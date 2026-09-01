@@ -1,9 +1,9 @@
 import type { JSX } from 'react';
 import '@testing-library/jest-dom/vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { PUBLIC_FEATURE_FLAGS } from '@duncit/app-settings';
 import AppRoutes from '../AppRoutes';
 
@@ -50,7 +50,7 @@ const flagsMock = (enabled: boolean) => ({
 
 function renderAt(path: string, mocks: unknown[] = []) {
   return render(
-    <MockedProvider mocks={mocks as never[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never[]}>
       <MemoryRouter initialEntries={[path]}>
         <AppRoutes {...props} />
         <LocationProbe />

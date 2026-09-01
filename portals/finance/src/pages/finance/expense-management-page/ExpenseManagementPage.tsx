@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useQuery } from '@apollo/client';
+import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import AddIcon from '@mui/icons-material/Add';
@@ -28,7 +28,7 @@ export default function ExpenseManagementPage() {
   // query state into ExpenseFilterInput so both stay in sync.
   const [summaryFilter, setSummaryFilter] = useState<ExpenseSummaryFilter | undefined>(undefined);
   const summaryKeyRef = useRef('null');
-  const summaryQ = useQuery(EXPENSE_SUMMARY, {
+  const summaryQ = useQuery<any>(EXPENSE_SUMMARY, {
     variables: { filter: summaryFilter ?? null },
     fetchPolicy: 'cache-and-network',
   });
@@ -41,7 +41,7 @@ export default function ExpenseManagementPage() {
         summaryKeyRef.current = key;
         setSummaryFilter(filter);
       }
-      const { data } = await client.query({
+      const { data } = await client.query<any>({
         query: EXPENSES_TABLE,
         variables: tableQueryToGql(q),
         fetchPolicy: 'network-only',

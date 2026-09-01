@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 
 type EventType = 'PAGE_VIEW' | 'IMPRESSION' | 'CLICK';
 
@@ -55,7 +56,7 @@ function metadataJson(extra: Record<string, unknown>) {
 }
 
 export function useClickstreamTracking({ enabled, path, superCategory }: Args) {
-  const [recordEvent] = useMutation(RECORD_APP_EVENT);
+  const [recordEvent] = useMutation<any>(RECORD_APP_EVENT);
 
   const send = (eventType: EventType, target: Element | null, extra: Record<string, unknown> = {}) => {
     if (!enabled || !localStorage.getItem('token')) return;

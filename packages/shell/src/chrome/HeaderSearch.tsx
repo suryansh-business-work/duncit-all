@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Autocomplete, Box, InputAdornment, TextField, Typography } from '@mui/material';
 import { useTranslation } from '../i18n/useTranslation';
 import { createFilterOptions } from '@mui/material/Autocomplete';

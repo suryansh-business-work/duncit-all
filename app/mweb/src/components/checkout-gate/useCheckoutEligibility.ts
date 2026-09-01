@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { missingCheckoutRequirements, type CheckoutRequirement } from '@duncit/utils';
 import { CHECKOUT_ELIGIBILITY, type CheckoutEligibilityMe } from './queries';
 

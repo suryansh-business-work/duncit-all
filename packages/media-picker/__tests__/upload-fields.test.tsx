@@ -8,15 +8,15 @@
  * (N+1)th and failing at the server.
  */
 import type { ReactElement } from 'react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 // Deep import through @duncit/tabs' own node_modules on purpose: this package
-// only PEER-depends on react-router-dom, and pnpm's auto-installed peer here
+// only PEER-depends on react-router, and pnpm's auto-installed peer here
 // (6.30.3) is a DIFFERENT instance than the one tabs resolves (6.30.6) — a
 // Router from the wrong instance is invisible to useTabParam's useSearchParams.
-// @ts-expect-error -- untyped deep path; the shape is react-router-dom's own
-import { MemoryRouter } from '../../tabs/node_modules/react-router-dom';
+// @ts-expect-error -- untyped deep path; the shape is react-router's own
+import { MemoryRouter } from '../../tabs/node_modules/react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import AttachmentUploadField from '../src/AttachmentUploadField';
@@ -48,7 +48,7 @@ const settle = async () => {
 // tab strip keeps its selection in the URL (`useTabParam`).
 const wrap = (ui: ReactElement) => render(
   <MemoryRouter>
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
     </MockedProvider>
   </MemoryRouter>

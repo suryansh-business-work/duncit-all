@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Controller, useForm, type Control } from 'react-hook-form';
+import { Controller, useForm, type Control, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, Divider, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
@@ -74,8 +74,8 @@ export default function RateLimitSettingsForm({
       }),
     [t],
   );
-  const { control, handleSubmit, reset } = useForm<Values>({
-    resolver: zodResolver(schema),
+  const { control, handleSubmit, reset } = useForm<Values, any, Values>({
+    resolver: zodResolver(schema) as unknown as Resolver<Values, any, Values>,
     defaultValues: toSettingsForm(settings),
   });
 

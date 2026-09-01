@@ -1,8 +1,8 @@
 import '@testing-library/jest-dom/vitest';
 import type { ReactElement } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { MockedProvider } from '@apollo/client/testing';
+import { MemoryRouter } from 'react-router';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -94,7 +94,7 @@ const hostPodsMock = (pods: unknown[] = []) => ({
 
 const setup = (mocks: unknown[], ui: ReactElement) =>
   render(
-    <MockedProvider mocks={mocks as never} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <MemoryRouter initialEntries={['/host']}>{ui}</MemoryRouter>
     </MockedProvider>,
   );

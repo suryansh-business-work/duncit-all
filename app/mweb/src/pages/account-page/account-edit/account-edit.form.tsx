@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -86,9 +86,9 @@ export default function AccountEditForm({
     handleSubmit,
     reset,
     formState: { isDirty, isValid },
-  } = useForm<AccountEditValues>({
+  } = useForm<AccountEditValues, any, AccountEditValues>({
     defaultValues,
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<AccountEditValues, any, AccountEditValues>,
     mode: 'onChange',
   });
 

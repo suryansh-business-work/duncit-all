@@ -2,10 +2,13 @@ import { GraphQLError } from 'graphql';
 import crypto from 'node:crypto';
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
+import { isEmailAddress } from '@utils/email';
 import { PHONE_EXTENSION_REGEX, PHONE_NUMBER_REGEX } from '@utils/phone';
 import { commPreferenceService } from '@modules/access/commPreference/commPreference.service';
+import { OTP_MAX_ATTEMPTS, OTP_RESEND_COOLDOWN_SEC, OTP_TTL_MS } from './otp.constants';
 import { deliverOtp } from './otp.delivery';
 import {
+  isPhoneMedium,
   OTP_MEDIUMS,
   OtpChallengeModel,
   type IOtpChallenge,
@@ -14,12 +17,6 @@ import {
   type OtpPurpose,
 } from './otp.model';
 
-/** How long a code stays usable. */
-const TTL_MS = 10 * 60 * 1000;
-/** Wrong guesses allowed before the challenge is burnt. */
-const MAX_ATTEMPTS = 5;
-/** Seconds between two sends on the same challenge. */
-const RESEND_COOLDOWN_SEC = 30;
 const CODE_LENGTH = 6;
 
 /**
@@ -56,6 +53,67 @@ export function normalizePhone(extension: unknown, number: unknown) {
   };
 }
 
+/** The mailbox a code is addressed to, rejected rather than guessed at. The
+ * shape is `@utils/email`'s — the ONE the API accepts anywhere (rule 34). */
+export function normalizeEmail(email: unknown): string {
+  const value = typeof email === 'string' ? email.trim().toLowerCase() : '';
+  if (!isEmailAddress(value)) throw badInput('Enter a valid email address');
+  return value;
+}
+
+/**
+ * Where a code is going.
+ *
+ * A phone pair OR a mailbox — never both, and which one is decided by the
+ * mediums asked for. Password recovery is the flow that made this necessary:
+ * the same purpose, the same expiry, the same attempt limit, reached from two
+ * channels the person chooses between.
+ */
+export interface OtpTarget {
+  phone_extension?: string | null;
+  phone_number?: string | null;
+  email?: string | null;
+}
+
+/** What a challenge is stored and found by. */
+interface NormalizedTarget {
+  phone_extension: string;
+  phone_number: string;
+  email: string;
+}
+
+/**
+ * Validate the destination the requested mediums actually need.
+ *
+ * Asked per medium rather than "whatever was supplied": a WhatsApp send with a
+ * mailbox and no number would otherwise be issued and then silently fail to
+ * deliver, and the person would be left waiting for a code nothing sent.
+ */
+export function normalizeTarget(
+  target: Readonly<OtpTarget>,
+  mediums: readonly OtpMedium[]
+): NormalizedTarget {
+  const phone = mediums.some(isPhoneMedium)
+    ? normalizePhone(target.phone_extension, target.phone_number)
+    : { phone_extension: '', phone_number: '' };
+  const email = mediums.includes('EMAIL') ? normalizeEmail(target.email) : '';
+  return { ...phone, email };
+}
+
+/** The ONE field a challenge is looked up by: its mailbox, or its number. */
+const targetFilter = (target: Readonly<NormalizedTarget>) =>
+  target.email ? { email: target.email } : { phone_number: target.phone_number };
+
+/**
+ * The same normalisation for a LOOKUP, where no mediums are being asked for.
+ *
+ * Which half to validate is read off which half was supplied, so verifying a
+ * code sent to a mailbox does not demand a country code that was never part of
+ * the flow.
+ */
+const normalizeLookup = (target: Readonly<OtpTarget>): NormalizedTarget =>
+  normalizeTarget(target, target.email ? ['EMAIL'] : ['WHATSAPP']);
+
 /** Only the mediums this platform knows, de-duplicated, never empty. */
 function cleanMediums(requested: readonly unknown[] | null | undefined): OtpMedium[] {
   const known = new Set<string>(OTP_MEDIUMS);
@@ -66,12 +124,11 @@ function cleanMediums(requested: readonly unknown[] | null | undefined): OtpMedi
   return picked;
 }
 
-export interface OtpRequestInput {
+export interface OtpRequestInput extends OtpTarget {
   purpose: OtpPurpose;
-  /** SMS, WhatsApp, or both — the medium IS a parameter, never a second method. */
+  /** SMS, WhatsApp, email, or several — the medium IS a parameter, never a
+   * second method. */
   mediums: readonly string[];
-  phone_extension: string;
-  phone_number: string;
   /** The name being proven alongside the number, when the flow proves one. */
   recipient_name?: string | null;
   /** Binds the proof to what asked for it (e.g. pod + membership). */
@@ -97,11 +154,45 @@ export interface PhoneOtpRequestResult {
 const nothingDelivered = (deliveries: readonly IOtpDelivery[]) =>
   deliveries.every((d) => d.status !== 'SENT');
 
+/**
+ * The mediums that survive the recipient's own channel switches.
+ *
+ * Honours the CHANNEL preference of whoever owns the NUMBER, which at a pod
+ * door is the attendee rather than the host who pressed the button. A number
+ * with no account behind it keeps every medium the caller asked for. Refusing
+ * when nothing survives is deliberate: sending on a channel somebody switched
+ * off would make the switch a lie.
+ *
+ * Email is not filtered here. It is the platform's own transport and the last
+ * channel that cannot be switched off — `commPreferenceService` already refuses
+ * to let an account disable its remaining deliverable channel, so a second gate
+ * on this side could only lock somebody out of their own password reset.
+ */
+async function allowedMediums(
+  target: Readonly<NormalizedTarget>,
+  asked: readonly OtpMedium[]
+): Promise<OtpMedium[]> {
+  const phoneMediums = asked.filter(isPhoneMedium);
+  if (phoneMediums.length === 0) return [...asked];
+
+  const allowed = new Set(
+    await commPreferenceService.allowedPhoneMediums(target.phone_number, phoneMediums)
+  );
+  const mediums = asked.filter((medium) => !isPhoneMedium(medium) || allowed.has(medium));
+  if (mediums.length === 0) {
+    throw new GraphQLError(
+      'This number has switched off one-time codes on every channel we could use.',
+      { extensions: { code: 'BAD_USER_INPUT' } }
+    );
+  }
+  return mediums;
+}
+
 /** Throws unless the cooldown since the last send on this challenge has passed. */
 function assertResendAllowed(previous: IOtpChallenge | null) {
   if (!previous) return;
   const elapsed = Date.now() - previous.last_sent_at.getTime();
-  const waitMs = RESEND_COOLDOWN_SEC * 1000 - elapsed;
+  const waitMs = OTP_RESEND_COOLDOWN_SEC * 1000 - elapsed;
   if (waitMs > 0) {
     throw new GraphQLError(
       `Wait ${Math.ceil(waitMs / 1000)}s before asking for another code`,
@@ -110,11 +201,11 @@ function assertResendAllowed(previous: IOtpChallenge | null) {
   }
 }
 
-/** The newest challenge for this purpose + number that is still usable. */
-function findLive(purpose: OtpPurpose, phone_number: string) {
+/** The newest challenge for this purpose + destination that is still usable. */
+function findLive(purpose: OtpPurpose, target: Readonly<NormalizedTarget>) {
   return OtpChallengeModel.findOne({
     purpose,
-    phone_number,
+    ...targetFilter(target),
     consumed_at: null,
     expires_at: { $gt: new Date() },
   }).sort({ created_at: -1 });
@@ -136,33 +227,18 @@ function findLive(purpose: OtpPurpose, phone_number: string) {
  * home they would move into.
  */
 export const otpService = {
-  MAX_ATTEMPTS,
-  RESEND_COOLDOWN_SEC,
+  OTP_MAX_ATTEMPTS,
+  OTP_RESEND_COOLDOWN_SEC,
 
   /** Issue a code and fan it out over every requested medium. */
   async request(input: Readonly<OtpRequestInput>): Promise<PhoneOtpRequestResult> {
     const asked = cleanMediums(input.mediums);
-    const phone = normalizePhone(input.phone_extension, input.phone_number);
-
-    // Honour the CHANNEL preference of whoever owns the number, which at a pod
-    // door is the attendee rather than the host who pressed the button. A
-    // number with no account behind it keeps every medium the caller asked
-    // for. Refusing when nothing survives is deliberate: sending on a channel
-    // somebody switched off would make the switch a lie.
-    const allowed = new Set(
-      await commPreferenceService.allowedPhoneMediums(phone.phone_number, asked)
-    );
-    const mediums = asked.filter((medium) => allowed.has(medium));
-    if (mediums.length === 0) {
-      throw new GraphQLError(
-        'This number has switched off one-time codes on every channel we could use.',
-        { extensions: { code: 'BAD_USER_INPUT' } }
-      );
-    }
+    const target = normalizeTarget(input, asked);
+    const mediums = await allowedMediums(target, asked);
 
     // Re-asking replaces the previous code rather than stacking a second live
     // one, so "the last SMS" is always the only one that works.
-    const previous = await findLive(input.purpose, phone.phone_number);
+    const previous = await findLive(input.purpose, target);
     assertResendAllowed(previous);
 
     const recipient_name = String(input.recipient_name ?? '').trim();
@@ -170,13 +246,13 @@ export const otpService = {
     const candidate = randomCode();
     const deliveries = await Promise.all(
       mediums.map((medium) =>
-        deliverOtp({ medium, ...phone, recipient_name, code: candidate, purpose: input.purpose })
+        deliverOtp({ medium, ...target, recipient_name, code: candidate, purpose: input.purpose })
       )
     );
     const stubbed = nothingDelivered(deliveries);
     const code = stubbed ? TEST_CODE : candidate;
 
-    const expires_at = new Date(Date.now() + TTL_MS);
+    const expires_at = new Date(Date.now() + OTP_TTL_MS);
     const doc = await OtpChallengeModel.findOneAndUpdate(
       { _id: previous?._id ?? new Types.ObjectId() },
       {
@@ -184,7 +260,7 @@ export const otpService = {
           purpose: input.purpose,
           mediums,
           deliveries,
-          ...phone,
+          ...target,
           recipient_name,
           code_hash: sha(code),
           expires_at,
@@ -193,6 +269,9 @@ export const otpService = {
           attempts: 0,
           verified_at: null,
           consumed_at: null,
+          // A resend revokes the grant a previous code earned: two live grants
+          // on one challenge is two chances to set a password from one proof.
+          grant_hash: '',
           last_sent_at: new Date(),
           context: input.context ?? {},
           requested_by: input.requested_by ?? null,
@@ -205,7 +284,7 @@ export const otpService = {
       challenge_id: String(doc._id),
       expires_at: expires_at.toISOString(),
       deliveries,
-      resend_after_seconds: RESEND_COOLDOWN_SEC,
+      resend_after_seconds: OTP_RESEND_COOLDOWN_SEC,
       test_code: stubbed ? code : null,
     };
   },
@@ -223,15 +302,13 @@ export const otpService = {
     return this.check(doc, code);
   },
 
-  /** Verify against the newest live challenge for a purpose + number. */
+  /** Verify against the newest live challenge for a purpose + destination. */
   async verifyLatest(
     purpose: OtpPurpose,
-    extension: string,
-    number: string,
+    target: Readonly<OtpTarget>,
     code: string
   ): Promise<IOtpChallenge> {
-    const phone = normalizePhone(extension, number);
-    const doc = await findLive(purpose, phone.phone_number);
+    const doc = await findLive(purpose, normalizeLookup(target));
     if (!doc) throw badInput('That code request has expired — send a new one');
     return this.check(doc, code);
   },
@@ -242,7 +319,7 @@ export const otpService = {
     if (doc.expires_at.getTime() <= Date.now()) {
       throw badInput('That code has expired — send a new one');
     }
-    if (doc.attempts >= MAX_ATTEMPTS) {
+    if (doc.attempts >= OTP_MAX_ATTEMPTS) {
       throw new GraphQLError('Too many wrong codes — send a new one', {
         extensions: { code: 'TOO_MANY_REQUESTS' },
       });
@@ -251,11 +328,54 @@ export const otpService = {
     if (!supplied || sha(supplied) !== doc.code_hash) {
       doc.attempts += 1;
       await doc.save();
-      const left = Math.max(MAX_ATTEMPTS - doc.attempts, 0);
+      const left = Math.max(OTP_MAX_ATTEMPTS - doc.attempts, 0);
       throw badInput(left > 0 ? `Incorrect code — ${left} attempts left` : 'Incorrect code');
     }
     doc.verified_at = new Date();
     await doc.save();
+    return doc;
+  },
+
+  /**
+   * Mint the one-shot grant that carries a verified code to the step that
+   * spends it.
+   *
+   * Password recovery proves the code on one screen and sets the password on
+   * the next, so something has to survive between them. The challenge id alone
+   * will not do: an ObjectId is a timestamp plus a counter, and a step that
+   * accepted one would be openable by anybody who could guess it. What comes
+   * back is `<challenge id>.<32 random bytes>`, and only the sha256 of the
+   * second half is stored.
+   */
+  async grant(doc: IOtpChallenge): Promise<string> {
+    const secret = crypto.randomBytes(32).toString('hex');
+    doc.grant_hash = sha(secret);
+    await doc.save();
+    return `${String(doc._id)}.${secret}`;
+  },
+
+  /**
+   * Trade a grant back for the challenge it was minted on.
+   *
+   * Every condition `consume` checks is checked again here, because a grant is
+   * the thing an attacker would hold: a challenge that has since expired, been
+   * spent, or had its code re-sent must not still open the door.
+   */
+  async redeemGrant(token: string, purpose: OtpPurpose): Promise<IOtpChallenge> {
+    const invalid = () => badInput('That verification has expired — start again');
+    const [id, secret] = String(token ?? '').split('.');
+    if (!id || !secret) throw invalid();
+    const doc = await OtpChallengeModel.findById(id).select('+grant_hash').catch(() => null);
+    if (doc?.purpose !== purpose || !doc.grant_hash) throw invalid();
+    if (!doc.verified_at || doc.consumed_at) throw invalid();
+    if (doc.expires_at.getTime() <= Date.now()) throw invalid();
+    // Constant-time: the hashes are the same length, so a byte-by-byte compare
+    // would leak how much of a guessed secret was right.
+    const supplied = Buffer.from(sha(secret));
+    const stored = Buffer.from(doc.grant_hash);
+    if (supplied.length !== stored.length || !crypto.timingSafeEqual(supplied, stored)) {
+      throw invalid();
+    }
     return doc;
   },
 

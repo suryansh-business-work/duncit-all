@@ -4,7 +4,7 @@ import type { EditForm } from '../queries';
 
 const PINCODE_PATTERN = /^[0-9A-Za-z -]{3,12}$/;
 
-export const userProfileSchema: z.ZodType<EditForm, z.ZodTypeDef, unknown> = z.object({
+export const userProfileSchema = z.object({
   first_name: zodRules.personName('First name'),
   last_name: zodRules.personName('Last name'),
   email: zodRules.optionalEmail('Email').default(''),
@@ -30,9 +30,8 @@ export const userProfileSchema: z.ZodType<EditForm, z.ZodTypeDef, unknown> = z.o
   assigned_zones: zodRules.optionalText('Assigned zones', 500).default(''),
   bio: zodRules.optionalText('Bio', 500).default(''),
   profile_photo: zodRules.optionalText('Profile photo URL', 1000).default(''),
-  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED'], {
-    errorMap: () => ({ message: 'Select a valid status' }),
-  }),
+  // zod 4 replaced errorMap with one `error`.
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED'], { error: 'Select a valid status' }),
 });
 
 /**

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import {
   makeNativeParityPodConfig,
   usePodEditorState,
@@ -22,8 +22,8 @@ interface Args {
 /** Club-admin wiring for the shared pod editor: pinned club, host search + seed. */
 export default function useClubAdminPodEditor({ clubId, editingPod, onSaved }: Args) {
   const client = useApolloClient();
-  const [createPod] = useMutation(CLUB_ADMIN_CREATE_POD);
-  const [updatePod] = useMutation(CLUB_ADMIN_UPDATE_POD);
+  const [createPod] = useMutation<any>(CLUB_ADMIN_CREATE_POD);
+  const [updatePod] = useMutation<any>(CLUB_ADMIN_UPDATE_POD);
 
   const editor = usePodEditorState({
     config: CLUB_ADMIN_POD_CONFIG,
@@ -38,7 +38,7 @@ export default function useClubAdminPodEditor({ clubId, editingPod, onSaved }: A
 
   const searchHosts = (term: string): Promise<PodHostOption[]> =>
     client
-      .query({
+      .query<any>({
         query: CLUB_ADMIN_HOST_SEARCH,
         variables: { search: term || undefined },
         fetchPolicy: 'network-only',

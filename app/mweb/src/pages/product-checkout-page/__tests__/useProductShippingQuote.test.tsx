@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { PRODUCT_SHIPPING_QUOTE, type ProductCartItemInput } from '../../checkout-page/queries';
 import { useProductShippingQuote } from '../useProductShippingQuote';
 
 const items: ProductCartItemInput[] = [{ product_id: 'a', pod_id: 'pod1', quantity: 2 }];
 
 const shippingMock = (): MockedResponse => ({
-  request: { query: PRODUCT_SHIPPING_QUOTE },
-  variableMatcher: () => true,
+  request: { query: PRODUCT_SHIPPING_QUOTE, variables: () => true },
   result: {
     data: { productShippingQuote: { total: 80, currency_symbol: '₹', all_quoted: true, lines: [] } },
   },
@@ -17,7 +17,7 @@ const shippingMock = (): MockedResponse => ({
 const wrapper = (mocks: MockedResponse[]) =>
   (function Wrapper({ children }: Readonly<{ children: React.ReactNode }>) {
     return (
-      <MockedProvider mocks={mocks} addTypename={false}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
         {children}
       </MockedProvider>
     );

@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, render, waitFor } from '@testing-library/react';
-import { ApolloClient, ApolloLink, ApolloProvider, InMemoryCache, Observable } from '@apollo/client';
+import { ApolloClient, ApolloLink, InMemoryCache } from '@apollo/client';
+import { Observable } from '@apollo/client/utilities';
+import { ApolloProvider } from '@apollo/client/react';
 import { useRegisterVenueForm, type EditableSectionKey } from './useRegisterVenueForm';
 import type { RegisterVenueMode } from './register-venue.types';
 
@@ -60,13 +62,16 @@ const makeClient = (sent: Sent[], failOn?: string) =>
   new ApolloClient({
     cache: new InMemoryCache(),
     link: new ApolloLink((operation) => {
-      sent.push({ name: operation.operationName, variables: operation.variables });
+      // Every document in this suite is a named operation; v4 types the field
+      // optional because an anonymous one is legal GraphQL.
+      const name = operation.operationName as string;
+      sent.push({ name, variables: operation.variables });
       return new Observable((observer) => {
-        if (operation.operationName === failOn) {
+        if (name === failOn) {
           observer.error(new Error('Venue name already taken'));
           return;
         }
-        observer.next({ data: RESULTS[operation.operationName] });
+        observer.next({ data: RESULTS[name] });
         observer.complete();
       });
     }),

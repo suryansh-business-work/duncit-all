@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 
 export const PUBLIC_FEATURE_FLAGS = gql`
   query PublicFeatureFlags {

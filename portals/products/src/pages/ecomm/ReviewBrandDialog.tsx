@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -57,8 +57,8 @@ export default function ReviewBrandDialog({ brand, onClose, onDone }: Readonly<P
   const [tagsText, setTagsText] = useState('');
   const [pending, setPending] = useState<Decision | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [approve, { loading: approving }] = useMutation(APPROVE_ECOMM_BRAND);
-  const [reject, { loading: rejecting }] = useMutation(REJECT_ECOMM_BRAND);
+  const [approve, { loading: approving }] = useMutation<any>(APPROVE_ECOMM_BRAND);
+  const [reject, { loading: rejecting }] = useMutation<any>(REJECT_ECOMM_BRAND);
   const loading = approving || rejecting;
 
   useEffect(() => {

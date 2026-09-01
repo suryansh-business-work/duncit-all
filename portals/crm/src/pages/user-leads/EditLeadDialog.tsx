@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { WA_UPDATE_USER_LEAD } from '../tools/whatsapp/whatsappQueries';
@@ -17,7 +17,7 @@ export default function EditLeadDialog({ lead, onClose, onSaved }: Readonly<Prop
   const { t } = useTranslation();
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
-  const [update, { loading, error, reset }] = useMutation(WA_UPDATE_USER_LEAD);
+  const [update, { loading, error, reset }] = useMutation<any>(WA_UPDATE_USER_LEAD);
 
   useEffect(() => {
     if (lead) {

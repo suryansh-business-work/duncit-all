@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { FormProvider, useForm } from 'react-hook-form';
 import { StatusChip, PriorityChip } from '@/components/StatusChips';
 import ExternalLink from '@/components/ExternalLink';

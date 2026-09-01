@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { DATA_CLONE_JOB, type CloneJob } from './queries';
 
 /** Poll cadence while a job runs. */

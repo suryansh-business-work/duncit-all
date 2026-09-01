@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Dialog } from '@mui/material';
 import {
   APP_POPUP_HEIGHT_FRACTION,
@@ -58,7 +58,7 @@ export default function AppPopupDialog() {
     variables: { platform },
     fetchPolicy: 'cache-and-network',
   });
-  const [dismissOnServer] = useMutation(DISMISS_APP_POPUP);
+  const [dismissOnServer] = useMutation<any>(DISMISS_APP_POPUP);
 
   const popup = data?.activeAppPopup ?? null;
   if (!popup || closed || !ready || isPopupDismissed(dismissed, popup.id)) return null;

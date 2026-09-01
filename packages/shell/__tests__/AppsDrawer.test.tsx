@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import FolderIcon from '@mui/icons-material/Folder';
 import { AppsDrawer } from '../src/chrome/AppsDrawer';
 
@@ -67,7 +67,7 @@ describe('AppsDrawer', () => {
 
   it('opens Jump to Portal over the page from its own tool, and closes it back to no dialog at all', async () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <AppsDrawer open onClose={vi.fn()} />
       </MockedProvider>,
     );
@@ -85,7 +85,7 @@ describe('AppsDrawer', () => {
 
   it('opens Ask Bot over the page from its own tool, and closes it back to no dialog at all', async () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <AppsDrawer open onClose={vi.fn()} />
       </MockedProvider>,
     );
@@ -100,7 +100,7 @@ describe('AppsDrawer', () => {
   it('mounts the file manager only once a tool is chosen, and unmounts it again on close', async () => {
     const onClose = vi.fn();
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <AppsDrawer open onClose={onClose} />
       </MockedProvider>
     );
@@ -121,7 +121,7 @@ describe('AppsDrawer', () => {
 describe('FileManagerDialog placement', () => {
   it('opens a file inside the dialog, not in a drawer over it', async () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <AppsDrawer open onClose={vi.fn()} />
       </MockedProvider>
     );

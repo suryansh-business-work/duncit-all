@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useQuery } from '@apollo/client';
-import { Link as RouterLink } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { Link as RouterLink } from 'react-router';
 import { Alert, Box, Card, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
@@ -33,8 +33,8 @@ const PICKER_SX = {
 export default function VenueDashboardPage() {
   const { t } = useTranslation();
   const [venueId, setVenueId] = useState<string>(ALL_VENUES);
-  const venuesQuery = useQuery(MY_VENUES, { fetchPolicy: 'cache-and-network' });
-  const statsQuery = useQuery(VENUE_OWNER_STATS, {
+  const venuesQuery = useQuery<any>(MY_VENUES, { fetchPolicy: 'cache-and-network' });
+  const statsQuery = useQuery<any>(VENUE_OWNER_STATS, {
     variables: { venue_id: venueId === ALL_VENUES ? null : venueId },
     fetchPolicy: 'cache-and-network',
   });

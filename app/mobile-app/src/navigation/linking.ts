@@ -40,7 +40,6 @@ export const linking: LinkingOptions<RootStackParamList> = {
       Login: 'login',
       Signup: 'signup',
       ForgotPassword: 'forgot-password',
-      ResetPassword: 'reset-password',
       Survey: 'survey',
       Menu: 'menu',
       Home: {

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { MenuItem, TextField } from '@mui/material';
 import { COMMS_PROVIDER_OPTIONS, type CommsProviderOption } from '../api/comms.gql';
 import { useTranslation } from '@duncit/shell';

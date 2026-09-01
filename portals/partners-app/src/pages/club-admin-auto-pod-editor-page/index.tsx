@@ -1,5 +1,5 @@
-import { useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { useNavigate, useParams } from 'react-router';
 import { Alert, Stack } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitButton } from '@duncit/buttons';
@@ -19,7 +19,7 @@ export default function ClubAdminAutoPodEditorPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const backTo = `/club-admin/clubs/${clubId}`;
-  const lookups = useQuery(CLUB_ADMIN_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
+  const lookups = useQuery<any>(CLUB_ADMIN_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
   const club: ClubAutoPodClub | null =
     (lookups.data?.myAdminClubs ?? []).find((item: ClubAutoPodClub) => item.id === clubId) ??
     null;

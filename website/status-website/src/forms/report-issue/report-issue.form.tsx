@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, MenuItem, Stack } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
@@ -39,8 +39,8 @@ export default function ReportIssueForm({
   const schema = useMemo(() => buildReportSchema(t), [t]);
   const captcha = useCaptcha(GRAPHQL_URL);
   const screenshots = useScreenshots(t);
-  const { control, handleSubmit, formState, resetField, setError } = useForm<ReportIssueValues>({
-    resolver: zodResolver(schema),
+  const { control, handleSubmit, formState, resetField, setError } = useForm<ReportIssueValues, any, ReportIssueValues>({
+    resolver: zodResolver(schema) as unknown as Resolver<ReportIssueValues, any, ReportIssueValues>,
     defaultValues: REPORT_DEFAULTS,
     mode: 'onTouched',
   });

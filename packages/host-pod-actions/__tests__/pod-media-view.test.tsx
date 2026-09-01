@@ -10,7 +10,8 @@
  * the pod and the field goes back to empty, so the grid below is always the one
  * true answer to "what is on this pod".
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { mwebPodMediaLabels } from '@duncit/utils';
@@ -80,7 +81,7 @@ const boardMock = (over: Record<string, unknown> = {}): MockedResponse => ({
 
 const mount = (mocks: readonly MockedResponse[] = [boardMock()], config = {}) =>
   render(
-    <MockedProvider mocks={[...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>
         <HostPodActionsProvider {...hostActionsConfig({ podMediaLabels: labels, ...config })}>
           <PodMediaView podId={POD_ID} />
@@ -326,7 +327,7 @@ describe('PodMediaGrid', () => {
 describe('PodMediaShareCard', () => {
   const card = (config = {}) =>
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <ThemeProvider theme={testTheme}>
           <HostPodActionsProvider {...hostActionsConfig({ podMediaLabels: labels, ...config })}>
             <PodMediaShareCard podId="DUN-POD-4821" podTitle="Sunday Badminton" />

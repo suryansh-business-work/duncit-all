@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Card, CardContent, Snackbar, Stack, Typography } from '@mui/material';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { DuncitButton } from '@duncit/buttons';
@@ -30,8 +30,8 @@ export default function RateLimitSettingsPage() {
     rateLimitSettings: RateLimitSettingsData;
   }>(SETTINGS, { fetchPolicy: 'cache-and-network' });
   const { data: optionsData } = useQuery<{ rateLimitOptions: RateLimitOptionsData }>(OPTIONS);
-  const [save] = useMutation(UPDATE_SETTINGS);
-  const [resetCounters] = useMutation(RESET_COUNTERS);
+  const [save] = useMutation<any>(UPDATE_SETTINGS);
+  const [resetCounters] = useMutation<any>(RESET_COUNTERS);
 
   const [saving, setSaving] = useState(false);
   const [opError, setOpError] = useState<string | null>(null);

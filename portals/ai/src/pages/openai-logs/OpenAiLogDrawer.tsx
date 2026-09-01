@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, Chip, CircularProgress, Divider, Drawer, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import CloseIcon from '@mui/icons-material/Close';

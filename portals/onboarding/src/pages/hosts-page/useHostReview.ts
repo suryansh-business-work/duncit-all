@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { notifyError } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import {
@@ -30,10 +30,10 @@ const toCategoryInput = (c: HostCategoryValue) => ({
  * never sees a rejected promise.
  */
 export function useHostReview(refresh: () => void) {
-  const [approve, { loading: approving }] = useMutation(APPROVE);
-  const [reject, { loading: rejecting }] = useMutation(REJECT);
-  const [setHostDeductions, { loading: savingCommission }] = useMutation(SET_HOST_DEDUCTIONS);
-  const [setHostCategories, { loading: savingCategories }] = useMutation(ADMIN_SET_HOST_CATEGORIES);
+  const [approve, { loading: approving }] = useMutation<any>(APPROVE);
+  const [reject, { loading: rejecting }] = useMutation<any>(REJECT);
+  const [setHostDeductions, { loading: savingCommission }] = useMutation<any>(SET_HOST_DEDUCTIONS);
+  const [setHostCategories, { loading: savingCategories }] = useMutation<any>(ADMIN_SET_HOST_CATEGORIES);
 
   const [active, setActive] = useState<HostRow | null>(null);
   const [notes, setNotes] = useState('');
@@ -43,10 +43,10 @@ export function useHostReview(refresh: () => void) {
   // close instead, so the grid does not flicker behind the open dialog.
   const dirtyRef = useRef(false);
 
-  const { data: defaultsData } = useQuery(DEFAULT_HOST_COMMISSION, { fetchPolicy: 'cache-first' });
+  const { data: defaultsData } = useQuery<any>(DEFAULT_HOST_COMMISSION, { fetchPolicy: 'cache-first' });
   const defaultCommissionPct: number | undefined = defaultsData?.defaultHostCommissionPct;
 
-  const { data: surveyData } = useQuery(HOST_SURVEY_CATEGORY, {
+  const { data: surveyData } = useQuery<any>(HOST_SURVEY_CATEGORY, {
     variables: { host_doc_id: active?.id ?? '' },
     skip: !active,
     fetchPolicy: 'cache-first',

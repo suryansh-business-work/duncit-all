@@ -4,7 +4,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { DuncitButton } from '@duncit/buttons';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { AppNavItem } from '../../types';
 import { filterNav } from './helpers';

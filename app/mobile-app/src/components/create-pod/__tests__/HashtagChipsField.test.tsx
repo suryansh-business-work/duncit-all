@@ -8,7 +8,7 @@ import { renderWithProviders } from '@/utils/test-utils';
 function Harness({ initial }: Readonly<{ initial?: string }>) {
   // `initial` deliberately passes through unmodified so tests can exercise the
   // undefined-value branch of the field.
-  const form = useForm<CreatePodFormValues>({
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, pod_hashtag_text: initial as never },
   });
   return <HashtagChipsField form={form} />;

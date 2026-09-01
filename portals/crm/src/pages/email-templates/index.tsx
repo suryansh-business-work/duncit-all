@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useApolloClient, useMutation } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
@@ -25,7 +25,7 @@ export default function EmailTemplatesPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   // Also refresh the legacy list doc so the compose-window template picker stays warm.
-  const [deleteMut, { loading: deleting }] = useMutation(DELETE, { refetchQueries: [{ query: TEMPLATES }] });
+  const [deleteMut, { loading: deleting }] = useMutation<any>(DELETE, { refetchQueries: [{ query: TEMPLATES }] });
   const [createOpen, setCreateOpen] = useState(false);
   const [removing, setRemoving] = useState<EmailTemplateRow | null>(null);
   const [snack, setSnack] = useState<string | null>(null);

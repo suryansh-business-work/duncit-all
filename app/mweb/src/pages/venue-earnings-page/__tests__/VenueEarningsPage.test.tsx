@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
-import { MemoryRouter } from 'react-router-dom';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import VenueEarningsPage from '../index';
 import { VENUE_EARNINGS } from '../queries';
@@ -44,7 +44,7 @@ const mocks = [
 
 function setup() {
   return render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <DuncitLocalizationProvider>
         <MemoryRouter>
           <VenueEarningsPage />

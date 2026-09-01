@@ -8,17 +8,17 @@
  * opens the pod — where booking is closed, which is why the rail offers no join
  * of its own.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
 import OngoingPodsRail from '../OngoingPodsRail';
 
 const navigate = vi.fn();
-vi.mock('react-router-dom', async () => ({
-  ...(await vi.importActual<typeof import('react-router-dom')>('react-router-dom')),
+vi.mock('react-router', async () => ({
+  ...(await vi.importActual<typeof import('react-router')>('react-router')),
   useNavigate: () => navigate,
 }));
 
@@ -41,7 +41,7 @@ const pod = (over: Record<string, unknown> = {}) => ({
 
 const rail = (pods: ReturnType<typeof pod>[]) =>
   render(
-    <MockedProvider mocks={[]} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter>
           <OngoingPodsRail pods={pods} hostNameOf={() => 'Host One'} />

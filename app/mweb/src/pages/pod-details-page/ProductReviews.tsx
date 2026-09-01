@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Avatar,
@@ -38,12 +38,12 @@ interface Review {
  * comment), the review list with thumbs up/down and the seller's reply. */
 export default function ProductReviews({ productId }: Readonly<{ productId: string }>) {
   const { t } = useTranslation();
-  const { data, loading, refetch } = useQuery(PRODUCT_REVIEWS, {
+  const { data, loading, refetch } = useQuery<any>(PRODUCT_REVIEWS, {
     variables: { id: productId },
     fetchPolicy: 'cache-and-network',
   });
-  const [createReview, { loading: saving }] = useMutation(CREATE_PRODUCT_REVIEW);
-  const [voteReview] = useMutation(VOTE_PRODUCT_REVIEW);
+  const [createReview, { loading: saving }] = useMutation<any>(CREATE_PRODUCT_REVIEW);
+  const [voteReview] = useMutation<any>(VOTE_PRODUCT_REVIEW);
   const { upload, uploading } = useImagekitUpload();
   const [rating, setRating] = useState<number | null>(0);
   const [comment, setComment] = useState('');

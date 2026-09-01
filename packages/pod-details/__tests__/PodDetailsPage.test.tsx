@@ -10,10 +10,11 @@
  * than a role, so a club reader running the admin operations gets a refusal
  * from the server instead of a smaller page.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, render, screen } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import PodDetailsPage, { type PodDetailsViewProps } from '../src/PodDetailsPage';
@@ -84,7 +85,7 @@ const settle = async () => {
 
 const mount = (props: PodDetailsViewProps = {}, mocks: MockedResponse[] = [podMock()]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>
       <MemoryRouter initialEntries={[`/pods/${POD_ID}`]}>
         <Routes>

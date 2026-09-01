@@ -1,4 +1,4 @@
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import type { CampaignNameValues } from './campaign-name-form';
@@ -22,13 +22,13 @@ import {
  * notify host instead of each dialog growing its own error state.
  */
 export function useWaCampaignActions(onChanged: () => void) {
-  const [sendCampaign, { loading: sending }] = useMutation(SEND_WA_CAMPAIGN);
-  const [cancelCampaign, { loading: cancelling }] = useMutation(CANCEL_WA_CAMPAIGN);
-  const [retryCampaign, { loading: retrying }] = useMutation(RETRY_WA_CAMPAIGN);
-  const [sendTest, { loading: testing }] = useMutation(SEND_WA_TEST_MESSAGE);
-  const [deleteCampaign, { loading: deleting }] = useMutation(DELETE_WA_CAMPAIGN);
-  const [createName, { loading: adding }] = useMutation(CREATE_WA_CAMPAIGN_NAME);
-  const [deleteName, { loading: removingName }] = useMutation(DELETE_WA_CAMPAIGN_NAME);
+  const [sendCampaign, { loading: sending }] = useMutation<any>(SEND_WA_CAMPAIGN);
+  const [cancelCampaign, { loading: cancelling }] = useMutation<any>(CANCEL_WA_CAMPAIGN);
+  const [retryCampaign, { loading: retrying }] = useMutation<any>(RETRY_WA_CAMPAIGN);
+  const [sendTest, { loading: testing }] = useMutation<any>(SEND_WA_TEST_MESSAGE);
+  const [deleteCampaign, { loading: deleting }] = useMutation<any>(DELETE_WA_CAMPAIGN);
+  const [createName, { loading: adding }] = useMutation<any>(CREATE_WA_CAMPAIGN_NAME);
+  const [deleteName, { loading: removingName }] = useMutation<any>(DELETE_WA_CAMPAIGN_NAME);
 
   const send = async (input: SendWaCampaignInput) => {
     try {

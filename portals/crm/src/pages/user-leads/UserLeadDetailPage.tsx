@@ -7,8 +7,8 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { useNavigate, useParams } from 'react-router';
 import { BackHeader, InfoRow, QueryGuard } from '@duncit/ui';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { WA_USER_LEAD } from '../tools/whatsapp/whatsappQueries';
@@ -25,7 +25,7 @@ export default function UserLeadDetailPage() {
   const { t } = useTranslation();
   const { id = '' } = useParams();
   const navigate = useNavigate();
-  const { data, loading, error } = useQuery(WA_USER_LEAD, { variables: { id } });
+  const { data, loading, error } = useQuery<any>(WA_USER_LEAD, { variables: { id } });
   const lead = data?.waUserLead;
 
   const body = (

@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useApolloClient, useMutation } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Alert, Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -34,7 +34,7 @@ export default function VenueLeadsPage() {
   const [showImport, setShowImport] = useState(false);
   const [toDelete, setToDelete] = useState<VenueLead | null>(null);
 
-  const [deleteLead, { loading: deleting }] = useMutation(DELETE_VENUE_LEAD);
+  const [deleteLead, { loading: deleting }] = useMutation<any>(DELETE_VENUE_LEAD);
 
   const fetchRows = useApolloTableFetch<VenueLead>(client, VENUE_LEADS_TABLE, 'venueLeadsTable');
 
@@ -71,7 +71,9 @@ export default function VenueLeadsPage() {
         variables: { entity: 'VENUE_LEAD' },
         fetchPolicy: 'network-only',
       });
-      const payload = kind === 'template' ? res.data.crmExcelTemplate : res.data.crmExcelExport;
+      // Apollo 4 types `data` optional — a query that errored has none, and the
+      // next line already treats an empty payload as a failure.
+      const payload = kind === 'template' ? res.data?.crmExcelTemplate : res.data?.crmExcelExport;
       if (!payload) throw new Error('Empty response');
       downloadBase64File(payload.content_base64, payload.filename, XLSX_MIME);
       setToast(kind === 'template' ? 'Template downloaded' : 'Venue leads exported');

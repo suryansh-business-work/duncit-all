@@ -5,7 +5,7 @@ import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import GroupIcon from '@mui/icons-material/GroupOutlined';
 import { DuncitIconButton } from '@duncit/buttons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import SeeAllCard from './SeeAllCard';
 import PodCardMedia from './PodCardMedia';
 import { usePricing } from '../../hooks/usePricing';

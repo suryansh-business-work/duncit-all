@@ -33,19 +33,35 @@ export const LoginDocument = gql(`
   }
 `);
 
-export const RequestPasswordResetOtpDocument = gql(`
-  mutation MobileRequestPasswordResetOtp($email: String!) {
-    requestPasswordResetOtp(email: $email) {
+/** Step one of recovery — find the account and send a code on its channel. */
+export const RequestPasswordResetCodeDocument = gql(`
+  mutation MobileRequestPasswordResetCode($input: PasswordResetLookupInput!) {
+    requestPasswordResetCode(input: $input) {
       ok
-      dev_otp
       registered
+      channel
+      expires_at
+      resend_after_seconds
+      expires_in_minutes
+      test_code
     }
   }
 `);
 
-export const ResetPasswordWithOtpDocument = gql(`
-  mutation MobileResetPasswordWithOtp($input: ResetPasswordInput!) {
-    resetPasswordWithOtp(input: $input)
+/** Step two — prove the code and take the grant that sets the password. */
+export const VerifyPasswordResetCodeDocument = gql(`
+  mutation MobileVerifyPasswordResetCode($input: VerifyPasswordResetCodeInput!) {
+    verifyPasswordResetCode(input: $input) {
+      ok
+      reset_token
+    }
+  }
+`);
+
+/** Step three — spend the grant. */
+export const CompletePasswordResetDocument = gql(`
+  mutation MobileCompletePasswordReset($input: CompletePasswordResetInput!) {
+    completePasswordReset(input: $input)
   }
 `);
 

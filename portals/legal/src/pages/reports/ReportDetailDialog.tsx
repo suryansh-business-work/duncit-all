@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -51,7 +51,7 @@ export default function ReportDetailDialog({
   const [status, setStatus] = useState<ReportStatus>('RECEIVED');
   const [resolution, setResolution] = useState('');
   const [error, setError] = useState('');
-  const [save, { loading }] = useMutation(UPDATE_CONTENT_REPORT_STATUS);
+  const [save, { loading }] = useMutation<any>(UPDATE_CONTENT_REPORT_STATUS);
 
   // Re-seed on every open: one dialog instance serves every row.
   useEffect(() => {

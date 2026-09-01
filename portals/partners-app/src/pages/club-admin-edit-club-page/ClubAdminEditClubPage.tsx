@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { useNavigate, useParams } from 'react-router';
 import {
   ClubEditorPage,
   blankClubFormValues,
@@ -26,11 +26,11 @@ export default function ClubAdminEditClubPage() {
   const { t } = useTranslation();
   const { clubId = '' } = useParams();
   const navigate = useNavigate();
-  const { data, loading, error } = useQuery(CLUB_FOR_EDIT, {
+  const { data, loading, error } = useQuery<any>(CLUB_FOR_EDIT, {
     variables: { club_doc_id: clubId },
     fetchPolicy: 'cache-and-network',
   });
-  const [updateClub, updateState] = useMutation(CLUB_ADMIN_UPDATE_CLUB);
+  const [updateClub, updateState] = useMutation<any>(CLUB_ADMIN_UPDATE_CLUB);
   const [opError, setOpError] = useState<string | null>(null);
 
   const [pickerOpen, setPickerOpen] = useState(false);

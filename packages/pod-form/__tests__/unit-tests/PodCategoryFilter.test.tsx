@@ -21,6 +21,8 @@ const CATEGORIES = [
 ];
 vi.mock('@apollo/client', () => ({
   gql: (s: TemplateStringsArray) => s.join(''),
+}));
+vi.mock('@apollo/client/react', () => ({
   useQuery: () => ({
     data: { venueAvailableSlots: [], categories: CATEGORIES },
     loading: false,
@@ -72,14 +74,30 @@ function renderForm(over: Partial<PodFormProps> = {}) {
 /** Open the Club select and read back the option labels it offers. */
 async function clubOptions(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByLabelText(/Club/i));
-  const options = screen.getAllByRole('option').map((o) => o.textContent);
+  const options = (await screen.findAllByRole('option')).map((o) => o.textContent);
   await user.keyboard('{Escape}');
   return options;
 }
 
+/**
+ * Pick one option out of a select that has just been opened.
+ *
+ * `findByRole` rather than `getByRole`, because each step of the cascade rebuilds
+ * the NEXT select's options: choosing Sports re-renders Category, and the menu
+ * that opens after it is a render behind the click that opened it. Reading it
+ * synchronously passes whenever that render lands in the same tick and fails when
+ * it does not — which is how this suite went red on CI while staying green
+ * locally ("Unable to find an accessible element with the role option and name
+ * Racket").
+ */
+async function pick(user: ReturnType<typeof userEvent.setup>, label: string, option: string) {
+  await user.click(screen.getByLabelText(label));
+  await user.click(await screen.findByRole('option', { name: option }));
+}
+
 describe('PodCategoryFilter', () => {
   it('sits above the form and offers every club until a category is picked', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     renderForm();
     expect(screen.getByTestId('pod-category-filter')).toBeInTheDocument();
     expect(await clubOptions(user)).toEqual(['Badminton Club', 'Dog Club']);
@@ -88,7 +106,7 @@ describe('PodCategoryFilter', () => {
   // The pod's category comes from its club, so picking it first simply narrows
   // what the club dropdown may offer.
   it('narrows the club list to the picked Super + Sub, dropping uncategorised clubs', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     // Legacy clubs: one with no category ids at all, one with only half the
     // pair. Neither can match, so both drop out once a category is picked.
     const LEGACY = { id: 'c3', club_name: 'Legacy Club' };
@@ -101,27 +119,21 @@ describe('PodCategoryFilter', () => {
       'Half Club',
     ]);
 
-    await user.click(screen.getByLabelText('Super Category'));
-    await user.click(screen.getByRole('option', { name: 'Sports' }));
-    await user.click(screen.getByLabelText('Category'));
-    await user.click(screen.getByRole('option', { name: 'Racket' }));
-    await user.click(screen.getByLabelText('Sub Category'));
-    await user.click(screen.getByRole('option', { name: 'Badminton' }));
+    await pick(user, 'Super Category', 'Sports');
+    await pick(user, 'Category', 'Racket');
+    await pick(user, 'Sub Category', 'Badminton');
 
     expect(await clubOptions(user)).toEqual(['Badminton Club']);
     expect(screen.queryByTestId('pod-category-no-clubs')).not.toBeInTheDocument();
   });
 
   it('warns when the picked category has no clubs yet', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     renderForm({ clubs: [DOG_CLUB] });
 
-    await user.click(screen.getByLabelText('Super Category'));
-    await user.click(screen.getByRole('option', { name: 'Sports' }));
-    await user.click(screen.getByLabelText('Category'));
-    await user.click(screen.getByRole('option', { name: 'Racket' }));
-    await user.click(screen.getByLabelText('Sub Category'));
-    await user.click(screen.getByRole('option', { name: 'Badminton' }));
+    await pick(user, 'Super Category', 'Sports');
+    await pick(user, 'Category', 'Racket');
+    await pick(user, 'Sub Category', 'Badminton');
 
     expect(screen.getByTestId('pod-category-no-clubs')).toBeInTheDocument();
   });

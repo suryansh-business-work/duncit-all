@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, Chip, Link, Skeleton, Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -34,7 +34,7 @@ function currentPortal(): string {
  * losing the conversation is the other common way.
  */
 export default function LinkCard({ url, onNavigate }: Readonly<Props>) {
-  const { data, loading } = useQuery(STAFF_LINK_PREVIEW, {
+  const { data, loading } = useQuery<any>(STAFF_LINK_PREVIEW, {
     variables: { url },
     fetchPolicy: 'cache-first',
   });

@@ -13,7 +13,7 @@ const capacityItemSchema = z.object({
     .min(1, 'Give this capacity a label (e.g. Banquet hall)')
     .max(80, 'Capacity label must be 80 characters or fewer'),
   capacity: z.coerce
-    .number({ invalid_type_error: 'Capacity must be a number' })
+    .number({ error: 'Capacity must be a number' })
     .int('Capacity must be a whole number')
     .min(1, 'Capacity must be at least 1')
     .max(100_000, 'Capacity is unrealistic'),

@@ -4,7 +4,7 @@
  * here so this file can invoke each callback directly; their own rendering is
  * covered in StaffChatPanel.test.tsx and each component's own tests.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, render } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -53,7 +53,7 @@ const settle = async () => {
 
 const mount = (props: Record<string, unknown> = {}) =>
   render(
-    <MockedProvider link={schemaMockLink()}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={schemaMockLink()}>
       <ThemeProvider theme={testTheme}>
         <StaffChatPanel open onClose={vi.fn()} meId="u-1" meName="Asha Rao" meRoles={['SUPPORT']} {...props} />
       </ThemeProvider>

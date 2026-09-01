@@ -68,11 +68,10 @@ describe('AdjustHealthDialog — editing an existing adjustment', () => {
     const editing = adjustment();
     const mocks: MockedResponse[] = [
       {
-        request: { query: EDIT_ADJUSTMENT },
-        variableMatcher: (variables) => {
+        request: { query: EDIT_ADJUSTMENT, variables: (variables) => {
           onEdit(variables);
           return true;
-        },
+        } },
         result: { data: { editAdjustment: score({ total_score: 67 }) } },
       },
     ];
@@ -101,7 +100,7 @@ describe('AdjustHealthDialog — editing an existing adjustment', () => {
 
   it('shows the mutation error and never calls onSaved/onClose when the edit fails', async () => {
     const mocks: MockedResponse[] = [
-      { request: { query: EDIT_ADJUSTMENT }, variableMatcher: () => true, error: new Error('Adjustment locked') },
+      { request: { query: EDIT_ADJUSTMENT, variables: () => true }, error: new Error('Adjustment locked') },
     ];
     const spies = { onClose: vi.fn(), onSaved: vi.fn() };
     renderWithProviders(
@@ -128,7 +127,7 @@ describe('AdjustHealthDialog — editing an existing adjustment', () => {
 
   it('falls back to a generic message when the rejection carries no message', async () => {
     const mocks: MockedResponse[] = [
-      { request: { query: ADJUST_HEALTH }, variableMatcher: () => true, error: new Error('') },
+      { request: { query: ADJUST_HEALTH, variables: () => true }, error: new Error('') },
     ];
     renderWithProviders(
       <AdjustHealthDialog
@@ -164,11 +163,10 @@ describe('HealthScoreCard — deleting an adjustment through the real confirm di
     const onDeleteVars = vi.fn();
     const { onUpdated } = card([
       {
-        request: { query: DELETE_ADJUSTMENT },
-        variableMatcher: (variables) => {
+        request: { query: DELETE_ADJUSTMENT, variables: (variables) => {
           onDeleteVars(variables);
           return true;
-        },
+        } },
         result: { data: { deleteAdjustment: score({ adjustments: [adjustment({ id: 'adj-2', delta: 5 })], total_score: 70 }) } },
       },
     ]);

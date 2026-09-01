@@ -7,7 +7,7 @@ import type { AccountEditValues } from '@/forms/account-edit/account-edit.types'
 import { renderWithProviders } from '@/utils/test-utils';
 
 function Harness({ initial = '', unset = false }: Readonly<{ initial?: string; unset?: boolean }>) {
-  const { control } = useForm<AccountEditValues>({
+  const { control } = useForm<AccountEditValues, any, AccountEditValues>({
     defaultValues: (unset ? {} : { dob: initial }) as AccountEditValues,
   });
   return <DobDateField control={control} />;

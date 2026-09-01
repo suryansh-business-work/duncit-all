@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { buildSlotLabels } from '@duncit/slots';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -31,10 +31,10 @@ export default function PartnerPodsPage() {
   const fmt = useDateFormat();
   const { t } = useTranslation();
   const slotLabels = useMemo(() => buildSlotLabels(t, 'shell.slots'), [t]);
-  const { data, error } = useQuery(PARTNER_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
+  const { data, error } = useQuery<any>(PARTNER_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [createPod, createState] = useMutation(CREATE_PARTNER_POD);
+  const [createPod, createState] = useMutation<any>(CREATE_PARTNER_POD);
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [opError, setOpError] = useState<string | null>(null);

@@ -80,8 +80,7 @@ export const invoiceSettingsLoadingMock = (): MockedResponse => ({
 export const updateInvoiceSettingsMock = (
   over: { fail?: boolean; delay?: number } = {},
 ): MockedResponse => ({
-  request: { query: UPDATE_INVOICE_SETTINGS },
-  variableMatcher: () => true,
+  request: { query: UPDATE_INVOICE_SETTINGS, variables: () => true },
   ...(over.delay ? { delay: over.delay } : {}),
   ...(over.fail
     ? { error: new Error('save boom') }

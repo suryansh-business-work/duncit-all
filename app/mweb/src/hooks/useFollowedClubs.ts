@@ -1,4 +1,5 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useCallback, useMemo } from 'react';
 
 const FOLLOWED_CLUBS = gql`
@@ -40,11 +41,11 @@ export function useFollowedClubs() {
     fetchPolicy: 'cache-and-network',
   });
   const refetchQueries = [{ query: FOLLOWED_CLUBS }];
-  const [followClub, followState] = useMutation(FOLLOW_CLUB, {
+  const [followClub, followState] = useMutation<any>(FOLLOW_CLUB, {
     awaitRefetchQueries: true,
     refetchQueries,
   });
-  const [unfollowClub, unfollowState] = useMutation(UNFOLLOW_CLUB, {
+  const [unfollowClub, unfollowState] = useMutation<any>(UNFOLLOW_CLUB, {
     awaitRefetchQueries: true,
     refetchQueries,
   });

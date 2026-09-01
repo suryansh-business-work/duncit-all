@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { useNavigate, useParams } from 'react-router';
 import {
   Alert,
   Card,
@@ -38,14 +38,14 @@ export default function ProductOrderDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [shipmentOpen, setShipmentOpen] = useState(false);
 
-  const { data, loading } = useQuery(PRODUCT_ORDER, {
+  const { data, loading } = useQuery<any>(PRODUCT_ORDER, {
     variables: { id: orderId },
     fetchPolicy: 'cache-and-network',
   });
-  const [advance, advanceState] = useMutation(ADVANCE_PRODUCT_ORDER_STATUS);
-  const [setMethod, methodState] = useMutation(SET_PRODUCT_ORDER_FULFILMENT_METHOD);
-  const [createShipment, shipmentState] = useMutation(CREATE_PRODUCT_ORDER_SHIPMENT);
-  const [refreshTracking, trackingState] = useMutation(REFRESH_PRODUCT_ORDER_TRACKING);
+  const [advance, advanceState] = useMutation<any>(ADVANCE_PRODUCT_ORDER_STATUS);
+  const [setMethod, methodState] = useMutation<any>(SET_PRODUCT_ORDER_FULFILMENT_METHOD);
+  const [createShipment, shipmentState] = useMutation<any>(CREATE_PRODUCT_ORDER_SHIPMENT);
+  const [refreshTracking, trackingState] = useMutation<any>(REFRESH_PRODUCT_ORDER_TRACKING);
 
   const order = data?.productOrder;
   const busy =

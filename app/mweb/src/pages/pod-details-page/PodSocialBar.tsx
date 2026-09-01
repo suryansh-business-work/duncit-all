@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Stack } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -29,7 +29,7 @@ export default function PodSocialBar({
   const [likeCount, setLikeCount] = useState(initialLikeCount || 0);
   const [commentCount, setCommentCount] = useState(initialCommentCount || 0);
   const [commentsOpen, setCommentsOpen] = useState(false);
-  const [toggleLike] = useMutation(TOGGLE_POD_LIKE);
+  const [toggleLike] = useMutation<any>(TOGGLE_POD_LIKE);
 
   // Re-sync when the pod refetches so likes/comments made on the Explore feed
   // are reflected here too.

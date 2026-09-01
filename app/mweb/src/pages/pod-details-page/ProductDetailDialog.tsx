@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -120,9 +120,9 @@ export default function ProductDetailDialog({
   const [zoomIndex, setZoomIndex] = useState<number | null>(null);
   const [brandOpen, setBrandOpen] = useState<string | null>(null);
   const [variantId, setVariantId] = useState<string | null>(null);
-  const [recordView] = useMutation(RECORD_PRODUCT_VIEW);
-  const [recordClick] = useMutation(RECORD_PRODUCT_CLICK);
-  const { data, loading, error } = useQuery(PUBLIC_PRODUCT, {
+  const [recordView] = useMutation<any>(RECORD_PRODUCT_VIEW);
+  const [recordClick] = useMutation<any>(RECORD_PRODUCT_CLICK);
+  const { data, loading, error } = useQuery<any>(PUBLIC_PRODUCT, {
     variables: { id: productId },
     skip: !productId,
     fetchPolicy: 'cache-first',

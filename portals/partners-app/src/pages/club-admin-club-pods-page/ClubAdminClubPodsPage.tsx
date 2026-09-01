@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
+import { Link as RouterLink, useNavigate, useParams } from 'react-router';
 import { Alert, Card, CardContent, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
 import CreatePodLauncher from './CreatePodLauncher';
 import EditIcon from '@mui/icons-material/Edit';
@@ -22,10 +22,10 @@ export default function ClubAdminClubPodsPage() {
   const { t } = useTranslation();
   const { clubId = '' } = useParams();
   const navigate = useNavigate();
-  const lookups = useQuery(CLUB_ADMIN_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
+  const lookups = useQuery<any>(CLUB_ADMIN_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [deletePod, deleteState] = useMutation(CLUB_ADMIN_DELETE_POD);
+  const [deletePod, deleteState] = useMutation<any>(CLUB_ADMIN_DELETE_POD);
 
   // One bucket of the table's Status column, or '' for every status. Derived
   // from four fields server-side, so it is a query argument rather than one of

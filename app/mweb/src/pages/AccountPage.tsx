@@ -1,6 +1,7 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useUserData } from '@duncit/user-context';
 import {
   Alert,
@@ -77,7 +78,7 @@ export default function AccountPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { logout: ctxLogout } = useUserData();
-  const { data, loading, error, refetch } = useQuery(ME, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error, refetch } = useQuery<any>(ME, { fetchPolicy: 'cache-and-network' });
   const { data: healthData } = useQuery<{ myAccountHealth: HealthScore }>(MY_ACCOUNT_HEALTH, {
     fetchPolicy: 'cache-and-network',
   });

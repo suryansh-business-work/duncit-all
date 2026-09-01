@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { __setTableRows } from './table-mock';
 import type { CatalogBrandProductRow } from '../../src/pages/catalog-brands/queries';
@@ -15,13 +15,13 @@ const m = vi.hoisted(() => ({
   duplicate: vi.fn(),
 }));
 
-vi.mock('react-router-dom', async (io) => ({
-  ...(await io<typeof import('react-router-dom')>()),
+vi.mock('react-router', async (io) => ({
+  ...(await io<typeof import('react-router')>()),
   useNavigate: () => nav.fn,
 }));
 
-vi.mock('@apollo/client', async (io) => {
-  const actual = await io<typeof import('@apollo/client')>();
+vi.mock('@apollo/client/react', async (io) => {
+  const actual = await io<typeof import('@apollo/client/react')>();
   return {
     ...actual,
     useApolloClient: () => ({}),

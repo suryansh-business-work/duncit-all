@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useLazyQuery, useMutation } from '@apollo/client';
+import { useLazyQuery, useMutation } from '@apollo/client/react';
 import { notify } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
@@ -65,8 +65,8 @@ export function useMailAutomationRule(account: MailAutomationAccount, onSaved: (
     [t]
   );
 
-  const form = useForm<MailAutomationRuleValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<MailAutomationRuleValues, any, MailAutomationRuleValues>({
+    resolver: zodResolver(schema) as unknown as Resolver<MailAutomationRuleValues, any, MailAutomationRuleValues>,
     mode: 'onBlur',
     defaultValues: accountToValues(account),
   });
@@ -80,7 +80,7 @@ export function useMailAutomationRule(account: MailAutomationAccount, onSaved: (
     setStep(0);
   }, [account.id, reset]);
 
-  const [save, saving] = useMutation(UPDATE_MAIL_AUTOMATION_RULE, {
+  const [save, saving] = useMutation<any>(UPDATE_MAIL_AUTOMATION_RULE, {
     refetchQueries: [MAIL_AUTOMATION_ACCOUNTS],
   });
   const [runPreview, previewState] = useLazyQuery<{ mailAutomationPreview: ReplyPreview }>(

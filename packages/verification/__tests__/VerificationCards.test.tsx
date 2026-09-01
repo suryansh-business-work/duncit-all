@@ -2,7 +2,7 @@
  * The list is the piece each page used to own a copy of, and the copy is where
  * Email fell behind. These assert the routing, not the cards.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -45,7 +45,7 @@ const items: Verification[] = [
 describe('VerificationCards', () => {
   it('gives each type the card that can act on it', () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <VerificationCards items={items} onChanged={vi.fn()} onError={vi.fn()} />
       </MockedProvider>,
     );
@@ -60,7 +60,7 @@ describe('VerificationCards', () => {
 
   it('renders nothing for an empty roster', () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <VerificationCards items={[]} onChanged={vi.fn()} onError={vi.fn()} />
       </MockedProvider>,
     );

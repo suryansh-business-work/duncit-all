@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Controller, type Control } from 'react-hook-form';
 import { Autocomplete, CircularProgress, TextField } from '@mui/material';
 import { WA_USER_SEARCH, type WaUserOption } from '../queries';

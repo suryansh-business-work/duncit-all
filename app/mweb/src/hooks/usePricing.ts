@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 
 const PUBLIC_FINANCE = gql`
   query PublicFinanceSettingsForPricing {
@@ -29,7 +30,7 @@ export interface PricedAmount {
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 export function usePricing() {
-  const { data } = useQuery(PUBLIC_FINANCE, { fetchPolicy: 'cache-first' });
+  const { data } = useQuery<any>(PUBLIC_FINANCE, { fetchPolicy: 'cache-first' });
   const fs = data?.publicFinanceSettings;
   const feePct = fs?.platform_fee_pct ?? 0;
   const gstPct = fs?.gst_pct ?? 0;

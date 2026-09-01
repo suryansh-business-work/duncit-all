@@ -1,4 +1,4 @@
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Grid, InputAdornment, MenuItem, Stack, TextField, Tooltip } from '@mui/material';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import { DuncitButton } from '@duncit/buttons';
@@ -17,7 +17,7 @@ interface AdvancedSettingsSectionProps {
 export default function AdvancedSettingsSection({ onError }: Readonly<AdvancedSettingsSectionProps>) {
   const { t } = useTranslation();
   const { control, setValue } = useFormContext<InventoryProductFormValues>();
-  const [generateSku, { loading: generating }] = useMutation(GENERATE_INVENTORY_SKU);
+  const [generateSku, { loading: generating }] = useMutation<any>(GENERATE_INVENTORY_SKU);
   const sku = useWatch({ control, name: 'sku' });
   const barcode = useWatch({ control, name: 'barcode' });
 

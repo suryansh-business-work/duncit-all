@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useMutation, useQuery, type ApolloCache } from '@apollo/client';
+import { type ApolloCache } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -32,7 +33,7 @@ interface Props {
  * outright — one shape in, one shape out, and no refetch round trip after a
  * connect that already took several seconds.
  */
-const writeSettings = (cache: ApolloCache<unknown>, settings?: CloneSettings) => {
+const writeSettings = (cache: ApolloCache, settings?: CloneSettings) => {
   if (!settings) return;
   cache.writeQuery({ query: DATA_CLONE_SETTINGS, data: { dataCloneSettings: settings } });
 };

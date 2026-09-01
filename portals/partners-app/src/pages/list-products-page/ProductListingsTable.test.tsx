@@ -1,7 +1,8 @@
 import '../../../__tests__/helpers/agGridEnv';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { gql } from '@apollo/client';
@@ -92,7 +93,7 @@ interface Handlers {
 const renderTable = (mocks: MockedResponse[], handlers: Handlers = {}) => {
   const { onEdit = vi.fn(), canManageProducts = true, ...rest } = handlers;
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <ProductListingsTable
           brandId="b1"
@@ -157,10 +158,12 @@ const adSubmitMock = (
   traceId: string,
   capture: (input: Record<string, unknown>) => void,
 ): MockedResponse => ({
-  request: { query: SUBMIT_AD_REQUEST },
-  variableMatcher: (variables) => {
-    capture((variables as { input: Record<string, unknown> }).input);
-    return true;
+  request: {
+    query: SUBMIT_AD_REQUEST,
+    variables: (variables) => {
+      capture((variables as { input: Record<string, unknown> }).input);
+      return true;
+    },
   },
   result: {
     data: { submitAdRequest: { __typename: 'AdRequest', id: 'ad-1', trace_id: traceId } },

@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { LocaleProvider, PUBLIC_LOCALES, PUBLIC_TRANSLATIONS } from '@duncit/app-settings';
 import { describe, expect, it } from 'vitest';
 import LanguageSection from '../LanguageSection';
@@ -26,7 +27,7 @@ const catalogueMock = (locale: string, entries: { key: string; value: string }[]
 
 function renderSection(mocks: MockedResponse[]) {
   return render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <LocaleProvider fallback={MWEB_FALLBACK_FLAT} userLocale="en-IN">
         <LanguageSection />
       </LocaleProvider>

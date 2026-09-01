@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Box, Paper, Stack, Typography } from '@mui/material';
 import ForumIcon from '@mui/icons-material/Forum';
 import SensorsIcon from '@mui/icons-material/Sensors';

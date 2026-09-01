@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import { notify } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
 

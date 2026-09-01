@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, Card, CardContent, Stack, Tooltip, Typography } from '@mui/material';
 import InsightsIcon from '@mui/icons-material/Insights';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -70,7 +70,7 @@ export default function HostInsights({ pods, currency }: Readonly<Props>) {
   const [range, setRange] = useState<HostChartRange>(DEFAULT_HOST_CHART_RANGE);
   const [filterOpen, setFilterOpen] = useState(false);
   const now = useMemo(() => new Date().toISOString(), []);
-  const { data } = useQuery(HOST_INSIGHTS, {
+  const { data } = useQuery<any>(HOST_INSIGHTS, {
     variables: { from: ALL_TIME_FROM, to: now, months: 12 },
     fetchPolicy: 'cache-and-network',
   });

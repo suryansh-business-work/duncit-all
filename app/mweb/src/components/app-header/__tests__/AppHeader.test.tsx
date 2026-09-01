@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { MockedProvider } from '@apollo/client/testing';
+import { MemoryRouter } from 'react-router';
+import { MockedProvider } from '@apollo/client/testing/react';
 import AppHeader from '../AppHeader';
 import { PUBLIC_FEATURE_FLAGS } from '@duncit/app-settings';
 import { CartProvider, type CartLine } from '../../cart/CartContext';
@@ -25,8 +25,8 @@ vi.mock('../../../StudioModeContext', () => ({
 }));
 
 const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+vi.mock('react-router', async () => {
+  const actual = await vi.importActual<typeof import('react-router')>('react-router');
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
@@ -189,7 +189,7 @@ function seedCart(quantity: number) {
 function renderHeader(props: Partial<typeof baseProps> & { minimal?: boolean } = {}, mocks: any[] = [headerMock(), policiesMock, flagsMock(true)]) {
   const merged = { ...baseProps, onSuperCategoryChange: vi.fn(), onLocationChange: vi.fn(), onZoneChange: vi.fn(), ...props };
   const utils = render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter initialEntries={['/']}>
         <CartProvider>
           <AppHeader {...merged} />

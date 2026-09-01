@@ -1,5 +1,6 @@
-import { Link as RouterLink } from 'react-router-dom';
-import { gql, useQuery } from '@apollo/client';
+import { Link as RouterLink } from 'react-router';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AddIcon from '@mui/icons-material/Add';
@@ -61,10 +62,10 @@ const ME_QUERY = gql`
 /** Your Pods — the host's hosted-pods list + drafts (the dashboard overview now
  * lives on its own page). B2-#5. */
 export default function HostManagePage() {
-  const meQ = useQuery(ME_QUERY, { fetchPolicy: 'cache-and-network' });
+  const meQ = useQuery<any>(ME_QUERY, { fetchPolicy: 'cache-and-network' });
   const userId = meQ.data?.me?.user_id;
   const isHost = (meQ.data?.me?.roles ?? []).includes('HOST');
-  const { data, loading, error, refetch } = useQuery(HOST_PODS, {
+  const { data, loading, error, refetch } = useQuery<any>(HOST_PODS, {
     skip: !userId,
     fetchPolicy: 'cache-and-network',
   });

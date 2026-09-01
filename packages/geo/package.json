@@ -17,9 +17,9 @@
     "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/geo"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^2.1.9",
+    "@vitest/coverage-v8": "^4.1.11",
     "country-region-data": "^4.1.0",
-    "typescript": "^5.9.3",
-    "vitest": "^2.1.9"
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
   }
 }

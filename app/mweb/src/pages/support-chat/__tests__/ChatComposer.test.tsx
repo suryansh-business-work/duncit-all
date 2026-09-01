@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 // The caps are Admin > Upload Settings; pin a row so the assertions are about
 // the admin's numbers reaching the field, per kind.
@@ -18,8 +19,7 @@ import ChatComposer from '../ChatComposer';
 import { GET_IMAGEKIT_AUTH } from '../../../utils/imagekit';
 
 const authMock: MockedResponse = {
-  request: { query: GET_IMAGEKIT_AUTH },
-  variableMatcher: () => true,
+  request: { query: GET_IMAGEKIT_AUTH, variables: () => true },
   result: {
     data: {
       getImagekitAuth: {
@@ -48,7 +48,7 @@ const fileInput = () => document.querySelector('input[type="file"]') as HTMLInpu
 function setup(mocks: MockedResponse[] = []) {
   const onSend = vi.fn();
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ChatComposer onSend={onSend} onTyping={vi.fn()} />
     </MockedProvider>,
   );

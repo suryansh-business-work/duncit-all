@@ -16,13 +16,13 @@ const store = vi.hoisted(() => ({
   ready: true,
   saving: false,
   loadFailed: false,
-  save: vi.fn<[items: readonly DashboardLayoutItem[]], Promise<void>>(),
-  reset: vi.fn<[], Promise<void>>(),
+  save: vi.fn<(items: readonly DashboardLayoutItem[]) => Promise<void>>(),
+  reset: vi.fn<() => Promise<void>>(),
 }));
 
 const grid = vi.hoisted(() => ({
-  read: vi.fn<[], DashboardLayoutItem[]>(),
-  apply: vi.fn<[items: readonly DashboardLayoutItem[]], void>(),
+  read: vi.fn<() => DashboardLayoutItem[]>(),
+  apply: vi.fn<(items: readonly DashboardLayoutItem[]) => void>(),
 }));
 
 const gridOptions = vi.hoisted(() => ({ current: null as UseGridStackOptions | null }));

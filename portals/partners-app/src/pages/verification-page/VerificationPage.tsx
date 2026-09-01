@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import {
@@ -19,7 +19,7 @@ import type { Verification } from '@duncit/verification';
  */
 export default function VerificationPage() {
   const { t } = useTranslation();
-  const { data, loading, error, refetch } = useQuery(MY_VERIFICATIONS, {
+  const { data, loading, error, refetch } = useQuery<any>(MY_VERIFICATIONS, {
     fetchPolicy: 'cache-and-network',
   });
   const [snack, setSnack] = useState<string | null>(null);

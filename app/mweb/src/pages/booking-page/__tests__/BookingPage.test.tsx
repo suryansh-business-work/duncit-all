@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import { MockedProvider } from '@apollo/client/testing';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { GraphQLError } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import BookingPage from '..';
@@ -29,7 +29,7 @@ function LocationProbe() {
 
 const renderPage = (mocks: unknown[]) =>
   render(
-    <MockedProvider mocks={mocks as never} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <MemoryRouter initialEntries={['/booking/booking-1']}>
         <Routes>
           <Route path="/booking/:bookingId" element={<BookingPage />} />

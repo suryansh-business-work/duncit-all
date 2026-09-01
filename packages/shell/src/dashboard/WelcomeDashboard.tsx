@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { parseApiError } from '@duncit/utils';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
@@ -98,7 +99,7 @@ export function WelcomeDashboard({
   children,
 }: WelcomeDashboardProps) {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(DASHBOARD_ME, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery<any>(DASHBOARD_ME, { fetchPolicy: 'cache-and-network' });
   const me = data?.me;
 
   if (loading && !me) {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { tableQueryToGql, type TableQueryState } from '@duncit/table';
@@ -26,7 +26,7 @@ export default function PaymentLogsPage() {
   // the table shows.
   const [totalsFilter, setTotalsFilter] = useState<Record<string, string> | undefined>(undefined);
   const totalsKeyRef = useRef('null');
-  const { data, refetch } = useQuery(PAYMENT_TOTALS, {
+  const { data, refetch } = useQuery<any>(PAYMENT_TOTALS, {
     variables: { filter: totalsFilter },
     fetchPolicy: 'cache-and-network',
     pollInterval: POLL_MS,
@@ -42,7 +42,7 @@ export default function PaymentLogsPage() {
         totalsKeyRef.current = key;
         setTotalsFilter(filter);
       }
-      const { data: page } = await client.query({
+      const { data: page } = await client.query<any>({
         query: PAYMENTS_TABLE,
         variables: tableQueryToGql(q),
         fetchPolicy: 'network-only',
@@ -67,7 +67,7 @@ export default function PaymentLogsPage() {
     [navigate],
   );
 
-  const [refundMut, { loading: refundLoading }] = useMutation(REFUND_PAYMENT);
+  const [refundMut, { loading: refundLoading }] = useMutation<any>(REFUND_PAYMENT);
   const [refundFor, setRefundFor] = useState<PaymentRow | null>(null);
   const [refundReason, setRefundReason] = useState('');
   const [actionError, setActionError] = useState<string | null>(null);
@@ -80,7 +80,7 @@ export default function PaymentLogsPage() {
       setActionError(null);
       setDownloadingId(p.id);
       try {
-        const { data: pdfData } = await client.query({
+        const { data: pdfData } = await client.query<any>({
           query: INVOICE_PDF,
           variables: { id: p.id },
           fetchPolicy: 'network-only',

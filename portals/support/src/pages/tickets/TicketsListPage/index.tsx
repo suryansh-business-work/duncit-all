@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useApolloClient } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { MenuItem, Stack, TextField } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -35,8 +35,12 @@ export default function TicketsListPage() {
         query: TICKETS,
         variables: supportListVars(q),
         fetchPolicy: 'network-only',
+        // A failed query rejects, so a resolved one always carries data.
+        // Apollo v4 types it as optional anyway, and an empty page is the
+        // honest reading of the case the type insists on.
+        errorPolicy: 'none',
       });
-      return { rows: data.tickets.items, total: data.tickets.total };
+      return { rows: data?.tickets.items ?? [], total: data?.tickets.total ?? 0 };
     },
     [client]
   );

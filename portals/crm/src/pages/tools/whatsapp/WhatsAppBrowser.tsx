@@ -1,7 +1,7 @@
 import {
   useEffect,
   useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useDebouncedValue } from '@duncit/ui';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import {
@@ -72,7 +72,7 @@ export default function WhatsAppBrowser() {
     page_size: pageSize,
     ...(tab === 'groups' && community ? { community_jid: community.jid } : {}),
   };
-  const { data, loading, refetch } = useQuery(tabConfig(t)[tab].query, {
+  const { data, loading, refetch } = useQuery<any>(tabConfig(t)[tab].query, {
     variables: { input },
     fetchPolicy: 'cache-and-network',
   });

@@ -145,7 +145,6 @@ const PAGES: PageEntry[] = [
   ['/register', '/register', () => import('../pages/RegisterPage')],
   ['/login', '/login', () => import('../pages/LoginPage')],
   ['/forgot-password', '/forgot-password', () => import('../pages/ForgotPasswordPage')],
-  ['/reset-password', '/reset-password', () => import('../pages/ResetPasswordPage')],
   ['*', '/no-such-page', () => import('../pages/NotFoundPage')],
 ];
 

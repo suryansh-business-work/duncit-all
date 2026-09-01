@@ -1,5 +1,5 @@
 import { cloneElement, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { ActivityCalendar } from 'react-activity-calendar';
 import {
   Alert,
@@ -59,13 +59,13 @@ export default function UserActivitySection({ userId }: Readonly<Props>) {
   const [year, setYear] = useState(new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState('');
   const [journeyDate, setJourneyDate] = useState('');
-  const { data, loading, error, refetch } = useQuery(USER_ACTIVITY_YEAR, {
+  const { data, loading, error, refetch } = useQuery<any>(USER_ACTIVITY_YEAR, {
     variables: { user_id: userId, year },
     skip: !userId,
     fetchPolicy: 'cache-and-network',
   });
-  const [deleteDay] = useMutation(DELETE_USER_ACTIVITY_DAY);
-  const [deleteYear] = useMutation(DELETE_USER_ACTIVITY_YEAR);
+  const [deleteDay] = useMutation<any>(DELETE_USER_ACTIVITY_DAY);
+  const [deleteYear] = useMutation<any>(DELETE_USER_ACTIVITY_YEAR);
   const confirm = useConfirm();
 
   const activity = data?.userActivityYear;

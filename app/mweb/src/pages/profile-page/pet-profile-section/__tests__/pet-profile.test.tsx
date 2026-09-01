@@ -16,10 +16,11 @@
  * The breed list follows the species. Offering cat breeds under Dog is how a
  * dropdown stops being help and becomes noise.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import PetForm from '../PetForm';
@@ -40,8 +41,7 @@ const PET: PetProfile = {
 };
 
 const saved: MockedResponse = {
-  request: { query: UPDATE_PET },
-  variableMatcher: () => true,
+  request: { query: UPDATE_PET, variables: () => true },
   result: {
     data: { updateMyPetProfile: { user_id: 'u-1', pet_profile: { ...PET } } },
   },
@@ -58,7 +58,7 @@ const settle = async () => {
 
 const wrap = (ui: React.ReactNode, mocks: MockedResponse[] = [saved]) =>
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter>{ui}</MemoryRouter>
       </ThemeProvider>

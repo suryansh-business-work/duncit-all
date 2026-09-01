@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { describe, expect, it } from 'vitest';
 import type { ReactNode } from 'react';
 import { SEARCH_DISCOVERY, SEARCH_CATEGORIES } from '../queries';
@@ -42,7 +42,7 @@ function categoriesMock(categories: any[]) {
 
 function wrapperWith(mocks: any[]) {
   return ({ children }: { children: ReactNode }) => (
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       {children}
     </MockedProvider>
   );

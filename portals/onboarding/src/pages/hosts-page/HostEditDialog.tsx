@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   CircularProgress,
@@ -13,7 +13,7 @@ import {
   TextField,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { Controller, FormProvider, useForm } from 'react-hook-form';
+import { Controller, FormProvider, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import HostAccordionForm from '../../components/host-form/HostAccordionForm';
 import HostCategoriesSection from '../../components/host-form/HostCategoriesSection';
@@ -35,10 +35,10 @@ interface Props {
 export default function HostEditDialog({ host, onClose, onSaved }: Readonly<Props>) {
   const { t } = useTranslation();
   const [error, setError] = useState('');
-  const [updateHost, state] = useMutation(UPDATE_HOST);
+  const [updateHost, state] = useMutation<any>(UPDATE_HOST);
 
-  const methods = useForm<HostEditValues>({
-    resolver: zodResolver(hostEditSchema),
+  const methods = useForm<HostEditValues, any, HostEditValues>({
+    resolver: zodResolver(hostEditSchema) as unknown as Resolver<HostEditValues, any, HostEditValues>,
     mode: 'onChange',
     defaultValues: hostEditInitialValues(host),
   });

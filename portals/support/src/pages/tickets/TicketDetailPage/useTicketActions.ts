@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import {
   EMAIL_TICKET_TRANSCRIPT,
   REOPEN_TICKET,
@@ -19,11 +19,11 @@ import { saveTranscript } from '../../../lib/downloadTranscript';
 export function useTicketActions(ticketId: string | undefined, onChanged: () => void) {
   const client = useApolloClient();
   const [notice, setNotice] = useState('');
-  const [resolveTicket] = useMutation(RESOLVE_TICKET, { onCompleted: onChanged });
-  const [reopenTicket] = useMutation(REOPEN_TICKET, { onCompleted: onChanged });
-  const [updateStatus] = useMutation(UPDATE_TICKET_STATUS, { onCompleted: onChanged });
-  const [updatePriority] = useMutation(UPDATE_TICKET_PRIORITY, { onCompleted: onChanged });
-  const [emailTicket] = useMutation(EMAIL_TICKET_TRANSCRIPT);
+  const [resolveTicket] = useMutation<any>(RESOLVE_TICKET, { onCompleted: onChanged });
+  const [reopenTicket] = useMutation<any>(REOPEN_TICKET, { onCompleted: onChanged });
+  const [updateStatus] = useMutation<any>(UPDATE_TICKET_STATUS, { onCompleted: onChanged });
+  const [updatePriority] = useMutation<any>(UPDATE_TICKET_PRIORITY, { onCompleted: onChanged });
+  const [emailTicket] = useMutation<any>(EMAIL_TICKET_TRANSCRIPT);
 
   const resolve = () =>
     resolveTicket({ variables: { ticket_id: ticketId } }).catch((e: Error) => setNotice(e.message));

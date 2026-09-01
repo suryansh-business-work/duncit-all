@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Avatar,
@@ -36,13 +36,13 @@ interface DetailsProps {
 
 export default function DetailsDialog({ id, onClose, onChanged }: Readonly<DetailsProps>) {
   const { t } = useTranslation();
-  const { data, loading, refetch } = useQuery(POD_IDEA_DETAILS, {
+  const { data, loading, refetch } = useQuery<any>(POD_IDEA_DETAILS, {
     variables: { id },
     fetchPolicy: 'cache-and-network',
   });
   const idea = data?.podIdea;
-  const [setStatusMut] = useMutation(SET_STATUS);
-  const [deleteCommentMut, { loading: deletingComment }] = useMutation(DELETE_COMMENT);
+  const [setStatusMut] = useMutation<any>(SET_STATUS);
+  const [deleteCommentMut, { loading: deletingComment }] = useMutation<any>(DELETE_COMMENT);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const handleDeleteComment = async () => {

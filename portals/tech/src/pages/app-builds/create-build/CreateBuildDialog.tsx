@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   CircularProgress,
@@ -44,7 +44,7 @@ export default function CreateBuildDialog({ open, platform, onClose, onQueued }:
     APP_BUILD_TRIGGER_CONFIG,
     { skip: !open, fetchPolicy: 'cache-and-network' }
   );
-  const [triggerBuild] = useMutation(TRIGGER_APP_BUILD);
+  const [triggerBuild] = useMutation<any>(TRIGGER_APP_BUILD);
   const config = data?.appBuildTriggerConfig ?? null;
 
   const submit = async (values: CreateBuildValues) => {

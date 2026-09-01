@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { useApolloClient } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useApolloClient } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';

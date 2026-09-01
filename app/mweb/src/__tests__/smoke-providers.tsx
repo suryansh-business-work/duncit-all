@@ -20,9 +20,9 @@
  */
 import type { ReactNode } from 'react';
 import type { ApolloLink } from '@apollo/client';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { DuncitLocalizationProvider } from '@duncit/app-settings';
 import { CartProvider } from '../components/cart/CartContext';
 import { TourProvider } from '../tours/TourContext';
@@ -51,9 +51,9 @@ export function SmokeProviders({ children, link }: Readonly<SmokeProvidersProps>
   );
 
   if (link) {
-    return <MockedProvider link={link}>{inner}</MockedProvider>;
+    return <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={link}>{inner}</MockedProvider>;
   }
-  return <MockedProvider mocks={[]}>{inner}</MockedProvider>;
+  return <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>{inner}</MockedProvider>;
 }
 
 export interface SmokeRouteProps {

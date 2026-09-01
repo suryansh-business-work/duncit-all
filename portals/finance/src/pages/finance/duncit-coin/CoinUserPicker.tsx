@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLazyQuery } from '@apollo/client';
+import { useLazyQuery } from '@apollo/client/react';
 import { Autocomplete, Box, TextField, Typography } from '@mui/material';
 import { COIN_USER_SEARCH, USER_SEARCH_MIN_CHARS, type CoinUserOption } from './queries';
 import { useTranslation } from '@duncit/app-settings';

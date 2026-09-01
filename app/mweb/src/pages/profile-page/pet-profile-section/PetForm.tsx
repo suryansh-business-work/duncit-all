@@ -1,6 +1,7 @@
 import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Alert, Autocomplete, Grid, Stack, TextField } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { PET_SPECIES_OPTIONS, breedsForSpecies } from '../../../utils/petBreeds';
@@ -18,9 +19,9 @@ const AGE_OPTIONS = Array.from({ length: 31 }, (_, i) => String(i));
 
 export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProps>) {
   const { t } = useTranslation();
-  const [updateMut, { loading, error }] = useMutation(UPDATE_PET);
+  const [updateMut, { loading, error }] = useMutation<any>(UPDATE_PET);
 
-  const { control, handleSubmit, watch, setValue, formState } = useForm<PetFormValues>({
+  const { control, handleSubmit, watch, setValue, formState } = useForm<z.input<typeof petSchema>, any, PetFormValues>({
     resolver: zodResolver(petSchema),
     defaultValues: {
       name: pet?.name ?? '',

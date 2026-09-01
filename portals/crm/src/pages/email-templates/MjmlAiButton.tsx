@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   CircularProgress,
@@ -28,7 +28,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [prompt, setPrompt] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [run, { loading }] = useMutation(AI_MJML);
+  const [run, { loading }] = useMutation<any>(AI_MJML);
   const open = Boolean(anchorEl);
 
   const generate = async () => {

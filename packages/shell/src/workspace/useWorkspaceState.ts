@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { createLogger } from '@duncit/logs';
 import type { DockEdge } from './context';
 import {
@@ -65,7 +65,7 @@ export function useWorkspaceState(enabled: boolean) {
     SHELL_WORKSPACE_STATE,
     { fetchPolicy: 'cache-and-network', skip: !enabled }
   );
-  const [save] = useMutation(SAVE_SHELL_WORKSPACE_STATE);
+  const [save] = useMutation<any>(SAVE_SHELL_WORKSPACE_STATE);
   const [state, setState] = useState<WorkspaceState>(DEFAULT_WORKSPACE);
 
   /*

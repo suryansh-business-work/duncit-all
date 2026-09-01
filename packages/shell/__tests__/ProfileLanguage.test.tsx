@@ -2,7 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-vi.mock('@apollo/client', () => ({ useMutation: vi.fn(), gql: (s: TemplateStringsArray) => s }));
+vi.mock('@apollo/client', () => ({
+  gql: (s: TemplateStringsArray) => s,
+}));
+vi.mock('@apollo/client/react', () => ({
+  useMutation: vi.fn(),
+}));
 
 const ENGLISH = { code: 'en-IN', label: 'English', english_label: 'English' };
 const HINDI = { code: 'hi-IN', label: 'हिन्दी', english_label: 'Hindi' };
@@ -26,7 +31,7 @@ vi.mock('../src/i18n/useTranslation', async () => {
   };
 });
 
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { ProfileLanguage } from '../src/chrome/ProfileLanguage';
 
 const mockMutation = vi.mocked(useMutation);
@@ -40,7 +45,10 @@ beforeEach(() => {
 const pickHindi = async () => {
   const u = userEvent.setup();
   await u.click(screen.getByRole('combobox', { name: 'Language' }));
-  await u.click(screen.getByRole('option', { name: 'हिन्दी · Hindi' }));
+  // `findByRole` — the menu opens a render after the click that opened it, so a
+  // synchronous read is a race that only shows up under load (see the same fix in
+  // @duncit/pod-form's category cascade).
+  await u.click(await screen.findByRole('option', { name: 'हिन्दी · Hindi' }));
 };
 
 describe('ProfileLanguage', () => {

@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { MenuItem, TextField } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
 
@@ -33,7 +34,7 @@ interface Props {
  */
 export default function SuperCategoryFilter({ value, onChange }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { data } = useQuery(SUPER_CATEGORIES);
+  const { data } = useQuery<any>(SUPER_CATEGORIES);
   const options = (data?.categories ?? []) as SuperCategoryOption[];
 
   return (

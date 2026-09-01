@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/app-settings';

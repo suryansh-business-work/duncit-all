@@ -1,4 +1,5 @@
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Dialog,
   DialogActions,
@@ -63,8 +64,8 @@ export default function EditAccountDialog({
   onSaved,
 }: Readonly<EditAccountDialogProps>) {
   const { t } = useTranslation();
-  const [updateProfile, { loading, error }] = useMutation(UPDATE_PROFILE);
-  const [setUsername, { loading: renaming, error: renameError }] = useMutation(SET_MY_USERNAME);
+  const [updateProfile, { loading, error }] = useMutation<any>(UPDATE_PROFILE);
+  const [setUsername, { loading: renaming, error: renameError }] = useMutation<any>(SET_MY_USERNAME);
   const guard = useUnsavedGuard(onClose);
   // A refused rename is reported in the app's own words: the server's sentence
   // is English-only, and the only thing the reader can act on is "pick another".

@@ -85,11 +85,11 @@ describe('HomeFeed', () => {
     fireEvent.press(screen.getByTestId('club-section-cl-1'));
     expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubSlug: 'cl-1' });
 
-    fireEvent.press(screen.getAllByTestId('pod-card-pod-1')[0]);
+    fireEvent.press(screen.getAllByTestId('pod-card-pod-1')[0]!);
     expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { clubSlug: 's', podSlug: 'pod-1' });
 
     // The club-section pod row uses its own onOpenPod handler.
-    fireEvent.press(screen.getAllByTestId('pod-card-pod-1')[1]);
+    fireEvent.press(screen.getAllByTestId('pod-card-pod-1')[1]!);
     expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { clubSlug: 's', podSlug: 'pod-1' });
   });
 

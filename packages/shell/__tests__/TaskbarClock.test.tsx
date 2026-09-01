@@ -2,7 +2,7 @@
  * The clock at the right end of the taskbar: two lines, and clicking it opens
  * the tray where the zone, seconds and language are set.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { fireEvent, render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
@@ -12,7 +12,7 @@ describe('TaskbarClock', () => {
   it("follows the device zone and seconds-off default outside a workspace", () => {
     expect(() =>
       render(
-        <MockedProvider mocks={[]}>
+        <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
           <TaskbarClock />
         </MockedProvider>,
       ),
@@ -21,7 +21,7 @@ describe('TaskbarClock', () => {
 
   it('opens the tray on click, and closes it again from outside', async () => {
     const { getByLabelText } = render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <TaskbarClock />
       </MockedProvider>,
     );

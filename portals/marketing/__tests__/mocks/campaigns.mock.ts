@@ -55,8 +55,7 @@ export const campaignDetailMock = (
   over: Partial<MarketingCampaignDetail> = {},
   opts: { pending?: boolean; failWith?: string } = {},
 ): MockedResponse => ({
-  request: { query: MARKETING_CAMPAIGN },
-  variableMatcher: () => true,
+  request: { query: MARKETING_CAMPAIGN, variables: () => true },
   ...(opts.failWith
     ? { result: { errors: [{ message: opts.failWith }] } }
     : {
@@ -86,8 +85,7 @@ export const campaignDetailMock = (
 });
 
 export const deleteCampaignMock = (opts: { failWith?: string } = {}): MockedResponse => ({
-  request: { query: DELETE_MARKETING_CAMPAIGN },
-  variableMatcher: () => true,
+  request: { query: DELETE_MARKETING_CAMPAIGN, variables: () => true },
   ...(opts.failWith
     ? { result: { errors: [{ message: opts.failWith }] } }
     : { result: { data: { deleteMarketingCampaign: true } } }),
@@ -118,8 +116,7 @@ export const makeRender = (over: Partial<MarketingCampaignRender> = {}): Marketi
 });
 
 export const renderCampaignMock = (over: Partial<MarketingCampaignRender> = {}): MockedResponse => ({
-  request: { query: RENDER_MARKETING_CAMPAIGN },
-  variableMatcher: () => true,
+  request: { query: RENDER_MARKETING_CAMPAIGN, variables: () => true },
   result: { data: { renderMarketingCampaign: makeRender(over) } },
   maxUsageCount: 20,
 });
@@ -142,21 +139,18 @@ export const createCampaignMock = (
 ): MockedResponse => {
   if (over.throwEmpty) {
     return {
-      request: { query: CREATE_MARKETING_CAMPAIGN },
-      variableMatcher: () => true,
+      request: { query: CREATE_MARKETING_CAMPAIGN, variables: () => true },
       result: { errors: [{ message: '' }] },
     };
   }
   if (over.throwMessage) {
     return {
-      request: { query: CREATE_MARKETING_CAMPAIGN },
-      variableMatcher: () => true,
+      request: { query: CREATE_MARKETING_CAMPAIGN, variables: () => true },
       result: { errors: [{ message: over.throwMessage }] },
     };
   }
   return {
-    request: { query: CREATE_MARKETING_CAMPAIGN },
-    variableMatcher: () => true,
+    request: { query: CREATE_MARKETING_CAMPAIGN, variables: () => true },
     result: { data: { createMarketingCampaign: makeCampaignResult(over.serverError ?? null) } },
   };
 };
@@ -166,21 +160,18 @@ export const sendCampaignMock = (
 ): MockedResponse => {
   if (over.throwEmpty) {
     return {
-      request: { query: SEND_MARKETING_CAMPAIGN },
-      variableMatcher: () => true,
+      request: { query: SEND_MARKETING_CAMPAIGN, variables: () => true },
       result: { errors: [{ message: '' }] },
     };
   }
   if (over.throwMessage) {
     return {
-      request: { query: SEND_MARKETING_CAMPAIGN },
-      variableMatcher: () => true,
+      request: { query: SEND_MARKETING_CAMPAIGN, variables: () => true },
       result: { errors: [{ message: over.throwMessage }] },
     };
   }
   return {
-    request: { query: SEND_MARKETING_CAMPAIGN },
-    variableMatcher: () => true,
+    request: { query: SEND_MARKETING_CAMPAIGN, variables: () => true },
     result: { data: { sendMarketingCampaign: makeCampaignResult(over.serverError ?? null) } },
   };
 };

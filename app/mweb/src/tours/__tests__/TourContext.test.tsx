@@ -1,4 +1,4 @@
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
@@ -20,7 +20,7 @@ function makeStore(seed: Record<string, string> = {}) {
 const wrapper =
   (store: ReturnType<typeof makeStore>, userId = 'u1') =>
   ({ children }: { children: ReactNode }) => (
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <TourProvider userId={userId} storage={store}>
         {children}
       </TourProvider>

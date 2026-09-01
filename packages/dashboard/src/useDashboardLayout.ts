@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   MY_DASHBOARD_LAYOUT,
   RESET_DASHBOARD_LAYOUT,
@@ -55,8 +55,8 @@ export function useDashboardLayout(dashboardId: string): DashboardLayoutState {
     { variables: { dashboard_id: dashboardId }, fetchPolicy: 'cache-and-network' }
   );
 
-  const [runSave, saveState] = useMutation(SAVE_DASHBOARD_LAYOUT);
-  const [runReset, resetState] = useMutation(RESET_DASHBOARD_LAYOUT);
+  const [runSave, saveState] = useMutation<any>(SAVE_DASHBOARD_LAYOUT);
+  const [runReset, resetState] = useMutation<any>(RESET_DASHBOARD_LAYOUT);
 
   // Memoised because callers key effects off this array's identity: rebuilding
   // it on every render would re-run the grid's layout pass on every render.

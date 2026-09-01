@@ -42,8 +42,7 @@ export const contactSubmissionsTableMock = (
 export const contactSubmissionsListMock = (
   rows: ContactSubmissionMock[] = [],
 ): MockedResponse => ({
-  request: { query: CONTACT_SUBMISSIONS },
-  variableMatcher: () => true,
+  request: { query: CONTACT_SUBMISSIONS, variables: () => true },
   maxUsageCount: Number.POSITIVE_INFINITY,
   result: { data: { contactSubmissions: rows } },
 });

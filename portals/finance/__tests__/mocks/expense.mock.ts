@@ -13,7 +13,7 @@ import {
 /**
  * Expense-management mocks. Table rows are fetched imperatively
  * (`client.query(EXPENSES_TABLE)`); the summary chips come from
- * `useQuery(EXPENSE_SUMMARY)`; create/update/delete/refund flow through the
+ * `useQuery<any>(EXPENSE_SUMMARY)`; create/update/delete/refund flow through the
  * five expense mutations. Rows are a schema-synced `Pick` of `Expense`.
  */
 export type ExpenseRefundMock = { __typename?: 'ExpenseRefund' } & Pick<
@@ -113,22 +113,19 @@ export const expenseSummaryMock = (
   summary: SummaryMock | null = makeExpenseSummary(),
   maxUsageCount = 50,
 ): MockedResponse => ({
-  request: { query: EXPENSE_SUMMARY },
-  variableMatcher: () => true,
+  request: { query: EXPENSE_SUMMARY, variables: () => true },
   result: { data: { expenseSummary: summary } },
   maxUsageCount,
 });
 
 export const expenseSummaryErrorMock = (): MockedResponse => ({
-  request: { query: EXPENSE_SUMMARY },
-  variableMatcher: () => true,
+  request: { query: EXPENSE_SUMMARY, variables: () => true },
   error: new Error('summary refresh failed'),
   maxUsageCount: 50,
 });
 
 export const expensesTableMock = (rows: ExpenseMock[]): MockedResponse => ({
-  request: { query: EXPENSES_TABLE },
-  variableMatcher: () => true,
+  request: { query: EXPENSES_TABLE, variables: () => true },
   result: { data: { expensesTable: { __typename: 'ExpenseTablePage', rows, total: rows.length } } },
   maxUsageCount: 50,
 });
@@ -136,8 +133,7 @@ export const expensesTableMock = (rows: ExpenseMock[]): MockedResponse => ({
 /* ---- Mutations ---- */
 
 export const createExpenseMock = (over: { fail?: boolean; delay?: number } = {}): MockedResponse => ({
-  request: { query: CREATE_EXPENSE },
-  variableMatcher: () => true,
+  request: { query: CREATE_EXPENSE, variables: () => true },
   ...(over.delay ? { delay: over.delay } : {}),
   ...(over.fail
     ? { error: new Error('create failed') }
@@ -146,22 +142,19 @@ export const createExpenseMock = (over: { fail?: boolean; delay?: number } = {})
 });
 
 export const updateExpenseMock = (): MockedResponse => ({
-  request: { query: UPDATE_EXPENSE },
-  variableMatcher: () => true,
+  request: { query: UPDATE_EXPENSE, variables: () => true },
   result: { data: { updateExpense: makeExpense() } },
   maxUsageCount: 20,
 });
 
 export const deleteExpenseMock = (): MockedResponse => ({
-  request: { query: DELETE_EXPENSE },
-  variableMatcher: () => true,
+  request: { query: DELETE_EXPENSE, variables: () => true },
   result: { data: { deleteExpense: true } },
   maxUsageCount: 20,
 });
 
 export const addRefundMock = (expense: ExpenseMock | null = makeExpense({ net_amount: 60 })): MockedResponse => ({
-  request: { query: ADD_REFUND },
-  variableMatcher: () => true,
+  request: { query: ADD_REFUND, variables: () => true },
   result: { data: { addExpenseRefund: expense } },
   maxUsageCount: 20,
 });
@@ -169,8 +162,7 @@ export const addRefundMock = (expense: ExpenseMock | null = makeExpense({ net_am
 export const removeRefundMock = (
   expense: ExpenseMock | null = makeExpense({ net_amount: 100 }),
 ): MockedResponse => ({
-  request: { query: REMOVE_REFUND },
-  variableMatcher: () => true,
+  request: { query: REMOVE_REFUND, variables: () => true },
   result: { data: { removeExpenseRefund: expense } },
   maxUsageCount: 20,
 });

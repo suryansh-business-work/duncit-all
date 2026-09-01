@@ -13,10 +13,11 @@
  * this sheet, so a post or a delete that does not report its delta leaves a
  * number on screen that contradicts the list underneath it.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import PodCommentsSheet from '../PodCommentsSheet';
@@ -56,14 +57,12 @@ const COMMENTS = [
 
 const answering = (comments = COMMENTS): MockedResponse[] => [
   {
-    request: { query: POD_COMMENTS },
-    variableMatcher: () => true,
+    request: { query: POD_COMMENTS, variables: () => true },
     result: { data: { podComments: comments } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
   {
-    request: { query: ADD_POD_COMMENT },
-    variableMatcher: () => true,
+    request: { query: ADD_POD_COMMENT, variables: () => true },
     result: {
       data: {
         addPodComment: {
@@ -79,14 +78,12 @@ const answering = (comments = COMMENTS): MockedResponse[] => [
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
   {
-    request: { query: DELETE_POD_COMMENT },
-    variableMatcher: () => true,
+    request: { query: DELETE_POD_COMMENT, variables: () => true },
     result: { data: { deletePodComment: true } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
   {
-    request: { query: TOGGLE_POD_COMMENT_LIKE },
-    variableMatcher: () => true,
+    request: { query: TOGGLE_POD_COMMENT_LIKE, variables: () => true },
     result: { data: { togglePodCommentLike: { id: 'c-1', like_count: 3, liked_by_me: true } } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
@@ -94,8 +91,7 @@ const answering = (comments = COMMENTS): MockedResponse[] => [
 
 const failing: MockedResponse[] = [
   {
-    request: { query: POD_COMMENTS },
-    variableMatcher: () => true,
+    request: { query: POD_COMMENTS, variables: () => true },
     error: new Error('Comments are unavailable'),
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
@@ -115,7 +111,7 @@ const sheet = (
 ) => {
   const spies = { onClose: vi.fn(), onCountChange: vi.fn() };
   const result = render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter>
           <PodCommentsSheet podId={POD} open viewerId={ME} {...spies} {...over} />

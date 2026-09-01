@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import {
   CREATE_IDEA,
@@ -49,7 +49,7 @@ export default function PodIdeasPage() {
     return f;
   }, [search]);
 
-  const { data, loading, refetch } = useQuery(POD_IDEAS, {
+  const { data, loading, refetch } = useQuery<any>(POD_IDEAS, {
     variables: { filter },
     fetchPolicy: 'cache-and-network',
   });
@@ -57,7 +57,7 @@ export default function PodIdeasPage() {
   const me = data?.me;
   const myId = me?.user_id;
 
-  const { data: myData, refetch: refetchMine } = useQuery(POD_IDEAS, {
+  const { data: myData, refetch: refetchMine } = useQuery<any>(POD_IDEAS, {
     variables: { filter: { author_id: myId } },
     skip: !myId,
     fetchPolicy: 'cache-and-network',
@@ -75,10 +75,10 @@ export default function PodIdeasPage() {
     [myIdeas, filterScope]
   );
 
-  const [createMut, { loading: creating }] = useMutation(CREATE_IDEA);
-  const [toggleLikeMut] = useMutation(TOGGLE_LIKE);
-  const [shareMut] = useMutation(SHARE);
-  const [deleteMut] = useMutation(DELETE_IDEA);
+  const [createMut, { loading: creating }] = useMutation<any>(CREATE_IDEA);
+  const [toggleLikeMut] = useMutation<any>(TOGGLE_LIKE);
+  const [shareMut] = useMutation<any>(SHARE);
+  const [deleteMut] = useMutation<any>(DELETE_IDEA);
 
   const refetchAll = async () => {
     await Promise.all([refetch(), myId ? refetchMine() : Promise.resolve()]);

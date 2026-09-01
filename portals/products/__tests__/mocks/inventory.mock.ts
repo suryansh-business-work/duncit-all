@@ -265,8 +265,7 @@ export const inventoryProductsListMock = (
   products: InventoryProduct[] = [],
   over: { error?: boolean } = {},
 ): MockedResponse => ({
-  request: { query: INVENTORY_PRODUCTS },
-  variableMatcher: () => true,
+  request: { query: INVENTORY_PRODUCTS, variables: () => true },
   result: over.error
     ? { errors: [{ message: 'boom' }] }
     : { data: { inventoryProducts: products } },
@@ -276,8 +275,7 @@ export const inventoryProductsListMock = (
 /* ---- Mutation builders ---- */
 
 export const createProductMock = (over: { fail?: boolean } = {}): MockedResponse => ({
-  request: { query: CREATE_PRODUCT },
-  variableMatcher: () => true,
+  request: { query: CREATE_PRODUCT, variables: () => true },
   result: over.fail
     ? { errors: [{ message: 'save failed' }] }
     : { data: { createInventoryProduct: { __typename: 'InventoryProduct', id: 'new-1' } } },
@@ -285,8 +283,7 @@ export const createProductMock = (over: { fail?: boolean } = {}): MockedResponse
 });
 
 export const updateProductMock = (): MockedResponse => ({
-  request: { query: UPDATE_PRODUCT },
-  variableMatcher: () => true,
+  request: { query: UPDATE_PRODUCT, variables: () => true },
   result: { data: { updateInventoryProduct: { __typename: 'InventoryProduct', id: 'p1' } } },
   maxUsageCount: 20,
 });

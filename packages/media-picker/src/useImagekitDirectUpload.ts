@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import type { ApolloClient } from '@apollo/client';
 import { GET_IMAGEKIT_AUTH } from './queries';
 import type { UploadSurface } from './types';
@@ -98,7 +98,7 @@ export function uploadFileWithTicket(
  * body limit, and still does.
  */
 export async function directUploadToImagekit(
-  client: ApolloClient<object>,
+  client: ApolloClient,
   file: File,
   folder: string,
   onProgress?: UploadProgress,
@@ -107,7 +107,7 @@ export async function directUploadToImagekit(
   // whether this surface's uploads are screened at all.
   surface: UploadSurface = 'PORTALS',
 ): Promise<string> {
-  const { data } = await client.mutate({
+  const { data } = await client.mutate<any>({
     mutation: GET_IMAGEKIT_AUTH,
     variables: { folder, surface },
   });

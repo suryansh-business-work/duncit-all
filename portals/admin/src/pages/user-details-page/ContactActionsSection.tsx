@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Chip, Link, Stack, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DuncitIconButton } from '@duncit/buttons';
@@ -69,7 +69,7 @@ export default function ContactActionsSection({ userId, refreshToken }: Readonly
   const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [deleteAction] = useMutation(DELETE_USER_CONTACT_ACTION);
+  const [deleteAction] = useMutation<any>(DELETE_USER_CONTACT_ACTION);
 
   const fetchTable = useApolloTableFetch<ContactActionRow>(
     client,

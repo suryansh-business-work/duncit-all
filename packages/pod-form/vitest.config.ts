@@ -6,6 +6,13 @@ export default defineConfig({
     globals: false,
     setupFiles: ['./__tests__/setup.ts'],
     include: ['__tests__/**/*.test.{ts,tsx}'],
+    // Vitest's 5s default is sized for a unit test. The suites here render the
+    // WHOLE PodForm — a large MUI form — and then drive a three-level dependent
+    // select through userEvent, which is ~1s on a dev machine and over five on a
+    // two-core CI runner: PodCategoryFilter failed with "Test timed out in 5000ms"
+    // on CI while passing locally every time. The race behind it is fixed
+    // separately (findByRole); this is the honest cost of the render.
+    testTimeout: 30_000,
     coverage: {
       provider: 'v8',
       // Vitest writes NO coverage report when a test fails (reportOnFailure defaults

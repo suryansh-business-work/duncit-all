@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { uploadFileWithTicket } from '@duncit/media-picker';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
@@ -28,8 +28,8 @@ export function useBackupUpload(onUploaded: () => void) {
   const [phase, setPhase] = useState<UploadPhase>('idle');
   const [percent, setPercent] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [authorise] = useMutation(DB_BACKUP_UPLOAD_AUTH);
-  const [complete] = useMutation(COMPLETE_DB_BACKUP_UPLOAD);
+  const [authorise] = useMutation<any>(DB_BACKUP_UPLOAD_AUTH);
+  const [complete] = useMutation<any>(COMPLETE_DB_BACKUP_UPLOAD);
 
   const upload = useCallback(
     async (file: File): Promise<boolean> => {

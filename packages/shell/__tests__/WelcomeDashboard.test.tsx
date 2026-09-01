@@ -2,7 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ReactNode } from 'react';
 import { render, screen } from '@testing-library/react';
 
-vi.mock('@apollo/client', () => ({ useQuery: vi.fn(), gql: (s: TemplateStringsArray) => s }));
+vi.mock('@apollo/client', () => ({
+  gql: (s: TemplateStringsArray) => s,
+}));
+vi.mock('@apollo/client/react', () => ({
+  useQuery: vi.fn(),
+}));
 vi.mock('@duncit/utils', () => ({ parseApiError: (e: { message?: string }) => `ERR:${e?.message ?? ''}` }));
 
 // The draggable grid belongs to @duncit/dashboard (its own suite). Here it is a
@@ -19,7 +24,7 @@ vi.mock('@duncit/dashboard', () => ({
   ),
 }));
 
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { WelcomeDashboard } from '../src/dashboard/WelcomeDashboard';
 
 const mockQuery = vi.mocked(useQuery);

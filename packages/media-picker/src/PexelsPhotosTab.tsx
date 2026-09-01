@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from './i18n/useTranslation';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -62,13 +62,13 @@ export default function PexelsPhotosTab({
   const [importingId, setImportingId] = useState<string | null>(null);
 
   const client = useApolloClient();
-  const [importMut] = useMutation(IMPORT_REMOTE);
+  const [importMut] = useMutation<any>(IMPORT_REMOTE);
 
   const runPexels = async (q: string, p: number, append: boolean) => {
     setPsearching(true);
     setError(null);
     try {
-      const res = await client.query({
+      const res = await client.query<any>({
         query: PEXELS_SEARCH,
         variables: { query: q || null, page: p, perPage: 24, orientation: porientation || null },
         fetchPolicy: 'network-only',

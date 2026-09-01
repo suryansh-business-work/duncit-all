@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Skeleton, Stack, Typography } from '@mui/material';
 import LiveHelpIcon from '@mui/icons-material/LiveHelp';
 import SupportShell from './SupportShell';
@@ -18,7 +18,7 @@ const MORE_WAYS = SUPPORT_SECTIONS.filter((section) => section.key !== 'live');
 
 export default function SupportHubPage() {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(PUBLIC_FAQ_GROUPS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery<any>(PUBLIC_FAQ_GROUPS, { fetchPolicy: 'cache-and-network' });
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<FaqItem | null>(null);
 

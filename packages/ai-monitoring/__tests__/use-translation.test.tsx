@@ -8,7 +8,7 @@
  * renders raw keys; provider copy still wins where it exists.
  */
 import type { ReactNode } from 'react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { LocaleProvider } from '@duncit/app-settings';
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -35,7 +35,7 @@ describe('useTranslation', () => {
 
   it('still resolves its own keys under a provider whose bundle lacks them', () => {
     const wrapper = ({ children }: Readonly<{ children: ReactNode }>) => (
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <LocaleProvider fallback={{}}>{children}</LocaleProvider>
       </MockedProvider>
     );

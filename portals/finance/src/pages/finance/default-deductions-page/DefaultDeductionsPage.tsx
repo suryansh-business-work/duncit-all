@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import PercentIcon from '@mui/icons-material/Percent';
 import { DuncitButton } from '@duncit/buttons';
@@ -58,8 +58,8 @@ function DeductionCard({ title, subtitle, children }: Readonly<SectionProps>) {
 
 export default function DefaultDeductionsPage() {
   const { t } = useTranslation();
-  const { data, loading, refetch } = useQuery(DEDUCTION_SETTINGS, { fetchPolicy: 'cache-and-network' });
-  const [updateMut, { loading: saving }] = useMutation(UPDATE_DEDUCTIONS);
+  const { data, loading, refetch } = useQuery<any>(DEDUCTION_SETTINGS, { fetchPolicy: 'cache-and-network' });
+  const [updateMut, { loading: saving }] = useMutation<any>(UPDATE_DEDUCTIONS);
   const [form, setForm] = useState<Deductions>(BLANK);
   const [error, setError] = useState<string | null>(null);
 

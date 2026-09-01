@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter, Routes, Route } from 'react-router';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import VenueLeadEditorPage from '@/pages/venue-leads/VenueLeadEditorPage';
@@ -9,7 +9,7 @@ import HostLeadEditorPage from '@/pages/host-leads/HostLeadEditorPage';
 
 const wrap = (route: string, path: string, ui: React.ReactElement) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <MemoryRouter initialEntries={[route]}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <Routes>

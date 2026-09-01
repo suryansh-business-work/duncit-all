@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Paper, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CelebrationIcon from '@mui/icons-material/Celebration';
@@ -37,8 +37,8 @@ const blankRow = (sortOrder: number): EditableRow => ({
  */
 export default function OccasionalIconsSection() {
   const { t } = useTranslation();
-  const { data } = useQuery(OCCASIONAL_ICONS, { fetchPolicy: 'cache-and-network' });
-  const [save] = useMutation(UPDATE_OCCASIONAL_ICONS, { refetchQueries: ['OccasionalIcons'] });
+  const { data } = useQuery<any>(OCCASIONAL_ICONS, { fetchPolicy: 'cache-and-network' });
+  const [save] = useMutation<any>(UPDATE_OCCASIONAL_ICONS, { refetchQueries: ['OccasionalIcons'] });
 
   const [rows, setRows] = useState<EditableRow[]>([]);
   const [busy, setBusy] = useState(false);

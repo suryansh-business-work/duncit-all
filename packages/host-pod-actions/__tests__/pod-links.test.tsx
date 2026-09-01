@@ -11,7 +11,7 @@
  * refused never toasts "copied".
  */
 import type { ReactNode } from 'react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { renderHook, act } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -36,7 +36,7 @@ const mount = (
 ) => {
   const config = hostActionsConfig(over);
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <HostPodActionsProvider {...config}>{children}</HostPodActionsProvider>
     </MockedProvider>
   );

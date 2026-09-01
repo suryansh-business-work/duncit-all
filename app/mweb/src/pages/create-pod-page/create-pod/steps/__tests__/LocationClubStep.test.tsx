@@ -13,12 +13,12 @@
  * handed rather than filtering again and risking a second, disagreeing rule.
  */
 import '@testing-library/jest-dom/vitest';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { fireEvent, render } from '@testing-library/react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import LocationClubStep from '../LocationClubStep';
@@ -76,7 +76,7 @@ function Harness({
   values,
   errors,
 }: Readonly<{ values?: Partial<CreatePodFormValues>; errors?: Record<string, string> }>) {
-  const form = useForm<CreatePodFormValues>({
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, ...values },
   });
   formRef = form;
@@ -94,7 +94,7 @@ function Harness({
 
 const step = (over: Parameters<typeof Harness>[0] = {}) =>
   render(
-    <MockedProvider mocks={[]} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter>
           <Harness {...over} />

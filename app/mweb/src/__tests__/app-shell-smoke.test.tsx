@@ -10,9 +10,9 @@
  * The routed page underneath is React.lazy, so what is asserted here is the
  * chrome around the Suspense boundary rather than the page inside it.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { act, render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import App from '../App';
@@ -99,7 +99,7 @@ beforeAll(() => {
 
 const mountAt = (route: string) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <MemoryRouter initialEntries={[route]}>
         <App />
       </MemoryRouter>

@@ -1,16 +1,16 @@
 import '@testing-library/jest-dom/vitest';
 import type { ReactElement } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const navigate = vi.fn();
-vi.mock('react-router-dom', async (importOriginal) => ({
+vi.mock('react-router', async (importOriginal) => ({
   // Spread, not replace: a factory mock IS the module, so every export it does
   // not name arrives as undefined — which is how useSearchParams became 'No
   // export is defined on the mock' the day a shared component started paging
   // through the URL.
-  ...(await importOriginal<typeof import('react-router-dom')>()),
+  ...(await importOriginal<typeof import('react-router')>()),
   useNavigate: () => navigate,
 }));
 
@@ -66,7 +66,7 @@ const noVars = { locationId: undefined, locality: undefined };
 
 const setup = (mocks: unknown[], ui: ReactElement) =>
   render(
-    <MockedProvider mocks={mocks as never} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <DuncitLocalizationProvider>
         {ui}
       </DuncitLocalizationProvider>

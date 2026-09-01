@@ -13,11 +13,7 @@ export interface MembershipBenefitFormValues {
   is_active: boolean;
 }
 
-export const membershipBenefitFormSchema: z.ZodType<
-  MembershipBenefitFormValues,
-  z.ZodTypeDef,
-  unknown
-> = z.object({
+export const membershipBenefitFormSchema = z.object({
   group: z
     .string()
     .trim()

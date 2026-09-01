@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Box, Dialog, DialogContent, DialogTitle, Grid } from '@mui/material';
 import { parseApiError } from '@duncit/utils';
 import {
@@ -55,7 +56,7 @@ interface Props {
  * the brand's product. Submits a PRODUCT_AD / BRAND_AD to Marketing's queue. */
 export default function RunAdDialog({ product, adKind, open, onClose, onSubmitted }: Readonly<Props>) {
   const { data: pricingData, loading: pricingLoading } = useQuery<{ adPricing: AdPricing }>(AD_PRICING, { skip: !open });
-  const [submitAd, { loading: saving }] = useMutation(SUBMIT_AD_REQUEST);
+  const [submitAd, { loading: saving }] = useMutation<any>(SUBMIT_AD_REQUEST);
   const [error, setError] = useState<string | null>(null);
 
   const initialValues = useMemo<AdRequestFormValues>(() => {

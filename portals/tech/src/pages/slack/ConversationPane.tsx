@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import { useTranslation } from '@duncit/shell';
@@ -51,7 +51,7 @@ interface Props {
 /** The right pane: who is talking, what they said, and a box to reply in. */
 export default function ConversationPane({ channel, onChannelsChanged }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { data, loading, error, refetch } = useQuery(SLACK_CHANNEL_HISTORY, {
+  const { data, loading, error, refetch } = useQuery<any>(SLACK_CHANNEL_HISTORY, {
     variables: { channel: channel?.id ?? '', limit: HISTORY_LIMIT },
     skip: !channel,
     pollInterval: POLL_MS,

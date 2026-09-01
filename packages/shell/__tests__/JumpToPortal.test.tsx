@@ -8,7 +8,8 @@
  * guessing what the request did.
  */
 import { describe, expect, it, vi } from 'vitest';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 
 import { JumpToPortalDialog } from '../src/chrome/jump-to-portal/JumpToPortalDialog';
@@ -62,7 +63,7 @@ const expandLocked = async () => {
 const open = (mocks: readonly MockedResponse[], props: Record<string, unknown> = {}) => {
   const onClose = vi.fn();
   render(
-    <MockedProvider mocks={[...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       <JumpToPortalDialog open onClose={onClose} {...props} />
     </MockedProvider>
   );
@@ -73,14 +74,13 @@ describe('JumpToPortalDialog', () => {
   it('asks for nothing at all while it is closed', () => {
     const asked = vi.fn();
     render(
-      <MockedProvider
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
         mocks={[
           {
-            request: { query: MY_PORTAL_ACCESS },
-            variableMatcher: () => {
+            request: { query: MY_PORTAL_ACCESS, variables: () => {
               asked();
               return true;
-            },
+            } },
             result: { data: { myPortalAccess: [] } },
           },
         ]}

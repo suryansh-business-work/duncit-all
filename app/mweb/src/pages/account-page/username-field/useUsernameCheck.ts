@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { IDLE_USERNAME_CHECK, scheduleUsernameCheck, type UsernameCheckState } from '@duncit/utils';
 import { logs } from '@duncit/logs';
 import { USERNAME_AVAILABILITY, type UsernameAvailability } from './queries';
@@ -29,7 +29,13 @@ export function useUsernameCheck(value: string, current: string | null): Usernam
               variables: { username: candidate },
               fetchPolicy: 'network-only',
             })
-            .then((result) => result.data.usernameAvailability),
+            // Apollo 4 types `data` optional — a query that errored has none,
+            // and the caller's contract is an answer, not a maybe.
+            .then((result) => {
+              const answer = result.data?.usernameAvailability;
+              if (!answer) throw new Error('No availability answer');
+              return answer;
+            }),
         onState: setCheck,
         onError: (error, candidate) =>
           logs.mWeb.error('useUsernameCheck', 'availability', { error, candidate }),

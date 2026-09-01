@@ -7,20 +7,23 @@
     // the newer runtime APIs while the emit stays exactly as it was.
     "lib": ["ES2022"],
     "module": "CommonJS",
+    // Node resolution, with baseUrl-relative paths, because this project stays
+    // on TypeScript 5 (see the typescript pin in package.json): its lazy
+    // `await import('@modules/…')` calls resolve through tsconfig-paths at
+    // RUNTIME, which node16 module semantics would require extensions for.
     "moduleResolution": "Node",
     "outDir": "dist",
     "rootDir": "src",
-    "baseUrl": ".",
     "paths": {
-      "@config/*": ["src/config/*"],
-      "@services/*": ["src/services/*"],
-      "@utils/*": ["src/utils/*"],
-      "@middleware/*": ["src/middleware/*"],
-      "@realtime/*": ["src/realtime/*"],
-      "@generated/*": ["src/generated/*"],
-      "@modules/*": ["src/modules/*"],
-      "@observability/*": ["src/observability/*"],
-      "@context": ["src/context.ts"]
+      "@config/*": ["./src/config/*"],
+      "@services/*": ["./src/services/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@middleware/*": ["./src/middleware/*"],
+      "@realtime/*": ["./src/realtime/*"],
+      "@generated/*": ["./src/generated/*"],
+      "@modules/*": ["./src/modules/*"],
+      "@observability/*": ["./src/observability/*"],
+      "@context": ["./src/context.ts"]
     },
     "types": ["node"]
   },

@@ -1,11 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 
-vi.mock('@apollo/client', () => ({ useQuery: vi.fn(), gql: (s: TemplateStringsArray) => s }));
+vi.mock('@apollo/client', () => ({
+  gql: (s: TemplateStringsArray) => s,
+}));
+vi.mock('@apollo/client/react', () => ({
+  useQuery: vi.fn(),
+}));
 
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { AppSidebar } from '../src/chrome/AppSidebar';
 import type { AppNavItem } from '../src/types';
 import type { DuncitUser } from '@duncit/user-context';

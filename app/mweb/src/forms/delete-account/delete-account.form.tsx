@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, InputAdornment, Stack } from '@mui/material';
 import PinOutlinedIcon from '@mui/icons-material/PinOutlined';
@@ -23,9 +23,9 @@ export function DeleteAccountForm({ loading, errorMessage, onSubmit }: Readonly<
   const { t } = useTranslation();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const schema = useMemo(() => makeDeleteAccountSchema(t), [t]);
-  const { control, handleSubmit } = useForm<DeleteAccountValues>({
+  const { control, handleSubmit } = useForm<DeleteAccountValues, any, DeleteAccountValues>({
     defaultValues: deleteAccountDefaults,
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<DeleteAccountValues, any, DeleteAccountValues>,
     mode: 'onTouched',
   });
 

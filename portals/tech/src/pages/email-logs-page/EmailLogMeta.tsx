@@ -1,6 +1,6 @@
 import { Box, Chip, Divider, Link, Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { formatDateTime } from '../server/format';
 import { STATUS_COLOR, type EmailLogDetail } from './queries';
 import { useTranslation } from '@duncit/app-settings';

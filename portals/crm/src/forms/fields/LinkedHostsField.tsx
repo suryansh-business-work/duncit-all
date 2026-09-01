@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { Autocomplete, Box, Chip, CircularProgress, TextField, Typography } from '@mui/material';
 import { HOST_LEADS } from '../../api/crm.gql';

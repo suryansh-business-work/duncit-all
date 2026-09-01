@@ -1,41 +1,40 @@
-import { useState } from 'react';
-import { useMutation } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { recoveryResendSeconds } from '@duncit/utils';
 import AuthBackground from '../../components/AuthBackground';
-import { type ForgotPasswordValues } from '../../forms/forgot-password';
-import { parseApiError } from '../../utils/parseApiError';
-import { REQUEST_PASSWORD_RESET_OTP } from './queries';
+import AuthModeToggle from '../../components/AuthModeToggle';
 import ForgotPasswordCard from './ForgotPasswordCard';
+import { usePasswordRecovery } from './usePasswordRecovery';
 
+/**
+ * Forgotten-password recovery: choose a channel, prove the code, set the
+ * password. RN twin: app/mobile-app/src/screens/ForgotPasswordScreen.tsx.
+ */
 export default function ForgotPasswordPage() {
-  const navigate = useNavigate();
-  const [requestOtp, { loading, error }] = useMutation(REQUEST_PASSWORD_RESET_OTP);
-  const [unregistered, setUnregistered] = useState(false);
+  const recovery = usePasswordRecovery();
+  const [resendIn, setResendIn] = useState(0);
+  const { lastSentAt, resendAfterSeconds } = recovery.state;
 
-  const handleSubmit = async (values: ForgotPasswordValues) => {
-    setUnregistered(false);
-    try {
-      const res = await requestOtp({ variables: { email: values.email } });
-      // An unregistered email gets no OTP — flag the field + Create-Account CTA
-      // instead of moving the visitor to the reset step.
-      if (res.data?.requestPasswordResetOtp?.registered === false) {
-        setUnregistered(true);
-        return;
-      }
-      navigate(`/reset-password?email=${encodeURIComponent(values.email)}`);
-    } catch (e) {
-      throw new Error(parseApiError(e));
+  /*
+    The cooldown ticks here rather than inside the step, so the step stays a
+    form and re-rendering it once a second does not remount the boxes somebody
+    is typing a code into. The interval only exists while there is something to
+    count down.
+  */
+  useEffect(() => {
+    if (lastSentAt === null) {
+      setResendIn(0);
+      return undefined;
     }
-  };
+    const tick = () => setResendIn(recoveryResendSeconds({ lastSentAt, resendAfterSeconds }));
+    tick();
+    const timer = globalThis.setInterval(tick, 1000);
+    return () => globalThis.clearInterval(timer);
+  }, [lastSentAt, resendAfterSeconds]);
 
   return (
     <AuthBackground>
-      <ForgotPasswordCard
-        loading={loading}
-        errorMessage={error ? parseApiError(error) : null}
-        unregistered={unregistered}
-        onSubmit={handleSubmit}
-      />
+      <AuthModeToggle />
+      <ForgotPasswordCard recovery={recovery} resendIn={resendIn} />
     </AuthBackground>
   );
 }

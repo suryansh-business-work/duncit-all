@@ -1,6 +1,7 @@
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { useEffect, useState } from 'react';
-import { useForm, type Path } from 'react-hook-form';
+import { useForm, type Path, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Card, CardContent, Stack, Step, StepContent, StepLabel, Stepper } from '@mui/material';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
@@ -61,8 +62,8 @@ interface Props {
 
 export default function ListProductsForm({ brandId, product = null, onSaved }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [submitProduct, submitState] = useMutation(SUBMIT_PRODUCT_LISTING);
-  const [updateProduct, updateState] = useMutation(UPDATE_PRODUCT_LISTING);
+  const [submitProduct, submitState] = useMutation<any>(SUBMIT_PRODUCT_LISTING);
+  const [updateProduct, updateState] = useMutation<any>(UPDATE_PRODUCT_LISTING);
   const [activeStep, setActiveStep] = useState(0);
   const [pickerIndex, setPickerIndex] = useState<number | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -71,8 +72,8 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
   const loading = submitState.loading || updateState.loading || moderation.moderating;
   const editing = Boolean(product?.id);
 
-  const { control, handleSubmit, reset, trigger, watch, getValues, setValue, setError } = useForm<ProductListingValues>({
-    resolver: zodResolver(productListingSchema),
+  const { control, handleSubmit, reset, trigger, watch, getValues, setValue, setError } = useForm<ProductListingValues, any, ProductListingValues>({
+    resolver: zodResolver(productListingSchema) as unknown as Resolver<ProductListingValues, any, ProductListingValues>,
     defaultValues: productToValues(product),
     mode: 'onBlur',
   });

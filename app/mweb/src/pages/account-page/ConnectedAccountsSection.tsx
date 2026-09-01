@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Card, CardContent, Divider, Snackbar, Stack, Typography } from '@mui/material';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import GoogleSignInButton from '../../components/GoogleSignInButton';
@@ -28,10 +28,10 @@ export default function ConnectedAccountsSection() {
   const { data, loading } = useQuery<{ myConnectedAccounts: ConnectedAccounts }>(
     MY_CONNECTED_ACCOUNTS
   );
-  const [connectGoogle, { loading: connecting }] = useMutation(CONNECT_GOOGLE_ACCOUNT, {
+  const [connectGoogle, { loading: connecting }] = useMutation<any>(CONNECT_GOOGLE_ACCOUNT, {
     refetchQueries: [MY_CONNECTED_ACCOUNTS],
   });
-  const [disconnectGoogle, { loading: disconnecting }] = useMutation(DISCONNECT_GOOGLE_ACCOUNT, {
+  const [disconnectGoogle, { loading: disconnecting }] = useMutation<any>(DISCONNECT_GOOGLE_ACCOUNT, {
     refetchQueries: [MY_CONNECTED_ACCOUNTS],
   });
   const [confirmOpen, setConfirmOpen] = useState(false);

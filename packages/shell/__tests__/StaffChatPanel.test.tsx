@@ -10,7 +10,7 @@
  * The answers come from ./schema-mock, which reads the server's own SDL — a
  * thread with no messages exercises almost none of what a thread does.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -54,7 +54,7 @@ const settle = async () => {
 
 const mount = (props: Record<string, unknown> = {}) =>
   render(
-    <MockedProvider link={schemaMockLink()}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={schemaMockLink()}>
       <ThemeProvider theme={testTheme}>
       <StaffChatPanel
         open

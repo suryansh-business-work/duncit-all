@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import DynamicValuesView from '@/components/DynamicValuesView';
 import { CRM_DYNAMIC_FIELDS } from '@/api/crm.gql';
 
@@ -96,14 +96,13 @@ const fields = (overrides: any[] = []) => ({
 describe('DynamicValuesView', () => {
   it('renders the "no fields" message when the server returns empty', async () => {
     render(
-      <MockedProvider
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
         mocks={[
           {
             request: { query: CRM_DYNAMIC_FIELDS, variables: { entity: 'VENUE_LEAD', include_inactive: false } },
             result: { data: { crmDynamicFields: [] } },
           },
         ]}
-        addTypename={false}
       >
         <DynamicValuesView entity="VENUE_LEAD" json="{}" />
       </MockedProvider>
@@ -119,7 +118,7 @@ describe('DynamicValuesView', () => {
       amenities: ['pool', 'gym'],
     });
     render(
-      <MockedProvider mocks={[fields()]} addTypename={false}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[fields()]}>
         <DynamicValuesView entity="VENUE_LEAD" json={json} />
       </MockedProvider>
     );
@@ -137,7 +136,7 @@ describe('DynamicValuesView', () => {
 
   it('falls back to em-dashes for missing values and survives bad JSON', async () => {
     render(
-      <MockedProvider mocks={[fields()]} addTypename={false}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[fields()]}>
         <DynamicValuesView entity="VENUE_LEAD" json="not-valid-json" />
       </MockedProvider>
     );

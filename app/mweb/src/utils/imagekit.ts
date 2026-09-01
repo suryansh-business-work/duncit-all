@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 
 /**
  * Where to send a file, and the one-shot pass that lets you.
@@ -47,7 +48,7 @@ async function postToServer(file: File, ticket: UploadTicket): Promise<string> {
  * attachments past the API body limit.
  */
 export function useImagekitUpload() {
-  const [getAuth] = useMutation(GET_IMAGEKIT_AUTH);
+  const [getAuth] = useMutation<any>(GET_IMAGEKIT_AUTH);
   const [uploading, setUploading] = useState(false);
   const upload = useCallback(
     async (file: File, folder: string): Promise<string> => {

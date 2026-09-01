@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from './i18n/useTranslation';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -51,13 +51,13 @@ export default function PexelsVideosTab({
   const [vimportingId, setVimportingId] = useState<string | null>(null);
 
   const client = useApolloClient();
-  const [importMediaMut] = useMutation(IMPORT_REMOTE_MEDIA);
+  const [importMediaMut] = useMutation<any>(IMPORT_REMOTE_MEDIA);
 
   const runPexelsVideos = async (q: string, p: number, append: boolean) => {
     setVsearching(true);
     setError(null);
     try {
-      const res = await client.query({
+      const res = await client.query<any>({
         query: PEXELS_VIDEO_SEARCH,
         variables: { query: q || null, page: p, perPage: 24, orientation: vorientation || null },
         fetchPolicy: 'network-only',

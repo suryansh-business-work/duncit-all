@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
 import { describe, expect, it } from 'vitest';
 import AuthLogo from '../AuthLogo';
@@ -34,7 +34,7 @@ const brandingMock = (over: Record<string, string | null>) => ({
 
 const renderLogo = (over: Record<string, string | null>) =>
   render(
-    <MockedProvider mocks={[brandingMock(over)]} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[brandingMock(over)]}>
       <AuthLogo tagline="Welcome back" />
     </MockedProvider>,
   );

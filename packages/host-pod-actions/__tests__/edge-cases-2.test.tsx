@@ -3,7 +3,8 @@
  * on, and what a record with fields missing renders as.
  */
 import type { ReactNode } from 'react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 // The slot calendar is MUI X and refuses to render without its own context.
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -58,7 +59,7 @@ const settle = async () => {
 
 const wrap = (ui: ReactNode, mocks: readonly MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={[...mocks]} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <HostPodActionsProvider {...hostActionsConfig()}>{ui}</HostPodActionsProvider>
@@ -87,8 +88,7 @@ afterEach(() => {
 describe('a scan whose ticket came back without one', () => {
   const scanMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
     ({
-      request: { query: HOST_SCAN_POD_TICKET },
-      variableMatcher: () => true,
+      request: { query: HOST_SCAN_POD_TICKET, variables: () => true },
       result: {
         data: {
           hostScanPodTicket: {
@@ -167,8 +167,7 @@ describe('a scan whose ticket came back without one', () => {
     let release: (value: unknown) => void = () => undefined;
     wrap(<TicketScanDialog pod={POD} onClose={vi.fn()} />, [
       {
-        request: { query: HOST_SCAN_POD_TICKET },
-        variableMatcher: () => true,
+        request: { query: HOST_SCAN_POD_TICKET, variables: () => true },
         delay: 1000,
         result: {
           data: {
@@ -516,8 +515,7 @@ describe('a resubmission the content check could not run for', () => {
           maxUsageCount: Number.POSITIVE_INFINITY,
         },
         {
-          request: { query: MODERATE_POD_CONTENT },
-          variableMatcher: () => true,
+          request: { query: MODERATE_POD_CONTENT, variables: () => true },
           error: new Error('The content check is unavailable'),
           maxUsageCount: Number.POSITIVE_INFINITY,
         },
@@ -551,8 +549,7 @@ describe('a scan that failed after the dialog moved on', () => {
   it('drops a failure that lands after the dialog was closed', async () => {
     wrap(<TicketScanDialog pod={POD} onClose={vi.fn()} />, [
       {
-        request: { query: HOST_SCAN_POD_TICKET },
-        variableMatcher: () => true,
+        request: { query: HOST_SCAN_POD_TICKET, variables: () => true },
         delay: 60,
         error: new Error('That code is not a Duncit ticket'),
         maxUsageCount: Number.POSITIVE_INFINITY,
@@ -611,8 +608,7 @@ describe('the state machine after a dialog reports success', () => {
         maxUsageCount: Number.POSITIVE_INFINITY,
       },
       {
-        request: { query: HOST_DELETE_POD },
-        variableMatcher: () => true,
+        request: { query: HOST_DELETE_POD, variables: () => true },
         result: { data: { hostDeletePod: true } },
         maxUsageCount: Number.POSITIVE_INFINITY,
       },
@@ -767,7 +763,7 @@ describe('a by-hand mark, all the way through its code', () => {
   it('spends the verified challenge on the row it was raised for', async () => {
     const notifySuccess = vi.fn();
     render(
-      <MockedProvider
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
         mocks={[
           {
             request: { query: POD_ATTENDANCE_BOARD, variables: { pod_doc_id: 'pod-1' } },
@@ -775,8 +771,7 @@ describe('a by-hand mark, all the way through its code', () => {
             maxUsageCount: Number.POSITIVE_INFINITY,
           },
           {
-            request: { query: REQUEST_ATTENDANCE_OTP },
-            variableMatcher: () => true,
+            request: { query: REQUEST_ATTENDANCE_OTP, variables: () => true },
             result: {
               data: {
                 requestPodAttendanceOtp: {
@@ -791,8 +786,7 @@ describe('a by-hand mark, all the way through its code', () => {
             maxUsageCount: Number.POSITIVE_INFINITY,
           },
           {
-            request: { query: VERIFY_ATTENDANCE_OTP },
-            variableMatcher: () => true,
+            request: { query: VERIFY_ATTENDANCE_OTP, variables: () => true },
             result: { data: { verifyPodAttendanceOtp: true } },
             maxUsageCount: Number.POSITIVE_INFINITY,
           },
@@ -809,7 +803,6 @@ describe('a by-hand mark, all the way through its code', () => {
             maxUsageCount: Number.POSITIVE_INFINITY,
           },
         ]}
-        addTypename={false}
       >
         <ThemeProvider theme={testTheme}>
           <HostPodActionsProvider {...hostActionsConfig()}>

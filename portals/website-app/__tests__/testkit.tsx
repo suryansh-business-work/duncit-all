@@ -1,7 +1,8 @@
 import type { ReactElement, ReactNode } from 'react';
 import { render } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
-import { MemoryRouter, Routes } from 'react-router-dom';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter, Routes } from 'react-router';
 import { ColorModeProvider } from '@duncit/shell';
 import { ConfirmProvider } from '@duncit/dialogs';
 import { appSettingsMock, brandingMock } from './mocks';
@@ -29,7 +30,7 @@ export function renderWithProviders(ui: ReactElement, options: Options = {}) {
   // Always provide branding + app-settings mocks — shell chrome and every
   // date-formatting table cell fire them; unused mocks are harmless otherwise.
   return render(
-    <MockedProvider mocks={[brandingMock(), appSettingsMock(), ...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[brandingMock(), appSettingsMock(), ...mocks]}>
       <ColorModeProvider>
         <ConfirmProvider>
           <MemoryRouter initialEntries={initialEntries}>

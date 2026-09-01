@@ -1,5 +1,5 @@
 import { JSX, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -48,7 +48,7 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
   const [subject, setSubject] = useState('');
   const [mjml, setMjml] = useState(STARTER_MJML);
   const [error, setError] = useState<string | null>(null);
-  const [createTpl, { loading }] = useMutation(CREATE);
+  const [createTpl, { loading }] = useMutation<any>(CREATE);
 
   const reset = () => { setTarget(null); setName(''); setSlug(''); setSubject(''); setMjml(STARTER_MJML); setError(null); };
   const close = () => { reset(); onClose(); };

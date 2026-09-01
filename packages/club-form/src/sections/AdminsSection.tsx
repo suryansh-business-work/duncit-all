@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Autocomplete, Avatar, CircularProgress, Stack, TextField, Typography } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { useFormContext, useFormState, useWatch } from 'react-hook-form';
@@ -79,7 +79,7 @@ export default function AdminsSection() {
   // one. The server matches at whatever level the club has filled in, and
   // returns everyone while it has none — so the picker still works before a
   // category is chosen rather than looking broken.
-  const { data, loading } = useQuery(CLUB_ADMIN_CANDIDATES, {
+  const { data, loading } = useQuery<any>(CLUB_ADMIN_CANDIDATES, {
     variables: {
       super_category_id: superCategoryId || undefined,
       sub_category_id: subCategoryId || undefined,

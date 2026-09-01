@@ -10,7 +10,8 @@
  * so a member with no links cannot save their bio until they delete that row.
  * The test below states what the form does today, not what it should do.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -22,8 +23,7 @@ import { UPDATE_MY_PROFILE } from '../queries';
 const testTheme = createTheme();
 
 const saved: MockedResponse = {
-  request: { query: UPDATE_MY_PROFILE },
-  variableMatcher: () => true,
+  request: { query: UPDATE_MY_PROFILE, variables: () => true },
   result: {
     data: {
       updateMyProfile: {
@@ -54,7 +54,7 @@ const LINK = { label: 'Strava', url: 'https://strava.com/meera' };
 const form = (over: Partial<Parameters<typeof ProfileAboutEditForm>[0]> = {}) => {
   const spies = { onCancel: vi.fn(), onSaved: vi.fn() };
   const result = render(
-    <MockedProvider mocks={[saved]} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[saved]}>
       <ThemeProvider theme={testTheme}>
         <ProfileAboutEditForm bio="Plays doubles on Sundays." links={[LINK]} {...spies} {...over} />
       </ThemeProvider>

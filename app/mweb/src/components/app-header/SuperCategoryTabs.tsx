@@ -1,5 +1,5 @@
 import { Box, Skeleton, Stack, Typography } from '@mui/material';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
 import { renderSuperCategoryMark } from './superCategoryIcon';
 import { useTranslation } from '../../i18n/useTranslation';

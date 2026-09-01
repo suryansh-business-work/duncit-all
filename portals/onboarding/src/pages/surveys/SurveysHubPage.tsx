@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Box, Card, CardActionArea, Stack, Typography } from '@mui/material';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import { surveyKinds, type SurveyKindMeta } from './surveyKinds';

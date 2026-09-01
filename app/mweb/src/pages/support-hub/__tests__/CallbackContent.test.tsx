@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import CallbackContent from '../CallbackContent';
 import {
   SUPPORT_CALL_TARGET,
@@ -65,7 +65,7 @@ const populatedHistoryMock = {
 
 function renderContent(mocks: any[], selected: SupportPodOption | null = null) {
   return render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <DuncitLocalizationProvider>
         <CallbackContent selected={selected} />
       </DuncitLocalizationProvider>

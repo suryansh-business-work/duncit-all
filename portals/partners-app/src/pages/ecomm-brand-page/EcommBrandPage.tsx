@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useNavigate } from 'react-router';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -38,12 +38,12 @@ type Editing = EcommBrand | 'new' | null;
 export default function EcommBrandPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { data, loading } = useQuery(MY_BRANDS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading } = useQuery<any>(MY_BRANDS, { fetchPolicy: 'cache-and-network' });
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [saveBrand, saveState] = useMutation(SAVE_BRAND);
-  const [submitBrand, submitState] = useMutation(SUBMIT_BRAND);
-  const [withdrawBrand, withdrawState] = useMutation(WITHDRAW_BRAND);
+  const [saveBrand, saveState] = useMutation<any>(SAVE_BRAND);
+  const [submitBrand, submitState] = useMutation<any>(SUBMIT_BRAND);
+  const [withdrawBrand, withdrawState] = useMutation<any>(WITHDRAW_BRAND);
   const [editing, setEditing] = useState<Editing>(null);
   const [pauseTarget, setPauseTarget] = useState<EcommBrandRow | null>(null);
   const [message, setMessage] = useState<string | null>(null);

@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, Chip, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import PaidIcon from '@mui/icons-material/Paid';
 import StatCards from './StatCards';
@@ -10,7 +10,7 @@ import { useTranslation } from '../../i18n/useTranslation';
  * every venue the signed-in owner has (Pod Finance Breakdown epic). */
 export default function VenueEarningsPage() {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(VENUE_EARNINGS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery<any>(VENUE_EARNINGS, { fetchPolicy: 'cache-and-network' });
 
   if (loading && !data) {
     return (

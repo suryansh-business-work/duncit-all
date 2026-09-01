@@ -7,10 +7,11 @@
  * than once per suite.
  */
 import type { ReactNode } from 'react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, render } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { PodDetailsScopeProvider, type PodDetailsScope } from '../src/scope';
 
 export const POD_ID = 'pod-1';
@@ -32,7 +33,7 @@ export const mountSection = (
   scope: PodDetailsScope = 'ADMIN',
 ) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter initialEntries={[`/pods/${POD_ID}`]}>
           <PodDetailsScopeProvider scope={scope}>

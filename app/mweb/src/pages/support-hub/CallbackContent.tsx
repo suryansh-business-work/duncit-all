@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Paper, Stack, TextField, Typography } from '@mui/material';
 import CallIcon from '@mui/icons-material/Call';
 import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
@@ -13,13 +13,13 @@ interface Props {
 }
 
 export default function CallbackContent({ selected }: Readonly<Props>) {
-  const { data } = useQuery(SUPPORT_CALL_TARGET, { fetchPolicy: 'cache-first' });
+  const { data } = useQuery<any>(SUPPORT_CALL_TARGET, { fetchPolicy: 'cache-first' });
   const target = data?.bouncerSupportTarget;
 
   const [reason, setReason] = useState('');
   const [requested, setRequested] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [requestCallback, { loading }] = useMutation(REQUEST_CALLBACK, {
+  const [requestCallback, { loading }] = useMutation<any>(REQUEST_CALLBACK, {
     refetchQueries: [{ query: MY_CALLBACK_REQUESTS }],
   });
 

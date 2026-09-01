@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { FormProvider, useForm, type UseFormReturn } from 'react-hook-form';
+import { FormProvider, useForm, type UseFormReturn, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Stack } from '@mui/material';
 import { makePodSchema } from './schema';
@@ -89,8 +89,8 @@ export default function PodForm({
   // language that was active when the form first mounted.
   const schema = useMemo(() => makePodSchema(config, t), [config, t]);
   const submitMode = useRef<'publish' | 'draft'>('publish');
-  const methods = useForm<PodFormValues>({
-    resolver: zodResolver(schema),
+  const methods = useForm<PodFormValues, any, PodFormValues>({
+    resolver: zodResolver(schema) as unknown as Resolver<PodFormValues, any, PodFormValues>,
     defaultValues: initialValues,
     mode: 'onBlur',
   });

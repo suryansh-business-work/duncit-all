@@ -7,7 +7,8 @@
  * and a successful group check-in that only swapped a line of text read as
  * "nothing happened" — hence the confirmation dialog with a tick per person.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -73,8 +74,7 @@ const scanMock = (
   over: Partial<MockedResponse> = {},
 ): MockedResponse =>
   ({
-    request: { query: HOST_SCAN_POD_TICKET },
-    variableMatcher: () => true,
+    request: { query: HOST_SCAN_POD_TICKET, variables: () => true },
     result: { data: { hostScanPodTicket: result } },
     maxUsageCount: Number.POSITIVE_INFINITY,
     ...over,
@@ -82,7 +82,7 @@ const scanMock = (
 
 const wrap = (ui: React.ReactNode, mocks: readonly MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={[...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>
         <HostPodActionsProvider {...hostActionsConfig()}>{ui}</HostPodActionsProvider>
       </ThemeProvider>
@@ -239,11 +239,10 @@ describe('TicketScanDialog', () => {
     const variables: Record<string, unknown>[] = [];
     wrap(<TicketScanDialog pod={POD} onClose={vi.fn()} />, [
       {
-        request: { query: HOST_SCAN_POD_TICKET },
-        variableMatcher: (v: Record<string, unknown>) => {
+        request: { query: HOST_SCAN_POD_TICKET, variables: (v: Record<string, unknown>) => {
           variables.push(v);
           return true;
-        },
+        } },
         result: {
           data: {
             hostScanPodTicket: scanResult({

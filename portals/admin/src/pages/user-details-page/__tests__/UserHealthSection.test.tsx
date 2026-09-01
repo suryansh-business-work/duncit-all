@@ -59,26 +59,22 @@ const score = (over: Partial<AdminHealthScore> = {}): AdminHealthScore & { __typ
 
 const answering = (result = score()): MockedResponse[] => [
   {
-    request: { query: USER_ACCOUNT_HEALTH },
-    variableMatcher: () => true,
+    request: { query: USER_ACCOUNT_HEALTH, variables: () => true },
     result: { data: { userAccountHealth: result } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
   {
-    request: { query: ADJUST_HEALTH },
-    variableMatcher: () => true,
+    request: { query: ADJUST_HEALTH, variables: () => true },
     result: { data: { adjustHealth: result } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
   {
-    request: { query: EDIT_ADJUSTMENT },
-    variableMatcher: () => true,
+    request: { query: EDIT_ADJUSTMENT, variables: () => true },
     result: { data: { editAdjustment: result } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
   {
-    request: { query: DELETE_ADJUSTMENT },
-    variableMatcher: () => true,
+    request: { query: DELETE_ADJUSTMENT, variables: () => true },
     result: { data: { deleteAdjustment: result } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
@@ -324,8 +320,7 @@ describe('UserHealthSection', () => {
     const { container } = renderWithProviders(<UserHealthSection userId="u-1" />, {
       mocks: [
         {
-          request: { query: USER_ACCOUNT_HEALTH },
-          variableMatcher: () => true,
+          request: { query: USER_ACCOUNT_HEALTH, variables: () => true },
           error: new Error('Health is unavailable'),
           maxUsageCount: Number.POSITIVE_INFINITY,
         },

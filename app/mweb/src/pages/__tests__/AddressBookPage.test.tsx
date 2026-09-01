@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { render, screen, waitFor } from '@testing-library/react';
 import AddressBookPage from '../AddressBookPage';
 import { MY_ADDRESSES } from '../account-page/AddressBookSection';
@@ -12,7 +12,7 @@ const emptyMock = {
 describe('AddressBookPage', () => {
   it('renders the Address Book section as a standalone page', async () => {
     render(
-      <MockedProvider mocks={[emptyMock]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[emptyMock]}>
         <AddressBookPage />
       </MockedProvider>,
     );

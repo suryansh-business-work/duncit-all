@@ -1,4 +1,5 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useCallback, useMemo, useState } from 'react';
 
 const SAVED_POD_IDS = gql`
@@ -34,7 +35,7 @@ export function useSavedPodHearts() {
     SAVED_POD_IDS,
     { fetchPolicy: 'cache-and-network' }
   );
-  const [toggleMut] = useMutation(TOGGLE_SAVED_POD_CARD, {
+  const [toggleMut] = useMutation<any>(TOGGLE_SAVED_POD_CARD, {
     refetchQueries: [{ query: SAVED_POD_IDS }],
   });
 

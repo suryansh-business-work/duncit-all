@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
-import { MemoryRouter } from 'react-router-dom';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter } from 'react-router';
 import EmailLogDrawer from '../../src/pages/email-logs-page/EmailLogDrawer';
 import { EMAIL_LOG_ONE } from '../../src/pages/email-logs-page/queries';
 
@@ -38,7 +38,7 @@ const mockFor = (data: Record<string, unknown> | null) => [
 const renderDrawer = (data: Record<string, unknown> | null = row, onClose = vi.fn()) => {
   render(
     <MemoryRouter>
-      <MockedProvider mocks={mockFor(data)}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mockFor(data)}>
         <EmailLogDrawer logId="L1" onClose={onClose} />
       </MockedProvider>
     </MemoryRouter>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { Controller, type Control, useForm } from 'react-hook-form';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { Controller, type Control, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Card, CardContent, Grid, Stack, TextField, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -66,11 +66,11 @@ export default function GiftCardSettingsCard() {
     PUBLIC_GIFT_CARD_SETTINGS,
     { fetchPolicy: 'cache-and-network' },
   );
-  const [save, { loading: saving }] = useMutation(UPDATE_GIFT_CARD_SETTINGS);
+  const [save, { loading: saving }] = useMutation<any>(UPDATE_GIFT_CARD_SETTINGS);
 
   const schema = useMemo(() => giftCardSettingsSchema(t), [t]);
-  const { control, handleSubmit, reset, formState } = useForm<GiftCardSettingsForm>({
-    resolver: zodResolver(schema),
+  const { control, handleSubmit, reset, formState } = useForm<GiftCardSettingsForm, any, GiftCardSettingsForm>({
+    resolver: zodResolver(schema) as unknown as Resolver<GiftCardSettingsForm, any, GiftCardSettingsForm>,
     defaultValues: BLANK_GIFT_CARD_SETTINGS,
     mode: 'onBlur',
   });

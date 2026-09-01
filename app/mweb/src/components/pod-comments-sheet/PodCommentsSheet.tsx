@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Alert, Box, CircularProgress, Drawer, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitIconButton } from '@duncit/buttons';
@@ -32,14 +32,14 @@ export default function PodCommentsSheet({
 }: Readonly<Props>) {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { data, loading, error, refetch } = useQuery(POD_COMMENTS, {
+  const { data, loading, error, refetch } = useQuery<any>(POD_COMMENTS, {
     variables: { id: podId },
     fetchPolicy: 'cache-and-network',
     skip: !open || !podId,
   });
-  const [addComment, addState] = useMutation(ADD_POD_COMMENT);
-  const [deleteComment] = useMutation(DELETE_POD_COMMENT);
-  const [toggleCommentLike] = useMutation(TOGGLE_POD_COMMENT_LIKE);
+  const [addComment, addState] = useMutation<any>(ADD_POD_COMMENT);
+  const [deleteComment] = useMutation<any>(DELETE_POD_COMMENT);
+  const [toggleCommentLike] = useMutation<any>(TOGGLE_POD_COMMENT_LIKE);
   const [snack, setSnack] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 

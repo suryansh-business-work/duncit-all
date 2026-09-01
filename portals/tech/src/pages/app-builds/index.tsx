@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -42,7 +42,7 @@ export default function AppBuildsPage({ platform }: Readonly<Props>) {
   const refetchRef = useRef<(() => void) | null>(null);
   const [selected, setSelected] = useState<AppBuildRow | null>(null);
   const [creating, setCreating] = useState(false);
-  const [removeBuild] = useMutation(DELETE_APP_BUILD);
+  const [removeBuild] = useMutation<any>(DELETE_APP_BUILD);
   const [hasLiveBuild, setHasLiveBuild] = useState(false);
   const baseFetch = useApolloTableFetch<AppBuildRow>(
     client,

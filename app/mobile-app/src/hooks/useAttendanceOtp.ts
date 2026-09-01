@@ -1,6 +1,6 @@
+import { formResolver } from '../utils/form-resolver';
 import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import type { PodAttendanceLabels, PodAttendanceRow } from '@duncit/utils';
 
 import {
@@ -42,8 +42,8 @@ export function useAttendanceOtp(
   row: PodAttendanceRow | null,
   labels: PodAttendanceLabels,
 ) {
-  const form = useForm<AttendanceOtpValues>({
-    resolver: zodResolver(buildAttendanceOtpSchema(labels)),
+  const form = useForm<AttendanceOtpValues, any, AttendanceOtpValues>({
+    resolver: formResolver<AttendanceOtpValues>(buildAttendanceOtpSchema(labels)),
     defaultValues: attendanceOtpInitialValues(row),
   });
   const { getValues, reset, setError, trigger } = form;

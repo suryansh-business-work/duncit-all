@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { MY_ECOMM_CHANGE_REQUESTS } from './queries';
 
@@ -20,7 +20,7 @@ interface ChangeRequest {
 
 /** The requests raised from this portal for a kind (BRAND | PRODUCT). */
 export default function ChangeRequestList({ kind }: Readonly<{ kind: 'BRAND' | 'PRODUCT' }>) {
-  const { data, loading } = useQuery(MY_ECOMM_CHANGE_REQUESTS, {
+  const { data, loading } = useQuery<any>(MY_ECOMM_CHANGE_REQUESTS, {
     variables: { kind },
     fetchPolicy: 'cache-and-network',
   });

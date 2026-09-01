@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, configure, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { GraphQLError } from 'graphql';
 import BrandSettingsPage from './BrandSettingsPage';
 import { MY_BRANDS } from '../queries';
@@ -105,7 +106,7 @@ const warehousesMock = (
 
 const renderSettings = (mocks: MockedResponse[]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter initialEntries={[`/ecomm-brand/${BRAND_ID}/settings`]}>
         <Routes>
           <Route path="/ecomm-brand" element={<p>Brands list</p>} />

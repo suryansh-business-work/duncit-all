@@ -1,4 +1,4 @@
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Dialog,
   DialogActions,
@@ -20,7 +20,7 @@ interface Props {
 /** Confirm + run a database delete of one or many user leads (MUI, no window.confirm). */
 export default function DeleteLeadsDialog({ ids, onClose, onDeleted }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [del, { loading }] = useMutation(WA_DELETE_USER_LEADS);
+  const [del, { loading }] = useMutation<any>(WA_DELETE_USER_LEADS);
   const count = ids.length;
 
   const run = async () => {

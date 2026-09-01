@@ -1,5 +1,5 @@
 import { Box, Stack, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import SensorsIcon from '@mui/icons-material/Sensors';
 import PodCard from './PodCard';
 import { podUrl } from '../../utils/seoUrls';

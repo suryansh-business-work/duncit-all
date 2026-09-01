@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { payableSpots } from '@duncit/utils';
 import { POTENTIAL_POD_EARNINGS, type EarningsProjection } from './queries';
 
@@ -72,7 +72,7 @@ export function useEarningsPreview(input: Readonly<EarningsPreviewInput>): Earni
   const { slotPrice, podAmount, noOfSpots, venueId, isPhysical, isFree } = input;
   const sent = useDebouncedInputs(podAmount, noOfSpots);
   const hasVenue = isPhysical && slotPrice !== null;
-  const { data, loading } = useQuery(POTENTIAL_POD_EARNINGS, {
+  const { data, loading } = useQuery<any>(POTENTIAL_POD_EARNINGS, {
     variables: {
       pod_amount: sent.podAmount,
       no_of_spots: sent.noOfSpots,

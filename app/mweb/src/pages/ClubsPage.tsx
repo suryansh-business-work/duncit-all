@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { gql, useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import {
   Alert,
   Box,
@@ -60,7 +61,7 @@ export default function ClubsPage({
   zoneName,
 }: Readonly<ClubsPageProps>) {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(ALL_CLUBS, {
+  const { data, loading, error } = useQuery<any>(ALL_CLUBS, {
     variables: { locationId: locationId || undefined, locality: zoneName || undefined },
     fetchPolicy: 'cache-and-network',
   });

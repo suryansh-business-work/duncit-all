@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Skeleton, Stack, Typography } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { TOGGLE_LIKE } from '../profile-page/queries';
@@ -28,7 +28,7 @@ export default function FollowFeedList({
     variables: { source, limit: 60 },
     fetchPolicy: 'cache-and-network',
   });
-  const [toggleLike] = useMutation(TOGGLE_LIKE);
+  const [toggleLike] = useMutation<any>(TOGGLE_LIKE);
 
   const posts = useMemo(() => {
     const items = data?.followingFeed ?? [];

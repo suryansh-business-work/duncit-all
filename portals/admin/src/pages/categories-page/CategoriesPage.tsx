@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import CategoryIcon from '@mui/icons-material/Category';
 import {
@@ -41,9 +41,9 @@ export default function CategoriesPage() {
   const [delBusy, setDelBusy] = useState(false);
   const [delError, setDelError] = useState<string | null>(null);
 
-  const [createMut] = useMutation(CREATE_CATEGORY);
-  const [updateMut] = useMutation(UPDATE_CATEGORY);
-  const [deleteMut] = useMutation(DELETE_CATEGORY);
+  const [createMut] = useMutation<any>(CREATE_CATEGORY);
+  const [updateMut] = useMutation<any>(UPDATE_CATEGORY);
+  const [deleteMut] = useMutation<any>(DELETE_CATEGORY);
 
   const refetchQueries = useMemo(
     () => [

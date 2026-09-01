@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Divider,
@@ -38,8 +38,8 @@ const titleCase = (p: Position) => p[0] + p.slice(1).toLowerCase();
  */
 export default function AllVibeIconCard() {
   const { t } = useTranslation();
-  const { data } = useQuery(BRANDING, { fetchPolicy: 'cache-and-network' });
-  const [updateMut] = useMutation(UPDATE_BRANDING, { refetchQueries: [t('admin.branding.title')] });
+  const { data } = useQuery<any>(BRANDING, { fetchPolicy: 'cache-and-network' });
+  const [updateMut] = useMutation<any>(UPDATE_BRANDING, { refetchQueries: [t('admin.branding.title')] });
 
   const savedIcon: string = data?.branding?.home_all_vibe_icon_url ?? '';
   const savedLayout: Layout | null = data?.branding?.home_all_vibe_icon_layout ?? null;

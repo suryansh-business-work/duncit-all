@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import { useTranslation } from '@duncit/app-settings';
@@ -11,7 +11,7 @@ import { ADMIN_LEADERBOARD_SETTINGS, type LeaderboardSettings } from './queries'
  * finishing a window inside a rank range pays. Each card has its own Save. */
 export default function LeaderboardSettingsPage() {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(ADMIN_LEADERBOARD_SETTINGS, {
+  const { data, loading, error } = useQuery<any>(ADMIN_LEADERBOARD_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
   const settings: LeaderboardSettings | undefined = data?.leaderboardSettings;

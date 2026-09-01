@@ -43,8 +43,8 @@ export const appPopupSchema = (t: Translate = fallbackT) =>
   .object({
     name: requiredText('Name', 3, 120),
     image_url: z.string().trim().min(1, 'Upload the popup image'),
-    start_at: z.date({ required_error: 'Pick a start date', invalid_type_error: 'Pick a start date' }),
-    end_at: z.date({ required_error: 'Pick an end date', invalid_type_error: 'Pick an end date' }),
+    start_at: z.date({ error: 'Pick a start date' }),
+    end_at: z.date({ error: 'Pick an end date' }),
     enabled: z.boolean(),
     platform: z.enum(['BOTH', 'IOS', 'ANDROID']),
     close_button_enabled: z.boolean(),

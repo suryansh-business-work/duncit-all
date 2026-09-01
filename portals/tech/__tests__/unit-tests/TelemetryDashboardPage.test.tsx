@@ -13,8 +13,8 @@ const m = vi.hoisted(() => ({
   variables: undefined as unknown,
 }));
 
-vi.mock('@apollo/client', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@apollo/client')>();
+vi.mock('@apollo/client/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@apollo/client/react')>();
   return {
     ...actual,
     useQuery: (_q: unknown, opts: { variables?: unknown }) => {

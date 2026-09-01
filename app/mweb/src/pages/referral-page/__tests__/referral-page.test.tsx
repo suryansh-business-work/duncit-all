@@ -15,10 +15,11 @@
  * clipboard where there is not, and neither may throw when the person changes
  * their mind — a cancelled share sheet rejects.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ReferralPage from '..';
@@ -41,8 +42,7 @@ const REFERRAL: MyReferral = {
 
 const answering = (referral: MyReferral | null = REFERRAL): MockedResponse[] => [
   {
-    request: { query: MY_REFERRAL },
-    variableMatcher: () => true,
+    request: { query: MY_REFERRAL, variables: () => true },
     result: { data: { myReferral: referral } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
@@ -50,8 +50,7 @@ const answering = (referral: MyReferral | null = REFERRAL): MockedResponse[] => 
 
 const failing: MockedResponse[] = [
   {
-    request: { query: MY_REFERRAL },
-    variableMatcher: () => true,
+    request: { query: MY_REFERRAL, variables: () => true },
     error: new Error('Referrals are unavailable'),
     maxUsageCount: Number.POSITIVE_INFINITY,
   },
@@ -67,7 +66,7 @@ const settle = async () => {
 
 const wrap = (ui: React.ReactNode, mocks: MockedResponse[] = answering()) =>
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter>{ui}</MemoryRouter>
       </ThemeProvider>

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
@@ -25,14 +25,14 @@ export default function NotificationsPage() {
   const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const { data: locsData } = useQuery(LOCATIONS_FOR_NOTIF);
-  const { data: usersData } = useQuery(USERS_FOR_NOTIF);
-  const { data: listsData } = useQuery(AUDIENCE_LISTS_FOR_NOTIF, {
+  const { data: locsData } = useQuery<any>(LOCATIONS_FOR_NOTIF);
+  const { data: usersData } = useQuery<any>(USERS_FOR_NOTIF);
+  const { data: listsData } = useQuery<any>(AUDIENCE_LISTS_FOR_NOTIF, {
     fetchPolicy: 'cache-and-network',
   });
 
-  const [createMut] = useMutation(CREATE_NOTIFICATION);
-  const [deleteMut] = useMutation(DELETE_NOTIFICATION);
+  const [createMut] = useMutation<any>(CREATE_NOTIFICATION);
+  const [deleteMut] = useMutation<any>(DELETE_NOTIFICATION);
   const confirm = useConfirm();
 
   const [open, setOpen] = useState(false);

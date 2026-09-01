@@ -3,7 +3,8 @@
  * on the server rather than localStorage, so it travels between the
  * seventeen portals it renders inside. See the hook's own header for why.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
@@ -36,18 +37,17 @@ const stateMock = (state: StaffChatState | null, over: Partial<MockedResponse> =
 
 const saveMock = (onSave?: (input: Record<string, unknown>) => void): MockedResponse =>
   ({
-    request: { query: SAVE_STAFF_CHAT_STATE },
-    variableMatcher: (variables: { input: Record<string, unknown> }) => {
+    request: { query: SAVE_STAFF_CHAT_STATE, variables: (variables: { input: Record<string, unknown> }) => {
       onSave?.(variables.input);
       return true;
-    },
+    } },
     result: { data: { saveStaffChatState: STATE } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   }) as MockedResponse;
 
 const wrapper = (mocks: readonly MockedResponse[]) =>
   function Wrapper({ children }: { children: ReactNode }) {
-    return <MockedProvider mocks={[...mocks]}>{children}</MockedProvider>;
+    return <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>{children}</MockedProvider>;
   };
 
 describe('useChatState', () => {
@@ -183,7 +183,7 @@ describe('useChatState', () => {
   it('swallows a save that fails, since nobody should watch a round trip to change a font size', async () => {
     const mocks: MockedResponse[] = [
       stateMock(STATE),
-      { request: { query: SAVE_STAFF_CHAT_STATE }, variableMatcher: () => true, error: new Error('offline') },
+      { request: { query: SAVE_STAFF_CHAT_STATE, variables: () => true }, error: new Error('offline') },
     ];
     const { result } = renderHook(() => useChatState(), { wrapper: wrapper(mocks) });
     await waitFor(() => expect(result.current.ready).toBe(true));

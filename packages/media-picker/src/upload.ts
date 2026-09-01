@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import type { ApolloClient } from '@apollo/client';
 import { fileToDataUrl } from '@duncit/utils';
 import { UPLOAD_IMAGE } from './queries';
@@ -41,7 +41,7 @@ interface UploadImageData {
  * Throws when the server returns no URL.
  */
 export async function uploadImageToImagekit(
-  client: ApolloClient<object>,
+  client: ApolloClient,
   file: File,
   options: Readonly<UploadImageOptions> = {},
 ): Promise<ImagekitUploadResult> {

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { ACCEPTANCE_SURFACE } from '../components/policy-acceptance';
 import { useTranslation } from '../i18n/useTranslation';
 import { parseApiError } from '../utils/parseApiError';
@@ -34,7 +35,7 @@ const SIGNUP_GOOGLE = gql`
 export function useGoogleSignup(linkedCode: string) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [signupGoogle, { loading }] = useMutation(SIGNUP_GOOGLE);
+  const [signupGoogle, { loading }] = useMutation<any>(SIGNUP_GOOGLE);
   const [credential, setCredential] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 

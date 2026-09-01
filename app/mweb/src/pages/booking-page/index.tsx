@@ -1,5 +1,5 @@
-import { useQuery } from '@apollo/client';
-import { Navigate, useParams } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { Navigate, useParams } from 'react-router';
 import { Alert, Box, CircularProgress } from '@mui/material';
 import { podUrl } from '../../utils/seoUrls';
 import { useTranslation } from '../../i18n/useTranslation';

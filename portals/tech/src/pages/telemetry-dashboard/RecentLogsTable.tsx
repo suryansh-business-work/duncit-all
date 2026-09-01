@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { Chip, Typography } from '@mui/material';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { TELEMETRY_LOGS_TABLE, levelColor, type LogRow } from './queries';

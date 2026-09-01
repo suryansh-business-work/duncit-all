@@ -7,7 +7,8 @@
  * wide for the same reason — a card must not change shape as partners join.
  */
 import type { ReactNode } from 'react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { mwebAutoPodLabels, shellPodKindLabels, type AutoPodLocation, type AutoPodRow } from '@duncit/utils';
@@ -65,7 +66,7 @@ const row = (over: Partial<AutoPodRow> = {}): AutoPodRow => (({
 const formatWhen = (iso: string) => `when:${iso}`;
 const formatMoney = (amount: number) => `₹${amount}`;
 
-const wrapped = (ui: ReactNode) => render(<MockedProvider mocks={[]}>
+const wrapped = (ui: ReactNode) => render(<MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
     </MockedProvider>);
 
@@ -389,7 +390,7 @@ describe('AutoPodCategoryFilter', () => {
 
   const filter = (mocks: readonly MockedResponse[], props: Record<string, unknown> = {}) =>
     render(
-      <MockedProvider mocks={[...mocks]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
         <ThemeProvider theme={testTheme}>
           <AutoPodCategoryFilter value="" onChange={vi.fn()} labels={labels} {...(props as never)} />
         </ThemeProvider>

@@ -18,7 +18,7 @@
  * clock: the whole point of `settings.timeZone` is that two people in different
  * places read the same message under the same time.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { fireEvent, render } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
@@ -235,7 +235,7 @@ type ThreadProps = Parameters<typeof MessageThread>[0];
 const thread = (over: Partial<ThreadProps> = {}) => {
   const spies = handlers();
   const result = render(
-    <MockedProvider link={schemaMockLink()}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={schemaMockLink()}>
       <ThemeProvider theme={testTheme}>
       <MessageThread
         messages={MESSAGES}
@@ -377,7 +377,7 @@ describe('MessageThread', () => {
   it('scrolls to the newest message on arrival, while already at the bottom', () => {
     const spies = handlers();
     const tree = (msgs: StaffMessage[]) => (
-      <MockedProvider link={schemaMockLink()}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={schemaMockLink()}>
         <ThemeProvider theme={testTheme}>
           <MessageThread
             messages={msgs}
@@ -408,7 +408,7 @@ describe('MessageThread', () => {
   it('counts an arriving message as unseen once scrolled away from the bottom, and jumping clears it', () => {
     const spies = handlers();
     const tree = (msgs: StaffMessage[]) => (
-      <MockedProvider link={schemaMockLink()}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={schemaMockLink()}>
         <ThemeProvider theme={testTheme}>
           <MessageThread
             messages={msgs}
@@ -444,7 +444,7 @@ describe('MessageThread', () => {
   it('caps the unseen pill at "9+" rather than an exact count once it grows past nine', () => {
     const spies = handlers();
     const tree = (msgs: StaffMessage[]) => (
-      <MockedProvider link={schemaMockLink()}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={schemaMockLink()}>
         <ThemeProvider theme={testTheme}>
           <MessageThread
             messages={msgs}
@@ -500,7 +500,7 @@ describe('MessageThread', () => {
   it('clears the unseen count by scrolling back down, not only by clicking the pill', () => {
     const spies = handlers();
     const tree = (msgs: StaffMessage[]) => (
-      <MockedProvider link={schemaMockLink()}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={schemaMockLink()}>
         <ThemeProvider theme={testTheme}>
           <MessageThread
             messages={msgs}

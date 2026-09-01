@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -52,9 +52,9 @@ export default function VenueSlotAvailabilityTab({ venueId }: Readonly<{ venueId
     skip: !venueId,
   });
 
-  const [createSlots] = useMutation(ADMIN_CREATE_VENUE_SLOTS);
-  const [updateSlot] = useMutation(ADMIN_UPDATE_VENUE_SLOT);
-  const [deleteSlot] = useMutation(ADMIN_DELETE_VENUE_SLOT);
+  const [createSlots] = useMutation<any>(ADMIN_CREATE_VENUE_SLOTS);
+  const [updateSlot] = useMutation<any>(ADMIN_UPDATE_VENUE_SLOT);
+  const [deleteSlot] = useMutation<any>(ADMIN_DELETE_VENUE_SLOT);
 
   const slotsForSelected = useMemo<VenueSlotRow[]>(() => {
     if (!selectedDate) return [];

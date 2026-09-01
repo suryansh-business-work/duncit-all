@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, Chip, CircularProgress, Paper, Stack, Typography } from '@mui/material';
 import { MY_CALLBACK_REQUESTS, type CallbackHistoryItem } from './queries';
 import { formatDateTime } from '../../utils/dateFormat';

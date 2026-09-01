@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Stack, Typography } from '@mui/material';
 import {
   canFollowBack,
@@ -68,9 +68,9 @@ export default function FollowRequestActions({
   onAnswered,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [accept] = useMutation(ANSWER_FOLLOW_REQUEST);
-  const [reject] = useMutation(REJECT_FOLLOW_REQUEST);
-  const [followBack] = useMutation(FOLLOW_USER);
+  const [accept] = useMutation<any>(ANSWER_FOLLOW_REQUEST);
+  const [reject] = useMutation<any>(REJECT_FOLLOW_REQUEST);
+  const [followBack] = useMutation<any>(FOLLOW_USER);
   // Which action is in flight, not merely THAT one is: the pending row can
   // offer three buttons, and only the tapped one should wear the spinner.
   const [inFlight, setInFlight] = useState<'answer' | 'followBack' | null>(null);

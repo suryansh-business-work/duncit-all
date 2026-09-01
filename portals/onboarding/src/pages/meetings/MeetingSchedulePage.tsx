@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useApolloClient, useMutation } from '@apollo/client/react';
+import { useParams, useSearchParams } from 'react-router';
 import {
   Alert,
   Box,
@@ -65,7 +65,7 @@ export default function MeetingSchedulePage() {
   const refetchRef = useRef<(() => void) | null>(null);
   const updateRowRef = useRef<((row: OnboardingMeeting) => void) | null>(null);
   const refresh = useCallback(() => refetchRef.current?.(), []);
-  const [updateMeeting] = useMutation(UPDATE_MEETING);
+  const [updateMeeting] = useMutation<any>(UPDATE_MEETING);
   // Double-submit guard for "Mark done". It is a ref rather than the mutation's
   // `loading` flag because that flag would have to ride into the table's column
   // defs, and a changing column def rebuilds every AG Grid column — closing an

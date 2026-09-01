@@ -1,5 +1,5 @@
-import { Link as RouterLink } from 'react-router-dom';
-import { useQuery } from '@apollo/client';
+import { Link as RouterLink } from 'react-router';
+import { useQuery } from '@apollo/client/react';
 import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import PaidIcon from '@mui/icons-material/Paid';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -8,7 +8,7 @@ import { VENUE_EARNINGS_SUMMARY } from './queries';
 /** Compact Venue Studio card linking to /venues/earnings with the headline
  * lifetime + pending numbers from myVenueEarningsSummary. */
 export default function VenueEarningsLinkCard() {
-  const { data } = useQuery(VENUE_EARNINGS_SUMMARY, { fetchPolicy: 'cache-and-network' });
+  const { data } = useQuery<any>(VENUE_EARNINGS_SUMMARY, { fetchPolicy: 'cache-and-network' });
   const summary = data?.myVenueEarningsSummary;
   const symbol = summary?.currency_symbol ?? '₹';
   const money = (value: number) => `${symbol}${(Number(value) || 0).toFixed(2)}`;

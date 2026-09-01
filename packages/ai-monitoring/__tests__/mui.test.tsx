@@ -6,7 +6,7 @@
  * it. The dialog is pure presentation of the copy the caller resolved, which is
  * what keeps the MUI and Tamagui halves saying the same sentences.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -42,7 +42,7 @@ afterEach(() => {
 describe('AiMonitoringChip', () => {
   it('renders while the settings request is still out — a slow request must not hide the notice', async () => {
     const { container } = render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <ThemeProvider theme={testTheme}>
         <AiMonitoringChip />
         </ThemeProvider>
@@ -55,7 +55,7 @@ describe('AiMonitoringChip', () => {
 
   it('opens its dialog when pressed', async () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <ThemeProvider theme={testTheme}>
         <AiMonitoringChip />
         </ThemeProvider>
@@ -74,7 +74,7 @@ describe('AiMonitoringChip', () => {
 
   it('takes the size and spacing the hosting field gives it', async () => {
     const { container } = render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <ThemeProvider theme={testTheme}>
         <AiMonitoringChip size="small" sx={{ mt: 1 }} />
         </ThemeProvider>
@@ -104,7 +104,7 @@ describe('AiMonitoringChip', () => {
       },
     };
     const { container } = render(
-      <MockedProvider mocks={[disabledConfigMock]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[disabledConfigMock]}>
         <ThemeProvider theme={testTheme}>
         <AiMonitoringChip />
         </ThemeProvider>
@@ -117,7 +117,7 @@ describe('AiMonitoringChip', () => {
 
   it('closes its dialog again through the dismiss button', async () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <ThemeProvider theme={testTheme}>
         <AiMonitoringChip />
         </ThemeProvider>

@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Alert,
   Avatar,
@@ -77,7 +77,7 @@ export default function BoardViewer() {
   const [category, setCategory] = useState<LeaderboardCategory>('USER');
   const [period, setPeriod] = useState<LeaderboardPeriod>('MONTH');
 
-  const { data, loading, error } = useQuery(ADMIN_LEADERBOARD_BOARD, {
+  const { data, loading, error } = useQuery<any>(ADMIN_LEADERBOARD_BOARD, {
     variables: { category, period },
     fetchPolicy: 'cache-and-network',
   });

@@ -42,6 +42,7 @@ exports:
   - 'makeContactOtpSchema'
   - 'makeWithdrawSchema'
   - 'makePasswordWithOtpSchema'
+  - 'makePasswordPairSchema'
   - 'buildWithdrawInput'
   - 'blankWithdrawValues'
   - 'WITHDRAW_METHODS'
@@ -50,6 +51,7 @@ exports:
   - 'resetPasswordDefaults'
   - 'currentPasswordDefaults'
   - 'newPasswordDefaults'
+  - 'passwordPairDefaults'
   - 'deleteAccountDefaults'
 ---
 
@@ -411,6 +413,7 @@ directly.
 | `makeContactOtpSchema` | the code proving it | six digits, nothing else |
 | `makeWithdrawSchema` | wallet withdrawal | balance ceiling, role-wise floor, per-method payout details |
 | `makePasswordWithOtpSchema` | both password flows | what reset and change-password each aliased |
+| `makePasswordPairSchema` | recovery step 3 | the same pair WITHOUT a code — recovery proves its code a step earlier |
 
 `makeContactValueSchema(channel, t)` returns a different object schema per channel rather than
 one schema with every field optional. A schema that accepts a blank number because the caller

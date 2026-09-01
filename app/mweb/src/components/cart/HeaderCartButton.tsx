@@ -1,7 +1,7 @@
 import { Badge, Stack, Typography } from '@mui/material';
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import { DuncitIconButton } from '@duncit/buttons';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router';
 import { CART_BADGE_MAX, deriveCartEntry } from '@duncit/utils';
 import { useProductVisibility } from '@duncit/app-settings';
 import { useTranslation } from '../../i18n/useTranslation';

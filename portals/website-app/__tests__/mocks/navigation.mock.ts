@@ -46,22 +46,19 @@ export const websiteNavTableMock = (
   tablePageMock(WEBSITE_NAV_TABLE, 'websiteNavTable', 'WebsiteNavItemTablePage', rows);
 
 export const createNavItemMock = (): MockedResponse => ({
-  request: { query: CREATE_NAV_ITEM },
-  variableMatcher: () => true,
+  request: { query: CREATE_NAV_ITEM, variables: () => true },
   maxUsageCount: Number.POSITIVE_INFINITY,
   result: { data: { createWebsiteNavItem: { __typename: 'WebsiteNavItem', id: 'a' } } },
 });
 
 export const updateNavItemMock = (): MockedResponse => ({
-  request: { query: UPDATE_NAV_ITEM },
-  variableMatcher: () => true,
+  request: { query: UPDATE_NAV_ITEM, variables: () => true },
   maxUsageCount: Number.POSITIVE_INFINITY,
   result: { data: { updateWebsiteNavItem: { __typename: 'WebsiteNavItem', id: 'a' } } },
 });
 
 export const deleteNavItemMock = (): MockedResponse => ({
-  request: { query: DELETE_NAV_ITEM },
-  variableMatcher: () => true,
+  request: { query: DELETE_NAV_ITEM, variables: () => true },
   maxUsageCount: Number.POSITIVE_INFINITY,
   result: { data: { deleteWebsiteNavItem: true } },
 });

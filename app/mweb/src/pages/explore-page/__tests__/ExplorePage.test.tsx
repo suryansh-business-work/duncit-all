@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { describe, expect, it, vi } from 'vitest';
 import ExplorePage from '../ExplorePage';
 import { EXPLORE_PODS, TOGGLE_SAVED_POD } from '../queries';
@@ -105,7 +105,7 @@ const toggleMock = (id: string, error = false) => ({
 
 const setup = (mocks: any[], props: Record<string, unknown> = {}) =>
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ExplorePage {...props} />
     </MockedProvider>,
   );

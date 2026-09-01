@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Box,
   InputAdornment,
@@ -29,7 +29,7 @@ export default function FaqSearch({ query, onQueryChange, onOpen }: Readonly<Faq
   const { t } = useTranslation();
   const debounced = useDebouncedValue(query.trim(), 350);
   const active = debounced.length > 0;
-  const { data, loading } = useQuery(SEARCH_FAQS, {
+  const { data, loading } = useQuery<any>(SEARCH_FAQS, {
     variables: { search: debounced },
     skip: !active,
     fetchPolicy: 'cache-and-network',

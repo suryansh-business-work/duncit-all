@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { WA_CAMPAIGN_REACH } from '../queries';
 import type { WaCampaignValues } from './wa-campaign.types';
 
@@ -20,7 +20,7 @@ function isIncomplete(values: WaCampaignValues): boolean {
 
 export function useWaReach(values: WaCampaignValues): number | null {
   const skip = isIncomplete(values);
-  const { data } = useQuery(WA_CAMPAIGN_REACH, {
+  const { data } = useQuery<any>(WA_CAMPAIGN_REACH, {
     variables: {
       audience: values.audience,
       audience_list_id: values.audience_list_id || null,

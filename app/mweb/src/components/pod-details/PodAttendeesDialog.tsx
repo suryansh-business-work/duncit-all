@@ -14,7 +14,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitIconButton } from '@duncit/buttons';
 import { attendeeSeatCount } from '@duncit/utils';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useTranslation } from '../../i18n/useTranslation';
 
 type Translate = (key: string, options?: { vars?: Record<string, string | number> }) => string;

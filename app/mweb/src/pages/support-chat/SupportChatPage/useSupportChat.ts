@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
+import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
 import { canReopen, downloadBase64File, mergeReal, transcriptMime } from '../chatHelpers';
 import { useSupportChatSocket, type TypingPayload } from '../useSupportChatSocket';
 import {
@@ -43,12 +43,12 @@ export function useSupportChat() {
   const messagesQuery = useQuery<{ supportChatMessages: SupportChatMessage[] }>(SUPPORT_CHAT_MESSAGES, {
     variables: { session_id: sessionId, limit: 100 }, skip: !sessionId, fetchPolicy: 'network-only',
   });
-  const [startChat] = useMutation(START_SUPPORT_CHAT);
-  const [sendMessage, { loading: sending }] = useMutation(SEND_SUPPORT_CHAT_MESSAGE);
-  const [markRead] = useMutation(MARK_SUPPORT_CHAT_READ);
-  const [resolveChat, { loading: resolving }] = useMutation(RESOLVE_SUPPORT_CHAT);
-  const [reopenChat, { loading: reopening }] = useMutation(REOPEN_SUPPORT_CHAT);
-  const [fetchTranscript] = useLazyQuery(SUPPORT_CHAT_TRANSCRIPT, { fetchPolicy: 'network-only' });
+  const [startChat] = useMutation<any>(START_SUPPORT_CHAT);
+  const [sendMessage, { loading: sending }] = useMutation<any>(SEND_SUPPORT_CHAT_MESSAGE);
+  const [markRead] = useMutation<any>(MARK_SUPPORT_CHAT_READ);
+  const [resolveChat, { loading: resolving }] = useMutation<any>(RESOLVE_SUPPORT_CHAT);
+  const [reopenChat, { loading: reopening }] = useMutation<any>(REOPEN_SUPPORT_CHAT);
+  const [fetchTranscript] = useLazyQuery<any>(SUPPORT_CHAT_TRANSCRIPT, { fetchPolicy: 'network-only' });
 
   const { emitTyping } = useSupportChatSocket({
     sessionId,

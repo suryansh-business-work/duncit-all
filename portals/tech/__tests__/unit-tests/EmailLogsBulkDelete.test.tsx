@@ -87,8 +87,7 @@ import EmailLogsPage from '../../src/pages/email-logs-page';
 const ALL_TIME = 12480;
 
 const statsMock = (): MockedResponse => ({
-  request: { query: EMAIL_LOG_STATS },
-  variableMatcher: () => true,
+  request: { query: EMAIL_LOG_STATS, variables: () => true },
   result: {
     data: {
       emailLogStats: {
@@ -106,8 +105,7 @@ const statsMock = (): MockedResponse => ({
 });
 
 const deleteMock = (over: { count?: number | null; error?: string } = {}): MockedResponse => ({
-  request: { query: DELETE_EMAIL_LOGS },
-  variableMatcher: () => true,
+  request: { query: DELETE_EMAIL_LOGS, variables: () => true },
   result: over.error
     ? { errors: [{ message: over.error }] }
     : { data: { deleteEmailLogs: over.count } },
@@ -115,8 +113,7 @@ const deleteMock = (over: { count?: number | null; error?: string } = {}): Mocke
 });
 
 const deleteAllMock = (count: number | null): MockedResponse => ({
-  request: { query: DELETE_ALL_EMAIL_LOGS },
-  variableMatcher: () => true,
+  request: { query: DELETE_ALL_EMAIL_LOGS, variables: () => true },
   result: { data: { deleteAllEmailLogs: count } },
   maxUsageCount: 20,
 });

@@ -1,7 +1,7 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import { useTranslation } from '@duncit/app-settings';
 import GiftCardMonthlyChart from './GiftCardMonthlyChart';
@@ -17,7 +17,7 @@ export default function GiftCardDashboardPage() {
   const [params, setParams] = useSearchParams();
   const months = Number(params.get('months')) || 12;
 
-  const { data, loading, error } = useQuery(GIFT_CARD_ADMIN_STATS, {
+  const { data, loading, error } = useQuery<any>(GIFT_CARD_ADMIN_STATS, {
     variables: { months },
     fetchPolicy: 'cache-and-network',
   });

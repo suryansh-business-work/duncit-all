@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import type { ReactElement } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import AdSlot from '../../AdSlot';
 import AdTile from '../../AdTile';
@@ -24,7 +24,7 @@ const mock = (position: string, ads: unknown[]) => ({
 });
 
 const setup = (mocks: any[], ui: ReactElement) =>
-  render(<MockedProvider mocks={mocks}>{ui}</MockedProvider>);
+  render(<MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>{ui}</MockedProvider>);
 
 afterEach(() => {
   vi.restoreAllMocks();

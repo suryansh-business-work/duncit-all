@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { Box, Card, CardActionArea, CardContent, LinearProgress, Stack } from '@mui/material';
 import { mergeSx } from '../mergeSx';
 import { HintText, IconAdornment, LabelText, ValueBlock } from './parts';

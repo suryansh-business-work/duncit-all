@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
-import { Controller, useForm } from 'react-hook-form';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
+import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Alert, CircularProgress, Stack, TextField, Typography } from '@mui/material';
@@ -38,15 +39,15 @@ export const emailVerificationSchema = z.object({
 
 export default function EmailVerificationForm({ email, verified, onVerified, autoSend = false }: Readonly<EmailVerificationFormProps>) {
   const { t } = useTranslation();
-  const [requestOtp, requestState] = useMutation(REQUEST_EMAIL_OTP);
-  const [verifyOtp, verifyState] = useMutation(VERIFY_EMAIL_OTP);
+  const [requestOtp, requestState] = useMutation<any>(REQUEST_EMAIL_OTP);
+  const [verifyOtp, verifyState] = useMutation<any>(VERIFY_EMAIL_OTP);
   const [requested, setRequested] = useState(false);
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { control, handleSubmit } = useForm<EmailVerificationValues>({
+  const { control, handleSubmit } = useForm<EmailVerificationValues, any, EmailVerificationValues>({
     defaultValues: { otp: '' },
-    resolver: zodResolver(emailVerificationSchema),
+    resolver: zodResolver(emailVerificationSchema) as unknown as Resolver<EmailVerificationValues, any, EmailVerificationValues>,
   });
 
   const submit = handleSubmit(async (values) => {

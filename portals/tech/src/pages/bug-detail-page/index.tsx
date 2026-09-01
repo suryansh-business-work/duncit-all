@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useMutation, useQuery } from '@apollo/client';
+import { useNavigate, useParams } from 'react-router';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Chip, Paper, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitButton } from '@duncit/buttons';
@@ -29,7 +29,7 @@ export default function BugDetailPage() {
   const { t } = useTranslation();
   const { bugId = '' } = useParams();
   const navigate = useNavigate();
-  const [updateStatus] = useMutation(UPDATE_BUG_STATUS);
+  const [updateStatus] = useMutation<any>(UPDATE_BUG_STATUS);
   const [busy, setBusy] = useState(false);
 
   const { data, loading, error, refetch } = useQuery<{ bug: BugRow | null }>(BUG_BY_ID, {

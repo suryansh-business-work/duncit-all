@@ -1,4 +1,4 @@
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import PodsTable from '../../components/pods-table/PodsTable';

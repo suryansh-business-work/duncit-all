@@ -36,7 +36,7 @@ function Harness({
   values,
   errors,
 }: Readonly<{ values?: Partial<CreatePodFormValues>; errors?: Record<string, string> }>) {
-  const form = useForm<CreatePodFormValues>({
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, ...values },
   });
   // In an effect, not during render: setError re-renders, and setting it on the

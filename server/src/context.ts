@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { watchClientPresence } from '@utils/clientPresence';
 import { isAccountLocked } from '@modules/access/accountDeletion/accountDeletion.lock';
+import { isSessionSealed } from '@modules/access/auth/session-seal';
 
 export interface AuthUser {
   id: string;
@@ -47,7 +48,7 @@ export function decodeAuthUser(authorization?: string | null): AuthUser | null {
     const user = jwt.verify(
       authorization.slice(7),
       process.env.JWT_SECRET || 'dev-secret'
-    ) as AuthUser;
+    ) as AuthUser & { iat?: number };
     /*
       A valid signature is no longer the whole answer.
 
@@ -60,6 +61,14 @@ export function decodeAuthUser(authorization?: string | null): AuthUser | null {
       is exactly what they are.
     */
     if (isAccountLocked(user?.id)) return null;
+    /*
+      And a token older than the account's last password reset is refused for
+      the same reason, one step narrower: the account is fine, this SESSION is
+      not. Recovering a forgotten password is the one flow whose premise is that
+      somebody else may hold the old credentials, so the browser they left
+      signed in has to stop working the moment the real owner finishes.
+    */
+    if (isSessionSealed(user?.id, user?.iat)) return null;
     return user;
   } catch {
     return null;

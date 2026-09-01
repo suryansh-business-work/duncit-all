@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, Skeleton, Stack, Typography } from '@mui/material';
 import { resolveIconSource } from '@duncit/fallback-icons';
 import { FALLBACK_ICONS } from '../fallback-icons';
@@ -25,7 +26,7 @@ interface Props {
  * `branding` server settings. Used on the Login & Register pages.
  */
 export default function AuthLogo({ tagline }: Readonly<Props>) {
-  const { data, loading } = useQuery(AUTH_BRANDING, {
+  const { data, loading } = useQuery<any>(AUTH_BRANDING, {
     fetchPolicy: 'cache-first',
   });
   const b = data?.branding;

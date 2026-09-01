@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Avatar,
   Box,
@@ -26,7 +26,7 @@ export default function BrandDetailDialog({
   onClose,
 }: Readonly<{ brandId: string | null; onClose: () => void }>) {
   const { t } = useTranslation();
-  const { data, loading } = useQuery(PUBLIC_BRAND, {
+  const { data, loading } = useQuery<any>(PUBLIC_BRAND, {
     variables: { id: brandId },
     skip: !brandId,
     fetchPolicy: 'cache-first',

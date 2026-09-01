@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   contactDraftValue,
   isPhoneChannel,
@@ -46,10 +46,10 @@ const INITIAL: ContactChangeState = {
  */
 export function useContactChange(channel: ContactChannel, onSaved: () => void) {
   const [state, setState] = useState<ContactChangeState>(INITIAL);
-  const [requestPhone] = useMutation(REQUEST_PHONE_CHANGE_OTP);
-  const [confirmPhone] = useMutation(CONFIRM_PHONE_CHANGE);
-  const [requestEmail] = useMutation(REQUEST_EMAIL_CHANGE_OTP);
-  const [confirmEmail] = useMutation(CONFIRM_EMAIL_CHANGE);
+  const [requestPhone] = useMutation<any>(REQUEST_PHONE_CHANGE_OTP);
+  const [confirmPhone] = useMutation<any>(CONFIRM_PHONE_CHANGE);
+  const [requestEmail] = useMutation<any>(REQUEST_EMAIL_CHANGE_OTP);
+  const [confirmEmail] = useMutation<any>(CONFIRM_EMAIL_CHANGE);
 
   const reset = useCallback(() => setState(INITIAL), []);
 

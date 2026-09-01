@@ -47,7 +47,6 @@ import { VerificationScreen } from '@/screens/VerificationScreen';
 import { WalletScreen } from '@/screens/WalletScreen';
 import { LoginScreen } from '@/screens/LoginScreen';
 import { ForgotPasswordScreen } from '@/screens/ForgotPasswordScreen';
-import { ResetPasswordScreen } from '@/screens/ResetPasswordScreen';
 import { NotFoundScreen } from '@/screens/NotFoundScreen';
 import { PodDetailsScreen } from '@/screens/PodDetailsScreen';
 import { PodFeedbackScreen } from '@/screens/PodFeedbackScreen';
@@ -273,7 +272,6 @@ export function RootNavigator() {
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Signup" component={SignupScreen} />
           <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
         </>
       )}
     </Stack.Navigator>

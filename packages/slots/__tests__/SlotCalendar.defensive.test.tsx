@@ -10,8 +10,8 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { act, render } from '@testing-library/react';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { act, cleanup, render } from '@testing-library/react';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../src/group', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../src/group')>();
@@ -62,6 +62,15 @@ const settle = async () => {
     });
   });
 };
+
+afterEach(() => {
+  // Unmount FIRST. `globals: false` means Testing Library never sees a global
+  // `afterEach` to register its own cleanup in, so every render stays mounted —
+  // and React work still queued when the jsdom environment is torn down throws
+  // `window is not defined`, which fails the run with every test passing.
+  cleanup();
+  vi.clearAllMocks();
+});
 
 const calendar = () =>
   render(

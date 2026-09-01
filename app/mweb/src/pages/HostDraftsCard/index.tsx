@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Card,
@@ -25,8 +25,8 @@ import { DELETE_POD_DRAFT, MY_POD_DRAFTS, type DraftRowData } from './drafts';
  */
 export default function HostDraftsCard() {
   const { t } = useTranslation();
-  const { data, loading, refetch } = useQuery(MY_POD_DRAFTS, { fetchPolicy: 'cache-and-network' });
-  const [deleteMut, { loading: deleting }] = useMutation(DELETE_POD_DRAFT);
+  const { data, loading, refetch } = useQuery<any>(MY_POD_DRAFTS, { fetchPolicy: 'cache-and-network' });
+  const [deleteMut, { loading: deleting }] = useMutation<any>(DELETE_POD_DRAFT);
   const [target, setTarget] = useState<string | null>(null);
   const retentionDays = useDraftRetentionDays();
   const drafts: DraftRowData[] = data?.myPodDrafts ?? [];

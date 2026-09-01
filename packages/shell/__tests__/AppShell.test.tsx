@@ -2,15 +2,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ReactNode } from 'react';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router';
 
 // `useMutation` is here because the shell now saves the reader's console
 // arrangement (the taskbar clock, where the Agent tab was dragged to) — the
 // provider that does it is mounted by AppShell itself.
 vi.mock('@apollo/client', () => ({
+  gql: (s: TemplateStringsArray) => s,
+}));
+vi.mock('@apollo/client/react', () => ({
   useQuery: vi.fn(),
   useMutation: () => [vi.fn(), { loading: false }],
-  gql: (s: TemplateStringsArray) => s,
 }));
 // A factory mock REPLACES the module, so anything the shell imports and this
 // object omits arrives as undefined — which is how `useBreadcrumbOverride`
@@ -31,7 +33,7 @@ vi.mock('../src/staff-chat', () => ({
   ),
 }));
 
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { DuncitThemeProvider } from '@duncit/theme';
 import { AppShell } from '../src/chrome/AppShell';
 import type { AppNavItem } from '../src/types';

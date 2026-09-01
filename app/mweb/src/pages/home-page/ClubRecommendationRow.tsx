@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Avatar, Box, Card, Stack, Typography } from '@mui/material';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { DuncitButton } from '@duncit/buttons';

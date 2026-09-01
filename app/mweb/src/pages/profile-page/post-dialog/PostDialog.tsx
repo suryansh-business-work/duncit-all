@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Dialog, DialogContent, Stack } from '@mui/material';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import {
@@ -25,15 +25,15 @@ interface Props {
 export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonly<Props>) {
   const { t } = useTranslation();
   const open = !!postId;
-  const { data, loading } = useQuery(POST_DETAILS, {
+  const { data, loading } = useQuery<any>(POST_DETAILS, {
     variables: { id: postId },
     skip: !postId,
     fetchPolicy: 'cache-and-network',
   });
-  const [toggleLike] = useMutation(TOGGLE_LIKE);
-  const [addComment] = useMutation(ADD_COMMENT);
-  const [deleteComment] = useMutation(DELETE_COMMENT);
-  const [deletePost] = useMutation(DELETE_POST);
+  const [toggleLike] = useMutation<any>(TOGGLE_LIKE);
+  const [addComment] = useMutation<any>(ADD_COMMENT);
+  const [deleteComment] = useMutation<any>(DELETE_COMMENT);
+  const [deletePost] = useMutation<any>(DELETE_POST);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [confirmPostOpen, setConfirmPostOpen] = useState(false);

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { useCrumbs } from '../src/useCrumbs';
 import type { BreadcrumbNavItem, Crumb } from '../src/types';
 

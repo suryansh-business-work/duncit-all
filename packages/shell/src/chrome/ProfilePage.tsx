@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Avatar,
@@ -71,12 +72,12 @@ export function ProfilePage() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [saved, setSaved] = useState(false);
-  const [save, { loading, error }] = useMutation(UPDATE_MY_PROFILE);
+  const [save, { loading, error }] = useMutation<any>(UPDATE_MY_PROFILE);
 
   const name = accountName(user, 'User');
   const email = accountEmail(user);
   const roles = user?.roles ?? [];
-  const { data: connected } = useQuery(MY_CONNECTED_ACCOUNTS);
+  const { data: connected } = useQuery<any>(MY_CONNECTED_ACCOUNTS);
   const googleEmail: string | null = connected?.myConnectedAccounts?.google?.google_email ?? null;
 
   const startEdit = () => {

@@ -13,12 +13,12 @@
     "@duncit/app-settings": "workspace:*",
     "@duncit/buttons": "workspace:*",
     "@duncit/gql-types": "workspace:*",
-    "@tiptap/extension-link": "3.30.3",
-    "@tiptap/extension-placeholder": "3.30.3",
-    "@tiptap/extension-underline": "3.30.3",
-    "@tiptap/pm": "3.30.3",
-    "@tiptap/react": "3.30.3",
-    "@tiptap/starter-kit": "3.30.3"
+    "@tiptap/extension-link": "3.30.6",
+    "@tiptap/extension-placeholder": "3.30.6",
+    "@tiptap/extension-underline": "3.30.6",
+    "@tiptap/pm": "3.30.6",
+    "@tiptap/react": "3.30.6",
+    "@tiptap/starter-kit": "3.30.6"
   },
   "peerDependencies": {
     "@apollo/client": ">=3",
@@ -29,18 +29,18 @@
     "react-dom": ">=18"
   },
   "devDependencies": {
-    "@apollo/client": "^3.14.1",
-    "@mui/icons-material": "^9.3.1",
-    "@mui/material": "^9.3.1",
+    "@apollo/client": "^4.2.12",
+    "@mui/icons-material": "^9.4.0",
+    "@mui/material": "^9.4.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
-    "@vitest/coverage-v8": "^2.1.9",
+    "@vitest/coverage-v8": "^4.1.11",
     "graphql": "^16.14.2",
-    "jsdom": "^25.0.1",
+    "jsdom": "^30.0.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "typescript": "^5.9.3",
-    "vitest": "^2.1.9"
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
   },
   "scripts": {
     "deps:check": "node ../../scripts/deps.mjs check",

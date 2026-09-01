@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
 import ProductReviewsPanel from './ProductReviewsPanel';
 
@@ -64,7 +65,7 @@ const reviewsMock = (
 
 const renderPanel = (mocks: MockedResponse[]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ProductReviewsPanel productId="prod-1" />
     </MockedProvider>,
   );

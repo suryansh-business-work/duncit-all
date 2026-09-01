@@ -25,7 +25,7 @@ const isHttpUrl = (value: string) => {
 
 export const buildContactActionSchema = (
   type: ContactType,
-): z.ZodType<ContactActionValues, z.ZodTypeDef, unknown> => {
+) => {
   const statuses = type === 'CALL' ? CALL_STATUSES : EMAIL_STATUSES;
   return z.object({
     subject: z.string().trim().max(160, 'Subject must be 160 characters or fewer').default(''),

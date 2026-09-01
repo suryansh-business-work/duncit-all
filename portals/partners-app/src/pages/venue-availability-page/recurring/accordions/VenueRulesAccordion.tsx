@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Accordion,
   AccordionDetails,
@@ -53,7 +53,7 @@ export default function VenueRulesAccordion({ venueId, rules, onSaved }: Readonl
   const { t } = useTranslation();
   const [draft, setDraft] = useState<VenueRulesForm>(rules);
   const [saved, setSaved] = useState(false);
-  const [save, { loading, error }] = useMutation(UPDATE_VENUE_SETTINGS);
+  const [save, { loading, error }] = useMutation<any>(UPDATE_VENUE_SETTINGS);
 
   const setNum = (key: NumKey, value: string, max?: number) =>
     setDraft((d) => ({

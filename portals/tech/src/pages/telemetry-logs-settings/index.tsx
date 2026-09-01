@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { Controller, useForm } from 'react-hook-form';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
@@ -43,10 +43,10 @@ const toggleLevel = (
 
 export default function TelemetryLogsSettingsPage() {
   const { t } = useTranslation();
-  const { data, loading, error, refetch } = useQuery(TELEMETRY_SETTINGS, {
+  const { data, loading, error, refetch } = useQuery<any>(TELEMETRY_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [save] = useMutation(UPDATE_TELEMETRY_SETTINGS);
+  const [save] = useMutation<any>(UPDATE_TELEMETRY_SETTINGS);
   const [toast, setToast] = useState<string | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
 
@@ -55,8 +55,8 @@ export default function TelemetryLogsSettingsPage() {
     handleSubmit,
     reset,
     formState: { errors, isDirty, isSubmitting },
-  } = useForm<TelemetrySettingsForm>({
-    resolver: zodResolver(telemetrySettingsSchema),
+  } = useForm<TelemetrySettingsForm, any, TelemetrySettingsForm>({
+    resolver: zodResolver(telemetrySettingsSchema) as unknown as Resolver<TelemetrySettingsForm, any, TelemetrySettingsForm>,
     defaultValues: DEFAULTS,
   });
 

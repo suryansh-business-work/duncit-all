@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { useParams } from 'react-router-dom';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { useParams } from 'react-router';
 import { Alert, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import { BackHeader } from '@duncit/ui';
 import { notifySuccess } from '@duncit/dialogs';
@@ -21,11 +21,11 @@ export default function CatalogBrandDetailPage() {
   const { brandId = '' } = useParams<{ brandId: string }>();
   const [error, setError] = useState<string | null>(null);
 
-  const brandQuery = useQuery(CATALOG_BRAND, {
+  const brandQuery = useQuery<any>(CATALOG_BRAND, {
     variables: { id: brandId },
     fetchPolicy: 'cache-and-network',
   });
-  const [updateBrand, updateState] = useMutation(ADMIN_UPDATE_ECOMM_BRAND);
+  const [updateBrand, updateState] = useMutation<any>(ADMIN_UPDATE_ECOMM_BRAND);
 
   const brand: CatalogBrandDetail | null = brandQuery.data?.ecommBrand ?? null;
   const initialValues = useMemo(() => toFormValues(brand), [brand]);

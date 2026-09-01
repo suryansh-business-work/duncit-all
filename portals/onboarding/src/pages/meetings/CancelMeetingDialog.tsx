@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -24,7 +24,7 @@ interface Props {
  * asked to fill the survey again and book a new slot. */
 export default function CancelMeetingDialog({ meeting, onClose, onCancelled }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [cancelMeeting, { loading }] = useMutation(CANCEL_MEETING);
+  const [cancelMeeting, { loading }] = useMutation<any>(CANCEL_MEETING);
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
 

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { useMutation } from '@apollo/client';
-import { Controller, useForm } from 'react-hook-form';
+import { useMutation } from '@apollo/client/react';
+import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
@@ -58,12 +58,12 @@ const buildDefaults = (
 
 export default function CouponFormDialog({ open, onClose, onSaved, initial, lockedPod, pods }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [createCoupon] = useMutation(CREATE_COUPON);
-  const [updateCoupon] = useMutation(UPDATE_COUPON);
+  const [createCoupon] = useMutation<any>(CREATE_COUPON);
+  const [updateCoupon] = useMutation<any>(UPDATE_COUPON);
 
-  const { control, handleSubmit, watch, reset, setError, formState } = useForm<CouponFormValues>({
+  const { control, handleSubmit, watch, reset, setError, formState } = useForm<CouponFormValues, any, CouponFormValues>({
     defaultValues: buildDefaults(initial, lockedPod),
-    resolver: zodResolver(buildCouponFormSchema(t)),
+    resolver: zodResolver(buildCouponFormSchema(t)) as unknown as Resolver<CouponFormValues, any, CouponFormValues>,
     mode: 'onTouched',
   });
 

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -41,7 +41,7 @@ export default function ActivityJourneyDialog({ open, userId, date, onClose }: R
   const { t } = useTranslation();
   const [pageFilter, setPageFilter] = useState('');
   const [actionFilter, setActionFilter] = useState('');
-  const { data, loading, error } = useQuery(USER_CLICKSTREAM, {
+  const { data, loading, error } = useQuery<any>(USER_CLICKSTREAM, {
     variables: { user_id: userId, date, limit: 500 },
     skip: !open || !userId || !date,
     fetchPolicy: 'network-only',

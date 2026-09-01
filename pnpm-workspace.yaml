@@ -25,3 +25,96 @@ packages:
   - website/earnwith-website
   - docs-site
   - packages/*
+
+# pnpm 10 stopped running dependency install scripts unless they are named
+# here. Every one below either downloads the binary it IS (esbuild, cypress,
+# ffmpeg-static) or builds a native binding, so a blocked script does not fail
+# the install — it fails later, at the first vite build or the first image
+# upload, pointing at the wrong thing.
+allowBuilds:
+  '@apollo/protobufjs': true
+  '@parcel/watcher': true
+  cypress: true
+  esbuild: true
+  ffmpeg-static: true
+  # The one deliberate NO, carried over from the old neverBuiltDependencies:
+  # its postinstall downloads a mongod binary, and the suites that need one
+  # fetch it themselves at run time.
+  mongodb-memory-server: false
+  protobufjs: true
+  sharp: true
+  unrs-resolver: true
+
+minimumReleaseAgeExclude:
+  - jscpd@5.1.0 || 5.1.1
+  - nodemailer@9.1.0
+  - '@tiptap/core@3.30.6'
+  - '@tiptap/extension-blockquote@3.30.6'
+  - '@tiptap/extension-bold@3.30.6'
+  - '@tiptap/extension-bubble-menu@3.30.6'
+  - '@tiptap/extension-bullet-list@3.30.6'
+  - '@tiptap/extension-code-block@3.30.6'
+  - '@tiptap/extension-code@3.30.6'
+  - '@tiptap/extension-document@3.30.6'
+  - '@tiptap/extension-dropcursor@3.30.6'
+  - '@tiptap/extension-floating-menu@3.30.6'
+  - '@tiptap/extension-gapcursor@3.30.6'
+  - '@tiptap/extension-hard-break@3.30.6'
+  - '@tiptap/extension-heading@3.30.6'
+  - '@tiptap/extension-horizontal-rule@3.30.6'
+  - '@tiptap/extension-italic@3.30.6'
+  - '@tiptap/extension-link@3.30.6'
+  - '@tiptap/extension-list-item@3.30.6'
+  - '@tiptap/extension-list-keymap@3.30.6'
+  - '@tiptap/extension-list@3.30.6'
+  - '@tiptap/extension-ordered-list@3.30.6'
+  - '@tiptap/extension-paragraph@3.30.6'
+  - '@tiptap/extension-placeholder@3.30.6'
+  - '@tiptap/extension-strike@3.30.6'
+  - '@tiptap/extension-text@3.30.6'
+  - '@tiptap/extension-underline@3.30.6'
+  - '@tiptap/extensions@3.30.6'
+  - '@tiptap/pm@3.30.6'
+  - '@tiptap/react@3.30.6'
+  - '@tiptap/starter-kit@3.30.6'
+  - jscpd-darwin-arm64@5.1.1
+  - jscpd-darwin-x64@5.1.1
+  - jscpd-linux-arm64-gnu@5.1.1
+  - jscpd-linux-x64-gnu@5.1.1
+  - jscpd-linux-x64-musl@5.1.1
+  - jscpd-windows-arm64-msvc@5.1.1
+  - jscpd-windows-x64-msvc@5.1.1
+  - '@astrojs/internal-helpers@0.11.0'
+  - '@astrojs/markdown-satteri@0.4.0'
+  - astro@7.2.10
+
+# pnpm 10 moved these out of package.json's "pnpm" field. pnpm 11 does not read
+# that field at all — it only WARNS that it ignored it — so an override left
+# behind there is silently not applied. Both settings below were in package.json
+# until the pnpm 9 -> 11 move and mean exactly what they meant there.
+
+# One vitest across the monorepo. Fifty workspaces declare it and its coverage
+# provider; without a single resolved version, two copies disagree about the
+# runner API and a suite fails in a way that points at neither.
+#
+# HELD AT 3: vitest 4's v8 provider remaps coverage through the AST instead of
+# the source map, and counts a branch or a function the old mapping folded into
+# the line around it. That is a stricter MEASUREMENT, not worse code — the same
+# tree drops from 100% to ~98% across a dozen packages, and shell alone gains
+# forty files with an uninvoked inline callback. Every package's 100/100/100/100
+# threshold was calibrated against the 3.x mapping. Moving to 4 is its own piece
+# of work: cover what it newly counts, THEN take the bump.
+overrides:
+  # One Apollo client and one graphql in the tree. Several packages declare the
+  # client as a loose peer (">=3"), and a loose range is how a SECOND copy gets
+  # in: hooks then read a context the provider never created. graphql is pinned
+  # for the same reason, at the 16 line @apollo/server and graphql-ws require.
+  '@apollo/client': 4.2.12
+  graphql: 16.14.2
+  vitest: 3.2.4
+  '@vitest/coverage-v8': 3.2.4
+  '@vitest/expect': 3.2.4
+  '@vitest/spy': 3.2.4
+  '@vitest/utils': 3.2.4
+  '@vitest/runner': 3.2.4
+  '@vitest/snapshot': 3.2.4

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
@@ -21,10 +21,10 @@ export default function HostRequestsPage() {
   const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [acknowledge, { loading: acking }] = useMutation(ACKNOWLEDGE_HOST_REQUEST);
-  const [approve, { loading: approving }] = useMutation(APPROVE_HOST_REQUEST);
-  const [reject, { loading: rejecting }] = useMutation(REJECT_HOST_REQUEST);
-  const [deleteRequest, { loading: deleting }] = useMutation(DELETE_HOST_REQUEST);
+  const [acknowledge, { loading: acking }] = useMutation<any>(ACKNOWLEDGE_HOST_REQUEST);
+  const [approve, { loading: approving }] = useMutation<any>(APPROVE_HOST_REQUEST);
+  const [reject, { loading: rejecting }] = useMutation<any>(REJECT_HOST_REQUEST);
+  const [deleteRequest, { loading: deleting }] = useMutation<any>(DELETE_HOST_REQUEST);
 
   const [contactFor, setContactFor] = useState<HostRequest | null>(null);
   const [decision, setDecision] = useState<{ mode: DecisionMode; request: HostRequest } | null>(null);

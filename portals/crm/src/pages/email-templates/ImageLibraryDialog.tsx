@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -47,8 +47,8 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
   const [copied, setCopied] = useState<string | null>(null);
   const { upload } = useImagekitBase64Upload();
   const caps = useUploadCaps('PORTALS');
-  const [addImage] = useMutation(ADD_TEMPLATE_IMAGE);
-  const [removeImage] = useMutation(REMOVE_TEMPLATE_IMAGE);
+  const [addImage] = useMutation<any>(ADD_TEMPLATE_IMAGE);
+  const [removeImage] = useMutation<any>(REMOVE_TEMPLATE_IMAGE);
 
   const onFile = async (file: File | null) => {
     if (!file) return;

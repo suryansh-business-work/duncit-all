@@ -1,6 +1,6 @@
-import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Alert, Box, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -18,9 +18,9 @@ interface Props {
 
 export default function ProfileAboutEditForm({ bio, links, onCancel, onSaved }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [updateProfile, { loading, error }] = useMutation(UPDATE_MY_PROFILE);
-  const { control, handleSubmit, watch } = useForm<ProfileAboutValues>({
-    resolver: zodResolver(profileSchema),
+  const [updateProfile, { loading, error }] = useMutation<any>(UPDATE_MY_PROFILE);
+  const { control, handleSubmit, watch } = useForm<ProfileAboutValues, any, ProfileAboutValues>({
+    resolver: zodResolver(profileSchema) as unknown as Resolver<ProfileAboutValues, any, ProfileAboutValues>,
     defaultValues: {
       bio,
       profile_links: links.length ? links : [{ label: '', url: '' }],

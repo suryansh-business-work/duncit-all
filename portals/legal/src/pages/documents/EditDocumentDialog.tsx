@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -38,7 +38,7 @@ export default function EditDocumentDialog({ doc, onClose, onSaved }: Readonly<P
   const [title, setTitle] = useState('');
   const [active, setActive] = useState(true);
   const [error, setError] = useState('');
-  const [save, { loading }] = useMutation(UPDATE_LEGAL_DOCUMENT);
+  const [save, { loading }] = useMutation<any>(UPDATE_LEGAL_DOCUMENT);
 
   // Re-seed on every open: the dialog is one instance reused for every row.
   useEffect(() => {

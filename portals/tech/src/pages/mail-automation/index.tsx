@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import { DuncitButton } from '@duncit/buttons';
@@ -47,7 +47,7 @@ export default function MailAutomationPage() {
   const [connectUrl, connecting] = useMutation<{ mailAutomationConnectUrl: string }>(
     MAIL_AUTOMATION_CONNECT_URL
   );
-  const [disconnect, disconnecting] = useMutation(DISCONNECT_MAIL_AUTOMATION_ACCOUNT, {
+  const [disconnect, disconnecting] = useMutation<any>(DISCONNECT_MAIL_AUTOMATION_ACCOUNT, {
     refetchQueries: [MAIL_AUTOMATION_ACCOUNTS],
   });
 

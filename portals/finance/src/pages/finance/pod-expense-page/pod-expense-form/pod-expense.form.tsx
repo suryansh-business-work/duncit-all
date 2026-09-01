@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -18,9 +18,9 @@ export default function PodExpenseForm({
   onSubmit,
 }: Readonly<PodExpenseFormProps>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, reset } = useForm<PodExpenseFormValues>({
+  const { control, handleSubmit, reset } = useForm<PodExpenseFormValues, any, PodExpenseFormValues>({
     defaultValues: toFormValues(expense),
-    resolver: zodResolver(podExpenseSchema(t)),
+    resolver: zodResolver(podExpenseSchema(t)) as unknown as Resolver<PodExpenseFormValues, any, PodExpenseFormValues>,
   });
 
   // The drawer keeps ONE form mounted and swaps which entry it is editing, so

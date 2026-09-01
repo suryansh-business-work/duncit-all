@@ -22,6 +22,7 @@ import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.sche
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
 import { startAccountDeletionScheduler } from '@modules/access/accountDeletion/accountDeletion.scheduler';
 import { startAccountLockRefresh } from '@modules/access/accountDeletion/accountDeletion.lock';
+import { startSessionSealRefresh } from '@modules/access/auth/session-seal';
 import { buildDbBackupRouter } from '@modules/platform/dbBackup/dbBackup.router';
 import { buildTicketRouter } from '@modules/pods/ticket/ticket.router';
 import { buildGmailOAuthRouter } from '@modules/platform/mailAutomation/mailAutomation.router';
@@ -34,7 +35,7 @@ import express from 'express';
 import { ApolloServer } from '@apollo/server';
 import type { ApolloServerPlugin } from '@apollo/server';
 import { unwrapResolverError } from '@apollo/server/errors';
-import { expressMiddleware } from '@apollo/server/express4';
+import { expressMiddleware } from '@as-integrations/express5';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { describeFetchFailure, humanFetchMessage } from '@utils/outboundFetch';
 import { connectDB } from './config/db';
@@ -277,6 +278,15 @@ async function bootstrap() {
     );
     await loadAccountLocks();
   });
+  /*
+    The session seals, for the same reason and at the same moment: a token
+    issued before its owner reset their password is refused on every request,
+    and an empty map is a map that lets every one of them back in.
+  */
+  await safeSeed('sessionSeals', async () => {
+    const { loadSessionSeals } = await import('@modules/access/auth/session-seal');
+    await loadSessionSeals();
+  });
   // Builds the gift card unique indexes (code, payment_id, the once-only
   // redeem guard) — new unique indexes only land through syncIndexes at boot.
   await safeSeed('giftCardIndexes', async () => {
@@ -380,6 +390,8 @@ async function bootstrap() {
   // operator turns it on), plus the safety-net refresh of the seal map above.
   startAccountDeletionScheduler();
   startAccountLockRefresh();
+  // The same safety net for the password-reset session seals.
+  startSessionSealRefresh();
 
   // WhatsApp: the scenarios no domain event can fire — the pod reminder, the
   // nudge to complete a finished pod, an unanswered slot request, a released
@@ -493,7 +505,7 @@ async function bootstrap() {
 
   if (process.env.NODE_ENV !== 'production') {
     app.use(cors({ origin: true, credentials: true }));
-    app.options('*', cors({ origin: true, credentials: true }));
+    app.options('/{*splat}', cors({ origin: true, credentials: true }));
   }
 
   // 70mb covers a base64-inflated 50 MB document upload (50 MB raw ≈ 67 MB base64)

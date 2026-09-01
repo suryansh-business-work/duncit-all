@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { notifySuccess } from '@duncit/dialogs';
 
 const m = vi.hoisted(() => ({
@@ -9,8 +9,8 @@ const m = vi.hoisted(() => ({
   updateState: { loading: false },
 }));
 
-vi.mock('@apollo/client', async (io) => {
-  const actual = await io<typeof import('@apollo/client')>();
+vi.mock('@apollo/client/react', async (io) => {
+  const actual = await io<typeof import('@apollo/client/react')>();
   return {
     ...actual,
     useQuery: () => m.query,

@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useApolloClient, useQuery } from '@apollo/client';
+import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import { parseApiError } from '@duncit/utils';

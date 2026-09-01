@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useTranslation } from '@duncit/app-settings';
 import { notify } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
@@ -31,9 +31,9 @@ export function useWhatsappBoard() {
   const { data, loading, error } = useQuery<BoardData>(WHATSAPP_SCENARIOS, {
     fetchPolicy: 'network-only',
   });
-  const [setEnabled] = useMutation(SET_WHATSAPP_SCENARIO_ENABLED);
-  const [reconcile] = useMutation(RECONCILE_WHATSAPP_SCENARIOS);
-  const [setMedia] = useMutation(SET_WHATSAPP_SCENARIO_MEDIA);
+  const [setEnabled] = useMutation<any>(SET_WHATSAPP_SCENARIO_ENABLED);
+  const [reconcile] = useMutation<any>(RECONCILE_WHATSAPP_SCENARIOS);
+  const [setMedia] = useMutation<any>(SET_WHATSAPP_SCENARIO_MEDIA);
   const [savingMedia, setSavingMedia] = useState(false);
 
   const board = written ?? data?.whatsappScenarios ?? null;

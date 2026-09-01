@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useEntityPageMeta } from '../app/pageMeta';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import PlaceIcon from '@mui/icons-material/Place';
@@ -15,7 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import MomentLightbox from '../components/moments/MomentLightbox';
 import VenueMapPreview from '../components/VenueMapPreview';
 import { useTranslation } from '../i18n/useTranslation';
@@ -78,7 +79,7 @@ const addressParts = (venue: any) => [
 export default function VenueDetailsPage() {
   const { venueId } = useParams();
   const navigate = useNavigate();
-  const { data, loading, error } = useQuery(PUBLIC_VENUES);
+  const { data, loading, error } = useQuery<any>(PUBLIC_VENUES);
   const { t } = useTranslation();
   const [snack, setSnack] = useState('');
   const [zoomIndex, setZoomIndex] = useState<number | null>(null);

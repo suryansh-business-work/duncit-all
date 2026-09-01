@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import PodProductOrderItem from './pod-history-page/PodProductOrderItem';
@@ -7,7 +7,7 @@ import { MY_PRODUCT_ORDERS, type ProductOrder } from './pod-history-page/product
 /** My Product Order History — every product order the buyer has placed across
  * all pods (newest first), each with its full fulfilment tracking. */
 export default function OrdersHistoryPage() {
-  const { data, loading, error } = useQuery(MY_PRODUCT_ORDERS, {
+  const { data, loading, error } = useQuery<any>(MY_PRODUCT_ORDERS, {
     fetchPolicy: 'cache-and-network',
   });
   const orders: ProductOrder[] = data?.myProductOrders ?? [];

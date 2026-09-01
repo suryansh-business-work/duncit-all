@@ -88,7 +88,7 @@ COPY packages/virtual-scroll/package.json ./packages/virtual-scroll/
 COPY packages/buttons-native/package.json ./packages/buttons-native/
 COPY packages/buttons/package.json ./packages/buttons/
 
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
 RUN pnpm install --frozen-lockfile
 
 COPY packages ./packages

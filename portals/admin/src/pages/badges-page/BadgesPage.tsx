@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -23,14 +23,14 @@ import BadgeFormDialog from './BadgeFormDialog';
  * platform's own badges and everything here is editable on top of them. */
 export default function BadgesPage() {
   const { t } = useTranslation();
-  const { data, loading, error, refetch } = useQuery(BADGES);
-  const { data: categoryData } = useQuery(BADGE_CATEGORIES);
-  const { data: roleData } = useQuery(BADGE_ROLES);
+  const { data, loading, error, refetch } = useQuery<any>(BADGES);
+  const { data: categoryData } = useQuery<any>(BADGE_CATEGORIES);
+  const { data: roleData } = useQuery<any>(BADGE_ROLES);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<BadgeForm>(emptyBadge);
-  const [createBadge, createState] = useMutation(CREATE_BADGE);
-  const [updateBadge, updateState] = useMutation(UPDATE_BADGE);
-  const [deleteBadge] = useMutation(DELETE_BADGE);
+  const [createBadge, createState] = useMutation<any>(CREATE_BADGE);
+  const [updateBadge, updateState] = useMutation<any>(UPDATE_BADGE);
+  const [deleteBadge] = useMutation<any>(DELETE_BADGE);
   const confirm = useConfirm();
   const busy = createState.loading || updateState.loading;
 

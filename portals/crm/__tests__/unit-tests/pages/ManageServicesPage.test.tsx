@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import ManageServicesPage from '@/pages/ManageServicesPage';
 import {
   CREATE_CRM_SERVICE,
@@ -42,7 +42,7 @@ const configMock = () => ({
 
 const wrap = (mocks: any[]) =>
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ManageServicesPage kind="VENUE" />
     </MockedProvider>
   );

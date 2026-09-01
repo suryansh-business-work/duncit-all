@@ -1,5 +1,5 @@
-import { useApolloClient, useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useApolloClient, useQuery } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Box, Card, CardActionArea, CardContent, Stack, Typography } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
 import PolicyIcon from '@mui/icons-material/Policy';

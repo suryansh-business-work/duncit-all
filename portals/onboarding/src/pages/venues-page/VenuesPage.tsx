@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
@@ -25,10 +25,10 @@ export default function VenuesPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const refresh = useCallback(() => refetchRef.current?.(), []);
-  const [approve] = useMutation(APPROVE);
-  const [reject] = useMutation(REJECT);
-  const [setVenueDeductions, { loading: savingDeductions }] = useMutation(SET_VENUE_DEDUCTIONS);
-  const { data: defaultsData } = useQuery(DEFAULT_VENUE_COMMISSION, { fetchPolicy: 'cache-first' });
+  const [approve] = useMutation<any>(APPROVE);
+  const [reject] = useMutation<any>(REJECT);
+  const [setVenueDeductions, { loading: savingDeductions }] = useMutation<any>(SET_VENUE_DEDUCTIONS);
+  const { data: defaultsData } = useQuery<any>(DEFAULT_VENUE_COMMISSION, { fetchPolicy: 'cache-first' });
   const defaultCommissionPct: number | undefined = defaultsData?.defaultVenueCommissionPct;
   const lifecycle = useEntityLifecycle(SET_VENUE_ACTIVE, DELETE_VENUE, refresh);
   const [active, setActive] = useState<any>(null);

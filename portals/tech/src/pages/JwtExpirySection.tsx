@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -56,10 +57,10 @@ interface Props {
 
 export default function JwtExpirySection({ onToast }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { data, loading, error, refetch } = useQuery(APP_SETTINGS, {
+  const { data, loading, error, refetch } = useQuery<any>(APP_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [save] = useMutation(UPDATE);
+  const [save] = useMutation<any>(UPDATE);
 
   const [value, setValue] = useState(7);
   const [unit, setUnit] = useState<Unit>('d');

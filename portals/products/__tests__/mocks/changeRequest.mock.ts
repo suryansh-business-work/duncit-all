@@ -113,8 +113,7 @@ export const myEcommChangeRequestsMock = (
 });
 
 export const submitEcommChangeMock = (over: { fail?: boolean } = {}): MockedResponse => ({
-  request: { query: SUBMIT_ECOMM_CHANGE },
-  variableMatcher: () => true,
+  request: { query: SUBMIT_ECOMM_CHANGE, variables: () => true },
   result: over.fail
     ? { errors: [{ message: 'submit failed' }] }
     : {

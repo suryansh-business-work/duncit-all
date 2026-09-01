@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import { FinanceWaterfallList, buildWaterfallLines } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
@@ -15,7 +15,7 @@ export default function SettlementPreview({ podId, venueBillAmount, hostUserId }
     return () => clearTimeout(timer);
   }, [venueBillAmount]);
 
-  const { data, loading, error } = useQuery(POD_SETTLEMENT_PREVIEW, {
+  const { data, loading, error } = useQuery<any>(POD_SETTLEMENT_PREVIEW, {
     variables: { pod_id: podId, venue_bill_amount: amount, host_user_id: hostUserId || null },
     fetchPolicy: 'cache-and-network',
   });
@@ -28,7 +28,9 @@ export default function SettlementPreview({ podId, venueBillAmount, hostUserId }
       // "the calculation doesn't appear" bugs are born.
       return (
         <Typography variant="caption" color={error ? 'error' : 'text.secondary'}>
-          {error?.graphQLErrors[0]?.message ?? error?.message ?? 'Preview unavailable.'}
+          {/* Apollo 4 hands back ONE error whose message already carries the
+              server's reason. */}
+          {error?.message ?? 'Preview unavailable.'}
         </Typography>
       );
     }

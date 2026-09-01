@@ -7,7 +7,7 @@ const m = vi.hoisted(() => ({
   clearToken: vi.fn(),
   hasAppAccess: vi.fn(() => true),
 }));
-vi.mock('react-router-dom', () => ({ useNavigate: () => m.navigate }));
+vi.mock('react-router', () => ({ useNavigate: () => m.navigate }));
 vi.mock('@duncit/user-context', () => ({ useUserData: () => m.userData }));
 vi.mock('@duncit/shell', async (io) => {
   const actual = await io<typeof import('@duncit/shell')>();

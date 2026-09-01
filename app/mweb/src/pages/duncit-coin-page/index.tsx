@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import CoinBalanceCard from './CoinBalanceCard';
 import CoinHistoryList from './CoinHistoryList';
@@ -10,10 +10,10 @@ import { useTranslation } from '../../i18n/useTranslation';
  * earned on every successful payment and spent at checkout. */
 export default function DuncitCoinPage() {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(MY_COIN_TRANSACTIONS, {
+  const { data, loading, error } = useQuery<any>(MY_COIN_TRANSACTIONS, {
     fetchPolicy: 'cache-and-network',
   });
-  const { data: financeData } = useQuery(PUBLIC_FINANCE, { fetchPolicy: 'cache-first' });
+  const { data: financeData } = useQuery<any>(PUBLIC_FINANCE, { fetchPolicy: 'cache-first' });
 
   const balance: CoinBalance | null = data?.myCoinBalance ?? null;
   const transactions: CoinTransaction[] = data?.myCoinTransactions ?? [];

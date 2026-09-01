@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import { act, screen, fireEvent, waitFor } from '@testing-library/react';
 import SosListPage from '../../src/pages/sos/SosListPage';
 import { renderWithProviders } from '../testkit';

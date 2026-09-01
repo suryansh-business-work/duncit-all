@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   PUBLIC_APP_SETTINGS,
   ambientDateFormatter,
@@ -45,14 +45,14 @@ export function useDateFormat() {
 /** Admin-configured minimum joining age (Admin > Settings), with a safe
  * fallback. Every date-of-birth input validates against it. */
 export function useMinSignupAge(): number {
-  const { data } = useQuery(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
+  const { data } = useQuery<any>(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
   return (data?.publicAppSettings?.min_signup_age as number) ?? DEFAULT_MIN_ACCOUNT_AGE_YEARS;
 }
 
 /** Admin-configured draft-pod retention window in days (Admin > Pods > Pod
  * Settings), with a safe fallback. Drives the Host Studio draft-expiry note. */
 export function useDraftRetentionDays(): number {
-  const { data } = useQuery(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
+  const { data } = useQuery<any>(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
   return (data?.publicAppSettings?.draft_retention_days as number) ?? FALLBACK_DRAFT_RETENTION_DAYS;
 }
 

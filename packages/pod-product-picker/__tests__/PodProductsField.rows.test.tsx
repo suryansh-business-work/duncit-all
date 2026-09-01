@@ -4,7 +4,7 @@
  * cannot corrupt the total, and the dialog's pick lands back in the value.
  */
 import type { ReactElement } from 'react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -45,7 +45,7 @@ const PRODUCTS = [
   product({ id: 'p-2', product_name: 'Grip Tape', unit_cost: 120, available_count: 6, sku: 'YX-GT-01' }),
 ];
 
-const wrap = (ui: ReactElement) => render(<MockedProvider mocks={[]}>
+const wrap = (ui: ReactElement) => render(<MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
     </MockedProvider>);
 

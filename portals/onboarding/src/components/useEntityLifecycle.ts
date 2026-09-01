@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import type { DocumentNode } from 'graphql';
 import { useUserData } from '@duncit/user-context';
 import { parseApiError } from '@duncit/utils';
@@ -17,8 +17,8 @@ export function useEntityLifecycle(
   const roles = user?.roles ?? [];
   const canHardDelete = roles.includes('DEVELOPERS_MANAGER') || roles.includes('SUPER_ADMIN');
 
-  const [setActive, { loading: toggling }] = useMutation(setActiveMutation);
-  const [runDelete, { loading: deleting }] = useMutation(deleteMutation);
+  const [setActive, { loading: toggling }] = useMutation<any>(setActiveMutation);
+  const [runDelete, { loading: deleting }] = useMutation<any>(deleteMutation);
 
   const [toggleTarget, setToggleTarget] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);

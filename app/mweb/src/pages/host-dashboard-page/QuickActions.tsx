@@ -1,5 +1,5 @@
 import { useTranslation } from '../../i18n/useTranslation';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Box, ButtonBase, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DashboardIcon from '@mui/icons-material/Dashboard';

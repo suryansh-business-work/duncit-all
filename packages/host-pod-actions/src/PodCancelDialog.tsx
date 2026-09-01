@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   CircularProgress,
@@ -94,16 +94,16 @@ export default function PodCancelDialog({
     reset,
     watch,
     formState: { errors },
-  } = useForm<PodCancelValues>({
-    resolver: zodResolver(buildPodCancelSchema(labels)),
+  } = useForm<PodCancelValues, any, PodCancelValues>({
+    resolver: zodResolver(buildPodCancelSchema(labels)) as unknown as Resolver<PodCancelValues, any, PodCancelValues>,
     defaultValues: blankPodCancelValues,
   });
-  const impactQ = useQuery(HOST_POD_DELETE_IMPACT, {
+  const impactQ = useQuery<any>(HOST_POD_DELETE_IMPACT, {
     variables: { pod_doc_id: podId },
     skip: !podId,
     fetchPolicy: 'network-only',
   });
-  const [remove, removeState] = useMutation(HOST_DELETE_POD);
+  const [remove, removeState] = useMutation<any>(HOST_DELETE_POD);
   const subject = watch('reason_subject');
 
   useEffect(() => {

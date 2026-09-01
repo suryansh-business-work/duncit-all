@@ -4,14 +4,14 @@ import ProductPageHeader from '../../src/pages/inventory-page/inventory-product-
 import { renderWithProviders } from '../testkit';
 
 const nav = vi.hoisted(() => ({ fn: vi.fn() }));
-vi.mock('react-router-dom', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-router-dom')>()),
+vi.mock('react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-router')>()),
   useNavigate: () => nav.fn,
 }));
 
 const fns = vi.hoisted(() => ({ archive: vi.fn(), restore: vi.fn(), duplicate: vi.fn() }));
-vi.mock('@apollo/client', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@apollo/client')>()),
+vi.mock('@apollo/client/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@apollo/client/react')>()),
   useMutation: (doc: any) => {
     const name = doc?.definitions?.[0]?.name?.value;
     const map: Record<string, any> = {

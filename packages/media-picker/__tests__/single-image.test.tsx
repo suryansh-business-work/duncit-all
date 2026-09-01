@@ -7,7 +7,8 @@
  * the fact that the field is CONTROLLED — it reports upward and never keeps its
  * own copy of the URL.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -52,8 +53,7 @@ const stubFileReader = () => {
 
 const uploadMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
   ({
-    request: { query: UPLOAD_IMAGE },
-    variableMatcher: () => true,
+    request: { query: UPLOAD_IMAGE, variables: () => true },
     result: {
       data: {
         uploadImageToImagekit: {
@@ -69,7 +69,7 @@ const uploadMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
 
 const wrap = (ui: React.ReactElement, mocks: readonly MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={[...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
     </MockedProvider>
   );

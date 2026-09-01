@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { useLocation, useNavigate } from 'react-router';
 import { getSafeRedirectPath } from '../utils/redirect';
 import { reportJourneyStep } from '../lib/short-link-journey';
 import {
@@ -23,10 +23,10 @@ import SubmitFooter from './signup-survey/SubmitFooter';
 export default function SignupSurveyPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { data, loading, error } = useQuery(SURVEY_DATA, {
+  const { data, loading, error } = useQuery<any>(SURVEY_DATA, {
     fetchPolicy: 'cache-and-network',
   });
-  const [saveInterests, { loading: saving }] = useMutation(SAVE_INTERESTS);
+  const [saveInterests, { loading: saving }] = useMutation<any>(SAVE_INTERESTS);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [opError, setOpError] = useState<string | null>(null);
 

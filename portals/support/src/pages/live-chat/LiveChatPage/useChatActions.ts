@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import {
   CLOSE_SUPPORT_CHAT,
   EMAIL_SUPPORT_CHAT_TRANSCRIPT,
@@ -15,9 +15,9 @@ import { saveTranscript } from '../../../lib/downloadTranscript';
 export function useChatActions(onChanged: () => void) {
   const client = useApolloClient();
   const [notice, setNotice] = useState('');
-  const [resolveChat] = useMutation(CLOSE_SUPPORT_CHAT, { onCompleted: onChanged });
-  const [reopenChat] = useMutation(REOPEN_SUPPORT_CHAT, { onCompleted: onChanged });
-  const [emailChat] = useMutation(EMAIL_SUPPORT_CHAT_TRANSCRIPT);
+  const [resolveChat] = useMutation<any>(CLOSE_SUPPORT_CHAT, { onCompleted: onChanged });
+  const [reopenChat] = useMutation<any>(REOPEN_SUPPORT_CHAT, { onCompleted: onChanged });
+  const [emailChat] = useMutation<any>(EMAIL_SUPPORT_CHAT_TRANSCRIPT);
 
   const resolve = (sessionId: string) =>
     resolveChat({ variables: { session_id: sessionId } }).catch((e: Error) => setNotice(e.message));

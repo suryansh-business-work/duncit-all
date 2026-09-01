@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { DELETE, EMAIL_TEMPLATE, RENDER, UPDATE, type EmailAsset, type EmailTemplate } from '../../api/emailTemplates.gql';
 import { parseApiError } from '@duncit/utils';
 import { useTabParam } from '@duncit/tabs';
@@ -15,8 +15,8 @@ export function useEmailTemplateEditor(templateId: string) {
     variables: { id: templateId },
     fetchPolicy: 'cache-and-network',
   });
-  const [updateTpl] = useMutation(UPDATE);
-  const [deleteTpl, { loading: deleting }] = useMutation(DELETE);
+  const [updateTpl] = useMutation<any>(UPDATE);
+  const [deleteTpl, { loading: deleting }] = useMutation<any>(DELETE);
   const client = useApolloClient();
 
   const template = data?.emailTemplate ?? null;
@@ -53,7 +53,7 @@ export function useEmailTemplateEditor(templateId: string) {
   const renderPreview = async (): Promise<string[]> => {
     if (!draft) return [];
     try {
-      const res = await client.query({ query: RENDER, variables: { mjml: draft.mjml, vars: varsJson }, fetchPolicy: 'network-only' });
+      const res = await client.query<any>({ query: RENDER, variables: { mjml: draft.mjml, vars: varsJson }, fetchPolicy: 'network-only' });
       const errors = res.data?.renderEmailTemplate?.errors ?? [];
       setPreviewHtml(res.data?.renderEmailTemplate?.html ?? '');
       setPreviewErrors(errors);

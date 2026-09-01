@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTheme } from '@mui/material';
 import { Joyride, STATUS, type EventData, type Step } from 'react-joyride';
 import { findTour, type TourStep } from '@duncit/tours';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { useFeatureFlag } from '../hooks/useFeatureFlag';
 import { useTours } from './TourContext';
 import type { Translate } from '../i18n/fallback';

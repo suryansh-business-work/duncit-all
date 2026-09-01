@@ -10,7 +10,7 @@ function Harness({
   initial,
   unset = false,
 }: Readonly<{ initial?: Partial<AccountEditValues>; unset?: boolean }>) {
-  const { control, setValue, watch } = useForm<AccountEditValues>({
+  const { control, setValue, watch } = useForm<AccountEditValues, any, AccountEditValues>({
     defaultValues: (unset
       ? {}
       : { country: '', state: '', city: '', ...initial }) as AccountEditValues,

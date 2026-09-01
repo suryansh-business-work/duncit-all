@@ -1,4 +1,4 @@
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Stack, Switch, Tooltip, Typography } from '@mui/material';
 import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
@@ -27,7 +27,7 @@ export default function DocumentActiveSwitch({
   onChanged,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [setActive, { loading }] = useMutation(SET_LEGAL_DOCUMENT_ACTIVE);
+  const [setActive, { loading }] = useMutation<any>(SET_LEGAL_DOCUMENT_ACTIVE);
   const label = isActive ? t('shell.common.active') : t('shell.common.inactive');
 
   const toggle = async (next: boolean) => {

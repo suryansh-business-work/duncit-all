@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, Chip, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import SupportForm, { toContactInput, type SupportFormValues } from '../../forms/support';
@@ -20,8 +21,8 @@ const SUBMIT_SUPPORT = gql`
 
 export default function SupportPage() {
   const { t } = useTranslation();
-  const { data, loading: loadingAccount } = useQuery(SUPPORT_PAGE, { fetchPolicy: 'cache-first' });
-  const [submitSupport, { loading }] = useMutation(SUBMIT_SUPPORT);
+  const { data, loading: loadingAccount } = useQuery<any>(SUPPORT_PAGE, { fetchPolicy: 'cache-first' });
+  const [submitSupport, { loading }] = useMutation<any>(SUBMIT_SUPPORT);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const me = data?.me;

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Alert from '@mui/material/Alert';
 import Checkbox from '@mui/material/Checkbox';
@@ -37,9 +37,9 @@ export default function CancellationPolicyForm({
   t,
   onSubmit,
 }: Readonly<CancellationPolicyFormProps>) {
-  const { control, handleSubmit, reset, watch } = useForm<CancellationPolicyValues>({
+  const { control, handleSubmit, reset, watch } = useForm<CancellationPolicyValues, any, CancellationPolicyValues>({
     defaultValues: initialValues,
-    resolver: zodResolver(cancellationPolicySchema),
+    resolver: zodResolver(cancellationPolicySchema) as unknown as Resolver<CancellationPolicyValues, any, CancellationPolicyValues>,
     mode: 'onTouched',
   });
   const { fields, append, remove } = useFieldArray({ control, name: 'tiers' });

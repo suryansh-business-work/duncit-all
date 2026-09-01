@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useLazyQuery, useMutation } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLazyQuery, useMutation } from '@apollo/client/react';
+import { useNavigate, useParams } from 'react-router';
 import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitButton } from '@duncit/buttons';
@@ -52,8 +52,8 @@ export default function SurveyGatePage() {
   const [meetingError, setMeetingError] = useState<string | null>(null);
 
   const [resolveSurvey] = useLazyQuery<{ activeSurveyFor: ActiveSurvey | null }>(ACTIVE_SURVEY_FOR, { fetchPolicy: 'network-only' });
-  const [submitSurvey, { loading: submittingSurvey }] = useMutation(SUBMIT_SURVEY_RESPONSE);
-  const [requestMeeting, { loading: requesting }] = useMutation(REQUEST_MEETING);
+  const [submitSurvey, { loading: submittingSurvey }] = useMutation<any>(SUBMIT_SURVEY_RESPONSE);
+  const [requestMeeting, { loading: requesting }] = useMutation<any>(REQUEST_MEETING);
 
   useEffect(() => {
     // Nothing is decided until the flag set lands — redirecting on the first

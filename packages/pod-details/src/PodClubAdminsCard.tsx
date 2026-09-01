@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
-import { useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Avatar, Chip, Link, Stack, Typography } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import EmailIcon from '@mui/icons-material/Email';
@@ -140,7 +140,7 @@ function ClubAdminRow({
 export default function PodClubAdminsCard({ clubId, userTo }: Readonly<Props>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { data, loading, error } = useQuery(POD_CLUB_DETAIL, {
+  const { data, loading, error } = useQuery<any>(POD_CLUB_DETAIL, {
     variables: { id: clubId },
     skip: !clubId,
   });

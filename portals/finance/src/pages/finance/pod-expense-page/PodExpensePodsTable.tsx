@@ -1,5 +1,5 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { Stack, Typography } from '@mui/material';
 import { StatusChip } from '@duncit/ui';
 import {

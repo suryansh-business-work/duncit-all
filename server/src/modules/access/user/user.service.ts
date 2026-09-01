@@ -44,6 +44,7 @@ import {
   sendAdminCredentialsEmail,
   sendEmailVerificationOtpEmail,
   sendPasswordResetOtpEmail,
+  sendPasswordChangedEmail,
   sendPortalLoginOtpEmail,
   sendPasswordChangeOtpEmail,
   sendAccountDeletionOtpEmail,
@@ -548,37 +549,6 @@ async function recordSignupAcceptance(
  * holds must stay silent, because an account-level send has no entity for the
  * funnel's unique index to dedupe on.
  */
-/**
- * Tell somebody their password just changed.
- *
- * The CODE that authorises the change is `password-reset-otp` /
- * `password-change-otp`; this is the confirmation AFTER it, and it is the only
- * one of the two that reaches a person whose account has been taken over — by
- * then the attacker holds the code, not them. `authentication`, which is a
- * REQUIRED mail category, so it can never be switched off.
- *
- * Best-effort: the password is already changed by the time this runs.
- */
-async function mailPasswordChanged(email: string, firstName: string): Promise<void> {
-  if (!email) return;
-  try {
-    const { appUrl } = await getUrlConfigs();
-    await sendEmail({
-      to: email,
-      subject: 'Your Duncit password was changed',
-      template: 'password-changed',
-      category: 'authentication',
-      vars: {
-        name: firstName || 'there',
-        email,
-        when: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
-        security_url: joinUrl(appUrl, '/profile'),
-      },
-    });
-  } catch (error) {
-    logs.server.warn('user.service', 'mailPasswordChanged', { error });
-  }
-}
 
 function accountStatusEvent(before: string, after: string): string | null {
   if (before === after) return null;
@@ -2031,7 +2001,7 @@ export const userService = {
         },
       }
     );
-    await mailPasswordChanged(email, (user as any).profile?.first_name ?? '');
+    await sendPasswordChangedEmail(email, (user as any).profile?.first_name ?? '');
     return true;
   },
 
@@ -2139,7 +2109,7 @@ export const userService = {
         },
       }
     );
-    await mailPasswordChanged(
+    await sendPasswordChangedEmail(
       (user as any).auth?.email ?? '',
       (user as any).profile?.first_name ?? ''
     );

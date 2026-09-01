@@ -8,7 +8,8 @@
  * moved, and a saved layout that never arrives leaves the page standing rather
  * than blank.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -69,7 +70,7 @@ const layoutMock = (items: SavedItem[]): MockedResponse => ({
 
 const mount = (widgets = WIDGETS, mocks: MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>
       <DuncitDashboard dashboardId="admin.overview" widgets={widgets} header={<h1>Overview</h1>} />
       </ThemeProvider>

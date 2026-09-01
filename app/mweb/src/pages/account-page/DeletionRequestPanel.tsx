@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { useUserData } from '@duncit/user-context';
 import { Alert, AlertTitle, Stack, Typography } from '@mui/material';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
@@ -37,12 +37,12 @@ export default function DeletionRequestPanel({ onToast }: Readonly<Props>) {
   const [otpOpen, setOtpOpen] = useState(false);
   const [submitted, setSubmitted] = useState<PendingRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { data, refetch } = useQuery(MY_ACCOUNT_DELETION_REQUEST, {
+  const { data, refetch } = useQuery<any>(MY_ACCOUNT_DELETION_REQUEST, {
     fetchPolicy: 'cache-and-network',
   });
-  const { data: settingsData } = useQuery(ACCOUNT_DELETION_SETTINGS);
-  const [requestOtp, { loading: requesting }] = useMutation(REQUEST_ACCOUNT_DELETION_OTP);
-  const [cancelRequest, { loading: cancelling }] = useMutation(CANCEL_MY_ACCOUNT_DELETION_REQUEST);
+  const { data: settingsData } = useQuery<any>(ACCOUNT_DELETION_SETTINGS);
+  const [requestOtp, { loading: requesting }] = useMutation<any>(REQUEST_ACCOUNT_DELETION_OTP);
+  const [cancelRequest, { loading: cancelling }] = useMutation<any>(CANCEL_MY_ACCOUNT_DELETION_REQUEST);
 
   const pending: PendingRequest | null = data?.myAccountDeletionRequest ?? null;
   const retentionDays: number | null = settingsData?.accountDeletionSettings?.retention_days ?? null;

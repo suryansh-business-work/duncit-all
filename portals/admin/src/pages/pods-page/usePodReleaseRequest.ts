@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { COMPLETE_POD_SETTLEMENT } from './queries';
 import { buildCompleteInput, type CompletePodValues } from './complete-pod-dialog';
 import type { ReleaseSummary } from './ReleaseSummaryDialog';
@@ -10,7 +10,7 @@ interface Args {
 }
 
 export default function usePodReleaseRequest({ refetch, setToast }: Args) {
-  const [completePodSettlement] = useMutation(COMPLETE_POD_SETTLEMENT);
+  const [completePodSettlement] = useMutation<any>(COMPLETE_POD_SETTLEMENT);
   const [completePod, setCompletePod] = useState<any>(null);
   const [releaseBusy, setReleaseBusy] = useState(false);
   const [releaseError, setReleaseError] = useState<string | null>(null);

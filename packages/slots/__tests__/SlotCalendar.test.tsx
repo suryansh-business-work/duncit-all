@@ -12,7 +12,7 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import SlotCalendar from '../src/mui/SlotCalendar';
@@ -20,7 +20,29 @@ import SlotTimeGrid from '../src/mui/SlotTimeGrid';
 import { mwebSlotLabels } from '../src/labels';
 import type { CalendarSlot, SlotFormatter } from '../src/types';
 
-const testTheme = createTheme();
+/**
+ * Instantaneous transitions.
+ *
+ * MUI schedules a real `setTimeout` for every transition it runs, and the date
+ * picker runs several. At the default durations those timers outlive the test
+ * that started them, land after jsdom is torn down, and throw `window is not
+ * defined` — which fails the run with all 98 tests passing. At zero they
+ * resolve inside the `settle()` each test already awaits.
+ */
+const testTheme = createTheme({
+  transitions: {
+    create: () => 'none',
+    duration: {
+      shortest: 0,
+      shorter: 0,
+      short: 0,
+      standard: 0,
+      complex: 0,
+      enteringScreen: 0,
+      leavingScreen: 0,
+    },
+  },
+});
 const labels = mwebSlotLabels((key) => key);
 
 /** Fixed to UTC, standing in for `useDateFormat()`. */
@@ -77,6 +99,12 @@ const settle = async () => {
 };
 
 afterEach(() => {
+  // Unmount FIRST. `globals: false` means Testing Library never sees a global
+  // `afterEach` to register its own cleanup in, so every render stayed mounted
+  // — and a MUI transition timer that outlives the jsdom environment throws
+  // `window is not defined` after teardown, which failed the run with all 98
+  // tests passing and every threshold met.
+  cleanup();
   vi.clearAllMocks();
 });
 

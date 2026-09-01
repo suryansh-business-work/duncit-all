@@ -1,5 +1,5 @@
-import { useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Box, Chip, CircularProgress, Paper, Stack, Typography } from '@mui/material';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import { formatDistanceToNow } from 'date-fns';

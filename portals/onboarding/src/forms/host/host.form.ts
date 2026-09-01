@@ -72,8 +72,9 @@ export const hostStep3Schema = z.object({
   tags: z.array(z.string().trim().max(40)).default([]),
 });
 
+// zod 4 replaced errorMap with one `error`.
 const hostStatus = z.enum(['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], {
-  errorMap: () => ({ message: 'Select a valid status' }),
+  error: 'Select a valid status',
 });
 
 /** One category a host operates in. Ids drive the save; names + request_no are

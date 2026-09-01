@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { ZodError } from 'zod';
 import { EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
 import {
@@ -37,22 +37,22 @@ const toCategoryValue = (row: {
 
 export function useUserDetailsState(user_id: string | undefined, setToast: (m: string | null) => void) {
   const navigate = useNavigate();
-  const { data, loading, error, refetch } = useQuery(USER, {
+  const { data, loading, error, refetch } = useQuery<any>(USER, {
     variables: { user_id },
     skip: !user_id,
     fetchPolicy: 'cache-and-network',
   });
   // Host categories live on the host PROFILE, not the role — a user can hold the
   // HOST role with no profile at all, in which case there is nothing to edit.
-  const hostQuery = useQuery(USER_HOST_PROFILE, {
+  const hostQuery = useQuery<any>(USER_HOST_PROFILE, {
     variables: { user_id },
     skip: !user_id,
     fetchPolicy: 'cache-and-network',
   });
-  const [updateUser] = useMutation(UPDATE_USER);
-  const [assign] = useMutation(ASSIGN_ROLES);
-  const [setHostCategoriesMutation] = useMutation(SET_HOST_CATEGORIES);
-  const [deleteUser] = useMutation(DELETE_USER);
+  const [updateUser] = useMutation<any>(UPDATE_USER);
+  const [assign] = useMutation<any>(ASSIGN_ROLES);
+  const [setHostCategoriesMutation] = useMutation<any>(SET_HOST_CATEGORIES);
+  const [deleteUser] = useMutation<any>(DELETE_USER);
 
   const [form, setForm] = useState<EditForm | null>(null);
   const [busy, setBusy] = useState(false);

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { useForm } from 'react-hook-form';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -24,12 +24,12 @@ export default function WithdrawalSettingsPage() {
     WITHDRAWAL_MINIMUMS,
     { fetchPolicy: 'cache-and-network' },
   );
-  const [updateMut, { loading: saving }] = useMutation(UPDATE_WITHDRAWAL_MINIMUMS);
+  const [updateMut, { loading: saving }] = useMutation<any>(UPDATE_WITHDRAWAL_MINIMUMS);
   const [error, setError] = useState<string | null>(null);
 
   const { control, trigger, getValues, reset, resetField, formState } =
-    useForm<WithdrawalMinimumsForm>({
-      resolver: zodResolver(withdrawalMinimumsSchema),
+    useForm<WithdrawalMinimumsForm, any, WithdrawalMinimumsForm>({
+      resolver: zodResolver(withdrawalMinimumsSchema) as unknown as Resolver<WithdrawalMinimumsForm, any, WithdrawalMinimumsForm>,
       defaultValues: BLANK_MINIMUMS,
       mode: 'onBlur',
     });

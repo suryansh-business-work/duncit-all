@@ -31,7 +31,7 @@ function Harness({
   defaults,
   withError,
 }: Readonly<{ defaults?: Partial<CouponFormValues>; withError?: boolean }>) {
-  const form = useForm<CouponFormValues>(defaults ? { defaultValues: defaults } : undefined);
+  const form = useForm<CouponFormValues, any, CouponFormValues>(defaults ? { defaultValues: defaults } : undefined);
   useEffect(() => {
     if (withError) form.setError('valid_from', { type: 'manual', message: 'Pick a later day' });
   }, [form, withError]);

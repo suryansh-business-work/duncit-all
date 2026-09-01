@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { ApolloLink, Observable, execute, gql } from '@apollo/client';
+import { ApolloLink, execute, gql } from '@apollo/client';
+import { Observable } from '@apollo/client/utilities';
 import { apolloErrorLink } from '@duncit/shell';
 
 const QUERY = gql`

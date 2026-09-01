@@ -4,7 +4,7 @@
  * else is a named row with its size and a download that never navigates the
  * chat away.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { fireEvent, render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -12,7 +12,7 @@ import BubbleBody from '../src/staff-chat/message-bubble/BubbleBody';
 import MessageAttachment, { humanSize } from '../src/staff-chat/MessageAttachment';
 import type { StaffMessage } from '../src/staff-chat/queries';
 
-const wrap = (ui: React.ReactNode) => render(<MockedProvider mocks={[]}>{ui}</MockedProvider>);
+const wrap = (ui: React.ReactNode) => render(<MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>{ui}</MockedProvider>);
 
 const message = (over: Partial<StaffMessage> = {}): StaffMessage =>
   ({

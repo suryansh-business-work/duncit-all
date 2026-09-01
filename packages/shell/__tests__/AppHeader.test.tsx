@@ -3,13 +3,18 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 
-vi.mock('@apollo/client', () => ({ useQuery: vi.fn(), gql: (s: TemplateStringsArray) => s }));
-vi.mock('react-router-dom', () => ({
+vi.mock('@apollo/client', () => ({
+  gql: (s: TemplateStringsArray) => s,
+}));
+vi.mock('@apollo/client/react', () => ({
+  useQuery: vi.fn(),
+}));
+vi.mock('react-router', () => ({
   useNavigate: () => vi.fn(),
   Link: ({ children, to }: { children: ReactNode; to: string }) => <a href={to}>{children}</a>,
 }));
 
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { DuncitThemeProvider, type ColorMode } from '@duncit/theme';
 import { AppHeader } from '../src/chrome/AppHeader';
 import type { AppNavItem } from '../src/types';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Stack, TextField, Typography } from '@mui/material';
 import CallIcon from '@mui/icons-material/Call';
 import { DuncitButton } from '@duncit/buttons';
@@ -20,7 +20,7 @@ export default function CallTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) 
   const [to, setTo] = useState('');
   const [ext, setExt] = useState('');
   const [result, setResult] = useState<RichTestResult | null>(null);
-  const [run, { loading }] = useMutation(TEST_ENV_TWILIO);
+  const [run, { loading }] = useMutation<any>(TEST_ENV_TWILIO);
   const resultKey = 'testEnvTwilioCall';
 
   const trimmedTo = to.trim();

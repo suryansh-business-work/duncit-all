@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
-import { MemoryRouter } from 'react-router-dom';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter } from 'react-router';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import DashboardPage from '@/pages/dashboard';
 
 const wrap = () =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <MemoryRouter>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <DashboardPage />

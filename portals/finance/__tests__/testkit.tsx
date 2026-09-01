@@ -1,8 +1,9 @@
 import type { ReactElement, ReactNode } from 'react';
 import { render } from '@testing-library/react';
 import { InMemoryCache } from '@apollo/client';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -34,7 +35,7 @@ const makeCache = () => new InMemoryCache({ typePolicies: { Expense: { keyFields
 
 function Providers({ mocks, children }: Readonly<{ mocks: readonly MockedResponse[]; children: ReactNode }>) {
   return (
-    <MockedProvider mocks={mocks as MockedResponse[]} cache={makeCache()}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as MockedResponse[]} cache={makeCache()}>
       <ThemeProvider theme={theme}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>{children}</LocalizationProvider>
       </ThemeProvider>

@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { describe, expect, it } from 'vitest';
 import PodHistoryTimeline from '../PodHistoryTimeline';
 import { PUBLIC_APP_SETTINGS } from '../../../utils/dateFormat';
@@ -67,7 +67,7 @@ const baseItem = (podDateTime: string, over: Record<string, unknown> = {}): PodH
 
 const renderIt = (item: PodHistoryItem) =>
   render(
-    <MockedProvider mocks={[appSettingsMock]} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[appSettingsMock]}>
       <PodHistoryTimeline item={item} />
     </MockedProvider>,
   );

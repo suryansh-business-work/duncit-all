@@ -8,10 +8,10 @@ import {
 } from '../../src/pages/finance/payment-logs-page/queries';
 
 /**
- * Payment-logs mocks. The KPI cards come from `useQuery(PAYMENT_TOTALS)`, which
+ * Payment-logs mocks. The KPI cards come from `useQuery<any>(PAYMENT_TOTALS)`, which
  * the server rolls up; the table rows are fetched imperatively via
  * `client.query(PAYMENTS_TABLE)`; the invoice download and refund flow through
- * `client.query(INVOICE_PDF)` and `useMutation(REFUND_PAYMENT)`. Rows are a
+ * `client.query(INVOICE_PDF)` and `useMutation<any>(REFUND_PAYMENT)`. Rows are a
  * schema-synced `Pick` of `Payment`.
  *
  * The totals query used to be called `PAYMENTS` and to answer with the list
@@ -74,8 +74,7 @@ export const paymentFailed = (): PaymentRowMock =>
  * page's empty-totals branch.
  */
 export const paymentTotalsMock = (payments: PaymentRowMock[] | null): MockedResponse => ({
-  request: { query: PAYMENT_TOTALS },
-  variableMatcher: () => true,
+  request: { query: PAYMENT_TOTALS, variables: () => true },
   result: {
     data: {
       paymentTotals: payments && {
@@ -91,8 +90,7 @@ export const paymentTotalsMock = (payments: PaymentRowMock[] | null): MockedResp
 });
 
 export const paymentsTableMock = (rows: PaymentRowMock[]): MockedResponse => ({
-  request: { query: PAYMENTS_TABLE },
-  variableMatcher: () => true,
+  request: { query: PAYMENTS_TABLE, variables: () => true },
   result: { data: { paymentsTable: { __typename: 'PaymentTablePage', rows, total: rows.length } } },
   maxUsageCount: 50,
 });
@@ -101,8 +99,7 @@ export const invoicePdfMock = (
   base64: string | null = 'aGVsbG8=',
   over: { fail?: boolean } = {},
 ): MockedResponse => ({
-  request: { query: INVOICE_PDF },
-  variableMatcher: () => true,
+  request: { query: INVOICE_PDF, variables: () => true },
   ...(over.fail
     ? { error: new Error('pdf failed') }
     : { result: { data: { paymentInvoicePdfBase64: base64 } } }),
@@ -110,8 +107,7 @@ export const invoicePdfMock = (
 });
 
 export const refundPaymentMock = (over: { fail?: boolean; delay?: number } = {}): MockedResponse => ({
-  request: { query: REFUND_PAYMENT },
-  variableMatcher: () => true,
+  request: { query: REFUND_PAYMENT, variables: () => true },
   ...(over.delay ? { delay: over.delay } : {}),
   ...(over.fail
     ? { error: new Error('refund failed') }

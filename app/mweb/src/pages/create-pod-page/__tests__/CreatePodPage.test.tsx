@@ -1,14 +1,14 @@
 import '@testing-library/jest-dom/vitest';
 import type { ReactElement } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react-router-dom')>();
+vi.mock('react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router')>();
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
@@ -145,7 +145,7 @@ const draftMock = (draftId: string) => ({
 
 const renderPage = (mocks: any[], entry = '/create-pod'): ReactElement =>
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter initialEntries={[entry]}>
         <Routes>
           <Route path="/create-pod" element={<Page />} />

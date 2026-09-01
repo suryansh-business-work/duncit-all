@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useApolloClient, useMutation } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import {
   Box,
   Dialog,
@@ -47,7 +47,7 @@ export default function DocumentsListPage() {
   const [docType, setDocType] = useState('');
   const [description, setDescription] = useState('');
   const [content, setContent] = useState('');
-  const [createDoc, { loading: creating }] = useMutation(CREATE_LEGAL_DOCUMENT);
+  const [createDoc, { loading: creating }] = useMutation<any>(CREATE_LEGAL_DOCUMENT);
 
   const reset = () => {
     setName('');

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { useApolloClient } from '@apollo/client';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { useApolloClient } from '@apollo/client/react';
+import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { FormControlLabel, Snackbar, Stack, Switch } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { useMediaPickerBridge } from '@duncit/pod-form';

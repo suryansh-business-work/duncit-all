@@ -4,7 +4,8 @@
  * per-browser storage would mean per-origin, so a launcher dragged in admin
  * would still show up in the corner in finance.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
@@ -38,18 +39,17 @@ const stateMock = (dto: ShellWorkspaceStateDto): MockedResponse =>
 
 const saveMock = (onSave?: (input: Record<string, unknown>) => void): MockedResponse =>
   ({
-    request: { query: SAVE_SHELL_WORKSPACE_STATE },
-    variableMatcher: (variables: { input: Record<string, unknown> }) => {
+    request: { query: SAVE_SHELL_WORKSPACE_STATE, variables: (variables: { input: Record<string, unknown> }) => {
       onSave?.(variables.input);
       return true;
-    },
+    } },
     result: { data: { saveShellWorkspaceState: DTO } },
     maxUsageCount: Number.POSITIVE_INFINITY,
   }) as MockedResponse;
 
 const wrapper = (mocks: readonly MockedResponse[]) =>
   function Wrapper({ children }: { children: ReactNode }) {
-    return <MockedProvider mocks={[...mocks]}>{children}</MockedProvider>;
+    return <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>{children}</MockedProvider>;
   };
 
 describe('useWorkspaceState', () => {
@@ -117,7 +117,7 @@ describe('useWorkspaceState', () => {
   it('updates local state without saving anything while saving is disabled', async () => {
     const saveFn = vi.fn();
     const { result } = renderHook(() => useWorkspaceState(false), {
-      wrapper: wrapper([{ request: { query: SAVE_SHELL_WORKSPACE_STATE }, variableMatcher: () => { saveFn(); return true; }, result: { data: { saveShellWorkspaceState: DTO } } }]),
+      wrapper: wrapper([{ request: { query: SAVE_SHELL_WORKSPACE_STATE, variables: () => { saveFn(); return true; } }, result: { data: { saveShellWorkspaceState: DTO } } }]),
     });
 
     act(() => {
@@ -136,7 +136,7 @@ describe('useWorkspaceState', () => {
   it('swallows a save that fails, since nobody should watch a round trip to move a launcher', async () => {
     const mocks: MockedResponse[] = [
       stateMock(DTO),
-      { request: { query: SAVE_SHELL_WORKSPACE_STATE }, variableMatcher: () => true, error: new Error('offline') },
+      { request: { query: SAVE_SHELL_WORKSPACE_STATE, variables: () => true }, error: new Error('offline') },
     ];
     const { result } = renderHook(() => useWorkspaceState(true), { wrapper: wrapper(mocks) });
     await waitFor(() => expect(result.current.state.agentEdge).toBe('LEFT'));

@@ -11,7 +11,7 @@ export function ProductFormHarness({
   children,
   values,
 }: Readonly<{ children: ReactNode; values?: Partial<InventoryProductFormValues> }>) {
-  const methods = useForm<InventoryProductFormValues>({
+  const methods = useForm<InventoryProductFormValues, any, InventoryProductFormValues>({
     defaultValues: { ...blankProductForm, ...values },
     mode: 'onChange',
   });

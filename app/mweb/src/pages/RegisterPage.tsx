@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { readReferralCode } from '@duncit/utils';
-import { gql, useMutation } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Alert, Box, Divider, Stack, Typography } from '@mui/material';
 import { auth } from '@duncit/auth-tokens';
 import AuthBackground from '../components/AuthBackground';
@@ -46,7 +47,7 @@ function splitName(name: string): { first_name: string; last_name?: string } {
 
 export default function RegisterPage() {
   const { t } = useTranslation();
-  const [registerMutation, { loading, error }] = useMutation(REGISTER);
+  const [registerMutation, { loading, error }] = useMutation<any>(REGISTER);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const navigate = useNavigate();
 

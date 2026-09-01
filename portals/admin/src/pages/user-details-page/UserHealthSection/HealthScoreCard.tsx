@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
@@ -30,7 +30,7 @@ export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<AdminHealthAdjustment | null>(null);
-  const [deleteAdjustment, { loading: deleting }] = useMutation(DELETE_ADJUSTMENT);
+  const [deleteAdjustment, { loading: deleting }] = useMutation<any>(DELETE_ADJUSTMENT);
   const confirm = useConfirm();
   const bandColor = theme.palette[BAND_COLOR[score.band]].main;
 

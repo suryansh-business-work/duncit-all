@@ -4,7 +4,7 @@
  *
  * The page keeps its CODE/AI selection in the URL through `useTabParam`
  * (rule 40), which needs a react-router `<Router>` above it — and this
- * package does not ship react-router-dom. The stub keeps the same contract,
+ * package does not ship react-router. The stub keeps the same contract,
  * items in and `{ items, value, onChange }` out, backed by state instead of
  * the query string, so a test can still switch tabs and watch the page follow.
  */

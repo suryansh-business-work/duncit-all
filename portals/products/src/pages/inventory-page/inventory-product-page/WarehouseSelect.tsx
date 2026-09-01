@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { MenuItem, TextField } from '@mui/material';
 import { useController, useFormContext } from 'react-hook-form';
 import { BRAND_PICKUP_LOCATIONS } from '../../ecomm/queries';
@@ -14,7 +14,7 @@ export default function WarehouseSelect() {
   const { t } = useTranslation();
   const { control } = useFormContext<InventoryProductFormValues>();
   const { field, fieldState } = useController({ control, name: 'pickup_location_id' });
-  const { data, loading } = useQuery(BRAND_PICKUP_LOCATIONS, {
+  const { data, loading } = useQuery<any>(BRAND_PICKUP_LOCATIONS, {
     variables: DUNCIT_OWNER,
     fetchPolicy: 'cache-and-network',
   });

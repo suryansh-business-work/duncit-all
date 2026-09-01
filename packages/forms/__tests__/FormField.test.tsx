@@ -20,7 +20,7 @@ function FormFieldHarness({
   useProvider = false,
   ...props
 }: Readonly<HarnessProps>) {
-  const methods = useForm<Values>({ defaultValues: { name: defaultValue } });
+  const methods = useForm<Values, any, Values>({ defaultValues: { name: defaultValue } });
   const field = (
     <FormField<Values>
       name="name"

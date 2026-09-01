@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { Chip, Stack, Tooltip, Typography } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 // The outlined-theme Error glyph. Named `ErrorOutlined` rather than
 // `ErrorOutline`, which @mui/icons-material v9 no longer ships.

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { notifyError, notifySuccess, useConfirm } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
 import { CREATE_FAQ, DELETE_FAQ, UPDATE_FAQ } from './queries';
@@ -40,9 +40,9 @@ export function useFaqCrud({ defaultCategory, readCategory, toInput, messages }:
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [createFaq, createState] = useMutation(CREATE_FAQ);
-  const [updateFaq, updateState] = useMutation(UPDATE_FAQ);
-  const [deleteFaq] = useMutation(DELETE_FAQ);
+  const [createFaq, createState] = useMutation<any>(CREATE_FAQ);
+  const [updateFaq, updateState] = useMutation<any>(UPDATE_FAQ);
+  const [deleteFaq] = useMutation<any>(DELETE_FAQ);
 
   const openNew = () => {
     setEditingId(null);

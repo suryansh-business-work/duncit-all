@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import { screen, fireEvent, within } from '@testing-library/react';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import { renderWithProviders } from '../testkit';
 import { makeMarketingDashboard, marketingDashboardMock } from '../mocks';
 

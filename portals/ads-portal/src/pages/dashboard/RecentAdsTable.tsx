@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { useApolloClient } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useApolloClient } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { DuncitTable, dateColumn, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';

@@ -38,8 +38,7 @@ export const newsletterSubscribersTableMock = (
 
 /** Full list query (KPI totals on the newsletter page + dashboard). */
 export const newsletterSubscribersListMock = (rows: SubscriberMock[] = []): MockedResponse => ({
-  request: { query: NEWSLETTER_SUBSCRIBERS },
-  variableMatcher: () => true,
+  request: { query: NEWSLETTER_SUBSCRIBERS, variables: () => true },
   maxUsageCount: Number.POSITIVE_INFINITY,
   result: { data: { newsletterSubscribers: rows } },
 });

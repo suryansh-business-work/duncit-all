@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   parseApiError,
   podContentViolationsOf,
@@ -26,7 +26,7 @@ type SetFieldError = (field: any, error: { type: string; message: string }) => v
  * on the field that carries it.
  */
 export function useContentCheck(setFieldError: SetFieldError) {
-  const [moderate, moderateState] = useMutation(MODERATE_POD_CONTENT);
+  const [moderate, moderateState] = useMutation<any>(MODERATE_POD_CONTENT);
   const [blocked, setBlocked] = useState<PodContentViolation[]>([]);
   const [failure, setFailure] = useState<string | null>(null);
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Alert, Box, Snackbar, Stack, Typography } from '@mui/material';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import { useApolloTableFetch } from '@duncit/table';
@@ -22,8 +22,8 @@ export default function ApprovalsPage() {
 
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [approveMut] = useMutation(APPROVE_REQUEST);
-  const [denyMut] = useMutation(DENY_REQUEST);
+  const [approveMut] = useMutation<any>(APPROVE_REQUEST);
+  const [denyMut] = useMutation<any>(DENY_REQUEST);
 
   // The status toggle lives outside the table (default PENDING), so it is pinned
   // into the query here rather than offered as a column filter.

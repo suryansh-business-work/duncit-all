@@ -1,18 +1,18 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ExplorePodCard from '../ExplorePodCard';
 import { TOGGLE_POD_LIKE } from '../../pod-details-page/queries';
 
 // useNavigate spy.
 const navigateMock = vi.fn();
-vi.mock('react-router-dom', async (importOriginal) => ({
+vi.mock('react-router', async (importOriginal) => ({
   // Spread, not replace: a factory mock IS the module, so every export it does
   // not name arrives as undefined — which is how useSearchParams became 'No
   // export is defined on the mock' the day a shared component started paging
   // through the URL.
-  ...(await importOriginal<typeof import('react-router-dom')>()),
+  ...(await importOriginal<typeof import('react-router')>()),
   useNavigate: () => navigateMock,
 }));
 
@@ -106,7 +106,7 @@ const likeMock = (id: string, result: { like_count: number; liked_by_me: boolean
 const setup = (props: Record<string, any> = {}, mocks: any[] = []) => {
   const { pod, ...rest } = props;
   return render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ExplorePodCard
         pod={basePod(pod)}
         club={{ club_name: 'Club' }}
@@ -265,7 +265,7 @@ describe('ExplorePodCard', () => {
 
   it('re-syncs like/comment state when the pod props change (feed refetch)', () => {
     const { rerender } = render(
-      <MockedProvider mocks={[]} addTypename={false}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <ExplorePodCard
           pod={basePod()}
           club={{}}
@@ -278,7 +278,7 @@ describe('ExplorePodCard', () => {
     );
     expect(screen.getByLabelText('btn-like')).toHaveTextContent('like:3');
     rerender(
-      <MockedProvider mocks={[]} addTypename={false}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <ExplorePodCard
           pod={basePod({ liked_by_me: true, like_count: 9, comment_count: 7 })}
           club={{}}

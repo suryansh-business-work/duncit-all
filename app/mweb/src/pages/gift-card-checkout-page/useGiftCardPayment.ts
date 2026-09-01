@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import type { RazorpayErrorLike } from '@duncit/utils';
 import {
   CHECKOUT_ME,
@@ -30,11 +30,11 @@ interface Args {
  */
 export function useGiftCardPayment({ onPaymentFailure }: Readonly<Args>) {
   const { t } = useTranslation();
-  const { data: financeData, loading: financeLoading } = useQuery(PUBLIC_FINANCE);
-  const { data: meData, loading: meLoading } = useQuery(CHECKOUT_ME, { fetchPolicy: 'cache-and-network' });
-  const [doDummy] = useMutation(DUMMY_GIFT_CARD_CHECKOUT);
-  const [doOrder] = useMutation(CREATE_RAZORPAY_GIFT_CARD_ORDER);
-  const [doVerify] = useMutation(VERIFY_RAZORPAY_PAYMENT);
+  const { data: financeData, loading: financeLoading } = useQuery<any>(PUBLIC_FINANCE);
+  const { data: meData, loading: meLoading } = useQuery<any>(CHECKOUT_ME, { fetchPolicy: 'cache-and-network' });
+  const [doDummy] = useMutation<any>(DUMMY_GIFT_CARD_CHECKOUT);
+  const [doOrder] = useMutation<any>(CREATE_RAZORPAY_GIFT_CARD_ORDER);
+  const [doVerify] = useMutation<any>(VERIFY_RAZORPAY_PAYMENT);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<CheckoutPaymentRow | null>(null);

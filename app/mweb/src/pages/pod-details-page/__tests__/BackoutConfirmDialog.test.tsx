@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { MockedProvider } from '@apollo/client/testing';
+import { MemoryRouter } from 'react-router';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
 import { describe, expect, it, vi } from 'vitest';
 import BackoutConfirmDialog from '../BackoutConfirmDialog';
@@ -48,7 +48,7 @@ function renderDialog(
   return {
     ...baseProps,
     ...render(
-      <MockedProvider mocks={mocks} addTypename={false}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
         <MemoryRouter initialEntries={['/pods/1']}>
           <BackoutConfirmDialog {...baseProps} />
         </MemoryRouter>

@@ -53,8 +53,8 @@ const harness = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('@apollo/client', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@apollo/client')>();
+vi.mock('@apollo/client/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@apollo/client/react')>();
   type Doc = { definitions: { kind: string; name?: { value: string } }[] };
   const opName = (doc: Doc) =>
     doc.definitions.find((d) => d.kind === 'OperationDefinition')?.name?.value ?? '?';

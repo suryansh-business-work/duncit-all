@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { notifyError } from '../../components/notify';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Avatar,
@@ -142,15 +142,15 @@ function IdeaDetailsBody({
 
 export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Readonly<DetailsProps>) {
   const { t } = useTranslation();
-  const { data, loading, refetch } = useQuery(POD_IDEA_DETAILS, {
+  const { data, loading, refetch } = useQuery<any>(POD_IDEA_DETAILS, {
     variables: { id },
     fetchPolicy: 'cache-and-network',
   });
   const idea = data?.podIdea;
   const [text, setText] = useState('');
-  const [addCommentMut, { loading: posting }] = useMutation(ADD_COMMENT);
-  const [deleteCommentMut] = useMutation(DELETE_COMMENT);
-  const [toggleLikeMut] = useMutation(TOGGLE_LIKE);
+  const [addCommentMut, { loading: posting }] = useMutation<any>(ADD_COMMENT);
+  const [deleteCommentMut] = useMutation<any>(DELETE_COMMENT);
+  const [toggleLikeMut] = useMutation<any>(TOGGLE_LIKE);
 
   const submit = async () => {
     const t = text.trim();

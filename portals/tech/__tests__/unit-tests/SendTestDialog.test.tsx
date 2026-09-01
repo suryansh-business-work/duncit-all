@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import SendTestDialog from '../../src/pages/email-templates-page/SendTestDialog';
 import { SEND_TEST, type Tpl } from '../../src/pages/email-templates-page/queries';
 
@@ -38,7 +38,7 @@ function mocksCapturing(sent: { vars?: string }) {
 
 const renderDialog = (mocks: any[] = [], onResult = vi.fn()) => {
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <SendTestDialog
         open
         template={template}
@@ -92,7 +92,7 @@ describe('SendTestDialog', () => {
 
   it('says a template with no variables has nothing to fill', () => {
     render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <SendTestDialog
           open
           template={{ ...template, variables: [] } as unknown as Tpl}

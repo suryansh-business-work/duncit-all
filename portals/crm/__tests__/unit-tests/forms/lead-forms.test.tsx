@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
-import { MemoryRouter } from 'react-router-dom';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter } from 'react-router';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { VenueLeadForm } from '@/forms/venue-lead';
@@ -33,7 +33,7 @@ const config: CrmOptionGroup = {
 
 const wrap = (ui: React.ReactElement) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <MemoryRouter>
         <LocalizationProvider dateAdapter={AdapterDateFns}>{ui}</LocalizationProvider>
       </MemoryRouter>

@@ -8,6 +8,8 @@ import type { PodFormValues } from '../../src/types';
 const apollo = vi.hoisted(() => ({ data: undefined as unknown }));
 vi.mock('@apollo/client', () => ({
   gql: (s: TemplateStringsArray) => s.join(''),
+}));
+vi.mock('@apollo/client/react', () => ({
   useQuery: () => ({ data: apollo.data, loading: false, error: undefined }),
 }));
 

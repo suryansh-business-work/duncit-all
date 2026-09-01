@@ -1,7 +1,9 @@
 import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import type { ApolloClient } from '@apollo/client';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { GraphQLError } from 'graphql';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -23,26 +25,29 @@ const VENUE_ID = 'venue-1';
 // a *rejecting* mutation would escape as an unhandled rejection and abort the
 // run. `errorPolicy: 'all'` lets a failing mutation resolve while still filling
 // the hook's `error`, which is exactly what drives the error Alerts under test.
-const MUTATION_ERROR_POLICY = { mutate: { errorPolicy: 'all' as const } };
+// v4 only accepts a client-wide default whose value is declared through
+// ApolloClient.DeclareDefaultOptions, and that augmentation is global — it
+// re-resolves useQuery for every file in the program, which is far too wide a
+// change to make for one test provider. The option itself is the documented
+// one; only its declaration is missing, so the cast says exactly that.
+const MUTATION_ERROR_POLICY = { mutate: { errorPolicy: 'all' } } as unknown as ApolloClient.DefaultOptions;
 
 function renderWithProviders(ui: ReactElement, mocks: MockedResponse[] = []) {
   return render(
-    <MockedProvider mocks={mocks} defaultOptions={MUTATION_ERROR_POLICY}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks} defaultOptions={MUTATION_ERROR_POLICY}>
       <LocalizationProvider dateAdapter={AdapterDateFns}>{ui}</LocalizationProvider>
     </MockedProvider>,
   );
 }
 
 const failingMock = (query: MockedResponse['request']['query'], message: string, data: unknown = null): MockedResponse => ({
-  request: { query },
-  variableMatcher: () => true,
+  request: { query, variables: () => true },
   result: { data, errors: [new GraphQLError(message)] } as any,
 });
 
 /** Captures the variables a mutation was actually called with. */
 const capturingMock = (query: MockedResponse['request']['query'], data: unknown, capture: (v: any) => void): MockedResponse => ({
-  request: { query },
-  variableMatcher: () => true,
+  request: { query, variables: () => true },
   result: (variables: Record<string, any>) => {
     capture(variables);
     return { data } as any;

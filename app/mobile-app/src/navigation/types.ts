@@ -9,7 +9,6 @@ export type RootStackParamList = {
   Login: undefined;
   Signup: undefined;
   ForgotPassword: undefined;
-  ResetPassword: { email: string };
   Survey: undefined;
   /** Google signup only: the skippable "got a referral code?" step. */
   ReferralPrompt: undefined;
@@ -141,7 +140,6 @@ export type MenuRoute = Exclude<
   | 'Login'
   | 'Signup'
   | 'ForgotPassword'
-  | 'ResetPassword'
   | 'Survey'
   | 'ReferralPrompt'
   | 'ChatRoom'

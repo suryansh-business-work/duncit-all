@@ -1,5 +1,6 @@
-import { gql, useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Alert, Avatar, Box, Card, CardActionArea, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { parseApiError } from '@duncit/utils';
 import { AccountSummaryCard } from '@duncit/shell';
@@ -84,7 +85,7 @@ function StatusCard({ to, title, chartTitle, counts }: StatusCardProps) {
 export default function DashboardPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { data, loading, error } = useQuery(ONBOARDING_DASHBOARD, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery<any>(ONBOARDING_DASHBOARD, { fetchPolicy: 'cache-and-network' });
   const me = data?.me;
 
   if (loading && !data) {

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { z } from 'zod';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
@@ -57,8 +57,8 @@ interface Props {
 /** Create/edit one navigation link for a marketing website. */
 export default function NavItemDialog({ open, item, defaultSite, onClose, onSave }: Readonly<Props>) {
   const { t } = useTranslation();
-  const form = useForm<NavItemValues>({
-    resolver: zodResolver(navItemSchema),
+  const form = useForm<NavItemValues, any, NavItemValues>({
+    resolver: zodResolver(navItemSchema) as unknown as Resolver<NavItemValues, any, NavItemValues>,
     defaultValues: blankValues,
     mode: 'onBlur',
   });

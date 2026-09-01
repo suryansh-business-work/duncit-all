@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { useNavigate, useParams } from 'react-router';
 import {
   Box,
   Chip,
@@ -51,9 +51,9 @@ export default function DocumentDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
-  const [updateDoc, { loading: saving }] = useMutation(UPDATE_LEGAL_DOCUMENT, { onCompleted: () => refetch() });
-  const [deleteDoc] = useMutation(DELETE_LEGAL_DOCUMENT);
-  const [cloneDoc] = useMutation(CLONE_LEGAL_DOCUMENT);
+  const [updateDoc, { loading: saving }] = useMutation<any>(UPDATE_LEGAL_DOCUMENT, { onCompleted: () => refetch() });
+  const [deleteDoc] = useMutation<any>(DELETE_LEGAL_DOCUMENT);
+  const [cloneDoc] = useMutation<any>(CLONE_LEGAL_DOCUMENT);
 
   useEffect(() => {
     if (doc && !editing) {

@@ -14,6 +14,7 @@ import {
   makeContactValueSchema,
   makeDeleteAccountSchema,
   makeLoginSchema,
+  makePasswordPairSchema,
   makeResetPasswordSchema,
   makeWithdrawSchema,
   buildWithdrawInput,
@@ -116,7 +117,9 @@ export default defineDemos('forms', [
       // Messages are keys here so the demo shows WHICH sentence fires without
       // pinning the English; a real surface passes its own live translator.
       const t = (key: string) => key;
-      const say = (result: { success: boolean; error?: z.ZodError }) =>
+      // zod 4 types safeParse as a discriminated result; the demo only reads
+      // the issues, so it takes that shape rather than restating it.
+      const say = (result: z.ZodSafeParseResult<unknown>) =>
         result.success ? 'accepted' : result.error!.issues.map((i) => `${i.path.join('.')} — ${i.message}`);
 
       return {
@@ -124,6 +127,12 @@ export default defineDemos('forms', [
         'Reset password': say(
           makeResetPasswordSchema(t).safeParse({
             otp: mock.otp,
+            new_password: mock.new_password,
+            confirm_password: mock.confirm_password,
+          }),
+        ),
+        'Recovery: new password only': say(
+          makePasswordPairSchema(t).safeParse({
             new_password: mock.new_password,
             confirm_password: mock.confirm_password,
           }),

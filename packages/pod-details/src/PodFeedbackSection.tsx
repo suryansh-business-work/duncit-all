@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Divider, Rating, Stack, Typography } from '@mui/material';
 import StarRateIcon from '@mui/icons-material/StarRate';
 import { POD_FEEDBACK_ASPECT_LABEL, type PodFeedbackAspect } from '@duncit/utils';
@@ -56,7 +56,7 @@ function AspectAverage({ row }: Readonly<{ row: PodAspectRating }>) {
 export default function PodFeedbackSection({ podId }: Readonly<{ podId: string }>) {
   const { t } = useTranslation();
   const scopeDocs = usePodDetailsScope();
-  const { data, loading, error } = useQuery(scopeDocs.feedback, {
+  const { data, loading, error } = useQuery<any>(scopeDocs.feedback, {
     variables: { pod_id: podId },
     skip: !podId,
     fetchPolicy: 'cache-and-network',

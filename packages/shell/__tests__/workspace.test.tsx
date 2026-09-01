@@ -12,7 +12,7 @@
  * also the state every console is in for the first paint after a reload.
  */
 import type { ReactNode } from 'react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
@@ -48,7 +48,7 @@ beforeAll(() => {
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 30_000 });
 
 const wrap = (ui: ReactNode, enabled = true) => (
-  <MockedProvider>
+  <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}>
     <ThemeProvider theme={testTheme}>
       <WorkspaceProvider enabled={enabled}>{ui}</WorkspaceProvider>
     </ThemeProvider>
@@ -217,7 +217,7 @@ describe('a window on the taskbar', () => {
 
   it('rolls up to its own title bar when there is no taskbar to go to', async () => {
     render(
-      <MockedProvider>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}>
         <ThemeProvider theme={testTheme}>
           <FloatingWindow
             id="loose"

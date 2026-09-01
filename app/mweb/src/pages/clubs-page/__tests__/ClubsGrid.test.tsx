@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import type { ReactElement } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { describe, expect, it, vi } from 'vitest';
 import ClubsGrid from '../ClubsGrid';
 import { ACTIVE_ADS, type PublicAd } from '../../../components/ads/useActiveAds';
@@ -29,7 +29,7 @@ const makeClubs = (n: number) =>
   }));
 
 const setup = (mocks: any[], ui: ReactElement) =>
-  render(<MockedProvider mocks={mocks}>{ui}</MockedProvider>);
+  render(<MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>{ui}</MockedProvider>);
 
 describe('ClubsGrid', () => {
   it('renders a card for each club with the pod count', () => {

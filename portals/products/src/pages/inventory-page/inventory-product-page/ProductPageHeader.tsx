@@ -1,5 +1,5 @@
-import { useMutation } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useMutation } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Box, Breadcrumbs, Chip, Stack, Typography } from '@mui/material';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -37,9 +37,9 @@ export default function ProductPageHeader({
 }: Readonly<ProductPageHeaderProps>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [archiveProduct] = useMutation(ARCHIVE_INVENTORY_PRODUCT);
-  const [restoreProduct] = useMutation(RESTORE_INVENTORY_PRODUCT);
-  const [duplicateProduct] = useMutation(DUPLICATE_INVENTORY_PRODUCT);
+  const [archiveProduct] = useMutation<any>(ARCHIVE_INVENTORY_PRODUCT);
+  const [restoreProduct] = useMutation<any>(RESTORE_INVENTORY_PRODUCT);
+  const [duplicateProduct] = useMutation<any>(DUPLICATE_INVENTORY_PRODUCT);
 
   const isArchived = product?.status === 'ARCHIVED';
 

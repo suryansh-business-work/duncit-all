@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   DELETE_STORY,
   MY_STORIES,
@@ -35,9 +35,9 @@ export function useProfileAvatar(onChanged?: () => void, hasPhoto = false) {
   const { data, refetch: refetchStories } = useQuery<{ myStories: Story[] }>(MY_STORIES, {
     fetchPolicy: 'cache-and-network',
   });
-  const [uploadImage] = useMutation(UPLOAD_AVATAR_IMAGE);
-  const [updatePhoto] = useMutation(UPDATE_PROFILE_PHOTO);
-  const [deleteStory] = useMutation(DELETE_STORY);
+  const [uploadImage] = useMutation<any>(UPLOAD_AVATAR_IMAGE);
+  const [updatePhoto] = useMutation<any>(UPDATE_PROFILE_PHOTO);
+  const [deleteStory] = useMutation<any>(DELETE_STORY);
 
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [cropSrc, setCropSrc] = useState<string | null>(null);

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useController, useFormContext } from 'react-hook-form';
 import {
   Alert,

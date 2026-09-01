@@ -1,5 +1,5 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
 import { describe, expect, it } from 'vitest';
 import type { ReactNode } from 'react';
@@ -208,7 +208,7 @@ const followedUsersMock = {
 
 function wrapperWith(mocks: any[]) {
   return ({ children }: { children: ReactNode }) => (
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       {children}
     </MockedProvider>
   );

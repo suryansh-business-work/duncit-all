@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -46,8 +46,8 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
     setError,
     watch,
     formState: { errors },
-  } = useForm<PodResubmitValues>({
-    resolver: zodResolver(podResubmitSchema),
+  } = useForm<PodResubmitValues, any, PodResubmitValues>({
+    resolver: zodResolver(podResubmitSchema) as unknown as Resolver<PodResubmitValues, any, PodResubmitValues>,
     defaultValues: podResubmitInitialValues(pod),
   });
   const venueId = watch('venue_id');
@@ -57,7 +57,7 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
     skip: !venueId,
     fetchPolicy: 'cache-and-network',
   });
-  const [resubmit, resubmitState] = useMutation(HOST_RESUBMIT_POD);
+  const [resubmit, resubmitState] = useMutation<any>(HOST_RESUBMIT_POD);
   const check = useContentCheck(setError);
   const busy = resubmitState.loading || check.checking;
 

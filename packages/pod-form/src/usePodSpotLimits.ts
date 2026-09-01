@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import type { PodSpotLimits } from '@duncit/utils';
 
 export const POD_SPOT_LIMITS = gql`

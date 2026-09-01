@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { useForm, type UseFormReturn } from 'react-hook-form';
+import { useForm, type UseFormReturn, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import DocumentsSection from './DocumentsSection';
 import { registerVenueSchema } from '../register-venue/register-venue.schema';
@@ -45,8 +45,8 @@ interface HarnessProps {
 }
 
 function Harness({ mode, defaults, lockedDocCount, docTypes, formRef }: Readonly<HarnessProps>) {
-  const form = useForm<RegisterVenueValues>({
-    resolver: zodResolver(registerVenueSchema),
+  const form = useForm<RegisterVenueValues, any, RegisterVenueValues>({
+    resolver: zodResolver(registerVenueSchema) as unknown as Resolver<RegisterVenueValues, any, RegisterVenueValues>,
     defaultValues: { ...blankRegisterVenueValues, ...defaults },
     mode: 'onBlur',
   });

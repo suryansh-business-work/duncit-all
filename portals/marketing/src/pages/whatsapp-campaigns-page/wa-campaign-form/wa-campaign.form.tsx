@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
@@ -71,9 +71,9 @@ export default function WaCampaignForm({
     setValue,
     watch,
     formState: { isValid },
-  } = useForm<WaCampaignValues>({
+  } = useForm<WaCampaignValues, any, WaCampaignValues>({
     defaultValues: emptyValues(),
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<WaCampaignValues, any, WaCampaignValues>,
     mode: 'onChange',
   });
 

@@ -22,8 +22,7 @@ export const LOGIN = gql`
 
 /** An `AuthPayload` result — a token+user on success, or a null token to model a failed login. */
 export const loginResultMock = (token: string | null, roles: string[]): MockedResponse => ({
-  request: { query: LOGIN },
-  variableMatcher: () => true,
+  request: { query: LOGIN, variables: () => true },
   result: {
     data: {
       login: {

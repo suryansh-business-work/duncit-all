@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { QueryGuard } from '@duncit/ui';
 import HealthScoreCard from '../user-details-page/UserHealthSection/HealthScoreCard';
 import {

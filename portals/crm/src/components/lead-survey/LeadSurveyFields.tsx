@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Alert, Snackbar, Stack } from '@mui/material';
 import { SAVE_LEAD_SURVEY_RESPONSE, type LeadSurveyAnswer, type LeadSurveyDef, type LeadSurveyEntity } from './queries';
 import SurveyStepper, { type SurveyAnswerInput } from './SurveyStepper';
@@ -19,7 +19,7 @@ export default function LeadSurveyFields({ entity, leadId, survey, initialAnswer
   const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const [snack, setSnack] = useState<string | null>(null);
-  const [save, { loading: saving }] = useMutation(SAVE_LEAD_SURVEY_RESPONSE);
+  const [save, { loading: saving }] = useMutation<any>(SAVE_LEAD_SURVEY_RESPONSE);
 
   const onSubmit = async (answers: SurveyAnswerInput[]) => {
     setError(null);

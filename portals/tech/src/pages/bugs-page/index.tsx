@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useApolloClient } from '@apollo/client';
+import { useNavigate } from 'react-router';
+import { useApolloClient } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { useUserData } from '@duncit/user-context';

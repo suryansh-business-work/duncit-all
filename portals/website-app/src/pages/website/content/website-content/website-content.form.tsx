@@ -1,4 +1,4 @@
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, DialogActions, FormControlLabel, Stack, Switch } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -27,9 +27,9 @@ interface Props {
 
 export default function WebsiteContentForm({ type, item, submitting, errorMessage, onSubmit, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { control, handleSubmit } = useForm<WebsiteContentFormValues>({
+  const { control, handleSubmit } = useForm<WebsiteContentFormValues, any, WebsiteContentFormValues>({
     defaultValues: item ? toFormValues(item) : blankValues(),
-    resolver: zodResolver(websiteContentSchema),
+    resolver: zodResolver(websiteContentSchema) as unknown as Resolver<WebsiteContentFormValues, any, WebsiteContentFormValues>,
     mode: 'onTouched',
   });
 

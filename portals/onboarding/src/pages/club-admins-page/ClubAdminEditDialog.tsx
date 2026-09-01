@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -40,7 +40,7 @@ export default function ClubAdminEditDialog({ row, onClose, onSaved }: Readonly<
   const [commission, setCommission] = useState('0');
   const [category, setCategory] = useState<AdminCategoryValue>(EMPTY_CATEGORY);
   const [error, setError] = useState('');
-  const [save, { loading }] = useMutation(UPDATE_CLUB_ADMIN);
+  const [save, { loading }] = useMutation<any>(UPDATE_CLUB_ADMIN);
 
   useEffect(() => {
     if (!row) return;

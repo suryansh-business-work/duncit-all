@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
+import { z } from 'zod';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -55,11 +56,11 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
     setValue,
     setError,
     formState: { errors },
-  } = useForm<PodEditValues>({
+  } = useForm<z.input<ReturnType<typeof buildPodEditSchema>>, any, PodEditValues>({
     resolver: zodResolver(buildPodEditSchema(labels)),
     defaultValues: podEditInitialValues(pod),
   });
-  const [save, saveState] = useMutation(HOST_UPDATE_POD);
+  const [save, saveState] = useMutation<any>(HOST_UPDATE_POD);
   // Network-only: capacity and seats sold both move while the dialog is closed,
   // and a cached range would offer seats that are already gone.
   const limitsQuery = useQuery<{ podSpotLimits: PodSpotLimits }>(POD_SPOT_LIMITS, {

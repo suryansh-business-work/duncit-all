@@ -40,8 +40,7 @@ export const makeLoginUser = (over: Partial<LoginUserMock> = {}): LoginUserMock 
 
 /** A successful/failed login. `token: null` models the "no token" server reply. */
 export const loginMock = (token: string | null, roles: string[]): MockedResponse => ({
-  request: { query: LOGIN },
-  variableMatcher: () => true,
+  request: { query: LOGIN, variables: () => true },
   result: {
     data: {
       login: token
@@ -53,7 +52,6 @@ export const loginMock = (token: string | null, roles: string[]): MockedResponse
 
 /** A GraphQL-level login failure (bad credentials). */
 export const loginErrorMock = (message: string): MockedResponse => ({
-  request: { query: LOGIN },
-  variableMatcher: () => true,
+  request: { query: LOGIN, variables: () => true },
   result: { errors: [{ message }] as never },
 });

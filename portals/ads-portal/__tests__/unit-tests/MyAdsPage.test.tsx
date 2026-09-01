@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import { screen, fireEvent } from '@testing-library/react';
 import MyAdsPage from '../../src/pages/ads/MyAdsPage';
 import { makeAdRow } from '../mocks';

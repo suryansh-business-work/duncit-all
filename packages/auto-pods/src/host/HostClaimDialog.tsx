@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import Alert from '@mui/material/Alert';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -53,7 +53,7 @@ export function HostClaimDialog({
   locationLabel,
 }: Readonly<HostClaimDialogProps>) {
   const [failure, setFailure] = useState<string | null>(null);
-  const [assign, assignState] = useMutation(HOST_ASSIGN_AUTO_POD);
+  const [assign, assignState] = useMutation<any>(HOST_ASSIGN_AUTO_POD);
 
   const needsLocation = row ? autoPodHostNeedsLocation(row, locationId) : false;
   const pinsCity = !!row && !row.location && !!locationId;

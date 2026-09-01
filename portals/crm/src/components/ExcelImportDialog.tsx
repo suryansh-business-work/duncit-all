@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { gql, useApolloClient, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,

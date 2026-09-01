@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useMutation } from '@apollo/client/react';
+import { useLocation, useNavigate } from 'react-router';
 import AuthBackground from '../../components/AuthBackground';
 import AuthModeToggle from '../../components/AuthModeToggle';
 import GoogleAuthNoticeDialog from '../../components/GoogleAuthNoticeDialog';
@@ -15,15 +15,19 @@ import {
 } from '../../utils/redirect';
 import { LINK_GOOGLE_ACCOUNT, LOGIN, LOGIN_GOOGLE } from './queries';
 import GoogleLinkConsentDialog from './GoogleLinkConsentDialog';
-import LoginCard from './LoginCard';
+import LoginCard, { type LoginStep } from './LoginCard';
 
 export default function LoginPage() {
   const { t } = useTranslation();
+  // Which half of the sign-in screen is showing. Kept in state rather than the
+  // URL: it is a choice of method, not a place — a shared /login link should
+  // always open on the options.
+  const [step, setStep] = useState<LoginStep>('CHOOSE');
   const navigate = useNavigate();
   const location = useLocation();
-  const [loginMutation, { loading, error }] = useMutation(LOGIN);
-  const [loginGoogle, { loading: gLoading }] = useMutation(LOGIN_GOOGLE);
-  const [linkGoogle, { loading: linking }] = useMutation(LINK_GOOGLE_ACCOUNT);
+  const [loginMutation, { loading, error }] = useMutation<any>(LOGIN);
+  const [loginGoogle, { loading: gLoading }] = useMutation<any>(LOGIN_GOOGLE);
+  const [linkGoogle, { loading: linking }] = useMutation<any>(LINK_GOOGLE_ACCOUNT);
   const [gError, setGError] = useState<string | null>(null);
   const [gNotice, setGNotice] = useState<{
     title: string;
@@ -113,6 +117,8 @@ export default function LoginPage() {
       <AuthModeToggle />
 
       <LoginCard
+        step={step}
+        onStep={setStep}
         loading={loading}
         errorMessage={error ? parseApiError(error) : null}
         onSubmit={handleSubmit}

@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import ChatRoomPage from '../ChatRoomPage';
 import {
@@ -12,12 +12,12 @@ import {
 
 const mockNavigate = vi.fn();
 
-vi.mock('react-router-dom', async (importOriginal) => ({
+vi.mock('react-router', async (importOriginal) => ({
   // Spread, not replace: a factory mock IS the module, so every export it does
   // not name arrives as undefined — which is how useSearchParams became 'No
   // export is defined on the mock' the day a shared component started paging
   // through the URL.
-  ...(await importOriginal<typeof import('react-router-dom')>()),
+  ...(await importOriginal<typeof import('react-router')>()),
   useParams: () => ({ id: 'pod1' }),
   useNavigate: () => mockNavigate,
 }));
@@ -105,9 +105,8 @@ const participantsMock = {
 
 function renderPage(extraMocks: any[] = [], pod = podActive, messages = [otherMsg, mineMsg]) {
   return render(
-    <MockedProvider
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
       mocks={[messagesMock(pod, messages), participantsMock, ...extraMocks]}
-      addTypename={false}
     >
       <ChatRoomPage />
     </MockedProvider>,

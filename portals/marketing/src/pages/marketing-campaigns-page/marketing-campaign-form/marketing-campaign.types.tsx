@@ -26,9 +26,9 @@ const defaultMjml = `<mjml>
 /** Marketing campaign contract — RHF + Zod (migrated from Formik + Yup). */
 export const marketingCampaignSchema = z.object({
     name: requiredText('Campaign name', 3, 120),
-    channel: z.enum(['EMAIL'], { required_error: 'Channel is required' }),
+    channel: z.enum(['EMAIL'], { error: 'Channel is required' }),
     audience: z.enum(['ALL_USERS', 'NEWSLETTER_SUBSCRIBERS', 'AUDIENCE_LIST'], {
-      required_error: 'Audience is required',
+      error: 'Audience is required',
     }),
     audience_list_id: z.string().trim().default(''),
     subject: requiredText('Subject', 3, 180),

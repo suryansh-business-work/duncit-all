@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { addDays, set as setTimeOnDate, startOfDay } from 'date-fns';
 import {
   initialRecurringForm,
@@ -23,10 +24,10 @@ const at = (h: number, m: number) =>
   setTimeOnDate(DAY, { hours: h, minutes: m, seconds: 0, milliseconds: 0 }).toISOString();
 
 let activeMocks: MockedResponse[] = [];
-let onDone: Mock<[], void>;
+let onDone: Mock<() => void>;
 
 function Wrapper({ children }: Readonly<{ children: ReactNode }>) {
-  return <MockedProvider mocks={activeMocks}>{children}</MockedProvider>;
+  return <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={activeMocks}>{children}</MockedProvider>;
 }
 
 interface ExistingRow {
@@ -70,8 +71,7 @@ const deleteMock = (slotId: string): MockedResponse => ({
 });
 
 const createMock = (capture: (v: Record<string, any>) => void): MockedResponse => ({
-  request: { query: CREATE_VENUE_SLOTS },
-  variableMatcher: () => true,
+  request: { query: CREATE_VENUE_SLOTS, variables: () => true },
   result: (variables: Record<string, any>) => {
     capture(variables);
     return { data: { createVenueSlots: [{ __typename: 'VenueSlot', id: 'created-1' }] } };
@@ -90,7 +90,7 @@ const HALL_AND_ROOF: CapacityItem[] = [
 
 beforeEach(() => {
   activeMocks = [];
-  onDone = vi.fn<[], void>();
+  onDone = vi.fn<() => void>();
 });
 
 describe('seedSpaces', () => {
@@ -209,7 +209,7 @@ describe('useRecurringDialog state machine', () => {
   it('resets the edited form back to its seed and clears a live server error', async () => {
     activeMocks = [
       slotsLookupMock([]),
-      { request: { query: CREATE_VENUE_SLOTS }, variableMatcher: () => true, error: new Error('Server exploded') },
+      { request: { query: CREATE_VENUE_SLOTS, variables: () => true }, error: new Error('Server exploded') },
     ];
     const { result } = mountHook(HALL_AND_ROOF);
     act(() =>
@@ -354,7 +354,7 @@ describe('useRecurringDialog submit', () => {
   it('surfaces a failing create as a server error', async () => {
     activeMocks = [
       slotsLookupMock([]),
-      { request: { query: CREATE_VENUE_SLOTS }, variableMatcher: () => true, error: new Error('Server exploded') },
+      { request: { query: CREATE_VENUE_SLOTS, variables: () => true }, error: new Error('Server exploded') },
     ];
     const { result } = mountHook(HALL_AND_ROOF);
     act(() => result.current.patch({ startDate: DAY, endDate: DAY }));

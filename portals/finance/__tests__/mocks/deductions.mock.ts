@@ -65,8 +65,7 @@ export const deductionSettingsLoadingMock = (): MockedResponse => ({
 });
 
 export const updateDeductionsMock = (over: { fail?: boolean; delay?: number } = {}): MockedResponse => ({
-  request: { query: UPDATE_DEDUCTIONS },
-  variableMatcher: () => true,
+  request: { query: UPDATE_DEDUCTIONS, variables: () => true },
   ...(over.delay ? { delay: over.delay } : {}),
   ...(over.fail
     ? { error: new Error('nope') }

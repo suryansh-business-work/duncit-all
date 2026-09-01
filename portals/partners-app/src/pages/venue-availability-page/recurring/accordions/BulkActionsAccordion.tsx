@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Accordion,
   AccordionDetails,
@@ -37,8 +37,8 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
   const [price, setPrice] = useState('');
   const [result, setResult] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<null | { text: string; run: () => Promise<void> }>(null);
-  const [bulkDelete, { error: deleteError }] = useMutation(BULK_DELETE_VENUE_SLOTS);
-  const [bulkUpdate, { error: updateError }] = useMutation(BULK_UPDATE_VENUE_SLOTS);
+  const [bulkDelete, { error: deleteError }] = useMutation<any>(BULK_DELETE_VENUE_SLOTS);
+  const [bulkUpdate, { error: updateError }] = useMutation<any>(BULK_UPDATE_VENUE_SLOTS);
 
   const filter = () => ({
     venue_id: venueId,

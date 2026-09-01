@@ -1,5 +1,5 @@
 import { Controller, type Control } from 'react-hook-form';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { Card, CardContent, Link, Stack, TextField, Typography } from '@mui/material';
 import { REFERRAL_MESSAGE_TOKENS } from '@duncit/utils';
 import type { ReferralSettingsForm } from './referral-settings.schema';

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import SurveyAnswers from './SurveyAnswers';
 import { USER_SURVEY_RESPONSES } from './queries';
 
@@ -25,7 +25,7 @@ const mock = (userSurveyResponses: unknown) => [
 
 const renderAnswers = (data: unknown, props?: { title?: string }) =>
   render(
-    <MockedProvider mocks={mock(data) as any} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mock(data) as any}>
       <SurveyAnswers userId="u1" kind="HOST" {...props} />
     </MockedProvider>,
   );
@@ -77,7 +77,7 @@ describe('SurveyAnswers', () => {
 
   it('skips the query entirely without a user id', () => {
     render(
-      <MockedProvider mocks={[]} addTypename={false}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <SurveyAnswers userId="" kind="HOST" />
       </MockedProvider>,
     );

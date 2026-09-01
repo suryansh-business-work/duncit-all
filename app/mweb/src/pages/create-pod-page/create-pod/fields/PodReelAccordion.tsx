@@ -15,7 +15,7 @@ import MovieOutlinedIcon from '@mui/icons-material/MovieOutlined';
 import VideocamOutlinedIcon from '@mui/icons-material/VideocamOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitButton } from '@duncit/buttons';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { MB, compressUploadedVideo, useImagekitDirectUpload, useUploadCaps } from '@duncit/media-picker';
 import { useTranslation } from '../../../../i18n/useTranslation';

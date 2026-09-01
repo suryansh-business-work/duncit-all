@@ -107,8 +107,10 @@ export {
 export {
   GENERIC_ERROR_MESSAGE,
   OFFLINE_MESSAGE,
+  firstGraphQLError,
   isNetworkFailureMessage,
   parseApiError,
+  type GraphQLErrorLike,
 } from './parse-api-error';
 export { formatINR, formatMoney, type FormatMoneyOptions } from './format-money';
 export { base64ToBlob, downloadBase64File, downloadBlob, downloadTextFile } from './download';
@@ -405,6 +407,32 @@ export {
   type ContactSnapshot,
   type ContactTranslate,
 } from './contact-change';
+export {
+  PASSWORD_RECOVERY_CHANNELS,
+  PASSWORD_RECOVERY_STEP_COUNT,
+  PASSWORD_RECOVERY_STEPS,
+  buildPasswordRecoveryLabels,
+  initialRecoveryState,
+  passwordRecoveryStepIndex,
+  previousRecoveryStep,
+  recoveryAfterComplete,
+  recoveryAfterSend,
+  recoveryAfterVerify,
+  recoveryBack,
+  recoveryDestination,
+  recoveryHeading,
+  recoveryLookup,
+  recoveryResendSeconds,
+  recoveryWithChannel,
+  type PasswordRecoveryChannel,
+  type PasswordRecoveryHeading,
+  type PasswordRecoveryLookup,
+  type PasswordRecoveryChannelLabels,
+  type PasswordRecoveryLabels,
+  type PasswordRecoveryState,
+  type PasswordRecoveryStep,
+  type PasswordRecoveryTranslate,
+} from './password-recovery';
 export {
   IDLE_USERNAME_CHECK,
   USERNAME_CHECK_DEBOUNCE_MS,

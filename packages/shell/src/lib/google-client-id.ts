@@ -35,7 +35,7 @@ export const setGoogleClientId = (next: string | null | undefined): void => {
 };
 
 /** Query the server for the runtime id; resolves to '' on any failure. */
-async function fetchGoogleClientId(apolloClient: ApolloClient<unknown>): Promise<string> {
+async function fetchGoogleClientId(apolloClient: ApolloClient): Promise<string> {
   try {
     const { data } = await apolloClient.query<{ publicClientConfig?: { google_client_id?: string | null } }>({
       query: PUBLIC_CLIENT_CONFIG,
@@ -53,7 +53,7 @@ async function fetchGoogleClientId(apolloClient: ApolloClient<unknown>): Promise
  * server has nothing. Never rejects, and never blocks first paint for longer
  * than `CONFIG_TIMEOUT_MS`.
  */
-export async function loadGoogleClientId(apolloClient: ApolloClient<unknown>, fallback = ''): Promise<string> {
+export async function loadGoogleClientId(apolloClient: ApolloClient, fallback = ''): Promise<string> {
   const timedOut = new Promise<string>((resolve) => {
     globalThis.setTimeout(() => resolve(''), CONFIG_TIMEOUT_MS);
   });

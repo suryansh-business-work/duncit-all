@@ -24,12 +24,42 @@ export function isNetworkFailureMessage(message: string): boolean {
   return NETWORK_FAILURE_RE.test(message);
 }
 
-/** Structural subset of ApolloError — no @apollo/client dependency. */
+/**
+ * Structural subset of what the clients throw — no @apollo/client dependency.
+ *
+ * Two generations of Apollo are described here on purpose. v3 split a failure
+ * into `networkError` and `graphQLErrors`; v4 throws one error and puts the
+ * GraphQL ones on `errors` (CombinedGraphQLErrors). The native app, which
+ * speaks raw fetch, matches neither and lands on `message`.
+ */
 type ApiErrorShape = {
   message?: string;
   networkError?: { message?: string } | null;
   graphQLErrors?: ReadonlyArray<{ message: string }>;
+  errors?: ReadonlyArray<{ message: string }>;
 };
+
+/** One GraphQL error as either Apollo generation reports it. */
+export interface GraphQLErrorLike {
+  message?: string;
+  extensions?: Record<string, unknown>;
+}
+
+/**
+ * The first GraphQL error on a thrown error, whichever Apollo threw it.
+ *
+ * v3 hung them on `graphQLErrors`; v4 throws a single `CombinedGraphQLErrors`
+ * carrying `errors`. Six call sites read `extensions` off that first entry to
+ * decide what the UI does next — an error code, a rejected-content reason — so
+ * the two shapes are reconciled here rather than at each of them.
+ */
+export function firstGraphQLError(err: unknown): GraphQLErrorLike | undefined {
+  const shape = err as {
+    graphQLErrors?: ReadonlyArray<GraphQLErrorLike>;
+    errors?: ReadonlyArray<GraphQLErrorLike>;
+  } | null;
+  return shape?.graphQLErrors?.[0] ?? shape?.errors?.[0];
+}
 
 /**
  * Converts an Apollo / network error into a user-friendly message.
@@ -53,9 +83,9 @@ export function parseApiError(err: unknown, fallback: string = GENERIC_ERROR_MES
 
   // GraphQL-level errors (index access is guarded — the native app compiles
   // this source under noUncheckedIndexedAccess).
-  const firstGraphQLError = e.graphQLErrors?.[0];
-  if (firstGraphQLError) {
-    return firstGraphQLError.message;
+  const graphQLError = e.graphQLErrors?.[0] ?? e.errors?.[0];
+  if (graphQLError) {
+    return graphQLError.message;
   }
 
   // Plain Error or string

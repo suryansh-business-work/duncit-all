@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { useForm } from 'react-hook-form';
 import { useEffect } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -47,7 +47,7 @@ function Harness({ withErrors = false }: { withErrors?: boolean }) {
 
 function renderStep(withErrors = false) {
   return render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <Harness withErrors={withErrors} />
     </MockedProvider>,
   );

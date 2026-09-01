@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Card, CardContent, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -35,8 +35,8 @@ export default function GrievanceOfficerForm({
   onSubmit,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, reset, formState } = useForm<GrievanceOfficerFormValues>({
-    resolver: zodResolver(grievanceOfficerSchema),
+  const { control, handleSubmit, reset, formState } = useForm<GrievanceOfficerFormValues, any, GrievanceOfficerFormValues>({
+    resolver: zodResolver(grievanceOfficerSchema) as unknown as Resolver<GrievanceOfficerFormValues, any, GrievanceOfficerFormValues>,
     defaultValues: EMPTY_GRIEVANCE_OFFICER,
     mode: 'onTouched',
   });

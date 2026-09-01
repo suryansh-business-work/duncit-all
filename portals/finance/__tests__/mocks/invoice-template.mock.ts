@@ -66,8 +66,7 @@ export const invoiceTemplatesLoadingMock = (): MockedResponse => ({
 export const updateInvoiceTemplateMock = (
   over: { fail?: boolean; delay?: number } = {},
 ): MockedResponse => ({
-  request: { query: UPDATE_INVOICE_TEMPLATE },
-  variableMatcher: () => true,
+  request: { query: UPDATE_INVOICE_TEMPLATE, variables: () => true },
   ...(over.delay ? { delay: over.delay } : {}),
   ...(over.fail
     ? { error: new Error('tmpl err') }

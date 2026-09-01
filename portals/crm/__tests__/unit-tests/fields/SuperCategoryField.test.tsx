@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import SuperCategoryField from '@/forms/fields/SuperCategoryField';
 import { SUPER_CATEGORIES } from '@/api/crm.gql';
@@ -31,7 +31,7 @@ function Harness() {
 
 function renderField(mocks = [superCategoriesMock]) {
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <Harness />
     </MockedProvider>
   );

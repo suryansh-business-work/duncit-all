@@ -5,7 +5,7 @@ import type { DuncitUser } from '@duncit/user-context';
 import { UserMenu } from '../src/chrome/UserMenu';
 
 const navigate = vi.hoisted(() => vi.fn());
-vi.mock('react-router-dom', () => ({ useNavigate: () => navigate }));
+vi.mock('react-router', () => ({ useNavigate: () => navigate }));
 
 const user = { user_id: 'u1', full_name: 'Ada Lovelace', email: 'ada@x.test' } as DuncitUser;
 

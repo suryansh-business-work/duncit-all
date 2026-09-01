@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
@@ -23,9 +23,9 @@ export default function BenefitsPanel({ plansVersion }: Readonly<{ plansVersion:
   const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [createMut, createState] = useMutation(CREATE_BENEFIT);
-  const [updateMut, updateState] = useMutation(UPDATE_BENEFIT);
-  const [deleteMut] = useMutation(DELETE_BENEFIT);
+  const [createMut, createState] = useMutation<any>(CREATE_BENEFIT);
+  const [updateMut, updateState] = useMutation<any>(UPDATE_BENEFIT);
+  const [deleteMut] = useMutation<any>(DELETE_BENEFIT);
   const confirm = useConfirm();
   const [editing, setEditing] = useState<BenefitRow | null>(null);
   const [open, setOpen] = useState(false);

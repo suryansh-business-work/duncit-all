@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import PlanCards from './PlanCards';
 import ComparisonTable from './ComparisonTable';
@@ -23,7 +23,7 @@ export default function MembershipPage() {
     { fetchPolicy: 'cache-and-network' }
   );
   // Already in the cache from the header, so the email paints with the page.
-  const { data: headerData } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-first' });
+  const { data: headerData } = useQuery<any>(HEADER_DATA, { fetchPolicy: 'cache-first' });
 
   const pricing = data?.membershipPricing ?? null;
   const plans = pricing?.plans ?? [];

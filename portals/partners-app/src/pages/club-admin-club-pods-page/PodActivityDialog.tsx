@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Alert,
   Chip,
@@ -33,7 +33,7 @@ interface Props {
  * audit vocabulary with the Pod Monitoring page so the two cannot drift. */
 export default function PodActivityDialog({ pod, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(CLUB_ADMIN_POD_AUDIT_LOGS, {
+  const { data, loading, error } = useQuery<any>(CLUB_ADMIN_POD_AUDIT_LOGS, {
     variables: { pod_doc_id: pod?.id },
     skip: !pod,
     fetchPolicy: 'cache-and-network',

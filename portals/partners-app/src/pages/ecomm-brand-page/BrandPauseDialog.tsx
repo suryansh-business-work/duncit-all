@@ -1,4 +1,4 @@
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { parseApiError } from '@duncit/utils';
@@ -16,7 +16,7 @@ interface Props {
  * placed orders are unaffected. Reports the outcome through onDone. */
 export default function BrandPauseDialog({ target, onClose, onDone }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [setBrandActive, activeState] = useMutation(SET_MY_BRAND_ACTIVE);
+  const [setBrandActive, activeState] = useMutation<any>(SET_MY_BRAND_ACTIVE);
   const activating = target ? target.is_active === false : false;
   const body = activating
     ? 'and its products will be visible in the shop again.'

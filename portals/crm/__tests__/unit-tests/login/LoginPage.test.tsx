@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
-import { MemoryRouter } from 'react-router-dom';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter } from 'react-router';
 import { gql } from '@apollo/client';
 import { DuncitThemeProvider } from '@duncit/theme';
 import LoginPage from '@/pages/LoginPage';
@@ -19,7 +19,7 @@ const LOGIN = gql`
 
 const wrap = (mocks: any[], initialEntries: string[] = ['/login']) =>
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter initialEntries={initialEntries}>
         <DuncitThemeProvider>
           <LoginPage />

@@ -92,7 +92,7 @@ describe('toSaveWarehouseVariables', () => {
       result: { data: { saveMyBrandPickupLocation: saved } },
     };
     const client = new ApolloClient({ link: new MockLink([mock]), cache: new InMemoryCache() });
-    const response = await client.mutate({
+    const response = await client.mutate<any>({
       mutation: SAVE_MY_WAREHOUSE,
       variables: toSaveWarehouseVariables('b1', 'w1', validWarehouse),
     });

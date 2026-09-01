@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useTheme } from '@mui/material/styles';
 
 const PORTAL_BRANDING = gql`
@@ -78,7 +79,7 @@ const splashMediaStyle: React.CSSProperties = {
  */
 export function PortalBranding(): React.ReactElement | null {
   const theme = useTheme();
-  const { data } = useQuery(PORTAL_BRANDING, { fetchPolicy: 'cache-first' });
+  const { data } = useQuery<any>(PORTAL_BRANDING, { fetchPolicy: 'cache-first' });
   const branding = data?.branding;
   const splashUrl: string = branding?.portals_splash_url || '';
   const isVideo = branding?.portals_splash_type === 'VIDEO';

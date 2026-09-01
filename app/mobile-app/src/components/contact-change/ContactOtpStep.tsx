@@ -1,5 +1,5 @@
+import { formResolver } from '../../utils/form-resolver';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, XStack, YStack } from 'tamagui';
 import type { ContactChangeLabels } from '@duncit/utils';
 
@@ -42,9 +42,9 @@ export function ContactOtpStep({
     control,
     handleSubmit,
     formState: { isValid },
-  } = useForm<ContactOtpValues>({
+  } = useForm<ContactOtpValues, any, ContactOtpValues>({
     defaultValues: { otp: '' },
-    resolver: zodResolver(contactOtpSchema),
+    resolver: formResolver<ContactOtpValues>(contactOtpSchema),
     mode: 'onChange',
   });
 

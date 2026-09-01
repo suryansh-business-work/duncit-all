@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import TuneIcon from '@mui/icons-material/Tune';
@@ -37,10 +37,10 @@ export default function ManageDynamicFieldsPage() {
     { variables: { include_inactive: true }, fetchPolicy: 'cache-and-network' }
   );
 
-  const [createMut, createState] = useMutation(CREATE_CRM_DYNAMIC_FIELD, { refetchQueries: refetchAfter });
-  const [updateMut, updateState] = useMutation(UPDATE_CRM_DYNAMIC_FIELD, { refetchQueries: refetchAfter });
-  const [deleteMut, deleteState] = useMutation(DELETE_CRM_DYNAMIC_FIELD, { refetchQueries: refetchAfter });
-  const [reorderMut, reorderState] = useMutation(REORDER_CRM_DYNAMIC_FIELDS, { refetchQueries: refetchAfter });
+  const [createMut, createState] = useMutation<any>(CREATE_CRM_DYNAMIC_FIELD, { refetchQueries: refetchAfter });
+  const [updateMut, updateState] = useMutation<any>(UPDATE_CRM_DYNAMIC_FIELD, { refetchQueries: refetchAfter });
+  const [deleteMut, deleteState] = useMutation<any>(DELETE_CRM_DYNAMIC_FIELD, { refetchQueries: refetchAfter });
+  const [reorderMut, reorderState] = useMutation<any>(REORDER_CRM_DYNAMIC_FIELDS, { refetchQueries: refetchAfter });
 
   const [draft, setDraft] = useState<DraftState | null>(null);
   const [removing, setRemoving] = useState<CrmDynamicField | null>(null);

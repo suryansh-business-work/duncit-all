@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { MockedProvider } from '@apollo/client/testing';
+import { MemoryRouter, Routes, Route } from 'react-router';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ClubDetailsPage from '../index';
 import { CLUB_BY_SLUG, CLUB_DETAILS_RELATED, CATEGORY_TREE } from '../clubDetailsQueries';
@@ -13,8 +13,8 @@ const h = vi.hoisted(() => ({
   isFollowing: vi.fn(() => false),
 }));
 
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+vi.mock('react-router', async () => {
+  const actual = await vi.importActual<typeof import('react-router')>('react-router');
   return { ...actual, useNavigate: () => h.navigate };
 });
 
@@ -134,7 +134,7 @@ function relatedMock(overrides: Partial<{ error: boolean }> = {}) {
 
 function renderPage(mocks: any[]) {
   return render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter initialEntries={['/club/chess']}>
         <Routes>
           <Route path="/club/:clubSlug" element={<ClubDetailsPage />} />

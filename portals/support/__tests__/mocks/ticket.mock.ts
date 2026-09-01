@@ -227,8 +227,7 @@ export const markTicketReadMock = (over: {
 });
 
 export const replyToTicketMock = (id = 't1'): MockedResponse => ({
-  request: { query: REPLY_TO_TICKET },
-  variableMatcher: () => true,
+  request: { query: REPLY_TO_TICKET, variables: () => true },
   result: {
     data: {
       replyToTicket: {
@@ -308,8 +307,7 @@ export const reopenTicketMock = (
 };
 
 export const createTicketMock = (id: string | null = 'new-1'): MockedResponse => ({
-  request: { query: CREATE_TICKET },
-  variableMatcher: () => true,
+  request: { query: CREATE_TICKET, variables: () => true },
   result: { data: { createTicket: { __typename: 'Ticket', id } } },
 });
 

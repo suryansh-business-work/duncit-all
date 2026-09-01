@@ -94,13 +94,25 @@ function stageCorpus(root) {
 function runJscpd(root) {
   const corpus = stageCorpus(root);
   const out = mkdtempSync(join(tmpdir(), "jscpd-"));
-  const bin = resolve(root, "node_modules/jscpd/bin/jscpd");
+  // Read the entry from the package rather than assuming a path: jscpd 5
+  // replaced `bin/jscpd` with a launcher beside its manifest.
+  const manifest = resolve(root, "node_modules/jscpd/package.json");
+  const declared = JSON.parse(readFileSync(manifest, "utf8")).bin;
+  const entry = typeof declared === "string" ? declared : declared.jscpd;
+  const bin = resolve(dirname(manifest), entry);
   try {
     execFileSync(
       process.execPath,
       [
         bin,
-        ...SCAN_PATHS,
+        // The corpus already holds ONLY the SCAN_PATHS files, so `.` scans the
+        // same set — and it is load-bearing for the paths in the report: jscpd 5
+        // names each file relative to the scan-path ARGUMENT it was found under,
+        // so passing the paths themselves strips their first segment and every
+        // area in the baseline reads as brand-new duplication ("ads-portal"
+        // instead of "portals/ads-portal"). Relative to `.`, the names match
+        // what v4 reported and the baseline keeps meaning what it says.
+        ".",
         "--config",
         resolve(root, ".jscpd.json"),
         "--reporters",

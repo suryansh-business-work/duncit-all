@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import SimpleBarChart from '../../components/SimpleBarChart';
@@ -21,7 +22,7 @@ const AVAILABLE_PRODUCTS = gql`
 export default function ProductsManagePage() {
   const { t } = useTranslation();
   const showProducts = useFeatureFlag('is_product_visible');
-  const { data, loading, error } = useQuery(AVAILABLE_PRODUCTS, {
+  const { data, loading, error } = useQuery<any>(AVAILABLE_PRODUCTS, {
     fetchPolicy: 'cache-and-network',
     skip: !showProducts,
   });

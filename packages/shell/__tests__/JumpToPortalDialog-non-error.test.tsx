@@ -6,8 +6,8 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('@apollo/client', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@apollo/client')>()),
+vi.mock('@apollo/client/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@apollo/client/react')>()),
   useQuery: () => ({
     data: {
       myPortalAccess: [

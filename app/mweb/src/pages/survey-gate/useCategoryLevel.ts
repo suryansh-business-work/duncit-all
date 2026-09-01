@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { CATEGORIES, type CategoryLevel, type CategoryOption } from './queries';
 
 /**

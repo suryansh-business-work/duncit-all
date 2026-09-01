@@ -1,5 +1,5 @@
-import { useQuery } from '@apollo/client';
-import { useParams } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { useParams } from 'react-router';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { PUBLIC_FINANCE } from '../checkout-page/queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -21,7 +21,7 @@ export default function GiftCardClaimPage() {
     fetchPolicy: 'network-only',
     skip: !code,
   });
-  const { data: financeData } = useQuery(PUBLIC_FINANCE);
+  const { data: financeData } = useQuery<any>(PUBLIC_FINANCE);
 
   const currencySymbol = financeData?.publicFinanceSettings?.currency_symbol ?? '₹';
   const card = data?.giftCardByCode ?? null;

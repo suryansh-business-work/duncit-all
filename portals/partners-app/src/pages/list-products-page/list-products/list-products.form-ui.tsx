@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -13,7 +13,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { Controller, type Control, type UseFormSetValue, type UseFormWatch } from 'react-hook-form';
 import { RhfTextField } from '@duncit/forms';
 import {
@@ -103,7 +103,7 @@ function CommissionField({ control }: Readonly<{ control: Control<ProductListing
 
 function DeliveryField({ control, brandId }: Readonly<{ control: Control<ProductListingValues>; brandId: string }>) {
   const { t } = useTranslation();
-  const { data, loading } = useQuery(MY_BRAND_WAREHOUSES, {
+  const { data, loading } = useQuery<any>(MY_BRAND_WAREHOUSES, {
     variables: { brand_doc_id: brandId },
     skip: !brandId,
   });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { Box, Container } from '@mui/material';
 import ScrollToTop from './components/ScrollToTop';
 import RouteMeta from './app/RouteMeta';

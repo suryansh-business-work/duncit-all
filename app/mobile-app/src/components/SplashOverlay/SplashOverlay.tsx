@@ -76,7 +76,7 @@ export function SplashOverlay({ onDone }: Readonly<{ onDone?: () => void }>) {
 
 const styles = StyleSheet.create({
   fill: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     zIndex: 9999,
     alignItems: 'center',
     justifyContent: 'center',

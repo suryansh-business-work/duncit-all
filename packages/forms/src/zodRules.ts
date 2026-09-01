@@ -18,7 +18,7 @@ export interface PasswordRuleOptions {
   /** Prepend a `min(1, "<label> is required")` check (crm spelling). */
   required?: boolean;
   /**
-   * Use `required_error` on the base string (support spelling; only differs
+   * Put the message on the base string itself (support spelling; only differs
    * from the default when the parsed value is `undefined`).
    */
   requiredError?: boolean;
@@ -53,7 +53,7 @@ const email = (label = 'Email', options: Readonly<EmailRuleOptions> = {}) => {
 
 const password = (label = 'Password', options: Readonly<PasswordRuleOptions> = {}) => {
   const base = options.requiredError
-    ? z.string({ required_error: `${label} is required` })
+    ? z.string({ error: `${label} is required` })
     : z.string();
   const withRequired = options.required ? base.min(1, `${label} is required`) : base;
   return withRequired

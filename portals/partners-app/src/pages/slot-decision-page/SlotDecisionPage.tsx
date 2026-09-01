@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useMutation, useQuery } from '@apollo/client';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CircularProgress, Divider, Stack } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -34,8 +34,8 @@ export default function SlotDecisionPage() {
     VENUE_SLOT_DECISION,
     { variables: { slot_id: slotId }, fetchPolicy: 'cache-and-network', skip: !slotId }
   );
-  const [approve, approveState] = useMutation(APPROVE_SLOT_REQUEST);
-  const [decline, declineState] = useMutation(DECLINE_SLOT_REQUEST);
+  const [approve, approveState] = useMutation<any>(APPROVE_SLOT_REQUEST);
+  const [decline, declineState] = useMutation<any>(DECLINE_SLOT_REQUEST);
   const [actionError, setActionError] = useState<string | null>(null);
   const [showDeclineForm, setShowDeclineForm] = useState(false);
 

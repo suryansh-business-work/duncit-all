@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, InputAdornment, Link, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -10,7 +10,7 @@ import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import RhfTextField from '../components/RhfTextField';
 import DobYearField from './DobYearField';
 import PhoneField from './PhoneField';
@@ -60,9 +60,9 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
     () => makeRegisterSchema(minAge, t, requiredPolicyIds),
     [minAge, t, requiredPolicyIds],
   );
-  const { control, handleSubmit } = useForm<RegisterFormValues>({
+  const { control, handleSubmit } = useForm<RegisterFormValues, any, RegisterFormValues>({
     defaultValues: initialValues ?? registerDefaults,
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<RegisterFormValues, any, RegisterFormValues>,
     mode: 'onTouched',
   });
   const showLabel = t('mweb.auth.showPassword');

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { Alert, Box, Chip, Stack, Typography } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';

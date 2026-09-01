@@ -76,7 +76,7 @@ export async function ensurePushSubscription(): Promise<boolean> {
 
   let sub = await reg.pushManager.getSubscription();
   if (!sub) {
-    const { data } = await apolloClient.query({
+    const { data } = await apolloClient.query<any>({
       query: PUSH_CONFIG,
       fetchPolicy: 'network-only',
     });
@@ -92,7 +92,7 @@ export async function ensurePushSubscription(): Promise<boolean> {
   const p256dh = json?.keys?.p256dh ?? arrayBufferToBase64(sub.getKey('p256dh') as ArrayBuffer);
   const auth = json?.keys?.auth ?? arrayBufferToBase64(sub.getKey('auth') as ArrayBuffer);
 
-  await apolloClient.mutate({
+  await apolloClient.mutate<any>({
     mutation: SAVE_SUB,
     variables: {
       input: {
@@ -112,7 +112,7 @@ export async function unsubscribePush(): Promise<void> {
   const sub = await reg.pushManager.getSubscription();
   if (!sub) return;
   try {
-    await apolloClient.mutate({ mutation: DELETE_SUB, variables: { endpoint: sub.endpoint } });
+    await apolloClient.mutate<any>({ mutation: DELETE_SUB, variables: { endpoint: sub.endpoint } });
   } catch {
     /* ignore */
   }

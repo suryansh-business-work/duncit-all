@@ -6,7 +6,8 @@
  * preview has to say which seats produced the figure, and the roster it sits
  * over is the evidence for it.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -111,7 +112,7 @@ const mediaBoardMock = (items: unknown[] = []): MockedResponse => ({
 
 const wrap = (ui: React.ReactNode, mocks: readonly MockedResponse[] = [], config = {}) =>
   render(
-    <MockedProvider mocks={[...mocks]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
       <ThemeProvider theme={testTheme}>
         <HostPodActionsProvider {...hostActionsConfig(config)}>{ui}</HostPodActionsProvider>
       </ThemeProvider>
@@ -223,7 +224,7 @@ describe('SettlementPreview', () => {
     await settle();
 
     rerender(
-      <MockedProvider mocks={[previewMock({ attended_seats: 9 })]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[previewMock({ attended_seats: 9 })]}>
         <ThemeProvider theme={testTheme}>
           <HostPodActionsProvider {...hostActionsConfig()}>
             <SettlementPreview podId="pod-1" venueBillAmount={0} onScan={vi.fn()} refreshToken={1} />
@@ -325,8 +326,7 @@ describe('PodCompleteDialog settlement', () => {
       previewMock(),
       mediaBoardMock(),
       {
-        request: { query: COMPLETE_POD },
-        variableMatcher: () => true,
+        request: { query: COMPLETE_POD, variables: () => true },
         result: { data: { completePod: { __typename: 'Pod', id: 'pod-1' } } },
         maxUsageCount: Number.POSITIVE_INFINITY,
       },
@@ -345,8 +345,7 @@ describe('PodCompleteDialog settlement', () => {
       previewMock(),
       mediaBoardMock(),
       {
-        request: { query: COMPLETE_POD },
-        variableMatcher: () => true,
+        request: { query: COMPLETE_POD, variables: () => true },
         error: new Error('This pod has already been completed'),
         maxUsageCount: Number.POSITIVE_INFINITY,
       },

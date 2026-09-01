@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 
 export type AdPosition =
   | 'AUTO'
@@ -39,7 +40,7 @@ export const ACTIVE_ADS = gql`
  * into every position, so callers just pass their concrete position. Empty
  * inventory → `ads: []` and the slot renders nothing. */
 export function useActiveAds(position: AdPosition): { ads: PublicAd[]; loading: boolean } {
-  const { data, loading } = useQuery(ACTIVE_ADS, {
+  const { data, loading } = useQuery<any>(ACTIVE_ADS, {
     variables: { position },
     fetchPolicy: 'cache-first',
   });

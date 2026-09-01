@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Box,
   CircularProgress,
@@ -30,7 +30,7 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
   const [busy, setBusy] = useState(false);
-  const [createPost] = useMutation(CREATE_POST);
+  const [createPost] = useMutation<any>(CREATE_POST);
 
   const reset = () => {
     setImageUrl(null);

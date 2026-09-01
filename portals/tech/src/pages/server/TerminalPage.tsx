@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { ReactTerminal, TerminalContextProvider } from 'react-terminal';
 import { Box, Stack, Typography } from '@mui/material';
 import TerminalIcon from '@mui/icons-material/Terminal';

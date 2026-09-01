@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
-import { useApolloClient } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useApolloClient } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Stack } from '@mui/material';
 import { PageHeader } from '@duncit/ui';
 import type { TableQueryState } from '@duncit/table';
@@ -22,8 +22,12 @@ export default function SosListPage() {
         query: BOUNCER_SOS_ALERTS,
         variables: supportListVars(q),
         fetchPolicy: 'network-only',
+        // A failed query rejects, so a resolved one always carries data.
+        // Apollo v4 types it as optional anyway, and an empty page is the
+        // honest reading of the case the type insists on.
+        errorPolicy: 'none',
       });
-      return { rows: data.bouncerSosAlerts.items, total: data.bouncerSosAlerts.total };
+      return { rows: data?.bouncerSosAlerts.items ?? [], total: data?.bouncerSosAlerts.total ?? 0 };
     },
     [client]
   );

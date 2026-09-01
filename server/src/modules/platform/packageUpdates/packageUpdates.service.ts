@@ -19,6 +19,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { promisify } from 'node:util';
+import { satisfies } from 'semver';
 import { logs } from '@observability/log';
 import {
   PACKAGE_MANIFEST,
@@ -123,13 +124,32 @@ function compareVersions(declared: Semver, latest: Semver): UpdateType {
   return 'UP_TO_DATE';
 }
 
+/**
+ * True when installing this range today already gives you the newest published
+ * version — so there is nothing to upgrade, whatever the floor it names says.
+ *
+ * This is the whole question the console exists to answer, and reading only the
+ * first version token answered a different one. `@mui/material: ">=5"` resolves
+ * to 9.4.0 and was reported as four majors behind; `nodemailer: "^9.0.6"`
+ * resolves to 9.1.0 and was reported as a minor behind. Neither is work anybody
+ * can do — 218 of the 220 peerDependency rows across the 79 manifests were the
+ * first kind. `^16.14.2` against 17.0.2 is the real kind: no install of that
+ * range can reach 17, and only those rows are left.
+ */
+export function alreadyResolvesToLatest(range: string, latest: string): boolean {
+  return satisfies(latest, range, { includePrerelease: true, loose: true });
+}
+
 /** The classification one declared range gets against the newest published version. */
 export function updateTypeOf(range: string, latest: string | null): UpdateType {
   if (LOCAL_RANGE.test(range)) return 'INTERNAL';
   if (!latest) return 'UNKNOWN';
+  if (alreadyResolvesToLatest(range, latest)) return 'UP_TO_DATE';
   const declared = parseVersion(range);
   const published = parseVersion(latest);
   if (!declared || !published) return 'UNKNOWN';
+  // Past here the range genuinely cannot reach `latest`; how far it is behind is
+  // what the operator reads to decide whether it is a bump or a migration.
   return compareVersions(declared, published);
 }
 

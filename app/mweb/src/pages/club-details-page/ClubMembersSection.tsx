@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Avatar, AvatarGroup, Box, ButtonBase, Typography } from '@mui/material';
 import PodAttendeesDialog, { type AttendeePerson } from '../../components/pod-details/PodAttendeesDialog';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -23,7 +24,7 @@ interface Props {
 export default function ClubMembersSection({ memberIds }: Readonly<Props>) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const { data } = useQuery(CLUB_MEMBERS, {
+  const { data } = useQuery<any>(CLUB_MEMBERS, {
     variables: { ids: memberIds },
     skip: memberIds.length === 0,
     fetchPolicy: 'cache-and-network',

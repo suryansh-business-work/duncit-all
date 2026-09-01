@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -28,7 +28,7 @@ export default function PodCouponsSection({ podId, podTitle }: Readonly<Props>) 
   const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [deleteCoupon] = useMutation(DELETE_COUPON);
+  const [deleteCoupon] = useMutation<any>(DELETE_COUPON);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<CouponRow | null>(null);
   const confirm = useConfirm();

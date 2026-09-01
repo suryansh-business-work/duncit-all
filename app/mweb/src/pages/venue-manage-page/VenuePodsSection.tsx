@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   StudioPodsSection,
   EMPTY_STUDIO_SUMMARY,
@@ -17,7 +17,7 @@ import { useTranslation } from '../../i18n/useTranslation';
  */
 export default function VenuePodsSection({ venueId }: Readonly<{ venueId: string }>) {
   const { t } = useTranslation();
-  const { data, loading, error, refetch } = useQuery(VENUE_STUDIO_PODS, {
+  const { data, loading, error, refetch } = useQuery<any>(VENUE_STUDIO_PODS, {
     variables: { venue_id: venueId },
     skip: !venueId,
     fetchPolicy: 'cache-and-network',

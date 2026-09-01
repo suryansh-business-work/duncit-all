@@ -5,7 +5,7 @@ import LocationSelect from '../LocationSelect';
 import { accountEditDefaults, type AccountEditValues } from '../account-edit.types';
 
 function Harness({ initial }: Readonly<{ initial?: Partial<AccountEditValues> }>) {
-  const { control, setValue } = useForm<AccountEditValues>({
+  const { control, setValue } = useForm<AccountEditValues, any, AccountEditValues>({
     defaultValues: accountEditDefaults(initial ?? {}),
   });
   return <LocationSelect control={control} setValue={setValue} />;

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import AppsIcon from '@mui/icons-material/Apps';
 import { useApolloTableFetch } from '@duncit/table';
@@ -21,7 +21,7 @@ export default function PortalAppSettingsPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
-  const [setFeatures] = useMutation(SET_PORTAL_APP_FEATURES);
+  const [setFeatures] = useMutation<any>(SET_PORTAL_APP_FEATURES);
 
   const fetchRows = useApolloTableFetch<PortalAppRow>(
     client,

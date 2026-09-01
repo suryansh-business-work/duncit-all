@@ -1,8 +1,8 @@
+import { formResolver } from '../../utils/form-resolver';
 import { useEffect, useMemo } from 'react';
 import { Modal } from 'react-native';
 import { z } from 'zod';
 import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Input, ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { KeyboardScreen } from '@/components/KeyboardScreen';
@@ -113,9 +113,9 @@ export function AddressFormSheet({
     () => ({ ...blankAddressValues, label: t('mweb.account.addressLabelDefault') }),
     [t],
   );
-  const { control, handleSubmit, reset } = useForm<AddressFormValues>({
+  const { control, handleSubmit, reset } = useForm<AddressFormValues, any, AddressFormValues>({
     defaultValues: initial ?? blank,
-    resolver: zodResolver(addressSchema),
+    resolver: formResolver<AddressFormValues>(addressSchema),
     mode: 'onTouched',
   });
 

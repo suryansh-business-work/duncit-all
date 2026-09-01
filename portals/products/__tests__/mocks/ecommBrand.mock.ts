@@ -115,23 +115,20 @@ export const makeBrandProductRow = (over: Partial<BrandProductRow> = {}): BrandP
 };
 
 export const marketplaceBrandsMock = (brands: EcommBrand[] = [makeEcommBrand()]): MockedResponse => ({
-  request: { query: MARKETPLACE_BRANDS },
-  variableMatcher: () => true,
+  request: { query: MARKETPLACE_BRANDS, variables: () => true },
   result: { data: { marketplaceBrands: brands } },
   maxUsageCount: 20,
 });
 
 /** Single brand at any status — what the review detail page loads. */
 export const ecommBrandMock = (brand: EcommBrand | null = makeEcommBrand()): MockedResponse => ({
-  request: { query: ECOMM_BRAND },
-  variableMatcher: () => true,
+  request: { query: ECOMM_BRAND, variables: () => true },
   result: { data: { ecommBrand: brand } },
   maxUsageCount: 20,
 });
 
 export const approveEcommBrandMock = (over: { fail?: boolean } = {}): MockedResponse => ({
-  request: { query: APPROVE_ECOMM_BRAND },
-  variableMatcher: () => true,
+  request: { query: APPROVE_ECOMM_BRAND, variables: () => true },
   result: over.fail
     ? { errors: [{ message: 'cannot approve' }] }
     : {
@@ -149,8 +146,7 @@ export const approveEcommBrandMock = (over: { fail?: boolean } = {}): MockedResp
 });
 
 export const rejectEcommBrandMock = (over: { fail?: boolean } = {}): MockedResponse => ({
-  request: { query: REJECT_ECOMM_BRAND },
-  variableMatcher: () => true,
+  request: { query: REJECT_ECOMM_BRAND, variables: () => true },
   result: over.fail
     ? { errors: [{ message: 'cannot reject' }] }
     : {

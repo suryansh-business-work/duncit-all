@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router';
 import { Alert, Box, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
 import { BackButton } from '@duncit/ui';
 import { useEmailTemplateEditor } from './useEmailTemplateEditor';

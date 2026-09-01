@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 
 /** One policy the gate lists. Title and body are API data, never translation keys. */
 export interface SignupPolicy {
@@ -35,7 +36,7 @@ const NO_POLICIES: SignupPolicy[] = [];
  * screen and lose the half-filled signup form.
  */
 export function useSignupPolicies() {
-  const { data, loading, error } = useQuery(SIGNUP_POLICIES);
+  const { data, loading, error } = useQuery<any>(SIGNUP_POLICIES);
   const policies = useMemo<SignupPolicy[]>(() => data?.signupPolicies ?? NO_POLICIES, [data]);
   return { policies, loading, failed: !!error };
 }

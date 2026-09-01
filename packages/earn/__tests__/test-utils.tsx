@@ -6,7 +6,8 @@
  * translator, exactly as the form's cy spec does.
  */
 import type { ReactElement } from 'react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { DuncitLocalizationProvider } from '@duncit/app-settings';
 import { act, fireEvent, render, screen } from '@testing-library/react';
@@ -57,7 +58,7 @@ export const wrap = (
   surface: EarnSurfaceConfig = buildConfig(),
 ) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>
         <DuncitLocalizationProvider>
           <EarnSurfaceProvider config={surface}>{ui}</EarnSurfaceProvider>

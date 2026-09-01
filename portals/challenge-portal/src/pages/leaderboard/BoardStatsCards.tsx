@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Paper, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/app-settings';
 import { QueryGuard } from '@duncit/ui';
@@ -50,7 +50,7 @@ function StatCard({ stat, t }: Readonly<StatCardProps>) {
 /** One headline card per board, straight from leaderboardAdminStats. */
 export default function BoardStatsCards() {
   const { t } = useTranslation();
-  const { data, loading, error } = useQuery(ADMIN_LEADERBOARD_STATS, {
+  const { data, loading, error } = useQuery<any>(ADMIN_LEADERBOARD_STATS, {
     fetchPolicy: 'cache-and-network',
   });
   const stats: LeaderboardCategoryStats[] = data?.leaderboardAdminStats ?? [];

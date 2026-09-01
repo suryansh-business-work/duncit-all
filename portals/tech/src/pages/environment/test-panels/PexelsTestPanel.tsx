@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Box, Stack, TextField, Typography } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { DuncitButton } from '@duncit/buttons';
@@ -13,7 +13,7 @@ export default function PexelsTestPanel({ entry }: Readonly<{ entry: EnvEntry }>
   const [query, setQuery] = useState('nature');
   const [photos, setPhotos] = useState<string[]>([]);
   const [result, setResult] = useState<RichTestResult | null>(null);
-  const [run, { loading }] = useMutation(TEST_ENV_PEXELS);
+  const [run, { loading }] = useMutation<any>(TEST_ENV_PEXELS);
 
   const search = async () => {
     setResult(null);

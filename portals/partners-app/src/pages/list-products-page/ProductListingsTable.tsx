@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import {
   Alert,
   Card,
@@ -59,8 +59,8 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
   const theme = useTheme();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [updateQuantity, quantityState] = useMutation(UPDATE_QUANTITY);
-  const [deleteListing, deleteState] = useMutation(DELETE_LISTING);
+  const [updateQuantity, quantityState] = useMutation<any>(UPDATE_QUANTITY);
+  const [deleteListing, deleteState] = useMutation<any>(DELETE_LISTING);
   const [deleteTarget, setDeleteTarget] = useState<ProductListingRow | null>(null);
   const [pauseTarget, setPauseTarget] = useState<ProductListingRow | null>(null);
   const [adTarget, setAdTarget] = useState<{ product: ProductListingRow; kind: AdKind } | null>(null);

@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { MockedResponse } from '@apollo/client/testing';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import BrandReviewDetailPage from '../../src/pages/ecomm/BrandReviewDetailPage';
 import { renderWithProviders } from '../testkit';
 import { ecommBrandMock, makeEcommBrand } from '../mocks/ecommBrand.mock';
 
 const nav = vi.hoisted(() => ({ fn: vi.fn() }));
-vi.mock('react-router-dom', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-router-dom')>()),
+vi.mock('react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-router')>()),
   useNavigate: () => nav.fn,
 }));
 vi.mock('../../src/pages/ecomm/BrandProductsTable', () => ({

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Box,
   Dialog,
@@ -32,7 +32,7 @@ export default function NewTicketDialog({ open, onClose, onCreated }: Readonly<P
   const [category, setCategory] = useState<TicketCategory>('GENERAL');
   const [bodyHtml, setBodyHtml] = useState('');
   const [attachments, setAttachments] = useState<string[]>([]);
-  const [createTicket, { loading: creating }] = useMutation(CREATE_TICKET);
+  const [createTicket, { loading: creating }] = useMutation<any>(CREATE_TICKET);
 
   const reset = () => {
     setSubject('');

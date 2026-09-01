@@ -13,7 +13,7 @@
  *  - the location dialog sends a LINK, never coordinates: the recipient opens
  *    it in their own Maps, already signed in.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -66,7 +66,7 @@ const settle = async () => {
 
 const wrap = (ui: React.ReactNode) =>
   render(
-    <MockedProvider link={schemaMockLink()}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={schemaMockLink()}>
       <ThemeProvider theme={testTheme}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>{ui}</LocalizationProvider>
       </ThemeProvider>
@@ -249,7 +249,7 @@ describe('ChatComposer', () => {
     // box it was anchored to is gone, but the popup is still up.
     voiceState.recording = true;
     rerender(
-      <MockedProvider link={schemaMockLink()}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={schemaMockLink()}>
         <ThemeProvider theme={testTheme}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>{tree()}</LocalizationProvider>
         </ThemeProvider>
@@ -500,7 +500,7 @@ describe('LocationDialog', () => {
       result: { data: { publicClientConfig: { google_maps_api_key: '' } } },
     };
     render(
-      <MockedProvider mocks={[noKeyMock]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[noKeyMock]}>
         <ThemeProvider theme={testTheme}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <LocationDialog open onClose={vi.fn()} onSend={vi.fn()} />

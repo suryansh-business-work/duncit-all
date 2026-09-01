@@ -1,6 +1,6 @@
+import { formResolver } from '../../utils/form-resolver';
 import { useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
@@ -32,9 +32,9 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
     () => makeSignupSchema(minSignupAge, t, requiredPolicyIds, datePlaceholder),
     [minSignupAge, t, requiredPolicyIds, datePlaceholder],
   );
-  const { control, handleSubmit, watch } = useForm<SignupFormValues>({
+  const { control, handleSubmit, watch } = useForm<SignupFormValues, any, SignupFormValues>({
     defaultValues: signupDefaults,
-    resolver: zodResolver(schema),
+    resolver: formResolver<SignupFormValues>(schema),
     mode: 'onBlur',
   });
 

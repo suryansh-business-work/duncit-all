@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   WA_CANCEL_EXTRACTION,
   WA_EXTRACTION,
@@ -27,12 +27,12 @@ export function ExtractionProvider({ children }: Readonly<{ children: React.Reac
   const authed = !!getToken();
   const [open, setOpen] = useState(false);
   const [onDone, setOnDone] = useState<(() => void) | undefined>(undefined);
-  const { data, startPolling, stopPolling, refetch } = useQuery(WA_EXTRACTION, {
+  const { data, startPolling, stopPolling, refetch } = useQuery<any>(WA_EXTRACTION, {
     skip: !authed,
     fetchPolicy: 'network-only',
   });
-  const [startMut, { loading: starting }] = useMutation(WA_START_EXTRACTION);
-  const [cancelMut] = useMutation(WA_CANCEL_EXTRACTION);
+  const [startMut, { loading: starting }] = useMutation<any>(WA_START_EXTRACTION);
+  const [cancelMut] = useMutation<any>(WA_CANCEL_EXTRACTION);
   const job: WaExtraction | null = data?.waExtraction ?? null;
   const running = job?.status === 'RUNNING';
 

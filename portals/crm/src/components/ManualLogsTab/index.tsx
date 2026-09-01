@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Box, MenuItem, Select, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EventNoteIcon from '@mui/icons-material/EventNote';
@@ -26,7 +26,7 @@ export default function ManualLogsTab({
   const [error, setError] = useState<string | null>(null);
   const [granularity, setGranularity] = useState<Granularity>('all');
   const groups = useMemo(() => groupLogs(activities, granularity), [activities, granularity]);
-  const [createLog, { loading: saving }] = useMutation(ADD_CRM_MANUAL_LOG, {
+  const [createLog, { loading: saving }] = useMutation<any>(ADD_CRM_MANUAL_LOG, {
     refetchQueries: [
       {
         query: { VENUE_LEAD, HOST_LEAD, ECOMM_LEAD }[entityType],

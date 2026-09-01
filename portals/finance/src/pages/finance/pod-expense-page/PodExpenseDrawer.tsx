@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Divider, Drawer } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -44,9 +44,9 @@ export default function PodExpenseDrawer({ seedPod, currency, onClose, onSaved }
   const [formOpen, setFormOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<PodExpenseRow | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [create, createState] = useMutation(CREATE_POD_EXPENSE);
-  const [update, updateState] = useMutation(UPDATE_POD_EXPENSE);
-  const [remove, removeState] = useMutation(DELETE_POD_EXPENSE);
+  const [create, createState] = useMutation<any>(CREATE_POD_EXPENSE);
+  const [update, updateState] = useMutation<any>(UPDATE_POD_EXPENSE);
+  const [remove, removeState] = useMutation<any>(DELETE_POD_EXPENSE);
   const saving = createState.loading || updateState.loading;
 
   const podDocId = seedPod?.pod_doc_id ?? null;

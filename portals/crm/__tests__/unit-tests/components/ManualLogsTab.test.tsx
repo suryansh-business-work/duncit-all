@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import ManualLogsTab from '@/components/ManualLogsTab';
 import type { CrmActivity } from '@/api/crm.types';
 
 const renderTab = (activities: CrmActivity[]) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ManualLogsTab entityType="VENUE_LEAD" entityId="v-1" activities={activities} />
     </MockedProvider>
   );

@@ -3,9 +3,9 @@
  * that minimises to an icon rail — the collapsed flag lives in the
  * workspace, so it reads the same everywhere a reader signs in.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
 const workspaceState = vi.hoisted(() => ({
@@ -20,7 +20,7 @@ import { AppShellNav } from '../src/chrome/AppShellNav';
 
 const mount = (over: Partial<Parameters<typeof AppShellNav>[0]> = {}) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <MemoryRouter>
         <AppShellNav name="CRM" nav={[]} mobileOpen={false} onCloseMobile={vi.fn()} {...over} />
       </MemoryRouter>

@@ -1,5 +1,5 @@
-import { useQuery } from '@apollo/client';
-import { Link as RouterLink } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { Link as RouterLink } from 'react-router';
 import { Alert, Box, Card, CardContent, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';

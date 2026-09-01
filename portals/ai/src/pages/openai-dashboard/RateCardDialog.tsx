@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { notify } from '@duncit/dialogs';
@@ -21,10 +21,10 @@ const buildSchema = (t: ReturnType<typeof UseTranslation>['t']) =>
       .min(1, t('ai.rateCard.modelRequired'))
       .max(80, t('ai.rateCard.modelTooLong')),
     input_per_1m: z.coerce
-      .number({ invalid_type_error: t('ai.rateCard.enterNumber') })
+      .number({ error: t('ai.rateCard.enterNumber') })
       .min(0, t('ai.rateCard.notNegative')),
     output_per_1m: z.coerce
-      .number({ invalid_type_error: t('ai.rateCard.enterNumber') })
+      .number({ error: t('ai.rateCard.enterNumber') })
       .min(0, t('ai.rateCard.notNegative')),
   });
 
@@ -46,11 +46,11 @@ interface Props {
  */
 export default function RateCardDialog({ price, onClose, onSaved }: Readonly<Props>) {
   const open = price !== undefined;
-  const [upsert, { loading }] = useMutation(UPSERT_OPENAI_MODEL_PRICE);
+  const [upsert, { loading }] = useMutation<any>(UPSERT_OPENAI_MODEL_PRICE);
   const { t } = useTranslation();
   const schema = useMemo(() => buildSchema(t), [t]);
-  const { control, handleSubmit, reset } = useForm<RateForm>({
-    resolver: zodResolver(schema),
+  const { control, handleSubmit, reset } = useForm<RateForm, any, RateForm>({
+    resolver: zodResolver(schema) as unknown as Resolver<RateForm, any, RateForm>,
     defaultValues: EMPTY,
   });
 

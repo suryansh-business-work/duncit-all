@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { useTranslation } from '@duncit/app-settings';
 import { ConfirmDialog, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
@@ -36,7 +36,7 @@ export default function RemoveMemberDialog({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
-  const [removeMember, { loading }] = useMutation(REMOVE_AUDIENCE_LIST_MEMBER);
+  const [removeMember, { loading }] = useMutation<any>(REMOVE_AUDIENCE_LIST_MEMBER);
 
   const confirm = async () => {
     setError(null);

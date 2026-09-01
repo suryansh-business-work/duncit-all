@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { InMemoryCache } from '@apollo/client';
-import { MockedProvider } from '@apollo/client/testing';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import ProductDetailPage, { PODS_FOR_PRODUCT } from '../ProductDetailPage';
 import { PUBLIC_PRODUCT, PRODUCT_REVIEWS, PUBLIC_BRAND } from '../pod-details-page/queries';
 import { CartProvider } from '../../components/cart/CartContext';
 
 const navigateMock = vi.fn();
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+vi.mock('react-router', async () => {
+  const actual = await vi.importActual<typeof import('react-router')>('react-router');
   return { ...actual, useNavigate: () => navigateMock };
 });
 
@@ -95,7 +95,9 @@ const brandMock = {
  * makes useQuery return the product synchronously with loading=false.
  */
 function renderPage(product: unknown, mocks: readonly unknown[], pods: unknown[] = []) {
-  const cache = new InMemoryCache({ addTypename: false });
+  // Apollo 4 dropped the addTypename option; the cache normalises the same way
+  // the mocks are written.
+  const cache = new InMemoryCache();
   cache.writeQuery({
     query: PUBLIC_PRODUCT,
     variables: { id: PRODUCT_ID },
@@ -106,9 +108,8 @@ function renderPage(product: unknown, mocks: readonly unknown[], pods: unknown[]
     result: { data: { podsForProduct: pods } },
   };
   return render(
-    <MockedProvider
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
       mocks={[...mocks, podsMock, podsMock] as never}
-      addTypename={false}
       cache={cache}
     >
       <CartProvider>

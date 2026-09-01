@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import ForumIcon from '@mui/icons-material/Forum';
 import { COMMUNICATION_LOGS, REQUEST_COMMUNICATION_TRANSCRIPT, type CommunicationLogItem } from '../../api/comms.gql';
@@ -30,7 +30,7 @@ export default function CommsLogsSection({ entityType, entityId }: Readonly<Prop
       fetchPolicy: 'cache-and-network',
     }
   );
-  const [requestTranscript, { loading: requesting }] = useMutation(REQUEST_COMMUNICATION_TRANSCRIPT);
+  const [requestTranscript, { loading: requesting }] = useMutation<any>(REQUEST_COMMUNICATION_TRANSCRIPT);
 
   // Live-refresh the log when a call for this lead changes state (e.g. the
   // customer hangs up → the call is marked "over" here in real time).

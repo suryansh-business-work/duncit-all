@@ -8,6 +8,8 @@ const { useQueryMock } = vi.hoisted(() => ({ useQueryMock: vi.fn() }));
 
 vi.mock('@apollo/client', () => ({
   gql: (strings: TemplateStringsArray) => strings,
+}));
+vi.mock('@apollo/client/react', () => ({
   useQuery: useQueryMock,
 }));
 
@@ -41,7 +43,7 @@ interface TestFormProps {
 
 /** Hoisted so RhfAdminCategory is exercised through a real react-hook-form context (S6478). */
 function TestForm({ defaultValue, onSubmitSpy, errorMessage }: Readonly<TestFormProps>) {
-  const { control, setError, handleSubmit } = useForm<FormValues>({
+  const { control, setError, handleSubmit } = useForm<FormValues, any, FormValues>({
     defaultValues: { category: defaultValue },
   });
 

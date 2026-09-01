@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Box,
   ClickAwayListener,
@@ -40,7 +40,7 @@ export default function SearchBar({ value, onChange, onPick }: Readonly<Props>) 
   const { t } = useTranslation();
   const [focused, setFocused] = useState(false);
   const debounced = useDebouncedValue(value.trim());
-  const { data } = useQuery(SEARCH_SUGGESTIONS, {
+  const { data } = useQuery<any>(SEARCH_SUGGESTIONS, {
     variables: { query: debounced },
     skip: debounced.length < 2,
     fetchPolicy: 'cache-and-network',

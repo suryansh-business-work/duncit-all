@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { useQuery } from '@apollo/client';
-import { useParams } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { useParams } from 'react-router';
 import { Box, Stack } from '@mui/material';
 import { QueryGuard } from '@duncit/ui';
 import { useDateFormat, useTranslation, type DateFormatter } from '@duncit/app-settings';

@@ -2,7 +2,8 @@
  * Identity upload — the path that actually reaches the server, plus the two
  * refusals that must never reach it: a locked row and an oversized file.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -42,7 +43,7 @@ function setup(item: Verification, mocks: MockedResponse[] = [submitMock]) {
   const onChanged = vi.fn();
   const onError = vi.fn();
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <IdentityCard item={item} onChanged={onChanged} onError={onError} />
     </MockedProvider>,
   );

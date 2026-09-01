@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { useQuery, type DocumentNode } from '@apollo/client';
+import { type DocumentNode } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import type { AutoPodQueueVariables } from '@duncit/auto-pods';
 import { formatINR, shellAutoPodLabels, type AutoPodLabels, type AutoPodRow } from '@duncit/utils';

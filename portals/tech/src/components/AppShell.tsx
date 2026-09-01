@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useUserData } from '@duncit/user-context';
 import { AppShell as ShellAppShell } from '@duncit/shell';
 import { appConfig } from '../config/app-config';

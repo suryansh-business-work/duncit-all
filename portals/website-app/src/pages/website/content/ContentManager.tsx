@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -26,9 +26,9 @@ export default function ContentManager({ type }: Readonly<{ type: WebsitePageTyp
   const labels = CONTENT_LABELS[type];
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [createContent] = useMutation(CREATE_CONTENT);
-  const [updateContent] = useMutation(UPDATE_CONTENT);
-  const [deleteContent] = useMutation(DELETE_CONTENT);
+  const [createContent] = useMutation<any>(CREATE_CONTENT);
+  const [updateContent] = useMutation<any>(UPDATE_CONTENT);
+  const [deleteContent] = useMutation<any>(DELETE_CONTENT);
   const confirm = useConfirm();
 
   const [dialogOpen, setDialogOpen] = useState(false);

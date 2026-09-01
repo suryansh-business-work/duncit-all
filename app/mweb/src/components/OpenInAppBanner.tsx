@@ -1,7 +1,8 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { withAttribution } from '@duncit/utils';
-import { gql, useQuery } from '@apollo/client';
-import { useLocation } from 'react-router-dom';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
+import { useLocation } from 'react-router';
 import { useTranslation } from '../i18n/useTranslation';
 import { Box, Paper, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -59,7 +60,7 @@ export default function OpenInAppBanner() {
   const [dismissed, setDismissed] = useState(false);
   const paperRef = useRef<HTMLDivElement | null>(null);
   const mobile = isMobileUa();
-  const { data } = useQuery(APP_VERSION_INFO, { skip: !mobile || dismissed, fetchPolicy: 'cache-first' });
+  const { data } = useQuery<any>(APP_VERSION_INFO, { skip: !mobile || dismissed, fetchPolicy: 'cache-first' });
 
   // Publish the space the bar occupies so overlays stacked in the same corner
   // (the floating cart) clear it instead of covering its buttons.

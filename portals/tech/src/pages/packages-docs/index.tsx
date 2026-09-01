@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import { Alert, Box, Paper, Stack, Typography } from '@mui/material';
 import EmailSidebarList from '../../components/EmailSidebarList';
 import FillViewport from '../../components/FillViewport';

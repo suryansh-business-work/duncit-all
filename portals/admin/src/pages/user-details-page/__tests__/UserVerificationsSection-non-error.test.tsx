@@ -16,8 +16,8 @@ vi.mock('@duncit/dialogs', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/dialogs')>()),
   notifyError: vi.fn(),
 }));
-vi.mock('@apollo/client', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@apollo/client')>()),
+vi.mock('@apollo/client/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@apollo/client/react')>()),
   useApolloClient: () => ({}),
   useMutation: () => [vi.fn().mockRejectedValue('offline'), { loading: false }],
 }));

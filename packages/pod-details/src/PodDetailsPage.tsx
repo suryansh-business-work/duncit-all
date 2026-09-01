@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
-import { useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { useNavigate, useParams } from 'react-router';
 import { Grid, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import { DuncitButton } from '@duncit/buttons';
@@ -62,12 +62,12 @@ function PodDetailsView({
   const navigate = useNavigate();
   const scopeDocs = usePodDetailsScope();
   const showProducts = useFeatureFlag('is_product_visible');
-  const { data, loading, error } = useQuery(POD_DETAIL, {
+  const { data, loading, error } = useQuery<any>(POD_DETAIL, {
     variables: { id },
     skip: !id,
     fetchPolicy: 'cache-and-network',
   });
-  const attendeesQuery = useQuery(scopeDocs.attendees, {
+  const attendeesQuery = useQuery<any>(scopeDocs.attendees, {
     variables: { id },
     skip: !id,
     fetchPolicy: 'cache-and-network',

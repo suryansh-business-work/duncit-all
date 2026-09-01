@@ -128,8 +128,7 @@ export const publicFinanceSettingsNullMock = (): MockedResponse => settings(null
 export const reviewPaymentReleaseMock = (
   over: { fail?: boolean; delay?: number } = {},
 ): MockedResponse => ({
-  request: { query: REVIEW_PAYMENT_RELEASE },
-  variableMatcher: () => true,
+  request: { query: REVIEW_PAYMENT_RELEASE, variables: () => true },
   ...(over.delay ? { delay: over.delay } : {}),
   ...(over.fail
     ? { error: new Error('review failed') }

@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 import { CircularProgress, Box } from '@mui/material';
 import { useUserData } from '@duncit/user-context';
 import { useProductVisibility } from '@duncit/app-settings';

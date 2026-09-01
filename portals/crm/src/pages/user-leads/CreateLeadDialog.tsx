@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { WA_CREATE_USER_LEAD } from '../tools/whatsapp/whatsappQueries';
@@ -16,7 +16,7 @@ export default function CreateLeadDialog({ open, onClose, onCreated }: Readonly<
   const { t } = useTranslation();
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
-  const [create, { loading, error }] = useMutation(WA_CREATE_USER_LEAD);
+  const [create, { loading, error }] = useMutation<any>(WA_CREATE_USER_LEAD);
 
   const submit = async () => {
     if (!phone.replace(/[^\d]/g, '')) return;

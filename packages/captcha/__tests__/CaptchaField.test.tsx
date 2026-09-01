@@ -22,7 +22,7 @@ interface Values {
 }
 
 function Host({ captcha }: Readonly<{ captcha: CaptchaState }>) {
-  const { control } = useForm<Values>({ defaultValues: { captcha_answer: '' } });
+  const { control } = useForm<Values, any, Values>({ defaultValues: { captcha_answer: '' } });
   return (
     <CaptchaField
       control={control}

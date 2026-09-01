@@ -41,8 +41,7 @@ export const makeFaqSubmission = (over: Partial<FaqSubmissionMock> = {}): FaqSub
 export const faqSubmissionsTableMock = (
   rows: FaqSubmissionMock[] = [makeFaqSubmission()],
 ): MockedResponse => ({
-  request: { query: FAQ_SUBMISSIONS_TABLE },
-  variableMatcher: () => true,
+  request: { query: FAQ_SUBMISSIONS_TABLE, variables: () => true },
   maxUsageCount: Number.POSITIVE_INFINITY,
   result: {
     data: {

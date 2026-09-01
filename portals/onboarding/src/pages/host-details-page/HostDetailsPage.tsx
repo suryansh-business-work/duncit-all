@@ -1,5 +1,5 @@
-import { useApolloClient, useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useApolloClient, useQuery } from '@apollo/client/react';
+import { useNavigate, useParams } from 'react-router';
 import { Chip, Divider, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { BackHeader, QueryGuard } from '@duncit/ui';
@@ -18,7 +18,7 @@ export default function HostDetailsPage() {
   const { formatDateTime } = useDateFormat();
   const client = useApolloClient();
 
-  const { data, loading, error } = useQuery(HOST_DETAILS, {
+  const { data, loading, error } = useQuery<any>(HOST_DETAILS, {
     variables: { host_doc_id: hostId },
     fetchPolicy: 'cache-and-network',
     skip: !hostId,

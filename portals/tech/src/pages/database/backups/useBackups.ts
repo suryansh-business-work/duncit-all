@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { useApolloTableFetch, type TableFetch } from '@duncit/table';
 import { useConfirm, notifyError, notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
@@ -51,11 +51,11 @@ export function useBackups() {
   });
   const restore = restoreQuery.data?.dbRestoreJob ?? null;
 
-  const [runBackup, runState] = useMutation(RUN_DB_BACKUP);
-  const [saveSettings, saveState] = useMutation(SAVE_DB_BACKUP_SETTINGS);
-  const [removeBackup] = useMutation(DELETE_DB_BACKUP);
-  const [requestDownload] = useMutation(REQUEST_DB_BACKUP_DOWNLOAD);
-  const [startRestore, restoreState] = useMutation(RESTORE_DB_BACKUP);
+  const [runBackup, runState] = useMutation<any>(RUN_DB_BACKUP);
+  const [saveSettings, saveState] = useMutation<any>(SAVE_DB_BACKUP_SETTINGS);
+  const [removeBackup] = useMutation<any>(DELETE_DB_BACKUP);
+  const [requestDownload] = useMutation<any>(REQUEST_DB_BACKUP_DOWNLOAD);
+  const [startRestore, restoreState] = useMutation<any>(RESTORE_DB_BACKUP);
 
   const baseFetch = useApolloTableFetch<BackupRow>(client, DB_BACKUPS_TABLE, 'dbBackupsTable');
 

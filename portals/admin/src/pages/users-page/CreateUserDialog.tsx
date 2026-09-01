@@ -11,7 +11,7 @@ import {
   TextField,
   Tooltip,
 } from '@mui/material';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
@@ -48,9 +48,9 @@ export default function CreateUserDialog({
   roles,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, reset, setValue } = useForm<CreateForm>({
+  const { control, handleSubmit, reset, setValue } = useForm<CreateForm, any, CreateForm>({
     defaultValues: form,
-    resolver: zodResolver(createUserSchema),
+    resolver: zodResolver(createUserSchema) as unknown as Resolver<CreateForm, any, CreateForm>,
     mode: 'onTouched',
   });
 

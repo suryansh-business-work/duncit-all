@@ -8,7 +8,8 @@
  * persisted, because this is a lookup, not a correspondence.
  */
 import { describe, expect, it, vi } from 'vitest';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
 
 import { AnswerLinks } from '../src/chrome/ask-bot/AnswerLinks';
@@ -67,15 +68,14 @@ const reply = (over: Record<string, unknown> = {}) => ({
 
 const chatMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
   ({
-    request: { query: ASK_BOT_CHAT },
-    variableMatcher: () => true,
+    request: { query: ASK_BOT_CHAT, variables: () => true },
     result: { data: { askBotChat: reply() } },
     maxUsageCount: Number.POSITIVE_INFINITY,
     ...over,
   }) as MockedResponse;
 
 const wrap = (ui: React.ReactNode, mocks: readonly MockedResponse[] = []) =>
-  render(<MockedProvider mocks={[...mocks]}>{ui}</MockedProvider>);
+  render(<MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>{ui}</MockedProvider>);
 
 describe('useBotCopy', () => {
   it('names the bot this console ships copy for', () => {
@@ -266,10 +266,15 @@ describe('AskBotDialog', () => {
     const asked: Record<string, unknown>[] = [];
     open([
       botsMock([bot()]),
+      // Apollo 4 carries the matcher inside the request, and this one is here to
+      // record what the bot was actually asked.
       chatMock({
-        variableMatcher: (v: Record<string, unknown>) => {
-          asked.push(v);
-          return true;
+        request: {
+          query: ASK_BOT_CHAT,
+          variables: (v: Record<string, unknown>) => {
+            asked.push(v);
+            return true;
+          },
         },
       }),
     ]);
@@ -342,7 +347,7 @@ describe('AskBotDialog', () => {
 describe('useAskBot', () => {
   const hook = (mocks: readonly MockedResponse[]) =>
     renderHook(() => useAskBot('navigation'), {
-      wrapper: ({ children }) => <MockedProvider mocks={[...mocks]}>{children}</MockedProvider>,
+      wrapper: ({ children }) => <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>{children}</MockedProvider>,
     });
 
   // "and in the app?" only works because the thread so far travels with it.
@@ -350,9 +355,12 @@ describe('useAskBot', () => {
     const asked: Record<string, unknown>[] = [];
     const { result } = hook([
       chatMock({
-        variableMatcher: (v: Record<string, unknown>) => {
-          asked.push(v);
-          return true;
+        request: {
+          query: ASK_BOT_CHAT,
+          variables: (v: Record<string, unknown>) => {
+            asked.push(v);
+            return true;
+          },
         },
       }),
     ]);
@@ -369,7 +377,7 @@ describe('useAskBot', () => {
 
   it('sends nothing for a blank question', async () => {
     const asked = vi.fn();
-    const { result } = hook([chatMock({ variableMatcher: () => (asked(), true) })]);
+    const { result } = hook([chatMock({})]);
 
     await act(async () => result.current.send('   '));
     await settle();

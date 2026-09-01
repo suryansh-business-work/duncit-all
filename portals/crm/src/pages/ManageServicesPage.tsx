@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -76,9 +76,9 @@ export default function ManageServicesPage({
     { query: CRM_SERVICES, variables: queryVars },
     { query: CRM_LEAD_CONFIG },
   ];
-  const [createMut, createState] = useMutation(CREATE_CRM_SERVICE, { refetchQueries: refetchAfterMutate });
-  const [updateMut, updateState] = useMutation(UPDATE_CRM_SERVICE, { refetchQueries: refetchAfterMutate });
-  const [deleteMut, deleteState] = useMutation(DELETE_CRM_SERVICE, { refetchQueries: refetchAfterMutate });
+  const [createMut, createState] = useMutation<any>(CREATE_CRM_SERVICE, { refetchQueries: refetchAfterMutate });
+  const [updateMut, updateState] = useMutation<any>(UPDATE_CRM_SERVICE, { refetchQueries: refetchAfterMutate });
+  const [deleteMut, deleteState] = useMutation<any>(DELETE_CRM_SERVICE, { refetchQueries: refetchAfterMutate });
 
   const [draft, setDraft] = useState<EditRow | null>(null);
   const [removing, setRemoving] = useState<CrmService | null>(null);

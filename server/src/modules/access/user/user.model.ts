@@ -242,6 +242,15 @@ const securitySchema = new Schema(
     failed_login_attempts: { type: Number, default: 0, min: 0 },
     locked_until: { type: Date, default: null },
     password_changed_at: { type: Date, default: null },
+    /**
+     * Every token issued before this instant is refused (`session-seal`).
+     *
+     * Separate from `password_changed_at`, which is a record of WHEN and is
+     * already set on documents whose owners are signed in perfectly legitimately
+     * — seeding the seal from it would sign those people out on deploy. Only the
+     * password-recovery door writes this one.
+     */
+    sessions_invalidated_at: { type: Date, default: null },
     // What `recent-account-login` decides on: a sign-in from a device that is
     // not in here is the one worth telling somebody about.
     known_devices: { type: [knownDeviceSchema], default: [] },

@@ -2,8 +2,9 @@ import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, configure, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { GraphQLError } from 'graphql';
 import EcommBrandPage from './EcommBrandPage';
 import { MY_BRANDS, SAVE_BRAND, SUBMIT_BRAND, WITHDRAW_BRAND, type EcommBrandRow } from './queries';
@@ -180,7 +181,7 @@ const brandsMock = (brands: ReturnType<typeof brand>[] = []): MockedResponse => 
 
 const renderPage = (mocks: MockedResponse[]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter initialEntries={['/ecomm-brand']}>
         <Routes>
           <Route path="/ecomm-brand" element={<EcommBrandPage />} />

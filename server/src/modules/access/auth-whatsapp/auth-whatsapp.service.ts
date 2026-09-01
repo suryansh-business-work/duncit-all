@@ -30,9 +30,13 @@ export const whatsappAuthService = {
   },
 
   async verifyOtp(userId: string, extension: string, number: string, otp: string) {
-    const challenge = await otpService.verifyLatest('WHATSAPP_SIGNUP', extension, number, otp);
-    await otpService.consume(String(challenge._id), { purpose: 'WHATSAPP_SIGNUP' });
     const { phone_extension, phone_number } = normalizePhone(extension, number);
+    const challenge = await otpService.verifyLatest(
+      'WHATSAPP_SIGNUP',
+      { phone_extension, phone_number },
+      otp
+    );
+    await otpService.consume(String(challenge._id), { purpose: 'WHATSAPP_SIGNUP' });
     // The before-image is read first: this write moves three fields the admin
     // user change log tracks, and a diff needs both sides.
     const before = await UserModel.findById(userId).lean();

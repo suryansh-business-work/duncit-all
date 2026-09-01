@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { ApolloProvider } from '@apollo/client';
+import { ApolloProvider } from '@apollo/client/react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { usernameBlocksSave, type UsernameStatus } from '@duncit/utils';
 import UsernameField from '../UsernameField';
@@ -19,7 +19,7 @@ const CURRENT = 'ravi-9x3m';
  * which the field shares with the rest of the form.
  */
 function Host({ current }: Readonly<{ current: string | null }>) {
-  const { control } = useForm<AccountEditValues>({
+  const { control } = useForm<AccountEditValues, any, AccountEditValues>({
     defaultValues: { username: current ?? '' } as AccountEditValues,
   });
   const [status, setStatus] = useState<UsernameStatus>('IDLE');

@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Checkbox, FormControlLabel, Stack, TextField, Typography } from '@mui/material';
 import { useDateFormat } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';

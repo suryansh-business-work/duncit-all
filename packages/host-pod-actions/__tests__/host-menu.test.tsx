@@ -8,7 +8,7 @@
  * would 404 for every guest who taps it.
  */
 import type { ReactNode } from 'react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -35,7 +35,7 @@ const settle = async () => {
 
 const wrap = (ui: ReactNode, over = {}) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>
         <HostPodActionsProvider {...hostActionsConfig(over)}>{ui}</HostPodActionsProvider>
       </ThemeProvider>

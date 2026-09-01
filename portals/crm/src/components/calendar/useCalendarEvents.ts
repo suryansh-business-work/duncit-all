@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { CRM_REMINDERS, type CrmReminder } from '../../api/reminders.gql';
 import { HOST_LEADS, VENUE_LEADS } from '../../api/crm.gql';
 import type { HostLead, VenueLead } from '../../api/crm.types';

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import AddressBookSection, {
   MY_ADDRESSES,
@@ -45,7 +45,7 @@ const listMock = (addresses: unknown[]) => ({
 
 const renderSection = (mocks: unknown[]) =>
   render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <AddressBookSection />
     </MockedProvider>,
   );

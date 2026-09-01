@@ -13,6 +13,14 @@ const waitForExit = () =>
     await new Promise((resolve) => setTimeout(resolve, 400));
   });
 
+/** jsdom 30 will not match an astral character in an attribute selector, so
+ * the label is compared rather than queried. */
+const byAriaLabel = (label: string) =>
+  ([...document.body.querySelectorAll('[aria-label]')].find(
+    (node) => node.getAttribute('aria-label') === label
+    // A miss answers null, the same as querySelector did.
+  ) ?? null) as HTMLElement;
+
 describe('MessageReactions', () => {
   it('groups existing reactions by emoji, marking your own as pressed', () => {
     const reactions: StaffReaction[] = [
@@ -60,14 +68,14 @@ describe('MessageReactions', () => {
     );
 
     fireEvent.click(getByLabelText('More reactions'));
-    const partyPopper = document.body.querySelector('[aria-label="React 🎉"]') as HTMLElement;
+    const partyPopper = byAriaLabel('React 🎉') as HTMLElement;
     expect(partyPopper).not.toBeNull();
 
     fireEvent.click(partyPopper);
     expect(onReact).toHaveBeenCalledWith('🎉');
 
     await waitForExit();
-    expect(document.body.querySelector('[aria-label="React 🎉"]')).toBeNull();
+    expect(byAriaLabel('React 🎉')).toBeNull();
   });
 
   it('closes the wider picker from outside without reacting', async () => {
@@ -80,6 +88,6 @@ describe('MessageReactions', () => {
     fireEvent.keyDown(backdrop, { key: 'Escape', code: 'Escape' });
     await waitForExit();
 
-    expect(document.body.querySelector('[aria-label="React 🎉"]')).toBeNull();
+    expect(byAriaLabel('React 🎉')).toBeNull();
   });
 });

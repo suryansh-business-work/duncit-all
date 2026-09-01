@@ -1,5 +1,6 @@
-import { useNavigate } from 'react-router-dom';
-import { gql, useQuery } from '@apollo/client';
+import { useNavigate } from 'react-router';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Alert,
   CircularProgress,
@@ -59,7 +60,7 @@ export default function PodClubAdminDialog({
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const { data, loading, error } = useQuery(POD_CLUB_ADMINS, {
+  const { data, loading, error } = useQuery<any>(POD_CLUB_ADMINS, {
     variables: { club_doc_id: pod?.club_id },
     skip: !pod?.club_id,
     fetchPolicy: 'cache-and-network',

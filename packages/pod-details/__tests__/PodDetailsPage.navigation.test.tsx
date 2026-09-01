@@ -5,10 +5,11 @@
  * page elsewhere hands in its own. A pod with no club renders the two club
  * cards in their "no club" state rather than fetching a club called null.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider } from '@mui/material/styles';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
 import PodDetailsPage, { type PodDetailsViewProps } from '../src/PodDetailsPage';
@@ -61,7 +62,7 @@ const podMock = (over: Record<string, unknown> = {}): MockedResponse => ({
 
 const mount = (props: PodDetailsViewProps = {}, mocks: MockedResponse[] = [podMock()]) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter initialEntries={[`/pods/${POD_ID}`]}>
           <Routes>

@@ -17,7 +17,7 @@
  *    which booking produced it, and marking is a scan rather than a toggle.
  */
 import type { ReactNode } from 'react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -46,7 +46,7 @@ const config = () => hostActionsConfig({ onViewProfile });
 
 const wrap = (ui: ReactNode) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>
         <HostPodActionsProvider {...config()}>{ui}</HostPodActionsProvider>
       </ThemeProvider>

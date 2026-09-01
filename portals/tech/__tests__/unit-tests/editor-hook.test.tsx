@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeTpl } from '../mocks/email-template.mock';
 
@@ -11,8 +11,8 @@ const m = vi.hoisted(() => ({
   clientQuery: vi.fn(),
   confirmMock: vi.fn(),
 }));
-vi.mock('@apollo/client', async (io) => {
-  const actual = await io<typeof import('@apollo/client')>();
+vi.mock('@apollo/client/react', async (io) => {
+  const actual = await io<typeof import('@apollo/client/react')>();
   return {
     ...actual,
     useQuery: () => ({ data: m.data, loading: m.loading, refetch: m.refetch }),

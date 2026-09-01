@@ -1,6 +1,6 @@
 import React from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { describe, expect, it } from 'vitest';
 import {
   PUBLIC_APP_SETTINGS,
@@ -21,7 +21,7 @@ function settingsMock(publicAppSettings: Record<string, unknown> | null) {
 
 function makeWrapper(mocks: any[]) {
   return ({ children }: { children: React.ReactNode }) => (
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       {children}
     </MockedProvider>
   );

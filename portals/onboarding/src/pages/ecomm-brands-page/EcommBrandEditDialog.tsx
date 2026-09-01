@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   CircularProgress,
@@ -39,7 +39,7 @@ export default function EcommBrandEditDialog({ brand, onClose, onSaved }: Readon
   const [status, setStatus] = useState('DRAFT');
   const [error, setError] = useState('');
   const docId = useRef(0);
-  const [updateBrand, state] = useMutation(ADMIN_UPDATE_ECOMM_BRAND);
+  const [updateBrand, state] = useMutation<any>(ADMIN_UPDATE_ECOMM_BRAND);
 
   useEffect(() => {
     if (!brand) return;

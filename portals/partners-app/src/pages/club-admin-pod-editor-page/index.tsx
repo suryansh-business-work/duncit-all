@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { useNavigate, useParams } from 'react-router';
 import { Alert } from '@mui/material';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { buildSlotLabels } from '@duncit/slots';
@@ -30,8 +30,8 @@ export default function ClubAdminPodEditorPage() {
   const picker = useMediaPickerBridge();
 
   const backTo = `/club-admin/clubs/${clubId}`;
-  const lookups = useQuery(CLUB_ADMIN_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
-  const podQuery = useQuery(CLUB_ADMIN_POD_FOR_EDIT, {
+  const lookups = useQuery<any>(CLUB_ADMIN_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
+  const podQuery = useQuery<any>(CLUB_ADMIN_POD_FOR_EDIT, {
     variables: { pod_doc_id: id },
     skip: !id,
     fetchPolicy: 'network-only',

@@ -14,12 +14,12 @@
  */
 import type { ReactNode } from 'react';
 import type { ApolloLink } from '@apollo/client';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { ConfirmProvider } from '@duncit/dialogs';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -78,7 +78,7 @@ const ROUTES = [
 /** `link` swaps what answers the page: nothing, or the schema-shaped mock. */
 const mountRoute = (route: string, link?: ApolloLink) =>
   render(
-    <MockedProvider mocks={[]} link={link}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]} link={link}>
       <ThemeProvider theme={smokeTheme}>
         <ConfirmProvider>
         <LocalizationProvider dateAdapter={AdapterDateFns}>

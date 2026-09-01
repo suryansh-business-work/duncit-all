@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Accordion,
   AccordionDetails,
@@ -43,8 +43,8 @@ export default function FutureAvailabilityAccordion({
   // clamped on blur and on save.
   const [horizonText, setHorizonText] = useState(String(autoExtend.horizon_days));
   const [saved, setSaved] = useState(false);
-  const [save, { loading, error }] = useMutation(UPDATE_VENUE_SETTINGS);
-  const { data } = useQuery(MY_SLOT_TEMPLATES, { variables: { venue_id: venueId } });
+  const [save, { loading, error }] = useMutation<any>(UPDATE_VENUE_SETTINGS);
+  const { data } = useQuery<any>(MY_SLOT_TEMPLATES, { variables: { venue_id: venueId } });
   const hasDefault = (data?.mySlotTemplates ?? []).some((t: { is_default: boolean }) => t.is_default);
 
   const patch = (p: Partial<VenueAutoExtendForm>) => {

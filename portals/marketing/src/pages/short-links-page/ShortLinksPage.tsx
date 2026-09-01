@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -35,7 +35,7 @@ export default function ShortLinksPage() {
   const [creating, setCreating] = useState(false);
   const [target, setTarget] = useState<ShortLinkRow | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [deleteLink, { loading: deleting }] = useMutation(DELETE_SHORT_LINK);
+  const [deleteLink, { loading: deleting }] = useMutation<any>(DELETE_SHORT_LINK);
 
   const { data: optionsData } = useQuery<{ shortLinkOptions: ShortLinkOptions }>(
     SHORT_LINK_OPTIONS,

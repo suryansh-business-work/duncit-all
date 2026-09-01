@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router';
 import { getSafeRedirectPath, redirectPathFromLocation } from '../utils/redirect';
 
 export function RequireAuth({ children }: Readonly<{ children: JSX.Element }>) {

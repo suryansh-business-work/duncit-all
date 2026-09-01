@@ -1,5 +1,5 @@
 import { Avatar, Box, Stack, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Host {

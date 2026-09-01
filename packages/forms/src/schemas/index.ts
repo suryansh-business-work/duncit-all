@@ -22,8 +22,11 @@
 export type { Translate } from './translate';
 
 export {
+  makePasswordPairSchema,
   makePasswordWithOtpSchema,
+  passwordPairDefaults,
   passwordWithOtpDefaults,
+  type PasswordPairValues,
   type PasswordWithOtpValues,
 } from './password-with-otp';
 

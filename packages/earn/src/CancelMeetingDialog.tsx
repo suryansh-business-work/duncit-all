@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -25,7 +25,7 @@ interface Props {
 export default function CancelMeetingDialog({ open, kind, onClose, onDone }: Readonly<Props>) {
   const { meetingLabels: labels } = useEarnSurface();
   const [error, setError] = useState<string | null>(null);
-  const [cancelMut, { loading: cancelling }] = useMutation(CANCEL_MY_MEETING);
+  const [cancelMut, { loading: cancelling }] = useMutation<any>(CANCEL_MY_MEETING);
 
   const submit = async (reason: string) => {
     setError(null);

@@ -1,6 +1,6 @@
+import { formResolver } from '../../utils/form-resolver';
 import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
@@ -18,9 +18,9 @@ export interface LoginFormProps {
 export function LoginForm({ loading, errorMessage, onSubmit }: Readonly<LoginFormProps>) {
   const { t } = useTranslation();
   const schema = useMemo(() => makeLoginSchema(t), [t]);
-  const { control, handleSubmit } = useForm<LoginFormValues>({
+  const { control, handleSubmit } = useForm<LoginFormValues, any, LoginFormValues>({
     defaultValues: loginDefaults,
-    resolver: zodResolver(schema),
+    resolver: formResolver<LoginFormValues>(schema),
     mode: 'onBlur',
   });
 

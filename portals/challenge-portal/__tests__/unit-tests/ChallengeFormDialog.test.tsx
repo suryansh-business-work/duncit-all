@@ -7,8 +7,8 @@ import { makeChallenge } from '../mocks';
 
 const useMutationMock = vi.hoisted(() => vi.fn());
 
-vi.mock('@apollo/client', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@apollo/client')>()),
+vi.mock('@apollo/client/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@apollo/client/react')>()),
   useMutation: useMutationMock,
 }));
 

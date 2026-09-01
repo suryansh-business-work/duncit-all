@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Card,
@@ -51,9 +51,9 @@ export default function ManagedOptionList({ group, addLabel, placeholder, search
     fetchPolicy: 'cache-and-network',
   });
   const refetchQueries = [{ query: CRM_MANAGED_OPTIONS, variables: queryVars }, { query: CRM_LEAD_CONFIG }];
-  const [createMut, createState] = useMutation(CREATE_CRM_MANAGED_OPTION, { refetchQueries });
-  const [updateMut, updateState] = useMutation(UPDATE_CRM_MANAGED_OPTION, { refetchQueries });
-  const [deleteMut, deleteState] = useMutation(DELETE_CRM_MANAGED_OPTION, { refetchQueries });
+  const [createMut, createState] = useMutation<any>(CREATE_CRM_MANAGED_OPTION, { refetchQueries });
+  const [updateMut, updateState] = useMutation<any>(UPDATE_CRM_MANAGED_OPTION, { refetchQueries });
+  const [deleteMut, deleteState] = useMutation<any>(DELETE_CRM_MANAGED_OPTION, { refetchQueries });
 
   const [draft, setDraft] = useState<ManagedEditRow | null>(null);
   const [removing, setRemoving] = useState<CrmManagedOption | null>(null);

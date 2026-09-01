@@ -10,7 +10,7 @@ import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { formatDistanceToNowStrict } from 'date-fns';
 import HomeStatusViewerDetails from './HomeStatusViewerDetails';
 import StatusSlideVideo from './StatusSlideVideo';

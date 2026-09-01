@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Paper, Stack, Typography } from '@mui/material';
 import SellIcon from '@mui/icons-material/Sell';
 import { notifySuccess } from '@duncit/dialogs';
@@ -13,8 +13,8 @@ import { useTranslation } from '@duncit/app-settings';
 
 export default function AdsSettingsPage() {
   const { t } = useTranslation();
-  const { data, loading, error, refetch } = useQuery(AD_PRICING);
-  const [updateMut] = useMutation(UPDATE_AD_PRICING);
+  const { data, loading, error, refetch } = useQuery<any>(AD_PRICING);
+  const [updateMut] = useMutation<any>(UPDATE_AD_PRICING);
   const [busy, setBusy] = useState(false);
   const [opError, setOpError] = useState<string | null>(null);
 

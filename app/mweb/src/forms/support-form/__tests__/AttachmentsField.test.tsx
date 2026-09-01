@@ -1,7 +1,8 @@
 import '@testing-library/jest-dom/vitest';
 import { useState } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 // The caps are Admin > Upload Settings; pin a row so the assertions are about
 // the admin's numbers reaching the field, per kind.
@@ -19,8 +20,7 @@ import AttachmentsField from '../AttachmentsField';
 import { GET_IMAGEKIT_AUTH } from '../../../utils/imagekit';
 
 const authMock: MockedResponse = {
-  request: { query: GET_IMAGEKIT_AUTH },
-  variableMatcher: () => true,
+  request: { query: GET_IMAGEKIT_AUTH, variables: () => true },
   result: {
     data: {
       getImagekitAuth: {
@@ -41,7 +41,7 @@ afterEach(() => {
 function Harness({ initial = [] as string[], mocks = [] as MockedResponse[] }: Readonly<{ initial?: string[]; mocks?: MockedResponse[] }>) {
   const [attachments, setAttachments] = useState<string[]>(initial);
   return (
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <AttachmentsField attachments={attachments} setAttachments={setAttachments} />
     </MockedProvider>
   );

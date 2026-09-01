@@ -5,7 +5,7 @@
  * only proves the dialog mounts.
  */
 import type { ReactElement } from 'react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -53,7 +53,7 @@ const PRODUCTS = [
   }),
 ];
 
-const wrap = (ui: ReactElement) => render(<MockedProvider mocks={[]}>
+const wrap = (ui: ReactElement) => render(<MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>{ui}</ThemeProvider>
     </MockedProvider>);
 

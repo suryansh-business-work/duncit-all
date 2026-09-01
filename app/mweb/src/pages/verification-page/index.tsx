@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
@@ -26,7 +26,7 @@ export default function VerificationPage() {
   const { t } = useTranslation();
   const { t: tv } = useVerificationTranslation();
   const navigate = useNavigate();
-  const { data, loading, error, refetch } = useQuery(MY_VERIFICATIONS, {
+  const { data, loading, error, refetch } = useQuery<any>(MY_VERIFICATIONS, {
     fetchPolicy: 'cache-and-network',
   });
   const [snack, setSnack] = useState<string | null>(null);

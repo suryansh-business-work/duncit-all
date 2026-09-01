@@ -14,7 +14,7 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { DuncitRoundButton } from '@duncit/buttons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useColorMode } from '../../../ColorModeContext';
 import { useStudioMode } from '../../../StudioModeContext';
 import { useAutoPodCounts } from '../../../hooks/useAutoPodCounts';

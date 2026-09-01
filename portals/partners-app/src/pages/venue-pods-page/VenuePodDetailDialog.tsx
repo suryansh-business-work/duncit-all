@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Avatar,
   CircularProgress,
@@ -35,7 +35,7 @@ interface Props {
 export default function VenuePodDetailDialog({ row, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const ids = row?.pod_attendees ?? [];
-  const { data, loading } = useQuery(VENUE_POD_ATTENDEE_PROFILES, {
+  const { data, loading } = useQuery<any>(VENUE_POD_ATTENDEE_PROFILES, {
     variables: { ids },
     skip: ids.length === 0,
   });

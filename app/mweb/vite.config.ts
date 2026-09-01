@@ -7,16 +7,31 @@ import pkg from './package.json' with { type: 'json' };
 // across deploys (app code changes far more often) and download in parallel,
 // instead of inflating the main entry chunk. Pairs with route-level lazy
 // loading in AppRoutes.
-function vendorChunk(id: string): string | undefined {
-  if (!id.includes('node_modules')) return undefined;
-  if (id.includes('@mui') || id.includes('@emotion')) return 'mui';
-  if (id.includes('@apollo') || id.includes('/graphql/')) return 'apollo';
-  if (id.includes('react-quill') || id.includes('quill')) return 'quill';
-  if (id.includes('react-slick') || id.includes('slick-carousel')) return 'slick';
-  if (id.includes('lottie')) return 'lottie';
-  if (id.includes('@fortawesome')) return 'fontawesome';
-  return undefined;
-}
+//
+// The `duncit` group is not about caching — it is what stops the split emitting a
+// CYCLE. Rolldown's interop helpers (`__commonJS` and friends) live in a module it
+// injects AFTER chunking, so no config decides where they go: neither the
+// `manualChunks` callback, which is never asked about them, nor a group whose
+// `test` matches their id. Left to itself the bundler folded them into whichever
+// leftover workspace chunk it happened to build first — one that imports MUI —
+// while MUI imported the helpers back. Two chunks, each waiting on the other, and
+// the browser evaluated one while the other was still empty: staging died on the
+// first line of `apollo-*.js` with `TypeError: e is not a function`, out of a
+// build that reported no error at all.
+//
+// Naming the workspace sources leaves no unassigned chunk to fold them into, so
+// rolldown emits them as their own `rolldown-runtime-*.js` that imports nothing.
+// `verify-chunk-graph`, chained into `build`, is what proves that: re-run it after
+// touching a group, because a cycle here is invisible until the page loads.
+const VENDOR_GROUPS = [
+  { name: 'duncit', test: /\/packages\/[^/]+\/src\// },
+  { name: 'mui', test: /node_modules\/(@mui|@emotion)\// },
+  { name: 'apollo', test: /node_modules\/(@apollo|graphql)\// },
+  { name: 'quill', test: /node_modules\/(react-)?quill/ },
+  { name: 'slick', test: /node_modules\/(react-slick|slick-carousel)\// },
+  { name: 'lottie', test: /node_modules\/[^/]*lottie/ },
+  { name: 'fontawesome', test: /node_modules\/@fortawesome\// },
+];
 
 export default defineConfig({
   plugins: [react()],
@@ -26,7 +41,7 @@ export default defineConfig({
   preview: { port: 2003, host: true, strictPort: true },
   build: {
     rollupOptions: {
-      output: { manualChunks: (id) => vendorChunk(id) },
+      output: { advancedChunks: { groups: VENDOR_GROUPS } },
     },
   },
   resolve: {
@@ -42,7 +57,6 @@ export default defineConfig({
       'react',
       'react-dom',
       'react-router',
-      'react-router-dom',
       '@apollo/client',
       '@emotion/react',
       '@emotion/styled',
@@ -68,7 +82,6 @@ export default defineConfig({
       'react/jsx-runtime',
       'react/jsx-dev-runtime',
       'react-router',
-      'react-router-dom',
       '@apollo/client',
       '@emotion/react',
       '@emotion/styled',

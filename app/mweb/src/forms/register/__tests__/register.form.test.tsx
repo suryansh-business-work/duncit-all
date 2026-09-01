@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
-import { MemoryRouter } from 'react-router-dom';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import RegisterForm from '../register.form';
 import { PUBLIC_APP_SETTINGS } from '../../../utils/dateFormat';
@@ -26,7 +26,7 @@ const settingsMock = {
 function renderForm(props: Partial<React.ComponentProps<typeof RegisterForm>> = {}) {
   const onSubmit = props.onSubmit ?? vi.fn();
   const utils = render(
-    <MockedProvider mocks={[settingsMock]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[settingsMock]}>
       <DuncitLocalizationProvider>
         <MemoryRouter initialEntries={['/register']}>
           <RegisterForm onSubmit={onSubmit} {...props} />

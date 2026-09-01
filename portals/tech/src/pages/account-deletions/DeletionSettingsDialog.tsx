@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -43,8 +43,8 @@ interface Props {
  */
 export default function DeletionSettingsDialog({ open, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { data } = useQuery(ACCOUNT_DELETION_SETTINGS, { fetchPolicy: 'cache-and-network' });
-  const [save, { loading }] = useMutation(UPDATE_ACCOUNT_DELETION_SETTINGS, {
+  const { data } = useQuery<any>(ACCOUNT_DELETION_SETTINGS, { fetchPolicy: 'cache-and-network' });
+  const [save, { loading }] = useMutation<any>(UPDATE_ACCOUNT_DELETION_SETTINGS, {
     refetchQueries: [{ query: ACCOUNT_DELETION_SETTINGS }],
   });
 
@@ -54,7 +54,7 @@ export default function DeletionSettingsDialog({ open, onClose }: Readonly<Props
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<Values>({ resolver: zodResolver(schema), values: { retention_days: current ?? 0 } });
+  } = useForm<Values, any, Values>({ resolver: zodResolver(schema) as unknown as Resolver<Values, any, Values>, values: { retention_days: current ?? 0 } });
 
   // The dialog is mounted for the life of the page, so a re-open has to re-seed
   // from the server rather than keep whatever was half-typed last time.

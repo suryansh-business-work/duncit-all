@@ -109,8 +109,12 @@ export function buildVenueApiRouter(): Router {
 
   router.get('/venues/:id', requireApiKey('venues:read'), async (req, res) => {
     try {
-      const valid = Types.ObjectId.isValid(req.params.id);
-      const venue = valid ? await venueService.getById(req.params.id) : null;
+      // Express 5 types every param `string | string[]` because of repeatable
+      // segments (`:x+`); these paths declare plain single params, so the
+      // assertion states what the route shape already guarantees.
+      const { id } = req.params as { id: string };
+      const valid = Types.ObjectId.isValid(id);
+      const venue = valid ? await venueService.getById(id) : null;
       if (venue?.status !== 'APPROVED' || venue?.is_active === false) {
         return res.status(404).json({ error: 'venue_not_found' });
       }
@@ -128,7 +132,7 @@ export function buildVenueApiRouter(): Router {
       if (to && Number.isNaN(to.getTime())) {
         return res.status(400).json({ error: 'to must be a valid date' });
       }
-      const slots = await venueSlotService.listAvailable(req.params.id, from);
+      const slots = await venueSlotService.listAvailable(req.params.id as string, from);
       const inRange = to
         ? slots.filter((s) => new Date(s.start_at).getTime() <= to.getTime())
         : slots;
@@ -146,7 +150,7 @@ export function buildVenueApiRouter(): Router {
         const auth = (req as ApiKeyedRequest).apiKey!;
         const externalRef =
           typeof req.body?.external_ref === 'string' ? req.body.external_ref : '';
-        const slot = await venueSlotService.bookExternal(req.params.slotId, auth.id, externalRef);
+        const slot = await venueSlotService.bookExternal(req.params.slotId as string, auth.id, externalRef);
         if (!slot) return res.status(409).json({ error: 'slot_unavailable' });
         return res.json({ booking: { ...toApiSlot(slot), external_ref: slot.external_ref ?? '' } });
       } catch (err) {
@@ -161,7 +165,7 @@ export function buildVenueApiRouter(): Router {
     async (req, res) => {
       try {
         const auth = (req as ApiKeyedRequest).apiKey!;
-        const slot = await venueSlotService.releaseExternal(req.params.slotId, auth.id);
+        const slot = await venueSlotService.releaseExternal(req.params.slotId as string, auth.id);
         // null = not booked, or booked by a DIFFERENT key — keys only cancel their own.
         if (!slot) return res.status(409).json({ error: 'slot_unavailable' });
         return res.json({ released: true });

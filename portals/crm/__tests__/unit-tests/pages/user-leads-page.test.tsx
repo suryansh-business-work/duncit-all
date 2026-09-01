@@ -1,8 +1,9 @@
 import '../helpers/agGridEnv';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
-import { MemoryRouter } from 'react-router-dom';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter } from 'react-router';
 import { logs } from '@duncit/logs';
 import UserLeadsPage from '@/pages/user-leads/UserLeadsPage';
 import {
@@ -60,7 +61,7 @@ const leadsMock = (): MockedResponse => ({
 
 const renderPage = (extraMocks: MockedResponse[] = []) =>
   render(
-    <MockedProvider mocks={[statsMock(), leadsMock(), ...extraMocks]} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[statsMock(), leadsMock(), ...extraMocks]}>
       <MemoryRouter>
         <UserLeadsPage />
       </MemoryRouter>
@@ -123,7 +124,7 @@ describe('UserLeadsPage', () => {
 
   it('shows the empty state when waUserLeads returns no page at all', async () => {
     render(
-      <MockedProvider
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
         mocks={[
           statsMock(),
           {
@@ -142,7 +143,6 @@ describe('UserLeadsPage', () => {
             result: { data: { waUserLeads: null } },
           },
         ]}
-        addTypename={false}
       >
         <MemoryRouter>
           <UserLeadsPage />

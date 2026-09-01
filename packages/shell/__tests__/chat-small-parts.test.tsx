@@ -4,7 +4,8 @@
  * entry point.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 
 import ReplyStrip from '../src/staff-chat/ReplyStrip';
@@ -194,7 +195,12 @@ describe('sounds', () => {
     const play = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal(
       'Audio',
-      vi.fn().mockImplementation(() => ({ play, volume: 0 })),
+      // A `function`, not an arrow: vitest 4 only lets a mock stand in for a
+      // constructor when its implementation is constructible, and this one is
+      // reached through `new Audio(...)`.
+      vi.fn().mockImplementation(function () {
+        return { play, volume: 0 };
+      }),
     );
 
     playMessagePing();
@@ -219,13 +225,15 @@ describe('sounds', () => {
     const pause = vi.fn();
     vi.stubGlobal(
       'Audio',
-      vi.fn().mockImplementation(() => ({
-        play: vi.fn().mockResolvedValue(undefined),
-        pause,
-        loop: false,
-        volume: 0,
-        currentTime: 5,
-      })),
+      vi.fn().mockImplementation(function () {
+        return {
+          play: vi.fn().mockResolvedValue(undefined),
+          pause,
+          loop: false,
+          volume: 0,
+          currentTime: 5,
+        };
+      }),
     );
 
     const stop = startRinging();
@@ -312,7 +320,7 @@ describe('StaffChatButton', () => {
 
   const button = (mocks: readonly MockedResponse[], props: Record<string, unknown> = {}) =>
     render(
-      <MockedProvider mocks={[...mocks]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
         <ShellRuntimeProvider graphqlUrl="https://server.test/graphql" tokenKey="token">
           <StaffChatButton meId="me" open={false} onToggle={vi.fn()} {...props} />
         </ShellRuntimeProvider>
@@ -346,7 +354,7 @@ describe('StaffChatButton', () => {
   it('skips the unread query and the socket outside a portal boot at all', async () => {
     expect(() =>
       render(
-        <MockedProvider mocks={[]}>
+        <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
           <StaffChatButton meId="me" open={false} onToggle={vi.fn()} />
         </MockedProvider>,
       ),

@@ -13,7 +13,7 @@ interface HarnessProps {
 /** Wraps children in a real RHF FormProvider and hands the methods back so a
  * test can drive setValue/setError/getValues directly. */
 export function FormHarness({ defaultValues, resolver, onMethods, children }: Readonly<HarnessProps>) {
-  const methods = useForm<ClubFormValues>({
+  const methods = useForm<ClubFormValues, any, ClubFormValues>({
     defaultValues: { ...blankClubFormValues, ...defaultValues },
     resolver,
   });

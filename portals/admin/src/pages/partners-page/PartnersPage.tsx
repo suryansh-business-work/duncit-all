@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react';
-import { gql, useApolloClient } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { gql } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';

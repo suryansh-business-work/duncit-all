@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
@@ -61,16 +61,22 @@ export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps
   const [toDelete, setToDelete] = useState<AiPrompt | null>(null);
   const [toReset, setToReset] = useState<AiPrompt | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [deletePrompt, { loading: deleting }] = useMutation(DELETE_AI_PROMPT);
-  const [resetPrompt, { loading: resetting }] = useMutation(RESET_AI_PROMPT);
+  const [deletePrompt, { loading: deleting }] = useMutation<any>(DELETE_AI_PROMPT);
+  const [resetPrompt, { loading: resetting }] = useMutation<any>(RESET_AI_PROMPT);
 
   const load = useCallback(async () => {
     const { data } = await client.query<{ aiPrompts: AiPrompt[] }>({
       query: AI_PROMPTS,
       variables: { filter: { kind } },
       fetchPolicy: 'network-only',
+      // A failed query rejects, so a resolved one always carries data.
+      errorPolicy: 'none',
     });
-    return data.aiPrompts;
+    // Apollo v4 widens `data` to `T | undefined` for every caller, including the
+    // ones that reject on failure. Narrowing it here rather than defaulting to
+    // `[]` keeps the single path the line above describes — the default would be
+    // a branch no test can reach, which is the whole package's 100% threshold.
+    return (data as { aiPrompts: AiPrompt[] }).aiPrompts;
   }, [client, kind]);
 
   // The table asks for a page; the query answers with the whole (small) list,

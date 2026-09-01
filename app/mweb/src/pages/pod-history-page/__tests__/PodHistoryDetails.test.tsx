@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { MockedProvider } from '@apollo/client/testing';
+import { MemoryRouter } from 'react-router';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import PodHistoryDetails from '../PodHistoryDetails';
 import { PUBLIC_APP_SETTINGS } from '../../../utils/dateFormat';
@@ -133,7 +133,7 @@ const renderIt = (
   const onRejoin = handlers.onRejoin ?? vi.fn();
   const mocks = [appSettingsMock, financeMock, ...(item.pod?.id ? [ordersMock(item.pod.id)] : []), ...extraMocks];
   render(
-    <MockedProvider mocks={mocks as never} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <MemoryRouter>
         <PodHistoryDetails
           item={item}

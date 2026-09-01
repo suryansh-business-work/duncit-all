@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -37,8 +37,8 @@ interface Props {
 export default function DeleteAccountDialog({ open, onClose, onSubmitted }: Readonly<Props>) {
   const { t } = useTranslation();
   const [info, setInfo] = useState<string | null>(t('mweb.account.deletion.otpSent'));
-  const [requestOtp, { loading: requesting }] = useMutation(REQUEST_ACCOUNT_DELETION_OTP);
-  const [submitRequest, { loading: submitting }] = useMutation(SUBMIT_ACCOUNT_DELETION_REQUEST);
+  const [requestOtp, { loading: requesting }] = useMutation<any>(REQUEST_ACCOUNT_DELETION_OTP);
+  const [submitRequest, { loading: submitting }] = useMutation<any>(SUBMIT_ACCOUNT_DELETION_REQUEST);
 
   const handleResend = () => {
     requestOtp()

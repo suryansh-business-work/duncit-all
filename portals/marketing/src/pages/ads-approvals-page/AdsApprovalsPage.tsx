@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import { useApolloTableFetch } from '@duncit/table';
@@ -21,7 +21,7 @@ export default function AdsApprovalsPage() {
 
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [reviewMut] = useMutation(REVIEW_AD_REQUEST);
+  const [reviewMut] = useMutation<any>(REVIEW_AD_REQUEST);
 
   // The status toggle lives outside the table (default PENDING), so it is pinned
   // into the query here rather than offered as a column filter.

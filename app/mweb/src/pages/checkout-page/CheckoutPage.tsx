@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useMutation, useQuery } from '@apollo/client';
+import { useLocation, useNavigate, useParams } from 'react-router';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Skeleton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { alpha, useTheme } from '@mui/material/styles';
@@ -44,13 +44,13 @@ export default function CheckoutPage() {
   const search = new URLSearchParams(location.search);
   const checkoutPodId = podId || state.pod_id || search.get('pod_id') || '';
 
-  const { data: podData, loading: podLoading, error: podError } = useQuery(CHECKOUT_POD, {
+  const { data: podData, loading: podLoading, error: podError } = useQuery<any>(CHECKOUT_POD, {
     variables: { id: checkoutPodId },
     skip: !checkoutPodId,
     fetchPolicy: 'cache-and-network',
   });
-  const [doCheckout] = useMutation(DUMMY_CHECKOUT);
-  const [doRazorpayOrder] = useMutation(CREATE_RAZORPAY_ORDER);
+  const [doCheckout] = useMutation<any>(DUMMY_CHECKOUT);
+  const [doRazorpayOrder] = useMutation<any>(CREATE_RAZORPAY_ORDER);
   const [alreadyBookedOpen, setAlreadyBookedOpen] = useState(false);
 
   const session = useCheckoutSession({ couponPodId: checkoutPodId || null });

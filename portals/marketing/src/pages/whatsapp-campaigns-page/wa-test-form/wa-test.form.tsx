@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
@@ -65,9 +65,9 @@ export default function WaTestForm({
     setValue,
     watch,
     formState: { isValid },
-  } = useForm<WaTestValues>({
+  } = useForm<WaTestValues, any, WaTestValues>({
     defaultValues: emptyValues(''),
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<WaTestValues, any, WaTestValues>,
     mode: 'onChange',
   });
 

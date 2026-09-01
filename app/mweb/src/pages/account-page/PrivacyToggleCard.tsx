@@ -1,4 +1,5 @@
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Card,
   CardContent,
@@ -26,7 +27,7 @@ interface Props {
 /** Account privacy: a private profile hides its posts and status from people
  * who don't follow you (like Instagram). Name and avatar stay visible. */
 export default function PrivacyToggleCard({ visibility, onChanged }: Readonly<Props>) {
-  const [setVisibility, { loading }] = useMutation(SET_VISIBILITY);
+  const [setVisibility, { loading }] = useMutation<any>(SET_VISIBILITY);
   const isPrivate = visibility === 'PRIVATE';
 
   const onToggle = async (next: boolean) => {

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -42,8 +42,8 @@ export default function WithdrawForm({ open, maxAmount, minAmount, currency, onC
     reset,
     watch,
     formState: { errors },
-  } = useForm<WithdrawValues>({ resolver: zodResolver(makeWithdrawSchema(maxAmount, minAmount, t)), defaultValues: blankWithdrawValues });
-  const [request, state] = useMutation(REQUEST_WITHDRAWAL);
+  } = useForm<WithdrawValues, any, WithdrawValues>({ resolver: zodResolver(makeWithdrawSchema(maxAmount, minAmount, t)) as unknown as Resolver<WithdrawValues, any, WithdrawValues>, defaultValues: blankWithdrawValues });
+  const [request, state] = useMutation<any>(REQUEST_WITHDRAWAL);
   const method = watch('payout_method');
   const minHint =
     minAmount > 0

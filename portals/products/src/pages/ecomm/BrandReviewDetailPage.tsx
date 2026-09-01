@@ -1,5 +1,5 @@
-import { useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { useNavigate, useParams } from 'react-router';
 import {
   Alert,
   Avatar,
@@ -28,7 +28,7 @@ export default function BrandReviewDetailPage() {
 
   // `ecommBrand` resolves a brand at ANY status; the marketplace queries are
   // approved-only, so a row opened from the review inbox showed "not found".
-  const brandQuery = useQuery(ECOMM_BRAND, {
+  const brandQuery = useQuery<any>(ECOMM_BRAND, {
     variables: { brand_doc_id: brandId },
     fetchPolicy: 'cache-and-network',
   });

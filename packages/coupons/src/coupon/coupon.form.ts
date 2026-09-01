@@ -34,7 +34,7 @@ const optionalPositiveInt = (t: CouponTranslate) =>
  */
 export const buildCouponFormSchema = (
   t: CouponTranslate,
-): z.ZodType<CouponFormValues, z.ZodTypeDef, unknown> =>
+) =>
   z
     .object({
       code: z
@@ -44,7 +44,7 @@ export const buildCouponFormSchema = (
         .refine((value) => CODE_PATTERN.test(value), t('shell.coupons.codeInvalid')),
       description: z.string().trim().max(300).default(''),
       discount_pct: z.coerce
-        .number({ invalid_type_error: t('shell.coupons.discountNumber') })
+        .number({ error: t('shell.coupons.discountNumber') })
         .min(1, t('shell.coupons.discountMin'))
         .max(100, t('shell.coupons.discountMax')),
       scope: z.enum(['GLOBAL', 'POD']),
@@ -54,7 +54,7 @@ export const buildCouponFormSchema = (
       max_uses: optionalPositiveInt(t),
       per_user_limit: optionalPositiveInt(t),
       min_order_amount: z.coerce
-        .number({ invalid_type_error: t('shell.coupons.amountNumber') })
+        .number({ error: t('shell.coupons.amountNumber') })
         .min(0, t('shell.coupons.amountMin'))
         .default(0),
       is_active: z.boolean().default(true),

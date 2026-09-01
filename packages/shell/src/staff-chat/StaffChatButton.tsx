@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from '../i18n/useTranslation';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Badge, Tooltip } from '@mui/material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import { DuncitIconButton } from '@duncit/buttons';

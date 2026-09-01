@@ -18,14 +18,14 @@
  * space is the common case and hunting for it among strangers' is not.
  */
 import '@testing-library/jest-dom/vitest';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { act, fireEvent, render } from '@testing-library/react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import VenueSlotStep from '../VenueSlotStep';
@@ -93,7 +93,7 @@ function Harness({
   errors?: Record<string, string>;
   clubVenueIds?: Set<string>;
 }>) {
-  const form = useForm<CreatePodFormValues>({
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, location_id: 'loc-1', ...values },
   });
   // In an effect: setError during render loops until React gives up.
@@ -111,7 +111,7 @@ function Harness({
 
 const step = (over: Parameters<typeof Harness>[0] = {}) =>
   render(
-    <MockedProvider mocks={[]} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <MemoryRouter>

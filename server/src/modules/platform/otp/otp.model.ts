@@ -1,8 +1,11 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 
 /** How a one-time code reaches the person it is proving. */
-export const OTP_MEDIUMS = ['SMS', 'WHATSAPP'] as const;
+export const OTP_MEDIUMS = ['SMS', 'WHATSAPP', 'EMAIL'] as const;
 export type OtpMedium = (typeof OTP_MEDIUMS)[number];
+
+/** The mediums that address a phone number rather than a mailbox. */
+export const isPhoneMedium = (medium: OtpMedium): boolean => medium !== 'EMAIL';
 
 /**
  * What a challenge is proving.
@@ -20,6 +23,10 @@ export const OTP_PURPOSES = [
   // code proving a contact number cannot move the WhatsApp one instead.
   'PHONE_CHANGE',
   'WHATSAPP_CHANGE',
+  // Recovering a forgotten password, on either channel. The ONE purpose that
+  // can be addressed to a mailbox as well as to a number — which is why the
+  // challenge below carries an `email` alongside the phone pair.
+  'PASSWORD_RESET',
 ] as const;
 export type OtpPurpose = (typeof OTP_PURPOSES)[number];
 
@@ -48,9 +55,23 @@ export interface IOtpChallenge extends Document {
   deliveries: IOtpDelivery[];
   phone_extension: string;
   phone_number: string;
+  /**
+   * The mailbox this challenge is addressed to, '' when it is addressed to a
+   * number. Exactly one of the two identifies a challenge — see `otpTargetKey`.
+   */
+  email: string;
   /** The name being proven alongside the number, '' when only the number is. */
   recipient_name: string;
   code_hash: string;
+  /**
+   * The sha256 of the one-shot grant minted when the code was accepted.
+   *
+   * Verifying and spending are two different moments for a password reset —
+   * the code is checked, then the new password is typed — and the step between
+   * them must not be re-openable by anybody who can guess an ObjectId. `''`
+   * until a grant is minted, and select:false because it is a credential.
+   */
+  grant_hash: string;
   expires_at: Date;
   attempts: number;
   verified_at: Date | null;
@@ -82,8 +103,10 @@ const otpChallengeSchema = new Schema<IOtpChallenge>(
     deliveries: { type: [deliverySchema], default: [] },
     phone_extension: { type: String, default: '' },
     phone_number: { type: String, default: '', index: true },
+    email: { type: String, default: '', lowercase: true, trim: true, index: true },
     recipient_name: { type: String, default: '' },
     code_hash: { type: String, required: true },
+    grant_hash: { type: String, default: '', select: false },
     // Mongo's TTL monitor drops the row an hour AFTER it expires rather than on
     // the dot, so a just-expired challenge can still answer "that code has
     // expired" instead of the misleading "no such challenge".
@@ -98,7 +121,8 @@ const otpChallengeSchema = new Schema<IOtpChallenge>(
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 
-// `verifyLatest` reads the newest live challenge for a purpose + number.
+// `verifyLatest` reads the newest live challenge for a purpose + destination.
 otpChallengeSchema.index({ purpose: 1, phone_number: 1, created_at: -1 });
+otpChallengeSchema.index({ purpose: 1, email: 1, created_at: -1 });
 
 export const OtpChallengeModel = model<IOtpChallenge>('OtpChallenge', otpChallengeSchema);

@@ -11,8 +11,9 @@
  * must not be shown a control that will be refused. `canWrite` is that line and
  * these hold both sides of it.
  */
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
-import { MemoryRouter } from 'react-router-dom';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter } from 'react-router';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -99,7 +100,7 @@ const PDF = file({
 
 const wrap = (ui: React.ReactNode) =>
   render(
-    <MockedProvider link={schemaMockLink()}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={schemaMockLink()}>
       <ThemeProvider theme={testTheme}>
         <MemoryRouter>{ui}</MemoryRouter>
       </ThemeProvider>
@@ -266,7 +267,7 @@ describe('FileDetailsView saving', () => {
       onError: vi.fn(),
     };
     const view = render(
-      <MockedProvider mocks={[...mocks]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
         <ThemeProvider theme={testTheme}>
           <MemoryRouter>
             <FileDetailsView file={file()} canWrite {...spies} {...props} />
@@ -562,7 +563,7 @@ describe('FileManagerDialog interactions', () => {
 
   const wrapMocked = (ui: React.ReactNode, mocks: readonly MockedResponse[]) =>
     render(
-      <MockedProvider mocks={[...mocks]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[...mocks]}>
         <ThemeProvider theme={testTheme}>
           <MemoryRouter>{ui}</MemoryRouter>
         </ThemeProvider>

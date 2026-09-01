@@ -3,7 +3,7 @@
  * picker and the clear-conversation confirm — grouped here only because none
  * of it belongs to the thread's own layout.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -28,7 +28,7 @@ const baseProps = () => ({
 
 const mount = (props: Partial<ReturnType<typeof baseProps>> = {}) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ConversationDialogs {...baseProps()} {...props} />
     </MockedProvider>,
   );

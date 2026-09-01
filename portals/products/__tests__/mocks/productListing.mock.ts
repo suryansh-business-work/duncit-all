@@ -44,8 +44,7 @@ export const makeProductListingRow = (
 export const reviewProductListingMock = (
   over: { status?: 'APPROVED' | 'DENIED'; fail?: boolean } = {},
 ): MockedResponse => ({
-  request: { query: REVIEW_PRODUCT_LISTING },
-  variableMatcher: () => true,
+  request: { query: REVIEW_PRODUCT_LISTING, variables: () => true },
   result: over.fail
     ? { errors: [{ message: 'cannot review' }] }
     : {

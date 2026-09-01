@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Autocomplete, TextField } from '@mui/material';
 import { CRM_SERVICES_OFFERED, type CrmServiceOffered } from '../../api/data.gql';
 import type { CrmServiceOffered as LeadService } from '../../api/crm.types';

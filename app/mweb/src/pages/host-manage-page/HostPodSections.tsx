@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Stack } from '@mui/material';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 import CancelScheduleSendIcon from '@mui/icons-material/CancelScheduleSend';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Alert, Dialog, DialogContent, DialogTitle } from '@mui/material';
 import {
   CREATE_CRM_CALL_PROMPT,
@@ -19,8 +19,8 @@ interface Props {
 /** Create / edit a Static Content prompt, wrapping the RHF+Zod form with GraphQL. */
 export default function CallPromptDialog({ open, prompt, onClose, onSaved }: Readonly<Props>) {
   const [error, setError] = useState<string | null>(null);
-  const [createPrompt, { loading: creating }] = useMutation(CREATE_CRM_CALL_PROMPT);
-  const [updatePrompt, { loading: updating }] = useMutation(UPDATE_CRM_CALL_PROMPT);
+  const [createPrompt, { loading: creating }] = useMutation<any>(CREATE_CRM_CALL_PROMPT);
+  const [updatePrompt, { loading: updating }] = useMutation<any>(UPDATE_CRM_CALL_PROMPT);
 
   const submit = async (values: CallPromptFormValues) => {
     setError(null);

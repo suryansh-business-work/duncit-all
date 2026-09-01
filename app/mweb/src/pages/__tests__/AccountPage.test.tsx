@@ -1,8 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { gql } from '@apollo/client';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import AccountPage from '../AccountPage';
 import { MY_ACCOUNT_HEALTH, type HealthScore } from '../../components/health/queries';
 
@@ -10,8 +10,8 @@ import { MY_ACCOUNT_HEALTH, type HealthScore } from '../../components/health/que
 const navigateSpy = vi.fn();
 const logoutSpy = vi.fn();
 
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+vi.mock('react-router', async () => {
+  const actual = await vi.importActual<typeof import('react-router')>('react-router');
   return { ...actual, useNavigate: () => navigateSpy };
 });
 
@@ -174,7 +174,7 @@ const healthMock = (h: HealthScore | null) => ({
 
 const renderPage = (mocks: unknown[]) =>
   render(
-    <MockedProvider mocks={mocks as never}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <MemoryRouter>
         <AccountPage />
       </MemoryRouter>

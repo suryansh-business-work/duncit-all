@@ -65,7 +65,7 @@ export function reportJourneyStep(step: JourneyStep): void {
   capture
     .then((clickId) => {
       if (!clickId) return null;
-      return apolloClient.mutate({
+      return apolloClient.mutate<any>({
         mutation: RECORD_STEP,
         variables: { click_id: clickId, step },
       });

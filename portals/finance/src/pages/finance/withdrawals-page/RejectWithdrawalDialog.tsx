@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -50,8 +50,8 @@ export default function RejectWithdrawalDialog({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<RejectFormValues>({
-    resolver: zodResolver(rejectSchema),
+  } = useForm<RejectFormValues, any, RejectFormValues>({
+    resolver: zodResolver(rejectSchema) as unknown as Resolver<RejectFormValues, any, RejectFormValues>,
     defaultValues: { reason: '' },
     mode: 'onSubmit',
   });

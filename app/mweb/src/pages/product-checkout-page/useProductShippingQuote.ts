@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLazyQuery } from '@apollo/client';
+import { useLazyQuery } from '@apollo/client/react';
 import { PINCODE_PATTERN } from '../checkout-page/checkout';
 import {
   PRODUCT_SHIPPING_QUOTE,
@@ -23,7 +23,7 @@ export function useProductShippingQuote(
   items: ProductCartItemInput[],
   deliveryPincode: string,
 ): Result {
-  const [run, { data, loading }] = useLazyQuery(PRODUCT_SHIPPING_QUOTE, { fetchPolicy: 'no-cache' });
+  const [run, { data, loading }] = useLazyQuery<any>(PRODUCT_SHIPPING_QUOTE, { fetchPolicy: 'no-cache' });
   const pincode = (deliveryPincode || '').trim();
   const pincodeValid = PINCODE_PATTERN.test(pincode);
   const itemsKey = JSON.stringify(items);

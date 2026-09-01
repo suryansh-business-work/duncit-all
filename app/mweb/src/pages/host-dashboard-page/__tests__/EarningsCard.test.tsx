@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
-import { MemoryRouter } from 'react-router-dom';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import EarningsCard from '../EarningsCard';
 
@@ -15,7 +15,7 @@ const summary = {
 
 function setup(withSummary: boolean) {
   return render(
-    <MockedProvider addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}>
       <MemoryRouter>
         <EarningsCard balance={99.5} currency="₹" summary={withSummary ? summary : null} />
       </MemoryRouter>

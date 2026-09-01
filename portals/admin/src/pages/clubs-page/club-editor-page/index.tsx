@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { useNavigate, useParams } from 'react-router';
 import type { UseFormReturn } from 'react-hook-form';
 import {
   ClubEditorPage,
@@ -43,10 +43,10 @@ export default function AdminClubEditorPage() {
   const [opError, setOpError] = useState<string | null>(null);
   const picker = useClubImagePicker();
 
-  const [createMut] = useMutation(CREATE);
-  const [updateMut] = useMutation(UPDATE);
+  const [createMut] = useMutation<any>(CREATE);
+  const [updateMut] = useMutation<any>(UPDATE);
 
-  const clubQuery = useQuery(CLUB_FOR_EDIT, {
+  const clubQuery = useQuery<any>(CLUB_FOR_EDIT, {
     variables: { id },
     skip: !id,
     fetchPolicy: 'network-only',

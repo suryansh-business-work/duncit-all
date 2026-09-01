@@ -16,7 +16,7 @@ export const notificationFormSchema = z
     body: requiredText('Body', 5, 1000),
     image_url: optionalUrl('Image URL', false, { defaultEmpty: true }),
     link_url: optionalUrl('Link URL', true, { defaultEmpty: true }),
-    scope: z.enum(scopes, { required_error: 'Audience is required' }),
+    scope: z.enum(scopes, { error: 'Audience is required' }),
     silent: z.boolean(),
     location_id: z.string().default(''),
     zone_name: z.string().default(''),
@@ -43,8 +43,8 @@ export const notificationFormSchema = z
       }
     } else if (values.target_user_ids.length > 0) {
       ctx.addIssue({
-        code: z.ZodIssueCode.too_big,
-        type: 'array',
+        code: 'too_big',
+        origin: 'array',
         maximum: 0,
         inclusive: true,
         path: ['target_user_ids'],

@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useMemo } from 'react';
 
 export const PUBLIC_ROLES = gql`
@@ -18,7 +19,7 @@ const FALLBACK = (key: string) =>
     .join(' ');
 
 export function useRoleLabels() {
-  const { data } = useQuery(PUBLIC_ROLES, { fetchPolicy: 'cache-first' });
+  const { data } = useQuery<any>(PUBLIC_ROLES, { fetchPolicy: 'cache-first' });
   const map = useMemo(() => {
     const m = new Map<string, string>();
     (data?.publicRoles ?? []).forEach((r: any) => m.set(r.key, r.name));

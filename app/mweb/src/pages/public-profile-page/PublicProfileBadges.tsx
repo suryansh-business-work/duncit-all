@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Avatar, Box, ButtonBase, Card, CardContent, Stack, Typography } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import BadgeDetailsSheet from '../../components/badges/BadgeDetailsSheet';
@@ -27,7 +28,7 @@ interface Props {
 }
 
 export default function PublicProfileBadges({ userId }: Readonly<Props>) {
-  const { data, loading } = useQuery(USER_BADGES, {
+  const { data, loading } = useQuery<any>(USER_BADGES, {
     variables: { user_id: userId },
     fetchPolicy: 'cache-and-network',
   });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -49,7 +49,7 @@ export default function GrievanceDetailDialog({
   const [status, setStatus] = useState<GrievanceStatus>('RECEIVED');
   const [resolution, setResolution] = useState('');
   const [error, setError] = useState('');
-  const [save, { loading }] = useMutation(UPDATE_GRIEVANCE_STATUS);
+  const [save, { loading }] = useMutation<any>(UPDATE_GRIEVANCE_STATUS);
 
   // Re-seed on every open: one dialog instance serves every row.
   useEffect(() => {

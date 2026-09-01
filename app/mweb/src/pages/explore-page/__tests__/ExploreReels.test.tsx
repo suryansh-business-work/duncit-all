@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import type { ReactNode } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { describe, expect, it, vi } from 'vitest';
 import ExploreReels from '../ExploreReels';
 import { ACTIVE_ADS, type PublicAd } from '../../../components/ads/useActiveAds';
@@ -68,7 +68,7 @@ const baseProps = (over: Partial<Parameters<typeof ExploreReels>[0]> = {}) => ({
 
 const setup = (props: any, mocks: any[]) =>
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ExploreReels {...props} />
     </MockedProvider>,
   );

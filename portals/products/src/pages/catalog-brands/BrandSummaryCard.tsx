@@ -1,4 +1,4 @@
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { Alert, Avatar, Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import RuleIcon from '@mui/icons-material/Rule';

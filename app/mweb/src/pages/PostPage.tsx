@@ -1,5 +1,6 @@
-import { gql, useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
+import { useNavigate, useParams } from 'react-router';
 import { Alert, CircularProgress, Stack } from '@mui/material';
 import PostDialog from './profile-page/post-dialog/PostDialog';
 
@@ -19,7 +20,7 @@ const ME_ID = gql`
 export default function PostPage() {
   const { postId = '' } = useParams();
   const navigate = useNavigate();
-  const { data, loading, error } = useQuery(ME_ID, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery<any>(ME_ID, { fetchPolicy: 'cache-and-network' });
 
   const goBack = () => navigate(-1);
 

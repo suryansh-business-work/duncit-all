@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Chip, CircularProgress, InputAdornment, Stack, TextField, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
@@ -34,7 +35,7 @@ export default function PartnerFaqsPage() {
   const { t } = useTranslation();
   const [topic, setTopic] = useState<ReturnType<typeof topics>[number]['value']>('ALL');
   const [search, setSearch] = useState('');
-  const { data, loading, error } = useQuery(PARTNER_FAQS, {
+  const { data, loading, error } = useQuery<any>(PARTNER_FAQS, {
     variables: { topic: topic === 'ALL' ? null : topic },
     fetchPolicy: 'cache-and-network',
   });

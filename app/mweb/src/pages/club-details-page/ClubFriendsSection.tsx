@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import {
   Avatar,
   AvatarGroup,
@@ -33,7 +34,7 @@ interface Props {
 export default function ClubFriendsSection({ friendIds }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
 
-  const { data } = useQuery(PUBLIC_USERS_BY_IDS, {
+  const { data } = useQuery<any>(PUBLIC_USERS_BY_IDS, {
     variables: { ids: friendIds },
     skip: friendIds.length === 0,
     fetchPolicy: 'cache-first',

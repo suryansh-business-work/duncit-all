@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useMutation, useQuery } from '@apollo/client';
+import { useNavigate, useParams } from 'react-router';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -25,11 +25,11 @@ export default function ChatRoomPage() {
   const { t } = useTranslation();
   const { id: podId } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data, loading, refetch } = useQuery(POD_MESSAGES, {
+  const { data, loading, refetch } = useQuery<any>(POD_MESSAGES, {
     variables: { pod_id: podId, limit: 80 },
     fetchPolicy: 'cache-and-network',
   });
-  const { data: peopleData } = useQuery(CHAT_PARTICIPANTS, {
+  const { data: peopleData } = useQuery<any>(CHAT_PARTICIPANTS, {
     variables: { pod_id: podId },
     fetchPolicy: 'cache-and-network',
   });
@@ -37,8 +37,8 @@ export default function ChatRoomPage() {
   const [picker, setPicker] = useState(false);
   const [emojiAnchor, setEmojiAnchor] = useState<HTMLElement | null>(null);
   const [reactAnchor, setReactAnchor] = useState<{ el: HTMLElement; id: string } | null>(null);
-  const [send] = useMutation(SEND_MSG);
-  const [react] = useMutation(REACT_MSG);
+  const [send] = useMutation<any>(SEND_MSG);
+  const [react] = useMutation<any>(REACT_MSG);
   const [live, setLive] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState<string | null>(null);

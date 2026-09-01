@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLazyQuery, useQuery } from '@apollo/client';
+import { useLazyQuery, useQuery } from '@apollo/client/react';
 import { Alert, Box, Stack, TextField, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { PUBLIC_FINANCE } from '../checkout-page/queries';
@@ -21,7 +21,7 @@ export default function GiftCardRedeemPage() {
   const [runLookup, { data, loading, error }] = useLazyQuery<{ giftCardByCode: GiftCard }>(GIFT_CARD_BY_CODE, {
     fetchPolicy: 'network-only',
   });
-  const { data: financeData } = useQuery(PUBLIC_FINANCE);
+  const { data: financeData } = useQuery<any>(PUBLIC_FINANCE);
 
   const currencySymbol = financeData?.publicFinanceSettings?.currency_symbol ?? '₹';
   const card = data?.giftCardByCode ?? null;

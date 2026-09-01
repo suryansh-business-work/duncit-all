@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Card, MenuItem, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import type { TableFilterValue, TableQueryState } from '@duncit/table';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
@@ -30,8 +30,8 @@ export default function VenuePodsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const refetchRef = useRef<(() => void) | null>(null);
 
-  const venuesQuery = useQuery(MY_VENUES, { fetchPolicy: 'cache-first' });
-  const podsQuery = useQuery(VENUE_PODS, {
+  const venuesQuery = useQuery<any>(MY_VENUES, { fetchPolicy: 'cache-first' });
+  const podsQuery = useQuery<any>(VENUE_PODS, {
     variables: { venue_id: venueId === ALL_VENUES ? null : venueId },
     fetchPolicy: 'cache-and-network',
   });

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import UserModeContent from '../UserModeContent';
 import { PUBLIC_FEATURE_FLAGS } from '@duncit/app-settings';
 import { ACTIVE_ADS } from '../../../ads/useActiveAds';
@@ -32,7 +32,7 @@ function renderContent(props: {
   showProducts?: boolean;
 }) {
   return render(
-    <MockedProvider mocks={[adsMock, flagsMock(props.showProducts !== false)]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[adsMock, flagsMock(props.showProducts !== false)]}>
       <UserModeContent
         me={props.me}
         roles={props.roles ?? []}
@@ -111,7 +111,7 @@ describe('UserModeContent', () => {
     expect(screen.queryByText('Pod Plans')).not.toBeInTheDocument();
 
     rerender(
-      <MockedProvider mocks={[adsMock]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[adsMock]}>
         <UserModeContent me={FULL_ME} roles={[]} mode="USER" showPodPlans onNavigate={vi.fn()} />
       </MockedProvider>,
     );
@@ -131,7 +131,7 @@ describe('UserModeContent', () => {
     expect(screen.queryByText('Withdrawal')).not.toBeInTheDocument();
 
     rerender(
-      <MockedProvider mocks={[adsMock]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[adsMock]}>
         <UserModeContent me={FULL_ME} roles={['HOST']} mode="HOST" showPodPlans={false} onNavigate={onNavigate} />
       </MockedProvider>,
     );

@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import type { UseFormReturn } from 'react-hook-form';
 import { VENUE_AVAILABLE_SLOTS, type PodFormConfig, type PodFormValues } from '@duncit/pod-form';
 import { buildAiFilledPod, type AvailableSlot } from '../podFormAi';
@@ -23,7 +23,7 @@ export default function usePodAiFill({ config, clubs, venues, hosts, getClubVenu
   // the picker then shows as selected.
   const fetchSlots = useCallback(
     async (venueId: string): Promise<AvailableSlot[]> => {
-      const { data } = await client.query({
+      const { data } = await client.query<any>({
         query: VENUE_AVAILABLE_SLOTS,
         variables: { venue_id: venueId, from: new Date().toISOString() },
         fetchPolicy: 'network-only',

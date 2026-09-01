@@ -45,6 +45,47 @@ export const requestPasswordResetSchema = yup.object({
   email: yup.string().email().required(),
 });
 
+/*
+  Forgotten-password recovery, in three steps.
+
+  The destination is validated per channel rather than "whatever was sent": a
+  PHONE request with only an email would otherwise reach the OTP service, which
+  would refuse it there with a message about a country code nobody was asked
+  for. `when` is what keeps one input honest about two shapes.
+*/
+const passwordResetLookupShape = {
+  channel: yup.string().oneOf(['EMAIL', 'PHONE']).required(),
+  email: yup
+    .string()
+    .when('channel', { is: 'EMAIL', then: (s) => s.email().required(), otherwise: (s) => s.optional() }),
+  phone_extension: yup.string().when('channel', {
+    is: 'PHONE',
+    then: (s) => s.matches(extRegex, { message: 'Invalid extension' }).required(),
+    otherwise: (s) => s.optional(),
+  }),
+  phone_number: yup.string().when('channel', {
+    is: 'PHONE',
+    then: (s) => s.matches(phoneRegex, { message: 'Invalid phone' }).required(),
+    otherwise: (s) => s.optional(),
+  }),
+};
+
+export const passwordResetLookupSchema = yup.object(passwordResetLookupShape);
+
+export const verifyPasswordResetCodeSchema = yup.object({
+  ...passwordResetLookupShape,
+  otp: yup
+    .string()
+    .matches(/^\d{6}$/, 'Enter the 6 digit code')
+    .required(),
+});
+
+export const completePasswordResetSchema = yup.object({
+  reset_token: yup.string().min(10).max(200).required(),
+  // The application's password policy, in the one place every door reads it.
+  new_password: yup.string().min(8).max(100).required(),
+});
+
 export const requestPortalLoginOtpSchema = yup.object({
   email: yup.string().email().required(),
   portal_key: yup.string().max(64).optional(),
@@ -103,6 +144,9 @@ export const googleSignupSchema = yup.object({
 export type RegisterDTO = yup.InferType<typeof registerSchema>;
 export type LoginDTO = yup.InferType<typeof loginSchema>;
 export type RequestPasswordResetDTO = yup.InferType<typeof requestPasswordResetSchema>;
+export type PasswordResetLookupDTO = yup.InferType<typeof passwordResetLookupSchema>;
+export type VerifyPasswordResetCodeDTO = yup.InferType<typeof verifyPasswordResetCodeSchema>;
+export type CompletePasswordResetDTO = yup.InferType<typeof completePasswordResetSchema>;
 export type ResetPasswordDTO = yup.InferType<typeof resetPasswordSchema>;
 export type RequestPasswordChangeDTO = yup.InferType<typeof requestPasswordChangeSchema>;
 export type ChangePasswordDTO = yup.InferType<typeof changePasswordSchema>;

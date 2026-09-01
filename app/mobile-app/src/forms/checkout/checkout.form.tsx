@@ -1,6 +1,6 @@
+import { formResolver } from '../../utils/form-resolver';
 import { useEffect, useMemo } from 'react';
 import { useController, useForm, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -74,9 +74,9 @@ export function CheckoutForm({
     () => (addressRequired ? makeProductCheckoutSchema(t) : makeCheckoutSchema(t)),
     [addressRequired, t],
   );
-  const { control, handleSubmit } = useForm<CheckoutFormValues>({
+  const { control, handleSubmit } = useForm<CheckoutFormValues, any, CheckoutFormValues>({
     values: { ...checkoutDefaults, ...initialValues },
-    resolver: zodResolver(schema),
+    resolver: formResolver<CheckoutFormValues>(schema),
     mode: 'onBlur',
   });
   const simulate = useController({ control, name: 'simulate_failure' });

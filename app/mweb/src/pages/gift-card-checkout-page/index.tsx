@@ -1,5 +1,5 @@
-import { useQuery } from '@apollo/client';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { Navigate, useLocation, useNavigate } from 'react-router';
 import { Alert, Box, Divider, Paper, Skeleton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
@@ -47,7 +47,7 @@ export default function GiftCardCheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const selection = (location.state as GiftCardSelection | null) ?? null;
-  const { data: financeData } = useQuery(PUBLIC_FINANCE);
+  const { data: financeData } = useQuery<any>(PUBLIC_FINANCE);
   const currencySymbol = financeData?.publicFinanceSettings?.currency_symbol ?? '₹';
   // What an agent needs if a payment times out and a ticket has to be opened.
   const failure = usePaymentFailure(() => ({

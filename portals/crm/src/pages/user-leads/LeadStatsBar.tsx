@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Card, CardContent, Grid, Stack, Typography } from '@mui/material';
 import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 import GroupsIcon from '@mui/icons-material/Groups';

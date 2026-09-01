@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Box,
   Checkbox,
@@ -36,7 +36,7 @@ export default function PortalEnvDrawer({ portal, onClose, onSaved }: Readonly<P
     skip: !portal,
     fetchPolicy: 'cache-and-network',
   });
-  const [setMut, setState] = useMutation(SET_PORTAL_ENV_ENTRIES);
+  const [setMut, setState] = useMutation<any>(SET_PORTAL_ENV_ENTRIES);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
 

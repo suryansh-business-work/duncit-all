@@ -29,16 +29,14 @@ export const makePolicy = (over: Partial<PolicyMock> = {}): PolicyMock => ({
 /* ---- Mutation builders ---- */
 
 export const createPolicyMock = (over: { id?: string; fail?: string } = {}): MockedResponse => ({
-  request: { query: CREATE_POLICY },
-  variableMatcher: () => true,
+  request: { query: CREATE_POLICY, variables: () => true },
   result: over.fail
     ? { errors: [{ message: over.fail }] }
     : { data: { createPolicy: { __typename: 'Policy', id: over.id ?? 'new-1' } } },
 });
 
 export const updatePolicyMock = (over: { id?: string } = {}): MockedResponse => ({
-  request: { query: UPDATE_POLICY },
-  variableMatcher: () => true,
+  request: { query: UPDATE_POLICY, variables: () => true },
   result: { data: { updatePolicy: { __typename: 'Policy', id: over.id ?? 'p1' } } },
 });
 

@@ -10,8 +10,8 @@ const m = vi.hoisted(() => ({
   channels: { loading: false, data: undefined as unknown, error: undefined } as QueryResult,
 }));
 
-vi.mock('@apollo/client', async (io) => {
-  const actual = await io<typeof import('@apollo/client')>();
+vi.mock('@apollo/client/react', async (io) => {
+  const actual = await io<typeof import('@apollo/client/react')>();
   return {
     ...actual,
     useQuery: (doc: { definitions: { name?: { value: string } }[] }) =>

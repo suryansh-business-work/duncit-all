@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+
 import { Alert, Box, Stack } from '@mui/material';
 import {
   MODERATION_FIELD_MAP,
@@ -38,7 +39,7 @@ import LocationClubStep from './steps/LocationClubStep';
 import VenueSlotStep, { VENUE_AVAILABLE_SLOTS } from './steps/VenueSlotStep';
 import PricingStep from './steps/PricingStep';
 import { useEarningsPreview } from './price-panel';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { filterProductsForClub, pruneProductRequests, spotsBounds } from '@duncit/utils';
 import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
 
@@ -84,8 +85,16 @@ export default function CreatePodStepper({
   // The schema cannot call `t` at module scope, so it is built here from the
   // reader's own catalogue — the validation messages are copy like any other.
   const schema = useMemo(() => makeCreatePodSchema(t), [t]);
-  const form = useForm<CreatePodFormValues>({
-    resolver: zodResolver(schema),
+  // The schema coerces a few fields (a spot count arrives from the DOM as a
+  // string), so its INPUT type differs from CreatePodFormValues. The fields are
+  // the values type — every step component is typed on it — so the resolver is
+  // told that rather than the form being retyped around the coercion.
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
+    resolver: zodResolver(schema) as unknown as Resolver<
+      CreatePodFormValues,
+      any,
+      CreatePodFormValues
+    >,
     defaultValues: initialValues,
     mode: 'onTouched',
   });

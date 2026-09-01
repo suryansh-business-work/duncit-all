@@ -4,7 +4,7 @@
  * docked — none of which a plain schema-mocked render ever reaches. useCall,
  * useCallRecorder and useWorkspaceWindow are stubbed here for exactly that.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, render } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
@@ -84,7 +84,7 @@ describe('StaffChatPanel with an incoming call, a ready recording and a docked t
   it('asks to be shown while a call is incoming, offers the ready recording to attach, and gives the sidebar a real minimise', async () => {
     const onRequestOpen = requestOpenSpy;
     render(
-      <MockedProvider link={schemaMockLink()}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} link={schemaMockLink()}>
         <ThemeProvider theme={testTheme}>
           <StaffChatPanel open onClose={vi.fn()} onRequestOpen={onRequestOpen} meId="u-1" meName="Asha Rao" />
         </ThemeProvider>

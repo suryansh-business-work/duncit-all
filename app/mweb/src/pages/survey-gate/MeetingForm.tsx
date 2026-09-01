@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { gql, useQuery } from '@apollo/client';
+import { useNavigate } from 'react-router';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack, TextField, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import SlotPicker from './SlotPicker';
@@ -44,7 +45,7 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
     variables: { kind },
     fetchPolicy: 'network-only',
   });
-  const { data: meData } = useQuery(MEETING_ME, { fetchPolicy: 'cache-and-network' });
+  const { data: meData } = useQuery<any>(MEETING_ME, { fetchPolicy: 'cache-and-network' });
   const [slot, setSlot] = useState('');
   const [name, setName] = useState('');
   const [notes, setNotes] = useState('');

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -43,7 +43,7 @@ export default function ScheduleMeetingDialog({ meeting, onClose, onSaved }: Rea
     skip: !meeting,
     fetchPolicy: 'network-only',
   });
-  const [updateMeeting, { loading: saving }] = useMutation(UPDATE_MEETING);
+  const [updateMeeting, { loading: saving }] = useMutation<any>(UPDATE_MEETING);
   const [slot, setSlot] = useState('');
   const [status, setStatus] = useState<MeetingStatus>('SCHEDULED');
   const [link, setLink] = useState('');

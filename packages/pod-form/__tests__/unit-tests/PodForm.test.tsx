@@ -11,6 +11,8 @@ vi.mock('@mui/x-date-pickers/DateTimePicker', () => ({
 
 vi.mock('@apollo/client', () => ({
   gql: (s: TemplateStringsArray) => s.join(''),
+}));
+vi.mock('@apollo/client/react', () => ({
   useQuery: () => ({ data: { venueAvailableSlots: [] }, loading: false, error: undefined }),
 }));
 

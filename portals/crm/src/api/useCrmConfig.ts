@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { CRM_LEAD_CONFIG } from './crm.gql';
 import type { CrmOptionGroup } from './crm.types';
 
@@ -12,7 +12,7 @@ const EMPTY: CrmOptionGroup = {
 
 /** Fetches the dynamic CRM option lists from the server (single source of truth). */
 export function useCrmConfig() {
-  const { data, loading, error } = useQuery(CRM_LEAD_CONFIG, { fetchPolicy: 'cache-first' });
+  const { data, loading, error } = useQuery<any>(CRM_LEAD_CONFIG, { fetchPolicy: 'cache-first' });
   const config: CrmOptionGroup = data?.crmLeadConfig ?? EMPTY;
   return { config, loading, error };
 }

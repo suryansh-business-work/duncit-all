@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Avatar, Box, Card, Chip, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import GroupsIcon from '@mui/icons-material/Groups';

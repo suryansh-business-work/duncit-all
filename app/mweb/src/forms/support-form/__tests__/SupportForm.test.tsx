@@ -1,13 +1,13 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { describe, expect, it, vi } from 'vitest';
 import SupportForm from '../SupportForm';
 
 function renderForm(props: Partial<React.ComponentProps<typeof SupportForm>>) {
   const onSubmit = props.onSubmit ?? vi.fn();
   const utils = render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <SupportForm onSubmit={onSubmit} {...props} />
     </MockedProvider>,
   );
@@ -71,13 +71,13 @@ describe('SupportForm — syncing async initialValues', () => {
   it('updates read-only fields when initialValues resolve after mount', () => {
     const onSubmit = vi.fn();
     const { rerender } = render(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <SupportForm initialValues={{}} onSubmit={onSubmit} />
       </MockedProvider>,
     );
     expect(fieldByLabel('^Name')).toHaveValue('');
     rerender(
-      <MockedProvider mocks={[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <SupportForm
           initialValues={{ name: 'Late Name', email: 'late@x.com', pod_id: 'p1', pod_title: 'Late Pod' }}
           onSubmit={onSubmit}

@@ -1,5 +1,5 @@
-import { useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import StarIcon from '@mui/icons-material/Star';
 import { DuncitButton } from '@duncit/buttons';
 import { SURVEYS, type SurveyKind } from './queries';

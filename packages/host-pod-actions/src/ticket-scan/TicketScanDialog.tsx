@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Box,
@@ -68,7 +68,7 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
   // The scan that just FLIPPED the ticket — drives the confirmation dialog.
   // Kept separately from `result` so dismissing it leaves the pane's state.
   const [confirmed, setConfirmed] = useState<HostTicketScanResult | null>(null);
-  const [scan, scanState] = useMutation(HOST_SCAN_POD_TICKET);
+  const [scan, scanState] = useMutation<any>(HOST_SCAN_POD_TICKET);
 
   // Scanning pauses while a code is in flight and while its result is on
   // screen — otherwise every frame re-submits the same ticket.

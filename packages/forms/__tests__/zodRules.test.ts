@@ -46,7 +46,7 @@ describe('zodRules.password', () => {
     expect(msg(zodRules.password('Pass', { required: true }), '')).toBe('Pass is required');
   });
 
-  it('with requiredError uses required_error for an undefined value', () => {
+  it('with requiredError words the message for an undefined value', () => {
     expect(msg(zodRules.password('Pass', { requiredError: true }), undefined)).toBe(
       'Pass is required',
     );

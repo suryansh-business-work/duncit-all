@@ -83,8 +83,7 @@ export const campaignsForShortLinkMock = (
 });
 
 export const shortLinkQrMock = (opts: { pending?: boolean } = {}): MockedResponse => ({
-  request: { query: SHORT_LINK_QR },
-  variableMatcher: () => true,
+  request: { query: SHORT_LINK_QR, variables: () => true },
   result: { data: { shortLinkQr: 'data:image/png;base64,QRQRQR' } },
   ...(opts.pending ? { delay: Infinity } : {}),
   maxUsageCount: 20,
@@ -94,8 +93,7 @@ export const createShortLinkMock = (
   over: Partial<ShortLinkRow> = {},
   opts: { failWith?: string } = {},
 ): MockedResponse => ({
-  request: { query: CREATE_SHORT_LINK },
-  variableMatcher: () => true,
+  request: { query: CREATE_SHORT_LINK, variables: () => true },
   ...(opts.failWith
     ? { result: { errors: [{ message: opts.failWith }] } }
     : {
@@ -108,8 +106,7 @@ export const createShortLinkMock = (
 });
 
 export const setShortLinkActiveMock = (isActive = false): MockedResponse => ({
-  request: { query: SET_SHORT_LINK_ACTIVE },
-  variableMatcher: () => true,
+  request: { query: SET_SHORT_LINK_ACTIVE, variables: () => true },
   result: {
     data: {
       setShortLinkActive: { __typename: 'ShortLink', id: 'sl1', is_active: isActive },
@@ -118,8 +115,7 @@ export const setShortLinkActiveMock = (isActive = false): MockedResponse => ({
 });
 
 export const deleteShortLinkMock = (opts: { failWith?: string } = {}): MockedResponse => ({
-  request: { query: DELETE_SHORT_LINK },
-  variableMatcher: () => true,
+  request: { query: DELETE_SHORT_LINK, variables: () => true },
   ...(opts.failWith
     ? { result: { errors: [{ message: opts.failWith }] } }
     : { result: { data: { deleteShortLink: true } } }),
@@ -182,8 +178,7 @@ export const shortLinkMock = (
   over: Partial<ShortLinkRow> = {},
   opts: { failWith?: string } = {},
 ): MockedResponse => ({
-  request: { query: SHORT_LINK },
-  variableMatcher: () => true,
+  request: { query: SHORT_LINK, variables: () => true },
   ...(opts.failWith
     ? { result: { errors: [{ message: opts.failWith }] } }
     : { result: { data: { shortLink: { __typename: 'ShortLink', ...makeShortLinkRow(over) } } } }),
@@ -194,8 +189,7 @@ export const shortLinkStatsMock = (
   over: Partial<ShortLinkStats> = {},
   opts: { pending?: boolean } = {},
 ): MockedResponse => ({
-  request: { query: SHORT_LINK_STATS },
-  variableMatcher: () => true,
+  request: { query: SHORT_LINK_STATS, variables: () => true },
   result: { data: { shortLinkStats: typedStats(makeShortLinkStats(over)) } },
   ...(opts.pending ? { delay: Infinity } : {}),
   maxUsageCount: 20,
@@ -219,8 +213,7 @@ export const makeShortLinkFunnel = (over: Partial<ShortLinkFunnel> = {}): ShortL
 export const shortLinkFunnelMock = (over: Partial<ShortLinkFunnel> = {}): MockedResponse => {
   const funnel = makeShortLinkFunnel(over);
   return {
-    request: { query: SHORT_LINK_FUNNEL },
-    variableMatcher: () => true,
+    request: { query: SHORT_LINK_FUNNEL, variables: () => true },
     result: {
       data: {
         shortLinkFunnel: {

@@ -13,7 +13,7 @@ type HarnessProps = Omit<RhfTextFieldProps<Values>, 'control' | 'name'> & {
 };
 
 function Harness({ defaultValue = '', ...props }: Readonly<HarnessProps>) {
-  const { control, setError } = useForm<Values>({ defaultValues: { name: defaultValue } });
+  const { control, setError } = useForm<Values, any, Values>({ defaultValues: { name: defaultValue } });
   return (
     <>
       <RhfTextField control={control as Control<Values>} name="name" label="Name" {...props} />

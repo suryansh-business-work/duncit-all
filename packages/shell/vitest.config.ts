@@ -6,6 +6,13 @@ export default defineConfig({
     globals: false,
     include: ['__tests__/**/*.test.{ts,tsx}'],
     setupFiles: ['./__tests__/setup.ts'],
+    // Vitest's 5s default is sized for a unit test. This suite mounts the whole
+    // portal chrome and the staff-chat surfaces — MessageThread's unseen-pill
+    // test alone rerenders a full MockedProvider tree ten times to grow the
+    // counter past nine, ~1.7s on a dev machine and past five on a two-core CI
+    // runner ("Test timed out in 5000ms" on CI, green locally every time; the
+    // pod-form suites hit the identical wall and carry the same setting).
+    testTimeout: 30_000,
     coverage: {
       provider: 'v8',
       // Vitest writes NO coverage report when a test fails (reportOnFailure defaults

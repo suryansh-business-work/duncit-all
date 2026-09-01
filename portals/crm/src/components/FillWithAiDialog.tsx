@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Alert,
   Dialog,
@@ -41,7 +42,7 @@ export default function FillWithAiDialog({ open, entity, title, onClose, onSaved
   const [rows, setRows] = useState<AiRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [parseMut, { loading: parsing }] = useMutation<{ aiParseCrmLeads: string }>(AI_PARSE_CRM_LEADS);
-  const [createMut, { loading: saving }] = useMutation(entity === 'VENUE_LEAD' ? CREATE_VENUE_LEAD : CREATE_HOST_LEAD);
+  const [createMut, { loading: saving }] = useMutation<any>(entity === 'VENUE_LEAD' ? CREATE_VENUE_LEAD : CREATE_HOST_LEAD);
 
   const close = () => { setText(''); setRows([]); setStep('input'); setError(null); onClose(); };
 

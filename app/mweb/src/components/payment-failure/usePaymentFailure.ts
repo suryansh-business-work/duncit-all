@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   classifyPaymentFailure,
   paymentTicketDraft,
@@ -35,7 +35,7 @@ const EMPTY: PaymentFailureState = {
  */
 export function usePaymentFailure(context: () => PaymentTicketContext) {
   const [state, setState] = useState<PaymentFailureState>(EMPTY);
-  const [createTicket] = useMutation(CREATE_TICKET);
+  const [createTicket] = useMutation<any>(CREATE_TICKET);
 
   const report = useCallback(
     async (error: RazorpayErrorLike | null) => {

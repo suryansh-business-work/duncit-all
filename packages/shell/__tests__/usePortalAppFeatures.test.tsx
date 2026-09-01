@@ -3,7 +3,7 @@
  * Fails open — a server blip or an unregistered portal must not silently
  * strip the chat/apps buttons.
  */
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { ReactNode } from 'react';
@@ -24,7 +24,7 @@ const PORTAL_APP_FEATURES = gql`
 const wrapper =
   (mocks: readonly unknown[]) =>
   ({ children }: { children: ReactNode }) =>
-    <MockedProvider mocks={mocks as never}>{children}</MockedProvider>;
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>{children}</MockedProvider>;
 
 describe('usePortalAppFeatures', () => {
   it('turns everything on for a portal with no registry row at all', async () => {

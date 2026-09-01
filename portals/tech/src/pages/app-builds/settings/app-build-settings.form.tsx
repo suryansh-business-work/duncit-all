@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Controller, useForm, type Control } from 'react-hook-form';
+import { Controller, useForm, type Control, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Autocomplete, Chip, Stack, TextField, Typography } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
@@ -135,12 +135,12 @@ export default function AppBuildSettingsForm({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const messages = { channelFormat: t('tech.appBuilds.channelFormat') };
-  const { control, handleSubmit, reset } = useForm<AppBuildSettingsValues>({
+  const { control, handleSubmit, reset } = useForm<AppBuildSettingsValues, any, AppBuildSettingsValues>({
     defaultValues: {
       android_channel: settings.android_channel ?? '',
       ios_channel: settings.ios_channel ?? '',
     },
-    resolver: zodResolver(appBuildSettingsSchema(messages)),
+    resolver: zodResolver(appBuildSettingsSchema(messages)) as unknown as Resolver<AppBuildSettingsValues, any, AppBuildSettingsValues>,
     mode: 'all',
   });
 

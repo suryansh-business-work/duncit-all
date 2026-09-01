@@ -1,4 +1,4 @@
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router';
 import { Link, Stack, Typography } from '@mui/material';
 import { BackHeader } from '@duncit/ui';
 import BlockIcon from '@mui/icons-material/Block';

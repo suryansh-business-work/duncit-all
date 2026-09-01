@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { useQuery } from '@apollo/client';
-import { useParams } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { useParams } from 'react-router';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
 import PullToRefreshIndicator from '../../components/PullToRefreshIndicator';
 import { usePullToRefresh } from '../../hooks/usePullToRefresh';
@@ -22,7 +22,7 @@ import { HOST_POD_PENDING_VIEW, type PodPendingView } from './queries';
 export default function PodPendingPage() {
   const { t } = useTranslation();
   const { podId } = useParams<{ podId: string }>();
-  const { data, loading, error, refetch } = useQuery(HOST_POD_PENDING_VIEW, {
+  const { data, loading, error, refetch } = useQuery<any>(HOST_POD_PENDING_VIEW, {
     variables: { pod_doc_id: podId },
     skip: !podId,
     fetchPolicy: 'cache-and-network',

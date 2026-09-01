@@ -35,8 +35,7 @@ export const payoutSettingsLoadingMock = (): MockedResponse => ({
 export const updatePayoutSettingsMock = (
   over: { fail?: boolean; delay?: number } = {},
 ): MockedResponse => ({
-  request: { query: UPDATE_PAYOUT_SETTINGS },
-  variableMatcher: () => true,
+  request: { query: UPDATE_PAYOUT_SETTINGS, variables: () => true },
   ...(over.delay ? { delay: over.delay } : {}),
   ...(over.fail
     ? { error: new Error('save failed') }

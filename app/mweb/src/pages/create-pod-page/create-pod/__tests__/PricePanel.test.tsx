@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { gql } from '@apollo/client';
 import { describe, expect, it } from 'vitest';
 import PricePanel, {
@@ -90,7 +90,7 @@ const venueMocks = [
 
 function setup(podAmount: number, noOfSpots = 0) {
   return render(
-    <MockedProvider mocks={venueMocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={venueMocks}>
       <Harness slotPrice={300} podAmount={podAmount} noOfSpots={noOfSpots} venueId="v1" isPhysical />
     </MockedProvider>,
   );
@@ -226,7 +226,7 @@ describe('PricePanel (auditable earnings statement)', () => {
       waterfall: { ...waterfall, club_admin_pct: 3, club_admin_amount: 700.42 },
     };
     render(
-      <MockedProvider
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
         mocks={[
           financeMock,
           {
@@ -234,7 +234,6 @@ describe('PricePanel (auditable earnings statement)', () => {
             result: { data: { potentialPodEarnings: clubProjection } },
           },
         ]}
-        addTypename={false}
       >
         <Harness slotPrice={300} podAmount={1000} noOfSpots={30} venueId="v1" isPhysical />
       </MockedProvider>,
@@ -252,7 +251,7 @@ describe('PricePanel (auditable earnings statement)', () => {
       waterfall: { ...waterfall, venue_amount: 0, venue_commission_amount: 0, venue_receives: 0 },
     };
     render(
-      <MockedProvider
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
         mocks={[
           financeMock,
           {
@@ -263,7 +262,6 @@ describe('PricePanel (auditable earnings statement)', () => {
             result: { data: { potentialPodEarnings: onlineProjection } },
           },
         ]}
-        addTypename={false}
       >
         <Harness slotPrice={300} podAmount={1000} noOfSpots={30} venueId="v1" isPhysical={false} />
       </MockedProvider>,

@@ -1,5 +1,5 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import {

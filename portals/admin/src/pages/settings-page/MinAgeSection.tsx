@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { DuncitButton } from '@duncit/buttons';
@@ -40,10 +41,10 @@ interface Props {
  * approximate an age. */
 export default function MinAgeSection({ onToast }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { data, loading, refetch } = useQuery(APP_SETTINGS_MIN_AGE, {
+  const { data, loading, refetch } = useQuery<any>(APP_SETTINGS_MIN_AGE, {
     fetchPolicy: 'cache-and-network',
   });
-  const [save] = useMutation(UPDATE, { refetchQueries: [{ query: PUBLIC_APP_SETTINGS }] });
+  const [save] = useMutation<any>(UPDATE, { refetchQueries: [{ query: PUBLIC_APP_SETTINGS }] });
 
   const [age, setAge] = useState(String(FALLBACK));
   const [busy, setBusy] = useState(false);

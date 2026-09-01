@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { MockedResponse } from '@apollo/client/testing';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import InventoryProductPage from '../../src/pages/inventory-page/inventory-product-page/InventoryProductPage';
 import { blankProductForm } from '../../src/pages/inventory-page/inventory-product-page/types';
@@ -14,8 +14,8 @@ import {
 } from '../mocks/inventory.mock';
 
 const nav = vi.hoisted(() => ({ fn: vi.fn() }));
-vi.mock('react-router-dom', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-router-dom')>()),
+vi.mock('react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-router')>()),
   useNavigate: () => nav.fn,
 }));
 

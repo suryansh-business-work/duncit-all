@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -44,9 +44,9 @@ export default function ContractsPage() {
   const [archiveTarget, setArchiveTarget] = useState<Contract | null>(null);
   const [signTarget, setSignTarget] = useState<Contract | null>(null);
 
-  const [createMut, { loading: creating }] = useMutation(CREATE_CONTRACT);
-  const [updateMut, { loading: updating }] = useMutation(UPDATE_CONTRACT);
-  const [archiveMut, { loading: archiving }] = useMutation(ARCHIVE_CONTRACT);
+  const [createMut, { loading: creating }] = useMutation<any>(CREATE_CONTRACT);
+  const [updateMut, { loading: updating }] = useMutation<any>(UPDATE_CONTRACT);
+  const [archiveMut, { loading: archiving }] = useMutation<any>(ARCHIVE_CONTRACT);
   const saving = creating || updating;
 
   /** Every write ends here, so the table is never stale after one. */

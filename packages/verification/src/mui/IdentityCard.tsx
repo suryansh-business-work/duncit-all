@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Stack } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { DuncitButton } from '@duncit/buttons';
@@ -26,7 +26,7 @@ export default function IdentityCard({ item, onChanged, onError }: Readonly<Prop
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const { upload } = useImagekitBase64Upload();
-  const [submit] = useMutation(SUBMIT_VERIFICATION);
+  const [submit] = useMutation<any>(SUBMIT_VERIFICATION);
   const locked = isVerificationLocked(item.status);
 
   const onFile = async (file: File) => {

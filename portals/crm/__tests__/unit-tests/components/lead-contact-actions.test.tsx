@@ -1,10 +1,10 @@
 import type { JSX } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import LeadContactActions from '@/components/LeadContactActions';
 
-const wrap = (ui: JSX.Element) => render(<MockedProvider mocks={[]} addTypename={false}>{ui}</MockedProvider>);
+const wrap = (ui: JSX.Element) => render(<MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>{ui}</MockedProvider>);
 
 afterEach(() => {
   vi.restoreAllMocks();

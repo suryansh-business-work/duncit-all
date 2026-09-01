@@ -45,3 +45,9 @@ declare module '*.mp3' {
 interface ImportMeta {
   readonly env: Record<string, string | boolean | undefined>;
 }
+
+// The demos mount @duncit/dashboard, which side-effect imports GridStack's
+// stylesheet. That package declares this too, but a wildcard module declaration
+// only applies inside the program that includes it — and TypeScript 7 checks a
+// side-effect import for one.
+declare module '*.css';

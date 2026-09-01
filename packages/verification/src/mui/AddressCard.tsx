@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Stack, TextField } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 
@@ -28,7 +28,7 @@ export default function AddressCard({ item, onChanged, onError }: Readonly<Props
   const { t } = useTranslation();
   const [form, setForm] = useState<AddressValues>(() => addressValuesFrom(item));
   const [busy, setBusy] = useState(false);
-  const [submit] = useMutation(SUBMIT_ADDRESS_VERIFICATION);
+  const [submit] = useMutation<any>(SUBMIT_ADDRESS_VERIFICATION);
   const locked = isVerificationLocked(item.status);
 
   const set = (key: keyof AddressValues) => (e: React.ChangeEvent<HTMLInputElement>) =>

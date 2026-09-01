@@ -26,10 +26,10 @@
     "date-fns-tz": ">=2"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^2.1.9",
+    "@vitest/coverage-v8": "^4.1.11",
     "date-fns": "^4.4.0",
     "date-fns-tz": "^3.2.0",
-    "typescript": "^5.9.3",
-    "vitest": "^2.1.9"
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
   }
 }

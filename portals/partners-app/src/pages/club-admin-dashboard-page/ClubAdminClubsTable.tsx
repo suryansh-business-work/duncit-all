@@ -1,5 +1,5 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { Card, Link, Stack, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { ClubAdminClubRow } from './queries';

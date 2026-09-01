@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { GraphQLError } from 'graphql';
 import ProductSettingsPage from './ProductSettingsPage';
 import { MY_PRODUCT_LISTINGS, UPDATE_PRODUCT_SETTINGS } from './queries';
@@ -60,7 +61,7 @@ const listingsMock = (rows: unknown[]): MockedResponse => ({
 
 const renderPage = (mocks: MockedResponse[], stateProduct?: Record<string, unknown>) =>
   render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter
         initialEntries={[{ pathname: SETTINGS_URL, state: stateProduct ? { product: stateProduct } : null }]}
       >

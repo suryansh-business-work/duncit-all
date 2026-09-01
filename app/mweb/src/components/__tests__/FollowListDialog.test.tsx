@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
-import { MemoryRouter } from 'react-router-dom';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import FollowListDialog, { FOLLOW_LISTS } from '../FollowListDialog';
 import { DuncitLocalizationProvider } from '@duncit/app-settings';
@@ -30,7 +30,7 @@ const mocks = [
 
 function setup() {
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <DuncitLocalizationProvider>
         <MemoryRouter>
           <FollowListDialog

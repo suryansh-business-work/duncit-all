@@ -2,7 +2,7 @@ import { Box, Dialog, DialogContent, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import type { FaqItem } from './faqQueries';
 import { useTranslation } from '../../i18n/useTranslation';
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Grid, MenuItem, Paper, Stack, TextField, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
@@ -82,9 +82,9 @@ export default function AdsPricingForm({
   onSubmit,
 }: Readonly<AdsPricingFormProps>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, reset, watch, formState } = useForm<AdsPricingFormValues>({
+  const { control, handleSubmit, reset, watch, formState } = useForm<AdsPricingFormValues, any, AdsPricingFormValues>({
     defaultValues: initialValues,
-    resolver: zodResolver(adsPricingSchema(t)),
+    resolver: zodResolver(adsPricingSchema(t)) as unknown as Resolver<AdsPricingFormValues, any, AdsPricingFormValues>,
     mode: 'onChange',
   });
 

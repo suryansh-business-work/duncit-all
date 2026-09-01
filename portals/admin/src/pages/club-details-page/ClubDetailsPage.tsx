@@ -1,5 +1,5 @@
-import { useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { useNavigate, useParams } from 'react-router';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import VerifiedIcon from '@mui/icons-material/Verified';
@@ -20,7 +20,7 @@ export default function ClubDetailsPage() {
   const { t } = useTranslation();
   const { id = '' } = useParams();
   const navigate = useNavigate();
-  const { data, loading, error } = useQuery(CLUB_DETAIL, {
+  const { data, loading, error } = useQuery<any>(CLUB_DETAIL, {
     variables: { id },
     skip: !id,
     fetchPolicy: 'cache-and-network',

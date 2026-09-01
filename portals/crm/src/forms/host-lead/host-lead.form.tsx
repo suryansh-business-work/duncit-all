@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { FormProvider, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, AlertTitle, Box, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -65,8 +65,8 @@ export default function HostLeadForm({ config, initialValues, submitting, submit
   const submitLabelText = submitLabel ?? t('crm.forms.saveHostLead');
 
   const [status, setStatus] = useState<string | undefined>(undefined);
-  const methods = useForm<HostLeadFormValues>({
-    resolver: zodResolver(hostLeadSchema, undefined, { raw: true }),
+  const methods = useForm<HostLeadFormValues, any, HostLeadFormValues>({
+    resolver: zodResolver(hostLeadSchema, undefined, { raw: true }) as unknown as Resolver<HostLeadFormValues, any, HostLeadFormValues>,
     mode: 'onChange',
     defaultValues: initialValues ?? hostLeadInitialValues,
   });

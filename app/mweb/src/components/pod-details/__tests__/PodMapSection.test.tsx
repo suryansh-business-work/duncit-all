@@ -16,7 +16,7 @@
  */
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
 import PodMapSection from '../PodMapSection';

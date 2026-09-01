@@ -1,8 +1,8 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { DuncitButton } from '@duncit/buttons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import EcommStatCards from './EcommStatCards';
 import { PARTNER_ECOMM_STATS } from './ecomm-dashboard.queries';
@@ -12,7 +12,7 @@ import { useTranslation } from '@duncit/shell';
 export default function EcommDashboardPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { data, loading, error } = useQuery(PARTNER_ECOMM_STATS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery<any>(PARTNER_ECOMM_STATS, { fetchPolicy: 'cache-and-network' });
   const stats = data?.partnerEcommStats ?? null;
 
   const widgets: DashboardWidget[] = [

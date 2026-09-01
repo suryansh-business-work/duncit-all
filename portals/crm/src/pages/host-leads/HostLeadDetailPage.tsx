@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@apollo/client/react';
+import { useNavigate, useParams } from 'react-router';
 import { Avatar, Box, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { BackButton, QueryGuard } from '@duncit/ui';

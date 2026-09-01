@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import Alert from '@mui/material/Alert';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -86,7 +86,7 @@ export function VenueAcceptDialog({
   );
   const slots = slotsQuery.data?.venueAvailableSlots ?? [];
 
-  const [accept, acceptState] = useMutation(VENUE_ACCEPT_AUTO_POD);
+  const [accept, acceptState] = useMutation<any>(VENUE_ACCEPT_AUTO_POD);
 
   // Preselect the only venue there is, and clear a slot that belongs to the
   // venue the owner just switched away from.

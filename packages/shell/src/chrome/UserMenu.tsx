@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Avatar, Box, ButtonBase, ListItemIcon, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
 import { useTranslation } from '../i18n/useTranslation';
 import LogoutIcon from '@mui/icons-material/Logout';

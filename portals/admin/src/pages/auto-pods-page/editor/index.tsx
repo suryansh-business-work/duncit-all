@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { useNavigate, useParams } from 'react-router';
 import { Alert } from '@mui/material';
 import {
   PodEditorPage,
@@ -35,11 +35,11 @@ export default function AdminAutoPodEditorPage() {
   const slotLabels = useMemo(() => buildSlotLabels(t, 'shell.slots'), [t]);
 
   const picker = useMediaPickerBridge();
-  const [createMut] = useMutation(CREATE_AUTO_POD);
-  const [updateMut] = useMutation(UPDATE_AUTO_POD);
-  const { data: financeData } = useQuery(FINANCE_FOR_PODS, { fetchPolicy: 'cache-first' });
+  const [createMut] = useMutation<any>(CREATE_AUTO_POD);
+  const [updateMut] = useMutation<any>(UPDATE_AUTO_POD);
+  const { data: financeData } = useQuery<any>(FINANCE_FOR_PODS, { fetchPolicy: 'cache-first' });
 
-  const autoPodQuery = useQuery(AUTO_POD_FOR_EDIT, {
+  const autoPodQuery = useQuery<any>(AUTO_POD_FOR_EDIT, {
     variables: { auto_pod_doc_id: id },
     skip: !id,
     fetchPolicy: 'network-only',

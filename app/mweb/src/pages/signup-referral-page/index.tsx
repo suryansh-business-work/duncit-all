@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { gql } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
+import { useLocation, useNavigate } from 'react-router';
 import { Alert, Stack, TextField, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { REFERRAL_CODE } from '@duncit/regex';
@@ -32,7 +33,7 @@ export default function SignupReferralPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const [apply, { loading }] = useMutation(APPLY_REFERRAL);
+  const [apply, { loading }] = useMutation<any>(APPLY_REFERRAL);
   const [code, setCode] = useState<string>((location.state as { code?: string })?.code ?? '');
   const [error, setError] = useState<string | null>(null);
 

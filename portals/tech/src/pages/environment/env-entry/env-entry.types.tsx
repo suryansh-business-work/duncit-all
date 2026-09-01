@@ -56,7 +56,7 @@ export const envEntrySchema = (def: EnvCategoryDef, isEdit: boolean) =>
       description: z.string().default(''),
       is_default: z.boolean().default(false),
       is_active: z.boolean().default(true),
-      config: z.record(z.string()).default({}),
+      config: z.record(z.string(), z.string()).default({}),
     })
     .superRefine((values, ctx) => {
       const config = values.config;

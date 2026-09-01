@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useApolloClient, useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useApolloClient, useQuery } from '@apollo/client/react';
+import { useNavigate, useParams } from 'react-router';
 import { Chip, Stack, Typography } from '@mui/material';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 import { DuncitButton } from '@duncit/buttons';

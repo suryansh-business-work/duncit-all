@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import {
   Box,
   Dialog,
@@ -45,12 +45,12 @@ export default function AppPopupsPage() {
   const refetchRef = useRef<(() => void) | null>(null);
   const confirm = useConfirm();
 
-  const { data: listsData } = useQuery(AUDIENCE_LISTS_FOR_POPUP, {
+  const { data: listsData } = useQuery<any>(AUDIENCE_LISTS_FOR_POPUP, {
     fetchPolicy: 'cache-and-network',
   });
-  const [createMut] = useMutation(CREATE_APP_POPUP);
-  const [updateMut] = useMutation(UPDATE_APP_POPUP);
-  const [deleteMut] = useMutation(DELETE_APP_POPUP);
+  const [createMut] = useMutation<any>(CREATE_APP_POPUP);
+  const [updateMut] = useMutation<any>(UPDATE_APP_POPUP);
+  const [deleteMut] = useMutation<any>(DELETE_APP_POPUP);
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<AppPopupRow | null>(null);

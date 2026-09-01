@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import type { PodMediaLabels } from '@duncit/utils';
 import {
   ADD_POD_PARTY_MEDIA,
@@ -45,8 +45,8 @@ export function usePodMediaBoard({
     POD_MEDIA_BOARD,
     { variables: { pod_doc_id: podId }, fetchPolicy: 'cache-and-network', skip: !podId },
   );
-  const [addMedia, addState] = useMutation(ADD_POD_PARTY_MEDIA);
-  const [removeMedia, removeState] = useMutation(REMOVE_POD_PARTY_MEDIA);
+  const [addMedia, addState] = useMutation<any>(ADD_POD_PARTY_MEDIA);
+  const [removeMedia, removeState] = useMutation<any>(REMOVE_POD_PARTY_MEDIA);
   const [failedWrite, setFailedWrite] = useState(false);
 
   const add = useCallback(

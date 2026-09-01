@@ -8,7 +8,7 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 
 import { NavRail, RAIL_WIDTH } from '../src/chrome/AppSidebar/NavRail';
 import type { AppNavItem } from '../src/types';

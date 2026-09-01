@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { MockedProvider } from '@apollo/client/testing';
+import { MemoryRouter, Route, Routes } from 'react-router';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { describe, expect, it, vi } from 'vitest';
 import PodPendingPage from '..';
 import { HOST_POD_PENDING_VIEW, type PodPendingView } from '../queries';
@@ -57,7 +57,7 @@ const viewMock = (data: PodPendingView | null, error?: Error) => ({
 
 const renderPage = (mocks: unknown[]) =>
   render(
-    <MockedProvider mocks={mocks as never} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as never}>
       <MemoryRouter initialEntries={['/host/pod-pending/pod-doc-1']}>
         <Routes>
           <Route path="/host/pod-pending/:podId" element={<PodPendingPage />} />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Badge, Tooltip } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import { DuncitIconButton } from '@duncit/buttons';
@@ -7,7 +7,7 @@ import { MARK_ALL, MARK_READ, MY_NOTIFS } from './queries';
 import NotificationsScreen from './notifications-screen';
 import { useHeaderPushNotifications } from './useHeaderPushNotifications';
 import { useNotificationsSse } from './useNotificationsSse';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface HeaderNotificationsBellProps {
@@ -19,7 +19,7 @@ export default function HeaderNotificationsBell({ onToast }: Readonly<HeaderNoti
   const navigate = useNavigate();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-  const { data: notifData, refetch: refetchNotifs } = useQuery(MY_NOTIFS, {
+  const { data: notifData, refetch: refetchNotifs } = useQuery<any>(MY_NOTIFS, {
     fetchPolicy: 'cache-and-network',
   });
   useNotificationsSse(() => {
@@ -27,8 +27,8 @@ export default function HeaderNotificationsBell({ onToast }: Readonly<HeaderNoti
       /* ignore */
     });
   });
-  const [markReadMut] = useMutation(MARK_READ);
-  const [markAllMut] = useMutation(MARK_ALL);
+  const [markReadMut] = useMutation<any>(MARK_READ);
+  const [markAllMut] = useMutation<any>(MARK_ALL);
   const myNotifs: any[] = notifData?.myNotifications ?? [];
   const unreadCount: number = notifData?.myUnreadNotificationCount ?? 0;
 

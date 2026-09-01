@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { MenuItem, TextField } from '@mui/material';
 import { MY_ADDRESSES } from '../account-page/AddressBookSection';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -15,7 +15,7 @@ interface Props {
  * Hidden while the book is empty. */
 export default function SavedAddressPicker({ onPick }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { data } = useQuery(MY_ADDRESSES, { fetchPolicy: 'cache-and-network' });
+  const { data } = useQuery<any>(MY_ADDRESSES, { fetchPolicy: 'cache-and-network' });
   const addresses: UserAddress[] = data?.myAddresses ?? [];
   const [selectedId, setSelectedId] = useState('');
 

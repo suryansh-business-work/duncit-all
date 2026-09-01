@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useMutation, useQuery } from '@apollo/client';
+import { useNavigate, useParams } from 'react-router';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { isBackoutMaxed } from '@duncit/utils';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -28,13 +28,13 @@ export default function PodHistoryDetailsPage() {
   const { data, loading, error, refetch } = useQuery<{ myPodMemberships: PodHistoryItem[] }>(MY_POD_MEMBERSHIPS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [backoutPod, backoutState] = useMutation(BACKOUT_POD_HISTORY);
-  const [rejoinPod, rejoinState] = useMutation(REJOIN_POD);
+  const [backoutPod, backoutState] = useMutation<any>(BACKOUT_POD_HISTORY);
+  const [rejoinPod, rejoinState] = useMutation<any>(REJOIN_POD);
   const items = useMemo(() => data?.myPodMemberships ?? [], [data]);
   const selected = items.find((item) => item.id === membershipId) ?? null;
   // Attempts left, from the state the backout mutation itself guards on — the
   // button was offered on a pod that had none, and every press of it failed.
-  const { data: stateData, refetch: refetchState } = useQuery(POD_HISTORY_BACKOUT_STATE, {
+  const { data: stateData, refetch: refetchState } = useQuery<any>(POD_HISTORY_BACKOUT_STATE, {
     variables: { pod_doc_id: selected?.pod?.id ?? '' },
     skip: !selected?.pod?.id,
     fetchPolicy: 'cache-and-network',

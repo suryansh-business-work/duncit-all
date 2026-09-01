@@ -9,10 +9,10 @@
  * and closes through the caller rather than on its own.
  */
 import type { ReactElement } from 'react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { act, fireEvent, render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AgentChat } from '../src/chrome/agent/AgentChat';
@@ -38,7 +38,7 @@ const settle = async () => {
 
 const wrap = (ui: ReactElement) =>
   render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <ThemeProvider theme={testTheme}>
       <MemoryRouter initialEntries={['/']}>{ui}</MemoryRouter>
       </ThemeProvider>
@@ -168,7 +168,7 @@ describe('BotChat', () => {
       },
     ];
     render(
-      <MockedProvider mocks={mocks}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
         <ThemeProvider theme={testTheme}>
           <MemoryRouter initialEntries={['/']}>
             <BotChat botKey="navigation" copy={copy} onRegisterRestart={vi.fn()} />

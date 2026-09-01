@@ -1,8 +1,9 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { DuncitButton } from '@duncit/buttons';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { formatDate } from '../../utils/dateFormat';
 
 const MY_VENUE = gql`
@@ -20,7 +21,7 @@ const MY_VENUE = gql`
 `;
 
 export default function UserVenuePanel() {
-  const { data, loading, error } = useQuery(MY_VENUE, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery<any>(MY_VENUE, { fetchPolicy: 'cache-and-network' });
   const venue = data?.myVenue;
 
   if (loading && !data) return <CircularProgress size={22} />;

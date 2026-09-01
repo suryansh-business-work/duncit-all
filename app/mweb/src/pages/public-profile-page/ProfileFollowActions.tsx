@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Stack, Typography } from '@mui/material';
 import { followActionFor, readFollowStatus } from '@duncit/utils';
 import FollowButton from '../../components/FollowButton';
@@ -41,11 +41,11 @@ type Busy = 'follow' | 'answer' | null;
  */
 export default function ProfileFollowActions({ profile, onChanged }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [follow] = useMutation(FOLLOW_USER);
-  const [unfollow] = useMutation(UNFOLLOW_USER);
-  const [cancelRequest] = useMutation(CANCEL_FOLLOW_REQUEST);
-  const [accept] = useMutation(ANSWER_FOLLOW_REQUEST);
-  const [reject] = useMutation(REJECT_FOLLOW_REQUEST);
+  const [follow] = useMutation<any>(FOLLOW_USER);
+  const [unfollow] = useMutation<any>(UNFOLLOW_USER);
+  const [cancelRequest] = useMutation<any>(CANCEL_FOLLOW_REQUEST);
+  const [accept] = useMutation<any>(ANSWER_FOLLOW_REQUEST);
+  const [reject] = useMutation<any>(REJECT_FOLLOW_REQUEST);
   // Which action is in flight, so only the tapped control wears the spinner.
   const [busy, setBusy] = useState<Busy>(null);
 

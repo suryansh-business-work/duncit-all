@@ -5,13 +5,13 @@ import { describe, expect, it } from 'vitest';
 import DobYearField from '../DobYearField';
 import type { RegisterFormValues } from '../register.types';
 import { DuncitLocalizationProvider } from '@duncit/app-settings';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 
 function Harness({
   initialDob = '',
   withError = false,
 }: Readonly<{ initialDob?: string; withError?: boolean }>) {
-  const { control, watch, setError } = useForm<RegisterFormValues>({
+  const { control, watch, setError } = useForm<RegisterFormValues, any, RegisterFormValues>({
     defaultValues: {
       name: '',
       email: '',
@@ -22,7 +22,7 @@ function Harness({
   });
   const dob = watch('dob');
   return (
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <DuncitLocalizationProvider>
         <div>
           <DobYearField control={control} minAge={18} />

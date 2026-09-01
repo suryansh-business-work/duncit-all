@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { useUserData } from '@duncit/user-context';
 import { Alert, AppBar, Box, Chip, Stack, Toolbar } from '@mui/material';
 import { HEADER_DATA, OPEN_LOCATION_PICKER_EVENT, SET_MY_SELECTED_LOCATION } from './queries';
@@ -42,8 +42,8 @@ export default function AppHeader({
   // The account menu is its own page (/menu) — opening it is a normal push, so
   // Back returns here and a refresh keeps the user on the menu.
   const openMenu = () => navigate('/menu');
-  const { data, loading } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-and-network' });
-  const [persistSelectedLocation] = useMutation(SET_MY_SELECTED_LOCATION, {
+  const { data, loading } = useQuery<any>(HEADER_DATA, { fetchPolicy: 'cache-and-network' });
+  const [persistSelectedLocation] = useMutation<any>(SET_MY_SELECTED_LOCATION, {
     onError: () => undefined,
   });
   const [locDialogOpen, setLocDialogOpen] = useState(false);

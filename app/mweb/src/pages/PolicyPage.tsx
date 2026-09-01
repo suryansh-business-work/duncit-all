@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router';
 import { Alert } from '@mui/material';
 import PolicyRenderer from '../components/PolicyRenderer';
 import { useTranslation } from '../i18n/useTranslation';

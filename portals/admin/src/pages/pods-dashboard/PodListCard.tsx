@@ -1,4 +1,4 @@
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router';
 import { Card, CardContent, Chip, Link, Rating, Stack, Typography } from '@mui/material';
 import type { DashboardPod } from './queries';
 import { formatDateTime } from '@duncit/app-settings';

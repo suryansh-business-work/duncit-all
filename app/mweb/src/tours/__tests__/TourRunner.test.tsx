@@ -1,6 +1,6 @@
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { act, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TourProvider, useTours } from '../TourContext';
@@ -31,7 +31,7 @@ function Starter() {
 
 function mount(anchors: string[]) {
   return render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <MemoryRouter>
         <TourProvider userId="u1" storage={store}>
           {anchors.map((a) => (

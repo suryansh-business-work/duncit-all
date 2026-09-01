@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Chip, FormControlLabel, Stack, Switch } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -47,9 +47,9 @@ export function PromptForm({
 }: Readonly<PromptFormProps>) {
   const copy = usePromptCopy();
   const schema = useMemo(() => promptFormSchema(variables), [variables]);
-  const { control, handleSubmit, watch, formState } = useForm<PromptFormValues>({
+  const { control, handleSubmit, watch, formState } = useForm<PromptFormValues, any, PromptFormValues>({
     defaultValues: { ...promptInitialValues, ...initialValues },
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<PromptFormValues, any, PromptFormValues>,
     mode: 'onChange',
   });
 

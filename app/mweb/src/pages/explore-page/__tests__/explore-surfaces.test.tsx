@@ -18,12 +18,12 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-vi.mock('react-router-dom', async (importOriginal) => ({
+vi.mock('react-router', async (importOriginal) => ({
   // Spread, not replace: a factory mock IS the module, so every export it does
   // not name arrives as undefined — which is how useSearchParams became 'No
   // export is defined on the mock' the day a shared component started paging
   // through the URL.
-  ...(await importOriginal<typeof import('react-router-dom')>()), useNavigate: () => vi.fn() }));
+  ...(await importOriginal<typeof import('react-router')>()), useNavigate: () => vi.fn() }));
 vi.mock('../../../hooks/usePricing', () => ({
   usePricing: () => ({ format: (amount: number) => `₹${amount}` }),
 }));

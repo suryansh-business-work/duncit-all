@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, InputAdornment, Stack, keyframes } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -36,9 +36,9 @@ export default function LoginForm({
   const [showPwd, setShowPwd] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const schema = useMemo(() => makeLoginSchema(t), [t]);
-  const { control, handleSubmit } = useForm<LoginFormValues>({
+  const { control, handleSubmit } = useForm<LoginFormValues, any, LoginFormValues>({
     defaultValues: initialValues ?? loginDefaults,
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<LoginFormValues, any, LoginFormValues>,
     mode: 'onTouched',
   });
 

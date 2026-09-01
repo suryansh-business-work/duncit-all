@@ -1,5 +1,5 @@
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useQuery } from '@apollo/client';
+import { useLocation, useNavigate, useParams } from 'react-router';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitButton } from '@duncit/buttons';
@@ -21,8 +21,8 @@ export default function ProductListingEditorPage() {
   const productsHome = `/ecomm-brand/${brandId}/products`;
   const stateProduct = (location.state as { product?: any } | null)?.product;
   const editing = Boolean(productId);
-  const { data: accessData, loading: accessLoading, error: accessError } = useQuery(PRODUCT_LISTING_ACCESS, { fetchPolicy: 'cache-and-network' });
-  const { data, loading, error } = useQuery(MY_PRODUCT_LISTINGS, { variables: { brand_id: brandId }, skip: !editing || Boolean(stateProduct), fetchPolicy: 'cache-and-network' });
+  const { data: accessData, loading: accessLoading, error: accessError } = useQuery<any>(PRODUCT_LISTING_ACCESS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery<any>(MY_PRODUCT_LISTINGS, { variables: { brand_id: brandId }, skip: !editing || Boolean(stateProduct), fetchPolicy: 'cache-and-network' });
   const canManageProducts = canManageProductListings(accessData?.me?.roles);
   const product = stateProduct || data?.myProductListings?.find((item: any) => item.id === productId) || null;
 

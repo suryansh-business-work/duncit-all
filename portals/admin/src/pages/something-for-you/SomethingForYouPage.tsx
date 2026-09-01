@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -28,12 +28,12 @@ type Saved = SomethingForYouForm & { id: string };
  */
 export default function SomethingForYouPage() {
   const { t } = useTranslation();
-  const { data, loading, error, refetch } = useQuery(SOMETHING_FOR_YOU_ITEMS);
+  const { data, loading, error, refetch } = useQuery<any>(SOMETHING_FOR_YOU_ITEMS);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<SomethingForYouForm>(emptyItem);
-  const [createItem, createState] = useMutation(CREATE_SOMETHING_FOR_YOU);
-  const [updateItem, updateState] = useMutation(UPDATE_SOMETHING_FOR_YOU);
-  const [deleteItem] = useMutation(DELETE_SOMETHING_FOR_YOU);
+  const [createItem, createState] = useMutation<any>(CREATE_SOMETHING_FOR_YOU);
+  const [updateItem, updateState] = useMutation<any>(UPDATE_SOMETHING_FOR_YOU);
+  const [deleteItem] = useMutation<any>(DELETE_SOMETHING_FOR_YOU);
   const confirm = useConfirm();
   const busy = createState.loading || updateState.loading;
   const items: Saved[] = data?.somethingForYouItems ?? [];

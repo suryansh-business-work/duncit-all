@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Skeleton, Snackbar, Stack, Typography } from '@mui/material';
 import SizesFormatsAccordion from './SizesFormatsAccordion';
 import CropPresetsAccordion from './CropPresetsAccordion';
@@ -25,7 +25,7 @@ export default function UploadSettingPage({ surface, title, subtitle }: Readonly
     UPLOAD_SETTINGS,
     { variables: { surface }, fetchPolicy: 'cache-and-network' },
   );
-  const [save, saveState] = useMutation(UPDATE_UPLOAD_SETTINGS);
+  const [save, saveState] = useMutation<any>(UPDATE_UPLOAD_SETTINGS);
   const [toast, setToast] = useState<string | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
 

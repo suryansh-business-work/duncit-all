@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import { act, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import TicketsListPage from '../../src/pages/tickets/TicketsListPage';
 import { renderWithProviders } from '../testkit';

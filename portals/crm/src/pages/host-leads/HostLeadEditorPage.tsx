@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { CREATE_HOST_LEAD, HOST_LEAD, UPDATE_HOST_LEAD } from '../../api/crm.gql';
 import { useCrmConfig } from '../../api/useCrmConfig';
@@ -17,9 +17,9 @@ export default function HostLeadEditorPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { config, loading: cfgLoading } = useCrmConfig();
-  const { data, loading: leadLoading } = useQuery(HOST_LEAD, { variables: { id }, skip: !isEdit, fetchPolicy: 'cache-and-network' });
-  const [createLead, { loading: creating }] = useMutation(CREATE_HOST_LEAD);
-  const [updateLead, { loading: updating }] = useMutation(UPDATE_HOST_LEAD);
+  const { data, loading: leadLoading } = useQuery<any>(HOST_LEAD, { variables: { id }, skip: !isEdit, fetchPolicy: 'cache-and-network' });
+  const [createLead, { loading: creating }] = useMutation<any>(CREATE_HOST_LEAD);
+  const [updateLead, { loading: updating }] = useMutation<any>(UPDATE_HOST_LEAD);
   const lead = data?.hostLead as HostLead | undefined;
   const aiPrefill = (location.state as { aiPrefill?: Partial<HostLeadFormValues> } | null)?.aiPrefill;
 

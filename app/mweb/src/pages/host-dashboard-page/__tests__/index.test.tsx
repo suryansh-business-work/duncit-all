@@ -1,14 +1,14 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { MockedProvider } from '@apollo/client/testing';
+import { MemoryRouter } from 'react-router';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import HostDashboardPage from '../index';
 import { HOST_DASHBOARD_ME, HOST_DASHBOARD_PODS } from '../queries';
 
 const navigateMock = vi.fn();
-vi.mock('react-router-dom', async (orig) => {
-  const actual = await orig<typeof import('react-router-dom')>();
+vi.mock('react-router', async (orig) => {
+  const actual = await orig<typeof import('react-router')>();
   return { ...actual, useNavigate: () => navigateMock };
 });
 
@@ -76,7 +76,7 @@ const podsMock = {
 
 function setup(mocks: any[]) {
   return render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <MemoryRouter>
         <HostDashboardPage />
       </MemoryRouter>

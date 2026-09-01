@@ -31,7 +31,7 @@ function Wrapper({
   required?: boolean;
   methodsRef?: { current: UseFormReturn<PodFormValues> | null };
 }>) {
-  const methods = useForm<PodFormValues>({ defaultValues: { pod_date_time: null } as PodFormValues });
+  const methods = useForm<PodFormValues, any, PodFormValues>({ defaultValues: { pod_date_time: null } as PodFormValues });
   if (methodsRef) methodsRef.current = methods;
   return (
     <DateTimeField

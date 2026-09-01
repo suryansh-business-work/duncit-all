@@ -10,15 +10,15 @@ const NETWORK_FAILURE_PATTERN = /failed to fetch|network request failed|load fai
  */
 export const ABORT_ERROR_NAME = 'AbortError';
 
-export const apolloErrorLink = onError(({ networkError }) => {
-  if (!networkError) return;
+export const apolloErrorLink = onError(({ error }) => {
+  if (!error) return;
   // Translated outside React: a link has no component tree around it, so it
   // reads the bundled copy the same way the module-level Zod schemas do.
-  if (networkError.name === ABORT_ERROR_NAME) {
-    networkError.message = fallbackT('mweb.common.requestTimedOut');
+  if (error.name === ABORT_ERROR_NAME) {
+    error.message = fallbackT('mweb.common.requestTimedOut');
     return;
   }
-  if (NETWORK_FAILURE_PATTERN.test(networkError.message)) {
-    networkError.message = fallbackT('mweb.common.networkUnavailable');
+  if (NETWORK_FAILURE_PATTERN.test(error.message)) {
+    error.message = fallbackT('mweb.common.networkUnavailable');
   }
 });

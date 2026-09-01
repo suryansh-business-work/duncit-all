@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useApolloClient, useMutation } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Alert, Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -27,7 +27,7 @@ export default function EcommLeadsPage() {
   const [error, setError] = useState<string | null>(null);
   const [toDelete, setToDelete] = useState<EcommLead | null>(null);
 
-  const [deleteLead, { loading: deleting }] = useMutation(DELETE_ECOMM_LEAD);
+  const [deleteLead, { loading: deleting }] = useMutation<any>(DELETE_ECOMM_LEAD);
 
   const fetchRows = useApolloTableFetch<EcommLead>(client, ECOMM_LEADS_TABLE, 'ecommLeadsTable');
 

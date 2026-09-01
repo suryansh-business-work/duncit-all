@@ -1,119 +1,140 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { ForgotPasswordScreen } from '@/screens/ForgotPasswordScreen';
-import { ResetPasswordScreen } from '@/screens/ResetPasswordScreen';
-import { requestPasswordResetOtp, resetPasswordWithOtp } from '@/services/auth.service';
+import {
+  completePasswordReset,
+  requestPasswordResetCode,
+  verifyPasswordResetCode,
+} from '@/services/auth.service';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/auth.service', () => ({
-  requestPasswordResetOtp: jest.fn(),
-  resetPasswordWithOtp: jest.fn(),
+  requestPasswordResetCode: jest.fn(),
+  verifyPasswordResetCode: jest.fn(),
+  completePasswordReset: jest.fn(),
 }));
 jest.mock('@/hooks/useBranding', () => ({
   useBranding: () => ({ data: undefined, isLoading: false }),
 }));
 const mockNavigate = jest.fn();
-let mockRouteParams: { email: string } | undefined = { email: 'riya@duncit.com' };
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
-  useRoute: () => ({ params: mockRouteParams }),
+  useRoute: () => ({ params: undefined }),
 }));
 
-const mockedRequest = requestPasswordResetOtp as jest.Mock;
-const mockedReset = resetPasswordWithOtp as jest.Mock;
+const mockedRequest = requestPasswordResetCode as jest.Mock;
+const mockedVerify = verifyPasswordResetCode as jest.Mock;
+const mockedComplete = completePasswordReset as jest.Mock;
+
+const SENT = {
+  registered: true,
+  resendAfterSeconds: 30,
+  expiresInMinutes: 10,
+  testCode: null,
+};
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockRouteParams = { email: 'riya@duncit.com' };
-  mockedRequest.mockResolvedValue({ registered: true });
-  mockedReset.mockResolvedValue(true);
+  mockedRequest.mockResolvedValue(SENT);
+  mockedVerify.mockResolvedValue('challenge.secret');
+  mockedComplete.mockResolvedValue(true);
 });
 
+/** Step one, on the default (email) channel. */
+async function sendCodeToEmail(email = 'riya@duncit.com') {
+  fireEvent.changeText(screen.getByTestId('field-email'), email);
+  await waitFor(() => expect(screen.getByTestId('recovery-send-code')).toBeTruthy());
+  fireEvent.press(screen.getByTestId('recovery-send-code'));
+}
+
 describe('ForgotPasswordScreen', () => {
-  it('requests an OTP and navigates to the reset step', async () => {
+  it('sends an email code and moves to the code step', async () => {
     renderWithProviders(<ForgotPasswordScreen />);
-    fireEvent.changeText(screen.getByTestId('field-email'), 'riya@duncit.com');
-    fireEvent.press(screen.getByTestId('forgot-password-submit'));
-    await waitFor(() => expect(mockedRequest).toHaveBeenCalledWith('riya@duncit.com'));
+    await sendCodeToEmail();
+
     await waitFor(() =>
-      expect(mockNavigate).toHaveBeenCalledWith('ResetPassword', { email: 'riya@duncit.com' }),
+      expect(mockedRequest).toHaveBeenCalledWith({
+        channel: 'EMAIL',
+        email: 'riya@duncit.com',
+      }),
     );
+    await waitFor(() => expect(screen.getByTestId('recovery-verify-code')).toBeTruthy());
+  });
+
+  it('sends a WhatsApp code when the phone channel is chosen', async () => {
+    renderWithProviders(<ForgotPasswordScreen />);
+    fireEvent.press(screen.getByTestId('recovery-channel-PHONE'));
+
+    fireEvent.changeText(screen.getByTestId('field-number'), '9876543210');
+    await waitFor(() => expect(screen.getByTestId('recovery-send-code')).toBeTruthy());
+    fireEvent.press(screen.getByTestId('recovery-send-code'));
+
+    await waitFor(() =>
+      expect(mockedRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ channel: 'PHONE', phone_number: '9876543210' }),
+      ),
+    );
+  });
+
+  it('says so when no account matches, and offers to create one', async () => {
+    mockedRequest.mockResolvedValueOnce({ ...SENT, registered: false });
+    renderWithProviders(<ForgotPasswordScreen />);
+    await sendCodeToEmail('ghost@duncit.com');
+
+    await waitFor(() =>
+      expect(screen.getByTestId('recovery-not-found')).toHaveTextContent(
+        'We couldn’t find an account with these details.',
+      ),
+    );
+    expect(screen.getByTestId('recovery-create-account')).toBeTruthy();
   });
 
   it('surfaces an error from the request', async () => {
     mockedRequest.mockRejectedValueOnce(new Error('server down'));
     renderWithProviders(<ForgotPasswordScreen />);
-    fireEvent.changeText(screen.getByTestId('field-email'), 'riya@duncit.com');
-    fireEvent.press(screen.getByTestId('forgot-password-submit'));
+    await sendCodeToEmail();
+
     await waitFor(() =>
-      expect(screen.getByTestId('forgot-password-error')).toHaveTextContent('server down'),
+      expect(screen.getByTestId('recovery-error')).toHaveTextContent('server down'),
     );
   });
 
-  it('flags an unregistered email and offers Create Account instead of the reset step', async () => {
-    mockedRequest.mockResolvedValueOnce({ registered: false });
+  it('verifies the code, sets a new password and offers the login CTA', async () => {
     renderWithProviders(<ForgotPasswordScreen />);
-    fireEvent.changeText(screen.getByTestId('field-email'), 'ghost@duncit.com');
-    fireEvent.press(screen.getByTestId('forgot-password-submit'));
-    await waitFor(() =>
-      expect(screen.getByTestId('forgot-email-error')).toHaveTextContent('Unregistered User'),
-    );
-    expect(screen.getByText('New to Duncit?')).toBeOnTheScreen();
-    expect(mockNavigate).not.toHaveBeenCalledWith('ResetPassword', expect.anything());
-    fireEvent.press(screen.getByTestId('forgot-create-account'));
-    expect(mockNavigate).toHaveBeenCalledWith('Signup');
-  });
+    await sendCodeToEmail();
 
-  it('links back to login', () => {
-    renderWithProviders(<ForgotPasswordScreen />);
-    fireEvent.press(screen.getByTestId('forgot-back-login'));
-    expect(mockNavigate).toHaveBeenCalledWith('Login');
-  });
-});
-
-describe('ResetPasswordScreen', () => {
-  function fill() {
+    await waitFor(() => expect(screen.getByTestId('field-otp')).toBeTruthy());
     fireEvent.changeText(screen.getByTestId('field-otp'), '123456');
-    fireEvent.changeText(screen.getByTestId('field-new_password'), 'BrandNew123');
-    fireEvent.changeText(screen.getByTestId('field-confirm_password'), 'BrandNew123');
-  }
+    fireEvent.press(screen.getByTestId('recovery-verify-code'));
 
-  it('resets the password then shows the success screen', async () => {
-    renderWithProviders(<ResetPasswordScreen />);
-    fill();
-    fireEvent.press(screen.getByTestId('reset-password-submit'));
     await waitFor(() =>
-      expect(mockedReset).toHaveBeenCalledWith({
-        email: 'riya@duncit.com',
-        otp: '123456',
-        new_password: 'BrandNew123',
-      }),
+      expect(mockedVerify).toHaveBeenCalledWith(
+        { channel: 'EMAIL', email: 'riya@duncit.com' },
+        '123456',
+      ),
     );
-    await waitFor(() => expect(screen.getByTestId('reset-password-success')).toBeOnTheScreen());
-    fireEvent.press(screen.getByTestId('reset-go-login'));
+
+    await waitFor(() => expect(screen.getByTestId('field-new_password')).toBeTruthy());
+    fireEvent.changeText(screen.getByTestId('field-new_password'), 'StrongPass123');
+    fireEvent.changeText(screen.getByTestId('field-confirm_password'), 'StrongPass123');
+    fireEvent.press(screen.getByTestId('recovery-save-password'));
+
+    await waitFor(() =>
+      expect(mockedComplete).toHaveBeenCalledWith('challenge.secret', 'StrongPass123'),
+    );
+    await waitFor(() => expect(screen.getByTestId('recovery-go-login')).toBeTruthy());
+
+    fireEvent.press(screen.getByTestId('recovery-go-login'));
     expect(mockNavigate).toHaveBeenCalledWith('Login');
   });
 
-  it('surfaces a reset error', async () => {
-    mockedReset.mockRejectedValueOnce(new Error('Invalid OTP'));
-    renderWithProviders(<ResetPasswordScreen />);
-    fill();
-    fireEvent.press(screen.getByTestId('reset-password-submit'));
-    await waitFor(() =>
-      expect(screen.getByTestId('reset-password-error')).toHaveTextContent('Invalid OTP'),
-    );
-  });
+  it('goes back from the code step to the channel step', async () => {
+    renderWithProviders(<ForgotPasswordScreen />);
+    await sendCodeToEmail();
 
-  it('resends the OTP', () => {
-    renderWithProviders(<ResetPasswordScreen />);
-    fireEvent.press(screen.getByTestId('reset-resend'));
-    expect(mockedRequest).toHaveBeenCalledWith('riya@duncit.com');
-  });
+    await waitFor(() => expect(screen.getByTestId('recovery-back')).toBeTruthy());
+    fireEvent.press(screen.getByTestId('recovery-back'));
 
-  it('handles a missing email param (resend is a no-op)', () => {
-    mockRouteParams = undefined;
-    renderWithProviders(<ResetPasswordScreen />);
-    fireEvent.press(screen.getByTestId('reset-resend'));
-    expect(mockedRequest).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.getByTestId('recovery-send-code')).toBeTruthy());
   });
 });

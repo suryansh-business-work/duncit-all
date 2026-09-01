@@ -14,8 +14,8 @@
     "e2e": "node ../scripts/e2e-no-surface.mjs duncit-docs"
   },
   "dependencies": {
-    "@astrojs/mdx": "^4.3.14",
-    "@astrojs/react": "^4.4.2",
+    "@astrojs/mdx": "^7.0.8",
+    "@astrojs/react": "^6.0.4",
     "@duncit/dialogs": "workspace:*",
     "@duncit/docs-demos": "workspace:*",
     "@duncit/theme": "workspace:*",
@@ -24,12 +24,12 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@monaco-editor/loader": "^1.7.0",
-    "@mui/icons-material": "^9.3.1",
-    "@mui/material": "^9.3.1",
-    "astro": "^5.18.2",
+    "@mui/icons-material": "^9.4.0",
+    "@mui/material": "^9.4.0",
+    "astro": "^7.2.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router-dom": "^6.30.6"
+    "react-router": "^8.3.1"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",

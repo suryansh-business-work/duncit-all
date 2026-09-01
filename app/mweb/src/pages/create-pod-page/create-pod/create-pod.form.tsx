@@ -125,17 +125,17 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
       meeting_notes: z.string().trim().max(1000),
       pod_description: z.string().trim().min(10, t('mweb.createPod.validation.descriptionShort')),
       pod_info: z.string().max(2000),
-      pod_date_time: z.date({ invalid_type_error: t('mweb.createPod.validation.startRequired') }),
+      pod_date_time: z.date({ error: t('mweb.createPod.validation.startRequired') }),
       pod_end_date_time: z.date().nullable(),
       pod_type: z.string().min(1, t('mweb.createPod.validation.podTypeRequired')),
       pod_amount: z
-        .number({ invalid_type_error: t('mweb.createPod.validation.amountNumber') })
+        .number({ error: t('mweb.createPod.validation.amountNumber') })
         .min(0)
         .max(1999)
         .nullable(),
       venue_space_label: z.string(),
       no_of_spots: z
-        .number({ invalid_type_error: t('mweb.createPod.validation.spotsNumber') })
+        .number({ error: t('mweb.createPod.validation.spotsNumber') })
         .min(0)
         .max(10000),
       pod_hashtag_text: z.string().max(500),
@@ -152,7 +152,7 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
           z.object({
             product_id: z.string().min(1, t('podProduct.selectFirst')),
             quantity: z
-              .number({ invalid_type_error: t('mweb.createPod.validation.quantityRequired') })
+              .number({ error: t('mweb.createPod.validation.quantityRequired') })
               .min(1)
               .max(10000),
           })
@@ -163,7 +163,7 @@ export function makeCreatePodSchema(t: Translate = fallbackT) {
           z.object({
             label: z.string().trim().min(1, t('mweb.createPod.validation.chargeLabelRequired')).max(80),
             amount: z
-              .number({ invalid_type_error: t('mweb.createPod.validation.amountNumber') })
+              .number({ error: t('mweb.createPod.validation.amountNumber') })
               .min(0)
               .max(100000),
             note: z.string().trim().max(200),

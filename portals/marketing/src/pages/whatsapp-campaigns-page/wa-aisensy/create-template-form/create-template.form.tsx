@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Dialog, DialogActions, DialogContent, DialogTitle, Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -37,9 +37,9 @@ export default function CreateTemplateForm({ open, busy, onClose, onSubmit }: Re
     reset,
     watch,
     formState: { isValid },
-  } = useForm<CreateTemplateValues>({
+  } = useForm<CreateTemplateValues, any, CreateTemplateValues>({
     defaultValues: emptyValues(),
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<CreateTemplateValues, any, CreateTemplateValues>,
     mode: 'onChange',
   });
 

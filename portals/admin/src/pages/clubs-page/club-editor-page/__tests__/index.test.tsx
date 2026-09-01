@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
-import { Route } from 'react-router-dom';
+import { Route } from 'react-router';
 import type { MockedResponse } from '@apollo/client/testing';
 import { GraphQLError } from 'graphql';
 import { blankClubFormValues, buildClubInput, clubToFormValues, type ClubFormValues } from '@duncit/club-form';
@@ -224,11 +224,10 @@ describe('AdminClubEditorPage / submit pipeline (create)', () => {
   it('creates through the create mutation with the real buildClubInput shape, then announces and navigates', async () => {
     let sentVariables: unknown;
     const createMock: MockedResponse = {
-      request: { query: CREATE },
-      variableMatcher: (variables) => {
+      request: { query: CREATE, variables: (variables) => {
         sentVariables = variables;
         return true;
-      },
+      } },
       result: { data: { createClub: { __typename: 'Club', id: 'new-1' } } },
     };
     renderPage('/clubs/new', [createMock]);
@@ -249,11 +248,10 @@ describe('AdminClubEditorPage / submit pipeline (create)', () => {
   it('saves a draft with the draft copy and draft input shape', async () => {
     let sentVariables: unknown;
     const createMock: MockedResponse = {
-      request: { query: CREATE },
-      variableMatcher: (variables) => {
+      request: { query: CREATE, variables: (variables) => {
         sentVariables = variables;
         return true;
-      },
+      } },
       result: { data: { createClub: { __typename: 'Club', id: 'new-2' } } },
     };
     renderPage('/clubs/new', [createMock]);
@@ -272,8 +270,7 @@ describe('AdminClubEditorPage / submit pipeline (create)', () => {
 
   it('shows the server error and stays on the editor when the create mutation fails', async () => {
     const failMock: MockedResponse = {
-      request: { query: CREATE },
-      variableMatcher: () => true,
+      request: { query: CREATE, variables: () => true },
       result: { errors: [new GraphQLError('Duplicate club id')] },
     };
     renderPage('/clubs/new', [failMock]);
@@ -344,11 +341,10 @@ describe('AdminClubEditorPage / editing an existing club', () => {
     };
     let sentVariables: unknown;
     const updateMock: MockedResponse = {
-      request: { query: UPDATE },
-      variableMatcher: (variables) => {
+      request: { query: UPDATE, variables: (variables) => {
         sentVariables = variables;
         return true;
-      },
+      } },
       result: { data: { updateClub: { __typename: 'Club', id: 'c1' } } },
     };
     renderPage('/clubs/c1/edit', [editMock, updateMock]);
@@ -375,8 +371,7 @@ describe('AdminClubEditorPage / editing an existing club', () => {
       result: { data: { club: row } },
     };
     const failMock: MockedResponse = {
-      request: { query: UPDATE },
-      variableMatcher: () => true,
+      request: { query: UPDATE, variables: () => true },
       result: { errors: [new GraphQLError('Club still has pods')] },
     };
     renderPage('/clubs/c1/edit', [editMock, failMock]);

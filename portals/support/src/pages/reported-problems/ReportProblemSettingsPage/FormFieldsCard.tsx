@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Alert,
   Card,
@@ -35,7 +35,7 @@ export default function FormFieldsCard() {
     REPORT_PROBLEM_CONFIG,
     { fetchPolicy: 'cache-and-network' }
   );
-  const [save, saveState] = useMutation(UPDATE_REPORT_PROBLEM_CONFIG, {
+  const [save, saveState] = useMutation<any>(UPDATE_REPORT_PROBLEM_CONFIG, {
     refetchQueries: [REPORT_PROBLEM_CONFIG],
   });
 

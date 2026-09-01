@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import { useApolloTableFetch } from '@duncit/table';

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import { useApolloTableFetch } from '@duncit/table';
@@ -14,7 +14,7 @@ export default function PaymentReleasePage() {
   const refetchRef = useRef<(() => void) | null>(null);
   const [reviewFor, setReviewFor] = useState<PaymentReleaseRow | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [review, reviewState] = useMutation(REVIEW_PAYMENT_RELEASE);
+  const [review, reviewState] = useMutation<any>(REVIEW_PAYMENT_RELEASE);
 
   const fetchRows = useApolloTableFetch<PaymentReleaseRow>(
     client,

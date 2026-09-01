@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Card, CardContent, Grid, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitButton } from '@duncit/buttons';
@@ -46,11 +46,11 @@ export default function CreateCampaignPage() {
   const { data: variablesData } = useQuery<{ marketingCampaignVariables: CampaignVariable[] }>(
     MARKETING_CAMPAIGN_VARIABLES,
   );
-  const [renderCampaign, { data: previewData, loading: previewLoading }] = useLazyQuery(
+  const [renderCampaign, { data: previewData, loading: previewLoading }] = useLazyQuery<any>(
     RENDER_MARKETING_CAMPAIGN,
     { fetchPolicy: 'no-cache' },
   );
-  const [createCampaign, { loading: saving }] = useMutation(CREATE_MARKETING_CAMPAIGN);
+  const [createCampaign, { loading: saving }] = useMutation<any>(CREATE_MARKETING_CAMPAIGN);
 
   // Re-renders on every edit to either field, so the preview tracks the MJML
   // as it is typed rather than waiting for a subject line.

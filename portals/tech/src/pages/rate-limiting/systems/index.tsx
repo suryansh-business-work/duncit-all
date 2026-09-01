@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Stack } from '@mui/material';
 import { PageHeader, QueryGuard } from '@duncit/ui';
 import { useTranslation } from '@duncit/app-settings';

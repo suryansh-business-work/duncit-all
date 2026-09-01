@@ -13,8 +13,8 @@ import {
 import { makeWrapper } from './testkit';
 
 const nav = vi.hoisted(() => ({ fn: vi.fn() }));
-vi.mock('react-router-dom', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('react-router-dom')>()),
+vi.mock('react-router', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-router')>()),
   useNavigate: () => nav.fn,
 }));
 

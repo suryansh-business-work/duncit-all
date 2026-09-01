@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { CATEGORIES_BY_PARENT, type CategoryOption } from './data.gql';
 
 export type CategoryLevel = 'SUPER' | 'CATEGORY' | 'SUB';

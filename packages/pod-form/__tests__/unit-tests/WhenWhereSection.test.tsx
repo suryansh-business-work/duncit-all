@@ -10,6 +10,8 @@ import type { PodFormData, PodFormValues } from '../../src/types';
 const useQueryMock = vi.fn();
 vi.mock('@apollo/client', () => ({
   gql: (s: TemplateStringsArray) => s.join(''),
+}));
+vi.mock('@apollo/client/react', () => ({
   useQuery: (...args: unknown[]) => useQueryMock(...args),
 }));
 
@@ -78,7 +80,7 @@ beforeEach(() => {
 });
 
 function NoDefaults({ data }: Readonly<{ data: PodFormData }>) {
-  const methods = useForm<PodFormValues>();
+  const methods = useForm<PodFormValues, any, PodFormValues>();
   return (
     <FormProvider {...methods}>
       <PodFormDataProvider value={data}>

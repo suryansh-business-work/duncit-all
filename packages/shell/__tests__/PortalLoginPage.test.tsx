@@ -1,15 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, type MemoryRouterProps } from 'react-router-dom';
+import { MemoryRouter, type MemoryRouterProps } from 'react-router';
 import type { ReactNode } from 'react';
 
-vi.mock('@apollo/client', () => ({ useMutation: vi.fn(), useQuery: vi.fn(), gql: (s: string) => s }));
+vi.mock('@apollo/client', () => ({
+  gql: (s: string) => s,
+}));
+vi.mock('@apollo/client/react', () => ({
+  useMutation: vi.fn(),
+  useQuery: vi.fn(),
+}));
 vi.mock('@duncit/utils', () => ({ parseApiError: (e: { message?: string }) => `DEF:${e?.message ?? ''}` }));
 
 const navSpy = vi.hoisted(() => vi.fn());
-vi.mock('react-router-dom', async (orig) => {
-  const actual = await orig<typeof import('react-router-dom')>();
+vi.mock('react-router', async (orig) => {
+  const actual = await orig<typeof import('react-router')>();
   return { ...actual, useNavigate: () => navSpy };
 });
 
@@ -50,7 +56,7 @@ vi.mock('../src/portal-login/OtpLoginPanel', () => ({
   ),
 }));
 
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { DuncitThemeProvider } from '@duncit/theme';
 import PortalLoginPage from '../src/portal-login/PortalLoginPage';
 import type { PortalLoginPageProps } from '../src/portal-login/portal-login.types';

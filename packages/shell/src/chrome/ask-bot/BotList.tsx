@@ -9,7 +9,7 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useTranslation } from '../../i18n/useTranslation';
 import { AppIcon } from '../AppIcon';
 import { useBotCopy } from './bot-copy';

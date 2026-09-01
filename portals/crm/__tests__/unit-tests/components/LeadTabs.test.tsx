@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import LeadTabs from '@/components/LeadTabs';
 
 // LeadTabs drives its selection through `useTabParam`, which reads and writes

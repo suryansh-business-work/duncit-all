@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { describe, expect, it, vi } from 'vitest';
 import ProductDetailDialog from '../ProductDetailDialog';
 import { PUBLIC_PRODUCT, RECORD_PRODUCT_CLICK, RECORD_PRODUCT_VIEW } from '../queries';
@@ -88,7 +89,7 @@ function renderDialog(
   const onClose = vi.fn();
   const onUpdateLine = vi.fn();
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ProductDetailDialog
         productId={PRODUCT_ID}
         onClose={onClose}
@@ -104,7 +105,7 @@ function renderDialog(
 describe('ProductDetailDialog', () => {
   it('renders nothing-open when productId is null and skips tracking', () => {
     render(
-      <MockedProvider mocks={[]} addTypename={false}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
         <ProductDetailDialog productId={null} onClose={vi.fn()} />
       </MockedProvider>,
     );
@@ -118,7 +119,7 @@ describe('ProductDetailDialog', () => {
 
   it('renders an error alert when the product query fails', async () => {
     render(
-      <MockedProvider
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }}
         mocks={[
           viewMock(),
           clickMock(),
@@ -127,7 +128,6 @@ describe('ProductDetailDialog', () => {
             error: new Error('boom'),
           },
         ]}
-        addTypename={false}
       >
         <ProductDetailDialog productId={PRODUCT_ID} onClose={vi.fn()} />
       </MockedProvider>,

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useApolloClient } from '@apollo/client';
+import { useApolloClient } from '@apollo/client/react';
 import { Box, Typography } from '@mui/material';
 import { DuncitTable, dateColumn, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import type { WaMediaRef } from '@duncit/communication';

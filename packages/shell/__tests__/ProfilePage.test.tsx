@@ -2,7 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-vi.mock('@apollo/client', () => ({ useQuery: vi.fn(), useMutation: vi.fn(), gql: (s: TemplateStringsArray) => s }));
+vi.mock('@apollo/client', () => ({
+  gql: (s: TemplateStringsArray) => s,
+}));
+vi.mock('@apollo/client/react', () => ({
+  useQuery: vi.fn(),
+  useMutation: vi.fn(),
+}));
 
 const userCtx = vi.hoisted(() => ({ user: null as unknown, refetch: vi.fn(), logout: vi.fn() }));
 vi.mock('@duncit/user-context', () => ({ useUserData: () => userCtx }));
@@ -12,7 +18,7 @@ vi.mock('../src/hooks/useBranding', () => ({
   useBranding: () => ({ appName: branding.appName, logoUrl: '', loading: false }),
 }));
 
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { ProfilePage } from '../src/chrome/ProfilePage';
 
 const mockMutation = vi.mocked(useMutation);

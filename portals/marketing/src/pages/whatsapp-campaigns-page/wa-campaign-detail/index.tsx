@@ -1,4 +1,4 @@
-import { useLazyQuery, useQuery } from '@apollo/client';
+import { useLazyQuery, useQuery } from '@apollo/client/react';
 import {
   Alert,
   CircularProgress,
@@ -76,7 +76,7 @@ export default function WaCampaignDetailDialog({
   });
   const campaign = data?.waCampaign;
   const listName = audienceLists.find((list) => list.id === campaign?.audience_list_id)?.name;
-  const [fetchCsv, { loading: exporting }] = useLazyQuery(WA_CAMPAIGN_RECIPIENTS_CSV, {
+  const [fetchCsv, { loading: exporting }] = useLazyQuery<any>(WA_CAMPAIGN_RECIPIENTS_CSV, {
     fetchPolicy: 'network-only',
   });
 

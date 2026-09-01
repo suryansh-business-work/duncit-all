@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Box,
   Card,
@@ -59,8 +59,8 @@ export default function CalendarSection() {
   const [selected, setSelected] = useState<CalEvent | null>(null);
 
   const { events, loading, refetch } = useCalendarEvents(entity, status);
-  const [toggleMut] = useMutation(TOGGLE_CRM_REMINDER);
-  const [deleteMut] = useMutation(DELETE_CRM_REMINDER);
+  const [toggleMut] = useMutation<any>(TOGGLE_CRM_REMINDER);
+  const [deleteMut] = useMutation<any>(DELETE_CRM_REMINDER);
 
   const step = (dir: 1 | -1) => {
     if (view === 'day') setCursor((c) => addDays(c, dir));

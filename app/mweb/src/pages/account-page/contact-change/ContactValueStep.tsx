@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -43,9 +43,9 @@ export default function ContactValueStep({
     control,
     handleSubmit,
     formState: { isValid },
-  } = useForm<ContactValueValues>({
+  } = useForm<ContactValueValues, any, ContactValueValues>({
     defaultValues,
-    resolver: zodResolver(makeContactValueSchema(channel)),
+    resolver: zodResolver(makeContactValueSchema(channel)) as unknown as Resolver<ContactValueValues, any, ContactValueValues>,
     mode: 'onChange',
   });
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Alert, Box, Dialog, DialogContent, DialogTitle, Stack } from '@mui/material';
 import { parseApiError } from '@duncit/utils';
 import { CREATE_AI_PROMPT, UPDATE_AI_PROMPT } from '../queries';
@@ -36,8 +36,8 @@ export function PromptDialog({ open, prompt, apiOrigin, onClose, onSaved }: Read
   // The preview follows the row that is open, not the one that was open last:
   // without this the panel shows the previous prompt for a frame after a switch.
   useEffect(() => setDraft(prompt?.content ?? ''), [prompt]);
-  const [createPrompt, { loading: creating }] = useMutation(CREATE_AI_PROMPT);
-  const [updatePrompt, { loading: updating }] = useMutation(UPDATE_AI_PROMPT);
+  const [createPrompt, { loading: creating }] = useMutation<any>(CREATE_AI_PROMPT);
+  const [updatePrompt, { loading: updating }] = useMutation<any>(UPDATE_AI_PROMPT);
   const code = prompt?.kind === 'CODE';
 
   const submit = async (values: PromptFormValues) => {

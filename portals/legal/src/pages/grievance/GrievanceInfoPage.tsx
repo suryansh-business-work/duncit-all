@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Stack } from '@mui/material';
 import { useDateFormat } from '@duncit/app-settings';
 import { notifySuccess } from '@duncit/dialogs';
@@ -23,7 +23,7 @@ export default function GrievanceInfoPage() {
   const { data, refetch } = useQuery<{ grievanceOfficer: GrievanceOfficer }>(GRIEVANCE_OFFICER, {
     fetchPolicy: 'network-only',
   });
-  const [saveMut, { loading: saving }] = useMutation(SAVE_GRIEVANCE_OFFICER);
+  const [saveMut, { loading: saving }] = useMutation<any>(SAVE_GRIEVANCE_OFFICER);
   const [error, setError] = useState<string | null>(null);
 
   const officer = data?.grievanceOfficer;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import {
   Box,
   Chip,
@@ -48,7 +48,7 @@ export default function StatusReportDetailDialog({ row, onClose, onSaved }: Read
   // in the portals — kept in that shape here and split on the way out.
   const [staffImages, setStaffImages] = useState('');
   const [saving, setSaving] = useState(false);
-  const [update] = useMutation(UPDATE_STATUS_REPORT);
+  const [update] = useMutation<any>(UPDATE_STATUS_REPORT);
   const [removeReports] = useMutation<{ deleteStatusReports: number }>(DELETE_STATUS_REPORTS);
   const confirm = useConfirm();
 

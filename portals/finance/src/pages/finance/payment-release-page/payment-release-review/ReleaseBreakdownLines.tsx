@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Box, Divider, Stack, Typography } from '@mui/material';
 import { formatMoney } from '@duncit/utils';
 import { POD_COIN_TOTALS, PUBLIC_FINANCE_SETTINGS } from '../queries';

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { gql, useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
+import { useNavigate } from 'react-router';
 import { Box, Chip, CircularProgress, Stack, TextField, Typography } from '@mui/material';
 import VenueExploreCard, { type ExploreVenue } from './VenueExploreCard';
 import VenuesLocationBar from './VenuesLocationBar';
@@ -68,11 +69,11 @@ export default function VenuesPage({ locationId }: Readonly<Props>) {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const { data: catData } = useQuery(SUPER_CATEGORIES, { fetchPolicy: 'cache-first' });
+  const { data: catData } = useQuery<any>(SUPER_CATEGORIES, { fetchPolicy: 'cache-first' });
   const categories = (catData?.categories ?? []).filter(
     (c: { is_active?: boolean | null }) => c.is_active !== false,
   );
-  const { data, loading, error } = useQuery(VENUES_EXPLORE, {
+  const { data, loading, error } = useQuery<any>(VENUES_EXPLORE, {
     variables: {
       location_id: locationId || null,
       search: search || null,
@@ -82,7 +83,7 @@ export default function VenuesPage({ locationId }: Readonly<Props>) {
   });
   const { ads } = useActiveAds('VENUE_LIST');
   const venues: ExploreVenue[] = data?.publicVenues ?? [];
-  const { data: locData } = useQuery(VENUES_LOCATIONS, { fetchPolicy: 'cache-first' });
+  const { data: locData } = useQuery<any>(VENUES_LOCATIONS, { fetchPolicy: 'cache-first' });
   const cityLabel = (locData?.locations ?? []).find(
     (l: { id: string }) => l.id === locationId,
   )?.location_name;

@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { useForm } from 'react-hook-form';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -33,7 +33,7 @@ function Harness({ initialReel = '', onForm }: { initialReel?: string; onForm?: 
 function setup(initialReel = '') {
   let form: any;
   const utils = render(
-    <MockedProvider mocks={[]}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
       <Harness initialReel={initialReel} onForm={(f) => (form = f)} />
     </MockedProvider>,
   );

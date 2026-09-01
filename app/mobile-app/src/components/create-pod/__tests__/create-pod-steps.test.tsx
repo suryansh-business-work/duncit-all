@@ -111,7 +111,7 @@ function VenueSlotHarness({
   viewerUserId?: string;
   clubVenueIds?: Set<string>;
 }>) {
-  const form = useForm<CreatePodFormValues>({
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, ...initial },
   });
   return (
@@ -126,7 +126,7 @@ function VenueSlotHarness({
 
 /** Lets a test force a venue_space_label error to assert the danger-styled line. */
 function SpaceErrorHarness() {
-  const form = useForm<CreatePodFormValues>({
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: {
       ...blankCreatePodForm,
       pod_mode: 'PHYSICAL',
@@ -159,7 +159,7 @@ function SpaceErrorHarness() {
 
 /** Exposes no_of_spots_text so space-picker auto-fill can be asserted. */
 function SpaceHarness({ venues }: Readonly<{ venues: CreatePodVenue[] }>) {
-  const form = useForm<CreatePodFormValues>({
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: {
       ...blankCreatePodForm,
       pod_mode: 'PHYSICAL',
@@ -348,7 +348,7 @@ describe('VenueSlotStep', () => {
 // The stepper owns Step 4's money state (it gates Create Pod), so the harnesses
 // derive it the same way the real container does.
 function PricingHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormValues> }>) {
-  const form = useForm<CreatePodFormValues>({
+  const form = useForm<CreatePodFormValues, any, CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, ...initial },
   });
   const pricing = usePodPricing({

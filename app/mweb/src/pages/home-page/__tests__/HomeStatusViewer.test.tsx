@@ -18,7 +18,7 @@
  */
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { fireEvent, render, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import HomeStatusViewer, {
@@ -32,7 +32,7 @@ const testTheme = createTheme();
 /** jsdom ships `play`/`pause` as "not implemented" stubs that log and return
  * undefined, so they are replaced outright rather than filled in — the viewer
  * starts its own clips now and a spy is the only way to see that it did. */
-const play = vi.fn<[], Promise<void>>();
+const play = vi.fn<() => Promise<void>>();
 const pause = vi.fn();
 
 beforeAll(() => {

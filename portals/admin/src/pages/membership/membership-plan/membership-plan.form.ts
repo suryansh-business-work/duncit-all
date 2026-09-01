@@ -17,7 +17,7 @@ export interface MembershipPlanFormValues {
   is_active: boolean;
 }
 
-export const membershipPlanFormSchema: z.ZodType<MembershipPlanFormValues, z.ZodTypeDef, unknown> =
+export const membershipPlanFormSchema =
   z.object({
     key: z
       .string()

@@ -1,4 +1,5 @@
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 
 /** Which header features this console offers, per Admin > Portal App Settings. */
 export interface PortalAppFeatures {
@@ -29,7 +30,7 @@ const ALL_ON: PortalAppFeatures = { chat: true, apps: true };
  * never flash in and back out.
  */
 export function usePortalAppFeatures(portalKey?: string): PortalAppFeatures {
-  const { data } = useQuery(PORTAL_APP_FEATURES, {
+  const { data } = useQuery<any>(PORTAL_APP_FEATURES, {
     variables: { key: portalKey },
     skip: !portalKey,
     fetchPolicy: 'cache-first',

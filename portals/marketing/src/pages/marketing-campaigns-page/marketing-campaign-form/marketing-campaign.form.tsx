@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Grid, MenuItem, Stack } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
@@ -35,9 +35,9 @@ export default function MarketingCampaignForm({
   onSubmit,
 }: Readonly<MarketingCampaignFormProps>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, trigger, watch, formState } = useForm<MarketingCampaignFormValues>({
+  const { control, handleSubmit, trigger, watch, formState } = useForm<MarketingCampaignFormValues, any, MarketingCampaignFormValues>({
     defaultValues: initialValues,
-    resolver: zodResolver(marketingCampaignSchema),
+    resolver: zodResolver(marketingCampaignSchema) as unknown as Resolver<MarketingCampaignFormValues, any, MarketingCampaignFormValues>,
     mode: 'onChange',
   });
 

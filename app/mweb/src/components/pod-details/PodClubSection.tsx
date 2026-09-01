@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Avatar, Box, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import MomentTile from '../moments/MomentTile';
 import MomentLightbox from '../moments/MomentLightbox';
 import CategoryBreadcrumb from '../CategoryBreadcrumb';

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, Skeleton, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import { notify, notifyError } from '@duncit/dialogs';
@@ -25,7 +25,7 @@ export default function AppBuildSettingsPage() {
   const settingsQuery = useQuery<{ appBuildSettings: AppBuildSettings }>(APP_BUILD_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [save, saving] = useMutation(UPDATE_APP_BUILD_SETTINGS);
+  const [save, saving] = useMutation<any>(UPDATE_APP_BUILD_SETTINGS);
 
   const onSubmit = useCallback(
     (values: AppBuildSettingsValues) => {

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import CategoryCascade, { EMPTY_CATEGORY_SCOPE, type CategoryScope } from '../CategoryCascade';
 import { CATEGORIES, type CategoryOption } from '../../survey-gate/queries';
@@ -47,7 +47,7 @@ const renderCascade = (
   mocks = [superMock, catMock, subMock],
 ) =>
   render(
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <CategoryCascade value={value} onChange={onChange} allowAll={props.allowAll} />
     </MockedProvider>,
   );

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useMutation, useQuery } from '@apollo/client/react';
+import { useLocation, useNavigate } from 'react-router';
 import { Avatar, Box, Chip, Paper, Stack, Typography } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
@@ -18,7 +18,7 @@ export default function SupportTicketsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const { data: headerData } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-first' });
+  const { data: headerData } = useQuery<any>(HEADER_DATA, { fetchPolicy: 'cache-first' });
   const me = headerData?.me;
 
   const initialValues = {
@@ -34,7 +34,7 @@ export default function SupportTicketsPage() {
 
   // Refetch the ticket list so a freshly-created ticket shows up immediately in
   // "Your tickets" (the list is cache-first and would otherwise stay stale).
-  const [createTicket, { loading }] = useMutation(CREATE_TICKET, {
+  const [createTicket, { loading }] = useMutation<any>(CREATE_TICKET, {
     refetchQueries: ['MyTickets'],
   });
   const [error, setError] = useState<string | null>(null);

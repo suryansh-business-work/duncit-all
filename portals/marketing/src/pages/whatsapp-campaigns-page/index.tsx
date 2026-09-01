@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import WaAutomation from './wa-automation';

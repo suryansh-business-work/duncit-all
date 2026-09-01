@@ -1,7 +1,8 @@
 import type { ReactElement, ReactNode } from 'react';
 import { render } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
-import { MemoryRouter, Routes } from 'react-router-dom';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter, Routes } from 'react-router';
 import { ColorModeProvider } from '@duncit/shell';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -27,7 +28,7 @@ interface Options {
 export function renderWithProviders(ui: ReactElement, options: Options = {}) {
   const { mocks = [], initialEntries = ['/'], routes } = options;
   return render(
-    <MockedProvider mocks={mocks}>
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
       <ColorModeProvider>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <MemoryRouter initialEntries={initialEntries}>

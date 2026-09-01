@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
@@ -16,9 +16,9 @@ export default function RolesPage() {
   const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [createRole] = useMutation(CREATE_ROLE);
-  const [updateRole] = useMutation(UPDATE_ROLE);
-  const [deleteRole] = useMutation(DELETE_ROLE);
+  const [createRole] = useMutation<any>(CREATE_ROLE);
+  const [updateRole] = useMutation<any>(UPDATE_ROLE);
+  const [deleteRole] = useMutation<any>(DELETE_ROLE);
   const confirm = useConfirm();
 
   const [editOpen, setEditOpen] = useState(false);

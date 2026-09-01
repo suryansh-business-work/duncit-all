@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { Box, Stack, TextField, Typography } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import { DuncitButton } from '@duncit/buttons';
@@ -16,7 +16,7 @@ export default function AiTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
   const [prompt, setPrompt] = useState('Say hello in one short sentence.');
   const [reply, setReply] = useState('');
   const [result, setResult] = useState<RichTestResult | null>(null);
-  const [run, { loading }] = useMutation(isGemini ? TEST_ENV_GEMINI : TEST_ENV_OPENAI);
+  const [run, { loading }] = useMutation<any>(isGemini ? TEST_ENV_GEMINI : TEST_ENV_OPENAI);
   const resultKey = isGemini ? 'testEnvGemini' : 'testEnvOpenai';
 
   const send = async () => {

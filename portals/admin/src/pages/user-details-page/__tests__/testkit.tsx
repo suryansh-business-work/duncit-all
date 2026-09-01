@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
-import { MemoryRouter } from 'react-router-dom';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { MemoryRouter } from 'react-router';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { renderWithProviders as renderWithPortalProviders } from '../../../__tests__/testkit';
@@ -29,7 +30,7 @@ export function renderWithProviders(ui: ReactElement, options: Options = {}) {
 export function makeWrapper(mocks: readonly MockedResponse[] = []) {
   return function Wrapper({ children }: Readonly<{ children: ReactNode }>) {
     return (
-      <MockedProvider mocks={mocks as MockedResponse[]}>
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks as MockedResponse[]}>
         <MemoryRouter>{children}</MemoryRouter>
       </MockedProvider>
     );

@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef } from 'react';
-import { gql, useApolloClient, useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import { Card, CardContent, Stack, Typography } from '@mui/material';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import {
@@ -89,7 +90,7 @@ export default function UserVerificationsSection({ userId }: Readonly<{ userId: 
   const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [review, { loading: saving }] = useMutation(REVIEW);
+  const [review, { loading: saving }] = useMutation<any>(REVIEW);
 
   const fetchTable = useApolloTableFetch<VerificationItem>(
     client,

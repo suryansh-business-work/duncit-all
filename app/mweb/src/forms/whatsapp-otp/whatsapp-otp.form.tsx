@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -21,9 +21,9 @@ interface RequestProps {
 
 export function WhatsAppRequestForm({ loading, onSubmit, onSkip }: Readonly<RequestProps>) {
   const { t } = useTranslation();
-  const { control, handleSubmit } = useForm<WhatsAppOtpRequestValues>({
+  const { control, handleSubmit } = useForm<WhatsAppOtpRequestValues, any, WhatsAppOtpRequestValues>({
     defaultValues: whatsAppOtpRequestDefaults,
-    resolver: zodResolver(whatsAppOtpRequestSchema),
+    resolver: zodResolver(whatsAppOtpRequestSchema) as unknown as Resolver<WhatsAppOtpRequestValues, any, WhatsAppOtpRequestValues>,
     mode: 'onTouched',
   });
 
@@ -73,9 +73,9 @@ export function WhatsAppVerifyForm({
   onSkip,
 }: Readonly<VerifyProps>) {
   const { t } = useTranslation();
-  const { control, handleSubmit } = useForm<WhatsAppOtpVerifyValues>({
+  const { control, handleSubmit } = useForm<WhatsAppOtpVerifyValues, any, WhatsAppOtpVerifyValues>({
     defaultValues: whatsAppOtpVerifyDefaults,
-    resolver: zodResolver(whatsAppOtpVerifySchema),
+    resolver: zodResolver(whatsAppOtpVerifySchema) as unknown as Resolver<WhatsAppOtpVerifyValues, any, WhatsAppOtpVerifyValues>,
     mode: 'onTouched',
   });
 

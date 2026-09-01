@@ -23,6 +23,10 @@ interface RowProps {
  * has to be proved, so they are not boxes that quietly disagree with the
  * account until Save is pressed — each is the value the account actually holds,
  * with the one door that can change it beside it.
+ *
+ * All three are required: a missing one is marked with the same asterisk the
+ * form's required boxes carry, and its empty line is coloured as the error it
+ * is rather than greyed out like an optional blank.
  */
 function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
   const copy = labels.channel(channel);
@@ -31,9 +35,9 @@ function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
     <XStack gap={12} alignItems="center" paddingVertical={8}>
       <YStack flex={1} gap={2}>
         <Text fontSize={12} color="$muted">
-          {copy.name}
+          {copy.name} <Text color="$danger">*</Text>
         </Text>
-        <Text fontSize={14} color={value ? '$color' : '$muted'} numberOfLines={1}>
+        <Text fontSize={14} color={value ? '$color' : '$danger'} numberOfLines={1}>
           {value || copy.emptyValue}
         </Text>
       </YStack>

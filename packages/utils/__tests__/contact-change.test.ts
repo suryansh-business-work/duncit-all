@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CONTACT_CHANNELS,
   buildContactChangeLabels,
+  contactDetailsComplete,
   contactDraftFrom,
   contactDraftIsUnchanged,
   contactDraftValue,
@@ -67,6 +68,25 @@ describe('formatPhoneLine', () => {
 
   it('renders the digits alone when no country code was stored', () => {
     expect(formatPhoneLine(null, '9876543210')).toBe('9876543210');
+  });
+});
+
+describe('contactDetailsComplete', () => {
+  it('is true only when the account holds all three details', () => {
+    expect(contactDetailsComplete(snapshot)).toBe(true);
+  });
+
+  it('is false while any one of them is missing, so Edit profile cannot save', () => {
+    expect(contactDetailsComplete({ ...snapshot, email: '' })).toBe(false);
+    expect(contactDetailsComplete({ ...snapshot, phone_number: null })).toBe(false);
+    expect(contactDetailsComplete({ ...snapshot, whatsapp_number: undefined })).toBe(false);
+    expect(contactDetailsComplete({})).toBe(false);
+  });
+
+  it('does not count a country code with no number behind it', () => {
+    expect(contactDetailsComplete({ ...snapshot, phone_number: '', phone_extension: '+91' })).toBe(
+      false,
+    );
   });
 });
 
@@ -207,6 +227,7 @@ describe('buildContactChangeLabels', () => {
     expect(built.cancel).toBe('t:mweb.contactChange.cancel');
     expect(built.unchanged).toBe('t:mweb.contactChange.unchanged');
     expect(built.whyOtp).toBe('t:mweb.contactChange.whyOtp');
+    expect(built.allRequired).toBe('t:mweb.contactChange.allRequired');
   });
 
   it('names all three channels, each with its own field, empty line, title and hint', () => {

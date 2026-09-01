@@ -3343,6 +3343,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       testCode: 'Test code: {code}',
       whyOtp:
         'We ask for a code so nobody else can move your account to an address or number you do not use.',
+      // All three are required, so Edit profile says so once under the rows
+      // rather than three times beside them.
+      allRequired:
+        'Your email address, phone number and WhatsApp number are all required.',
       saved: '{channelName} updated',
     },
     smsPreference: {

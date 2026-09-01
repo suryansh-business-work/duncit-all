@@ -34,6 +34,7 @@ import {
   canSubmitPodFeedback,
   commChannelSummary,
   commRowState,
+  contactDetailsComplete,
   contactDraftFrom,
   contactDraftIsUnchanged,
   contactDraftValue,
@@ -701,7 +702,8 @@ export default defineDemos('utils', [
       'true. Change only `draftExtension` — same digits, different country — and it still ' +
       'sends, because +1 9845012345 is not the same number as +91 9845012345. Blank the ' +
       "account's whatsapp_number and its row falls back to the empty line rather than " +
-      'showing a lone +91.',
+      'showing a lone +91 — and `Edit profile can save` flips to false, because all three ' +
+      'contact details are required before the profile form will save.',
     mock: {
       email: 'ravi@duncit.com',
       phone_extension: '+91',
@@ -733,6 +735,7 @@ export default defineDemos('utils', [
         'Dialog opens on': JSON.stringify(contactDraftFrom(account, mock.channel)),
         'Value stored': contactDraftValue(draft, mock.channel),
         'Sends a code': String(!contactDraftIsUnchanged(account, mock.channel, draft)),
+        'Edit profile can save': String(contactDetailsComplete(account)),
       };
     },
   }),

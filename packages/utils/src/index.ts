@@ -391,6 +391,7 @@ export {
 export {
   CONTACT_CHANNELS,
   buildContactChangeLabels,
+  contactDetailsComplete,
   contactDraftFrom,
   contactDraftIsUnchanged,
   contactDraftValue,

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Stack, Typography } from '@mui/material';
 import {
   buildContactChangeLabels,
+  contactDetailsComplete,
   type ContactChannel,
   type ContactSnapshot,
 } from '@duncit/utils';
@@ -34,6 +35,11 @@ export default function ContactSection({ snapshot, onChanged }: Readonly<Props>)
         {t('mweb.account.contactDetails')}
       </Typography>
       <ContactRows labels={labels} snapshot={snapshot} onChange={setChannel} />
+      {!contactDetailsComplete(snapshot) && (
+        <Typography variant="caption" sx={{ color: 'error.main' }} data-testid="contact-required">
+          {labels.allRequired}
+        </Typography>
+      )}
       <ChangeContactDialog
         channel={channel}
         snapshot={snapshot}

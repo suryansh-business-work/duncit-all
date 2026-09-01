@@ -3,7 +3,12 @@ import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { usernameBlocksSave, type ContactSnapshot, type UsernameStatus } from '@duncit/utils';
+import {
+  contactDetailsComplete,
+  usernameBlocksSave,
+  type ContactSnapshot,
+  type UsernameStatus,
+} from '@duncit/utils';
 import RhfTextField from '../../../forms/components/RhfTextField';
 import AddressFields, { type AddressFieldNames } from '../../../forms/components/AddressFields';
 import { UsernameField } from '../username-field';
@@ -103,6 +108,10 @@ export default function AccountEditForm({
   });
 
   const handleBlocked = usernameBlocksSave(handleStatus, !!defaultValues.username);
+  // The three contact details are required, and none of them rides this Save —
+  // each is its own proved write — so a missing one has to hold the button
+  // rather than a Zod rule over a field the form does not have.
+  const contactsIncomplete = !contactDetailsComplete(contactSnapshot);
 
   const submit = handleSubmit(async (values) => {
     setSubmitError(null);
@@ -149,8 +158,6 @@ export default function AccountEditForm({
           size="small"
           slotProps={{ inputLabel: { shrink: true } }}
         />
-        <DobDateField control={control} minAge={minAge} />
-        <LocationSelect control={control} setValue={setValue} />
         <ContactSection
           snapshot={contactSnapshot}
           onChanged={(_channel, next) => {
@@ -158,6 +165,8 @@ export default function AccountEditForm({
             onContactChanged?.();
           }}
         />
+        <DobDateField control={control} minAge={minAge} />
+        <LocationSelect control={control} setValue={setValue} />
         <Typography
           variant="overline"
           sx={{
@@ -187,7 +196,7 @@ export default function AccountEditForm({
           <DuncitButton
             type="submit"
             variant="contained"
-            disabled={loading || !isDirty || !isValid || handleBlocked}
+            disabled={loading || !isDirty || !isValid || handleBlocked || contactsIncomplete}
           >
             {loading ? 'Saving…' : 'Save'}
           </DuncitButton>

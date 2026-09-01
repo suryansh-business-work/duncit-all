@@ -1,4 +1,4 @@
-import { Divider, Stack, Typography } from '@mui/material';
+import { Box, Divider, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import {
   CONTACT_CHANNELS,
@@ -22,6 +22,10 @@ interface RowProps {
  * has to be proved, so they are not boxes that quietly disagree with the
  * account until Save is pressed — each is the value the account actually holds,
  * with the one door that can change it beside it.
+ *
+ * All three are required: a missing one is marked with the same asterisk the
+ * form's required boxes carry, and its empty line is coloured as the error it
+ * is rather than greyed out like an optional blank.
  */
 function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
   const copy = labels.channel(channel);
@@ -30,8 +34,11 @@ function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
       <Stack sx={{ flex: 1, minWidth: 0 }}>
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
           {copy.name}
+          <Box component="span" aria-hidden sx={{ color: 'error.main', ml: 0.25 }}>
+            *
+          </Box>
         </Typography>
-        <Typography variant="body2" noWrap sx={{ color: value ? 'text.primary' : 'text.disabled' }}>
+        <Typography variant="body2" noWrap sx={{ color: value ? 'text.primary' : 'error.main' }}>
           {value || copy.emptyValue}
         </Typography>
       </Stack>

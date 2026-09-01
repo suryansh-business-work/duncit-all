@@ -3776,6 +3776,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "mweb.confirm.areYouSure": "Are you sure?",
   "mweb.confirm.confirm": "Confirm",
   "mweb.contactChange.add": "Add",
+  "mweb.contactChange.allRequired": "Your email address, phone number and WhatsApp number are all required.",
   "mweb.contactChange.cancel": "Cancel",
   "mweb.contactChange.change": "Change",
   "mweb.contactChange.codeLabel": "6-digit code",

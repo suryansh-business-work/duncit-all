@@ -1,6 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Text, YStack } from 'tamagui';
-import { buildContactChangeLabels, type ContactChannel, type ContactSnapshot } from '@duncit/utils';
+import {
+  buildContactChangeLabels,
+  contactDetailsComplete,
+  type ContactChannel,
+  type ContactSnapshot,
+} from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { ChangeContactSheet } from './ChangeContactSheet';
@@ -28,6 +33,11 @@ export function ContactSection({ snapshot, onChanged }: Readonly<Props>) {
         {t('mweb.account.contactDetails')}
       </Text>
       <ContactRows labels={labels} snapshot={snapshot} onChange={setChannel} />
+      {contactDetailsComplete(snapshot) ? null : (
+        <Text fontSize={12} color="$danger" testID="contact-required">
+          {labels.allRequired}
+        </Text>
+      )}
       <ChangeContactSheet
         channel={channel}
         snapshot={snapshot}

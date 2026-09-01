@@ -12,7 +12,7 @@ const me = {
   email: 'riya@duncit.com',
   phone_number: '9876543210',
   phone_extension: '+91',
-  whatsapp_number: '',
+  whatsapp_number: '9876543211',
   whatsapp_extension: '+91',
   profile_photo: null,
   bio: 'Hello',
@@ -28,8 +28,10 @@ const me = {
 const setup = (props: Partial<Parameters<typeof AccountEditForm>[0]> = {}) =>
   renderWithProviders(<AccountEditForm me={me} onSubmit={jest.fn()} {...props} />);
 
+// Save is a <DuncitButton/>, which reports its state as `aria-disabled` —
+// `accessibilityState` is not among the props it forwards.
 const saveDisabled = () =>
-  screen.getByTestId('account-edit-submit').props.accessibilityState?.disabled === true;
+  screen.getByTestId('account-edit-submit').props['aria-disabled'] === true;
 
 /** Press Save once it is enabled (RHF validates onChange asynchronously). */
 const pressSaveWhenEnabled = async () => {
@@ -99,6 +101,22 @@ describe('AccountEditForm', () => {
         'Enter a 10-digit phone number',
       ),
     );
+  });
+
+  it('marks every contact detail required and blocks Save while one is missing', async () => {
+    const onSubmit = jest.fn();
+    setup({ me: { ...me, whatsapp_number: '' } as AccountMe, onSubmit });
+
+    expect(screen.getByTestId('contact-required')).toBeOnTheScreen();
+    fireEvent.changeText(screen.getByTestId('field-first_name'), 'Riya R');
+    await waitFor(() => expect(saveDisabled()).toBe(true));
+    fireEvent.press(screen.getByTestId('account-edit-submit'));
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('says nothing about required contacts once the account holds all three', () => {
+    setup();
+    expect(screen.queryByTestId('contact-required')).toBeNull();
   });
 
   it('renders the error message when provided', () => {

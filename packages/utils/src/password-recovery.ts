@@ -190,6 +190,41 @@ export function recoveryBack(
   return step ? { ...state, step } : { ...state };
 }
 
+/** What a send's answer came back saying. */
+export type CodeSendVerdict = 'NOT_REGISTERED' | 'NOT_SENT' | 'SENT';
+
+/** The three things a request-a-code answer can mean, as the screens read them. */
+export interface CodeSendAnswer {
+  /** False when no account has these details — nothing was sent. */
+  registered: boolean;
+  /** Whether a medium actually carried the code out of the building. */
+  sent: boolean;
+  /** The code echoed back while no medium could really carry it. */
+  testCode: string | null;
+}
+
+/**
+ * What to do with a send's answer.
+ *
+ * Three outcomes, and the middle one is the one that used to be missing: an
+ * account CAN be found and its code still reach nobody — a mailbox that takes
+ * its codes on another channel, a switched-off template, an address every mail
+ * server refused. That is not "no such account", and it is not a code on its
+ * way either, so the screen has to stay where it is and say so.
+ *
+ * A test code still counts as sent: that is a medium with no transport wired,
+ * where the server hands the code back on purpose and the flow is meant to
+ * continue.
+ *
+ * Shared because both surfaces decide it identically and the pair had already
+ * grown one copy each (rule 40 — the mWeb/native pair shares LOGIC, never UI).
+ */
+export function codeSendVerdict(answer: Readonly<CodeSendAnswer>): CodeSendVerdict {
+  if (!answer.registered) return 'NOT_REGISTERED';
+  if (!answer.sent && !answer.testCode) return 'NOT_SENT';
+  return 'SENT';
+}
+
 /** The translator each surface hands in — the same shape as the copy next door. */
 export type PasswordRecoveryTranslate = (
   key: string,

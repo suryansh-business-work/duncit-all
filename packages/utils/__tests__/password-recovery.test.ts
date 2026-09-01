@@ -7,6 +7,7 @@ import {
   PASSWORD_RECOVERY_STEP_COUNT,
   buildOtpLoginLabels,
   buildPasswordRecoveryLabels,
+  codeSendVerdict,
   initialRecoveryState,
   passwordRecoveryStepIndex,
   previousRecoveryStep,
@@ -298,5 +299,33 @@ describe('buildOtpLoginLabels', () => {
     expect(labels.resendIn(18)).toBe(recovery.resendIn(18));
     expect(labels.codeExpiry(10)).toBe(recovery.codeExpiry(10));
     expect(labels.testCode('123456')).toBe(recovery.testCode('123456'));
+  });
+});
+
+/*
+  The three things a request-a-code answer can mean. The middle one is the one
+  that used to be missing on both surfaces: an account CAN be found and its
+  code still reach nobody — a mailbox taking its codes on another channel, a
+  switched-off template, an address every mail server refused.
+*/
+describe('codeSendVerdict', () => {
+  const answer = (over = {}) => ({ registered: true, sent: true, testCode: null, ...over });
+
+  it('reads a delivered code as sent', () => {
+    expect(codeSendVerdict(answer())).toBe('SENT');
+  });
+
+  it('reads no account as NOT_REGISTERED, whatever delivery says', () => {
+    expect(codeSendVerdict(answer({ registered: false, sent: false }))).toBe('NOT_REGISTERED');
+    expect(codeSendVerdict(answer({ registered: false, sent: true }))).toBe('NOT_REGISTERED');
+  });
+
+  it('reads a found account whose code went nowhere as NOT_SENT', () => {
+    expect(codeSendVerdict(answer({ sent: false }))).toBe('NOT_SENT');
+  });
+
+  /* A stubbed medium hands the code back on purpose, so the flow continues. */
+  it('counts a test code as sent, because that flow is meant to continue', () => {
+    expect(codeSendVerdict(answer({ sent: false, testCode: '123456' }))).toBe('SENT');
   });
 });

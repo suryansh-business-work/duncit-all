@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  codeSendVerdict,
   emptyContactDraft,
   initialRecoveryState,
   recoveryAfterSend,
@@ -106,18 +107,14 @@ export function useCodeRequest(
       setRequesting(true);
       try {
         const result = await send(state.channel, draft);
-        if (!result.registered) {
+        // What the three outcomes mean is decided once, in @duncit/utils,
+        // because both surfaces read them identically (rule 40).
+        const verdict = codeSendVerdict(result);
+        if (verdict === 'NOT_REGISTERED') {
           setNotFound(true);
           return;
         }
-        /*
-          Nothing carried the code and there is none to display, so the code box
-          would be a box with no code coming. Staying on the channel step is the
-          whole point: the way out is the other channel, and it is right here.
-          A test code still advances — that is the medium with no transport
-          wired, where the server hands the code back on purpose.
-        */
-        if (!result.sent && !result.testCode) {
+        if (verdict === 'NOT_SENT') {
           setNotSent(true);
           return;
         }

@@ -36,6 +36,16 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 24
+          # This job installs NOTHING on purpose — every gate below is a plain
+          # node script. setup-node@v5 turns package-manager caching on by
+          # DEFAULT, reads `packageManager` for pnpm, and its post step then
+          # tries to save a store directory no step here ever created:
+          # "Path Validation Error: Path(s) specified in the action for caching
+          # do(es) not exist" — a job failure after all twelve gates passed.
+          # It stayed hidden while the lockfile was stable, because a cache HIT
+          # creates the directory; every dependency bump changes the key, misses,
+          # and fails the job.
+          package-manager-cache: false
 
       # Rule 39: every surface ships a local copy of every fallback icon name.
       - name: Fallback icons — mWeb

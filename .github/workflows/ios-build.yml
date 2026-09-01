@@ -100,6 +100,20 @@ jobs:
           # Full history: the report step describes the merged commit range.
           fetch-depth: 0
 
+      - name: Select Xcode 26 (Swift 6.2)
+        # expo-modules-jsi/apple/Package.swift declares `swift-tools-version:
+        # 6.2`, so resolving it needs Xcode 26. The macos-15 image ships several
+        # Xcode 26.x alongside older ones but still DEFAULTS to 16.4 (Swift
+        # 6.1), and the archive died in the ExpoModulesJSI xcframework script
+        # phase with "package 'apple' is using Swift tools version 6.2.0 but the
+        # installed version is 6.1.0". Newest 26.x rather than a pinned minor:
+        # the image rotates those, and the requirement is the major. An empty
+        # glob fails the step here instead of 3 minutes into the archive.
+        run: |
+          DEVELOPER_DIR=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)/Contents/Developer
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"
+          "$DEVELOPER_DIR/usr/bin/xcodebuild" -version
+
       - name: Record build start
         run: echo "BUILD_STARTED_AT=$(date +%s)" >> "$GITHUB_ENV"
 

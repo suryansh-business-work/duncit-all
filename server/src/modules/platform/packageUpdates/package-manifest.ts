@@ -144,7 +144,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "jest-expo", range: "~57.0.5", kind: "devDependencies" },
       { name: "prettier", range: "^3.9.6", kind: "devDependencies" },
       { name: "react-test-renderer", range: "19.2.3", kind: "devDependencies" },
-      { name: "typescript", range: "~5.9.3", kind: "devDependencies" },
+      { name: "typescript", range: "~6.0.3", kind: "devDependencies" },
     ],
   },
   {

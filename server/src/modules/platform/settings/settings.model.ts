@@ -137,6 +137,19 @@ export interface IBranding extends Document {
   // Autoplay/loop/muted background video of the "Venues" card in the consumer
   // account drawer (native + mWeb). Admin-managed — never hardcode the URL.
   venues_card_video_url: string;
+  /*
+    The backdrop behind the sign-in and sign-up screens (native + mWeb), as TWO
+    independent switches rather than one image/video selector. Either can be off
+    on its own, and with both off the screens keep the bundled animated gradient
+    they have always drawn — which is the state a database that has never been
+    touched is already in. A URL without its switch renders nothing: the switch
+    is what an admin turns off to take a backdrop down without losing the asset
+    they picked.
+  */
+  login_background_image_enabled: boolean;
+  login_background_image_url: string;
+  login_background_video_enabled: boolean;
+  login_background_video_url: string;
   // Per-platform Google Font family names (admin Branding → Fonts tabs).
   // Empty string = each platform's built-in default (Quicksand).
   mobile_font_family: string;
@@ -299,6 +312,12 @@ const brandingSchema = new Schema<IBranding>(
       type: String,
       default: "https://ik.imagekit.io/esdata1/pods/13903093_1920_1080_60fps_CGCbnkfjK.mp4?tr=orig",
     },
+    // Both off by default: an install that has never opened this section keeps
+    // the gradient, and turning one on is a deliberate act.
+    login_background_image_enabled: { type: Boolean, default: false },
+    login_background_image_url: { type: String, default: "" },
+    login_background_video_enabled: { type: Boolean, default: false },
+    login_background_video_url: { type: String, default: "" },
     mobile_font_family: { type: String, default: "" },
     mweb_font_family: { type: String, default: "" },
     portals_font_family: { type: String, default: "" },

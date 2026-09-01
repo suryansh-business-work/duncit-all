@@ -33,18 +33,6 @@ export const registerSchema = yup.object({
   zone: yup.string().optional(),
 });
 
-export const loginSchema = yup.object({
-  email: yup.string().email().required(),
-  password: yup.string().min(8).required(),
-  // Which portal the login request comes from (appConfig.key). Optional —
-  // consumer apps omit it; consoles send it so access can be enforced.
-  portal_key: yup.string().max(64).optional(),
-});
-
-export const requestPasswordResetSchema = yup.object({
-  email: yup.string().email().required(),
-});
-
 /*
   Forgotten-password recovery, in three steps.
 
@@ -69,6 +57,30 @@ const passwordResetLookupShape = {
     otherwise: (s) => s.optional(),
   }),
 };
+
+export const loginSchema = yup.object({
+  // The SAME per-channel destination rules the recovery and OTP doors validate,
+  // spelled once below and spread here (rule 34): what counts as a phone number
+  // cannot be allowed to differ between the door you sign in through and the
+  // door you recover through. `channel` defaults to EMAIL so every client that
+  // predates the phone option keeps working untouched.
+  ...passwordResetLookupShape,
+  // Overrides the spread's REQUIRED channel. Recovery has always sent one;
+  // this door has not, and every portal and shipped app build still posts a
+  // bare { email, password } — defaulting keeps all of them working, and the
+  // per-channel rules above then read EMAIL and require the address exactly as
+  // they did before.
+  channel: yup.string().oneOf(['EMAIL', 'PHONE']).default('EMAIL'),
+  password: yup.string().min(8).required(),
+  // Which portal the login request comes from (appConfig.key). Optional —
+  // consumer apps omit it; consoles send it so access can be enforced.
+  portal_key: yup.string().max(64).optional(),
+});
+
+export const requestPasswordResetSchema = yup.object({
+  email: yup.string().email().required(),
+});
+
 
 export const passwordResetLookupSchema = yup.object(passwordResetLookupShape);
 

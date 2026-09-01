@@ -64,6 +64,8 @@ interface Props {
   busy: boolean;
   /** True when the destination typed has no account behind it. */
   notFound: boolean;
+  /** True when the account exists but nothing could carry its code. */
+  notSent: boolean;
   onChannel: (channel: PasswordRecoveryChannel) => void;
   onSend: (draft: ContactDraft) => void;
 }
@@ -82,6 +84,7 @@ export function RecoveryChannelStep({
   defaultValues,
   busy,
   notFound,
+  notSent,
   onChannel,
   onSend,
 }: Readonly<Props>) {
@@ -147,6 +150,12 @@ export function RecoveryChannelStep({
       {notFound ? (
         <Text fontSize={13} color="$danger" testID="recovery-not-found">
           {labels.notFound}
+        </Text>
+      ) : null}
+
+      {notSent ? (
+        <Text fontSize={13} color="$danger" testID="recovery-not-sent">
+          {labels.notSent}
         </Text>
       ) : null}
 

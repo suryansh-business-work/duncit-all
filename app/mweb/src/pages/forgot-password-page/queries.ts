@@ -10,6 +10,7 @@ export const REQUEST_PASSWORD_RESET_CODE = gql`
       expires_at
       resend_after_seconds
       expires_in_minutes
+      sent
       test_code
     }
   }

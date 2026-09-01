@@ -33,11 +33,13 @@ export {
 export {
   forgotPasswordDefaults,
   loginDefaults,
+  LOGIN_CHANNELS,
   makeForgotPasswordSchema,
   makeLoginSchema,
   makeResetPasswordSchema,
   resetPasswordDefaults,
   type ForgotPasswordValues,
+  type LoginChannel,
   type LoginFormValues,
   type ResetPasswordValues,
 } from './auth';

@@ -50,6 +50,7 @@ export function useOtpLogin(
     state,
     error: flow.error,
     notFound: flow.notFound,
+    notSent: flow.notSent,
     expiresInMinutes: flow.expiresInMinutes,
     testCode: flow.testCode,
     resendIn: flow.resendIn,

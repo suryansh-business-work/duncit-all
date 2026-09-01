@@ -216,6 +216,12 @@ export interface PasswordRecoveryLabels {
   sending: string;
   /** The refusal a destination with no account behind it gets. */
   notFound: string;
+  /**
+   * The refusal a destination that HAS an account but could not be reached
+   * gets. A different sentence from `notFound` on purpose: the account is fine,
+   * the channel is not, and the way out is the other one.
+   */
+  notSent: string;
   newToDuncit: string;
   createAccount: string;
   /** Step two. */
@@ -351,6 +357,7 @@ export function buildPasswordRecoveryLabels(
     sendCode: t('mweb.passwordRecovery.sendCode'),
     sending: t('mweb.passwordRecovery.sending'),
     notFound: t('mweb.passwordRecovery.notFound'),
+    notSent: t('mweb.passwordRecovery.notSent'),
     newToDuncit: t('mweb.passwordRecovery.newToDuncit'),
     createAccount: t('mweb.passwordRecovery.createAccount'),
     codeTitle: t('mweb.passwordRecovery.codeTitle'),

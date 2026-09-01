@@ -31,6 +31,9 @@ export function useOtpLogin(onAuthed: (token: string, user: any) => void) {
       const result = res.data?.requestLoginOtp;
       return {
         registered: Boolean(result?.registered),
+        // Absent (an older server) reads as sent: a missing field must never be
+        // what stops somebody signing in.
+        sent: result?.sent !== false,
         resendAfterSeconds: result?.resend_after_seconds ?? 30,
         expiresInMinutes: result?.expires_in_minutes ?? 10,
         testCode: result?.test_code ?? null,
@@ -67,6 +70,7 @@ export function useOtpLogin(onAuthed: (token: string, user: any) => void) {
     state,
     error: flow.error,
     notFound: flow.notFound,
+    notSent: flow.notSent,
     expiresInMinutes: flow.expiresInMinutes,
     testCode: flow.testCode,
     resendIn: flow.resendIn,

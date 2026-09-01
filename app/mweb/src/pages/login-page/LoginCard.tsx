@@ -2,7 +2,7 @@ import { Box, Stack, Typography } from '@mui/material';
 import { auth } from '@duncit/auth-tokens';
 import AuthHeading from '../../components/AuthHeading';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
-import { type LoginFormValues } from '../../forms/login';
+import { type LoginSubmitValues } from '../../forms/login';
 import { useTranslation } from '../../i18n/useTranslation';
 import LoginOtpStep from './LoginOtpStep';
 import type { OtpLogin } from './useOtpLogin';
@@ -17,7 +17,7 @@ interface Props {
   onStep: (step: LoginStep) => void;
   loading: boolean;
   errorMessage: string | null;
-  onSubmit: (values: LoginFormValues) => Promise<void>;
+  onSubmit: (values: LoginSubmitValues) => Promise<void>;
   gLoading: boolean;
   gError: string | null;
   onGoogleCredential: (idToken: string) => Promise<void> | void;

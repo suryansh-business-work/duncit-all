@@ -25,7 +25,7 @@ import {
   type PasswordResetLookup,
   type PasswordResetRequestResult,
 } from '@modules/access/auth/password-reset.service';
-import { otpService } from '@modules/platform/otp/otp.service';
+import { anyDelivered, otpService } from '@modules/platform/otp/otp.service';
 import { OTP_TTL_MINUTES } from '@modules/platform/otp/otp.constants';
 
 import { syncUserMirrors } from './user.mirrors';
@@ -1378,7 +1378,21 @@ export const userService = {
   },
 
   async login(input: LoginDTO, signIn?: SignInContext) {
-    const user = await UserModel.findOne({ 'auth.email': input.email }).select('+auth.password');
+    /*
+      The SAME account lookup recovery and Continue with OTP use, so the three
+      doors cannot disagree about which account a phone number belongs to — a
+      number matches whether it is the one the account signed up with or the
+      WhatsApp one it added later (rule 34). EMAIL is the default channel, so a
+      caller that sends only an address takes exactly the path it always did.
+    */
+    const user = await accountFor(
+      targetOf({
+        channel: input.channel ?? 'EMAIL',
+        email: input.email,
+        phone_extension: input.phone_extension,
+        phone_number: input.phone_number,
+      } as PasswordResetLookup)
+    );
     if (!user) throw invalidCredentials();
     const stored = (user as any).auth?.password as string | undefined;
     if (!stored) {
@@ -1455,6 +1469,7 @@ export const userService = {
       expires_at: issued.expires_at,
       resend_after_seconds: issued.resend_after_seconds,
       expires_in_minutes: OTP_TTL_MINUTES,
+      sent: anyDelivered(issued.deliveries),
       test_code: issued.test_code,
     };
   },

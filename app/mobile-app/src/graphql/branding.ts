@@ -17,6 +17,10 @@ export const BrandingDocument = gql(`
       mobile_splash_url
       mobile_splash_type
       venues_card_video_url
+      login_background_image_enabled
+      login_background_image_url
+      login_background_video_enabled
+      login_background_video_url
       mobile_font_family
       home_all_vibe_icon_url
       home_all_vibe_icon_layout {

@@ -53,8 +53,67 @@ describe('makeLoginSchema', () => {
     expect(schema.safeParse({ email: 'asha@duncit.com', password: '12345678' }).success).toBe(true);
   });
 
-  it('starts empty', () => {
-    expect(loginDefaults).toEqual({ email: '', password: '' });
+  it('starts empty, on the dial code every other phone row in both apps starts on', () => {
+    expect(loginDefaults).toEqual({
+      email: '',
+      phoneExtension: '+91',
+      phoneNumber: '',
+      password: '',
+    });
+  });
+
+  /*
+    Continue with password reaches the same account on either of the two things
+    it is identified by, so the schema is built per channel: the one that is not
+    showing must not be able to hold the form shut, and the one that IS showing
+    has to be asked for.
+  */
+  describe('on the PHONE channel', () => {
+    const phone = makeLoginSchema(t, 'PHONE');
+
+    it('asks for the number and ignores the address the form is not showing', () => {
+      const parsed = phone.safeParse({
+        phoneExtension: '+91',
+        phoneNumber: '9845012345',
+        password: 'correct-horse',
+      });
+      expect(parsed.success).toBe(true);
+    });
+
+    it('refuses a blank number rather than falling through on the email box', () => {
+      const result = phone.safeParse({
+        phoneExtension: '+91',
+        phoneNumber: '',
+        password: 'correct-horse',
+      });
+      expect(result.success).toBe(false);
+      expect(messagesFor(result)).toContain('mweb.signup.validation.phoneRequired');
+    });
+
+    it('refuses a country code that is not one', () => {
+      const result = phone.safeParse({
+        phoneExtension: 'x',
+        phoneNumber: '9845012345',
+        password: 'correct-horse',
+      });
+      expect(messagesFor(result)).toContain('mweb.signup.validation.codeInvalid');
+    });
+
+    it('does not ask for the email the phone form never shows', () => {
+      const result = phone.safeParse({
+        email: '',
+        phoneExtension: '+91',
+        phoneNumber: '9845012345',
+        password: 'correct-horse',
+      });
+      expect(result.success).toBe(true);
+    });
+  });
+
+  it('does not ask for the phone boxes the email form never shows', () => {
+    expect(schema.safeParse({ email: 'asha@duncit.com', password: 'correct-horse' }).success).toBe(
+      true,
+    );
   });
 });
 

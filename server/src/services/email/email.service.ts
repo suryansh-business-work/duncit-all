@@ -234,6 +234,15 @@ export interface SendResult extends EmailDelivery {
   /** Which Tech-portal entry carried it, for the CRM to record against a lead. */
   entryId?: string | null;
   entryName?: string;
+  /**
+   * Why a `skipped` send did not go, in the same words the email log records.
+   *
+   * A caller that has to tell somebody their code is on its way needs more than
+   * the boolean: "you receive codes on another channel" and "the mail server
+   * refused the address" are the same `skipped` and completely different things
+   * to say. Absent on a send that actually went.
+   */
+  reason?: string;
 }
 
 /**
@@ -291,7 +300,7 @@ export async function sendEmail(opts: {
       reason,
       duration_ms: Date.now() - startedAt,
     });
-    return { messageId: '', provider: 'none', accepted: [], rejected: [], skipped: true };
+    return { messageId: '', provider: 'none', accepted: [], rejected: [], skipped: true, reason };
   };
 
   // The cheapest failures first, so a message with nobody to send to never
@@ -467,7 +476,7 @@ export async function sendHtmlEmail(opts: {
       source_detail: opts.source_detail,
       duration_ms: Date.now() - startedAt,
     });
-    return { messageId: '', provider: 'none', accepted: [], rejected: [], skipped: true };
+    return { messageId: '', provider: 'none', accepted: [], rejected: [], skipped: true, reason };
   };
 
   if (recipients.length === 0 && !opts.bcc?.length) return notSent('No recipient address', 'FAILED');

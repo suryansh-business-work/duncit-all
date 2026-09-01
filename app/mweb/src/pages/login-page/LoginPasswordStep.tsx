@@ -1,14 +1,14 @@
 import { Link as RouterLink } from 'react-router';
 import { Link, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { LoginForm, type LoginFormValues } from '../../forms/login';
+import { LoginForm, type LoginSubmitValues } from '../../forms/login';
 import LegalLinks from '../../components/LegalLinks';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   loading: boolean;
   errorMessage: string | null;
-  onSubmit: (values: LoginFormValues) => Promise<void>;
+  onSubmit: (values: LoginSubmitValues) => Promise<void>;
   onBack: () => void;
 }
 

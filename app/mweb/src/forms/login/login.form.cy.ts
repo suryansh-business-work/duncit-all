@@ -8,7 +8,7 @@ const firstError = (result: ReturnType<typeof loginSchema.safeParse>) =>
 
 describe('loginSchema', () => {
   it('exposes empty defaults', () => {
-    expect(loginDefaults).toEqual({ email: '', password: '' });
+    expect(loginDefaults).toEqual({ email: '', phoneExtension: '+91', phoneNumber: '', password: '' });
   });
 
   it('rejects empty fields', () => {

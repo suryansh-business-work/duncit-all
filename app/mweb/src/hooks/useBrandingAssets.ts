@@ -11,6 +11,10 @@ const BRANDING_ASSETS = gql`
       mweb_splash_url
       mweb_splash_type
       venues_card_video_url
+      login_background_image_enabled
+      login_background_image_url
+      login_background_video_enabled
+      login_background_video_url
     }
   }
 `;
@@ -31,5 +35,13 @@ export function useBrandingAssets() {
     splashUrl: b?.mweb_splash_url || '',
     splashType: b?.mweb_splash_type || 'IMAGE',
     venuesCardVideoUrl: b?.venues_card_video_url || '',
+    /*
+      A backdrop is its switch AND its asset: an admin who turns one off
+      keeps the URL they picked, so the URL alone must never draw anything.
+      Video first — it is the richer of the two, and an admin who set both
+      up went to more trouble for that one.
+    */
+    loginBackgroundVideoUrl: b?.login_background_video_enabled ? b?.login_background_video_url || '' : '',
+    loginBackgroundImageUrl: b?.login_background_image_enabled ? b?.login_background_image_url || '' : '',
   };
 }

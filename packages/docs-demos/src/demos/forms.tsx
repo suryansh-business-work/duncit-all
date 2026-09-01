@@ -123,7 +123,25 @@ export default defineDemos('forms', [
         result.success ? 'accepted' : result.error!.issues.map((i) => `${i.path.join('.')} — ${i.message}`);
 
       return {
-        Login: say(makeLoginSchema(t).safeParse({ email: mock.email, password: mock.password })),
+        // Sign-in is built per channel, like the contact-change value below it:
+        // the EMAIL form never asks about the phone boxes and the PHONE form
+        // never asks about the address, so each is parsed with its own schema.
+        'Login (email)': say(
+          makeLoginSchema(t, 'EMAIL').safeParse({
+            email: mock.email,
+            phoneExtension: mock.extension,
+            phoneNumber: mock.number,
+            password: mock.password,
+          }),
+        ),
+        'Login (phone)': say(
+          makeLoginSchema(t, 'PHONE').safeParse({
+            email: mock.email,
+            phoneExtension: mock.extension,
+            phoneNumber: mock.number,
+            password: mock.password,
+          }),
+        ),
         'Reset password': say(
           makeResetPasswordSchema(t).safeParse({
             otp: mock.otp,

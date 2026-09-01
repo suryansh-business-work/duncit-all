@@ -19,7 +19,7 @@ interface Props {
 export default function LoginOtpStep({ otp, onBack }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = buildOtpLoginLabels(t);
-  const { state, notFound, expiresInMinutes, testCode, resendIn, busy } = otp;
+  const { state, notFound, notSent, expiresInMinutes, testCode, resendIn, busy } = otp;
   const onCode = state.step === 'CODE';
 
   return (
@@ -48,6 +48,7 @@ export default function LoginOtpStep({ otp, onBack }: Readonly<Props>) {
           defaultValues={state.draft}
           busy={busy.requesting}
           notFound={notFound}
+          notSent={notSent}
           onChannel={otp.setChannel}
           onSend={(draft) => {
             otp.sendCode(draft).catch(() => undefined);

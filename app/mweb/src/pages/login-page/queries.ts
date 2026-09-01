@@ -58,6 +58,7 @@ export const REQUEST_LOGIN_OTP = gql`
       expires_at
       resend_after_seconds
       expires_in_minutes
+      sent
       test_code
     }
   }

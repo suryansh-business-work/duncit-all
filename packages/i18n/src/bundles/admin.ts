@@ -364,6 +364,16 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       footerLogo: 'Footer logo',
       websiteLogos: 'Website Logos (marketing sites)',
       websiteHint: 'Header logo, footer logo, favicon + app-store links for duncit.com and its subsites.',
+      loginBackground: 'Login Background (mWeb + app)',
+      loginBackgroundSubtitle:
+        'The backdrop behind the sign-in and sign-up screens on mWeb and the mobile app.',
+      loginBackgroundHint:
+        'Turn either switch on to replace the built-in animated gradient. With both off, the apps keep the gradient. A video plays muted and looping, and wins if both are on.',
+      loginBackgroundImage: 'Background image',
+      loginBackgroundImageSize: 'Portrait JPG/PNG, ~1080×1920px — it is cropped to fill the screen.',
+      loginBackgroundVideo: 'Background video',
+      loginBackgroundVideoSize:
+        'Portrait MP4, ~1080×1920px, a few seconds long. Keep it small: it loads before sign-in.',
       logoHint: 'Square or wordmark image used in the app header.',
       faviconHint: 'Square PNG/SVG, 64×64px — browser-tab icon for every website.',
       headerLogoHint: 'Transparent PNG/SVG, ~320×96px — shown in the site header on light glass.',

@@ -1,13 +1,13 @@
 import { Text, XStack, YStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
-import { LoginForm, type LoginFormValues } from '@/forms/login';
+import { LoginForm, type LoginSubmitValues } from '@/forms/login';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   loading: boolean;
   errorMessage: string | null;
-  onSubmit: (values: LoginFormValues) => void | Promise<void>;
+  onSubmit: (values: LoginSubmitValues) => void | Promise<void>;
   onForgotPassword: () => void;
   onBack: () => void;
 }

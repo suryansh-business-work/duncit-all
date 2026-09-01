@@ -140,6 +140,8 @@ const BRANDING_FIELDS = [
   "portals_splash_url",
   "portals_splash_type",
   "venues_card_video_url",
+  "login_background_image_url",
+  "login_background_video_url",
   "mobile_font_family",
   "mweb_font_family",
   "portals_font_family",
@@ -208,6 +210,10 @@ const brandingToPub = (doc: any) => ({
   venues_card_video_url:
     doc.venues_card_video_url ??
     "https://ik.imagekit.io/esdata1/pods/13903093_1920_1080_60fps_CGCbnkfjK.mp4?tr=orig",
+  login_background_image_enabled: !!doc.login_background_image_enabled,
+  login_background_image_url: doc.login_background_image_url ?? "",
+  login_background_video_enabled: !!doc.login_background_video_enabled,
+  login_background_video_url: doc.login_background_video_url ?? "",
   mobile_font_family: doc.mobile_font_family ?? "",
   mweb_font_family: doc.mweb_font_family ?? "",
   portals_font_family: doc.portals_font_family ?? "",
@@ -707,6 +713,8 @@ export const settingsService = {
         height?: number | null;
       } | null;
       home_show_all_vibe_categories?: boolean;
+      login_background_image_enabled?: boolean;
+      login_background_video_enabled?: boolean;
     },
   ) {
     const update: any = {};
@@ -721,6 +729,14 @@ export const settingsService = {
     // Boolean toggle can't ride the string-typed BRANDING_FIELDS loop.
     if (input.home_show_all_vibe_categories !== undefined) {
       update.home_show_all_vibe_categories = !!input.home_show_all_vibe_categories;
+    }
+    // Same reason: the two login-backdrop switches are Booleans, and a URL
+    // saved without its switch would be an asset that never draws.
+    if (input.login_background_image_enabled !== undefined) {
+      update.login_background_image_enabled = !!input.login_background_image_enabled;
+    }
+    if (input.login_background_video_enabled !== undefined) {
+      update.login_background_video_enabled = !!input.login_background_video_enabled;
     }
     const doc = await BrandingModel.findOneAndUpdate(
       { singleton_key: "branding" },

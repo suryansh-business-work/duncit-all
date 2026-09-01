@@ -16,6 +16,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { DuncitButton } from '@duncit/buttons';
 import { QueryGuard } from '@duncit/ui';
 import IdentitySection from './IdentitySection';
+import LoginBackgroundSection from './LoginBackgroundSection';
 import PlatformAssetsSection from './PlatformAssetsSection';
 import WebsiteAssetsSection from './WebsiteAssetsSection';
 import FontsSection from './FontsSection';
@@ -68,7 +69,12 @@ export default function BrandingPage() {
       const b = data.branding;
       const next = { ...emptyBrandingForm };
       (Object.keys(next) as (keyof BrandingFormState)[]).forEach((key) => {
-        next[key] = b[key] ?? emptyBrandingForm[key];
+        // `next[key]` narrows to the INTERSECTION of every field's type once the
+        // form holds more than one — with booleans alongside the strings that is
+        // `never`, and no value is assignable to it. The write is safe (same key
+        // on both sides); the cast is what says so per assignment rather than
+        // widening the form's own types.
+        (next as Record<string, unknown>)[key] = b[key] ?? emptyBrandingForm[key];
       });
       setForm(next);
     }
@@ -133,6 +139,13 @@ export default function BrandingPage() {
             />
           </BrandingAccordion>
         ))}
+
+        <BrandingAccordion
+          title={t('admin.branding.loginBackground')}
+          subtitle={t('admin.branding.loginBackgroundSubtitle')}
+        >
+          <LoginBackgroundSection form={form} setForm={setForm} />
+        </BrandingAccordion>
 
         <BrandingAccordion
           title={t('admin.branding.websiteLogos')}

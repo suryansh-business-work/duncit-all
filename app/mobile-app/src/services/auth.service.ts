@@ -36,7 +36,11 @@ export interface SignupValues {
 }
 
 export interface LoginValues {
+  /** Which of the two the password is proved against. Defaults to EMAIL. */
+  channel?: 'EMAIL' | 'PHONE';
   email: string;
+  phoneExtension?: string;
+  phoneNumber?: string;
   password: string;
 }
 
@@ -86,9 +90,25 @@ export async function register(values: SignupValues): Promise<AuthOutcome> {
 }
 
 export async function login(values: LoginValues): Promise<AuthOutcome> {
-  const data = await graphqlRequest(LoginDocument, {
-    input: { email: values.email.trim().toLowerCase(), password: values.password },
-  });
+  /*
+    Only the chosen channel travels. Sending a blank email alongside a phone
+    number makes the server's per-channel validator argue with a box nobody
+    filled in — the same reason toLookupInput exists for recovery.
+  */
+  const input =
+    values.channel === 'PHONE'
+      ? {
+          channel: PasswordResetChannel.Phone,
+          phone_extension: (values.phoneExtension ?? '').trim(),
+          phone_number: (values.phoneNumber ?? '').trim(),
+          password: values.password,
+        }
+      : {
+          channel: PasswordResetChannel.Email,
+          email: values.email.trim().toLowerCase(),
+          password: values.password,
+        };
+  const data = await graphqlRequest(LoginDocument, { input });
   await setAuthToken(data.login.token);
   return { token: data.login.token, surveyCompleted: data.login.user.onboarding_survey_completed };
 }
@@ -128,6 +148,12 @@ const toLookupInput = (lookup: Readonly<PasswordResetLookup>) => ({
 
 export interface PasswordResetRequestOutcome {
   registered: boolean;
+  /**
+   * Whether a medium actually carried the code. Distinct from `registered`: an
+   * account can be found and its code still reach nobody, which is the one
+   * outcome the code box must not be shown for.
+   */
+  sent: boolean;
   resendAfterSeconds: number;
   expiresInMinutes: number;
   /** Echoed back only while no medium could really carry the code. */
@@ -150,6 +176,9 @@ export async function requestPasswordResetCode(
   const result = data.requestPasswordResetCode;
   return {
     registered: result.registered,
+    // Absent (an older server) reads as sent: a missing field must never be
+    // what stops somebody signing in.
+    sent: result.sent !== false,
     resendAfterSeconds: result.resend_after_seconds,
     expiresInMinutes: result.expires_in_minutes,
     testCode: result.test_code ?? null,
@@ -190,6 +219,9 @@ export async function requestLoginOtp(
   const result = data.requestLoginOtp;
   return {
     registered: result.registered,
+    // Absent (an older server) reads as sent: a missing field must never be
+    // what stops somebody signing in.
+    sent: result.sent !== false,
     resendAfterSeconds: result.resend_after_seconds,
     expiresInMinutes: result.expires_in_minutes,
     testCode: result.test_code ?? null,

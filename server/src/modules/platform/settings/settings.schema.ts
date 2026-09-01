@@ -230,6 +230,16 @@ export const settingsTypeDefs = gql`
     portals_splash_url: String!
     portals_splash_type: String!
     venues_card_video_url: String!
+    """
+    The backdrop behind the sign-in and sign-up screens, as two independent
+    switches. With both off the apps keep their bundled animated gradient,
+    which is what a database nobody has touched already answers. Video wins
+    when both are on and both carry a URL.
+    """
+    login_background_image_enabled: Boolean!
+    login_background_image_url: String!
+    login_background_video_enabled: Boolean!
+    login_background_video_url: String!
     mobile_font_family: String!
     mweb_font_family: String!
     portals_font_family: String!
@@ -293,6 +303,10 @@ export const settingsTypeDefs = gql`
     portals_splash_url: String
     portals_splash_type: String
     venues_card_video_url: String
+    login_background_image_enabled: Boolean
+    login_background_image_url: String
+    login_background_video_enabled: Boolean
+    login_background_video_url: String
     mobile_font_family: String
     mweb_font_family: String
     portals_font_family: String

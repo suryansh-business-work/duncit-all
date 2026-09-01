@@ -219,6 +219,18 @@ describe('CreatePodPage', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('from-draft');
   });
 
+  // MUI renders `caption` as a <span>, and noWrap's overflow/text-overflow are
+  // inert on an inline box: only white-space:nowrap took, so on a phone the note
+  // ran out of the header in one unbroken line and under the close button. jsdom
+  // computes no layout, so the guard is the element itself — an inline box
+  // cannot show an ellipsis no matter what the styles say.
+  it('renders the autosave note as a block so it truncates instead of overflowing', () => {
+    renderPage([optionsMock(baseOptions())]);
+    const note = screen.getByText(/Your progress saves automatically/);
+    expect(note.tagName).toBe('DIV');
+    expect(note).toHaveClass('MuiTypography-noWrap');
+  });
+
   it('navigates to host management from the close button', async () => {
     renderPage([optionsMock(baseOptions())]);
     await screen.findByTestId('stepper');

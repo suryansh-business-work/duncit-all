@@ -68,6 +68,16 @@ export function currentContactValue(
   return formatPhoneLine(snapshot.whatsapp_extension, snapshot.whatsapp_number);
 }
 
+/**
+ * Whether the account holds all three contact details.
+ *
+ * Every one of them is required in Edit profile, so this is what keeps Save
+ * shut while one is still missing. Shared rather than re-derived per surface:
+ * mWeb and native must not disagree about whether a profile is complete.
+ */
+export const contactDetailsComplete = (snapshot: Readonly<ContactSnapshot>): boolean =>
+  CONTACT_CHANNELS.every((channel) => currentContactValue(snapshot, channel) !== '');
+
 /** The draft a dialog opens with: the value already on the account. */
 export function contactDraftFrom(
   snapshot: Readonly<ContactSnapshot>,
@@ -151,6 +161,8 @@ export interface ContactChangeLabels {
   testCode: (code: string) => string;
   /** The line explaining why any of this asks for a code at all. */
   whyOtp: string;
+  /** Shown under the rows while any of the three is still missing. */
+  allRequired: string;
   saved: (channelName: string) => string;
 }
 
@@ -209,6 +221,7 @@ export function buildContactChangeLabels(t: ContactTranslate): ContactChangeLabe
     unchanged: t('mweb.contactChange.unchanged'),
     testCode: (code) => t('mweb.contactChange.testCode', { vars: { code } }),
     whyOtp: t('mweb.contactChange.whyOtp'),
+    allRequired: t('mweb.contactChange.allRequired'),
     saved: (channelName) => t('mweb.contactChange.saved', { vars: { channelName } }),
   };
 }

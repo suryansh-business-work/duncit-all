@@ -114,6 +114,7 @@ exports:
   - 'isPhoneChannel'
   - 'formatPhoneLine'
   - 'currentContactValue'
+  - 'contactDetailsComplete'
   - 'contactDraftFrom'
   - 'contactDraftValue'
   - 'contactDraftIsUnchanged'
@@ -1249,6 +1250,17 @@ const account = {
 currentContactValue(account, 'PHONE');    // '+91 9845012345'
 currentContactValue(account, 'WHATSAPP'); // '' — the row falls back to "No WhatsApp number yet"
 contactDraftFrom(account, 'PHONE');       // { email: '', extension: '+91', number: '9845012345' }
+```
+
+All three are REQUIRED. Nothing about them rides the edit-profile Save — each is its own
+proved write — so a missing one cannot be caught by a Zod rule over a field the form does
+not have. `contactDetailsComplete` is what holds the button instead, and it is one function
+rather than one per surface so mWeb and native cannot disagree about whether a profile is
+reachable:
+
+```ts
+contactDetailsComplete(account);                              // false — no WhatsApp number
+contactDetailsComplete({ ...account, whatsapp_number: '9845012345' }); // true
 ```
 
 `contactDraftIsUnchanged` is the refusal that runs BEFORE a code is sent. A code costs the

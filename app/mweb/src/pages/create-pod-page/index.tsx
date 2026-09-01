@@ -238,8 +238,14 @@ export default function CreatePodPage() {
             <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
               {t('mweb.createPod.title')}
             </Typography>
+            {/* `component` is load-bearing: MUI maps `caption` to a <span>, and
+                `noWrap`'s overflow/text-overflow do nothing on an inline box. Only
+                its white-space:nowrap took, so on a phone the note ran past this
+                Box in one unbroken line and under the close button instead of
+                ending in an ellipsis. A block element is what truncation needs. */}
             <Typography
               variant="caption"
+              component="div"
               noWrap
               sx={{
                 color: "text.secondary",

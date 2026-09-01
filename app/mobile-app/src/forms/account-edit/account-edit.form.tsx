@@ -2,7 +2,12 @@ import { formResolver } from '../../utils/form-resolver';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Text, XStack, YStack } from 'tamagui';
-import { usernameBlocksSave, type ContactSnapshot, type UsernameStatus } from '@duncit/utils';
+import {
+  contactDetailsComplete,
+  usernameBlocksSave,
+  type ContactSnapshot,
+  type UsernameStatus,
+} from '@duncit/utils';
 
 import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -99,6 +104,10 @@ export function AccountEditForm({
   const discard = () => reset(accountEditDefaults(me));
   const discardDisabled = loading || !isDirty;
   const handleBlocked = usernameBlocksSave(handleStatus, !!me?.username);
+  // The three contact details are required, and none of them rides this Save —
+  // each is its own proved write — so a missing one has to hold the button
+  // rather than a Zod rule over a field the form does not have.
+  const contactsIncomplete = !contactDetailsComplete(contacts);
 
   useEffect(() => {
     onDirtyChange?.(isDirty);
@@ -151,10 +160,6 @@ export function AccountEditForm({
         numberOfLines={3}
       />
 
-      <DobDateField control={control} minAge={minSignupAge} />
-
-      <LocationSelect control={control} setValue={setValue} />
-
       <ContactSection
         snapshot={contacts}
         onChanged={(_channel, next) => {
@@ -162,6 +167,10 @@ export function AccountEditForm({
           onContactChanged?.();
         }}
       />
+
+      <DobDateField control={control} minAge={minSignupAge} />
+
+      <LocationSelect control={control} setValue={setValue} />
 
       <Text fontSize={12} fontWeight="700" color="$muted" letterSpacing={0.6}>
         MAIN ADDRESS
@@ -194,7 +203,7 @@ export function AccountEditForm({
         testID="account-edit-submit"
         label={loading ? 'Saving…' : 'Save'}
         loading={loading}
-        disabled={loading || !isDirty || !isValid || handleBlocked}
+        disabled={loading || !isDirty || !isValid || handleBlocked || contactsIncomplete}
         onPress={handleSubmit(onSubmit)}
       />
     </YStack>

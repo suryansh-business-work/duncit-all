@@ -197,10 +197,7 @@ export async function requestLoginOtp(
 }
 
 /** Step two: a correct code signs in — the same outcome a password login has. */
-export async function loginWithOtp(
-  lookup: PasswordResetLookup,
-  otp: string,
-): Promise<AuthOutcome> {
+export async function loginWithOtp(lookup: PasswordResetLookup, otp: string): Promise<AuthOutcome> {
   const data = await graphqlRequest(LoginWithOtpDocument, {
     input: { ...toLookupInput(lookup), otp: otp.trim() },
   });

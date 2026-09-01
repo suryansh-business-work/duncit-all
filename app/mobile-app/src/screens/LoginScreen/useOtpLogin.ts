@@ -1,9 +1,5 @@
 import { useCallback, useState } from 'react';
-import {
-  recoveryLookup,
-  type ContactDraft,
-  type PasswordRecoveryChannel,
-} from '@duncit/utils';
+import { recoveryLookup, type ContactDraft, type PasswordRecoveryChannel } from '@duncit/utils';
 
 import { useCodeRequest, type CodeRequestOutcome } from '@/hooks/useCodeRequest';
 import { loginWithOtp, requestLoginOtp } from '@/services/auth.service';

@@ -115,7 +115,13 @@ export default function PodDetailsPage() {
   // "Pod not found." flash.
   const detailsPending = !!id && !error && (loading || !data);
   if (slugResolution.loading || detailsPending) return <PodDetailsSkeleton />;
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  // The slug lookup FAILING is not the same as the pod not existing. A request
+  // the retry link will not retry — an abort, a 4xx — leaves `id` empty with no
+  // error of its own on POD_DETAILS, and that fell straight through to "Pod not
+  // found.": the page reads as a deleted pod and hides the only thing that
+  // would explain it. Report whichever query actually failed.
+  const failure = slugResolution.error ?? error;
+  if (failure) return <Alert severity="error">{failure.message}</Alert>;
   if (!pod) return <Alert severity="warning">{t('mweb.podDetails.notFound')}</Alert>;
 
   const club = (data?.clusters ?? data?.clubs ?? []).find((c: any) => c.id === pod.club_id) ?? null;

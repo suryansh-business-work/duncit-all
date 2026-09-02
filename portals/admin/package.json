@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@apollo/client": "^4.2.12",
+    "@duncit/ai-monitoring": "workspace:*",
     "@duncit/app-settings": "workspace:*",
     "@duncit/auto-pods": "workspace:*",
     "@duncit/buttons": "workspace:*",

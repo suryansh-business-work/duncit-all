@@ -1,112 +1,94 @@
 import { useState } from 'react';
-import {
-  Chip,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Fade,
-  Stack,
-  Typography,
-} from '@mui/material';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import { AiMonitorGlyph, AiMonitorPill, AiProcessingInline } from '@duncit/ai-monitoring/mui';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-const scannedItems = (t: Translate) =>[
-  { key: 'name', label: t('partners.listProductsPage.productTitle'), detail: 'checked for misleading, offensive or restricted wording.' },
-  { key: 'descriptions', label: t('partners.listProductsPage.variantDescriptions'), detail: 'checked against the community guidelines.' },
-  { key: 'images', label: t('partners.listProductsPage.variantImages'), detail: 'scanned for prohibited or unsafe content.' },
+const scannedItems = (t: Translate) => [
+  {
+    key: 'name',
+    label: t('partners.listProductsPage.productTitle'),
+    detail: t('partners.listProductsPage.aiCheckNameDetail'),
+  },
+  {
+    key: 'descriptions',
+    label: t('partners.listProductsPage.variantDescriptions'),
+    detail: t('partners.listProductsPage.aiCheckDescriptionsDetail'),
+  },
+  {
+    key: 'images',
+    label: t('partners.listProductsPage.variantImages'),
+    detail: t('partners.listProductsPage.aiCheckImagesDetail'),
+  },
 ];
 
-/** "AI monitoring" chip beside the submit row. Clicking it opens a dialog
- * explaining what the AI preflight scans before a listing is accepted. */
+/** "AI monitoring" pill beside the submit row. Clicking it opens a dialog
+ * explaining what the AI preflight scans before a listing is accepted.
+ *
+ * The pill and the dialog's badge are `@duncit/ai-monitoring/mui`'s, so this
+ * check shimmers and breathes exactly like the one on a pod row and the one
+ * beside an upload field — one AI affordance, not a third look for products. */
 export function AiMonitoringChip() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Chip
-        icon={<AutoAwesomeIcon />}
+      <AiMonitorPill
         label={t('partners.listProductsPage.aiMonitoring')}
-        color="secondary"
-        variant="outlined"
+        ariaLabel={t('partners.listProductsPage.aiCheckTitle')}
         onClick={() => setOpen(true)}
-        data-testid="ai-monitoring-chip"
+        testId="ai-monitoring-chip"
       />
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 900 }}>
-          <AutoAwesomeIcon color="secondary" /> AI content check
+          <AiMonitorGlyph size={26} /> {t('partners.listProductsPage.aiCheckTitle')}
         </DialogTitle>
         <DialogContent>
-          <Typography
-            variant="body2"
-            sx={{
-              color: "text.secondary",
-              mb: 1.5
-            }}>
-            Every listing runs through an AI check before it is submitted, so only products that follow the
-            community guidelines reach shoppers. The check reviews:
+          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.5 }}>
+            {t('partners.listProductsPage.aiCheckIntro')}
           </Typography>
           <Stack spacing={1.25}>
             {scannedItems(t).map((item) => (
-              <Stack key={item.key} spacing={0.25} sx={{ p: 1.25, borderRadius: 2, bgcolor: 'action.hover' }}>
-                <Typography variant="body2" sx={{
-                  fontWeight: 700
-                }}>{item.label}</Typography>
-                <Typography variant="caption" sx={{
-                  color: "text.secondary"
-                }}>{item.detail}</Typography>
+              <Stack
+                key={item.key}
+                spacing={0.25}
+                sx={{ p: 1.25, borderRadius: 2, bgcolor: 'action.hover' }}
+              >
+                <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                  {item.label}
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  {item.detail}
+                </Typography>
               </Stack>
             ))}
           </Stack>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              display: 'block',
-              mt: 1.5
-            }}>
-            If something is flagged you'll see exactly what to fix and where — nothing is submitted until the
-            listing passes.
+          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 1.5 }}>
+            {t('partners.listProductsPage.aiCheckFootnote')}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <DuncitButton onClick={() => setOpen(false)}>{t('partners.listProductsPage.gotIt')}</DuncitButton>
+          <DuncitButton onClick={() => setOpen(false)}>
+            {t('partners.listProductsPage.gotIt')}
+          </DuncitButton>
         </DialogActions>
       </Dialog>
     </>
   );
 }
 
-/** Animated inline state shown while the AI moderation preflight runs. */
+/** The wait while the AI moderation preflight reads the listing — the same
+ * badge and rings as the Create Pod overlay, at a line's height, because it
+ * happens in place rather than over the page. */
 export function AiCheckingIndicator({ visible }: Readonly<{ visible: boolean }>) {
+  const { t } = useTranslation();
   return (
-    <Fade in={visible} unmountOnExit>
-      <Stack
-        direction="row"
-        spacing={1.25}
-        data-testid="ai-checking-indicator"
-        sx={{
-          alignItems: "center",
-          p: 1.25,
-          borderRadius: 2,
-          bgcolor: 'action.hover'
-        }}>
-        <CircularProgress size={18} color="secondary" />
-        <Typography
-          variant="body2"
-          sx={{
-            fontWeight: 700,
-            '@keyframes aiCheckPulse': { '0%': { opacity: 0.55 }, '50%': { opacity: 1 }, '100%': { opacity: 0.55 } },
-            animation: 'aiCheckPulse 1.4s ease-in-out infinite'
-          }}>
-          AI is checking all your details…
-        </Typography>
-      </Stack>
-    </Fade>
+    <AiProcessingInline
+      visible={visible}
+      label={t('partners.listProductsPage.aiChecking')}
+      testId="ai-checking-indicator"
+    />
   );
 }

@@ -4,6 +4,7 @@ import type { AiMonitoringCopy } from '@duncit/ai-monitoring';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { AiMonitorGlyph } from './AiMonitorGlyph';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -61,6 +62,9 @@ export function AiMonitoringDialog({ open, onClose, copy }: Readonly<Props>) {
       footer={footer}
     >
       <YStack gap={12}>
+        <YStack alignItems="center" paddingBottom={2}>
+          <AiMonitorGlyph size={40} testID="ai-monitoring-glyph" />
+        </YStack>
         <YStack gap={7}>
           {copy.points.map((point) => (
             <XStack key={point} gap={8} alignItems="flex-start">

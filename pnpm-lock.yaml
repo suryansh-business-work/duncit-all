@@ -409,6 +409,9 @@ importers:
       '@duncit/buttons':
         specifier: workspace:*
         version: link:../buttons
+      '@duncit/utils':
+        specifier: workspace:*
+        version: link:../utils
     devDependencies:
       '@apollo/client':
         specifier: 4.2.12
@@ -2868,6 +2871,9 @@ importers:
       '@apollo/client':
         specifier: 4.2.12
         version: 4.2.12(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.2)(ws@8.20.1))(graphql@16.14.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rxjs@7.8.2)
+      '@duncit/ai-monitoring':
+        specifier: workspace:*
+        version: link:../../packages/ai-monitoring
       '@duncit/app-settings':
         specifier: workspace:*
         version: link:../../packages/app-settings

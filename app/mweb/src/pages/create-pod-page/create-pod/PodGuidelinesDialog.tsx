@@ -10,9 +10,9 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import BlockIcon from '@mui/icons-material/Block';
 import { DuncitButton } from '@duncit/buttons';
+import { AiMonitorGlyph } from '@duncit/ai-monitoring/mui';
 import { POD_GUIDELINE_RULE_KEYS } from './create-pod.form';
 import { useTranslation } from '../../../i18n/useTranslation';
 
@@ -28,7 +28,7 @@ export default function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth data-testid="pod-guidelines-dialog">
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
-        <AutoAwesomeIcon color="primary" /> {t('mweb.createPod.aiMonitors')}
+        <AiMonitorGlyph size={24} /> {t('mweb.createPod.aiMonitors')}
       </DialogTitle>
       <DialogContent>
         <Typography

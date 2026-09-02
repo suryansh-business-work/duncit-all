@@ -277,6 +277,15 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
     },
 
     listProductsPage: {
+      aiCheckDescriptionsDetail: 'checked against the community guidelines.',
+      aiCheckFootnote:
+        "If something is flagged you'll see exactly what to fix and where — nothing is submitted until the listing passes.",
+      aiCheckImagesDetail: 'scanned for prohibited or unsafe content.',
+      aiCheckIntro:
+        'Every listing runs through an AI check before it is submitted, so only products that follow the community guidelines reach shoppers. The check reviews:',
+      aiCheckNameDetail: 'checked for misleading, offensive or restricted wording.',
+      aiCheckTitle: 'AI content check',
+      aiChecking: 'AI is checking all your details…',
       aiMonitoring: 'AI monitoring',
       brandProducts: 'Brand products',
       clicks: 'Clicks',

@@ -2,7 +2,7 @@ import { GraphQLError } from 'graphql';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { AutoPodModel } from './autoPod.model';
-import { autoPodService, type AutoPodQueueScope } from './autoPod.service';
+import { autoPodService, categoryPathOf, type AutoPodQueueScope } from './autoPod.service';
 import { autoPodAudience } from './autoPod.audience';
 import {
   clubClaimAutoPod,
@@ -52,6 +52,9 @@ export const autoPodResolvers = {
       const sub: any = await CategoryModel.findById(parent.sub_category_id).select('name').lean();
       return sub?.name ?? null;
     },
+    category_path: (parent: any) => categoryPathOf(String(parent.sub_category_id)),
+    // Attached by the venue queue only; every other list reads null.
+    venue_expires_at: (parent: any) => parent.venue_expires_at ?? null,
     viewer_claimed: (parent: any, _a: unknown, ctx: GraphQLContext) => viewerClaimed(parent, ctx),
     pod: async (parent: any) => {
       if (!parent.pod_id) return null;
@@ -92,6 +95,14 @@ export const autoPodResolvers = {
     myAutoPodActionCounts: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
       autoPodService.actionCounts(requireAuth(ctx).id),
 
+    // Ownership of the venue is asserted inside; the offer must still be
+    // waiting on a venue.
+    autoPodVenueSlots: (
+      _p: unknown,
+      args: { auto_pod_doc_id: string; venue_id: string },
+      ctx: GraphQLContext
+    ) => autoPodService.venueSlots(requireAuth(ctx).id, args.auto_pod_doc_id, args.venue_id),
+
     // Names, emails and phone numbers of partners — the admin's to see while
     // writing a template, nobody else's.
     autoPodAudience: (_p: unknown, args: { sub_category_id: string }, ctx: GraphQLContext) => {
@@ -126,6 +137,15 @@ export const autoPodResolvers = {
     ) => {
       const user = requireRole(ctx, ADMIN_WRITE);
       return autoPodService.update(user.id, args.auto_pod_doc_id, args.input);
+    },
+
+    setAutoPodActive: (
+      _p: unknown,
+      args: { auto_pod_doc_id: string; is_active: boolean },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, ADMIN_WRITE);
+      return autoPodService.setActive(user.id, args.auto_pod_doc_id, args.is_active);
     },
 
     cancelAutoPod: (

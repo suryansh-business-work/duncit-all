@@ -74,6 +74,8 @@ export const autoPodTypeDefs = gql`
     id: ID!
     auto_pod_no: String!
     stage: AutoPodStage!
+    "False while an admin has paused the offer: shown to nobody, and no claim lands on it."
+    is_active: Boolean!
     pod_title: String!
     pod_description: String!
     pod_info: String!
@@ -84,6 +86,8 @@ export const autoPodTypeDefs = gql`
     sub_category_id: ID!
     "Display name of the sub-category the admin chose."
     category_name: String
+    "Super › Category › Sub names, walked up from the sub-category."
+    category_path: [String!]!
     """
     PHYSICAL waits on a venue to bring the slot; VIRTUAL carries its own
     meeting details and dates and waits on a host and a club only.
@@ -113,6 +117,13 @@ export const autoPodTypeDefs = gql`
     club_claim: AutoPodClubClaim
     "The city the first enrolment pinned it to — null while nobody has enrolled."
     location: AutoPodLocation
+    """
+    When this offer leaves venues' lists (and expires) if none has accepted it
+    by then — created_at plus Pod Settings' auto_pod_venue_expiry_hours. Null on
+    a virtual offer, once a venue has accepted, and on every list but the
+    venue's own queue.
+    """
+    venue_expires_at: String
     "True when the calling user (or one of their clubs) already enrolled."
     viewer_claimed: Boolean!
     pod_id: ID
@@ -174,6 +185,34 @@ export const autoPodTypeDefs = gql`
     venues: [AutoPodAudienceVenue!]!
     hosts: [AutoPodAudienceHost!]!
     club_admins: [AutoPodAudienceClubAdmin!]!
+  }
+
+  "One of a venue's free slots, priced as the venue would be paid for the offer."
+  type AutoPodVenueSlot {
+    id: ID!
+    start_at: String!
+    end_at: String!
+    whole_day: Boolean!
+    space_label: String!
+    capacity: Int!
+    "The slot's price — what the pod pays the venue before commission."
+    price: Float!
+    "What the venue is paid after Finance's venue commission."
+    venue_receives: Float!
+    venue_commission_pct: Float!
+    "What the host would be left with — negative when the slot costs more than the pod collects."
+    host_receives: Float!
+    "False when the pod's money could not cover this slot; accepting it would be refused."
+    viable: Boolean!
+  }
+
+  type AutoPodVenueSlots {
+    "How many days ahead the list reaches — Pod Settings' auto_pod_slot_window_days."
+    window_days: Int!
+    "When the offer leaves this venue's list if it does not accept."
+    expires_at: String
+    "Nearest first."
+    slots: [AutoPodVenueSlot!]!
   }
 
   type AutoPodTablePage {
@@ -240,9 +279,16 @@ export const autoPodTypeDefs = gql`
     """
     Offers this venue owner may still accept, plus the ones they accepted.
     location_id narrows to offers pinned to that city — offers nobody has
-    enrolled in yet have no city and are always included.
+    enrolled in yet have no city and are always included. venue_id narrows to
+    what ONE of the caller's venues could accept (its category and city).
     """
-    venueAutoPods(location_id: ID): [AutoPod!]!
+    venueAutoPods(location_id: ID, venue_id: ID): [AutoPod!]!
+    """
+    The free slots one of the caller's venues could commit to an offer, in the
+    next auto_pod_slot_window_days days, nearest first — each with what the
+    venue would be paid after Finance's deductions.
+    """
+    autoPodVenueSlots(auto_pod_doc_id: ID!, venue_id: ID!): AutoPodVenueSlots!
     """
     Offers this host may still take (in a sub-category they are approved in),
     plus the ones they took. sub_category_id narrows to one of their categories;
@@ -278,6 +324,12 @@ export const autoPodTypeDefs = gql`
     updateAutoPod(auto_pod_doc_id: ID!, input: UpdateAutoPodInput!): AutoPod!
     "Pulls a pre-live offer: everyone enrolled is told and the venue's slot is released."
     cancelAutoPod(auto_pod_doc_id: ID!, reason: String): AutoPod!
+    """
+    Pauses (false) or resumes (true) an offer still enrolling. Paused, it is
+    shown to nobody and takes no claim; resumed, whoever is still missing is
+    told again.
+    """
+    setAutoPodActive(auto_pod_doc_id: ID!, is_active: Boolean!): AutoPod!
     """
     Removes the record for good. Refused once the pod is live (delete the pod
     itself); a pre-live offer is cancelled first so its slot is released and

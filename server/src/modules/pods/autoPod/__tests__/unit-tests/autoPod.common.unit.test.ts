@@ -3,7 +3,13 @@
  * a venue only for a physical offer. Written once here and once as a Mongo
  * filter, so both are checked against the same cases.
  */
-import { AUTO_POD_COMPLETE_FILTER, isAutoPodComplete, PHYSICAL_FILTER } from '../../autoPod.common';
+import {
+  ACTIVE_FILTER,
+  AUTO_POD_COMPLETE_FILTER,
+  isAutoPodComplete,
+  pendingBaseFilter,
+  PHYSICAL_FILTER,
+} from '../../autoPod.common';
 
 const claim = {};
 
@@ -35,5 +41,37 @@ describe('the Mongo filters', () => {
       $or: [{ pod_mode: 'VIRTUAL' }, { venue_claim: { $ne: null } }],
     });
     expect(PHYSICAL_FILTER).toEqual({ pod_mode: { $ne: 'VIRTUAL' } });
+  });
+});
+
+describe('pendingBaseFilter', () => {
+  // The admin table asks "which role is this offer still waiting on"; the
+  // venue clause is also physical, since a virtual offer never waits on one.
+  const PRE_LIVE = { stage: { $in: ['OPEN', 'CLAIMING'] } };
+
+  it('is null when nothing (or nothing real) was asked for', () => {
+    expect(pendingBaseFilter([])).toBeNull();
+    expect(pendingBaseFilter(['SOMETHING_ELSE', ''])).toBeNull();
+  });
+
+  it('builds one clause per role, the venue one physical-only', () => {
+    expect(pendingBaseFilter(['VENUE'])).toEqual({ ...PRE_LIVE, ...PHYSICAL_FILTER, venue_claim: null });
+    expect(pendingBaseFilter(['HOST'])).toEqual({ ...PRE_LIVE, host_claim: null });
+    expect(pendingBaseFilter(['CLUB'])).toEqual({ ...PRE_LIVE, club_claim: null });
+  });
+
+  it('ORs several roles together, dropping what is not a role', () => {
+    expect(pendingBaseFilter(['HOST', 'CLUB', 'nope'])).toEqual({
+      $or: [
+        { ...PRE_LIVE, host_claim: null },
+        { ...PRE_LIVE, club_claim: null },
+      ],
+    });
+  });
+});
+
+describe('ACTIVE_FILTER', () => {
+  it('reads a row without the flag as active, so nothing written before it existed disappears', () => {
+    expect(ACTIVE_FILTER).toEqual({ is_active: { $ne: false } });
   });
 });

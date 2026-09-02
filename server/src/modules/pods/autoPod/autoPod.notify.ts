@@ -129,6 +129,7 @@ const ROLE_NOUN: Record<Role, string> = { venue: 'a venue', host: 'a host', club
  * roles for whom this enrolment changed nothing, so they are not told twice.
  */
 async function remaining(doc: IAutoPod, skip: Role[] = []): Promise<void> {
+  if (doc.is_active === false) return;
   const missing: Role[] = [];
   // A virtual offer has no venue to wait for.
   const needsVenue = doc.pod_mode !== 'VIRTUAL' && !doc.venue_claim;

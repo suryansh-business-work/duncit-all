@@ -20,7 +20,13 @@
  * `pod-draft.cleanup`. No-ops under NODE_ENV=test.
  */
 import { AutoPodModel, type IAutoPod } from './autoPod.model';
-import { AUTO_POD_COMPLETE_FILTER, autoPodEvent, PRE_LIVE_FILTER } from './autoPod.common';
+import {
+  AUTO_POD_COMPLETE_FILTER,
+  autoPodEvent,
+  PHYSICAL_FILTER,
+  PRE_LIVE_FILTER,
+} from './autoPod.common';
+import { autoPodService } from './autoPod.service';
 import { ensureClubPin } from './autoPod.location';
 import { autoPodNotify } from './autoPod.notify';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -70,6 +76,41 @@ async function expireStaleClaiming(): Promise<number> {
     );
     if (!won) continue;
     await venueSlotService.releaseForAutoPod(String(doc._id));
+    expired += 1;
+    autoPodNotify.expired(won).catch((error) =>
+      logs.server.error('autoPod', 'notifyExpired', { error, auto_pod_id: String(doc._id) })
+    );
+  }
+  return expired;
+}
+
+/**
+ * A physical offer no venue accepted inside Pod Settings' venue window is
+ * already off every venue's list, so it can never complete — expire it and
+ * tell whoever had enrolled. The same window is what the venue's card counts
+ * down.
+ */
+async function expireUnacceptedByVenue(): Promise<number> {
+  const { venueCutoff, venueExpiryHours } = await autoPodService.windows();
+  const stale = await AutoPodModel.find({
+    ...PRE_LIVE_FILTER,
+    ...PHYSICAL_FILTER,
+    venue_claim: null,
+    created_at: { $lte: venueCutoff },
+  }).limit(100);
+  let expired = 0;
+  for (const doc of stale) {
+    const won = await AutoPodModel.findOneAndUpdate(
+      { _id: doc._id, ...PRE_LIVE_FILTER },
+      {
+        $set: { stage: 'EXPIRED' },
+        $push: {
+          events: autoPodEvent('EXPIRED', null, '', `No venue accepted within ${venueExpiryHours} hours`),
+        },
+      },
+      { new: true }
+    );
+    if (!won) continue;
     expired += 1;
     autoPodNotify.expired(won).catch((error) =>
       logs.server.error('autoPod', 'notifyExpired', { error, auto_pod_id: String(doc._id) })
@@ -179,7 +220,7 @@ export async function runAutoPodSweep(): Promise<{
   pinned: number;
 }> {
   const pinned = await backfillClubPins();
-  const expired = await expireStaleClaiming();
+  const expired = (await expireStaleClaiming()) + (await expireUnacceptedByVenue());
   const recovered = await recoverStuckMaterializing();
   const retried = await retryCompleteClaiming();
   return { expired, recovered, retried, pinned };

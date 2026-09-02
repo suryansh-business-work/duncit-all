@@ -1255,6 +1255,10 @@ export type AppSettings = {
   __typename?: 'AppSettings';
   /** Whether a host must verify an attendee's name and phone over OTP before marking them present by hand. The door scan is proof on its own and is never gated by this. */
   attendance_otp_required: Scalars['Boolean']['output'];
+  /** How many days ahead a venue is shown its free slots when accepting an Auto Pod. */
+  auto_pod_slot_window_days: Scalars['Int']['output'];
+  /** How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires. */
+  auto_pod_venue_expiry_hours: Scalars['Int']['output'];
   /** CUSTOM anchor — the instant the apps' clock should read (ISO). */
   custom_time?: Maybe<Scalars['String']['output']>;
   /** Server's real time when the CUSTOM anchor was saved (ISO). */
@@ -1590,6 +1594,8 @@ export type AutoPod = {
   cancelled_at?: Maybe<Scalars['String']['output']>;
   /** Display name of the sub-category the admin chose. */
   category_name?: Maybe<Scalars['String']['output']>;
+  /** Super › Category › Sub names, walked up from the sub-category. */
+  category_path: Array<Scalars['String']['output']>;
   /** Club Admin enrolment — null until a club admin claims it for their club. */
   club_claim?: Maybe<AutoPodClubClaim>;
   created_at: Scalars['String']['output'];
@@ -1602,6 +1608,8 @@ export type AutoPod = {
   /** Host enrolment — null until a host assigns themselves. */
   host_claim?: Maybe<AutoPodHostClaim>;
   id: Scalars['ID']['output'];
+  /** False while an admin has paused the offer: shown to nobody, and no claim lands on it. */
+  is_active: Scalars['Boolean']['output'];
   /** The city the first enrolment pinned it to — null while nobody has enrolled. */
   location?: Maybe<AutoPodLocation>;
   materialized_at?: Maybe<Scalars['String']['output']>;
@@ -1639,6 +1647,13 @@ export type AutoPod = {
   updated_at: Scalars['String']['output'];
   /** Venue enrolment — null until a venue accepts and picks its slot. Always null on a VIRTUAL offer. */
   venue_claim?: Maybe<AutoPodVenueClaim>;
+  /**
+   * When this offer leaves venues' lists (and expires) if none has accepted it
+   * by then — created_at plus Pod Settings' auto_pod_venue_expiry_hours. Null on
+   * a virtual offer, once a venue has accepted, and on every list but the
+   * venue's own queue.
+   */
+  venue_expires_at?: Maybe<Scalars['String']['output']>;
   /** True when the calling user (or one of their clubs) already enrolled. */
   viewer_claimed: Scalars['Boolean']['output'];
   what_this_pod_offers: Array<Scalars['String']['output']>;
@@ -1772,6 +1787,36 @@ export type AutoPodVenueClaim = {
   venue_id: Scalars['ID']['output'];
   venue_name: Scalars['String']['output'];
   venue_slot_id: Scalars['ID']['output'];
+};
+
+/** One of a venue's free slots, priced as the venue would be paid for the offer. */
+export type AutoPodVenueSlot = {
+  __typename?: 'AutoPodVenueSlot';
+  capacity: Scalars['Int']['output'];
+  end_at: Scalars['String']['output'];
+  /** What the host would be left with — negative when the slot costs more than the pod collects. */
+  host_receives: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  /** The slot's price — what the pod pays the venue before commission. */
+  price: Scalars['Float']['output'];
+  space_label: Scalars['String']['output'];
+  start_at: Scalars['String']['output'];
+  venue_commission_pct: Scalars['Float']['output'];
+  /** What the venue is paid after Finance's venue commission. */
+  venue_receives: Scalars['Float']['output'];
+  /** False when the pod's money could not cover this slot; accepting it would be refused. */
+  viable: Scalars['Boolean']['output'];
+  whole_day: Scalars['Boolean']['output'];
+};
+
+export type AutoPodVenueSlots = {
+  __typename?: 'AutoPodVenueSlots';
+  /** When the offer leaves this venue's list if it does not accept. */
+  expires_at?: Maybe<Scalars['String']['output']>;
+  /** Nearest first. */
+  slots: Array<AutoPodVenueSlot>;
+  /** How many days ahead the list reaches — Pod Settings' auto_pod_slot_window_days. */
+  window_days: Scalars['Int']['output'];
 };
 
 /** One recorded Backout lifecycle event (immutable, chronological). */
@@ -9202,6 +9247,12 @@ export type Mutation = {
   /** Switch off everything the signed-in person is allowed to switch off. */
   setAllMyMailPreferences: MailPreference;
   setAllMyWhatsappPreferences: WaPreference;
+  /**
+   * Pauses (false) or resumes (true) an offer still enrolling. Paused, it is
+   * shown to nobody and takes no claim; resumed, whoever is still missing is
+   * told again.
+   */
+  setAutoPodActive: AutoPod;
   /** Onboarding/finance: brand-level Duncit commission %% override on product sales (0 = inherit). */
   setBrandCommission: EcommBrand;
   /** Set the pay commission. Null or 0 inherits the platform default. */
@@ -11937,6 +11988,12 @@ export type MutationSetAllMyMailPreferencesArgs = {
 
 export type MutationSetAllMyWhatsappPreferencesArgs = {
   enabled: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetAutoPodActiveArgs = {
+  auto_pod_doc_id: Scalars['ID']['input'];
+  is_active: Scalars['Boolean']['input'];
 };
 
 
@@ -16404,6 +16461,12 @@ export type Query = {
    * it — with the counts the template form gates its next step on.
    */
   autoPodAudience: AutoPodAudience;
+  /**
+   * The free slots one of the caller's venues could commit to an offer, in the
+   * next auto_pod_slot_window_days days, nearest first — each with what the
+   * venue would be paid after Finance's deductions.
+   */
+  autoPodVenueSlots: AutoPodVenueSlots;
   /** Active, currently-valid coupons a shopper can apply (global + this pod). */
   availableCouponsForPod: Array<Coupon>;
   availablePodProducts: Array<InventoryProduct>;
@@ -17430,7 +17493,8 @@ export type Query = {
   /**
    * Offers this venue owner may still accept, plus the ones they accepted.
    * location_id narrows to offers pinned to that city — offers nobody has
-   * enrolled in yet have no city and are always included.
+   * enrolled in yet have no city and are always included. venue_id narrows to
+   * what ONE of the caller's venues could accept (its category and city).
    */
   venueAutoPods: Array<AutoPod>;
   venueAvailableSlots: Array<VenueSlot>;
@@ -17675,6 +17739,12 @@ export type QueryAutoPodArgs = {
 
 export type QueryAutoPodAudienceArgs = {
   sub_category_id: Scalars['ID']['input'];
+};
+
+
+export type QueryAutoPodVenueSlotsArgs = {
+  auto_pod_doc_id: Scalars['ID']['input'];
+  venue_id: Scalars['ID']['input'];
 };
 
 
@@ -19706,6 +19776,7 @@ export type QueryVenueArgs = {
 
 export type QueryVenueAutoPodsArgs = {
   location_id?: InputMaybe<Scalars['ID']['input']>;
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -22574,6 +22645,10 @@ export type UpdateAppBuildSettingsInput = {
 export type UpdateAppSettingsInput = {
   /** Whether a host must verify an attendee's name and phone over OTP before marking them present by hand. The door scan is proof on its own and is never gated by this. */
   attendance_otp_required?: InputMaybe<Scalars['Boolean']['input']>;
+  /** How many days ahead a venue is shown its free slots when accepting an Auto Pod (1-60). */
+  auto_pod_slot_window_days?: InputMaybe<Scalars['Int']['input']>;
+  /** How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires (1-720). */
+  auto_pod_venue_expiry_hours?: InputMaybe<Scalars['Int']['input']>;
   /** CUSTOM anchor (ISO). Saving it stamps custom_time_set_at server-side. */
   custom_time?: InputMaybe<Scalars['String']['input']>;
   date_format?: InputMaybe<Scalars['String']['input']>;

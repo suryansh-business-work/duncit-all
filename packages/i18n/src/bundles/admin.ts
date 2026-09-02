@@ -321,6 +321,16 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       autoCancelLeadLabel: 'Lead Window (Hours)',
       autoCancelLeadMin: 'Minimum 1 hour. Default 24.',
       autoCancelLeadInvalid: 'Enter a whole number of 1 or more.',
+      autoPodSlotWindowTitle: 'Auto Pods — slot window',
+      autoPodSlotWindowDesc: 'How many days ahead a venue is shown its free slots when accepting an Auto Pod. Keep it short: the host and the club admin still need time to enrol before the date.',
+      autoPodSlotWindowLabel: 'Days ahead',
+      autoPodSlotWindowMin: 'Between 1 and 60 days.',
+      autoPodSlotWindowInvalid: 'Enter a whole number between 1 and 60.',
+      autoPodExpiryTitle: 'Auto Pods — venue window',
+      autoPodExpiryDesc: 'How many hours an Auto Pod stays on venues’ lists waiting for one to accept. Each venue’s card counts this down; when it runs out with no venue the offer expires.',
+      autoPodExpiryLabel: 'Hours',
+      autoPodExpiryMin: 'Between 1 and 720 hours.',
+      autoPodExpiryInvalid: 'Enter a whole number between 1 and 720.',
     },
 
     completePod: {

@@ -57,3 +57,26 @@ export const AUTO_POD_COMPLETE_FILTER = {
 
 /** Offers a venue can act on at all — the physical ones. */
 export const PHYSICAL_FILTER = { pod_mode: { $ne: 'VIRTUAL' } };
+
+/** An offer an admin has paused is offered to nobody until it is resumed. */
+export const ACTIVE_FILTER = { is_active: { $ne: false } };
+
+const PENDING_ROLES = new Set(['VENUE', 'HOST', 'CLUB']);
+
+/**
+ * The admin table's "still waiting on" filter as a Mongo clause: a pre-live
+ * offer with that role's claim empty — and, for the venue, physical, since a
+ * virtual offer never waits on one. Several roles OR together; anything that
+ * is not a role is ignored. Null when nothing was asked for.
+ */
+export function pendingBaseFilter(roles: readonly string[]): Record<string, unknown> | null {
+  const clauses = roles
+    .filter((role) => PENDING_ROLES.has(role))
+    .map((role) => {
+      if (role === 'VENUE') return { ...PRE_LIVE_FILTER, ...PHYSICAL_FILTER, venue_claim: null };
+      if (role === 'HOST') return { ...PRE_LIVE_FILTER, host_claim: null };
+      return { ...PRE_LIVE_FILTER, club_claim: null };
+    });
+  if (clauses.length === 0) return null;
+  return clauses.length === 1 ? clauses[0] : { $or: clauses };
+}

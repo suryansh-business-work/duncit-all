@@ -64,6 +64,34 @@ function projectionFor(
   };
 }
 
+/**
+ * One projection per slot price at ONE rate lookup: what the venue would be
+ * paid for that slot and what the host would be left with. The Auto Pod slot
+ * picker lists a venue's free slots this way, so every choice carries its own
+ * price tag before the venue commits — and a slot the pod's money cannot
+ * cover (the same rule assertViablePodEconomics refuses on) is marked so.
+ */
+export async function venueSlotProjections(input: {
+  hostUserId: string | null;
+  venueId: string;
+  podAmount: number;
+  noOfSpots: number;
+  slotPrices: number[];
+}): Promise<
+  { venue_receives: number; venue_commission_pct: number; host_receives: number; viable: boolean }[]
+> {
+  const rates = await resolveEffectiveRates({ hostUserId: input.hostUserId, venueId: input.venueId });
+  return input.slotPrices.map((price) => {
+    const { waterfall } = projectionFor(input.podAmount, input.noOfSpots, price, rates);
+    return {
+      venue_receives: waterfall.venue_receives,
+      venue_commission_pct: waterfall.venue_commission_pct,
+      host_receives: waterfall.host_receives,
+      viable: waterfall.host_receives > 0,
+    };
+  });
+}
+
 /** One row of the Step-4 "Suggested Ticket Prices" table. */
 export interface SuggestedTicketPrice {
   price: number;

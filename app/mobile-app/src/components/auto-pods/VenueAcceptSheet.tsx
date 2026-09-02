@@ -4,11 +4,14 @@ import { autoPodCityLabel, type AutoPodLabels, type AutoPodRow } from '@duncit/u
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
 import { PillButton } from '@/components/attendance/AttendanceOtpControls';
+import type { AutoPodVenueOption } from '@/hooks/useAutoPodVenues';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useVenueAcceptAutoPod } from '@/hooks/useVenueAcceptAutoPod';
 
 interface Props {
   row: AutoPodRow | null;
+  /** The venue chosen at the top of the queue — the one this accept commits. */
+  venue: AutoPodVenueOption | null;
   labels: AutoPodLabels;
   onClose: () => void;
   onAccepted: () => void;
@@ -20,16 +23,19 @@ interface Props {
 
 /**
  * Accepting an Auto Pod and committing a slot are ONE step: an acceptance with
- * no date would leave hosts and club admins nothing to enrol against. The venue
- * picks from slots it has already published — the slot is booked the instant
- * this succeeds and stays booked until the pod exists.
+ * no date would leave hosts and club admins nothing to enrol against. The
+ * venue is the one chosen at the top of the queue; the slots are its free ones
+ * in the next few days, nearest first, and the chosen one says what it pays
+ * the venue after Duncit's deductions. The slot is booked the instant this
+ * succeeds and stays booked until the pod exists.
  *
  * The Tamagui twin of `@duncit/auto-pods`' `VenueAcceptDialog` (rule 27); the
- * two pickers are chip columns rather than MUI selects, which is the pattern
+ * slot picker is a chip column rather than an MUI select, which is the pattern
  * every other native sheet uses for a short single-select list.
  */
 export function VenueAcceptSheet({
   row,
+  venue,
   labels,
   onClose,
   onAccepted,
@@ -37,17 +43,15 @@ export function VenueAcceptSheet({
   formatMoney,
   onAddAvailability,
 }: Readonly<Props>) {
-  const { warning } = useThemeColors();
+  const { warning, success } = useThemeColors();
   const accept = useVenueAcceptAutoPod(
     row?.id ?? null,
+    venue,
     row?.location?.location_id ?? null,
     labels,
     onAccepted,
   );
 
-  const venueOptions = accept.venues.map(
-    (venue) => [venue.id, venue.venue_name] as readonly [string, string],
-  );
   const slotOptions = accept.slots.map((slot) => {
     const space = slot.space_label ? ` · ${slot.space_label}` : '';
     return [
@@ -55,6 +59,21 @@ export function VenueAcceptSheet({
       `${formatWhen(slot.start_at)}${space} · ${formatMoney(slot.price)}`,
     ] as readonly [string, string];
   });
+
+  let earningLine = null;
+  if (accept.selected?.viable) {
+    earningLine = (
+      <Text testID="auto-pod-slot-earning" fontSize={12.5} fontWeight="700" color={success}>
+        {labels.potentialEarning(formatMoney(accept.selected.venue_receives))}
+      </Text>
+    );
+  } else if (accept.selected) {
+    earningLine = (
+      <Text testID="auto-pod-slot-not-viable" fontSize={12.5} color={warning}>
+        {labels.slotNotViable}
+      </Text>
+    );
+  }
 
   const footer = (
     <XStack gap={10}>
@@ -75,7 +94,7 @@ export function VenueAcceptSheet({
             accept.accept().catch(() => undefined);
           }}
           variant="solid"
-          disabled={!accept.venueId || !accept.slotId || accept.busy}
+          disabled={!accept.canAccept}
         />
       </YStack>
     </XStack>
@@ -104,7 +123,17 @@ export function VenueAcceptSheet({
           </Text>
         ) : null}
 
-        {accept.noVenueInCity ? (
+        {venue ? (
+          <Text testID="auto-pod-accepting-with" fontSize={12.5} color="$color">
+            {labels.acceptingWith(venue.venue_name)}
+          </Text>
+        ) : (
+          <Text testID="auto-pod-pick-venue-first" fontSize={12.5} color="$muted">
+            {labels.pickVenueFirst}
+          </Text>
+        )}
+
+        {venue && !accept.venueInCity ? (
           <Text testID="auto-pod-no-venue-in-city" fontSize={12} color={warning}>
             {labels.noVenueInCity(autoPodCityLabel(row?.location))}
           </Text>
@@ -112,21 +141,13 @@ export function VenueAcceptSheet({
 
         <YStack gap={8}>
           <Text fontSize={12} fontWeight="700" color="$color">
-            {labels.pickVenue}
-          </Text>
-          <OptionChipRow
-            layout="column"
-            testIDPrefix="auto-pod-venue"
-            options={venueOptions}
-            value={accept.venueId}
-            onSelect={accept.setVenueId}
-          />
-        </YStack>
-
-        <YStack gap={8}>
-          <Text fontSize={12} fontWeight="700" color="$color">
             {labels.pickSlot}
           </Text>
+          {accept.windowDays > 0 ? (
+            <Text testID="auto-pod-slot-window" fontSize={11.5} color="$muted">
+              {labels.slotWindow(accept.windowDays)}
+            </Text>
+          ) : null}
           <OptionChipRow
             layout="column"
             testIDPrefix="auto-pod-slot"
@@ -134,6 +155,7 @@ export function VenueAcceptSheet({
             value={accept.slotId}
             onSelect={accept.setSlotId}
           />
+          {earningLine}
         </YStack>
 
         {accept.showNoSlots ? (

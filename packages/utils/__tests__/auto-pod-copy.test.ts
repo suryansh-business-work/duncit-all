@@ -28,6 +28,8 @@ const BUNDLE_KEYS = [
   'waitingVenue', 'waitingHost', 'waitingClub', 'waitingFor', 'roleVenue', 'roleHost', 'roleClub',
   'locationLabel', 'allLocations', 'changeLocation', 'categoryLabel', 'allCategories', 'noHostCategories',
   'pinnedTo', 'unpinned', 'virtualPod', 'pickLocationFirst', 'willPinTo', 'noVenueInCity', 'noClubInCity',
+  'venueLabel', 'noVenues', 'venueCategory', 'noVenueCategory', 'pickVenueFirst',
+  'removedIn', 'slotWindow', 'potentialEarning', 'slotNotViable', 'acceptingWith',
   'liveNow', 'viewPod', 'cancelled', 'expired', 'claimedElsewhere', 'dismiss',
   'emptyVenue', 'emptyHost', 'emptyClub',
   'noSlots', 'addAvailability', 'loadFailed', 'retry',
@@ -91,6 +93,11 @@ const exercise = (labels: AutoPodLabels): Record<string, string> => {
   out.willPinTo = labels.willPinTo(CITY);
   out.noVenueInCity = labels.noVenueInCity(CITY);
   out.noClubInCity = labels.noClubInCity(CITY);
+  out.venueCategory = labels.venueCategory('Sports › Racket › Badminton');
+  out.removedIn = labels.removedIn(5, 12);
+  out.slotWindow = labels.slotWindow(7);
+  out.potentialEarning = labels.potentialEarning('₹1,080');
+  out.acceptingWith = labels.acceptingWith('Play Arena');
   return out;
 };
 
@@ -160,10 +167,15 @@ describe.each([
       .filter((c) => c.vars !== undefined)
       .toSorted((a, b) => a.key.localeCompare(b.key));
     expect(withVars).toEqual([
+      { key: `${ns}.acceptingWith`, vars: { venue: 'Play Arena' } },
       { key: `${ns}.expectedEarnings`, vars: { amount: '₹1,200' } },
       { key: `${ns}.noClubInCity`, vars: { city: CITY } },
       { key: `${ns}.noVenueInCity`, vars: { city: CITY } },
       { key: `${ns}.pinnedTo`, vars: { city: CITY } },
+      { key: `${ns}.potentialEarning`, vars: { amount: '₹1,080' } },
+      { key: `${ns}.removedIn`, vars: { hours: 5, minutes: 12 } },
+      { key: `${ns}.slotWindow`, vars: { days: 7 } },
+      { key: `${ns}.venueCategory`, vars: { path: 'Sports › Racket › Badminton' } },
       { key: `${ns}.waitingFor`, vars: { roles: `t:${ns}.roleVenue, t:${ns}.roleHost, t:${ns}.roleClub` } },
       { key: `${ns}.willPinTo`, vars: { city: CITY } },
     ]);

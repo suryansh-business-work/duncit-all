@@ -5,7 +5,13 @@ import { Route, useLocation } from 'react-router';
 import type { MockedResponse } from '@apollo/client/testing';
 import { GraphQLError } from 'graphql';
 import { renderWithProviders } from '../../../__tests__/testkit';
-import { ADMIN_AUTO_PODS_TABLE, CANCEL_AUTO_POD, DELETE_AUTO_POD, type AutoPodTableRow } from '../queries';
+import {
+  ADMIN_AUTO_PODS_TABLE,
+  CANCEL_AUTO_POD,
+  DELETE_AUTO_POD,
+  SET_AUTO_POD_ACTIVE,
+  type AutoPodTableRow,
+} from '../queries';
 import AutoPodsPage from '../AutoPodsPage';
 
 const harness = vi.hoisted(() => ({
@@ -14,6 +20,7 @@ const harness = vi.hoisted(() => ({
   row: {
     id: 'doc1',
     pod_id: null as string | null,
+    is_active: true,
   },
 }));
 
@@ -32,6 +39,7 @@ vi.mock('../AutoPodsTable', () => ({
     onCancel: (row: AutoPodTableRow) => void;
     onDelete: (row: AutoPodTableRow) => void;
     onViewPod: (row: AutoPodTableRow) => void;
+    onToggleActive: (row: AutoPodTableRow) => void;
   }) => {
     props.refetchRef.current = harness.tableRefetch;
     return (
@@ -48,6 +56,9 @@ vi.mock('../AutoPodsTable', () => ({
         </button>
         <button type="button" onClick={() => props.onViewPod(harness.row as AutoPodTableRow)}>
           row-view-pod
+        </button>
+        <button type="button" onClick={() => props.onToggleActive(harness.row as AutoPodTableRow)}>
+          row-toggle-active
         </button>
       </div>
     );
@@ -108,7 +119,41 @@ const renderPage = (mocks: MockedResponse[] = []) =>
 beforeEach(() => {
   harness.fetchCalls.length = 0;
   harness.tableRefetch.mockReset();
-  harness.row = { id: 'doc1', pod_id: null };
+  harness.row = { id: 'doc1', pod_id: null, is_active: true };
+});
+
+describe('AutoPodsPage / pause and resume an offer', () => {
+  const setActiveMock = (is_active: boolean, over: Partial<MockedResponse> = {}): MockedResponse => ({
+    request: { query: SET_AUTO_POD_ACTIVE, variables: { auto_pod_doc_id: 'doc1', is_active } },
+    result: { data: { setAutoPodActive: null } },
+    ...over,
+  });
+
+  it('pauses an active offer, toasts and reloads the grid', async () => {
+    renderPage([setActiveMock(false)]);
+    fireEvent.click(screen.getByText('row-toggle-active'));
+    expect(
+      await screen.findByText('Auto Pod paused — it is shown to nobody until you activate it.'),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(harness.tableRefetch).toHaveBeenCalledTimes(1));
+  });
+
+  it('resumes a paused offer', async () => {
+    harness.row = { id: 'doc1', pod_id: null, is_active: false };
+    renderPage([setActiveMock(true)]);
+    fireEvent.click(screen.getByText('row-toggle-active'));
+    expect(
+      await screen.findByText('Auto Pod is active again — partners still missing are told.'),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(harness.tableRefetch).toHaveBeenCalledTimes(1));
+  });
+
+  it('notifies with the server error and does not reload the grid when the toggle fails', async () => {
+    renderPage([setActiveMock(false, { result: { errors: [new GraphQLError('Only an Auto Pod still enrolling can be paused or resumed')] } })]);
+    fireEvent.click(screen.getByText('row-toggle-active'));
+    expect(await screen.findByText('Only an Auto Pod still enrolling can be paused or resumed')).toBeInTheDocument();
+    expect(harness.tableRefetch).not.toHaveBeenCalled();
+  });
 });
 
 describe('AutoPodsPage / data fetch', () => {
@@ -142,14 +187,14 @@ describe('AutoPodsPage / header + navigation', () => {
   });
 
   it('opens the materialized pod when View Pod is used', () => {
-    harness.row = { id: 'doc1', pod_id: 'pod-9' };
+    harness.row = { id: 'doc1', pod_id: 'pod-9', is_active: true };
     renderPage();
     fireEvent.click(screen.getByText('row-view-pod'));
     expect(screen.getByText('POD DETAIL ROUTE')).toBeInTheDocument();
   });
 
   it('does nothing when View Pod is used on an offer with no pod yet', () => {
-    harness.row = { id: 'doc1', pod_id: null };
+    harness.row = { id: 'doc1', pod_id: null, is_active: true };
     renderPage();
     fireEvent.click(screen.getByText('row-view-pod'));
     expect(screen.getByTestId('pathname')).toHaveTextContent('/auto-pods');

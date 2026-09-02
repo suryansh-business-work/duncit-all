@@ -16,6 +16,7 @@ import {
   ADMIN_AUTO_PODS_TABLE,
   CANCEL_AUTO_POD,
   DELETE_AUTO_POD,
+  SET_AUTO_POD_ACTIVE,
   type AutoPodTableRow,
 } from './queries';
 
@@ -37,6 +38,7 @@ export default function AutoPodsPage() {
   const labels = useMemo(() => shellAutoPodLabels(t), [t]);
   const [cancelMutation] = useMutation<any>(CANCEL_AUTO_POD);
   const [deleteMutation] = useMutation<any>(DELETE_AUTO_POD);
+  const [setActiveMutation] = useMutation<any>(SET_AUTO_POD_ACTIVE);
 
   const setCancelReason = useCallback((value: string) => {
     cancelReasonRef.current = value;
@@ -100,6 +102,22 @@ export default function AutoPodsPage() {
     [confirm, deleteMutation, labels.dismiss, refetch, t]
   );
 
+  // Pausing hides the offer from every partner until it is resumed; resuming
+  // tells whoever is still missing. Neither needs a reason, so neither asks.
+  const handleToggleActive = useCallback(
+    async (row: AutoPodTableRow) => {
+      const next = !row.is_active;
+      try {
+        await setActiveMutation({ variables: { auto_pod_doc_id: row.id, is_active: next } });
+        notifySuccess(next ? t('admin.autoPods.activated') : t('admin.autoPods.deactivated'));
+        refetch();
+      } catch (error_) {
+        notifyError(parseApiError(error_));
+      }
+    },
+    [refetch, setActiveMutation, t]
+  );
+
   const handleEdit = useCallback(
     (row: AutoPodTableRow) => navigate(`${AUTO_PODS_PATH}/${row.id}/edit`),
     [navigate]
@@ -146,6 +164,7 @@ export default function AutoPodsPage() {
         onCancel={handleCancel}
         onDelete={handleDelete}
         onViewPod={handleViewPod}
+        onToggleActive={handleToggleActive}
       />
     </Stack>
   );

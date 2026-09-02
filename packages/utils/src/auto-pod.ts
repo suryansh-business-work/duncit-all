@@ -83,6 +83,14 @@ export interface AutoPodRow {
   category_name?: string | null;
   /** Absent on rows written before the field existed — those are physical. */
   pod_mode?: AutoPodMode | null;
+  /** False while an admin has paused the offer. */
+  is_active?: boolean;
+  /**
+   * When the offer leaves venues' lists (and expires) if no venue has accepted
+   * it by then. Set on the venue queue only; null on a virtual offer, once a
+   * venue is on it, and everywhere else.
+   */
+  venue_expires_at?: string | null;
   pod_amount: number;
   no_of_spots: number;
   venue_claim: AutoPodVenueClaim | null;
@@ -221,4 +229,23 @@ export function autoPodModeCount(
   const role = MODE_TO_ROLE[mode as AutoPodStudioMode];
   if (!role) return 0;
   return counts[role] ?? 0;
+}
+
+/** What a countdown says: whole hours and the minutes left over. */
+export interface AutoPodTimeLeft {
+  hours: number;
+  minutes: number;
+}
+
+/**
+ * How long until `iso` — for the venue card's "Removed from your list in …"
+ * line. Null when there is no deadline, or once it has passed; minutes are
+ * rounded UP so the line never reads "0h 0m" while the offer is still there.
+ */
+export function autoPodTimeLeft(iso: string | null | undefined, nowMs: number): AutoPodTimeLeft | null {
+  if (!iso) return null;
+  const left = new Date(iso).getTime() - nowMs;
+  if (!Number.isFinite(left) || left <= 0) return null;
+  const minutesTotal = Math.ceil(left / 60_000);
+  return { hours: Math.floor(minutesTotal / 60), minutes: minutesTotal % 60 };
 }

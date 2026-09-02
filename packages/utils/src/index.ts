@@ -496,6 +496,7 @@ export {
   autoPodPreLive,
   autoPodRoles,
   autoPodTicks,
+  autoPodTimeLeft,
   autoPodWaitingOn,
   splitAutoPods,
   type AutoPodActionCounts,
@@ -508,6 +509,7 @@ export {
   type AutoPodStage,
   type AutoPodStudioMode,
   type AutoPodTick,
+  type AutoPodTimeLeft,
   type AutoPodVenueClaim,
 } from './auto-pod';
 export {

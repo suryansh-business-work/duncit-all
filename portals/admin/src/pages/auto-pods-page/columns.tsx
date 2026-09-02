@@ -1,12 +1,13 @@
-import { AutoPodTicks } from '@duncit/auto-pods';
-import { actionsColumn, entityIdColumn, EM_DASH, type DuncitColumn } from '@duncit/table';
-import { autoPodCityLabel, formatMoney, type AutoPodLabels } from '@duncit/utils';
-import { AutoPodStageChip, CancelAutoPodButton, ViewPodButton } from './AutoPodStageChip';
+import { AutoPodDependencyTimeline } from '@duncit/auto-pods';
+import { activeChipColumn, dateColumn, entityIdColumn, EM_DASH, type DuncitColumn } from '@duncit/table';
+import type { AutoPodLabels } from '@duncit/utils';
+import { AutoPodStageChip } from './AutoPodStageChip';
+import AutoPodRowMenu from './AutoPodRowMenu';
 import {
+  categoryPathOf,
   clubNameOf,
   hostNameOf,
-  isAutoPodDeletable,
-  isAutoPodEditable,
+  pendingFilterOptions,
   stageFilterOptions,
   STAGE_LABEL_KEY,
   venueNameOf,
@@ -15,29 +16,31 @@ import type { AutoPodTableRow } from './queries';
 
 export interface AutoPodColumnDeps {
   t: (key: string) => string;
-  /** The shared Auto Pod copy — the tick row is the same three words everywhere. */
+  /** The shared Auto Pod copy — the dependency line uses the same three role words as every card. */
   labels: AutoPodLabels;
   formatDateTime: (value: string) => string;
   onEdit: (row: AutoPodTableRow) => void;
   onCancel: (row: AutoPodTableRow) => void;
   onDelete: (row: AutoPodTableRow) => void;
   onViewPod: (row: AutoPodTableRow) => void;
+  onToggleActive: (row: AutoPodTableRow) => void;
 }
 
 /**
- * Columns for `adminAutoPodsTable`. Only the fields the server allowlists are
- * sortable or filterable (stage, pod_amount, created_at plus the sort keys) —
- * everything derived from a claim is read-only chrome.
+ * Columns for `adminAutoPodsTable`: the offer's id and title, its Super ›
+ * Category › Sub, the Venue → Host → Club Admin dependency line, the stage,
+ * whether it is paused, when it was written and last touched, and the row
+ * menu. Only the fields the server allowlists are sortable or filterable —
+ * the dependency filter is not a field at all: the server lifts `pending`
+ * out of the filters and turns it into a "still waiting on" clause.
  *
- * The Enrolments cell renders a React component; DuncitTable's column builder
+ * The dependency cell renders a React component; DuncitTable's column builder
  * already stamps `equals: () => false` on every column with a `cellRenderer`,
- * which is what keeps the ticks repainting as partners enrol.
+ * which is what keeps the dots repainting as partners enrol.
  */
 export function getAutoPodColumns(deps: Readonly<AutoPodColumnDeps>): DuncitColumn<AutoPodTableRow>[] {
-  const { t, labels, formatDateTime, onEdit, onCancel, onDelete, onViewPod } = deps;
-  const viewPodLabel = t('admin.autoPods.viewPod');
-  const cancelLabel = t('admin.autoPods.cancel');
-  const anyCity = t('admin.autoPods.anyCity');
+  const { t, labels, formatDateTime, onEdit, onCancel, onDelete, onViewPod, onToggleActive } = deps;
+  const formatDate = (date: Date) => formatDateTime(date.toISOString());
 
   return [
     entityIdColumn<AutoPodTableRow>({
@@ -54,40 +57,21 @@ export function getAutoPodColumns(deps: Readonly<AutoPodColumnDeps>): DuncitColu
       valueGetter: (row) => row.pod_title,
     },
     {
-      field: 'category_name',
+      field: 'category_path',
       headerName: t('admin.autoPods.colCategory'),
       sortable: false,
-      minWidth: 150,
-      valueGetter: (row) => row.category_name || EM_DASH,
+      minWidth: 220,
+      valueGetter: (row) => categoryPathOf(row) || EM_DASH,
     },
     {
-      field: 'location',
-      headerName: t('admin.autoPods.colLocation'),
+      field: 'pending',
+      headerName: t('admin.autoPods.colDependency'),
       sortable: false,
-      minWidth: 160,
-      valueGetter: (row) => autoPodCityLabel(row.location) || anyCity,
-    },
-    {
-      field: 'pod_amount',
-      headerName: t('admin.autoPods.colPrice'),
-      filter: { type: 'number' },
-      width: 120,
-      valueGetter: (row) => formatMoney(row.pod_amount),
-    },
-    {
-      field: 'no_of_spots',
-      headerName: t('admin.autoPods.colSpots'),
-      width: 100,
-      valueGetter: (row) => row.no_of_spots,
-    },
-    {
-      field: 'enrolments',
-      headerName: t('admin.autoPods.colEnrolments'),
-      sortable: false,
-      minWidth: 330,
-      cellRenderer: (row) => <AutoPodTicks row={row} labels={labels} />,
+      minWidth: 380,
+      filter: { type: 'select', options: pendingFilterOptions(t), multiple: true },
+      cellRenderer: (row) => <AutoPodDependencyTimeline row={row} labels={labels} />,
       // Keyed on who has enrolled so the cell's plain-text value (search,
-      // export) tracks the chips rather than going stale at three dashes.
+      // export) tracks the dots rather than going stale at three dashes.
       valueGetter: (row) => `${venueNameOf(row)} / ${hostNameOf(row)} / ${clubNameOf(row)}`,
     },
     {
@@ -98,55 +82,43 @@ export function getAutoPodColumns(deps: Readonly<AutoPodColumnDeps>): DuncitColu
       cellRenderer: (row) => <AutoPodStageChip row={row} t={t} />,
       valueGetter: (row) => t(STAGE_LABEL_KEY[row.stage]),
     },
-    {
-      field: 'venue_claim',
-      headerName: t('admin.autoPods.colVenue'),
-      sortable: false,
-      minWidth: 150,
-      valueGetter: venueNameOf,
-    },
-    {
-      field: 'host_claim',
-      headerName: t('admin.autoPods.colHost'),
-      sortable: false,
-      minWidth: 150,
-      valueGetter: hostNameOf,
-    },
-    {
-      field: 'club_claim',
-      headerName: t('admin.autoPods.colClub'),
-      sortable: false,
-      minWidth: 150,
-      valueGetter: clubNameOf,
-    },
-    {
+    activeChipColumn<AutoPodTableRow>({
+      field: 'is_active',
+      headerName: t('admin.autoPods.colActive'),
+      activeLabel: t('admin.autoPods.active'),
+      inactiveLabel: t('admin.autoPods.paused'),
+      width: 110,
+    }),
+    dateColumn<AutoPodTableRow>({
       field: 'created_at',
       headerName: t('admin.autoPods.colCreatedAt'),
-      filter: { type: 'date' },
+      hide: false,
       width: 180,
-      valueGetter: (row) => (row.created_at ? formatDateTime(row.created_at) : EM_DASH),
-    },
-    actionsColumn<AutoPodTableRow>({
-      headerName: t('admin.autoPods.colActions'),
-      width: 190,
-      onEdit,
-      onDelete,
-      edit: {
-        title: t('admin.autoPods.edit'),
-        disabled: (row) => !isAutoPodEditable(row),
-        disabledTitle: t('admin.autoPods.editLiveHint'),
-      },
-      delete: {
-        title: t('admin.autoPods.delete'),
-        disabled: (row) => !isAutoPodDeletable(row),
-        disabledTitle: t('admin.autoPods.deleteLiveHint'),
-      },
-      renderExtra: (row) => (
-        <>
-          <ViewPodButton row={row} label={viewPodLabel} onClick={onViewPod} />
-          <CancelAutoPodButton row={row} label={cancelLabel} onClick={onCancel} />
-        </>
-      ),
+      formatDate,
     }),
+    dateColumn<AutoPodTableRow>({
+      field: 'updated_at',
+      headerName: t('admin.autoPods.colUpdatedAt'),
+      hide: false,
+      width: 180,
+      formatDate,
+    }),
+    {
+      field: 'actions',
+      headerName: t('admin.autoPods.colActions'),
+      width: 80,
+      sortable: false,
+      cellRenderer: (row) => (
+        <AutoPodRowMenu
+          row={row}
+          t={t}
+          onEdit={onEdit}
+          onCancel={onCancel}
+          onDelete={onDelete}
+          onViewPod={onViewPod}
+          onToggleActive={onToggleActive}
+        />
+      ),
+    },
   ];
 }

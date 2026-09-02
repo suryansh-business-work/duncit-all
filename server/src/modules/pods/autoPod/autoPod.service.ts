@@ -1,9 +1,11 @@
 import { Types } from 'mongoose';
 import { AutoPodModel, type IAutoPod } from './autoPod.model';
 import {
+  ACTIVE_FILTER,
   autoPodEvent,
   autoPodFail,
   isAutoPodComplete,
+  pendingBaseFilter,
   PHYSICAL_FILTER,
   PRE_LIVE_FILTER,
   PRE_LIVE_STAGES,
@@ -21,8 +23,9 @@ import {
   validateHasImage,
   validateMeetingDetails,
 } from '@modules/pods/pod/pod.service';
-import { breakdownService } from '@modules/finance/finance/breakdown.service';
-import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
+import { breakdownService, venueSlotProjections } from '@modules/finance/finance/breakdown.service';
+import { ensureOwnedVenue, venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
+import { settingsService } from '@modules/platform/settings/settings.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 
@@ -32,6 +35,36 @@ export { autoPodEvent, autoPodFail, PRE_LIVE_STAGES };
 export interface AutoPodQueueScope {
   location_id?: string | null;
   sub_category_id?: string | null;
+  /** Venue queue only: one of the caller's venues, so the list is what THAT
+   * venue could accept (its category, its city) rather than the union. */
+  venue_id?: string | null;
+}
+
+const HOUR_MS = 3_600_000;
+const DAY_MS = 86_400_000;
+
+/**
+ * When a physical offer leaves venues' lists (and expires) if none accepts it:
+ * created_at plus the Pod Settings window. Null once a venue is on it, on a
+ * virtual offer, and once the offer is no longer enrolling.
+ */
+function venueExpiresAt(doc: IAutoPod, venueExpiryHours: number): string | null {
+  if (doc.pod_mode === 'VIRTUAL' || doc.venue_claim) return null;
+  if (!PRE_LIVE_STAGES.includes(doc.stage as any)) return null;
+  return new Date(doc.created_at.getTime() + venueExpiryHours * HOUR_MS).toISOString();
+}
+
+/** "Sports", "Racket", "Badminton" — the names walked up from the sub-category. */
+export async function categoryPathOf(subCategoryId: string): Promise<string[]> {
+  const names: string[] = [];
+  let id: string | null = subCategoryId;
+  for (let level = 0; level < 3 && id && Types.ObjectId.isValid(id); level += 1) {
+    const node: any = await CategoryModel.findById(id).select('name parent_id').lean();
+    if (!node) break;
+    names.unshift(node.name ?? '');
+    id = node.parent_id ? String(node.parent_id) : null;
+  }
+  return names;
 }
 
 /** A club the caller administers, with what it can claim on. */
@@ -62,6 +95,7 @@ export const autoPodToPub = (d: IAutoPod | null) => {
     id: String(d._id),
     auto_pod_no: d.auto_pod_no,
     stage: d.stage,
+    is_active: d.is_active !== false,
     pod_title: d.pod_title,
     pod_description: d.pod_description ?? '',
     pod_info: d.pod_info ?? '',
@@ -165,6 +199,7 @@ const AUTO_POD_TABLE_CONFIG: TableEntityConfig = {
   filterFields: {
     stage: { type: 'enum' },
     pod_mode: { type: 'enum' },
+    is_active: { type: 'boolean' },
     sub_category_id: { type: 'string' },
     super_category_id: { type: 'string' },
     pod_amount: { type: 'number' },
@@ -578,14 +613,116 @@ export const autoPodService = {
     return autoPodToPub(await this.loadById(autoPodId));
   },
 
+  /**
+   * The admin console table. Its "pending" filter is not a field — it asks for
+   * offers still waiting on a role — so it is lifted out of the client's
+   * filters and becomes the base clause; the allowlisted fields go through the
+   * engine as usual.
+   */
   async table(input?: TableQueryInput | null) {
+    const filters = input?.filters ?? [];
+    const roles = filters
+      .filter((f) => f.field === 'pending')
+      .flatMap((f) => (f.values?.length ? f.values : [f.value ?? '']));
+    const query = input ? { ...input, filters: filters.filter((f) => f.field !== 'pending') } : input;
     const { docs, total, page, page_size } = await runTableQuery<any>(
       AutoPodModel,
-      {},
-      input,
+      pendingBaseFilter(roles) ?? {},
+      query,
       AUTO_POD_TABLE_CONFIG
     );
     return { rows: docs.map(autoPodToPub), total, page, page_size };
+  },
+
+  /**
+   * The two Auto Pod windows from Pod Settings, and the instant before which a
+   * venue-less offer is already off venues' lists. Read once per request, never
+   * per row.
+   */
+  async windows() {
+    const settings = await settingsService.getAppSettings();
+    const venueExpiryHours = settings.auto_pod_venue_expiry_hours;
+    return {
+      slotWindowDays: settings.auto_pod_slot_window_days,
+      venueExpiryHours,
+      venueCutoff: new Date(Date.now() - venueExpiryHours * HOUR_MS),
+    };
+  },
+
+  /**
+   * Admin pauses or resumes an offer. Paused, it is offered to nobody and no
+   * claim lands on it; resumed, whoever is still missing is told again. Only
+   * an offer still enrolling can be toggled — a live one is a pod, and a
+   * cancelled or expired one is over.
+   */
+  async setActive(actorUserId: string, autoPodId: string, isActive: boolean) {
+    const doc = await this.loadById(autoPodId);
+    if (!PRE_LIVE_STAGES.includes(doc.stage as any)) {
+      autoPodFail('BAD_REQUEST', 'Only an Auto Pod still enrolling can be paused or resumed');
+    }
+    if ((doc.is_active !== false) === isActive) return autoPodToPub(doc);
+    const note = isActive ? 'Resumed — offered to partners again' : 'Paused — offered to nobody until resumed';
+    const updated = await AutoPodModel.findOneAndUpdate(
+      { _id: doc._id, ...PRE_LIVE_FILTER },
+      {
+        $set: { is_active: isActive },
+        $push: { events: autoPodEvent(isActive ? 'RESUME' : 'PAUSE', actorUserId, '', note) },
+      },
+      { new: true }
+    );
+    if (!updated) {
+      autoPodFail('CONFLICT', 'This Auto Pod changed while you were editing it — refresh and try again');
+    }
+    if (isActive) {
+      autoPodNotify.opened(updated).catch((error) =>
+        logs.server.error('autoPod', 'notifyResumed', { error, auto_pod_id: autoPodId })
+      );
+    }
+    return autoPodToPub(updated);
+  },
+
+  /**
+   * The free slots one of the caller's venues could commit to an offer: the
+   * next `auto_pod_slot_window_days` days, nearest first, each priced as the
+   * venue would be PAID — the slot price less the venue commission Finance
+   * deducts (under the enrolled host's rates when there is one, the platform
+   * defaults otherwise). A slot the pod's money could not cover is flagged
+   * rather than hidden, so the venue learns why it cannot be chosen.
+   */
+  async venueSlots(userId: string, autoPodId: string, venueId: string) {
+    const doc = await this.loadById(autoPodId);
+    if (doc.pod_mode === 'VIRTUAL') {
+      autoPodFail('BAD_REQUEST', 'A virtual Auto Pod has no venue — it needs only a host and a club');
+    }
+    if (!PRE_LIVE_STAGES.includes(doc.stage as any) || doc.venue_claim) {
+      autoPodFail('CONFLICT', 'This Auto Pod has already been accepted by another venue.');
+    }
+    const venue = await ensureOwnedVenue(userId, venueId);
+    const { slotWindowDays, venueExpiryHours } = await this.windows();
+    const until = Date.now() + slotWindowDays * DAY_MS;
+    const available = await venueSlotService.listAvailable(String(venue._id));
+    const inWindow = available.filter((slot) => new Date(slot.start_at).getTime() <= until);
+    const projections = await venueSlotProjections({
+      hostUserId: doc.host_claim ? String(doc.host_claim.user_id) : null,
+      venueId: String(venue._id),
+      podAmount: doc.pod_amount ?? 0,
+      noOfSpots: doc.no_of_spots ?? 0,
+      slotPrices: inWindow.map((slot) => slot.price),
+    });
+    return {
+      window_days: slotWindowDays,
+      expires_at: venueExpiresAt(doc, venueExpiryHours),
+      slots: inWindow.map((slot, index) => ({
+        id: slot.id,
+        start_at: slot.start_at,
+        end_at: slot.end_at,
+        whole_day: slot.whole_day,
+        space_label: slot.space_label,
+        capacity: slot.capacity,
+        price: slot.price,
+        ...projections[index],
+      })),
+    };
   },
 
   /**
@@ -649,9 +786,11 @@ export const autoPodService = {
    * Pre-live PHYSICAL offers with no venue yet that one of these venues could
    * take: the offer's category must be THAT venue's, and its city (once pinned)
    * that venue's too — a pair per venue, exactly as clubs are matched. A venue
-   * that declares no category matches nothing. Null when no venue could match.
+   * that declares no category matches nothing. Offers older than the venue
+   * window (`venueCutoff`) are off the list — the sweep expires them. Null
+   * when no venue could match.
    */
-  venueOpenFilter(venues: OwnerVenue[], scope?: AutoPodQueueScope) {
+  venueOpenFilter(venues: OwnerVenue[], venueCutoff: Date, scope?: AutoPodQueueScope) {
     const perVenue = venues
       .filter((venue) => venue.subCategoryId)
       .map((venue) => ({
@@ -664,7 +803,9 @@ export const autoPodService = {
     return {
       ...PRE_LIVE_FILTER,
       ...PHYSICAL_FILTER,
+      ...ACTIVE_FILTER,
       venue_claim: null,
+      created_at: { $gt: venueCutoff },
       ...andOf({ $or: perVenue }, locationScope(scope?.location_id)),
     };
   },
@@ -682,6 +823,7 @@ export const autoPodService = {
     if (wanted.length === 0) return null;
     return {
       ...PRE_LIVE_FILTER,
+      ...ACTIVE_FILTER,
       host_claim: null,
       sub_category_id: { $in: wanted },
       ...locationScope(scope?.location_id),
@@ -706,6 +848,7 @@ export const autoPodService = {
     if (perClub.length === 0) return null;
     return {
       ...PRE_LIVE_FILTER,
+      ...ACTIVE_FILTER,
       club_claim: null,
       ...andOf({ $or: perClub }, locationScope(scope?.location_id)),
     };
@@ -717,13 +860,22 @@ export const autoPodService = {
    * a caller who owns no venue sees nothing at all.
    */
   async listForVenue(userId: string, scope?: AutoPodQueueScope) {
-    const venues = await this.ownerVenues(userId);
+    const owned = await this.ownerVenues(userId);
+    const venues = scope?.venue_id
+      ? owned.filter((venue) => String(venue.id) === scope.venue_id)
+      : owned;
     if (venues.length === 0) return [];
+    const { venueCutoff, venueExpiryHours } = await this.windows();
     const or: any[] = [{ 'venue_claim.owner_user_id': new Types.ObjectId(userId) }];
-    const open = this.venueOpenFilter(venues, scope);
+    const open = this.venueOpenFilter(venues, venueCutoff, scope);
     if (open) or.push(open);
     const docs = await AutoPodModel.find({ $or: or }).sort({ created_at: -1 }).limit(200);
-    return docs.map(autoPodToPub);
+    // The venue's list is the one place the countdown is shown, so it is the
+    // one payload that carries it.
+    return docs.map((doc) => ({
+      ...autoPodToPub(doc),
+      venue_expires_at: venueExpiresAt(doc, venueExpiryHours),
+    }));
   },
 
   /** Offers still needing a host in a sub-category this host works in, plus the
@@ -768,13 +920,14 @@ export const autoPodService = {
       });
       if (admin) return true;
     }
-    const [venues, subIds, clubs] = await Promise.all([
+    const [venues, subIds, clubs, { venueCutoff }] = await Promise.all([
       this.ownerVenues(userId),
       this.hostSubCategoryIds(userId),
       this.adminClubs(userId),
+      this.windows(),
     ]);
     const open = [
-      this.venueOpenFilter(venues),
+      this.venueOpenFilter(venues, venueCutoff),
       this.hostOpenFilter(subIds),
       this.clubOpenFilter(clubs),
     ].filter(Boolean) as Record<string, unknown>[];
@@ -791,12 +944,13 @@ export const autoPodService = {
    * are, so the switch never lands someone on offers they cannot take.
    */
   async actionCounts(userId: string) {
-    const [venues, subIds, clubs] = await Promise.all([
+    const [venues, subIds, clubs, { venueCutoff }] = await Promise.all([
       this.ownerVenues(userId),
       this.hostSubCategoryIds(userId),
       this.adminClubs(userId),
+      this.windows(),
     ]);
-    const venueOpen = this.venueOpenFilter(venues);
+    const venueOpen = this.venueOpenFilter(venues, venueCutoff);
     const hostOpen = this.hostOpenFilter(subIds);
     const clubOpen = this.clubOpenFilter(clubs);
     const [venue, host, club] = await Promise.all([

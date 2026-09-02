@@ -2907,6 +2907,20 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       pinnedTo: 'In {city}',
       unpinned: 'Any city — the first partner to enrol sets it',
       virtualPod: 'Virtual pod — no venue needed',
+      // The venue queue: which of the owner's venues is looking, and its
+      // category (the offers shown are the ones THAT venue could take).
+      venueLabel: 'Venue',
+      noVenues: 'Add an approved venue to be offered Auto Pods.',
+      venueCategory: 'Category: {path}',
+      noVenueCategory: 'This venue has no category yet — set one under Manage venue to be offered Auto Pods.',
+      pickVenueFirst: 'Pick a venue at the top first.',
+      // The card's countdown — Pod Settings decides the window.
+      removedIn: 'Removed from your list in {hours}h {minutes}m',
+      // The slot picker.
+      slotWindow: 'Free slots in the next {days} days, nearest first.',
+      potentialEarning: 'You earn {amount} from this slot, after Duncit’s deductions.',
+      slotNotViable: 'The pod cannot cover this slot’s price.',
+      acceptingWith: 'Accepting with {venue}',
       pickLocationFirst: 'Select your city at the top first — this pod takes its city from you.',
       willPinTo: 'This pod will be set to {city}.',
       noVenueInCity: 'None of your venues is in {city}.',

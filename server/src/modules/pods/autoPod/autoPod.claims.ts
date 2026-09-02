@@ -46,9 +46,16 @@ async function displayName(userId: string): Promise<string> {
  */
 const isPreLive = (doc: IAutoPod) => PRE_LIVE_STAGES.includes(doc.stage as any);
 
-/** The offer as every claim first sees it: loaded, and pinned to its club's
- * city if it was opened by a club before pinning existed. */
-const loadOffer = async (autoPodId: string) => ensureClubPin(await autoPodService.loadById(autoPodId));
+/** The offer as every claim first sees it: loaded, pinned to its club's city
+ * if it was opened by a club before pinning existed, and not paused — an
+ * admin's pause is a hold on every claim, a re-tap included. */
+const loadOffer = async (autoPodId: string) => {
+  const doc = await ensureClubPin(await autoPodService.loadById(autoPodId));
+  if (doc.is_active === false) {
+    autoPodFail('CONFLICT', 'This Auto Pod is paused — try again once the admin resumes it');
+  }
+  return doc;
+};
 
 /** Every claim's `$set` moves the offer to CLAIMING and pins the city if it was
  * this enrolment's to pin. */

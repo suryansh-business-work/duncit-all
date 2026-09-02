@@ -120,6 +120,8 @@ export interface IAutoPod extends Document {
   auto_pod_no: string;
   stage: AutoPodStage;
   created_by: Types.ObjectId | null;
+  /** False while an admin has paused the offer: shown to nobody, no claim lands. */
+  is_active: boolean;
   pod_title: string;
   pod_description: string;
   pod_info: string;
@@ -256,6 +258,7 @@ const autoPodSchema = new Schema<IAutoPod>(
       index: true,
     },
     created_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    is_active: { type: Boolean, default: true, index: true },
     pod_title: { type: String, required: true, trim: true },
     pod_description: { type: String, required: true },
     pod_info: { type: String, default: '' },

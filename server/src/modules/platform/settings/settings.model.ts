@@ -41,6 +41,13 @@ export interface IAppSettings extends Document {
    * (Admin > Pods > Pod Settings). Pods starting inside this window are the
    * ones the sweep evaluates. */
   pod_auto_cancel_lead_hours: number;
+  /** How many days ahead a venue is shown its free slots when accepting an
+   * Auto Pod (Admin > Pods > Pod Settings > Auto Pods). Kept short on purpose:
+   * the host and the club admin still need time to enrol before the date. */
+  auto_pod_slot_window_days: number;
+  /** How many hours a physical Auto Pod stays on venues' lists — and stays
+   * open at all — before it expires if no venue has accepted it. */
+  auto_pod_venue_expiry_hours: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -68,6 +75,8 @@ const appSettingsSchema = new Schema<IAppSettings>(
     attendance_otp_required: { type: Boolean, default: true },
     pod_auto_cancel_enabled: { type: Boolean, default: false },
     pod_auto_cancel_lead_hours: { type: Number, default: 24, min: 1, max: 8760 },
+    auto_pod_slot_window_days: { type: Number, default: 7, min: 1, max: 60 },
+    auto_pod_venue_expiry_hours: { type: Number, default: 24, min: 1, max: 720 },
     // `coin_earn_pct` used to live here. It moved to CoinSettings — split into a
     // pod-join and a shop rate — where the rest of the coin payout rules are;
     // coinSettingsService.seed() carries the configured value across on the

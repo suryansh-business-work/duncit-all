@@ -512,7 +512,9 @@ describe('PricePanel', () => {
     expect(screen.getByText('Taxable Amount')).toBeOnTheScreen();
     expect(screen.getByText('₹24,576.27')).toBeOnTheScreen();
     expect(screen.getByText('GST @18%')).toBeOnTheScreen();
-    expect(screen.getByText('Formula: ₹24,576.27 × 18%')).toBeOnTheScreen();
+    // Quoted on the ₹29,000.00 total collection printed at the top of the
+    // panel, not on the taxable base — same ₹4,423.73, checkable by hand.
+    expect(screen.getByText('Formula: ₹29,000.00 (total collection) × 18 ÷ 118')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('price-panel-platform-group'));
     expect(screen.getByText('Platform Fee @5%')).toBeOnTheScreen();
     expect(screen.getByText('Formula: ₹24,576.27 × 5%')).toBeOnTheScreen();
@@ -540,6 +542,76 @@ describe('PricePanel', () => {
     fireEvent.press(screen.getByTestId('price-panel-charges-header'));
     expect(screen.queryByText('Taxes')).toBeNull();
     expect(screen.getByText('You will receive')).toBeOnTheScreen();
+  });
+
+  it('explains why each charge exists behind the section info button', () => {
+    mockedEarnings.mockReturnValue({ projection, waterfall, isLoading: false });
+    renderWithProviders(
+      <PriceHarness
+        finance={finance}
+        slotPrice={300}
+        venueId="v1"
+        podAmount={1000}
+        noOfSpots={30}
+        isPhysical
+      />,
+    );
+    // Nothing is shown until asked for — the description is not extra chrome
+    // on a panel whose job is the numbers. mWeb twin.
+    expect(screen.queryByTestId('price-panel-taxes-group-description')).toBeNull();
+
+    fireEvent.press(screen.getByTestId('price-panel-taxes-group-info'));
+    expect(screen.getByTestId('price-panel-taxes-group-description')).toBeOnTheScreen();
+    expect(screen.getByText(/government tax on every ticket sold/i)).toBeOnTheScreen();
+    expect(screen.getByText(/not a Duncit charge/i)).toBeOnTheScreen();
+
+    fireEvent.press(screen.getByTestId('price-panel-venue-group-info'));
+    expect(screen.getByText(/deducted once for the whole pod, not per guest/i)).toBeOnTheScreen();
+
+    // Pressing again closes it.
+    fireEvent.press(screen.getByTestId('price-panel-taxes-group-info'));
+    expect(screen.queryByTestId('price-panel-taxes-group-description')).toBeNull();
+  });
+
+  it('keeps the info button independent of the section it sits on', () => {
+    mockedEarnings.mockReturnValue({ projection, waterfall, isLoading: false });
+    renderWithProviders(
+      <PriceHarness
+        finance={finance}
+        slotPrice={300}
+        venueId="v1"
+        podAmount={1000}
+        noOfSpots={30}
+        isPhysical
+      />,
+    );
+    // Opening the reason must not open the arithmetic, or the panel jumps
+    // under a host who only wanted the explanation.
+    fireEvent.press(screen.getByTestId('price-panel-taxes-group-info'));
+    expect(screen.getByTestId('price-panel-taxes-group-description')).toBeOnTheScreen();
+    expect(screen.queryByText('Taxable Amount')).toBeNull();
+
+    // And the reverse: expanding the rows leaves the description closed.
+    fireEvent.press(screen.getByTestId('price-panel-platform-group'));
+    expect(screen.getByText('Platform Fee @5%')).toBeOnTheScreen();
+    expect(screen.queryByTestId('price-panel-platform-group-description')).toBeNull();
+  });
+
+  it('labels every info control for screen readers', () => {
+    mockedEarnings.mockReturnValue({ projection, waterfall, isLoading: false });
+    renderWithProviders(
+      <PriceHarness
+        finance={finance}
+        slotPrice={300}
+        venueId="v1"
+        podAmount={1000}
+        noOfSpots={30}
+        isPhysical
+      />,
+    );
+    // One per rendered section (taxes, platform, venue — no club cut here).
+    const info = screen.getAllByLabelText('Why this charge?');
+    expect(info).toHaveLength(3);
   });
 
   it('shows the Club Charges section with the pool-based formula when a cut is configured', () => {

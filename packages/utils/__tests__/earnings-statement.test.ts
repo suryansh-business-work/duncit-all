@@ -20,7 +20,7 @@ const TEMPLATES: Record<string, string> = {
   'earnings.statement.taxableLabel': 'Taxable Amount',
   'earnings.statement.taxableFormula': '{amount} − {gst} GST (prices are GST-inclusive)',
   'earnings.statement.gstLabel': 'GST @{pct}%',
-  'earnings.statement.gstFormula': '{net} × {pct}%',
+  'earnings.statement.gstFormula': '{amount} (total collection) × {pct} ÷ {divisor}',
   'earnings.statement.platformTitle': 'Platform Charges',
   'earnings.statement.platformFeeLabel': 'Platform Fee @{pct}%',
   'earnings.statement.platformFeeFormula': '{net} × {pct}%',
@@ -38,6 +38,11 @@ const TEMPLATES: Record<string, string> = {
     '{venue} × {pct}% of the slot price above — the venue receives {receives}',
   'earnings.statement.collectionLabel': 'Total collection',
   'earnings.statement.includedGstNote': 'Includes GST {gst} — prices are GST-inclusive',
+  'earnings.statement.taxesDescription': 'GST is a government tax on every ticket sold.',
+  'earnings.statement.platformDescription': 'What it costs to put this pod on and pay you.',
+  'earnings.statement.clubDescription': 'The club admin’s share for running the club.',
+  'earnings.statement.venueDescription': 'The fixed price the venue set for the slot.',
+  'earnings.statement.whyThisCharge': 'Why this charge?',
 };
 
 const t: EarningsTranslate = (key, options) =>
@@ -92,7 +97,9 @@ describe('buildEarningsStatement (venue pod)', () => {
     });
     expect(taxable.formula).toBe('₹897.00 − ₹136.83 GST (prices are GST-inclusive)');
     expect(gst).toMatchObject({ label: 'GST @18%', amount: 136.83, deduction: true });
-    expect(gst.formula).toBe('₹760.17 × 18%');
+    // Quoted on the TOTAL COLLECTION — the only base printed on the panel —
+    // rather than the taxable value, which is itself derived: 897 × 18 ÷ 118.
+    expect(gst.formula).toBe('₹897.00 (total collection) × 18 ÷ 118');
     // The taxable base is context, never a deduction: section total = GST only.
     expect(taxes.total).toBe(136.83);
   });
@@ -149,6 +156,120 @@ describe('buildEarningsStatement (venue pod)', () => {
       { has_venue: true, symbol: '₹', t },
     );
     expect(broken.reconciled).toBe(false);
+  });
+});
+
+describe('buildEarningsStatement (GST is quoted on the total collection)', () => {
+  /** The engine's own extraction: gst = P × g / (100 + g). */
+  const extract = (collection: number, pct: number) =>
+    Math.round(((collection * pct) / (100 + pct)) * 100) / 100;
+
+  it('states the GST row against the collection, and that arithmetic is the server value', () => {
+    const gst = statement()
+      .sections.find((sec) => sec.key === 'taxes')!
+      .lines.find((l) => l.key === 'gst')!;
+    expect(gst.formula).toBe('₹897.00 (total collection) × 18 ÷ 118');
+    // Reading the row literally has to reproduce the amount printed beside it,
+    // which is the whole point of quoting a base the host can see.
+    expect(extract(897, 18)).toBe(gst.amount);
+    expect(gst.amount).toBe(136.83);
+  });
+
+  it('is identical to the old taxable-base form to the paise, at every rate', () => {
+    // net × g% === P × g/(100+g) exactly, so restating the base moved no money.
+    for (const pct of [0, 5, 12, 18, 28]) {
+      const gstAmount = extract(897, pct);
+      const netAmount = Math.round((897 - gstAmount) * 100) / 100;
+      const s = buildEarningsStatement(
+        { ...venueWaterfall, gst_pct: pct, gst_amount: gstAmount, net_amount: netAmount },
+        { has_venue: true, symbol: '₹', t },
+      );
+      const gst = s.sections[0].lines.find((l) => l.key === 'gst')!;
+      expect(gst.formula).toBe(`₹897.00 (total collection) × ${pct} ÷ ${100 + pct}`);
+      // The divisor is always 100 + the rate — never a hardcoded 118.
+      expect(Math.abs(netAmount * (pct / 100) - gst.amount)).toBeLessThanOrEqual(0.01);
+    }
+  });
+
+  it('divides by 100 at a 0% rate rather than emitting a bare 100', () => {
+    const s = buildEarningsStatement(
+      { ...venueWaterfall, gst_pct: 0, gst_amount: 0, net_amount: 897 },
+      { has_venue: true, symbol: '₹', t },
+    );
+    const gst = s.sections[0].lines.find((l) => l.key === 'gst')!;
+    expect(gst.formula).toBe('₹897.00 (total collection) × 0 ÷ 100');
+    expect(gst.amount).toBe(0);
+  });
+});
+
+describe('buildEarningsStatement (section descriptions)', () => {
+  it('gives every rendered section a non-empty description', () => {
+    const s = buildEarningsStatement(
+      {
+        ...venueWaterfall,
+        club_admin_pct: 3,
+        club_admin_amount: 21.66,
+        host_amount: 201.5,
+        host_commission_amount: 20.15,
+        host_receives: 181.35,
+      },
+      { has_venue: true, symbol: '₹', t },
+    );
+    expect(s.sections.map((sec) => sec.description)).toEqual([
+      'GST is a government tax on every ticket sold.',
+      'What it costs to put this pod on and pay you.',
+      'The club admin’s share for running the club.',
+      'The fixed price the venue set for the slot.',
+    ]);
+    // A missing key would render as `<missing …>` on both surfaces, so the
+    // info button must never open onto one.
+    for (const section of s.sections) {
+      expect(section.description).not.toContain('<missing');
+      expect(section.description.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('describes only the sections it actually renders', () => {
+    // No venue and no club cut: two sections, two descriptions, no orphans.
+    const s = buildEarningsStatement(
+      {
+        ...venueWaterfall,
+        venue_amount: 0,
+        venue_commission_amount: 0,
+        venue_receives: 0,
+        host_amount: 722.16,
+        host_commission_amount: 72.22,
+        host_receives: 649.94,
+      },
+      { has_venue: false, symbol: '₹', t },
+    );
+    expect(s.sections.map((sec) => sec.key)).toEqual(['taxes', 'platform']);
+    expect(s.sections.map((sec) => sec.description)).toEqual([
+      'GST is a government tax on every ticket sold.',
+      'What it costs to put this pod on and pay you.',
+    ]);
+  });
+
+  it('keeps the description independent of the money, so a ₹0 pod still explains itself', () => {
+    const free = buildEarningsStatement(
+      {
+        ...venueWaterfall,
+        amount: 0,
+        gst_amount: 0,
+        net_amount: 0,
+        platform_fee_amount: 0,
+        pool_amount: 0,
+        venue_amount: 0,
+        venue_commission_amount: 0,
+        venue_receives: 0,
+        host_amount: 0,
+        host_commission_amount: 0,
+        host_receives: 0,
+        host_earn_pct: 0,
+      },
+      { has_venue: false, symbol: '₹', t },
+    );
+    expect(free.sections.every((sec) => sec.description.length > 0)).toBe(true);
   });
 });
 

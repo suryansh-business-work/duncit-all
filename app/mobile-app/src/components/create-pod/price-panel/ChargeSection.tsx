@@ -39,6 +39,8 @@ export function ChargeRow({
 
 interface SectionProps {
   title: string;
+  /** Why this charge exists — revealed by the section's info button. */
+  description: string;
   amount: string;
   tint: string;
   testID: string;
@@ -47,53 +49,93 @@ interface SectionProps {
   children: ReactNode;
 }
 
-/** One collapsible charge section — pressable header with a rotating chevron.
- * An `invalidMessage` turns the section red and pins the reason under it. */
+/**
+ * One collapsible charge section — pressable header with a rotating chevron,
+ * and beside it an info button that opens the reason the charge exists.
+ * An `invalidMessage` turns the section red and pins the reason under it.
+ *
+ * The info control sits OUTSIDE the header press area, exactly as on mWeb: the
+ * header opens the arithmetic, the info button opens the justification, and
+ * nesting one press target in the other would make them fight for the tap.
+ */
 export function ChargeSection({
   title,
+  description,
   amount,
   tint,
   testID,
   invalidMessage,
   children,
 }: Readonly<SectionProps>) {
-  const { muted } = useThemeColors();
+  const { muted, primary } = useThemeColors();
   const [open, setOpen] = useState(false);
+  const [info, setInfo] = useState(false);
+  const { t } = useTranslation();
+  const infoColor = info ? primary : muted;
   return (
     <YStack
       borderRadius={10}
       overflow="hidden"
       backgroundColor={tint}
-      borderWidth={invalidMessage ? 1.5 : 0}
-      borderColor="$danger"
+      borderWidth={invalidMessage ? 1.5 : 1}
+      borderColor={invalidMessage ? '$danger' : '$borderColor'}
     >
-      <XStack
-        testID={testID}
-        role="button"
-        aria-label={title}
-        aria-expanded={open}
-        onPress={() => setOpen((value) => !value)}
-        alignItems="center"
-        justifyContent="space-between"
-        paddingHorizontal={12}
-        paddingVertical={9}
-        pressStyle={PRESS_STYLE.control}
-      >
-        <Text fontSize={13} fontWeight="600" color="$color" flexShrink={1}>
-          {title}
-        </Text>
-        <XStack alignItems="center" gap={4}>
-          <Text fontSize={13} fontWeight="600" color="$color">
-            {amount}
+      <XStack alignItems="center" paddingRight={6}>
+        <XStack
+          flex={1}
+          testID={testID}
+          role="button"
+          aria-label={title}
+          aria-expanded={open}
+          onPress={() => setOpen((value) => !value)}
+          alignItems="center"
+          justifyContent="space-between"
+          paddingHorizontal={12}
+          paddingVertical={10}
+          pressStyle={PRESS_STYLE.control}
+        >
+          <Text fontSize={13} fontWeight="600" color="$color" flexShrink={1}>
+            {title}
           </Text>
-          <MaterialIcons
-            name="expand-more"
-            size={18}
-            color={muted}
-            style={{ transform: [{ rotate: open ? '180deg' : '0deg' }] }}
-          />
+          <XStack alignItems="center" gap={4}>
+            <Text fontSize={13} fontWeight="600" color="$color">
+              {amount}
+            </Text>
+            <MaterialIcons
+              name="expand-more"
+              size={18}
+              color={muted}
+              style={{ transform: [{ rotate: open ? '180deg' : '0deg' }] }}
+            />
+          </XStack>
+        </XStack>
+        <XStack
+          testID={`${testID}-info`}
+          role="button"
+          aria-label={t('earnings.statement.whyThisCharge')}
+          aria-expanded={info}
+          onPress={() => setInfo((value) => !value)}
+          padding={6}
+          pressStyle={PRESS_STYLE.control}
+        >
+          <MaterialIcons name="info-outline" size={16} color={infoColor} />
         </XStack>
       </XStack>
+      {info ? (
+        <YStack
+          testID={`${testID}-description`}
+          backgroundColor="$background"
+          marginHorizontal={4}
+          marginBottom={4}
+          borderRadius={8}
+          paddingHorizontal={10}
+          paddingVertical={8}
+        >
+          <Text fontSize={11} color="$muted" lineHeight={16}>
+            {description}
+          </Text>
+        </YStack>
+      ) : null}
       {invalidMessage ? (
         <Text
           testID={`${testID}-invalid`}

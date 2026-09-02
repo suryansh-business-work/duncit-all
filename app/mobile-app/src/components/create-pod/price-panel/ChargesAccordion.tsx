@@ -16,8 +16,13 @@ interface Props {
 }
 
 /** "Govt. and other charges" — the auditable deductions tree. Every section
- * keeps its subtotal on the header and every row carries the exact formula the
- * server used, so each value can be verified by hand. mWeb twin. */
+ * keeps its subtotal on the header, carries an info button explaining why the
+ * charge exists, and every row carries the exact formula the server used, so
+ * each value can be verified by hand.
+ *
+ * The sections are spaced and bordered rather than stacked flush: four charges
+ * with different payees reading as one continuous list was the reason a host
+ * could not tell where the venue's money ended and Duncit's began. mWeb twin. */
 export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<Props>) {
   const { primary, muted } = useThemeColors();
   const { t } = useTranslation();
@@ -65,7 +70,7 @@ export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<
         </XStack>
       </XStack>
       {open ? (
-        <YStack gap={8} paddingHorizontal={8} paddingBottom={8}>
+        <YStack gap={14} paddingHorizontal={8} paddingTop={4} paddingBottom={10}>
           {statement.sections.map((section) => {
             const isVenue = section.key === 'venue';
             const shortfall = isVenue && venueShortfall;
@@ -73,6 +78,7 @@ export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<
               <ChargeSection
                 key={section.key}
                 title={section.title}
+                description={section.description}
                 amount={money(section.total)}
                 tint={sectionTint(isVenue, shortfall)}
                 invalidMessage={shortfall ? t('mweb.createPod.venueShortfall') : undefined}
@@ -84,7 +90,8 @@ export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<
               </ChargeSection>
             );
           })}
-          <XStack justifyContent="space-between" paddingHorizontal={12} paddingTop={2}>
+          <YStack height={1} backgroundColor="$borderColor" marginTop={2} />
+          <XStack justifyContent="space-between" paddingHorizontal={12}>
             <Text fontSize={13} fontWeight="600" color="$color">
               {t('mweb.createPod.totalDeductions')}
             </Text>

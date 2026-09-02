@@ -82,9 +82,14 @@ describe('checkoutSchema', () => {
   it('validates the GSTIN only when has_gstin is on', () => {
     // Off: the GSTIN field is ignored entirely, even when malformed.
     expect(checkoutSchema.safeParse({ ...valid, has_gstin: false, gstin: 'NOTAGSTIN' }).success).toBe(true);
-    // On: a valid GSTIN passes; lower-case is accepted (validated uppercased).
-    expect(checkoutSchema.safeParse({ ...valid, has_gstin: true, gstin: '27AAPFU0939F1Z' }).success).toBe(true);
-    expect(checkoutSchema.safeParse({ ...valid, has_gstin: true, gstin: '27aapfu0939f1z' }).success).toBe(true);
+    // On: a real 15-character GSTIN passes; lower-case is accepted (validated
+    // uppercased). This fixture used to be 14 characters, matching the pattern
+    // checkout carried — which no actual GSTIN can satisfy, because position 14
+    // is a literal Z. The shape now comes from @duncit/regex.
+    expect(checkoutSchema.safeParse({ ...valid, has_gstin: true, gstin: '27AAPFU0939F1ZV' }).success).toBe(true);
+    expect(checkoutSchema.safeParse({ ...valid, has_gstin: true, gstin: '27aapfu0939f1zv' }).success).toBe(true);
+    // 14 characters — one short — is refused, which is what was broken.
+    expect(checkoutSchema.safeParse({ ...valid, has_gstin: true, gstin: '27AAPFU0939F1Z' }).success).toBe(false);
     // On but empty is allowed — there is simply nothing to send.
     expect(checkoutSchema.safeParse({ ...valid, has_gstin: true, gstin: '' }).success).toBe(true);
     // On and malformed is rejected.

@@ -31,6 +31,11 @@ export const OTP_PURPOSES = [
   // Separate from PASSWORD_RESET so a code minted to recover a password can
   // never be spent to open a session, and the other way round.
   'LOGIN',
+  // Proving ONE of the extra people a multi-seat booking admits, at the door.
+  // Deliberately not ATTENDANCE: a companion code is raised against the same
+  // membership, so sharing the purpose would let it be spent as the buyer's own
+  // attendance proof.
+  'POD_COMPANION',
 ] as const;
 export type OtpPurpose = (typeof OTP_PURPOSES)[number];
 

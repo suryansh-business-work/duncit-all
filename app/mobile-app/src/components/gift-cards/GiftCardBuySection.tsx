@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Text, YStack } from 'tamagui';
-import { z } from 'zod';
+import { EMAIL } from '@duncit/regex';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
 import type { GiftCardCategory, GiftCardSettings } from '@/hooks/useGiftCards';
@@ -11,8 +11,6 @@ import { GiftCardAmountPicker } from './GiftCardAmountPicker';
 import { GiftCardHowItWorks } from './GiftCardHowItWorks';
 import { GiftCardRecipientFields } from './GiftCardRecipientFields';
 import { GiftCardThemePicker, type GiftCardThemeChoice } from './GiftCardThemePicker';
-
-const EMAIL_CHECK = z.string().email();
 
 interface Props {
   settings: GiftCardSettings;
@@ -55,7 +53,7 @@ export function GiftCardBuySection({
   const amountError = hasCustom && !customValid ? rangeHint : null;
 
   const trimmedEmail = email.trim();
-  const emailValid = EMAIL_CHECK.safeParse(trimmedEmail).success;
+  const emailValid = EMAIL.test(trimmedEmail);
   let emailError: string | null = null;
   if (forGift && trimmedEmail !== '' && !emailValid) {
     emailError = t('mweb.auth.validation.emailInvalid');

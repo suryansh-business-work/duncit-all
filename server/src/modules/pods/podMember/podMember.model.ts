@@ -17,6 +17,19 @@ export interface IPodCompanion {
   phone_extension: string | null;
   phone_number: string;
   added_at: Date;
+  /**
+   * When this person's own number answered a one-time code, null when the host
+   * recorded them without one.
+   *
+   * Verifying a companion is optional — a number that cannot be reached must
+   * never hold a group at the door — so this records which of them were
+   * actually proved rather than gating the check-in.
+   */
+  verified_at: Date | null;
+  /** The channel that carried the code they answered, '' when none did. */
+  verified_medium: string;
+  /** The challenge the proof was spent on, so it can never be spent twice. */
+  otp_challenge_id: Types.ObjectId | null;
 }
 
 export interface IPodMember extends Document {
@@ -64,6 +77,13 @@ const podMemberSchema = new Schema<IPodMember>(
             phone_extension: { type: String, default: null, trim: true },
             phone_number: { type: String, required: true, trim: true },
             added_at: { type: Date, default: () => new Date() },
+            verified_at: { type: Date, default: null },
+            verified_medium: { type: String, default: '' },
+            otp_challenge_id: {
+              type: Schema.Types.ObjectId,
+              ref: 'OtpChallenge',
+              default: null,
+            },
           },
           { _id: false }
         ),

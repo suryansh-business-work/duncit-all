@@ -1,9 +1,20 @@
 import * as yup from 'yup';
+import { DIAL_CODE, EMAIL, OTP_6, PERSON_NAME, PHONE_INTL } from '@duncit/regex';
 
-export const PERSON_NAME_PATTERN = /^[A-Za-z][A-Za-z .'-]{0,59}$/;
-export const PHONE_NUMBER_PATTERN = /^\d{6,15}$/;
-export const PHONE_EXTENSION_PATTERN = /^\+?\d{1,5}$/;
-export const OTP_PATTERN = /^\d{4,8}$/;
+/*
+  Re-exported, not re-declared: @duncit/regex is the one place a name, a phone
+  number, a dial code and a one-time code are described (rule 40). The shapes
+  that stood here were a second opinion on all four — the name one even allowed
+  a hyphen the signup box refuses, so the same person could be accepted here and
+  turned away there.
+
+  POSTAL_CODE_PATTERN has no twin in the package (it is alphanumeric, for
+  non-Indian postcodes) and stays declared.
+*/
+export const PERSON_NAME_PATTERN = PERSON_NAME;
+export const PHONE_NUMBER_PATTERN = PHONE_INTL;
+export const PHONE_EXTENSION_PATTERN = DIAL_CODE;
+export const OTP_PATTERN = OTP_6;
 export const POSTAL_CODE_PATTERN = /^[\dA-Za-z -]{3,12}$/;
 
 const optionalText = (label: string, max: number) =>
@@ -51,12 +62,18 @@ export const validationRules = {
     yup
       .string()
       .trim()
-      .matches(PERSON_NAME_PATTERN, `${label} can use letters, spaces, apostrophes, periods and hyphens only`)
+      .matches(PERSON_NAME_PATTERN, `${label} can use letters, spaces, apostrophes and periods only`)
       .required(`${label} is required`),
   optionalText,
   requiredText,
   email: (label = 'Email') =>
-    yup.string().trim().lowercase().email(`Enter a valid ${label.toLowerCase()}`).max(254).required(`${label} is required`),
+    yup
+      .string()
+      .trim()
+      .lowercase()
+      .test('email', `Enter a valid ${label.toLowerCase()}`, (value) => !value || EMAIL.test(value))
+      .max(254)
+      .required(`${label} is required`),
   phoneNumber: (label = 'Phone number') =>
     yup.string().trim().matches(PHONE_NUMBER_PATTERN, `${label} must contain only digits (6-15 digits)`).required(`${label} is required`),
   phoneExtension: (label = 'Phone code') =>

@@ -155,20 +155,30 @@ describe('ScannedAttendeeCard', () => {
   });
 });
 
+/** The three inputs one companion row owns, in the order they render. */
+const companionRow = (container: HTMLElement, index: number) => {
+  const fields = [...container.querySelectorAll<HTMLInputElement>('input')];
+  return { name: fields[index * 3], extension: fields[index * 3 + 1], phone: fields[index * 3 + 2] };
+};
+
 describe('CompanionsForm', () => {
   it('asks for exactly the seats still unaccounted for', () => {
-    const { container } = wrap(<CompanionsForm seats={4} required={3} onSubmit={vi.fn()} />);
+    const { container } = wrap(
+      <CompanionsForm podId="pod-1" membershipId="pm-1" seats={4} required={3} onSubmit={vi.fn()} />
+    );
 
-    // Three people, each needing a name and a number.
-    expect(container.querySelectorAll('input').length).toBeGreaterThanOrEqual(6);
+    // Three people, each needing a name, a dial code and a number.
+    expect(container.querySelectorAll('input').length).toBeGreaterThanOrEqual(9);
   });
 
   it('does not submit a half-filled group — the server enforces the same count', async () => {
     const onSubmit = vi.fn();
-    const { container } = wrap(<CompanionsForm seats={3} required={2} onSubmit={onSubmit} />);
+    const { container } = wrap(
+      <CompanionsForm podId="pod-1" membershipId="pm-1" seats={3} required={2} onSubmit={onSubmit} />
+    );
 
-    const [firstName] = container.querySelectorAll<HTMLInputElement>('input');
-    if (firstName) fireEvent.change(firstName, { target: { value: 'Vikram N' } });
+    const { name } = companionRow(container, 0);
+    if (name) fireEvent.change(name, { target: { value: 'Vikram N' } });
     for (const control of container.querySelectorAll<HTMLElement>('button')) {
       fireEvent.click(control);
     }
@@ -180,27 +190,32 @@ describe('CompanionsForm', () => {
 
   it('reports one entry per seat once every one has a name and a number', async () => {
     const onSubmit = vi.fn();
-    const { container } = wrap(<CompanionsForm seats={3} required={2} onSubmit={onSubmit} />);
+    const { container } = wrap(
+      <CompanionsForm podId="pod-1" membershipId="pm-1" seats={3} required={2} onSubmit={onSubmit} />
+    );
 
-    const fields = [...container.querySelectorAll<HTMLInputElement>('input')];
-    fields.forEach((field, index) => {
-      fireEvent.change(field, {
-        target: { value: index % 2 === 0 ? `Guest ${index}` : '9000000002' },
-      });
-    });
-    for (const control of container.querySelectorAll<HTMLElement>('button')) {
-      fireEvent.click(control);
+    for (const index of [0, 1]) {
+      const row = companionRow(container, index);
+      fireEvent.change(row.name, { target: { value: `Guest ${index}` } });
+      fireEvent.change(row.phone, { target: { value: '9000000002' } });
     }
+    await settle();
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement);
     await settle();
     await settle();
 
-    for (const [companions] of onSubmit.mock.calls) {
-      expect(companions).toHaveLength(2);
-    }
+    // The dial code is prefilled, so a row nobody touched still carries one —
+    // and a row the host never verified sends no challenge at all.
+    expect(onSubmit).toHaveBeenCalledWith([
+      { name: 'Guest 0', phone_extension: '+91', phone_number: '9000000002', otp_challenge_id: null },
+      { name: 'Guest 1', phone_extension: '+91', phone_number: '9000000002', otp_challenge_id: null },
+    ]);
   });
 
   it('renders while the mark is in flight', () => {
-    const { container } = wrap(<CompanionsForm seats={2} required={1} busy onSubmit={vi.fn()} />);
+    const { container } = wrap(
+      <CompanionsForm podId="pod-1" membershipId="pm-1" seats={2} required={1} busy onSubmit={vi.fn()} />
+    );
 
     expect(container.innerHTML).not.toBe('');
   });

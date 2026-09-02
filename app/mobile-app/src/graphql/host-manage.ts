@@ -158,6 +158,7 @@ export const HostScanPodTicketDocument = gql(`
       companions {
         name
         phone_number
+        verified_at
       }
       ticket {
         id
@@ -165,6 +166,7 @@ export const HostScanPodTicketDocument = gql(`
         status
         seats
         checked_in_at
+        membership_id
       }
       attendee {
         user_id

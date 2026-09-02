@@ -506,9 +506,12 @@ describe('CompanionsForm refusals', () => {
   // group present — it can only fail.
   it('says what is wrong under each companion field', async () => {
     const onSubmit = vi.fn();
-    wrap(<CompanionsForm seats={2} required={1} onSubmit={onSubmit} />);
+    wrap(
+      <CompanionsForm podId="pod-1" membershipId="pm-1" seats={2} required={1} onSubmit={onSubmit} />
+    );
 
-    const [name, phone] = screen.getAllByRole('textbox');
+    // name, dial code, number — the dial code is the middle one.
+    const [name, , phone] = screen.getAllByRole('textbox');
     fireEvent.input(name, { target: { value: 'A' } });
     fireEvent.input(phone, { target: { value: '12' } });
     await settle();

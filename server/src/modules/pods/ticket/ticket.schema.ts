@@ -66,6 +66,10 @@ export const eventTicketTypeDefs = /* GraphQL */ `
     phone_number: String!
     "When the host recorded them (ISO)."
     added_at: String!
+    "When their own number answered a one-time code (ISO). Null when the host recorded them without one."
+    verified_at: String
+    "The channel that carried the code they answered — blank when none did."
+    verified_medium: String!
   }
 
   "Details for one of the other people a multi-seat ticket admits."
@@ -73,6 +77,15 @@ export const eventTicketTypeDefs = /* GraphQL */ `
     name: String!
     phone_extension: String
     phone_number: String!
+    """
+    A verified requestPodCompanionOtp challenge for THIS number, when the
+    host proved it at the door.
+
+    Optional on purpose: a dead phone or a number abroad must never hold a
+    group at the door. When it is sent the server spends it, so one proof can
+    never be replayed across the rest of the group.
+    """
+    otp_challenge_id: ID
   }
 
   type HostTicketScanResult {

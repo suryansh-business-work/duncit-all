@@ -151,7 +151,23 @@ export const podAttendanceTypeDefs = /* GraphQL */ `
     joinPodMeeting(pod_doc_id: ID!): PodMeetingAccess!
     "Send the attendee a one-time code over the chosen medium(s)."
     requestPodAttendanceOtp(input: PodAttendanceOtpInput!): PhoneOtpRequestResult!
-    "Check the code the attendee read out. Spending it happens at the mark."
+    """
+    Send ONE of the extra people a multi-seat booking admits a one-time code.
+
+    The same input and the same shared OTP service as the attendee's own code,
+    with the name and the number being the companion's rather than the buyer's.
+    A separate purpose, so a companion's proof can never be spent as the
+    buyer's attendance. Spending it happens when the group is recorded, which
+    is why the host verifies them one at a time.
+    """
+    requestPodCompanionOtp(input: PodAttendanceOtpInput!): PhoneOtpRequestResult!
+    """
+    Check a code that was read out — the attendee's own, or a companion's.
+
+    Purpose-agnostic on purpose: verifying grants nothing by itself, and the
+    step that SPENDS the proof (the mark, or the door's companion record)
+    re-checks the purpose, the booking and the number it was raised for.
+    """
     verifyPodAttendanceOtp(challenge_id: ID!, otp: String!): Boolean!
     """
     Host marks one attendee present without a scan.

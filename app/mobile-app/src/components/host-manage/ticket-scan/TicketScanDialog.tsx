@@ -12,11 +12,12 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CompanionsChecklist } from './CompanionsChecklist';
-import { CompanionsForm, type CompanionValue } from './CompanionsForm';
+import { CompanionsForm } from './CompanionsForm';
 import { ScanConfirmation } from './ScanConfirmation';
 import { ScannedAttendeeCard } from './ScannedAttendeeCard';
 import { ScannerFrame } from './ScannerFrame';
-import type { HostTicketScanResult } from './scan.types';
+import type { HostTicketScanResult, PodCompanionRecord } from './scan.types';
+import type { CompanionRecordInput } from '@duncit/utils';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
@@ -26,6 +27,18 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 function resultTone(result: HostTicketScanResult): string {
   if (result.ok) return '$success';
   return result.requires_companions ? '$color' : '$danger';
+}
+
+/**
+ * What the green-tick roster says under a companion's name.
+ *
+ * The number on file, plus whether that number actually answered a code — the
+ * host verified them one at a time, and this is where they see which of them
+ * it worked for.
+ */
+function companionLine(companion: PodCompanionRecord, verified: string): string {
+  if (!companion.verified_at) return companion.phone_number;
+  return `${companion.phone_number} · ${verified}`;
 }
 
 export interface ScanTarget {
@@ -71,7 +84,7 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
     }
   }, [pod]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const submit = async (token: string, companions?: CompanionValue[]) => {
+  const submit = async (token: string, companions?: CompanionRecordInput[]) => {
     const epoch = epochRef.current;
     setBusy(true);
     setError(null);
@@ -214,14 +227,19 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                         people={recorded.map((companion) => ({
                           key: `${companion.phone_number}-${companion.name}`,
                           primary: companion.name,
-                          secondary: companion.phone_number,
+                          secondary: companionLine(
+                            companion,
+                            t('mweb.hostScan.companionVerified'),
+                          ),
                         }))}
                       />
                     ) : null}
 
-                    {result?.requires_companions && pendingToken ? (
+                    {result?.requires_companions && pendingToken && result.ticket ? (
                       <CompanionsForm
-                        seats={result.ticket?.seats ?? 1}
+                        podId={pod?.id ?? ''}
+                        membershipId={result.ticket.membership_id}
+                        seats={result.ticket.seats ?? 1}
                         required={result.companions_required}
                         busy={busy}
                         onSubmit={(companions) => void submit(pendingToken, companions)}

@@ -184,6 +184,106 @@ export const isOtpCodeShape = (value: string): boolean => /^\d{6}$/.test(value.t
 export const isOtpPhoneShape = (value: string): boolean => /^\d{6,15}$/.test(value.trim());
 export const isOtpExtensionShape = (value: string): boolean => /^\+?\d{1,5}$/.test(value.trim());
 
+/**
+ * The dial code a phone field starts on.
+ *
+ * One definition rather than a literal per form: it is prefilled so the common
+ * case is "confirm", not "type", and it stays editable everywhere it appears.
+ */
+export const DEFAULT_DIAL_CODE = '+91';
+
+/**
+ * One of the extra people a multi-seat booking admits, as the door's form
+ * holds them.
+ *
+ * The same shape in MUI and in Tamagui (rule 27), including the challenge id —
+ * the host verifies the number on the row, and the id is what carries that
+ * proof into the scan that records the group.
+ */
+export interface CompanionEntry {
+  name: string;
+  phone_extension: string;
+  phone_number: string;
+  /** A verified POD_COMPANION challenge, '' until the host proves this number. */
+  otp_challenge_id: string;
+}
+
+/** `count` empty rows, ready to be filled in at the door. */
+export const blankCompanionEntries = (count: number): CompanionEntry[] =>
+  Array.from({ length: Math.max(count, 0) }, () => ({
+    name: '',
+    phone_extension: DEFAULT_DIAL_CODE,
+    phone_number: '',
+    otp_challenge_id: '',
+  }));
+
+/** Everything the server needs before this row can be recorded. */
+export const isCompanionEntryComplete = (entry: Readonly<CompanionEntry>): boolean =>
+  entry.name.trim().length >= 2 &&
+  isOtpExtensionShape(entry.phone_extension) &&
+  isOtpPhoneShape(entry.phone_number);
+
+/** True once every row can be recorded. The code is never part of this — a
+ * number that cannot be reached must not hold the group at the door. */
+export const areCompanionEntriesComplete = (
+  entries: readonly CompanionEntry[]
+): boolean => entries.length > 0 && entries.every(isCompanionEntryComplete);
+
+/** One companion as `PodCompanionInput` carries them to the server. */
+export interface CompanionRecordInput {
+  name: string;
+  phone_extension: string;
+  phone_number: string;
+  /** null when the host never proved this number — an option, not a gate. */
+  otp_challenge_id: string | null;
+}
+
+/**
+ * The rows, as the scan that records them sends them.
+ *
+ * Shared rather than written twice: the MUI form and the Tamagui one collect
+ * the same people for the same mutation, and a trim done on one side only is
+ * exactly how the two would start disagreeing about what was recorded.
+ */
+export const companionEntriesToInput = (
+  entries: readonly CompanionEntry[]
+): CompanionRecordInput[] =>
+  entries.map((entry) => ({
+    name: entry.name.trim(),
+    phone_extension: entry.phone_extension.trim(),
+    phone_number: entry.phone_number.trim(),
+    otp_challenge_id: entry.otp_challenge_id || null,
+  }));
+
+/** What one row's verify control is doing right now. */
+export type CompanionOtpState =
+  /** This number already answered a code. */
+  | 'VERIFIED'
+  /** Somebody else's code is in flight — the host proves them one at a time. */
+  | 'BLOCKED'
+  /** No number to send to yet. */
+  | 'INCOMPLETE'
+  /** Ready to send. */
+  | 'READY';
+
+/**
+ * Whether this row may start a verification.
+ *
+ * One at a time is the whole point: a code proves the person standing in front
+ * of the host, and two live challenges at a door is how the wrong person gets
+ * ticked. `activeIndex` is the row with a challenge open, or null when none is.
+ */
+export function companionOtpState(
+  entry: Readonly<CompanionEntry>,
+  index: number,
+  activeIndex: number | null
+): CompanionOtpState {
+  if (entry.otp_challenge_id) return 'VERIFIED';
+  if (activeIndex !== null && activeIndex !== index) return 'BLOCKED';
+  if (!isCompanionEntryComplete(entry)) return 'INCOMPLETE';
+  return 'READY';
+}
+
 /** `+91 9876543210`, or '' when there is no number to show. */
 export function joinPhone(extension: string, number: string): string {
   const digits = String(number ?? '').trim();

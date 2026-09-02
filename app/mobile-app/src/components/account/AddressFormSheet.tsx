@@ -11,40 +11,18 @@ import { useBottomInset } from '@/hooks/useBottomNavSpace';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { blankAddress, makeAddressSchema } from '@duncit/forms/schemas';
+import { fallbackT } from '@/i18n/fallback';
 
-/** Validation for a saved address — RN twin of mWeb's addressSchema. */
-export const addressSchema = z.object({
-  label: z.string().trim().min(1, 'Give this address a label').max(60),
-  name: z.string().trim().max(120),
-  phone: z.string().trim().max(20),
-  line1: z.string().trim().min(1, 'Address line 1 is required').max(200),
-  line2: z.string().trim().max(200),
-  landmark: z.string().trim().max(160),
-  city: z.string().trim().min(1, 'City is required').max(120),
-  state: z.string().trim().min(1, 'State is required').max(120),
-  pincode: z
-    .string()
-    .trim()
-    .regex(/^\d{4,10}$/, 'Enter a valid pincode'),
-  country: z.string().trim().max(80),
-});
+/** Bundled-English schema, for callers that parse outside React. The rules are
+ * @duncit/forms' — mWeb's dialog renders the same ones (rules 27 and 40). */
+export const addressSchema = makeAddressSchema(fallbackT);
 
 export type AddressFormValues = z.infer<typeof addressSchema>;
 
 /** The empty form. `label` is filled in by the sheet from the catalogue — it
  * is prefilled copy the user reads, so it cannot live here as a literal. */
-export const blankAddressValues: AddressFormValues = {
-  label: '',
-  name: '',
-  phone: '',
-  line1: '',
-  line2: '',
-  landmark: '',
-  city: '',
-  state: '',
-  pincode: '',
-  country: 'India',
-};
+export const blankAddressValues: AddressFormValues = blankAddress;
 
 interface Props {
   open: boolean;
@@ -109,13 +87,14 @@ export function AddressFormSheet({
   // A new address opens with a suggested label the user can overwrite. Memoised
   // because the reset effect below depends on it: a fresh object every render
   // would re-fire that effect on every keystroke and wipe what was being typed.
+  const schema = useMemo(() => makeAddressSchema(t), [t]);
   const blank = useMemo(
     () => ({ ...blankAddressValues, label: t('mweb.account.addressLabelDefault') }),
     [t],
   );
   const { control, handleSubmit, reset } = useForm<AddressFormValues, any, AddressFormValues>({
     defaultValues: initial ?? blank,
-    resolver: formResolver<AddressFormValues>(addressSchema),
+    resolver: formResolver<AddressFormValues>(schema),
     mode: 'onTouched',
   });
 

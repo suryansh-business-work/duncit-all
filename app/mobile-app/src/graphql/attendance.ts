@@ -78,7 +78,30 @@ export const RequestAttendanceOtpDocument = gql(`
   }
 `);
 
-/** Check the code the attendee read out. Spending it happens at the mark. */
+/**
+ * Send ONE of the extra people a multi-seat booking admits a WhatsApp code.
+ *
+ * Verified through the same `VerifyAttendanceOtpDocument` below — checking a
+ * code grants nothing by itself, and the step that SPENDS this one (the scan
+ * that records the group) re-checks the purpose, the booking and the number.
+ */
+export const RequestCompanionOtpDocument = gql(`
+  mutation MobileRequestPodCompanionOtp($input: PodAttendanceOtpInput!) {
+    requestPodCompanionOtp(input: $input) {
+      challenge_id
+      expires_at
+      resend_after_seconds
+      test_code
+      deliveries {
+        medium
+        status
+        reason
+      }
+    }
+  }
+`);
+
+/** Check the code that was read out — the attendee's own, or a companion's. */
 export const VerifyAttendanceOtpDocument = gql(`
   mutation MobileVerifyPodAttendanceOtp($challenge_id: ID!, $otp: String!) {
     verifyPodAttendanceOtp(challenge_id: $challenge_id, otp: $otp)

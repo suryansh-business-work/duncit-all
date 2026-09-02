@@ -22,7 +22,12 @@ import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import { HOST_SCAN_POD_TICKET } from '../queries';
 import { writeFailure } from '../write-failure';
 import type { HostPodActionLabels } from '../labels';
-import type { HostTicketScanResult, PodCompanionInput, ScanTarget } from '../types';
+import type {
+  HostTicketScanResult,
+  PodCompanionInput,
+  PodCompanionRecord,
+  ScanTarget,
+} from '../types';
 
 interface Props {
   pod: ScanTarget | null;
@@ -57,6 +62,18 @@ function confirmationText(
   if (seats > 1) return labels.attendanceMarkedGroup(who, seats - 1);
   if (who) return labels.attendanceMarkedOne(who);
   return labels.attendanceMarked;
+}
+
+/**
+ * What the green-tick roster says under a companion's name.
+ *
+ * The number on file, plus whether that number actually answered a code — the
+ * host verified them one at a time, and this is where they see which of them
+ * it worked for.
+ */
+function companionLine(companion: PodCompanionRecord, labels: HostPodActionLabels): string {
+  if (!companion.verified_at) return companion.phone_number;
+  return `${companion.phone_number} · ${labels.companionVerified}`;
 }
 
 /** Camera check-in for one pod: scan a ticket QR, mark the attendee present and
@@ -183,13 +200,15 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
                   people={recorded.map((companion) => ({
                     key: `${companion.phone_number}-${companion.name}`,
                     primary: companion.name,
-                    secondary: companion.phone_number,
+                    secondary: companionLine(companion, labels),
                   }))}
                 />
               )}
-              {result.requires_companions && pendingToken && (
+              {result.requires_companions && pendingToken && result.ticket && (
                 <CompanionsForm
-                  seats={result.ticket?.seats ?? 1}
+                  podId={pod?.id ?? ''}
+                  membershipId={result.ticket.membership_id}
+                  seats={result.ticket.seats ?? 1}
                   required={result.companions_required}
                   busy={scanState.loading}
                   onSubmit={(companions) => submit(pendingToken, companions)}

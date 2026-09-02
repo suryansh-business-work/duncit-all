@@ -47,7 +47,7 @@ const me = {
   email: 'riya@duncit.com',
   phone_number: '9876543210',
   phone_extension: '+91',
-  whatsapp_number: '',
+  whatsapp_number: '9876543211',
   whatsapp_extension: '+91',
   profile_photo: null,
   bio: 'Hello there',
@@ -177,11 +177,11 @@ describe('EditAccountDialog', () => {
     expect(screen.queryByTestId('account-edit-submit')).toBeNull();
   });
 
+  // Save is a <DuncitButton/>, which reports its state as `aria-disabled` —
+  // `accessibilityState` is not among the props it forwards.
   const pressSaveWhenEnabled = async () => {
     await waitFor(() =>
-      expect(screen.getByTestId('account-edit-submit').props.accessibilityState?.disabled).toBe(
-        false,
-      ),
+      expect(screen.getByTestId('account-edit-submit').props['aria-disabled']).toBe(false),
     );
     fireEvent.press(screen.getByTestId('account-edit-submit'));
   };

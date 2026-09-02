@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { z } from 'zod';
 import { useForm, Controller, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,23 +13,22 @@ import {
   TextField,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import { makeAddressSchema as makeSharedAddressSchema } from '@duncit/forms/schemas';
 import { blankAddressValues, type AddressFormValues } from './address-book.types';
+import { fallbackT, type Translate } from '../../../i18n/fallback';
 import { useTranslation } from '../../../i18n/useTranslation';
 
-/** Validation for a saved address — mirrors the server's addressBook rules. */
-export const addressSchema = z.object({
-  label: z.string().trim().min(1, 'Give this address a label').max(60),
-  name: z.string().trim().max(120),
-  phone: z.string().trim().max(20),
-  line1: z.string().trim().min(1, 'Address line 1 is required').max(200),
-  line2: z.string().trim().max(200),
-  landmark: z.string().trim().max(160),
-  city: z.string().trim().min(1, 'City is required').max(120),
-  state: z.string().trim().min(1, 'State is required').max(120),
-  pincode: z.string().trim().regex(/^\d{4,10}$/, 'Enter a valid pincode'),
-  country: z.string().trim().max(80),
-  is_default: z.boolean(),
-});
+/**
+ * One saved address, plus the flag only mWeb offers.
+ *
+ * The rules themselves are @duncit/forms' `makeAddressSchema` — the native
+ * sheet renders the same ones, so a parcel refused on one app is refused on the
+ * other (rules 27 and 40). Every shape behind them is @duncit/regex's.
+ */
+export const makeAddressSchema = (t: Translate = fallbackT) =>
+  makeSharedAddressSchema(t).extend({ is_default: z.boolean() });
+
+export const addressSchema = makeAddressSchema();
 
 interface Props {
   open: boolean;
@@ -52,9 +51,10 @@ export default function AddressForm({
   const { t } = useTranslation();
   // A new address opens with a suggested label the user can overwrite.
   const blank = { ...blankAddressValues, label: t('mweb.account.addressLabelDefault') };
+  const schema = useMemo(() => makeAddressSchema(t), [t]);
   const { control, handleSubmit, reset } = useForm<AddressFormValues, any, AddressFormValues>({
     defaultValues: initial ?? blank,
-    resolver: zodResolver(addressSchema) as unknown as Resolver<AddressFormValues, any, AddressFormValues>,
+    resolver: zodResolver(schema) as unknown as Resolver<AddressFormValues, any, AddressFormValues>,
     mode: 'onTouched',
   });
 

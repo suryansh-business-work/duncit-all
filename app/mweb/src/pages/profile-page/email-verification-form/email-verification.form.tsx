@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { Alert, CircularProgress, Stack, TextField, Typography } from '@mui/material';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import { DuncitButton } from '@duncit/buttons';
-import { OTP_PATTERN } from '../../../forms/validation/rules';
+import { OTP_6 } from '@duncit/regex';
 import type { EmailVerificationFormProps, EmailVerificationValues } from './email-verification.types';
 import { useTranslation } from '../../../i18n/useTranslation';
 
@@ -34,7 +34,7 @@ export const emailVerificationSchema = z.object({
     .string()
     .trim()
     .min(1, 'OTP is required')
-    .regex(OTP_PATTERN, 'Enter the OTP we sent'),
+    .regex(OTP_6, 'Enter the OTP we sent'),
 });
 
 export default function EmailVerificationForm({ email, verified, onVerified, autoSend = false }: Readonly<EmailVerificationFormProps>) {

@@ -29,7 +29,7 @@ const me = {
   email: 'riya@duncit.com',
   phone_number: '9876543210',
   phone_extension: '+91',
-  whatsapp_number: '',
+  whatsapp_number: '9876543211',
   whatsapp_extension: '+91',
   profile_photo: null,
   bio: 'Hello there',

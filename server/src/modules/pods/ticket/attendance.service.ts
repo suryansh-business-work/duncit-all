@@ -7,6 +7,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { otpService } from '@modules/platform/otp/otp.service';
+import type { OtpPurpose } from '@modules/platform/otp/otp.model';
 import { TicketModel, type AttendanceMethod, type ITicket } from './ticket.model';
 
 /** Why the roster is read-only, or OPEN when it is not. */
@@ -18,6 +19,16 @@ const badInput = (message: string) =>
 
 const notFound = (message: string) =>
   new GraphQLError(message, { extensions: { code: 'NOT_FOUND' } });
+
+/** `PodAttendanceOtpInput`, which both code-raising paths share. */
+interface AttendanceOtpInput {
+  pod_doc_id: string;
+  membership_id: string;
+  name: string;
+  phone_extension: string;
+  phone_number: string;
+  mediums: readonly string[];
+}
 
 /**
  * These read the NESTED storage paths, never the flat legacy virtuals.
@@ -349,20 +360,18 @@ export const attendanceService = {
   },
 
   /**
-   * Send an attendee a one-time code so the host can prove who they are.
+   * Send a one-time code to somebody this booking admits.
    *
    * Authorised as the pod's host, then delegated to the shared otpService — the
-   * medium (SMS, WhatsApp, or both) is passed straight through as a parameter.
+   * medium (SMS, WhatsApp, or both) is passed straight through as a parameter,
+   * and so is the PURPOSE: the buyer's own attendance code and a companion's
+   * are the same request to the same service, addressed to a different person.
+   * They stay separate purposes because they are raised against the same
+   * booking, so a shared one would let a companion's proof mark the buyer.
    */
-  async requestOtp(
-    input: Readonly<{
-      pod_doc_id: string;
-      membership_id: string;
-      name: string;
-      phone_extension: string;
-      phone_number: string;
-      mediums: readonly string[];
-    }>,
+  async issueOtp(
+    purpose: OtpPurpose,
+    input: Readonly<AttendanceOtpInput>,
     actor: Readonly<{ id: string; roles: string[] }>
   ) {
     const { pod, viewer } = await resolveViewer(input.pod_doc_id, actor);
@@ -382,7 +391,7 @@ export const attendanceService = {
     if (!name) throw badInput("Enter the attendee's name");
 
     return otpService.request({
-      purpose: 'ATTENDANCE',
+      purpose,
       mediums: input.mediums,
       phone_extension: input.phone_extension,
       phone_number: input.phone_number,
@@ -393,6 +402,28 @@ export const attendanceService = {
       },
       requested_by: actor.id,
     });
+  },
+
+  /** The attendee's own number, proved before a by-hand mark. */
+  requestOtp(
+    input: Readonly<AttendanceOtpInput>,
+    actor: Readonly<{ id: string; roles: string[] }>
+  ) {
+    return this.issueOtp('ATTENDANCE', input, actor);
+  },
+
+  /**
+   * One of the extra people a multi-seat booking admits, proved at the door.
+   *
+   * Spent when the group is recorded rather than here, which is why the host
+   * works through them one at a time: a code proves the person standing in
+   * front of them, not the booking.
+   */
+  requestCompanionOtp(
+    input: Readonly<AttendanceOtpInput>,
+    actor: Readonly<{ id: string; roles: string[] }>
+  ) {
+    return this.issueOtp('POD_COMPANION', input, actor);
   },
 
   /** Check the code the attendee read out. Spending it is a separate step. */

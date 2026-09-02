@@ -133,13 +133,18 @@ export interface ScannedAttendee {
 /** One extra person a multi-seat ticket admits, recorded at the door. */
 export interface PodCompanionInput {
   name: string;
+  phone_extension: string;
   phone_number: string;
+  /** A verified POD_COMPANION challenge, null when the host did not send one. */
+  otp_challenge_id: string | null;
 }
 
 /** A companion already on file — what the green-tick roster renders. */
 export interface PodCompanionRecord {
   name: string;
   phone_number: string;
+  /** ISO when their own number answered a code, null when it never did. */
+  verified_at: string | null;
 }
 
 export interface HostTicketScanResult {
@@ -159,6 +164,8 @@ export interface HostTicketScanResult {
     /** People this one QR admits. 1 for every single-seat and legacy ticket. */
     seats: number;
     checked_in_at: string | null;
+    /** The booking behind this ticket — what a companion's code is raised on. */
+    membership_id: string;
   } | null;
   attendee: ScannedAttendee | null;
 }

@@ -4,13 +4,11 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 import { MobileProductShippingQuoteDocument } from '@/graphql/productCheckout';
 import { graphqlRequest } from '@/services/graphql.client';
 import type { ProductCartItemInput } from '@/generated/graphql/graphql';
+import { PINCODE_LOOSE } from '@duncit/regex';
 
 export type ProductShippingQuote = ResultOf<
   typeof MobileProductShippingQuoteDocument
 >['productShippingQuote'];
-
-/** Mirrors the server delivery-pincode rule (4–10 digits). */
-const PINCODE_PATTERN = /^\d{4,10}$/;
 
 interface Result {
   quote: ProductShippingQuote | null;
@@ -32,7 +30,7 @@ export function useProductShippingQuote(
   const [quote, setQuote] = useState<ProductShippingQuote | null>(null);
   const [loading, setLoading] = useState(false);
   const pincode = (deliveryPincode || '').trim();
-  const pincodeValid = PINCODE_PATTERN.test(pincode);
+  const pincodeValid = PINCODE_LOOSE.test(pincode);
   const itemsKey = JSON.stringify(items);
 
   useEffect(() => {

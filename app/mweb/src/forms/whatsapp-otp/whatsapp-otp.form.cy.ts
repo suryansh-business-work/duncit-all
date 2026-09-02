@@ -54,9 +54,13 @@ describe('whatsAppOtpVerifySchema', () => {
     expect(firstError(result)).toMatch(/otp/i);
   });
 
-  it('accepts 4-8 digit OTP', () => {
-    expect(whatsAppOtpVerifySchema.safeParse({ otp: '1234' }).success).toBe(true);
-    expect(whatsAppOtpVerifySchema.safeParse({ otp: '12345678' }).success).toBe(true);
+  it('accepts the six-digit code the server actually issues, and nothing else', () => {
+    expect(whatsAppOtpVerifySchema.safeParse({ otp: '123456' }).success).toBe(true);
+    // Four and eight digits used to pass. Every code the server mints is six
+    // (otpService's CODE_LENGTH), so the wider rule only sent a provably wrong
+    // string on a round trip.
+    expect(whatsAppOtpVerifySchema.safeParse({ otp: '1234' }).success).toBe(false);
+    expect(whatsAppOtpVerifySchema.safeParse({ otp: '12345678' }).success).toBe(false);
   });
 
   it('rejects an empty OTP', () => {

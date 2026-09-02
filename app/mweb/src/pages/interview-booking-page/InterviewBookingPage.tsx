@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useForm, type Resolver } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
 import { Alert, Box, Container, Stack, Typography } from '@mui/material';
@@ -10,7 +12,12 @@ import { Slot, slotKey } from './slotHelpers';
 import InterviewCalendar from './InterviewCalendar';
 import InterviewDetailsForm from './InterviewDetailsForm';
 import InterviewSuccessCard from './InterviewSuccessCard';
-import { PHONE_EXTENSION_PATTERN, PHONE_NUMBER_PATTERN } from '../../forms/validation/rules';
+import {
+  interviewDetailsDefaults,
+  makeInterviewDetailsSchema,
+  toInterviewBookingInput,
+  type InterviewDetailsValues,
+} from './interview-booking';
 import { parseApiError } from '../../utils/parseApiError';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -28,15 +35,23 @@ export default function InterviewBookingPage({ type }: Readonly<Props>) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [slots, setSlots] = useState<Map<string, Slot>>(new Map());
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phoneExtension, setPhoneExtension] = useState('+91');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [businessName, setBusinessName] = useState('');
-  const [businessAddress, setBusinessAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [zone, setZone] = useState('');
-  const [about, setAbout] = useState('');
+  // The applicant's boxes are a real form (rule 10): each one refuses on its
+  // own line as it is typed into, against the shapes in @duncit/regex. Only the
+  // calendar stays outside it — a picked slot is not a field.
+  const schema = useMemo(() => makeInterviewDetailsSchema(t), [t]);
+  const { control, handleSubmit, formState } = useForm<
+    InterviewDetailsValues,
+    any,
+    InterviewDetailsValues
+  >({
+    defaultValues: interviewDetailsDefaults,
+    resolver: zodResolver(schema) as unknown as Resolver<
+      InterviewDetailsValues,
+      any,
+      InterviewDetailsValues
+    >,
+    mode: 'onTouched',
+  });
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,37 +85,27 @@ export default function InterviewBookingPage({ type }: Readonly<Props>) {
 
   const slotList = Array.from(slots.values()).sort((a, b) => +a.start - +b.start);
 
-  const submit = async () => {
+  // The only refusal left for the alert: the calendar is not a form field, so
+  // nothing under a box can carry it.
+  const submit = handleSubmit(async (values) => {
     setError(null);
-    if (!name.trim()) return setError(t('mweb.interviewBooking.yourNameIsRequired'));
-    if (!email.trim()) return setError(t('mweb.interviewBooking.emailIsRequired'));
-    if (!PHONE_EXTENSION_PATTERN.test(phoneExtension)) return setError(t('mweb.interviewBooking.phoneCodeIsInvalid'));
-    if (!PHONE_NUMBER_PATTERN.test(phoneNumber)) return setError(t('mweb.interviewBooking.phoneMustContainOnlyDigits6'));
-    if (!about.trim())
-      return setError(
-        `Tell us briefly about ${isHost ? 'why you want to host' : 'your venue'}`
-      );
-    if (slotList.length === 0) return setError(t('mweb.interviewBooking.pickAtLeastOnePreferredTime'));
+    if (slotList.length === 0) {
+      setError(t('mweb.interviewBooking.pickAtLeastOnePreferredTime'));
+      return;
+    }
 
     setBusy(true);
     try {
       const res = await createMut({
         variables: {
-          input: {
+          input: toInterviewBookingInput({
+            ...values,
             type,
-            applicant_name: name,
-            applicant_email: email,
-            applicant_phone: `${phoneExtension} ${phoneNumber}`,
-            about,
-            business_name: businessName || null,
-            business_address: businessAddress || null,
-            city: city || null,
-            zone: zone || null,
             preferred_slots: slotList.map((s) => ({
               start: s.start.toISOString(),
               end: s.end.toISOString(),
             })),
-          },
+          }),
         },
       });
       setSubmittedRef(res.data?.createInterview?.id ?? 'submitted');
@@ -109,7 +114,7 @@ export default function InterviewBookingPage({ type }: Readonly<Props>) {
     } finally {
       setBusy(false);
     }
-  };
+  });
 
   if (submittedRef) return <InterviewSuccessCard submittedRef={submittedRef} />;
 
@@ -152,33 +157,18 @@ export default function InterviewBookingPage({ type }: Readonly<Props>) {
           onRemoveSlot={removeSlot}
         />
 
-        <InterviewDetailsForm
-          isHost={isHost}
-          name={name}
-          setName={setName}
-          email={email}
-          setEmail={setEmail}
-          phoneExtension={phoneExtension}
-          setPhoneExtension={setPhoneExtension}
-          phoneNumber={phoneNumber}
-          setPhoneNumber={setPhoneNumber}
-          businessName={businessName}
-          setBusinessName={setBusinessName}
-          businessAddress={businessAddress}
-          setBusinessAddress={setBusinessAddress}
-          city={city}
-          setCity={setCity}
-          zone={zone}
-          setZone={setZone}
-          about={about}
-          setAbout={setAbout}
-        />
+        <InterviewDetailsForm isHost={isHost} control={control} />
 
         <Stack direction="row" spacing={2} sx={{
           justifyContent: "flex-end"
         }}>
           <DuncitButton onClick={() => navigate(-1)}>{t('mweb.common.cancel')}</DuncitButton>
-          <DuncitButton variant="contained" size="large" onClick={submit} disabled={busy}>
+          <DuncitButton
+            variant="contained"
+            size="large"
+            onClick={submit}
+            disabled={busy || formState.isSubmitting}
+          >
             {busy ? 'Submitting…' : 'Request Interview'}
           </DuncitButton>
         </Stack>

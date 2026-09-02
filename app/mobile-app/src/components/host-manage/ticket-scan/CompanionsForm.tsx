@@ -1,31 +1,30 @@
 import { useState } from 'react';
-import { Input, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
+import {
+  areCompanionEntriesComplete,
+  blankCompanionEntries,
+  companionEntriesToInput,
+  type CompanionEntry,
+  type CompanionRecordInput,
+} from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
+import { useCompanionOtp } from '@/hooks/useCompanionOtp';
+import { CompanionRow } from './CompanionRow';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
-/** Same rule the server enforces on a companion's number (6-15 digits). */
-const PHONE = /^\d{6,15}$/;
-
-export interface CompanionValue {
-  name: string;
-  phone_number: string;
-}
-
 interface Props {
+  /** The pod being checked into — what a companion's code is raised against. */
+  podId: string;
+  /** The booking these people are coming in on. */
+  membershipId: string;
   /** People this ticket admits, including the buyer. */
   seats: number;
   /** How many still need a name and a phone number. */
   required: number;
   busy?: boolean;
-  onSubmit: (companions: CompanionValue[]) => void;
+  onSubmit: (companions: CompanionRecordInput[]) => void;
 }
-
-const blank = (count: number): CompanionValue[] =>
-  Array.from({ length: count }, () => ({ name: '', phone_number: '' }));
-
-const complete = (rows: CompanionValue[]) =>
-  rows.every((row) => row.name.trim().length >= 2 && PHONE.test(row.phone_number.trim()));
 
 /**
  * The rest of the group, collected at the door — the Tamagui twin of mWeb's
@@ -34,18 +33,45 @@ const complete = (rows: CompanionValue[]) =>
  * A multi-seat ticket is a number until someone writes down who it covers, and
  * the scan is the one moment they are all standing there. The ticket does not
  * check in until every one of them has a name and a phone number.
+ *
+ * Each row can also send that number a WhatsApp code, one person at a time.
+ * That part is OPTIONAL and deliberately so: a dead phone or a number abroad
+ * must never hold a group at the door, so the code records who was actually
+ * proved rather than deciding who gets in.
  */
-export function CompanionsForm({ seats, required, busy, onSubmit }: Readonly<Props>) {
+export function CompanionsForm({
+  podId,
+  membershipId,
+  seats,
+  required,
+  busy,
+  onSubmit,
+}: Readonly<Props>) {
   const { t } = useTranslation();
-  const [rows, setRows] = useState<CompanionValue[]>(() => blank(required));
+  const [rows, setRows] = useState<CompanionEntry[]>(() => blankCompanionEntries(required));
   const [touched, setTouched] = useState(false);
+  const otp = useCompanionOtp(
+    podId,
+    membershipId,
+    t('mweb.attendance.otpCodeInvalid'),
+    t('mweb.hostScan.companionOtpFailed'),
+  );
 
-  const set = (index: number, patch: Partial<CompanionValue>) =>
-    setRows((current) => current.map((row, i) => (i === index ? { ...row, ...patch } : row)));
+  // A proof names ONE number. Retyping the name or the number makes it a
+  // different person, so the challenge it earned no longer describes this row.
+  const edit = (index: number, patch: Partial<CompanionEntry>) =>
+    setRows((current) =>
+      current.map((row, i) => (i === index ? { ...row, ...patch, otp_challenge_id: '' } : row)),
+    );
+
+  const keepProof = (index: number, otp_challenge_id: string) =>
+    setRows((current) =>
+      current.map((row, i) => (i === index ? { ...row, otp_challenge_id } : row)),
+    );
 
   const press = () => {
     setTouched(true);
-    if (complete(rows)) onSubmit(rows.map((row) => ({ ...row, name: row.name.trim() })));
+    if (areCompanionEntriesComplete(rows)) onSubmit(companionEntriesToInput(rows));
   };
 
   return (
@@ -60,35 +86,17 @@ export function CompanionsForm({ seats, required, busy, onSubmit }: Readonly<Pro
       {rows.map((row, index) => (
         // The index IS the identity here: the rows are positional slots created
         // from a count, never reordered, added to or removed.
-        <YStack key={`companion-${index}`} gap={6}>
-          <Text fontSize={12} fontWeight="700" color="$muted">
-            {t('mweb.hostScan.companionsHeading', { vars: { index: index + 1 } })}
-          </Text>
-          <Text fontSize={11.5} color="$muted">
-            {t('mweb.hostScan.companionName')} · {t('mweb.hostScan.fieldRequired')}
-          </Text>
-          <Input
-            testID={`companion-name-${index}`}
-            value={row.name}
-            onChangeText={(name) => set(index, { name })}
-            placeholder={t('mweb.hostScan.companionName')}
-            size="$4"
-          />
-          <Text fontSize={11.5} color="$muted">
-            {t('mweb.hostScan.companionPhone')} · {t('mweb.hostScan.fieldRequired')}
-          </Text>
-          <Input
-            testID={`companion-phone-${index}`}
-            value={row.phone_number}
-            onChangeText={(phone_number) => set(index, { phone_number })}
-            placeholder={t('mweb.hostScan.companionPhone')}
-            keyboardType="number-pad"
-            size="$4"
-          />
-        </YStack>
+        <CompanionRow
+          key={`companion-${index}`}
+          index={index}
+          entry={row}
+          otp={otp}
+          onChange={edit}
+          onVerified={keepProof}
+        />
       ))}
 
-      {touched && !complete(rows) ? (
+      {touched && !areCompanionEntriesComplete(rows) ? (
         <Text testID="companions-incomplete" fontSize={12} color="$danger">
           {t('mweb.hostScan.companionsIncomplete')}
         </Text>

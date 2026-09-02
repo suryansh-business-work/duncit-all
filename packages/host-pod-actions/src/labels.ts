@@ -51,6 +51,29 @@ export interface HostPodActionLabels {
   companionsBody: (seats: number, count: number) => string;
   companionName: string;
   companionPhone: string;
+  /**
+   * Proving one companion's own number at the door, one person at a time.
+   *
+   * The GENERIC half of this copy (send, resend, the code box, the test code)
+   * is the attendance page's, word for word, so it is read from that namespace
+   * rather than shipped a second time under this one (rule 34).
+   */
+  companionExtension: string;
+  companionVerifyCta: string;
+  companionOtpHint: string;
+  companionVerified: string;
+  companionOtpBlocked: string;
+  companionOtpFailed: string;
+  otpSend: string;
+  otpSending: string;
+  otpResend: string;
+  otpCode: string;
+  otpCodeInvalid: string;
+  otpVerify: string;
+  otpVerifying: string;
+  otpCancel: string;
+  otpExtensionInvalid: string;
+  otpTestCode: (code: string) => string;
   companionsSubmit: string;
   companionsIncomplete: string;
   companionsHeading: (index: number) => string;
@@ -184,6 +207,22 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     companionsBody: (seats, count) => t('mweb.hostScan.companionsBody', { vars: { seats, count } }),
     companionName: t('mweb.hostScan.companionName'),
     companionPhone: t('mweb.hostScan.companionPhone'),
+    companionExtension: t('mweb.hostScan.companionExtension'),
+    companionVerifyCta: t('mweb.hostScan.companionVerifyCta'),
+    companionOtpHint: t('mweb.hostScan.companionOtpHint'),
+    companionVerified: t('mweb.hostScan.companionVerified'),
+    companionOtpBlocked: t('mweb.hostScan.companionOtpBlocked'),
+    companionOtpFailed: t('mweb.hostScan.companionOtpFailed'),
+    otpSend: t('mweb.attendance.otpSend'),
+    otpSending: t('mweb.attendance.otpSending'),
+    otpResend: t('mweb.attendance.otpResend'),
+    otpCode: t('mweb.attendance.otpCode'),
+    otpCodeInvalid: t('mweb.attendance.otpCodeInvalid'),
+    otpVerify: t('mweb.attendance.otpVerify'),
+    otpVerifying: t('mweb.attendance.otpVerifying'),
+    otpCancel: t('mweb.attendance.otpCancel'),
+    otpExtensionInvalid: t('mweb.attendance.otpExtensionInvalid'),
+    otpTestCode: (code) => t('mweb.attendance.otpTestCode', { vars: { code } }),
     companionsSubmit: t('mweb.hostScan.companionsSubmit'),
     companionsIncomplete: t('mweb.hostScan.companionsIncomplete'),
     companionsHeading: (index) => t('mweb.hostScan.companionsHeading', { vars: { index } }),
@@ -282,6 +321,22 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     companionsBody: (seats, count) => t('shell.hostScan.companionsBody', { vars: { seats, count } }),
     companionName: t('shell.hostScan.companionName'),
     companionPhone: t('shell.hostScan.companionPhone'),
+    companionExtension: t('shell.hostScan.companionExtension'),
+    companionVerifyCta: t('shell.hostScan.companionVerifyCta'),
+    companionOtpHint: t('shell.hostScan.companionOtpHint'),
+    companionVerified: t('shell.hostScan.companionVerified'),
+    companionOtpBlocked: t('shell.hostScan.companionOtpBlocked'),
+    companionOtpFailed: t('shell.hostScan.companionOtpFailed'),
+    otpSend: t('shell.attendance.otpSend'),
+    otpSending: t('shell.attendance.otpSending'),
+    otpResend: t('shell.attendance.otpResend'),
+    otpCode: t('shell.attendance.otpCode'),
+    otpCodeInvalid: t('shell.attendance.otpCodeInvalid'),
+    otpVerify: t('shell.attendance.otpVerify'),
+    otpVerifying: t('shell.attendance.otpVerifying'),
+    otpCancel: t('shell.attendance.otpCancel'),
+    otpExtensionInvalid: t('shell.attendance.otpExtensionInvalid'),
+    otpTestCode: (code) => t('shell.attendance.otpTestCode', { vars: { code } }),
     companionsSubmit: t('shell.hostScan.companionsSubmit'),
     companionsIncomplete: t('shell.hostScan.companionsIncomplete'),
     companionsHeading: (index) => t('shell.hostScan.companionsHeading', { vars: { index } }),

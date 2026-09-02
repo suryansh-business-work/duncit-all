@@ -30,7 +30,9 @@
       "Bash(cp \"C:/Users/SURYAN~1/AppData/Local/Temp/claude/c--Users-Suryansh-Srivastava-Desktop-Projects-duncit-all/d8f9730c-1764-4dea-92a3-1f30cc8e28af/scratchpad/check-templates.ts\" scripts/__check-templates.tmp.ts)",
       "Bash(npx expo *)",
       "Bash(echo \"EXIT=$?\")",
-      "Bash(rm -f expo-cfg-err.txt)"
+      "Bash(rm -f expo-cfg-err.txt)",
+      "Bash(npx eslint *)",
+      "Bash(xargs grep -l \"acceptAll\\\\|Accept all\\\\|Accept All\")"
     ],
     "deny": [],
     "additionalDirectories": [

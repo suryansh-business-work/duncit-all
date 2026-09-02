@@ -111,4 +111,24 @@ describe('fetchBranding', () => {
     fetchMock.mockResolvedValue(jsonResponse({ data: {} }));
     await expect(fetchBranding()).resolves.toBeNull();
   });
+
+  it('returns null when the payload carries no data key at all', async () => {
+    fetchMock.mockResolvedValue(jsonResponse({}));
+    await expect(fetchBranding()).resolves.toBeNull();
+  });
+
+  it('raises the first GraphQL error the server reports', async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({ errors: [{ message: 'Branding is not configured' }] }),
+    );
+    await expect(fetchBranding()).rejects.toThrow('Branding is not configured');
+  });
+
+  it('still raises when the error carries no message', async () => {
+    // A GraphQL error without a message is rare but legal, and swallowing it
+    // would turn a failed request into a silent null the page renders as
+    // "no branding" rather than "something is wrong".
+    fetchMock.mockResolvedValue(jsonResponse({ errors: [{}] }));
+    await expect(fetchBranding()).rejects.toThrow('Request failed');
+  });
 });

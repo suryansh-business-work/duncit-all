@@ -51,8 +51,14 @@ describe('submitStatusReport', () => {
     const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe(`${SERVER_BASE}/graphql`);
     // Unauthenticated by design: the visitor this exists for may be the one who
-    // cannot sign in anywhere.
-    expect((init as RequestInit).headers).toEqual({ 'content-type': 'application/json' });
+    // cannot sign in anywhere. The identity headers name the SURFACE, not a
+    // person — they are what rate limiting and the audit trail read.
+    expect((init as RequestInit).headers).toEqual({
+      'content-type': 'application/json',
+      'x-duncit-surface': 'WEBSITE',
+      'x-duncit-app': 'status-website',
+    });
+    expect((init as RequestInit).headers).not.toHaveProperty('authorization');
     expect((init as RequestInit).signal).toBe(signal);
     expect(postedBody().variables).toEqual({ input: REPORT });
   });

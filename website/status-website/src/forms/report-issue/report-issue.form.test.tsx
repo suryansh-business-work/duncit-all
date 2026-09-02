@@ -197,6 +197,49 @@ describe('ReportIssueSection', () => {
     expect(screen.getByRole('button', { name: 'Report something else' })).toBeTruthy();
   });
 
+  it('sends the attached screenshots along with the report', async () => {
+    render(<ReportIssueForm groups={GROUPS} onSubmitted={vi.fn()} onCancel={vi.fn()} />);
+
+    const picker = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const shot = new File(['screenshot-bytes'], 'signin-500.png', { type: 'image/png' });
+    fireEvent.change(picker, { target: { files: [shot] } });
+    await screen.findByAltText('signin-500.png');
+
+    fillValidReport();
+    fireEvent.click(screen.getByRole('button', { name: 'Send report' }));
+
+    await waitFor(() => expect(submitStatusReport).toHaveBeenCalled());
+    // The images travel INSIDE the mutation as base64 — the form is
+    // unauthenticated, so there is no upload credential to hand out.
+    const sent = submitStatusReport.mock.calls[0][0];
+    expect(sent.images).toHaveLength(1);
+    expect(sent.images[0].file_name).toBe('signin-500.png');
+    expect(sent.images[0].mime_type).toBe('image/png');
+    expect(sent.images[0].data).toContain('data:image/png;base64,');
+    // Only the three fields the mutation takes. The local draft id is not
+    // one of them and must not leak into the payload.
+    expect(sent.images[0]).toEqual({
+      file_name: 'signin-500.png',
+      mime_type: 'image/png',
+      data: expect.stringContaining('data:image/png;base64,'),
+    });
+  });
+
+  it('lets the reporter dismiss the thank-you from the alert itself', async () => {
+    render(<ReportIssueSection groups={null} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Report a problem' }));
+    fillValidReport();
+    fireEvent.click(screen.getByRole('button', { name: 'Send report' }));
+    await screen.findByRole('alert');
+
+    // MUI renders the Alert close affordance only when onClose is wired, so
+    // this is also the assertion that it still is.
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+    await waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
+  });
+
   it('dismisses the thank-you, and closes when the form is cancelled', async () => {
     render(<ReportIssueSection groups={null} />);
 

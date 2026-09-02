@@ -16,7 +16,7 @@ export default defineConfig({
       reportOnFailure: true,
       reporter: ['text-summary', 'lcov'],
       reportsDirectory: './coverage',
-      include: ['src/lib/**', 'src/utils/**'],
+      include: ['src/lib/**', 'src/utils/**', 'src/config/**'],
       exclude: ['src/pages/**', '**/*.astro', '**/*.config.*', 'src/env.d.ts'],
       thresholds: { statements: 100, branches: 100, functions: 100, lines: 100 },
     },

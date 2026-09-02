@@ -35,10 +35,20 @@ const OUT = join(
 const NAME = "generate-package-manifest";
 const check = process.argv.includes("--check");
 
-/** Trees that hold somebody else's `package.json`, or a build of ours. */
+/**
+ * Trees that hold somebody else's `package.json`, or a build of ours.
+ *
+ * `.claude` is here because agent worktrees live under `.claude/worktrees/` —
+ * a full second checkout of this repo, git-excluded, present on one developer's
+ * machine and nowhere else. Walking into it adds every manifest a second time,
+ * so `--check` passes for whoever has no worktree and fails for whoever does,
+ * on the same commit. A generated file has to be a function of the TRACKED
+ * tree or it cannot be a gate.
+ */
 const SKIP_DIR = new Set([
   "node_modules",
   ".git",
+  ".claude",
   "dist",
   "build",
   ".astro",

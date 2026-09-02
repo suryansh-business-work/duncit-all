@@ -313,6 +313,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@apollo/client", range: "^4.2.12", kind: "devDependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "devDependencies" },
       { name: "@mui/icons-material", range: "^9.4.0", kind: "devDependencies" },
@@ -1653,6 +1654,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     private: true,
     dependencies: [
       { name: "@apollo/client", range: "^4.2.12", kind: "dependencies" },
+      { name: "@duncit/ai-monitoring", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/auto-pods", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },

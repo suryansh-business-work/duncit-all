@@ -13,7 +13,11 @@ export default defineConfig({
       reportOnFailure: true,
       reporter: ['text-summary', 'lcov'],
       reportsDirectory: './coverage',
-      include: ['regex.mjs'],
+      // BOTH entry points. The lockstep suite already requires regex.cjs and
+      // calls every validator in it, but listing only the .mjs meant no
+      // coverage was ever emitted for the CJS twin — so SonarQube, which
+      // analyses the file either way, read it as entirely uncovered.
+      include: ['regex.mjs', 'regex.cjs'],
       thresholds: { lines: 100, statements: 100, functions: 100, branches: 100 },
     },
   },

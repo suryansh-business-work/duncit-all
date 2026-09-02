@@ -7,7 +7,7 @@ import { makeSignupSchema, signupDefaults } from '../src/schemas/signup';
 const t = (key: string, options?: { vars?: Record<string, string | number> }) =>
   options?.vars ? `${key}:${JSON.stringify(options.vars)}` : key;
 
-const schema = makeSignupSchema(18, t);
+const schema = makeSignupSchema(t, 18);
 const ELIGIBLE_YEAR = String(latestEligibleBirthYear(18));
 
 const valid = {
@@ -85,7 +85,7 @@ describe('the birth year', () => {
   });
 
   it('takes the minimum age it is given', () => {
-    const strict = makeSignupSchema(21, t);
+    const strict = makeSignupSchema(t, 21);
     expect(strict.safeParse({ ...valid, dobYear: ELIGIBLE_YEAR }).success).toBe(false);
   });
 });
@@ -171,7 +171,7 @@ describe('the policies', () => {
   });
 
   it('refuses until every required policy is ticked, and says so on the field', () => {
-    const gated = makeSignupSchema(18, t, ['terms', 'privacy']);
+    const gated = makeSignupSchema(t, 18, ['terms', 'privacy']);
     const result = gated.safeParse({ ...valid, acceptedPolicyIds: ['terms'] });
     expect(result.success).toBe(false);
     if (result.success) return;
@@ -180,7 +180,7 @@ describe('the policies', () => {
   });
 
   it('passes once all of them are', () => {
-    const gated = makeSignupSchema(18, t, ['terms', 'privacy']);
+    const gated = makeSignupSchema(t, 18, ['terms', 'privacy']);
     expect(gated.safeParse({ ...valid, acceptedPolicyIds: ['terms', 'privacy'] }).success).toBe(
       true,
     );
@@ -189,7 +189,7 @@ describe('the policies', () => {
 
 describe('the default minimum age', () => {
   it('falls back to the shared constant when none is given', () => {
-    const relaxed = makeSignupSchema(undefined, t);
+    const relaxed = makeSignupSchema(t);
     expect(relaxed.safeParse({ ...valid, dobYear: '1990' }).success).toBe(true);
   });
 });

@@ -1,20 +1,18 @@
 import { formResolver } from '../../utils/form-resolver';
-import { useCallback, useState, type ReactNode } from 'react';
+import { useCallback, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import { PodMediaSummary } from '@/components/pod-media/PodMediaSummary';
 import { DuncitDialog } from '@/components/DuncitDialog';
-import { CompletePodSettlementDocument } from '@/graphql/settlement';
-import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useSettlementPreview } from '@/hooks/useSettlementPreview';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { SettlementSummary } from './SettlementSummary';
+import { usePodCompleteSubmit } from './usePodCompleteSubmit';
 import {
   blankPodCompleteValues,
-  buildCompleteInput,
   buildPodCompleteSchema,
   type HostPodForComplete,
   type PodCompleteValues,
@@ -109,8 +107,6 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
   const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
   const hasVenue = !!pod?.venue_id;
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { control, handleSubmit, watch } = useForm<PodCompleteValues, any, PodCompleteValues>({
     resolver: formResolver<PodCompleteValues>(buildPodCompleteSchema(hasVenue)),
     defaultValues: blankPodCompleteValues,
@@ -123,24 +119,12 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
     error: previewError,
   } = useSettlementPreview(pod?.id ?? null, billAmount);
 
-  const submit = handleSubmit(async (values) => {
-    /* istanbul ignore next -- the dialog only mounts with a pod */
-    if (!pod) return;
-    setBusy(true);
-    setError(null);
-    try {
-      await graphqlRequest(
-        CompletePodSettlementDocument,
-        { input: buildCompleteInput(values, pod.id) },
-        { auth: true },
-      );
-      onCompleted();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('mweb.hostManage.couldNotCompleteThePod'));
-    } finally {
-      setBusy(false);
-    }
-  });
+  const { busy, error, run } = usePodCompleteSubmit(
+    pod,
+    onCompleted,
+    t('mweb.hostManage.couldNotCompleteThePod'),
+  );
+  const submit = handleSubmit(run);
 
   // Closing is refused outright while the settlement is in flight — the backdrop,
   // the header's ✕ and the Cancel button all route through here, so there is one

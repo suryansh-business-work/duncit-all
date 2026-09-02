@@ -773,7 +773,6 @@
   "portals/partners-app/src/pages/host-dashboard-page/HostInsightsCharts.tsx": 4,
   "portals/partners-app/src/pages/host-dashboard-page/HostStatCards.tsx": 6,
   "portals/partners-app/src/pages/host-pods-page/HostPodsPage.tsx": 3,
-  "portals/partners-app/src/pages/list-products-page/list-products/AiMonitoring.tsx": 4,
   "portals/partners-app/src/pages/list-products-page/list-products/list-products.form-ui.tsx": 4,
   "portals/partners-app/src/pages/list-products-page/list-products/list-products.schema.ts": 25,
   "portals/partners-app/src/pages/list-products-page/list-products/ListProductsPreview.tsx": 2,

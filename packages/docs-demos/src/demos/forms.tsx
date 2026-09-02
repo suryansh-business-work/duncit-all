@@ -161,7 +161,7 @@ export default defineDemos('forms', [
           }),
         ),
         Signup: say(
-          makeSignupSchema(18, t).safeParse({
+          makeSignupSchema(t, 18).safeParse({
             name: mock.name,
             dobYear: mock.dobYear,
             email: mock.email,

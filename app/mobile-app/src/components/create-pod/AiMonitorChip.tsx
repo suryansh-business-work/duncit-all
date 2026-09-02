@@ -1,11 +1,5 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack } from 'tamagui';
-
-import { AI_MONITOR_GRADIENT } from '@duncit/utils';
-
+import { AiMonitorPill } from '@/components/ai-monitoring';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   onPress: () => void;
@@ -13,36 +7,20 @@ interface Props {
 }
 
 /** Colourful gradient pill that sits beside every step's title. Tapping it opens
- * the "What AI monitors" guidelines dialog. */
+ * the "What AI monitors" guidelines dialog.
+ *
+ * The pill itself — gradient, sweep, turning spark — is the app's one
+ * `AiMonitorPill`, the twin of the pill mWeb shows on the same step and the
+ * portals show on a pod row (rule 27). Only the copy and what it opens are
+ * Create Pod's. */
 export function AiMonitorChip({ onPress, testID = 'create-pod-ai-chip' }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <XStack
-      testID={testID}
-      role="button"
-      aria-label={t('mweb.createPod.aiMonitors')}
+    <AiMonitorPill
+      label={t('mweb.createPod.aiMonitoring')}
+      ariaLabel={t('mweb.createPod.aiMonitors')}
       onPress={onPress}
-      pressStyle={PRESS_STYLE.control}
-      borderRadius={999}
-      overflow="hidden"
-    >
-      <LinearGradient
-        colors={AI_MONITOR_GRADIENT}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 5,
-          paddingHorizontal: 10,
-          paddingVertical: 6,
-        }}
-      >
-        <MaterialIcons name="auto-awesome" size={13} color="#ffffff" />
-        <Text fontSize={11} fontWeight="700" color="#ffffff">
-          {t('mweb.createPod.aiMonitoring')}
-        </Text>
-      </LinearGradient>
-    </XStack>
+      testID={testID}
+    />
   );
 }

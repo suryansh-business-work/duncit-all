@@ -3,7 +3,6 @@ import { Alert, Box, Link, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import { DuncitButton } from '@duncit/buttons';
-import { auth } from '@duncit/auth-tokens';
 import {
   PASSWORD_RECOVERY_STEP_COUNT,
   buildPasswordRecoveryLabels,

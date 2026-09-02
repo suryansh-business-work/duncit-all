@@ -1,7 +1,4 @@
-import {
-  makeSignupSchema as makeSharedSignupSchema,
-  type SignupFormValues,
-} from '@duncit/forms/schemas';
+import { makeSignupSchema as makeSharedSignupSchema } from '@duncit/forms/schemas';
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS } from '@duncit/datetime';
 
 import { fallbackT, type Translate } from '@/i18n/fallback';
@@ -19,11 +16,11 @@ export function makeSignupSchema(
   t: Translate = fallbackT,
   requiredPolicyIds: readonly string[] = [],
 ) {
-  return makeSharedSignupSchema(minAge, t, requiredPolicyIds);
+  return makeSharedSignupSchema(t, minAge, requiredPolicyIds);
 }
 
 export const signupSchema = makeSignupSchema();
 
-export type { SignupFormValues };
+export type { SignupFormValues } from '@duncit/forms/schemas';
 
 export { signupDefaults } from '@duncit/forms/schemas';

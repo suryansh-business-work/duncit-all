@@ -47,7 +47,7 @@ export default function HashtagChipsField({ form }: Readonly<Props>) {
             event.preventDefault();
             commit();
           } else if (event.key === 'Backspace' && !draft && tags.length > 0) {
-            removeTag(tags[tags.length - 1]);
+            removeTag(tags.at(-1)!);
           }
         };
         return (

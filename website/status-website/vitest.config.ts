@@ -17,7 +17,11 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       // main.tsx is the bootstrap entry (DOM mount + font/side-effect imports);
       // it carries no unit-testable logic and is coverage-excluded in Sonar too.
-      exclude: ['src/**/*.d.ts', 'src/vite-env.d.ts', 'src/main.tsx'],
+      // src/types.ts is 26 interface/type declarations and nothing else — it
+      // emits no JavaScript at all, so it cannot be executed and every one of
+      // its 177 lines counted as uncovered. Same category as the .d.ts files
+      // beside it, just without the extension to say so.
+      exclude: ['src/**/*.d.ts', 'src/vite-env.d.ts', 'src/main.tsx', 'src/types.ts'],
     },
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],

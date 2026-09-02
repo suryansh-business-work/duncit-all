@@ -178,7 +178,7 @@ for (const { manifest, upgrades, error } of results) {
   behind += names.length;
   console.log(`\n  ${label}`);
   const was = before.get(manifest);
-  for (const name of names.sort()) {
+  for (const name of names.toSorted((a, b) => a.localeCompare(b))) {
     const from = was.get(name) ?? '?';
     console.log(`    ${name.padEnd(38)} ${from.padEnd(14)} -> ${upgrades[name]}`);
   }

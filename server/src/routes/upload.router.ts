@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Response } from 'express';
 import busboy from 'busboy';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -105,6 +105,80 @@ function spoolFilePart(
   });
 }
 
+type UploadTicket = NonNullable<ReturnType<typeof spendUploadTicket>>;
+
+/**
+ * Where this ticket's bytes are written.
+ *
+ * A build artifact is spooled STRAIGHT into the directory it will be served
+ * from, so a 100 MB APK is written once. Spooling to tmp and moving would write
+ * it twice — and worse, the move would be a cross-device copy: in the container
+ * /tmp and the bind-mounted artifacts dir are different mounts, so fs.rename
+ * fails there with EXDEV.
+ *
+ * A database archive lands the same way and for the same reason, except that
+ * its name was decided when the pass was issued: the backup row already exists
+ * and already points at it. Resolving through backupPath means a tampered
+ * destination cannot write outside the directory — null is that refusal.
+ */
+async function resolveDestination(
+  ticket: UploadTicket,
+  requestedName: string
+): Promise<{ storedName: string; destPath: string } | null> {
+  if (ticket.store === 'builds') {
+    await ensureArtifactsDir();
+    const dest = newArtifactDestination(requestedName || 'artifact');
+    return { storedName: dest.name, destPath: dest.path };
+  }
+  if (ticket.store === 'db-backups') {
+    const resolved = backupPath(ticket.destination);
+    if (!resolved) return null;
+    await ensureBackupsDir();
+    return { storedName: ticket.destination, destPath: resolved };
+  }
+  return {
+    storedName: '',
+    destPath: path.join(os.tmpdir(), `duncit-upload-${crypto.randomUUID()}`),
+  };
+}
+
+/**
+ * Log an image for AI review.
+ *
+ * Images that come through here (support attachments, native picks) never
+ * touched the GraphQL upload path, so this is the only place they can be
+ * logged. Without it "every upload is checked" would be true of one of the two
+ * routes a file can take. Videos are not AI-reviewed.
+ */
+function recordImageForReview(ticket: UploadTicket, url: string, fileName: string): void {
+  mediaScanService
+    .record({ url, fileName, folder: ticket.folder, surface: ticket.surface, userId: ticket.userId })
+    .catch(() => undefined);
+}
+
+/**
+ * Answer an upload the library refused.
+ *
+ * A file the admin's Upload Settings refuse (too large, a format that is not on
+ * the allow-list) is the uploader's problem rather than the upstream's: it comes
+ * back as a 400 carrying the reason — the same sentence the GraphQL upload
+ * answers with — instead of a 502, which reads as "try again" and never stops
+ * being true.
+ */
+function answerUploadFailure(
+  res: Response,
+  ticket: UploadTicket,
+  error: any,
+  fileName: string,
+  bytes: number
+): void {
+  const rejected = error?.extensions?.code === 'BAD_USER_INPUT';
+  if (!rejected) {
+    logs.server.error('upload', 'proxy', { error, userId: ticket.userId, fileName, bytes });
+  }
+  res.status(rejected ? 400 : 502).json({ message: error?.message || 'Upload failed' });
+}
+
 export function buildUploadRouter(): Router {
   const router = Router();
 
@@ -117,34 +191,14 @@ export function buildUploadRouter(): Router {
       return;
     }
 
-    // A build artifact is spooled STRAIGHT into the directory it will be served
-    // from, so a 100 MB APK is written once. Spooling to tmp and moving would
-    // write it twice — and worse, the move would be a cross-device copy: in the
-    // container /tmp and the bind-mounted artifacts dir are different mounts, so
-    // fs.rename fails there with EXDEV.
-    // A database archive lands the same way and for the same reason, except
-    // that its name was decided when the pass was issued: the backup row
-    // already exists and already points at it. Resolving through backupPath
-    // means a tampered destination cannot write outside the directory.
     const toBuilds = ticket.store === 'builds';
     const toBackups = ticket.store === 'db-backups';
-    let storedName = '';
-    let destPath = path.join(os.tmpdir(), `duncit-upload-${crypto.randomUUID()}`);
-    if (toBuilds) {
-      await ensureArtifactsDir();
-      const dest = newArtifactDestination(String(req.query.fileName ?? '').trim() || 'artifact');
-      storedName = dest.name;
-      destPath = dest.path;
-    } else if (toBackups) {
-      const resolved = backupPath(ticket.destination);
-      if (!resolved) {
-        res.status(400).json({ message: 'That upload link does not name a backup archive.' });
-        return;
-      }
-      await ensureBackupsDir();
-      storedName = ticket.destination;
-      destPath = resolved;
+    const destination = await resolveDestination(ticket, String(req.query.fileName ?? '').trim());
+    if (!destination) {
+      res.status(400).json({ message: 'That upload link does not name a backup archive.' });
+      return;
     }
+    const { storedName, destPath } = destination;
 
     let keep = false;
     try {
@@ -194,38 +248,10 @@ export function buildUploadRouter(): Router {
           folder: ticket.folder,
           surface: ticket.surface,
         });
-        // Images that come through here (support attachments, native picks)
-        // never touched the GraphQL upload path, so this is the only place they
-        // can be logged. Without it "every upload is checked" would be true of
-        // one of the two routes a file can take. Videos are not AI-reviewed.
-        if (isImage) {
-          mediaScanService
-            .record({
-              url: uploaded.url,
-              fileName: storedFileName,
-              folder: ticket.folder,
-              surface: ticket.surface,
-              userId: ticket.userId,
-            })
-            .catch(() => undefined);
-        }
+        if (isImage) recordImageForReview(ticket, uploaded.url, storedFileName);
         res.json(uploaded);
       } catch (error: any) {
-        // A file the admin's Upload Settings refuse (too large, a format that is
-        // not on the allow-list) is the uploader's problem rather than the
-        // upstream's: it comes back as a 400 carrying the reason — the same
-        // sentence the GraphQL upload answers with — instead of a 502, which
-        // reads as "try again" and never stops being true.
-        const rejected = error?.extensions?.code === 'BAD_USER_INPUT';
-        if (!rejected) {
-          logs.server.error('upload', 'proxy', {
-            error,
-            userId: ticket.userId,
-            fileName,
-            bytes: spooled.bytes,
-          });
-        }
-        res.status(rejected ? 400 : 502).json({ message: error?.message || 'Upload failed' });
+        answerUploadFailure(res, ticket, error, fileName, spooled.bytes);
       }
     } finally {
       // Always, except the one path that means to keep it — an artifact left in

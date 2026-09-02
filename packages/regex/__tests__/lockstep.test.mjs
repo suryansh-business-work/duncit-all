@@ -56,7 +56,10 @@ describe('the patterns themselves are identical across entry points', () => {
   });
 
   it('every validator agrees with its cjs twin on the same input', () => {
-    const samples = ['', '9876543210', 'a@b.com', '110001', '123456', 'HDFC0001234', 'john@okhdfcbank', '29ABCDE1234F1Z5'];
+    // null and undefined are in here deliberately: toDigits guards its input
+    // with a nullish guard, and with only string samples that guard never fired
+    // on the cjs side, so the twin carried an unexercised branch.
+    const samples = ['', '9876543210', 'a@b.com', '110001', '123456', 'HDFC0001234', 'john@okhdfcbank', '29ABCDE1234F1Z5', null, undefined];
     const validators = sorted(esmNames).filter((name) => typeof esm[name] === 'function');
     for (const name of validators) {
       for (const sample of samples) {

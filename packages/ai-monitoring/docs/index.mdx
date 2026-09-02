@@ -9,12 +9,19 @@ consumers:
   - 'packages/media-picker'
   - 'app/mweb'
   - 'app/mobile-app'
+  - 'portals/admin'
+  - 'portals/partners-app'
 exports:
   - 'resolveAiMonitoringCopy'
   - 'aiMonitoringFallbackCopy'
   - 'isAiMonitoringChipVisible'
   - 'AI_MONITORING_CONFIG_QUERY'
   - 'AiMonitoringChip'
+  - 'AiMonitorGlyph'
+  - 'AiMonitorPill'
+  - 'AiProcessingOverlay'
+  - 'AiProcessingInline'
+  - 'aiMotion'
   - 'AiMonitoringDialog'
   - 'useAiMonitoringConfig'
 ---
@@ -77,3 +84,62 @@ normal case, not an error case: the fallback copy is complete on its own.
 
 Do not compose the key from a variable — the Shared Gates check greps for the
 literal, and a composed key is invisible to it.
+
+## The motion language
+
+AI Monitoring moves, and it moves the same way everywhere: a person learns the
+signal once instead of per screen. There are three states and one badge.
+
+| State | What it looks like | What renders it |
+| --- | --- | --- |
+| Idle, on a flat control | a band of the AI gradient crossing it, spark turning | `AiMonitoringChip` |
+| Idle, on a gradient control | the colour sliding under it, spark turning | `AiMonitorPill` |
+| A check is running | the badge breathing and emitting rings, a bar scanning | `AiProcessingOverlay`, `AiProcessingInline` |
+
+The badge itself is `AiMonitorGlyph` — one drawing, at four sizes, so the chip,
+the dialog it opens, the pill on a pod row and the wait behind Create Pod are
+visibly the same feature.
+
+```tsx
+import { AiMonitorGlyph, AiMonitorPill, AiProcessingOverlay } from '@duncit/ai-monitoring/mui';
+
+<AiMonitorPill label={t('shell.podMonitoring.aiMonitoring')} onClick={openTrail} />;
+
+<AiProcessingOverlay
+  open={publishing}
+  title={t('mweb.createPod.aiMonitoringTitle')}
+  note={t('mweb.createPod.aiMonitoringNote')}
+  hold={t('mweb.createPod.aiMonitoringHold')}
+/>;
+```
+
+The processing views hold **no copy of their own**: Create Pod's wording is not
+a listing's wording, so the caller passes the sentences, exactly as
+`AiMonitoringDialog` takes its `copy`.
+
+### Timings live in `@duncit/utils`, not here
+
+`AI_MONITOR_MOTION` sits beside `AI_MONITOR_GRADIENT`, because the native app
+animates the same badge with `Animated` and cannot import this package's MUI
+half. Both sides read the durations from there; a duration typed twice is two
+features that merely share a palette.
+
+```ts
+import { AI_MONITOR_MOTION, AI_MONITOR_RINGS } from '@duncit/utils';
+
+AI_MONITOR_MOTION.breatheMs; // 1800 — the badge, on web and on native
+AI_MONITOR_RINGS; // the lead ring and the one half a flight behind it
+```
+
+### Every animation can be switched off
+
+Nothing sets `animation` directly. It goes through `aiMotion`, which pairs the
+animation with `@media (prefers-reduced-motion: reduce) { animation: none }` —
+this is a notice a person is meant to READ before they upload something, and a
+shimmer they cannot stop is a reason to look away from it.
+
+```ts
+import { aiMotion, aiBreathe } from '@duncit/ai-monitoring/mui';
+
+sx={{ ...aiMotion(`${aiBreathe} 1800ms ease-in-out infinite`) }}
+```

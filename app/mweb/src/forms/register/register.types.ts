@@ -17,7 +17,7 @@ export function makeRegisterSchema(
   t: Translate = fallbackT,
   requiredPolicyIds: readonly string[] = [],
 ) {
-  return makeSignupSchema(minAge, t, requiredPolicyIds);
+  return makeSignupSchema(t, minAge, requiredPolicyIds);
 }
 
 export const registerSchema = makeRegisterSchema();

@@ -1,6 +1,4 @@
-import { ButtonBase } from '@mui/material';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import { AI_MONITOR_GRADIENT_CSS } from '@duncit/utils';
+import { AiMonitorPill } from '@duncit/ai-monitoring/mui';
 import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
@@ -8,29 +6,19 @@ interface Props {
 }
 
 /** Colourful gradient pill beside every step's eyebrow. Opens the "What AI
- * monitors" guidelines dialog. */
+ * monitors" guidelines dialog.
+ *
+ * The pill itself — gradient, shimmer, turning spark — is
+ * `@duncit/ai-monitoring/mui`'s, the same one Admin and Partners put on a pod
+ * row (rule 40). Only the copy and what it opens are Create Pod's. */
 export default function AiMonitorChip({ onClick }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <ButtonBase
+    <AiMonitorPill
+      label={t('mweb.createPod.aiMonitoring')}
+      ariaLabel={t('mweb.createPod.aiMonitors')}
       onClick={onClick}
-      aria-label={t('mweb.createPod.aiMonitors')}
-      data-testid="create-pod-ai-chip"
-      sx={{
-        borderRadius: 999,
-        px: 1.25,
-        py: 0.5,
-        gap: 0.5,
-        color: '#fff',
-        fontWeight: 700,
-        fontSize: 11,
-        lineHeight: 1,
-        background: AI_MONITOR_GRADIENT_CSS,
-        boxShadow: 1,
-      }}
-    >
-      <AutoAwesomeIcon sx={{ fontSize: 14 }} />
-      {t('mweb.createPod.aiMonitoring')}
-    </ButtonBase>
+      testId="create-pod-ai-chip"
+    />
   );
 }

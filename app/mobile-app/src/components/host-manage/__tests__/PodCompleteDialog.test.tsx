@@ -5,6 +5,13 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
+// PodMediaSummary reaches for the navigator to open the Upload Pod Media
+// screen. The dialog renders it, so without this the whole suite dies on
+// "Couldn't find a navigation object" before any assertion runs.
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: mockNavigate }),
+}));
 const mockPreview = { settlement: null as unknown, isLoading: false, error: null as string | null };
 jest.mock('@/hooks/useSettlementPreview', () => ({
   useSettlementPreview: () => mockPreview,
@@ -22,17 +29,16 @@ jest.mock('@/hooks/useMediaUpload', () => ({
   }),
 }));
 jest.mock('@/hooks/useUploadSettings', () => ({ useUploadSettings: () => null }));
+// PodMediaSummary loads the pod's media board through the same graphqlRequest
+// this suite mocks. Left real, its query lands in mockRequest and every
+// assertion about what the dialog SENT ends up reading the board query.
+jest.mock('@/hooks/usePodMediaBoard', () => ({
+  usePodMediaBoard: () => ({ board: null, isLoading: false, error: null, busy: false }),
+}));
 const mockRequest = graphqlRequest as jest.Mock;
 
 const venuePod = { id: 'p1', pod_title: 'Cafe jam', venue_id: 'v1' };
 const virtualPod = { id: 'p2', pod_title: 'Online jam', venue_id: null };
-
-const addPartyMedia = async () => {
-  fireEvent.press(screen.getByTestId('media-upload-add'));
-  await waitFor(() =>
-    expect(screen.getByTestId('media-thumb-https://cdn/p.jpg')).toBeOnTheScreen(),
-  );
-};
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -71,13 +77,12 @@ describe('PodCompleteDialog', () => {
     expect(screen.queryByTestId('pod-complete-dialog')).toBeNull();
   });
 
-  it('submits a virtual pod with only party media (device upload)', async () => {
+  it('submits a virtual pod, which is never asked for a bill', async () => {
     const onCompleted = jest.fn();
     renderWithProviders(
       <PodCompleteDialog pod={virtualPod} onClose={jest.fn()} onCompleted={onCompleted} />,
     );
     expect(screen.queryByTestId('field-venue_bill_amount')).toBeNull();
-    await addPartyMedia();
     fireEvent.press(screen.getByTestId('pod-complete-submit'));
     await waitFor(() => expect(onCompleted).toHaveBeenCalled());
     expect(mockRequest).toHaveBeenCalledWith(
@@ -87,7 +92,7 @@ describe('PodCompleteDialog', () => {
     );
   });
 
-  it('requires bill amount and media for a venue pod, but never a bill document', async () => {
+  it('requires a bill amount for a venue pod, but never a bill document', async () => {
     renderWithProviders(
       <PodCompleteDialog pod={venuePod} onClose={jest.fn()} onCompleted={jest.fn()} />,
     );
@@ -95,17 +100,15 @@ describe('PodCompleteDialog', () => {
     expect(screen.queryByTestId('bill-upload-add')).toBeNull();
     fireEvent.press(screen.getByTestId('pod-complete-submit'));
     await waitFor(() => expect(screen.getByTestId('venue_bill_amount-error')).toBeOnTheScreen());
-    expect(screen.getByTestId('media_text-error')).toBeOnTheScreen();
     expect(mockRequest).not.toHaveBeenCalled();
   });
 
-  it('submits a venue pod with the bill amount and media, no bill document', async () => {
+  it('submits a venue pod with the bill amount, no bill document', async () => {
     const onCompleted = jest.fn();
     renderWithProviders(
       <PodCompleteDialog pod={venuePod} onClose={jest.fn()} onCompleted={onCompleted} />,
     );
     fireEvent.changeText(screen.getByTestId('field-venue_bill_amount'), '1500');
-    await addPartyMedia();
     fireEvent.press(screen.getByTestId('pod-complete-submit'));
     await waitFor(() => expect(onCompleted).toHaveBeenCalled());
     expect(mockRequest).toHaveBeenCalledWith(
@@ -120,7 +123,6 @@ describe('PodCompleteDialog', () => {
     renderWithProviders(
       <PodCompleteDialog pod={virtualPod} onClose={jest.fn()} onCompleted={jest.fn()} />,
     );
-    await addPartyMedia();
     mockRequest.mockRejectedValueOnce(new Error('FORBIDDEN'));
     fireEvent.press(screen.getByTestId('pod-complete-submit'));
     await waitFor(() => expect(screen.getByText('FORBIDDEN')).toBeOnTheScreen());
@@ -140,7 +142,6 @@ describe('PodCompleteDialog', () => {
     renderWithProviders(
       <PodCompleteDialog pod={virtualPod} onClose={onClose} onCompleted={jest.fn()} />,
     );
-    await addPartyMedia();
     fireEvent.press(screen.getByTestId('pod-complete-submit'));
     await waitFor(() => expect(screen.getByText('Completing…')).toBeOnTheScreen());
     fireEvent.press(screen.getByTestId('pod-complete-cancel'));

@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
+import { AiMonitorGlyph } from '@/components/ai-monitoring';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { POD_GUIDELINE_RULE_KEYS } from './create-pod.form';
@@ -54,6 +55,9 @@ export function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) {
       footer={footer}
     >
       <YStack gap={12}>
+        <YStack alignItems="center" paddingBottom={2}>
+          <AiMonitorGlyph size={40} testID="pod-guidelines-glyph" />
+        </YStack>
         <YStack gap={7}>
           {POD_GUIDELINE_RULE_KEYS.map((key) => (
             <XStack key={key} gap={8} alignItems="flex-start">

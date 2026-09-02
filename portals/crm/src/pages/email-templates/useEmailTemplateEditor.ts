@@ -39,7 +39,7 @@ export function useEmailTemplateEditor(templateId: string) {
 
   useEffect(() => {
     if (!template) return;
-    setDraft(JSON.parse(JSON.stringify(template)));
+    setDraft(structuredClone(template));
   }, [template]);
 
   // Images persist immediately via their own mutations, so they're excluded

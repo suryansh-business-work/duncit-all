@@ -23,8 +23,8 @@ import type { Translate } from './translate';
  * bundled English.
  */
 export function makeSignupSchema(
-  minAge: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
   t: Translate,
+  minAge: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
   requiredPolicyIds: readonly string[] = [],
 ) {
   return z

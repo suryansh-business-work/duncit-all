@@ -471,7 +471,7 @@ says *required* and a one-letter name says *too short*, rather than one message 
 badly.
 
 ```ts
-const schema = makeSignupSchema(minAge, t, requiredPolicyIds);
+const schema = makeSignupSchema(t, minAge, requiredPolicyIds);
 
 schema.safeParse({ ...values, name: '' });   // nameRequired
 schema.safeParse({ ...values, name: 'A' });  // nameMin

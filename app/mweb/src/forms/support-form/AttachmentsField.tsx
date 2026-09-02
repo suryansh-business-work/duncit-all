@@ -82,7 +82,6 @@ function AttachmentPreview({ url, onRemove }: Readonly<PreviewProps>) {
 }
 
 export default function AttachmentsField({ attachments, setAttachments }: Readonly<Props>) {
-  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const { upload, uploading } = useImagekitUpload();
   const gate = useAttachmentGate();

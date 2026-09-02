@@ -28,7 +28,7 @@ const PLACEHOLDER = /\{(\w+)\}/g;
 /** The `{name}` tokens in a string, sorted, so two strings can be compared. */
 export function placeholderNames(text) {
   return [...String(text).matchAll(PLACEHOLDER)]
-    .map((match) => match[1])
+    .map((match) => match[1] ?? '')
     .sort((a, b) => a.localeCompare(b));
 }
 

@@ -13,6 +13,17 @@ import { useCompanionOtp } from '@/hooks/useCompanionOtp';
 import { CompanionRow } from './CompanionRow';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
+/**
+ * Row identity, handed out once per row and never reused.
+ *
+ * A CompanionEntry is {name, phone_extension, phone_number, otp_challenge_id} —
+ * it carries no id, and giving it one would ripple through the shared schema,
+ * companionEntriesToInput, the server input type and both apps' tests for the
+ * sake of a React key. So the keys live beside the rows instead, seeded in the
+ * same initialiser, which is what useFieldArray does internally on the MUI side.
+ */
+let nextCompanionKey = 0;
+
 interface Props {
   /** The pod being checked into — what a companion's code is raised against. */
   podId: string;
@@ -49,6 +60,9 @@ export function CompanionsForm({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [rows, setRows] = useState<CompanionEntry[]>(() => blankCompanionEntries(required));
+  const [rowKeys] = useState<string[]>(() =>
+    rows.map(() => `companion-${(nextCompanionKey += 1)}`),
+  );
   const [touched, setTouched] = useState(false);
   const otp = useCompanionOtp(
     podId,
@@ -84,10 +98,8 @@ export function CompanionsForm({
       </Text>
 
       {rows.map((row, index) => (
-        // The index IS the identity here: the rows are positional slots created
-        // from a count, never reordered, added to or removed.
         <CompanionRow
-          key={`companion-${index}`}
+          key={rowKeys[index]}
           index={index}
           entry={row}
           otp={otp}

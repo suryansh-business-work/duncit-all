@@ -16,7 +16,7 @@ export function groupTicketMessages(
   const groups: TicketDayGroup[] = [];
   for (const m of messages) {
     const key = dayKey(m.created_at);
-    const last = groups[groups.length - 1];
+    const last = groups.at(-1);
     if (last?.key === key) {
       last.messages.push(m);
     } else {

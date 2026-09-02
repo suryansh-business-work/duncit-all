@@ -3,7 +3,6 @@ import {
   HttpLink,
   InMemoryCache,
   from,
-  type NormalizedCacheObject,
   type TypePolicies,
 } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';

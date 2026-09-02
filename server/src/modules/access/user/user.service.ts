@@ -48,7 +48,6 @@ import type {
 import { verifyGoogleIdToken } from '@modules/access/auth/auth.google';
 import { assertPortalLogin } from '@modules/portals';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
-import { getUrlConfigs } from '@config/url-configs';
 import { noteSignIn, type SignInContext } from './user.signin';
 import {
   sendWelcomeEmail,
@@ -62,7 +61,6 @@ import {
   sendAdminAccessGrantedEmail,
   sendAdminAccessRevokedEmail,
   sendPartnerAccessGrantedEmail,
-  sendEmail,
 } from '@services/email/email.service';
 import type { AuthUser } from '@context';
 import { CategoryModel } from '@modules/pods/category/category.model';
@@ -83,7 +81,6 @@ import { toPostalAddress } from '@utils/address';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 import { notifyEvent } from '@services/notify/notify.service';
-import { joinUrl } from '@utils/url';
 import { emitNotifyForUsers } from '@modules/engagement/notification/notification.events';
 
 const idStrings = (values: unknown[] | undefined | null) =>
@@ -1391,7 +1388,7 @@ export const userService = {
         email: input.email,
         phone_extension: input.phone_extension,
         phone_number: input.phone_number,
-      } as PasswordResetLookup)
+      })
     );
     if (!user) throw invalidCredentials();
     const stored = (user as any).auth?.password as string | undefined;

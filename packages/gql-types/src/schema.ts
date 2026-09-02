@@ -1255,6 +1255,10 @@ export type AppSettings = {
   __typename?: 'AppSettings';
   /** Whether a host must verify an attendee's name and phone over OTP before marking them present by hand. The door scan is proof on its own and is never gated by this. */
   attendance_otp_required: Scalars['Boolean']['output'];
+  /** How many days ahead a venue is shown its free slots when accepting an Auto Pod. */
+  auto_pod_slot_window_days: Scalars['Int']['output'];
+  /** How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires. */
+  auto_pod_venue_expiry_hours: Scalars['Int']['output'];
   /** CUSTOM anchor — the instant the apps' clock should read (ISO). */
   custom_time?: Maybe<Scalars['String']['output']>;
   /** Server's real time when the CUSTOM anchor was saved (ISO). */
@@ -1590,6 +1594,8 @@ export type AutoPod = {
   cancelled_at?: Maybe<Scalars['String']['output']>;
   /** Display name of the sub-category the admin chose. */
   category_name?: Maybe<Scalars['String']['output']>;
+  /** Super › Category › Sub names, walked up from the sub-category. */
+  category_path: Array<Scalars['String']['output']>;
   /** Club Admin enrolment — null until a club admin claims it for their club. */
   club_claim?: Maybe<AutoPodClubClaim>;
   created_at: Scalars['String']['output'];
@@ -1602,30 +1608,52 @@ export type AutoPod = {
   /** Host enrolment — null until a host assigns themselves. */
   host_claim?: Maybe<AutoPodHostClaim>;
   id: Scalars['ID']['output'];
+  /** False while an admin has paused the offer: shown to nobody, and no claim lands on it. */
+  is_active: Scalars['Boolean']['output'];
   /** The city the first enrolment pinned it to — null while nobody has enrolled. */
   location?: Maybe<AutoPodLocation>;
   materialized_at?: Maybe<Scalars['String']['output']>;
+  meeting_notes?: Maybe<Scalars['String']['output']>;
+  meeting_platform?: Maybe<Scalars['String']['output']>;
+  meeting_url?: Maybe<Scalars['String']['output']>;
   no_of_spots: Scalars['Int']['output'];
   payment_terms?: Maybe<Scalars['String']['output']>;
   place_charges: Array<PodPlaceCharge>;
   /** The materialized pod, once LIVE. */
   pod?: Maybe<Pod>;
   pod_amount: Scalars['Float']['output'];
+  /** VIRTUAL only — a physical offer's dates come from the venue's slot. */
+  pod_date_time?: Maybe<Scalars['String']['output']>;
   pod_description: Scalars['String']['output'];
+  pod_end_date_time?: Maybe<Scalars['String']['output']>;
   pod_hashtag: Array<Scalars['String']['output']>;
   pod_id?: Maybe<Scalars['ID']['output']>;
   pod_images_and_videos: Array<PodMedia>;
   pod_info: Scalars['String']['output'];
+  /**
+   * PHYSICAL waits on a venue to bring the slot; VIRTUAL carries its own
+   * meeting details and dates and waits on a host and a club only.
+   */
+  pod_mode: PodMode;
   pod_occurrence: PodOccurrence;
   pod_title: Scalars['String']['output'];
   pod_type: PodType;
+  product_requests: Array<PodProductRequest>;
+  products_enabled: Scalars['Boolean']['output'];
   reel_url?: Maybe<Scalars['String']['output']>;
   stage: AutoPodStage;
   sub_category_id: Scalars['ID']['output'];
   super_category_id: Scalars['ID']['output'];
   updated_at: Scalars['String']['output'];
-  /** Venue enrolment — null until a venue accepts and picks its slot. */
+  /** Venue enrolment — null until a venue accepts and picks its slot. Always null on a VIRTUAL offer. */
   venue_claim?: Maybe<AutoPodVenueClaim>;
+  /**
+   * When this offer leaves venues' lists (and expires) if none has accepted it
+   * by then — created_at plus Pod Settings' auto_pod_venue_expiry_hours. Null on
+   * a virtual offer, once a venue has accepted, and on every list but the
+   * venue's own queue.
+   */
+  venue_expires_at?: Maybe<Scalars['String']['output']>;
   /** True when the calling user (or one of their clubs) already enrolled. */
   viewer_claimed: Scalars['Boolean']['output'];
   what_this_pod_offers: Array<Scalars['String']['output']>;
@@ -1636,6 +1664,49 @@ export type AutoPodActionCounts = {
   club: Scalars['Int']['output'];
   host: Scalars['Int']['output'];
   venue: Scalars['Int']['output'];
+};
+
+/**
+ * Everyone who could enrol in a fresh Auto Pod of one sub-category, before a
+ * city is pinned. All three counts must be positive before the template is
+ * rolled out — an offer nobody can complete never goes live.
+ */
+export type AutoPodAudience = {
+  __typename?: 'AutoPodAudience';
+  club_admin_count: Scalars['Int']['output'];
+  club_admins: Array<AutoPodAudienceClubAdmin>;
+  host_count: Scalars['Int']['output'];
+  hosts: Array<AutoPodAudienceHost>;
+  venue_count: Scalars['Int']['output'];
+  venues: Array<AutoPodAudienceVenue>;
+};
+
+/** A club admin whose club carries a sub-category, with every such club of theirs. */
+export type AutoPodAudienceClubAdmin = {
+  __typename?: 'AutoPodAudienceClubAdmin';
+  club_names: Array<Scalars['String']['output']>;
+  email: Scalars['String']['output'];
+  full_name: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+/** A host approved in a sub-category. */
+export type AutoPodAudienceHost = {
+  __typename?: 'AutoPodAudienceHost';
+  email: Scalars['String']['output'];
+  full_name: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+/** A venue that could accept an offer in a sub-category. */
+export type AutoPodAudienceVenue = {
+  __typename?: 'AutoPodAudienceVenue';
+  city: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  locality: Scalars['String']['output'];
+  owner_name: Scalars['String']['output'];
+  venue_name: Scalars['String']['output'];
 };
 
 export type AutoPodClubClaim = {
@@ -1716,6 +1787,36 @@ export type AutoPodVenueClaim = {
   venue_id: Scalars['ID']['output'];
   venue_name: Scalars['String']['output'];
   venue_slot_id: Scalars['ID']['output'];
+};
+
+/** One of a venue's free slots, priced as the venue would be paid for the offer. */
+export type AutoPodVenueSlot = {
+  __typename?: 'AutoPodVenueSlot';
+  capacity: Scalars['Int']['output'];
+  end_at: Scalars['String']['output'];
+  /** What the host would be left with — negative when the slot costs more than the pod collects. */
+  host_receives: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  /** The slot's price — what the pod pays the venue before commission. */
+  price: Scalars['Float']['output'];
+  space_label: Scalars['String']['output'];
+  start_at: Scalars['String']['output'];
+  venue_commission_pct: Scalars['Float']['output'];
+  /** What the venue is paid after Finance's venue commission. */
+  venue_receives: Scalars['Float']['output'];
+  /** False when the pod's money could not cover this slot; accepting it would be refused. */
+  viable: Scalars['Boolean']['output'];
+  whole_day: Scalars['Boolean']['output'];
+};
+
+export type AutoPodVenueSlots = {
+  __typename?: 'AutoPodVenueSlots';
+  /** When the offer leaves this venue's list if it does not accept. */
+  expires_at?: Maybe<Scalars['String']['output']>;
+  /** Nearest first. */
+  slots: Array<AutoPodVenueSlot>;
+  /** How many days ahead the list reaches — Pod Settings' auto_pod_slot_window_days. */
+  window_days: Scalars['Int']['output'];
 };
 
 /** One recorded Backout lifecycle event (immutable, chronological). */
@@ -2134,6 +2235,16 @@ export type Branding = {
   /** Sub-heading under the vibe heading; empty falls back to each client's bundled copy. */
   home_vibe_subheading: Scalars['String']['output'];
   ios_app_url: Scalars['String']['output'];
+  /**
+   * The backdrop behind the sign-in and sign-up screens, as two independent
+   * switches. With both off the apps keep their bundled animated gradient,
+   * which is what a database nobody has touched already answers. Video wins
+   * when both are on and both carry a URL.
+   */
+  login_background_image_enabled: Scalars['Boolean']['output'];
+  login_background_image_url: Scalars['String']['output'];
+  login_background_video_enabled: Scalars['Boolean']['output'];
+  login_background_video_url: Scalars['String']['output'];
   logo_url: Scalars['String']['output'];
   mobile_favicon_url: Scalars['String']['output'];
   mobile_font_family: Scalars['String']['output'];
@@ -2637,6 +2748,29 @@ export type ClubAdminCandidate = {
   user_id: Scalars['ID']['output'];
 };
 
+/**
+ * One category the Club Admin's clubs run under — a tile of the dashboard's
+ * category card.
+ *
+ * Keyed on the club's OWN category (the sub-category leaf every club carries),
+ * with the parent super category alongside, so a tile names the activity the
+ * same way the "Your Clubs" table's two category columns do. A club carrying no
+ * category — only ones predating the mandatory picker — has none to report and
+ * is simply absent from the card, which is why these club counts are read per
+ * category rather than against assigned_clubs.
+ */
+export type ClubAdminCategory = {
+  __typename?: 'ClubAdminCategory';
+  category_id: Scalars['ID']['output'];
+  /** How many of the caller's clubs run under this category. */
+  clubs: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  /** Pods across those clubs, inside the dashboard's date window. */
+  pods: Scalars['Int']['output'];
+  /** Parent super category's name. Null when the club carries no super category. */
+  super_category?: Maybe<Scalars['String']['output']>;
+};
+
 /** Max-info per-club row for the Club Admin 'Your Clubs' table (myAdminClubsTable). */
 export type ClubAdminClubInfoRow = {
   __typename?: 'ClubAdminClubInfoRow';
@@ -2715,6 +2849,8 @@ export type ClubAdminClubsPage = {
 
 export type ClubAdminDashboard = {
   __typename?: 'ClubAdminDashboard';
+  /** Categories the caller's clubs run under, biggest first. */
+  categories: Array<ClubAdminCategory>;
   clubs: Array<ClubAdminClubRow>;
   kpis: ClubAdminKpis;
   trend: Array<ClubAdminTrendPoint>;
@@ -3598,16 +3734,24 @@ export type CreateAisensyTemplateInput = {
 
 export type CreateAutoPodInput = {
   available_perks?: InputMaybe<Array<Scalars['String']['input']>>;
+  meeting_notes?: InputMaybe<Scalars['String']['input']>;
+  meeting_platform?: InputMaybe<Scalars['String']['input']>;
+  meeting_url?: InputMaybe<Scalars['String']['input']>;
   no_of_spots: Scalars['Int']['input'];
   payment_terms?: InputMaybe<Scalars['String']['input']>;
   place_charges?: InputMaybe<Array<PodPlaceChargeInput>>;
   pod_amount: Scalars['Float']['input'];
+  pod_date_time?: InputMaybe<Scalars['String']['input']>;
   pod_description: Scalars['String']['input'];
+  pod_end_date_time?: InputMaybe<Scalars['String']['input']>;
   pod_hashtag?: InputMaybe<Array<Scalars['String']['input']>>;
   pod_images_and_videos: Array<PodMediaInput>;
   pod_info?: InputMaybe<Scalars['String']['input']>;
+  /** Defaults to PHYSICAL. VIRTUAL requires meeting_url, pod_date_time and pod_end_date_time. */
+  pod_mode?: InputMaybe<PodMode>;
   pod_occurrence?: InputMaybe<PodOccurrence>;
   pod_title: Scalars['String']['input'];
+  product_requests?: InputMaybe<Array<PodProductRequestInput>>;
   reel_url?: InputMaybe<Scalars['String']['input']>;
   sub_category_id: Scalars['ID']['input'];
   what_this_pod_offers?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -7389,8 +7533,18 @@ export type LocationZoneInput = {
 };
 
 export type LoginInput = {
-  email: Scalars['String']['input'];
+  /**
+   * Which of the two the password is being proved against. Defaults to EMAIL, so
+   * every portal and shipped app build that posts a bare email + password keeps
+   * working untouched.
+   */
+  channel?: InputMaybe<PasswordResetChannel>;
+  /** Required when channel is EMAIL. */
+  email?: InputMaybe<Scalars['String']['input']>;
   password: Scalars['String']['input'];
+  /** Required, with the extension, when channel is PHONE. */
+  phone_extension?: InputMaybe<Scalars['String']['input']>;
+  phone_number?: InputMaybe<Scalars['String']['input']>;
   portal_key?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -8933,6 +9087,16 @@ export type Mutation = {
   requestPasswordResetOtp: OtpRequestResult;
   /** Send the attendee a one-time code over the chosen medium(s). */
   requestPodAttendanceOtp: PhoneOtpRequestResult;
+  /**
+   * Send ONE of the extra people a multi-seat booking admits a one-time code.
+   *
+   * The same input and the same shared OTP service as the attendee's own code,
+   * with the name and the number being the companion's rather than the buyer's.
+   * A separate purpose, so a companion's proof can never be spent as the
+   * buyer's attendance. Spending it happens when the group is recorded, which
+   * is why the host verifies them one at a time.
+   */
+  requestPodCompanionOtp: PhoneOtpRequestResult;
   /** Ask an admin for console access — lands in Admin > Portal Access; the decision is emailed. */
   requestPortalAccess: PortalAccessEntry;
   /**
@@ -9083,6 +9247,12 @@ export type Mutation = {
   /** Switch off everything the signed-in person is allowed to switch off. */
   setAllMyMailPreferences: MailPreference;
   setAllMyWhatsappPreferences: WaPreference;
+  /**
+   * Pauses (false) or resumes (true) an offer still enrolling. Paused, it is
+   * shown to nobody and takes no claim; resumed, whoever is still missing is
+   * told again.
+   */
+  setAutoPodActive: AutoPod;
   /** Onboarding/finance: brand-level Duncit commission %% override on product sales (0 = inherit). */
   setBrandCommission: EcommBrand;
   /** Set the pay commission. Null or 0 inherits the platform default. */
@@ -9477,7 +9647,13 @@ export type Mutation = {
    * costs an attempt.
    */
   verifyPasswordResetCode: PasswordResetVerifyResult;
-  /** Check the code the attendee read out. Spending it happens at the mark. */
+  /**
+   * Check a code that was read out — the attendee's own, or a companion's.
+   *
+   * Purpose-agnostic on purpose: verifying grants nothing by itself, and the
+   * step that SPENDS the proof (the mark, or the door's companion record)
+   * re-checks the purpose, the booking and the number it was raised for.
+   */
   verifyPodAttendanceOtp: Scalars['Boolean']['output'];
   verifyRazorpayPayment: Payment;
   verifyWhatsAppOtp: User;
@@ -11491,6 +11667,11 @@ export type MutationRequestPodAttendanceOtpArgs = {
 };
 
 
+export type MutationRequestPodCompanionOtpArgs = {
+  input: PodAttendanceOtpInput;
+};
+
+
 export type MutationRequestPortalAccessArgs = {
   portal_key: Scalars['String']['input'];
 };
@@ -11807,6 +11988,12 @@ export type MutationSetAllMyMailPreferencesArgs = {
 
 export type MutationSetAllMyWhatsappPreferencesArgs = {
   enabled: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetAutoPodActiveArgs = {
+  auto_pod_doc_id: Scalars['ID']['input'];
+  is_active: Scalars['Boolean']['input'];
 };
 
 
@@ -13582,6 +13769,16 @@ export type PasswordResetRequestResult = {
   /** Seconds to wait before another code can be asked for. */
   resend_after_seconds: Scalars['Int']['output'];
   /**
+   * Whether a medium actually carried the code out of the building.
+   *
+   * Separate from registered, which only says an account was found. A mailbox
+   * that receives its codes on another channel, a switched-off template and an
+   * address every mail server refused are all a real account whose code never
+   * arrives — and a screen that says to check your email for those leaves the
+   * person with nothing to do. False means show the failure, not the code box.
+   */
+  sent: Scalars['Boolean']['output'];
+  /**
    * The code itself, echoed back ONLY while no medium could really carry it.
    * Null the moment a real transport handles the send.
    */
@@ -14407,11 +14604,24 @@ export type PodCompanion = {
   name: Scalars['String']['output'];
   phone_extension?: Maybe<Scalars['String']['output']>;
   phone_number: Scalars['String']['output'];
+  /** When their own number answered a one-time code (ISO). Null when the host recorded them without one. */
+  verified_at?: Maybe<Scalars['String']['output']>;
+  /** The channel that carried the code they answered — blank when none did. */
+  verified_medium: Scalars['String']['output'];
 };
 
 /** Details for one of the other people a multi-seat ticket admits. */
 export type PodCompanionInput = {
   name: Scalars['String']['input'];
+  /**
+   * A verified requestPodCompanionOtp challenge for THIS number, when the
+   * host proved it at the door.
+   *
+   * Optional on purpose: a dead phone or a number abroad must never hold a
+   * group at the door. When it is sent the server spends it, so one proof can
+   * never be replayed across the rest of the group.
+   */
+  otp_challenge_id?: InputMaybe<Scalars['ID']['input']>;
   phone_extension?: InputMaybe<Scalars['String']['input']>;
   phone_number: Scalars['String']['input'];
 };
@@ -16245,6 +16455,18 @@ export type Query = {
   audienceTable: AudienceTablePage;
   /** One Auto Pod. Admins, and any partner who can act on or has enrolled in it. */
   autoPod: AutoPod;
+  /**
+   * Admin only: who could enrol in a new Auto Pod of this sub-category — the
+   * venues hosting it, the hosts approved in it and the admins of clubs carrying
+   * it — with the counts the template form gates its next step on.
+   */
+  autoPodAudience: AutoPodAudience;
+  /**
+   * The free slots one of the caller's venues could commit to an offer, in the
+   * next auto_pod_slot_window_days days, nearest first — each with what the
+   * venue would be paid after Finance's deductions.
+   */
+  autoPodVenueSlots: AutoPodVenueSlots;
   /** Active, currently-valid coupons a shopper can apply (global + this pod). */
   availableCouponsForPod: Array<Coupon>;
   availablePodProducts: Array<InventoryProduct>;
@@ -17271,7 +17493,8 @@ export type Query = {
   /**
    * Offers this venue owner may still accept, plus the ones they accepted.
    * location_id narrows to offers pinned to that city — offers nobody has
-   * enrolled in yet have no city and are always included.
+   * enrolled in yet have no city and are always included. venue_id narrows to
+   * what ONE of the caller's venues could accept (its category and city).
    */
   venueAutoPods: Array<AutoPod>;
   venueAvailableSlots: Array<VenueSlot>;
@@ -17511,6 +17734,17 @@ export type QueryAudienceTableArgs = {
 
 export type QueryAutoPodArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryAutoPodAudienceArgs = {
+  sub_category_id: Scalars['ID']['input'];
+};
+
+
+export type QueryAutoPodVenueSlotsArgs = {
+  auto_pod_doc_id: Scalars['ID']['input'];
+  venue_id: Scalars['ID']['input'];
 };
 
 
@@ -19542,6 +19776,7 @@ export type QueryVenueArgs = {
 
 export type QueryVenueAutoPodsArgs = {
   location_id?: InputMaybe<Scalars['ID']['input']>;
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -22410,6 +22645,10 @@ export type UpdateAppBuildSettingsInput = {
 export type UpdateAppSettingsInput = {
   /** Whether a host must verify an attendee's name and phone over OTP before marking them present by hand. The door scan is proof on its own and is never gated by this. */
   attendance_otp_required?: InputMaybe<Scalars['Boolean']['input']>;
+  /** How many days ahead a venue is shown its free slots when accepting an Auto Pod (1-60). */
+  auto_pod_slot_window_days?: InputMaybe<Scalars['Int']['input']>;
+  /** How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires (1-720). */
+  auto_pod_venue_expiry_hours?: InputMaybe<Scalars['Int']['input']>;
   /** CUSTOM anchor (ISO). Saving it stamps custom_time_set_at server-side. */
   custom_time?: InputMaybe<Scalars['String']['input']>;
   date_format?: InputMaybe<Scalars['String']['input']>;
@@ -22451,16 +22690,23 @@ export type UpdateApprovedVenueInput = {
 
 export type UpdateAutoPodInput = {
   available_perks?: InputMaybe<Array<Scalars['String']['input']>>;
+  meeting_notes?: InputMaybe<Scalars['String']['input']>;
+  meeting_platform?: InputMaybe<Scalars['String']['input']>;
+  meeting_url?: InputMaybe<Scalars['String']['input']>;
   no_of_spots?: InputMaybe<Scalars['Int']['input']>;
   payment_terms?: InputMaybe<Scalars['String']['input']>;
   place_charges?: InputMaybe<Array<PodPlaceChargeInput>>;
   pod_amount?: InputMaybe<Scalars['Float']['input']>;
+  pod_date_time?: InputMaybe<Scalars['String']['input']>;
   pod_description?: InputMaybe<Scalars['String']['input']>;
+  pod_end_date_time?: InputMaybe<Scalars['String']['input']>;
   pod_hashtag?: InputMaybe<Array<Scalars['String']['input']>>;
   pod_images_and_videos?: InputMaybe<Array<PodMediaInput>>;
   pod_info?: InputMaybe<Scalars['String']['input']>;
+  pod_mode?: InputMaybe<PodMode>;
   pod_occurrence?: InputMaybe<PodOccurrence>;
   pod_title?: InputMaybe<Scalars['String']['input']>;
+  product_requests?: InputMaybe<Array<PodProductRequestInput>>;
   reel_url?: InputMaybe<Scalars['String']['input']>;
   sub_category_id?: InputMaybe<Scalars['ID']['input']>;
   what_this_pod_offers?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -22490,6 +22736,10 @@ export type UpdateBrandingInput = {
   home_vibe_heading?: InputMaybe<Scalars['String']['input']>;
   home_vibe_subheading?: InputMaybe<Scalars['String']['input']>;
   ios_app_url?: InputMaybe<Scalars['String']['input']>;
+  login_background_image_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  login_background_image_url?: InputMaybe<Scalars['String']['input']>;
+  login_background_video_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  login_background_video_url?: InputMaybe<Scalars['String']['input']>;
   logo_url?: InputMaybe<Scalars['String']['input']>;
   mobile_favicon_url?: InputMaybe<Scalars['String']['input']>;
   mobile_font_family?: InputMaybe<Scalars['String']['input']>;

@@ -12,6 +12,7 @@ import {
   sendMeetingScheduledAdminEmail,
   sendMeetingCancelledEmail,
   sendMeetingRescheduledEmail,
+  sendMeetingUpdatedEmail,
   sendMeetingApprovedEmail,
   sendMeetingRejectedEmail,
 } from '@services/email/email.service';
@@ -22,6 +23,7 @@ jest.mock('@services/email/email.service', () => ({
   sendMeetingBookedEmail: jest.fn().mockResolvedValue(undefined),
   sendMeetingCancelledEmail: jest.fn().mockResolvedValue(undefined),
   sendMeetingRescheduledEmail: jest.fn().mockResolvedValue(undefined),
+  sendMeetingUpdatedEmail: jest.fn().mockResolvedValue(undefined),
   sendMeetingApprovedEmail: jest.fn().mockResolvedValue(undefined),
   sendMeetingRejectedEmail: jest.fn().mockResolvedValue(undefined),
 }));
@@ -271,6 +273,25 @@ describe('meeting slot booking', () => {
     await expect(meetingService.rescheduleMyMeeting(other, 'HOST', '2027-02-01T08:00:00.000Z')).rejects.toThrow(/not found/i);
   });
 
+  it('emails the party’s rescheduled template when the applicant moves their own meeting', async () => {
+    const me = new Types.ObjectId();
+    await UserModel.collection.insertOne({
+      _id: me,
+      auth: { email: 'mover@example.com' },
+      profile: { first_name: 'Mover' },
+    } as never);
+    await meetingService.request(me.toString(), 'VENUE', { requested_at: '2027-06-01T05:00:00.000Z', contact_phone: '9555555571' });
+
+    (sendMeetingRescheduledEmail as jest.Mock).mockClear();
+    await meetingService.rescheduleMyMeeting(me.toString(), 'VENUE', '2027-06-01T07:00:00.000Z', 'The venue walkthrough clashes with a delivery');
+
+    // It used to send `venue-onboarding-booked`, which told an applicant their
+    // interview had just been booked every time they pushed it back.
+    expect(sendMeetingRescheduledEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: 'mover@example.com', audience: 'VENUE', kind: 'Venue' }),
+    );
+  });
+
   it('cancels my meeting and frees its slot for others', async () => {
     const me = new Types.ObjectId().toString();
     const other = new Types.ObjectId().toString();
@@ -518,7 +539,7 @@ describe('meeting notifications + cross-flow slot picker (batch)', () => {
     ).rejects.toThrow(/different time slot/i);
   });
 
-  it('emails distinct events when staff schedule, reschedule, then update details', async () => {
+  it('emails the per-party template when staff move the meeting, and the shared one when they only edit its details', async () => {
     const applicant = new Types.ObjectId();
     await UserModel.collection.insertOne({
       _id: applicant,
@@ -528,17 +549,21 @@ describe('meeting notifications + cross-flow slot picker (batch)', () => {
     await meetingService.request(applicant.toString(), 'HOST', { requested_at: '2028-02-01T05:00:00.000Z', contact_phone: '9190000001' });
     const m = await meetingService.myMeeting(applicant.toString(), 'HOST');
 
-    (sendMeetingScheduledEmail as jest.Mock).mockClear();
     await meetingService.update(m!.id, { status: 'SCHEDULED', scheduled_at: '2028-02-01T05:00:00.000Z', meeting_link: 'https://x' });
-    expect(sendMeetingScheduledEmail).toHaveBeenCalledWith(expect.objectContaining({ to: 'evt@example.com' }));
 
+    // A move: the host's OWN template, carrying the link the meeting already has.
     (sendMeetingRescheduledEmail as jest.Mock).mockClear();
     await meetingService.update(m!.id, { scheduled_at: '2028-02-01T06:00:00.000Z' });
-    expect(sendMeetingRescheduledEmail).toHaveBeenCalledWith(expect.objectContaining({ to: 'evt@example.com', change: 'rescheduled' }));
+    expect(sendMeetingRescheduledEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: 'evt@example.com', audience: 'HOST', kind: 'Host', meeting_url: 'https://x' }),
+    );
 
+    // Editing the link is not a move, so it keeps the shared template.
     (sendMeetingRescheduledEmail as jest.Mock).mockClear();
+    (sendMeetingUpdatedEmail as jest.Mock).mockClear();
     await meetingService.update(m!.id, { meeting_link: 'https://y' });
-    expect(sendMeetingRescheduledEmail).toHaveBeenCalledWith(expect.objectContaining({ change: 'updated' }));
+    expect(sendMeetingUpdatedEmail).toHaveBeenCalledWith(expect.objectContaining({ to: 'evt@example.com', link: 'https://y' }));
+    expect(sendMeetingRescheduledEmail).not.toHaveBeenCalled();
   });
 
 });

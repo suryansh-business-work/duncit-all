@@ -32,6 +32,11 @@ const DEFAULT_ATTENDANCE_OTP_REQUIRED = true;
 const DEFAULT_POD_AUTO_CANCEL_ENABLED = false;
 /** Hours before a pod's start when the auto-cancel finance check runs. */
 const DEFAULT_POD_AUTO_CANCEL_LEAD_HOURS = 24;
+/** Days of free slots a venue is offered when accepting an Auto Pod — short,
+ * because the host and the club admin still need time to enrol before the date. */
+const DEFAULT_AUTO_POD_SLOT_WINDOW_DAYS = 7;
+/** Hours an Auto Pod waits for a venue before it leaves venues' lists and expires. */
+const DEFAULT_AUTO_POD_VENUE_EXPIRY_HOURS = 24;
 
 const cleanRetentionDays = (value: unknown) =>
   Math.max(1, Math.floor(Number(value)) || DEFAULT_DRAFT_RETENTION_DAYS);
@@ -58,6 +63,14 @@ const cleanVenueCancelHealthPenalty = (value: unknown) => {
 const cleanPodAutoCancelLeadHours = (value: unknown) =>
   Math.min(8760, Math.max(1, Math.floor(Number(value)) || DEFAULT_POD_AUTO_CANCEL_LEAD_HOURS));
 
+/** Auto Pod slot window, clamped to 1 – 60 days. */
+const cleanAutoPodSlotWindowDays = (value: unknown) =>
+  Math.min(60, Math.max(1, Math.floor(Number(value)) || DEFAULT_AUTO_POD_SLOT_WINDOW_DAYS));
+
+/** Auto Pod venue window, clamped to 1 hour – 30 days. */
+const cleanAutoPodVenueExpiryHours = (value: unknown) =>
+  Math.min(720, Math.max(1, Math.floor(Number(value)) || DEFAULT_AUTO_POD_VENUE_EXPIRY_HOURS));
+
 const toAppPub = (d: any) => ({
   jwt_expires_in: d?.jwt_expires_in ?? null,
   jwt_no_expiry: true,
@@ -79,6 +92,8 @@ const toAppPub = (d: any) => ({
   pod_auto_cancel_enabled: d?.pod_auto_cancel_enabled ?? DEFAULT_POD_AUTO_CANCEL_ENABLED,
   pod_auto_cancel_lead_hours:
     d?.pod_auto_cancel_lead_hours ?? DEFAULT_POD_AUTO_CANCEL_LEAD_HOURS,
+  auto_pod_slot_window_days: cleanAutoPodSlotWindowDays(d?.auto_pod_slot_window_days),
+  auto_pod_venue_expiry_hours: cleanAutoPodVenueExpiryHours(d?.auto_pod_venue_expiry_hours),
   updated_at: d?.updated_at?.toISOString?.() ?? "",
 });
 
@@ -388,6 +403,8 @@ type AppSettingsUpdateInput = {
   attendance_otp_required?: boolean;
   pod_auto_cancel_enabled?: boolean;
   pod_auto_cancel_lead_hours?: number;
+  auto_pod_slot_window_days?: number;
+  auto_pod_venue_expiry_hours?: number;
 };
 
 /** Fields copied to the update as-is when the caller supplied them. */
@@ -430,6 +447,12 @@ const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
   if (input.pod_auto_cancel_lead_hours !== undefined)
     update.pod_auto_cancel_lead_hours = cleanPodAutoCancelLeadHours(
       input.pod_auto_cancel_lead_hours,
+    );
+  if (input.auto_pod_slot_window_days !== undefined)
+    update.auto_pod_slot_window_days = cleanAutoPodSlotWindowDays(input.auto_pod_slot_window_days);
+  if (input.auto_pod_venue_expiry_hours !== undefined)
+    update.auto_pod_venue_expiry_hours = cleanAutoPodVenueExpiryHours(
+      input.auto_pod_venue_expiry_hours,
     );
   return update;
 };

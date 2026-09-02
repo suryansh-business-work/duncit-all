@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useAdminCategories } from '@duncit/category';
 import { spotsBounds, type SpotsBounds } from '@duncit/utils';
@@ -51,4 +52,20 @@ export function useSpotsBounds(): SpotsBounds {
   }
 
   return spotsBounds({ minPax, venueCapacity: capacity });
+}
+
+/**
+ * Raise the spots to the floor once the floor is known; never lower, so a
+ * legitimately larger pod is left alone. The control clamps what it DISPLAYS
+ * to the activity's minimum, so without this the form could still hold a
+ * smaller number than the admin was shown and save it. (Sections stay mounted
+ * when their accordion is collapsed, so this runs regardless.)
+ */
+export function useSpotsFloor(min: number) {
+  const { getValues, setValue } = useFormContext<PodFormValues>();
+  useEffect(() => {
+    if (min > 0 && (Number(getValues('no_of_spots')) || 0) < min) {
+      setValue('no_of_spots', min, { shouldValidate: true });
+    }
+  }, [min]); // eslint-disable-line react-hooks/exhaustive-deps
 }

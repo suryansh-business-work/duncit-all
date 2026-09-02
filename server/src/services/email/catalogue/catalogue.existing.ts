@@ -411,19 +411,20 @@ export const EXISTING_EMAILS: readonly EmailDef[] = [
   }),
   describeEmail({
     slug: 'meeting-rescheduled',
-    name: 'Onboarding Meeting Rescheduled',
-    description: 'The applicant, when staff moves the meeting or changes its details.',
+    name: 'Onboarding Meeting Details Updated',
+    description:
+      'The applicant, when staff edit the meeting’s link or instructions WITHOUT moving it. A move now sends the per-party `<party>-meeting-rescheduled` template, so this row is only ever reached with `change` set to `updated`.',
     audience: 'HOST',
     category: 'notification',
-    fires: 'Staff reschedules an onboarding meeting or edits its link/instructions',
-    subject: 'Your Duncit {{kind}} onboarding meeting was rescheduled',
+    fires: 'Staff edit a scheduled meeting’s link or instructions without changing its time',
+    subject: 'Your Duncit {{kind}} onboarding meeting details were updated',
     footerNote: '',
     vars: meetingVars([
       MEETING_LINK,
       MEETING_NOTES,
-      v('change', 'Which of the two happened — `rescheduled` or `updated`.', 'rescheduled'),
-      v('heading', 'The heading the service picks for the chosen `change`.', 'Your meeting was rescheduled'),
-      v('intro', 'The opening line the service picks for the chosen `change`.', 'Your Venue onboarding meeting has been moved to a new time:'),
+      v('change', 'Always `updated` — a move goes to the per-party template instead.', 'updated'),
+      v('heading', 'The heading the service picks for the chosen `change`.', 'Your meeting details were updated'),
+      v('intro', 'The opening line the service picks for the chosen `change`.', 'We’ve updated the details of your Venue onboarding meeting. Here’s the latest:'),
     ]),
   }),
   describeEmail({

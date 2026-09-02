@@ -328,6 +328,58 @@ async function buildClubInfoRows(clubs: any[]) {
   });
 }
 
+/**
+ * The dashboard's category card: one tile per category the caller's clubs run
+ * under, biggest first.
+ *
+ * Keyed on the club's OWN category — the sub-category leaf every club carries —
+ * with the parent super category alongside, so a tile names the activity the
+ * same way the "Your Clubs" table's two category columns do. A club with no
+ * category (only ones predating the mandatory picker) has none to report and is
+ * left out, which is why a tile's club count is read per category rather than
+ * against assigned_clubs.
+ *
+ * Pods come from the tallies the dashboard has already folded, so they answer
+ * to the selected date window exactly as every other flow figure does.
+ */
+async function buildCategoryRows(clubs: any[], byClub: Map<string, ClubTally>) {
+  const byCategory = new Map<string, any[]>();
+  for (const club of clubs) {
+    if (!club.category_id) continue;
+    const key = String(club.category_id);
+    const group = byCategory.get(key) ?? [];
+    group.push(club);
+    byCategory.set(key, group);
+  }
+  if (byCategory.size === 0) return [];
+
+  const ids = clubs.flatMap((c) => [c.category_id, c.super_category_id]).filter(Boolean);
+  const categories = await CategoryModel.find({ _id: { $in: ids } }).select('name').lean();
+  const categoryNames = new Map<string, string>(
+    (categories as any[]).map((c) => [String(c._id), c.name])
+  );
+
+  // Driven by the category documents rather than by the ids on the clubs, so a
+  // club pointing at a deleted category drops out instead of drawing a tile
+  // with no name to show.
+  const rows = (categories as any[])
+    .filter((c) => byCategory.has(String(c._id)))
+    .map((c) => {
+      const group = byCategory.get(String(c._id))!;
+      return {
+        category_id: String(c._id),
+        name: c.name as string,
+        super_category: nameOf(categoryNames, group[0].super_category_id),
+        clubs: group.length,
+        pods: group.reduce((sum, club) => sum + byClub.get(String(club._id))!.total, 0),
+      };
+    });
+  // A statement, not an expression: `sort` returns the SAME array it reordered,
+  // and the server's lib is ES2022, which has no `toSorted` (S4043).
+  rows.sort((a, b) => b.clubs - a.clubs || b.pods - a.pods || a.name.localeCompare(b.name));
+  return rows;
+}
+
 const EMPTY_KPIS = {
   assigned_clubs: 0,
   total_pods: 0,
@@ -755,11 +807,11 @@ export const clubAdminService = {
 
     const clubDocs = Types.ObjectId.isValid(userId)
       ? await ClubModel.find({ admin_user_ids: new Types.ObjectId(userId) })
-          .select('_id club_id club_name')
+          .select('_id club_id club_name category_id super_category_id')
           .lean()
       : [];
     if (clubDocs.length === 0) {
-      return { kpis: { ...EMPTY_KPIS }, trend: [], clubs: [] };
+      return { kpis: { ...EMPTY_KPIS }, trend: [], clubs: [], categories: [] };
     }
     const clubOids = clubDocs.map((c: any) => c._id);
     const now = Date.now();
@@ -792,7 +844,7 @@ export const clubAdminService = {
     const inWindow = rangeFilter('created_at', fromDate, toDate);
     const asOfWindowEnd = rangeFilter('created_at', null, toDate);
 
-    const [bookings, backed_out, followers, new_followers, ratingAgg, payments, followerRows, bookingRows, followerClubRows, ratingClubRows] =
+    const [bookings, backed_out, followers, new_followers, ratingAgg, payments, followerRows, bookingRows, followerClubRows, ratingClubRows, categories] =
       await Promise.all([
         PodMemberModel.countDocuments({ pod_id: { $in: podIds }, status: 'JOINED', ...inWindow }),
         PodMemberModel.countDocuments({ pod_id: { $in: podIds }, status: 'BACKED_OUT', ...inWindow }),
@@ -824,6 +876,7 @@ export const clubAdminService = {
           { $match: { club_id: { $in: clubOids }, ...asOfWindowEnd } },
           { $group: { _id: '$club_id', avg: { $avg: '$stars' } } },
         ]),
+        buildCategoryRows(clubDocs as any[], byClub),
       ]);
 
     const currency_symbol = (payments[0] as any)?.currency_symbol || '₹';
@@ -896,7 +949,7 @@ export const clubAdminService = {
       currency_symbol,
     };
 
-    return { kpis, trend, clubs };
+    return { kpis, trend, clubs, categories };
   },
 
   /** Server-side table page over the COMPUTED per-club dashboard rows for the

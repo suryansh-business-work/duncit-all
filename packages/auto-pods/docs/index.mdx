@@ -15,6 +15,10 @@ exports:
   - 'AutoPodQueue'
   - 'AutoPodCategoryFilter'
   - 'VenueAcceptDialog'
+  - 'AutoPodVenuePicker'
+  - 'venueCategoryPath'
+  - 'AutoPodExpiryNote'
+  - 'AutoPodDependencyTimeline'
   - 'HostClaimDialog'
   - 'ClubClaimDialog'
   - 'PodKindChooser'
@@ -26,7 +30,7 @@ exports:
   - 'HOST_ASSIGN_AUTO_POD'
   - 'CLUB_CLAIM_AUTO_POD'
   - 'MY_VENUES_FOR_AUTO_POD'
-  - 'VENUE_AVAILABLE_SLOTS_FOR_AUTO_POD'
+  - 'AUTO_POD_VENUE_SLOTS'
   - 'MY_ADMIN_CLUBS_FOR_AUTO_POD'
   - 'MY_HOST_CATEGORIES_FOR_AUTO_POD'
   - 'AUTO_POD_LOCATIONS'
@@ -53,14 +57,16 @@ at least one partner has; the third enrolment tips it into `MATERIALIZING` and
 then `LIVE`.
 
 Every card carries `AutoPodTicks`: **Venue Enroll**, **Host Enroll**, **Club
-Admin Enroll**, always in that order and always all three. Each is amber and
-outlined while that partner has yet to enrol, and turns green and filled the
-moment they do — so the state of an offer reads at a glance. The order is
-presentation only: it is the same three chips whichever partner went first, so
-a card never changes width as they enrol.
+Admin Enroll**, always in that order. Each is amber and outlined while that
+partner has yet to enrol, and turns green and filled the moment they do — so
+the state of an offer reads at a glance. The order is presentation only: it is
+the same chips whichever partner went first, so a card never changes width as
+they enrol. A **VIRTUAL** offer (`row.pod_mode`) has no venue to enrol: it
+draws two ticks, carries a "Virtual pod — no venue needed" line, and never
+appears in a venue's queue.
 
 The derivation itself is `autoPodTicks()` in `@duncit/utils`, so the Tamagui
-twin draws exactly the same three ticks from exactly the same rule. Below the
+twin draws exactly the same ticks from exactly the same rule. Below the
 ticks the card says who is still missing — `labels.waitingFor(autoPodMissingRoles(row))`
 — and which city the offer belongs to.
 
@@ -158,7 +164,7 @@ import { AutoPodCategoryFilter } from '@duncit/auto-pods';
 
 | Dialog | Role | What it collects |
 | --- | --- | --- |
-| `VenueAcceptDialog` | Venue | Which venue, and which of its free slots |
+| `VenueAcceptDialog` | Venue | Which of the chosen venue's free slots — each priced as the venue would be paid |
 | `HostClaimDialog` | Host | Nothing — confirms, and shows projected earnings |
 | `ClubClaimDialog` | Club Admin | Which of their clubs (only category-matching ones) |
 
@@ -167,10 +173,31 @@ would leave the pod nothing to run on. The slot is booked the instant the
 accept succeeds and stays booked until the pod exists, so no ordinary pod can
 take it in between.
 
-`VenueAcceptDialog` and `ClubClaimDialog` narrow the owner's venues / clubs to
-the pinned city when there is one, and say so (`labels.noVenueInCity(city)` /
-`labels.noClubInCity(city)`) when none qualifies — the server would refuse the
-enrolment anyway, so the dialog does not offer it.
+The venue itself is chosen **above the queue**, with `AutoPodVenuePicker`: an
+owner may run several venues, and the queue is what THAT venue could take (its
+category and its city — `VENUE_AUTO_PODS` takes `venue_id`), so the picker
+writes the venue's category under itself (`venueCategoryPath`) to say why the
+list is what it is. `VenueAcceptDialog` takes that `venue` and asks only for
+the slot, read from `AUTO_POD_VENUE_SLOTS`: the next few days (Pod Settings'
+*Auto Pods — slot window*), nearest first, each carrying `venue_receives` —
+what the venue is paid after Finance's deductions — and `viable`, false when
+the pod's money could not cover it (`labels.slotNotViable`, and the button
+stays shut). The chosen slot's pay shows as `labels.potentialEarning(amount)`.
+
+A venue's card also counts the offer down: `AutoPodExpiryNote` reads
+`row.venue_expires_at` (set on the venue queue only — Pod Settings' *Auto
+Pods — venue window* past `created_at`) and says "Removed from your list in
+5h 12m"; when it runs out with no venue the server expires the offer.
+
+`VenueAcceptDialog` and `ClubClaimDialog` refuse a venue / club outside the
+pinned city when there is one, and say so (`labels.noVenueInCity(city)` /
+`labels.noClubInCity(city)`) — the server would refuse the enrolment anyway,
+so the dialog does not offer it.
+
+The admin console's table draws the same enrolment derivation as a line —
+`AutoPodDependencyTimeline`: Venue → Host → Club Admin, a green dot with the
+partner's name where they have enrolled, an amber one where the offer is
+still waiting.
 
 `HostClaimDialog` **requires** `locationId` — the city selected at the top of
 the host's page (`''` when none) — and takes an optional `locationLabel` for

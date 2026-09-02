@@ -5,8 +5,11 @@ import {
   clubNameOf,
   hostNameOf,
   isAutoPodCancellable,
+  categoryPathOf,
   isAutoPodDeletable,
   isAutoPodEditable,
+  isAutoPodPausable,
+  pendingFilterOptions,
   STAGE_COLOR,
   STAGE_LABEL_KEY,
   stageFilterOptions,
@@ -20,6 +23,7 @@ const makeRow = (over: Partial<AutoPodTableRow> = {}): AutoPodTableRow => ({
   id: 'doc1',
   auto_pod_no: 'AP-1',
   stage: 'OPEN',
+  is_active: true,
   pod_title: 'Weekend Trek',
   pod_description: '',
   pod_info: '',
@@ -28,9 +32,11 @@ const makeRow = (over: Partial<AutoPodTableRow> = {}): AutoPodTableRow => ({
   super_category_id: 'sc1',
   sub_category_id: 'sub1',
   category_name: 'Adventure',
+  category_path: ['Outdoors', 'Hiking', 'Adventure'],
   pod_amount: 500,
   no_of_spots: 10,
   pod_occurrence: 'ONE_TIME',
+  pod_mode: 'PHYSICAL',
   payment_terms: null,
   venue_claim: null,
   host_claim: null,
@@ -38,6 +44,7 @@ const makeRow = (over: Partial<AutoPodTableRow> = {}): AutoPodTableRow => ({
   location: null,
   pod_id: null,
   created_at: '2026-01-02T08:00:00.000Z',
+  updated_at: '2026-01-03T08:00:00.000Z',
   ...over,
 });
 
@@ -142,5 +149,31 @@ describe('auto-pods helpers / claim name lookups', () => {
         }),
       ),
     ).toBe('Chess Club');
+  });
+});
+
+describe('pendingFilterOptions', () => {
+  it('offers the three roles an offer can still be waiting on, venue first', () => {
+    expect(pendingFilterOptions((key) => key)).toEqual([
+      { value: 'VENUE', label: 'admin.autoPods.pendingVenue' },
+      { value: 'HOST', label: 'admin.autoPods.pendingHost' },
+      { value: 'CLUB', label: 'admin.autoPods.pendingClub' },
+    ]);
+  });
+});
+
+describe('categoryPathOf', () => {
+  it('joins the names the server walked up, skipping blanks', () => {
+    expect(categoryPathOf(makeRow())).toBe('Outdoors › Hiking › Adventure');
+    expect(categoryPathOf(makeRow({ category_path: ['Outdoors', '', 'Adventure'] }))).toBe('Outdoors › Adventure');
+    expect(categoryPathOf(makeRow({ category_path: [] }))).toBe('');
+  });
+});
+
+describe('isAutoPodPausable', () => {
+  it('only means something while partners could still enrol', () => {
+    for (const stage of ALL_STAGES) {
+      expect(isAutoPodPausable(makeRow({ stage }))).toBe(stage === 'OPEN' || stage === 'CLAIMING');
+    }
   });
 });

@@ -32,3 +32,51 @@ export function autoPodEvent(
     at: new Date(),
   };
 }
+
+/**
+ * Every enrolment the offer needs: a host and a club always, a venue only when
+ * the pod is physical — a virtual pod has no venue to enrol.
+ */
+export const isAutoPodComplete = (doc: {
+  pod_mode?: string | null;
+  venue_claim: unknown;
+  host_claim: unknown;
+  club_claim: unknown;
+}) => !!doc.host_claim && !!doc.club_claim && (doc.pod_mode === 'VIRTUAL' || !!doc.venue_claim);
+
+/**
+ * Mongo filter for the same rule. Offers written before `pod_mode` existed
+ * carry no field at all, which is why "physical" is spelled as "not VIRTUAL"
+ * here and in PHYSICAL_FILTER rather than as an equality.
+ */
+export const AUTO_POD_COMPLETE_FILTER = {
+  host_claim: { $ne: null },
+  club_claim: { $ne: null },
+  $or: [{ pod_mode: 'VIRTUAL' }, { venue_claim: { $ne: null } }],
+};
+
+/** Offers a venue can act on at all — the physical ones. */
+export const PHYSICAL_FILTER = { pod_mode: { $ne: 'VIRTUAL' } };
+
+/** An offer an admin has paused is offered to nobody until it is resumed. */
+export const ACTIVE_FILTER = { is_active: { $ne: false } };
+
+const PENDING_ROLES = new Set(['VENUE', 'HOST', 'CLUB']);
+
+/**
+ * The admin table's "still waiting on" filter as a Mongo clause: a pre-live
+ * offer with that role's claim empty — and, for the venue, physical, since a
+ * virtual offer never waits on one. Several roles OR together; anything that
+ * is not a role is ignored. Null when nothing was asked for.
+ */
+export function pendingBaseFilter(roles: readonly string[]): Record<string, unknown> | null {
+  const clauses = roles
+    .filter((role) => PENDING_ROLES.has(role))
+    .map((role) => {
+      if (role === 'VENUE') return { ...PRE_LIVE_FILTER, ...PHYSICAL_FILTER, venue_claim: null };
+      if (role === 'HOST') return { ...PRE_LIVE_FILTER, host_claim: null };
+      return { ...PRE_LIVE_FILTER, club_claim: null };
+    });
+  if (clauses.length === 0) return null;
+  return clauses.length === 1 ? clauses[0] : { $or: clauses };
+}

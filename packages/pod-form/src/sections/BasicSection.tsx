@@ -1,10 +1,10 @@
-import { MenuItem, Stack, TextField, ToggleButton, ToggleButtonGroup } from '@mui/material';
-import PlaceIcon from '@mui/icons-material/Place';
-import VideocamIcon from '@mui/icons-material/Videocam';
+import { MenuItem, Stack, TextField } from '@mui/material';
 import { useFormContext, useWatch } from 'react-hook-form';
 import HostSelectField from '../components/HostSelectField';
 import HostsField from '../components/HostsField';
+import PodModeToggle from '../components/PodModeToggle';
 import RhfTextField from '../components/RhfTextField';
+import AutoPodEconomicsFields from './AutoPodEconomicsFields';
 import { usePodFormData } from '../context';
 import type { PodFormValues } from '../types';
 import { useTranslation } from '../i18n/useTranslation';
@@ -42,15 +42,16 @@ export default function BasicSection() {
   const { t } = useTranslation();
   const { config, clubs, searchHosts } = usePodFormData();
   const { control, setValue, formState: { errors } } = useFormContext<PodFormValues>();
-  const podMode = useWatch({ control, name: 'pod_mode' });
   const clubId = useWatch({ control, name: 'club_id' });
 
-  // An Auto Pod's author decides the title and the tags only: the mode, the
-  // club and the hosts are what the partners who enrol bring.
+  // An Auto Pod's author decides the title, the economics and the tags: the
+  // club and the hosts are what the partners who enrol bring, and the mode is
+  // chosen above the sections by the stepper.
   if (config.autoPod) {
     return (
       <Stack spacing={2}>
         <TitleField />
+        <AutoPodEconomicsFields />
         <HashtagsField />
       </Stack>
     );
@@ -67,23 +68,7 @@ export default function BasicSection() {
   return (
     <Stack spacing={2}>
       <TitleField />
-      <ToggleButtonGroup
-        exclusive
-        fullWidth
-        color="primary"
-        value={podMode}
-        onChange={(_, nextMode) => {
-          if (nextMode) setValue('pod_mode', nextMode);
-        }}
-        aria-label={t('podForm.basicSection.podMode')}
-      >
-        <ToggleButton value="PHYSICAL" aria-label={t('podForm.basicSection.physicalPod')}>
-          <PlaceIcon fontSize="small" sx={{ mr: 1 }} /> Physical
-        </ToggleButton>
-        <ToggleButton value="VIRTUAL" aria-label={t('podForm.basicSection.virtualPod')}>
-          <VideocamIcon fontSize="small" sx={{ mr: 1 }} /> Virtual
-        </ToggleButton>
-      </ToggleButtonGroup>
+      <PodModeToggle />
       <TextField
         select
         label={t('podForm.basicSection.club')}

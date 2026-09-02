@@ -1,4 +1,4 @@
-import { AutoPodTicks } from '@duncit/auto-pods';
+import { AutoPodDependencyTimeline, AutoPodTicks } from '@duncit/auto-pods';
 import {
   autoPodMissingRoles,
   autoPodTicks,
@@ -65,9 +65,14 @@ export default defineDemos('auto-pods', [
     id: 'ticks',
     title: 'How far along an Auto Pod offer is, at a glance',
     note:
-      'Flip host_claimed or club_claimed to true first — any partner may enrol first. The row is always three chips in the same order, so a card never changes width or reorders as partners enrol; the order is presentation, not a dependency.',
+      'Flip host_claimed or club_claimed to true first — any partner may enrol first. The chips are the card row; the line under them is the admin table Pod dependency cell, drawn from the same derivation: green with the partner name where they have enrolled, amber where the offer is still waiting.',
     mock: { venue_claimed: false, host_claimed: false, club_claimed: false },
-    render: (mock) => <AutoPodTicks row={rowFrom(mock)} labels={LABELS} />,
+    render: (mock) => (
+      <div style={{ display: 'grid', gap: 16 }}>
+        <AutoPodTicks row={rowFrom(mock)} labels={LABELS} />
+        <AutoPodDependencyTimeline row={rowFrom(mock)} labels={LABELS} />
+      </div>
+    ),
     compute: (mock) => {
       const row = rowFrom(mock);
       const missing = autoPodMissingRoles(row);

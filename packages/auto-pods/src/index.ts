@@ -8,6 +8,12 @@ export { AutoPodCategoryFilter } from './AutoPodCategoryFilter';
 export type { AutoPodCategoryFilterProps } from './AutoPodCategoryFilter';
 export { VenueAcceptDialog } from './venue/VenueAcceptDialog';
 export type { VenueAcceptDialogProps } from './venue/VenueAcceptDialog';
+export { AutoPodVenuePicker, venueCategoryPath } from './venue/AutoPodVenuePicker';
+export type { AutoPodVenueOption, AutoPodVenuePickerProps } from './venue/AutoPodVenuePicker';
+export { AutoPodExpiryNote } from './AutoPodExpiryNote';
+export type { AutoPodExpiryNoteProps } from './AutoPodExpiryNote';
+export { AutoPodDependencyTimeline } from './AutoPodDependencyTimeline';
+export type { AutoPodDependencyTimelineProps } from './AutoPodDependencyTimeline';
 export { HostClaimDialog } from './host/HostClaimDialog';
 export type { HostClaimDialogProps } from './host/HostClaimDialog';
 export { ClubClaimDialog } from './club/ClubClaimDialog';
@@ -25,6 +31,6 @@ export {
   MY_VENUES_FOR_AUTO_POD,
   VENUE_ACCEPT_AUTO_POD,
   VENUE_AUTO_PODS,
-  VENUE_AVAILABLE_SLOTS_FOR_AUTO_POD,
+  AUTO_POD_VENUE_SLOTS,
   type AutoPodQueueVariables,
 } from './queries';

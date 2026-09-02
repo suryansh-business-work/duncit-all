@@ -71,6 +71,21 @@ export interface AutoPodLabels {
   /** The card's city line: pinned by the first enrolment, or not yet. */
   pinnedTo: (city: string) => string;
   unpinned: string;
+  /** The card's mode line on an offer with no venue to enrol. */
+  virtualPod: string;
+  /** The venue queue's own venue picker, and the category line under it. */
+  venueLabel: string;
+  noVenues: string;
+  venueCategory: (path: string) => string;
+  noVenueCategory: string;
+  pickVenueFirst: string;
+  /** The venue card's countdown to the offer leaving their list. */
+  removedIn: (hours: number, minutes: number) => string;
+  /** The slot picker: how far ahead it reaches, and what a slot pays the venue. */
+  slotWindow: (days: number) => string;
+  potentialEarning: (amount: string) => string;
+  slotNotViable: string;
+  acceptingWith: (venue: string) => string;
   /** A host's "Assign Myself" on an offer that takes its city from them. */
   pickLocationFirst: string;
   willPinTo: (city: string) => string;
@@ -151,6 +166,17 @@ export function mwebAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     noHostCategories: t('mweb.autoPods.noHostCategories'),
     pinnedTo: (city) => t('mweb.autoPods.pinnedTo', { vars: { city } }),
     unpinned: t('mweb.autoPods.unpinned'),
+    virtualPod: t('mweb.autoPods.virtualPod'),
+    venueLabel: t('mweb.autoPods.venueLabel'),
+    noVenues: t('mweb.autoPods.noVenues'),
+    venueCategory: (path) => t('mweb.autoPods.venueCategory', { vars: { path } }),
+    noVenueCategory: t('mweb.autoPods.noVenueCategory'),
+    pickVenueFirst: t('mweb.autoPods.pickVenueFirst'),
+    removedIn: (hours, minutes) => t('mweb.autoPods.removedIn', { vars: { hours, minutes } }),
+    slotWindow: (days) => t('mweb.autoPods.slotWindow', { vars: { days } }),
+    potentialEarning: (amount) => t('mweb.autoPods.potentialEarning', { vars: { amount } }),
+    slotNotViable: t('mweb.autoPods.slotNotViable'),
+    acceptingWith: (venue) => t('mweb.autoPods.acceptingWith', { vars: { venue } }),
     pickLocationFirst: t('mweb.autoPods.pickLocationFirst'),
     willPinTo: (city) => t('mweb.autoPods.willPinTo', { vars: { city } }),
     noVenueInCity: (city) => t('mweb.autoPods.noVenueInCity', { vars: { city } }),
@@ -226,6 +252,17 @@ export function shellAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     noHostCategories: t('shell.autoPods.noHostCategories'),
     pinnedTo: (city) => t('shell.autoPods.pinnedTo', { vars: { city } }),
     unpinned: t('shell.autoPods.unpinned'),
+    virtualPod: t('shell.autoPods.virtualPod'),
+    venueLabel: t('shell.autoPods.venueLabel'),
+    noVenues: t('shell.autoPods.noVenues'),
+    venueCategory: (path) => t('shell.autoPods.venueCategory', { vars: { path } }),
+    noVenueCategory: t('shell.autoPods.noVenueCategory'),
+    pickVenueFirst: t('shell.autoPods.pickVenueFirst'),
+    removedIn: (hours, minutes) => t('shell.autoPods.removedIn', { vars: { hours, minutes } }),
+    slotWindow: (days) => t('shell.autoPods.slotWindow', { vars: { days } }),
+    potentialEarning: (amount) => t('shell.autoPods.potentialEarning', { vars: { amount } }),
+    slotNotViable: t('shell.autoPods.slotNotViable'),
+    acceptingWith: (venue) => t('shell.autoPods.acceptingWith', { vars: { venue } }),
     pickLocationFirst: t('shell.autoPods.pickLocationFirst'),
     willPinTo: (city) => t('shell.autoPods.willPinTo', { vars: { city } }),
     noVenueInCity: (city) => t('shell.autoPods.noVenueInCity', { vars: { city } }),

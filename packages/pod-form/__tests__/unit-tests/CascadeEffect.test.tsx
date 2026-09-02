@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { render, act } from '@testing-library/react';
 import type { UseFormReturn } from 'react-hook-form';
 import CascadeEffect from '../../src/CascadeEffect';
-import { Harness, makeData } from './helpers';
+import { Harness, makeConfig, makeData } from './helpers';
 import type { PodFormData, PodFormValues } from '../../src/types';
 
 function mount(defaults: Partial<PodFormValues>, data: PodFormData = makeData()) {
@@ -135,5 +135,31 @@ describe('CascadeEffect', () => {
   it('leaves an empty request list alone', () => {
     const ref = mount({ products_enabled: true, club_id: 'c1', product_requests: [] }, badmintonData('sub-1'));
     expect(ref.current?.getValues('product_requests')).toEqual([]);
+  });
+});
+
+describe('CascadeEffect (autoPod)', () => {
+  // An Auto Pod has no club: the category the form holds is what the products
+  // must match, so a row outside it is dropped exactly as a club switch drops one.
+  it('prunes product rows the template’s own category does not offer', () => {
+    const ref = mount(
+      {
+        pod_mode: 'PHYSICAL',
+        super_category_id: 'sup-1',
+        sub_category_id: 'sub-1',
+        product_requests: [
+          { product_id: 'p1', quantity: 1 },
+          { product_id: 'p2', quantity: 1 },
+        ],
+      },
+      makeData({
+        config: makeConfig({ autoPod: true, showProducts: true }),
+        products: [
+          { id: 'p1', product_name: 'Shuttles', categories: [{ super_category_id: 'sup-1', sub_category_id: 'sub-1' }] },
+          { id: 'p2', product_name: 'Football', categories: [{ super_category_id: 'sup-2', sub_category_id: 'sub-2' }] },
+        ],
+      }),
+    );
+    expect(ref.current?.getValues('product_requests')).toEqual([{ product_id: 'p1', quantity: 1 }]);
   });
 });

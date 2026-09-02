@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, YStack } from 'tamagui';
@@ -6,19 +6,38 @@ import { autoPodActionable, type AutoPodRow } from '@duncit/utils';
 
 import { StackScreen } from '@/components/StackScreen';
 import { PillButton } from '@/components/attendance/AttendanceOtpControls';
-import { AutoPodLocationRow, AutoPodQueue, VenueAcceptSheet } from '@/components/auto-pods';
+import {
+  AutoPodExpiryNote,
+  AutoPodLocationRow,
+  AutoPodQueue,
+  AutoPodVenueRow,
+  VenueAcceptSheet,
+} from '@/components/auto-pods';
 import { useAutoPodScreen } from '@/hooks/useAutoPodScreen';
+import type { AutoPodVenueOption } from '@/hooks/useAutoPodVenues';
+import { useDateFormat } from '@/hooks/useDateFormat';
 import { useLocations } from '@/hooks/useLocations';
 import type { RootStackParamList } from '@/navigation/types';
+
+/** Re-renders once a minute, so the cards' countdowns keep moving. */
+function useMinuteTick(): number {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((n) => n + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  return tick;
+}
 
 /**
  * Venue Studio > Auto Pods — the offers a venue may take.
  *
- * A venue may enrol at any point: first, and its city pins the offer, or after
- * a host or club has, in which case only a venue in that city is offered it.
- * Accepting books one of the venue's own free slots in the same step. The
- * header's city narrows the queue to offers pinned there plus every unpinned
- * one.
+ * The venue picked at the top is the one looking: the offers are what THAT
+ * venue could take (its category, its city), each counting down the window
+ * Pod Settings gives venues to accept. Accepting picks one of the venue's free
+ * slots in the next few days, nearest first, priced as the venue would be paid
+ * — in one step. The header's city narrows the queue to offers pinned there
+ * plus every unpinned one.
  *
  * The mWeb twin is `/venues/auto-pods` (rule 27); the logic both read is
  * `@duncit/utils`' auto-pod helpers.
@@ -26,27 +45,35 @@ import type { RootStackParamList } from '@/navigation/types';
 export function VenueAutoPodsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { selectedId } = useLocations();
+  const [venue, setVenue] = useState<AutoPodVenueOption | null>(null);
   const { labels, formatWhen, formatMoney, rows, isLoading, hasError, refetch } = useAutoPodScreen(
     'venue',
-    { locationId: selectedId },
+    { locationId: selectedId, venueId: venue?.id },
   );
+  const { clock } = useDateFormat();
+  useMinuteTick();
+  const nowMs = clock.nowMs();
   const [offer, setOffer] = useState<AutoPodRow | null>(null);
 
   const renderAction = (row: AutoPodRow) =>
     autoPodActionable(row, 'venue') ? (
-      <PillButton
-        testID={`auto-pod-accept-${row.id}`}
-        label={labels.acceptCta}
-        onPress={() => setOffer(row)}
-        variant="solid"
-        disabled={false}
-      />
+      <YStack gap={8}>
+        <AutoPodExpiryNote expiresAt={row.venue_expires_at} nowMs={nowMs} labels={labels} />
+        <PillButton
+          testID={`auto-pod-accept-${row.id}`}
+          label={labels.acceptCta}
+          onPress={() => setOffer(row)}
+          variant="solid"
+          disabled={!venue}
+        />
+      </YStack>
     ) : null;
 
   return (
     <StackScreen title={labels.venueTitle} testID="venue-auto-pods-screen">
       <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
         <YStack gap={14}>
+          <AutoPodVenueRow value={venue} onChange={setVenue} labels={labels} />
           <AutoPodLocationRow labels={labels} />
           <AutoPodQueue
             role="venue"
@@ -64,6 +91,7 @@ export function VenueAutoPodsScreen() {
 
       <VenueAcceptSheet
         row={offer}
+        venue={venue}
         labels={labels}
         onClose={() => setOffer(null)}
         onAccepted={() => {

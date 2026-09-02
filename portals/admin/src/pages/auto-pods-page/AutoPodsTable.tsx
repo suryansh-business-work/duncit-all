@@ -15,6 +15,7 @@ interface Props {
   onCancel: (row: AutoPodTableRow) => void;
   onDelete: (row: AutoPodTableRow) => void;
   onViewPod: (row: AutoPodTableRow) => void;
+  onToggleActive: (row: AutoPodTableRow) => void;
 }
 
 const getRowId = (row: AutoPodTableRow) => row.id;
@@ -30,10 +31,12 @@ export default function AutoPodsTable({
   onCancel,
   onDelete,
   onViewPod,
+  onToggleActive,
 }: Readonly<Props>) {
   const columns = useMemo(
-    () => getAutoPodColumns({ t, labels, formatDateTime, onEdit, onCancel, onDelete, onViewPod }),
-    [t, labels, formatDateTime, onEdit, onCancel, onDelete, onViewPod]
+    () =>
+      getAutoPodColumns({ t, labels, formatDateTime, onEdit, onCancel, onDelete, onViewPod, onToggleActive }),
+    [t, labels, formatDateTime, onEdit, onCancel, onDelete, onViewPod, onToggleActive]
   );
 
   return (

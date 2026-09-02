@@ -1,15 +1,16 @@
 /**
  * Background sweep for the states an Auto Pod cannot leave on its own.
  *
- * 1. EXPIRY — a CLAIMING offer whose accepted slot has already started can
- *    never materialize (`validateFutureDates` would reject it), so it is marked
- *    EXPIRED and the venue gets its slot back rather than having it held
- *    forever by an offer nobody completed.
+ * 1. EXPIRY — a CLAIMING offer whose accepted slot (or, for a virtual offer,
+ *    whose own start) has already passed can never materialize
+ *    (`validateFutureDates` would reject it), so it is marked EXPIRED and the
+ *    venue gets its slot back rather than having it held forever by an offer
+ *    nobody completed.
  * 2. STUCK MATERIALIZATION — the MATERIALIZING lock is held by one request; if
  *    that process died mid-way the offer would sit locked for good. Anything
  *    older than the grace window is reconciled: if the pod it was creating
  *    exists, finish the handover; if not, put it back to CLAIMING.
- * 3. COMPLETE BUT NOT LIVE — an offer with all three enrolments whose last
+ * 3. COMPLETE BUT NOT LIVE — an offer with every enrolment whose last
  *    materialization failed (usually pricing, since fixed by the admin) is
  *    tried again, because no claim is left to trigger it.
  * 4. LEGACY PINS — offers a club opened before pinning existed are pinned to
@@ -19,7 +20,13 @@
  * `pod-draft.cleanup`. No-ops under NODE_ENV=test.
  */
 import { AutoPodModel, type IAutoPod } from './autoPod.model';
-import { autoPodEvent, PRE_LIVE_FILTER } from './autoPod.common';
+import {
+  AUTO_POD_COMPLETE_FILTER,
+  autoPodEvent,
+  PHYSICAL_FILTER,
+  PRE_LIVE_FILTER,
+} from './autoPod.common';
+import { autoPodService } from './autoPod.service';
 import { ensureClubPin } from './autoPod.location';
 import { autoPodNotify } from './autoPod.notify';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -32,11 +39,28 @@ const MATERIALIZE_GRACE_MS = 10 * 60 * 1000;
 /** A complete offer left alone this long is not mid-request any more. */
 const RETRY_GRACE_MS = 2 * 60 * 1000;
 
-/** Expire offers whose slot has already started, releasing the venue's slot. */
+/** Offers whose start has passed: the slot's for a physical one, the admin's
+ * own date for a virtual one. */
+const startPassed = (now: Date) => ({
+  $or: [
+    { 'venue_claim.pod_date_time': { $lte: now } },
+    { pod_mode: 'VIRTUAL', pod_date_time: { $lte: now } },
+  ],
+});
+
+/** Offers whose start is still ahead — the mirror of startPassed. */
+const startAhead = (now: Date) => ({
+  $or: [
+    { venue_claim: { $ne: null }, 'venue_claim.pod_date_time': { $gt: now } },
+    { pod_mode: 'VIRTUAL', pod_date_time: { $gt: now } },
+  ],
+});
+
+/** Expire offers whose start has already passed, releasing the venue's slot. */
 async function expireStaleClaiming(): Promise<number> {
   const stale = await AutoPodModel.find({
     stage: 'CLAIMING',
-    'venue_claim.pod_date_time': { $lte: new Date() },
+    ...startPassed(new Date()),
   }).limit(100);
   let expired = 0;
   for (const doc of stale) {
@@ -45,13 +69,48 @@ async function expireStaleClaiming(): Promise<number> {
       {
         $set: { stage: 'EXPIRED' },
         $push: {
-          events: autoPodEvent('EXPIRED', null, '', 'Slot date passed before everyone enrolled'),
+          events: autoPodEvent('EXPIRED', null, '', 'Start date passed before everyone enrolled'),
         },
       },
       { new: true }
     );
     if (!won) continue;
     await venueSlotService.releaseForAutoPod(String(doc._id));
+    expired += 1;
+    autoPodNotify.expired(won).catch((error) =>
+      logs.server.error('autoPod', 'notifyExpired', { error, auto_pod_id: String(doc._id) })
+    );
+  }
+  return expired;
+}
+
+/**
+ * A physical offer no venue accepted inside Pod Settings' venue window is
+ * already off every venue's list, so it can never complete — expire it and
+ * tell whoever had enrolled. The same window is what the venue's card counts
+ * down.
+ */
+async function expireUnacceptedByVenue(): Promise<number> {
+  const { venueCutoff, venueExpiryHours } = await autoPodService.windows();
+  const stale = await AutoPodModel.find({
+    ...PRE_LIVE_FILTER,
+    ...PHYSICAL_FILTER,
+    venue_claim: null,
+    created_at: { $lte: venueCutoff },
+  }).limit(100);
+  let expired = 0;
+  for (const doc of stale) {
+    const won = await AutoPodModel.findOneAndUpdate(
+      { _id: doc._id, ...PRE_LIVE_FILTER },
+      {
+        $set: { stage: 'EXPIRED' },
+        $push: {
+          events: autoPodEvent('EXPIRED', null, '', `No venue accepted within ${venueExpiryHours} hours`),
+        },
+      },
+      { new: true }
+    );
+    if (!won) continue;
     expired += 1;
     autoPodNotify.expired(won).catch((error) =>
       logs.server.error('autoPod', 'notifyExpired', { error, auto_pod_id: String(doc._id) })
@@ -78,14 +137,17 @@ async function recoverStuckMaterializing(): Promise<number> {
   for (const doc of stuck) {
     const pod = await findMaterializedPod(doc);
     if (pod) {
-      // The pod was created before the crash — finish what was left.
-      await venueSlotService
-        .transferAutoPodHold(
-          String(doc.venue_claim!.venue_slot_id),
-          String(doc._id),
-          String(pod._id)
-        )
-        .catch(() => undefined);
+      // The pod was created before the crash — finish what was left. A virtual
+      // offer held no slot, so there is nothing to hand over.
+      if (doc.venue_claim) {
+        await venueSlotService
+          .transferAutoPodHold(
+            String(doc.venue_claim.venue_slot_id),
+            String(doc._id),
+            String(pod._id)
+          )
+          .catch(() => undefined);
+      }
       await AutoPodModel.updateOne(
         { _id: doc._id, stage: 'MATERIALIZING' },
         {
@@ -109,16 +171,14 @@ async function recoverStuckMaterializing(): Promise<number> {
   return recovered;
 }
 
-/** Retry offers that have all three enrolments but never went live. */
+/** Retry offers that have every enrolment but never went live. */
 async function retryCompleteClaiming(): Promise<number> {
   const cutoff = new Date(Date.now() - RETRY_GRACE_MS);
+  // Two `$or`s — completeness and the future start — so they nest in an `$and`.
   const complete = await AutoPodModel.find({
     stage: 'CLAIMING',
-    venue_claim: { $ne: null },
-    host_claim: { $ne: null },
-    club_claim: { $ne: null },
-    'venue_claim.pod_date_time': { $gt: new Date() },
     updated_at: { $lt: cutoff },
+    $and: [AUTO_POD_COMPLETE_FILTER, startAhead(new Date())],
   })
     .select('_id')
     .limit(50);
@@ -160,7 +220,7 @@ export async function runAutoPodSweep(): Promise<{
   pinned: number;
 }> {
   const pinned = await backfillClubPins();
-  const expired = await expireStaleClaiming();
+  const expired = (await expireStaleClaiming()) + (await expireUnacceptedByVenue());
   const recovered = await recoverStuckMaterializing();
   const retried = await retryCompleteClaiming();
   return { expired, recovered, retried, pinned };

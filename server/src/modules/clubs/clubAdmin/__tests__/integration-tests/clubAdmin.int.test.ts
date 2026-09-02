@@ -433,6 +433,76 @@ describe('clubAdminService dashboard', () => {
     expect(d.trend.length).toBeGreaterThan(0);
   });
 
+  it('groups the assigned clubs into category tiles, biggest first', async () => {
+    const admin = uid();
+    const sports = await CategoryModel.create({ name: 'Sports', slug: 'sports-card', level: 'SUPER' });
+    const tennis = await CategoryModel.create({ name: 'Tennis', slug: 'tennis-card', level: 'SUB', parent_id: sports._id });
+    const chess = await CategoryModel.create({ name: 'Chess', slug: 'chess-card', level: 'SUB', parent_id: sports._id });
+
+    const tennisA = await seedClub({
+      admin_user_ids: [admin],
+      club_name: 'Tennis A',
+      super_category_id: sports._id,
+      category_id: tennis._id,
+    });
+    await seedClub({
+      admin_user_ids: [admin],
+      club_name: 'Tennis B',
+      super_category_id: sports._id,
+      category_id: tennis._id,
+    });
+    await seedClub({
+      admin_user_ids: [admin],
+      club_name: 'Chess A',
+      super_category_id: sports._id,
+      category_id: chess._id,
+    });
+    // Carries no category at all — it has none to report, so no tile names it.
+    await seedClub({ admin_user_ids: [admin], club_name: 'Uncategorised' });
+    // Another admin's club in the same category never widens a tile.
+    await seedClub({ club_name: 'Not Mine', admin_user_ids: [uid()], super_category_id: sports._id, category_id: tennis._id });
+    await seedPod(tennisA._id);
+    await seedPod(tennisA._id, { pod_date_time: new Date(Date.now() - 86_400_000) });
+
+    const { categories, kpis } = await clubAdminService.dashboard(admin);
+    expect(categories).toEqual([
+      { category_id: String(tennis._id), name: 'Tennis', super_category: 'Sports', clubs: 2, pods: 2 },
+      { category_id: String(chess._id), name: 'Chess', super_category: 'Sports', clubs: 1, pods: 0 },
+    ]);
+    // The uncategorised club still counts as an assigned club — the tiles are
+    // read per category, not against this figure.
+    expect(kpis.assigned_clubs).toBe(4);
+  });
+
+  it('leaves the category card empty when no assigned club carries a category', async () => {
+    const admin = uid();
+    await seedClub({ admin_user_ids: [admin], club_name: 'No Category' });
+    const { categories } = await clubAdminService.dashboard(admin);
+    expect(categories).toEqual([]);
+  });
+
+  it('drops a category tile whose category document is gone', async () => {
+    const admin = uid();
+    await seedClub({
+      admin_user_ids: [admin],
+      club_name: 'Dangling',
+      super_category_id: new Types.ObjectId(),
+      category_id: new Types.ObjectId(),
+    });
+    const { categories } = await clubAdminService.dashboard(admin);
+    expect(categories).toEqual([]);
+  });
+
+  it('reports a category tile with no super category as null rather than a name', async () => {
+    const admin = uid();
+    const solo = await CategoryModel.create({ name: 'Solo', slug: 'solo-card', level: 'SUB' });
+    await seedClub({ admin_user_ids: [admin], club_name: 'Solo Club', category_id: solo._id });
+    const { categories } = await clubAdminService.dashboard(admin);
+    expect(categories).toEqual([
+      { category_id: String(solo._id), name: 'Solo', super_category: null, clubs: 1, pods: 0 },
+    ]);
+  });
+
   it('serves the clubAdminDashboardTable page over the computed per-club rows, scoped to the caller', async () => {
     const adminA = uid();
     const adminB = uid();

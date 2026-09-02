@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { AutoPodLocation, AutoPodRole, AutoPodRow, AutoPodStage } from '@duncit/utils';
+import type {
+  AutoPodLocation,
+  AutoPodMode,
+  AutoPodRole,
+  AutoPodRow,
+  AutoPodStage,
+} from '@duncit/utils';
 
 import {
   ClubAdminAutoPodsDocument,
@@ -27,6 +33,8 @@ export interface AutoPodQueueRow extends AutoPodRow {
 export interface AutoPodQueueScope {
   locationId?: string;
   subCategoryId?: string;
+  /** Venue queue only: which of the owner's venues is looking. */
+  venueId?: string;
 }
 
 /** The three list queries select identical fields, so one node type covers all. */
@@ -56,6 +64,8 @@ const locationOf = (location: AutoPodNode['location']): AutoPodLocation | null =
 const toRow = (node: AutoPodNode): AutoPodQueueRow => ({
   ...node,
   stage: String(node.stage) as AutoPodStage,
+  pod_mode: String(node.pod_mode) as AutoPodMode,
+  venue_expires_at: node.venue_expires_at ?? null,
   pod_images_and_videos: node.pod_images_and_videos.map((media) => ({
     url: media.url,
     type: String(media.type),
@@ -79,7 +89,11 @@ async function fetchAutoPods(
 ): Promise<AutoPodQueueRow[]> {
   const location_id = orNull(scope.locationId);
   if (role === 'venue') {
-    const res = await graphqlRequest(VenueAutoPodsDocument, { location_id }, { auth: true });
+    const res = await graphqlRequest(
+      VenueAutoPodsDocument,
+      { location_id, venue_id: orNull(scope.venueId) },
+      { auth: true },
+    );
     return res.venueAutoPods.map(toRow);
   }
   if (role === 'host') {

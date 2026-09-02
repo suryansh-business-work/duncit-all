@@ -10,7 +10,7 @@ import { RECEIPT_EMAILS } from './catalogue.receipts';
 export * from './catalogue.types';
 export * from './mjml';
 export { FIELD, LABEL, CTA, FOOTER, HELP } from './catalogue.copy';
-export { ONBOARDING_COPY_KEYS } from './catalogue.onboarding';
+export { ONBOARDING_COPY_KEYS, ONBOARDING_SLUG_BY_AUDIENCE } from './catalogue.onboarding';
 
 /**
  * Every email the product sends, in one list.

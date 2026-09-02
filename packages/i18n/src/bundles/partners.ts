@@ -108,6 +108,7 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       backedOut: 'Backed Out',
       bookings: 'Bookings',
       clubAdminDashboard: 'Club Admin Dashboard',
+      clubs: 'Clubs',
       community: 'Community',
       completedPods: 'Completed Pods',
       fillRate: 'Fill Rate',
@@ -116,6 +117,7 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       monthlyTrend: 'Monthly trend',
       monthlyTrendChart: 'Monthly trend chart',
       newFollowers: 'New Followers',
+      noCategoryOnYourClubs: 'No category is set on your clubs yet.',
       notEnoughDataToDrawA: 'Not enough data to draw a trend yet.',
       overview: 'Overview',
       partnerToolsClubAdmin: 'Partner tools · Club Admin',
@@ -130,6 +132,8 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       totalPods: 'Total pods',
       totalSpots: 'Total Spots',
       upcomingPods: 'Upcoming Pods',
+      yourCategories: 'Your Categories',
+      yourCategoriesHint: 'The categories your clubs run under.',
     },
 
     clubAdminEditClubPage: {

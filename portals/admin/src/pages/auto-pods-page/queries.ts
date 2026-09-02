@@ -19,6 +19,7 @@ const ADMIN_AUTO_POD_FIELDS = gql`
     id
     auto_pod_no
     stage
+    is_active
     pod_title
     pod_description
     pod_info
@@ -30,6 +31,8 @@ const ADMIN_AUTO_POD_FIELDS = gql`
     super_category_id
     sub_category_id
     category_name
+    category_path
+    pod_mode
     pod_amount
     no_of_spots
     pod_occurrence
@@ -66,6 +69,7 @@ const ADMIN_AUTO_POD_FIELDS = gql`
     }
     pod_id
     created_at
+    updated_at
   }
 `;
 
@@ -99,6 +103,12 @@ export const AUTO_POD_FOR_EDIT = gql`
       reel_url
       super_category_id
       sub_category_id
+      pod_mode
+      meeting_platform
+      meeting_url
+      meeting_notes
+      pod_date_time
+      pod_end_date_time
       pod_amount
       no_of_spots
       pod_occurrence
@@ -109,6 +119,10 @@ export const AUTO_POD_FOR_EDIT = gql`
         label
         amount
         note
+      }
+      product_requests {
+        product_id
+        quantity
       }
       host_claim {
         user_id
@@ -154,6 +168,16 @@ export const CANCEL_AUTO_POD = gql`
   }
 `;
 
+/** Pause (false) or resume (true) an offer still enrolling. */
+export const SET_AUTO_POD_ACTIVE = gql`
+  ${ADMIN_AUTO_POD_FIELDS}
+  mutation AdminSetAutoPodActive($auto_pod_doc_id: ID!, $is_active: Boolean!) {
+    setAutoPodActive(auto_pod_doc_id: $auto_pod_doc_id, is_active: $is_active) {
+      ...AdminAutoPodFields
+    }
+  }
+`;
+
 export const DELETE_AUTO_POD = gql`
   mutation AdminDeleteAutoPod($auto_pod_doc_id: ID!) {
     deleteAutoPod(auto_pod_doc_id: $auto_pod_doc_id)
@@ -165,6 +189,7 @@ export interface AutoPodTableRow {
   id: string;
   auto_pod_no: string;
   stage: AutoPodStage;
+  is_active: boolean;
   pod_title: string;
   pod_description: string;
   pod_info: string;
@@ -173,6 +198,9 @@ export interface AutoPodTableRow {
   super_category_id: string;
   sub_category_id: string;
   category_name: string | null;
+  /** Super › Category › Sub names, as far up as the tree resolves. */
+  category_path: string[];
+  pod_mode: 'PHYSICAL' | 'VIRTUAL';
   pod_amount: number;
   no_of_spots: number;
   pod_occurrence: string;
@@ -183,6 +211,7 @@ export interface AutoPodTableRow {
   location: AutoPodLocation | null;
   pod_id: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 /** Row shape of `AUTO_POD_FOR_EDIT` — the shared template plus the enrolments that lock its category. */

@@ -9,6 +9,7 @@ const AUTO_POD_FIELDS = `
   id
   auto_pod_no
   stage
+  is_active
   pod_title
   pod_description
   pod_images_and_videos {
@@ -17,11 +18,13 @@ const AUTO_POD_FIELDS = `
   }
   sub_category_id
   category_name
+  pod_mode
   pod_amount
   no_of_spots
   viewer_claimed
   pod_id
   expected_host_earnings
+  venue_expires_at
   venue_claim {
     venue_id
     venue_slot_id
@@ -57,17 +60,19 @@ const AUTO_POD_FIELDS = `
 /**
  * The three queue queries take the SAME variables — `location_id` narrows to
  * one city (an offer nobody has enrolled in yet has no city and always shows),
- * and `sub_category_id` narrows a host's queue to one of their categories. A
- * page passes `null` for "all", so one hook can drive all three.
+ * `sub_category_id` narrows a host's queue to one of their categories, and
+ * `venue_id` narrows the venue queue to what ONE of the owner's venues could
+ * take. A page passes `null` for "all", so one hook can drive all three.
  */
 export interface AutoPodQueueVariables {
   location_id?: string | null;
   sub_category_id?: string | null;
+  venue_id?: string | null;
 }
 
 export const VENUE_AUTO_PODS = gql`
-  query VenueAutoPods($location_id: ID) {
-    venueAutoPods(location_id: $location_id) {
+  query VenueAutoPods($location_id: ID, $venue_id: ID) {
+    venueAutoPods(location_id: $location_id, venue_id: $venue_id) {
       ${AUTO_POD_FIELDS}
     }
   }
@@ -125,7 +130,8 @@ export const CLUB_CLAIM_AUTO_POD = gql`
   }
 `;
 
-/** The venue owner's own venues — used to pick which one accepts an offer. */
+/** The venue owner's own venues — the queue's picker, with the category each
+ * one declares (which is what decides the offers it is shown). */
 export const MY_VENUES_FOR_AUTO_POD = gql`
   query MyVenuesForAutoPod {
     myVenues {
@@ -135,21 +141,40 @@ export const MY_VENUES_FOR_AUTO_POD = gql`
       is_active
       location_id
       city
+      venue_category {
+        sub_category_id
+        super_category_name
+        category_name
+        sub_category_name
+      }
     }
   }
 `;
 
-/** Free slots on the chosen venue, which is what the venue commits on accept. */
-export const VENUE_AVAILABLE_SLOTS_FOR_AUTO_POD = gql`
-  query VenueAvailableSlotsForAutoPod($venue_id: ID!) {
-    venueAvailableSlots(venue_id: $venue_id) {
-      id
-      start_at
-      end_at
-      whole_day
-      price
-      space_label
-      capacity
+/**
+ * The chosen venue's free slots for ONE offer: the next few days (Pod
+ * Settings decides how many), nearest first, each with what the venue would
+ * be paid after Finance's deductions — and whether the pod's money could
+ * cover it at all.
+ */
+export const AUTO_POD_VENUE_SLOTS = gql`
+  query AutoPodVenueSlots($auto_pod_doc_id: ID!, $venue_id: ID!) {
+    autoPodVenueSlots(auto_pod_doc_id: $auto_pod_doc_id, venue_id: $venue_id) {
+      window_days
+      expires_at
+      slots {
+        id
+        start_at
+        end_at
+        whole_day
+        space_label
+        capacity
+        price
+        venue_receives
+        venue_commission_pct
+        host_receives
+        viable
+      }
     }
   }
 `;

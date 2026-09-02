@@ -1,9 +1,6 @@
-import { Types } from 'mongoose';
-import type { IAutoPod, IAutoPodLocation } from './autoPod.model';
+import type { IAutoPod } from './autoPod.model';
 import { autoPodCityLabel } from './autoPod.location';
-import { ClubModel } from '@modules/clubs/club/club.model';
-import { HostModel } from '@modules/venues/host/host.model';
-import { VenueModel } from '@modules/venues/venue/venue.model';
+import { audienceClubs, audienceHosts, audienceVenues } from './autoPod.audience';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { logs } from '@observability/log';
 
@@ -46,42 +43,24 @@ async function push(
   });
 }
 
-/** Only partners in the pinned city are offered a pinned Auto Pod. */
-const inCity = (location: IAutoPodLocation | null) =>
-  location ? { location_id: location.location_id } : {};
-
-/** Owners of every approved, active venue (in the city, once pinned). */
-async function venueOwnerIds(location: IAutoPodLocation | null): Promise<string[]> {
-  const ids = await VenueModel.distinct('owner_user_id', {
-    status: 'APPROVED',
-    is_active: true,
-    ...inCity(location),
-  });
-  return ids.map(String);
+/**
+ * Who each missing role's push goes to. The audience module owns the matching
+ * rule (sub-category, plus the pinned city for venues and clubs); this only
+ * reduces its rows to user ids.
+ */
+async function venueOwnerIds(doc: IAutoPod): Promise<string[]> {
+  const venues = await audienceVenues(doc.sub_category_id, doc.location);
+  return venues.map((venue) => venue.owner_user_id);
 }
 
-/** Approved, active hosts onboarded into this sub-category. A host has no city
- * of their own — they pick one when they enrol — so category is the audience. */
-async function hostIdsForSubCategory(subCategoryId: Types.ObjectId): Promise<string[]> {
-  const hosts = await HostModel.find({
-    status: 'APPROVED',
-    is_active: true,
-    'host_categories.sub_category_id': subCategoryId,
-  }).select('user_id');
-  return hosts.map((h: any) => String(h.user_id));
+async function hostIds(doc: IAutoPod): Promise<string[]> {
+  const hosts = await audienceHosts(doc.sub_category_id);
+  return hosts.map((host) => host.user_id);
 }
 
-/** Admins of active clubs carrying this sub-category (in the city, once pinned). */
-async function clubAdminIdsForSubCategory(
-  subCategoryId: Types.ObjectId,
-  location: IAutoPodLocation | null
-): Promise<string[]> {
-  const clubs = await ClubModel.find({
-    category_id: subCategoryId,
-    is_active: true,
-    ...inCity(location),
-  }).select('admin_user_ids');
-  return clubs.flatMap((c: any) => (c.admin_user_ids ?? []).map(String));
+async function clubAdminIds(doc: IAutoPod): Promise<string[]> {
+  const clubs = await audienceClubs(doc.sub_category_id, doc.location);
+  return clubs.flatMap((club) => club.admin_user_ids);
 }
 
 /**
@@ -126,11 +105,14 @@ const whenLabel = (value?: Date | null) =>
     ? new Date(value).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
     : '';
 
-/** "at Play Arena on 12 Sep, 6:00 pm · in Bengaluru, Karnataka" — whatever is known. */
+/** "at Play Arena on 12 Sep, 6:00 pm · in Bengaluru, Karnataka" — whatever is
+ * known. A virtual offer's date is the admin's, so it is known from the start. */
 function whereLine(doc: IAutoPod): string {
   const parts: string[] = [];
   if (doc.venue_claim) {
     parts.push(`at ${doc.venue_claim.venue_name} on ${whenLabel(doc.venue_claim.pod_date_time)}`);
+  } else if (doc.pod_mode === 'VIRTUAL' && doc.pod_date_time) {
+    parts.push(`online on ${whenLabel(doc.pod_date_time)}`);
   }
   const city = autoPodCityLabel(doc.location);
   if (city) parts.push(`in ${city}`);
@@ -147,8 +129,11 @@ const ROLE_NOUN: Record<Role, string> = { venue: 'a venue', host: 'a host', club
  * roles for whom this enrolment changed nothing, so they are not told twice.
  */
 async function remaining(doc: IAutoPod, skip: Role[] = []): Promise<void> {
+  if (doc.is_active === false) return;
   const missing: Role[] = [];
-  if (!doc.venue_claim && !skip.includes('venue')) missing.push('venue');
+  // A virtual offer has no venue to wait for.
+  const needsVenue = doc.pod_mode !== 'VIRTUAL' && !doc.venue_claim;
+  if (needsVenue && !skip.includes('venue')) missing.push('venue');
   if (!doc.host_claim && !skip.includes('host')) missing.push('host');
   if (!doc.club_claim && !skip.includes('club')) missing.push('club');
   if (missing.length === 0) return;
@@ -156,9 +141,9 @@ async function remaining(doc: IAutoPod, skip: Role[] = []): Promise<void> {
   const where = whereLine(doc);
   const audiences = await Promise.all(
     missing.map(async (role) => {
-      if (role === 'venue') return venueOwnerIds(doc.location);
-      if (role === 'host') return hostIdsForSubCategory(doc.sub_category_id);
-      return clubAdminIdsForSubCategory(doc.sub_category_id, doc.location);
+      if (role === 'venue') return venueOwnerIds(doc);
+      if (role === 'host') return hostIds(doc);
+      return clubAdminIds(doc);
     })
   );
   const actions: Record<Role, string> = {

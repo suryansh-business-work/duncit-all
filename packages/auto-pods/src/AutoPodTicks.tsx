@@ -5,16 +5,17 @@ import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import { autoPodTicks, type AutoPodRole, type AutoPodRow, type AutoPodLabels } from '@duncit/utils';
 
 export interface AutoPodTicksProps {
-  row: Pick<AutoPodRow, 'venue_claim' | 'host_claim' | 'club_claim'>;
+  row: Pick<AutoPodRow, 'venue_claim' | 'host_claim' | 'club_claim' | 'pod_mode'>;
   labels: AutoPodLabels;
   size?: 'small' | 'medium';
 }
 
 /**
- * The three enrolments an Auto Pod needs, always shown together and always in
- * order: Venue Enroll, Host Enroll, Club Admin Enroll. Amber while that partner
- * has yet to enrol, green the moment they do — so one glance says how far along
- * the offer is without reading a word.
+ * The enrolments an Auto Pod needs, always shown together and always in
+ * order: Venue Enroll, Host Enroll, Club Admin Enroll (a virtual offer has no
+ * venue tick). Amber while that partner has yet to enrol, green the moment
+ * they do — so one glance says how far along the offer is without reading a
+ * word.
  */
 export function AutoPodTicks({ row, labels, size = 'small' }: Readonly<AutoPodTicksProps>) {
   return (

@@ -28,11 +28,12 @@ import { gql } from '@/generated/graphql';
 /** Open offers this venue may accept, plus the ones it already accepted. A
  * `location_id` narrows to offers pinned to that city plus every unpinned one. */
 export const VenueAutoPodsDocument = gql(`
-  query MobileVenueAutoPods($location_id: ID) {
-    venueAutoPods(location_id: $location_id) {
+  query MobileVenueAutoPods($location_id: ID, $venue_id: ID) {
+    venueAutoPods(location_id: $location_id, venue_id: $venue_id) {
       id
       auto_pod_no
       stage
+      is_active
       pod_title
       pod_description
       pod_images_and_videos {
@@ -41,11 +42,13 @@ export const VenueAutoPodsDocument = gql(`
       }
       sub_category_id
       category_name
+      pod_mode
       pod_amount
       no_of_spots
       viewer_claimed
       pod_id
       expected_host_earnings
+      venue_expires_at
       location {
         location_id
         location_name
@@ -87,6 +90,7 @@ export const HostAutoPodsDocument = gql(`
       id
       auto_pod_no
       stage
+      is_active
       pod_title
       pod_description
       pod_images_and_videos {
@@ -95,11 +99,13 @@ export const HostAutoPodsDocument = gql(`
       }
       sub_category_id
       category_name
+      pod_mode
       pod_amount
       no_of_spots
       viewer_claimed
       pod_id
       expected_host_earnings
+      venue_expires_at
       location {
         location_id
         location_name
@@ -141,6 +147,7 @@ export const ClubAdminAutoPodsDocument = gql(`
       id
       auto_pod_no
       stage
+      is_active
       pod_title
       pod_description
       pod_images_and_videos {
@@ -149,11 +156,13 @@ export const ClubAdminAutoPodsDocument = gql(`
       }
       sub_category_id
       category_name
+      pod_mode
       pod_amount
       no_of_spots
       viewer_claimed
       pod_id
       expected_host_earnings
+      venue_expires_at
       location {
         location_id
         location_name
@@ -310,6 +319,54 @@ export const MyHostCategoriesForAutoPodDocument = gql(`
         sub_category_name
         category_name
         super_category_name
+      }
+    }
+  }
+`);
+
+/** The owner's venues — the queue's picker, with the category each declares
+ * (which is what decides the offers it is shown). */
+export const MyVenuesForAutoPodDocument = gql(`
+  query MobileMyVenuesForAutoPod {
+    myVenues {
+      id
+      venue_name
+      status
+      is_active
+      location_id
+      city
+      venue_category {
+        sub_category_id
+        super_category_name
+        category_name
+        sub_category_name
+      }
+    }
+  }
+`);
+
+/**
+ * The chosen venue's free slots for ONE offer: the next few days (Pod Settings
+ * decides how many), nearest first, each with what the venue would be paid
+ * after Finance's deductions — and whether the pod's money could cover it.
+ */
+export const AutoPodVenueSlotsDocument = gql(`
+  query MobileAutoPodVenueSlots($auto_pod_doc_id: ID!, $venue_id: ID!) {
+    autoPodVenueSlots(auto_pod_doc_id: $auto_pod_doc_id, venue_id: $venue_id) {
+      window_days
+      expires_at
+      slots {
+        id
+        start_at
+        end_at
+        whole_day
+        space_label
+        capacity
+        price
+        venue_receives
+        venue_commission_pct
+        host_receives
+        viable
       }
     }
   }

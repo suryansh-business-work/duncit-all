@@ -93,7 +93,7 @@ export function buildPodInput(values: PodFormValues, { draft, config }: BuildPod
 }
 
 /** Hashtags as typed → the array the server stores (leading # dropped). */
-const hashtagsOf = (text: string) =>
+export const hashtagsOf = (text: string) =>
   text
     .split(/[\s,]+/)
     .map((s) => s.replace(/^#/, '').trim())
@@ -108,14 +108,26 @@ const placeChargesOf = (values: PodFormValues) =>
 
 /**
  * Auto Pod mode: form values → `CreateAutoPodInput` (the update input is the
- * same shape). Only the TEMPLATE goes: no club, venue, host, date, mode or
- * products — a venue, a host and a club admin supply theirs when they enrol.
+ * same shape). Only the TEMPLATE goes: no club, venue or host — a venue, a
+ * host and a club admin supply theirs when they enrol. A VIRTUAL offer has no
+ * venue to bring the slot, so its meeting details and window travel here; a
+ * PHYSICAL one sends them as null. Payment terms and place charges are not
+ * the template's to write (the form has no section for them), so they are
+ * left out rather than nulled — an edit keeps whatever a row already holds.
  */
 export function buildAutoPodInput(values: PodFormValues) {
+  const isVirtual = values.pod_mode === 'VIRTUAL';
   return {
     pod_title: values.pod_title.trim(),
     pod_description: values.pod_description,
     sub_category_id: values.sub_category_id,
+    pod_mode: values.pod_mode,
+    meeting_platform: isVirtual ? values.meeting_platform.trim() || null : null,
+    meeting_url: isVirtual ? values.meeting_url.trim() : null,
+    meeting_notes: isVirtual ? values.meeting_notes.trim() || null : null,
+    pod_date_time: isVirtual && values.pod_date_time ? values.pod_date_time.toISOString() : null,
+    pod_end_date_time:
+      isVirtual && values.pod_end_date_time ? values.pod_end_date_time.toISOString() : null,
     pod_amount: Number(values.pod_amount) || 0,
     no_of_spots: Number(values.no_of_spots) || 0,
     pod_images_and_videos: linesToMedia(values.media_text),
@@ -125,8 +137,11 @@ export function buildAutoPodInput(values: PodFormValues) {
     pod_occurrence: values.pod_occurrence,
     what_this_pod_offers: values.what_this_pod_offers,
     available_perks: values.available_perks,
-    payment_terms: values.payment_terms || null,
-    place_charges: placeChargesOf(values),
+    product_requests: isVirtual
+      ? []
+      : values.product_requests
+          .map((item) => ({ product_id: item.product_id, quantity: Number(item.quantity) || 0 }))
+          .filter((item) => item.product_id && item.quantity > 0),
   };
 }
 
@@ -140,6 +155,13 @@ export interface AutoPodTemplateRow {
   reel_url?: string | null;
   super_category_id: string;
   sub_category_id: string;
+  /** Absent on rows written before virtual offers existed — those are physical. */
+  pod_mode?: string | null;
+  meeting_platform?: string | null;
+  meeting_url?: string | null;
+  meeting_notes?: string | null;
+  pod_date_time?: string | null;
+  pod_end_date_time?: string | null;
   pod_amount: number;
   no_of_spots: number;
   pod_occurrence?: string | null;
@@ -147,15 +169,23 @@ export interface AutoPodTemplateRow {
   available_perks?: string[] | null;
   payment_terms?: string | null;
   place_charges?: { label: string; amount: number; note?: string | null }[] | null;
+  product_requests?: { product_id: string; quantity: number }[] | null;
 }
 
 /** Build RHF form values from an Auto Pod so the form can prefill for edit. */
 export function autoPodToFormValues(row: AutoPodTemplateRow): PodFormValues {
+  const isVirtual = row.pod_mode === 'VIRTUAL';
   return {
     ...blankAutoPodFormValues,
     pod_title: row.pod_title ?? '',
     super_category_id: row.super_category_id ?? '',
     sub_category_id: row.sub_category_id ?? '',
+    pod_mode: isVirtual ? 'VIRTUAL' : 'PHYSICAL',
+    meeting_platform: row.meeting_platform ?? '',
+    meeting_url: row.meeting_url ?? '',
+    meeting_notes: row.meeting_notes ?? '',
+    pod_date_time: isVirtual && row.pod_date_time ? new Date(row.pod_date_time) : null,
+    pod_end_date_time: isVirtual && row.pod_end_date_time ? new Date(row.pod_end_date_time) : null,
     pod_description: row.pod_description ?? '',
     pod_type: AUTO_POD_TYPE,
     pod_amount: Number(row.pod_amount ?? 1),
@@ -172,6 +202,11 @@ export function autoPodToFormValues(row: AutoPodTemplateRow): PodFormValues {
       label: c.label ?? '',
       amount: c.amount ?? 0,
       note: c.note ?? '',
+    })),
+    products_enabled: (row.product_requests ?? []).length > 0,
+    product_requests: (row.product_requests ?? []).map((item) => ({
+      product_id: item.product_id ?? '',
+      quantity: Number(item.quantity ?? 1),
     })),
   };
 }

@@ -156,6 +156,7 @@ export default function PodEditorPage({
             onSubmit={onSubmit}
             onReady={onReady}
             hideDraftOnEdit={hideDraftOnEdit}
+            editing={editing}
             preview={<PodPreview />}
           />
         </Stack>

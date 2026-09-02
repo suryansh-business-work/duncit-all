@@ -38,6 +38,10 @@ export const settingsTypeDefs = gql`
     pod_auto_cancel_enabled: Boolean!
     "How many hours before a pod's start the auto-cancel finance check runs."
     pod_auto_cancel_lead_hours: Int!
+    "How many days ahead a venue is shown its free slots when accepting an Auto Pod."
+    auto_pod_slot_window_days: Int!
+    "How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires."
+    auto_pod_venue_expiry_hours: Int!
     updated_at: String
   }
 
@@ -94,6 +98,10 @@ export const settingsTypeDefs = gql`
     pod_auto_cancel_enabled: Boolean
     "How many hours before a pod's start the auto-cancel finance check runs (1-8760)."
     pod_auto_cancel_lead_hours: Int
+    "How many days ahead a venue is shown its free slots when accepting an Auto Pod (1-60)."
+    auto_pod_slot_window_days: Int
+    "How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires (1-720)."
+    auto_pod_venue_expiry_hours: Int
   }
 
   type FeatureFlag {

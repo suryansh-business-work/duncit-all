@@ -3,6 +3,8 @@ export { AutoPodCard } from './AutoPodCard';
 export { AutoPodQueue } from './AutoPodQueue';
 export { AutoPodLocationRow } from './AutoPodLocationRow';
 export { AutoPodCategoryChips } from './AutoPodCategoryChips';
+export { AutoPodVenueRow } from './AutoPodVenueRow';
+export { AutoPodExpiryNote } from './AutoPodExpiryNote';
 export { VenueAcceptSheet } from './VenueAcceptSheet';
 export { HostClaimSheet } from './HostClaimSheet';
 export { ClubClaimSheet } from './ClubClaimSheet';

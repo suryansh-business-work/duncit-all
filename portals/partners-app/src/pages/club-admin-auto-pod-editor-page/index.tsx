@@ -23,10 +23,11 @@ export default function ClubAdminAutoPodEditorPage() {
   const club: ClubAutoPodClub | null =
     (lookups.data?.myAdminClubs ?? []).find((item: ClubAutoPodClub) => item.id === clubId) ??
     null;
+  const products = lookups.data?.availablePodProducts ?? [];
 
   const renderEditor = () => {
     if (!club) return null;
-    if (club.category_id) return <ClubAutoPodEditor club={club} backTo={backTo} />;
+    if (club.category_id) return <ClubAutoPodEditor club={club} backTo={backTo} products={products} />;
     return (
       <Stack spacing={2} sx={{ alignItems: 'flex-start' }}>
         <Alert severity="error" sx={{ width: '100%' }}>

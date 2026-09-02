@@ -34,6 +34,14 @@ exports:
   - 'blankAutoPodFormValues'
   - 'AUTO_POD_TYPE'
   - 'AutoPodTemplateRow'
+  - 'useAutoPodAudience'
+  - 'AUTO_POD_AUDIENCE'
+  - 'AUTO_POD_AUDIENCE_ROLES'
+  - 'audienceCount'
+  - 'AUTO_POD_DETAIL_FIELDS'
+  - 'AutoPodAudience'
+  - 'AutoPodAudienceState'
+  - 'AutoPodAudienceRole'
 ---
 
 ## Why this exists
@@ -329,8 +337,12 @@ both surfaces render can be asserted without mounting either.
 | `useMediaPickerBridge` | `() => …` | `{ pickerOpen, pickerKind, pickImage, pickVideo, settlePicker, accept, title }` |
 | `useVenueSlots` | `(venueId: string, skip?: boolean) => …` | `{ slots: VenueSlot[], loading, error }` — the one slot query the picker and the spots bounds share. |
 | `useAutoPodEditorState` | `(args: UseAutoPodEditorStateArgs) => …` | `{ initialValues, busy, opError, submit }` — the Auto Pod twin of `usePodEditorState`; see "Auto Pod mode". |
-| `buildAutoPodInput` | `(values: PodFormValues) => CreateAutoPodInput` | The template only — no club, venue, host, date, mode or products. |
+| `buildAutoPodInput` | `(values: PodFormValues) => CreateAutoPodInput` | The template only — no club, venue or host. Carries `pod_mode`, the meeting details and dates of a VIRTUAL offer, and the product rows of a PHYSICAL one; leaves payment terms and place charges out. |
 | `autoPodToFormValues` | `(row: AutoPodTemplateRow) => PodFormValues` | Form values for editing an Auto Pod, blank-defaulted over `blankAutoPodFormValues`. |
+| `useAutoPodAudience` | `(subCategoryId: string, enabled: boolean) => AutoPodAudienceState` | Step 1's counts: who could enrol in the category. `complete` is true only when every count is above zero. |
+| `AUTO_POD_AUDIENCE` | `DocumentNode` | The admin-only `autoPodAudience(sub_category_id)` query behind it. |
+| `AUTO_POD_AUDIENCE_ROLES` / `audienceCount` | `readonly AutoPodAudienceRole[]` / `(audience, role) => number` | The three counts in card order, and one role's count off the payload. |
+| `AUTO_POD_DETAIL_FIELDS` | `(keyof PodFormValues)[]` | What step 2 validates before the review opens. |
 
 `VENUE_AVAILABLE_SLOTS` is that query document, exported for a consumer that has to read the same
 slots outside the form tree — the admin AI-fill books the venue's next free slot before it resets
@@ -355,8 +367,9 @@ them straight to `MediaPickerDialog`.
 | `showIsActive` | `boolean` | — | Active toggle (edit only). |
 | `showProducts` | `boolean` | — | Approved-products section + its rules. |
 | `showReel` | `boolean` | `false` | Explore reel `reel_url` field. |
-| `autoPod` | `boolean` | `false` | Auto Pod mode — the template only; see "Auto Pod mode" below. |
+| `autoPod` | `boolean` | `false` | Auto Pod mode — the three-step template stepper; see "Auto Pod mode" below. |
 | `lockCategory` | `boolean` | `false` | Auto Pod mode only: the category is fixed and shown read-only. |
+| `showAutoPodAudience` | `boolean` | `false` | Auto Pod mode only: step 1 counts the venues, hosts and club admins in the category and gates step 2 on all three being above zero. Admin only — the rows carry partners' contact details. |
 
 ## Live preview
 
@@ -434,25 +447,41 @@ being picked. Do not re-implement the promise bridge at the call site.
 An **Auto Pod** is a pod written without a venue, a host or a club — a venue, a host and a club
 admin each enrol later, in any order, and the first to enrol pins it to a city (`@duncit/auto-pods`
 renders that side). The Admin and Partners consoles used to open a separate, smaller form for it.
-They now open **this** form with `config.autoPod: true`, so an Auto Pod is authored in the same
-accordion sections, with the same media picker, place charges, reel and finance breakdown as an
-ordinary pod. One form, one schema; the mode is one more config flag.
+They now open **this** form with `config.autoPod: true`, which turns it into a **three-step
+stepper** — the same sections, media picker and reel as an ordinary pod, in a different order.
+One form, one schema; the mode is one more config flag.
+
+1. **Pod category** — `AutoPodCategoryField`, a REQUIRED Super › Category › Sub cascade in the club
+   picker's place. Under it, when `showAutoPodAudience` is on, three counts: the venues hosting
+   that sub-category, the hosts approved in it, the club admins whose club carries it. Each count
+   is a button opening a side drawer (`DuncitTable`) listing who is behind it. **Next stays
+   disabled until all three counts are above zero** — an offer nobody can complete never goes live,
+   and the admin should learn that before writing the pod.
+2. **Pod details** — Physical / Virtual first (a virtual offer gains the Meeting Details section and
+   loses Approved Products), then Images & videos, the reel, Basic Information (title, ticket price,
+   spots and occurrence — there is no Payment & Charges section), About, What this pod offers,
+   Available perks and, for a physical offer, Approved Products filtered to the chosen category.
+   Next runs the schema over `AUTO_POD_DETAIL_FIELDS` and holds the step until it passes.
+3. **Review & roll out** — every field read back read-only above the one submit button:
+   *Roll out Auto Pod* on create, *Save changes* on edit.
 
 What `autoPod: true` changes:
 
 | Ordinary pod | Auto Pod mode |
 | --- | --- |
-| Club picker (category inherited from the club) | `AutoPodCategoryField` — a REQUIRED Super › Sub cascade in the club picker's place. It writes `super_category_id` + `sub_category_id`; only hosts approved in that sub-category and clubs carrying it are ever offered the pod. |
-| Hosts, venue slot, mode, date/time | Gone — nothing to pick yet. The When/Where section is dropped. |
-| Products section | Dropped. |
-| `pod_type` select | Fixed to `AUTO_POD_TYPE` (`'PAID'`) — an Auto Pod is physical and never free. |
-| "Save as Draft" | Gone; the template is either saved or not. |
+| Club picker (category inherited from the club) | `AutoPodCategoryField` — writes `super_category_id` + `sub_category_id`; only venues, hosts and clubs in that sub-category are ever offered the pod. |
+| Hosts, venue slot, date/time | Gone — a venue brings the slot when it enrols. A VIRTUAL offer has no venue, so its meeting link, notes and start/end are written here instead and it waits on a host and a club only. |
+| Payment & Charges section | Dropped. Price, spots and occurrence move into Basic Information; place charges and the earnings projection need a venue the template does not have. |
+| Products section | Kept for a PHYSICAL offer, filtered to the template's category (`usePodCategoryClub` hands the product rules a club-shaped stand-in). |
+| `pod_type` select | Fixed to `AUTO_POD_TYPE` (`'PAID'`) — an Auto Pod is never free. |
+| "Save as Draft" | Gone; the template is either rolled out or not. |
 
-`makePodSchema(config, t)` swaps the club/venue/host/date rules for the template's own: a category is
+`makePodSchema(config, t)` swaps the club/venue/host rules for the template's own: a category is
 required, the ticket price floor is 1, spots are 2–999 (the host attends free, so two is the fewest
-that bill anyone) and at least one image. `lockCategory: true` shows the category read-only — a
-Club Admin opening one for their club, or a template a host or club has already enrolled on (the
-server refuses a category change from then on).
+that bill anyone), at least one image, and — for a VIRTUAL offer — a valid meeting link plus a future
+start and end. `lockCategory: true` shows the category read-only — a Club Admin opening one for
+their club, or a template a host or club has already enrolled on (the server refuses a category
+change from then on).
 
 A sensible console config:
 
@@ -460,13 +489,14 @@ A sensible console config:
 import { makeNativeParityPodConfig, type PodFormConfig } from '@duncit/pod-form';
 
 const ADMIN_AUTO_POD_CONFIG: PodFormConfig = {
-  ...makeNativeParityPodConfig({ showProducts: false }),
+  ...makeNativeParityPodConfig({ showProducts: true }),
   autoPod: true,
+  showAutoPodAudience: true, // false on Partners — the counts' rows carry partners' contact details
   showHosts: false,
   showVenueSlot: false,
-  showPlaceCharges: true,
+  showPlaceCharges: false,
   showReel: true,
-  showFinance: true, // false on Partners, which has no finance settings
+  showFinance: false,
 };
 ```
 

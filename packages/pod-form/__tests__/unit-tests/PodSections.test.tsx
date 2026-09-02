@@ -113,3 +113,28 @@ describe('PodSections', () => {
     expect(screen.queryByText(/Approved Products/)).not.toBeInTheDocument();
   });
 });
+
+describe('PodSections (autoPod)', () => {
+  it('drops Payment & Charges and the venue section, keeping the pod copy sections', () => {
+    renderSections(makeData({ config: makeConfig({ autoPod: true }) }), { pod_type: 'PAID' });
+    expect(screen.getByText('1. Basic Information')).toBeInTheDocument();
+    expect(screen.getByText('2. About this Pod')).toBeInTheDocument();
+    expect(screen.queryByText(/Payment & Charges/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/When, Where/)).not.toBeInTheDocument();
+  });
+
+  it('adds Meeting Details for a virtual template, in the venue section’s place, and no products', () => {
+    renderSections(makeData({ config: makeConfig({ autoPod: true, showProducts: true }) }), {
+      pod_type: 'PAID',
+      pod_mode: 'VIRTUAL',
+    });
+    expect(screen.getByText('2. Meeting Details')).toBeInTheDocument();
+    expect(screen.queryByText(/Approved Products/)).not.toBeInTheDocument();
+  });
+
+  it('offers Approved Products to a physical template when the surface shows them', () => {
+    renderSections(makeData({ config: makeConfig({ autoPod: true, showProducts: true }) }), { pod_type: 'PAID' });
+    expect(screen.getByText('5. Approved Products')).toBeInTheDocument();
+    expect(screen.queryByText(/Payment & Charges/)).not.toBeInTheDocument();
+  });
+});

@@ -31,6 +31,7 @@ const makeRow = (over: Partial<AutoPodTableRow> = {}): AutoPodTableRow => ({
   id: 'doc1',
   auto_pod_no: 'AP-1',
   stage: 'OPEN',
+  is_active: true,
   pod_title: 'Weekend Trek',
   pod_description: '',
   pod_info: '',
@@ -39,9 +40,11 @@ const makeRow = (over: Partial<AutoPodTableRow> = {}): AutoPodTableRow => ({
   super_category_id: 'sc1',
   sub_category_id: 'sub1',
   category_name: 'Adventure',
+  category_path: ['Outdoors', 'Hiking', 'Adventure'],
   pod_amount: 500,
   no_of_spots: 10,
   pod_occurrence: 'ONE_TIME',
+  pod_mode: 'PHYSICAL',
   payment_terms: null,
   venue_claim: null,
   host_claim: null,
@@ -49,6 +52,7 @@ const makeRow = (over: Partial<AutoPodTableRow> = {}): AutoPodTableRow => ({
   location: null,
   pod_id: null,
   created_at: '2026-01-02T08:00:00.000Z',
+  updated_at: '2026-01-03T08:00:00.000Z',
   ...over,
 });
 
@@ -67,6 +71,7 @@ describe('AutoPodsTable', () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onViewPod={vi.fn()}
+        onToggleActive={vi.fn()}
       />,
     );
     expect(captured.props).toMatchObject({
@@ -93,6 +98,7 @@ describe('AutoPodsTable', () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onViewPod={vi.fn()}
+        onToggleActive={vi.fn()}
       />,
     );
     expect(screen.getByTestId('toolbar')).toHaveTextContent('New Auto Pod');
@@ -110,6 +116,7 @@ describe('AutoPodsTable', () => {
         onCancel={vi.fn()}
         onDelete={vi.fn()}
         onViewPod={vi.fn()}
+        onToggleActive={vi.fn()}
       />,
     );
     expect(screen.getByTestId('headers')).toHaveTextContent(
@@ -117,15 +124,11 @@ describe('AutoPodsTable', () => {
         'admin.autoPods.colAutoPodNo',
         'admin.autoPods.colTitle',
         'admin.autoPods.colCategory',
-        'admin.autoPods.colLocation',
-        'admin.autoPods.colPrice',
-        'admin.autoPods.colSpots',
-        'admin.autoPods.colEnrolments',
+        'admin.autoPods.colDependency',
         'admin.autoPods.colStage',
-        'admin.autoPods.colVenue',
-        'admin.autoPods.colHost',
-        'admin.autoPods.colClub',
+        'admin.autoPods.colActive',
         'admin.autoPods.colCreatedAt',
+        'admin.autoPods.colUpdatedAt',
         'admin.autoPods.colActions',
       ].join('|'),
     );
@@ -136,6 +139,7 @@ describe('AutoPodsTable', () => {
     const onDelete = vi.fn();
     const onCancel = vi.fn();
     const onViewPod = vi.fn();
+    const onToggleActive = vi.fn();
     render(
       <AutoPodsTable
         t={t}
@@ -147,22 +151,28 @@ describe('AutoPodsTable', () => {
         onCancel={onCancel}
         onDelete={onDelete}
         onViewPod={onViewPod}
+        onToggleActive={onToggleActive}
       />,
     );
     const columns = captured.props?.columns as DuncitColumn<AutoPodTableRow>[];
     const actionsCol = columns.find((c) => c.field === 'actions');
     if (!actionsCol?.cellRenderer) throw new Error('actions column missing a cellRenderer');
     const row = makeRow({ id: 'row-7', pod_id: 'pod-7', stage: 'OPEN' });
-    const { getAllByRole } = render(<>{actionsCol.cellRenderer(row)}</>);
-    const buttons = getAllByRole('button');
-    // renderExtra order: View Pod, Cancel, then Edit, Delete.
-    fireEvent.click(buttons[0]);
-    fireEvent.click(buttons[1]);
-    fireEvent.click(buttons[2]);
-    fireEvent.click(buttons[3]);
+    const { getByRole } = render(<>{actionsCol.cellRenderer(row)}</>);
+    // Every action sits in the row's three-dot menu, which closes after each pick.
+    const pick = (label: string) => {
+      fireEvent.click(getByRole('button', { name: 'admin.autoPods.moreActions' }));
+      fireEvent.click(getByRole('menuitem', { name: label }));
+    };
+    pick('admin.autoPods.viewPod');
+    pick('admin.autoPods.cancel');
+    pick('admin.autoPods.edit');
+    pick('admin.autoPods.delete');
+    pick('admin.autoPods.deactivate');
     expect(onViewPod).toHaveBeenCalledWith(row);
     expect(onCancel).toHaveBeenCalledWith(row);
     expect(onEdit).toHaveBeenCalledWith(row);
     expect(onDelete).toHaveBeenCalledWith(row);
+    expect(onToggleActive).toHaveBeenCalledWith(row);
   });
 });

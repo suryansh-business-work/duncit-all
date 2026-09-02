@@ -35,8 +35,24 @@ export function stageFilterOptions(t: (key: string) => string) {
   return STAGES.map((stage) => ({ value: stage, label: t(STAGE_LABEL_KEY[stage]) }));
 }
 
+/** The three roles an offer can still be waiting on — the table's dependency filter. */
+export function pendingFilterOptions(t: (key: string) => string) {
+  return [
+    { value: 'VENUE', label: t('admin.autoPods.pendingVenue') },
+    { value: 'HOST', label: t('admin.autoPods.pendingHost') },
+    { value: 'CLUB', label: t('admin.autoPods.pendingClub') },
+  ];
+}
+
+/** "Sports › Racket › Badminton" — the names the server walked up from the sub-category. */
+export const categoryPathOf = (row: AutoPodTableRow): string =>
+  (row.category_path ?? []).filter(Boolean).join(' › ');
+
 /** The template may be rewritten at any pre-live stage (the category locks once a host or club enrolled). */
 export const isAutoPodEditable = (row: AutoPodTableRow): boolean => autoPodPreLive(row.stage);
+
+/** Pausing (and resuming) only means something while partners could still enrol. */
+export const isAutoPodPausable = (row: AutoPodTableRow): boolean => autoPodPreLive(row.stage);
 
 /** Cancelling a pod that already materialized is the Pods page's job, not this one. */
 export const isAutoPodCancellable = (row: AutoPodTableRow): boolean => autoPodPreLive(row.stage);

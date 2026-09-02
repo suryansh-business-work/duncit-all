@@ -4,8 +4,11 @@ import {
   autoPodCityLabel,
   autoPodEnrolledCount,
   autoPodHostNeedsLocation,
+  autoPodMissingRoles,
   autoPodModeCount,
+  autoPodRoles,
   autoPodTicks,
+  autoPodTimeLeft,
   autoPodWaitingOn,
   splitAutoPods,
   type AutoPodClubClaim,
@@ -293,5 +296,56 @@ describe('autoPodCityLabel', () => {
   it('is empty for an offer nobody has pinned yet', () => {
     expect(autoPodCityLabel(null)).toBe('');
     expect(autoPodCityLabel(undefined)).toBe('');
+  });
+});
+
+describe('a virtual offer', () => {
+  // The admin wrote the meeting details and the dates into the template, so
+  // there is no venue to enrol: every derivation is two roles wide.
+  const virtual = (over: Partial<AutoPodRow> = {}): AutoPodRow => row({ pod_mode: 'VIRTUAL', ...over });
+
+  it('needs a host and a club only, in the same order as ever', () => {
+    expect(autoPodRoles(virtual())).toEqual(['host', 'club']);
+    expect(autoPodRoles(row())).toEqual(['venue', 'host', 'club']);
+    // A row from before the field existed is physical.
+    expect(autoPodRoles(row({ pod_mode: null }))).toEqual(['venue', 'host', 'club']);
+  });
+
+  it('draws two ticks and counts against two', () => {
+    expect(autoPodTicks(virtual({ host_claim: hostClaim }))).toEqual([
+      { role: 'host', done: true },
+      { role: 'club', done: false },
+    ]);
+    expect(autoPodEnrolledCount(virtual({ host_claim: hostClaim, club_claim: clubClaim }))).toBe(2);
+  });
+
+  it('is never a venue’s to act on, and still the host’s and the club’s', () => {
+    expect(autoPodActionable(virtual(), 'venue')).toBe(false);
+    expect(autoPodActionable(virtual(), 'host')).toBe(true);
+    expect(autoPodActionable(virtual(), 'club')).toBe(true);
+  });
+
+  it('waits on the host and the club only', () => {
+    expect(autoPodMissingRoles(virtual())).toEqual(['host', 'club']);
+    expect(autoPodWaitingOn(virtual({ stage: 'CLAIMING', host_claim: hostClaim }))).toBe('club');
+    expect(autoPodMissingRoles(row())).toEqual(['venue', 'host', 'club']);
+  });
+});
+
+describe('autoPodTimeLeft', () => {
+  const now = Date.UTC(2026, 8, 2, 10, 0, 0);
+
+  it('splits what is left into whole hours and the minutes over, rounding minutes up', () => {
+    expect(autoPodTimeLeft(new Date(now + 5 * 3_600_000 + 12 * 60_000).toISOString(), now)).toEqual({ hours: 5, minutes: 12 });
+    // Ten seconds left still reads as a minute, never "0h 0m" while the offer is there.
+    expect(autoPodTimeLeft(new Date(now + 10_000).toISOString(), now)).toEqual({ hours: 0, minutes: 1 });
+    expect(autoPodTimeLeft(new Date(now + 24 * 3_600_000).toISOString(), now)).toEqual({ hours: 24, minutes: 0 });
+  });
+
+  it('is null with no deadline, a past one, or an unreadable one', () => {
+    expect(autoPodTimeLeft(null, now)).toBeNull();
+    expect(autoPodTimeLeft(undefined, now)).toBeNull();
+    expect(autoPodTimeLeft(new Date(now - 1).toISOString(), now)).toBeNull();
+    expect(autoPodTimeLeft('not a date', now)).toBeNull();
   });
 });

@@ -16,6 +16,8 @@ const POD_SETTINGS = gql`
       attendance_otp_required
       pod_auto_cancel_enabled
       pod_auto_cancel_lead_hours
+      auto_pod_slot_window_days
+      auto_pod_venue_expiry_hours
       updated_at
     }
   }
@@ -30,6 +32,8 @@ const UPDATE_POD_SETTINGS = gql`
       attendance_otp_required
       pod_auto_cancel_enabled
       pod_auto_cancel_lead_hours
+      auto_pod_slot_window_days
+      auto_pod_venue_expiry_hours
       updated_at
     }
   }
@@ -128,6 +132,30 @@ export default function PodSettingsPage() {
         loading={loading}
         value={settings?.pod_auto_cancel_lead_hours ?? null}
         onSave={(next) => saveField({ pod_auto_cancel_lead_hours: next })}
+      />
+      <NumberSettingCard
+        title={t('admin.podSettings.autoPodSlotWindowTitle')}
+        description={t('admin.podSettings.autoPodSlotWindowDesc')}
+        label={t('admin.podSettings.autoPodSlotWindowLabel')}
+        helperText={t('admin.podSettings.autoPodSlotWindowMin')}
+        invalidText={t('admin.podSettings.autoPodSlotWindowInvalid')}
+        min={1}
+        max={60}
+        loading={loading}
+        value={settings?.auto_pod_slot_window_days ?? null}
+        onSave={(next) => saveField({ auto_pod_slot_window_days: next })}
+      />
+      <NumberSettingCard
+        title={t('admin.podSettings.autoPodExpiryTitle')}
+        description={t('admin.podSettings.autoPodExpiryDesc')}
+        label={t('admin.podSettings.autoPodExpiryLabel')}
+        helperText={t('admin.podSettings.autoPodExpiryMin')}
+        invalidText={t('admin.podSettings.autoPodExpiryInvalid')}
+        min={1}
+        max={720}
+        loading={loading}
+        value={settings?.auto_pod_venue_expiry_hours ?? null}
+        onSave={(next) => saveField({ auto_pod_venue_expiry_hours: next })}
       />
       <Snackbar
         open={!!toast}

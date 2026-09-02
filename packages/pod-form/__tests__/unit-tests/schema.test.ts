@@ -331,3 +331,52 @@ describe('makePodSchema (autoPod)', () => {
     expect(paths).toContain('reel_url');
   });
 });
+
+describe('makePodSchema (autoPod, virtual)', () => {
+  const autoConfig = makeConfig({ autoPod: true, showProducts: true });
+  const virtual = (over: Partial<PodFormValues> = {}): PodFormValues => ({
+    ...blankPodFormValues,
+    pod_title: 'Evening Quiz',
+    pod_description: 'Online quiz night for everyone.',
+    sub_category_id: 'sub-quiz',
+    pod_type: 'PAID',
+    pod_amount: 200,
+    no_of_spots: 10,
+    media_text: 'https://cdn.example.com/quiz.jpg',
+    pod_mode: 'VIRTUAL',
+    meeting_url: 'https://meet.google.com/abc',
+    pod_date_time: new Date(Date.now() + 86_400_000),
+    pod_end_date_time: new Date(Date.now() + 90_000_000),
+    ...over,
+  });
+
+  it('accepts a virtual template that carries its own meeting link and window', () => {
+    expect(makePodSchema(autoConfig, fallbackT).safeParse(virtual()).success).toBe(true);
+  });
+
+  it('needs the meeting link a venue would otherwise bring, and a real one', () => {
+    expect(errorPaths(autoConfig, virtual({ meeting_url: '' }))).toContain('meeting_url');
+    expect(errorPaths(autoConfig, virtual({ meeting_url: 'not a url' }))).toContain('meeting_url');
+  });
+
+  it('needs a future start and an end after it', () => {
+    expect(errorPaths(autoConfig, virtual({ pod_date_time: null }))).toContain('pod_date_time');
+    expect(errorPaths(autoConfig, virtual({ pod_end_date_time: null }))).toContain('pod_end_date_time');
+    expect(
+      errorPaths(autoConfig, virtual({ pod_end_date_time: new Date(Date.now() + 80_000_000) })),
+    ).toContain('pod_end_date_time');
+  });
+
+  it('cannot carry products', () => {
+    expect(errorPaths(autoConfig, virtual({ product_requests: [{ product_id: 'p1', quantity: 1 }] }))).toContain(
+      'product_requests',
+    );
+  });
+
+  it('asks nothing about meetings or dates of a physical template', () => {
+    const res = makePodSchema(autoConfig, fallbackT).safeParse(
+      virtual({ pod_mode: 'PHYSICAL', meeting_url: '', pod_date_time: null, pod_end_date_time: null }),
+    );
+    expect(res.success).toBe(true);
+  });
+});

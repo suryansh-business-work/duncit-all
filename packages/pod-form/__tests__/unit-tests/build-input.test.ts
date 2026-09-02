@@ -330,28 +330,77 @@ describe('buildAutoPodInput', () => {
       { url: 'https://cdn.example.com/rally.mp4', type: 'VIDEO' },
     ]);
     expect(input.reel_url).toBeNull();
-    expect(input.payment_terms).toBeNull();
-    expect(input.place_charges).toEqual([{ label: 'Court fee', amount: 200, note: null }]);
+    expect(input.pod_mode).toBe('PHYSICAL');
+    // A physical offer's venue brings the slot — nothing about where or when travels.
+    expect(input.meeting_platform).toBeNull();
+    expect(input.meeting_url).toBeNull();
+    expect(input.meeting_notes).toBeNull();
+    expect(input.pod_date_time).toBeNull();
+    expect(input.pod_end_date_time).toBeNull();
+    // The form has no Payment & Charges section, so neither field is the
+    // template's to write: left OUT (an edit keeps what the row holds), not nulled.
+    expect('payment_terms' in input).toBe(false);
+    expect('place_charges' in input).toBe(false);
     // Nothing a partner supplies later rides along.
     expect('club_id' in input).toBe(false);
     expect('venue_id' in input).toBe(false);
     expect('pod_hosts_id' in input).toBe(false);
-    expect('pod_date_time' in input).toBe(false);
   });
 
   it('keeps a real reel URL and coerces broken numbers to zero', () => {
     const input = buildAutoPodInput(
       templateValues({
         reel_url: 'https://cdn.example.com/reel.mp4',
-        payment_terms: 'Pay on arrival.',
         pod_amount: 'x' as unknown as number,
         no_of_spots: 'y' as unknown as number,
       }),
     );
     expect(input.reel_url).toBe('https://cdn.example.com/reel.mp4');
-    expect(input.payment_terms).toBe('Pay on arrival.');
     expect(input.pod_amount).toBe(0);
     expect(input.no_of_spots).toBe(0);
+  });
+
+  it('sends only real product rows on a physical offer, with quantities as numbers', () => {
+    const input = buildAutoPodInput(
+      templateValues({
+        product_requests: [
+          { product_id: 'prod-1', quantity: '2' as unknown as number },
+          { product_id: '', quantity: 3 },
+          { product_id: 'prod-2', quantity: 0 },
+        ],
+      }),
+    );
+    expect(input.product_requests).toEqual([{ product_id: 'prod-1', quantity: 2 }]);
+  });
+
+  it('carries the meeting details and window of a virtual offer, and never its products', () => {
+    const start = new Date('2030-01-05T10:00:00.000Z');
+    const end = new Date('2030-01-05T11:30:00.000Z');
+    const input = buildAutoPodInput(
+      templateValues({
+        pod_mode: 'VIRTUAL',
+        meeting_platform: ' GOOGLE_MEET ',
+        meeting_url: ' https://meet.google.com/abc ',
+        meeting_notes: '  ',
+        pod_date_time: start,
+        pod_end_date_time: end,
+        product_requests: [{ product_id: 'prod-1', quantity: 2 }],
+      }),
+    );
+    expect(input.pod_mode).toBe('VIRTUAL');
+    expect(input.meeting_platform).toBe('GOOGLE_MEET');
+    expect(input.meeting_url).toBe('https://meet.google.com/abc');
+    // A blank note is null, not an empty string the server would store.
+    expect(input.meeting_notes).toBeNull();
+    expect(input.pod_date_time).toBe(start.toISOString());
+    expect(input.pod_end_date_time).toBe(end.toISOString());
+    expect(input.product_requests).toEqual([]);
+  });
+
+  it('sends null dates for a virtual offer that has none picked yet', () => {
+    const input = buildAutoPodInput(templateValues({ pod_mode: 'VIRTUAL', meeting_url: 'https://x.y' }));
+    expect(input.pod_date_time).toBeNull();
+    expect(input.pod_end_date_time).toBeNull();
   });
 });
 
@@ -435,5 +484,60 @@ describe('autoPodToFormValues', () => {
     expect(values.sub_category_id).toBe('');
     expect(values.media_text).toBe('');
     expect(values.place_charges).toEqual([{ label: '', amount: 50, note: '' }]);
+  });
+});
+
+describe('autoPodToFormValues (virtual, products)', () => {
+  const virtualRow: AutoPodTemplateRow = {
+    pod_title: 'Evening Quiz',
+    pod_description: 'Online quiz night.',
+    pod_images_and_videos: [{ url: 'https://cdn.example.com/quiz.jpg', type: 'IMAGE' }],
+    super_category_id: 'sup-games',
+    sub_category_id: 'sub-quiz',
+    pod_mode: 'VIRTUAL',
+    meeting_platform: 'GOOGLE_MEET',
+    meeting_url: 'https://meet.google.com/abc',
+    meeting_notes: 'Camera on.',
+    pod_date_time: '2030-01-05T10:00:00.000Z',
+    pod_end_date_time: '2030-01-05T11:30:00.000Z',
+    pod_amount: 200,
+    no_of_spots: 10,
+  };
+
+  it('rehydrates the meeting details and window of a virtual offer', () => {
+    const values = autoPodToFormValues(virtualRow);
+    expect(values.pod_mode).toBe('VIRTUAL');
+    expect(values.meeting_platform).toBe('GOOGLE_MEET');
+    expect(values.meeting_url).toBe('https://meet.google.com/abc');
+    expect(values.meeting_notes).toBe('Camera on.');
+    expect(values.pod_date_time?.toISOString()).toBe('2030-01-05T10:00:00.000Z');
+    expect(values.pod_end_date_time?.toISOString()).toBe('2030-01-05T11:30:00.000Z');
+    expect(values.product_requests).toEqual([]);
+    expect(values.products_enabled).toBe(false);
+  });
+
+  it('leaves the window empty on a virtual row that never had one', () => {
+    const values = autoPodToFormValues({ ...virtualRow, pod_date_time: null, pod_end_date_time: null });
+    expect(values.pod_date_time).toBeNull();
+    expect(values.pod_end_date_time).toBeNull();
+  });
+
+  it('ignores stray dates on a physical row and rehydrates its product rows, defaulting a missing quantity to 1', () => {
+    const values = autoPodToFormValues({
+      ...virtualRow,
+      pod_mode: 'PHYSICAL',
+      product_requests: [
+        { product_id: 'p1', quantity: 3 },
+        { product_id: undefined as unknown as string, quantity: undefined as unknown as number },
+      ],
+    });
+    expect(values.pod_mode).toBe('PHYSICAL');
+    expect(values.pod_date_time).toBeNull();
+    expect(values.pod_end_date_time).toBeNull();
+    expect(values.products_enabled).toBe(true);
+    expect(values.product_requests).toEqual([
+      { product_id: 'p1', quantity: 3 },
+      { product_id: '', quantity: 1 },
+    ]);
   });
 });

@@ -2014,6 +2014,9 @@ importers:
       '@duncit/slots':
         specifier: workspace:*
         version: link:../slots
+      '@duncit/table':
+        specifier: workspace:*
+        version: link:../table
       '@duncit/ui':
         specifier: workspace:*
         version: link:../ui

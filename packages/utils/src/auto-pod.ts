@@ -22,6 +22,13 @@ export type AutoPodRole = 'venue' | 'host' | 'club';
 /** The three roles, in the order every tick row and "waiting for" line lists them. */
 export const AUTO_POD_ROLES: readonly AutoPodRole[] = ['venue', 'host', 'club'];
 
+/**
+ * PHYSICAL — a venue enrols and brings the slot. VIRTUAL — the admin wrote the
+ * meeting details and dates into the template, so there is no venue to enrol
+ * and the offer waits on a host and a club only.
+ */
+export type AutoPodMode = 'PHYSICAL' | 'VIRTUAL';
+
 export interface AutoPodVenueClaim {
   venue_id: string;
   venue_slot_id: string;
@@ -74,6 +81,16 @@ export interface AutoPodRow {
    * needs this to offer only the clubs the server would accept. */
   sub_category_id: string;
   category_name?: string | null;
+  /** Absent on rows written before the field existed — those are physical. */
+  pod_mode?: AutoPodMode | null;
+  /** False while an admin has paused the offer. */
+  is_active?: boolean;
+  /**
+   * When the offer leaves venues' lists (and expires) if no venue has accepted
+   * it by then. Set on the venue queue only; null on a virtual offer, once a
+   * venue is on it, and everywhere else.
+   */
+  venue_expires_at?: string | null;
   pod_amount: number;
   no_of_spots: number;
   venue_claim: AutoPodVenueClaim | null;
@@ -91,7 +108,7 @@ export interface AutoPodTick {
   done: boolean;
 }
 
-type Claims = Pick<AutoPodRow, 'venue_claim' | 'host_claim' | 'club_claim'>;
+type Claims = Pick<AutoPodRow, 'venue_claim' | 'host_claim' | 'club_claim' | 'pod_mode'>;
 
 const claimOf = (row: Claims, role: AutoPodRole) => {
   if (role === 'venue') return row.venue_claim;
@@ -100,15 +117,23 @@ const claimOf = (row: Claims, role: AutoPodRole) => {
 };
 
 /**
- * The three ticks, always in the same order — Venue, Host, Club Admin — so a
- * card's tick row never changes width or order as partners enrol. Enrolments
- * happen in ANY order; the order here is presentation only.
+ * The roles this offer needs, in tick order. A virtual offer has no venue to
+ * enrol, so its row is two ticks wide; every physical offer is three.
  */
-export function autoPodTicks(row: Claims): AutoPodTick[] {
-  return AUTO_POD_ROLES.map((role) => ({ role, done: !!claimOf(row, role) }));
+export function autoPodRoles(row: Pick<AutoPodRow, 'pod_mode'>): AutoPodRole[] {
+  return AUTO_POD_ROLES.filter((role) => role !== 'venue' || row.pod_mode !== 'VIRTUAL');
 }
 
-/** How many of the three have enrolled. */
+/**
+ * The ticks, always in the same order — Venue, Host, Club Admin — so a card's
+ * tick row never changes width or order as partners enrol. Enrolments happen
+ * in ANY order; the order here is presentation only.
+ */
+export function autoPodTicks(row: Claims): AutoPodTick[] {
+  return autoPodRoles(row).map((role) => ({ role, done: !!claimOf(row, role) }));
+}
+
+/** How many of the needed partners have enrolled. */
 export function autoPodEnrolledCount(row: Claims): number {
   return autoPodTicks(row).filter((tick) => tick.done).length;
 }
@@ -126,6 +151,8 @@ export function autoPodPreLive(stage: AutoPodStage): boolean {
  */
 export function autoPodActionable(row: AutoPodRow, role: AutoPodRole): boolean {
   if (row.viewer_claimed) return false;
+  // A virtual offer is never a venue's to act on.
+  if (role === 'venue' && row.pod_mode === 'VIRTUAL') return false;
   return autoPodPreLive(row.stage) && !claimOf(row, role);
 }
 
@@ -147,7 +174,7 @@ export function splitAutoPods(
  * live (or gone). */
 export function autoPodMissingRoles(row: Pick<AutoPodRow, 'stage'> & Claims): AutoPodRole[] {
   if (!autoPodPreLive(row.stage)) return [];
-  return AUTO_POD_ROLES.filter((role) => !claimOf(row, role));
+  return autoPodRoles(row).filter((role) => !claimOf(row, role));
 }
 
 /** The first role the row is still waiting on, or null once it is live (or gone). */
@@ -202,4 +229,23 @@ export function autoPodModeCount(
   const role = MODE_TO_ROLE[mode as AutoPodStudioMode];
   if (!role) return 0;
   return counts[role] ?? 0;
+}
+
+/** What a countdown says: whole hours and the minutes left over. */
+export interface AutoPodTimeLeft {
+  hours: number;
+  minutes: number;
+}
+
+/**
+ * How long until `iso` — for the venue card's "Removed from your list in …"
+ * line. Null when there is no deadline, or once it has passed; minutes are
+ * rounded UP so the line never reads "0h 0m" while the offer is still there.
+ */
+export function autoPodTimeLeft(iso: string | null | undefined, nowMs: number): AutoPodTimeLeft | null {
+  if (!iso) return null;
+  const left = new Date(iso).getTime() - nowMs;
+  if (!Number.isFinite(left) || left <= 0) return null;
+  const minutesTotal = Math.ceil(left / 60_000);
+  return { hours: Math.floor(minutesTotal / 60), minutes: minutesTotal % 60 };
 }

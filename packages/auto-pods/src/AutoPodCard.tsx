@@ -10,6 +10,7 @@ import Divider from '@mui/material/Divider';
 import PlaceIcon from '@mui/icons-material/Place';
 import EventIcon from '@mui/icons-material/Event';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
+import VideocamIcon from '@mui/icons-material/Videocam';
 import ImageNotSupportedIcon from '@mui/icons-material/ImageNotSupported';
 import {
   autoPodCityLabel,
@@ -97,6 +98,7 @@ export function AutoPodCard({
   const image = firstImage(row);
   const missing = autoPodMissingRoles(row);
   const venue = row.venue_claim;
+  const virtual = row.pod_mode === 'VIRTUAL';
   const city = autoPodCityLabel(row.location);
   const cityLine = city ? labels.pinnedTo(city) : labels.unpinned;
 
@@ -122,6 +124,9 @@ export function AutoPodCard({
 
         <Stack spacing={0.5}>
           <DetailLine icon={<LocationCityIcon fontSize="small" color="action" />} text={cityLine} />
+          {virtual ? (
+            <DetailLine icon={<VideocamIcon fontSize="small" color="action" />} text={labels.virtualPod} />
+          ) : null}
           {venue ? (
             <>
               <DetailLine icon={<PlaceIcon fontSize="small" color="action" />} text={venue.venue_name} />

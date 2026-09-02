@@ -1,5 +1,8 @@
 import {
+  AUTO_POD_AUDIENCE_ROLES,
+  AUTO_POD_DETAIL_FIELDS,
   AUTO_POD_TYPE,
+  audienceCount,
   OCCURRENCES,
   POD_MODES,
   POD_TYPES,
@@ -9,6 +12,7 @@ import {
   getProductRequestTotal,
   makeNativeParityPodConfig,
   makePodSchema,
+  type AutoPodAudience,
   type PodFormConfig,
   type PodFormValues,
   fallbackT,
@@ -28,6 +32,8 @@ interface PodMock {
 interface AutoPodMock {
   config: PodFormConfig;
   values: PodFormValues;
+  /** What step 1 counted for the chosen category — every count must be above zero. */
+  audience: AutoPodAudience;
 }
 
 /** What a Zod result says is still missing, one line per issue. */
@@ -89,21 +95,35 @@ export default defineDemos('pod-form', [
 
   defineDemo<AutoPodMock>({
     id: 'auto-pod',
-    title: 'The same form in Auto Pod mode',
+    title: 'The same form in Auto Pod mode — a three-step stepper',
     note:
-      'Blank sub_category_id and the template stops validating — the category stands in for the club, because an Auto Pod has no club, venue, host or date until partners enrol. Note what buildAutoPodInput leaves out: nothing a partner supplies later ever goes to the server.',
+      'Blank sub_category_id and the template stops validating — the category stands in for the club, because an Auto Pod has no club, venue or host until partners enrol. Set host_count to 0 and step 2 stays shut. Switch pod_mode to VIRTUAL and a meeting link plus a start and end become required, because no venue will bring them. Note what buildAutoPodInput leaves out: nothing a partner supplies later ever goes to the server.',
     mock: {
       config: {
-        ...makeNativeParityPodConfig({ showProducts: false }),
+        ...makeNativeParityPodConfig({ showProducts: true }),
         autoPod: true,
+        showAutoPodAudience: true,
         showHosts: false,
         showVenueSlot: false,
-        showPlaceCharges: true,
+        showPlaceCharges: false,
         showReel: true,
         showFinance: false,
       },
+      audience: {
+        venue_count: 4,
+        host_count: 11,
+        club_admin_count: 3,
+        venues: [
+          { id: '66f1a2b3c4d5e6f708192d01', venue_name: 'Play Arena', city: 'Bengaluru', locality: 'HSR Layout', owner_name: 'Om Prakash' },
+        ],
+        hosts: [{ user_id: '66f1a2b3c4d5e6f708192e01', full_name: 'Asha Rao', email: 'asha@duncit.com', phone: '9876543210' }],
+        club_admins: [
+          { user_id: '66f1a2b3c4d5e6f708192f01', full_name: 'Neha Iyer', email: 'neha@duncit.com', club_names: ['Bengaluru Shuttlers'] },
+        ],
+      },
       values: {
         ...blankAutoPodFormValues,
+        pod_mode: 'PHYSICAL',
         pod_title: 'Sunday Badminton Doubles',
         pod_description: 'Friendly doubles for intermediate players. Rackets available on site.',
         super_category_id: '66f1a2b3c4d5e6f708192c01',
@@ -119,6 +139,10 @@ export default defineDemos('pod-form', [
       const parsed = makePodSchema(mock.config, fallbackT).safeParse(mock.values);
       return {
         'Pod type is fixed to': AUTO_POD_TYPE,
+        'Step 2 opens (every count above zero)': AUTO_POD_AUDIENCE_ROLES.every(
+          (role) => audienceCount(mock.audience, role) > 0,
+        ),
+        'Fields step 2 validates before the review': AUTO_POD_DETAIL_FIELDS.length,
         'This template is valid': parsed.success,
         'What is still missing': issueLines(parsed),
         'buildAutoPodInput(values)': buildAutoPodInput(mock.values),

@@ -1605,26 +1605,39 @@ export type AutoPod = {
   /** The city the first enrolment pinned it to — null while nobody has enrolled. */
   location?: Maybe<AutoPodLocation>;
   materialized_at?: Maybe<Scalars['String']['output']>;
+  meeting_notes?: Maybe<Scalars['String']['output']>;
+  meeting_platform?: Maybe<Scalars['String']['output']>;
+  meeting_url?: Maybe<Scalars['String']['output']>;
   no_of_spots: Scalars['Int']['output'];
   payment_terms?: Maybe<Scalars['String']['output']>;
   place_charges: Array<PodPlaceCharge>;
   /** The materialized pod, once LIVE. */
   pod?: Maybe<Pod>;
   pod_amount: Scalars['Float']['output'];
+  /** VIRTUAL only — a physical offer's dates come from the venue's slot. */
+  pod_date_time?: Maybe<Scalars['String']['output']>;
   pod_description: Scalars['String']['output'];
+  pod_end_date_time?: Maybe<Scalars['String']['output']>;
   pod_hashtag: Array<Scalars['String']['output']>;
   pod_id?: Maybe<Scalars['ID']['output']>;
   pod_images_and_videos: Array<PodMedia>;
   pod_info: Scalars['String']['output'];
+  /**
+   * PHYSICAL waits on a venue to bring the slot; VIRTUAL carries its own
+   * meeting details and dates and waits on a host and a club only.
+   */
+  pod_mode: PodMode;
   pod_occurrence: PodOccurrence;
   pod_title: Scalars['String']['output'];
   pod_type: PodType;
+  product_requests: Array<PodProductRequest>;
+  products_enabled: Scalars['Boolean']['output'];
   reel_url?: Maybe<Scalars['String']['output']>;
   stage: AutoPodStage;
   sub_category_id: Scalars['ID']['output'];
   super_category_id: Scalars['ID']['output'];
   updated_at: Scalars['String']['output'];
-  /** Venue enrolment — null until a venue accepts and picks its slot. */
+  /** Venue enrolment — null until a venue accepts and picks its slot. Always null on a VIRTUAL offer. */
   venue_claim?: Maybe<AutoPodVenueClaim>;
   /** True when the calling user (or one of their clubs) already enrolled. */
   viewer_claimed: Scalars['Boolean']['output'];
@@ -1636,6 +1649,49 @@ export type AutoPodActionCounts = {
   club: Scalars['Int']['output'];
   host: Scalars['Int']['output'];
   venue: Scalars['Int']['output'];
+};
+
+/**
+ * Everyone who could enrol in a fresh Auto Pod of one sub-category, before a
+ * city is pinned. All three counts must be positive before the template is
+ * rolled out — an offer nobody can complete never goes live.
+ */
+export type AutoPodAudience = {
+  __typename?: 'AutoPodAudience';
+  club_admin_count: Scalars['Int']['output'];
+  club_admins: Array<AutoPodAudienceClubAdmin>;
+  host_count: Scalars['Int']['output'];
+  hosts: Array<AutoPodAudienceHost>;
+  venue_count: Scalars['Int']['output'];
+  venues: Array<AutoPodAudienceVenue>;
+};
+
+/** A club admin whose club carries a sub-category, with every such club of theirs. */
+export type AutoPodAudienceClubAdmin = {
+  __typename?: 'AutoPodAudienceClubAdmin';
+  club_names: Array<Scalars['String']['output']>;
+  email: Scalars['String']['output'];
+  full_name: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+/** A host approved in a sub-category. */
+export type AutoPodAudienceHost = {
+  __typename?: 'AutoPodAudienceHost';
+  email: Scalars['String']['output'];
+  full_name: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+/** A venue that could accept an offer in a sub-category. */
+export type AutoPodAudienceVenue = {
+  __typename?: 'AutoPodAudienceVenue';
+  city: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  locality: Scalars['String']['output'];
+  owner_name: Scalars['String']['output'];
+  venue_name: Scalars['String']['output'];
 };
 
 export type AutoPodClubClaim = {
@@ -3633,16 +3689,24 @@ export type CreateAisensyTemplateInput = {
 
 export type CreateAutoPodInput = {
   available_perks?: InputMaybe<Array<Scalars['String']['input']>>;
+  meeting_notes?: InputMaybe<Scalars['String']['input']>;
+  meeting_platform?: InputMaybe<Scalars['String']['input']>;
+  meeting_url?: InputMaybe<Scalars['String']['input']>;
   no_of_spots: Scalars['Int']['input'];
   payment_terms?: InputMaybe<Scalars['String']['input']>;
   place_charges?: InputMaybe<Array<PodPlaceChargeInput>>;
   pod_amount: Scalars['Float']['input'];
+  pod_date_time?: InputMaybe<Scalars['String']['input']>;
   pod_description: Scalars['String']['input'];
+  pod_end_date_time?: InputMaybe<Scalars['String']['input']>;
   pod_hashtag?: InputMaybe<Array<Scalars['String']['input']>>;
   pod_images_and_videos: Array<PodMediaInput>;
   pod_info?: InputMaybe<Scalars['String']['input']>;
+  /** Defaults to PHYSICAL. VIRTUAL requires meeting_url, pod_date_time and pod_end_date_time. */
+  pod_mode?: InputMaybe<PodMode>;
   pod_occurrence?: InputMaybe<PodOccurrence>;
   pod_title: Scalars['String']['input'];
+  product_requests?: InputMaybe<Array<PodProductRequestInput>>;
   reel_url?: InputMaybe<Scalars['String']['input']>;
   sub_category_id: Scalars['ID']['input'];
   what_this_pod_offers?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -16334,6 +16398,12 @@ export type Query = {
   audienceTable: AudienceTablePage;
   /** One Auto Pod. Admins, and any partner who can act on or has enrolled in it. */
   autoPod: AutoPod;
+  /**
+   * Admin only: who could enrol in a new Auto Pod of this sub-category — the
+   * venues hosting it, the hosts approved in it and the admins of clubs carrying
+   * it — with the counts the template form gates its next step on.
+   */
+  autoPodAudience: AutoPodAudience;
   /** Active, currently-valid coupons a shopper can apply (global + this pod). */
   availableCouponsForPod: Array<Coupon>;
   availablePodProducts: Array<InventoryProduct>;
@@ -17600,6 +17670,11 @@ export type QueryAudienceTableArgs = {
 
 export type QueryAutoPodArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryAutoPodAudienceArgs = {
+  sub_category_id: Scalars['ID']['input'];
 };
 
 
@@ -22540,16 +22615,23 @@ export type UpdateApprovedVenueInput = {
 
 export type UpdateAutoPodInput = {
   available_perks?: InputMaybe<Array<Scalars['String']['input']>>;
+  meeting_notes?: InputMaybe<Scalars['String']['input']>;
+  meeting_platform?: InputMaybe<Scalars['String']['input']>;
+  meeting_url?: InputMaybe<Scalars['String']['input']>;
   no_of_spots?: InputMaybe<Scalars['Int']['input']>;
   payment_terms?: InputMaybe<Scalars['String']['input']>;
   place_charges?: InputMaybe<Array<PodPlaceChargeInput>>;
   pod_amount?: InputMaybe<Scalars['Float']['input']>;
+  pod_date_time?: InputMaybe<Scalars['String']['input']>;
   pod_description?: InputMaybe<Scalars['String']['input']>;
+  pod_end_date_time?: InputMaybe<Scalars['String']['input']>;
   pod_hashtag?: InputMaybe<Array<Scalars['String']['input']>>;
   pod_images_and_videos?: InputMaybe<Array<PodMediaInput>>;
   pod_info?: InputMaybe<Scalars['String']['input']>;
+  pod_mode?: InputMaybe<PodMode>;
   pod_occurrence?: InputMaybe<PodOccurrence>;
   pod_title?: InputMaybe<Scalars['String']['input']>;
+  product_requests?: InputMaybe<Array<PodProductRequestInput>>;
   reel_url?: InputMaybe<Scalars['String']['input']>;
   sub_category_id?: InputMaybe<Scalars['ID']['input']>;
   what_this_pod_offers?: InputMaybe<Array<Scalars['String']['input']>>;

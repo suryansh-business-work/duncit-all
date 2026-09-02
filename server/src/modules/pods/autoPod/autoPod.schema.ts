@@ -84,6 +84,17 @@ export const autoPodTypeDefs = gql`
     sub_category_id: ID!
     "Display name of the sub-category the admin chose."
     category_name: String
+    """
+    PHYSICAL waits on a venue to bring the slot; VIRTUAL carries its own
+    meeting details and dates and waits on a host and a club only.
+    """
+    pod_mode: PodMode!
+    meeting_platform: String
+    meeting_url: String
+    meeting_notes: String
+    "VIRTUAL only — a physical offer's dates come from the venue's slot."
+    pod_date_time: String
+    pod_end_date_time: String
     pod_type: PodType!
     pod_amount: Float!
     no_of_spots: Int!
@@ -92,7 +103,9 @@ export const autoPodTypeDefs = gql`
     available_perks: [String!]!
     payment_terms: String
     place_charges: [PodPlaceCharge!]!
-    "Venue enrolment — null until a venue accepts and picks its slot."
+    products_enabled: Boolean!
+    product_requests: [PodProductRequest!]!
+    "Venue enrolment — null until a venue accepts and picks its slot. Always null on a VIRTUAL offer."
     venue_claim: AutoPodVenueClaim
     "Host enrolment — null until a host assigns themselves."
     host_claim: AutoPodHostClaim
@@ -124,6 +137,45 @@ export const autoPodTypeDefs = gql`
     club: Int!
   }
 
+  "A venue that could accept an offer in a sub-category."
+  type AutoPodAudienceVenue {
+    id: ID!
+    venue_name: String!
+    city: String!
+    locality: String!
+    owner_name: String!
+  }
+
+  "A host approved in a sub-category."
+  type AutoPodAudienceHost {
+    user_id: ID!
+    full_name: String!
+    email: String!
+    phone: String!
+  }
+
+  "A club admin whose club carries a sub-category, with every such club of theirs."
+  type AutoPodAudienceClubAdmin {
+    user_id: ID!
+    full_name: String!
+    email: String!
+    club_names: [String!]!
+  }
+
+  """
+  Everyone who could enrol in a fresh Auto Pod of one sub-category, before a
+  city is pinned. All three counts must be positive before the template is
+  rolled out — an offer nobody can complete never goes live.
+  """
+  type AutoPodAudience {
+    venue_count: Int!
+    host_count: Int!
+    club_admin_count: Int!
+    venues: [AutoPodAudienceVenue!]!
+    hosts: [AutoPodAudienceHost!]!
+    club_admins: [AutoPodAudienceClubAdmin!]!
+  }
+
   type AutoPodTablePage {
     rows: [AutoPod!]!
     total: Int!
@@ -135,9 +187,17 @@ export const autoPodTypeDefs = gql`
     pod_title: String!
     pod_description: String!
     sub_category_id: ID!
+    "Defaults to PHYSICAL. VIRTUAL requires meeting_url, pod_date_time and pod_end_date_time."
+    pod_mode: PodMode
+    meeting_platform: String
+    meeting_url: String
+    meeting_notes: String
+    pod_date_time: String
+    pod_end_date_time: String
     pod_amount: Float!
     no_of_spots: Int!
     pod_images_and_videos: [PodMediaInput!]!
+    product_requests: [PodProductRequestInput!]
     pod_info: String
     pod_hashtag: [String!]
     reel_url: String
@@ -152,9 +212,16 @@ export const autoPodTypeDefs = gql`
     pod_title: String
     pod_description: String
     sub_category_id: ID
+    pod_mode: PodMode
+    meeting_platform: String
+    meeting_url: String
+    meeting_notes: String
+    pod_date_time: String
+    pod_end_date_time: String
     pod_amount: Float
     no_of_spots: Int
     pod_images_and_videos: [PodMediaInput!]
+    product_requests: [PodProductRequestInput!]
     pod_info: String
     pod_hashtag: [String!]
     reel_url: String
@@ -186,6 +253,12 @@ export const autoPodTypeDefs = gql`
     clubAdminAutoPods(location_id: ID): [AutoPod!]!
     "Per-role counts of Auto Pods waiting on the caller — drives role-switch landing."
     myAutoPodActionCounts: AutoPodActionCounts!
+    """
+    Admin only: who could enrol in a new Auto Pod of this sub-category — the
+    venues hosting it, the hosts approved in it and the admins of clubs carrying
+    it — with the counts the template form gates its next step on.
+    """
+    autoPodAudience(sub_category_id: ID!): AutoPodAudience!
   }
 
   extend type Mutation {

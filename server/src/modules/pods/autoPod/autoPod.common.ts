@@ -32,3 +32,28 @@ export function autoPodEvent(
     at: new Date(),
   };
 }
+
+/**
+ * Every enrolment the offer needs: a host and a club always, a venue only when
+ * the pod is physical — a virtual pod has no venue to enrol.
+ */
+export const isAutoPodComplete = (doc: {
+  pod_mode?: string | null;
+  venue_claim: unknown;
+  host_claim: unknown;
+  club_claim: unknown;
+}) => !!doc.host_claim && !!doc.club_claim && (doc.pod_mode === 'VIRTUAL' || !!doc.venue_claim);
+
+/**
+ * Mongo filter for the same rule. Offers written before `pod_mode` existed
+ * carry no field at all, which is why "physical" is spelled as "not VIRTUAL"
+ * here and in PHYSICAL_FILTER rather than as an equality.
+ */
+export const AUTO_POD_COMPLETE_FILTER = {
+  host_claim: { $ne: null },
+  club_claim: { $ne: null },
+  $or: [{ pod_mode: 'VIRTUAL' }, { venue_claim: { $ne: null } }],
+};
+
+/** Offers a venue can act on at all — the physical ones. */
+export const PHYSICAL_FILTER = { pod_mode: { $ne: 'VIRTUAL' } };

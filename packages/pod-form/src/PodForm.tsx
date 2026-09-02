@@ -8,7 +8,7 @@ import { PodFormDataProvider } from './context';
 import CascadeEffect from './CascadeEffect';
 import { EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
 import PodCategoryFilter from './PodCategoryFilter';
-import AutoPodCategoryField from './AutoPodCategoryField';
+import AutoPodStepper from './auto-pod/AutoPodStepper';
 import PodFormActions from './PodFormActions';
 import PodFormLayout from './PodFormLayout';
 import PodSections from './PodSections';
@@ -50,6 +50,8 @@ export interface PodFormProps {
   onReady?: (methods: UseFormReturn<PodFormValues>) => void;
   /** Admin hides "Save as Draft" once a pod exists (draft only affects create). */
   hideDraftOnEdit?: boolean;
+  /** Editing an existing row — the Auto Pod stepper's last button saves rather than rolls out. */
+  editing?: boolean;
   /**
    * Live preview column, rendered INSIDE this form's provider so it can watch
    * the values being typed. Given one, the form lays itself out in two columns;
@@ -81,6 +83,7 @@ export default function PodForm({
   onSubmit,
   onReady,
   hideDraftOnEdit = false,
+  editing = false,
   preview,
 }: Readonly<PodFormProps>) {
   const { t } = useTranslation();
@@ -154,24 +157,30 @@ export default function PodForm({
   // An Auto Pod has no draft: it is either open for enrolment or it is not.
   const showDraft = !config.autoPod && !(hideDraftOnEdit && isEdit);
 
-  // In Auto Pod mode the category IS the field (there is no club to narrow);
-  // otherwise it only filters which clubs are offered.
-  const categoryField = config.autoPod ? (
-    <AutoPodCategoryField />
-  ) : (
-    <PodCategoryFilter
-      value={categoryFilter}
-      onChange={setCategoryFilter}
-      matchCount={clubsInCategory.length}
-      clubCount={clubs.length}
+  // Auto Pod mode is a three-step stepper — the category (and who could enrol
+  // in it), the pod, then a read-only review above the roll-out button — and
+  // it draws the category field, the sections and the actions itself.
+  const stepper = (
+    <AutoPodStepper
+      editing={editing}
+      busy={busy}
+      disabled={busyOrSubmitting}
+      error={error ?? null}
+      onCancel={onCancel}
     />
   );
 
   // One spacing for every block in the column — the category, the media, each
   // section, the error and the actions — rather than a margin per component.
-  const fields = (
+  // The category picker here persists nothing: it only narrows the clubs.
+  const sections = (
     <Stack spacing={2}>
-      {categoryField}
+      <PodCategoryFilter
+        value={categoryFilter}
+        onChange={setCategoryFilter}
+        matchCount={clubsInCategory.length}
+        clubCount={clubs.length}
+      />
       <PodSections />
       {/* `whiteSpace: pre-line` keeps a content refusal readable: it arrives as
           a headline followed by one line per rule broken. */}
@@ -195,6 +204,7 @@ export default function PodForm({
       />
     </Stack>
   );
+  const fields = config.autoPod ? stepper : sections;
 
   return (
     <FormProvider {...methods}>

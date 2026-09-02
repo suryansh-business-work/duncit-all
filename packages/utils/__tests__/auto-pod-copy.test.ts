@@ -27,7 +27,7 @@ const BUNDLE_KEYS = [
   'priceLabel', 'spotsLabel', 'expectedEarnings',
   'waitingVenue', 'waitingHost', 'waitingClub', 'waitingFor', 'roleVenue', 'roleHost', 'roleClub',
   'locationLabel', 'allLocations', 'changeLocation', 'categoryLabel', 'allCategories', 'noHostCategories',
-  'pinnedTo', 'unpinned', 'pickLocationFirst', 'willPinTo', 'noVenueInCity', 'noClubInCity',
+  'pinnedTo', 'unpinned', 'virtualPod', 'pickLocationFirst', 'willPinTo', 'noVenueInCity', 'noClubInCity',
   'liveNow', 'viewPod', 'cancelled', 'expired', 'claimedElsewhere', 'dismiss',
   'emptyVenue', 'emptyHost', 'emptyClub',
   'noSlots', 'addAvailability', 'loadFailed', 'retry',

@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useFormContext, useWatch, type UseFormSetValue } from 'react-hook-form';
 import { usePodFormData } from './context';
-import { filterProductsForClub, pruneProductRequests } from './product-category';
+import { clubCategoryKey, filterProductsForClub, pruneProductRequests } from './product-category';
+import { usePodCategoryClub } from './usePodCategoryClub';
 import type { PodFormValues } from './types';
 
 /** A VIRTUAL pod has no venue, place charges or products — clear them. */
@@ -35,6 +36,11 @@ export default function CascadeEffect() {
   const clubId = useWatch({ control, name: 'club_id' });
   const venueId = useWatch({ control, name: 'venue_id' });
   const podType = useWatch({ control, name: 'pod_type' });
+  // The club whose category the products must match — or, for an Auto Pod,
+  // the category the form holds, in a club's shape.
+  const categoryClub = usePodCategoryClub();
+  const key = clubCategoryKey(categoryClub);
+  const categoryId = key ? `${key.superId}|${key.subId}` : '';
 
   useEffect(() => {
     const values = getValues();
@@ -62,17 +68,16 @@ export default function CascadeEffect() {
     }
   }, [podType]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Switching club switches which products the pod may carry, so rows the new
-  // club does not offer are dropped. Without this they survive unrenderable and
-  // the save fails on the server's category gate. Twin of the same effect in
-  // both Create Pod steppers.
+  // Switching category (a club, or an Auto Pod's own pair) switches which
+  // products the pod may carry, so rows it no longer offers are dropped.
+  // Without this they survive unrenderable and the save fails on the server's
+  // category gate. Twin of the same effect in both Create Pod steppers.
   useEffect(() => {
     const requests = getValues('product_requests');
     if (requests.length === 0) return;
-    const club = clubs.find((item) => String(item.id) === String(clubId));
-    const kept = pruneProductRequests(requests, filterProductsForClub(products, club));
+    const kept = pruneProductRequests(requests, filterProductsForClub(products, categoryClub));
     if (kept !== requests) setValue('product_requests', kept);
-  }, [clubId, clubs, products]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [categoryId, products]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
 }

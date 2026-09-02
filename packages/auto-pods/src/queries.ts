@@ -17,6 +17,7 @@ const AUTO_POD_FIELDS = `
   }
   sub_category_id
   category_name
+  pod_mode
   pod_amount
   no_of_spots
   viewer_claimed

@@ -31,7 +31,11 @@ function DetailLine({
   icon,
   value,
   tint,
-}: Readonly<{ icon: 'location-city' | 'place' | 'event'; value: string; tint: string }>) {
+}: Readonly<{
+  icon: 'location-city' | 'place' | 'event' | 'videocam';
+  value: string;
+  tint: string;
+}>) {
   return (
     <XStack alignItems="center" gap={6}>
       <MaterialIcons name={icon} size={14} color={tint} />
@@ -104,6 +108,7 @@ export function AutoPodCard({ row, labels, formatWhen, formatMoney, action }: Re
   const image = firstImage(row);
   const missing = autoPodMissingRoles(row);
   const venue = row.venue_claim;
+  const virtual = row.pod_mode === 'VIRTUAL';
   const city = autoPodCityLabel(row.location);
   const cityLine = city ? labels.pinnedTo(city) : labels.unpinned;
   const subtitle = row.category_name
@@ -134,6 +139,7 @@ export function AutoPodCard({ row, labels, formatWhen, formatMoney, action }: Re
 
         <YStack gap={4}>
           <DetailLine icon="location-city" value={cityLine} tint={muted} />
+          {virtual ? <DetailLine icon="videocam" value={labels.virtualPod} tint={muted} /> : null}
           {venue ? (
             <>
               <DetailLine icon="place" value={venue.venue_name} tint={muted} />

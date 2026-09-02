@@ -26,21 +26,26 @@ interface Props {
   club: ClubAutoPodClub;
   /** Where the back button and Cancel go. */
   backTo: string;
+  /** The Duncit products this club may attach, already filtered to what it can see. */
+  products: any[];
 }
 
 /**
- * The same accordion form an ordinary pod uses, in Auto Pod mode: no club,
- * venue, host or date — the marketplace fills those in — and the category
+ * The same stepper an admin's Auto Pod uses, in Auto Pod mode: no club,
+ * venue or host — the marketplace fills those in — and the category
  * read-only, because a pod inherits Super + Sub from its club and this Auto
  * Pod is already claimed for THIS club. No finance: partners never see rates.
+ * No audience counts either: the rows behind them carry other partners'
+ * contact details, which are the admin's to see, not a club's.
  */
 const CLUB_ADMIN_AUTO_POD_CONFIG: PodFormConfig = {
-  ...makeNativeParityPodConfig({ showProducts: false }),
+  ...makeNativeParityPodConfig({ showProducts: true }),
   autoPod: true,
   lockCategory: true,
+  showAutoPodAudience: false,
   showHosts: false,
   showVenueSlot: false,
-  showPlaceCharges: true,
+  showPlaceCharges: false,
   showReel: true,
   showFinance: false,
 };
@@ -54,7 +59,7 @@ const noVenueIds = () => [];
  * what a venue may already have priced. Mounted only once the club is known,
  * so the club's category seeds the form on its first render.
  */
-export default function ClubAutoPodEditor({ club, backTo }: Readonly<Props>) {
+export default function ClubAutoPodEditor({ club, backTo, products }: Readonly<Props>) {
   const navigate = useNavigate();
   const fmt = useDateFormat();
   const { t } = useTranslation();
@@ -93,6 +98,7 @@ export default function ClubAutoPodEditor({ club, backTo }: Readonly<Props>) {
         error={editor.opError}
         clubs={[]}
         venues={[]}
+        products={products}
         getClubVenueIds={noVenueIds}
         onPickImage={picker.pickImage}
         onPickVideo={picker.pickVideo}

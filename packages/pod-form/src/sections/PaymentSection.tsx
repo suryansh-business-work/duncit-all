@@ -1,8 +1,7 @@
-import { useEffect } from 'react';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { Box, MenuItem, Slider, Stack, Switch, TextField, Typography } from '@mui/material';
 import { payableSpots } from '@duncit/utils';
-import { useSpotsBounds } from '../useSpotsBounds';
+import { useSpotsBounds, useSpotsFloor } from '../useSpotsBounds';
 import EarningsProjection from '../components/EarningsProjection';
 import PlaceChargesField from '../components/PlaceChargesField';
 import { getProductRequestTotal } from '../build-input';
@@ -42,16 +41,7 @@ export default function PaymentSection() {
       ? t('podForm.paymentSection.boundsHintMin', { vars: { min: spots.min } })
       : undefined;
   })();
-  // The control clamps what it DISPLAYS to the activity's minimum, so without
-  // this the form could still hold a smaller number than the admin was shown and
-  // save it. Raise to the floor once the floor is known; never lower, so a
-  // legitimately larger pod is left alone. (Sections stay mounted when the
-  // accordion is collapsed, so this runs regardless.)
-  useEffect(() => {
-    if (spots.min > 0 && (Number(getValues('no_of_spots')) || 0) < spots.min) {
-      setValue('no_of_spots', spots.min, { shouldValidate: true });
-    }
-  }, [spots.min]); // eslint-disable-line react-hooks/exhaustive-deps
+  useSpotsFloor(spots.min);
   // An Auto Pod is never free, so its floor is 1 rather than 0.
   const amountFloor = config.autoPod ? 1 : 0;
   const paidHint = config.autoPod

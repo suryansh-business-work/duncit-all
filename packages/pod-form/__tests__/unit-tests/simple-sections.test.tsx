@@ -6,7 +6,7 @@ import AboutSection from '../../src/sections/AboutSection';
 import OffersSection from '../../src/sections/OffersSection';
 import PerksSection from '../../src/sections/PerksSection';
 import ProductsSection from '../../src/sections/ProductsSection';
-import { Harness, makeData } from './helpers';
+import { Harness, makeConfig, makeData } from './helpers';
 import type { PodFormValues } from '../../src/types';
 
 describe('AboutSection', () => {
@@ -114,5 +114,39 @@ describe('ProductsSection', () => {
       methodsRef.current?.setError('product_requests', { type: 'custom', message: 'A virtual pod cannot carry products' });
     });
     expect(screen.getByText('A virtual pod cannot carry products')).toBeInTheDocument();
+  });
+});
+
+describe('ProductsSection (autoPod)', () => {
+  // An Auto Pod has no club: the category pair the form holds is what the
+  // products must match, so the picker offers exactly what a club with that
+  // pair would.
+  const inCategory = {
+    id: 'p1',
+    product_name: 'Shuttlecocks',
+    unit_cost: 100,
+    available_count: 5,
+    categories: [{ super_category_id: 'sup-1', sub_category_id: 'sub-1' }],
+  };
+
+  it('offers the products of the category the template carries', () => {
+    render(
+      <Harness
+        data={makeData({ config: makeConfig({ autoPod: true, showProducts: true }), products: [inCategory] as never })}
+        defaultValues={{ super_category_id: 'sup-1', sub_category_id: 'sub-1' }}
+      >
+        <ProductsSection />
+      </Harness>,
+    );
+    expect(screen.getByRole('button', { name: 'Add a Product' })).toBeEnabled();
+  });
+
+  it('offers nothing until the category is chosen', () => {
+    render(
+      <Harness data={makeData({ config: makeConfig({ autoPod: true, showProducts: true }), products: [inCategory] as never })}>
+        <ProductsSection />
+      </Harness>,
+    );
+    expect(screen.getByText('No products available for this category.')).toBeInTheDocument();
   });
 });

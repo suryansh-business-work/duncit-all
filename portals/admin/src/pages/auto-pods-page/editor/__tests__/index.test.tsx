@@ -220,11 +220,12 @@ describe('AdminAutoPodEditorPage / new offer', () => {
     expect(JSON.parse(screen.getByTestId('config').textContent ?? '{}')).toMatchObject({
       autoPod: true,
       lockCategory: false,
+      showAutoPodAudience: true,
       showHosts: false,
       showVenueSlot: false,
-      showPlaceCharges: true,
+      showPlaceCharges: false,
       showReel: true,
-      showFinance: true,
+      showFinance: false,
     });
     expect(
       screen.getByText(

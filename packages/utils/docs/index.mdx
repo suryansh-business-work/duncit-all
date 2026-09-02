@@ -159,6 +159,7 @@ exports:
   - 'badgeProgressPercent'
   - 'sortBadgeProgress'
   - 'AUTO_POD_ROLES'
+  - 'autoPodRoles'
   - 'autoPodTicks'
   - 'autoPodEnrolledCount'
   - 'autoPodPreLive'
@@ -786,10 +787,11 @@ twin cannot disagree on what an offer is waiting for.
 | Export | Signature | Meaning |
 | --- | --- | --- |
 | `AUTO_POD_ROLES` | `readonly AutoPodRole[]` | `['venue', 'host', 'club']` — the order every tick row and "waiting for" line lists them. Presentation only. |
-| `autoPodTicks` | `(row) => AutoPodTick[]` | Always three, in that order, `done` when that partner has enrolled. |
-| `autoPodEnrolledCount` | `(row) => number` | How many of the three have enrolled. |
+| `autoPodRoles` | `(row) => AutoPodRole[]` | The roles this offer needs: all three for a physical one, `['host', 'club']` when `row.pod_mode` is `'VIRTUAL'` (no venue to enrol). A row without the field is physical. |
+| `autoPodTicks` | `(row) => AutoPodTick[]` | One per needed role, in that order, `done` when that partner has enrolled. |
+| `autoPodEnrolledCount` | `(row) => number` | How many of the needed partners have enrolled. |
 | `autoPodPreLive` | `(stage) => boolean` | `OPEN` (nobody yet) or `CLAIMING` (at least one) — still enrolling. |
-| `autoPodActionable` | `(row, role) => boolean` | Pre-live, this viewer has not enrolled, and this role's tick is empty. Any order. |
+| `autoPodActionable` | `(row, role) => boolean` | Pre-live, this viewer has not enrolled, and this role's tick is empty. Any order. Never true for a venue on a virtual offer. |
 | `splitAutoPods` | `(rows, role) => { actionable, mine }` | A role's queue: what needs them, then what they already took. |
 | `autoPodMissingRoles` | `(row) => AutoPodRole[]` | Every role still missing, in tick order; `[]` once live or gone. |
 | `autoPodWaitingOn` | `(row) => AutoPodRole \| null` | The first missing role. |

@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { AutoPodLocation, AutoPodRole, AutoPodRow, AutoPodStage } from '@duncit/utils';
+import type {
+  AutoPodLocation,
+  AutoPodMode,
+  AutoPodRole,
+  AutoPodRow,
+  AutoPodStage,
+} from '@duncit/utils';
 
 import {
   ClubAdminAutoPodsDocument,
@@ -56,6 +62,7 @@ const locationOf = (location: AutoPodNode['location']): AutoPodLocation | null =
 const toRow = (node: AutoPodNode): AutoPodQueueRow => ({
   ...node,
   stage: String(node.stage) as AutoPodStage,
+  pod_mode: String(node.pod_mode) as AutoPodMode,
   pod_images_and_videos: node.pod_images_and_videos.map((media) => ({
     url: media.url,
     type: String(media.type),

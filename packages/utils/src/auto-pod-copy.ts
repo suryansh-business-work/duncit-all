@@ -71,6 +71,8 @@ export interface AutoPodLabels {
   /** The card's city line: pinned by the first enrolment, or not yet. */
   pinnedTo: (city: string) => string;
   unpinned: string;
+  /** The card's mode line on an offer with no venue to enrol. */
+  virtualPod: string;
   /** A host's "Assign Myself" on an offer that takes its city from them. */
   pickLocationFirst: string;
   willPinTo: (city: string) => string;
@@ -151,6 +153,7 @@ export function mwebAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     noHostCategories: t('mweb.autoPods.noHostCategories'),
     pinnedTo: (city) => t('mweb.autoPods.pinnedTo', { vars: { city } }),
     unpinned: t('mweb.autoPods.unpinned'),
+    virtualPod: t('mweb.autoPods.virtualPod'),
     pickLocationFirst: t('mweb.autoPods.pickLocationFirst'),
     willPinTo: (city) => t('mweb.autoPods.willPinTo', { vars: { city } }),
     noVenueInCity: (city) => t('mweb.autoPods.noVenueInCity', { vars: { city } }),
@@ -226,6 +229,7 @@ export function shellAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     noHostCategories: t('shell.autoPods.noHostCategories'),
     pinnedTo: (city) => t('shell.autoPods.pinnedTo', { vars: { city } }),
     unpinned: t('shell.autoPods.unpinned'),
+    virtualPod: t('shell.autoPods.virtualPod'),
     pickLocationFirst: t('shell.autoPods.pickLocationFirst'),
     willPinTo: (city) => t('shell.autoPods.willPinTo', { vars: { city } }),
     noVenueInCity: (city) => t('shell.autoPods.noVenueInCity', { vars: { city } }),

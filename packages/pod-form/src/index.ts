@@ -12,6 +12,17 @@ export type { UseAutoPodEditorStateArgs } from './editor/useAutoPodEditorState';
 export { default as useMediaPickerBridge } from './editor/useMediaPickerBridge';
 export type { PodMediaPickKind } from './editor/useMediaPickerBridge';
 export { useVenueSlots, VENUE_AVAILABLE_SLOTS, type VenueSlot } from './slots/useVenueSlots';
+export { useAutoPodAudience } from './auto-pod/useAutoPodAudience';
+export type { AutoPodAudienceState } from './auto-pod/useAutoPodAudience';
+export { AUTO_POD_AUDIENCE, AUTO_POD_AUDIENCE_ROLES, audienceCount } from './auto-pod/audience-queries';
+export type {
+  AutoPodAudience,
+  AutoPodAudienceRole,
+  AutoPodAudienceVenue,
+  AutoPodAudienceHost,
+  AutoPodAudienceClubAdmin,
+} from './auto-pod/audience-queries';
+export { AUTO_POD_DETAIL_FIELDS } from './auto-pod/steps';
 export { makePodSchema } from './schema';
 export type { PodSchema } from './schema';
 export { makeNativeParityPodConfig } from './configs';

@@ -23,6 +23,7 @@ const makeRow = (over: Partial<AutoPodTableRow> = {}): AutoPodTableRow => ({
   pod_amount: 500,
   no_of_spots: 10,
   pod_occurrence: 'ONE_TIME',
+  pod_mode: 'PHYSICAL',
   payment_terms: null,
   venue_claim: null,
   host_claim: null,

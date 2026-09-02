@@ -41,6 +41,7 @@ export const VenueAutoPodsDocument = gql(`
       }
       sub_category_id
       category_name
+      pod_mode
       pod_amount
       no_of_spots
       viewer_claimed
@@ -95,6 +96,7 @@ export const HostAutoPodsDocument = gql(`
       }
       sub_category_id
       category_name
+      pod_mode
       pod_amount
       no_of_spots
       viewer_claimed
@@ -149,6 +151,7 @@ export const ClubAdminAutoPodsDocument = gql(`
       }
       sub_category_id
       category_name
+      pod_mode
       pod_amount
       no_of_spots
       viewer_claimed

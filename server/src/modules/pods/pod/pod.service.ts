@@ -282,7 +282,7 @@ function validateAmount(type: PodType, amount: number) {
  * meeting is over — when the link stops counting as attendance, when the
  * feedback ask fires — so it has to be given.
  */
-function validateFutureDates(
+export function validateFutureDates(
   startValue?: string | Date | null,
   endValue?: string | Date | null,
   requireEnd = false
@@ -337,7 +337,7 @@ function normalizeReelUrl(value?: string | null): string | null {
   return url;
 }
 
-function validateMeetingDetails(mode: PodMode, input: any, current?: any) {
+export function validateMeetingDetails(mode: PodMode, input: any, current?: any) {
   if (mode !== 'VIRTUAL') return;
   const meetingUrl = input.meeting_url === undefined ? current?.meeting_url : input.meeting_url;
   const trimmed = typeof meetingUrl === 'string' ? meetingUrl.trim() : '';
@@ -1220,7 +1220,7 @@ function productMatchesClubCategory(product: any, clubCategory: ClubCategory | n
   );
 }
 
-async function buildProductRequests(
+export async function buildProductRequests(
   enabled: boolean,
   rawItems: any[] = [],
   clubCategory: ClubCategory | null = null,
@@ -2002,9 +2002,11 @@ export const podService = {
   async create(
     input: any,
     audit?: { actorUserId?: string | null; source: PodAuditSource; note?: string | null },
-    opts?: { autoPodSlot?: { slotId: string; autoPodId: string } }
+    opts?: { autoPodSlot?: { slotId: string; autoPodId: string }; autoPodId?: string }
   ) {
     const autoPodSlot = opts?.autoPodSlot ?? null;
+    // A VIRTUAL Auto Pod hands over no slot, but the pod is still its child.
+    const autoPodId = opts?.autoPodId ?? autoPodSlot?.autoPodId ?? null;
     const pod_id = await resolvePodSlugForCreate(input);
     if (!input.pod_hosts_id?.length) {
       throw new GraphQLError('At least one host is required', {
@@ -2110,7 +2112,7 @@ export const podService = {
       // A pod awaiting the venue's slot approval stays offline until approved.
       is_active: needsVenueApproval ? false : input.is_active ?? true,
       venue_approval_status: venueApprovalForCreate(autoPodSlot, needsVenueApproval),
-      source_auto_pod_id: autoPodSlot ? new Types.ObjectId(autoPodSlot.autoPodId) : null,
+      source_auto_pod_id: autoPodId ? new Types.ObjectId(autoPodId) : null,
     });
 
     await bookOrHoldSlotForPod(doc, slotDoc, needsVenueApproval, autoPodSlot);

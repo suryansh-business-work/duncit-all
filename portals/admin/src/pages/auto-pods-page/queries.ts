@@ -30,6 +30,7 @@ const ADMIN_AUTO_POD_FIELDS = gql`
     super_category_id
     sub_category_id
     category_name
+    pod_mode
     pod_amount
     no_of_spots
     pod_occurrence
@@ -99,6 +100,12 @@ export const AUTO_POD_FOR_EDIT = gql`
       reel_url
       super_category_id
       sub_category_id
+      pod_mode
+      meeting_platform
+      meeting_url
+      meeting_notes
+      pod_date_time
+      pod_end_date_time
       pod_amount
       no_of_spots
       pod_occurrence
@@ -109,6 +116,10 @@ export const AUTO_POD_FOR_EDIT = gql`
         label
         amount
         note
+      }
+      product_requests {
+        product_id
+        quantity
       }
       host_claim {
         user_id
@@ -173,6 +184,7 @@ export interface AutoPodTableRow {
   super_category_id: string;
   sub_category_id: string;
   category_name: string | null;
+  pod_mode: 'PHYSICAL' | 'VIRTUAL';
   pod_amount: number;
   no_of_spots: number;
   pod_occurrence: string;

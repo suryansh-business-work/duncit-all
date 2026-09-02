@@ -4,7 +4,9 @@ import {
   autoPodCityLabel,
   autoPodEnrolledCount,
   autoPodHostNeedsLocation,
+  autoPodMissingRoles,
   autoPodModeCount,
+  autoPodRoles,
   autoPodTicks,
   autoPodWaitingOn,
   splitAutoPods,
@@ -293,5 +295,38 @@ describe('autoPodCityLabel', () => {
   it('is empty for an offer nobody has pinned yet', () => {
     expect(autoPodCityLabel(null)).toBe('');
     expect(autoPodCityLabel(undefined)).toBe('');
+  });
+});
+
+describe('a virtual offer', () => {
+  // The admin wrote the meeting details and the dates into the template, so
+  // there is no venue to enrol: every derivation is two roles wide.
+  const virtual = (over: Partial<AutoPodRow> = {}): AutoPodRow => row({ pod_mode: 'VIRTUAL', ...over });
+
+  it('needs a host and a club only, in the same order as ever', () => {
+    expect(autoPodRoles(virtual())).toEqual(['host', 'club']);
+    expect(autoPodRoles(row())).toEqual(['venue', 'host', 'club']);
+    // A row from before the field existed is physical.
+    expect(autoPodRoles(row({ pod_mode: null }))).toEqual(['venue', 'host', 'club']);
+  });
+
+  it('draws two ticks and counts against two', () => {
+    expect(autoPodTicks(virtual({ host_claim: hostClaim }))).toEqual([
+      { role: 'host', done: true },
+      { role: 'club', done: false },
+    ]);
+    expect(autoPodEnrolledCount(virtual({ host_claim: hostClaim, club_claim: clubClaim }))).toBe(2);
+  });
+
+  it('is never a venue’s to act on, and still the host’s and the club’s', () => {
+    expect(autoPodActionable(virtual(), 'venue')).toBe(false);
+    expect(autoPodActionable(virtual(), 'host')).toBe(true);
+    expect(autoPodActionable(virtual(), 'club')).toBe(true);
+  });
+
+  it('waits on the host and the club only', () => {
+    expect(autoPodMissingRoles(virtual())).toEqual(['host', 'club']);
+    expect(autoPodWaitingOn(virtual({ stage: 'CLAIMING', host_claim: hostClaim }))).toBe('club');
+    expect(autoPodMissingRoles(row())).toEqual(['venue', 'host', 'club']);
   });
 });

@@ -96,13 +96,23 @@ export interface PodFormConfig {
    */
   singleHost?: boolean;
   /**
-   * Auto Pod mode: the author writes the pod ONLY. No club, venue, host, date
-   * or mode — a venue, a host and a club admin each enrol later, in any order.
-   * A required category field replaces the club picker, the When/Where and
-   * Products sections are dropped, the pod type is fixed to PAID (an Auto Pod
-   * is physical and never free) and "Save as Draft" is gone. Off when omitted.
+   * Auto Pod mode: the author writes the pod ONLY, as a three-step stepper —
+   * category, details, review — and a venue, a host and a club admin each
+   * enrol later, in any order. A required category field replaces the club
+   * picker; the venue and Payment & Charges sections are dropped (the price,
+   * spots and occurrence sit in Basic Information); a VIRTUAL offer carries its
+   * own meeting details and dates instead of waiting on a venue; the pod type
+   * is fixed to PAID (an Auto Pod is never free) and "Save as Draft" is gone.
+   * Off when omitted.
    */
   autoPod?: boolean;
+  /**
+   * Auto Pod mode only: step 1 counts the venues, hosts and club admins the
+   * chosen category would offer the pod to, and refuses to go on until all
+   * three are above zero. Admin turns it on; the Partners console leaves it
+   * off, because the rows behind the counts carry partners' contact details.
+   */
+  showAutoPodAudience?: boolean;
   /**
    * Auto Pod mode only: the category is fixed (a Club Admin opening one for
    * their club, or a template a host or club has already enrolled on) and is

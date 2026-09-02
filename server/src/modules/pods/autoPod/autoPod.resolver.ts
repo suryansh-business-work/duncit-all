@@ -3,6 +3,7 @@ import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { AutoPodModel } from './autoPod.model';
 import { autoPodService, type AutoPodQueueScope } from './autoPod.service';
+import { autoPodAudience } from './autoPod.audience';
 import {
   clubClaimAutoPod,
   hostAssignAutoPod,
@@ -90,6 +91,13 @@ export const autoPodResolvers = {
 
     myAutoPodActionCounts: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
       autoPodService.actionCounts(requireAuth(ctx).id),
+
+    // Names, emails and phone numbers of partners — the admin's to see while
+    // writing a template, nobody else's.
+    autoPodAudience: (_p: unknown, args: { sub_category_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_WRITE);
+      return autoPodAudience(args.sub_category_id);
+    },
   },
 
   Mutation: {

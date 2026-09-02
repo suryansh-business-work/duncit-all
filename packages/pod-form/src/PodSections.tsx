@@ -36,21 +36,34 @@ function whereSection(isVirtual: boolean, t: Translate): SectionDef {
   return { id: 'when', label: t('podForm.podSections.whenWhereAndMap'), render: () => <WhenWhereSection /> };
 }
 
+/** An Auto Pod's venue brings the slot, so only a VIRTUAL one has a "where"
+ * section of its own — the meeting details. */
+function autoPodWhereSection(isVirtual: boolean, t: Translate): SectionDef[] {
+  if (!isVirtual) return [];
+  return [{ id: 'meeting', label: t('podForm.podSections.meetingDetails'), render: () => <MeetingSection /> }];
+}
+
 function buildSections(isVirtual: boolean, showProducts: boolean, autoPod: boolean, t: Translate): SectionDef[] {
   const list: SectionDef[] = [
     { id: 'basic', label: t('podForm.podSections.basicInformation'), render: () => <BasicSection /> },
   ];
-  if (!autoPod) list.push(whereSection(isVirtual, t));
+  if (autoPod) list.push(...autoPodWhereSection(isVirtual, t));
+  else list.push(whereSection(isVirtual, t));
   list.push(
     { id: 'about', label: t('podForm.podSections.aboutThisPod'), render: () => <AboutSection /> },
     { id: 'offers', label: t('podForm.podSections.whatThisPodOffers'), render: () => <OffersSection /> },
     { id: 'perks', label: t('podForm.podSections.availablePerks'), render: () => <PerksSection /> },
   );
-  // Products ride on a club's catalogue, and an Auto Pod has no club yet.
-  if (showProducts && !isVirtual && !autoPod) {
+  // Products match the pod's category — its club's, or the one an Auto Pod
+  // carries itself — and a virtual pod has nowhere to hand them out.
+  if (showProducts && !isVirtual) {
     list.push({ id: 'products', label: t('podForm.podSections.approvedProducts'), render: () => <ProductsSection /> });
   }
-  list.push({ id: 'payment', label: t('podForm.podSections.paymentAndCharges'), render: () => <PaymentSection /> });
+  // An Auto Pod's price and spots sit in Basic Information; the rest of this
+  // section (place charges, the venue-priced projection) needs a venue.
+  if (!autoPod) {
+    list.push({ id: 'payment', label: t('podForm.podSections.paymentAndCharges'), render: () => <PaymentSection /> });
+  }
   return list;
 }
 

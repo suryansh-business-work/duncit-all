@@ -616,6 +616,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       noHostCategories: 'You are not an approved host in any category yet.',
       pinnedTo: 'In {city}',
       unpinned: 'Any city — the first partner to enrol sets it',
+      virtualPod: 'Virtual pod — no venue needed',
       pickLocationFirst: 'Select your city at the top first — this pod takes its city from you.',
       willPinTo: 'This pod will be set to {city}.',
       noVenueInCity: 'None of your venues is in {city}.',

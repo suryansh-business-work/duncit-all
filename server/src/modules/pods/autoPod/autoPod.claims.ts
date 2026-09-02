@@ -1,7 +1,14 @@
 import { Types } from 'mongoose';
 import { AutoPodModel, type IAutoPod, type IAutoPodLocation } from './autoPod.model';
 import { autoPodService, autoPodToPub } from './autoPod.service';
-import { autoPodEvent, autoPodFail, PRE_LIVE_FILTER, PRE_LIVE_STAGES } from './autoPod.common';
+import {
+  AUTO_POD_COMPLETE_FILTER,
+  autoPodEvent,
+  autoPodFail,
+  isAutoPodComplete,
+  PRE_LIVE_FILTER,
+  PRE_LIVE_STAGES,
+} from './autoPod.common';
 import {
   autoPodCityLabel,
   ensureClubPin,
@@ -96,6 +103,9 @@ export async function venueAcceptAutoPod(
   slotId: string
 ) {
   const doc = await loadOffer(autoPodId);
+  if (doc.pod_mode === 'VIRTUAL') {
+    autoPodFail('BAD_REQUEST', 'A virtual Auto Pod has no venue — it needs only a host and a club');
+  }
   if (!isPreLive(doc) || doc.venue_claim) {
     autoPodFail('CONFLICT', 'This Auto Pod has already been accepted by another venue.');
   }
@@ -103,6 +113,11 @@ export async function venueAcceptAutoPod(
   const venue = await ensureOwnedVenue(userId, venueId);
   if (venue.status !== 'APPROVED' || venue.is_active === false) {
     autoPodFail('FORBIDDEN', 'Only an approved, active venue can accept an Auto Pod');
+  }
+  // A venue declares the sub-category it hosts, and only a venue in the
+  // offer's category is ever shown it — the same rule the queue applies.
+  if (String(venue.venue_category?.sub_category_id ?? '') !== String(doc.sub_category_id)) {
+    autoPodFail('BAD_USER_INPUT', "This Auto Pod's category does not match that venue");
   }
   // The venue's own city is what it brings — never a city picked on a screen.
   const location = await resolveEnrolmentLocation(doc, venue.location_id, 'VENUE', {
@@ -326,9 +341,9 @@ export async function clubClaimAutoPod(actor: any, autoPodId: string, clubId: st
   return finishIfComplete(claimed, userId);
 }
 
-/** All three enrolled? Then this claim is the one that takes it live. */
+/** Everyone enrolled? Then this claim is the one that takes it live. */
 async function finishIfComplete(doc: IAutoPod, actorUserId: string) {
-  if (!doc.venue_claim || !doc.host_claim || !doc.club_claim) return autoPodToPub(doc);
+  if (!isAutoPodComplete(doc)) return autoPodToPub(doc);
   return autoPodToPub(await materializeAutoPod(String(doc._id), actorUserId));
 }
 
@@ -352,9 +367,7 @@ export async function materializeAutoPod(
     {
       _id: new Types.ObjectId(autoPodId),
       stage: 'CLAIMING',
-      venue_claim: { $ne: null },
-      host_claim: { $ne: null },
-      club_claim: { $ne: null },
+      ...AUTO_POD_COMPLETE_FILTER,
     },
     { $set: { stage: 'MATERIALIZING' } },
     { new: true }
@@ -362,14 +375,10 @@ export async function materializeAutoPod(
   // Someone else is already taking it live (or it moved on) — report what is.
   if (!locked) return autoPodService.loadById(autoPodId);
 
-  const venueClaim = locked.venue_claim!;
-  const hostClaim = locked.host_claim!;
-  const clubClaim = locked.club_claim!;
-
   try {
-    const pod = await createPodFromAutoPod(locked, venueClaim, hostClaim, clubClaim);
+    const pod = await createPodFromAutoPod(locked);
     if (!pod) autoPodFail('INTERNAL_SERVER_ERROR', 'The pod could not be created');
-    return goLive(locked, String(pod.id), actorUserId, 'All three enrolled — pod created');
+    return goLive(locked, String(pod.id), actorUserId, 'Everyone enrolled — pod created');
   } catch (err) {
     // The failure may have come AFTER the pod row was written (the handover or
     // the notification, not the create). A pod that exists is live whatever
@@ -423,14 +432,48 @@ async function goLive(locked: IAutoPod, podId: string, actorUserId: string | nul
   return live ?? locked;
 }
 
-/** The `podService.create` call — a normal pod in every respect, with the slot
- * handed over from the Auto Pod rather than claimed afresh. */
-async function createPodFromAutoPod(
-  doc: IAutoPod,
-  venueClaim: NonNullable<IAutoPod['venue_claim']>,
-  hostClaim: NonNullable<IAutoPod['host_claim']>,
-  clubClaim: NonNullable<IAutoPod['club_claim']>
-) {
+/**
+ * Where and when the pod happens. A physical offer takes both from the slot
+ * its venue committed, and hands that slot over rather than claiming it
+ * afresh; a virtual offer carries its own meeting link and window, and has no
+ * slot to hand over — only the Auto Pod id, so the pod still knows its parent.
+ */
+function placeOf(doc: IAutoPod) {
+  if (doc.pod_mode === 'VIRTUAL') {
+    return {
+      input: {
+        pod_mode: 'VIRTUAL',
+        venue_id: null,
+        venue_slot_id: null,
+        meeting_platform: doc.meeting_platform ?? null,
+        meeting_url: doc.meeting_url ?? null,
+        meeting_notes: doc.meeting_notes ?? null,
+        pod_date_time: doc.pod_date_time?.toISOString() ?? null,
+        pod_end_date_time: doc.pod_end_date_time?.toISOString() ?? null,
+      },
+      opts: { autoPodId: String(doc._id) },
+    };
+  }
+  const venueClaim = doc.venue_claim!;
+  return {
+    input: {
+      pod_mode: 'PHYSICAL',
+      venue_id: String(venueClaim.venue_id),
+      venue_slot_id: String(venueClaim.venue_slot_id),
+      pod_date_time: venueClaim.pod_date_time.toISOString(),
+      pod_end_date_time: venueClaim.pod_end_date_time?.toISOString() ?? null,
+    },
+    opts: {
+      autoPodSlot: { slotId: String(venueClaim.venue_slot_id), autoPodId: String(doc._id) },
+    },
+  };
+}
+
+/** The `podService.create` call — a normal pod in every respect. */
+async function createPodFromAutoPod(doc: IAutoPod) {
+  const hostClaim = doc.host_claim!;
+  const clubClaim = doc.club_claim!;
+  const place = placeOf(doc);
   const input = {
     pod_title: doc.pod_title,
     pod_description: doc.pod_description,
@@ -441,7 +484,6 @@ async function createPodFromAutoPod(
       type: m.type ?? 'IMAGE',
     })),
     reel_url: doc.reel_url ?? null,
-    pod_mode: 'PHYSICAL',
     pod_type: 'PAID',
     pod_amount: doc.pod_amount ?? 0,
     no_of_spots: doc.no_of_spots ?? 0,
@@ -454,12 +496,14 @@ async function createPodFromAutoPod(
       amount: c.amount ?? 0,
       note: c.note ?? null,
     })),
+    products_enabled: !!doc.products_enabled,
+    product_requests: (doc.product_requests ?? []).map((item) => ({
+      product_id: String(item.product_id),
+      quantity: item.quantity,
+    })),
     club_id: String(clubClaim.club_id),
     pod_hosts_id: [String(hostClaim.user_id)],
-    venue_id: String(venueClaim.venue_id),
-    venue_slot_id: String(venueClaim.venue_slot_id),
-    pod_date_time: venueClaim.pod_date_time.toISOString(),
-    pod_end_date_time: venueClaim.pod_end_date_time?.toISOString() ?? null,
+    ...place.input,
     is_active: true,
   };
   const audit = {
@@ -467,9 +511,7 @@ async function createPodFromAutoPod(
     source: 'SYSTEM' as const,
     note: `Materialized from Auto Pod ${doc.auto_pod_no}`,
   };
-  const opts = {
-    autoPodSlot: { slotId: String(venueClaim.venue_slot_id), autoPodId: String(doc._id) },
-  };
+  const opts = place.opts;
   try {
     return await podService.create(input, audit, opts);
   } catch (err) {

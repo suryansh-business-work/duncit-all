@@ -22,6 +22,13 @@ export type AutoPodRole = 'venue' | 'host' | 'club';
 /** The three roles, in the order every tick row and "waiting for" line lists them. */
 export const AUTO_POD_ROLES: readonly AutoPodRole[] = ['venue', 'host', 'club'];
 
+/**
+ * PHYSICAL — a venue enrols and brings the slot. VIRTUAL — the admin wrote the
+ * meeting details and dates into the template, so there is no venue to enrol
+ * and the offer waits on a host and a club only.
+ */
+export type AutoPodMode = 'PHYSICAL' | 'VIRTUAL';
+
 export interface AutoPodVenueClaim {
   venue_id: string;
   venue_slot_id: string;
@@ -74,6 +81,8 @@ export interface AutoPodRow {
    * needs this to offer only the clubs the server would accept. */
   sub_category_id: string;
   category_name?: string | null;
+  /** Absent on rows written before the field existed — those are physical. */
+  pod_mode?: AutoPodMode | null;
   pod_amount: number;
   no_of_spots: number;
   venue_claim: AutoPodVenueClaim | null;
@@ -91,7 +100,7 @@ export interface AutoPodTick {
   done: boolean;
 }
 
-type Claims = Pick<AutoPodRow, 'venue_claim' | 'host_claim' | 'club_claim'>;
+type Claims = Pick<AutoPodRow, 'venue_claim' | 'host_claim' | 'club_claim' | 'pod_mode'>;
 
 const claimOf = (row: Claims, role: AutoPodRole) => {
   if (role === 'venue') return row.venue_claim;
@@ -100,15 +109,23 @@ const claimOf = (row: Claims, role: AutoPodRole) => {
 };
 
 /**
- * The three ticks, always in the same order — Venue, Host, Club Admin — so a
- * card's tick row never changes width or order as partners enrol. Enrolments
- * happen in ANY order; the order here is presentation only.
+ * The roles this offer needs, in tick order. A virtual offer has no venue to
+ * enrol, so its row is two ticks wide; every physical offer is three.
  */
-export function autoPodTicks(row: Claims): AutoPodTick[] {
-  return AUTO_POD_ROLES.map((role) => ({ role, done: !!claimOf(row, role) }));
+export function autoPodRoles(row: Pick<AutoPodRow, 'pod_mode'>): AutoPodRole[] {
+  return AUTO_POD_ROLES.filter((role) => role !== 'venue' || row.pod_mode !== 'VIRTUAL');
 }
 
-/** How many of the three have enrolled. */
+/**
+ * The ticks, always in the same order — Venue, Host, Club Admin — so a card's
+ * tick row never changes width or order as partners enrol. Enrolments happen
+ * in ANY order; the order here is presentation only.
+ */
+export function autoPodTicks(row: Claims): AutoPodTick[] {
+  return autoPodRoles(row).map((role) => ({ role, done: !!claimOf(row, role) }));
+}
+
+/** How many of the needed partners have enrolled. */
 export function autoPodEnrolledCount(row: Claims): number {
   return autoPodTicks(row).filter((tick) => tick.done).length;
 }
@@ -126,6 +143,8 @@ export function autoPodPreLive(stage: AutoPodStage): boolean {
  */
 export function autoPodActionable(row: AutoPodRow, role: AutoPodRole): boolean {
   if (row.viewer_claimed) return false;
+  // A virtual offer is never a venue's to act on.
+  if (role === 'venue' && row.pod_mode === 'VIRTUAL') return false;
   return autoPodPreLive(row.stage) && !claimOf(row, role);
 }
 
@@ -147,7 +166,7 @@ export function splitAutoPods(
  * live (or gone). */
 export function autoPodMissingRoles(row: Pick<AutoPodRow, 'stage'> & Claims): AutoPodRole[] {
   if (!autoPodPreLive(row.stage)) return [];
-  return AUTO_POD_ROLES.filter((role) => !claimOf(row, role));
+  return autoPodRoles(row).filter((role) => !claimOf(row, role));
 }
 
 /** The first role the row is still waiting on, or null once it is live (or gone). */

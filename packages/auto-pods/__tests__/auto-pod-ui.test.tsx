@@ -463,3 +463,21 @@ describe('AutoPodCategoryFilter', () => {
     }
   });
 });
+
+describe('a virtual offer', () => {
+  // No venue to enrol: two ticks, and the card says so in place of a venue line.
+  it('draws two ticks and says no venue is needed', () => {
+    const { container } = render(
+      <AutoPodTicks
+        row={{ pod_mode: 'VIRTUAL', venue_claim: null, host_claim: null, club_claim: null }}
+        labels={labels}
+      />
+    );
+    expect(container.querySelectorAll('.MuiChip-root')).toHaveLength(2);
+
+    wrapped(
+      <AutoPodCard row={row({ pod_mode: 'VIRTUAL' })} labels={labels} formatWhen={formatWhen} formatMoney={formatMoney} />
+    );
+    expect(screen.getByText('mweb.autoPods.virtualPod')).toBeInTheDocument();
+  });
+});

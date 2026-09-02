@@ -53,14 +53,16 @@ at least one partner has; the third enrolment tips it into `MATERIALIZING` and
 then `LIVE`.
 
 Every card carries `AutoPodTicks`: **Venue Enroll**, **Host Enroll**, **Club
-Admin Enroll**, always in that order and always all three. Each is amber and
-outlined while that partner has yet to enrol, and turns green and filled the
-moment they do — so the state of an offer reads at a glance. The order is
-presentation only: it is the same three chips whichever partner went first, so
-a card never changes width as they enrol.
+Admin Enroll**, always in that order. Each is amber and outlined while that
+partner has yet to enrol, and turns green and filled the moment they do — so
+the state of an offer reads at a glance. The order is presentation only: it is
+the same chips whichever partner went first, so a card never changes width as
+they enrol. A **VIRTUAL** offer (`row.pod_mode`) has no venue to enrol: it
+draws two ticks, carries a "Virtual pod — no venue needed" line, and never
+appears in a venue's queue.
 
 The derivation itself is `autoPodTicks()` in `@duncit/utils`, so the Tamagui
-twin draws exactly the same three ticks from exactly the same rule. Below the
+twin draws exactly the same ticks from exactly the same rule. Below the
 ticks the card says who is still missing — `labels.waitingFor(autoPodMissingRoles(row))`
 — and which city the offer belongs to.
 

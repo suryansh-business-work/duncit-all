@@ -7,6 +7,9 @@ import { nextEntityNo } from '@modules/venues/entityIdCounter';
  * and a club admin claims it for their club — in ANY order, each in parallel.
  * Only when all three have enrolled does it materialize into a real Pod.
  *
+ * A VIRTUAL offer has no venue to enrol: the admin writes the meeting link and
+ * the dates into the template, and a host plus a club admin complete it.
+ *
  * The FIRST enrolment pins the offer to a location (Country → State → City, one
  * admin Location row): a venue brings its own city, a club its own, and a host
  * the city they had selected when they assigned themselves. From then on only
@@ -44,6 +47,20 @@ export interface IAutoPodPlaceCharge {
   amount: number;
   note: string | null;
 }
+
+/** A Duncit product the admin attached to the template — id + quantity only;
+ * the pod's own rows (name, cost) are built when it materializes. */
+export interface IAutoPodProductRequest {
+  product_id: Types.ObjectId;
+  quantity: number;
+}
+
+/**
+ * PHYSICAL — a venue enrols and brings the slot (and so the date).
+ * VIRTUAL — there is no venue: the admin writes the meeting details and the
+ * dates into the template, and only a host and a club admin need enrol.
+ */
+export type AutoPodMode = 'PHYSICAL' | 'VIRTUAL';
 
 /** Tick 1 — the venue that accepted, and the slot it committed. */
 export interface IAutoPodVenueClaim {
@@ -111,6 +128,14 @@ export interface IAutoPod extends Document {
   reel_url: string | null;
   super_category_id: Types.ObjectId;
   sub_category_id: Types.ObjectId;
+  pod_mode: AutoPodMode;
+  /** VIRTUAL only — a physical offer's meeting fields stay null. */
+  meeting_platform: string | null;
+  meeting_url: string | null;
+  meeting_notes: string | null;
+  /** VIRTUAL only — a physical offer takes its dates from the venue's slot. */
+  pod_date_time: Date | null;
+  pod_end_date_time: Date | null;
   pod_type: 'PAID';
   pod_amount: number;
   no_of_spots: number;
@@ -119,6 +144,8 @@ export interface IAutoPod extends Document {
   available_perks: string[];
   payment_terms: string | null;
   place_charges: IAutoPodPlaceCharge[];
+  products_enabled: boolean;
+  product_requests: IAutoPodProductRequest[];
   venue_claim: IAutoPodVenueClaim | null;
   host_claim: IAutoPodHostClaim | null;
   club_claim: IAutoPodClubClaim | null;
@@ -150,6 +177,14 @@ const placeChargeSchema = new Schema<IAutoPodPlaceCharge>(
     label: { type: String, required: true, trim: true, maxlength: 80 },
     amount: { type: Number, required: true, min: 0, max: 100000 },
     note: { type: String, default: null, trim: true, maxlength: 200 },
+  },
+  { _id: false }
+);
+
+const productRequestSchema = new Schema<IAutoPodProductRequest>(
+  {
+    product_id: { type: Schema.Types.ObjectId, ref: 'InventoryProduct', required: true },
+    quantity: { type: Number, required: true, min: 1, max: 10000 },
   },
   { _id: false }
 );
@@ -229,7 +264,13 @@ const autoPodSchema = new Schema<IAutoPod>(
     reel_url: { type: String, default: null, trim: true, maxlength: 1000 },
     super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
     sub_category_id: { type: Schema.Types.ObjectId, ref: 'Category', required: true, index: true },
-    // Auto Pods are physical, and a physical pod may never be FREE.
+    pod_mode: { type: String, enum: ['PHYSICAL', 'VIRTUAL'], default: 'PHYSICAL', index: true },
+    meeting_platform: { type: String, default: null, trim: true, maxlength: 80 },
+    meeting_url: { type: String, default: null, trim: true, maxlength: 1000 },
+    meeting_notes: { type: String, default: null, trim: true, maxlength: 1000 },
+    pod_date_time: { type: Date, default: null },
+    pod_end_date_time: { type: Date, default: null },
+    // An Auto Pod may never be FREE.
     pod_type: { type: String, enum: ['PAID'], default: 'PAID' },
     pod_amount: { type: Number, default: 0, min: 0, max: 1999 },
     no_of_spots: { type: Number, default: 0 },
@@ -242,6 +283,8 @@ const autoPodSchema = new Schema<IAutoPod>(
     available_perks: { type: [String], default: [] },
     payment_terms: { type: String, default: null, trim: true, maxlength: 4000 },
     place_charges: { type: [placeChargeSchema], default: [] },
+    products_enabled: { type: Boolean, default: false },
+    product_requests: { type: [productRequestSchema], default: [] },
     venue_claim: { type: venueClaimSchema, default: null },
     host_claim: { type: hostClaimSchema, default: null },
     club_claim: { type: clubClaimSchema, default: null },

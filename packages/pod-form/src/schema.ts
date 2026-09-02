@@ -84,12 +84,16 @@ function refineVenue(
   ) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_slot_id'], message: t('podForm.validation.slotRequired') });
   }
-  if (values.pod_mode === 'VIRTUAL') {
-    if (!values.meeting_url) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['meeting_url'], message: t('podForm.validation.meetingLinkRequired') });
-    } else if (!isHttpUrl(values.meeting_url)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['meeting_url'], message: t('podForm.validation.meetingLinkInvalid') });
-    }
+  refineMeeting(values, ctx, t);
+}
+
+/** Meeting-link rules — only a VIRTUAL pod has one. */
+function refineMeeting(values: PodFormValues, ctx: z.RefinementCtx, t: Translate) {
+  if (values.pod_mode !== 'VIRTUAL') return;
+  if (!values.meeting_url) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['meeting_url'], message: t('podForm.validation.meetingLinkRequired') });
+  } else if (!isHttpUrl(values.meeting_url)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['meeting_url'], message: t('podForm.validation.meetingLinkInvalid') });
   }
 }
 
@@ -157,10 +161,11 @@ function refineProducts(
 
 /**
  * Auto Pod mode: the template's own rules, mirroring the server's
- * `validateTemplate` so a bad template never round-trips. No club, venue, host
- * or date exists yet — a category stands in for the club, the price floor is 1
- * (a physical pod is never free) and two spots are the fewest that bill anyone
- * (the host attends free).
+ * `validateTemplate` so a bad template never round-trips. No club, venue or
+ * host exists yet — a category stands in for the club, the price floor is 1
+ * (an Auto Pod is never free) and two spots are the fewest that bill anyone
+ * (the host attends free). A VIRTUAL offer has no venue to bring the slot, so
+ * it must carry the meeting link and the window itself.
  */
 function refineAutoPod(values: PodFormValues, ctx: z.RefinementCtx, t: Translate) {
   if (!values.sub_category_id) {
@@ -181,6 +186,10 @@ function refineAutoPod(values: PodFormValues, ctx: z.RefinementCtx, t: Translate
   }
   if (!hasImage(values.media_text)) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['media_text'], message: t('podForm.autoPod.mediaRequired') });
+  }
+  if (values.pod_mode === 'VIRTUAL') {
+    refineMeeting(values, ctx, t);
+    refineDates(values, ctx, t);
   }
 }
 
@@ -266,6 +275,7 @@ export function makePodSchema(config: PodFormConfig, t: Translate) {
       if (config.autoPod) {
         refineAutoPod(values, ctx, t);
         refineReel(values, ctx, config, t);
+        refineProducts(values, ctx, config, t);
         return;
       }
       refineVenue(values, ctx, config, t);

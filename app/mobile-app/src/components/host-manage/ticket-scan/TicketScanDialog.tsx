@@ -234,6 +234,11 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
 
                     {result?.requires_companions && pendingToken && result.ticket ? (
                       <CompanionsForm
+                        /* Keyed on the booking: the form sizes its rows from
+                           companions_required once, at mount. A different
+                           ticket must therefore get a different form, while a
+                           re-scan of the SAME one keeps what the host typed. */
+                        key={result.ticket.membership_id}
                         podId={pod?.id ?? ''}
                         membershipId={result.ticket.membership_id}
                         seats={result.ticket.seats ?? 1}

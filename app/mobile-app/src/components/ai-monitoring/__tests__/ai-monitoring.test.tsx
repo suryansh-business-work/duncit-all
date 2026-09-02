@@ -21,11 +21,17 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useAiMonitoringConfig');
 
+// Named rather than read back out of `points`: this app compiles with
+// `noUncheckedIndexedAccess`, so `points[0]` is `string | undefined` here and
+// `TextMatch` will not take that. Asserting on the sentence the fixture
+// declares says what the test means anyway.
+const SCAN_POINT = 'Your upload is scanned for unsafe content.';
+
 const copy: AiMonitoringCopy = {
   chipLabel: 'AI Monitoring',
   title: 'This upload is checked by AI',
   intro: 'An AI model reviews every image and file uploaded here.',
-  points: ['Your upload is scanned for unsafe content.'],
+  points: [SCAN_POINT],
   footnote: 'Breaking the guidelines can lead to action on your account.',
   dismissLabel: 'Got it',
 };
@@ -165,7 +171,7 @@ describe('AiMonitoringDialog', () => {
   it('renders every sentence the caller resolved', () => {
     renderWithProviders(<AiMonitoringDialog open onClose={jest.fn()} copy={copy} />);
 
-    expect(screen.getByText(copy.points[0])).toBeTruthy();
+    expect(screen.getByText(SCAN_POINT)).toBeTruthy();
     expect(screen.getByText(copy.footnote)).toBeTruthy();
   });
 
@@ -177,7 +183,7 @@ describe('AiMonitoringDialog', () => {
     );
 
     expect(screen.queryByText(copy.footnote)).toBeNull();
-    expect(screen.getByText(copy.points[0])).toBeTruthy();
+    expect(screen.getByText(SCAN_POINT)).toBeTruthy();
   });
 
   it('closes through the caller callback rather than on its own', () => {

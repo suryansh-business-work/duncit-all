@@ -52,17 +52,49 @@ jobs:
       - name: Check SonarQube availability
         id: sonar
         run: |
-          code=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "${{ secrets.SONAR_HOST_URL }}/api/server/version" || echo "000")
+          # `|| true`, NOT `|| echo "000"`: curl ALREADY writes 000 through -w
+          # when the connection never completes, so the fallback echo appended a
+          # second one and every unreachable run logged the nonsense "HTTP
+          # 000000". The `||` itself is still needed — the step runs under
+          # `bash -e`, so a non-zero curl would abort before the branch below.
+          code=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "${{ secrets.SONAR_HOST_URL }}/api/server/version" || true)
           if [ "$code" = "200" ]; then
             echo "up=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "up=false" >> "$GITHUB_OUTPUT"
-            if [ "${{ inputs.fail_on_unreachable }}" = "true" ]; then
-              echo "::error::SonarQube server unreachable (HTTP $code)."
-              exit 1
-            fi
-            echo "::warning::SonarQube server unreachable (HTTP $code) — skipping scan."
+            exit 0
           fi
+
+          echo "up=false" >> "$GITHUB_OUTPUT"
+          if [ "${{ inputs.fail_on_unreachable }}" = "true" ]; then
+            echo "::error::SonarQube server unreachable (HTTP $code)."
+            exit 1
+          fi
+
+          # A skipped scan leaves this run GREEN on purpose: a manually-managed
+          # VPS being down is not this commit's fault, and reddening every push
+          # over it would only teach people to ignore the check.
+          #
+          # That trade has one cost, and it is the whole reason for the noise
+          # below: nothing in the checks list distinguishes "analysed and clean"
+          # from "never analysed". Three people read `Probe SonarQube: success`
+          # on 2026-09-02 and took it as a quality signal, while every run since
+          # 10:58 UTC had published nothing — the probe job exits 0, so the run
+          # reports success with all three real jobs skipped. Say it plainly
+          # here, in the two places a person actually looks.
+          echo "::warning::SonarQube server unreachable (HTTP $code) — NO analysis was published for this commit. This run being green says nothing about code quality."
+          {
+            echo "## :warning: No SonarQube analysis was published"
+            echo
+            echo "\`/api/server/version\` did not answer (curl status \`$code\` — \`000\` means the connection never completed, which is a network failure rather than an HTTP error)."
+            echo
+            echo "Both coverage jobs and **Build and analyze** were skipped, so:"
+            echo
+            echo "- this run being green says nothing about code quality, and"
+            echo "- the SonarQube dashboard still shows the last commit that *did* analyse."
+            echo
+            echo "If the server answers from a developer machine but not from here, the fault is egress to the VPS from GitHub's runner ranges (firewall / fail2ban) — not SonarQube being down."
+            echo
+            echo "Re-run with **fail_on_unreachable: true** to make this state fail instead of skip."
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # ---------------------------------------------------------------------------
   # Coverage. The scanner NEVER runs tests — it only reads the lcov each runner

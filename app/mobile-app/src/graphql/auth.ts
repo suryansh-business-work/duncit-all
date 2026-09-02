@@ -137,3 +137,36 @@ export const LinkGoogleAccountDocument = gql(`
     }
   }
 `);
+
+/**
+ * Signup step four — proving the WhatsApp number the account was created with.
+ *
+ * All three authenticate the caller, which is why the step can only run after
+ * `register` has returned a token: the account has to exist before its number
+ * can be proved.
+ */
+export const RequestWhatsAppOtpDocument = gql(`
+  mutation MobileRequestWhatsAppOtp($ext: String!, $num: String!) {
+    requestWhatsAppOtp(phone_extension: $ext, phone_number: $num) {
+      ok
+      dev_otp
+    }
+  }
+`);
+
+export const VerifyWhatsAppOtpDocument = gql(`
+  mutation MobileVerifyWhatsAppOtp($ext: String!, $num: String!, $otp: String!) {
+    verifyWhatsAppOtp(phone_extension: $ext, phone_number: $num, otp: $otp) {
+      user_id
+      whatsapp_number
+    }
+  }
+`);
+
+export const SkipWhatsAppOtpDocument = gql(`
+  mutation MobileSkipWhatsAppOtp {
+    skipWhatsAppOtp {
+      user_id
+    }
+  }
+`);

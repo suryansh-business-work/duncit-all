@@ -22,7 +22,12 @@ import { useHostPodActionsConfig } from '../HostPodActionsProvider';
 import { HOST_SCAN_POD_TICKET } from '../queries';
 import { writeFailure } from '../write-failure';
 import type { HostPodActionLabels } from '../labels';
-import type { HostTicketScanResult, PodCompanionInput, ScanTarget } from '../types';
+import type {
+  HostTicketScanResult,
+  PodCompanionInput,
+  PodCompanionRecord,
+  ScanTarget,
+} from '../types';
 
 interface Props {
   pod: ScanTarget | null;
@@ -59,6 +64,18 @@ function confirmationText(
   return labels.attendanceMarked;
 }
 
+/**
+ * What the green-tick roster says under a companion's name.
+ *
+ * The number on file, plus whether that number actually answered a code — the
+ * host verified them one at a time, and this is where they see which of them
+ * it worked for.
+ */
+function companionLine(companion: PodCompanionRecord, labels: HostPodActionLabels): string {
+  if (!companion.verified_at) return companion.phone_number;
+  return `${companion.phone_number} · ${labels.companionVerified}`;
+}
+
 /** Camera check-in for one pod: scan a ticket QR, mark the attendee present and
  * show who they are. Stays open so a host can work through a queue at the door. */
 export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
@@ -69,6 +86,10 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
   // Kept separately from `result` so dismissing it leaves the pane's state.
   const [confirmed, setConfirmed] = useState<HostTicketScanResult | null>(null);
   const [scan, scanState] = useMutation<any>(HOST_SCAN_POD_TICKET);
+
+  // Read once, up here: the dialog only renders its body while there IS a
+  // pod, so reading it inside would be a guard no test could ever take.
+  const podId = pod?.id ?? '';
 
   // Scanning pauses while a code is in flight and while its result is on
   // screen — otherwise every frame re-submits the same ticket.
@@ -183,13 +204,20 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
                   people={recorded.map((companion) => ({
                     key: `${companion.phone_number}-${companion.name}`,
                     primary: companion.name,
-                    secondary: companion.phone_number,
+                    secondary: companionLine(companion, labels),
                   }))}
                 />
               )}
-              {result.requires_companions && pendingToken && (
+              {result.requires_companions && pendingToken && result.ticket && (
                 <CompanionsForm
-                  seats={result.ticket?.seats ?? 1}
+                  /* Keyed on the booking: the form sizes its rows from
+                     companions_required once, at mount. A different ticket
+                     must therefore get a different form, while a re-scan of
+                     the SAME one keeps what the host has already typed. */
+                  key={result.ticket.membership_id}
+                  podId={podId}
+                  membershipId={result.ticket.membership_id}
+                  seats={result.ticket.seats ?? 1}
                   required={result.companions_required}
                   busy={scanState.loading}
                   onSubmit={(companions) => submit(pendingToken, companions)}

@@ -31,7 +31,19 @@ describe('EditAccountDialog non-Error save failure', () => {
     renderWithProviders(
       <EditAccountDialog
         open
-        me={{ first_name: 'Riya', roles: ['USER'] } as never}
+        // All three contact details are required, so Save stays shut without
+        // them and this test would never reach the rejected save it is about.
+        me={
+          {
+            first_name: 'Riya',
+            roles: ['USER'],
+            email: 'riya@duncit.com',
+            phone_extension: '+91',
+            phone_number: '9876543210',
+            whatsapp_extension: '+91',
+            whatsapp_number: '9876543211',
+          } as never
+        }
         onClose={jest.fn()}
         onSave={onSave}
         onSaveUsername={jest.fn()}
@@ -39,10 +51,7 @@ describe('EditAccountDialog non-Error save failure', () => {
     );
     fireEvent.changeText(screen.getByTestId('field-first_name'), 'Riya R');
     await waitFor(
-      () =>
-        expect(screen.getByTestId('account-edit-submit').props.accessibilityState?.disabled).toBe(
-          false,
-        ),
+      () => expect(screen.getByTestId('account-edit-submit').props['aria-disabled']).toBe(false),
       { timeout: 8000 },
     );
     fireEvent.press(screen.getByTestId('account-edit-submit'));

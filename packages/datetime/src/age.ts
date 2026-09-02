@@ -90,3 +90,58 @@ export function isEligibleDob(
 export function dobMinAgeMessage(minAgeYears: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS): string {
   return `You must be at least ${minAgeYears} years old to join Duncit`;
 }
+
+/*
+  YEAR-ONLY dates of birth.
+
+  Signup asks for a birth YEAR rather than a full date, because a year is the
+  one part of a birthday people will type without hesitating. The cost is
+  precision, and it is worth stating plainly: a year cannot say whether this
+  year's birthday has happened yet, so the gate has to round one way or the
+  other. It rounds in the applicant's favour — `2007` is eligible for 18 all
+  through 2025, including for somebody born in December who is still 17.
+
+  That is the standard year-only reading and it is what makes the field usable;
+  the terms the applicant accepts are what carry the attestation. Anything that
+  needs the exact age (nothing does today) must ask for the full date instead.
+*/
+
+/** The most recent birth year still old enough — the newest option a year
+ * picker should offer, so an ineligible year cannot be chosen at all. */
+export function latestEligibleBirthYear(
+  minAgeYears: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
+  asOf?: DateInput,
+): number {
+  const today = toDay(asOf) ?? toDay(new Date())!;
+  return today.getFullYear() - minAgeYears;
+}
+
+/** True when a four-digit birth year clears the minimum joining age. A
+ * year that is not a real number, or one in the future, is never eligible. */
+export function isEligibleBirthYear(
+  year: number | string,
+  minAgeYears: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
+  asOf?: DateInput,
+): boolean {
+  const born = typeof year === 'number' ? year : Number.parseInt(year, 10);
+  if (!Number.isInteger(born)) return false;
+  return born <= latestEligibleBirthYear(minAgeYears, asOf);
+}
+
+/**
+ * The date of birth a birth year is stored as: the first of January.
+ *
+ * The encoding matters, because the server re-checks the age against a real
+ * date. January 1 is the reading the year-only gate above already took — it
+ * makes the applicant the OLDEST person that year could describe, so the
+ * server agrees with the form instead of refusing what the form accepted.
+ */
+export function birthYearToDob(year: number | string): string {
+  return `${String(year).trim()}-01-01`;
+}
+
+/** The birth year back out of a stored 'YYYY-MM-DD', or '' when there is none. */
+export function dobToBirthYear(dob: string | null | undefined): string {
+  const value = String(dob ?? '').trim();
+  return /^\d{4}/.test(value) ? value.slice(0, 4) : '';
+}

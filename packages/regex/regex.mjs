@@ -148,3 +148,16 @@ export const USERNAME = /^(?=.{3,30}$)[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 /** Handle shape check. Lower-case before calling it — the pattern is strict. */
 export const isUsername = (v) => USERNAME.test(v);
+
+/**
+ * A four-digit birth YEAR — what a year-only date of birth is typed as.
+ *
+ * Deliberately just the shape: whether the year makes somebody old enough is a
+ * calendar question, and it belongs to @duncit/datetime's
+ * `isEligibleBirthYear` alongside every other age rule. This pattern only says
+ * "four digits", so `20`, `1 999` and `two thousand` never reach that check.
+ */
+export const BIRTH_YEAR = /^\d{4}$/;
+
+/** Birth-year shape check — four digits, nothing else. */
+export const isBirthYear = (v) => BIRTH_YEAR.test(v);

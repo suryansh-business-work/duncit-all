@@ -1,1 +1,5 @@
-export type { InterviewBookingFormValues, InterviewBookingType } from './interview-booking.form';
+export type {
+  InterviewBookingFormValues,
+  InterviewBookingType,
+  InterviewDetailsValues,
+} from './interview-booking.form';

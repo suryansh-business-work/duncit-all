@@ -70,8 +70,20 @@ export {
 } from './withdraw';
 
 export {
+  blankAddress,
+  makeAddressSchema,
+  type AddressValues,
+} from './address';
+
+export {
   makeContactOtpSchema,
   makeContactValueSchema,
   type ContactOtpValues,
   type ContactValueValues,
 } from './contact-change';
+
+export {
+  makeSignupSchema,
+  signupDefaults,
+  type SignupFormValues,
+} from './signup';

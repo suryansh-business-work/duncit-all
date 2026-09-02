@@ -179,6 +179,29 @@ export const HOST_RESUBMIT_POD = gql`
 `;
 
 /** Door check-in: marks attendance and answers with who walked in. */
+/**
+ * Send ONE of the extra people a multi-seat booking admits a WhatsApp code.
+ *
+ * The verify half is `VERIFY_ATTENDANCE_OTP` — checking a code grants nothing
+ * by itself, and the step that SPENDS this one (the scan that records the
+ * group) re-checks the purpose, the booking and the number it was raised for.
+ */
+export const REQUEST_COMPANION_OTP = gql`
+  mutation RequestPodCompanionOtp($input: PodAttendanceOtpInput!) {
+    requestPodCompanionOtp(input: $input) {
+      challenge_id
+      expires_at
+      resend_after_seconds
+      test_code
+      deliveries {
+        medium
+        status
+        reason
+      }
+    }
+  }
+`;
+
 export const HOST_SCAN_POD_TICKET = gql`
   mutation HostScanPodTicket(
     $pod_doc_id: ID!
@@ -194,6 +217,7 @@ export const HOST_SCAN_POD_TICKET = gql`
       companions {
         name
         phone_number
+        verified_at
       }
       ticket {
         id
@@ -201,6 +225,7 @@ export const HOST_SCAN_POD_TICKET = gql`
         status
         seats
         checked_in_at
+        membership_id
       }
       attendee {
         user_id

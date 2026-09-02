@@ -11,10 +11,12 @@ import {
   zodRules,
 } from '@duncit/forms';
 import {
+  makeAddressSchema,
   makeContactValueSchema,
   makeDeleteAccountSchema,
   makeLoginSchema,
   makePasswordPairSchema,
+  makeSignupSchema,
   makeResetPasswordSchema,
   makeWithdrawSchema,
   buildWithdrawInput,
@@ -35,6 +37,8 @@ interface WithdrawMock {
 }
 
 interface SchemaMock {
+  name: string;
+  dobYear: string;
   email: string;
   password: string;
   otp: string;
@@ -44,6 +48,9 @@ interface SchemaMock {
   channel: ContactChannel;
   extension: string;
   number: string;
+  /** The recipient on a saved address — name and number, as typed. */
+  recipient_name: string;
+  recipient_phone: string;
 }
 
 interface FieldMock {
@@ -103,6 +110,8 @@ export default defineDemos('forms', [
     note:
       'Blank the email and watch the FIRST message: it says the field is required, not that it is invalid. The app used to carry its own copy of this schema with no min(1) and no length cap, so the same empty box read differently on the two surfaces. Change channel to EMAIL and the phone boxes stop being asked for.',
     mock: {
+      name: 'Meera Nair',
+      dobYear: '1998',
       email: 'meera@duncit.com',
       password: 'correct-horse',
       otp: '482913',
@@ -112,6 +121,8 @@ export default defineDemos('forms', [
       channel: 'PHONE',
       extension: '+91',
       number: '9845012345',
+      recipient_name: 'Ravi Kumar',
+      recipient_phone: '+91 98450 12345',
     },
     compute: (mock) => {
       // Messages are keys here so the demo shows WHICH sentence fires without
@@ -149,6 +160,19 @@ export default defineDemos('forms', [
             confirm_password: mock.confirm_password,
           }),
         ),
+        Signup: say(
+          makeSignupSchema(18, t).safeParse({
+            name: mock.name,
+            dobYear: mock.dobYear,
+            email: mock.email,
+            phoneExtension: mock.extension,
+            phoneNumber: mock.number,
+            password: mock.new_password,
+            confirmPassword: mock.confirm_password,
+            referralCode: '',
+            acceptedPolicyIds: [],
+          }),
+        ),
         'Recovery: new password only': say(
           makePasswordPairSchema(t).safeParse({
             new_password: mock.new_password,
@@ -167,6 +191,20 @@ export default defineDemos('forms', [
         ),
         'Why per channel':
           'One schema with every field optional would let "Send code" through with nothing typed.',
+        'Saved address': say(
+          makeAddressSchema(t).safeParse({
+            label: 'Home',
+            name: mock.recipient_name,
+            phone: mock.recipient_phone,
+            line1: '5 Residency Road',
+            line2: '',
+            landmark: '',
+            city: 'Bengaluru',
+            state: 'Karnataka',
+            pincode: '560025',
+            country: 'India',
+          }),
+        ),
       };
     },
   }),

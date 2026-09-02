@@ -31,6 +31,15 @@ export const podCompanionSchema = yup.object({
     .trim()
     .matches(PHONE_NUMBER_REGEX, 'Phone must contain only digits (6-15 digits)')
     .required('Phone number is required'),
+  /**
+   * A verified POD_COMPANION challenge, when the host proved this number.
+   *
+   * Optional: an attendee whose phone is dead or abroad must still be able to
+   * walk in, so the code is an option the host takes rather than a gate. When
+   * it IS supplied the service spends it, which is what stops one proof being
+   * replayed across the rest of the group.
+   */
+  otp_challenge_id: yup.string().trim().nullable().default(null),
 });
 
 export const podCompanionsSchema = yup.object({

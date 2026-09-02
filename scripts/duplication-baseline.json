@@ -1,8 +1,8 @@
 {
   "maxPercent": 2.1,
   "areas": {
-    "app/mobile-app": 3289,
-    "app/mweb": 2744,
+    "app/mobile-app": 3322,
+    "app/mweb": 2745,
     "packages/ai-prompts": 18,
     "packages/app-settings": 16,
     "packages/auto-pods": 30,
@@ -10,7 +10,7 @@
     "packages/club-form": 304,
     "packages/communication": 599,
     "packages/forms": 42,
-    "packages/host-pod-actions": 135,
+    "packages/host-pod-actions": 168,
     "packages/location": 122,
     "packages/logs": 77,
     "packages/media-picker": 175,

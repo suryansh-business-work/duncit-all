@@ -11,6 +11,16 @@
  * the statement shows the real taxable base (net = collection − GST) instead of
  * inventing per-charge tax lines.
  *
+ * The GST row states its arithmetic on the TOTAL COLLECTION — P × g ÷ (100+g)
+ * — not on the taxable base. Both produce the identical rupee (net × g/100 ===
+ * P × g/(100+g) exactly), but only the collection is a number the host can see
+ * on the panel, so only that form is checkable by hand. Quoting a base that is
+ * itself derived asked the reader to trust one number to verify the next.
+ *
+ * Every section also carries a `description`: why that charge exists at all.
+ * It is copy, not decoration — a host watching money leave their pod is owed
+ * the reason, and both surfaces put it behind the section's info button.
+ *
  * The two Duncit commissions are charged on DIFFERENT bases and are shown that
  * way: the host's (host_amount × host_commission_pct) is a real deduction from
  * the collection and lives under Platform Charges, venue or no venue; the
@@ -54,6 +64,8 @@ export interface StatementLine {
 export interface StatementSection {
   key: string;
   title: string;
+  /** Why this charge exists — rendered behind the section's info button. */
+  description: string;
   lines: StatementLine[];
   /** Sum of this section's deduction lines (raw sum — format at render time). */
   total: number;
@@ -136,6 +148,7 @@ export function buildEarningsStatement(
   const taxes: StatementSection = {
     key: 'taxes',
     title: t('earnings.statement.taxesTitle'),
+    description: t('earnings.statement.taxesDescription'),
     lines: [
       {
         key: 'taxable',
@@ -150,8 +163,10 @@ export function buildEarningsStatement(
         key: 'gst',
         label: t('earnings.statement.gstLabel', { vars: { pct: w.gst_pct } }),
         amount: w.gst_amount,
+        // On the COLLECTION, the figure the host can actually see on the
+        // panel: P × g ÷ (100+g). Identical to net × g% to the paise.
         formula: t('earnings.statement.gstFormula', {
-          vars: { net: money(w.net_amount), pct: w.gst_pct },
+          vars: { amount: money(w.amount), pct: w.gst_pct, divisor: 100 + w.gst_pct },
         }),
         deduction: true,
       },
@@ -162,6 +177,7 @@ export function buildEarningsStatement(
   const platform: StatementSection = {
     key: 'platform',
     title: t('earnings.statement.platformTitle'),
+    description: t('earnings.statement.platformDescription'),
     lines: [
       {
         key: 'platform-fee',
@@ -191,6 +207,7 @@ export function buildEarningsStatement(
     sections.push({
       key: 'club',
       title: t('earnings.statement.clubTitle'),
+      description: t('earnings.statement.clubDescription'),
       lines: [
         {
           key: 'club-admin',
@@ -232,6 +249,7 @@ export function buildEarningsStatement(
     sections.push({
       key: 'venue',
       title: t('earnings.statement.venueTitle'),
+      description: t('earnings.statement.venueDescription'),
       lines: venueLines,
       total: 0,
     });

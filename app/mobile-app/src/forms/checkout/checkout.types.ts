@@ -1,15 +1,7 @@
 import { z } from 'zod';
+import { DIAL_CODE, EMAIL, GSTIN, PERSON_NAME, PHONE_INTL, PINCODE_LOOSE } from '@duncit/regex';
 
 import { fallbackT, type Translate } from '@/i18n/fallback';
-
-/** Mirror of the server GSTIN rule (14 checkout chars): 2 digits, 5 A-Z, 4
- * digits, 1 A-Z, then 2 alphanumerics. Validated only when non-empty. */
-const GSTIN_RE = /^\d{2}[A-Z]{5}\d{4}[A-Z][0-9A-Z]{2}$/;
-const PINCODE_RE = /^\d{4,10}$/;
-const EMAIL_CHECK = z.string().email();
-
-const PHONE_EXTENSION_RE = /^\+?\d{1,5}$/;
-const PHONE_NUMBER_RE = /^\d{6,15}$/;
 
 /**
  * Checkout contact + billing contract — RN twin of mWeb's checkout schemas.
@@ -25,24 +17,27 @@ const PHONE_NUMBER_RE = /^\d{6,15}$/;
  */
 function makeCheckoutObject(t: Translate) {
   return z.object({
-    full_name: z.string().trim().max(160, t('mweb.checkout.validation.nameMax')),
+    full_name: z
+      .string()
+      .trim()
+      .max(160, t('mweb.checkout.validation.nameMax'))
+      // Empty is allowed — the contact block is read-only here — but a typed
+      // name takes the same shape signup and Edit profile ask for.
+      .refine((v) => v === '' || PERSON_NAME.test(v), t('mweb.checkout.validation.nameInvalid')),
     email: z
       .string()
       .trim()
       .min(1, t('mweb.auth.validation.emailRequired'))
-      .email(t('mweb.auth.validation.emailInvalid'))
+      .refine((v) => EMAIL.test(v), t('mweb.auth.validation.emailInvalid'))
       .max(254),
     phone_extension: z
       .string()
       .trim()
-      .refine(
-        (v) => !v || PHONE_EXTENSION_RE.test(v),
-        t('mweb.checkout.validation.phoneCodeInvalid'),
-      ),
+      .refine((v) => !v || DIAL_CODE.test(v), t('mweb.checkout.validation.phoneCodeInvalid')),
     phone_number: z
       .string()
       .trim()
-      .refine((v) => !v || PHONE_NUMBER_RE.test(v), t('mweb.checkout.validation.phoneInvalid')),
+      .refine((v) => !v || PHONE_INTL.test(v), t('mweb.checkout.validation.phoneInvalid')),
     same_as_main: z.boolean(),
     line1: z.string().trim().max(200, t('mweb.checkout.validation.line1Max')),
     line2: z.string().trim().max(200, t('mweb.checkout.validation.line2Max')),
@@ -85,7 +80,7 @@ function addAddressIssues(values: CheckoutObjectValues, ctx: z.RefinementCtx, t:
       message: t('mweb.checkout.validation.stateRequired'),
     });
   }
-  if (!PINCODE_RE.test(values.pincode)) {
+  if (!PINCODE_LOOSE.test(values.pincode)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['pincode'],
@@ -97,14 +92,14 @@ function addAddressIssues(values: CheckoutObjectValues, ctx: z.RefinementCtx, t:
 /** GSTIN and the separate billing email are optional everywhere — checked only
  * once the buyer typed something. */
 function addOptionalFieldIssues(values: CheckoutObjectValues, ctx: z.RefinementCtx, t: Translate) {
-  if (values.billing_email !== '' && !EMAIL_CHECK.safeParse(values.billing_email).success) {
+  if (values.billing_email !== '' && !EMAIL.test(values.billing_email)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['billing_email'],
       message: t('mweb.checkout.validation.billingEmailInvalid'),
     });
   }
-  if (values.has_gstin && values.gstin !== '' && !GSTIN_RE.test(values.gstin.toUpperCase())) {
+  if (values.has_gstin && values.gstin !== '' && !GSTIN.test(values.gstin.toUpperCase())) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['gstin'],

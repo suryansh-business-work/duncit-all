@@ -33,9 +33,9 @@ export function PhoneField({ control }: Readonly<Props>) {
         <FormTextField
           control={control}
           name="phoneNumber"
-          label={t('mweb.common.phoneNumber')}
+          label={t('mweb.signup.whatsappLabel')}
           placeholder={t('mweb.signup.phonePlaceholder')}
-          hint={t('mweb.signup.phoneHint')}
+          hint={t('mweb.signup.whatsappHint')}
           keyboardType="phone-pad"
           digitsOnly
           autoComplete="tel"

@@ -31,6 +31,10 @@ module.exports = {
     // pin jest straight at the TS SOURCE entry (babel-jest transforms it), the
     // same code Metro bundles via the `import` condition.
     '^@duncit/utils$': '<rootDir>/../../packages/utils/src/index.ts',
+    // Same, for the same reason: @duncit/forms/schemas now reaches for the
+    // birth-year age rule, and jest walking up from packages/forms/ finds
+    // nothing in CI, where only app/mobile-app is installed.
+    '^@duncit/datetime$': '<rootDir>/../../packages/datetime/src/index.ts',
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

@@ -1,119 +1,27 @@
-import { z } from 'zod';
-import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, isEligibleDob } from '@duncit/datetime';
-import { DIAL_CODE, PERSON_NAME, PHONE_INTL, REFERRAL_CODE } from '@duncit/regex';
+import { makeSignupSchema, type SignupFormValues } from '@duncit/forms/schemas';
+import { DEFAULT_MIN_ACCOUNT_AGE_YEARS } from '@duncit/datetime';
 import { fallbackT, type Translate } from '../../i18n/fallback';
 
 /**
- * Register contract — RHF + Zod (migrated from Formik + Yup). Mirrors the native
- * signup: name, email, phone, 8-char password with confirmation, and a date of
- * birth that makes the applicant at least 18 today.
+ * mWeb's signup contract — the shared one, under the names this surface's call
+ * sites already use.
  *
- * The age rule lives in @duncit/datetime so signup, the profile editor and the
- * server all gate on the same calendar comparison. It replaced an
- * admin-configured birth-YEAR range, which could only ever approximate an age:
- * a year picker passes anyone born in the cut-off year, including someone whose
- * 18th birthday is still months away. The message it fails with is copy, so it
- * comes from the shared catalogue rather than the package's English constant.
+ * The rules themselves live in `@duncit/forms/schemas` because the native app
+ * validates the same signup: the two copies had drifted on the name length, the
+ * confirm-password rule and whether a blank email said "required" or "invalid"
+ * (rule 40). Nothing here re-states a rule; it only binds the factory to mWeb's
+ * bundled English so a caller outside React still reads real sentences.
  */
 export function makeRegisterSchema(
   minAge: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
   t: Translate = fallbackT,
   requiredPolicyIds: readonly string[] = [],
 ) {
-  const dobString = z
-    .string()
-    .min(1, t('mweb.signup.validation.dobRequired'))
-    .refine((v) => !Number.isNaN(new Date(v).getTime()), t('mweb.signup.validation.dobInvalid'))
-    .refine(
-      (v) => isEligibleDob(v, minAge),
-      t('mweb.signup.validation.dobMinAge', { vars: { years: minAge } }),
-    );
-
-  return z
-    .object({
-      name: z
-        .string()
-        .trim()
-        .min(1, t('mweb.signup.validation.nameRequired'))
-        .max(60, t('mweb.signup.validation.nameTooLong'))
-        .regex(PERSON_NAME, t('mweb.signup.validation.namePattern')),
-      email: z
-        .string()
-        .trim()
-        .min(1, t('mweb.auth.validation.emailRequired'))
-        .email(t('mweb.auth.validation.emailInvalid'))
-        .max(254),
-      /*
-        Phone is required and unique, and both halves are checked here only for
-        SHAPE — the digits without a dial code, matching the server's own
-        `phoneRegex`, so a number the form accepts is a number the mutation
-        accepts. Whether it is already on another account is the server's
-        answer: it holds the unique index, and a client-side check would race it.
-      */
-      phoneExtension: z
-        .string()
-        .trim()
-        .min(1, t('mweb.signup.validation.codeRequired'))
-        .regex(DIAL_CODE, t('mweb.signup.validation.codeInvalid')),
-      phoneNumber: z
-        .string()
-        .trim()
-        .min(1, t('mweb.signup.validation.phoneRequired'))
-        .regex(PHONE_INTL, t('mweb.signup.validation.phoneInvalid')),
-      password: z.string().min(8, t('mweb.auth.validation.passwordMin')).max(128),
-      confirmPassword: z.string().min(1, t('mweb.signup.validation.confirmRequired')),
-      dob: dobString,
-      /*
-        Optional, and the ONLY place a code can be typed on this surface — the
-        box is gone from Refer & Earn, because a code is redeemed once and this
-        is the moment it happens. The shape is checked here so a typo is an
-        inline hint; whether the code actually exists is the server's call, made
-        before the account is created.
-      */
-      referralCode: z
-        .string()
-        .trim()
-        .refine(
-          (v) => v === '' || REFERRAL_CODE.test(v.toUpperCase()),
-          t('mweb.referral.validation.codePattern'),
-        ),
-      /*
-        Every policy the person ticked in the acceptance dialog, and the reason
-        the signup button is dead until they have. It is a real validation rule
-        rather than a disabled prop so the form says WHY, in the reader's
-        language, the same way a missing name does. The list the rule checks
-        against is the live `signupPolicies` answer, which is also what the
-        server re-verifies before it creates anything.
-      */
-      acceptedPolicyIds: z.array(z.string()),
-    })
-    .refine((values) => values.password === values.confirmPassword, {
-      message: t('mweb.auth.validation.passwordsMismatch'),
-      path: ['confirmPassword'],
-    })
-    .refine(
-      (values) => {
-        const ticked = new Set(values.acceptedPolicyIds);
-        return requiredPolicyIds.every((id) => ticked.has(id));
-      },
-      { message: t('policyAcceptance.required'), path: ['acceptedPolicyIds'] },
-    );
+  return makeSignupSchema(minAge, t, requiredPolicyIds);
 }
 
 export const registerSchema = makeRegisterSchema();
 
-export type RegisterFormValues = z.infer<typeof registerSchema>;
+export type RegisterFormValues = SignupFormValues;
 
-export const registerDefaults: RegisterFormValues = {
-  name: '',
-  email: '',
-  // Same default dial as every other phone row in both apps — India is the
-  // market, and the box is a searchable list for everyone else.
-  phoneExtension: '+91',
-  phoneNumber: '',
-  password: '',
-  confirmPassword: '',
-  dob: '',
-  referralCode: '',
-  acceptedPolicyIds: [],
-};
+export { signupDefaults as registerDefaults } from '@duncit/forms/schemas';

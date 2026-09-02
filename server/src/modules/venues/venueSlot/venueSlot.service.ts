@@ -594,7 +594,12 @@ async function podPublishedSends(facts: SlotDecisionFacts): Promise<NotifyInput[
 /** Best-effort WhatsApp beside the in-app note: the decision to the hosts and
  * to the venue owner, plus the pod-is-live pair once it is approved. The sends
  * themselves never throw; the lookups feeding them can. */
-async function whatsappSlotDecision(pod: any, slot: IVenueSlot, approved: boolean) {
+async function whatsappSlotDecision(
+  pod: any,
+  slot: IVenueSlot,
+  approved: boolean,
+  tellOwner = true
+) {
   try {
     const venue = await VenueModel.findById(slot.venue_id).select('venue_name owner_user_id').lean();
     if (!venue) return;
@@ -619,7 +624,7 @@ async function whatsappSlotDecision(pod: any, slot: IVenueSlot, approved: boolea
     };
     const sends = [
       ...hostDecisionSends(facts, approved),
-      ...(await venueDecisionSends(facts, approved)),
+      ...(tellOwner ? await venueDecisionSends(facts, approved) : []),
     ];
     if (approved) sends.push(...(await podPublishedSends(facts)));
     // `notifyEach`, not `sendEach`: the same four decisions now also go out as
@@ -637,8 +642,23 @@ async function whatsappSlotDecision(pod: any, slot: IVenueSlot, approved: boolea
   }
 }
 
-/** Best-effort in-app note to the pod's hosts when a venue decides a request. */
-async function notifySlotDecision(pod: any, slot: IVenueSlot, approved: boolean, reason?: string | null) {
+/**
+ * Best-effort in-app note to the pod's hosts when a venue decides a request.
+ *
+ * `tellOwner` is false for a decline the venue owner did not make. Their copy
+ * is subjected "You declined a slot", which would be a false account of their
+ * own actions when the deadline decided it for them — and there is no template
+ * yet that says what actually happened, so the honest choice is silence on that
+ * side rather than a wrong sentence. The HOST is always told either way: their
+ * pod just went offline and that is not optional news.
+ */
+async function notifySlotDecision(
+  pod: any,
+  slot: IVenueSlot,
+  approved: boolean,
+  reason?: string | null,
+  tellOwner = true
+) {
   try {
     const { notificationService } = await import('@modules/engagement/notification/notification.service');
     const when = slot.start_at.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
@@ -663,11 +683,61 @@ async function notifySlotDecision(pod: any, slot: IVenueSlot, approved: boolean,
     });
   }
   // Outside the block above so a failed in-app note still reaches WhatsApp.
-  await whatsappSlotDecision(pod, slot, approved);
+  await whatsappSlotDecision(pod, slot, approved, tellOwner);
 }
 
 /** One pending booking request row: the slot joined with its requesting pod,
  * that pod's first host's contact details and the venue name. */
+/** Who is turning the request down, and what the audit row says when the
+ * decline carries no reason of its own. */
+interface DeclineActor {
+  source: 'VENUE_OWNER' | 'SYSTEM';
+  actorUserId: string | null;
+  fallbackNote: string;
+}
+
+/**
+ * The ONE write that turns a pending request down.
+ *
+ * A decline is four facts that have to move together — the slot frees up, the
+ * pod comes out of PENDING and goes offline, the host is told, and the trail
+ * records who did it. The venue owner's decline and the deadline sweep are the
+ * two ways in (rule 41's shape); a second copy of this is how one of those four
+ * would quietly stop happening on one of the paths.
+ *
+ * The caller has already established that the slot is PENDING with a pod on it.
+ */
+async function applyDecline(slot: IVenueSlot, reason: string, actor: DeclineActor) {
+  const podId = slot.booked_by_pod_id;
+  const note = reason.trim();
+  slot.status = 'AVAILABLE';
+  slot.booked_by_pod_id = null;
+  // Keep the decision on the slot: `booked_by_pod_id` is cleared above, so
+  // without this the decision page has nothing to render after a decline.
+  slot.decision = 'DECLINED';
+  slot.decided_at = new Date();
+  slot.decided_pod_id = podId;
+  slot.decline_reason = note;
+  await (slot as any).save();
+  const beforePod = await PodModel.findById(podId);
+  const before = beforePod ? snapshotPod(beforePod) : null;
+  const pod = await PodModel.findByIdAndUpdate(
+    podId,
+    { $set: { venue_approval_status: 'DECLINED', is_active: false, venue_slot_id: null } },
+    { new: true }
+  );
+  if (!pod) return;
+  await notifySlotDecision(pod, slot, false, note, actor.source === 'VENUE_OWNER');
+  await podAuditService.record({
+    pod,
+    action: 'VENUE_DECLINED',
+    source: actor.source,
+    actorUserId: actor.actorUserId,
+    before,
+    note: note || actor.fallbackNote,
+  });
+}
+
 function toRequestRow(s: IVenueSlot, pod: any, host: any, venueName: string) {
   const hostName = host
     ? `${host.profile?.first_name ?? ''} ${host.profile?.last_name ?? ''}`.trim()
@@ -919,7 +989,14 @@ export const venueSlotService = {
   /** Owner: pending booking requests across their venues, newest first,
    * joined with the requesting pod and its host's contact details. */
   async listRequests(userId: string, venueId?: string | null) {
-    const q: any = { status: 'PENDING', owner_user_id: new Types.ObjectId(userId) };
+    const q: any = {
+      status: 'PENDING',
+      owner_user_id: new Types.ObjectId(userId),
+      // Only what the owner can still decide. A request whose slot has begun is
+      // already settled — the sweep declines it — and leaving it on the page
+      // labelled "Awaiting decision" invites a decision that cannot be made.
+      start_at: { $gt: new Date() },
+    };
     if (venueId) {
       if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue_id');
       q.venue_id = new Types.ObjectId(venueId);
@@ -994,6 +1071,12 @@ export const venueSlotService = {
     if (slot.status !== 'PENDING' || !slot.booked_by_pod_id) {
       fail('BAD_REQUEST', 'This slot has no pending booking request');
     }
+    // The slot has already begun, so approving it would put a pod live for a
+    // time that has been and gone. The sweep declines these, and this refuses
+    // the owner who opens a stale page in the window before it runs.
+    if (slot.start_at.getTime() <= Date.now()) {
+      fail('BAD_REQUEST', 'This slot has already started and can no longer be approved');
+    }
     slot.status = 'BOOKED';
     slot.decision = 'APPROVED';
     slot.decided_at = new Date();
@@ -1028,35 +1111,33 @@ export const venueSlotService = {
     if (slot.status !== 'PENDING' || !slot.booked_by_pod_id) {
       fail('BAD_REQUEST', 'This slot has no pending booking request');
     }
-    const podId = slot.booked_by_pod_id;
-    slot.status = 'AVAILABLE';
-    slot.booked_by_pod_id = null;
-    // Keep the decision on the slot: `booked_by_pod_id` is cleared above, so
-    // without this the decision page has nothing to render after a decline.
-    slot.decision = 'DECLINED';
-    slot.decided_at = new Date();
-    slot.decided_pod_id = podId;
-    slot.decline_reason = reason?.trim() ?? '';
-    await (slot as any).save();
-    const beforePod = await PodModel.findById(podId);
-    const before = beforePod ? snapshotPod(beforePod) : null;
-    const pod = await PodModel.findByIdAndUpdate(
-      podId,
-      { $set: { venue_approval_status: 'DECLINED', is_active: false, venue_slot_id: null } },
-      { new: true }
-    );
-    if (pod) {
-      await notifySlotDecision(pod, slot, false, reason);
-      await podAuditService.record({
-        pod,
-        action: 'VENUE_DECLINED',
-        source: 'VENUE_OWNER',
-        actorUserId: userId,
-        before,
-        note: reason?.trim() || 'Venue owner declined the slot booking request',
-      });
-    }
+    await applyDecline(slot, reason ?? '', {
+      source: 'VENUE_OWNER',
+      actorUserId: userId,
+      fallbackNote: 'Venue owner declined the slot booking request',
+    });
     return (await withVenueAndPod([slot]))[0];
+  },
+
+  /**
+   * The deadline passing IS the decision.
+   *
+   * A request the venue never answered before the slot began cannot be
+   * answered at all — the pod could not have run — so it is declined with that
+   * as its reason rather than left in the queue. Same write as the owner's own
+   * decline, so the host is told, the pod comes out of PENDING and the slot
+   * frees up; only the actor differs. Called by the sweep in
+   * `venueSlot.expiry.ts` and safe to call twice: the PENDING guard makes the
+   * second call a no-op.
+   */
+  async expireRequest(slot: IVenueSlot, reason: string): Promise<boolean> {
+    if (slot.status !== 'PENDING' || !slot.booked_by_pod_id) return false;
+    await applyDecline(slot, reason, {
+      source: 'SYSTEM',
+      actorUserId: null,
+      fallbackNote: reason,
+    });
+    return true;
   },
 
   // Atomic: only succeeds if the slot is currently AVAILABLE. Called from pod

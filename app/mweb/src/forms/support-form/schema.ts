@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { EMAIL, PERSON_NAME } from '@duncit/regex';
 
 export interface SupportFormValues {
   name: string;
@@ -39,8 +40,13 @@ export const supportSchema = z.object({
     .string()
     .trim()
     .min(1, 'Name is required')
-    .min(2, 'At least 2 characters'),
-  email: z.string().trim().min(1, 'Email is required').email('Enter a valid email'),
+    .min(2, 'At least 2 characters')
+    .refine((v) => PERSON_NAME.test(v), 'Enter a valid name'),
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Email is required')
+    .refine((v) => EMAIL.test(v), 'Enter a valid email'),
   category: z.enum(categoryValues),
   subject: z
     .string()

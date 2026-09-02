@@ -19,6 +19,14 @@ exports:
   - 'FALLBACK_DATE_FORMAT'
   - 'FALLBACK_TIME_FORMAT'
   - 'FALLBACK_TIME_ZONE'
+  - 'DEFAULT_MIN_ACCOUNT_AGE_YEARS'
+  - 'ageInYears'
+  - 'isEligibleDob'
+  - 'latestEligibleDob'
+  - 'isEligibleBirthYear'
+  - 'latestEligibleBirthYear'
+  - 'birthYearToDob'
+  - 'dobToBirthYear'
 ---
 
 ## Why this exists
@@ -345,3 +353,30 @@ Native uses `slug` as its local asset folder name, so slugs are not free to rena
 `vitest.config.ts` sets 100/100/100/100 across `src/**`. The fallback branches — missing
 `serverNow`, a CUSTOM anchor with no save-stamp, an invalid date — are each covered, because
 every one of them is a path a misconfigured admin setting can actually reach in production.
+
+## Age, and year-only dates of birth
+
+One rule for every surface — signup, the profile editor and the server all gate on the same
+calendar comparison, never a millisecond division (a year is not a fixed number of days, so
+`(now - dob) / 31536000000` drifts across leap years and lets an under-age member through on
+the wrong side of their birthday).
+
+Signup asks for a **year**, because that is the one part of a birthday people type without
+hesitating. A year cannot say whether this year's birthday has happened yet, so the gate has
+to round, and it rounds in the applicant's favour:
+
+```ts
+// "today" is 1 September 2026
+latestEligibleBirthYear(18); // 2008 — the newest year a picker should offer
+isEligibleBirthYear(2008, 18); // true, all through the year
+isEligibleBirthYear(2009, 18); // false
+
+birthYearToDob(2008); // '2008-01-01' — the date the mutation sends
+dobToBirthYear('1998-04-23'); // '1998' — reading a stored date back
+```
+
+`birthYearToDob` encodes the year as **January 1** on purpose: that is the same reading the
+year-only gate took, so the server — which re-checks against a real date — agrees with the
+form instead of refusing what the form accepted.
+
+Anything that needs an exact age must ask for the full date and use `isEligibleDob`.

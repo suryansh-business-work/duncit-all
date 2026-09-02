@@ -14,6 +14,8 @@ import { generateTicketWithInvoicePdf } from '@services/ticket/ticket-with-invoi
 import type { InvoiceData } from '@services/invoice/invoice.pdf';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { invoiceDataForPayment } from '@modules/finance/payment/payment.invoice';
+import { otpService } from '@modules/platform/otp/otp.service';
+import type { PodCompanionDTO } from './ticket.validator';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { podImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
 import type { StoredMedia } from '@utils/media';
@@ -77,7 +79,39 @@ const toPubCompanion = (c: any) => ({
   phone_extension: c.phone_extension ?? null,
   phone_number: c.phone_number ?? '',
   added_at: c.added_at?.toISOString?.() ?? new Date(0).toISOString(),
+  verified_at: c.verified_at?.toISOString?.() ?? null,
+  verified_medium: c.verified_medium ?? '',
 });
+
+/**
+ * One validated companion as it is stored, with its one-time code spent.
+ *
+ * Verifying a companion is OPTIONAL — a dead phone or a number abroad must
+ * never hold a group at the door — so a row with no challenge is recorded
+ * unverified. When the host DID verify one, spending it here is what stops the
+ * same proof being replayed against the next person in the queue.
+ */
+async function toStoredCompanion(membership: any, companion: PodCompanionDTO) {
+  const { otp_challenge_id: challengeId, ...rest } = companion;
+  const base = { ...rest, added_at: new Date() };
+  if (!challengeId) {
+    return { ...base, verified_at: null, verified_medium: '', otp_challenge_id: null };
+  }
+  const challenge = await otpService.consume(challengeId, {
+    purpose: 'POD_COMPANION',
+    // Bound to the booking AND to the number it was raised for: one proof
+    // proves one person, never the rest of the group.
+    match: (c) =>
+      String((c.context as any)?.membership_id ?? '') === String(membership._id) &&
+      c.phone_number === rest.phone_number,
+  });
+  return {
+    ...base,
+    verified_at: challenge.verified_at ?? new Date(),
+    verified_medium: challenge.mediums.join(','),
+    otp_challenge_id: challenge._id,
+  };
+}
 
 /**
  * The door's rule for a ticket that admits more than one person.
@@ -124,7 +158,7 @@ async function recordCompanions(
   }
   membership.companions = [
     ...onFile,
-    ...companions.map((c) => ({ ...c, added_at: new Date() })),
+    ...(await Promise.all(companions.map((c) => toStoredCompanion(membership, c)))),
   ];
   await membership.save();
   return 0;

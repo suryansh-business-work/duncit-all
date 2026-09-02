@@ -29,6 +29,9 @@ export const podAttendanceResolvers = {
     requestPodAttendanceOtp: (_p: unknown, args: { input: any }, ctx: GraphQLContext) =>
       attendanceService.requestOtp(args.input, actorOf(ctx)),
 
+    requestPodCompanionOtp: (_p: unknown, args: { input: any }, ctx: GraphQLContext) =>
+      attendanceService.requestCompanionOtp(args.input, actorOf(ctx)),
+
     verifyPodAttendanceOtp: (
       _p: unknown,
       args: { challenge_id: string; otp: string },

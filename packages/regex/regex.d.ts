@@ -74,3 +74,16 @@ export function isReferralCode(value: string): boolean;
 export const USERNAME: RegExp;
 /** Handle shape check. Lower-case before calling it — the pattern is strict. */
 export function isUsername(value: string): boolean;
+
+/**
+ * A four-digit birth YEAR — what a year-only date of birth is typed as.
+ *
+ * Deliberately just the shape: whether the year makes somebody old enough is a
+ * calendar question, and it belongs to @duncit/datetime's
+ * `isEligibleBirthYear` alongside every other age rule. This pattern only says
+ * "four digits", so `20`, `1 999` and `two thousand` never reach that check.
+ */
+export const BIRTH_YEAR: RegExp;
+
+/** Birth-year shape check — four digits, nothing else. */
+export function isBirthYear(value: string): boolean;

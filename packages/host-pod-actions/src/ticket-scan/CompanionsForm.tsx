@@ -1,42 +1,30 @@
 import { useMemo } from 'react';
-import { useForm, useFieldArray, type Resolver } from 'react-hook-form';
+import { useFieldArray, useForm, useWatch, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Alert, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import { companionEntriesToInput, type CompanionEntry } from '@duncit/utils';
+import CompanionRow from './CompanionRow';
+import { useCompanionOtp } from './useCompanionOtp';
+import {
+  buildCompanionsSchema,
+  companionsInitialValues,
+  type CompanionValues,
+} from './companions.form';
 import { useHostPodActionsConfig } from '../HostPodActionsProvider';
-import type { HostPodActionLabels } from '../labels';
-
-/** Same rule the server enforces on a companion's number (6-15 digits). */
-const PHONE = /^\d{6,15}$/;
-
-/**
- * Built per render rather than at module scope so the messages come from the
- * bundle. A module-level schema cannot reach the labels, which is how the first
- * version ended up with two shipped keys nothing rendered — caught by
- * verify-translation-keys, not by tsc.
- */
-const buildSchema = (labels: HostPodActionLabels) =>
-  z.object({
-    companions: z
-      .array(
-        z.object({
-          name: z.string().trim().min(2, labels.nameInvalid).max(120),
-          phone_number: z.string().trim().regex(PHONE, labels.phoneInvalid),
-        }),
-      )
-      .min(1),
-  });
-
-export type CompanionValues = z.infer<ReturnType<typeof buildSchema>>;
+import type { PodCompanionInput } from '../types';
 
 interface Props {
+  /** The pod being checked into — what a companion's code is raised against. */
+  podId: string;
+  /** The booking these people are coming in on. */
+  membershipId: string;
   /** People this ticket admits, including the buyer. */
   seats: number;
   /** How many still need a name and a phone number. */
   required: number;
   busy?: boolean;
-  onSubmit: (companions: CompanionValues['companions']) => void;
+  onSubmit: (companions: PodCompanionInput[]) => void;
 }
 
 /**
@@ -46,68 +34,73 @@ interface Props {
  * the scan is the one moment they are all standing there. The ticket does not
  * check in until every one of them has a name and a phone number — the server
  * enforces the same count, so a half-filled form cannot mark a group present.
+ *
+ * Each row can also send that number a WhatsApp code, one person at a time.
+ * That part is OPTIONAL and deliberately so: a dead phone or a number abroad
+ * must never hold a group at the door, so the code records who was actually
+ * proved rather than deciding who gets in.
  */
-export default function CompanionsForm({ seats, required, busy, onSubmit }: Readonly<Props>) {
+export default function CompanionsForm({
+  podId,
+  membershipId,
+  seats,
+  required,
+  busy,
+  onSubmit,
+}: Readonly<Props>) {
   const { labels } = useHostPodActionsConfig();
-  const schema = useMemo(() => buildSchema(labels), [labels]);
-  const { control, register, handleSubmit, formState } = useForm<CompanionValues, any, CompanionValues>({
+  const schema = useMemo(() => buildCompanionsSchema(labels), [labels]);
+  const { control, handleSubmit, setValue, formState } = useForm<CompanionValues, any, CompanionValues>({
     resolver: zodResolver(schema) as unknown as Resolver<CompanionValues, any, CompanionValues>,
     mode: 'onTouched',
-    defaultValues: {
-      companions: Array.from({ length: required }, () => ({ name: '', phone_number: '' })),
-    },
+    defaultValues: companionsInitialValues(required),
   });
   const { fields } = useFieldArray({ control, name: 'companions' });
+  // An explicit defaultValue rather than a guard at every read: useWatch
+  // answers with this until the form has a value, so a row is never missing.
+  const entries = useWatch({
+    control,
+    name: 'companions',
+    defaultValue: companionsInitialValues(required).companions,
+  }) as CompanionEntry[];
+  const otp = useCompanionOtp(podId, membershipId, labels);
+
+  // A proof names ONE number. Retyping the name or the number makes it a
+  // different person, so the challenge it earned no longer describes this row.
+  const dropProof = (index: number) => {
+    if (entries[index].otp_challenge_id) {
+      setValue(`companions.${index}.otp_challenge_id`, '', { shouldDirty: true });
+    }
+  };
+
+  const keepProof = (index: number, challengeId: string) => {
+    setValue(`companions.${index}.otp_challenge_id`, challengeId, { shouldDirty: true });
+  };
 
   return (
     <Stack
       component="form"
       spacing={1.5}
-      onSubmit={handleSubmit((values) => onSubmit(values.companions))}
+      onSubmit={handleSubmit((values) => onSubmit(companionEntriesToInput(values.companions)))}
     >
       <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
         {labels.companionsTitle}
       </Typography>
-      <Typography variant="caption" sx={{
-        color: "text.secondary"
-      }}>
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
         {labels.companionsBody(seats, required)}
       </Typography>
 
       {fields.map((field, index) => (
-        <Stack key={field.id} spacing={1}>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 700
-            }}>
-            {labels.companionsHeading(index + 1)}
-          </Typography>
-          {/* `required` on both: the ticket cannot check in without them, and
-              the asterisk says so before a failed submit rather than after. */}
-          <TextField
-            size="small"
-            required
-            label={labels.companionName}
-            error={!!formState.errors.companions?.[index]?.name}
-            helperText={
-              formState.errors.companions?.[index]?.name?.message ?? labels.fieldRequired
-            }
-            {...register(`companions.${index}.name` as const)}
-          />
-          <TextField
-            size="small"
-            required
-            label={labels.companionPhone}
-            inputMode="numeric"
-            error={!!formState.errors.companions?.[index]?.phone_number}
-            helperText={
-              formState.errors.companions?.[index]?.phone_number?.message ?? labels.fieldRequired
-            }
-            {...register(`companions.${index}.phone_number` as const)}
-          />
-        </Stack>
+        <CompanionRow
+          key={field.id}
+          index={index}
+          control={control}
+          entry={entries[index]}
+          labels={labels}
+          otp={otp}
+          onEdit={dropProof}
+          onVerified={keepProof}
+        />
       ))}
 
       {formState.isSubmitted && !formState.isValid && (

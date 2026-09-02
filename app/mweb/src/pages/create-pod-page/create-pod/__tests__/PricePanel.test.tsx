@@ -146,7 +146,9 @@ describe('PricePanel (auditable earnings statement)', () => {
     expect(screen.getByText('Taxable Amount')).toBeVisible();
     expect(screen.getByText('₹24,576.27')).toBeVisible();
     expect(screen.getByText('GST @18%')).toBeVisible();
-    expect(screen.getByText('Formula: ₹24,576.27 × 18%')).toBeVisible();
+    // Quoted on the ₹29,000.00 total collection printed at the top of the
+    // panel, not on the taxable base — same ₹4,423.73, checkable by hand.
+    expect(screen.getByText('Formula: ₹29,000.00 (total collection) × 18 ÷ 118')).toBeVisible();
 
     fireEvent.click(screen.getByRole('button', { name: /Platform Charges/ }));
     expect(screen.getByText('Platform Fee @5%')).toBeVisible();
@@ -167,6 +169,66 @@ describe('PricePanel (auditable earnings statement)', () => {
         'Formula: ₹300.00 × 10% of the slot price above — the venue receives ₹270.00',
       ),
     ).toBeVisible();
+  });
+
+  it('explains why each charge exists behind the section info button', async () => {
+    setup(1000, 30);
+    await screen.findByText('You will receive');
+    // Nothing is shown until asked for — the description is not extra chrome
+    // on a panel whose job is the numbers.
+    expect(screen.queryByTestId('price-panel-taxes-group-description')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('price-panel-taxes-group-info'));
+    const taxes = screen.getByTestId('price-panel-taxes-group-description');
+    expect(taxes).toBeVisible();
+    expect(taxes).toHaveTextContent(/government tax on every ticket sold/i);
+    // It names GST as the government's, not Duncit's — that is the question
+    // the button exists to answer.
+    expect(taxes).toHaveTextContent(/not a Duncit charge/i);
+
+    fireEvent.click(screen.getByTestId('price-panel-platform-group-info'));
+    expect(screen.getByTestId('price-panel-platform-group-description')).toHaveTextContent(
+      /payment-gateway charges, booking and ticketing/i,
+    );
+
+    fireEvent.click(screen.getByTestId('price-panel-venue-group-info'));
+    expect(screen.getByTestId('price-panel-venue-group-description')).toHaveTextContent(
+      /deducted once for the whole pod, not per guest/i,
+    );
+
+    // Pressing again closes it.
+    fireEvent.click(screen.getByTestId('price-panel-taxes-group-info'));
+    await waitFor(() =>
+      expect(screen.queryByTestId('price-panel-taxes-group-description')).not.toBeInTheDocument(),
+    );
+  });
+
+  it('keeps the info button independent of the section it sits on', async () => {
+    setup(1000, 30);
+    await screen.findByText('You will receive');
+    // Opening the reason must not open the arithmetic, or the panel jumps
+    // under a host who only wanted the explanation.
+    fireEvent.click(screen.getByTestId('price-panel-taxes-group-info'));
+    expect(screen.getByTestId('price-panel-taxes-group-description')).toBeVisible();
+    expect(screen.queryByText('Taxable Amount')).not.toBeInTheDocument();
+
+    // And the reverse: expanding the rows leaves the description closed.
+    fireEvent.click(screen.getByTestId('price-panel-platform-group'));
+    expect(screen.getByText('Platform Fee @5%')).toBeVisible();
+    expect(screen.queryByTestId('price-panel-platform-group-description')).not.toBeInTheDocument();
+  });
+
+  it('labels every info control for screen readers', async () => {
+    setup(1000, 30);
+    await screen.findByText('You will receive');
+    // One per rendered section (taxes, platform, venue — no club cut here).
+    const info = screen.getAllByRole('button', { name: 'Why this charge?' });
+    expect(info).toHaveLength(3);
+    for (const button of info) {
+      expect(button).toHaveAttribute('aria-expanded', 'false');
+    }
+    fireEvent.click(info[0]);
+    expect(info[0]).toHaveAttribute('aria-expanded', 'true');
   });
 
   it('renders the Net Payout arithmetic inside the payout card', async () => {

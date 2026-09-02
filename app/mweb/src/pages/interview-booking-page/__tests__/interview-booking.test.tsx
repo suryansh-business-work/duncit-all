@@ -228,15 +228,17 @@ describe('InterviewBookingPage', () => {
     expect(container.textContent).toContain('Email is required');
 
     fireEvent.change(getByLabelText(/^email/i), { target: { value: 'meera@duncit.com' } });
+    // The box keeps only digits, so letters never become a value to refuse —
+    // what is left is an empty required field, named as one.
     fireEvent.change(getByLabelText(/^phone/i), { target: { value: 'abcd' } });
     submitButton(container)?.click();
     await settle();
-    expect(container.textContent).toContain('digits');
+    expect(container.textContent).toContain('Phone number is required');
 
     fireEvent.change(getByLabelText(/^phone/i), { target: { value: '9000000001' } });
     submitButton(container)?.click();
     await settle();
-    expect(container.textContent).toContain('why you want to host');
+    expect(container.textContent).toContain('Tell us a bit more');
   });
 
   it('will not send an application with no times in it — nobody could act on one', async () => {

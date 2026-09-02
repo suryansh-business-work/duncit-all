@@ -1,15 +1,20 @@
 import { describe, expect, it } from 'vitest';
+import { latestEligibleBirthYear } from '@duncit/datetime';
 import { registerSchema, registerDefaults } from './register.types';
 
-const today = new Date();
-const validDob = `${today.getFullYear() - 18}-01-01`;
+/** The newest year that still clears the default minimum age. */
+const ELIGIBLE_YEAR = String(latestEligibleBirthYear());
 
 const valid = {
   name: 'Jane Doe',
   email: 'jane@example.com',
+  phoneExtension: '+91',
+  phoneNumber: '9845012345',
   password: 'longenough',
   confirmPassword: 'longenough',
-  dob: validDob,
+  dobYear: ELIGIBLE_YEAR,
+  referralCode: '',
+  acceptedPolicyIds: [],
 };
 
 const firstError = (result: ReturnType<typeof registerSchema.safeParse>) =>
@@ -17,7 +22,8 @@ const firstError = (result: ReturnType<typeof registerSchema.safeParse>) =>
 
 describe('registerSchema', () => {
   it('exposes empty defaults', () => {
-    expect(registerDefaults.dob).toBe('');
+    expect(registerDefaults.dobYear).toBe('');
+    expect(registerDefaults.name).toBe('');
   });
 
   it('accepts a fully valid register payload', () => {
@@ -39,8 +45,23 @@ describe('registerSchema', () => {
     expect(firstError(registerSchema.safeParse({ ...valid, email: 'bad' }))).toMatch(/valid email/i);
   });
 
+  it('rejects a phone number that is not digits', () => {
+    const result = registerSchema.safeParse({ ...valid, phoneNumber: '98-45-01' });
+    expect(firstError(result)).toMatch(/digits only/i);
+  });
+
+  it('rejects a dial code that is not one', () => {
+    expect(firstError(registerSchema.safeParse({ ...valid, phoneExtension: 'IN' }))).toMatch(
+      /code like/i,
+    );
+  });
+
   it('rejects passwords shorter than 8 characters', () => {
-    const result = registerSchema.safeParse({ ...valid, password: 'short', confirmPassword: 'short' });
+    const result = registerSchema.safeParse({
+      ...valid,
+      password: 'short',
+      confirmPassword: 'short',
+    });
     expect(firstError(result)).toMatch(/8 characters/i);
   });
 
@@ -55,16 +76,30 @@ describe('registerSchema', () => {
   });
 
   it('rejects an empty birth year', () => {
-    expect(firstError(registerSchema.safeParse({ ...valid, dob: '' }))).toMatch(/birth year is required/i);
+    expect(firstError(registerSchema.safeParse({ ...valid, dobYear: '' }))).toMatch(
+      /birth year is required/i,
+    );
   });
 
-  it('rejects a future birth year', () => {
-    const future = `${today.getFullYear() + 1}-01-01`;
-    expect(firstError(registerSchema.safeParse({ ...valid, dob: future }))).toMatch(/between/i);
+  it('rejects a year that is not four digits — the BIRTH_YEAR shape', () => {
+    expect(firstError(registerSchema.safeParse({ ...valid, dobYear: '90' }))).toMatch(
+      /4-digit year/i,
+    );
+    expect(firstError(registerSchema.safeParse({ ...valid, dobYear: 'nineteen' }))).toMatch(
+      /4-digit year/i,
+    );
   });
 
-  it('rejects a birth year outside the allowed bounds', () => {
-    const tooYoung = `${today.getFullYear() - 10}-01-01`;
-    expect(firstError(registerSchema.safeParse({ ...valid, dob: tooYoung }))).toMatch(/between/i);
+  it('rejects a birth year too recent to be old enough', () => {
+    const tooYoung = String(Number(ELIGIBLE_YEAR) + 1);
+    expect(firstError(registerSchema.safeParse({ ...valid, dobYear: tooYoung }))).toMatch(
+      /at least/i,
+    );
+  });
+
+  it('accepts a blank referral code, and rejects a malformed one', () => {
+    expect(registerSchema.safeParse({ ...valid, referralCode: '' }).success).toBe(true);
+    expect(registerSchema.safeParse({ ...valid, referralCode: 'DUN-A1B2C3' }).success).toBe(true);
+    expect(registerSchema.safeParse({ ...valid, referralCode: 'nope' }).success).toBe(false);
   });
 });

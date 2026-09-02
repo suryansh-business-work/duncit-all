@@ -1,10 +1,8 @@
 import { z } from 'zod';
-import { EMAIL, OTP_6, PHONE_INTL } from '@duncit/regex';
+import { DIAL_CODE, EMAIL, OTP_6, PHONE_INTL } from '@duncit/regex';
 import { isPhoneChannel, type ContactChannel, type ContactDraft } from '@duncit/utils';
 
 import type { Translate } from './translate';
-
-const EXTENSION_PATTERN = /^\+?\d{1,5}$/;
 
 /** Step one's values — the shared draft shape, so nothing converts. */
 export type ContactValueValues = ContactDraft;
@@ -41,10 +39,7 @@ export function makeContactValueSchema(
   const extensionValue = z
     .string()
     .trim()
-    .refine(
-      (v) => EXTENSION_PATTERN.test(v),
-      t('mweb.contactChange.validation.extensionInvalid'),
-    );
+    .refine((v) => DIAL_CODE.test(v), t('mweb.contactChange.validation.extensionInvalid'));
 
   // The international range the server accepts, not the 10-digit Indian one:
   // there is a country-code picker beside this box, so a rule that only fits

@@ -5,6 +5,9 @@ import {
   CompletePasswordResetDocument,
   LoginWithOtpDocument,
   RequestLoginOtpDocument,
+  RequestWhatsAppOtpDocument,
+  SkipWhatsAppOtpDocument,
+  VerifyWhatsAppOtpDocument,
   RequestPasswordResetCodeDocument,
   VerifyPasswordResetCodeDocument,
   SignupWithGoogleDocument,
@@ -291,4 +294,40 @@ export async function linkGoogleAccount(idToken: string): Promise<AuthOutcome> {
 
 export async function logout(): Promise<void> {
   await clearAuthToken();
+}
+
+/**
+ * Signup step four: send the code that proves the WhatsApp number.
+ *
+ * Authorised by the token `register` has already stored — the account exists
+ * by the time this runs, which is the only way these mutations can be called.
+ * Returns the development code while no transport can carry a real one.
+ */
+export async function requestWhatsAppOtp(
+  extension: string,
+  number: string,
+): Promise<{ testCode: string | null }> {
+  const data = await graphqlRequest(RequestWhatsAppOtpDocument, {
+    ext: extension.trim(),
+    num: number.trim(),
+  });
+  return { testCode: data.requestWhatsAppOtp.dev_otp ?? null };
+}
+
+/** Prove the number. A wrong code throws, exactly as the server refused it. */
+export async function verifyWhatsAppOtp(
+  extension: string,
+  number: string,
+  otp: string,
+): Promise<void> {
+  await graphqlRequest(VerifyWhatsAppOtpDocument, {
+    ext: extension.trim(),
+    num: number.trim(),
+    otp: otp.trim(),
+  });
+}
+
+/** Leave the number unverified. The account is untouched either way. */
+export async function skipWhatsAppOtp(): Promise<void> {
+  await graphqlRequest(SkipWhatsAppOtpDocument, {});
 }

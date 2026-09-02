@@ -130,6 +130,15 @@ exports:
   - 'recoveryDestination'
   - 'buildPasswordRecoveryLabels'
   - 'buildOtpLoginLabels'
+  - 'SIGNUP_STEPS'
+  - 'SIGNUP_STEP_COUNT'
+  - 'SIGNUP_STEP_FIELDS'
+  - 'signupStepIndex'
+  - 'nextSignupStep'
+  - 'previousSignupStep'
+  - 'stepSubmitsAccount'
+  - 'canLeaveSignupStep'
+  - 'buildSignupStepperLabels'
   - 'USERNAME_PATTERN'
   - 'normalizeUsername'
   - 'usernameStatus'
@@ -408,17 +417,19 @@ Returns, exactly:
     {
       "key": "taxes",
       "title": "Taxes",
+      "description": "GST is a government tax on every ticket sold, not a Duncit charge. …",
       "lines": [
         { "key": "taxable", "label": "Taxable Amount", "amount": 24576.27,
           "formula": "₹29,000.00 − ₹4,423.73 GST (prices are GST-inclusive)", "deduction": false },
         { "key": "gst", "label": "GST @18%", "amount": 4423.73,
-          "formula": "₹24,576.27 × 18%", "deduction": true }
+          "formula": "₹29,000.00 (total collection) × 18 ÷ 118", "deduction": true }
       ],
       "total": 4423.73
     },
     {
       "key": "platform",
       "title": "Platform Charges",
+      "description": "What it costs to put this pod on and pay you for it — …",
       "lines": [
         { "key": "platform-fee", "label": "Platform Fee @10%", "amount": 2457.63,
           "formula": "₹24,576.27 × 10%", "deduction": true },
@@ -430,6 +441,7 @@ Returns, exactly:
     {
       "key": "club",
       "title": "Club Charges",
+      "description": "The club admin’s share for running the club this pod belongs to — …",
       "lines": [
         { "key": "club-admin", "label": "Club Admin Fee @5%", "amount": 1105.93,
           "formula": "₹22,118.64 × 5%", "deduction": true }
@@ -439,6 +451,7 @@ Returns, exactly:
     {
       "key": "venue",
       "title": "Venue Charges",
+      "description": "The fixed price the venue set for the slot you booked — …",
       "lines": [
         { "key": "venue-slot", "label": "Venue Slot Price", "amount": 6000,
           "formula": "Fixed booked slot price (deducted once per pod)", "deduction": true },
@@ -454,7 +467,16 @@ Returns, exactly:
 }
 ```
 
-Three things to read off that output:
+Four things to read off that output:
+
+- The `gst` line quotes its arithmetic on the **total collection**, not on the taxable base
+  above it: `₹29,000.00 × 18 ÷ 118`. Both forms give the identical paise — `net × g/100` and
+  `P × g/(100+g)` are the same number — but only the collection is printed on the panel, so
+  only that form can be checked without first trusting a derived figure. The divisor is always
+  `100 + gst_pct`, never a literal 118.
+- Every section carries a `description`: why that charge exists and who ends up with the
+  money. Both surfaces put it behind an info button on the section header, so it is copy, not
+  decoration — render it or a host is looking at a deduction with no stated reason.
 
 - The `taxable` line has `deduction: false` — it is context, and the Taxes section total
   (`4423.73`) is the GST alone. A renderer that sums every line will over-state the section.
@@ -537,6 +559,7 @@ because native's codegen refuses an interpolated one.
 | `buildEarningsStatement` | `(w: EarningsWaterfall, o: EarningsStatementOptions) => EarningsStatement` | Formats the server waterfall; adds no math. `o.t` resolves the copy from `earnings.statement.*`. |
 | `EarningsStatementOptions.has_venue` | `boolean` (required) | Renders the Venue Charges section. |
 | `EarningsStatementOptions.symbol` | `string` (required) | Symbol used inside the formula strings. |
+| `StatementSection.description` | `string` | Why the charge exists; rendered behind the section's info button. Resolved from `earnings.statement.<key>Description`. |
 
 ### Errors
 
@@ -900,7 +923,8 @@ when all three audit identities hold. It does not compute a fee, a rate or a tax
 If a number looks wrong, the fix belongs in the server waterfall, not here — re-deriving it
 client-side is how the two surfaces started disagreeing in the first place. GST is charged once
 and extracted from the GST-inclusive collection, so the statement shows the real taxable base
-rather than inventing per-charge tax rows.
+rather than inventing per-charge tax rows — and states the GST row's arithmetic on the
+collection, which is the only base a reader can see on the panel.
 
 Grouping is the one thing it does decide, and the commissions are where that matters. Duncit
 takes a cut from each side of the split — `host_commission_*` off the host's remainder and
@@ -1324,6 +1348,27 @@ apps render the same channel and code steps for both flows:
 buildOtpLoginLabels(t).verify; // 'Verify & sign in' — recovery says 'Verify code'
 buildOtpLoginLabels(t).resend; // identical to recovery: same cooldown, same mechanics
 ```
+
+### Joining Duncit, one question at a time
+
+Signup is four steps, and the order is the point: the two that cost nothing come first (who
+you are, how we reach you), the password comes third so it is typed once the person is already
+committed, and the WhatsApp code is last because it can only be asked for AFTER the account
+exists — `requestWhatsAppOtp` authenticates its caller.
+
+`SIGNUP_STEP_FIELDS` is what "Continue" validates: RHF's `trigger` takes exactly that list, so
+a step can only be left once its OWN boxes are right and nobody is told off about a box two
+screens ahead.
+
+```ts
+SIGNUP_STEP_FIELDS.WHO;       // ['name', 'dobYear', 'referralCode']
+nextSignupStep('CONTACT');    // 'SECURITY'
+stepSubmitsAccount('SECURITY'); // true — this step's button IS "create my account"
+canLeaveSignupStep('VERIFY'); // false — the account exists; Back would offer a spent form
+```
+
+Both apps render the same four steps from `buildSignupStepperLabels`; the MUI and Tamagui
+components stay separate and thin (rule 40).
 
 ### The follow button, and the follow rows in the inbox
 

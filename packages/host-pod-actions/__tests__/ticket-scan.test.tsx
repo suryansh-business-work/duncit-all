@@ -19,7 +19,8 @@ import ScannerViewport from '../src/ticket-scan/ScannerViewport';
 import TicketScanDialog from '../src/ticket-scan/TicketScanDialog';
 import { useQrScanner } from '../src/ticket-scan/useQrScanner';
 import { HostPodActionsProvider } from '../src/HostPodActionsProvider';
-import { HOST_SCAN_POD_TICKET } from '../src/queries';
+import { VERIFY_ATTENDANCE_OTP } from '../src/attendance/queries';
+import { HOST_SCAN_POD_TICKET, REQUEST_COMPANION_OTP } from '../src/queries';
 import { hostActionsConfig, labelsFor } from './host-actions-config';
 
 const POD = { id: 'pod-1', pod_title: 'Sunday Badminton' };
@@ -64,9 +65,30 @@ const scanResult = (over: Record<string, unknown> = {}) => ({
     status: 'CHECKED_IN',
     seats: 1,
     checked_in_at: '2026-08-30T12:40:00.000Z',
+    membership_id: 'pm-1',
   },
   attendee,
   ...over,
+});
+
+/** A ticket, with the booking a companion's code would be raised against. */
+const ticket = (over: Record<string, unknown> = {}) => ({
+  __typename: 'PodTicket',
+  id: 't-1',
+  ticket_code: TOKEN,
+  status: 'BOOKED',
+  seats: 1,
+  checked_in_at: null,
+  membership_id: 'pm-1',
+  ...over,
+});
+
+/** One recorded companion, unproved unless the test says otherwise. */
+const companion = (name: string, phone_number: string, verified_at: string | null = null) => ({
+  __typename: 'PodCompanion',
+  name,
+  phone_number,
+  verified_at,
 });
 
 const scanMock = (
@@ -118,10 +140,10 @@ describe('TicketScanDialog', () => {
     wrap(<TicketScanDialog pod={POD} onClose={vi.fn()} />, [
       scanMock(
         scanResult({
-          ticket: { __typename: 'PodTicket', id: 't-1', ticket_code: TOKEN, status: 'CHECKED_IN', seats: 3, checked_in_at: null },
+          ticket: ticket({ status: 'CHECKED_IN', seats: 3 }),
           companions: [
-            { __typename: 'PodCompanion', name: 'Vikram S', phone_number: '9000000001' },
-            { __typename: 'PodCompanion', name: 'Meera N', phone_number: '9000000002' },
+            companion('Vikram S', '9000000001', '2026-08-30T12:41:00.000Z'),
+            companion('Meera N', '9000000002'),
           ],
         }),
       ),
@@ -132,6 +154,11 @@ describe('TicketScanDialog', () => {
 
     expect(screen.getAllByText(labels.attendanceMarkedGroup('Asha Rao', 2)).length).toBeGreaterThan(0);
     expect(screen.getAllByText('Vikram S').length).toBeGreaterThan(0);
+    // The host proved Vikram's number and not Meera's, and the roster says so.
+    expect(
+      screen.getAllByText(`9000000001 · ${labels.companionVerified}`).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText('9000000002').length).toBeGreaterThan(0);
   });
 
   it('says so rather than marking again when the ticket was already scanned', async () => {
@@ -156,7 +183,7 @@ describe('TicketScanDialog', () => {
           message: 'Add the other 2 people on this booking.',
           requires_companions: true,
           companions_required: 2,
-          ticket: { __typename: 'PodTicket', id: 't-1', ticket_code: TOKEN, status: 'BOOKED', seats: 3, checked_in_at: null },
+          ticket: ticket({ seats: 3 }),
         }),
       ),
     ]);
@@ -250,7 +277,7 @@ describe('TicketScanDialog', () => {
               message: 'Add the other 1 person on this booking.',
               requires_companions: true,
               companions_required: 1,
-              ticket: { __typename: 'PodTicket', id: 't-1', ticket_code: TOKEN, status: 'BOOKED', seats: 2, checked_in_at: null },
+              ticket: ticket({ seats: 2 }),
             }),
           },
         },
@@ -260,7 +287,8 @@ describe('TicketScanDialog', () => {
     await settle();
     await pasteCode();
 
-    const [name, phone] = screen.getAllByRole('textbox');
+    // name, dial code, number — the dial code is the middle one.
+    const [name, , phone] = screen.getAllByRole('textbox');
     fireEvent.input(name, { target: { value: 'Vikram S' } });
     fireEvent.input(phone, { target: { value: '9000000001' } });
     await settle();
@@ -271,6 +299,93 @@ describe('TicketScanDialog', () => {
     expect(variables).toHaveLength(2);
     expect(variables[1]).toMatchObject({ token: TOKEN });
     expect(variables[1].companions).not.toBeNull();
+  });
+
+  /**
+   * Proving one of the extra people, at the door.
+   *
+   * Optional, so nothing here blocks the group — but when the host does send a
+   * code, the challenge it earns has to reach the scan that records them, or
+   * the proof is thrown away the moment they press Mark attendance.
+   */
+  it('carries a verified companion’s challenge into the scan that records them', async () => {
+    const variables: Record<string, unknown>[] = [];
+    wrap(<TicketScanDialog pod={POD} onClose={vi.fn()} />, [
+      {
+        request: { query: HOST_SCAN_POD_TICKET, variables: (v: Record<string, unknown>) => {
+          variables.push(v);
+          return true;
+        } },
+        result: {
+          data: {
+            hostScanPodTicket: scanResult({
+              ok: false,
+              message: 'Add the other 1 person on this booking.',
+              requires_companions: true,
+              companions_required: 1,
+              ticket: ticket({ seats: 2 }),
+            }),
+          },
+        },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+      {
+        request: { query: REQUEST_COMPANION_OTP, variables: () => true },
+        result: {
+          data: {
+            requestPodCompanionOtp: {
+              __typename: 'PhoneOtpRequestResult',
+              challenge_id: 'otp-9',
+              expires_at: '2026-08-30T13:00:00.000Z',
+              resend_after_seconds: 30,
+              test_code: '123456',
+              deliveries: [
+                { __typename: 'OtpDelivery', medium: 'WHATSAPP', status: 'STUBBED', reason: '' },
+              ],
+            },
+          },
+        },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+      {
+        request: { query: VERIFY_ATTENDANCE_OTP, variables: () => true },
+        result: { data: { verifyPodAttendanceOtp: true } },
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ]);
+    await settle();
+    await pasteCode();
+
+    const [name, , phone] = screen.getAllByRole('textbox');
+    fireEvent.input(name, { target: { value: 'Vikram S' } });
+    fireEvent.input(phone, { target: { value: '9000000001' } });
+    await settle();
+
+    fireEvent.click(screen.getByTestId('companion-otp-send-0'));
+    await settle();
+    await settle();
+
+    fireEvent.change(screen.getByTestId('companion-otp-code-0').querySelector('input') as HTMLInputElement, {
+      target: { value: '123456' },
+    });
+    fireEvent.click(screen.getByTestId('companion-otp-verify-0'));
+    await settle();
+    await settle();
+
+    expect(screen.getByTestId('companion-verified-0')).toBeInTheDocument();
+
+    fireEvent.submit(name.closest('form') as HTMLFormElement);
+    await settle();
+    await settle();
+
+    expect(variables[1].companions).toEqual([
+      {
+        name: 'Vikram S',
+        phone_extension: '+91',
+        phone_number: '9000000001',
+        otp_challenge_id: 'otp-9',
+      },
+    ]);
   });
 });
 

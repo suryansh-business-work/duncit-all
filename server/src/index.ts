@@ -11,6 +11,7 @@ import { startStatusScheduler } from './observability/statusScheduler';
 import { startPodDraftCleanupScheduler } from '@modules/pods/pod-draft/pod-draft.cleanup';
 import { startAutoPodSweepScheduler } from '@modules/pods/autoPod/autoPod.recovery';
 import { startPodAutoCancelScheduler } from '@modules/pods/pod/pod.autoCancel';
+import { startSlotRequestExpiryScheduler } from '@modules/venues/venueSlot/venueSlot.expiry';
 import { startTelemetryCleanupScheduler } from './observability/telemetryScheduler';
 import { seedRateLimitDefaults } from '@modules/platform/rateLimit/rateLimit.seed';
 import { startRateLimitCleanupScheduler } from '@modules/platform/rateLimit/rateLimit.scheduler';
@@ -365,6 +366,10 @@ async function bootstrap() {
   // settlement would leave the host side negative, refunding attendees under
   // each venue's cancellation policy. Off until an admin enables it.
   startPodAutoCancelScheduler();
+
+  // Venue slot requests: once a slot has started, an unanswered request can no
+  // longer be answered — decline it so the host is told and the slot frees up.
+  startSlotRequestExpiryScheduler();
 
   // Telemetry retention: delete persisted logs/bugs past the admin window daily.
   startTelemetryCleanupScheduler();

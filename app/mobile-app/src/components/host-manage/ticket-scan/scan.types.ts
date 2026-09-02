@@ -17,6 +17,8 @@ export interface ScannedAttendee {
 export interface PodCompanionRecord {
   name: string;
   phone_number: string;
+  /** ISO when their own number answered a code, null when it never did. */
+  verified_at: string | null;
 }
 
 export interface HostTicketScanResult {
@@ -36,6 +38,8 @@ export interface HostTicketScanResult {
     /** People this one QR admits. 1 for every single-seat and legacy ticket. */
     seats: number;
     checked_in_at: string | null;
+    /** The booking behind this ticket — what a companion's code is raised on. */
+    membership_id: string;
   } | null;
   attendee: ScannedAttendee | null;
 }

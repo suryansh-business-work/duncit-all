@@ -1062,6 +1062,16 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       companionsBody: 'This ticket admits {seats}. Add the other {count} to mark attendance.',
       companionName: 'Name',
       companionPhone: 'Phone',
+      // Proving a companion's own number, one person at a time. Optional by
+      // design: a dead phone or a number abroad must never hold a group at the
+      // door, so this records who was actually proved rather than gating them.
+      companionExtension: 'Country code',
+      companionVerifyCta: 'Verify on WhatsApp',
+      companionOtpHint:
+        'Optional. Send this number a code and type it back — one person at a time.',
+      companionVerified: 'Verified',
+      companionOtpBlocked: 'Finish verifying the person above first.',
+      companionOtpFailed: 'Could not send the code. Try again.',
       companionsSubmit: 'Mark attendance',
       companionsIncomplete: 'Fill in every name and phone number.',
       companionsHeading: 'Person {index}',

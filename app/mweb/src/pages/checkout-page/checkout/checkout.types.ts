@@ -1,13 +1,22 @@
 import { z } from 'zod';
+import { DIAL_CODE, EMAIL, GSTIN, PERSON_NAME, PHONE_INTL, PINCODE_LOOSE } from '@duncit/regex';
 import { fallbackT, type Translate } from '../../../i18n/fallback';
 import type { CheckoutForm } from '../queries';
 
-export const PHONE_NUMBER_PATTERN = /^\d{6,15}$/;
-export const PHONE_EXTENSION_PATTERN = /^\+?\d{1,5}$/;
-export const PINCODE_PATTERN = /^\d{4,10}$/;
-// Mirrors the server billing validator (payment.validator.ts): 2 digits, 5
-// letters, 4 digits, 1 letter, then 2 alphanumerics. Validated uppercased.
-export const GSTIN_PATTERN = /^\d{2}[A-Z]{5}\d{4}[A-Z][\dA-Z]{2}$/;
+/*
+  The shapes below are re-exported, not re-declared: @duncit/regex is the one
+  place a phone, a dial code, a postal code and a GSTIN are described (rule 40).
+
+  GSTIN is the reason this matters. The pattern that stood here was 14
+  characters — 2 digits, 5 letters, 4 digits, 1 letter, 2 alphanumerics — one
+  short of a GSTIN, which carries a literal Z in position 14. It matched no
+  valid GSTIN at all, so the field could not be filled in; the message beside
+  it has always said "15-character GSTIN".
+*/
+export const PHONE_NUMBER_PATTERN = PHONE_INTL;
+export const PHONE_EXTENSION_PATTERN = DIAL_CODE;
+export const PINCODE_PATTERN = PINCODE_LOOSE;
+export const GSTIN_PATTERN = GSTIN;
 
 /** The seven postal-address parts shared by the main address and checkout billing. */
 export interface PostalAddressParts {
@@ -20,7 +29,6 @@ export interface PostalAddressParts {
   country: string;
 }
 
-const isEmail = (value: string) => z.string().email().safeParse(value).success;
 
 /**
  * Checkout contract — RHF + Zod. Contact details (name/email/phone) plus a
@@ -36,12 +44,18 @@ const isEmail = (value: string) => z.string().email().safeParse(value).success;
  */
 function makeCheckoutObject(t: Translate) {
   return z.object({
-    full_name: z.string().trim().max(160, t('mweb.checkout.validation.nameMax')),
+    full_name: z
+      .string()
+      .trim()
+      .max(160, t('mweb.checkout.validation.nameMax'))
+      // Empty is allowed — the contact block is read-only here — but a typed
+      // name takes the same shape signup and Edit profile ask for.
+      .refine((v) => v === '' || PERSON_NAME.test(v), t('mweb.checkout.validation.nameInvalid')),
     email: z
       .string()
       .trim()
       .min(1, t('mweb.auth.validation.emailRequired'))
-      .email(t('mweb.auth.validation.emailInvalid'))
+      .refine((v) => EMAIL.test(v), t('mweb.auth.validation.emailInvalid'))
       .max(254),
     phone_extension: z
       .string()
@@ -117,7 +131,7 @@ function addOptionalFieldIssues(values: CheckoutObjectValues, ctx: z.RefinementC
     });
   }
   const billingEmail = values.billing_email.trim();
-  if (billingEmail && !isEmail(billingEmail)) {
+  if (billingEmail && !EMAIL.test(billingEmail)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['billing_email'],

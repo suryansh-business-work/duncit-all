@@ -65,8 +65,12 @@ describe('checkoutSchema — contact + billing', () => {
     expect(parse({ has_gstin: false, gstin: 'INVALID123' }).success).toBe(true);
     // Toggle on → an empty GSTIN is still fine (it just won't be sent).
     expect(parse({ has_gstin: true, gstin: '' }).success).toBe(true);
-    expect(parse({ has_gstin: true, gstin: '27AAAAA0000A1Z' }).success).toBe(true);
-    expect(parse({ has_gstin: true, gstin: '27aaaaa0000a1z' }).success).toBe(true);
+    // A real 15-character GSTIN — position 14 is a literal Z. The fixture used
+    // to be 14 characters, matching the pattern this file carried, which no
+    // actual GSTIN can satisfy. The shape now comes from @duncit/regex.
+    expect(parse({ has_gstin: true, gstin: '27AAAAA0000A1ZQ' }).success).toBe(true);
+    expect(parse({ has_gstin: true, gstin: '27aaaaa0000a1zq' }).success).toBe(true);
+    expect(parse({ has_gstin: true, gstin: '27AAAAA0000A1Z' }).success).toBe(false);
     expect(parse({ has_gstin: true, gstin: 'INVALID123' }).success).toBe(false);
   });
 });

@@ -1,102 +1,11 @@
-import { useState, type ReactNode } from 'react';
-import { Alert, Box, ButtonBase, Collapse, Stack, Typography } from '@mui/material';
-import { alpha, useTheme, type Theme } from '@mui/material/styles';
+import { useState } from 'react';
+import { Alert, Box, ButtonBase, Collapse, Divider, Stack, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
 import { useTranslation } from '../../../../i18n/useTranslation';
-import type { EarningsStatement, StatementLine } from '@duncit/utils';
-
-/** One auditable row: label + amount, with the formula that produced it
- * underneath. Context rows (the taxable base) render muted, not bold. */
-function ChargeRow({ line, money }: Readonly<{ line: StatementLine; money: (n: number) => string }>) {
-  const { t } = useTranslation();
-  return (
-    <Box sx={{ px: 1.5, py: 0.75 }}>
-      <Stack direction="row" spacing={2} sx={{
-        justifyContent: "space-between"
-      }}>
-        <Typography variant="body2" color={line.deduction ? 'text.primary' : 'text.secondary'}>
-          {line.label}
-        </Typography>
-        <Typography variant="body2" sx={{
-          fontWeight: line.deduction ? 700 : 500
-        }}>
-          {money(line.amount)}
-        </Typography>
-      </Stack>
-      <Typography variant="caption" component="div" sx={{
-        color: "text.secondary"
-      }}>
-        {t('mweb.createPod.formula', { vars: { formula: line.formula } })}
-      </Typography>
-    </Box>
-  );
-}
-
-interface SectionProps {
-  title: string;
-  amount: string;
-  tint: string;
-  /** Always-visible error under the header (the venue-shortfall rule). */
-  error?: string | null;
-  children: ReactNode;
-}
-
-/** One collapsible charge section — a real button header with a rotating chevron. */
-function ChargeSection({ title, amount, tint, error, children }: Readonly<SectionProps>) {
-  const [open, setOpen] = useState(false);
-  return (
-    <Box
-      sx={{
-        borderRadius: '16px',
-        overflow: 'hidden',
-        bgcolor: tint,
-        ...(error ? { border: '1px solid', borderColor: 'error.main' } : null),
-      }}
-    >
-      <ButtonBase
-        onClick={() => setOpen((value) => !value)}
-        aria-expanded={open}
-        sx={{ width: '100%', px: 1.5, py: 1, justifyContent: 'space-between', textAlign: 'left' }}
-      >
-        <Typography variant="body2" sx={{
-          fontWeight: 600
-        }}>
-          {title}
-        </Typography>
-        <Stack direction="row" spacing={0.5} sx={{
-          alignItems: "center"
-        }}>
-          <Typography variant="body2" sx={{
-            fontWeight: 600
-          }}>
-            {amount}
-          </Typography>
-          <ExpandMoreIcon
-            fontSize="small"
-            sx={{ transition: 'transform 180ms ease', transform: open ? 'rotate(180deg)' : 'none' }}
-          />
-        </Stack>
-      </ButtonBase>
-      {error && (
-        <Alert severity="error" sx={{ mx: 0.5, mb: 0.5 }} data-testid="price-panel-venue-error">
-          {error}
-        </Alert>
-      )}
-      <Collapse in={open} unmountOnExit>
-        <Box sx={{ bgcolor: 'background.paper', mx: 0.5, mb: 0.5, borderRadius: '16px' }}>{children}</Box>
-      </Collapse>
-    </Box>
-  );
-}
-
-/** Section background: the failing venue section wins, then the venue's own
- * warning tint, then the neutral info tint. */
-function sectionTint(theme: Theme, isVenue: boolean, hasError: boolean): string {
-  if (hasError) return alpha(theme.palette.error.main, 0.12);
-  if (isVenue) return alpha(theme.palette.warning.main, 0.1);
-  return alpha(theme.palette.info.main, 0.08);
-}
+import { ChargeRow, ChargeSection, sectionTint } from './ChargeSection';
+import type { EarningsStatement } from '@duncit/utils';
 
 interface Props {
   statement: EarningsStatement;
@@ -108,8 +17,13 @@ interface Props {
 
 /**
  * "Govt. and other charges" — the auditable deductions tree. Every section
- * keeps its subtotal on the header; every row carries the exact formula the
- * server used, so each value can be verified by hand.
+ * keeps its subtotal on the header, carries an info button explaining why the
+ * charge exists, and every row carries the exact formula the server used, so
+ * each value can be verified by hand.
+ *
+ * The sections are spaced and bordered rather than stacked flush: four charges
+ * with different payees reading as one continuous list was the reason a host
+ * could not tell where the venue's money ended and Duncit's began.
  */
 export default function ChargesAccordion({ statement, money, venueError }: Readonly<Props>) {
   const theme = useTheme();
@@ -131,22 +45,14 @@ export default function ChargesAccordion({ statement, money, venueError }: Reado
         aria-expanded={open}
         sx={{ width: '100%', px: 1.5, py: 1.25, justifyContent: 'space-between', textAlign: 'left' }}
       >
-        <Stack direction="row" spacing={1} sx={{
-          alignItems: "center"
-        }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <ReceiptLongOutlinedIcon fontSize="small" color="primary" />
-          <Typography variant="subtitle2" sx={{
-            fontWeight: 700
-          }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
             {t('mweb.createPod.govtCharges')}
           </Typography>
         </Stack>
-        <Stack direction="row" spacing={0.5} sx={{
-          alignItems: "center"
-        }}>
-          <Typography variant="subtitle2" sx={{
-            fontWeight: 700
-          }}>
+        <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
             {money(statement.total_deductions)}
           </Typography>
           <ExpandMoreIcon
@@ -156,7 +62,7 @@ export default function ChargesAccordion({ statement, money, venueError }: Reado
         </Stack>
       </ButtonBase>
       <Collapse in={open} unmountOnExit>
-        <Stack spacing={1} sx={{ px: 1, pb: 1 }}>
+        <Stack spacing={1.75} sx={{ px: 1, pt: 0.5, pb: 1.25 }}>
           {statement.sections.map((section) => {
             const isVenue = section.key === 'venue';
             const error = isVenue ? venueError ?? null : null;
@@ -164,8 +70,10 @@ export default function ChargesAccordion({ statement, money, venueError }: Reado
               <ChargeSection
                 key={section.key}
                 title={section.title}
+                description={section.description}
                 amount={money(section.total)}
                 tint={sectionTint(theme, isVenue, !!error)}
+                testId={`price-panel-${section.key}-group`}
                 error={error}
               >
                 {section.lines.map((line) => (
@@ -174,21 +82,12 @@ export default function ChargesAccordion({ statement, money, venueError }: Reado
               </ChargeSection>
             );
           })}
-          <Stack
-            direction="row"
-            sx={{
-              justifyContent: "space-between",
-              px: 1.5,
-              pt: 0.5
-            }}>
-            <Typography variant="body2" sx={{
-              fontWeight: 600
-            }}>
+          <Divider sx={{ mt: 0.5 }} />
+          <Stack direction="row" sx={{ justifyContent: 'space-between', px: 1.5 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
               {t('mweb.createPod.totalDeductions')}
             </Typography>
-            <Typography variant="body2" sx={{
-              fontWeight: 700
-            }}>
+            <Typography variant="body2" sx={{ fontWeight: 700 }}>
               {money(statement.total_deductions)}
             </Typography>
           </Stack>

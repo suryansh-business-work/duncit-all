@@ -1,8 +1,18 @@
 import { z } from 'zod';
+import { DIAL_CODE, OTP_6, PHONE_INTL } from '@duncit/regex';
 
-export const PHONE_NUMBER_PATTERN = /^\d{6,15}$/;
-export const PHONE_EXTENSION_PATTERN = /^\+?\d{1,5}$/;
-export const OTP_PATTERN = /^\d{4,8}$/;
+/*
+  Re-exported, not re-declared: @duncit/regex is the one place a dial code, a
+  phone number and a one-time code are described (rule 40).
+
+  The code is now OTP_6 rather than a 4-to-8 digit range. Every code the server
+  issues is exactly six digits (otpService's CODE_LENGTH, and the email flows'
+  randomInt(100000, 1000000)), so the wider rule only let a five- or
+  seven-digit string through to a round trip that could never succeed.
+*/
+export const PHONE_NUMBER_PATTERN = PHONE_INTL;
+export const PHONE_EXTENSION_PATTERN = DIAL_CODE;
+export const OTP_PATTERN = OTP_6;
 
 /**
  * WhatsApp OTP contracts — RHF + Zod (migrated from Formik + Yup). The two

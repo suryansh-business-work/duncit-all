@@ -14,6 +14,7 @@ import {
   sendMeetingCancelledEmail,
   sendMeetingScheduledAdminEmail,
   sendMeetingRescheduledEmail,
+  sendMeetingUpdatedEmail,
 } from '@services/email/email.service';
 
 /** Where a meeting notification deep-links to — the Earn surface holds the
@@ -325,10 +326,24 @@ async function notifyMeetingEvent(doc: any, event: MeetingEvent) {
     }
     const when = slotPartsTz(iso(doc.scheduled_at ?? doc.requested_at), offset);
     await notify(waEvents.interview, [name, when.date, when.time, link], { notes });
-  } else if (event === 'rescheduled' || event === 'updated') {
-    // No per-party template for these two: nobody asked for one, and one
-    // reschedule notice reads the same whoever is being rescheduled.
-    await sendMeetingRescheduledEmail({ to, name, kind: kindLabel, slot, link, notes, change: event });
+  } else if (event === 'rescheduled') {
+    // A move reads as its own thing per party, exactly as booked/confirmed/
+    // approved/rejected already do — `host-meeting-rescheduled` and its three
+    // siblings. An EDIT to the link or the note is not a move and keeps the
+    // shared template, which is the only case it still carries.
+    const when = slotPartsTz(iso(doc.scheduled_at ?? doc.requested_at), offset);
+    await sendMeetingRescheduledEmail({
+      to,
+      name,
+      audience: doc.kind,
+      kind: kindLabel,
+      date: when.date,
+      time: when.time,
+      meeting_url: link,
+      notes,
+    });
+  } else if (event === 'updated') {
+    await sendMeetingUpdatedEmail({ to, name, kind: kindLabel, slot, link, notes });
   } else if (event === 'approved') {
     // The template's second value is the partner-portal login address, which is
     // the same address this email is going to.
@@ -518,8 +533,8 @@ async function notifyScheduleChange(doc: any, wasScheduled: boolean, prevSchedul
   }
 }
 
-/** Best-effort applicant notification for booking + cancellation actions. */
-async function notifyApplicant(doc: any, kind: 'booked' | 'cancelled', reason?: string) {
+/** Best-effort applicant notification for booking, reschedule and cancellation. */
+async function notifyApplicant(doc: any, event: 'booked' | 'rescheduled' | 'cancelled', reason?: string) {
   try {
     const [names, av] = await Promise.all([userMap([String(doc.user_id)]), MeetingAvailabilityModel.findOne()]);
     const who = names.get(String(doc.user_id));
@@ -534,24 +549,42 @@ async function notifyApplicant(doc: any, kind: 'booked' | 'cancelled', reason?: 
       slot: slotLabelTz(at, offset),
       notes: doc.notes || '',
     };
-    if (kind === 'booked') {
-      const when = slotPartsTz(at, offset);
-      // A reschedule supersedes the row and books a fresh one, so the new
-      // meeting id is a new entity and its confirmation is not a duplicate.
-      await notifyEvent({
-        event: waEventsFor(doc.kind).booked,
-        entityId: String(doc._id),
-        user: who?.user,
-        name: opts.name,
-        params: [opts.name, when.date, when.time],
-        email: opts.to,
-        vars: { notes: opts.notes },
-      });
-    } else {
+    if (event === 'cancelled') {
       await sendMeetingCancelledEmail({ ...opts, reason: reason ?? '' });
+      return;
+    }
+    const when = slotPartsTz(at, offset);
+    // A reschedule supersedes the row and books a fresh one, so the new
+    // meeting id is a new entity and its confirmation is not a duplicate.
+    //
+    // WhatsApp has no reschedule campaign, so the new slot still goes out as
+    // the BOOKED message there. Its EMAIL leg is suppressed for a move and the
+    // per-party rescheduled template sent below instead: an applicant pushing
+    // their interview back was being told, in writing, that it had just been
+    // booked.
+    await notifyEvent({
+      event: waEventsFor(doc.kind).booked,
+      entityId: String(doc._id),
+      user: who?.user,
+      name: opts.name,
+      params: [opts.name, when.date, when.time],
+      email: event === 'booked' ? opts.to : '',
+      vars: { notes: opts.notes },
+    });
+    if (event === 'rescheduled') {
+      await sendMeetingRescheduledEmail({
+        to: opts.to,
+        name: opts.name,
+        audience: doc.kind,
+        kind: opts.kind,
+        date: when.date,
+        time: when.time,
+        meeting_url: doc.meeting_link || '',
+        notes: opts.notes,
+      });
     }
   } catch (err) {
-    logs.server.error('meeting', 'notifyApplicant', { error: err, msg: 'applicant email failed', kind });
+    logs.server.error('meeting', 'notifyApplicant', { error: err, msg: 'applicant email failed', kind: event });
   }
 }
 
@@ -886,7 +919,7 @@ export const meetingService = {
       reschedule_count: (doc.reschedule_count ?? 0) + 1,
       reschedule_reason: cleanReason,
     });
-    await notifyApplicant(fresh, 'booked');
+    await notifyApplicant(fresh, 'rescheduled');
     return pub(fresh);
   },
 

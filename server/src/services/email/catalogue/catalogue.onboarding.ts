@@ -3,18 +3,18 @@ import { CTA, FIELD, FOOTER, HELP, LABEL } from './catalogue.copy';
 import { defineEmail, v, type EmailAudience, type EmailDef, type EmailVar } from './catalogue.types';
 
 /**
- * The four onboarding emails, for each of the four partner kinds.
+ * The onboarding emails, for each of the four partner kinds.
  *
- * Written as one shape × four audiences rather than sixteen hand-written rows:
- * a host, a venue, a brand and a club admin walk the same four steps — booked,
- * scheduled, approved, rejected — and the only thing that differs is who is
- * being addressed and what they get to do next.
+ * Written as one shape × four audiences rather than twenty hand-written rows:
+ * a host, a venue, a brand and a club admin walk the same steps — booked,
+ * confirmed, rescheduled, approved, rejected — and the only thing that differs
+ * is who is being addressed and what they get to do next.
  *
- * They are still SIXTEEN templates and not four with a `{{kind}}` variable,
- * because the four are edited by different people for different reasons: the
- * venue team rewrites the venue rejection without touching the brand one, and
- * the WhatsApp side already keeps sixteen campaigns for the same reason. What
- * is shared is the CODE that builds them, which is the part rule 34 is about.
+ * They are still TWENTY templates and not five with a `{{kind}}` variable,
+ * because they are edited by different people for different reasons: the venue
+ * team rewrites the venue rejection without touching the brand one, and the
+ * WhatsApp side already keeps sixteen campaigns for the same reason. What is
+ * shared is the CODE that builds them, which is the part rule 34 is about.
  *
  * The suspend/reactivate pair follows the same argument, and is built here too
  * so a fifth partner kind is one array entry rather than six new files.
@@ -98,12 +98,22 @@ const MEETING_ROWS = [
   { labelKey: FIELD.time, valueVar: 'time' },
 ] as const;
 
-/** The four steps, as data. Everything about one email except who it is for. */
+/** What an interview with a call link shows under the callout — confirmed, or
+ * moved to a new slot. The link line is blank until staff attach one, exactly
+ * as the note line is blank when staff wrote none. */
+const SCHEDULED_ROWS = [
+  ...MEETING_ROWS,
+  { labelKey: FIELD.meetingLink, valueVar: 'meeting_url' },
+  { labelKey: FIELD.notes, valueVar: 'notes' },
+] as const;
+
+/** The steps, as data. Everything about one email except who it is for. */
 interface Step {
   /** Slug suffix, e.g. `onboarding-approved`. */
   suffix: string;
-  /** WhatsApp event suffix, e.g. `ONBOARDING_APPROVED`. */
-  wa: string;
+  /** WhatsApp event suffix, e.g. `ONBOARDING_APPROVED`. Omitted when the step
+   * has no WhatsApp campaign behind it and goes out by email alone. */
+  wa?: string;
   /** Display suffix and copy-key suffix. */
   name: string;
   key: string;
@@ -147,14 +157,26 @@ const STEPS: readonly Step[] = [
     subject: 'Your Duncit {party} onboarding interview is confirmed',
     tone: LIVE,
     vars: SCHEDULED_VARS,
-    rows: [
-      ...MEETING_ROWS,
-      { labelKey: FIELD.meetingLink, valueVar: 'meeting_url' },
-      { labelKey: FIELD.notes, valueVar: 'notes' },
-    ],
+    rows: SCHEDULED_ROWS,
     ctaKey: CTA.joinMeeting,
     ctaVar: 'meeting_url',
     fires: 'Staff confirms the interview and attaches the call link',
+    calloutLabelKey: LABEL.meeting,
+    calloutVar: 'date',
+  },
+  {
+    // No `wa`: WhatsApp has no reschedule campaign, so a move still sends the
+    // BOOKED message for the new slot there and this email beside it.
+    suffix: 'meeting-rescheduled',
+    name: 'Onboarding Interview Rescheduled',
+    key: 'Rescheduled',
+    category: 'notification',
+    subject: 'Your Duncit {party} onboarding interview was rescheduled',
+    tone: PAUSED,
+    vars: SCHEDULED_VARS,
+    rows: SCHEDULED_ROWS,
+    helpKey: HELP.meetingMoved,
+    fires: 'The interview moves to a different slot — the applicant moved it, or staff did',
     calloutLabelKey: LABEL.meeting,
     calloutVar: 'date',
   },
@@ -252,7 +274,7 @@ const build = (party: Party, step: Step): EmailDef => {
     audience: party.audience,
     category: step.category,
     fires: `${step.fires} (${who})`,
-    waEvent: `${party.wa}_${step.wa}`,
+    waEvent: step.wa ? `${party.wa}_${step.wa}` : undefined,
     subject: step.subject.replace('{party}', party.label),
     footerNote: party.footer,
     vars: step.vars,
@@ -274,6 +296,18 @@ export const ONBOARDING_EMAILS: readonly EmailDef[] = [
   ...PARTIES.flatMap((party) => STEPS.map((step) => build(party, step))),
   ...ACCOUNT_STEPS.map((step) => build(CLUB_ADMIN, step)),
 ];
+
+/**
+ * `HOST` → `host`, the slug prefix that party's templates are built with.
+ *
+ * A send site picking one of these templates by the meeting's own `kind` reads
+ * it from here rather than writing the four slugs out again — a second copy is
+ * how `club-admin` ends up spelled `clubadmin` in one place and silently
+ * missing its template (rule 34).
+ */
+export const ONBOARDING_SLUG_BY_AUDIENCE: Readonly<Record<string, string>> = Object.fromEntries(
+  PARTIES.map((party) => [party.audience, party.slug])
+);
 
 /** Every `email.<party><step>` namespace this file renders, for the bundle. */
 export const ONBOARDING_COPY_KEYS: readonly string[] = [

@@ -15,6 +15,7 @@ import { commPreferenceService } from '@modules/access/commPreference/commPrefer
 import { joinUrl } from '@utils/url';
 import { getMailConfigs, getUrlConfigs } from '../../config/url-configs';
 import { TEMPLATE_CATEGORIES, TEMPLATE_FOOTER_NOTES } from './template-categories';
+import { ONBOARDING_SLUG_BY_AUDIENCE } from './catalogue';
 import {
   SmtpProvider,
   resolveEmailProvider,
@@ -1161,31 +1162,66 @@ export function sendMeetingScheduledAdminEmail(opts: {
   });
 }
 
-/** Staff rescheduled the meeting or changed its details (link/instructions). */
+/**
+ * The onboarding interview moved to a different slot.
+ *
+ * One template per partner kind — `host-meeting-rescheduled`,
+ * `venue-meeting-rescheduled`, `ecomm-meeting-rescheduled` and
+ * `club-admin-meeting-rescheduled` — for the reason every other onboarding
+ * step already has four: the venue team rewrites the venue wording without
+ * touching the brand one. The prefix is read from the catalogue rather than
+ * listed a second time here, so a slug and its template cannot disagree.
+ *
+ * A move used to send the BOOKED template, which told an applicant their
+ * interview was freshly booked every time they pushed it back.
+ */
 export function sendMeetingRescheduledEmail(opts: {
+  to: string;
+  name: string;
+  /** The meeting's own `kind` — HOST, VENUE, ECOMM or CLUB_ADMIN. */
+  audience: string;
+  /** That party in words, for the subject line. */
+  kind: string;
+  date: string;
+  time: string;
+  meeting_url: string;
+  notes: string;
+}) {
+  const { audience, kind, ...vars } = opts;
+  const party = ONBOARDING_SLUG_BY_AUDIENCE[audience] ?? 'host';
+  return sendEmail({
+    to: opts.to,
+    subject: `Your Duncit ${kind} onboarding interview was rescheduled`,
+    template: `${party}-meeting-rescheduled`,
+    category: 'notification',
+    vars,
+  });
+}
+
+/**
+ * Staff changed a scheduled meeting's link or instructions without moving it.
+ *
+ * Stays on the shared `meeting-rescheduled` template: this is the one case it
+ * still carries, and its `change`/`heading`/`intro` variables exist for it.
+ */
+export function sendMeetingUpdatedEmail(opts: {
   to: string;
   name: string;
   kind: string;
   slot: string;
   link: string;
   notes: string;
-  /** "rescheduled" | "updated" — drives the heading/intro copy. */
-  change: string;
 }) {
-  const updated = opts.change === 'updated';
   return sendEmail({
     to: opts.to,
-    subject: updated
-      ? `Your Duncit ${opts.kind} onboarding meeting details were updated`
-      : `Your Duncit ${opts.kind} onboarding meeting was rescheduled`,
+    subject: `Your Duncit ${opts.kind} onboarding meeting details were updated`,
     template: 'meeting-rescheduled',
     category: 'notification',
     vars: {
       ...opts,
-      heading: updated ? 'Your meeting details were updated' : 'Your meeting was rescheduled',
-      intro: updated
-        ? `We've updated the details of your ${opts.kind} onboarding meeting. Here's the latest:`
-        : `Your ${opts.kind} onboarding meeting has been moved to a new time:`,
+      change: 'updated',
+      heading: 'Your meeting details were updated',
+      intro: `We've updated the details of your ${opts.kind} onboarding meeting. Here's the latest:`,
     },
   });
 }

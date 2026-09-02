@@ -122,6 +122,7 @@ export const HELP = {
   invoiceAttached: 'email.help.invoiceAttached',
   noAction: 'email.help.noAction',
   onboardingNext: 'email.help.onboardingNext',
+  meetingMoved: 'email.help.meetingMoved',
   accountPaused: 'email.help.accountPaused',
   accountLive: 'email.help.accountLive',
   feedbackWhy: 'email.help.feedbackWhy',

@@ -116,6 +116,8 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
     'Your tax invoice is attached to this email as a PDF. Keep it — it is the document you claim against, and we cannot re-issue it with different details later.',
   'email.help.onboardingNext':
     'We will confirm the call and send you the link. If the time no longer works, reply to this email and we will move it.',
+  'email.help.meetingMoved':
+    'Your earlier slot has been released, so this new one is the time to keep. If it does not work either, reply to this email and we will move it again.',
   'email.help.accountPaused':
     'Nothing has been deleted. Reply to this email if you think this is a mistake, or if you want it switched back on.',
   'email.help.accountLive':
@@ -171,6 +173,9 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.hostOnboardingScheduled.title': 'Your host interview is confirmed',
   'email.hostOnboardingScheduled.body':
     'Your host interview is confirmed for the time below. The call link is in this email, so keep it handy.',
+  'email.hostOnboardingRescheduled.title': 'Your host interview has moved',
+  'email.hostOnboardingRescheduled.body':
+    'Your host interview has been moved. The new slot is below — nothing else about your application changes, and we will see you then.',
   'email.hostOnboardingApproved.title': 'You are a Duncit host',
   'email.hostOnboardingApproved.body':
     'Your host application is approved. Sign in to the Partners console with the account below and you can create your first pod straight away.',
@@ -185,6 +190,9 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.venueOnboardingScheduled.title': 'Your venue interview is confirmed',
   'email.venueOnboardingScheduled.body':
     'Your venue interview is confirmed for the time below. The call link is in this email, so keep it handy.',
+  'email.venueOnboardingRescheduled.title': 'Your venue interview has moved',
+  'email.venueOnboardingRescheduled.body':
+    'Your venue interview has been moved. The new slot is below — nothing else about your application changes, and we will see you then.',
   'email.venueOnboardingApproved.title': 'Your venue is approved',
   'email.venueOnboardingApproved.body':
     'Your venue application is approved. Sign in to the Partners console with the account below to add your rooms and open your availability.',
@@ -199,6 +207,9 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.ecommOnboardingScheduled.title': 'Your brand interview is confirmed',
   'email.ecommOnboardingScheduled.body':
     'Your brand interview is confirmed for the time below. The call link is in this email, so keep it handy.',
+  'email.ecommOnboardingRescheduled.title': 'Your brand interview has moved',
+  'email.ecommOnboardingRescheduled.body':
+    'Your brand interview has been moved. The new slot is below — nothing else about your application changes, and we will see you then.',
   'email.ecommOnboardingApproved.title': 'Your brand is approved',
   'email.ecommOnboardingApproved.body':
     'Your brand application is approved. Sign in to the Partners console with the account below to list your first products and set your stock.',
@@ -213,6 +224,9 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.clubAdminOnboardingScheduled.title': 'Your club admin interview is confirmed',
   'email.clubAdminOnboardingScheduled.body':
     'Your club admin interview is confirmed for the time below. The call link is in this email, so keep it handy.',
+  'email.clubAdminOnboardingRescheduled.title': 'Your club admin interview has moved',
+  'email.clubAdminOnboardingRescheduled.body':
+    'Your club admin interview has been moved. The new slot is below — nothing else about your application changes, and we will see you then.',
   'email.clubAdminOnboardingApproved.title': 'You are a Duncit club admin',
   'email.clubAdminOnboardingApproved.body':
     'Your club admin application is approved. Sign in to the Partners console with the account below to see the pods you now look after.',

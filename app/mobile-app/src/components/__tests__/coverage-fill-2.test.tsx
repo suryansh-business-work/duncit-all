@@ -51,10 +51,7 @@ describe('EditAccountDialog non-Error save failure', () => {
     );
     fireEvent.changeText(screen.getByTestId('field-first_name'), 'Riya R');
     await waitFor(
-      () =>
-        expect(screen.getByTestId('account-edit-submit').props['aria-disabled']).toBe(
-          false,
-        ),
+      () => expect(screen.getByTestId('account-edit-submit').props['aria-disabled']).toBe(false),
       { timeout: 8000 },
     );
     fireEvent.press(screen.getByTestId('account-edit-submit'));

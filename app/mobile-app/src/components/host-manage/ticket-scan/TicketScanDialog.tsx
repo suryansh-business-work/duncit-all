@@ -227,10 +227,7 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                         people={recorded.map((companion) => ({
                           key: `${companion.phone_number}-${companion.name}`,
                           primary: companion.name,
-                          secondary: companionLine(
-                            companion,
-                            t('mweb.hostScan.companionVerified'),
-                          ),
+                          secondary: companionLine(companion, t('mweb.hostScan.companionVerified')),
                         }))}
                       />
                     ) : null}

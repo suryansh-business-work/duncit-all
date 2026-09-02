@@ -1,4 +1,7 @@
-import { makeSignupSchema as makeSharedSignupSchema, type SignupFormValues } from '@duncit/forms/schemas';
+import {
+  makeSignupSchema as makeSharedSignupSchema,
+  type SignupFormValues,
+} from '@duncit/forms/schemas';
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS } from '@duncit/datetime';
 
 import { fallbackT, type Translate } from '@/i18n/fallback';

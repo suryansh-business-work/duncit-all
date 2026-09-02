@@ -3,7 +3,6 @@ import { DIAL_CODE, EMAIL, GSTIN, PERSON_NAME, PHONE_INTL, PINCODE_LOOSE } from 
 
 import { fallbackT, type Translate } from '@/i18n/fallback';
 
-
 /**
  * Checkout contact + billing contract — RN twin of mWeb's checkout schemas.
  * Email is the ONLY mandatory contact field: the contact block is read-only
@@ -34,10 +33,7 @@ function makeCheckoutObject(t: Translate) {
     phone_extension: z
       .string()
       .trim()
-      .refine(
-        (v) => !v || DIAL_CODE.test(v),
-        t('mweb.checkout.validation.phoneCodeInvalid'),
-      ),
+      .refine((v) => !v || DIAL_CODE.test(v), t('mweb.checkout.validation.phoneCodeInvalid')),
     phone_number: z
       .string()
       .trim()

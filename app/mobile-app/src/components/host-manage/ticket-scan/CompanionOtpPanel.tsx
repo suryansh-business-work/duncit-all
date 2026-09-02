@@ -61,7 +61,14 @@ export function CompanionOtpPanel({ index, entry, state, otp, onVerified }: Read
         role="button"
         aria-label={t('mweb.hostScan.companionVerifyCta')}
         aria-disabled={state !== 'READY'}
-        onPress={state === 'READY' ? () => { setCode(''); otp.start(index, entry); } : undefined}
+        onPress={
+          state === 'READY'
+            ? () => {
+                setCode('');
+                otp.start(index, entry);
+              }
+            : undefined
+        }
         alignSelf="flex-start"
         height={36}
         paddingHorizontal={14}

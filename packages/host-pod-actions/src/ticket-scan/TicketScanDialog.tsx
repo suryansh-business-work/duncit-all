@@ -87,6 +87,10 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
   const [confirmed, setConfirmed] = useState<HostTicketScanResult | null>(null);
   const [scan, scanState] = useMutation<any>(HOST_SCAN_POD_TICKET);
 
+  // Read once, up here: the dialog only renders its body while there IS a
+  // pod, so reading it inside would be a guard no test could ever take.
+  const podId = pod?.id ?? '';
+
   // Scanning pauses while a code is in flight and while its result is on
   // screen — otherwise every frame re-submits the same ticket.
   const scanning = !!pod && !result && !scanState.loading;
@@ -206,7 +210,12 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
               )}
               {result.requires_companions && pendingToken && result.ticket && (
                 <CompanionsForm
-                  podId={pod?.id ?? ''}
+                  /* Keyed on the booking: the form sizes its rows from
+                     companions_required once, at mount. A different ticket
+                     must therefore get a different form, while a re-scan of
+                     the SAME one keeps what the host has already typed. */
+                  key={result.ticket.membership_id}
+                  podId={podId}
                   membershipId={result.ticket.membership_id}
                   seats={result.ticket.seats ?? 1}
                   required={result.companions_required}

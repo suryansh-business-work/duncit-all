@@ -16,12 +16,6 @@ interface Props {
   onVerified: (challengeId: string) => void;
 }
 
-/** Hoisted so the three-way choice sits at nesting 0 (Sonar S3358). */
-function sendLabel(sending: boolean, sent: boolean, labels: HostPodActionLabels): string {
-  if (sending) return labels.otpSending;
-  return sent ? labels.otpResend : labels.otpSend;
-}
-
 /**
  * One companion's WhatsApp code — sent, then read back.
  *
@@ -66,6 +60,16 @@ export default function CompanionOtpPanel({
       .catch(() => undefined);
   };
 
+  /*
+    Three states on one button, hoisted to nesting 0 (Sonar S3358). Once a code
+    is live the only question is whether the next one is on its way, so this
+    never says "Send" — that word belongs to the button before the first code,
+    which is companionVerifyCta.
+  */
+  const sent = live && !!otp.challengeId;
+  let sendLabel = labels.companionVerifyCta;
+  if (sent) sendLabel = otp.sending ? labels.otpSending : labels.otpResend;
+
   return (
     <Stack spacing={0.75}>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -73,19 +77,17 @@ export default function CompanionOtpPanel({
       </Typography>
       <DuncitButton
         size="small"
-        variant={live && otp.challengeId ? 'text' : 'outlined'}
+        variant={sent ? 'text' : 'outlined'}
         startIcon={<WhatsAppIcon />}
         disabled={state !== 'READY' || otp.sending}
         onClick={send}
         data-testid={`companion-otp-send-${index}`}
         sx={{ alignSelf: 'flex-start', borderRadius: 999, fontWeight: 800 }}
       >
-        {live && otp.challengeId
-          ? sendLabel(otp.sending, true, labels)
-          : labels.companionVerifyCta}
+        {sendLabel}
       </DuncitButton>
 
-      {live && otp.challengeId && (
+      {sent && (
         <Stack spacing={0.75}>
           {otp.testCode && <Alert severity="info">{labels.otpTestCode(otp.testCode)}</Alert>}
           <TextField

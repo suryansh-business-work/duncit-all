@@ -56,13 +56,19 @@ export default function CompanionsForm({
     defaultValues: companionsInitialValues(required),
   });
   const { fields } = useFieldArray({ control, name: 'companions' });
-  const entries = useWatch({ control, name: 'companions' }) as CompanionEntry[];
+  // An explicit defaultValue rather than a guard at every read: useWatch
+  // answers with this until the form has a value, so a row is never missing.
+  const entries = useWatch({
+    control,
+    name: 'companions',
+    defaultValue: companionsInitialValues(required).companions,
+  }) as CompanionEntry[];
   const otp = useCompanionOtp(podId, membershipId, labels);
 
   // A proof names ONE number. Retyping the name or the number makes it a
   // different person, so the challenge it earned no longer describes this row.
   const dropProof = (index: number) => {
-    if (entries?.[index]?.otp_challenge_id) {
+    if (entries[index].otp_challenge_id) {
       setValue(`companions.${index}.otp_challenge_id`, '', { shouldDirty: true });
     }
   };
@@ -89,7 +95,7 @@ export default function CompanionsForm({
           key={field.id}
           index={index}
           control={control}
-          entry={entries?.[index] ?? field}
+          entry={entries[index]}
           labels={labels}
           otp={otp}
           onEdit={dropProof}

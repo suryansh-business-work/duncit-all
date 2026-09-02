@@ -142,6 +142,14 @@ describe('year-only dates of birth', () => {
     );
   });
 
+  it('reads today off the clock when no instant is given', () => {
+    // The `asOf ?? now` fallback: a year picker calls this with no argument,
+    // so the branch that reaches for the real clock is the one that ships.
+    const thisYear = new Date().getFullYear();
+    expect(latestEligibleBirthYear(18)).toBe(thisYear - 18);
+    expect(latestEligibleBirthYear()).toBe(thisYear - DEFAULT_MIN_ACCOUNT_AGE_YEARS);
+  });
+
   it('accepts the cut-off year and everything before it', () => {
     expect(isEligibleBirthYear(2008, 18, SEP)).toBe(true);
     expect(isEligibleBirthYear('1998', 18, SEP)).toBe(true);

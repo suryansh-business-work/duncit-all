@@ -11,12 +11,11 @@ import {
   zodRules,
 } from '@duncit/forms';
 import {
-  makeAddressSchema,
   makeContactValueSchema,
   makeDeleteAccountSchema,
   makeLoginSchema,
-  makePasswordPairSchema,
   makeSignupSchema,
+  makePasswordPairSchema,
   makeResetPasswordSchema,
   makeWithdrawSchema,
   buildWithdrawInput,
@@ -48,9 +47,6 @@ interface SchemaMock {
   channel: ContactChannel;
   extension: string;
   number: string;
-  /** The recipient on a saved address — name and number, as typed. */
-  recipient_name: string;
-  recipient_phone: string;
 }
 
 interface FieldMock {
@@ -121,8 +117,6 @@ export default defineDemos('forms', [
       channel: 'PHONE',
       extension: '+91',
       number: '9845012345',
-      recipient_name: 'Ravi Kumar',
-      recipient_phone: '+91 98450 12345',
     },
     compute: (mock) => {
       // Messages are keys here so the demo shows WHICH sentence fires without
@@ -160,6 +154,12 @@ export default defineDemos('forms', [
             confirm_password: mock.confirm_password,
           }),
         ),
+        'Recovery: new password only': say(
+          makePasswordPairSchema(t).safeParse({
+            new_password: mock.new_password,
+            confirm_password: mock.confirm_password,
+          }),
+        ),
         Signup: say(
           makeSignupSchema(18, t).safeParse({
             name: mock.name,
@@ -171,12 +171,6 @@ export default defineDemos('forms', [
             confirmPassword: mock.confirm_password,
             referralCode: '',
             acceptedPolicyIds: [],
-          }),
-        ),
-        'Recovery: new password only': say(
-          makePasswordPairSchema(t).safeParse({
-            new_password: mock.new_password,
-            confirm_password: mock.confirm_password,
           }),
         ),
         'Delete account': say(
@@ -191,20 +185,6 @@ export default defineDemos('forms', [
         ),
         'Why per channel':
           'One schema with every field optional would let "Send code" through with nothing typed.',
-        'Saved address': say(
-          makeAddressSchema(t).safeParse({
-            label: 'Home',
-            name: mock.recipient_name,
-            phone: mock.recipient_phone,
-            line1: '5 Residency Road',
-            line2: '',
-            landmark: '',
-            city: 'Bengaluru',
-            state: 'Karnataka',
-            pincode: '560025',
-            country: 'India',
-          }),
-        ),
       };
     },
   }),

@@ -30,7 +30,11 @@
       // are already this app's own file: dependencies — Metro finds them, tsc
       // walking up from packages/forms/ does not.
       "@duncit/regex": ["./node_modules/@duncit/regex"],
-      "@duncit/utils": ["./node_modules/@duncit/utils"]
+      "@duncit/utils": ["./node_modules/@duncit/utils"],
+      // …and @duncit/datetime since the signup schema moved in there: the
+      // birth-year age rule is a calendar question, so the one contract both
+      // apps validate against reaches for it.
+      "@duncit/datetime": ["./node_modules/@duncit/datetime"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],

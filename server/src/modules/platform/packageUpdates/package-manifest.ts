@@ -2084,7 +2084,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@types/react", range: "^19.2.18", kind: "devDependencies" },
       { name: "@types/react-dom", range: "^19.2.5", kind: "devDependencies" },
       { name: "@vitejs/plugin-react", range: "^6.1.1", kind: "devDependencies" },
-      { name: "@vitest/coverage-istanbul", range: "4.1.11", kind: "devDependencies" },
+      { name: "@vitest/coverage-istanbul", range: "3.2.4", kind: "devDependencies" },
       { name: "cross-env", range: "^10.1.0", kind: "devDependencies" },
       { name: "cypress", range: "^15.21.1", kind: "devDependencies" },
       { name: "jsdom", range: "^30.0.1", kind: "devDependencies" },

@@ -39,6 +39,13 @@ export const CLUB_ADMIN_DASHBOARD = gql`
         rating
         revenue
       }
+      categories {
+        category_id
+        name
+        super_category
+        clubs
+        pods
+      }
     }
   }
 `;
@@ -102,10 +109,20 @@ export interface ClubAdminClubRow {
   revenue: number;
 }
 
+/** One tile of the category card: a category the admin's clubs run under. */
+export interface ClubAdminCategoryRow {
+  category_id: string;
+  name: string;
+  super_category: string | null;
+  clubs: number;
+  pods: number;
+}
+
 export interface ClubAdminDashboard {
   kpis: ClubAdminKpis;
   trend: ClubAdminTrendPoint[];
   clubs: ClubAdminClubRow[];
+  categories: ClubAdminCategoryRow[];
 }
 
 export const emptyClubAdminKpis: ClubAdminKpis = {
@@ -131,4 +148,5 @@ export const emptyClubAdminDashboard: ClubAdminDashboard = {
   kpis: emptyClubAdminKpis,
   trend: [],
   clubs: [],
+  categories: [],
 };

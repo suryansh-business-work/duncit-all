@@ -11,6 +11,7 @@ import {
   type ClubAdminClubRow,
   type ClubAdminDashboard,
 } from './queries';
+import ClubAdminCategoryCard from './ClubAdminCategoryCard';
 import ClubAdminKpiCards from './ClubAdminKpiCards';
 import ClubAdminTrendChart from './ClubAdminTrendChart';
 import ClubAdminClubsTable from './ClubAdminClubsTable';
@@ -145,6 +146,8 @@ export default function ClubAdminDashboardPage() {
               </TextField>
             </Stack>
           </Card>
+
+          <ClubAdminCategoryCard categories={dashboard.categories} loading={loading && !data} />
 
           {error && <Alert severity="error">{error.message}</Alert>}
         </Stack>

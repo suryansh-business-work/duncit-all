@@ -55,10 +55,34 @@ export const clubAdminTypeDefs = /* GraphQL */ `
     page_size: Int!
   }
 
+  """
+  One category the Club Admin's clubs run under — a tile of the dashboard's
+  category card.
+
+  Keyed on the club's OWN category (the sub-category leaf every club carries),
+  with the parent super category alongside, so a tile names the activity the
+  same way the "Your Clubs" table's two category columns do. A club carrying no
+  category — only ones predating the mandatory picker — has none to report and
+  is simply absent from the card, which is why these club counts are read per
+  category rather than against assigned_clubs.
+  """
+  type ClubAdminCategory {
+    category_id: ID!
+    name: String!
+    "Parent super category's name. Null when the club carries no super category."
+    super_category: String
+    "How many of the caller's clubs run under this category."
+    clubs: Int!
+    "Pods across those clubs, inside the dashboard's date window."
+    pods: Int!
+  }
+
   type ClubAdminDashboard {
     kpis: ClubAdminKpis!
     trend: [ClubAdminTrendPoint!]!
     clubs: [ClubAdminClubRow!]!
+    "Categories the caller's clubs run under, biggest first."
+    categories: [ClubAdminCategory!]!
   }
 
   """

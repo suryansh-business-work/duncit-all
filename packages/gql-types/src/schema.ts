@@ -2134,6 +2134,16 @@ export type Branding = {
   /** Sub-heading under the vibe heading; empty falls back to each client's bundled copy. */
   home_vibe_subheading: Scalars['String']['output'];
   ios_app_url: Scalars['String']['output'];
+  /**
+   * The backdrop behind the sign-in and sign-up screens, as two independent
+   * switches. With both off the apps keep their bundled animated gradient,
+   * which is what a database nobody has touched already answers. Video wins
+   * when both are on and both carry a URL.
+   */
+  login_background_image_enabled: Scalars['Boolean']['output'];
+  login_background_image_url: Scalars['String']['output'];
+  login_background_video_enabled: Scalars['Boolean']['output'];
+  login_background_video_url: Scalars['String']['output'];
   logo_url: Scalars['String']['output'];
   mobile_favicon_url: Scalars['String']['output'];
   mobile_font_family: Scalars['String']['output'];
@@ -2637,6 +2647,29 @@ export type ClubAdminCandidate = {
   user_id: Scalars['ID']['output'];
 };
 
+/**
+ * One category the Club Admin's clubs run under — a tile of the dashboard's
+ * category card.
+ *
+ * Keyed on the club's OWN category (the sub-category leaf every club carries),
+ * with the parent super category alongside, so a tile names the activity the
+ * same way the "Your Clubs" table's two category columns do. A club carrying no
+ * category — only ones predating the mandatory picker — has none to report and
+ * is simply absent from the card, which is why these club counts are read per
+ * category rather than against assigned_clubs.
+ */
+export type ClubAdminCategory = {
+  __typename?: 'ClubAdminCategory';
+  category_id: Scalars['ID']['output'];
+  /** How many of the caller's clubs run under this category. */
+  clubs: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  /** Pods across those clubs, inside the dashboard's date window. */
+  pods: Scalars['Int']['output'];
+  /** Parent super category's name. Null when the club carries no super category. */
+  super_category?: Maybe<Scalars['String']['output']>;
+};
+
 /** Max-info per-club row for the Club Admin 'Your Clubs' table (myAdminClubsTable). */
 export type ClubAdminClubInfoRow = {
   __typename?: 'ClubAdminClubInfoRow';
@@ -2715,6 +2748,8 @@ export type ClubAdminClubsPage = {
 
 export type ClubAdminDashboard = {
   __typename?: 'ClubAdminDashboard';
+  /** Categories the caller's clubs run under, biggest first. */
+  categories: Array<ClubAdminCategory>;
   clubs: Array<ClubAdminClubRow>;
   kpis: ClubAdminKpis;
   trend: Array<ClubAdminTrendPoint>;
@@ -7389,8 +7424,18 @@ export type LocationZoneInput = {
 };
 
 export type LoginInput = {
-  email: Scalars['String']['input'];
+  /**
+   * Which of the two the password is being proved against. Defaults to EMAIL, so
+   * every portal and shipped app build that posts a bare email + password keeps
+   * working untouched.
+   */
+  channel?: InputMaybe<PasswordResetChannel>;
+  /** Required when channel is EMAIL. */
+  email?: InputMaybe<Scalars['String']['input']>;
   password: Scalars['String']['input'];
+  /** Required, with the extension, when channel is PHONE. */
+  phone_extension?: InputMaybe<Scalars['String']['input']>;
+  phone_number?: InputMaybe<Scalars['String']['input']>;
   portal_key?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -8933,6 +8978,16 @@ export type Mutation = {
   requestPasswordResetOtp: OtpRequestResult;
   /** Send the attendee a one-time code over the chosen medium(s). */
   requestPodAttendanceOtp: PhoneOtpRequestResult;
+  /**
+   * Send ONE of the extra people a multi-seat booking admits a one-time code.
+   *
+   * The same input and the same shared OTP service as the attendee's own code,
+   * with the name and the number being the companion's rather than the buyer's.
+   * A separate purpose, so a companion's proof can never be spent as the
+   * buyer's attendance. Spending it happens when the group is recorded, which
+   * is why the host verifies them one at a time.
+   */
+  requestPodCompanionOtp: PhoneOtpRequestResult;
   /** Ask an admin for console access — lands in Admin > Portal Access; the decision is emailed. */
   requestPortalAccess: PortalAccessEntry;
   /**
@@ -9477,7 +9532,13 @@ export type Mutation = {
    * costs an attempt.
    */
   verifyPasswordResetCode: PasswordResetVerifyResult;
-  /** Check the code the attendee read out. Spending it happens at the mark. */
+  /**
+   * Check a code that was read out — the attendee's own, or a companion's.
+   *
+   * Purpose-agnostic on purpose: verifying grants nothing by itself, and the
+   * step that SPENDS the proof (the mark, or the door's companion record)
+   * re-checks the purpose, the booking and the number it was raised for.
+   */
   verifyPodAttendanceOtp: Scalars['Boolean']['output'];
   verifyRazorpayPayment: Payment;
   verifyWhatsAppOtp: User;
@@ -11487,6 +11548,11 @@ export type MutationRequestPasswordResetOtpArgs = {
 
 
 export type MutationRequestPodAttendanceOtpArgs = {
+  input: PodAttendanceOtpInput;
+};
+
+
+export type MutationRequestPodCompanionOtpArgs = {
   input: PodAttendanceOtpInput;
 };
 
@@ -13582,6 +13648,16 @@ export type PasswordResetRequestResult = {
   /** Seconds to wait before another code can be asked for. */
   resend_after_seconds: Scalars['Int']['output'];
   /**
+   * Whether a medium actually carried the code out of the building.
+   *
+   * Separate from registered, which only says an account was found. A mailbox
+   * that receives its codes on another channel, a switched-off template and an
+   * address every mail server refused are all a real account whose code never
+   * arrives — and a screen that says to check your email for those leaves the
+   * person with nothing to do. False means show the failure, not the code box.
+   */
+  sent: Scalars['Boolean']['output'];
+  /**
    * The code itself, echoed back ONLY while no medium could really carry it.
    * Null the moment a real transport handles the send.
    */
@@ -14407,11 +14483,24 @@ export type PodCompanion = {
   name: Scalars['String']['output'];
   phone_extension?: Maybe<Scalars['String']['output']>;
   phone_number: Scalars['String']['output'];
+  /** When their own number answered a one-time code (ISO). Null when the host recorded them without one. */
+  verified_at?: Maybe<Scalars['String']['output']>;
+  /** The channel that carried the code they answered — blank when none did. */
+  verified_medium: Scalars['String']['output'];
 };
 
 /** Details for one of the other people a multi-seat ticket admits. */
 export type PodCompanionInput = {
   name: Scalars['String']['input'];
+  /**
+   * A verified requestPodCompanionOtp challenge for THIS number, when the
+   * host proved it at the door.
+   *
+   * Optional on purpose: a dead phone or a number abroad must never hold a
+   * group at the door. When it is sent the server spends it, so one proof can
+   * never be replayed across the rest of the group.
+   */
+  otp_challenge_id?: InputMaybe<Scalars['ID']['input']>;
   phone_extension?: InputMaybe<Scalars['String']['input']>;
   phone_number: Scalars['String']['input'];
 };
@@ -22490,6 +22579,10 @@ export type UpdateBrandingInput = {
   home_vibe_heading?: InputMaybe<Scalars['String']['input']>;
   home_vibe_subheading?: InputMaybe<Scalars['String']['input']>;
   ios_app_url?: InputMaybe<Scalars['String']['input']>;
+  login_background_image_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  login_background_image_url?: InputMaybe<Scalars['String']['input']>;
+  login_background_video_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  login_background_video_url?: InputMaybe<Scalars['String']['input']>;
   logo_url?: InputMaybe<Scalars['String']['input']>;
   mobile_favicon_url?: InputMaybe<Scalars['String']['input']>;
   mobile_font_family?: InputMaybe<Scalars['String']['input']>;

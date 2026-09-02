@@ -10,6 +10,14 @@
  * The deadline is the slot's own start time, and passing it IS the decision.
  */
 import { Types } from 'mongoose';
+
+// The decision fan-out is part of what this file asserts on, so it is captured
+// rather than left to hit the WhatsApp/email lookups behind it.
+const notifyEach = jest.fn().mockResolvedValue([]);
+jest.mock('@services/notify/notify.service', () => ({
+  notifyEach: (...args: unknown[]) => notifyEach(...args),
+}));
+
 import { venueSlotService } from '../../venueSlot.service';
 import { VenueSlotModel } from '../../venueSlot.model';
 import {
@@ -18,11 +26,27 @@ import {
 } from '../../venueSlot.expiry';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { UserModel } from '@modules/access/user/user.model';
 import { PodAuditLogModel } from '@modules/pods/podAudit/podAudit.model';
 
 const ownerId = new Types.ObjectId().toString();
 const hostId = new Types.ObjectId().toString();
 const inDays = (d: number) => new Date(Date.now() + d * 86_400_000);
+
+/** Real accounts for both sides — the decision fan-out reads their contact
+ * details, and with no documents behind the ids it sends nobody anything. */
+async function seedAccounts() {
+  await UserModel.create({
+    _id: new Types.ObjectId(ownerId),
+    auth: { email: 'owner@duncit.com' },
+    profile: { first_name: 'Rohit', last_name: 'Nair' },
+  });
+  await UserModel.create({
+    _id: new Types.ObjectId(hostId),
+    auth: { email: 'host@duncit.com' },
+    profile: { first_name: 'Meera', last_name: 'Nair' },
+  });
+}
 
 async function seedVenue() {
   const v = await VenueModel.create({
@@ -193,6 +217,40 @@ describe('what the venue owner can still see and do', () => {
 
     expect(detail.decision).toBe('DECLINED');
     expect(detail.decline_reason).toBe(SLOT_REQUEST_EXPIRED_REASON);
+  });
+});
+
+describe('who gets told', () => {
+  beforeEach(seedAccounts);
+
+  const eventsSent = () =>
+    notifyEach.mock.calls.flatMap(([sends]) => (sends ?? []).map((n: any) => n.event));
+
+  it('tells the host their pod is off, because that is not optional news', async () => {
+    await seedRequest(-1);
+
+    await runSlotRequestExpirySweep();
+
+    expect(eventsSent()).toContain('HOST_SLOT_REJECTED');
+  });
+
+  it('does NOT tell the venue owner they declined it, because they did not', async () => {
+    // Their copy is subjected "You declined a slot". Sending that to somebody
+    // who never opened the page is a false account of their own actions, and
+    // silence is the honest option until a template says what really happened.
+    await seedRequest(-1);
+
+    await runSlotRequestExpirySweep();
+
+    expect(eventsSent()).not.toContain('VENUE_SLOT_REJECTED');
+  });
+
+  it('still sends the owner their copy when they DID decline it', async () => {
+    const { slotId } = await seedRequest(3);
+
+    await venueSlotService.declineRequest(ownerId, slotId, 'Double booked');
+
+    expect(eventsSent()).toContain('VENUE_SLOT_REJECTED');
   });
 });
 

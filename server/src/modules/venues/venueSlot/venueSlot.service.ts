@@ -594,7 +594,12 @@ async function podPublishedSends(facts: SlotDecisionFacts): Promise<NotifyInput[
 /** Best-effort WhatsApp beside the in-app note: the decision to the hosts and
  * to the venue owner, plus the pod-is-live pair once it is approved. The sends
  * themselves never throw; the lookups feeding them can. */
-async function whatsappSlotDecision(pod: any, slot: IVenueSlot, approved: boolean) {
+async function whatsappSlotDecision(
+  pod: any,
+  slot: IVenueSlot,
+  approved: boolean,
+  tellOwner = true
+) {
   try {
     const venue = await VenueModel.findById(slot.venue_id).select('venue_name owner_user_id').lean();
     if (!venue) return;
@@ -619,7 +624,7 @@ async function whatsappSlotDecision(pod: any, slot: IVenueSlot, approved: boolea
     };
     const sends = [
       ...hostDecisionSends(facts, approved),
-      ...(await venueDecisionSends(facts, approved)),
+      ...(tellOwner ? await venueDecisionSends(facts, approved) : []),
     ];
     if (approved) sends.push(...(await podPublishedSends(facts)));
     // `notifyEach`, not `sendEach`: the same four decisions now also go out as
@@ -637,8 +642,23 @@ async function whatsappSlotDecision(pod: any, slot: IVenueSlot, approved: boolea
   }
 }
 
-/** Best-effort in-app note to the pod's hosts when a venue decides a request. */
-async function notifySlotDecision(pod: any, slot: IVenueSlot, approved: boolean, reason?: string | null) {
+/**
+ * Best-effort in-app note to the pod's hosts when a venue decides a request.
+ *
+ * `tellOwner` is false for a decline the venue owner did not make. Their copy
+ * is subjected "You declined a slot", which would be a false account of their
+ * own actions when the deadline decided it for them — and there is no template
+ * yet that says what actually happened, so the honest choice is silence on that
+ * side rather than a wrong sentence. The HOST is always told either way: their
+ * pod just went offline and that is not optional news.
+ */
+async function notifySlotDecision(
+  pod: any,
+  slot: IVenueSlot,
+  approved: boolean,
+  reason?: string | null,
+  tellOwner = true
+) {
   try {
     const { notificationService } = await import('@modules/engagement/notification/notification.service');
     const when = slot.start_at.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
@@ -663,7 +683,7 @@ async function notifySlotDecision(pod: any, slot: IVenueSlot, approved: boolean,
     });
   }
   // Outside the block above so a failed in-app note still reaches WhatsApp.
-  await whatsappSlotDecision(pod, slot, approved);
+  await whatsappSlotDecision(pod, slot, approved, tellOwner);
 }
 
 /** One pending booking request row: the slot joined with its requesting pod,
@@ -707,7 +727,7 @@ async function applyDecline(slot: IVenueSlot, reason: string, actor: DeclineActo
     { new: true }
   );
   if (!pod) return;
-  await notifySlotDecision(pod, slot, false, note);
+  await notifySlotDecision(pod, slot, false, note, actor.source === 'VENUE_OWNER');
   await podAuditService.record({
     pod,
     action: 'VENUE_DECLINED',

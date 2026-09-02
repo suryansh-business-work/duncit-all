@@ -50,6 +50,14 @@ import {
   hostPodSection,
   mwebAttendanceLabels,
   needsOtp,
+  SIGNUP_STEPS,
+  SIGNUP_STEP_COUNT,
+  SIGNUP_STEP_FIELDS,
+  canLeaveSignupStep,
+  nextSignupStep,
+  previousSignupStep,
+  signupStepIndex,
+  stepSubmitsAccount,
   PASSWORD_RECOVERY_CHANNELS,
   PASSWORD_RECOVERY_STEP_COUNT,
   passwordRecoveryStepIndex,
@@ -82,6 +90,7 @@ import {
   type ContactChannel,
   type ContactSnapshot,
   type PasswordRecoveryChannel,
+  type SignupStep,
   type PasswordRecoveryStep,
   type PodAttendanceMode,
   type PodAttendanceViewer,
@@ -136,6 +145,10 @@ interface ContactChangeMock {
   channel: ContactChannel;
   draftExtension: string;
   draftNumber: string;
+}
+
+interface SignupStepMock {
+  step: SignupStep;
 }
 
 interface PasswordRecoveryMock {
@@ -738,6 +751,25 @@ export default defineDemos('utils', [
         'Edit profile can save': String(contactDetailsComplete(account)),
       };
     },
+  }),
+  defineDemo<SignupStepMock>({
+    id: 'signup-steps',
+    title: 'Joining Duncit, one question at a time',
+    note:
+      "Move `step` through the four and watch what each one owns. SECURITY is the only step whose " +
+      "button creates the account, and VERIFY is the only one with no way back — by then the account " +
+      'exists, so Back could only offer a form that has been spent.',
+    mock: { step: 'CONTACT' },
+    compute: (mock) => ({
+      'Step': `${signupStepIndex(mock.step)} of ${SIGNUP_STEP_COUNT}`,
+      'Boxes this step validates': SIGNUP_STEP_FIELDS[mock.step].join(', ') || '(none — the server checks the code)',
+      'Continue goes to': nextSignupStep(mock.step) ?? '(nowhere — this is the last)',
+      'Back goes to': canLeaveSignupStep(mock.step)
+        ? (previousSignupStep(mock.step) ?? '')
+        : '(no Back on this step)',
+      'Creates the account': String(stepSubmitsAccount(mock.step)),
+      'The four steps': SIGNUP_STEPS.join(' -> '),
+    }),
   }),
   defineDemo<PasswordRecoveryMock>({
     id: 'password-recovery',

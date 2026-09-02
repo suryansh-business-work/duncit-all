@@ -56,7 +56,11 @@ export { resolveActiveOccasion, type OccasionWindow } from './occasion';
 export {
   DEFAULT_MIN_ACCOUNT_AGE_YEARS,
   ageInYears,
+  birthYearToDob,
   dobMinAgeMessage,
+  dobToBirthYear,
+  isEligibleBirthYear,
   isEligibleDob,
+  latestEligibleBirthYear,
   latestEligibleDob,
 } from './age';

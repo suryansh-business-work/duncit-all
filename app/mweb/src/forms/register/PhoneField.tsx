@@ -10,7 +10,10 @@ interface Props {
 }
 
 /**
- * Signup's phone row: the dial code leads, the number follows.
+ * Signup's WhatsApp row: the dial code leads, the number follows.
+ *
+ * Named for WhatsApp rather than "phone" because step four sends a code to it —
+ * the label has to explain why the number is being asked for.
  *
  * Split out of register.form.tsx to keep that file inside the 200-line ceiling,
  * and shaped exactly like the profile editor's contact row so the two places a
@@ -31,9 +34,9 @@ export default function PhoneField({ control }: Readonly<Props>) {
       <RhfTextField
         control={control}
         name="phoneNumber"
-        label={t('mweb.common.phoneNumber')}
+        label={t('mweb.signup.whatsappLabel')}
         required
-        hint={t('mweb.signup.phoneHint')}
+        hint={t('mweb.signup.whatsappHint')}
         placeholder={t('mweb.signup.phonePlaceholder')}
         autoComplete="tel-national"
         size="small"

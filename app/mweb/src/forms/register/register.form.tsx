@@ -1,72 +1,83 @@
 import { useMemo, useState } from 'react';
-import { Controller, useForm, type Resolver } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, InputAdornment, Link, Stack, Typography } from '@mui/material';
+import { Alert, Stack } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import CardGiftcardOutlinedIcon from '@mui/icons-material/CardGiftcardOutlined';
-import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
-import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
-import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
-import { Link as RouterLink } from 'react-router';
-import RhfTextField from '../components/RhfTextField';
-import DobYearField from './DobYearField';
-import PhoneField from './PhoneField';
-import { makeRegisterSchema, registerDefaults, type RegisterFormValues } from './register.types';
+import { DuncitButton } from '@duncit/buttons';
+import {
+  SIGNUP_STEP_FIELDS,
+  buildSignupStepperLabels,
+  canLeaveSignupStep,
+  firstStepWithError,
+  nextSignupStep,
+  previousSignupStep,
+  stepSubmitsAccount,
+  type SignupStep,
+} from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useMinSignupAge } from '../../utils/dateFormat';
-import {
-  PolicyAcceptanceField,
-  useSignupPolicies,
-} from '../../components/policy-acceptance';
+import { useSignupPolicies } from '../../components/policy-acceptance';
+import ContactStep from './steps/ContactStep';
+import SecurityStep from './steps/SecurityStep';
+import WhoStep from './steps/WhoStep';
+import { makeRegisterSchema, registerDefaults, type RegisterFormValues } from './register.types';
 
 interface Props {
+  /** Which of the first three steps is showing. VERIFY is the page's, not the
+   * form's — it needs the account that this form's last step creates. */
+  step: SignupStep;
+  onStep: (step: SignupStep) => void;
   loading?: boolean;
   errorMessage?: string | null;
   initialValues?: RegisterFormValues;
   onSubmit: (values: RegisterFormValues) => Promise<void> | void;
 }
 
-const startIcon = (icon: React.ReactNode) => ({
-  startAdornment: <InputAdornment position="start">{icon}</InputAdornment>,
-});
-
-const passwordInputProps = (visible: boolean, onToggle: () => void, toggleLabel: string) => ({
-  ...startIcon(<LockOutlinedIcon fontSize="small" />),
-  endAdornment: (
-    <InputAdornment position="end">
-      <DuncitIconButton size="small" onClick={onToggle} edge="end" aria-label={toggleLabel}>
-        {visible ? (
-          <VisibilityOffOutlinedIcon fontSize="small" />
-        ) : (
-          <VisibilityOutlinedIcon fontSize="small" />
-        )}
-      </DuncitIconButton>
-    </InputAdornment>
-  ),
-});
-
-export default function RegisterForm({ loading, errorMessage, initialValues, onSubmit }: Readonly<Props>) {
+/**
+ * Join Duncit, steps one to three.
+ *
+ * ONE react-hook-form across all three, not a form per step: the answers have
+ * to survive going back, and `register` needs every one of them at once. What
+ * the step changes is which boxes are shown and which are validated — "Continue"
+ * runs `trigger` over `SIGNUP_STEP_FIELDS[step]` alone, so a person is never
+ * told off about a box two screens ahead that they have not reached.
+ *
+ * The step order and the field lists come from @duncit/utils, which the native
+ * signup drives from too (rules 27 and 40).
+ */
+export default function RegisterForm({
+  step,
+  onStep,
+  loading,
+  errorMessage,
+  initialValues,
+  onSubmit,
+}: Readonly<Props>) {
   const { t } = useTranslation();
-  const [showPwd, setShowPwd] = useState(false);
-  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const minAge = useMinSignupAge();
   const { policies, loading: policiesLoading, failed: policiesFailed } = useSignupPolicies();
   const requiredPolicyIds = useMemo(() => policies.map((policy) => policy.id), [policies]);
+  const labels = buildSignupStepperLabels(t);
   const schema = useMemo(
     () => makeRegisterSchema(minAge, t, requiredPolicyIds),
     [minAge, t, requiredPolicyIds],
   );
-  const { control, handleSubmit } = useForm<RegisterFormValues, any, RegisterFormValues>({
+  const {
+    control,
+    handleSubmit,
+    trigger,
+    formState: { errors },
+  } = useForm<RegisterFormValues, any, RegisterFormValues>({
     defaultValues: initialValues ?? registerDefaults,
-    resolver: zodResolver(schema) as unknown as Resolver<RegisterFormValues, any, RegisterFormValues>,
+    resolver: zodResolver(schema) as unknown as Resolver<
+      RegisterFormValues,
+      any,
+      RegisterFormValues
+    >,
     mode: 'onTouched',
   });
-  const showLabel = t('mweb.auth.showPassword');
-  const hideLabel = t('mweb.auth.hidePassword');
 
   const submit = handleSubmit(async (values) => {
     setSubmitError(null);
@@ -77,111 +88,94 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
     }
   });
 
+  /** Continue: check THIS step's boxes, then move on — or create the account. */
+  const advance = async () => {
+    setSubmitError(null);
+    const fields = SIGNUP_STEP_FIELDS[step] as (keyof RegisterFormValues)[];
+    if (!(await trigger(fields))) return;
+
+    if (!stepSubmitsAccount(step)) {
+      const next = nextSignupStep(step);
+      if (next) onStep(next);
+      return;
+    }
+
+    /*
+      The last step submits, and `handleSubmit` re-checks the WHOLE form — so a
+      value that is somehow wrong two steps back would otherwise stop the
+      account being created with nothing on screen to explain it, because that
+      box is not rendered. Check everything first and, if something earlier is
+      wrong, go to the step that owns it: the error is then beside the box.
+    */
+    if (!(await trigger())) {
+      const broken = firstStepWithError(Object.keys(errors));
+      if (broken && broken !== step) onStep(broken);
+      return;
+    }
+    await submit();
+  };
+
+  const back = () => {
+    setSubmitError(null);
+    const previous = previousSignupStep(step);
+    if (previous) onStep(previous);
+  };
+
+  const creating = stepSubmitsAccount(step);
+  let nextLabel = labels.next;
+  if (creating) nextLabel = loading ? labels.creating : labels.createAccount;
+
   return (
-    <form noValidate onSubmit={submit}>
+    <form
+      noValidate
+      onSubmit={(event) => {
+        // Enter inside a box means "next step", never "submit the account" —
+        // the account is created by the third step's button alone.
+        event.preventDefault();
+        advance().catch(() => undefined);
+      }}
+    >
       <Stack spacing={1.5}>
-        <RhfTextField
-          control={control}
-          name="name"
-          label={t('mweb.signup.nameLabel')}
-          required
-          placeholder={t('mweb.signup.namePlaceholder')}
-          autoComplete="name"
-          size="small"
-          slotProps={{ inputLabel: { shrink: true }, input: startIcon(<PersonOutlineIcon fontSize="small" />) }}
-        />
-        <RhfTextField
-          control={control}
-          name="email"
-          type="email"
-          label={t('mweb.auth.emailLabel')}
-          required
-          placeholder={t('mweb.signup.emailPlaceholder')}
-          autoComplete="email"
-          size="small"
-          slotProps={{ inputLabel: { shrink: true }, input: startIcon(<EmailOutlinedIcon fontSize="small" />) }}
-        />
-        <PhoneField control={control} />
-        <DobYearField control={control} minAge={minAge} />
-        <RhfTextField
-          control={control}
-          name="password"
-          type={showPwd ? 'text' : 'password'}
-          label={t('mweb.auth.passwordLabel')}
-          required
-          hint={t('mweb.auth.passwordHint')}
-          placeholder={t('mweb.signup.passwordPlaceholder')}
-          autoComplete="new-password"
-          size="small"
-          slotProps={{ inputLabel: { shrink: true }, input: passwordInputProps(
-            showPwd,
-            () => setShowPwd((v) => !v),
-            showPwd ? hideLabel : showLabel,
-          ) }}
-        />
-        <RhfTextField
-          control={control}
-          name="confirmPassword"
-          type={showConfirmPwd ? 'text' : 'password'}
-          label={t('mweb.signup.confirmPasswordLabel')}
-          required
-          placeholder={t('mweb.signup.confirmPasswordPlaceholder')}
-          autoComplete="new-password"
-          size="small"
-          slotProps={{ inputLabel: { shrink: true }, input: passwordInputProps(
-            showConfirmPwd,
-            () => setShowConfirmPwd((v) => !v),
-            showConfirmPwd ? hideLabel : showLabel,
-          ) }}
-        />
-        <RhfTextField
-          control={control}
-          name="referralCode"
-          label={t('mweb.referral.codeOptional')}
-          hint={t('mweb.referral.codeHint')}
-          placeholder={t('mweb.referral.codePlaceholder')}
-          size="small"
-          slotProps={{ inputLabel: { shrink: true }, input: startIcon(<CardGiftcardOutlinedIcon fontSize="small" />), htmlInput: { style: { textTransform: 'uppercase' } } }}
-          
-          
-        />
-        <Controller
-          control={control}
-          name="acceptedPolicyIds"
-          render={({ field, fieldState }) => (
-            <PolicyAcceptanceField
-              accepted={field.value}
-              onChange={field.onChange}
-              error={fieldState.error?.message}
-              policies={policies}
-              loading={policiesLoading}
-              failed={policiesFailed}
-            />
-          )}
-        />
+        {step === 'WHO' && <WhoStep control={control} minAge={minAge} />}
+        {step === 'CONTACT' && <ContactStep control={control} />}
+        {step === 'SECURITY' && (
+          <SecurityStep
+            control={control}
+            policies={policies}
+            policiesLoading={policiesLoading}
+            policiesFailed={policiesFailed}
+          />
+        )}
       </Stack>
-      <Stack spacing={2} sx={{ mt: 2 }}>
-        <DuncitButton
-          type="submit"
-          variant="contained"
-          disabled={loading}
-          fullWidth
-          endIcon={<ArrowForwardIcon />}
-        >
-          {loading ? t('mweb.signup.submitting') : t('mweb.signup.submit')}
-        </DuncitButton>
-        {(submitError || errorMessage) && <Alert severity="error">{submitError || errorMessage}</Alert>}
-        <Typography
-          variant="body2"
-          sx={{
-            color: "text.secondary",
-            textAlign: "center"
-          }}>
-          {t('mweb.signup.haveAccount')}{' '}
-          <Link component={RouterLink} to="/login" underline="hover">
-            {t('mweb.signup.logIn')}
-          </Link>
-        </Typography>
+
+      <Stack spacing={1.2} sx={{ mt: 2 }}>
+        {(submitError || errorMessage) && (
+          <Alert severity="error">{submitError || errorMessage}</Alert>
+        )}
+        <Stack direction="row" spacing={1}>
+          {canLeaveSignupStep(step) && (
+            <DuncitButton
+              type="button"
+              variant="outlined"
+              color="inherit"
+              onClick={back}
+              startIcon={<ArrowBackIcon />}
+              data-testid="signup-back"
+            >
+              {labels.back}
+            </DuncitButton>
+          )}
+          <DuncitButton
+            type="submit"
+            variant="contained"
+            disabled={loading}
+            fullWidth
+            endIcon={<ArrowForwardIcon />}
+            data-testid="signup-next"
+          >
+            {nextLabel}
+          </DuncitButton>
+        </Stack>
       </Stack>
     </form>
   );

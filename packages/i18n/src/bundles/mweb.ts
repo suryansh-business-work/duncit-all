@@ -603,6 +603,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // with mweb.common.code, which every other phone row on both apps uses.
       phonePlaceholder: '9876543210',
       phoneHint: 'We use this to reach you about your bookings.',
+      // The stepper asks for the WhatsApp number by name, because step four
+      // sends a code to it — 'phone' would not explain why.
+      whatsappLabel: 'WhatsApp number',
+      whatsappHint: 'We send your booking updates and your sign-up code here.',
+      dobYearLabel: 'Birth year',
+      dobYearHint: 'You must be at least {years} years old to join.',
+      referralLabel: 'Referral code (optional)',
+      referralHint: 'Have a friend’s code? Both of you earn coins.',
       passwordPlaceholder: 'Create a password',
       confirmPasswordLabel: 'Confirm Password',
       confirmPasswordPlaceholder: 'Re-enter password',
@@ -630,6 +638,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         dobInvalid: 'Enter a valid date of birth',
         dobFormat: 'Use the format {format}',
         dobMinAge: 'You must be at least {years} years old to join Duncit',
+        // Signup asks for a birth YEAR, so the shape rule is about four digits
+        // rather than a date pattern. BIRTH_YEAR from @duncit/regex.
+        dobYearRequired: 'Birth year is required',
+        dobYearInvalid: 'Enter a 4-digit year',
         // Phone is required and unique. The client says what shape is expected;
         // whether the number is already on another account is the server's
         // answer, and it arrives as the form's error line.
@@ -638,6 +650,32 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         codeRequired: 'Country code is required',
         codeInvalid: 'Use a code like +91',
       },
+    },
+    // The four-step Join Duncit flow. Every word is rendered from
+    // buildSignupStepperLabels in @duncit/utils, so both apps read one set.
+    signupSteps: {
+      whoTitle: 'About you',
+      whoSubtitle: 'Your name, the year you were born, and a referral code if you have one.',
+      contactTitle: 'How we reach you',
+      contactSubtitle: 'Your WhatsApp number and email address.',
+      securityTitle: 'Your password',
+      securitySubtitle: 'Pick something only you would guess.',
+      verifyTitle: 'Verify WhatsApp',
+      verifySubtitle: 'Type the code we sent, and your number is confirmed.',
+      stepOf: 'Step {current} of {total}',
+      next: 'Continue',
+      back: 'Back',
+      createAccount: 'Create account',
+      creating: 'Creating your account…',
+      sendCode: 'Send code',
+      sending: 'Sending…',
+      verify: 'Verify number',
+      verifying: 'Verifying…',
+      codeSentTo: 'We sent a 6-digit code to {destination} on WhatsApp.',
+      didntGetIt: 'Didn’t get it?',
+      resend: 'Send again',
+      skipForNow: 'Skip for now',
+      testCode: 'Test code: {code}',
     },
     forgotPassword: {
       title: 'Forgot',
@@ -1459,6 +1497,18 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       phone: 'Phone',
       receiverName: 'Receiver name',
       useAsMyDefaultAddress: 'Use as my default address',
+      // What a saved address refuses, on mWeb and native alike (rule 27). The
+      // shapes behind them are @duncit/regex's, so the two apps cannot drift on
+      // what a name, a number or a postal code is.
+      validation: {
+        labelRequired: 'Give this address a label',
+        nameInvalid: 'Name can use letters, spaces, apostrophes and periods only',
+        phoneInvalid: 'Enter a valid phone number',
+        line1Required: 'Address line 1 is required',
+        cityRequired: 'City is required',
+        stateRequired: 'State is required',
+        pincodeInvalid: 'Enter a valid pincode',
+      },
     },
     // The cart: the products waiting to be paid for, and the header button that
     // leads back to them.
@@ -1702,6 +1752,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // which already says the same two things.
       validation: {
         nameMax: 'Name must be 160 characters or fewer',
+        nameInvalid: 'Name can use letters, spaces, apostrophes and periods only',
         phoneCodeInvalid: 'Use a code like +91',
         phoneInvalid: 'Phone must contain only digits (6-15 digits)',
         line1Required: 'Address line 1 is required',
@@ -2277,6 +2328,16 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       companionsBody: 'This ticket admits {seats}. Add the other {count} to mark attendance.',
       companionName: 'Name',
       companionPhone: 'Phone',
+      // Proving a companion's own number, one person at a time. Optional by
+      // design: a dead phone or a number abroad must never hold a group at the
+      // door, so this records who was actually proved rather than gating them.
+      companionExtension: 'Country code',
+      companionVerifyCta: 'Verify on WhatsApp',
+      companionOtpHint:
+        'Optional. Send this number a code and type it back — one person at a time.',
+      companionVerified: 'Verified',
+      companionOtpBlocked: 'Finish verifying the person above first.',
+      companionOtpFailed: 'Could not send the code. Try again.',
       companionsSubmit: 'Mark attendance',
       companionsIncomplete: 'Fill in every name and phone number.',
       companionsHeading: 'Person {index}',
@@ -3171,6 +3232,23 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venueName: 'Venue name',
       yourNameIsRequired: 'Your name is required',
       zoneArea: 'Zone / Area',
+      // The page validates as it is filled in rather than only on submit, so
+      // every rule below needs a sentence of its own. The shapes come from
+      // @duncit/regex, the same ones signup and Edit profile ask for.
+      nameInvalid: 'Name can use letters, spaces, apostrophes and periods only',
+      emailInvalid: 'Enter a valid email address',
+      phoneIsRequired: 'Phone number is required',
+      aboutRequired: 'Tell us a bit more (10+ characters)',
+      aboutMax: 'This must be 2000 characters or fewer',
+      venueNameMax: 'Venue name must be 120 characters or fewer',
+      venueAddressMax: 'Venue address must be 500 characters or fewer',
+      cityMax: 'City must be 80 characters or fewer',
+      zoneMax: 'Zone must be 80 characters or fewer',
+      slotsMax: 'Up to 5 time slots',
+      typeInvalid: 'Select a valid type',
+      slotStartInvalid: 'Start time must be a valid date',
+      slotEndInvalid: 'End time must be a valid date',
+      slotEndBeforeStart: 'End must be after start',
     },
     listProduct: {
       listYourProduct: 'List your product',

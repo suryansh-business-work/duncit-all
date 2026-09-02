@@ -27,6 +27,8 @@ exports:
   - 'GSTIN'
   - 'REFERRAL_CODE'
   - 'USERNAME'
+  - 'BIRTH_YEAR'
+  - 'isBirthYear'
   - 'isPhoneNumber'
   - 'isPhoneIntl'
   - 'isPincode'
@@ -168,6 +170,7 @@ above holds for everything you can import.
 | `BANK_ACCOUNT_NUMBER` | `/^\d{6,18}$/` | `isBankAccountNumber` | 6–18 digits |
 | `GSTIN` | `/^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/` | `isGstin` | 15 chars, literal `Z` at 14 |
 | `USERNAME` | `/^(?=.{3,30}$)[a-z0-9]+(?:-[a-z0-9]+)*$/` | `isUsername` | a Duncit @handle — `suryansh-srivastava-7k2f` |
+| `BIRTH_YEAR` | `/^\d{4}$/` | `isBirthYear` | a year-only date of birth — `1998` |
 
 `EMAIL` and `UPI_ID` are bounded on both sides deliberately — the domain labels exclude `.`
 so the `\.` separator never overlaps a label. Both are linear; neither can be made to

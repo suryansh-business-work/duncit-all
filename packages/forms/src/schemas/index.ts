@@ -75,3 +75,9 @@ export {
   type ContactOtpValues,
   type ContactValueValues,
 } from './contact-change';
+
+export {
+  makeSignupSchema,
+  signupDefaults,
+  type SignupFormValues,
+} from './signup';

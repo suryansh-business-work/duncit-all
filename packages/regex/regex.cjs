@@ -110,6 +110,16 @@ const REFERRAL_CODE = /^DUN-[0-9A-F]{6}$/;
  */
 const USERNAME = /^(?=.{3,30}$)[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+/**
+ * A four-digit birth YEAR — what a year-only date of birth is typed as.
+ *
+ * Deliberately just the shape: whether the year makes somebody old enough is a
+ * calendar question, and it belongs to @duncit/datetime's
+ * `isEligibleBirthYear` alongside every other age rule. This pattern only says
+ * "four digits", so `20`, `1 999` and `two thousand` never reach that check.
+ */
+const BIRTH_YEAR = /^\d{4}$/;
+
 module.exports = {
   PHONE_NUMBER,
   PHONE_NUMBER_IN,
@@ -128,6 +138,7 @@ module.exports = {
   PERSON_NAME,
   REFERRAL_CODE,
   USERNAME,
+  BIRTH_YEAR,
   toDigits: (v) => String(v ?? '').replaceAll(NON_DIGITS, ''),
   isPhoneNumber: (v) => PHONE_NUMBER.test(v),
   isPincode: (v) => PINCODE.test(v),
@@ -142,4 +153,5 @@ module.exports = {
   isPersonName: (v) => PERSON_NAME.test(v),
   isReferralCode: (v) => REFERRAL_CODE.test(v),
   isUsername: (v) => USERNAME.test(v),
+  isBirthYear: (v) => BIRTH_YEAR.test(v),
 };

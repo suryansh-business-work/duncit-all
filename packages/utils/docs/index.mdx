@@ -130,6 +130,15 @@ exports:
   - 'recoveryDestination'
   - 'buildPasswordRecoveryLabels'
   - 'buildOtpLoginLabels'
+  - 'SIGNUP_STEPS'
+  - 'SIGNUP_STEP_COUNT'
+  - 'SIGNUP_STEP_FIELDS'
+  - 'signupStepIndex'
+  - 'nextSignupStep'
+  - 'previousSignupStep'
+  - 'stepSubmitsAccount'
+  - 'canLeaveSignupStep'
+  - 'buildSignupStepperLabels'
   - 'USERNAME_PATTERN'
   - 'normalizeUsername'
   - 'usernameStatus'
@@ -1324,6 +1333,27 @@ apps render the same channel and code steps for both flows:
 buildOtpLoginLabels(t).verify; // 'Verify & sign in' — recovery says 'Verify code'
 buildOtpLoginLabels(t).resend; // identical to recovery: same cooldown, same mechanics
 ```
+
+### Joining Duncit, one question at a time
+
+Signup is four steps, and the order is the point: the two that cost nothing come first (who
+you are, how we reach you), the password comes third so it is typed once the person is already
+committed, and the WhatsApp code is last because it can only be asked for AFTER the account
+exists — `requestWhatsAppOtp` authenticates its caller.
+
+`SIGNUP_STEP_FIELDS` is what "Continue" validates: RHF's `trigger` takes exactly that list, so
+a step can only be left once its OWN boxes are right and nobody is told off about a box two
+screens ahead.
+
+```ts
+SIGNUP_STEP_FIELDS.WHO;       // ['name', 'dobYear', 'referralCode']
+nextSignupStep('CONTACT');    // 'SECURITY'
+stepSubmitsAccount('SECURITY'); // true — this step's button IS "create my account"
+canLeaveSignupStep('VERIFY'); // false — the account exists; Back would offer a spent form
+```
+
+Both apps render the same four steps from `buildSignupStepperLabels`; the MUI and Tamagui
+components stay separate and thin (rule 40).
 
 ### The follow button, and the follow rows in the inbox
 

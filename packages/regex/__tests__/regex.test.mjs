@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   BANK_ACCOUNT_NUMBER,
+  BIRTH_YEAR,
   DIAL_CODE,
   DIGITS,
   EMAIL,
   GSTIN,
   IFSC,
   isBankAccountNumber,
+  isBirthYear,
   isEmail,
   isGstin,
   isIfsc,
@@ -355,5 +357,20 @@ describe('validators', () => {
   it('isGstin uses the STRICT pattern, not the loose one', () => {
     expect(isGstin('29ABCDE1234F1Z5')).toBe(true);
     expect(isGstin('29ABCDE1234F1A5')).toBe(false);
+  });
+
+  it('BIRTH_YEAR takes four digits and nothing else', () => {
+    expect(BIRTH_YEAR.test('1998')).toBe(true);
+    expect(BIRTH_YEAR.test('2007')).toBe(true);
+    // The three shapes a year box actually receives when somebody mistypes.
+    expect(BIRTH_YEAR.test('98')).toBe(false);
+    expect(BIRTH_YEAR.test('19988')).toBe(false);
+    expect(BIRTH_YEAR.test('1 99')).toBe(false);
+    expect(BIRTH_YEAR.test('')).toBe(false);
+  });
+
+  it('isBirthYear matches BIRTH_YEAR', () => {
+    expect(isBirthYear('2001')).toBe(true);
+    expect(isBirthYear('twenty')).toBe(false);
   });
 });

@@ -937,6 +937,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
     path: "packages/forms/package.json",
     private: true,
     dependencies: [
+      { name: "@duncit/datetime", range: "workspace:*", kind: "devDependencies" },
       { name: "@duncit/regex", range: "workspace:*", kind: "devDependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "devDependencies" },
       { name: "@mui/material", range: "^9.4.0", kind: "devDependencies" },
@@ -954,6 +955,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "typescript", range: "^7.0.2", kind: "devDependencies" },
       { name: "vitest", range: "^4.1.11", kind: "devDependencies" },
       { name: "zod", range: "^4.5.4", kind: "devDependencies" },
+      { name: "@duncit/datetime", range: "workspace:*", kind: "peerDependencies" },
       { name: "@duncit/regex", range: "workspace:*", kind: "peerDependencies" },
       { name: "@duncit/utils", range: "workspace:*", kind: "peerDependencies" },
       { name: "@mui/material", range: ">=5", kind: "peerDependencies" },

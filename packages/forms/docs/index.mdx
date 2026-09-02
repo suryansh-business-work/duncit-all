@@ -40,9 +40,12 @@ exports:
   - 'makeDeleteAccountSchema'
   - 'makeContactValueSchema'
   - 'makeContactOtpSchema'
+  - 'makeAddressSchema'
+  - 'blankAddress'
   - 'makeWithdrawSchema'
   - 'makePasswordWithOtpSchema'
   - 'makePasswordPairSchema'
+  - 'makeSignupSchema'
   - 'buildWithdrawInput'
   - 'blankWithdrawValues'
   - 'WITHDRAW_METHODS'
@@ -52,6 +55,7 @@ exports:
   - 'currentPasswordDefaults'
   - 'newPasswordDefaults'
   - 'passwordPairDefaults'
+  - 'signupDefaults'
   - 'deleteAccountDefaults'
 ---
 
@@ -411,9 +415,11 @@ directly.
 | `makeDeleteAccountSchema` | deletion request | code + a ≤1000-char reason a human reads |
 | `makeContactValueSchema` | email/phone/WhatsApp change | built PER CHANNEL — see below |
 | `makeContactOtpSchema` | the code proving it | six digits, nothing else |
+| `makeAddressSchema` | one saved address | recipient name, number and postal code from @duncit/regex |
 | `makeWithdrawSchema` | wallet withdrawal | balance ceiling, role-wise floor, per-method payout details |
 | `makePasswordWithOtpSchema` | both password flows | what reset and change-password each aliased |
 | `makePasswordPairSchema` | recovery step 3 | the same pair WITHOUT a code — recovery proves its code a step earlier |
+| `makeSignupSchema` | joining Duncit | the whole four-step signup, in ONE contract — see below |
 
 `makeContactValueSchema(channel, t)` returns a different object schema per channel rather than
 one schema with every field optional. A schema that accepts a blank number because the caller
@@ -424,6 +430,57 @@ union gives react-hook-form a union to resolve field paths against, which it can
 Phone numbers validate against `PHONE_INTL`, not the 10-digit Indian pattern: there is a
 country-code picker beside the box, and a `+91`-only rule would refuse numbers the picker
 itself offers.
+
+### One saved address
+
+`makeAddressSchema(t)` is here for the same reason `makeContactValueSchema` is: mWeb's dialog
+and the native sheet had written it out separately, which is how the recipient's name and number
+ended up with no rule at all on either of them — a `max(120)` and a `max(20)`, and nothing
+about what the characters could be.
+
+The shapes come from `@duncit/regex`, so a parcel refused on one app is refused on the other.
+The number is read through `toDigits` first, so a pasted number is judged on its digits rather
+than its spacing:
+
+```ts
+makeAddressSchema(t).safeParse({ ...blankAddress, phone: '+91 98765 43210' }); // the number passes
+makeAddressSchema(t).safeParse({ ...blankAddress, name: 'Doe_123' }); // address.validation.nameInvalid
+```
+
+mWeb offers a "default address" flag that native does not, so it extends rather than re-declares:
+`makeAddressSchema(t).extend({ is_default: z.boolean() })`.
+
+### One signup, not two
+
+`makeSignupSchema` is the contract BOTH signup surfaces validate against. They used to hold a
+copy each, and the copies had already drifted on three rules that decide whether a real person
+can join:
+
+| Rule | mWeb said | the app said |
+| --- | --- | --- |
+| Name length | 1–60 | 2–80 |
+| Confirm password | "did you fill it in" | "at least 8 characters" |
+| Blank email | "Email is required" | "Enter a valid email" |
+
+So `Al` passed one surface and not the other, a long Indian full name passed the app and was
+refused by mWeb, and the confirm box reported a length problem under a field whose real problem
+is that it does not match. One copy, one answer.
+
+The name carries TWO length rules on purpose — Zod stops at the first failure, so an empty box
+says *required* and a one-letter name says *too short*, rather than one message doing both jobs
+badly.
+
+```ts
+const schema = makeSignupSchema(minAge, t, requiredPolicyIds);
+
+schema.safeParse({ ...values, name: '' });   // nameRequired
+schema.safeParse({ ...values, name: 'A' });  // nameMin
+schema.safeParse({ ...values, dobYear: '90' }); // dobYearInvalid — BIRTH_YEAR wants four digits
+```
+
+The birth YEAR is checked for shape by `BIRTH_YEAR` from `@duncit/regex` and for age by
+`isEligibleBirthYear` from `@duncit/datetime`, so the form, the profile editor and the server
+all gate on one calendar.
 
 ### The withdrawal floor
 

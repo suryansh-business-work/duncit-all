@@ -3,8 +3,12 @@ import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_MIN_ACCOUNT_AGE_YEARS,
   ageInYears,
+  birthYearToDob,
   dobMinAgeMessage,
+  dobToBirthYear,
+  isEligibleBirthYear,
   isEligibleDob,
+  latestEligibleBirthYear,
   latestEligibleDob,
 } from '../src/age';
 
@@ -120,5 +124,55 @@ describe('dobMinAgeMessage', () => {
   it('says the same thing on every surface, with the configured number in it', () => {
     expect(dobMinAgeMessage(21)).toBe('You must be at least 21 years old to join Duncit');
     expect(dobMinAgeMessage()).toContain(String(DEFAULT_MIN_ACCOUNT_AGE_YEARS));
+  });
+});
+
+describe('year-only dates of birth', () => {
+  // A fixed "today" so the expectations do not rot with the calendar.
+  const SEP = new Date(2026, 8, 1); // 1 September 2026
+
+  it('offers the newest year that is old enough', () => {
+    expect(latestEligibleBirthYear(18, SEP)).toBe(2008);
+    expect(latestEligibleBirthYear(21, SEP)).toBe(2005);
+  });
+
+  it('defaults the minimum age to the shared constant', () => {
+    expect(latestEligibleBirthYear(undefined, SEP)).toBe(
+      2026 - DEFAULT_MIN_ACCOUNT_AGE_YEARS,
+    );
+  });
+
+  it('accepts the cut-off year and everything before it', () => {
+    expect(isEligibleBirthYear(2008, 18, SEP)).toBe(true);
+    expect(isEligibleBirthYear('1998', 18, SEP)).toBe(true);
+  });
+
+  it('rejects a year too recent to be old enough', () => {
+    expect(isEligibleBirthYear(2009, 18, SEP)).toBe(false);
+    expect(isEligibleBirthYear(2030, 18, SEP)).toBe(false);
+  });
+
+  it('rejects anything that is not a whole year', () => {
+    expect(isEligibleBirthYear('', 18, SEP)).toBe(false);
+    expect(isEligibleBirthYear('nineteen', 18, SEP)).toBe(false);
+    expect(isEligibleBirthYear(Number.NaN, 18, SEP)).toBe(false);
+  });
+
+  it('defaults its minimum age too', () => {
+    expect(isEligibleBirthYear(1990, undefined, SEP)).toBe(true);
+  });
+
+  it('stores a year as the first of January, which is what the server re-checks', () => {
+    expect(birthYearToDob(2001)).toBe('2001-01-01');
+    expect(birthYearToDob(' 1999 ')).toBe('1999-01-01');
+    // The round trip the profile editor makes when it reads a stored date back.
+    expect(isEligibleDob(birthYearToDob(2008), 18, SEP)).toBe(true);
+  });
+
+  it('reads the year back out of a stored date, and says so when there is none', () => {
+    expect(dobToBirthYear('1998-04-23')).toBe('1998');
+    expect(dobToBirthYear('')).toBe('');
+    expect(dobToBirthYear(null)).toBe('');
+    expect(dobToBirthYear('not-a-date')).toBe('');
   });
 });

@@ -11,6 +11,7 @@
     "./schemas": "./src/schemas/index.ts"
   },
   "peerDependencies": {
+    "@duncit/datetime": "workspace:*",
     "@duncit/regex": "workspace:*",
     "@duncit/utils": "workspace:*",
     "@mui/material": ">=5",
@@ -20,6 +21,7 @@
     "zod": ">=4"
   },
   "devDependencies": {
+    "@duncit/datetime": "workspace:*",
     "@duncit/regex": "workspace:*",
     "@duncit/utils": "workspace:*",
     "@mui/material": "^9.4.0",

@@ -17,6 +17,11 @@ jest.mock('@/stores/auth.store', () => ({
 }));
 
 jest.mock('@/services/auth.service');
+/* Google's fast path is gated on the policy list having answered. Unmocked it
+   never loads, so the sheet opens and the credential is never spent. */
+jest.mock('@/hooks/usePolicies', () => ({
+  useSignupPolicies: () => ({ policies: [], loaded: true }),
+}));
 jest.mock('@/components/AuthScaffold', () => ({
   AuthScaffold: ({ children, testID }: { children: ReactNode; testID?: string }) => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -37,6 +42,17 @@ jest.mock('@/components/GoogleAuthButton', () => ({
     );
   },
 }));
+jest.mock('@/screens/SignupScreen/VerifyWhatsappStep', () => ({
+  VerifyWhatsappStep: ({ onDone }: { onDone: () => void }) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { Pressable, Text } = require('react-native');
+    return (
+      <Pressable testID="finish-whatsapp" onPress={onDone}>
+        <Text>v</Text>
+      </Pressable>
+    );
+  },
+}));
 jest.mock('@/forms/signup', () => ({
   SignupForm: ({ onSubmit }: { onSubmit: (v: Record<string, string>) => void }) => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -45,7 +61,14 @@ jest.mock('@/forms/signup', () => ({
       <Pressable
         testID="submit-signup"
         onPress={() =>
-          onSubmit({ name: 'Riya', birthYear: '1995', email: 'r@b.com', password: 'pw' })
+          onSubmit({
+            name: 'Riya',
+            dobYear: '1995',
+            email: 'r@b.com',
+            phoneExtension: '+91',
+            phoneNumber: '9845012345',
+            password: 'pw',
+          })
         }
       >
         <Text>s</Text>
@@ -60,10 +83,24 @@ const mockedGoogle = jest.mocked(signupWithGoogle);
 beforeEach(() => jest.clearAllMocks());
 
 describe('SignupScreen', () => {
-  it('registers and lands on the survey gate', async () => {
+  it('creates the account and moves to the WhatsApp step without signing in yet', async () => {
     mockedRegister.mockResolvedValue({ token: 't', surveyCompleted: false });
     renderWithProviders(<SignupScreen />);
     fireEvent.press(screen.getByTestId('submit-signup'));
+
+    await waitFor(() => expect(screen.getByTestId('finish-whatsapp')).toBeOnTheScreen());
+    /* The gate stays shut on purpose: flipping it here would unmount the
+       screen and skip the step the person is halfway through. */
+    expect(mockAuthenticate).not.toHaveBeenCalled();
+  });
+
+  it('signs in once the WhatsApp step is settled', async () => {
+    mockedRegister.mockResolvedValue({ token: 't', surveyCompleted: false });
+    renderWithProviders(<SignupScreen />);
+    fireEvent.press(screen.getByTestId('submit-signup'));
+    await waitFor(() => expect(screen.getByTestId('finish-whatsapp')).toBeOnTheScreen());
+
+    fireEvent.press(screen.getByTestId('finish-whatsapp'));
     await waitFor(() => expect(mockAuthenticate).toHaveBeenCalledWith('t', false));
   });
 
@@ -71,7 +108,9 @@ describe('SignupScreen', () => {
     mockedGoogle.mockResolvedValue({ token: 'g', surveyCompleted: false });
     renderWithProviders(<SignupScreen />);
     fireEvent.press(screen.getByTestId('google-btn'));
-    await waitFor(() => expect(mockAuthenticate).toHaveBeenCalledWith('g', false));
+    // The third argument routes Google to the referral step: its form never
+    // carried a code, so it is asked for after the account exists.
+    await waitFor(() => expect(mockAuthenticate).toHaveBeenCalledWith('g', false, true));
   });
 
   it('does not authenticate when registration fails', async () => {

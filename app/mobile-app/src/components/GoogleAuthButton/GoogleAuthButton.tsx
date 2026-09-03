@@ -93,14 +93,24 @@ export function GoogleAuthButton({
       onPress={() => {
         if (isDisabled) return;
         setPrompting(true);
-        // A rejected prompt never reaches the response effect, so the spinner
-        // is cleared here too — otherwise a browser that refuses to open
-        // leaves the button spinning with nothing behind it.
         promptAsync()
-          .catch(() => {
-            onError?.(t('mweb.auth.googleFailed'));
+          .then((result) => {
+            /*
+              A SUCCESS is left spinning on purpose: the effect below clears it
+              in the same breath as handing the token to the parent, which
+              starts its own wait. Clearing it here would let the button go idle
+              and pressable for the frame between the two.
+
+              Every other outcome ends here, because nothing follows it.
+            */
+            if (result.type !== 'success') setPrompting(false);
           })
-          .finally(() => setPrompting(false));
+          .catch(() => {
+            // A prompt that never opened reaches no response, so this is the
+            // only place the spinner can be cleared for it.
+            setPrompting(false);
+            onError?.(t('mweb.auth.googleFailed'));
+          });
       }}
       alignItems="center"
       justifyContent="center"

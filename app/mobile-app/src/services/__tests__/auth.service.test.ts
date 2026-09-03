@@ -59,6 +59,7 @@ describe('auth.service mutations', () => {
       email: 'Riya@Duncit.com',
       phoneNumber: '9845012345',
       phoneExtension: '+91',
+      whatsappIsMobile: true,
       password: 'StrongPass123',
       acceptedPolicyIds: ['pol-1'],
     });

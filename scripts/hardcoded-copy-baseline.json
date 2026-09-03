@@ -340,7 +340,7 @@
   "app/mweb/src/pages/venue-slot-requests-page/index.tsx": 3,
   "app/mweb/src/pages/venue-slot-requests-page/SlotRequestCard.tsx": 1,
   "app/mweb/src/pages/VenueDetailsPage.tsx": 1,
-  "app/mweb/src/pages/VenueManagePage.tsx": 6,
+  "app/mweb/src/pages/VenueManagePage.tsx": 3,
   "app/mweb/src/pages/venues-page/index.tsx": 2,
   "app/mweb/src/pages/venues-page/VenuePodsSection.tsx": 1,
   "app/mweb/src/pages/wallet-page/WalletPage.tsx": 1,

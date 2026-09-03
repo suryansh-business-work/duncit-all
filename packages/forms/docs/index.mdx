@@ -46,6 +46,8 @@ exports:
   - 'makePasswordWithOtpSchema'
   - 'makePasswordPairSchema'
   - 'makeSignupSchema'
+  - 'makeWhatsappNumberSchema'
+  - 'whatsappNumberShape'
   - 'buildWithdrawInput'
   - 'blankWithdrawValues'
   - 'WITHDRAW_METHODS'
@@ -56,6 +58,7 @@ exports:
   - 'newPasswordDefaults'
   - 'passwordPairDefaults'
   - 'signupDefaults'
+  - 'whatsappNumberDefaults'
   - 'deleteAccountDefaults'
 ---
 
@@ -420,6 +423,7 @@ directly.
 | `makePasswordWithOtpSchema` | both password flows | what reset and change-password each aliased |
 | `makePasswordPairSchema` | recovery step 3 | the same pair WITHOUT a code — recovery proves its code a step earlier |
 | `makeSignupSchema` | joining Duncit | the whole four-step signup, in ONE contract — see below |
+| `makeWhatsappNumberSchema` | the Google door's number step | the WhatsApp row on its own — see below |
 
 `makeContactValueSchema(channel, t)` returns a different object schema per channel rather than
 one schema with every field optional. A schema that accepts a blank number because the caller
@@ -481,6 +485,29 @@ schema.safeParse({ ...values, dobYear: '90' }); // dobYearInvalid — BIRTH_YEAR
 The birth YEAR is checked for shape by `BIRTH_YEAR` from `@duncit/regex` and for age by
 `isEligibleBirthYear` from `@duncit/datetime`, so the form, the profile editor and the server
 all gate on one calendar.
+
+### The WhatsApp row, asked at two doors
+
+Signup collects ONE number, and `whatsappNumberShape(t)` is it: the dial code, the digits, and
+`whatsappIsMobile` — the tick box saying whether that number is the person's mobile number too.
+Unticked, the profile phone is left **blank**; the person has said the two differ, and filing
+the WhatsApp number as their mobile would put a number they never gave us on their account.
+
+The shape is spread into `makeSignupSchema` and exported on its own as
+`makeWhatsappNumberSchema` because two doors ask for it. The email form asks as step two.
+Google hands back a finished account with no form attached, so it asks on a step of its own —
+which is also the only moment `requestWhatsAppOtp` can be called, since that mutation
+authenticates its caller.
+
+```ts
+const schema = makeWhatsappNumberSchema(t);
+
+schema.safeParse(whatsappNumberDefaults); // phoneRequired — the number is the one blank box
+schema.safeParse({ ...whatsappNumberDefaults, phoneNumber: '9845012345' }); // passes
+```
+
+Whether the number is already on another account is the server's answer, checked twice: before
+a code is sent, and again before a proven number is written.
 
 ### The withdrawal floor
 

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
-import { useNavigate } from 'react-router';
 import { ACCEPTANCE_SURFACE } from '../components/policy-acceptance';
 import { useTranslation } from '../i18n/useTranslation';
 import { parseApiError } from '../utils/parseApiError';
@@ -28,13 +27,12 @@ const SIGNUP_GOOGLE = gql`
  * add because at that point there is still no account: backing out leaves
  * nothing behind, which is what the dialog's Google wording promises.
  *
- * `linkedCode` is a referral code that arrived on the URL; it rides through to
- * the referral step so somebody who followed a friend's link and then chose
- * Google still lands with the box filled in.
+ * Where the new account goes next is the SIGNUP FLOW's answer, not this hook's:
+ * a Google account has no phone number on it, so the WhatsApp step runs before
+ * the referral question, and only the flow knows whether that step is on.
  */
-export function useGoogleSignup(linkedCode: string) {
+export function useGoogleSignup(onCreated: () => void) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [signupGoogle, { loading }] = useMutation<any>(SIGNUP_GOOGLE);
   const [credential, setCredential] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +55,7 @@ export function useGoogleSignup(linkedCode: string) {
     const token = res.data?.signupWithGoogle?.token;
     if (token) {
       localStorage.setItem('token', token);
-      navigate('/signup-referral', { state: { code: linkedCode } });
+      onCreated();
     }
   };
 

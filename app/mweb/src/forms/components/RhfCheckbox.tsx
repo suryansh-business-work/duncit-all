@@ -42,7 +42,8 @@ export default function RhfCheckbox<T extends FieldValues>({
                 checked={field.value === true}
                 onChange={(event) => field.onChange(event.target.checked)}
                 onBlur={field.onBlur}
-                inputProps={{ 'data-testid': testId } as Record<string, string>}
+                data-testid={testId}
+                slotProps={{ input: { 'aria-label': label } }}
               />
             }
           />

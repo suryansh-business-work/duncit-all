@@ -61,6 +61,7 @@ import {
   SIGNUP_STEPS,
   SIGNUP_STEP_COUNT,
   SIGNUP_STEP_FIELDS,
+  buildSignupStepperLabels,
   canLeaveSignupStep,
   nextSignupStep,
   previousSignupStep,
@@ -777,16 +778,27 @@ export default defineDemos('utils', [
       "button creates the account, and VERIFY is the only one with no way back — by then the account " +
       'exists, so Back could only offer a form that has been spent.',
     mock: { step: 'CONTACT' },
-    compute: (mock) => ({
-      'Step': `${signupStepIndex(mock.step)} of ${SIGNUP_STEP_COUNT}`,
-      'Boxes this step validates': SIGNUP_STEP_FIELDS[mock.step].join(', ') || '(none — the server checks the code)',
-      'Continue goes to': nextSignupStep(mock.step) ?? '(nowhere — this is the last)',
-      'Back goes to': canLeaveSignupStep(mock.step)
-        ? (previousSignupStep(mock.step) ?? '')
-        : '(no Back on this step)',
-      'Creates the account': String(stepSubmitsAccount(mock.step)),
-      'The four steps': SIGNUP_STEPS.join(' -> '),
-    }),
+    compute: (mock) => {
+      // Keys rather than English, so the demo shows WHICH sentence each label
+      // resolves to without pinning a translation.
+      const t = (key: string) => key;
+      const labels = buildSignupStepperLabels(t);
+      return {
+        'Step': `${signupStepIndex(mock.step)} of ${SIGNUP_STEP_COUNT}`,
+        'Boxes this step validates':
+          SIGNUP_STEP_FIELDS[mock.step].join(', ') || '(none — the server checks the code)',
+        'Continue goes to': nextSignupStep(mock.step) ?? '(nowhere — this is the last)',
+        'Back goes to': canLeaveSignupStep(mock.step)
+          ? (previousSignupStep(mock.step) ?? '')
+          : '(no Back on this step)',
+        'Creates the account': String(stepSubmitsAccount(mock.step)),
+        'The four steps': SIGNUP_STEPS.join(' -> '),
+        // The Google door has no form to have asked these, so it asks them
+        // inside VERIFY — same builder, so both doors word the box identically.
+        "Google's number half-step": labels.numberTitle,
+        'The tick box': labels.sameAsMobile,
+      };
+    },
   }),
   defineDemo<PasswordRecoveryMock>({
     id: 'password-recovery',

@@ -1439,6 +1439,7 @@ screens ahead.
 
 ```ts
 SIGNUP_STEP_FIELDS.WHO;       // ['name', 'dobYear', 'referralCode']
+SIGNUP_STEP_FIELDS.CONTACT;   // includes 'whatsappIsMobile' — the tick box is CONTACT's
 nextSignupStep('CONTACT');    // 'SECURITY'
 stepSubmitsAccount('SECURITY'); // true — this step's button IS "create my account"
 canLeaveSignupStep('VERIFY'); // false — the account exists; Back would offer a spent form
@@ -1446,6 +1447,12 @@ canLeaveSignupStep('VERIFY'); // false — the account exists; Back would offer 
 
 Both apps render the same four steps from `buildSignupStepperLabels`; the MUI and Tamagui
 components stay separate and thin (rule 40).
+
+Google is the same four steps with the first three answered for it, so it lands straight on
+VERIFY — where it has to ask for the WhatsApp number before it can ask for the code, because
+Google hands back an account with no phone on it. `numberTitle` / `numberSubtitle` are that
+half-step's words, and `sameAsMobile` / `sameAsMobileHint` are the tick box's, rendered from
+the same builder so neither door words it differently.
 
 ### The follow button, and the follow rows in the inbox
 

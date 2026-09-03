@@ -54,7 +54,14 @@ export function WhatsappNumberStep({ onSubmit, onSkip }: Readonly<Props>) {
       <Text fontSize={13} color="$muted">
         {labels.numberSubtitle}
       </Text>
-      <WhatsappNumberFields control={control} />
+      <WhatsappNumberFields
+        control={control}
+        names={{
+          extension: 'phoneExtension',
+          number: 'phoneNumber',
+          sameAsMobile: 'whatsappIsMobile',
+        }}
+      />
       <PrimaryButton
         testID="signup-number-continue"
         label={labels.sendCode}

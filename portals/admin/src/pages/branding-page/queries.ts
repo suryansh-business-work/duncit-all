@@ -182,3 +182,14 @@ export const emptyBrandingForm: BrandingFormState = {
   mweb_font_family: '',
   portals_font_family: '',
 };
+
+/**
+ * The "All" vibe-tab icon layout, as the mutation's `CategoryIconLayoutInput`
+ * wants it. The value read back by the `Branding` query carries Apollo's
+ * `__typename`, which the input type rejects — every caller that round-trips a
+ * layout back into `updateBranding` picks its fields through here.
+ */
+export const toIconLayoutInput = (
+  layout: { position: string; width: number; height: number } | null | undefined,
+): BrandingFormState['home_all_vibe_icon_layout'] =>
+  layout ? { position: layout.position, width: layout.width, height: layout.height } : null;

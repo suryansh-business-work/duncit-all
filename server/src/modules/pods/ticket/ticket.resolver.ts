@@ -58,14 +58,24 @@ export const eventTicketResolvers = {
     // express it.
     clubAdminForceAttendance: (
       _p: unknown,
-      args: { pod_doc_id: string; membership_id: string },
+      args: {
+        pod_doc_id: string;
+        membership_id: string;
+        otp_challenge_id?: string | null;
+        companions?: unknown;
+      },
       ctx: GraphQLContext
     ) => {
       const u = requireAuth(ctx);
-      return ticketService.clubAdminForceAttendance(args.pod_doc_id, args.membership_id, {
-        id: u.id,
-        roles: u.roles ?? [],
-      });
+      return ticketService.clubAdminForceAttendance(
+        args.pod_doc_id,
+        args.membership_id,
+        { id: u.id, roles: u.roles ?? [] },
+        // Both are optional and independent: a code proves the attendee, the
+        // names account for the seats. Dropping either here is how the mutation
+        // would silently ignore half of what the admin just filled in.
+        { otpChallengeId: args.otp_challenge_id ?? null, companions: args.companions }
+      );
     },
   },
 };

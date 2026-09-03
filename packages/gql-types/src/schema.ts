@@ -8457,14 +8457,22 @@ export type Mutation = {
   /** Soft-delete a pod in one of the signed-in user's clubs. */
   clubAdminDeletePod: Scalars['Boolean']['output'];
   /**
-   * Club Admin marks a member present WITHOUT a scan.
+   * Club Admin marks a member present without a scan — by code, or by name.
    *
-   * The host's path is QR-only on purpose: a scan is proof the person was at the
-   * door, and the host is paid on the result. This is the override for when that
-   * proof cannot be produced — a dead phone, a lost ticket — and it is limited
-   * to the club's admin, who is accountable for the club rather than for this
-   * pod's payout. Every forced mark records who forced it and notifies the
-   * member, so it is contestable rather than silent.
+   * The host's own path is proof-first: a QR scan, or a one-time code the
+   * attendee reads back, and the host is paid on the result. This is the club's
+   * override for when neither can be produced, and it carries both doors:
+   *
+   * - Send the attendee a WhatsApp/SMS code with requestPodAttendanceOtp, verify
+   *   it, and pass the challenge as otp_challenge_id. It is spent here and the
+   *   number that answered is recorded against the ticket.
+   * - Or pass none: the host forgot to mark the pod and read the admin the
+   *   names, which is the call this path exists for. The companions argument
+   *   records whichever of them a multi-seat booking was given.
+   *
+   * Neither door is gated on the companion count, unlike the host's scan — the
+   * group is not standing at this one. Every mark records who made it and
+   * notifies the member, so it is contestable rather than silent.
    */
   clubAdminForceAttendance: EventTicket;
   /** Edit a club the signed-in user administers (governance fields are ignored). */
@@ -10166,7 +10174,9 @@ export type MutationClubAdminDeletePodArgs = {
 
 
 export type MutationClubAdminForceAttendanceArgs = {
+  companions?: InputMaybe<Array<PodForcedCompanionInput>>;
   membership_id: Scalars['ID']['input'];
+  otp_challenge_id?: InputMaybe<Scalars['ID']['input']>;
   pod_doc_id: Scalars['ID']['input'];
 };
 
@@ -14968,6 +14978,22 @@ export type PodFinanceWaterfall = {
   venue_commission_pct: Scalars['Float']['output'];
   venue_receives: Scalars['Float']['output'];
   version: Scalars['Int']['output'];
+};
+
+/**
+ * One of the extra people a booking admits, as a Club Admin is given them.
+ *
+ * Separate from PodCompanionInput because the two are collected in different
+ * rooms. At the door the host has the group in front of them, so a number is
+ * reasonable. A Club Admin correcting a roster the host forgot is read names
+ * down a phone line, and demanding a number there means ringing every attendee
+ * — the exact call this path exists to avoid. So the name is required and
+ * nothing else is.
+ */
+export type PodForcedCompanionInput = {
+  name: Scalars['String']['input'];
+  phone_extension?: InputMaybe<Scalars['String']['input']>;
+  phone_number?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type PodIdea = {

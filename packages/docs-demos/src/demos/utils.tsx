@@ -31,6 +31,7 @@ import {
   buildPodFeedbackInput,
   canCompletePod,
   canFollowBack,
+  attendanceRowState,
   canScanTickets,
   canSubmitPodFeedback,
   commChannelSummary,
@@ -50,6 +51,7 @@ import {
   formatMoney,
   hostPodSection,
   mwebAttendanceLabels,
+  namedCompanionEntries,
   needsOtp,
   SIGNUP_STEPS,
   SIGNUP_STEP_COUNT,
@@ -177,6 +179,8 @@ interface AttendanceBoardMock {
   can_mark: boolean;
   otp_required: boolean;
   pod_mode: PodAttendanceMode;
+  /** Seats on one booking still without a name against them. */
+  companions_required: number;
 }
 
 /** A slice of the Home feed, plus the instant the rails are drawn at. */
@@ -892,26 +896,40 @@ export default defineDemos('utils', [
       'Flip pod_mode to VIRTUAL: the scanner disappears and the earnings sentence changes. ' +
       'canScanTickets decides whether the scan dialog is MOUNTED, not merely hidden — it reads ' +
       'the host-actions config, which a console with no host area never supplies. ' +
-      'Set viewer to CLUB_ADMIN and needsOtp answers false whatever otp_required says — the ' +
-      'override exists for the attendee who cannot be reached.',
+      'Now set viewer to CLUB_ADMIN with companions_required above 0: the row state flips from ' +
+      'NEEDS_COMPANIONS to READY, because naming the group is the HOST’s door step and the ' +
+      'admin is correcting the roster long after that door shut. needsOtp also answers false for ' +
+      'them — not because they cannot send a code, but because they are never made to.',
     mock: {
       pod_id: 'DUN-POD-4821',
       viewer: 'HOST',
       can_mark: true,
       otp_required: true,
       pod_mode: 'PHYSICAL',
+      companions_required: 7,
     },
     compute: (mock) => {
       // Keys rather than copy, so the demo names WHICH sentence each surface renders.
       const labels = mwebAttendanceLabels((key) => key);
       const door = mock.pod_mode === 'VIRTUAL' ? 'VIRTUAL_JOIN' : 'HOST_SCAN';
       const scanCta = canScanTickets(mock) ? labels.scanCta : '(hidden)';
+      const row = { attended: false, companions_required: mock.companions_required };
       return {
         'needsOtp(board)': needsOtp(mock),
         'canScanTickets(board)': canScanTickets(mock),
         'earningsBodyFor(board, labels)': earningsBodyFor(mock, labels),
         'Scan CTA': scanCta,
         'How a member gets marked': labels.methodLabel(door),
+        'attendanceRowState(row, can_mark, viewer)': attendanceRowState(
+          row,
+          mock.can_mark,
+          mock.viewer
+        ),
+        'namedCompanionEntries(what the admin was read)': namedCompanionEntries([
+          { name: 'Ishita Rao', phone_extension: '+91', phone_number: '9876543210' },
+          { name: 'Kabir Shah', phone_extension: '+91', phone_number: '' },
+          { name: '', phone_extension: '+91', phone_number: '' },
+        ]),
       };
     },
   }),

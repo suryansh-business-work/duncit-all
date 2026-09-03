@@ -149,7 +149,14 @@ export const podAttendanceTypeDefs = /* GraphQL */ `
     are never attendees of their own pod.
     """
     joinPodMeeting(pod_doc_id: ID!): PodMeetingAccess!
-    "Send the attendee a one-time code over the chosen medium(s)."
+    """
+    Send the attendee a one-time code over the chosen medium(s).
+
+    Open to the pod's host and to an admin of its club: both boards offer the
+    code, and only the host's board can be made to require it. The number is
+    never the caller's to choose freely — the booking has to be live on a pod
+    they already hold the roster for.
+    """
     requestPodAttendanceOtp(input: PodAttendanceOtpInput!): PhoneOtpRequestResult!
     """
     Send ONE of the extra people a multi-seat booking admits a one-time code.

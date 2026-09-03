@@ -40,8 +40,10 @@ describe('SpendBars', () => {
     );
 
     // Grouped, because these are read as magnitudes rather than exact figures.
-    expect(container.textContent).toContain('12,400 calls');
-    expect(container.textContent).toContain('515,000 tokens');
+    // Grouping is locale-driven (an Indian locale writes 5,15,000, not
+    // 515,000), so the expectation is built the same way the component is.
+    expect(container.textContent).toContain((12_400).toLocaleString() + ' calls');
+    expect(container.textContent).toContain((515_000).toLocaleString() + ' tokens');
   });
 
   it('scales the widest bar to the biggest spender, not to the busiest', () => {

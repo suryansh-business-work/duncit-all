@@ -108,13 +108,25 @@ export type AttendanceRowState =
   /** The roster is closed; nothing on this row can change. */
   | 'LOCKED';
 
+/**
+ * The companion gate is the HOST's, and only the host's.
+ *
+ * A multi-seat booking is a bare number until someone writes down who it
+ * covers, and the one moment those people are all present is the host's door —
+ * so the host's row waits. A Club Admin is never at that door: they are
+ * correcting a roster afterwards, their mutation has no companion gate, and
+ * their dialog collects whatever names they were read. Applying the host's
+ * wait to them disabled the only button they have, on exactly the bookings
+ * they are called about.
+ */
 export function attendanceRowState(
   row: Readonly<Pick<PodAttendanceRow, 'attended' | 'companions_required'>>,
-  canMark: boolean
+  canMark: boolean,
+  viewer: PodAttendanceViewer = 'HOST'
 ): AttendanceRowState {
   if (row.attended) return 'MARKED';
   if (!canMark) return 'LOCKED';
-  if (row.companions_required > 0) return 'NEEDS_COMPANIONS';
+  if (viewer === 'HOST' && row.companions_required > 0) return 'NEEDS_COMPANIONS';
   return 'READY';
 }
 
@@ -254,6 +266,44 @@ export const companionEntriesToInput = (
     phone_number: entry.phone_number.trim(),
     otp_challenge_id: entry.otp_challenge_id || null,
   }));
+
+/**
+ * One name on a Club Admin's mark, as `PodForcedCompanionInput` carries it.
+ *
+ * No `otp_challenge_id`, unlike `CompanionRecordInput`: a companion proved by
+ * code belongs to the host's door, and the input type this feeds does not
+ * declare the field at all — sending it would be rejected before the server
+ * saw the names.
+ */
+export interface NamedCompanionInput {
+  name: string;
+  phone_extension: string;
+  phone_number: string;
+}
+
+/**
+ * The names a Club Admin was read, as their mark sends them.
+ *
+ * Blanks are dropped rather than rejected: the admin records the names they
+ * were actually given, and holding the mark for the ones they were not is the
+ * same dead end the host's door gate already was for them. A number stays
+ * optional for the same reason — chasing one means ringing the attendee, which
+ * is the call this whole path exists to avoid.
+ */
+export const namedCompanionEntries = (
+  // The name/number half of a CompanionEntry, so the door's own form can be
+  // passed straight in and an admin's form need not carry a challenge id it
+  // never fills.
+  entries: readonly Readonly<Omit<CompanionEntry, 'otp_challenge_id'>>[]
+): NamedCompanionInput[] =>
+  entries
+    .filter((entry) => entry.name.trim().length >= 2)
+    .map((entry) => ({
+      name: entry.name.trim(),
+      // A dial code with no number behind it is noise on the record.
+      phone_extension: entry.phone_number.trim() ? entry.phone_extension.trim() : '',
+      phone_number: entry.phone_number.trim(),
+    }));
 
 /** What one row's verify control is doing right now. */
 export type CompanionOtpState =

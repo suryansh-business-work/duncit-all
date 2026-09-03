@@ -2312,13 +2312,33 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       otpVerified: 'Verified — you can mark this attendance now.',
       otpTestCode: 'Codes are not being delivered yet. Enter the test code {code}.',
       otpCancel: 'Cancel',
-      // The Club Admin's override. It exists for when proof cannot be produced,
-      // so the warning is the only thing standing between it and a wrong payout.
-      forceTitle: 'Force mark attendance',
+      // The Club Admin's two doors. They get two different calls — "I could not
+      // scan them", and "the host forgot the whole pod, here are the names" —
+      // so the board asks which one this is instead of assuming.
+      chooseTitle: 'Mark {name} present',
+      chooseBody:
+        'A ticket scan is the strongest proof, so use it whenever you can. When you cannot, pick how you are marking this attendee.',
+      chooseOtpTitle: 'Verify with a one-time code',
+      chooseOtpBody:
+        'Send the attendee a WhatsApp or SMS code and enter it back. The number that answers is recorded against their ticket.',
+      chooseDirectTitle: 'Mark directly, no code',
+      chooseDirectBody:
+        'Use this when the host missed the pod and read you the attendees. Nothing is sent — you are vouching for the mark.',
+      chooseCancel: 'Cancel',
+      // The direct mark. It exists for when proof cannot be produced, so the
+      // warning is the only thing standing between it and a wrong payout.
+      forceTitle: 'Mark attendance without a scan',
       forceWarning:
         'You are marking this person present without a ticket scan. Check their details or ask for valid proof first — a wrong mark changes what the host is paid.',
       forceConfirm: 'Yes, mark present',
       forceCancel: 'Cancel',
+      // A multi-seat booking. The host would collect these at the door; an
+      // admin is read whichever of them the host or the buyer remembers.
+      forceCompanionsTitle: 'Who else did this booking bring?',
+      forceCompanionsBody:
+        'This booking admits {seats}. Add the {count} you were given a name for — leave a row blank if you were not told, the mark still goes through.',
+      forceCompanionName: 'Name',
+      forceCompanionPhone: 'Phone number (optional)',
     },
     // The door scanner: one ticket can admit a group, so the host is told how
     // many people that single QR lets in. The count itself is rendered as a

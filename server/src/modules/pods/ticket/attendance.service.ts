@@ -140,6 +140,32 @@ export async function markTicketPresent(
 }
 
 /**
+ * Spend a verified code and hand back the proof a ticket records.
+ *
+ * Both by-hand doors land here — the host's mark, and the Club Admin's — so the
+ * binding is written once. `match` is what stops one code being replayed across
+ * a roster: a challenge raised for one booking can only ever be spent on that
+ * booking, whichever mutation is spending it.
+ */
+export async function consumeAttendanceProof(
+  challengeId: string,
+  membershipId: unknown
+): Promise<ITicket['attendance_verification']> {
+  const challenge = await otpService.consume(challengeId, {
+    purpose: 'ATTENDANCE',
+    match: (c) => String((c.context as any)?.membership_id ?? '') === String(membershipId),
+  });
+  return {
+    medium: challenge.mediums.join(','),
+    phone_extension: challenge.phone_extension,
+    phone_number: challenge.phone_number,
+    name: challenge.recipient_name,
+    verified_at: challenge.verified_at ?? new Date(),
+    challenge_id: String(challenge._id),
+  };
+}
+
+/**
  * Whether this person's own attendance at this pod has been marked.
  *
  * "Was I there" has exactly one answer, and a JOINED membership is not it: a
@@ -362,23 +388,33 @@ export const attendanceService = {
   /**
    * Send a one-time code to somebody this booking admits.
    *
-   * Authorised as the pod's host, then delegated to the shared otpService — the
-   * medium (SMS, WhatsApp, or both) is passed straight through as a parameter,
-   * and so is the PURPOSE: the buyer's own attendance code and a companion's
-   * are the same request to the same service, addressed to a different person.
-   * They stay separate purposes because they are raised against the same
-   * booking, so a shared one would let a companion's proof mark the buyer.
+   * Authorised as the pod's host OR as an admin of its club, then delegated to
+   * the shared otpService — the medium (SMS, WhatsApp, or both) is passed
+   * straight through as a parameter, and so is the PURPOSE: the buyer's own
+   * attendance code and a companion's are the same request to the same service,
+   * addressed to a different person. They stay separate purposes because they
+   * are raised against the same booking, so a shared one would let a
+   * companion's proof mark the buyer.
+   *
+   * Which viewers may raise one is per PURPOSE, not per service. The attendee's
+   * own code is open to the Club Admin, because a code is an OPTION on their
+   * board — their override still marks without one, so this widens what they
+   * can prove, never what they can reach: the booking has to be live on a pod
+   * of a club they administer. A COMPANION's code stays host-only. That one is
+   * addressed to somebody who is on no roster at all, so it is only tied to a
+   * person by the host standing at a door with them, and opening it wider is
+   * the generic "text any number" entry point rule 41 refuses to build.
    */
   async issueOtp(
     purpose: OtpPurpose,
     input: Readonly<AttendanceOtpInput>,
-    actor: Readonly<{ id: string; roles: string[] }>
+    actor: Readonly<{ id: string; roles: string[] }>,
+    hostOnly = false
   ) {
+    // resolveViewer throws FORBIDDEN for anyone who is neither, so reaching
+    // this line already means the caller may mark this roster.
     const { pod, viewer } = await resolveViewer(input.pod_doc_id, actor);
-    // HOST only. A Club Admin's mark never asks for a code, so letting them
-    // raise one would be a way to text a member from a screen that has no
-    // reason to — the narrower door is the correct one.
-    if (viewer !== 'HOST') {
+    if (hostOnly && viewer !== 'HOST') {
       throw new GraphQLError('Only the pod host verifies an attendee here', {
         extensions: { code: 'FORBIDDEN' },
       });
@@ -404,7 +440,8 @@ export const attendanceService = {
     });
   },
 
-  /** The attendee's own number, proved before a by-hand mark. */
+  /** The attendee's own number, proved before a by-hand mark. Host or Club
+   * Admin: both boards offer the code, and only the host's requires it. */
   requestOtp(
     input: Readonly<AttendanceOtpInput>,
     actor: Readonly<{ id: string; roles: string[] }>
@@ -423,7 +460,7 @@ export const attendanceService = {
     input: Readonly<AttendanceOtpInput>,
     actor: Readonly<{ id: string; roles: string[] }>
   ) {
-    return this.issueOtp('POD_COMPANION', input, actor);
+    return this.issueOtp('POD_COMPANION', input, actor, true);
   },
 
   /** Check the code the attendee read out. Spending it is a separate step. */
@@ -477,20 +514,7 @@ export const attendanceService = {
     let verification: ITicket['attendance_verification'] = null;
     if (settings.attendance_otp_required) {
       if (!otpChallengeId) throw badInput('Verify the attendee’s phone number first');
-      const challenge = await otpService.consume(otpChallengeId, {
-        purpose: 'ATTENDANCE',
-        // Bound to the booking it was raised for, so one verified code cannot
-        // be replayed against the rest of the roster.
-        match: (c) => String((c.context as any)?.membership_id ?? '') === String(membership._id),
-      });
-      verification = {
-        medium: challenge.mediums.join(','),
-        phone_extension: challenge.phone_extension,
-        phone_number: challenge.phone_number,
-        name: challenge.recipient_name,
-        verified_at: challenge.verified_at ?? new Date(),
-        challenge_id: String(challenge._id),
-      };
+      verification = await consumeAttendanceProof(otpChallengeId, membership._id);
     }
 
     const ticket = await TicketModel.findOne({ membership_id: membership._id });

@@ -187,6 +187,7 @@ exports:
   - 'PodAttendanceMode'
   - 'attendanceRowState'
   - 'splitAttendance'
+  - 'namedCompanionEntries'
   - 'needsOtp'
   - 'canScanTickets'
   - 'earningsBodyFor'
@@ -745,9 +746,10 @@ inside the pod window (`joinPodMeeting`, recorded as method `VIRTUAL_JOIN`).
 | Export | Signature | Meaning |
 | --- | --- | --- |
 | `PodAttendanceMode` | `'PHYSICAL' \| 'VIRTUAL'` | Mirrors the server's `PodMode`; the board's `pod_mode`. |
-| `attendanceRowState` | `(row, canMark) => AttendanceRowState` | `MARKED`, `READY`, `NEEDS_COMPANIONS` or `LOCKED` — one value, never three booleans. |
+| `attendanceRowState` | `(row, canMark, viewer?) => AttendanceRowState` | `MARKED`, `READY`, `NEEDS_COMPANIONS` or `LOCKED` — one value, never three booleans. `NEEDS_COMPANIONS` is the HOST's wait only (viewer defaults to `'HOST'`). |
 | `splitAttendance` | `(rows) => { marked, unmarked }` | The two lists, in the order the page shows them. |
-| `needsOtp` | `(board) => boolean` | HOST viewer AND `otp_required`. The Club Admin's override never asks — it exists for the attendee who cannot be reached. |
+| `namedCompanionEntries` | `(entries) => NamedCompanionInput[]` | The names a Club Admin was read, blanks dropped, numbers optional — `PodForcedCompanionInput` for `clubAdminForceAttendance`. |
+| `needsOtp` | `(board) => boolean` | HOST viewer AND `otp_required`. The Club Admin is never *required* to send a code — their board offers it as one of two doors. |
 | `canScanTickets` | `(board) => boolean` | HOST viewer AND `can_mark` AND not `VIRTUAL`. False hides the scan CTA. |
 | `earningsBodyFor` | `(board, labels) => string` | `labels.earningsBodyVirtual` for a virtual pod, `labels.earningsBody` otherwise — the sentence above the roster. |
 | `mwebAttendanceLabels` / `shellAttendanceLabels` / `buildAttendanceLabels` | `(t) => PodAttendanceLabels` | Every word the surfaces render — `mweb.attendance.*` for mWeb + native, `shell.attendance.*` for the portals, word-for-word identical. |
@@ -773,11 +775,32 @@ canScanTickets(online)            // false — the scan CTA is hidden
 earningsBodyFor(online, labels)   // 'This pod is online, so there is no door to scan at. …'
 labels.methodLabel('VIRTUAL_JOIN')  // 'Joined the meeting' — what the row reads after joinPodMeeting
 
-needsOtp({ viewer: 'CLUB_ADMIN', otp_required: true })  // false — the override never asks
+needsOtp({ viewer: 'CLUB_ADMIN', otp_required: true })  // false — never REQUIRED of them
+
+// An 8-seat booking the host never marked. The host's row waits for the door;
+// the Club Admin's does not, because the door is long shut.
+const group = { attended: false, companions_required: 7 };
+attendanceRowState(group, true, 'HOST')        // 'NEEDS_COMPANIONS' — name them at the door
+attendanceRowState(group, true, 'CLUB_ADMIN')  // 'READY' — their dialog collects the names
+
+namedCompanionEntries([
+  { name: 'Ishita Rao', phone_extension: '+91', phone_number: '9876543210' },
+  { name: 'Kabir Shah', phone_extension: '+91', phone_number: '' },
+  { name: '', phone_extension: '+91', phone_number: '' },
+])
+// [{ name: 'Ishita Rao', phone_extension: '+91', phone_number: '9876543210' },
+//  { name: 'Kabir Shah', phone_extension: '', phone_number: '' }]
+// — the unnamed row is dropped, and a dial code with no number behind it with it.
 ```
 
 A virtual host can still mark someone by hand (`HOST_MANUAL`, with a code when the
 setting says so) for the member who joined some other way; only the scanner is gone.
+
+A Club Admin gets two doors rather than one. `clubAdminForceAttendance` takes an optional
+verified `otp_challenge_id` (they sent the attendee a WhatsApp/SMS code) and optional
+`companions` (the host forgot the pod and read them the names). Neither is required, and
+neither is gated on the companion count — that gate is the host's scan, and refusing this
+mark would leave the host unpaid for people who really came.
 
 ### Auto Pods — `auto-pod` + `auto-pod-copy`
 

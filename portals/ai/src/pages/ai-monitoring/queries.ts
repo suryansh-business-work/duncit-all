@@ -129,7 +129,14 @@ export const ACTION_COLOR: Record<MonitoringLogRow['action'], ChipColor> = {
   BLOCKED: 'error',
 };
 
-const options = (values: readonly string[], labels: Record<string, string>) =>
+/**
+ * Filter options, labelled.
+ *
+ * A value with no label falls back to the value itself rather than rendering a
+ * blank row — the mistake this catches is adding a status to the list below and
+ * forgetting its wording. Exported so that safety net is actually proven.
+ */
+export const options = (values: readonly string[], labels: Record<string, string>) =>
   values.map((value) => ({ value, label: labels[value] ?? value }));
 
 export const RESULT_OPTIONS = options(['PENDING', 'LOW', 'MEDIUM', 'HIGH'], {

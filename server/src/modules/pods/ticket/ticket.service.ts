@@ -2,7 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types, type ClientSession } from 'mongoose';
 import crypto from 'node:crypto';
 import { TicketModel, type ITicket } from './ticket.model';
-import { markTicketPresent } from './attendance.service';
+import { consumeAttendanceProof, markTicketPresent } from './attendance.service';
 import { signTicketToken, verifyTicketToken } from './ticket.token';
 import { ticketPdfFilename, ticketPdfUrl } from './ticket.download';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
@@ -162,6 +162,49 @@ async function recordCompanions(
   ];
   await membership.save();
   return 0;
+}
+
+/**
+ * The names a Club Admin was given, written onto the booking.
+ *
+ * Deliberately NOT `recordCompanions`: that one is the door's rule and demands
+ * exactly the missing count, because the group is standing there and a short
+ * list means somebody walked in unaccounted for. This is the after-the-fact
+ * correction — the admin records the names they were read and marks the seat
+ * regardless, since refusing the mark is the failure mode that leaves the host
+ * unpaid for people who really came.
+ *
+ * Extra entries are dropped rather than rejected: a booking cannot admit more
+ * people than it paid for, whoever is typing.
+ */
+async function recordNamedCompanions(
+  membership: any,
+  seats: number,
+  supplied: unknown
+): Promise<void> {
+  const list = Array.isArray(supplied) ? supplied : [];
+  if (list.length === 0 || !membership) return;
+  const onFile: any[] = membership.companions ?? [];
+  const remaining = Math.max(seats - 1 - onFile.length, 0);
+  if (remaining === 0) return;
+
+  const { validate } = await import('@utils/validate');
+  const { podForcedCompanionsSchema } = await import('./ticket.validator');
+  const { companions } = await validate(podForcedCompanionsSchema, { companions: list });
+  const accepted = companions.slice(0, remaining);
+  if (accepted.length === 0) return;
+
+  membership.companions = [
+    ...onFile,
+    ...accepted.map((c) => ({
+      ...c,
+      added_at: new Date(),
+      verified_at: null,
+      verified_medium: '',
+      otp_challenge_id: null,
+    })),
+  ];
+  await membership.save();
 }
 
 const toPub = (t: ITicket) => ({
@@ -814,21 +857,33 @@ export const ticketService = {
   },
 
   /**
-   * Club Admin marks a member present WITHOUT a scan.
+   * Club Admin marks a member present without a scan — by code, or by name.
    *
-   * The host's path is deliberately QR-only: a scan is proof the person was at
-   * the door. This is the override for when that proof cannot be produced — a
-   * dead phone, a lost ticket — and it is limited to the club's admin, who is
-   * accountable for the club rather than for this pod's payout. The host, who
-   * IS paid on the result, can never mark someone present by hand.
+   * The host's own path is proof-first: a QR scan, or a one-time code the
+   * attendee reads back. This is the club's override for when neither can be
+   * produced, and it carries BOTH doors, because the two calls a Club Admin
+   * actually gets are different jobs:
    *
-   * Every forced mark is stamped with who forced it (`checked_in_by`) and the
-   * member is notified, so it is contestable rather than silent.
+   * - "I could not scan them" — send the attendee a WhatsApp/SMS code and pass
+   *   `otpChallengeId`. The proof is spent here and stored on the ticket, so
+   *   the roster shows the number that answered.
+   * - "The host forgot to mark the pod, here are the names" — pass no
+   *   challenge. Ringing every attendee for a code is precisely the work this
+   *   call exists to avoid, so nothing is demanded; `companions` records
+   *   whichever names the admin was read for a multi-seat booking.
+   *
+   * Neither door is gated on the companion count. The host's scan is, because
+   * the group is standing at it; refusing this one would leave the host unpaid
+   * for people who really came, which is the failure it exists to fix.
+   *
+   * Every mark is stamped with who made it (`checked_in_by`) and the member is
+   * notified, so it is contestable rather than silent.
    */
   async clubAdminForceAttendance(
     podDocId: string,
     membershipId: string,
-    actor: { id: string; roles: string[] }
+    actor: { id: string; roles: string[] },
+    options: Readonly<{ otpChallengeId?: string | null; companions?: unknown }> = {}
   ) {
     const { clubAdminService } = await import('@modules/clubs/clubAdmin/clubAdmin.service');
     await clubAdminService.assertClubAdminForPod(actor as any, podDocId);
@@ -852,13 +907,24 @@ export const ticketService = {
     }
     if (t.status === 'CHECKED_IN') return toPub(t);
 
-    await markTicketPresent(t, actor.id, 'CLUB_ADMIN_FORCE');
+    // The names first, so a mark that then fails has not quietly lost them.
+    await recordNamedCompanions(membership, membership.seats ?? t.seats ?? 1, options.companions);
+
+    // The same spend the host's mark does, so the binding to this one booking
+    // cannot drift between the two doors. Null on the by-name door, which asks
+    // for no code at all.
+    const verification = options.otpChallengeId
+      ? await consumeAttendanceProof(options.otpChallengeId, membership._id)
+      : null;
+
+    await markTicketPresent(t, actor.id, 'CLUB_ADMIN_FORCE', verification);
     await notifyAttendanceMarked(t);
     logs.server.info('ticket.service', 'clubAdminForceAttendance', {
-      msg: 'attendance forced without a scan',
+      msg: 'attendance marked by the club admin without a scan',
       pod_doc_id: podDocId,
       membership_id: membershipId,
       actor_id: actor.id,
+      otp_verified: !!verification,
     });
     return toPub(t);
   },

@@ -8,11 +8,11 @@ import {
   splitAttendance,
   type PodAttendanceLabels,
   type PodAttendanceRow as AttendanceRowData,
+  type PodAttendanceViewer,
 } from '@duncit/utils';
 import AttendanceRow from './AttendanceRow';
-import AttendanceOtpDialog from './AttendanceOtpDialog';
+import AttendanceDialogs from './AttendanceDialogs';
 import AttendanceSummary from './AttendanceSummary';
-import ForceMarkDialog from './ForceMarkDialog';
 import {
   ClubAdminHelpCard,
   EarningsNotice,
@@ -36,6 +36,7 @@ function RosterSection({
   rows,
   labels,
   canMark,
+  viewer,
   busyId,
   formatDateTime,
   onMark,
@@ -44,6 +45,7 @@ function RosterSection({
   rows: AttendanceRowData[];
   labels: PodAttendanceLabels;
   canMark: boolean;
+  viewer: PodAttendanceViewer;
   busyId: string;
   formatDateTime: (iso: string) => string;
   onMark?: (row: AttendanceRowData) => void;
@@ -60,6 +62,7 @@ function RosterSection({
           row={row}
           labels={labels}
           canMark={canMark}
+          viewer={viewer}
           busy={busyId === row.membership_id}
           formatDateTime={formatDateTime}
           onMark={onMark}
@@ -142,6 +145,7 @@ export default function PodAttendanceView({
         rows={unmarked}
         labels={labels}
         canMark={board.can_mark}
+        viewer={board.viewer}
         busyId={api.busyId}
         formatDateTime={formatDateTime}
         onMark={onMark}
@@ -155,6 +159,7 @@ export default function PodAttendanceView({
         rows={marked}
         labels={labels}
         canMark={board.can_mark}
+        viewer={board.viewer}
         busyId={api.busyId}
         formatDateTime={formatDateTime}
       />
@@ -187,20 +192,7 @@ export default function PodAttendanceView({
         <ClubAdminHelpCard admins={board.club_admins} labels={labels} />
       )}
 
-      <AttendanceOtpDialog
-        podId={podId}
-        row={api.otpRow}
-        labels={labels}
-        onClose={api.cancelOtp}
-        onVerified={api.finishMark}
-      />
-      <ForceMarkDialog
-        row={api.forceRow}
-        labels={labels}
-        busy={!!api.busyId}
-        onClose={api.cancelForce}
-        onConfirm={api.confirmForce}
-      />
+      <AttendanceDialogs podId={podId} labels={labels} api={api} />
     </Stack>
   );
 }

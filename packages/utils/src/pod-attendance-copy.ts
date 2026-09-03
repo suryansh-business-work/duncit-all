@@ -86,11 +86,24 @@ export interface PodAttendanceLabels {
   otpVerified: string;
   otpTestCode: (code: string) => string;
   otpCancel: string;
-  /** Club Admin force mark. */
+  /** Club Admin: which of the two doors this mark is going through. */
+  chooseTitle: (name: string) => string;
+  chooseBody: string;
+  chooseOtpTitle: string;
+  chooseOtpBody: string;
+  chooseDirectTitle: string;
+  chooseDirectBody: string;
+  chooseCancel: string;
+  /** Club Admin direct mark. */
   forceTitle: string;
   forceWarning: string;
   forceConfirm: string;
   forceCancel: string;
+  /** The names an admin was read for a multi-seat booking. */
+  forceCompanionsTitle: string;
+  forceCompanionsBody: (seats: number, count: number) => string;
+  forceCompanionName: string;
+  forceCompanionPhone: string;
 }
 
 /** `mweb.*` — mWeb and the native app (rule 27: one namespace for both). */
@@ -153,10 +166,22 @@ export function mwebAttendanceLabels(t: AttendanceTranslate): PodAttendanceLabel
     otpVerified: t('mweb.attendance.otpVerified'),
     otpTestCode: (code) => t('mweb.attendance.otpTestCode', { vars: { code } }),
     otpCancel: t('mweb.attendance.otpCancel'),
+    chooseTitle: (name) => t('mweb.attendance.chooseTitle', { vars: { name } }),
+    chooseBody: t('mweb.attendance.chooseBody'),
+    chooseOtpTitle: t('mweb.attendance.chooseOtpTitle'),
+    chooseOtpBody: t('mweb.attendance.chooseOtpBody'),
+    chooseDirectTitle: t('mweb.attendance.chooseDirectTitle'),
+    chooseDirectBody: t('mweb.attendance.chooseDirectBody'),
+    chooseCancel: t('mweb.attendance.chooseCancel'),
     forceTitle: t('mweb.attendance.forceTitle'),
     forceWarning: t('mweb.attendance.forceWarning'),
     forceConfirm: t('mweb.attendance.forceConfirm'),
     forceCancel: t('mweb.attendance.forceCancel'),
+    forceCompanionsTitle: t('mweb.attendance.forceCompanionsTitle'),
+    forceCompanionsBody: (seats, count) =>
+      t('mweb.attendance.forceCompanionsBody', { vars: { seats, count } }),
+    forceCompanionName: t('mweb.attendance.forceCompanionName'),
+    forceCompanionPhone: t('mweb.attendance.forceCompanionPhone'),
   };
 }
 
@@ -239,10 +264,22 @@ export function shellAttendanceLabels(t: AttendanceTranslate): PodAttendanceLabe
     otpVerified: t('shell.attendance.otpVerified'),
     otpTestCode: (code) => t('shell.attendance.otpTestCode', { vars: { code } }),
     otpCancel: t('shell.attendance.otpCancel'),
+    chooseTitle: (name) => t('shell.attendance.chooseTitle', { vars: { name } }),
+    chooseBody: t('shell.attendance.chooseBody'),
+    chooseOtpTitle: t('shell.attendance.chooseOtpTitle'),
+    chooseOtpBody: t('shell.attendance.chooseOtpBody'),
+    chooseDirectTitle: t('shell.attendance.chooseDirectTitle'),
+    chooseDirectBody: t('shell.attendance.chooseDirectBody'),
+    chooseCancel: t('shell.attendance.chooseCancel'),
     forceTitle: t('shell.attendance.forceTitle'),
     forceWarning: t('shell.attendance.forceWarning'),
     forceConfirm: t('shell.attendance.forceConfirm'),
     forceCancel: t('shell.attendance.forceCancel'),
+    forceCompanionsTitle: t('shell.attendance.forceCompanionsTitle'),
+    forceCompanionsBody: (seats, count) =>
+      t('shell.attendance.forceCompanionsBody', { vars: { seats, count } }),
+    forceCompanionName: t('shell.attendance.forceCompanionName'),
+    forceCompanionPhone: t('shell.attendance.forceCompanionPhone'),
   };
 }
 

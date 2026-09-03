@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import TaskSpendTable from '../../src/pages/openai-dashboard/TaskSpendTable';
 import type { TaskSpend } from '../../src/pages/openai-dashboard/queries';
 import { renderWithProviders } from '../testkit';
@@ -70,6 +70,22 @@ describe('TaskSpendTable', () => {
     );
 
     expect(await screen.findAllByTestId('table-row')).toHaveLength(2);
+    expect(screen.getByText('Suggest a club')).toBeInTheDocument();
+  });
+
+  it('searches a task by its label, its area or its key', async () => {
+    renderWithProviders(
+      <TaskSpendTable
+        rows={[spend(), spend({ task: 'club.suggest', label: 'Suggest a club', module: 'Clubs' })]}
+      />,
+    );
+    expect(await screen.findAllByTestId('table-row')).toHaveLength(2);
+
+    // The key is searchable too — it is what someone reads off a log line and
+    // pastes in here.
+    fireEvent.change(screen.getByLabelText('table-search'), { target: { value: 'club.sug' } });
+
+    await waitFor(() => expect(screen.getAllByTestId('table-row')).toHaveLength(1));
     expect(screen.getByText('Suggest a club')).toBeInTheDocument();
   });
 

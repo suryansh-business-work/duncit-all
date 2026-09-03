@@ -129,6 +129,39 @@ describe('AiMonitoringSettingsPage', () => {
     await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('AI Monitoring settings saved'));
   });
 
+  it('lets the chip be turned off, which hides the notice everywhere', async () => {
+    renderWithProviders(<AiMonitoringSettingsPage />, { mocks: [loadMock()] });
+
+    const toggle = await screen.findByLabelText(/Show the AI Monitoring chip/i);
+    expect(toggle).toBeChecked();
+
+    // One switch decides whether every upload field on every surface carries
+    // the notice at all.
+    fireEvent.click(toggle);
+    await waitFor(() => expect(toggle).not.toBeChecked());
+  });
+
+  it('names the default prompt key when the server has not assigned one', async () => {
+    renderWithProviders(<AiMonitoringSettingsPage />, {
+      mocks: [loadMock({ image_prompt_key: null as unknown as string })],
+    });
+
+    // The warning tells an editor which Prompt Library entry they are about to
+    // affect; without a key it still has to name the default rather than a gap.
+    expect(await screen.findByText(/upload\.image_scan/)).toBeInTheDocument();
+  });
+
+  it('counts tokens as zero when the prompt came back empty', async () => {
+    renderWithProviders(<AiMonitoringSettingsPage />, {
+      mocks: [loadMock({ image_prompt: null as unknown as string })],
+    });
+
+    // A settings row written before the prompt was set has null here, and the
+    // token estimate must read 0 rather than throwing on it.
+    const chip = await screen.findByTestId('ai-monitoring-token-count');
+    expect(chip.textContent).toMatch(/0/);
+  });
+
   it('reports a refused save instead of pretending it worked', async () => {
     renderWithProviders(<AiMonitoringSettingsPage />, {
       mocks: [

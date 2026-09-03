@@ -116,6 +116,15 @@ describe('OpenAiLogsTable', () => {
     expect(screen.getByText('FAILED')).toBeInTheDocument();
   });
 
+  it('dashes the area and the model when the call recorded neither', async () => {
+    mount([row({ module: '', model: '', detail: '', task_label: '' })]);
+
+    // A skipped call never reached a model, and an ad-hoc call has no area —
+    // both columns have to read as absent rather than empty.
+    await screen.findByText('pod.describe');
+    expect(screen.getAllByText('—').length).toBeGreaterThan(1);
+  });
+
   it('opens the row it was clicked on', async () => {
     const onRowClick = vi.fn();
     mount([row()], onRowClick);

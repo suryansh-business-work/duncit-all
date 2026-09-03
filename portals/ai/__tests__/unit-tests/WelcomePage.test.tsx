@@ -46,6 +46,23 @@ describe('WelcomePage', () => {
     expect(screen.getByText('Hi Asha Rao')).toBeInTheDocument();
   });
 
+  it('uses the plain tagline when the config names no catalogue key', async () => {
+    vi.resetModules();
+    vi.doMock('../../src/config/app-config', async (io) => {
+      const actual = await io<typeof import('../../src/config/app-config')>();
+      // A portal that has not had its tagline translated yet still has to show
+      // one — the literal is the fallback, not a blank subtitle.
+      return { appConfig: { ...actual.appConfig, taglineKey: undefined, tagline: 'Plain tagline' } };
+    });
+    const Page = (await import('../../src/pages/WelcomePage')).default;
+
+    userMock.value = { user: null };
+    renderWithProviders(<Page />);
+
+    expect(screen.getByText('Plain tagline')).toBeInTheDocument();
+    vi.doUnmock('../../src/config/app-config');
+  });
+
   it('falls back to "there" when the user has no name', () => {
     userMock.value = { user: null };
     renderWithProviders(<WelcomePage />);

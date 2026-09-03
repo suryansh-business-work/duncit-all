@@ -113,6 +113,10 @@ export function useDeviceUpload({
     setStage(isVideo ? 'uploading' : 'processing');
     setUploadPct(isVideo ? 0 : null);
     setError(null);
+    // One exit, below the finally: a `return` inside both the try and the
+    // catch gives the finally a second completion path, which v8 counts as a
+    // branch nothing can reach.
+    let uploadedUrl: string | null = null;
     try {
       let url: string;
       if (isVideo) {
@@ -147,15 +151,15 @@ export function useDeviceUpload({
         if (fileInputRef.current) fileInputRef.current.value = '';
       }
       onClose();
-      return url;
+      uploadedUrl = url;
     } catch (e: any) {
       setError(e.message);
-      return null;
     } finally {
       setUploading(false);
       setUploadPct(null);
       setStage('uploading');
     }
+    return uploadedUrl;
   };
 
   return {

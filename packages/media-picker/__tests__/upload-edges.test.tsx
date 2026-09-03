@@ -358,10 +358,10 @@ describe('MediaListField picking through the dialog', () => {
     fireEvent.change(input);
     await settle();
 
-    const upload = [...document.body.querySelectorAll<HTMLElement>('[role="dialog"] button')].find(
-      (b) => b.textContent?.includes('Upload to ImageKit'),
+    const use = [...document.body.querySelectorAll<HTMLElement>('[role="dialog"] button')].find(
+      (b) => b.textContent?.includes('Use this image'),
     );
-    fireEvent.click(upload as HTMLElement);
+    fireEvent.click(use as HTMLElement);
     await settle();
     await settle();
   };

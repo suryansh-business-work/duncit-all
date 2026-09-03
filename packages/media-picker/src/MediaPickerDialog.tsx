@@ -104,35 +104,30 @@ export default function MediaPickerDialog({
   });
 
   // A file chosen on the device tab is not on ImageKit yet. There is no second
-  // button to press for that: the action that finishes the pick uploads it
-  // first, so "chose a picture but never sent it" stops being a state the user
-  // can leave the dialog in.
+  // button to press for that: the one action that finishes the pick uploads it
+  // on the way out, so "chose a picture but never sent it" stops being a state
+  // the reader can leave the dialog in.
   const pendingFile = tab === 'device' && Boolean(device.picked);
 
   const done = async () => {
     const uploaded = pendingFile ? await device.uploadFromDevice() : null;
-    // The upload failed and said so on screen — closing now would throw the
-    // file away and look like it worked.
-    if (pendingFile && !uploaded) return;
-    // Single-pick is already finished: the upload reported the URL and closed.
-    if (!multi) return;
+    // Single-pick is already finished — the upload reported the URL and closed.
+    // A failed upload has put its error on screen, and closing over it would
+    // throw the file away while looking like it worked.
+    if (!multi || (pendingFile && !uploaded)) return;
     onPickedMany?.(uploaded ? addToSelection(selection.urls, uploaded, max) : selection.urls);
     onClose();
   };
 
-  // The tray is full and the device tab still holds a file — the same dead end
-  // the old Upload button showed, kept visible rather than silently dropping
-  // that file on the way out.
-  const trayFull = multi && pendingFile && selection.atLimit;
-
-  // What the button will hand back, so it can name it. The pending file is not
-  // in the tray yet (hence the +1), and the cap still applies.
-  const readyCount = Math.min((multi ? selection.urls.length : 0) + (pendingFile ? 1 : 0), max);
+  // What the button will hand back, so it can name it. Single-pick never fills
+  // the tray, so the same sum reads right in both shapes; the pending file is
+  // not in the tray yet, hence the +1.
+  const pickCount = selection.urls.length + (pendingFile ? 1 : 0);
 
   // Named above the return: three answers inside the JSX would be the nested
   // ternary S3358 rejects.
-  const pluralLabel = t('media.picker.useTheseCount', { vars: { count: readyCount } });
-  const pickLabel = readyCount > 1 ? pluralLabel : t('media.picker.useThis');
+  const pluralLabel = t('media.picker.useTheseCount', { vars: { count: pickCount } });
+  const pickLabel = pickCount > 1 ? pluralLabel : t('media.picker.useThis');
   const buttonLabel = device.uploading ? t('media.picker.uploading') : pickLabel;
 
   useEffect(() => {
@@ -238,7 +233,7 @@ export default function MediaPickerDialog({
           <DuncitButton
             variant="contained"
             onClick={done}
-            disabled={readyCount === 0 || device.uploading || trayFull}
+            disabled={pickCount === 0 || device.uploading}
             startIcon={device.uploading ? <CircularProgress size={16} /> : undefined}
           >
             {buttonLabel}

@@ -43,6 +43,9 @@ const CALLER_FIXABLE_CODES = new Set([
   // The thing asked for is gone, or someone else got there first.
   'NOT_FOUND',
   'CONFLICT',
+  // The caller already holds a seat on this pod. The join button is simply
+  // answering "you are in" — the client renders it, and nothing is broken.
+  'ALREADY_BOOKED',
   // The caller hung up before we finished, so the rest of the work was
   // abandoned on purpose (see clientPresence). Nothing is broken here — but it
   // is worth a warn, because a run of these is a request that got slow enough

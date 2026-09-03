@@ -5,7 +5,15 @@ import StudioPodRow from './StudioPodRow';
 import StudioPodsFigures from './StudioPodsFigures';
 import type { StudioPod, StudioPodSummary } from './types';
 
-interface BodyProps {
+/** Per-row hooks a studio may add; Club Studio passes neither. */
+interface RowActions {
+  /** Tapping a row — Venue Studio opens the pod's detail sheet. */
+  onOpenPod?: (pod: StudioPod) => void;
+  /** "Cancel pod" behind the row's overflow menu — Venue Studio only. */
+  onCancelPod?: (pod: StudioPod) => void;
+}
+
+interface BodyProps extends RowActions {
   loading: boolean;
   failed: boolean;
   pods: readonly StudioPod[];
@@ -22,6 +30,8 @@ function StudioPodsBody({
   emptyText,
   currencySymbol,
   onRetry,
+  onOpenPod,
+  onCancelPod,
 }: Readonly<BodyProps>) {
   const { t } = useTranslation();
   if (loading) {
@@ -61,13 +71,19 @@ function StudioPodsBody({
   return (
     <Stack spacing={1}>
       {pods.map((pod) => (
-        <StudioPodRow key={pod.id} pod={pod} currencySymbol={currencySymbol} />
+        <StudioPodRow
+          key={pod.id}
+          pod={pod}
+          currencySymbol={currencySymbol}
+          onOpen={onOpenPod}
+          onCancel={onCancelPod}
+        />
       ))}
     </Stack>
   );
 }
 
-interface Props {
+interface Props extends RowActions {
   title: string;
   subtitle: string;
   /** Already-translated word for what the figures cover — Venues or Clubs. */
@@ -95,6 +111,8 @@ export default function StudioPodsSection({
   loading,
   failed,
   onRetry,
+  onOpenPod,
+  onCancelPod,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   // The summary counts every pod in scope while the list is capped, so this is
@@ -140,6 +158,8 @@ export default function StudioPodsSection({
             emptyText={emptyText}
             currencySymbol={summary.currency_symbol}
             onRetry={onRetry}
+            onOpenPod={onOpenPod}
+            onCancelPod={onCancelPod}
           />
         </Stack>
       </CardContent>

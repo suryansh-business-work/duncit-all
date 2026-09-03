@@ -34,6 +34,8 @@ export type ProfileIconKey =
   | 'ecomm'
   | 'insights'
   | 'calendar'
+  | 'availability'
+  | 'settings'
   | 'autopods';
 
 export interface ProfileTile {
@@ -192,11 +194,14 @@ const PARTNER_MENUS: readonly PartnerMenuSpec[] = [
 export function buildPartnerMenus(
   roles: readonly string[],
   mode: StudioMode,
-  autoPods?: ProfileTile | null
+  autoPods?: ProfileTile | null,
+  extraItems: readonly ProfileTile[] = []
 ): PartnerMenu[] {
   const active = PARTNER_MENUS.find((menu) => menu.mode === mode && roles.includes(menu.role));
   if (!active) return [];
-  const items = [...active.items];
+  // Rows the caller builds with translated labels (the venue calendar pair)
+  // follow the mode's own rows — this module holds no copy for them (rule 38).
+  const items = [...active.items, ...extraItems];
   // Auto Pods sits above Withdrawal: it is work waiting on the partner, and the
   // caller only passes it when the `auto_pods` flag is on for a role that has a
   // queue. Its label arrives translated — this module holds no copy (rule 38).

@@ -3,16 +3,18 @@ import { useQuery } from '@apollo/client/react';
 import SimpleBarChart, { buildMonthlyCounts } from '../components/SimpleBarChart';
 import { MY_VENUE_HEALTH, type HealthScore } from '../components/health/queries';
 import { Card, CardContent, Chip, Box, Stack, Typography } from '@mui/material';
-import { pickVenue } from '@duncit/utils';
+import { emptyVenueOwnerStats, pickVenue, type VenueOwnerStats } from '@duncit/utils';
 import UserVenuePanel from './profile-page/UserVenuePanel';
 import VenueEarningsLinkCard from './venue-earnings-page/VenueEarningsLinkCard';
 import VenueHealthCard from './venue-manage-page/VenueHealthCard';
 import VenueListBody from './venue-manage-page/VenueListBody';
+import VenueOwnerStatsStrip from './venue-manage-page/VenueOwnerStatsStrip';
 import VenuePodsSection from './venue-manage-page/VenuePodsSection';
+import VenueQuickActions from './venue-manage-page/VenueQuickActions';
 import VenueStatTiles from './venue-manage-page/VenueStatTiles';
 import VenueStudioHeader from './venue-manage-page/VenueStudioHeader';
 import VenueSwitcher from './venue-manage-page/VenueSwitcher';
-import { MY_VENUES_DETAILS, PODS_AT_VENUE } from './venue-manage-page/queries';
+import { MY_VENUES_DETAILS, PODS_AT_VENUE, VENUE_OWNER_STATS } from './venue-manage-page/queries';
 import { useTranslation } from '../i18n/useTranslation';
 
 /**
@@ -43,6 +45,14 @@ export default function VenueManagePage() {
     fetchPolicy: 'cache-and-network',
   });
   const venuePods: any[] = podsQ.data?.pods ?? [];
+  // The slot KPIs of the selected venue — the "Slot earnings" strip and the
+  // pending count on the Slot requests action.
+  const statsQ = useQuery<{ venueOwnerStats: VenueOwnerStats }>(VENUE_OWNER_STATS, {
+    variables: { venue_id: venue?.id ?? '' },
+    skip: !venue?.id,
+    fetchPolicy: 'cache-and-network',
+  });
+  const stats = statsQ.data?.venueOwnerStats ?? emptyVenueOwnerStats;
   const capacity = typeof venue?.capacity === 'number' ? venue.capacity : 0;
   const isApproved = venue?.status === 'APPROVED';
 
@@ -54,9 +64,13 @@ export default function VenueManagePage() {
 
       <VenueStatTiles listed={venues.length} capacity={capacity} status={venue?.status ?? 'New'} />
 
+      {venue?.id && <VenueOwnerStatsStrip stats={stats} />}
+
+      {venue?.id && <VenueQuickActions approved={isApproved} pendingRequests={stats.pending_requests} />}
+
       <VenueEarningsLinkCard />
 
-      {venue?.id && <VenuePodsSection venueId={venue.id} />}
+      {venue?.id && <VenuePodsSection venueId={venue.id} onPodsChanged={() => statsQ.refetch()} />}
 
       <Card variant="outlined" sx={{ borderRadius: '16px' }}>
         <CardContent>

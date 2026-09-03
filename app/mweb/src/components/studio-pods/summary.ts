@@ -1,3 +1,4 @@
+import { formatMoney } from '@duncit/utils';
 import type { StudioPod, StudioPodBucket, StudioPodSummary } from './types';
 
 /**
@@ -76,4 +77,18 @@ export function fillPercent(summary: Readonly<StudioPodSummary>): number {
 export function podFillPercent(pod: Readonly<StudioPod>): number {
   if (pod.no_of_spots <= 0) return 0;
   return Math.min(100, Math.round((pod.attendee_count / pod.no_of_spots) * 100));
+}
+
+/**
+ * What a seat costs, as the row and the detail sheet both word it: a FREE pod
+ * reads as free, never as a zero price — native already did this (rule 27).
+ * `freeLabel` arrives translated; this module holds no copy.
+ */
+export function podPriceLabel(
+  pod: Readonly<Pick<StudioPod, 'pod_type' | 'pod_amount'>>,
+  currencySymbol: string,
+  freeLabel: string
+): string {
+  if (pod.pod_type === 'FREE') return freeLabel;
+  return formatMoney(pod.pod_amount, { symbol: currencySymbol });
 }

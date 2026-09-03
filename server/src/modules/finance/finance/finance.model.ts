@@ -99,27 +99,63 @@ export interface IInvoiceTemplates {
   product: IPartyInvoiceTemplate;
 }
 
-const partyTemplate = (label: string) =>
+export const INVOICE_TEMPLATE_KINDS = ['venue', 'host', 'product'] as const;
+export type InvoiceTemplateKind = (typeof INVOICE_TEMPLATE_KINDS)[number];
+
+const INVOICE_FOOTER = 'This is a computer-generated document and does not require a signature.';
+
+/**
+ * What a party template is created with — and what a READ falls back to.
+ *
+ * Mongoose applies these when it builds the subdocument, but a `$set` of a
+ * nested path does not: it writes exactly the object given. A partial save
+ * therefore leaves a stored template missing fields, and every field of
+ * `PartyInvoiceTemplate` is non-nullable to GraphQL. Shared with the resolver
+ * so the fallback there is these same values rather than a second copy.
+ */
+export const INVOICE_TEMPLATE_DEFAULTS: Record<InvoiceTemplateKind, IPartyInvoiceTemplate> = {
+  venue: { label: 'VENUE PAYOUT INVOICE', terms: '', footer: INVOICE_FOOTER, note: '' },
+  host: { label: 'HOST PAYOUT INVOICE', terms: '', footer: INVOICE_FOOTER, note: '' },
+  product: { label: 'PRODUCT INVOICE', terms: '', footer: INVOICE_FOOTER, note: '' },
+};
+
+/**
+ * One party's template with every field present, whatever the stored row is
+ * missing. Rows damaged by the partial-save bug (a `$set` of the whole
+ * subdocument dropped the fields the caller did not send) stay in the database
+ * after that fix, so BOTH readers — the GraphQL settings payload and the payout
+ * PDF, whose title is `label` — go through here rather than trusting the row.
+ */
+export const partyTemplateOf = (
+  settings: { invoice_templates?: Partial<Record<InvoiceTemplateKind, Partial<IPartyInvoiceTemplate>>> },
+  kind: InvoiceTemplateKind
+): IPartyInvoiceTemplate => {
+  const stored = settings.invoice_templates?.[kind] ?? {};
+  const fallback = INVOICE_TEMPLATE_DEFAULTS[kind];
+  return {
+    label: stored.label ?? fallback.label,
+    terms: stored.terms ?? fallback.terms,
+    footer: stored.footer ?? fallback.footer,
+    note: stored.note ?? fallback.note,
+  };
+};
+
+const partyTemplate = (defaults: IPartyInvoiceTemplate) =>
   new Schema<IPartyInvoiceTemplate>(
     {
-      label: { type: String, default: label, trim: true, maxlength: 80 },
-      terms: { type: String, default: '', trim: true, maxlength: 2000 },
-      footer: {
-        type: String,
-        default: 'This is a computer-generated document and does not require a signature.',
-        trim: true,
-        maxlength: 500,
-      },
-      note: { type: String, default: '', trim: true, maxlength: 500 },
+      label: { type: String, default: defaults.label, trim: true, maxlength: 80 },
+      terms: { type: String, default: defaults.terms, trim: true, maxlength: 2000 },
+      footer: { type: String, default: defaults.footer, trim: true, maxlength: 500 },
+      note: { type: String, default: defaults.note, trim: true, maxlength: 500 },
     },
     { _id: false }
   );
 
 const invoiceTemplatesSchema = new Schema<IInvoiceTemplates>(
   {
-    venue: { type: partyTemplate('VENUE PAYOUT INVOICE'), default: () => ({}) },
-    host: { type: partyTemplate('HOST PAYOUT INVOICE'), default: () => ({}) },
-    product: { type: partyTemplate('PRODUCT INVOICE'), default: () => ({}) },
+    venue: { type: partyTemplate(INVOICE_TEMPLATE_DEFAULTS.venue), default: () => ({}) },
+    host: { type: partyTemplate(INVOICE_TEMPLATE_DEFAULTS.host), default: () => ({}) },
+    product: { type: partyTemplate(INVOICE_TEMPLATE_DEFAULTS.product), default: () => ({}) },
   },
   { _id: false }
 );

@@ -14,6 +14,7 @@ import {
 import { UserModel } from '@modules/access/user/user.model';
 import { emitNotifyForUsers } from './notification.events';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { outboundFetch } from '@utils/outboundFetch';
 import { logs } from '@observability/log';
 
 let vapidReady = false;
@@ -93,7 +94,11 @@ async function sendExpoChunk(chunk: ExpoMessage[]): Promise<{ delivered: number;
   let delivered = 0;
   let failed = 0;
   try {
-    const res = await fetch('https://exp.host/--/api/v2/push/send', {
+    // Through outboundFetch like every other outbound call: a handshake that
+    // never landed is retried once (nothing was delivered, so no push is sent
+    // twice), and what does fail says "Expo push did not respond in time"
+    // rather than undici's bare "fetch failed".
+    const res = await outboundFetch('Expo push', 'https://exp.host/--/api/v2/push/send', {
       method: 'POST',
       headers: { 'content-type': 'application/json', accept: 'application/json' },
       body: JSON.stringify(chunk),

@@ -47,16 +47,25 @@ export function renderMjml(
 ): { html: string; errors: string[] } {
   const expanded = applyVars(mjml, vars);
   try {
+    // `soft` validation COLLECTS problems instead of throwing, so a body mjml
+    // cannot build anything from does not reach the catch below — it returns
+    // with no `html` at all. The old cast claimed `string` and passed that
+    // straight out, which failed every `html: String!` render type ("Cannot
+    // return null for non-nullable field EmailTemplateRender.html" killed the
+    // admin editor's preview) and, on a send path, would have mailed an empty
+    // body. The type below is what mjml actually returns.
     const result = mjml2html(expanded, { validationLevel: 'soft' }) as unknown as {
-      html: string;
-      errors: { formattedMessage?: string; message?: string }[];
+      html?: string | null;
+      errors?: { formattedMessage?: string; message?: string }[];
     };
-    return {
-      html: result.html,
-      errors: (result.errors || []).map(
-        (e) => e.formattedMessage || e.message || 'Unknown MJML error'
-      ),
-    };
+    const errors = (result.errors || []).map(
+      (e) => e.formattedMessage || e.message || 'Unknown MJML error'
+    );
+    // Nothing rendered AND nothing said why is the worst pair: the preview
+    // looks merely blank, and a send goes out empty in silence. Name it, so
+    // the editor shows a reason and the send paths that check `errors` stop.
+    if (!result.html && errors.length === 0) errors.push('MJML produced no output');
+    return { html: result.html ?? '', errors };
   } catch (e: any) {
     return { html: '', errors: [e.message || String(e)] };
   }

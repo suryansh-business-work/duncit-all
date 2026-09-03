@@ -1,4 +1,5 @@
 import { logs } from '@observability/log';
+import { describeFetchFailure } from '@utils/outboundFetch';
 
 /**
  * The transport half of the server's WhatsApp gateway: HTTP, retries, timeouts
@@ -67,7 +68,11 @@ export function describeFetchError(error: unknown): string {
   if (cause?.code && cause.message) return `${cause.code} (${cause.message})`;
   if (cause?.code) return cause.code;
   if (cause?.message) return cause.message;
-  return err?.message || String(error);
+  // A connect that tries IPv4 and IPv6 fails as an AggregateError: its own
+  // message is empty and the errno sits on the parts inside it, so every
+  // check above misses and this returned undici's bare "fetch failed". The
+  // shared helper walks the whole cause chain — reused, not re-implemented.
+  return describeFetchFailure(error) || err?.message || String(error);
 }
 
 /** One attempt, abandoned if the vendor never answers. */

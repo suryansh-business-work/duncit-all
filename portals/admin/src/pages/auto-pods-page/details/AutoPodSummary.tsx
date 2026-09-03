@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
-import { InfoRow } from '@duncit/ui';
+import { Card, CardContent, Divider, Stack, Typography } from '@mui/material';
+import { ChipList, InfoRow } from '@duncit/ui';
 import {
   autoPodCityLabel,
   formatMoney,
@@ -20,18 +20,6 @@ interface Props {
 interface SummaryRow {
   label: string;
   value: ReactNode;
-}
-
-/** A list value as chips, or a dash when nothing is in it. */
-function ChipList({ items, empty }: Readonly<{ items: string[]; empty: string }>) {
-  if (items.length === 0) return <>{empty}</>;
-  return (
-    <Stack direction="row" spacing={0.75} useFlexGap sx={{ flexWrap: 'wrap' }}>
-      {items.map((item) => (
-        <Chip key={item} size="small" variant="outlined" label={item} />
-      ))}
-    </Stack>
-  );
 }
 
 /** The meeting rows a virtual offer shows — or who will fill them in. */

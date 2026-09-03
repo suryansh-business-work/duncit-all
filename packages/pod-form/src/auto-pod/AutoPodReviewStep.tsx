@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import { Alert, Chip, Divider, Stack, Typography } from '@mui/material';
+import { Alert, Divider, Stack, Typography } from '@mui/material';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useCategoryValue } from '@duncit/category';
-import { InfoRow } from '@duncit/ui';
+import { ChipList, InfoRow } from '@duncit/ui';
 import { usePodFormData } from '../context';
 import { hashtagsOf, linesToMedia } from '../build-input';
 import { POD_MODES, type PodFormValues, type PodKeyedOption } from '../types';
@@ -17,18 +17,6 @@ interface ReviewRow {
 function optionLabel(options: PodKeyedOption[], value: string, t: Translate): string {
   const hit = options.find((option) => option.value === value);
   return hit ? t(hit.labelKey) : value;
-}
-
-/** A list value as chips, or the "nothing" dash when it is empty. */
-function ChipList({ items, empty }: Readonly<{ items: string[]; empty: string }>) {
-  if (items.length === 0) return <>{empty}</>;
-  return (
-    <Stack direction="row" spacing={0.75} useFlexGap sx={{ flexWrap: 'wrap' }}>
-      {items.map((item) => (
-        <Chip key={item} size="small" variant="outlined" label={item} />
-      ))}
-    </Stack>
-  );
 }
 
 /** "Rackets × 4" per attached product, named off the catalogue the form holds. */

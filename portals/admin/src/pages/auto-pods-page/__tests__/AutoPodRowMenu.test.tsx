@@ -38,6 +38,7 @@ const renderMenu = (row: AutoPodTableRow, over: Partial<AutoPodRowMenuProps> = {
   const props: AutoPodRowMenuProps = {
     row,
     t,
+    onViewDetails: vi.fn(),
     onEdit: vi.fn(),
     onCancel: vi.fn(),
     onDelete: vi.fn(),

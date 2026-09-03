@@ -4,6 +4,7 @@ import StorageIcon from '@mui/icons-material/Storage';
 import { Paper, Stack } from '@mui/material';
 import { useEffect, useState } from 'react';
 import {
+  ChipList,
   InfoRow,
   PageHeader,
   SpotsStepper,
@@ -26,6 +27,7 @@ interface RowsMock {
   venue: string;
   spots: string;
   total: number;
+  perks: string[];
   statuses: string[];
 }
 
@@ -118,14 +120,15 @@ export default defineDemos('ui', [
 
   defineDemo<RowsMock>({
     id: 'rows-and-chips',
-    title: 'PageHeader, InfoRow and StatusChip',
+    title: 'PageHeader, InfoRow, StatusChip and ChipList',
     note:
-      'StatusChip resolves its colour from a shared status map, so PENDING is the same amber in Finance as it is in Admin.',
+      'StatusChip resolves its colour from a shared status map, so PENDING is the same amber in Finance as it is in Admin. Empty the perks list and ChipList draws the dash instead — that is the row an Auto Pod summary shows for anything not written yet.',
     mock: {
       pod_id: 'DUN-POD-4821',
       venue: 'Play Arena, HSR Layout',
       spots: '7 of 8 taken',
       total: 3150,
+      perks: ['Water', 'Parking', 'Rackets provided'],
       statuses: ['ACTIVE', 'PENDING', 'CANCELLED', 'COMPLETED', 'REFUNDED'],
     },
     render: (mock) => (
@@ -135,6 +138,7 @@ export default defineDemos('ui', [
           <InfoRow label="Venue" value={mock.venue} />
           <InfoRow label="Spots" value={mock.spots} />
           <InfoRow variant="split" bold label="Collected" value={formatMoney(mock.total)} />
+          <InfoRow label="Available perks" value={<ChipList items={mock.perks} empty="—" />} />
         </Paper>
         <Stack direction="row" spacing={1} useFlexGap sx={{
           flexWrap: "wrap"

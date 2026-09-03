@@ -5,9 +5,11 @@ import { useTranslation } from '../i18n/useTranslation';
 
 /**
  * Step 2: the pod itself. Physical or virtual comes first because it reshapes
- * what follows — a virtual pod gains the Meeting Details section and loses the
- * products one — then the media, the reel and the sections an ordinary pod
- * has, minus Payment & Charges (the price and spots sit in Basic Information).
+ * what follows — a virtual pod loses the products section — then the media,
+ * the reel and the sections an ordinary pod has, minus where and when it
+ * happens and Payment & Charges: the venue's slot fixes a physical pod's
+ * date, and the host sets the price, the spots and (on a virtual pod) the
+ * meeting details when they assign themselves.
  */
 export default function AutoPodDetailsStep() {
   const { t } = useTranslation();
@@ -19,7 +21,7 @@ export default function AutoPodDetailsStep() {
         </Typography>
         <PodModeToggle />
         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>
-          {t('podForm.autoPod.modeHint')}
+          {t('podForm.autoPod.modeHintHostBrings')}
         </Typography>
       </Box>
       <PodSections />

@@ -135,6 +135,7 @@ export default function AdminAutoPodEditorPage() {
         onPicked={(url) => picker.settlePicker(url)}
         folder="/auto-pods"
         title={picker.title}
+        seedQuery={picker.seedQuery}
         accept={picker.accept}
       />
     </>

@@ -254,7 +254,7 @@ pickBestVideoFile({
 | `surface` | `'PORTALS' \| 'MOBILE' \| 'MWEB'` | no | — | Which Upload Settings row drives sizes, formats and crop presets. |
 | `max` | `number` | no | `1` | How many images ONE open may return. `1` closes on the first pick; above 1 the picks collect in a tray. |
 | `onPickedMany` | `(urls: string[]) => void` | no | — | Fires once with every picked URL. Required when `max` is above 1. |
-| `seedQuery` | `string` | no | — | What to search Pexels for before the user types — e.g. the pod's sub-category. |
+| `seedQuery` | `string` | no | — | What to search Pexels for before the user types — e.g. the pod's sub-category. Seeds the photos AND the videos tab, so a reel picker opens on the category too. |
 | `orientation` | `'landscape' \| 'portrait' \| 'square' \| ''` | no | `''` | Pexels orientation to start on. A cover is wide, so pass `'landscape'`. |
 | `deviceOnly` | `boolean` | no | `false` | Hide the Pexels tabs and offer the device alone. For a picker whose answer has to be a real photograph of something that happened — a pod’s own media, which is what a host’s payout is evidenced on. A stock library is right for a cover and wrong there, so the tabs are absent rather than discouraged. |
 

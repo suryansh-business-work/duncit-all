@@ -116,7 +116,7 @@ export default defineDemos('pod-form', [
     id: 'auto-pod',
     title: 'The same form in Auto Pod mode — a three-step stepper',
     note:
-      'Blank sub_category_id and the template stops validating — the category stands in for the club, because an Auto Pod has no club, venue or host until partners enrol. Set host_count to 0 and step 2 stays shut. Switch pod_mode to VIRTUAL and a meeting link plus a start and end become required, because no venue will bring them. Note what buildAutoPodInput leaves out: nothing a partner supplies later ever goes to the server.',
+      'Blank sub_category_id and the template stops validating — the category stands in for the club, because an Auto Pod has no club, venue or host until partners enrol. Set host_count to 0 and step 2 stays shut. Note what buildAutoPodInput leaves out: the pod_amount, no_of_spots and pod_occurrence in the values never reach the server, and switching pod_mode to VIRTUAL asks for no meeting link — the host prices the pod and, on a virtual offer, sets the meeting link and window when they assign themselves. Nothing a partner supplies later ever goes in the template.',
     mock: {
       config: {
         ...makeNativeParityPodConfig({ showProducts: true }),

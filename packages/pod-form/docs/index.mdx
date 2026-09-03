@@ -416,7 +416,7 @@ both surfaces render can be asserted without mounting either.
 | `useMediaPickerBridge` | `() => …` | `{ pickerOpen, pickerKind, pickImage, pickVideo, settlePicker, accept, title }` |
 | `useVenueSlots` | `(venueId: string, skip?: boolean) => …` | `{ slots: VenueSlot[], loading, error }` — the one slot query the picker and the spots bounds share. |
 | `useAutoPodEditorState` | `(args: UseAutoPodEditorStateArgs) => …` | `{ initialValues, busy, opError, submit }` — the Auto Pod twin of `usePodEditorState`; see "Auto Pod mode". |
-| `buildAutoPodInput` | `(values: PodFormValues) => CreateAutoPodInput` | The template only — no club, venue or host. Carries `pod_mode`, the meeting details and dates of a VIRTUAL offer, and the product rows of a PHYSICAL one; leaves payment terms and place charges out. |
+| `buildAutoPodInput` | `(values: PodFormValues) => CreateAutoPodInput` | The template only — the pod's content. No club, venue or host, and no price, spots, occurrence or meeting details either: the venue's slot fixes the date, and the host prices the pod and (on a VIRTUAL offer) sets the meeting link and window when they assign themselves. Carries `pod_mode` and the product rows of a PHYSICAL offer; leaves payment terms and place charges out. |
 | `autoPodToFormValues` | `(row: AutoPodTemplateRow) => PodFormValues` | Form values for editing an Auto Pod, blank-defaulted over `blankAutoPodFormValues`. |
 | `useAutoPodAudience` | `(subCategoryId: string, enabled: boolean) => AutoPodAudienceState` | Step 1's counts: who could enrol in the category. `complete` is true only when every count is above zero. |
 | `AUTO_POD_AUDIENCE` | `DocumentNode` | The admin-only `autoPodAudience(sub_category_id)` query behind it. |
@@ -543,31 +543,34 @@ One form, one schema; the mode is one more config flag.
    is a button opening a side drawer (`DuncitTable`) listing who is behind it. **Next stays
    disabled until all three counts are above zero** — an offer nobody can complete never goes live,
    and the admin should learn that before writing the pod.
-2. **Pod details** — Physical / Virtual first (a virtual offer gains the Meeting Details section and
-   loses Approved Products), then Images & videos, the reel, Basic Information (title, ticket price,
-   spots and occurrence — there is no Payment & Charges section), About, What this pod offers,
-   Available perks and, for a physical offer, Approved Products filtered to the chosen category.
-   Next runs the schema over `AUTO_POD_DETAIL_FIELDS` and holds the step until it passes.
+2. **Pod details** — Physical / Virtual first (a virtual offer loses Approved Products), then
+   Images & videos, the reel, Basic Information (title and hashtags — no price, spots or
+   occurrence: the host sets them when they assign themselves, within the venue's capacity),
+   About, What this pod offers, Available perks and, for a physical offer, Approved Products
+   filtered to the chosen category. There is no where/when or Meeting Details section in either
+   mode. Next runs the schema over `AUTO_POD_DETAIL_FIELDS` and holds the step until it passes.
 3. **Review & roll out** — every field read back read-only above the one submit button:
-   *Roll out Auto Pod* on create, *Save changes* on edit.
+   *Roll out Auto Pod* on create, *Save changes* on edit. The Next and submit buttons are keyed
+   apart on purpose: React once re-rendered the review step INTO the Next button's DOM node while
+   its click was still being dispatched, the browser then saw a submit button, and the offer rolled
+   out the moment step 3 opened.
 
 What `autoPod: true` changes:
 
 | Ordinary pod | Auto Pod mode |
 | --- | --- |
 | Club picker (category inherited from the club) | `AutoPodCategoryField` — writes `super_category_id` + `sub_category_id`; only venues, hosts and clubs in that sub-category are ever offered the pod. |
-| Hosts, venue slot, date/time | Gone — a venue brings the slot when it enrols. A VIRTUAL offer has no venue, so its meeting link, notes and start/end are written here instead and it waits on a host and a club only. |
-| Payment & Charges section | Dropped. Price, spots and occurrence move into Basic Information; place charges and the earnings projection need a venue the template does not have. |
+| Hosts, venue slot, date/time, meeting details | Gone — a venue brings the slot when it enrols, and the host brings the meeting link and window to a VIRTUAL offer (which has no venue and waits on a host and a club only) when they assign themselves. |
+| Payment & Charges section | Dropped, and nothing replaces it: the template carries no price, spots or occurrence. The host prices the pod at assignment against the venue's real slot price; place charges and the earnings projection need a venue the template does not have. |
 | Products section | Kept for a PHYSICAL offer, filtered to the template's category (`usePodCategoryClub` hands the product rules a club-shaped stand-in). |
 | `pod_type` select | Fixed to `AUTO_POD_TYPE` (`'PAID'`) — an Auto Pod is never free. |
 | "Save as Draft" | Gone; the template is either rolled out or not. |
 
 `makePodSchema(config, t)` swaps the club/venue/host rules for the template's own: a category is
-required, the ticket price floor is 1, spots are 2–999 (the host attends free, so two is the fewest
-that bill anyone), at least one image, and — for a VIRTUAL offer — a valid meeting link plus a future
-start and end. `lockCategory: true` shows the category read-only — a Club Admin opening one for
-their club, or a template a host or club has already enrolled on (the server refuses a category
-change from then on).
+required and at least one image — nothing else, because the price, the spots and the meeting
+details are not the template's. `lockCategory: true` shows the category read-only — a Club Admin
+opening one for their club, or a template a host or club has already enrolled on (the server
+refuses a category change from then on).
 
 A sensible console config:
 

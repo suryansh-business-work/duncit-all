@@ -98,12 +98,12 @@ export interface PodFormConfig {
   /**
    * Auto Pod mode: the author writes the pod ONLY, as a three-step stepper —
    * category, details, review — and a venue, a host and a club admin each
-   * enrol later, in any order. A required category field replaces the club
-   * picker; the venue and Payment & Charges sections are dropped (the price,
-   * spots and occurrence sit in Basic Information); a VIRTUAL offer carries its
-   * own meeting details and dates instead of waiting on a venue; the pod type
-   * is fixed to PAID (an Auto Pod is never free) and "Save as Draft" is gone.
-   * Off when omitted.
+   * enrol later. A required category field replaces the club picker; the
+   * where/when, meeting and Payment & Charges sections are all dropped — the
+   * venue's slot fixes the date, and the host sets the price, the spots and
+   * (on a VIRTUAL offer) the meeting details when they assign themselves; the
+   * pod type is fixed to PAID (an Auto Pod is never free) and "Save as Draft"
+   * is gone. Off when omitted.
    */
   autoPod?: boolean;
   /**
@@ -163,6 +163,12 @@ export interface GenerateMeetingLinkInput {
   endISO?: string;
 }
 
+/** What the form knows when it opens the media picker, so the picker need not ask. */
+export interface PodMediaPickOptions {
+  /** The Pexels search to open on — the pod's sub-category, as people doing it. */
+  seedQuery?: string;
+}
+
 /**
  * Non-form-value data + injected behaviours the form needs. Passed once to
  * `<PodForm>` and shared with sections via context so props stay shallow.
@@ -181,9 +187,9 @@ export interface PodFormData {
   /** When provided, shows an auto-generate button next to the meeting link. */
   onGenerateMeetingLink?: (input: GenerateMeetingLinkInput) => Promise<string>;
   /** When provided, the media field uses a rich picker instead of a textarea. */
-  onPickImage?: () => Promise<string | null>;
+  onPickImage?: (options?: PodMediaPickOptions) => Promise<string | null>;
   /** When provided, the reel field uses a video picker instead of a URL input. */
-  onPickVideo?: () => Promise<string | null>;
+  onPickVideo?: (options?: PodMediaPickOptions) => Promise<string | null>;
   /** When provided (and hosts are shown), hosts use a server-search picker. */
   searchHosts?: SearchPodHosts;
   /**

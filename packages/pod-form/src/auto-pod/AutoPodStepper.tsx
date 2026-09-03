@@ -118,8 +118,16 @@ export default function AutoPodStepper({
             {t('podForm.autoPod.back')}
           </DuncitButton>
         )}
+        {/* Two buttons, two keys — never one DOM node that changes type. Next's
+            validation resolves in a microtask while the click is still being
+            dispatched, and React flushed the review step INTO the same
+            <button>: by the time the browser ran the click's activation
+            behaviour the node read type="submit", and the offer rolled out
+            the moment step 3 opened. A keyed pair mounts a fresh submit
+            button the click never touched. */}
         {active < REVIEW ? (
           <DuncitButton
+            key="next"
             variant="contained"
             type="button"
             endIcon={<ArrowForwardIcon />}
@@ -131,7 +139,13 @@ export default function AutoPodStepper({
             {t('podForm.autoPod.next')}
           </DuncitButton>
         ) : (
-          <DuncitButton variant="contained" type="submit" startIcon={<RocketLaunchIcon />} disabled={disabled}>
+          <DuncitButton
+            key="submit"
+            variant="contained"
+            type="submit"
+            startIcon={<RocketLaunchIcon />}
+            disabled={disabled}
+          >
             {submitLabel}
           </DuncitButton>
         )}

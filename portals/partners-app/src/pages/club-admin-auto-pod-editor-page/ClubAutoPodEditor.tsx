@@ -118,6 +118,7 @@ export default function ClubAutoPodEditor({ club, backTo, products }: Readonly<P
         onPicked={(url) => picker.settlePicker(url)}
         folder="/auto-pods"
         title={picker.title}
+        seedQuery={picker.seedQuery}
         accept={picker.accept}
       />
     </>

@@ -80,15 +80,14 @@ export default function MediaPickerDialog({
   );
 
   // Below the allow* flags on purpose — a Pexels tab the caller's `accept` rules
-  // out is rendered disabled, and the strip is built from that same data.
+  // out is not offered at all (a reel picker shows no photos tab), and the
+  // strip is built from that same data.
   const tabs = useTabParam<PickerTab>({
-    items: deviceOnly
-      ? [{ value: 'device', label: t('media.picker.fromDevice') }]
-      : [
-          { value: 'device', label: t('media.picker.fromDevice') },
-          { value: 'photos', label: t('media.picker.pexelsPhotos'), disabled: !allowImage },
-          { value: 'videos', label: t('media.picker.pexelsVideos'), disabled: !allowVideo },
-        ],
+    items: [
+      { value: 'device', label: t('media.picker.fromDevice') },
+      ...(!deviceOnly && allowImage ? [{ value: 'photos' as const, label: t('media.picker.pexelsPhotos') }] : []),
+      ...(!deviceOnly && allowVideo ? [{ value: 'videos' as const, label: t('media.picker.pexelsVideos') }] : []),
+    ],
     fallback: 'device',
     param: 'selectedtab_media',
   });
@@ -197,6 +196,7 @@ export default function MediaPickerDialog({
             open={open}
             folder={folder}
             surface={surface}
+            seedQuery={seedQuery}
             onPicked={handlePicked}
             onClose={closeAfterPick}
             setError={setError}

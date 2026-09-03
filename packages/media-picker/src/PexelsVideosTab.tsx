@@ -27,6 +27,8 @@ interface Props {
   folder: string;
   /** Upload Settings surface — an import is capped and compressed like any upload. */
   surface: UploadSurface;
+  /** What to search before the user types — the pod's sub-category, say. */
+  seedQuery?: string;
   onPicked: (url: string) => void;
   onClose: () => void;
   setError: (msg: string | null) => void;
@@ -37,12 +39,13 @@ export default function PexelsVideosTab({
   open,
   folder,
   surface,
+  seedQuery,
   onPicked,
   onClose,
   setError,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [vquery, setVquery] = useState('');
+  const [vquery, setVquery] = useState(seedQuery ?? '');
   const [vorientation, setVorientation] = useState<Orientation>('');
   const [vsearching, setVsearching] = useState(false);
   const [videos, setVideos] = useState<any[]>([]);

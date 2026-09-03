@@ -35,8 +35,8 @@ export interface PodEditorPageProps {
   getClubVenueIds: (club: any) => string[];
   meetingPlatforms?: PodOption[];
   onGenerateMeetingLink?: (input: GenerateMeetingLinkInput) => Promise<string>;
-  onPickImage?: () => Promise<string | null>;
-  onPickVideo?: () => Promise<string | null>;
+  onPickImage?: NonNullable<PodFormData['onPickImage']>;
+  onPickVideo?: NonNullable<PodFormData['onPickVideo']>;
   searchHosts?: SearchPodHosts;
   /** Admin-configured formatter from `useDateFormat()`; drives the slot calendar. */
   dateFormatter: PodFormData['dateFormatter'];

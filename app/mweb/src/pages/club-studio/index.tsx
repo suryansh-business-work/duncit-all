@@ -1,6 +1,8 @@
 import { Box, Stack, Typography } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import ClubPodsSection from './ClubPodsSection';
+import ClubQuickActions from './ClubQuickActions';
+import YourClubsSection from './YourClubsSection';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /**
@@ -46,6 +48,10 @@ export default function ClubStudioPage() {
           </Typography>
         </Box>
       </Stack>
+
+      <ClubQuickActions />
+
+      <YourClubsSection />
 
       <ClubPodsSection />
     </Stack>

@@ -5,7 +5,10 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import { DuncitButton } from '@duncit/buttons';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
+import { useCategoryValue } from '@duncit/category';
+import { coverSearchTerm } from '@duncit/utils';
 import { usePodFormData } from './context';
+import { usePodCategoryClub } from './usePodCategoryClub';
 import MediaField from './components/MediaField';
 import ReelField from './components/ReelField';
 import BasicSection from './sections/BasicSection';
@@ -71,6 +74,14 @@ export default function PodSections() {
   const { control, formState: { errors } } = useFormContext<PodFormValues>();
   const podMode = useWatch({ control, name: 'pod_mode' });
   const isVirtual = podMode === 'VIRTUAL';
+  // The Pexels tabs open on people doing THIS category — the pod's own
+  // sub-category, whether it comes from its club or an Auto Pod's template —
+  // so the picker never asks for what the form already knows.
+  const categoryClub = usePodCategoryClub();
+  const category = useCategoryValue(categoryClub?.super_category_id, categoryClub?.category_id);
+  const seedQuery = coverSearchTerm(category.sub_name);
+  const pickImage = onPickImage ? () => onPickImage({ seedQuery }) : undefined;
+  const pickVideo = onPickVideo ? () => onPickVideo({ seedQuery }) : undefined;
   const sections = buildSections(isVirtual, config.showProducts, !!config.autoPod, t).map((section, index) => ({
     ...section,
     title: `${index + 1}. ${section.label}`,
@@ -112,7 +123,7 @@ export default function PodSections() {
             label={t('podForm.podSections.imagesAndVideos')}
             value={field.value}
             onChange={field.onChange}
-            onPickImage={onPickImage}
+            onPickImage={pickImage}
             required
             error={errors.media_text?.message}
             helperText={t('podForm.podSections.coverImageFirstRestBecomeA')}
@@ -127,7 +138,7 @@ export default function PodSections() {
             <ReelField
               value={field.value}
               onChange={field.onChange}
-              onPickVideo={onPickVideo}
+              onPickVideo={pickVideo}
               error={errors.reel_url?.message}
             />
           )}

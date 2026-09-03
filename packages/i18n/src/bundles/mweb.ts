@@ -254,6 +254,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venueAvailability: { title: 'Venue availability' },
       venueSettings: { title: 'Venue settings' },
       clubStudio: { title: 'Club studio' },
+      clubDashboard: { title: 'Club dashboard' },
+      clubMonitoring: { title: 'Pod monitoring' },
+      clubPods: { title: 'Club pods' },
+      clubPodEditor: { title: 'Club pod' },
+      clubEdit: { title: 'Edit club' },
       faqs: { title: 'FAQs' },
       policies: { title: 'Policies' },
       podIdeas: {
@@ -3859,6 +3864,25 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     venueMenu: {
       availability: 'Availability Calendar',
       settings: 'Venue Settings',
+    },
+    // The club admin menu's two rows after Club Studio — native renders the
+    // same keys (rule 27). The pages themselves speak `clubAdmin.*`, which the
+    // Partners console shares; only this app-side chrome lives here.
+    clubMenu: {
+      dashboard: 'Club Dashboard',
+      monitoring: 'Pod Monitoring (AI)',
+    },
+    // Club Studio's "Your clubs" list and its quick actions.
+    clubStudio: {
+      yourClubs: 'Your clubs',
+      yourClubsSubtitle: 'Clubs you administer — open one for its pods, or edit its page.',
+      openPods: 'Pods',
+      editClub: 'Edit club',
+      noClubs: 'No clubs are assigned to you yet.',
+      dashboardAction: 'Club dashboard',
+      monitoringAction: 'Pod monitoring (AI)',
+      // The paged lists (club pods, pod monitoring) fetch one more page on tap.
+      loadMore: 'Load more',
     },
     venueManagePage: {
       listYourSpace: 'List your space, run events, get discovered',

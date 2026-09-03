@@ -41,6 +41,27 @@ interface UserModeContentProps {
   onNavigate: (to: string) => void;
 }
 
+/**
+ * The rows a partner mode adds after its own: the venue menu's calendar pair,
+ * the club admin menu's dashboard and AI pod monitor. Built here so the labels
+ * are translated; native renders the same keys (rule 27).
+ */
+function partnerModeItems(mode: StudioMode, translate: (key: string) => string): ProfileTile[] {
+  if (mode === 'VENUE') {
+    return [
+      { key: 'venue-availability', label: translate('mweb.venueMenu.availability'), caption: '', icon: 'availability', to: '/venues/availability' },
+      { key: 'venue-settings', label: translate('mweb.venueMenu.settings'), caption: '', icon: 'settings', to: '/venues/settings' },
+    ];
+  }
+  if (mode === 'CLUB') {
+    return [
+      { key: 'club-dashboard', label: translate('mweb.clubMenu.dashboard'), caption: '', icon: 'dashboard', to: '/clubs/dashboard' },
+      { key: 'club-monitoring', label: translate('mweb.clubMenu.monitoring'), caption: '', icon: 'monitoring', to: '/clubs/monitoring' },
+    ];
+  }
+  return [];
+}
+
 /** The partner menu's Auto Pods row, or null when the flag is off or the mode
  * has no queue (USER, ECOMM). */
 function autoPodsTile(
@@ -64,15 +85,7 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
   // destinations that redirect straight back home.
   const { visible: productsVisible } = useProductVisibility();
   const percent = profileCompletion(me ?? {});
-  // The venue menu's calendar pair, after Venue Earnings. Built here so the
-  // labels are translated; native renders the same two keys (rule 27).
-  const venueItems: ProfileTile[] = mode === 'VENUE'
-    ? [
-        { key: 'venue-availability', label: t('mweb.venueMenu.availability'), caption: '', icon: 'availability', to: '/venues/availability' },
-        { key: 'venue-settings', label: t('mweb.venueMenu.settings'), caption: '', icon: 'settings', to: '/venues/settings' },
-      ]
-    : [];
-  const partnerMenus = buildPartnerMenus(roles, mode, autoPodsTile(mode, showAutoPods, t), venueItems);
+  const partnerMenus = buildPartnerMenus(roles, mode, autoPodsTile(mode, showAutoPods, t), partnerModeItems(mode, t));
   // Built here rather than in profileSections so the label is translated —
   // the section ships flag-gated and localized from day one (rule 38).
   const leaderboardItems: ProfileTile[] = [

@@ -100,8 +100,11 @@ export function EmailVerificationSection({
   const otpValid = isOtp(otp.trim());
   const otpHint = otp.length > 0 && !otpValid;
 
+  // The badges card above ends flush with its own border, so the heading needs a
+  // top margin of its own. It lives here rather than on the parent so a verified
+  // account — which renders nothing — leaves no empty band behind.
   return (
-    <YStack testID="email-verification" gap={10}>
+    <YStack testID="email-verification" gap={10} marginTop={16}>
       <XStack alignItems="center" gap={8}>
         <MaterialIcons name="mark-email-read" size={18} color={primary} />
         <Text fontSize={14} fontWeight="600" color="$color">

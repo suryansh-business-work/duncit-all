@@ -72,6 +72,14 @@ export function FormTextField<T extends FieldValues>({
   const [visible, setVisible] = useState(false);
   const hasError = !!fieldState.error;
   const isSecure = !!secureTextEntry;
+  const masked = isSecure && !visible;
+  // Tamagui's WEB <Input> destructures `secureTextEntry` away with the rest of
+  // the native-only props, so it never reaches the host <input> and Native Web
+  // rendered every password in clear text — the eye toggled its icon and
+  // nothing else. `type` is the prop the web build forwards; the native build
+  // reads it too (mapping `password` back to secureTextEntry), so the pair
+  // below masks on both platforms.
+  const maskType = masked ? 'password' : undefined;
   const toggleLabel = visible ? t('mweb.auth.hidePassword') : t('mweb.auth.showPassword');
 
   return (
@@ -97,7 +105,8 @@ export function FormTextField<T extends FieldValues>({
           value={(field.value as string) ?? ''}
           onChangeText={(text) => field.onChange(digitsOnly ? toDigits(text) : text)}
           onBlur={field.onBlur}
-          secureTextEntry={isSecure && !visible}
+          secureTextEntry={masked}
+          type={maskType}
           aria-label={label}
           // Tamagui's <Input> recomputes `editable` as `!disabled && !readOnly`
           // *after* spreading incoming props, so a passed `editable` never

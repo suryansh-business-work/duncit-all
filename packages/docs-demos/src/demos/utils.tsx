@@ -20,6 +20,11 @@ import {
   pickVenue,
   venueLabel,
   venueSubLabel,
+  canCancelVenuePod,
+  cancelDisabledReason,
+  cancelPenaltyHeadline,
+  tabCounts,
+  venueOwnerStatTiles,
   autoPodActionable,
   autoPodCityLabel,
   autoPodEnrolledCount,
@@ -108,6 +113,8 @@ import {
   type PodParticipationFields,
   type PodPhaseFields,
   type UsernameRejection,
+  type VenueOwnerStats,
+  type VenuePodRow,
 } from '@duncit/utils';
 import { defineDemo, defineDemos } from '../types';
 
@@ -263,6 +270,18 @@ interface HostInsightsMock {
   statusCounts: StatusCounts;
   earnings: MonthlyEarning[];
   palette: StatusPalette;
+}
+
+/** Pods at a partner's venue as `venuePods` lists them, plus the admin-configured cancel penalty. */
+interface VenuePodsMock {
+  pods: Array<VenuePodRow & { pod_id: string; pod_title: string }>;
+  /** `publicAppSettings.venue_cancel_health_penalty`; null before the query answers. */
+  cancel_penalty: number | null;
+}
+
+/** One owner's figures across their venues, as `venueOwnerStats` answers them. */
+interface VenueDashboardMock {
+  stats: VenueOwnerStats;
 }
 
 export default defineDemos('utils', [
@@ -1082,5 +1101,51 @@ export default defineDemos('utils', [
         'A venue that was deleted': venueLabel(pickVenue(mock.venues, 'ven-gone'), 'Untitled venue'),
       };
     },
+  }),
+  defineDemo<VenuePodsMock>({
+    id: 'venue-pods',
+    title: 'Which pods a venue owner may still cancel',
+    note:
+      'Only the UPCOMING pod offers Cancel; the ONGOING one answers ALREADY_STARTED because the owner may pull the plug before a pod starts, never during it. Stamp a cancelled_at onto the upcoming pod and it turns ALREADY_CANCELLED whatever its bucket says. Set cancel_penalty to 0 and the dialog headline stops promising an Account Health hit; set it to null and it is written without a number rather than a guessed one.',
+    mock: {
+      pods: [
+        { pod_id: 'DUN-POD-4821', pod_title: 'Sunday Pottery Jam', bucket: 'UPCOMING', cancelled_at: null },
+        { pod_id: 'DUN-POD-4977', pod_title: 'Terrace Chess Club', bucket: 'ONGOING', cancelled_at: null },
+        { pod_id: 'DUN-POD-4310', pod_title: 'Late Night Standup', bucket: 'COMPLETED', cancelled_at: null },
+      ],
+      cancel_penalty: 7,
+    },
+    compute: (mock) => ({
+      'Cancel offered on': mock.pods.filter(canCancelVenuePod).map((pod) => pod.pod_title),
+      'Why not, per pod': Object.fromEntries(
+        mock.pods.map((pod) => [pod.pod_title, cancelDisabledReason(pod) ?? 'can cancel'])
+      ),
+      'Dialog headline': cancelPenaltyHeadline(mock.cancel_penalty),
+      'Tab counts': tabCounts(mock.pods),
+    }),
+  }),
+  defineDemo<VenueDashboardMock>({
+    id: 'venue-dashboard',
+    title: 'The six tiles on a venue owner’s dashboard',
+    note:
+      'The tiles come back in the order every surface draws them, each marked money or count so INR formatting is never guessed per app. Change total_venues and nothing moves: the venue counts are the scope of the figures, not a figure, and are never tiled.',
+    mock: {
+      stats: {
+        total_venues: 2,
+        approved_venues: 2,
+        total_capacity: 140,
+        potential_earning: 86500,
+        booked_earning: 31200,
+        upcoming_slots: 18,
+        booked_slots: 7,
+        pending_requests: 3,
+      },
+    },
+    compute: (mock) => ({
+      Tiles: venueOwnerStatTiles(mock.stats),
+      'Money tiles, formatted': venueOwnerStatTiles(mock.stats)
+        .filter((tile) => tile.kind === 'money')
+        .map((tile) => `${tile.key}: ${formatMoney(tile.value)}`),
+    }),
   }),
 ]);

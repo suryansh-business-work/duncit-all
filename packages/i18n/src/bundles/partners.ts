@@ -437,36 +437,8 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
     },
 
     venueAvailabilityPage: {
-      aAvailable: 'A — Available',
-      allowInstantBooking: 'Allow instant booking',
-      allowMultipleBookings: 'Allow multiple bookings',
-      allowWaitlist: 'Allow waitlist',
-      areYouSure: 'Are you sure?',
-      autoExtendAvailability: 'Auto-extend availability',
-      autoExtendSaved: 'Auto-extend saved.',
-      bBooked: 'B — Booked',
       back: 'Back',
-      blocked: '× — Blocked',
-      bookingApprovalRequired: 'Booking approval required',
-      bufferBetweenSlotsMin: 'Buffer between slots (min)',
-      calendarView: 'Calendar view',
-      couldNotSaveAutoExtendPlease: 'Could not save auto-extend. Please try again.',
-      end: 'End',
-      endDate: 'End date',
-      from: 'From',
-      futureAvailability: 'Future availability',
-      leaveHoliday: 'Leave / Holiday',
-      maximumAdvanceBookingDays: 'Maximum advance booking (days)',
-      maximumBookingsPerSlot: 'Maximum bookings per slot',
-      minimumBookingNoticeMin: 'Minimum booking notice (min)',
-      month: 'Month',
-      newPrice: 'New price (₹)',
       next: 'Next',
-      pPendingApproval: 'P — Pending approval',
-      previous: 'Previous',
-      price: 'Price (₹)',
-      repeatOnDays: 'Repeat on days',
-      saveAsTemplate: 'Save as template',
       slotAvailability: 'Slot availability',
       slotAvailabilityHint:
         'Pick a date to add or manage time slots. Hosts will only see your Available slots when creating a pod.',
@@ -474,34 +446,17 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       approvalRequired:
         'Availability is only editable once your venue is approved (current status: {status}).',
       venueNamed: 'Venue · {name}',
-      startDate: 'Start date',
-      stopOnOptional: 'Stop on (optional)',
-      templateName: 'Template name',
-      // What a recurring run does when a generated slot lands on a time the
-      // space is already published for. Skip is the default; Overwrite is
-      // destructive, so its warning is part of the choice, not a footnote.
-      whenSlotsOverlap: 'When a slot already exists',
-      overlapSkip: 'Keep the existing slot',
-      overlapSkipHint: 'Slots that clash with one already published are not created.',
-      overlapReplace: 'Overwrite the existing slot',
-      overlapReplaceHint: 'The existing slot is deleted and the new one takes its place.',
-      overlapReplaceWarning:
-        'Overwriting permanently deletes the slots already published for the same space and time, together with their price and notes. Booked slots and pending booking requests are never deleted — new slots clashing with one are skipped instead.',
       venueNotFoundOrItIsn: "Venue not found, or it isn't yours.",
-      venueRules: 'Venue rules',
-      venueRulesSaved: 'Venue rules saved.',
-      weekdays: 'Weekdays',
-      weekends: 'Weekends',
     },
 
     venueDashboardPage: {
+      bookedSlots: 'Booked Slots',
       bookedValue: 'Booked Value',
       pendingRequests: 'Pending Requests',
       pickOneVenueOrViewAll: 'Pick one venue or view all together',
       potentialEarnings: 'Potential Earnings',
       registerVenue: 'Register venue',
       totalCapacity: 'Total Capacity',
-      totalVenues: 'Total Venues',
       upcomingSlots: 'Upcoming Slots',
       venueDashboard: 'Venue Dashboard',
     },
@@ -520,38 +475,6 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       hosts: 'Hosts',
       noPodsAtYourVenuesYet: 'No pods at your venues yet.',
       whyAreYouCancelling: 'Why are you cancelling?',
-    },
-
-    /**
-     * Venue Owner > Settings. The cancellation policy is written as bands: a
-     * band charges for cancelling INSIDE its window, so a booking cancelled
-     * outside every band is free — the copy says that rather than leaving the
-     * owner to infer it from an empty list.
-     */
-    venueSettingsPage: {
-      title: 'Venue settings',
-      subtitle: 'Rules that apply to bookings at your venue.',
-      venue: 'Venue',
-      noVenues: 'Register a venue first — settings apply to a venue you own.',
-      cancellationTitle: 'Cancellation policy',
-      rescheduleOnly: 'Reschedule only — no cancellations',
-      rescheduleOnlyHint:
-        'Guests may move a booking to another slot, but not cancel it. Your cancellation charges do not apply while this is on.',
-      policyDisabled: 'Cancellation charges are off because this venue is reschedule-only.',
-      bandsTitle: 'Cancellation charges',
-      bandsHint:
-        'Each row charges for cancelling within that many hours of the start. The tightest matching row wins, and a cancellation outside every row is free.',
-      noBands: 'No charges yet — cancelling is free at any time.',
-      addBand: 'Add a charge',
-      removeTier: 'Remove this charge',
-      tierHours: 'Cancel within (hours)',
-      tierChargeType: 'Charge',
-      tierValue: 'Amount',
-      chargePercent: 'Percent of slot price',
-      chargeAmount: 'Flat amount',
-      save: 'Save policy',
-      saving: 'Saving…',
-      saved: 'Cancellation policy saved.',
     },
 
     walletPage: {

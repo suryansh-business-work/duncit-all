@@ -7,8 +7,9 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
+import { emptyVenueOwnerStats } from '@duncit/utils';
 import { MY_VENUES } from '../register-venue-page/queries';
-import { VENUE_OWNER_STATS, emptyVenueOwnerStats } from './queries';
+import { VENUE_OWNER_STATS } from './queries';
 import VenueStatCards from './VenueStatCards';
 import { useTranslation } from '@duncit/shell';
 

@@ -251,6 +251,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venueEarnings: { title: 'Venue earnings' },
       slotRequests: { title: 'Slot requests' },
       venueHealth: { title: 'Venue health' },
+      venueAvailability: { title: 'Venue availability' },
+      venueSettings: { title: 'Venue settings' },
       clubStudio: { title: 'Club studio' },
       faqs: { title: 'FAQs' },
       policies: { title: 'Policies' },
@@ -3840,6 +3842,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venueHealth: 'Venue Health',
       venueStudio: 'Venue Studio',
     },
+    // The venue partner menu's two calendar rows — native renders the same keys.
+    venueMenu: {
+      availability: 'Availability Calendar',
+      settings: 'Venue Settings',
+    },
     venueManagePage: {
       listYourSpace: 'List your space, run events, get discovered',
       listed: 'Listed',
@@ -3848,6 +3855,65 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       switchYourVenue: 'Switch your venue',
       untitledVenue: 'Untitled venue',
       yourVenues: 'Your venues',
+      // The "Slot earnings" strip, fed by venueOwnerStats for the selected venue.
+      slotEarnings: 'Slot earnings',
+      potentialEarning: 'Potential earning',
+      bookedEarning: 'Booked earning',
+      upcomingSlots: 'Upcoming slots',
+      bookedSlots: 'Booked slots',
+      pendingRequests: 'Pending requests',
+      totalCapacity: 'Total capacity',
+      // The quick-actions row under the strip.
+      availabilityAction: 'Availability calendar',
+      settingsAction: 'Venue settings',
+      slotRequestsAction: 'Slot requests',
+      slotRequestsPending: '{count} pending',
+      approvalNeededForAvailability: 'The availability calendar opens once this venue is approved.',
+    },
+    // /venues/availability — the calendar the shared editor renders (rule 27).
+    venueAvailabilityPage: {
+      title: 'Slot availability',
+      subtitle:
+        'Pick a date to add or manage time slots. Hosts only see your Available slots when creating a pod.',
+      noVenues: 'Register a venue first — availability belongs to a venue you own.',
+      approvalRequired: 'Availability is only editable once your venue is approved (current status: {status}).',
+    },
+    // /venues/settings — the cancellation policy page chrome; the form's own
+    // copy is the shared venueSettings.* namespace.
+    venueSettingsPage: {
+      title: 'Venue settings',
+      subtitle: 'Rules that apply to bookings at your venue.',
+      noVenues: 'Register a venue first — settings apply to a venue you own.',
+    },
+    // Venue Studio's per-pod actions: the cancel dialog and the detail sheet.
+    venuePods: {
+      cancelPod: 'Cancel pod',
+      cancelTitle: 'Cancel this pod?',
+      reason: 'Reason (shared with attendees)',
+      reasonRequired: 'Give a reason of at least 5 characters',
+      penaltyUnknown: "Cancelling this pod will reduce this venue's Account Health.",
+      penaltyNone: 'Cancelling this pod cannot be undone.',
+      penaltyPoints: "Cancelling this pod will reduce this venue's Account Health by {penalty} {unit}.",
+      point: 'point',
+      points: 'points',
+      refundsNote:
+        'Every attendee who paid for this pod is refunded, and everyone booked in is emailed that the pod is cancelled. This cannot be undone.',
+      alreadyCancelled: 'This pod is already cancelled.',
+      alreadyStarted: 'This pod has already started, so it can no longer be cancelled.',
+      alreadyFinished: 'This pod has already finished.',
+      cancelled: "Pod cancelled — {refunds}. This venue's Account Health is now {score}.",
+      refundedOne: '1 payment refunded',
+      refundedMany: '{count} payments refunded',
+      keepPod: 'Keep pod',
+      cancelling: 'Cancelling…',
+      attendees: 'Attendees',
+      noAttendees: 'No attendees yet.',
+      podDetails: 'Pod details',
+      hosts: 'Hosts',
+      when: 'When',
+      venue: 'Venue',
+      spots: 'Spots',
+      price: 'Price',
     },
     venueMapPreview: {
       mapPreview: 'Map preview',

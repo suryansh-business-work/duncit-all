@@ -22,6 +22,9 @@ import {
   makeWithdrawSchema,
   buildWithdrawInput,
   blankWithdrawValues,
+  makeCancellationPolicySchema,
+  toPolicyInput,
+  type CancellationPolicyValues,
   type WithdrawValues,
 } from '@duncit/forms/schemas';
 import { defineDemo, defineDemos } from '../types';
@@ -248,6 +251,32 @@ export default defineDemos('forms', [
         'Sent to requestWithdrawal': result.success ? buildWithdrawInput(mock.values) : null,
         'Why the floor is checked here':
           'The server enforces balance >= min AND amount >= min. Checking only the balance let a healthy wallet submit an under-floor amount and meet a raw server error instead of a field message.',
+      };
+    },
+  }),
+
+  defineDemo<CancellationPolicyValues>({
+    id: 'venue-cancellation',
+    title: 'The cancellation policy a venue owner writes, as every surface checks it',
+    note:
+      'The third band is refused twice: 6 hours is already covered by the flat ₹500 band, and 120% would charge more than the booking. Change its hours_before to 2 and its value to 80 and the whole policy parses — the numbers the mutation receives appear below, coerced from the strings the inputs hold. Tick reschedule_only and the bands are still sent: that switch makes them inapplicable, not wrong.',
+    mock: {
+      reschedule_only: false,
+      tiers: [
+        { hours_before: '24', charge_type: 'PERCENT', value: '50' },
+        { hours_before: '6', charge_type: 'AMOUNT', value: '500' },
+        { hours_before: '6', charge_type: 'PERCENT', value: '120' },
+      ],
+    },
+    compute: (mock) => {
+      const t = (key: string) => key;
+      const result = makeCancellationPolicySchema(t).safeParse(mock);
+      return {
+        Verdict: result.success
+          ? 'accepted'
+          : result.error.issues.map((i) => `${i.path.join('.')} — ${i.message}`),
+        'Sent as VenueSettingsInput.cancellation': result.success ? toPolicyInput(mock, t) : null,
+        'Cancelling outside every band': 'free — a band charges only INSIDE its window',
       };
     },
   }),

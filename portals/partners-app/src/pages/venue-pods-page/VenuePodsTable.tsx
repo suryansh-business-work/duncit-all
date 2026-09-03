@@ -12,7 +12,7 @@ import { StatusChip } from '@duncit/ui';
 import {
   BUCKET_COLORS,
   BUCKET_LABELS,
-  cancelDisabledReason,
+  cancelDisabledText,
   fmtDate,
   type VenuePodRow,
 } from './queries';
@@ -46,7 +46,7 @@ function CancelPodCell({
   row,
   onCancel,
 }: Readonly<{ row: VenuePodRow; onCancel: (row: VenuePodRow) => void }>) {
-  const disabledReason = cancelDisabledReason(row);
+  const disabledReason = cancelDisabledText(row);
   return (
     <Tooltip title={disabledReason ?? CANCEL_HINT}>
       <span>
@@ -83,7 +83,7 @@ const actionsColumn = (onCancel: (row: VenuePodRow) => void, t: Translate): Dunc
   headerName: t('shell.common.actions'),
   width: 160,
   sortable: false,
-  valueGetter: (row) => cancelDisabledReason(row) ?? CANCEL_HINT,
+  valueGetter: (row) => cancelDisabledText(row) ?? CANCEL_HINT,
   cellRenderer: (row: VenuePodRow) => <CancelPodCell row={row} onCancel={onCancel} />,
 });
 

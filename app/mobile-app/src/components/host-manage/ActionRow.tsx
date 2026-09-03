@@ -14,6 +14,8 @@ interface ActionRowProps {
   /** Buttons pinned to the right of the row, for a line that does more than
    * one thing (the rating link is opened, shared or copied). */
   trailing?: ReactNode;
+  /** Shown but inert — for a door that opens only once something is approved. */
+  disabled?: boolean;
   onPress: () => void;
 }
 
@@ -25,6 +27,7 @@ export function ActionRow({
   tint,
   danger,
   trailing,
+  disabled = false,
   onPress,
 }: Readonly<ActionRowProps>) {
   return (
@@ -32,7 +35,9 @@ export function ActionRow({
       testID={testID}
       role="button"
       aria-label={label}
-      onPress={onPress}
+      aria-disabled={disabled}
+      onPress={disabled ? undefined : onPress}
+      opacity={disabled ? 0.5 : 1}
       alignItems="center"
       gap={12}
       height={52}

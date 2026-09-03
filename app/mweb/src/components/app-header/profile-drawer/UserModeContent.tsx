@@ -64,7 +64,15 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
   // destinations that redirect straight back home.
   const { visible: productsVisible } = useProductVisibility();
   const percent = profileCompletion(me ?? {});
-  const partnerMenus = buildPartnerMenus(roles, mode, autoPodsTile(mode, showAutoPods, t));
+  // The venue menu's calendar pair, after Venue Earnings. Built here so the
+  // labels are translated; native renders the same two keys (rule 27).
+  const venueItems: ProfileTile[] = mode === 'VENUE'
+    ? [
+        { key: 'venue-availability', label: t('mweb.venueMenu.availability'), caption: '', icon: 'availability', to: '/venues/availability' },
+        { key: 'venue-settings', label: t('mweb.venueMenu.settings'), caption: '', icon: 'settings', to: '/venues/settings' },
+      ]
+    : [];
+  const partnerMenus = buildPartnerMenus(roles, mode, autoPodsTile(mode, showAutoPods, t), venueItems);
   // Built here rather than in profileSections so the label is translated —
   // the section ships flag-gated and localized from day one (rule 38).
   const leaderboardItems: ProfileTile[] = [

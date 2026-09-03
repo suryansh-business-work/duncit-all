@@ -1,17 +1,41 @@
 import {
+  generateRecurringSlots,
   groupSlotsByDay,
+  readVenueSettings,
+  recurringErrorMessage,
   slotPriceLabel,
   slotRangeLabel,
   slotSpanLabel,
   slotTileLines,
+  weekdayLabels,
   type CalendarSlot,
   type SlotFormatter,
+  type SpacePrice,
+  type TimeRange,
 } from '@duncit/slots';
+import { AVAILABILITY_BUNDLE, createTranslator, flattenCatalogue } from '@duncit/i18n';
 import { defineDemo, defineDemos } from '../types';
 
 interface SlotsMock {
   time_zone: string;
   slots: CalendarSlot[];
+}
+
+interface RecurringMock {
+  /** "Now", injected so the past/beyond-cap skips read the same for everyone. */
+  now: string;
+  start_date: string;
+  end_date: string;
+  /** 0 = Sunday … 6 = Saturday. */
+  weekdays: number[];
+  time_slots: TimeRange[];
+  spaces: SpacePrice[];
+  settings: {
+    operating_hours: { open: string; close: string };
+    weekly_off_days: number[];
+    holidays: string[];
+    rules: { max_advance_days: number; buffer_minutes: number };
+  };
 }
 
 /**
@@ -30,6 +54,9 @@ const formatterFor = (timeZone: string): SlotFormatter => {
     clock: { nowMs: () => Date.parse('2026-09-14T06:00:00.000Z') },
   };
 };
+
+/** The real availability copy, so the sentences below are the ones a partner reads. */
+const { t } = createTranslator({ locale: 'en-IN', fallback: flattenCatalogue(AVAILABILITY_BUNDLE) });
 
 export default defineDemos('slots', [
   defineDemo<SlotsMock>({
@@ -84,6 +111,69 @@ export default defineDemos('slots', [
           labels.wholeDay
         ),
         'Prices': mock.slots.map((slot) => slotPriceLabel(slot.price, labels.free)),
+      };
+    },
+  }),
+
+  defineDemo<RecurringMock>({
+    id: 'recurring',
+    title: 'What a recurring run creates for a Koramangala turf',
+    note:
+      "Two courts at ₹399 and ₹599, weekdays only, two evening windows, Wednesday the 16th a holiday. Add a Saturday to weekdays, or set buffer_minutes to 30 and the back-to-back windows are refused — the refusal is the sentence the dialog shows.",
+    mock: {
+      now: '2026-09-14T06:00:00',
+      start_date: '2026-09-14T00:00:00',
+      end_date: '2026-09-18T00:00:00',
+      weekdays: [1, 2, 3, 4, 5],
+      time_slots: [
+        { start: '18:00', end: '20:00' },
+        { start: '20:00', end: '22:00' },
+      ],
+      spaces: [
+        { label: 'Court 1', capacity: 10, price: 399 },
+        { label: 'Court 2', capacity: 10, price: 599 },
+      ],
+      settings: {
+        operating_hours: { open: '06:00', close: '23:00' },
+        weekly_off_days: [],
+        holidays: ['2026-09-16'],
+        rules: { max_advance_days: 60, buffer_minutes: 0 },
+      },
+    },
+    compute: (mock) => {
+      const settings = readVenueSettings(mock.settings);
+      const result = generateRecurringSlots(
+        {
+          startDate: new Date(mock.start_date),
+          endDate: new Date(mock.end_date),
+          weekdays: mock.weekdays,
+          wholeDay: false,
+          timeSlots: mock.time_slots,
+          spaces: mock.spaces,
+          bufferMinutes: settings.rules.buffer_minutes,
+          skipWeeklyOff: true,
+          skipHolidays: true,
+        },
+        settings,
+        new Date(mock.now)
+      );
+      const days = weekdayLabels(t).short;
+      return {
+        'Slots to be created': result.summary.total,
+        'Estimated revenue (₹)': result.summary.estimatedRevenue,
+        'Per space': Object.entries(result.summary.bySpace).map(
+          ([label, bucket]) => `${label || 'Whole venue'} — ${bucket.count} slot(s) at ₹${bucket.price}`
+        ),
+        'Auto-skipped': {
+          holidays: result.summary.skippedHolidays,
+          weeklyOff: result.summary.skippedWeeklyOff,
+          past: result.summary.skippedPast,
+          beyondCap: result.summary.skippedBeyondCap,
+        },
+        'First three slots': result.slots.slice(0, 3).map(
+          (slot) => `${days[slot.weekday]} ${slot.start_at.slice(0, 16)} · ${slot.space_label} · ₹${slot.price}`
+        ),
+        'Why it was refused': result.errors.map((code) => recurringErrorMessage(code, t, settings)),
       };
     },
   }),

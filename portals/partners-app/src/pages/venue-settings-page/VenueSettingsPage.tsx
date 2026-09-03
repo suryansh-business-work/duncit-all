@@ -11,18 +11,14 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
+import type { VenueCancellationPolicy } from '@duncit/forms/schemas';
 import {
   CancellationPolicyForm,
   toPolicyInput,
   toPolicyValues,
   type CancellationPolicyValues,
 } from './cancellation-policy';
-import {
-  MY_VENUES_SETTINGS,
-  UPDATE_VENUE_CANCELLATION,
-  type VenueCancellationPolicy,
-  type VenueSettingsVenue,
-} from './queries';
+import { MY_VENUES_SETTINGS, UPDATE_VENUE_CANCELLATION, type VenueSettingsVenue } from './queries';
 
 /**
  * Venue Owner → Settings. One venue at a time, because the policy is the
@@ -64,10 +60,10 @@ export default function VenueSettingsPage() {
       await saveSettings({
         variables: {
           venue_doc_id: selected.id,
-          input: { cancellation: toPolicyInput(values) },
+          input: { cancellation: toPolicyInput(values, t) },
         },
       });
-      setMessage(t('partners.venueSettingsPage.saved'));
+      setMessage(t('venueSettings.saved'));
       await refetch();
     } catch (saveError) {
       setApiError(parseApiError(saveError));
@@ -92,23 +88,23 @@ export default function VenueSettingsPage() {
         <Typography variant="h5" sx={{
           fontWeight: 700
         }}>
-          {t('partners.venueSettingsPage.title')}
+          {t('venueSettings.title')}
         </Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
-          {t('partners.venueSettingsPage.subtitle')}
+          {t('venueSettings.subtitle')}
         </Typography>
       </Stack>
 
       {venues.length === 0 ? (
-        <Alert severity="info">{t('partners.venueSettingsPage.noVenues')}</Alert>
+        <Alert severity="info">{t('venueSettings.noVenues')}</Alert>
       ) : (
         <>
           <TextField
             select
             fullWidth
-            label={t('partners.venueSettingsPage.venue')}
+            label={t('venueSettings.venue')}
             value={selected?.id ?? ''}
             onChange={(event) => setVenueId(event.target.value)}
           >
@@ -125,7 +121,7 @@ export default function VenueSettingsPage() {
                 <Typography variant="subtitle1" sx={{
                   fontWeight: 600
                 }}>
-                  {t('partners.venueSettingsPage.cancellationTitle')}
+                  {t('venueSettings.cancellationTitle')}
                 </Typography>
                 <CancellationPolicyForm
                   initialValues={initialValues}

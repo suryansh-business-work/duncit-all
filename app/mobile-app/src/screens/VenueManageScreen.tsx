@@ -1,35 +1,27 @@
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 import { venueSubLabel } from '@duncit/utils';
 
 import { SimpleBarChart, buildMonthlyCounts } from '@/components/SimpleBarChart';
 import { StackScreen } from '@/components/StackScreen';
-import { StudioPodsSection, VenueSwitcher, useVenueStudioPods } from '@/components/studio';
+import {
+  StatTile,
+  VenueQuickActions,
+  VenueSlotEarningsTiles,
+  VenueStudioPods,
+  VenueSwitcher,
+  useVenueStudioPods,
+} from '@/components/studio';
 import { useVenueDashboard } from '@/hooks/useStudioDashboards';
 import { useTranslation } from '@/hooks/useTranslation';
-
-/** Stat tile shared by the studio dashboards. */
-export function StatTile({ label, value }: Readonly<{ label: string; value: string | number }>) {
-  return (
-    <YStack
-      flex={1}
-      padding={12}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
-      <Text fontSize={11} fontWeight="700" color="$primary">
-        {label}
-      </Text>
-      <Text fontSize={17} fontWeight="700" color="$color" numberOfLines={1}>
-        {value}
-      </Text>
-    </YStack>
-  );
-}
+import { useVenueOwnerStats } from '@/hooks/useVenueOwnerStats';
+import type { MenuRoute, RootStackParamList } from '@/navigation/types';
 
 /**
- * Venue studio dashboard — venues, capacity, status + bookings chart (B3-1).
+ * Venue studio dashboard — venues, capacity, status, the slot-earnings strip,
+ * the doors to the calendar / settings / requests, the bookings chart and the
+ * pods booked here (B3-1).
  *
  * A partner with more than one venue picks which one the screen is about from
  * the switcher at the top; every figure below it belongs to that venue. Only
@@ -37,8 +29,13 @@ export function StatTile({ label, value }: Readonly<{ label: string; value: stri
  */
 export function VenueManageScreen() {
   const { t } = useTranslation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  // MenuRoute is a union of param-less screens; RN v7's distributive
+  // `navigate` needs the narrower signature spelled out.
+  const navigate: (screen: MenuRoute) => void = navigation.navigate;
   const { venues, venue, venueId, selectVenue, podDates, isLoading } = useVenueDashboard();
   const podsState = useVenueStudioPods(venueId);
+  const { stats } = useVenueOwnerStats(venueId);
   const capacity = venue?.capacity ?? 0;
 
   return (
@@ -52,6 +49,16 @@ export function VenueManageScreen() {
             <StatTile label={t('mweb.common.capacity')} value={capacity || '-'} />
             <StatTile label={t('mweb.venueManagePage.status')} value={venue?.status ?? 'New'} />
           </XStack>
+          {venue ? (
+            <>
+              <VenueSlotEarningsTiles stats={stats} />
+              <VenueQuickActions
+                approved={venue.status === 'APPROVED'}
+                pendingRequests={stats.pending_requests}
+                onNavigate={navigate}
+              />
+            </>
+          ) : null}
           <YStack
             gap={4}
             padding={14}
@@ -68,13 +75,13 @@ export function VenueManageScreen() {
             </Text>
             <SimpleBarChart testID="venue-pods-chart" data={buildMonthlyCounts(podDates)} />
           </YStack>
-          {/* The bookings behind that chart, pod by pod, with their figures.
-              Hidden when there is no venue at all: the empty copy says "no pods
-              have been booked at your venue", which asserts a venue they do not
-              have — and it fired a needless authenticated round trip. mWeb
-              gates it the same way (rule 27). */}
+          {/* The bookings behind that chart, pod by pod, with their figures and
+              the owner's per-pod actions. Hidden when there is no venue at all:
+              the empty copy says "no pods have been booked at your venue",
+              which asserts a venue they do not have — and it fired a needless
+              authenticated round trip. mWeb gates it the same way (rule 27). */}
           {venues.length > 0 ? (
-            <StudioPodsSection variant="VENUE" state={podsState} testID="venue-studio-pods" />
+            <VenueStudioPods state={podsState} testID="venue-studio-pods" />
           ) : null}
           {!isLoading && venues.length === 0 ? (
             <Text testID="venue-dashboard-empty" fontSize={13} color="$muted">

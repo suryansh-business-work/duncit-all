@@ -1,13 +1,18 @@
 import {
+  CalendarLegend,
+  CalendarToolbar,
   checkSlotDraft,
   isDraftIncomplete,
   isSlotConflictError,
   minEndTime,
   minTimeOn,
+  PreviewBar,
   slotCoveredDays,
   slotCoversDay,
   wholeDayWindow,
+  type CalendarView,
 } from '@duncit/availability-calendar';
+import type { PreviewSummary } from '@duncit/slots';
 import { defineDemo, defineDemos } from '../types';
 
 interface SlotMock {
@@ -33,7 +38,66 @@ interface WholeDayMock {
   now: string;
 }
 
+interface ToolbarMock {
+  view: CalendarView;
+  period_label: string;
+  /** False at the end of the 60-day window — Next goes disabled. */
+  can_go_next: boolean;
+}
+
+interface PreviewMock {
+  summary: PreviewSummary;
+  max_advance_days: number;
+}
+
+const noop = () => undefined;
+
 export default defineDemos('availability-calendar', [
+  defineDemo<ToolbarMock>({
+    id: 'chrome',
+    title: 'The calendar chrome: view switch, period arrows and the legend',
+    note:
+      "Set can_go_next false and the Next arrow disables — that is the 60-day booking window. The period label is whatever the host computed with periodLabel(); the toolbar itself owns no state.",
+    mock: { view: 'month', period_label: 'September 2026', can_go_next: true },
+    render: (mock) => (
+      <>
+        <CalendarToolbar
+          view={mock.view}
+          onView={noop}
+          periodLabel={mock.period_label}
+          onShift={noop}
+          canGoNext={mock.can_go_next}
+          onToday={noop}
+          onRecurring={noop}
+        />
+        <CalendarLegend />
+      </>
+    ),
+  }),
+
+  defineDemo<PreviewMock>({
+    id: 'preview',
+    title: 'What the recurring dialog promises before Create is pressed',
+    note:
+      'The same PreviewSummary the generator returns. Put skippedBeyondCap at 3 and the auto-skipped line names the cap; empty bySpace and the breakdown disappears.',
+    mock: {
+      summary: {
+        total: 16,
+        bySpace: {
+          'Court 1': { count: 8, price: 399, capacity: 10 },
+          'Court 2': { count: 8, price: 599, capacity: 10 },
+        },
+        estimatedRevenue: 7984,
+        skippedWeeklyOff: 0,
+        skippedHolidays: 1,
+        skippedPast: 0,
+        skippedBeyondCap: 0,
+      },
+      max_advance_days: 60,
+    },
+    render: (mock) => <PreviewBar summary={mock.summary} maxAdvanceDays={mock.max_advance_days} />,
+  }),
+
   defineDemo<SlotMock>({
     id: 'multi-day',
     title: 'Which calendar cells one slot has to appear in',

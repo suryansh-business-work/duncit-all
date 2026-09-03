@@ -4,7 +4,7 @@ import { SimpleBarChart } from '@/components/SimpleBarChart';
 import { StackScreen } from '@/components/StackScreen';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useEcommDashboard } from '@/hooks/useStudioDashboards';
-import { StatTile } from '@/screens/VenueManageScreen';
+import { StatTile } from '@/components/studio';
 import { useTranslation } from '@/hooks/useTranslation';
 
 /** ecomm studio dashboard — catalogue stats + stock-by-product chart (B3-1). */

@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import AddSlotFields from '../src/DayDrawer/AddSlotFields';
 import AddSlotForm from '../src/DayDrawer/AddSlotForm';
-import { emptyDraft } from '../src/slot-draft';
+import { emptyDraft } from '@duncit/slots';
 import type { NewSlotInput } from '../src/types';
 
 // Deterministic stand-ins for the MUI X pickers (see DayDrawer.test.tsx).

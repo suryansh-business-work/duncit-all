@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import { VENUE_SETTINGS_FRAGMENT } from '@duncit/availability-calendar';
 
 export const MY_VENUE = gql`
   query MyVenue($venue_id: ID) {
@@ -75,33 +76,6 @@ export const MY_VENUE = gql`
         zone_code
         pincode
       }
-    }
-  }
-`;
-
-export const VENUE_SETTINGS_FRAGMENT = `
-  settings {
-    operating_hours {
-      open
-      close
-    }
-    weekly_off_days
-    holidays
-    rules {
-      buffer_minutes
-      min_notice_minutes
-      max_advance_days
-      max_bookings_per_slot
-      allow_instant_booking
-      allow_waitlist
-      booking_approval_required
-      allow_multiple_bookings
-    }
-    auto_extend {
-      enabled
-      template_id
-      horizon_days
-      until
     }
   }
 `;

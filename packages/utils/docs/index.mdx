@@ -182,6 +182,14 @@ exports:
   - 'pickVenue'
   - 'venueLabel'
   - 'venueSubLabel'
+  - 'canCancelVenuePod'
+  - 'cancelDisabledReason'
+  - 'cancelPenaltyHeadline'
+  - 'matchesTab'
+  - 'tabCounts'
+  - 'TAB_ORDER'
+  - 'venueOwnerStatTiles'
+  - 'emptyVenueOwnerStats'
   - 'mwebAutoPodLabels'
   - 'shellAutoPodLabels'
   - 'shellPodKindLabels'
@@ -929,6 +937,57 @@ autoPodHostNeedsLocation(row, '')        // false — pinned; the host's selecti
 autoPodHostNeedsLocation({ location: null }, '')        // true  — unpinned and no city selected
 autoPodCityLabel(row.location)           // 'Bengaluru, Karnataka'
 mwebAutoPodLabels(t).waitingFor(autoPodMissingRoles(row))  // 'Waiting for a venue, a host'
+```
+
+### A venue owner's pods — `venue-pods`
+
+The pods booked at a venue are one list on three surfaces: the Partners console's table, and
+the mWeb and native venue studios. Whether a pod can still be cancelled, why it cannot, and
+which tab a row sits under are one rule here, over the `venuePods` row's `bucket` and
+`cancelled_at`. Every answer is a **code** — the caller maps it to its own translated
+sentence, so no English lives in the rule.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `canCancelVenuePod` | `(row) => boolean` | Only an `UPCOMING` pod with no `cancelled_at` — the owner may pull the plug before the pod starts, never after. |
+| `cancelDisabledReason` | `(row) => 'ALREADY_CANCELLED' \| 'ALREADY_STARTED' \| 'ALREADY_FINISHED' \| null` | Why Cancel is off; `null` while it is on. A `cancelled_at` wins over the bucket — the bucket is computed from the clock, the timestamp from the fact. |
+| `cancelPenaltyHeadline` | `(penalty) => 'UNKNOWN' \| 'NONE' \| 'POINTS'` | Which warning the cancel dialog opens with: no number until the admin-configured penalty has arrived, no penalty when it is 0. |
+| `matchesTab` / `tabCounts` / `TAB_ORDER` | | The Upcoming tab covers live (`ONGOING`) pods too. |
+
+```ts
+const upcoming = { bucket: 'UPCOMING', cancelled_at: null };
+const ongoing = { bucket: 'ONGOING', cancelled_at: null };
+
+canCancelVenuePod(upcoming)        // true
+cancelDisabledReason(ongoing)      // 'ALREADY_STARTED'
+cancelDisabledReason({ bucket: 'UPCOMING', cancelled_at: '2026-07-03T00:00:00.000Z' })
+                                   // 'ALREADY_CANCELLED' — whatever the bucket says
+cancelPenaltyHeadline(null)        // 'UNKNOWN' — the sentence is written without a number
+cancelPenaltyHeadline(0)           // 'NONE' — promising "0 points" would be a lie
+tabCounts([upcoming, ongoing])     // { ALL: 2, UPCOMING: 2, CANCELLED: 0, COMPLETED: 0 }
+```
+
+The Partners console keeps its own `applyVenuePodsQuery` (search, sort and paging over
+`@duncit/table`'s query state) beside these; that depends on the table and cannot come here.
+
+### The venue owner's dashboard — `venue-dashboard`
+
+`venueOwnerStats` answers eight numbers. Six of them are tiles, in one order, each either
+`money` (INR) or a `count` — and that is decided here, so the MUI stat cards in Partners and
+the Tamagui tiles in the apps read the same dashboard. `total_venues` and `approved_venues`
+are the scope, not a figure, and are never tiled. The caller labels each tile by its `key`
+from its own bundle.
+
+```ts
+venueOwnerStatTiles({ ...emptyVenueOwnerStats, potential_earning: 86_500, booked_slots: 7 })
+// [
+//   { key: 'potential_earning', kind: 'money', value: 86500 },
+//   { key: 'booked_earning',    kind: 'money', value: 0 },
+//   { key: 'upcoming_slots',    kind: 'count', value: 0 },
+//   { key: 'booked_slots',      kind: 'count', value: 7 },
+//   { key: 'pending_requests',  kind: 'count', value: 0 },
+//   { key: 'total_capacity',    kind: 'count', value: 0 },
+// ]
 ```
 
 ## The grievance form is one spec, four validators

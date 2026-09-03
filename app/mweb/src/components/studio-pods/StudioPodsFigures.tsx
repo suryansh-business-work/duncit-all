@@ -1,7 +1,8 @@
-import { Box, Card, CardContent, LinearProgress, Stack, Typography } from '@mui/material';
+import { Box, LinearProgress, Stack, Typography } from '@mui/material';
 import { formatMoney } from '@duncit/utils';
 import { useDateFormat } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
+import FigureTile from './FigureTile';
 import { fillPercent } from './summary';
 import type { StudioPodSummary } from './types';
 
@@ -9,28 +10,6 @@ interface Figure {
   key: string;
   label: string;
   value: string;
-}
-
-/** One stat tile. Hoisted to module scope so it is never redefined per render. */
-function FigureTile({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <Card variant="outlined" sx={{ flex: '1 1 28%', minWidth: 96, borderRadius: '16px' }}>
-      <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
-        <Typography
-          variant="caption"
-          noWrap
-          sx={{
-            color: "text.secondary",
-            fontWeight: 700
-          }}>
-          {label}
-        </Typography>
-        <Typography variant="h6" sx={{ mt: 0.25, fontWeight: 700 }} noWrap>
-          {value}
-        </Typography>
-      </CardContent>
-    </Card>
-  );
 }
 
 interface Props {

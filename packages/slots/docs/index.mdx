@@ -1,12 +1,13 @@
 ---
 name: '@duncit/slots'
-summary: 'One slot-selection experience for every surface: pick a date on a calendar, then a time on that date. Framework-free logic at the root, the MUI calendar behind /mui; the app renders the same logic through its own Tamagui view.'
+summary: 'One slot experience for every surface: pick a date on a calendar, then a time on that date — and, for the venue owner, the rules that decide which slot may be added and what a recurring run creates. Framework-free logic at the root, the MUI calendar behind /mui; the app renders the same logic through its own Tamagui view.'
 category: 'ui'
 zeroDeps: true
 frameworkFree: false
 coverageGate: true
 consumers:
   - 'packages/pod-form'
+  - 'packages/availability-calendar'
   - 'app/mweb'
   - 'app/mobile-app'
   - 'portals/onboarding'
@@ -26,6 +27,28 @@ exports:
   - 'monthKeyOf'
   - 'weekdayIndex'
   - 'weekdayInitials'
+  - 'wholeDayWindow'
+  - 'slotCoversDay'
+  - 'slotCoveredDays'
+  - 'emptyDraft'
+  - 'checkSlotDraft'
+  - 'isDraftIncomplete'
+  - 'minTimeOn'
+  - 'minEndTime'
+  - 'slotIssueMessage'
+  - 'MAX_FUTURE_DAYS'
+  - 'NO_SPACE'
+  - 'generateRecurringSlots'
+  - 'recurringErrorMessage'
+  - 'weekdayLabels'
+  - 'readVenueSettings'
+  - 'timeToHHMM'
+  - 'hhmmToDate'
+  - 'parseHHMM'
+  - 'effectiveMaxAdvance'
+  - 'MAX_ADVANCE_DAYS_CAP'
+  - 'DEFAULT_VENUE_RULES'
+  - 'DEFAULT_AUTO_EXTEND'
 ---
 
 ## Why this exists
@@ -45,6 +68,11 @@ This package is the single answer: one set of helpers that group and label slots
 admin-configured formatter, and two thin views — MUI and Tamagui — that render the identical
 two steps from those helpers.
 
+The venue owner's side of the same coin lives here too. Which slot may be added, and what a
+recurring run creates, used to be answered in the Partners console alone; the moment mWeb and
+the native app grew the same calendar, those rules had to move somewhere all three could
+import — and this package is the one framework-free module the app already compiles.
+
 ## Where each piece lives
 
 | Import | Contains | Used by |
@@ -52,12 +80,15 @@ two steps from those helpers.
 | `@duncit/slots` | Types and pure functions. No React, no toolkit. | everything, including Node and tests |
 | `@duncit/slots/mui` | `SlotCalendar` on MUIX `DateCalendar` | the portals and mWeb |
 | — | the app renders the same logic through its own Tamagui view in `app/mobile-app/src/components/slots/` | the app |
+| `@duncit/availability-calendar` | the MUI venue-availability editor built on the rules below | Partners, Onboarding, mWeb |
 
 The Tamagui view lives in the app rather than here on purpose: the native app typechecks and
 bundles linked packages from their own SOURCE, so a `react`/`tamagui` import inside this package
 resolves by walking up from `packages/slots/` and finds nothing in CI or Docker. Keeping the
 view in the app is what every other native-consumed package already does — the two calendars
-still render the same steps from the same helpers.
+still render the same steps from the same helpers. The same constraint is why the rules below
+import nothing but `date-fns`, and why the app compiles them with `noUncheckedIndexedAccess`
+on: every index read in here is guarded.
 
 ## The one slot shape
 
@@ -117,6 +148,105 @@ app, `shell.slots.*` for the portals.
   *available*, so without it an edit form would clear a valid saved choice.
 - `slotDayBounds` derives the calendar's min/max from the data, so the arrows cannot page into
   months that can never hold a slot — no hardcoded horizon.
+
+## Slot draft / whole-day window
+
+The venue owner's add-slot form is judged by one pure function, so the MUI drawer and the
+native twin cannot disagree about which slot is addable.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `emptyDraft` | `(date: Date) => SlotDraft` | A draft seeded on the clicked day: no times, no price, no space picked (`NO_SPACE`, because `''` is a real space — the whole venue). |
+| `checkSlotDraft` | `(draft, now) => { start; end } \| SlotIssueCode` | The window the draft asks for, or the ONE thing wrong with it. `now` is a parameter so the same draft can be re-judged against a moving clock. |
+| `isDraftIncomplete` | `(code) => boolean` | True for `pickDates` / `pickSlotTimes` — unfinished, not wrong. Say it on submit; never shout it mid-typing. |
+| `minTimeOn` / `minEndTime` | `(…, now) => Date \| undefined` | The picker bounds: "now" on today, a minute past the start while the slot sits on one day. An hour that has gone by is never offered. |
+| `slotIssueMessage` | `(code, t) => string` | The single place a code becomes a sentence — literal `availability.*` keys, the namespace every surface ships. |
+| `wholeDayWindow` | `(startDate, endDate, now?) => { start; end }` | A whole-day booking across a date range. Today's starts five minutes from now, never at a midnight that has passed. |
+| `slotCoversDay` / `slotCoveredDays` | `(slot, day)` / `(slot)` | Which calendar cells a slot touches. The end is exclusive, so a block ending at midnight does not claim the next day. |
+| `MAX_FUTURE_DAYS` | `60` | Mirrors the server cap in `validateSlotWindow`. |
+
+```ts
+import { checkSlotDraft, emptyDraft, slotIssueMessage } from '@duncit/slots';
+
+const now = new Date('2026-09-14T14:30:00');
+const draft = {
+  ...emptyDraft(new Date('2026-09-14T00:00:00')),
+  startTime: new Date('2026-09-14T09:00:00'),
+  endTime: new Date('2026-09-14T10:00:00'),
+};
+
+checkSlotDraft(draft, now);        // 'startInFuture' — 9am is already gone at 2:30pm
+slotIssueMessage('startInFuture', t); // "Start time must be in the future."
+```
+
+## Recurring availability
+
+`generateRecurringSlots` is the whole engine behind the recurring dialog: the live preview,
+the "Create N slots" label and the batch actually sent to `createVenueSlots` all come from one
+call, so they can never drift. It walks every day in the range, keeps the chosen weekdays,
+skips weekly-offs / holidays / past windows / anything beyond the advance cap, and emits one
+slot per time range per space, each priced for that space.
+
+```ts
+import {
+  generateRecurringSlots,
+  readVenueSettings,
+  recurringErrorMessage,
+} from '@duncit/slots';
+
+// A Koramangala turf: two courts, weekday evenings, Wednesday the 16th a holiday.
+const settings = readVenueSettings({
+  operating_hours: { open: '06:00', close: '23:00' },
+  holidays: ['2026-09-16'],
+  rules: { max_advance_days: 60, buffer_minutes: 0 },
+});
+
+const run = generateRecurringSlots(
+  {
+    startDate: new Date('2026-09-14T00:00:00'),
+    endDate: new Date('2026-09-18T00:00:00'),
+    weekdays: [1, 2, 3, 4, 5],
+    wholeDay: false,
+    timeSlots: [
+      { start: '18:00', end: '20:00' },
+      { start: '20:00', end: '22:00' },
+    ],
+    spaces: [
+      { label: 'Court 1', capacity: 10, price: 399 },
+      { label: 'Court 2', capacity: 10, price: 599 },
+    ],
+    bufferMinutes: settings.rules.buffer_minutes,
+    skipWeeklyOff: true,
+    skipHolidays: true,
+  },
+  settings,
+  new Date('2026-09-14T06:00:00'),
+);
+
+run.summary.total;             // 16 — 4 days × 2 windows × 2 courts (the holiday skipped)
+run.summary.estimatedRevenue;  // 7984
+run.summary.skippedHolidays;   // 1
+run.errors;                    // []
+```
+
+A run that cannot be generated comes back with `slots: []` and one or more **codes** in
+`errors` — `'pickDates'`, `'pickWeekday'`, `'addTimeSlot'`, `'invalidTime'`, `'endAfterStart'`,
+`'beforeOpen'`, `'afterClose'`, `'overlap'`, `'bufferGap'`, `'addSpace'`, `'negativePrice'`,
+`'endDateAfterStart'`. Codes rather than sentences, because the engine is framework-free and
+shared with the native app; `recurringErrorMessage(code, t, settings)` turns one into the
+sentence the dialog shows, reading the venue's hours and buffer for the ones that name them:
+
+```ts
+recurringErrorMessage('bufferGap', t, settings);
+// "Keep at least a 30-minute gap between time slots."
+```
+
+`weekdayLabels(t)` gives the repeat picker its seven short and full names (Sunday first, the
+order `Date#getDay` counts in), and the settings helpers normalise what the server sends:
+`readVenueSettings` fills a venue registered before settings existed with the defaults
+(`DEFAULT_VENUE_RULES`, `DEFAULT_AUTO_EXTEND`), `effectiveMaxAdvance` clamps
+`rules.max_advance_days` into `[1, MAX_ADVANCE_DAYS_CAP]`, and `timeToHHMM` / `hhmmToDate` /
+`parseHHMM` move between a picker's `Date` and the `'HH:mm'` the server stores.
 
 ## Coverage
 

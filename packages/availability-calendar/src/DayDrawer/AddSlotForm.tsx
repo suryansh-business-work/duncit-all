@@ -12,7 +12,7 @@ import {
   slotIssueMessage,
   MAX_FUTURE_DAYS,
   type SlotDraft,
-} from '../slot-draft';
+} from '@duncit/slots';
 import type { NewSlotInput, VenueSpace } from '../types';
 
 // How often the form re-reads the clock. The whole point of the add form
@@ -98,7 +98,7 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
       reset();
     } catch (e) {
       setClashing(isSlotConflictError(e) && !overwrite ? payload : null);
-      setError(e instanceof Error ? e.message : t('shell.availability.createFailed'));
+      setError(e instanceof Error ? e.message : t('availability.createFailed'));
     } finally {
       setCreating(false);
     }
@@ -136,7 +136,7 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
   // Hoisted out of the Alert's props so the conditionals sit at nesting 0.
   const overwriteAction = clashing ? (
     <DuncitButton color="inherit" size="small" onClick={() => setConfirmOverwrite(true)}>
-      {t('shell.availability.overwriteAction')}
+      {t('availability.overwriteAction')}
     </DuncitButton>
   ) : undefined;
   // A submit/server failure outranks the live hint, and only it is dismissable
@@ -152,11 +152,11 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
           color: "text.secondary",
           fontWeight: 900
         }}>
-        Add availability
+        {t('availability.addTitle')}
       </Typography>
       {isHoliday && (
         <Alert severity="error" sx={{ mt: 1 }}>
-          This date is marked as a venue leave/holiday — slots cannot be added or booked.
+          {t('availability.holidayAlert')}
         </Alert>
       )}
       <Stack spacing={1.5} sx={{ mt: 1, display: isHoliday ? 'none' : 'flex' }}>
@@ -174,17 +174,17 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
           </Alert>
         )}
         <DuncitButton variant="contained" disabled={creating || !!liveIssue} onClick={handleAdd}>
-          {creating ? 'Adding…' : 'Add slot'}
+          {creating ? t('availability.adding') : t('availability.addSlot')}
         </DuncitButton>
       </Stack>
 
       <ConfirmDialog
         open={confirmOverwrite}
         destructive
-        title={t('shell.availability.overwriteTitle')}
-        message={t('shell.availability.overwriteMessage')}
-        confirmLabel={t('shell.availability.overwriteConfirm')}
-        cancelLabel={t('shell.common.cancel')}
+        title={t('availability.overwriteTitle')}
+        message={t('availability.overwriteMessage')}
+        confirmLabel={t('availability.overwriteConfirm')}
+        cancelLabel={t('availability.cancel')}
         onConfirm={handleOverwrite}
         onClose={() => setConfirmOverwrite(false)}
       />

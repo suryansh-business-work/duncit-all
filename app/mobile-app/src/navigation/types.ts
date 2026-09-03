@@ -53,6 +53,10 @@ export type RootStackParamList = {
   VenueManage: undefined;
   VenueEarnings: undefined;
   VenueSlotRequests: undefined;
+  /** /venues/availability — the owner's slot calendar (mWeb's exact path). */
+  VenueAvailability: undefined;
+  /** /venues/settings — the owner's cancellation policy (mWeb's exact path). */
+  VenueSettings: undefined;
   /** Auto Pods a venue may accept — the FIRST of the three enrolments. */
   VenueAutoPods: undefined;
   /** Auto Pods waiting for a host, once a venue has dated them. */

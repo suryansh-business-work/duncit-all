@@ -13,6 +13,7 @@ import { SidebarDuncitCoinCard } from './SidebarDuncitCoinCard';
 import { SidebarReferralCard } from './SidebarReferralCard';
 import { SidebarVenuesCard } from './SidebarVenuesCard';
 import { SidebarManageList } from './SidebarManageList';
+import { buildVenueMenuItems } from './venueMenuItems';
 import {
   buildManageItems,
   buildPartnerMenus,
@@ -82,6 +83,7 @@ export function SidebarUserContent({
     roles,
     mode,
     showAutoPods ? autoPodTitles[mode] : undefined,
+    buildVenueMenuItems(mode, t),
   );
   // Built here rather than in profileSections so the label is translated —
   // the section ships flag-gated and localized from day one (rule 38).

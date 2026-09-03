@@ -5,6 +5,8 @@ import {
   SESSION_BUNDLE,
   SHELL_BUNDLE,
   WITHDRAW_BUNDLE,
+  AVAILABILITY_BUNDLE,
+  VENUE_SETTINGS_BUNDLE,
   FULFILMENT_BUNDLE,
   type FlatCatalogue,
   type NestedCatalogue,
@@ -34,6 +36,11 @@ export const SHELL_FALLBACK: NestedCatalogue = {
   ...SHELL_BUNDLE,
   ...SESSION_BUNDLE,
   ...WITHDRAW_BUNDLE,
+  // availability.* + venueSettings.* are rendered by @duncit/availability-calendar
+  // and the venue settings form in the Partners console, mWeb AND native, so
+  // they are namespaces of their own rather than shell.* entries (rule 40).
+  ...AVAILABILITY_BUNDLE,
+  ...VENUE_SETTINGS_BUNDLE,
   ...FULFILMENT_BUNDLE,
 };
 

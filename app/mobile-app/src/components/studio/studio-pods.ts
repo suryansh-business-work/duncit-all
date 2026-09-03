@@ -1,3 +1,7 @@
+import { formatMoney, type VenuePodRow } from '@duncit/utils';
+
+import type { Translate } from '@/i18n/fallback';
+
 /**
  * Shared shapes + derivations behind the two partner-studio pod sections
  * (Venue Studio → "Pods hosted on your Venue", Club Studio → "Your Pods").
@@ -31,6 +35,8 @@ export interface StudioPod {
    * type renders both studios (and mWeb shows the same line). */
   owner_name: string;
   bucket: string;
+  /** Set when the pod was cancelled — the fact, where `bucket` is the clock. */
+  cancelled_at?: string | null;
 }
 
 /**
@@ -103,6 +109,25 @@ export function bucketLabelKey(bucket: string): string {
 /** Chip colour token for a pod's state. */
 export function bucketTone(bucket: string): string {
   return isBucket(bucket) ? BUCKET_TONES[bucket] : BUCKET_TONES.UPCOMING;
+}
+
+/** The row as the shared venue-pod rules (`canCancelVenuePod` and friends in
+ * @duncit/utils) read it — the bucket narrowed to the enum they expect. */
+export function asVenuePodRow(pod: StudioPod): VenuePodRow {
+  return {
+    bucket: isBucket(pod.bucket) ? pod.bucket : 'UPCOMING',
+    cancelled_at: pod.cancelled_at ?? null,
+  };
+}
+
+/** The ticket price a row and the detail sheet both print. */
+export function podPriceLabel(
+  pod: Pick<StudioPod, 'pod_type' | 'pod_amount'>,
+  t: Translate,
+  currencySymbol: string | null,
+): string {
+  if (pod.pod_type === 'FREE') return t('mweb.podDetails.free');
+  return formatMoney(pod.pod_amount, { symbol: currencySymbol ?? undefined });
 }
 
 /** The server summary shape both studios return (venuePodsSummary /

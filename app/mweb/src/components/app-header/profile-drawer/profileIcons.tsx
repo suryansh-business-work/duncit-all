@@ -26,6 +26,8 @@ import StoreIcon from '@mui/icons-material/Store';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import InsightsIcon from '@mui/icons-material/Insights';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import EventRepeatIcon from '@mui/icons-material/EventRepeat';
+import SettingsIcon from '@mui/icons-material/Settings';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import type { ProfileIconKey } from './profileSections';
 
@@ -63,6 +65,10 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   // A slot request is a booking waiting on a decision, so it wears a calendar
   // rather than the venue's own storefront icon.
   calendar: <EventAvailableIcon />,
+  // The availability calendar is the recurring schedule the venue publishes;
+  // venue settings are the rules bookings there run on.
+  availability: <EventRepeatIcon />,
+  settings: <SettingsIcon />,
   // An Auto Pod is a pod that assembled itself out of three enrolments — the
   // sparkle reads as "made for you" rather than as another studio destination.
   autopods: <AutoAwesomeIcon />,

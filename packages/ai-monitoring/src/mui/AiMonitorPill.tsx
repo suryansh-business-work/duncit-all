@@ -42,6 +42,14 @@ export function AiMonitorPill({
         borderRadius: 999,
         px: 1.25,
         py: 0.5,
+        // Every `button` gets a 44px min-height on a coarse pointer (the
+        // CssBaseline touch-target rule, WCAG 2.5.5) — right for a real
+        // control, wrong for an inline pill. It doubled this one from 22px to
+        // 44px on every phone, so mWeb's Create Pod step eyebrow rendered a
+        // gradient slab wedged under its progress bar while the portals, on a
+        // fine pointer, showed the pill it was drawn as. One height on every
+        // pointer now, and still clear of the 24px WCAG 2.5.8 target.
+        minHeight: 28,
         gap: 0.5,
         color: '#fff',
         fontWeight: 700,

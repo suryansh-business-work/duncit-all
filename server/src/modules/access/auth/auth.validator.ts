@@ -27,6 +27,10 @@ export const registerSchema = yup.object({
     .string()
     .matches(extRegex, { message: 'Invalid extension' })
     .required(),
+  // The number is the WhatsApp one; this says whether it is the mobile number
+  // too. Defaulted rather than required, so every shipped build that predates
+  // the tick box keeps writing the phone exactly as it always did.
+  whatsapp_is_mobile: yup.boolean().default(true),
   password: yup.string().min(8).max(100).required(),
   dob: yup.date().max(new Date(), 'DOB must be in the past').required(),
   city: yup.string().optional(),

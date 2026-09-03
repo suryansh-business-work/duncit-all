@@ -9122,7 +9122,14 @@ export type Mutation = {
   requestPasswordResetCode: PasswordResetRequestResult;
   /** Deprecated: email-only step one. Use requestPasswordResetCode. */
   requestPasswordResetOtp: OtpRequestResult;
-  /** Send the attendee a one-time code over the chosen medium(s). */
+  /**
+   * Send the attendee a one-time code over the chosen medium(s).
+   *
+   * Open to the pod's host and to an admin of its club: both boards offer the
+   * code, and only the host's board can be made to require it. The number is
+   * never the caller's to choose freely — the booking has to be live on a pod
+   * they already hold the roster for.
+   */
   requestPodAttendanceOtp: PhoneOtpRequestResult;
   /**
    * Send ONE of the extra people a multi-seat booking admits a one-time code.
@@ -9695,6 +9702,15 @@ export type Mutation = {
    */
   verifyPodAttendanceOtp: Scalars['Boolean']['output'];
   verifyRazorpayPayment: Payment;
+  /**
+   * Prove the WhatsApp number, and write it where signup said it belongs.
+   *
+   * also_mobile is the signup tick box: true writes the proven number to the
+   * account's phone as well, false leaves that blank on purpose. It defaults to
+   * false so a shipped build that predates the box never fills in a number the
+   * person did not agree to — the email door has already written its own phone
+   * by the time this runs.
+   */
   verifyWhatsAppOtp: User;
   /** Thumbs up/down a review. vote: 1 up, -1 down, 0 clears. */
   voteProductReview: ProductReview;
@@ -13223,6 +13239,7 @@ export type MutationVerifyRazorpayPaymentArgs = {
 
 
 export type MutationVerifyWhatsAppOtpArgs = {
+  also_mobile?: InputMaybe<Scalars['Boolean']['input']>;
   otp: Scalars['String']['input'];
   phone_extension: Scalars['String']['input'];
   phone_number: Scalars['String']['input'];
@@ -20428,6 +20445,17 @@ export type RegisterInput = {
    * costing both sides their coins.
    */
   referral_code?: InputMaybe<Scalars['String']['input']>;
+  /**
+   * Whether the WhatsApp number above is ALSO the account's mobile number.
+   *
+   * The form asks for one number, because one number is what most people have.
+   * Ticked, it is written to the profile phone as well; unticked, the profile
+   * phone is left blank on purpose — the person has said the two differ, and
+   * filing the WhatsApp number as their mobile would put a number they never
+   * gave us on their account. Either way the number is recorded as the WhatsApp
+   * one, which is what the verification step proves.
+   */
+  whatsapp_is_mobile?: InputMaybe<Scalars['Boolean']['input']>;
   zone?: InputMaybe<Scalars['String']['input']>;
 };
 

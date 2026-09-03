@@ -13857,6 +13857,10 @@ export type PartnerEcommStats = {
   approved_products: Scalars['Int']['output'];
   /** Gross value of the partner's sold line items (before Duncit commission). */
   gross_revenue: Scalars['Float']['output'];
+  /** What the partner actually earns — gross minus the Duncit commission, on the same netted basis as the venue/host payout releases. */
+  net_earnings: Scalars['Float']['output'];
+  /** Every sold product, best-selling first, for the performance chart. Empty until something sells. */
+  product_performance: Array<PartnerProductPerformance>;
   total_brands: Scalars['Int']['output'];
   total_items_sold: Scalars['Int']['output'];
   /** Distinct product orders containing at least one of the partner's brand lines (cancelled/failed/RTO excluded). */
@@ -13869,6 +13873,18 @@ export type PartnerFaqTopic =
   | 'HOST'
   | 'PRODUCTS'
   | 'VENUE';
+
+/** One of the partner's products, as the E-Commerce Brand Dashboard's performance chart plots it. */
+export type PartnerProductPerformance = {
+  __typename?: 'PartnerProductPerformance';
+  /** Gross value of this product's sold line items (before Duncit commission). */
+  gross_revenue: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  /** What the partner keeps on it — gross minus the Duncit commission. */
+  net_earnings: Scalars['Float']['output'];
+  product_id: Scalars['ID']['output'];
+  units_sold: Scalars['Int']['output'];
+};
 
 export type PartyInvoiceTemplate = {
   __typename?: 'PartyInvoiceTemplate';

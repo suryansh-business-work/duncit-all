@@ -83,6 +83,11 @@ export default function App() {
       <Route path="/host/change-requests" element={authed(<ChangeRequestsPage role="HOST" />)} />
       <Route path="/host/auto-pods" element={authed(<HostAutoPodsPage />)} />
       <Route path="/become-host" element={authed(<BecomeHostPage />)} />
+      {/* The two sidebar entries a not-yet-partner sees: each opens the Earn with
+          Duncit page ON its own journey, so the click lands in the onboarding
+          flow rather than on the menu that contains it. */}
+      <Route path="/be-a-host" element={authed(<EarnPage focus="HOST" />)} />
+      <Route path="/become-a-brand-partner" element={authed(<EarnPage focus="ECOMM" />)} />
       <Route path="/ecomm-brand" element={authed(<EcommBrandPage />)} />
       <Route path="/ecomm/dashboard" element={authed(<EcommDashboardPage />)} />
       <Route path="/ecomm-brand/:brandId/settings" element={authed(<BrandSettingsPage />)} />

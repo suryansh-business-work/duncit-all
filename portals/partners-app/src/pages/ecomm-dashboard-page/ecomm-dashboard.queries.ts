@@ -12,9 +12,26 @@ export const PARTNER_ECOMM_STATS = gql`
       total_orders
       total_items_sold
       gross_revenue
+      net_earnings
+      product_performance {
+        product_id
+        name
+        units_sold
+        gross_revenue
+        net_earnings
+      }
     }
   }
 `;
+
+/** One product's sales, as the performance chart plots it. */
+export interface PartnerProductPerformance {
+  product_id: string;
+  name: string;
+  units_sold: number;
+  gross_revenue: number;
+  net_earnings: number;
+}
 
 export interface PartnerEcommStats {
   total_brands: number;
@@ -25,4 +42,6 @@ export interface PartnerEcommStats {
   total_orders: number;
   total_items_sold: number;
   gross_revenue: number;
+  net_earnings: number;
+  product_performance: PartnerProductPerformance[];
 }

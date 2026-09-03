@@ -11,6 +11,7 @@ consumers:
   - 'portals/partners-app'
 exports:
   - 'EARN_JOURNEYS'
+  - 'EARN_KINDS'
   - 'earnBoxState'
   - 'meetingNotice'
   - 'partnerPortalUrl'
@@ -51,6 +52,11 @@ same journey is a path on the web and a stack screen on native:
   cta: { label: 'Ready to register another venue?', partnerPath: '/register-venue/new' },
 }
 ```
+
+`EARN_KINDS` is the same list reduced to its `kind` values, in the same
+order. It is what a surface passes to `EarnJourneyList`'s `kinds` when it wants
+the whole menu; the Partners sidebar links straight at one journey and passes
+just that kind instead.
 
 `iconKey` is a string, never an icon element — MUI, `@expo/vector-icons` and the
 shell's `AppIcon` are three different icon sets, so each surface maps the key

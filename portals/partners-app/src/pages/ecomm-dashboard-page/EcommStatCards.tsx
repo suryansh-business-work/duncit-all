@@ -19,6 +19,8 @@ export const emptyEcommStats: PartnerEcommStats = {
   total_orders: 0,
   total_items_sold: 0,
   gross_revenue: 0,
+  net_earnings: 0,
+  product_performance: [],
 };
 
 /** Flatten the stats payload into labelled cards (approved counts as captions). */
@@ -42,6 +44,11 @@ export function ecommStatCards(stats: PartnerEcommStats, t: Translate): StatCard
     { key: 'orders', label: t('partners.ecommDashboardPage.totalOrders'), value: String(stats.total_orders) },
     { key: 'items', label: t('partners.ecommDashboardPage.totalItemsSold'), value: String(stats.total_items_sold) },
     { key: 'revenue', label: t('partners.common.totalRevenue'), value: formatINR(stats.gross_revenue) },
+    {
+      key: 'earnings',
+      label: t('partners.ecommDashboardPage.totalEarnings'),
+      value: formatINR(stats.net_earnings),
+    },
   ];
 }
 

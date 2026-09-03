@@ -10,6 +10,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { EARN_KINDS } from '@duncit/onboarding';
 import EarnJourneyList from '../src/EarnJourneyList';
 import EarnMeetingActions from '../src/EarnMeetingActions';
 import { useEarnSurface } from '../src/EarnSurfaceProvider';
@@ -159,7 +160,7 @@ describe('EarnJourneyList with the schema answering', () => {
 
   it('offers the approved next step, and the actions on every pending meeting', async () => {
     const runCta = vi.fn();
-    wrap(<EarnJourneyList showProducts />, [earnMeMock], buildConfig({ runCta }));
+    wrap(<EarnJourneyList showProducts kinds={EARN_KINDS} />, [earnMeMock], buildConfig({ runCta }));
     await settle();
 
     fireEvent.click(screen.getByRole('button', { name: 'Ready to host more experiences?' }));
@@ -172,7 +173,7 @@ describe('EarnJourneyList with the schema answering', () => {
   });
 
   it('asks the page to refetch after a cancel, and survives that refetch failing', async () => {
-    wrap(<EarnJourneyList showProducts />, [earnMeMock, cancelMock(REASON, 'VENUE')]);
+    wrap(<EarnJourneyList showProducts kinds={EARN_KINDS} />, [earnMeMock, cancelMock(REASON, 'VENUE')]);
     await settle();
 
     // The first pending card in journey order is the venue.

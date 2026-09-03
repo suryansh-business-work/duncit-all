@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { Box, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitButton } from '@duncit/buttons';
-import { partnerPortalUrl } from '@duncit/onboarding';
+import { EARN_KINDS, partnerPortalUrl } from '@duncit/onboarding';
 import { mwebCurrentLabel, mwebMeetingLabels } from '@duncit/slots';
 import {
   EarnJourneyList,
@@ -65,7 +65,7 @@ export default function EarnPage() {
         </Typography>
       </Stack>
       <EarnSurfaceProvider config={config}>
-        <EarnJourneyList showProducts={showProducts} />
+        <EarnJourneyList showProducts={showProducts} kinds={EARN_KINDS} />
       </EarnSurfaceProvider>
     </Stack>
   );

@@ -50,6 +50,7 @@ import {
   mwebEarnMeetingLabels,
   type EarnSurfaceConfig,
 } from '@duncit/earn';
+import { EARN_KINDS } from '@duncit/onboarding';
 import { mwebCurrentLabel, mwebMeetingLabels } from '@duncit/slots';
 
 const config: EarnSurfaceConfig = {
@@ -69,7 +70,7 @@ const config: EarnSurfaceConfig = {
 };
 
 <EarnSurfaceProvider config={config}>
-  <EarnJourneyList showProducts={showProducts} />
+  <EarnJourneyList showProducts={showProducts} kinds={EARN_KINDS} />
 </EarnSurfaceProvider>;
 ```
 
@@ -85,6 +86,11 @@ host CTA live on mWeb and open externally via `urlConfigs.mwebUrl`.
   `showProducts` boolean. mWeb passes its generic `useFeatureFlag`; a portal
   without one uses the exported `useEarnProductsVisible()` (same
   `is_product_visible` semantics, default hidden).
+- **Which journeys to show** — `EarnJourneyList` takes a required `kinds`
+  array. Both hub pages pass `EARN_KINDS` (the whole menu); the Partners
+  sidebar links a not-yet-partner straight at one journey ("Be a Host",
+  "Become an E-Commerce Brand Partner") and passes just that kind, so the
+  entry lands ON the onboarding flow rather than on a menu containing it.
 - **Journey copy and lock rules** — `@duncit/onboarding`.
 
 ## GraphQL

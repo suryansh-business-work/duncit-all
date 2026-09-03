@@ -14,6 +14,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import EarnBox from '../src/EarnBox';
+import { EARN_KINDS } from '@duncit/onboarding';
 import EarnJourneyList from '../src/EarnJourneyList';
 import EarnMeetingActions from '../src/EarnMeetingActions';
 import { EarnSurfaceProvider, type EarnSurfaceConfig } from '../src/EarnSurfaceProvider';
@@ -118,18 +119,18 @@ describe('EarnBox', () => {
 
 describe('EarnJourneyList', () => {
   it('renders with nothing behind it rather than throwing', async () => {
-    const { container } = wrap(<EarnJourneyList showProducts />);
+    const { container } = wrap(<EarnJourneyList showProducts kinds={EARN_KINDS} />);
     await settle();
 
     expect(container.innerHTML).not.toBe('');
   });
 
   it('hides the product-seller path when products are gated off, exactly as native does', async () => {
-    const { container: withProducts } = wrap(<EarnJourneyList showProducts />);
+    const { container: withProducts } = wrap(<EarnJourneyList showProducts kinds={EARN_KINDS} />);
     await settle();
     const shown = withProducts.textContent ?? '';
 
-    const { container: without } = wrap(<EarnJourneyList showProducts={false} />);
+    const { container: without } = wrap(<EarnJourneyList showProducts={false} kinds={EARN_KINDS} />);
     await settle();
     const hidden = without.textContent ?? '';
 
@@ -137,7 +138,7 @@ describe('EarnJourneyList', () => {
   });
 
   it('survives every card being pressed', async () => {
-    wrap(<EarnJourneyList showProducts />);
+    wrap(<EarnJourneyList showProducts kinds={EARN_KINDS} />);
     await settle();
 
     for (const control of [...document.body.querySelectorAll<HTMLElement>('button:not([disabled])')].slice(0, 20)) {

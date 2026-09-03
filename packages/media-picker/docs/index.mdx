@@ -249,7 +249,7 @@ pickBestVideoFile({
 | `onPicked` | `(url: string) => void` | yes | — | Fires with the final stored URL. |
 | `folder` | `string` | no | — | ImageKit folder, e.g. `'/pods'`, `'/branding'`. |
 | `title` | `string` | no | — | Dialog heading. |
-| `accept` | `string` | no | images + videos | Comma-separated MIME list. |
+| `accept` | `string` | no | images + videos | Comma-separated MIME list. A Pexels tab it rules out is not offered at all — a `video/*` reel picker shows no photos tab. |
 | `allowDocuments` | `boolean` | no | derived from `accept` | Pass `false` to force-disable documents even for a pdf accept list. |
 | `surface` | `'PORTALS' \| 'MOBILE' \| 'MWEB'` | no | — | Which Upload Settings row drives sizes, formats and crop presets. |
 | `max` | `number` | no | `1` | How many images ONE open may return. `1` closes on the first pick; above 1 the picks collect in a tray. |

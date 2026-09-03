@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Routes, Route, Navigate } from 'react-router';
 import { ProfilePage, RequireAuth } from '@duncit/shell';
-import { useFeatureFlag } from '@duncit/app-settings';
+import { useFeatureFlagState } from '@duncit/app-settings';
 import AppShell from './components/AppShell';
 import LoginPage from './pages/LoginPage';
 import HubPage from './pages/HubPage';
@@ -22,6 +22,7 @@ import PodsPage from './pages/PodsPage';
 import PodEditorPage from './pages/pods-page/pod-editor-page';
 import AutoPodsPage from './pages/auto-pods-page';
 import AutoPodEditorPage from './pages/auto-pods-page/editor';
+import AutoPodDetailsPage from './pages/auto-pods-page/details';
 import PodDetailsPage from './pages/PodDetailsPage';
 import PodSettingsPage from './pages/PodSettingsPage';
 import PortalsUploadSettingPage from './pages/upload-settings/PortalsUploadSettingPage';
@@ -45,10 +46,13 @@ import { getToken } from './lib/session';
 /**
  * Auto Pods ship behind the `auto_pods` flag. With it off the route falls back
  * to All Pods rather than 404-ing, which is what a stale bookmark or a link in
- * an older email hits.
+ * an older email hits. The gate WAITS for the flags to land: on a reload the
+ * first render has no answer yet, and reading that as "off" bounced every
+ * refresh of /auto-pods to /pods.
  */
 function AutoPodsRoute({ page }: Readonly<{ page: ReactNode }>) {
-  const enabled = useFeatureFlag('auto_pods');
+  const { pending, enabled } = useFeatureFlagState('auto_pods');
+  if (pending) return null;
   if (!enabled) return <Navigate to="/pods" replace />;
   return <>{page}</>;
 }
@@ -88,6 +92,7 @@ export default function App() {
                 <Route path="/pods/:id/edit" element={<PodEditorPage />} />
                 <Route path="/auto-pods" element={<AutoPodsRoute page={<AutoPodsPage />} />} />
                 <Route path="/auto-pods/new" element={<AutoPodsRoute page={<AutoPodEditorPage />} />} />
+                <Route path="/auto-pods/:id" element={<AutoPodsRoute page={<AutoPodDetailsPage />} />} />
                 <Route
                   path="/auto-pods/:id/edit"
                   element={<AutoPodsRoute page={<AutoPodEditorPage />} />}

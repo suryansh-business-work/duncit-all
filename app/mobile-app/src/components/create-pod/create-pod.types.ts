@@ -2,6 +2,7 @@
 import type { UseFormReturn } from 'react-hook-form';
 import type { PodPickerProduct } from '@duncit/utils';
 
+import type { CreatePodInput } from '@/generated/graphql/graphql';
 import { fallbackT } from '@/i18n/fallback';
 
 /** The only pod types — FREE is virtual-only, physical pods are always PAID. */
@@ -208,3 +209,25 @@ export interface CreatePodSubCategory {
 export type CreatePodProduct = PodPickerProduct;
 
 export type CreatePodForm = UseFormReturn<CreatePodFormValues>;
+
+/** One host a Club Admin may put on a pod — the `clubAdminHostSearch` row. */
+export interface PodHostOption {
+  user_id: string;
+  full_name: string;
+  email?: string | null;
+}
+
+/**
+ * The stepper in Club Admin mode: the club is pinned, drafts are off, hosts
+ * may be assigned and the last step writes through the club-admin mutations
+ * instead of publishing a draft. mWeb mounts the shared editor over
+ * `useClubAdminPodEditor` for the same job (rule 27).
+ */
+export interface ClubAdminStepperMode {
+  club: CreatePodClub;
+  initialHosts: PodHostOption[];
+  searchHosts: (term: string) => Promise<PodHostOption[]>;
+  submit: (input: CreatePodInput, hostIds: string[]) => Promise<void>;
+  submitLabel: string;
+  busyLabel: string;
+}

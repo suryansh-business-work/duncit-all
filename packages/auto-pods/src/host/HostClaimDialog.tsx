@@ -9,29 +9,19 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { DuncitButton } from '@duncit/buttons';
+import { ambientDateFormatter } from '@duncit/datetime';
 import {
   autoPodCityLabel,
+  autoPodHostMeetingReady,
   autoPodHostNeedsLocation,
+  type AutoPodHostMeeting,
   type AutoPodRow,
   type AutoPodLabels,
 } from '@duncit/utils';
 import { AUTO_POD_HOST_PROJECTION, HOST_ASSIGN_AUTO_POD } from '../queries';
 import { enrolmentFailure } from '../failure-message';
-
-/** What the host's numbers add up to, after every deduction Finance takes. */
-export interface AutoPodHostProjection {
-  min_spots: number;
-  max_spots: number;
-  pod_amount: number;
-  no_of_spots: number;
-  total_collection: number;
-  gst_amount: number;
-  platform_fee_amount: number;
-  venue_amount: number;
-  club_admin_amount: number;
-  host_receives: number;
-  viable: boolean;
-}
+import { BLANK_HOST_MEETING, HostMeetingFields, hostMeetingInput } from './HostMeetingFields';
+import { HostProjectionLines, type AutoPodHostProjection } from './HostProjectionLines';
 
 interface ProjectionData {
   autoPodHostProjection: AutoPodHostProjection;
@@ -56,38 +46,14 @@ export interface HostClaimDialogProps {
   locationLabel?: string;
 }
 
-/** The earning breakdown for the numbers typed, or why they do not work. */
-function ProjectionLines({
-  projection,
-  labels,
-  formatMoney,
-}: Readonly<{ projection: AutoPodHostProjection | null; labels: AutoPodLabels; formatMoney: (amount: number) => string }>) {
-  if (!projection) return null;
-  if (!projection.viable) return <Alert severity="warning">{labels.projectionNotViable}</Alert>;
-  const fees = projection.gst_amount + projection.platform_fee_amount;
-  return (
-    <Stack spacing={0.25} data-testid="auto-pod-host-projection">
-      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
-        {labels.projectionTitle}
-      </Typography>
-      <Typography variant="subtitle2" sx={{ color: 'success.main' }}>
-        {labels.projectionHost(formatMoney(projection.host_receives))}
-      </Typography>
-      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-        {labels.projectionVenue(formatMoney(projection.venue_amount))} ·{' '}
-        {labels.projectionClub(formatMoney(projection.club_admin_amount))} ·{' '}
-        {labels.projectionFees(formatMoney(fees))}
-      </Typography>
-    </Stack>
-  );
-}
-
 /**
  * "Assign Myself" — the host takes the pod, and sets its ticket price and
  * number of spots (within the activity's minimum and the venue's capacity).
  * Every change re-prices the pod on the server under the host's own rates,
  * the venue's slot price and the club admin's cut, so what the dialog shows as
- * "you earn" is exactly what the save is judged on.
+ * "you earn" is exactly what the save is judged on. On a VIRTUAL offer the
+ * host also brings the meeting link and the window — there is no venue to fix
+ * them — and the button waits until `autoPodHostMeetingReady` says they hold.
  */
 export function HostClaimDialog({
   row,
@@ -103,12 +69,14 @@ export function HostClaimDialog({
   const [failure, setFailure] = useState<string | null>(null);
   const [amount, setAmount] = useState(0);
   const [spots, setSpots] = useState(0);
+  const [meeting, setMeeting] = useState<AutoPodHostMeeting>(BLANK_HOST_MEETING);
   const [assign, assignState] = useMutation<any>(HOST_ASSIGN_AUTO_POD);
 
-  // The template's numbers are the starting point; a fresh offer resets them.
+  // A fresh offer starts from whatever it already carries (nothing, on a template).
   useEffect(() => {
     setAmount(row?.pod_amount ?? 0);
     setSpots(row?.no_of_spots ?? 0);
+    setMeeting(BLANK_HOST_MEETING);
     setFailure(null);
   }, [row?.id]);
 
@@ -121,10 +89,20 @@ export function HostClaimDialog({
   const inRange =
     !!projection && spots >= projection.min_spots && spots <= projection.max_spots;
 
+  const virtual = row?.pod_mode === 'VIRTUAL';
+  // The admin-configured clock (rule 11): the earliest start a host may pick.
+  const now = new Date(ambientDateFormatter().clock.nowMs());
+  const meetingReady = !virtual || autoPodHostMeetingReady(meeting, now.getTime());
   const needsLocation = row ? autoPodHostNeedsLocation(row, locationId) : false;
   const pinsCity = !!row && !row.location && !!locationId;
   const canAssign =
-    !!row && !needsLocation && !!projection && projection.viable && inRange && !assignState.loading;
+    !!row &&
+    !needsLocation &&
+    !!projection &&
+    projection.viable &&
+    inRange &&
+    meetingReady &&
+    !assignState.loading;
   const locked = !!row && !canAssign;
 
   const handleClose = () => {
@@ -142,6 +120,8 @@ export function HostClaimDialog({
           location_id: row.location ? null : locationId,
           pod_amount: amount,
           no_of_spots: spots,
+          // Only a virtual offer carries a meeting; a physical one sends none.
+          ...(virtual ? { meeting: hostMeetingInput(meeting) } : {}),
         },
       });
       onAssigned();
@@ -196,7 +176,11 @@ export function HostClaimDialog({
             }}
           />
 
-          <ProjectionLines projection={projection} labels={labels} formatMoney={formatMoney} />
+          {virtual ? (
+            <HostMeetingFields value={meeting} onChange={setMeeting} labels={labels} now={now} />
+          ) : null}
+
+          <HostProjectionLines projection={projection} labels={labels} formatMoney={formatMoney} />
 
           {needsLocation ? <Alert severity="warning">{labels.pickLocationFirst}</Alert> : null}
           {pinsCity ? (

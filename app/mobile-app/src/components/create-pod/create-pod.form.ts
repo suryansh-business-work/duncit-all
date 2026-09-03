@@ -53,8 +53,14 @@ function refineVenue(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Trans
       path: ['venue_id'],
       message: t('mweb.createPod.validation.venueRequired'),
     });
-  } else if (values.pod_mode === 'PHYSICAL' && !values.venue_space_label) {
-    // A space (capacity) is chosen after the venue and gates the slot list.
+  } else if (
+    values.pod_mode === 'PHYSICAL' &&
+    !values.venue_space_label &&
+    !values.venue_slot_id
+  ) {
+    // A space (capacity) is chosen after the venue and gates the slot list. A
+    // pod that already holds a slot (the club-admin edit) has its space booked,
+    // and only a NEW space + slot pick re-routes it.
     ctx.addIssue({
       code: 'custom',
       path: ['venue_space_label'],

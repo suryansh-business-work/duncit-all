@@ -15,10 +15,15 @@ interface AutoPodMock {
   venue_claimed: boolean;
   host_claimed: boolean;
   club_claimed: boolean;
+  /** A virtual offer has no venue to enrol — two stops, not three. */
+  virtual: boolean;
 }
 
 /** The slice of a staging row the ticks and the "waiting for" line read. */
-type TickRow = Pick<AutoPodRow, 'stage' | 'location' | 'venue_claim' | 'host_claim' | 'club_claim'>;
+type TickRow = Pick<
+  AutoPodRow,
+  'stage' | 'location' | 'pod_mode' | 'venue_claim' | 'host_claim' | 'club_claim'
+>;
 
 const VENUE: AutoPodVenueClaim = {
   venue_id: 'ven-2207',
@@ -46,11 +51,13 @@ const CLUB: AutoPodClubClaim = {
 
 /** A staging row, filled in only as far as the ticks below need it. */
 const rowFrom = (mock: AutoPodMock): TickRow => {
-  const anyEnrolled = mock.venue_claimed || mock.host_claimed || mock.club_claimed;
+  const venueClaimed = mock.venue_claimed && !mock.virtual;
+  const anyEnrolled = venueClaimed || mock.host_claimed || mock.club_claimed;
   return {
     stage: anyEnrolled ? 'CLAIMING' : 'OPEN',
     location: null,
-    venue_claim: mock.venue_claimed ? VENUE : null,
+    pod_mode: mock.virtual ? 'VIRTUAL' : 'PHYSICAL',
+    venue_claim: venueClaimed ? VENUE : null,
     host_claim: mock.host_claimed ? HOST : null,
     club_claim: mock.club_claimed ? CLUB : null,
   };
@@ -65,12 +72,12 @@ export default defineDemos('auto-pods', [
     id: 'ticks',
     title: 'How far along an Auto Pod offer is, at a glance',
     note:
-      'Flip host_claimed or club_claimed to true first — any partner may enrol first. The chips are the card row; the line under them is the admin table Pod dependency cell, drawn from the same derivation: green with the partner name where they have enrolled, amber where the offer is still waiting.',
-    mock: { venue_claimed: false, host_claimed: false, club_claimed: false },
+      'Flip venue_claimed, host_claimed or club_claimed to true — the chips are the card row; the line under them is the admin table Pod dependency cell, drawn from the same derivation: green with the partner name where they have enrolled, amber where the offer is still waiting. Every green stop is a button (onEnrolledClick gets the role) — that is how the admin opens the venue, host or club admin behind it. Set virtual to true and the venue stop disappears: a virtual offer waits on a host and a club only.',
+    mock: { venue_claimed: false, host_claimed: false, club_claimed: false, virtual: false },
     render: (mock) => (
       <div style={{ display: 'grid', gap: 16 }}>
         <AutoPodTicks row={rowFrom(mock)} labels={LABELS} />
-        <AutoPodDependencyTimeline row={rowFrom(mock)} labels={LABELS} />
+        <AutoPodDependencyTimeline row={rowFrom(mock)} labels={LABELS} onEnrolledClick={() => undefined} />
       </div>
     ),
     compute: (mock) => {

@@ -17,6 +17,8 @@ interface Props {
   form: CreatePodForm;
   clubs: CreatePodClub[];
   locations: CreatePodLocation[];
+  /** Club Admin mode: the pod's club, fixed — the club search is not shown. */
+  pinnedClub?: CreatePodClub | null;
 }
 
 const locationLabel = (location: CreatePodLocation) =>
@@ -27,7 +29,12 @@ const locationLabel = (location: CreatePodLocation) =>
 /** Step 2 — pod city + locality (chosen in the header location picker, which
  * shows the club count per locality), the pod mode and the club. The category
  * moved above the page title, so the club list arrives already scoped to it. */
-export function LocationClubStep({ form, clubs, locations }: Readonly<Props>) {
+export function LocationClubStep({
+  form,
+  clubs,
+  locations,
+  pinnedClub = null,
+}: Readonly<Props>) {
   const { control, getValues, setValue, watch } = form;
   const { primary } = useThemeColors();
   const { t } = useTranslation();
@@ -122,20 +129,24 @@ export function LocationClubStep({ form, clubs, locations }: Readonly<Props>) {
           />
         )}
       />
-      <Controller
-        control={control}
-        name="club_id"
-        render={({ field, fieldState }) => (
-          <ClubSearchField
-            clubs={clubs}
-            value={field.value}
-            onChange={field.onChange}
-            error={fieldState.error?.message}
-            required
-          />
-        )}
+      {pinnedClub ? null : (
+        <Controller
+          control={control}
+          name="club_id"
+          render={({ field, fieldState }) => (
+            <ClubSearchField
+              clubs={clubs}
+              value={field.value}
+              onChange={field.onChange}
+              error={fieldState.error?.message}
+              required
+            />
+          )}
+        />
+      )}
+      <ClubPreview
+        club={pinnedClub ?? clubs.find((club) => club.id === watch('club_id')) ?? null}
       />
-      <ClubPreview club={clubs.find((club) => club.id === watch('club_id')) ?? null} />
 
       <LocationDialog
         open={pickerOpen}

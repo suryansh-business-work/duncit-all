@@ -18,11 +18,13 @@ import type { CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
 interface Props {
   form: CreatePodForm;
   hostCategories: CreatePodHostCategory[];
+  /** Off in Club Admin mode — the pod's category is the pinned club's own. */
+  showCategory?: boolean;
 }
 
 /** Step 1 — Pod Basics: title, description, cover media, hashtags and the
  * required "what this pod offers" list, with optional extras (info, perks). */
-export function BasicsStep({ form, hostCategories }: Readonly<Props>) {
+export function BasicsStep({ form, hostCategories, showCategory = true }: Readonly<Props>) {
   const { control, watch } = form;
   const { t } = useTranslation();
   // The host picks the category above the media field, and the server already
@@ -39,7 +41,7 @@ export function BasicsStep({ form, hostCategories }: Readonly<Props>) {
       {/* First field of the form: the category scopes the clubs on step 2 AND
           the products on step 4, so it is picked before the title. mWeb twin
           (rule 27). */}
-      <HostCategoryField form={form} hostCategories={hostCategories} />
+      {showCategory ? <HostCategoryField form={form} hostCategories={hostCategories} /> : null}
       {/* The title field alone, not the title/description/photo group: the
           native overlay cannot scroll a target into view, so a highlight taller
           than the viewport is one the host never sees. */}

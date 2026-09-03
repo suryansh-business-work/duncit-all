@@ -30,6 +30,8 @@ export { SpotsStepper } from './SpotsStepper';
 export { TermsAgreement } from './TermsAgreement';
 export { OptionalSettingsCards } from './OptionalSettingsCards';
 export { CreatePodStepper, type DraftPayload } from './CreatePodStepper';
+export { AssignHostsField } from './AssignHostsField';
+export { podToCreatePodForm, type EditablePod } from './pod-to-form';
 export {
   buildCreatePodInput,
   buildModerationInput,
@@ -61,6 +63,8 @@ export {
   type CreatePodProduct,
   type CreatePodSlot,
   type CreatePodVenue,
+  type ClubAdminStepperMode,
+  type PodHostOption,
   type PodModerationResult,
   type PodModerationViolation,
 } from './create-pod.types';

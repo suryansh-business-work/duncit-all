@@ -3884,6 +3884,28 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // The paged lists (club pods, pod monitoring) fetch one more page on tap.
       loadMore: 'Load more',
     },
+    // The native club editor's own copy. Its field labels are the shared
+    // clubForm.* namespace, but the Tamagui form checks its own Zod rules —
+    // @duncit/club-form is an MUI build the app does not depend on — so the
+    // messages those rules stop a person with live here.
+    clubEdit: {
+      faqs: 'FAQs',
+      question: 'Question',
+      addFaq: 'Add FAQ',
+      saveFailed: 'Could not save the club. Please try again.',
+      validation: {
+        nameRequired: 'Club name is required',
+        descriptionRequired: 'A short description is required',
+        communityLinkRequired: 'WhatsApp community link is required',
+        groupLinkRequired: 'WhatsApp group link is required',
+        linkInvalid: 'Enter a valid link (https://…)',
+        whoWeAreRequired: 'Add at least one "Who we are" point',
+        whatWeDoRequired: 'Add at least one "What we do" point',
+        perksRequired: 'Add at least one perk',
+        valuesRequired: 'Add at least one value',
+        imageRequired: 'Add at least one feature image',
+      },
+    },
     venueManagePage: {
       listYourSpace: 'List your space, run events, get discovered',
       listed: 'Listed',

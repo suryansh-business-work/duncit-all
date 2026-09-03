@@ -20,6 +20,8 @@ exports:
   - 'AutoPodExpiryNote'
   - 'AutoPodDependencyTimeline'
   - 'HostClaimDialog'
+  - 'HostMeetingFields'
+  - 'HostProjectionLines'
   - 'ClubClaimDialog'
   - 'AutoPodWithdrawDialog'
   - 'AutoPodWithdrawAction'
@@ -173,7 +175,7 @@ import { AutoPodCategoryFilter } from '@duncit/auto-pods';
 | Dialog | Role | What it collects |
 | --- | --- | --- |
 | `VenueAcceptDialog` | Venue | Which of the chosen venue's free slots — each priced as the venue would be paid |
-| `HostClaimDialog` | Host | The ticket price and the number of spots — re-priced on every change |
+| `HostClaimDialog` | Host | The ticket price and the number of spots — re-priced on every change — and, on a VIRTUAL offer, the meeting platform, link, start and end (`HostMeetingFields`); the template carries none of these |
 | `ClubClaimDialog` | Club Admin | Which of their clubs (only category-matching ones) |
 
 Accepting and picking a slot are **one** action: an acceptance with no date
@@ -208,7 +210,15 @@ so the dialog does not offer it.
 The admin console's table draws the same enrolment derivation as a line —
 `AutoPodDependencyTimeline`: Venue → Host → Club Admin, a green dot with the
 partner's name where they have enrolled, an amber one where the offer is
-still waiting.
+still waiting. Given `onEnrolledClick(role)`, every green stop is a button
+(`data-testid="auto-pod-dependency-<role>"`) — the admin's way into the venue,
+the host or the club admin who took that place; a pending stop is never one.
+
+Every card wears its mode — `labels.modePhysical` / `labels.modeVirtual` as a
+chip beside the title — because a virtual offer waits on two partners and a
+physical one on three. The template carries no price: until a host has set the
+ticket price and spots (`autoPodPriced(row)` in `@duncit/utils`) the card says
+`labels.pricedByHost` where the two chips would be, rather than "₹0".
 
 `HostClaimDialog` **requires** `locationId` — the city selected at the top of
 the host's page (`''` when none) — and takes an optional `locationLabel` for

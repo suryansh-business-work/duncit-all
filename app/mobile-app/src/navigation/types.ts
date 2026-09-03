@@ -68,6 +68,19 @@ export type RootStackParamList = {
   BeClubAdmin: undefined;
   /** Club Studio — pods across the clubs the signed-in user administers. */
   ClubManage: undefined;
+  /** /clubs/dashboard — the Club Admin's figures across every club they run. */
+  ClubAdminDashboard: undefined;
+  /** /clubs/monitoring — the AI-monitored trail of every pod edit in their clubs. */
+  ClubPodMonitoring: undefined;
+  /** /clubs/:clubId/pods — one club's pods. `notice` is what the editor just did. */
+  ClubPods: { clubId: string; notice?: 'created' | 'updated' };
+  /** /clubs/:clubId/pods/new — a new pod, pinned to the club. */
+  ClubPodEditor: { clubId: string };
+  /** /clubs/:clubId/pods/:podId/edit — the same editor over an existing pod. Its
+   * own screen because React Navigation gives a screen ONE path and mWeb has two. */
+  ClubPodEdit: { clubId: string; podId: string };
+  /** /clubs/:clubId/edit — the club's own page. */
+  ClubEdit: { clubId: string };
   ProductsManage: undefined;
   Support: undefined;
   Sos: undefined;
@@ -162,6 +175,10 @@ export type MenuRoute = Exclude<
   | 'ProductDetail'
   | 'GiftCardCheckout'
   | 'GiftCardClaim'
+  | 'ClubPods'
+  | 'ClubPodEditor'
+  | 'ClubPodEdit'
+  | 'ClubEdit'
 >;
 
 declare global {

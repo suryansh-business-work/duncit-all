@@ -15,6 +15,7 @@ import ImageNotSupportedIcon from '@mui/icons-material/ImageNotSupported';
 import {
   autoPodCityLabel,
   autoPodMissingRoles,
+  autoPodPriced,
   type AutoPodRow,
   type AutoPodLabels,
 } from '@duncit/utils';
@@ -102,17 +103,31 @@ export function AutoPodCard({
   const virtual = row.pod_mode === 'VIRTUAL';
   const city = autoPodCityLabel(row.location);
   const cityLine = city ? labels.pinnedTo(city) : labels.unpinned;
+  // The mode tag every card wears; the same two words on the native card.
+  const modeLabel = virtual ? labels.modeVirtual : labels.modePhysical;
+  const modeIcon = virtual ? <VideocamIcon /> : <PlaceIcon />;
+  const priced = autoPodPriced(row);
 
   return (
     <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {image ? <AutoPodCover url={image} /> : null}
       <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, flexGrow: 1 }}>
         <Box>
-          <Typography variant="subtitle1" noWrap title={row.pod_title} sx={{
-            fontWeight: 600
-          }}>
-            {row.pod_title}
-          </Typography>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="subtitle1" noWrap title={row.pod_title} sx={{
+              fontWeight: 600
+            }}>
+              {row.pod_title}
+            </Typography>
+            <Chip
+              size="small"
+              color={virtual ? 'info' : 'default'}
+              icon={modeIcon}
+              label={modeLabel}
+              data-testid="auto-pod-mode-tag"
+              sx={{ flexShrink: 0 }}
+            />
+          </Stack>
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>
@@ -141,12 +156,20 @@ export function AutoPodCard({
 
         <Divider />
 
-        <Stack direction="row" spacing={1} useFlexGap sx={{
-          flexWrap: "wrap"
-        }}>
-          <Chip size="small" variant="outlined" label={`${labels.priceLabel}: ${formatMoney(row.pod_amount)}`} />
-          <Chip size="small" variant="outlined" label={`${labels.spotsLabel}: ${row.no_of_spots}`} />
-        </Stack>
+        {/* The template carries no price: until a host sets one the card says
+            who will, rather than reading "₹0" and "0 spots". */}
+        {priced ? (
+          <Stack direction="row" spacing={1} useFlexGap sx={{
+            flexWrap: "wrap"
+          }}>
+            <Chip size="small" variant="outlined" label={`${labels.priceLabel}: ${formatMoney(row.pod_amount)}`} />
+            <Chip size="small" variant="outlined" label={`${labels.spotsLabel}: ${row.no_of_spots}`} />
+          </Stack>
+        ) : (
+          <Typography variant="caption" sx={{ color: 'text.secondary' }} data-testid="auto-pod-priced-by-host">
+            {labels.pricedByHost}
+          </Typography>
+        )}
 
         {typeof row.expected_host_earnings === 'number' ? (
           <Typography variant="body2" sx={{

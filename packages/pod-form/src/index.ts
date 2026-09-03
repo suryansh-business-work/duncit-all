@@ -10,7 +10,7 @@ export type { UsePodEditorStateArgs, PodEditorSaveMeta } from './editor/usePodEd
 export { default as useAutoPodEditorState } from './editor/useAutoPodEditorState';
 export type { UseAutoPodEditorStateArgs } from './editor/useAutoPodEditorState';
 export { default as useMediaPickerBridge } from './editor/useMediaPickerBridge';
-export type { PodMediaPickKind } from './editor/useMediaPickerBridge';
+export type { PodMediaPickKind, PodMediaPickOptions } from './editor/useMediaPickerBridge';
 export { useVenueSlots, VENUE_AVAILABLE_SLOTS, type VenueSlot } from './slots/useVenueSlots';
 export { useAutoPodAudience } from './auto-pod/useAutoPodAudience';
 export type { AutoPodAudienceState } from './auto-pod/useAutoPodAudience';

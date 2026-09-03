@@ -10,8 +10,11 @@ type TimelineRow = Pick<AutoPodRow, 'venue_claim' | 'host_claim' | 'club_claim' 
 export interface AutoPodDependencyTimelineProps {
   row: TimelineRow;
   labels: AutoPodLabels;
-  /** Given, the enrolled venue's stop becomes a button that opens its details. */
-  onVenueClick?: () => void;
+  /**
+   * Given, every green stop becomes a button that opens who enrolled there —
+   * the venue, the host or the club admin. A pending stop is never a button.
+   */
+  onEnrolledClick?: (role: AutoPodRole) => void;
 }
 
 /** Who enrolled for a role — the name the card would show. */
@@ -31,7 +34,7 @@ function enrolledName(row: TimelineRow, role: AutoPodRole): string {
 export function AutoPodDependencyTimeline({
   row,
   labels,
-  onVenueClick,
+  onEnrolledClick,
 }: Readonly<AutoPodDependencyTimelineProps>) {
   const ticks = autoPodTicks(row);
   return (
@@ -41,12 +44,12 @@ export function AutoPodDependencyTimeline({
         const detail = tick.done ? name || labels.tickDone : labels.tickPending;
         const color = tick.done ? 'success.main' : 'warning.main';
         const stateLabel = `${labels.tick(tick.role)} — ${tick.done ? labels.tickDone : labels.tickPending}`;
-        const opensVenue = tick.role === 'venue' && tick.done && !!onVenueClick;
+        const opens = tick.done && !!onEnrolledClick;
         const stop = (
           <>
             <Box
               component="span"
-              aria-label={opensVenue ? undefined : stateLabel}
+              aria-label={opens ? undefined : stateLabel}
               sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: color, flexShrink: 0 }}
             />
             <Box sx={{ lineHeight: 1.1, textAlign: 'left' }}>
@@ -62,11 +65,11 @@ export function AutoPodDependencyTimeline({
         return (
           <Stack key={tick.role} direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
             {index > 0 && <ArrowForwardIcon sx={{ fontSize: 14, color: 'text.disabled' }} />}
-            {opensVenue ? (
+            {opens ? (
               <ButtonBase
-                onClick={onVenueClick}
+                onClick={() => onEnrolledClick(tick.role)}
                 aria-label={stateLabel}
-                data-testid="auto-pod-dependency-venue"
+                data-testid={`auto-pod-dependency-${tick.role}`}
                 sx={{ display: 'flex', alignItems: 'center', gap: 0.75, borderRadius: 1, px: 0.5 }}
               >
                 {stop}

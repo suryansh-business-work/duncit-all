@@ -94,24 +94,34 @@ export const whatsappAuthService = {
     // The before-image is read first: this write moves fields the admin user
     // change log tracks, and a diff needs both sides.
     const before = await UserModel.findById(userId).lean();
-    const user = await UserModel.findByIdAndUpdate(
-      userId,
-      {
-        $set: {
-          'communication.whatsapp.extension': phone_extension,
-          'communication.whatsapp.number': phone_number,
-          'communication.whatsapp.verified_at': new Date(),
-          ...(alsoMobile
-            ? {
-                'auth.phone.extension': phone_extension,
-                'auth.phone.number': phone_number,
-                'auth.phone.is_verified': true,
-              }
-            : {}),
+    let user;
+    try {
+      user = await UserModel.findByIdAndUpdate(
+        userId,
+        {
+          $set: {
+            'communication.whatsapp.extension': phone_extension,
+            'communication.whatsapp.number': phone_number,
+            'communication.whatsapp.verified_at': new Date(),
+            ...(alsoMobile
+              ? {
+                  'auth.phone.extension': phone_extension,
+                  'auth.phone.number': phone_number,
+                  'auth.phone.is_verified': true,
+                }
+              : {}),
+          },
         },
-      },
-      { new: true }
-    );
+        { new: true }
+      );
+    } catch (e: any) {
+      // The unique phone index is what actually decides, and it can refuse a
+      // number the check above read as free — two people can be on this step
+      // with the same number at once. Answered with the same sentence, so the
+      // race and the ordinary case do not read differently.
+      if (e?.code === 11000) throw numberTakenError();
+      throw e;
+    }
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     await userAuditService.record({ userId, before, after: user });
     return user;

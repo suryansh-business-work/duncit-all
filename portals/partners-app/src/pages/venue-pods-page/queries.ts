@@ -2,6 +2,14 @@ import { gql } from '@apollo/client';
 import type { TableQueryState } from '@duncit/table';
 import type { StatusColorMap } from '@duncit/ui';
 import { formatDateTime } from '@duncit/app-settings';
+import {
+  cancelDisabledReason,
+  matchesTab,
+  type VenueCancelDisabledReason,
+  type VenueCancelPodResult,
+  type VenuePodBucket,
+  type VenuePodTab,
+} from '@duncit/utils';
 
 export const VENUE_PODS = gql`
   query VenuePods($venue_id: ID) {
@@ -62,8 +70,7 @@ export const VENUE_CANCEL_PENALTY = gql`
   }
 `;
 
-export type VenuePodBucket = 'UPCOMING' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
-
+/** One `venuePods` row. The cancel and tab rules read `bucket` + `cancelled_at` (@duncit/utils). */
 export interface VenuePodRow {
   id: string;
   pod_slug: string;
@@ -91,23 +98,17 @@ export interface AttendeeProfile {
   profile_photo: string | null;
 }
 
-export interface VenueCancelPodResult {
-  pod_id: string;
-  health_penalty: number;
-  venue_health_score: number;
-  refunded_count: number;
-}
-
-/** A venue owner may only pull the plug before the pod starts. */
-export const canCancelVenuePod = (row: VenuePodRow): boolean =>
-  row.bucket === 'UPCOMING' && !row.cancelled_at;
+/** The shared rule answers a code; these are the owner's words for each. */
+const CANCEL_DISABLED_TEXT: Record<VenueCancelDisabledReason, string> = {
+  ALREADY_CANCELLED: 'This pod is already cancelled.',
+  ALREADY_STARTED: 'This pod has already started, so it can no longer be cancelled.',
+  ALREADY_FINISHED: 'This pod has already finished.',
+};
 
 /** Why the Cancel action is unavailable, or null when it is available. */
-export function cancelDisabledReason(row: VenuePodRow): string | null {
-  if (canCancelVenuePod(row)) return null;
-  if (row.cancelled_at || row.bucket === 'CANCELLED') return 'This pod is already cancelled.';
-  if (row.bucket === 'ONGOING') return 'This pod has already started, so it can no longer be cancelled.';
-  return 'This pod has already finished.';
+export function cancelDisabledText(row: VenuePodRow): string | null {
+  const reason = cancelDisabledReason(row);
+  return reason ? CANCEL_DISABLED_TEXT[reason] : null;
 }
 
 /** Success line for the page snackbar — every number comes from the server. */
@@ -131,28 +132,12 @@ export const BUCKET_COLORS: StatusColorMap = {
   CANCELLED: 'error',
 };
 
-/** Tab keys — Upcoming includes pods that are live right now. */
-export type VenuePodTab = 'ALL' | 'UPCOMING' | 'CANCELLED' | 'COMPLETED';
-
-export const TAB_ORDER: VenuePodTab[] = ['ALL', 'UPCOMING', 'CANCELLED', 'COMPLETED'];
-
 export const TAB_LABELS: Record<VenuePodTab, string> = {
   ALL: 'All',
   UPCOMING: 'Upcoming',
   CANCELLED: 'Cancelled',
   COMPLETED: 'Completed',
 };
-
-export function matchesTab(row: VenuePodRow, tab: VenuePodTab): boolean {
-  if (tab === 'ALL') return true;
-  if (tab === 'UPCOMING') return row.bucket === 'UPCOMING' || row.bucket === 'ONGOING';
-  return row.bucket === tab;
-}
-
-export const tabCounts = (rows: readonly VenuePodRow[]): Record<VenuePodTab, number> =>
-  Object.fromEntries(
-    TAB_ORDER.map((tab) => [tab, rows.filter((row) => matchesTab(row, tab)).length]),
-  ) as Record<VenuePodTab, number>;
 
 export const fmtDate = (iso?: string | null) => {
   if (!iso) return '—';

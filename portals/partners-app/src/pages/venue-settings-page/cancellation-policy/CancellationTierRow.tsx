@@ -5,7 +5,7 @@ import Tooltip from '@mui/material/Tooltip';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitIconButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
-import type { CancellationPolicyValues } from './cancellation-policy.types';
+import type { CancellationPolicyValues } from '@duncit/forms/schemas';
 
 export interface CancellationTierRowProps {
   control: Control<CancellationPolicyValues>;
@@ -34,31 +34,31 @@ export default function CancellationTierRow({
       <RhfTextField
         control={control}
         name={`tiers.${index}.hours_before`}
-        label={t('partners.venueSettingsPage.tierHours')}
+        label={t('venueSettings.tierHours')}
         type="number"
         disabled={disabled}
       />
       <RhfTextField
         control={control}
         name={`tiers.${index}.charge_type`}
-        label={t('partners.venueSettingsPage.tierChargeType')}
+        label={t('venueSettings.tierChargeType')}
         select
         disabled={disabled}
       >
-        <MenuItem value="PERCENT">{t('partners.venueSettingsPage.chargePercent')}</MenuItem>
-        <MenuItem value="AMOUNT">{t('partners.venueSettingsPage.chargeAmount')}</MenuItem>
+        <MenuItem value="PERCENT">{t('venueSettings.chargePercent')}</MenuItem>
+        <MenuItem value="AMOUNT">{t('venueSettings.chargeAmount')}</MenuItem>
       </RhfTextField>
       <RhfTextField
         control={control}
         name={`tiers.${index}.value`}
-        label={t('partners.venueSettingsPage.tierValue')}
+        label={t('venueSettings.tierValue')}
         type="number"
         disabled={disabled}
       />
-      <Tooltip title={t('partners.venueSettingsPage.removeTier')}>
+      <Tooltip title={t('venueSettings.removeTier')}>
         <span>
           <DuncitIconButton
-            aria-label={t('partners.venueSettingsPage.removeTier')}
+            aria-label={t('venueSettings.removeTier')}
             onClick={onRemove}
             disabled={disabled}
             sx={{ mt: 1 }}

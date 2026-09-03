@@ -1,19 +1,5 @@
 import { gql } from '@apollo/client';
-
-/** How a cancellation charge is expressed — a share of the slot price, or rupees. */
-export type VenueCancellationChargeType = 'PERCENT' | 'AMOUNT';
-
-/** One band of the policy: cancelling INSIDE `hours_before` costs `value`. */
-export interface VenueCancellationTier {
-  hours_before: number;
-  charge_type: VenueCancellationChargeType;
-  value: number;
-}
-
-export interface VenueCancellationPolicy {
-  reschedule_only: boolean;
-  tiers: VenueCancellationTier[];
-}
+import type { VenueCancellationPolicy } from '@duncit/forms/schemas';
 
 /** Just the part of a venue this page reads — the picker and the policy. */
 export interface VenueSettingsVenue {

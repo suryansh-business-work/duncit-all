@@ -14,13 +14,8 @@ import {
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField, zodRules } from '@duncit/forms';
-import {
-  fmtDate,
-  VENUE_CANCEL_PENALTY,
-  VENUE_CANCEL_POD,
-  type VenueCancelPodResult,
-  type VenuePodRow,
-} from './queries';
+import { cancelPenaltyHeadline, type VenueCancelPodResult } from '@duncit/utils';
+import { fmtDate, VENUE_CANCEL_PENALTY, VENUE_CANCEL_POD, type VenuePodRow } from './queries';
 import { useTranslation } from '@duncit/shell';
 
 const FORM_ID = 'venue-cancel-pod-form';
@@ -32,14 +27,13 @@ const cancelPodSchema = z.object({
 type CancelPodValues = z.infer<typeof cancelPodSchema>;
 
 /**
- * The warning headline. The penalty is admin-configured server data, so until it
- * lands the sentence is written without a number rather than with a guessed one
- * — and when an admin has set it to 0 the platform charges nothing, so promising
- * a penalty of "0 points" would be a lie.
+ * The warning headline. Which of the three it is (no number yet, no penalty at
+ * all, or the points) is the shared rule in @duncit/utils; the words are here.
  */
 function penaltyHeadline(penalty: number | null): string {
-  if (penalty == null) return "Cancelling this pod will reduce this venue's Account Health.";
-  if (penalty === 0) return 'Cancelling this pod cannot be undone.';
+  const headline = cancelPenaltyHeadline(penalty);
+  if (headline === 'UNKNOWN') return "Cancelling this pod will reduce this venue's Account Health.";
+  if (headline === 'NONE') return 'Cancelling this pod cannot be undone.';
   const unit = penalty === 1 ? 'point' : 'points';
   return `Cancelling this pod will reduce this venue's Account Health by ${penalty} ${unit}.`;
 }

@@ -10,7 +10,7 @@ import {
   startOfWeek,
 } from 'date-fns';
 import { useTranslation } from '@duncit/app-settings';
-import { slotCoveredDays } from './slot-window';
+import { slotCoveredDays, weekdayLabels } from '@duncit/slots';
 import type { CalendarView, VenueSlotRow } from './types';
 import { formatDate } from '@duncit/datetime';
 
@@ -74,7 +74,8 @@ function cellShape(isDayView: boolean, isSelected: boolean, isDisabled: boolean,
   } as const;
 }
 
-const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+// Stable keys for the weekday header: the translated labels may repeat.
+const WEEKDAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
 interface BadgeProps {
   count: number;
@@ -131,9 +132,9 @@ function DayHeader({ date, isDayView, isToday, isHoliday }: Readonly<DayHeaderPr
         <Typography
           variant="caption"
           sx={{ fontSize: 9, fontWeight: 800 }}
-          aria-label={t('shell.availability.onLeave')}
+          aria-label={t('availability.onLeave')}
         >
-          {t('shell.availability.leaveTag')}
+          {t('availability.leaveTag')}
         </Typography>
       )}
     </Stack>
@@ -203,6 +204,7 @@ interface DayCellProps {
 /** A single day tile with its A/P/B/× slot counts. Hoisted to module scope so
  *  it is never re-created per render (S6478). */
 function DayCell({ date, view, monthStart, today, maxDate, bucket, isHoliday, selectedDate, onSelect }: Readonly<DayCellProps>) {
+  const { t } = useTranslation();
   const isOtherMonth = view === 'month' && !isSameMonth(date, monthStart);
   const isPast = date < today;
   // Days past the booking window (e.g. > 60 days out) are non-bookable, so they
@@ -251,7 +253,7 @@ function DayCell({ date, view, monthStart, today, maxDate, bucket, isHoliday, se
       <DayHeader date={date} isDayView={isDayView} isToday={isToday} isHoliday={isHoliday} />
       {isHoliday && isDayView && (
         <Typography variant="caption" sx={{ fontWeight: 800 }}>
-          Venue on leave — not bookable
+          {t('availability.onLeaveNotBookable')}
         </Typography>
       )}
       <DayBadges bucket={bucket} isSelected={isSelected} />
@@ -271,6 +273,8 @@ export default function AvailabilityCalendar({
   holidays = [],
   maxDate,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const weekdays = weekdayLabels(t).short;
   const buckets = bucketByDay(slots);
   const holidaySet = new Set(holidays);
   const monthStart = startOfMonth(month);
@@ -285,9 +289,9 @@ export default function AvailabilityCalendar({
     <Box>
       {view !== 'day' && (
         <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: { xs: 0.5, sm: 1 }, mb: 1 }}>
-          {WEEKDAY_LABELS.map((label) => (
+          {weekdays.map((label, i) => (
             <Typography
-              key={label}
+              key={WEEKDAY_KEYS[i]}
               variant="caption"
               sx={{ fontWeight: 800, color: 'text.secondary', textAlign: 'center' }}
             >

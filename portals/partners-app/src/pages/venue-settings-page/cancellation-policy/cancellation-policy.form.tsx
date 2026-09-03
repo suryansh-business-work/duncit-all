@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Controller, useFieldArray, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Alert from '@mui/material/Alert';
@@ -9,13 +9,15 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
-import CancellationTierRow from './CancellationTierRow';
 import {
-  cancellationPolicySchema,
   emptyTier,
+  makeCancellationPolicySchema,
   type CancellationPolicyValues,
-  type SubmitCancellationPolicy,
-} from './cancellation-policy.types';
+} from '@duncit/forms/schemas';
+import CancellationTierRow from './CancellationTierRow';
+
+/** What the page does with a valid policy. */
+export type SubmitCancellationPolicy = (values: CancellationPolicyValues) => Promise<void>;
 
 export interface CancellationPolicyFormProps {
   initialValues: CancellationPolicyValues;
@@ -37,9 +39,11 @@ export default function CancellationPolicyForm({
   t,
   onSubmit,
 }: Readonly<CancellationPolicyFormProps>) {
+  // The schema carries the reader's messages, so it is built from their `t`.
+  const schema = useMemo(() => makeCancellationPolicySchema(t), [t]);
   const { control, handleSubmit, reset, watch } = useForm<CancellationPolicyValues, any, CancellationPolicyValues>({
     defaultValues: initialValues,
-    resolver: zodResolver(cancellationPolicySchema) as unknown as Resolver<CancellationPolicyValues, any, CancellationPolicyValues>,
+    resolver: zodResolver(schema) as unknown as Resolver<CancellationPolicyValues, any, CancellationPolicyValues>,
     mode: 'onTouched',
   });
   const { fields, append, remove } = useFieldArray({ control, name: 'tiers' });
@@ -59,31 +63,31 @@ export default function CancellationPolicyForm({
         render={({ field }) => (
           <FormControlLabel
             control={<Checkbox checked={field.value} onChange={field.onChange} />}
-            label={t('partners.venueSettingsPage.rescheduleOnly')}
+            label={t('venueSettings.rescheduleOnly')}
           />
         )}
       />
       <Typography variant="caption" sx={{
         color: "text.secondary"
       }}>
-        {t('partners.venueSettingsPage.rescheduleOnlyHint')}
+        {t('venueSettings.rescheduleOnlyHint')}
       </Typography>
 
       <Divider />
 
       {rescheduleOnly ? (
-        <Alert severity="info">{t('partners.venueSettingsPage.policyDisabled')}</Alert>
+        <Alert severity="info">{t('venueSettings.policyDisabled')}</Alert>
       ) : null}
 
-      <Typography variant="subtitle2">{t('partners.venueSettingsPage.bandsTitle')}</Typography>
+      <Typography variant="subtitle2">{t('venueSettings.bandsTitle')}</Typography>
       <Typography variant="caption" sx={{
         color: "text.secondary"
       }}>
-        {t('partners.venueSettingsPage.bandsHint')}
+        {t('venueSettings.bandsHint')}
       </Typography>
 
       {fields.length === 0 ? (
-        <Alert severity="success">{t('partners.venueSettingsPage.noBands')}</Alert>
+        <Alert severity="success">{t('venueSettings.noBands')}</Alert>
       ) : null}
 
       {fields.map((row, index) => (
@@ -103,10 +107,10 @@ export default function CancellationPolicyForm({
           onClick={() => append(emptyTier)}
           disabled={rescheduleOnly}
         >
-          {t('partners.venueSettingsPage.addBand')}
+          {t('venueSettings.addBand')}
         </DuncitButton>
         <DuncitButton variant="contained" onClick={submit} disabled={saving}>
-          {saving ? t('partners.venueSettingsPage.saving') : t('partners.venueSettingsPage.save')}
+          {saving ? t('venueSettings.saving') : t('venueSettings.save')}
         </DuncitButton>
       </Stack>
 

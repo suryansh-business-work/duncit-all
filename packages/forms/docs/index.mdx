@@ -59,6 +59,10 @@ exports:
   - 'signupDefaults'
   - 'whatsappNumberDefaults'
   - 'deleteAccountDefaults'
+  - 'makeCancellationPolicySchema'
+  - 'toPolicyValues'
+  - 'toPolicyInput'
+  - 'emptyTier'
 ---
 
 ## Why this exists
@@ -423,6 +427,7 @@ directly.
 | `makePasswordPairSchema` | recovery step 3 | the same pair WITHOUT a code — recovery proves its code a step earlier |
 | `makeSignupSchema` | joining Duncit | the whole four-step signup, in ONE contract — see below |
 | `makeWhatsappNumberSchema` | the Google door's number step | the WhatsApp row on its own — see below |
+| `makeCancellationPolicySchema` | a venue's cancellation policy | any number of bands, each a window + a charge — see below |
 
 `makeContactValueSchema(channel, t)` returns a different object schema per channel rather than
 one schema with every field optional. A schema that accepts a blank number because the caller
@@ -530,6 +535,49 @@ The messages live in the shared `withdraw.*` namespace rather than `mweb.wallet.
 `partners.walletPage.*`, because all three surfaces render them — it rides into the portals
 through `SHELL_FALLBACK` and into the apps through their own fallback bundles. The partner
 console's amount rules were plain English literals before this moved.
+
+### Venue cancellation policy
+
+`makeCancellationPolicySchema(t)` is what a venue owner's cancellation policy is checked
+against — in the Partners console today, and in mWeb and the native app as they gain the
+same settings page. The policy is a list of **bands**: cancelling INSIDE `hours_before` of the
+slot start costs `value`, either a `PERCENT` of the slot price or a flat `AMOUNT`. A booking
+cancelled outside every band is free, and `reschedule_only` takes cancelling off the table
+altogether without deleting the bands.
+
+The form holds `hours_before` and `value` as **strings** (`CancellationTierValues`), because
+they come out of text inputs; the schema coerces them, so the parsed output is the server's
+`VenueCancellationPolicy` with numbers. Two rules the server also enforces are refused on the
+row instead of after a round trip:
+
+```ts
+const schema = makeCancellationPolicySchema(t);
+
+schema.safeParse({
+  reschedule_only: false,
+  tiers: [
+    { hours_before: '24', charge_type: 'PERCENT', value: '50' },
+    { hours_before: '6', charge_type: 'AMOUNT', value: '500' },
+  ],
+}); // { success: true, data: { …, tiers: [{ hours_before: 24, … value: 50 }, { hours_before: 6, … value: 500 }] } }
+
+schema.safeParse({ reschedule_only: false, tiers: [{ hours_before: '24', charge_type: 'PERCENT', value: '150' }] });
+// tiers.0.value — venueSettings.validation.percentMax   (more than the booking)
+
+schema.safeParse({ reschedule_only: false, tiers: [band24, { ...band24, value: '20' }] });
+// tiers.1.hours_before — venueSettings.validation.duplicateWindow   (two bands, one window)
+```
+
+The other refusals are the window's shape — whole hours, none negative, at most 8760 (a
+year) — and a charge that is a number and not negative. Every message is a
+`venueSettings.validation.*` key, a namespace all three surfaces ship.
+
+Two mappers sit either side of the form. `toPolicyValues(policy)` turns the saved
+`VenueSettings.cancellation` into form values (a venue with no policy yet edits an empty one),
+and `toPolicyInput(values, t)` parses the form back into `VenueSettingsInput.cancellation` —
+throwing rather than sending an invalid policy. The bands are kept even while
+`reschedule_only` is on, so switching it back off restores what the owner wrote instead of an
+empty list. `emptyTier` is the band "Add a charge" appends: 24 hours, 50%.
 
 ### Still to move
 

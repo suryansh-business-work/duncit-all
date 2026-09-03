@@ -61,7 +61,7 @@ export default function DayDrawer({
                 color: "text.secondary",
                 fontWeight: 900
               }}>
-              Availability
+              {t('availability.drawerTitle')}
             </Typography>
             <Typography variant="h6" sx={{
               fontWeight: 900
@@ -69,7 +69,7 @@ export default function DayDrawer({
               {date ? formatDate(date) : ''}
             </Typography>
           </Box>
-          <DuncitIconButton size="small" onClick={onClose} aria-label={t('shell.common.close')}>
+          <DuncitIconButton size="small" onClick={onClose} aria-label={t('availability.close')}>
             <CloseIcon />
           </DuncitIconButton>
         </Stack>

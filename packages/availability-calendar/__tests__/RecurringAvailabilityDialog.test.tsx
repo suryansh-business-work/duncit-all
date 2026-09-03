@@ -1,22 +1,15 @@
+import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { format } from 'date-fns';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import RecurringAvailabilityDialog from '../src/RecurringAvailabilityDialog';
-import type { NewSlotInput } from '../src/types';
+import { type MockedResponse } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
+import { addDays, format, startOfDay } from 'date-fns';
+import RecurringAvailabilityDialog from '../src/recurring/RecurringAvailabilityDialog';
+import { CREATE_VENUE_SLOTS, MY_SLOT_TEMPLATES } from '../src/queries';
+import type { VenueSpace } from '../src/types';
 
-// Deterministic stand-ins for the MUI X pickers: plain inputs whose value is parsed
-// as a local date-time string, so onChange fires with a real Date or null without
-// wrestling the real pickers' popup/keyboard interaction under jsdom.
+// Deterministic stand-ins for the MUI X pickers (see DayDrawer.test.tsx).
 vi.mock('@mui/x-date-pickers/DatePicker', () => ({
-  DatePicker: ({
-    label,
-    value,
-    onChange,
-  }: {
-    label: string;
-    value: Date | null;
-    onChange: (v: Date | null) => void;
-  }) => (
+  DatePicker: ({ label, value, onChange }: { label: string; value: Date | null; onChange: (v: Date | null) => void }) => (
     <input
       aria-label={label}
       value={value ? value.toISOString() : ''}
@@ -25,15 +18,7 @@ vi.mock('@mui/x-date-pickers/DatePicker', () => ({
   ),
 }));
 vi.mock('@mui/x-date-pickers/TimePicker', () => ({
-  TimePicker: ({
-    label,
-    value,
-    onChange,
-  }: {
-    label: string;
-    value: Date | null;
-    onChange: (v: Date | null) => void;
-  }) => (
+  TimePicker: ({ label, value, onChange }: { label: string; value: Date | null; onChange: (v: Date | null) => void }) => (
     <input
       aria-label={label}
       value={value ? value.toISOString() : ''}
@@ -42,201 +27,123 @@ vi.mock('@mui/x-date-pickers/TimePicker', () => ({
   ),
 }));
 
-function setDate(label: string, y: number, m: number, d: number) {
-  const value = `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}T00:00:00`;
-  fireEvent.change(screen.getByLabelText(label), { target: { value } });
+const VENUE_ID = 'venue-1';
+// The generator uses the real clock, so the range sits inside the 60-day window.
+const DAY = startOfDay(addDays(new Date(), 5));
+const NEXT = addDays(DAY, 1);
+const local = (d: Date) => format(d, "yyyy-MM-dd'T'00:00:00");
+
+const templatesMock: MockedResponse = {
+  request: { query: MY_SLOT_TEMPLATES, variables: { venue_id: VENUE_ID } },
+  maxUsageCount: Number.POSITIVE_INFINITY,
+  result: { data: { mySlotTemplates: [] } },
+};
+
+const createMock = (capture: (v: Record<string, any>) => void, delay = 0): MockedResponse => ({
+  request: { query: CREATE_VENUE_SLOTS, variables: () => true },
+  delay,
+  result: (variables: Record<string, any>) => {
+    capture(variables);
+    return {
+      data: {
+        createVenueSlots: [
+          { __typename: 'VenueSlot', id: 'created-1', start_at: DAY.toISOString(), end_at: NEXT.toISOString(), price: 399, status: 'AVAILABLE', notes: '' },
+        ],
+      },
+    };
+  },
+});
+
+const HALL: VenueSpace[] = [{ label: 'Hall', capacity: 50 }];
+
+function renderDialog(mocks: MockedResponse[], capacityItems = HALL) {
+  const onClose = vi.fn();
+  const onDone = vi.fn();
+  render(
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[templatesMock, ...mocks]}>
+      <RecurringAvailabilityDialog
+        open
+        onClose={onClose}
+        venueId={VENUE_ID}
+        settings={undefined}
+        capacityItems={capacityItems}
+        venueCapacity={120}
+        onDone={onDone}
+      />
+    </MockedProvider>,
+  );
+  return { onClose, onDone };
 }
 
-function setTime(label: string, hhmm: string) {
-  fireEvent.change(screen.getByLabelText(label), { target: { value: `2000-01-01T${hhmm}` } });
-}
-
-function renderDialog(onAdd = vi.fn().mockResolvedValue(undefined), onClose = vi.fn()) {
-  render(<RecurringAvailabilityDialog open onClose={onClose} onAdd={onAdd} />);
-  return { onAdd, onClose };
-}
+const pickRange = (from: Date, to: Date) => {
+  fireEvent.change(screen.getByLabelText('Start date'), { target: { value: local(from) } });
+  fireEvent.change(screen.getByLabelText('End date'), { target: { value: local(to) } });
+};
 
 describe('RecurringAvailabilityDialog', () => {
-  beforeEach(() => {
-    // "Now" = Jan 15 2026, 12:00 local, unless a test overrides it.
-    vi.setSystemTime(new Date(2026, 0, 15, 12, 0, 0));
+  it('opens on an empty preview and keeps quiet until the dates are picked', () => {
+    renderDialog([]);
+    expect(screen.getByText('Recurring availability')).toBeInTheDocument();
+    expect(screen.getByText('Create slots with custom timing, pricing and venue settings.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create 0 slots' })).toBeDisabled();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
+  it('counts the slots the range will create, singular when there is one', () => {
+    renderDialog([]);
+    pickRange(DAY, DAY);
+    expect(screen.getByRole('button', { name: 'Create 1 slot' })).toBeEnabled();
+    pickRange(DAY, NEXT);
+    expect(screen.getByRole('button', { name: 'Create 2 slots' })).toBeEnabled();
   });
 
-  it('shows a validation error when required fields are missing', () => {
-    const { onAdd } = renderDialog();
-    fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
-    expect(screen.getByText('Pick the start and end date.')).toBeInTheDocument();
-    expect(onAdd).not.toHaveBeenCalled();
+  it('explains why nothing can be created once the dates are picked', () => {
+    renderDialog([]);
+    pickRange(NEXT, DAY);
+    expect(screen.getByRole('alert')).toHaveTextContent('End date must be on or after the start date.');
+    expect(screen.getByRole('button', { name: 'Create 0 slots' })).toBeDisabled();
   });
 
-  it('shows a validation error when the dates are set but the daily times are not', () => {
-    const { onAdd } = renderDialog();
-    setDate('Start date', 2026, 1, 20);
-    setDate('End date', 2026, 1, 21);
-    fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
-    expect(screen.getByText('Pick the daily start and end time.')).toBeInTheDocument();
-    expect(onAdd).not.toHaveBeenCalled();
-  });
+  it('sends the batch with the chosen conflict mode, refreshes and closes', async () => {
+    let created: Record<string, any> | null = null;
+    const { onClose, onDone } = renderDialog([createMock((v) => { created = v; })]);
+    pickRange(DAY, DAY);
+    fireEvent.click(screen.getByRole('radio', { name: /Overwrite the existing slot/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create 1 slot' }));
 
-  it('books each day of the range as a whole-day slot when Whole day is on, needing no times', async () => {
-    const { onAdd, onClose } = renderDialog();
-    fireEvent.click(screen.getByRole('switch'));
-    expect(screen.queryByLabelText('Daily start')).not.toBeInTheDocument();
-    setDate('Start date', 2026, 1, 15); // today: starts a few minutes from now, not at a past midnight
-    setDate('End date', 2026, 1, 16);
-    fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
-
-    const expected: NewSlotInput[] = [
-      {
-        start_at: new Date(2026, 0, 15, 12, 5).toISOString(),
-        end_at: new Date(2026, 0, 15, 23, 59, 59, 999).toISOString(),
-        whole_day: true,
-        price: 0,
-        notes: '',
-      },
-      {
-        start_at: new Date(2026, 0, 16).toISOString(),
-        end_at: new Date(2026, 0, 16, 23, 59, 59, 999).toISOString(),
-        whole_day: true,
-        price: 0,
-        notes: '',
-      },
-    ];
-    await waitFor(() => expect(onAdd).toHaveBeenCalledWith(expected));
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
-    expect(screen.getByRole('switch')).not.toBeChecked(); // reset alongside the fields
+    expect(onDone).toHaveBeenCalledTimes(1);
+    expect(created!.input).toMatchObject({ venue_id: VENUE_ID, on_conflict: 'REPLACE' });
+    expect(created!.input.slots).toHaveLength(1);
   });
 
-  it('shows a validation error when the end date is before the start date', () => {
-    const { onAdd } = renderDialog();
-    setDate('Start date', 2026, 1, 20);
-    setDate('End date', 2026, 1, 15);
-    setTime('Daily start', '09:00');
-    setTime('Daily end', '10:00');
-    fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
-    expect(screen.getByText('End date must be on or after the start date.')).toBeInTheDocument();
-    expect(onAdd).not.toHaveBeenCalled();
+  it('keeps the dialog open with the server message when the batch fails, and lets it be dismissed', async () => {
+    const { onClose } = renderDialog([
+      { request: { query: CREATE_VENUE_SLOTS, variables: () => true }, error: new Error('Server exploded') },
+    ]);
+    pickRange(DAY, DAY);
+    fireEvent.click(screen.getByRole('button', { name: 'Create 1 slot' }));
+
+    const alert = (await screen.findByText('Server exploded')).closest('[role="alert"]') as HTMLElement;
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.click(within(alert).getByRole('button'));
+    expect(screen.queryByText('Server exploded')).not.toBeInTheDocument();
   });
 
-  it('shows a validation error when the daily end time is not after the start time', () => {
-    const { onAdd } = renderDialog();
-    setDate('Start date', 2026, 1, 20);
-    setDate('End date', 2026, 1, 20);
-    setTime('Daily start', '10:00');
-    setTime('Daily end', '09:00');
-    fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
-    expect(screen.getByText('Daily end time must be after the start time.')).toBeInTheDocument();
-    expect(onAdd).not.toHaveBeenCalled();
+  it('shows the busy label while the batch is in flight', async () => {
+    renderDialog([createMock(() => undefined, 60_000)]);
+    pickRange(DAY, DAY);
+    fireEvent.click(screen.getByRole('button', { name: 'Create 1 slot' }));
+    expect(await screen.findByRole('button', { name: 'Creating…' })).toBeDisabled();
   });
 
-  it('shows an error when a valid single-day range has no upcoming slots', () => {
-    const { onAdd } = renderDialog();
-    // Today (Jan 15) with a 9am window, but "now" is mocked to noon: already past.
-    setDate('Start date', 2026, 1, 15);
-    setDate('End date', 2026, 1, 15);
-    setTime('Daily start', '09:00');
-    setTime('Daily end', '10:00');
-    fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
-    expect(screen.getByText('That range has no upcoming slots.')).toBeInTheDocument();
-    expect(onAdd).not.toHaveBeenCalled();
-  });
-
-  it('builds one slot per upcoming day, skipping a day whose window has already passed, and resets on success', async () => {
-    const { onAdd, onClose } = renderDialog();
-    setDate('Start date', 2026, 1, 15); // today: 9am window already past "now" (noon) -> skipped
-    setDate('End date', 2026, 1, 18);
-    setTime('Daily start', '09:00');
-    setTime('Daily end', '10:00');
-    fireEvent.change(screen.getByLabelText('Price (₹)'), { target: { value: '200' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
-
-    const expected: NewSlotInput[] = [16, 17, 18].map((d) => ({
-      start_at: new Date(2026, 0, d, 9, 0, 0, 0).toISOString(),
-      end_at: new Date(2026, 0, d, 10, 0, 0, 0).toISOString(),
-      whole_day: false,
-      price: 200,
-      notes: '',
-    }));
-    await waitFor(() => expect(onAdd).toHaveBeenCalledWith(expected));
-    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
-    expect(screen.getByLabelText('Start date')).toHaveValue('');
-  });
-
-  it('defaults an empty price to 0 and skips days beyond the 60-day cap while keeping days within it', async () => {
-    vi.setSystemTime(new Date(2026, 0, 1, 0, 0, 0)); // now = Jan 1 2026 00:00; cap = Mar 2 2026 00:00
-    const { onAdd } = renderDialog();
-    setDate('Start date', 2026, 1, 1);
-    setDate('End date', 2026, 3, 3);
-    setTime('Daily start', '01:00');
-    setTime('Daily end', '02:00');
-    fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
-
-    await waitFor(() => expect(onAdd).toHaveBeenCalledTimes(1));
-    const slots = onAdd.mock.calls[0][0] as NewSlotInput[];
-    const days = slots.map((s) => format(new Date(s.start_at), 'yyyy-MM-dd'));
-    expect(days).toHaveLength(60); // Jan 1 .. Mar 1 inclusive; Mar 2-3 fall past the cap
-    expect(days[0]).toBe('2026-01-01');
-    expect(days[days.length - 1]).toBe('2026-03-01');
-    expect(days).not.toContain('2026-03-02');
-    expect(slots.every((s) => s.price === 0)).toBe(true);
-  });
-
-  it('resets the fields and calls onClose when cancelled', () => {
-    const { onClose } = renderDialog();
-    setDate('Start date', 2026, 1, 20);
-    fireEvent.change(screen.getByLabelText('Price (₹)'), { target: { value: '50' } });
+  it('closes from Cancel and from the corner button, resetting the form', () => {
+    const { onClose } = renderDialog([]);
+    pickRange(DAY, DAY);
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(screen.getByLabelText('Start date')).toHaveValue('');
-  });
-
-  it('shows the thrown message and keeps the dialog open when adding fails with an Error', async () => {
-    const onAdd = vi.fn().mockRejectedValue(new Error('Network drop'));
-    const { onClose } = renderDialog(onAdd);
-    setDate('Start date', 2026, 1, 20);
-    setDate('End date', 2026, 1, 20);
-    setTime('Daily start', '09:00');
-    setTime('Daily end', '10:00');
-    fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
-    await waitFor(() => expect(screen.getByText('Network drop')).toBeInTheDocument());
-    expect(onClose).not.toHaveBeenCalled();
-
-    const alert = screen.getByText('Network drop').closest('[role="alert"]') as HTMLElement;
-    fireEvent.click(within(alert).getByRole('button'));
-    expect(screen.queryByText('Network drop')).not.toBeInTheDocument();
-  });
-
-  it('shows a generic message when adding fails with a non-Error', async () => {
-    const onAdd = vi.fn().mockRejectedValue('boom');
-    renderDialog(onAdd);
-    setDate('Start date', 2026, 1, 20);
-    setDate('End date', 2026, 1, 20);
-    setTime('Daily start', '09:00');
-    setTime('Daily end', '10:00');
-    fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
-    await waitFor(() => expect(screen.getByText('Could not add slots')).toBeInTheDocument());
-  });
-
-  it('shows an "Adding…" state while saving, then resolves back to normal', async () => {
-    let resolveAdd: () => void = () => {};
-    const onAdd = vi.fn(
-      () =>
-        new Promise<void>((resolve) => {
-          resolveAdd = resolve;
-        }),
-    );
-    renderDialog(onAdd);
-    setDate('Start date', 2026, 1, 20);
-    setDate('End date', 2026, 1, 20);
-    setTime('Daily start', '09:00');
-    setTime('Daily end', '10:00');
-    fireEvent.click(screen.getByRole('button', { name: 'Add to calendar' }));
-    expect(await screen.findByRole('button', { name: 'Adding…' })).toBeDisabled();
-    resolveAdd();
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Add to calendar' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalledTimes(2);
   });
 });

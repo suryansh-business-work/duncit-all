@@ -58,6 +58,9 @@ importers:
       '@duncit/auto-pods':
         specifier: workspace:*
         version: link:../../packages/auto-pods
+      '@duncit/availability-calendar':
+        specifier: workspace:*
+        version: link:../../packages/availability-calendar
       '@duncit/buttons':
         specifier: workspace:*
         version: link:../../packages/buttons
@@ -698,7 +701,13 @@ importers:
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../dialogs
+      '@duncit/slots':
+        specifier: workspace:*
+        version: link:../slots
     devDependencies:
+      '@apollo/client':
+        specifier: 4.2.12
+        version: 4.2.12(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.2)(ws@8.20.1))(graphql@16.14.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rxjs@7.8.2)
       '@mui/icons-material':
         specifier: ^9.4.0
         version: 9.4.0(@mui/material@9.4.0(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)
@@ -732,6 +741,9 @@ importers:
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
+      graphql:
+        specifier: 16.14.2
+        version: 16.14.2
       jsdom:
         specifier: ^30.0.1
         version: 30.0.1(@noble/hashes@1.8.0)

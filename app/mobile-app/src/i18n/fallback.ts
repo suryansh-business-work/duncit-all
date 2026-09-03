@@ -13,6 +13,8 @@ import {
   VERIFICATION_BUNDLE,
   WHATSAPP_BUNDLE,
   WITHDRAW_BUNDLE,
+  AVAILABILITY_BUNDLE,
+  VENUE_SETTINGS_BUNDLE,
   FULFILMENT_BUNDLE,
   type NestedCatalogue,
   type Translator,
@@ -52,6 +54,10 @@ export const NATIVE_FALLBACK: NestedCatalogue = {
   ...VERIFICATION_BUNDLE,
   ...WHATSAPP_BUNDLE,
   ...WITHDRAW_BUNDLE,
+  // The venue availability screen and the venue settings screen are the
+  // Tamagui twins of the calendar + form the packages render on mWeb (rule 27).
+  ...AVAILABILITY_BUNDLE,
+  ...VENUE_SETTINGS_BUNDLE,
   ...FULFILMENT_BUNDLE,
 };
 

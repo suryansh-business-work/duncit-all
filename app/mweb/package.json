@@ -28,6 +28,7 @@
     "@duncit/app-settings": "workspace:*",
     "@duncit/auth-tokens": "workspace:*",
     "@duncit/auto-pods": "workspace:*",
+    "@duncit/availability-calendar": "workspace:*",
     "@duncit/buttons": "workspace:*",
     "@duncit/datetime": "workspace:*",
     "@duncit/earn": "workspace:*",

@@ -24,7 +24,7 @@ import { useTranslation } from '@duncit/app-settings';
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 const priceLabel = (price: number, t: Translate) =>
-  price > 0 ? `₹${price}` : t('shell.availability.free');
+  price > 0 ? `₹${price}` : t('availability.free');
 
 const STATUS_COLOR: Record<VenueSlotRow['status'], 'success' | 'info' | 'warning' | 'default'> = {
   AVAILABLE: 'success',
@@ -47,17 +47,17 @@ export function slotWhenLabel(
   // The end instant is exclusive: ending exactly at midnight claims no extra day.
   const multiDay = !isSameDay(start, new Date(end.getTime() - 1));
   if (slot.whole_day) {
-    if (!multiDay) return t('shell.slots.wholeDay');
-    return t('shell.availability.wholeDayRange', {
+    if (!multiDay) return t('availability.wholeDay');
+    return t('availability.wholeDayRange', {
       vars: { from: formatDate(start), to: formatDate(end) },
     });
   }
   if (multiDay) {
-    return t('shell.availability.timeRange', {
+    return t('availability.timeRange', {
       vars: { from: formatDateTime(start), to: formatDateTime(end) },
     });
   }
-  return t('shell.availability.timeRange', {
+  return t('availability.timeRange', {
     vars: { from: formatTime(start), to: formatTime(end) },
   });
 }
@@ -78,7 +78,7 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
     try {
       await onToggleBlock(slot);
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('shell.availability.updateFailed'));
+      setError(e instanceof Error ? e.message : t('availability.updateFailed'));
     }
   };
 
@@ -89,7 +89,7 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
     try {
       await onDelete(slotId);
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('shell.availability.deleteFailed'));
+      setError(e instanceof Error ? e.message : t('availability.deleteFailed'));
     }
   };
 
@@ -101,7 +101,7 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
           color: "text.secondary",
           fontWeight: 900
         }}>
-        {t('shell.availability.existingSlots')}
+        {t('availability.existingSlots')}
       </Typography>
       {error && (
         <Alert severity="error" onClose={() => setError(null)} sx={{ mt: 1 }}>
@@ -115,7 +115,7 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
             color: "text.secondary",
             mt: 1
           }}>
-          {t('shell.availability.noSlotsForDate')}
+          {t('availability.noSlotsForDate')}
         </Typography>
       ) : (
         <Stack spacing={1} sx={{ mt: 1 }}>
@@ -155,7 +155,7 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
                   }}>
                   {slot.space_label}
                   {slot.capacity
-                    ? ` · ${t('shell.availability.holdsCapacity', { vars: { capacity: slot.capacity } })}`
+                    ? ` · ${t('availability.holdsCapacity', { vars: { capacity: slot.capacity } })}`
                     : ''}
                 </Typography>
               )}
@@ -164,8 +164,8 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
                   color: "text.secondary"
                 }}>
                   {slot.status === 'PENDING'
-                    ? t('shell.availability.requestedByPod')
-                    : t('shell.availability.bookedByPod')}
+                    ? t('availability.requestedByPod')
+                    : t('availability.bookedByPod')}
                   : {slot.booked_pod_title}
                 </Typography>
               )}
@@ -176,7 +176,7 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
                     color: "info.main",
                     display: 'block'
                   }}>
-                  {t('shell.availability.awaitingDecision')}
+                  {t('availability.awaitingDecision')}
                 </Typography>
               )}
               {slot.notes && (
@@ -192,8 +192,8 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
                     onClick={() => handleToggleBlock(slot)}
                   >
                     {slot.status === 'BLOCKED'
-                      ? t('shell.availability.unblock')
-                      : t('shell.availability.block')}
+                      ? t('availability.unblock')
+                      : t('availability.block')}
                   </DuncitButton>
                   <DuncitButton
                     size="small"
@@ -201,7 +201,7 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
                     startIcon={<DeleteOutlineIcon />}
                     onClick={() => setConfirmDeleteId(slot.id)}
                   >
-                    {t('shell.common.delete')}
+                    {t('availability.delete')}
                   </DuncitButton>
                 </Stack>
               )}
@@ -211,14 +211,14 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
       )}
 
       <Dialog open={!!confirmDeleteId} onClose={() => setConfirmDeleteId(null)}>
-        <DialogTitle>{t('shell.availability.deleteTitle')}</DialogTitle>
+        <DialogTitle>{t('availability.deleteTitle')}</DialogTitle>
         <DialogContent>
-          <DialogContentText>{t('shell.availability.deleteBody')}</DialogContentText>
+          <DialogContentText>{t('availability.deleteBody')}</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <DuncitButton onClick={() => setConfirmDeleteId(null)}>{t('shell.common.cancel')}</DuncitButton>
+          <DuncitButton onClick={() => setConfirmDeleteId(null)}>{t('availability.cancel')}</DuncitButton>
           <DuncitButton color="error" variant="contained" onClick={handleConfirmDelete}>
-            {t('shell.common.delete')}
+            {t('availability.delete')}
           </DuncitButton>
         </DialogActions>
       </Dialog>

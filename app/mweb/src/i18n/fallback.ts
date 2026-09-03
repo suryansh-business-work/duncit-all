@@ -12,6 +12,8 @@ import {
   SESSION_BUNDLE,
   WHATSAPP_BUNDLE,
   WITHDRAW_BUNDLE,
+  AVAILABILITY_BUNDLE,
+  VENUE_SETTINGS_BUNDLE,
   FULFILMENT_BUNDLE,
   type NestedCatalogue,
   type Translator,
@@ -50,6 +52,10 @@ export const MWEB_FALLBACK: NestedCatalogue = {
   ...SESSION_BUNDLE,
   ...WHATSAPP_BUNDLE,
   ...WITHDRAW_BUNDLE,
+  // The venue availability calendar and the venue settings form render here
+  // through the same packages the Partners console mounts (rule 27).
+  ...AVAILABILITY_BUNDLE,
+  ...VENUE_SETTINGS_BUNDLE,
   ...FULFILMENT_BUNDLE,
 };
 

@@ -12,7 +12,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { addDays, startOfDay } from 'date-fns';
 import { useTranslation } from '@duncit/app-settings';
-import { minEndTime, minTimeOn, type SlotDraft } from '../slot-draft';
+import { minEndTime, minTimeOn, type SlotDraft } from '@duncit/slots';
 import type { VenueSpace } from '../types';
 
 export type { SlotDraft };
@@ -51,9 +51,9 @@ export default function AddSlotFields({
 
   /** "Court 1 · holds 4" — the capacity is what tells the two courts apart. */
   const spaceOption = (space: VenueSpace) => {
-    const label = space.label || t('shell.slots.wholeVenue');
+    const label = space.label || t('availability.wholeVenue');
     if (space.capacity <= 0) return label;
-    return t('shell.availability.spaceHolds', { vars: { label, capacity: space.capacity } });
+    return t('availability.spaceHolds', { vars: { label, capacity: space.capacity } });
   };
 
   return (
@@ -67,12 +67,12 @@ export default function AddSlotFields({
             <Typography variant="body2" sx={{
               fontWeight: 800
             }}>
-              {t('shell.slots.wholeDay')}
+              {t('availability.wholeDay')}
             </Typography>
             <Typography variant="caption" sx={{
               color: "text.secondary"
             }}>
-              {t('shell.availability.wholeDayHint')}
+              {t('availability.wholeDayHint')}
             </Typography>
           </Box>
         }
@@ -81,10 +81,10 @@ export default function AddSlotFields({
         <TextField
           select
           size="small"
-          label={t('shell.availability.space')}
+          label={t('availability.space')}
           value={activeSpace?.label ?? ''}
           onChange={(e) => patch({ spaceLabel: e.target.value })}
-          helperText={t('shell.availability.spaceHint')}
+          helperText={t('availability.spaceHint')}
         >
           {spaces.map((space) => (
             <MenuItem key={space.label} value={space.label}>
@@ -95,7 +95,7 @@ export default function AddSlotFields({
       )}
       <Stack direction="row" spacing={1}>
         <DatePicker
-          label={t('shell.availability.startDate')}
+          label={t('availability.startDate')}
           value={startDate}
           onChange={(next) => patch({ startDate: next })}
           minDate={now}
@@ -104,7 +104,7 @@ export default function AddSlotFields({
         />
         {!wholeDay && (
           <TimePicker
-            label={t('shell.availability.startTime')}
+            label={t('availability.startTime')}
             value={startTime}
             onChange={(next) => patch({ startTime: next })}
             minTime={minTimeOn(startDate, now)}
@@ -114,7 +114,7 @@ export default function AddSlotFields({
       </Stack>
       <Stack direction="row" spacing={1}>
         <DatePicker
-          label={t('shell.availability.endDate')}
+          label={t('availability.endDate')}
           value={endDate}
           onChange={(next) => patch({ endDate: next })}
           minDate={startDate ?? now}
@@ -123,7 +123,7 @@ export default function AddSlotFields({
         />
         {!wholeDay && (
           <TimePicker
-            label={t('shell.availability.endTime')}
+            label={t('availability.endTime')}
             value={endTime}
             onChange={(next) => patch({ endTime: next })}
             minTime={minEndTime(draft, now)}
@@ -131,21 +131,21 @@ export default function AddSlotFields({
           />
         )}
       </Stack>
-      {isMultiDay && <Alert severity="info">{t('shell.availability.multiDayHint')}</Alert>}
+      {isMultiDay && <Alert severity="info">{t('availability.multiDayHint')}</Alert>}
       <TextField
         size="small"
         type="number"
-        label={t('shell.availability.price')}
+        label={t('availability.price')}
         value={price}
         onChange={(e) => patch({ price: e.target.value })}
-        helperText={t('shell.availability.priceHint')}
+        helperText={t('availability.priceHint')}
         slotProps={{
           htmlInput: { min: 0, step: 50 }
         }}
       />
       <TextField
         size="small"
-        label={t('shell.availability.notes')}
+        label={t('availability.notes')}
         value={notes}
         onChange={(e) => patch({ notes: e.target.value })}
         slotProps={{

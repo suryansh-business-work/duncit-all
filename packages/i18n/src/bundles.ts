@@ -19,6 +19,8 @@ import { AD_REQUEST_BUNDLE } from './bundles/ad-request';
 import { UI_BUNDLE } from './bundles/ui';
 import { VERIFICATION_BUNDLE } from './bundles/verification';
 import { WITHDRAW_BUNDLE } from './bundles/withdraw';
+import { AVAILABILITY_BUNDLE } from './bundles/availability';
+import { VENUE_SETTINGS_BUNDLE } from './bundles/venue-settings';
 import { FULFILMENT_BUNDLE } from './bundles/fulfilment';
 import { SESSION_BUNDLE } from './bundles/session';
 import { LOCATION_BUNDLE } from './bundles/location';
@@ -98,6 +100,8 @@ export {
   UI_BUNDLE,
   VERIFICATION_BUNDLE,
   WITHDRAW_BUNDLE,
+  AVAILABILITY_BUNDLE,
+  VENUE_SETTINGS_BUNDLE,
   FULFILMENT_BUNDLE,
   WEBSITE_APP_BUNDLE,
   WEBSITE_BUNDLE,
@@ -126,6 +130,8 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   ui: UI_BUNDLE,
   verification: VERIFICATION_BUNDLE,
   withdraw: WITHDRAW_BUNDLE,
+  availability: AVAILABILITY_BUNDLE,
+  venueSettings: VENUE_SETTINGS_BUNDLE,
   fulfilment: FULFILMENT_BUNDLE,
   session: SESSION_BUNDLE,
   location: LOCATION_BUNDLE,

@@ -3,11 +3,8 @@ import type { TableFilterValue } from '@duncit/table';
 import { fieldsAt, operationOf, variablesOf } from '../../../__tests__/gql-contract';
 import {
   applyVenuePodsQuery,
-  canCancelVenuePod,
-  cancelDisabledReason,
+  cancelDisabledText,
   cancelSuccessMessage,
-  matchesTab,
-  tabCounts,
   VENUE_CANCEL_PENALTY,
   VENUE_CANCEL_POD,
   VENUE_POD_ATTENDEE_PROFILES,
@@ -76,29 +73,18 @@ describe('VENUE_PODS contract', () => {
   });
 });
 
-describe('canCancelVenuePod', () => {
-  it('allows only an upcoming pod', () => {
-    expect(canCancelVenuePod(makeRow({ bucket: 'UPCOMING' }))).toBe(true);
-    expect(canCancelVenuePod(makeRow({ bucket: 'ONGOING' }))).toBe(false);
-    expect(canCancelVenuePod(makeRow({ bucket: 'COMPLETED' }))).toBe(false);
-    expect(canCancelVenuePod(makeRow({ bucket: 'CANCELLED' }))).toBe(false);
-  });
-
-  it('refuses a pod that is already cancelled, whatever its bucket says', () => {
-    const row = makeRow({ bucket: 'UPCOMING', cancelled_at: '2026-07-03T00:00:00.000Z' });
-    expect(canCancelVenuePod(row)).toBe(false);
-    expect(cancelDisabledReason(row)).toBe('This pod is already cancelled.');
-  });
-
+describe('cancelDisabledText', () => {
+  // The rule itself (which pods may be cancelled) is tested in @duncit/utils;
+  // this pins the owner's words for each answer it gives.
   it('explains every disabled state and stays silent when the action is live', () => {
-    expect(cancelDisabledReason(makeRow({ bucket: 'UPCOMING' }))).toBeNull();
-    expect(cancelDisabledReason(makeRow({ bucket: 'CANCELLED' }))).toBe(
+    expect(cancelDisabledText(makeRow({ bucket: 'UPCOMING' }))).toBeNull();
+    expect(cancelDisabledText(makeRow({ bucket: 'CANCELLED' }))).toBe(
       'This pod is already cancelled.',
     );
-    expect(cancelDisabledReason(makeRow({ bucket: 'ONGOING' }))).toBe(
+    expect(cancelDisabledText(makeRow({ bucket: 'ONGOING' }))).toBe(
       'This pod has already started, so it can no longer be cancelled.',
     );
-    expect(cancelDisabledReason(makeRow({ bucket: 'COMPLETED' }))).toBe(
+    expect(cancelDisabledText(makeRow({ bucket: 'COMPLETED' }))).toBe(
       'This pod has already finished.',
     );
   });
@@ -119,19 +105,13 @@ describe('cancelSuccessMessage', () => {
   });
 });
 
-describe('tab helpers', () => {
+describe('applyVenuePodsQuery', () => {
   const rows = [
     makeRow(),
     makeRow({ id: '2', bucket: 'ONGOING' }),
     makeRow({ id: '3', bucket: 'COMPLETED', completed_at: '2026-07-02T00:00:00.000Z' }),
     makeRow({ id: '4', bucket: 'CANCELLED', cancelled_at: '2026-07-03T00:00:00.000Z' }),
   ];
-
-  it('counts every tab, with Upcoming covering live pods too', () => {
-    expect(tabCounts(rows)).toEqual({ ALL: 4, UPCOMING: 2, CANCELLED: 1, COMPLETED: 1 });
-    expect(matchesTab(rows[1], 'UPCOMING')).toBe(true);
-    expect(matchesTab(rows[1], 'COMPLETED')).toBe(false);
-  });
 
   it('applies the tab from externalFilters plus search, sort and paging', () => {
     const cancelled = applyVenuePodsQuery(rows, {

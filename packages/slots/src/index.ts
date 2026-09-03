@@ -43,3 +43,48 @@ export {
   weekdayInitials,
 } from './month';
 export type { CalendarSlot, SlotDay, SlotFormatter, SlotLabels } from './types';
+// Venue availability: the rules behind the add-slot form and the recurring
+// dialog. Framework-free so the native app's Tamagui twin runs the same ones.
+export { slotCoveredDays, slotCoversDay, wholeDayWindow } from './slot-window';
+export type { SlotSpan } from './slot-window';
+export {
+  checkSlotDraft,
+  emptyDraft,
+  isDraftIncomplete,
+  MAX_FUTURE_DAYS,
+  minEndTime,
+  minTimeOn,
+  NO_SPACE,
+  slotIssueMessage,
+} from './slot-draft';
+export type { SlotDraft, SlotIssueCode, Translate } from './slot-draft';
+export {
+  DEFAULT_AUTO_EXTEND,
+  DEFAULT_VENUE_RULES,
+  effectiveMaxAdvance,
+  generateRecurringSlots,
+  hhmmToDate,
+  MAX_ADVANCE_DAYS_CAP,
+  parseHHMM,
+  readVenueSettings,
+  recurringErrorMessage,
+  timeToHHMM,
+  weekdayLabels,
+} from './recurring';
+export type {
+  GeneratedSlot,
+  GenerateResult,
+  PreviewSummary,
+  RecurringConfig,
+  RecurringErrorCode,
+  SpaceBucket,
+  SpacePrice,
+  TimeRange,
+  VenueAutoExtendForm,
+  VenueOperatingHours,
+  VenueRulesForm,
+  VenueSettingsLike,
+  VenueSettingsView,
+  WeekdayLabelRow,
+  WeekdayLabels,
+} from './recurring';

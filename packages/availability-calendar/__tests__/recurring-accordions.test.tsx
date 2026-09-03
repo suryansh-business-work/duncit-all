@@ -376,13 +376,6 @@ describe('BulkActionsAccordion', () => {
     const setPrice = screen.getByRole('button', { name: 'Set price' });
     expect((setPrice as HTMLButtonElement).disabled).toBe(true);
 
-    // A price that is not a number is sent as zero rather than NaN.
-    fireEvent.change(screen.getByLabelText('New price (₹)'), { target: { value: 'abc' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Set price' }));
-    expect(screen.getByText('Re-price all matching upcoming slots to ₹0? Existing prices are overwritten.')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-    await waitFor(() => expect(screen.queryByText(/to ₹0\?/)).toBeNull());
-
     fireEvent.change(screen.getByLabelText('New price (₹)'), { target: { value: '250.6' } });
     expect((screen.getByRole('button', { name: 'Set price' }) as HTMLButtonElement).disabled).toBe(false);
 

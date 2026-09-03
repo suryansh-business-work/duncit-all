@@ -153,26 +153,26 @@ export function useRecurringDialog(
     }
     setSubmitting(true);
     setServerError(null);
+    const slots = result.slots.map((s) => ({
+      start_at: s.start_at,
+      end_at: s.end_at,
+      whole_day: s.whole_day,
+      price: s.price,
+      space_label: s.space_label,
+      capacity: s.capacity,
+    }));
+    let ok = true;
     try {
-      const slots = result.slots.map((s) => ({
-        start_at: s.start_at,
-        end_at: s.end_at,
-        whole_day: s.whole_day,
-        price: s.price,
-        space_label: s.space_label,
-        capacity: s.capacity,
-      }));
       await createSlots({
         variables: { input: { venue_id: venueId, slots, on_conflict: form.conflictMode } },
       });
       await onDone();
-      return true;
     } catch (e) {
       setServerError(e instanceof Error ? e.message : t('availability.recurring.createFailed'));
-      return false;
-    } finally {
-      setSubmitting(false);
+      ok = false;
     }
+    setSubmitting(false);
+    return ok;
   };
 
   return { form, patch, reset, venueSettings, result, submit, submitting, serverError, setServerError };

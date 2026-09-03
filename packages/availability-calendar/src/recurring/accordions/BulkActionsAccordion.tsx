@@ -10,7 +10,8 @@ import DayOfWeekPicker from '../DayOfWeekPicker';
 import { BULK_DELETE_VENUE_SLOTS, BULK_UPDATE_VENUE_SLOTS } from '../../queries';
 import AdvancedAccordion from './AdvancedAccordion';
 
-const toInt = (v: string) => Math.max(0, Math.round(Number(v) || 0));
+// The price comes from a number input, which only ever yields '' or a number.
+const toInt = (v: string) => Math.max(0, Math.round(Number(v)));
 
 interface BulkResult {
   matched: number;

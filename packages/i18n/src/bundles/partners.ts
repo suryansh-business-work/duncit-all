@@ -457,7 +457,6 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       potentialEarnings: 'Potential Earnings',
       registerVenue: 'Register venue',
       totalCapacity: 'Total Capacity',
-      totalVenues: 'Total Venues',
       upcomingSlots: 'Upcoming Slots',
       venueDashboard: 'Venue Dashboard',
     },
@@ -476,38 +475,6 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       hosts: 'Hosts',
       noPodsAtYourVenuesYet: 'No pods at your venues yet.',
       whyAreYouCancelling: 'Why are you cancelling?',
-    },
-
-    /**
-     * Venue Owner > Settings. The cancellation policy is written as bands: a
-     * band charges for cancelling INSIDE its window, so a booking cancelled
-     * outside every band is free — the copy says that rather than leaving the
-     * owner to infer it from an empty list.
-     */
-    venueSettingsPage: {
-      title: 'Venue settings',
-      subtitle: 'Rules that apply to bookings at your venue.',
-      venue: 'Venue',
-      noVenues: 'Register a venue first — settings apply to a venue you own.',
-      cancellationTitle: 'Cancellation policy',
-      rescheduleOnly: 'Reschedule only — no cancellations',
-      rescheduleOnlyHint:
-        'Guests may move a booking to another slot, but not cancel it. Your cancellation charges do not apply while this is on.',
-      policyDisabled: 'Cancellation charges are off because this venue is reschedule-only.',
-      bandsTitle: 'Cancellation charges',
-      bandsHint:
-        'Each row charges for cancelling within that many hours of the start. The tightest matching row wins, and a cancellation outside every row is free.',
-      noBands: 'No charges yet — cancelling is free at any time.',
-      addBand: 'Add a charge',
-      removeTier: 'Remove this charge',
-      tierHours: 'Cancel within (hours)',
-      tierChargeType: 'Charge',
-      tierValue: 'Amount',
-      chargePercent: 'Percent of slot price',
-      chargeAmount: 'Flat amount',
-      save: 'Save policy',
-      saving: 'Saving…',
-      saved: 'Cancellation policy saved.',
     },
 
     walletPage: {

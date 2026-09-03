@@ -398,7 +398,7 @@ export async function venueWithdrawAutoPod(userId: string, autoPodId: string) {
         ...(unpin ? { location: null } : {}),
       },
       $push: {
-        events: autoPodEvent('VENUE_WITHDRAW', userId, claim!.venue_name, 'Venue withdrew its slot'),
+        events: autoPodEvent('VENUE_WITHDRAW', userId, claim.venue_name, 'Venue withdrew its slot'),
       },
     },
     { new: true }
@@ -406,13 +406,13 @@ export async function venueWithdrawAutoPod(userId: string, autoPodId: string) {
   if (!updated) {
     autoPodFail('CONFLICT', 'This Auto Pod changed while you were cancelling — refresh and try again');
   }
-  await venueSlotService.releaseAutoPodSlot(String(claim!.venue_slot_id), autoPodId);
+  await venueSlotService.releaseAutoPodSlot(String(claim.venue_slot_id), autoPodId);
   await autoPodService.applyWithdrawPenalty(
     'VENUE',
-    String(claim!.venue_id),
+    String(claim.venue_id),
     `Withdrew the slot from Auto Pod "${doc.pod_title}"`
   );
-  autoPodNotify.withdrawn(updated, 'venue', claim!.venue_name).catch((error) =>
+  autoPodNotify.withdrawn(updated, 'venue', claim.venue_name).catch((error) =>
     logs.server.error('autoPod', 'notifyVenueWithdrawn', { error, auto_pod_id: autoPodId })
   );
   return autoPodToPub(updated);
@@ -441,7 +441,7 @@ export async function hostWithdrawAutoPod(userId: string, autoPodId: string) {
         stage: others ? 'CLAIMING' : 'OPEN',
         ...(unpin ? { location: null } : {}),
       },
-      $push: { events: autoPodEvent('HOST_WITHDRAW', userId, claim!.host_name, 'Host stepped off') },
+      $push: { events: autoPodEvent('HOST_WITHDRAW', userId, claim.host_name, 'Host stepped off') },
     },
     { new: true }
   );
@@ -449,7 +449,7 @@ export async function hostWithdrawAutoPod(userId: string, autoPodId: string) {
     autoPodFail('CONFLICT', 'This Auto Pod changed while you were cancelling — refresh and try again');
   }
   await autoPodService.applyWithdrawPenalty('USER', userId, `Stepped off Auto Pod "${doc.pod_title}"`);
-  autoPodNotify.withdrawn(updated, 'host', claim!.host_name).catch((error) =>
+  autoPodNotify.withdrawn(updated, 'host', claim.host_name).catch((error) =>
     logs.server.error('autoPod', 'notifyHostWithdrawn', { error, auto_pod_id: autoPodId })
   );
   return autoPodToPub(updated);

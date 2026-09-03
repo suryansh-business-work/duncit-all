@@ -57,6 +57,9 @@ const audience: AutoPodAudience = {
     { user_id: 'h1', full_name: 'Asha Rao', email: 'asha@example.com', phone: '9876543210' },
     // A host who never gave a phone: the cell reads blank, never "undefined".
     { user_id: 'h2', full_name: 'Bala', email: 'bala@example.com', phone: undefined as unknown as string },
+    // A phone that arrived as a NUMBER. A row is Record<string, unknown>, so
+    // the searchable text has to cope with more than strings.
+    { user_id: 'h3', full_name: 'Cara', email: 'cara@example.com', phone: 9123456789 as unknown as string },
   ],
   club_admins: [
     { user_id: 'a1', full_name: 'Neha Iyer', email: 'neha@example.com', club_names: ['Shuttlers', 'Smashers'] },
@@ -92,6 +95,7 @@ describe('AutoPodAudienceDrawer', () => {
     }
     expect(await screen.findByText('Asha Rao | asha@example.com | 9876543210')).toBeInTheDocument();
     expect(screen.getByText(/^Bala | bala@example.com/)).toBeInTheDocument();
+    expect(screen.getByText('Cara | cara@example.com | 9123456789')).toBeInTheDocument();
     expect(screen.getByTestId('table')).toHaveAttribute('data-table-id', 'auto-pod-audience-hosts');
     await user.type(screen.getByLabelText('Search…'), '98765');
     await waitFor(() => expect(screen.getAllByTestId('row')).toHaveLength(1));

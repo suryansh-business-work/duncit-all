@@ -64,6 +64,12 @@ importers:
       '@duncit/buttons':
         specifier: workspace:*
         version: link:../../packages/buttons
+      '@duncit/category':
+        specifier: workspace:*
+        version: link:../../packages/category
+      '@duncit/club-form':
+        specifier: workspace:*
+        version: link:../../packages/club-form
       '@duncit/datetime':
         specifier: workspace:*
         version: link:../../packages/datetime
@@ -100,6 +106,12 @@ importers:
       '@duncit/onboarding':
         specifier: workspace:*
         version: link:../../packages/onboarding
+      '@duncit/pod-details':
+        specifier: workspace:*
+        version: link:../../packages/pod-details
+      '@duncit/pod-form':
+        specifier: workspace:*
+        version: link:../../packages/pod-form
       '@duncit/pod-product-picker':
         specifier: workspace:*
         version: link:../../packages/pod-product-picker

@@ -2,27 +2,20 @@ import { useMemo, type MutableRefObject } from 'react';
 import { Chip, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import {
-  ACTION_COLORS,
-  ACTION_LABELS,
-  ACTION_OPTIONS,
-  fmtWhen,
-  RISK_COLORS,
-  RISK_OPTIONS,
-  SOURCE_LABELS,
-  SOURCE_OPTIONS,
+  POD_AUDIT_ACTION_COLORS,
+  POD_AUDIT_RISK_COLORS,
+  podAuditActionLabel,
+  podAuditActionOptions,
+  podAuditRiskLabel,
+  podAuditRiskOptions,
+  podAuditSourceLabel,
+  podAuditSourceOptions,
   type PodAuditLog,
-} from './queries';
+} from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
+import { fmtWhen } from './queries';
 
 const getRowId = (row: PodAuditLog) => row.id;
-
-const renderAction = (row: PodAuditLog) => (
-  <Chip size="small" label={ACTION_LABELS[row.action]} color={ACTION_COLORS[row.action]} />
-);
-
-const renderRisk = (row: PodAuditLog) => (
-  <Chip size="small" label={row.ai_risk} color={RISK_COLORS[row.ai_risk]} variant="outlined" />
-);
 
 const renderSummary = (row: PodAuditLog) => (
   <Typography variant="body2" component="span" sx={{
@@ -42,8 +35,27 @@ interface Props {
  * Partners (Club Admin) monitoring pages. */
 export default function PodMonitoringTable({ fetchRows, refetchRef, onRowClick }: Readonly<Props>) {
   const { t } = useTranslation();
-  const columns = useMemo<DuncitColumn<PodAuditLog>[]>(
-    () => [
+  const columns = useMemo<DuncitColumn<PodAuditLog>[]>(() => {
+    const renderAction = (row: PodAuditLog) => (
+      <Chip
+        size="small"
+        label={podAuditActionLabel(row.action, t)}
+        color={POD_AUDIT_ACTION_COLORS[row.action]}
+      />
+    );
+    const renderRisk = (row: PodAuditLog) => (
+      <Chip
+        size="small"
+        label={podAuditRiskLabel(row.ai_risk, t)}
+        color={POD_AUDIT_RISK_COLORS[row.ai_risk]}
+        variant="outlined"
+      />
+    );
+    const actorValue = (row: PodAuditLog) => {
+      const source = podAuditSourceLabel(row.source, t);
+      return row.actor_name ? `${row.actor_name} · ${source}` : source;
+    };
+    return [
       {
         field: 'created_at',
         headerName: t('admin.eventTickets.colWhen'),
@@ -62,17 +74,16 @@ export default function PodMonitoringTable({ fetchRows, refetchRef, onRowClick }
         field: 'action',
         headerName: t('admin.podMonitoring.colAction'),
         width: 150,
-        filter: { type: 'select', options: ACTION_OPTIONS },
+        filter: { type: 'select', options: podAuditActionOptions(t) },
         cellRenderer: renderAction,
-        valueGetter: (row) => ACTION_LABELS[row.action],
+        valueGetter: (row) => podAuditActionLabel(row.action, t),
       },
       {
         field: 'source',
-        headerName: 'By',
+        headerName: t('clubAdmin.monitoring.actor'),
         width: 150,
-        filter: { type: 'select', options: SOURCE_OPTIONS },
-        valueGetter: (row) =>
-          row.actor_name ? `${row.actor_name} · ${SOURCE_LABELS[row.source]}` : SOURCE_LABELS[row.source],
+        filter: { type: 'select', options: podAuditSourceOptions(t) },
+        valueGetter: actorValue,
       },
       {
         field: 'changes',
@@ -85,9 +96,9 @@ export default function PodMonitoringTable({ fetchRows, refetchRef, onRowClick }
         field: 'ai_risk',
         headerName: t('admin.podMonitoring.colAiRisk'),
         width: 120,
-        filter: { type: 'select', options: RISK_OPTIONS },
+        filter: { type: 'select', options: podAuditRiskOptions(t) },
         cellRenderer: renderRisk,
-        valueGetter: (row) => row.ai_risk,
+        valueGetter: (row) => podAuditRiskLabel(row.ai_risk, t),
       },
       {
         field: 'ai_summary',
@@ -98,9 +109,8 @@ export default function PodMonitoringTable({ fetchRows, refetchRef, onRowClick }
         cellRenderer: renderSummary,
         valueGetter: (row) => row.ai_summary,
       },
-    ],
-    [],
-  );
+    ];
+  }, [t]);
 
   return (
     <DuncitTable<PodAuditLog>
@@ -110,7 +120,7 @@ export default function PodMonitoringTable({ fetchRows, refetchRef, onRowClick }
       getRowId={getRowId}
       onRowClick={onRowClick}
       emptyText={t('admin.podMonitoring.empty')}
-      searchPlaceholder="Search pod, actor or AI summary"
+      searchPlaceholder={t('clubAdmin.monitoring.search')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       refetchRef={refetchRef}
     />

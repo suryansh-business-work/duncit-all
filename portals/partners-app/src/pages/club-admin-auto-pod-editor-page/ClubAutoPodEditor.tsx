@@ -6,6 +6,7 @@ import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { buildSlotLabels } from '@duncit/slots';
 import { notifySuccess } from '@duncit/dialogs';
 import {
+  CLUB_ADMIN_CREATE_AUTO_POD,
   makeNativeParityPodConfig,
   PodEditorPage,
   useAutoPodEditorState,
@@ -13,7 +14,6 @@ import {
   type PodFormConfig,
 } from '@duncit/pod-form';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
-import { CLUB_ADMIN_CREATE_AUTO_POD } from '../club-admin-club-pods-page/queries';
 
 export interface ClubAutoPodClub {
   id: string;

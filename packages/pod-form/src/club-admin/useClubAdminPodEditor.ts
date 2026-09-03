@@ -1,26 +1,28 @@
 import { useMemo } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client/react';
-import {
-  makeNativeParityPodConfig,
-  usePodEditorState,
-  type PodEditorSaveMeta,
-  type PodHostOption,
-} from '@duncit/pod-form';
+import usePodEditorState, { type PodEditorSaveMeta } from '../editor/usePodEditorState';
+import type { PodHostOption } from '../types';
+import { CLUB_ADMIN_POD_CONFIG } from './config';
 import { CLUB_ADMIN_CREATE_POD, CLUB_ADMIN_HOST_SEARCH, CLUB_ADMIN_UPDATE_POD } from './queries';
 
-/** Native-parity pod form for Club Admins: venue slots, place charges, reel and
- * an optional assign-host picker (the server injects the admin when empty). */
-export const CLUB_ADMIN_POD_CONFIG = makeNativeParityPodConfig({ showProducts: true });
-
-interface Args {
+export interface UseClubAdminPodEditorArgs {
   clubId: string;
   /** The pod being edited; null on the create route. */
   editingPod?: any;
   onSaved: (meta: PodEditorSaveMeta) => void;
 }
 
-/** Club-admin wiring for the shared pod editor: pinned club, host search + seed. */
-export default function useClubAdminPodEditor({ clubId, editingPod, onSaved }: Args) {
+/**
+ * Club-admin wiring for the shared pod editor: pinned club, host search + seed.
+ *
+ * The Partners console and mWeb both mount `PodEditorPage` over this one hook,
+ * so a club admin writes a pod the same way on either surface (rule 40).
+ */
+export default function useClubAdminPodEditor({
+  clubId,
+  editingPod,
+  onSaved,
+}: UseClubAdminPodEditorArgs) {
   const client = useApolloClient();
   const [createPod] = useMutation<any>(CLUB_ADMIN_CREATE_POD);
   const [updatePod] = useMutation<any>(CLUB_ADMIN_UPDATE_POD);

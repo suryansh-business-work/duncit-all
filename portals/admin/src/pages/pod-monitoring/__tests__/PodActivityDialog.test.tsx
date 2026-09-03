@@ -4,7 +4,8 @@ import type { MockedResponse } from '@apollo/client/testing';
 import { GraphQLError } from 'graphql';
 import { renderWithProviders } from '../../../__tests__/testkit';
 import PodActivityDialog from '../PodActivityDialog';
-import { POD_AUDIT_LOGS, type PodAuditLog } from '../queries';
+import type { PodAuditLog } from '@duncit/utils';
+import { POD_AUDIT_LOGS } from '../queries';
 
 const onClose = vi.fn();
 

@@ -1,10 +1,8 @@
+import { useMemo } from 'react';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
+import { podRowStatusOptions, type PodRowStatusFilter } from '@duncit/utils';
 import { useTranslation } from '../../i18n';
-import {
-  POD_ROW_STATUS_OPTIONS,
-  type PodRowStatusFilter,
-} from '../../components/pod-status';
 
 interface Props {
   value: PodRowStatusFilter;
@@ -22,19 +20,20 @@ interface Props {
  */
 export default function PodStatusFilter({ value, onChange }: Readonly<Props>) {
   const { t } = useTranslation();
+  const options = useMemo(() => podRowStatusOptions(t), [t]);
 
   return (
     <TextField
       select
       size="small"
-      label={t('partners.podStatus.filterLabel')}
+      label={t('clubAdmin.pods.statusFilter')}
       value={value}
       onChange={(event) => onChange(event.target.value as PodRowStatusFilter)}
       sx={{ minWidth: 170 }}
     >
-      {POD_ROW_STATUS_OPTIONS.map((option) => (
-        <MenuItem key={option.labelKey} value={option.value}>
-          {t(option.labelKey)}
+      {options.map((option) => (
+        <MenuItem key={option.label} value={option.value}>
+          {option.label}
         </MenuItem>
       ))}
     </TextField>

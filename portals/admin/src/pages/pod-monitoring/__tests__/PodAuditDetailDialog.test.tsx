@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import PodAuditDetailDialog from '../PodAuditDetailDialog';
-import type { PodAuditLog } from '../queries';
+import type { PodAuditLog } from '@duncit/utils';
 
 const onClose = vi.fn();
 

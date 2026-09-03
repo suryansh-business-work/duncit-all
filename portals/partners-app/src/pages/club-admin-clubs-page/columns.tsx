@@ -79,7 +79,7 @@ export const clubAdminClubsColumns = (t: Translate): DuncitColumn<ClubAdminClubI
   },
   {
     field: 'super_category',
-    headerName: t('partners.clubAdminClubsPage.superCategory'),
+    headerName: t('partners.common.superCategory'),
     hide: true,
     minWidth: 150,
     filter: { type: 'text' },
@@ -129,10 +129,10 @@ export const clubAdminClubsColumns = (t: Translate): DuncitColumn<ClubAdminClubI
   },
   activeChipColumn<ClubAdminClubInfoRow>({
     field: 'is_verified',
-    headerName: t('partners.clubAdminClubsPage.verified'),
+    headerName: t('clubAdmin.clubs.verified'),
     width: 120,
-    activeLabel: 'Verified',
-    inactiveLabel: 'Unverified',
+    activeLabel: t('clubAdmin.clubs.verified'),
+    inactiveLabel: t('clubAdmin.clubs.unverified'),
     outlineInactive: true,
   }),
   activeChipColumn<ClubAdminClubInfoRow>(),

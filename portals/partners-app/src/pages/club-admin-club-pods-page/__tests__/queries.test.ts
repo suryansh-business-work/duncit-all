@@ -5,10 +5,10 @@ import {
   CLUB_ADMIN_DELETE_POD,
   CLUB_ADMIN_HOST_SEARCH,
   CLUB_ADMIN_POD_LOOKUPS,
-  CLUB_ADMIN_PODS,
   CLUB_ADMIN_PODS_TABLE,
   CLUB_ADMIN_UPDATE_POD,
-} from '../queries';
+} from '@duncit/pod-form';
+import { CLUB_ADMIN_PODS } from '../queries';
 
 describe('CLUB_ADMIN_POD_LOOKUPS', () => {
   it('is parameterless and fills all three pickers in one round trip', () => {

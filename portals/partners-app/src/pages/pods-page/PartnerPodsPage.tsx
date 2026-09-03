@@ -17,7 +17,13 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
-import { PodForm, blankPodFormValues, buildPodInput, type PodFormValues } from '@duncit/pod-form';
+import {
+  PodForm,
+  blankPodFormValues,
+  buildPodInput,
+  getClubVenueIds,
+  type PodFormValues,
+} from '@duncit/pod-form';
 import PodsTable from '../../components/PodsTable';
 import {
   CREATE_PARTNER_POD,
@@ -25,7 +31,7 @@ import {
   PARTNER_POD_LOOKUPS,
   type PartnerPodRow,
 } from './queries';
-import { PARTNER_POD_CONFIG, getClubVenueIds } from './partner-pod-config';
+import { PARTNER_POD_CONFIG } from './partner-pod-config';
 
 export default function PartnerPodsPage() {
   const fmt = useDateFormat();

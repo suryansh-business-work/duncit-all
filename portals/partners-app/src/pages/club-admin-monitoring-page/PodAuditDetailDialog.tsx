@@ -11,14 +11,40 @@ import {
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import {
-  ACTION_COLORS,
-  ACTION_LABELS,
-  fmtWhen,
-  RISK_COLORS,
-  SOURCE_LABELS,
+  POD_AUDIT_ACTION_COLORS,
+  POD_AUDIT_RISK_COLORS,
+  podAuditActionLabel,
+  podAuditRiskLabel,
+  podAuditSourceLabel,
+  type PodAuditChange,
   type PodAuditLog,
-} from './queries';
+} from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
+import { fmtWhen } from './queries';
+
+interface ChangeRowProps {
+  change: PodAuditChange;
+  emptyValue: string;
+}
+
+/** One tracked field: what it was, then what it became. */
+function ChangeRow({ change, emptyValue }: Readonly<ChangeRowProps>) {
+  return (
+    <Stack spacing={0.25}>
+      <Typography variant="caption" sx={{
+        fontWeight: 800
+      }}>
+        {change.field}
+      </Typography>
+      <Typography variant="body2" sx={{ color: 'error.main', wordBreak: 'break-word' }}>
+        − {change.from || emptyValue}
+      </Typography>
+      <Typography variant="body2" sx={{ color: 'success.main', wordBreak: 'break-word' }}>
+        + {change.to || emptyValue}
+      </Typography>
+    </Stack>
+  );
+}
 
 interface Props {
   log: PodAuditLog | null;
@@ -34,55 +60,51 @@ export default function PodAuditDetailDialog({ log, onClose }: Readonly<Props>) 
       {log && (
         <>
           <DialogTitle sx={{ fontWeight: 900 }}>
-            {ACTION_LABELS[log.action]} — {log.pod_title || log.pod_id}
+            {podAuditActionLabel(log.action, t)} — {log.pod_title || log.pod_id}
           </DialogTitle>
           <DialogContent dividers>
             <Stack spacing={1.5}>
               <Stack direction="row" spacing={1} useFlexGap sx={{
                 flexWrap: "wrap"
               }}>
-                <Chip size="small" label={ACTION_LABELS[log.action]} color={ACTION_COLORS[log.action]} />
-                <Chip size="small" label={`AI risk: ${log.ai_risk}`} color={RISK_COLORS[log.ai_risk]} />
-                <Chip size="small" variant="outlined" label={SOURCE_LABELS[log.source]} />
+                <Chip
+                  size="small"
+                  label={podAuditActionLabel(log.action, t)}
+                  color={POD_AUDIT_ACTION_COLORS[log.action]}
+                />
+                <Chip
+                  size="small"
+                  label={t('clubAdmin.monitoring.aiRiskChip', { vars: { risk: podAuditRiskLabel(log.ai_risk, t) } })}
+                  color={POD_AUDIT_RISK_COLORS[log.ai_risk]}
+                />
+                <Chip size="small" variant="outlined" label={podAuditSourceLabel(log.source, t)} />
               </Stack>
               <Typography variant="body2" sx={{
                 color: "text.secondary"
               }}>
-                {fmtWhen(log.created_at)} · {log.actor_name || 'Unknown actor'}
+                {fmtWhen(log.created_at)} · {log.actor_name || t('clubAdmin.monitoring.unknownActor')}
               </Typography>
               {log.ai_summary && <Alert severity="info">{log.ai_summary}</Alert>}
               {log.note && (
                 <Typography variant="body2">
-                  <b>Note:</b> {log.note}
+                  <b>{t('clubAdmin.monitoring.note')}</b> {log.note}
                 </Typography>
               )}
               <Divider />
               <Typography variant="subtitle2" sx={{
                 fontWeight: 800
               }}>
-                Changes ({log.changes.length})
+                {t('clubAdmin.monitoring.changesCount', { vars: { total: log.changes.length } })}
               </Typography>
               {log.changes.length === 0 && (
                 <Typography variant="body2" sx={{
                   color: "text.secondary"
                 }}>
-                  No tracked field changed for this action.
+                  {t('clubAdmin.monitoring.noChanges')}
                 </Typography>
               )}
               {log.changes.map((change) => (
-                <Stack key={change.field} spacing={0.25}>
-                  <Typography variant="caption" sx={{
-                    fontWeight: 800
-                  }}>
-                    {change.field}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'error.main', wordBreak: 'break-word' }}>
-                    − {change.from || '(empty)'}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'success.main', wordBreak: 'break-word' }}>
-                    + {change.to || '(empty)'}
-                  </Typography>
-                </Stack>
+                <ChangeRow key={change.field} change={change} emptyValue={t('clubAdmin.monitoring.emptyValue')} />
               ))}
             </Stack>
           </DialogContent>

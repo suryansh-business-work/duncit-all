@@ -7,6 +7,7 @@ import {
   WITHDRAW_BUNDLE,
   AVAILABILITY_BUNDLE,
   VENUE_SETTINGS_BUNDLE,
+  CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
   type FlatCatalogue,
   type NestedCatalogue,
@@ -41,6 +42,7 @@ export const SHELL_FALLBACK: NestedCatalogue = {
   // they are namespaces of their own rather than shell.* entries (rule 40).
   ...AVAILABILITY_BUNDLE,
   ...VENUE_SETTINGS_BUNDLE,
+  ...CLUB_ADMIN_BUNDLE,
   ...FULFILMENT_BUNDLE,
 };
 

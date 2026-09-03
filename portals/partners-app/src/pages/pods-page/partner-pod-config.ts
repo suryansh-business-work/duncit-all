@@ -16,6 +16,3 @@ export const PARTNER_POD_CONFIG: PodFormConfig = {
   showFinance: false,
   showIsActive: false,
 };
-
-/** Partner clubs expose their linked venue ids directly on `meetup_venues_id`. */
-export const getClubVenueIds = (club: any): string[] => club?.meetup_venues_id ?? [];

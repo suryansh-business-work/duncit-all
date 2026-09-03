@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import ClubAdminCategoryCard from './ClubAdminCategoryCard';
-import type { ClubAdminCategoryRow } from './queries';
+import type { ClubAdminCategoryRow } from '@duncit/utils';
 
 afterEach(cleanup);
 

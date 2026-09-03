@@ -3,9 +3,10 @@ import { useApolloClient } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import { useApolloTableFetch } from '@duncit/table';
+import type { PodAuditLog } from '@duncit/utils';
 import ClubAdminPodMonitoringTable from './ClubAdminPodMonitoringTable';
 import PodAuditDetailDialog from './PodAuditDetailDialog';
-import { CLUB_ADMIN_POD_AUDIT_LOGS_TABLE, type PodAuditLog } from './queries';
+import { CLUB_ADMIN_POD_AUDIT_LOGS_TABLE } from './queries';
 import { useTranslation } from '@duncit/shell';
 
 /** Club Admin > Pod Monitoring (AI) — the AI-monitored audit trail of every
@@ -35,11 +36,11 @@ export default function ClubAdminPodMonitoringPage() {
         <Box>
           <Typography variant="h5" sx={{
             fontWeight: 700
-          }}>{t('shell.nav.podMonitoringAi')}</Typography>
+          }}>{t('clubAdmin.monitoring.title')}</Typography>
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            Every pod edit, status change and critical action in your clubs — risk-scored by AI.
+            {t('clubAdmin.monitoring.subtitle')}
           </Typography>
         </Box>
       </Stack>

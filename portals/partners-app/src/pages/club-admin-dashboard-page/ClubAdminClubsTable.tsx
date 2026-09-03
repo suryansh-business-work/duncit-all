@@ -2,8 +2,7 @@ import { useMemo, type MutableRefObject } from 'react';
 import { Link as RouterLink } from 'react-router';
 import { Card, Link, Stack, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
-import type { ClubAdminClubRow } from './queries';
-import { formatCount, formatMoney, formatRating } from './format';
+import { formatCount, formatMoney, formatRating, type ClubAdminClubRow } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -37,7 +36,7 @@ export default function ClubAdminClubsTable({ fetchRows, refetchRef, currencySym
       },
       {
         field: 'total_pods',
-        headerName: t('partners.clubAdminDashboardPage.totalPods'),
+        headerName: t('clubAdmin.dashboard.column.totalPods'),
         hide: true,
         width: 110,
         filter: { type: 'number' },
@@ -66,20 +65,20 @@ export default function ClubAdminClubsTable({ fetchRows, refetchRef, currencySym
       },
       {
         field: 'rating',
-        headerName: t('partners.clubAdminDashboardPage.rating'),
+        headerName: t('clubAdmin.dashboard.column.rating'),
         width: 100,
         filter: { type: 'number' },
         valueGetter: (club) => formatRating(club.rating),
       },
       {
         field: 'revenue',
-        headerName: t('partners.clubAdminDashboardPage.revenue'),
+        headerName: t('clubAdmin.dashboard.column.revenue'),
         width: 120,
         filter: { type: 'number' },
-        valueGetter: (club) => formatMoney(club.revenue, currencySymbol),
+        valueGetter: (club) => formatMoney(club.revenue, { symbol: currencySymbol }),
       },
     ],
-    [currencySymbol],
+    [currencySymbol, t],
   );
 
   return (
@@ -87,15 +86,15 @@ export default function ClubAdminClubsTable({ fetchRows, refetchRef, currencySym
       <Stack spacing={1.5}>
         <Typography variant="subtitle2" sx={{
           fontWeight: 900
-        }}>{t('partners.clubAdminDashboardPage.perClubBreakdown')}</Typography>
+        }}>{t('clubAdmin.dashboard.perClubBreakdown')}</Typography>
         <DuncitTable<ClubAdminClubRow>
           tableId="partners-app-club-admin-clubs"
           columns={columns}
           fetchRows={fetchRows}
           getRowId={getClubRowId}
-          emptyText={t('partners.common.noClubsAreAssignedToYou')}
+          emptyText={t('clubAdmin.dashboard.noClubs')}
           defaultSort={{ field: 'club_name', dir: 'asc' }}
-          searchPlaceholder="Search club name or slug"
+          searchPlaceholder={t('clubAdmin.dashboard.searchClubs')}
           refetchRef={refetchRef}
         />
       </Stack>

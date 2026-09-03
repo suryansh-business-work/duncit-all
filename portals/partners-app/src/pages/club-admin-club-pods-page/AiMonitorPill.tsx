@@ -12,6 +12,6 @@ interface Props {
 export default function AiMonitorPill({ onClick }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <SharedAiMonitorPill label={t('shell.podMonitoring.aiMonitoring')} onClick={onClick} />
+    <SharedAiMonitorPill label={t('clubAdmin.pods.aiMonitoring')} onClick={onClick} />
   );
 }

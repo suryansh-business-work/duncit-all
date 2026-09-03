@@ -5,11 +5,12 @@ import { Alert, Dialog, DialogContent, DialogTitle } from '@mui/material';
 import {
   PodForm,
   blankPodFormValues,
+  getClubVenueIds,
   useMediaPickerBridge,
   type PodFormValues,
 } from '@duncit/pod-form';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
-import { PARTNER_POD_CONFIG, getClubVenueIds } from '../pods-page/partner-pod-config';
+import { PARTNER_POD_CONFIG } from '../pods-page/partner-pod-config';
 
 interface Props {
   open: boolean;

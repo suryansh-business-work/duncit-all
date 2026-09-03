@@ -1,6 +1,12 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { FinanceSettingsModel, getFinanceSettings, type IFinanceSettings } from './finance.model';
+import {
+  FinanceSettingsModel,
+  getFinanceSettings,
+  INVOICE_TEMPLATE_KINDS,
+  partyTemplateOf,
+  type IFinanceSettings,
+} from './finance.model';
 import { paymentReleaseService } from './paymentRelease.service';
 import { computePodSettlement } from './settlement.service';
 import { breakdownService } from './breakdown.service';
@@ -58,9 +64,9 @@ const toPub = (d: IFinanceSettings) => ({
   invoice_terms: d.invoice_terms,
   invoice_logo_url: d.invoice_logo_url,
   invoice_templates: {
-    venue: { ...d.invoice_templates.venue },
-    host: { ...d.invoice_templates.host },
-    product: { ...d.invoice_templates.product },
+    venue: partyTemplateOf(d, 'venue'),
+    host: partyTemplateOf(d, 'host'),
+    product: partyTemplateOf(d, 'product'),
   },
   updated_at: d.updated_at.toISOString(),
 });
@@ -276,13 +282,20 @@ export const financeResolvers = {
       const input = args.input;
       validatePctInputs(input);
       validatePayoutInputs(input);
-      // Flatten nested invoice templates to dotted paths so a partial update of
-      // one party's template doesn't wipe the others.
+      // Flatten nested invoice templates to dotted paths — one per FIELD, not
+      // per party. Setting a party's whole subdocument REPLACED it, and every
+      // field of PartyInvoiceTemplateInput is optional, so saving one field
+      // silently wiped the other three; the next read then died on the
+      // non-nullable `label` and took the Finance invoice pages with it.
       const set: Record<string, any> = { ...input };
       if (input.invoice_templates) {
         delete set.invoice_templates;
-        for (const kind of ['venue', 'host', 'product']) {
-          if (input.invoice_templates[kind]) set[`invoice_templates.${kind}`] = input.invoice_templates[kind];
+        for (const kind of INVOICE_TEMPLATE_KINDS) {
+          const tpl = input.invoice_templates[kind];
+          if (!tpl) continue;
+          for (const [field, value] of Object.entries(tpl)) {
+            if (value !== undefined) set[`invoice_templates.${kind}.${field}`] = value;
+          }
         }
       }
       const doc = await FinanceSettingsModel.findOneAndUpdate(

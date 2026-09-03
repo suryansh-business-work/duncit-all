@@ -8,7 +8,7 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { sendEmail } from '@services/email/email.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
-import { getFinanceSettings } from './finance.model';
+import { getFinanceSettings, partyTemplateOf } from './finance.model';
 import {
   computePodSettlement,
   SETTLEMENT_ENGINE_VERSION,
@@ -406,7 +406,9 @@ async function notifyApproval(doc: IPaymentRelease) {
     const money = (n: number) => `${cur}${(Number(n) || 0).toFixed(2)}`;
     const isHost = doc.kind === 'HOST_PAYMENT';
     const isClubAdmin = doc.kind === 'CLUB_ADMIN';
-    const tmpl = isHost ? fs.invoice_templates.host : fs.invoice_templates.venue;
+    // Through the shared accessor: `label` is this PDF's title, and a row the
+    // old partial-save bug stripped would have printed an undefined one.
+    const tmpl = partyTemplateOf(fs, isHost ? 'host' : 'venue');
     const b = doc.breakdown;
     const payout = releasePayout(doc);
     const attachments = [];

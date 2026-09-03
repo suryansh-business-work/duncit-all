@@ -1255,6 +1255,8 @@ export type AppSettings = {
   __typename?: 'AppSettings';
   /** Whether a host must verify an attendee's name and phone over OTP before marking them present by hand. The door scan is proof on its own and is never gated by this. */
   attendance_otp_required: Scalars['Boolean']['output'];
+  /** Account Health points a venue or host loses by withdrawing from an Auto Pod (0 disables the penalty). */
+  auto_pod_cancel_health_penalty: Scalars['Int']['output'];
   /** How many days ahead a venue is shown its free slots when accepting an Auto Pod. */
   auto_pod_slot_window_days: Scalars['Int']['output'];
   /** How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires. */
@@ -1657,6 +1659,8 @@ export type AutoPod = {
   /** True when the calling user (or one of their clubs) already enrolled. */
   viewer_claimed: Scalars['Boolean']['output'];
   what_this_pod_offers: Array<Scalars['String']['output']>;
+  /** Account Health points a venue or host loses by withdrawing (Pod Settings). Set on their own queues. */
+  withdraw_penalty_points?: Maybe<Scalars['Int']['output']>;
 };
 
 export type AutoPodActionCounts = {
@@ -1731,6 +1735,27 @@ export type AutoPodHostClaim = {
   assigned_at: Scalars['String']['output'];
   host_name: Scalars['String']['output'];
   user_id: Scalars['ID']['output'];
+};
+
+/**
+ * What the host's numbers add up to on an offer — under their own rates, the
+ * venue's slot price and the club admin's cut — and the spot limits the
+ * activity and the booked space impose.
+ */
+export type AutoPodHostProjection = {
+  __typename?: 'AutoPodHostProjection';
+  club_admin_amount: Scalars['Float']['output'];
+  gst_amount: Scalars['Float']['output'];
+  host_receives: Scalars['Float']['output'];
+  max_spots: Scalars['Int']['output'];
+  min_spots: Scalars['Int']['output'];
+  no_of_spots: Scalars['Int']['output'];
+  platform_fee_amount: Scalars['Float']['output'];
+  pod_amount: Scalars['Float']['output'];
+  total_collection: Scalars['Float']['output'];
+  venue_amount: Scalars['Float']['output'];
+  /** False when the numbers would be refused: out of range, or the host would earn nothing. */
+  viable: Scalars['Boolean']['output'];
 };
 
 /**
@@ -8766,9 +8791,11 @@ export type Mutation = {
   getImagekitAuth: ImagekitAuth;
   grantAdminAccess: User;
   /**
-   * Host enrols: assigns themselves. location_id is the city the host had
-   * selected — required when nobody has enrolled yet (it pins the offer), and
-   * must match the pinned city otherwise.
+   * Host enrols: assigns themselves, setting the pod's ticket price and spots
+   * (the template's when omitted). Only once a venue has fixed the slot on a
+   * physical offer. location_id is the city the host had selected — required
+   * when nobody has enrolled yet on a virtual offer (it pins it), and must
+   * match the pinned city otherwise.
    */
   hostAssignAutoPod: AutoPod;
   hostDeletePod: Scalars['Boolean']['output'];
@@ -8791,6 +8818,8 @@ export type Mutation = {
    */
   hostScanPodTicket: HostTicketScanResult;
   hostUpdatePod: Pod;
+  /** The host steps off while the offer is still enrolling; the offer returns to hosts' lists and the host pays the Pod Settings penalty. */
+  hostWithdrawAutoPod: AutoPod;
   /** Upsert bugs from an export file, matched on fingerprint. */
   importBugs: BugImportResult;
   /**
@@ -9637,6 +9666,8 @@ export type Mutation = {
   venueAcceptAutoPod: AutoPod;
   /** Venue owner cancels an UPCOMING pod booked at their venue: refunds every successful attendee payment, emails the audience and deducts the Account Health penalty configured in Admin > Pods > Pod Settings. */
   venueCancelPod: VenueCancelPodResult;
+  /** The venue takes its slot back while the offer is still enrolling; the offer returns to venues' lists and the venue pays the Pod Settings penalty. */
+  venueWithdrawAutoPod: AutoPod;
   verifyEmailVerificationOtp: User;
   verifyEventTicketQr: EventTicketVerifyResult;
   /**
@@ -11155,6 +11186,8 @@ export type MutationGrantAdminAccessArgs = {
 export type MutationHostAssignAutoPodArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
   location_id?: InputMaybe<Scalars['ID']['input']>;
+  no_of_spots?: InputMaybe<Scalars['Int']['input']>;
+  pod_amount?: InputMaybe<Scalars['Float']['input']>;
 };
 
 
@@ -11188,6 +11221,11 @@ export type MutationHostScanPodTicketArgs = {
 export type MutationHostUpdatePodArgs = {
   input: HostUpdatePodInput;
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationHostWithdrawAutoPodArgs = {
+  auto_pod_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -13140,6 +13178,11 @@ export type MutationVenueAcceptAutoPodArgs = {
 export type MutationVenueCancelPodArgs = {
   pod_id: Scalars['ID']['input'];
   reason: Scalars['String']['input'];
+};
+
+
+export type MutationVenueWithdrawAutoPodArgs = {
+  auto_pod_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -16461,6 +16504,8 @@ export type Query = {
    * it — with the counts the template form gates its next step on.
    */
   autoPodAudience: AutoPodAudience;
+  /** What a ticket price and spot count would earn the CALLING host on this offer, plus the spot limits. */
+  autoPodHostProjection: AutoPodHostProjection;
   /**
    * The free slots one of the caller's venues could commit to an offer, in the
    * next auto_pod_slot_window_days days, nearest first — each with what the
@@ -17739,6 +17784,13 @@ export type QueryAutoPodArgs = {
 
 export type QueryAutoPodAudienceArgs = {
   sub_category_id: Scalars['ID']['input'];
+};
+
+
+export type QueryAutoPodHostProjectionArgs = {
+  auto_pod_doc_id: Scalars['ID']['input'];
+  no_of_spots: Scalars['Int']['input'];
+  pod_amount: Scalars['Float']['input'];
 };
 
 
@@ -22645,6 +22697,8 @@ export type UpdateAppBuildSettingsInput = {
 export type UpdateAppSettingsInput = {
   /** Whether a host must verify an attendee's name and phone over OTP before marking them present by hand. The door scan is proof on its own and is never gated by this. */
   attendance_otp_required?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Account Health points a venue or host loses by withdrawing from an Auto Pod (0-100, 0 disables the penalty). */
+  auto_pod_cancel_health_penalty?: InputMaybe<Scalars['Int']['input']>;
   /** How many days ahead a venue is shown its free slots when accepting an Auto Pod (1-60). */
   auto_pod_slot_window_days?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires (1-720). */

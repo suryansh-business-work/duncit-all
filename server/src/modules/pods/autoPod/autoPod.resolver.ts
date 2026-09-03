@@ -7,7 +7,9 @@ import { autoPodAudience } from './autoPod.audience';
 import {
   clubClaimAutoPod,
   hostAssignAutoPod,
+  hostWithdrawAutoPod,
   venueAcceptAutoPod,
+  venueWithdrawAutoPod,
 } from './autoPod.claims';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
@@ -55,6 +57,8 @@ export const autoPodResolvers = {
     category_path: (parent: any) => categoryPathOf(String(parent.sub_category_id)),
     // Attached by the venue queue only; every other list reads null.
     venue_expires_at: (parent: any) => parent.venue_expires_at ?? null,
+    // Attached by the venue and host queues; every other list reads null.
+    withdraw_penalty_points: (parent: any) => parent.withdraw_penalty_points ?? null,
     viewer_claimed: (parent: any, _a: unknown, ctx: GraphQLContext) => viewerClaimed(parent, ctx),
     pod: async (parent: any) => {
       if (!parent.pod_id) return null;
@@ -102,6 +106,20 @@ export const autoPodResolvers = {
       args: { auto_pod_doc_id: string; venue_id: string },
       ctx: GraphQLContext
     ) => autoPodService.venueSlots(requireAuth(ctx).id, args.auto_pod_doc_id, args.venue_id),
+
+    autoPodHostProjection: async (
+      _p: unknown,
+      args: { auto_pod_doc_id: string; pod_amount: number; no_of_spots: number },
+      ctx: GraphQLContext
+    ) => {
+      await assertCanReadAutoPod(ctx, args.auto_pod_doc_id);
+      return autoPodService.hostProjection(
+        requireAuth(ctx).id,
+        args.auto_pod_doc_id,
+        args.pod_amount,
+        args.no_of_spots
+      );
+    },
 
     // Names, emails and phone numbers of partners — the admin's to see while
     // writing a template, nobody else's.
@@ -178,9 +196,28 @@ export const autoPodResolvers = {
 
     hostAssignAutoPod: (
       _p: unknown,
-      args: { auto_pod_doc_id: string; location_id?: string | null },
+      args: {
+        auto_pod_doc_id: string;
+        location_id?: string | null;
+        pod_amount?: number | null;
+        no_of_spots?: number | null;
+      },
       ctx: GraphQLContext
-    ) => hostAssignAutoPod(requireAuth(ctx).id, args.auto_pod_doc_id, args.location_id),
+    ) =>
+      hostAssignAutoPod(
+        requireAuth(ctx).id,
+        args.auto_pod_doc_id,
+        args.location_id,
+        args.pod_amount,
+        args.no_of_spots
+      ),
+
+    // Ownership of the claim is asserted inside each.
+    venueWithdrawAutoPod: (_p: unknown, args: { auto_pod_doc_id: string }, ctx: GraphQLContext) =>
+      venueWithdrawAutoPod(requireAuth(ctx).id, args.auto_pod_doc_id),
+
+    hostWithdrawAutoPod: (_p: unknown, args: { auto_pod_doc_id: string }, ctx: GraphQLContext) =>
+      hostWithdrawAutoPod(requireAuth(ctx).id, args.auto_pod_doc_id),
 
     clubClaimAutoPod: (
       _p: unknown,

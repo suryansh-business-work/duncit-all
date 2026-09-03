@@ -66,6 +66,7 @@ const toRow = (node: AutoPodNode): AutoPodQueueRow => ({
   stage: String(node.stage) as AutoPodStage,
   pod_mode: String(node.pod_mode) as AutoPodMode,
   venue_expires_at: node.venue_expires_at ?? null,
+  withdraw_penalty_points: node.withdraw_penalty_points ?? null,
   pod_images_and_videos: node.pod_images_and_videos.map((media) => ({
     url: media.url,
     type: String(media.type),

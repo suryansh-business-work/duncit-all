@@ -6,6 +6,7 @@ import {
   AutoPodExpiryNote,
   AutoPodQueue,
   AutoPodVenuePicker,
+  AutoPodWithdrawAction,
   VENUE_AUTO_PODS,
   VenueAcceptDialog,
   type AutoPodVenueOption,
@@ -39,7 +40,10 @@ function useMinuteTick(): number {
  * Pod Settings gives venues to accept. Accepting picks one of the venue's free
  * slots in the next few days, nearest first, priced as the venue would be paid
  * — in one step, because an acceptance with no date would leave hosts and
- * club admins nothing to enrol against. Native twin: `VenueAutoPodsScreen`.
+ * club admins nothing to enrol against. The venue goes first: hosts are
+ * offered the pod only once the slot is fixed. An accepted offer sits under
+ * "Assigned slot" with a Cancel until a host and a club admin are on it.
+ * Native twin: `VenueAutoPodsScreen`.
  */
 export default function VenueAutoPodsPage({ locationId }: Readonly<Props>) {
   const navigate = useNavigate();
@@ -79,6 +83,9 @@ export default function VenueAutoPodsPage({ locationId }: Readonly<Props>) {
               {queue.labels.acceptCta}
             </DuncitButton>
           </Stack>
+        )}
+        renderMineAction={(row) => (
+          <AutoPodWithdrawAction row={row} role="venue" labels={queue.labels} onWithdrawn={queue.reload} />
         )}
       />
 

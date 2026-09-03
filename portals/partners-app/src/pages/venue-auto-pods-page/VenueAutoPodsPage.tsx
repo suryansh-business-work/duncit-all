@@ -7,6 +7,7 @@ import {
   AutoPodExpiryNote,
   AutoPodQueue,
   AutoPodVenuePicker,
+  AutoPodWithdrawAction,
   VenueAcceptDialog,
   VENUE_AUTO_PODS,
   type AutoPodVenueOption,
@@ -29,7 +30,9 @@ function useMinuteTick(): number {
 }
 
 /**
- * Auto Pods a venue may take, in any order with the host and the club admin.
+ * Auto Pods a venue may take — the venue goes first: a host is offered the pod
+ * only once a venue has fixed its slot, and a club admin once a host is on it.
+ * An accepted offer sits under "Assigned slot" with a Cancel until both are.
  * The venue picked at the top is the one looking — the offers are what THAT
  * venue could take (its category, its city), each counting down the window
  * Pod Settings gives venues to accept. Accepting commits one of the venue's
@@ -80,7 +83,12 @@ export default function VenueAutoPodsPage() {
         formatWhen={queue.formatWhen}
         formatMoney={queue.formatMoney}
         renderAction={renderAction}
-        renderMineAction={(row) => <AutoPodMineAction row={row} labels={queue.labels} />}
+        renderMineAction={(row) => (
+          <Stack spacing={1}>
+            <AutoPodMineAction row={row} labels={queue.labels} />
+            <AutoPodWithdrawAction row={row} role="venue" labels={queue.labels} onWithdrawn={queue.refetch} />
+          </Stack>
+        )}
       />
       <VenueAcceptDialog
         row={selected}

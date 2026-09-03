@@ -86,6 +86,25 @@ export interface AutoPodLabels {
   potentialEarning: (amount: string) => string;
   slotNotViable: string;
   acceptingWith: (venue: string) => string;
+  /** The heading over the rows this viewer already enrolled in — one per role. */
+  assignedHeading: (role: AutoPodRole) => string;
+  /** Taking an enrolment back: the button, the warning and what it costs. */
+  withdrawCta: string;
+  withdrawTitle: string;
+  withdrawWarning: string;
+  withdrawPenalty: (points: number) => string;
+  withdrawConfirm: string;
+  withdrawn: string;
+  /** The host's own numbers on the offer, and what they add up to. */
+  ticketPrice: string;
+  spotsField: string;
+  spotsRange: (min: number, max: number) => string;
+  projectionTitle: string;
+  projectionHost: (amount: string) => string;
+  projectionVenue: (amount: string) => string;
+  projectionClub: (amount: string) => string;
+  projectionFees: (amount: string) => string;
+  projectionNotViable: string;
   /** A host's "Assign Myself" on an offer that takes its city from them. */
   pickLocationFirst: string;
   willPinTo: (city: string) => string;
@@ -119,6 +138,11 @@ export function mwebAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     venue: t('mweb.autoPods.roleVenue'),
     host: t('mweb.autoPods.roleHost'),
     club: t('mweb.autoPods.roleClub'),
+  };
+  const assignedByRole: Record<AutoPodRole, string> = {
+    venue: t('mweb.autoPods.assignedVenue'),
+    host: t('mweb.autoPods.assignedHost'),
+    club: t('mweb.autoPods.assignedClub'),
   };
   return {
     venueTitle: t('mweb.autoPods.venueTitle'),
@@ -177,6 +201,22 @@ export function mwebAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     potentialEarning: (amount) => t('mweb.autoPods.potentialEarning', { vars: { amount } }),
     slotNotViable: t('mweb.autoPods.slotNotViable'),
     acceptingWith: (venue) => t('mweb.autoPods.acceptingWith', { vars: { venue } }),
+    assignedHeading: (role) => assignedByRole[role],
+    withdrawCta: t('mweb.autoPods.withdrawCta'),
+    withdrawTitle: t('mweb.autoPods.withdrawTitle'),
+    withdrawWarning: t('mweb.autoPods.withdrawWarning'),
+    withdrawPenalty: (points) => t('mweb.autoPods.withdrawPenalty', { vars: { points } }),
+    withdrawConfirm: t('mweb.autoPods.withdrawConfirm'),
+    withdrawn: t('mweb.autoPods.withdrawn'),
+    ticketPrice: t('mweb.autoPods.ticketPrice'),
+    spotsField: t('mweb.autoPods.spotsField'),
+    spotsRange: (min, max) => t('mweb.autoPods.spotsRange', { vars: { min, max } }),
+    projectionTitle: t('mweb.autoPods.projectionTitle'),
+    projectionHost: (amount) => t('mweb.autoPods.projectionHost', { vars: { amount } }),
+    projectionVenue: (amount) => t('mweb.autoPods.projectionVenue', { vars: { amount } }),
+    projectionClub: (amount) => t('mweb.autoPods.projectionClub', { vars: { amount } }),
+    projectionFees: (amount) => t('mweb.autoPods.projectionFees', { vars: { amount } }),
+    projectionNotViable: t('mweb.autoPods.projectionNotViable'),
     pickLocationFirst: t('mweb.autoPods.pickLocationFirst'),
     willPinTo: (city) => t('mweb.autoPods.willPinTo', { vars: { city } }),
     noVenueInCity: (city) => t('mweb.autoPods.noVenueInCity', { vars: { city } }),
@@ -205,6 +245,11 @@ export function shellAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     venue: t('shell.autoPods.roleVenue'),
     host: t('shell.autoPods.roleHost'),
     club: t('shell.autoPods.roleClub'),
+  };
+  const assignedByRole: Record<AutoPodRole, string> = {
+    venue: t('shell.autoPods.assignedVenue'),
+    host: t('shell.autoPods.assignedHost'),
+    club: t('shell.autoPods.assignedClub'),
   };
   return {
     venueTitle: t('shell.autoPods.venueTitle'),
@@ -263,6 +308,22 @@ export function shellAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     potentialEarning: (amount) => t('shell.autoPods.potentialEarning', { vars: { amount } }),
     slotNotViable: t('shell.autoPods.slotNotViable'),
     acceptingWith: (venue) => t('shell.autoPods.acceptingWith', { vars: { venue } }),
+    assignedHeading: (role) => assignedByRole[role],
+    withdrawCta: t('shell.autoPods.withdrawCta'),
+    withdrawTitle: t('shell.autoPods.withdrawTitle'),
+    withdrawWarning: t('shell.autoPods.withdrawWarning'),
+    withdrawPenalty: (points) => t('shell.autoPods.withdrawPenalty', { vars: { points } }),
+    withdrawConfirm: t('shell.autoPods.withdrawConfirm'),
+    withdrawn: t('shell.autoPods.withdrawn'),
+    ticketPrice: t('shell.autoPods.ticketPrice'),
+    spotsField: t('shell.autoPods.spotsField'),
+    spotsRange: (min, max) => t('shell.autoPods.spotsRange', { vars: { min, max } }),
+    projectionTitle: t('shell.autoPods.projectionTitle'),
+    projectionHost: (amount) => t('shell.autoPods.projectionHost', { vars: { amount } }),
+    projectionVenue: (amount) => t('shell.autoPods.projectionVenue', { vars: { amount } }),
+    projectionClub: (amount) => t('shell.autoPods.projectionClub', { vars: { amount } }),
+    projectionFees: (amount) => t('shell.autoPods.projectionFees', { vars: { amount } }),
+    projectionNotViable: t('shell.autoPods.projectionNotViable'),
     pickLocationFirst: t('shell.autoPods.pickLocationFirst'),
     willPinTo: (city) => t('shell.autoPods.willPinTo', { vars: { city } }),
     noVenueInCity: (city) => t('shell.autoPods.noVenueInCity', { vars: { city } }),

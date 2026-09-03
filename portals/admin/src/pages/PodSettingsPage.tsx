@@ -18,6 +18,7 @@ const POD_SETTINGS = gql`
       pod_auto_cancel_lead_hours
       auto_pod_slot_window_days
       auto_pod_venue_expiry_hours
+      auto_pod_cancel_health_penalty
       updated_at
     }
   }
@@ -34,6 +35,7 @@ const UPDATE_POD_SETTINGS = gql`
       pod_auto_cancel_lead_hours
       auto_pod_slot_window_days
       auto_pod_venue_expiry_hours
+      auto_pod_cancel_health_penalty
       updated_at
     }
   }
@@ -156,6 +158,18 @@ export default function PodSettingsPage() {
         loading={loading}
         value={settings?.auto_pod_venue_expiry_hours ?? null}
         onSave={(next) => saveField({ auto_pod_venue_expiry_hours: next })}
+      />
+      <NumberSettingCard
+        title={t('admin.podSettings.autoPodPenaltyTitle')}
+        description={t('admin.podSettings.autoPodPenaltyDesc')}
+        label={t('admin.podSettings.autoPodPenaltyLabel')}
+        helperText={t('admin.podSettings.autoPodPenaltyMin')}
+        invalidText={t('admin.podSettings.autoPodPenaltyInvalid')}
+        min={0}
+        max={100}
+        loading={loading}
+        value={settings?.auto_pod_cancel_health_penalty ?? null}
+        onSave={(next) => saveField({ auto_pod_cancel_health_penalty: next })}
       />
       <Snackbar
         open={!!toast}

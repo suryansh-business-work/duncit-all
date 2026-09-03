@@ -122,6 +122,10 @@ export interface IAutoPod extends Document {
   created_by: Types.ObjectId | null;
   /** False while an admin has paused the offer: shown to nobody, no claim lands. */
   is_active: boolean;
+  /** When the offer was last put in front of venues — at creation, and again
+   * whenever a venue withdraws its slot. The venue window counts from here;
+   * rows from before the field count from created_at. */
+  venue_window_from: Date | null;
   pod_title: string;
   pod_description: string;
   pod_info: string;
@@ -259,6 +263,7 @@ const autoPodSchema = new Schema<IAutoPod>(
     },
     created_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     is_active: { type: Boolean, default: true, index: true },
+    venue_window_from: { type: Date, default: null },
     pod_title: { type: String, required: true, trim: true },
     pod_description: { type: String, required: true },
     pod_info: { type: String, default: '' },

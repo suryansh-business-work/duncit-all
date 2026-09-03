@@ -164,6 +164,8 @@ exports:
   - 'autoPodEnrolledCount'
   - 'autoPodPreLive'
   - 'autoPodActionable'
+  - 'autoPodNextRole'
+  - 'autoPodWithdrawable'
   - 'splitAutoPods'
   - 'autoPodMissingRoles'
   - 'autoPodWaitingOn'
@@ -779,8 +781,8 @@ setting says so) for the member who joined some other way; only the scanner is g
 
 ### Auto Pods — `auto-pod` + `auto-pod-copy`
 
-An Auto Pod is a pod written without a venue, a host or a club; a venue, a host and a club
-admin each enrol later, in ANY order, and it becomes a real pod once all three have. The row
+An Auto Pod is a pod written without a venue, a host or a club; a venue, then a host, then a
+club admin enrol later, and it becomes a real pod once all three have. The row
 shape, the three-enrolment derivation every card draws, the "can this role act" predicate and
 the city-pin rule all live here, so the MUI card (`@duncit/auto-pods`) and the native Tamagui
 twin cannot disagree on what an offer is waiting for.
@@ -792,7 +794,9 @@ twin cannot disagree on what an offer is waiting for.
 | `autoPodTicks` | `(row) => AutoPodTick[]` | One per needed role, in that order, `done` when that partner has enrolled. |
 | `autoPodEnrolledCount` | `(row) => number` | How many of the needed partners have enrolled. |
 | `autoPodPreLive` | `(stage) => boolean` | `OPEN` (nobody yet) or `CLAIMING` (at least one) — still enrolling. |
-| `autoPodActionable` | `(row, role) => boolean` | Pre-live, this viewer has not enrolled, and this role's tick is empty. Any order. Never true for a venue on a virtual offer. |
+| `autoPodActionable` | `(row, role) => boolean` | Pre-live, this viewer has not enrolled, and it is this role's TURN — the venue's until a slot is fixed, then the host's, then the club admin's. Never true for a venue on a virtual offer. |
+| `autoPodNextRole` | `(row) => AutoPodRole \| null` | Whose turn it is, or null once everyone needed is on it. |
+| `autoPodWithdrawable` | `(row, role) => boolean` | Pre-live, this viewer enrolled as this role, and the role is a venue or a host — a club admin's claim completes the pod, so it cannot be taken back. |
 | `splitAutoPods` | `(rows, role) => { actionable, mine }` | A role's queue: what needs them, then what they already took. |
 | `autoPodMissingRoles` | `(row) => AutoPodRole[]` | Every role still missing, in tick order; `[]` once live or gone. |
 | `autoPodWaitingOn` | `(row) => AutoPodRole \| null` | The first missing role. |
@@ -1449,14 +1453,16 @@ carry no `actorId` and stay inert rather than rendering a button with nobody to 
 `followBackLabelKey` and `canFollowBack` split the button's two live states: an open ask
 reads "Requested" and stops accepting taps, because a pending request has nothing to re-send.
 
-## An Auto Pod enrols in any order, and the first partner pins its city
+## An Auto Pod enrols venue → host → club admin, and the first partner pins its city
 
-Auto Pods used to be venue-first: only venues saw an `OPEN` offer, and a host or club admin was
-offered it only after a venue had accepted. That is gone. A fresh offer is visible to all three
-roles at once, and `autoPodActionable(row, role)` is true for any role whose own tick is still
-empty while the offer is pre-live and the viewer has not enrolled. The venue › host › club order
-in `AUTO_POD_ROLES` is how the chips are drawn, not a dependency — a card never changes width or
-reorders as partners join, whichever went first.
+A fresh physical offer is visible to venues only; once a venue has fixed a slot it reaches
+hosts, and once a host is on it, club admins. A virtual offer has no venue and reaches hosts
+first. `autoPodNextRole(row)` names whose turn it is, and `autoPodActionable(row, role)` is true
+only for that role while the offer is pre-live and the viewer has not enrolled — so the venue ›
+host › club order in `AUTO_POD_ROLES` is the dependency as well as how the chips are drawn. A
+venue or host may take their enrolment back until the club admin's claim completes the pod
+(`autoPodWithdrawable(row, role)`), at the Account Health cost the row carries in
+`withdraw_penalty_points`; a club admin's claim is final.
 
 What the first enrolment DOES fix is the city. An offer starts with `location: null`; the first
 partner to enrol pins it to one admin Location row — a venue brings `venue.location_id`, a club
@@ -1472,8 +1478,7 @@ else. Two consequences a surface must render, and both come from here:
   and `labels.unpinned` before, in exactly the same words on mWeb, native and every portal.
 
 `autoPodMissingRoles(row)` feeds `labels.waitingFor(roles)` — "Waiting for a venue, a host" —
-which replaced the single "waiting on" line, because with any-order enrolment there is no
-single next partner to name.
+the card's line naming everyone still to come, in the order they will.
 
 ## Adding a helper
 

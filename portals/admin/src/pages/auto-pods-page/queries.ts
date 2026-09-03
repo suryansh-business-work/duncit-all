@@ -222,3 +222,36 @@ export interface AutoPodEditRow extends AutoPodTemplateRow {
   club_claim: { club_id: string } | null;
   location: Pick<AutoPodLocation, 'location_id' | 'city' | 'state'> | null;
 }
+
+/** The enrolled venue behind a green Venue dot — who runs it, where it is, how many it holds. */
+export const AUTO_POD_VENUE_DETAILS = gql`
+  query AutoPodVenueDetails($venue_doc_id: ID!) {
+    venue(venue_doc_id: $venue_doc_id) {
+      id
+      venue_name
+      owner_name
+      owner_email
+      owner_phone
+      address_line1
+      address_line2
+      locality
+      city
+      state
+      capacity
+    }
+  }
+`;
+
+export interface AutoPodVenueDetails {
+  id: string;
+  venue_name: string;
+  owner_name: string;
+  owner_email: string;
+  owner_phone: string;
+  address_line1: string;
+  address_line2: string;
+  locality: string;
+  city: string;
+  state: string;
+  capacity: number;
+}

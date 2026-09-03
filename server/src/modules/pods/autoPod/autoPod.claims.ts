@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { AutoPodModel, type IAutoPod, type IAutoPodLocation } from './autoPod.model';
-import { autoPodService, autoPodToPub } from './autoPod.service';
+import { autoPodService, autoPodToPub, spotLimits } from './autoPod.service';
 import {
   AUTO_POD_COMPLETE_FILTER,
   autoPodEvent,
@@ -214,7 +214,9 @@ export async function venueAcceptAutoPod(
 export async function hostAssignAutoPod(
   userId: string,
   autoPodId: string,
-  locationId?: string | null
+  locationId?: string | null,
+  podAmount?: number | null,
+  noOfSpots?: number | null
 ) {
   const doc = await loadOffer(autoPodId);
   // Idempotent: a double tap is the same host arriving twice, not a conflict —
@@ -225,7 +227,23 @@ export async function hostAssignAutoPod(
   if (!isPreLive(doc) || doc.host_claim) {
     autoPodFail('CONFLICT', 'Another host has already taken this Auto Pod.');
   }
+  // Enrolment runs venue → host → club admin: a physical offer reaches hosts
+  // only once a venue has fixed the slot.
+  if (doc.pod_mode !== 'VIRTUAL' && !doc.venue_claim) {
+    autoPodFail('CONFLICT', 'A venue has to accept this Auto Pod before a host can take it.');
+  }
   await assertActiveHost(userId);
+
+  // The host's own numbers on the pod — the template's when none were sent.
+  const amount = podAmount ?? doc.pod_amount ?? 0;
+  const spots = noOfSpots ?? doc.no_of_spots ?? 0;
+  if (amount < 1 || amount > 1999) {
+    autoPodFail('BAD_USER_INPUT', 'Ticket price must be between 1 and 1999');
+  }
+  const limits = await spotLimits(doc);
+  if (spots < limits.min || spots > limits.max) {
+    autoPodFail('BAD_USER_INPUT', `Spots must be between ${limits.min} and ${limits.max}`);
+  }
 
   const subIds = await autoPodService.hostSubCategoryIds(userId);
   if (!subIds.some((id) => String(id) === String(doc.sub_category_id))) {
@@ -240,8 +258,8 @@ export async function hostAssignAutoPod(
   // against the venue's price when one has already enrolled.
   await breakdownService.assertViablePodEconomics({
     hostUserId: userId,
-    podAmount: doc.pod_amount ?? 0,
-    noOfSpots: doc.no_of_spots ?? 0,
+    podAmount: amount,
+    noOfSpots: spots,
     venueId: doc.venue_claim ? String(doc.venue_claim.venue_id) : null,
     venueAmount: doc.venue_claim?.slot_price ?? 0,
   });
@@ -258,6 +276,8 @@ export async function hostAssignAutoPod(
               host_name: hostName,
               assigned_at: new Date(),
             },
+            pod_amount: amount,
+            no_of_spots: spots,
           },
           loc
         ),
@@ -294,6 +314,10 @@ export async function clubClaimAutoPod(actor: any, autoPodId: string, clubId: st
   }
   if (!isPreLive(doc) || doc.club_claim) {
     autoPodFail('CONFLICT', 'Another club has already claimed this Auto Pod.');
+  }
+  // The club admin's turn is the last: a host has to be on it first.
+  if (!doc.host_claim) {
+    autoPodFail('CONFLICT', 'A host has to take this Auto Pod before a club can claim it.');
   }
 
   const club: any = await ClubModel.findById(clubId)
@@ -346,6 +370,89 @@ export async function clubClaimAutoPod(actor: any, autoPodId: string, clubId: st
     logs.server.error('autoPod', 'notifyClubEnrolled', { error, auto_pod_id: autoPodId })
   );
   return finishIfComplete(claimed, userId);
+}
+
+/**
+ * A venue takes its slot back. Allowed while the offer is still enrolling —
+ * the club admin's claim completes the pod, so there is nothing to withdraw
+ * from after it. The slot is released, the offer goes back in front of venues
+ * (its window restarts), the pin is dropped when the venue was the only
+ * partner, and the Pod Settings penalty comes off the venue's Account Health.
+ */
+export async function venueWithdrawAutoPod(userId: string, autoPodId: string) {
+  const doc = await autoPodService.loadById(autoPodId);
+  if (!isPreLive(doc)) autoPodFail('CONFLICT', 'This Auto Pod is no longer enrolling.');
+  const claim = doc.venue_claim;
+  if (!claim || String(claim.owner_user_id) !== userId) {
+    autoPodFail('FORBIDDEN', 'You have not accepted this Auto Pod.');
+  }
+  const others = !!doc.host_claim || !!doc.club_claim;
+  const unpin = doc.location?.bound_by === 'VENUE' && !others;
+  const updated = await AutoPodModel.findOneAndUpdate(
+    { _id: doc._id, ...PRE_LIVE_FILTER, 'venue_claim.owner_user_id': new Types.ObjectId(userId) },
+    {
+      $set: {
+        venue_claim: null,
+        stage: others ? 'CLAIMING' : 'OPEN',
+        venue_window_from: new Date(),
+        ...(unpin ? { location: null } : {}),
+      },
+      $push: {
+        events: autoPodEvent('VENUE_WITHDRAW', userId, claim!.venue_name, 'Venue withdrew its slot'),
+      },
+    },
+    { new: true }
+  );
+  if (!updated) {
+    autoPodFail('CONFLICT', 'This Auto Pod changed while you were cancelling — refresh and try again');
+  }
+  await venueSlotService.releaseAutoPodSlot(String(claim!.venue_slot_id), autoPodId);
+  await autoPodService.applyWithdrawPenalty(
+    'VENUE',
+    String(claim!.venue_id),
+    `Withdrew the slot from Auto Pod "${doc.pod_title}"`
+  );
+  autoPodNotify.withdrawn(updated, 'venue', claim!.venue_name).catch((error) =>
+    logs.server.error('autoPod', 'notifyVenueWithdrawn', { error, auto_pod_id: autoPodId })
+  );
+  return autoPodToPub(updated);
+}
+
+/**
+ * A host steps off. Allowed while the offer is still enrolling; the offer
+ * goes back in front of hosts, the pin is dropped when the host was the only
+ * partner (a virtual offer they pinned), and the Pod Settings penalty comes
+ * off the host's own Account Health.
+ */
+export async function hostWithdrawAutoPod(userId: string, autoPodId: string) {
+  const doc = await autoPodService.loadById(autoPodId);
+  if (!isPreLive(doc)) autoPodFail('CONFLICT', 'This Auto Pod is no longer enrolling.');
+  const claim = doc.host_claim;
+  if (!claim || String(claim.user_id) !== userId) {
+    autoPodFail('FORBIDDEN', 'You have not taken this Auto Pod.');
+  }
+  const others = !!doc.venue_claim || !!doc.club_claim;
+  const unpin = doc.location?.bound_by === 'HOST' && !others;
+  const updated = await AutoPodModel.findOneAndUpdate(
+    { _id: doc._id, ...PRE_LIVE_FILTER, 'host_claim.user_id': new Types.ObjectId(userId) },
+    {
+      $set: {
+        host_claim: null,
+        stage: others ? 'CLAIMING' : 'OPEN',
+        ...(unpin ? { location: null } : {}),
+      },
+      $push: { events: autoPodEvent('HOST_WITHDRAW', userId, claim!.host_name, 'Host stepped off') },
+    },
+    { new: true }
+  );
+  if (!updated) {
+    autoPodFail('CONFLICT', 'This Auto Pod changed while you were cancelling — refresh and try again');
+  }
+  await autoPodService.applyWithdrawPenalty('USER', userId, `Stepped off Auto Pod "${doc.pod_title}"`);
+  autoPodNotify.withdrawn(updated, 'host', claim!.host_name).catch((error) =>
+    logs.server.error('autoPod', 'notifyHostWithdrawn', { error, auto_pod_id: autoPodId })
+  );
+  return autoPodToPub(updated);
 }
 
 /** Everyone enrolled? Then this claim is the one that takes it live. */

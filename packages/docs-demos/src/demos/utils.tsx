@@ -20,6 +20,7 @@ import {
   autoPodEnrolledCount,
   autoPodHostNeedsLocation,
   autoPodMissingRoles,
+  autoPodNextRole,
   badgeProgressPercent,
   buildCommPreferenceLabels,
   buildEarningsBars,
@@ -352,6 +353,7 @@ export default defineDemos('utils', [
     compute: (mock) => ({
       'autoPodEnrolledCount(row)': autoPodEnrolledCount(mock.row),
       'autoPodMissingRoles(row)': autoPodMissingRoles(mock.row),
+      'autoPodNextRole(row)': autoPodNextRole(mock.row),
       'autoPodActionable(row, role)': Object.fromEntries(
         AUTO_POD_ROLES.map((role) => [role, autoPodActionable(mock.row, role)])
       ),

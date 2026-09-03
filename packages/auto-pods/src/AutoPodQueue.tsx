@@ -80,9 +80,12 @@ function AutoPodSection({
 }
 
 /**
- * A role's whole Auto Pod queue: what still needs them, then what they already
- * enrolled in. Both sections render the same card, so a venue watching its
- * accepted offer sees exactly the enrolment state a host does.
+ * A role's whole Auto Pod queue: what is waiting on them (enrolment runs venue
+ * → host → club admin, so an offer reaches a host only once a venue has fixed
+ * a slot, and a club admin once a host is on it), then what they already
+ * enrolled in — the venue's "Assigned slot", the host's "Assigned Auto Pods",
+ * the club admin's "Final assigned Auto Pods". Both sections render the same
+ * card, so a venue watching its accepted offer sees exactly what a host does.
  */
 export function AutoPodQueue({
   role,
@@ -136,7 +139,7 @@ export function AutoPodQueue({
         renderAction={renderAction}
       />
       <AutoPodSection
-        heading={labels.claimedByYou}
+        heading={labels.assignedHeading(role)}
         rows={mine}
         labels={labels}
         formatWhen={formatWhen}

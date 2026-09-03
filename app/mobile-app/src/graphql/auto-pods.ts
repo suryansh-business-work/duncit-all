@@ -4,11 +4,15 @@ import { gql } from '@/generated/graphql';
  * Auto Pods, for the three partners who enrol in one.
  *
  * An admin writes the pod with no venue, host or club; a venue, a host and a
- * club admin each enrol — in ANY order — and only once all three are on it does
- * it become an ordinary pod. The FIRST enrolment pins the offer to a city, and
- * from then on only partners in that city are offered it. Each role reads its
- * OWN queue — the server decides which offers a caller may see; the one filter
- * every queue carries is the city, and the host queue adds a sub-category.
+ * club admin each enrol — in THAT order: a host is offered a physical pod only
+ * once a venue has fixed its slot (a virtual one at once), a club admin only
+ * once a host is on it — and only once all three are on it does it become an
+ * ordinary pod. The FIRST enrolment pins the offer to a city, and from then on
+ * only partners in that city are offered it. A venue or host may withdraw
+ * until the club admin's claim completes the pod, at an Account Health cost
+ * the row carries (`withdraw_penalty_points`). Each role reads its OWN queue —
+ * the server decides which offers a caller may see; the one filter every queue
+ * carries is the city, and the host queue adds a sub-category.
  *
  * Every document selects the same fields the MUI surfaces do
  * (`@duncit/auto-pods`' `AUTO_POD_FIELDS`), because both feed the identical
@@ -49,6 +53,7 @@ export const VenueAutoPodsDocument = gql(`
       pod_id
       expected_host_earnings
       venue_expires_at
+      withdraw_penalty_points
       location {
         location_id
         location_name
@@ -106,6 +111,7 @@ export const HostAutoPodsDocument = gql(`
       pod_id
       expected_host_earnings
       venue_expires_at
+      withdraw_penalty_points
       location {
         location_id
         location_name
@@ -163,6 +169,7 @@ export const ClubAdminAutoPodsDocument = gql(`
       pod_id
       expected_host_earnings
       venue_expires_at
+      withdraw_penalty_points
       location {
         location_id
         location_name
@@ -238,15 +245,22 @@ export const VenueAcceptAutoPodDocument = gql(`
   }
 `);
 
-/** "Assign Myself" — the host takes the pod. `location_id` is REQUIRED on an
- * offer nobody has enrolled in yet (the host's city pins it) and null once the
- * offer is already pinned. */
+/** "Assign Myself" — the host takes the pod, setting its ticket price and
+ * spots. `location_id` is REQUIRED on a virtual offer nobody has enrolled in
+ * yet (the host's city pins it) and null once the offer is already pinned. */
 export const HostAssignAutoPodDocument = gql(`
-  mutation MobileHostAssignAutoPod($auto_pod_doc_id: ID!, $location_id: ID) {
-    hostAssignAutoPod(auto_pod_doc_id: $auto_pod_doc_id, location_id: $location_id) {
+  mutation MobileHostAssignAutoPod($auto_pod_doc_id: ID!, $location_id: ID, $pod_amount: Float, $no_of_spots: Int) {
+    hostAssignAutoPod(
+      auto_pod_doc_id: $auto_pod_doc_id
+      location_id: $location_id
+      pod_amount: $pod_amount
+      no_of_spots: $no_of_spots
+    ) {
       id
       stage
       viewer_claimed
+      pod_amount
+      no_of_spots
       location {
         location_id
         location_name
@@ -368,6 +382,52 @@ export const AutoPodVenueSlotsDocument = gql(`
         host_receives
         viable
       }
+    }
+  }
+`);
+
+/**
+ * What the host's numbers add up to on ONE offer — under their own rates, the
+ * venue's slot price and the club admin's cut — plus the spot limits the
+ * activity and the booked space impose. Re-read as the host edits the price
+ * or the spots; `viable` false means the save would be refused.
+ */
+export const AutoPodHostProjectionDocument = gql(`
+  query MobileAutoPodHostProjection($auto_pod_doc_id: ID!, $pod_amount: Float!, $no_of_spots: Int!) {
+    autoPodHostProjection(auto_pod_doc_id: $auto_pod_doc_id, pod_amount: $pod_amount, no_of_spots: $no_of_spots) {
+      min_spots
+      max_spots
+      pod_amount
+      no_of_spots
+      total_collection
+      gst_amount
+      platform_fee_amount
+      venue_amount
+      club_admin_amount
+      host_receives
+      viable
+    }
+  }
+`);
+
+/** The venue takes its slot back; the offer returns to venues' lists. */
+export const VenueWithdrawAutoPodDocument = gql(`
+  mutation MobileVenueWithdrawAutoPod($auto_pod_doc_id: ID!) {
+    venueWithdrawAutoPod(auto_pod_doc_id: $auto_pod_doc_id) {
+      id
+      stage
+      viewer_claimed
+    }
+  }
+`);
+
+/** The host steps off; the offer returns to hosts' lists. */
+export const HostWithdrawAutoPodDocument = gql(`
+  mutation MobileHostWithdrawAutoPod($auto_pod_doc_id: ID!) {
+    hostWithdrawAutoPod(auto_pod_doc_id: $auto_pod_doc_id) {
+      id
+      stage
+      viewer_claimed
     }
   }
 `);

@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { AutoPodQueue, HostClaimDialog, HOST_AUTO_PODS } from '@duncit/auto-pods';
+import {
+  AutoPodQueue,
+  AutoPodWithdrawAction,
+  HostClaimDialog,
+  HOST_AUTO_PODS,
+} from '@duncit/auto-pods';
 import { EMPTY_LOCATION, type AdminLocationValue } from '@duncit/location';
 import type { AutoPodRow } from '@duncit/utils';
 import AutoPodFilters from '../../components/auto-pods/AutoPodFilters';
@@ -10,10 +15,12 @@ import AutoPodsPageHeader from '../../components/auto-pods/AutoPodsPageHeader';
 import useAutoPodsQueue from '../../components/auto-pods/useAutoPodsQueue';
 
 /**
- * Auto Pods a host may take, in any order with the venue and the club admin.
- * A host has no venue or club to bring a city with, so the city chosen in the
- * filter row is what pins an offer nobody has enrolled in yet; the claim
- * dialog stays off until one is picked. First host wins.
+ * Auto Pods a host may take — second in line: a physical offer arrives once a
+ * venue has fixed its slot, a virtual one straight away. The host prices the
+ * pod and picks its spots in the claim dialog. A host has no venue or club to
+ * bring a city with, so on a virtual offer the city chosen in the filter row
+ * is what pins it; the dialog stays off until one is picked. First host wins,
+ * and may cancel until a club admin claims the pod.
  */
 export default function HostAutoPodsPage() {
   const [selected, setSelected] = useState<AutoPodRow | null>(null);
@@ -52,7 +59,12 @@ export default function HostAutoPodsPage() {
         formatWhen={queue.formatWhen}
         formatMoney={queue.formatMoney}
         renderAction={renderAction}
-        renderMineAction={(row) => <AutoPodMineAction row={row} labels={queue.labels} />}
+        renderMineAction={(row) => (
+          <Stack spacing={1}>
+            <AutoPodMineAction row={row} labels={queue.labels} />
+            <AutoPodWithdrawAction row={row} role="host" labels={queue.labels} onWithdrawn={queue.refetch} />
+          </Stack>
+        )}
       />
       <HostClaimDialog
         row={selected}

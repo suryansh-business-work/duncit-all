@@ -21,6 +21,8 @@ exports:
   - 'AutoPodDependencyTimeline'
   - 'HostClaimDialog'
   - 'ClubClaimDialog'
+  - 'AutoPodWithdrawDialog'
+  - 'AutoPodWithdrawAction'
   - 'PodKindChooser'
   - 'VENUE_AUTO_PODS'
   - 'HOST_AUTO_PODS'
@@ -28,6 +30,9 @@ exports:
   - 'AUTO_POD_ACTION_COUNTS'
   - 'VENUE_ACCEPT_AUTO_POD'
   - 'HOST_ASSIGN_AUTO_POD'
+  - 'AUTO_POD_HOST_PROJECTION'
+  - 'VENUE_WITHDRAW_AUTO_POD'
+  - 'HOST_WITHDRAW_AUTO_POD'
   - 'CLUB_CLAIM_AUTO_POD'
   - 'MY_VENUES_FOR_AUTO_POD'
   - 'AUTO_POD_VENUE_SLOTS'
@@ -39,22 +44,25 @@ exports:
 
 An **Auto Pod** is a pod an admin writes without picking a venue, a host or a
 club — the marketplace completes it. A venue accepts the offer and commits one
-of its slots, a host assigns themselves, and a club admin claims it for their
-club — **in any order**. The moment all three have enrolled it becomes an
-ordinary pod.
+of its slots, then a host assigns themselves (pricing the pod and picking its
+spots), then a club admin claims it for their club — **in that order**. The
+moment all three have enrolled it becomes an ordinary pod.
 
 This package is the MUI half of that: mWeb, the Partners portal and the Admin
 console all render these components. The native app deliberately does **not**
 import it — it keeps Tamagui twins over the same `@duncit/utils` logic (rule 40:
 share the logic, never the UI).
 
-## The three enrolments, in any order
+## The three enrolments, venue → host → club admin
 
-A fresh Auto Pod is visible to all three roles at once: venue owners, hosts
-approved in its sub-category, and club admins whose club carries it. Whoever
-acts first, acts first. `OPEN` means nobody has enrolled yet; `CLAIMING` means
-at least one partner has; the third enrolment tips it into `MATERIALIZING` and
-then `LIVE`.
+A fresh physical Auto Pod is visible to venue owners only. Once a venue has
+fixed a slot it reaches hosts approved in its sub-category; once a host is on
+it, club admins whose club carries it. A **VIRTUAL** offer has no venue, so it
+reaches hosts first. `OPEN` means nobody has enrolled yet; `CLAIMING` means
+at least one partner has; the last enrolment tips it into `MATERIALIZING` and
+then `LIVE`. `AutoPodQueue` puts a role's own enrolments under that role's
+heading — the venue's **Assigned slot**, the host's **Assigned Auto Pods**,
+the club admin's **Final assigned Auto Pods** (`labels.assignedHeading(role)`).
 
 Every card carries `AutoPodTicks`: **Venue Enroll**, **Host Enroll**, **Club
 Admin Enroll**, always in that order. Each is amber and outlined while that
@@ -165,7 +173,7 @@ import { AutoPodCategoryFilter } from '@duncit/auto-pods';
 | Dialog | Role | What it collects |
 | --- | --- | --- |
 | `VenueAcceptDialog` | Venue | Which of the chosen venue's free slots — each priced as the venue would be paid |
-| `HostClaimDialog` | Host | Nothing — confirms, and shows projected earnings |
+| `HostClaimDialog` | Host | The ticket price and the number of spots — re-priced on every change |
 | `ClubClaimDialog` | Club Admin | Which of their clubs (only category-matching ones) |
 
 Accepting and picking a slot are **one** action: an acceptance with no date
@@ -220,6 +228,41 @@ import { HostClaimDialog } from '@duncit/auto-pods';
   onAssigned={() => refetch()}
   formatWhen={formatDateTime}
   formatMoney={money}
+/>;
+```
+
+The dialog's two fields default to the template's numbers and re-read
+`AUTO_POD_HOST_PROJECTION` on every change: the server prices the pod under
+the host's own rates, the venue's slot price and the club admin's cut, and
+answers with the spot limits too (`min_spots` is the activity's minimum,
+`max_spots` the booked space's capacity). The lines under the fields are
+`labels.projectionHost(amount)` and the three deductions; `viable` false
+shows `labels.projectionNotViable` and keeps the button shut, because the
+same waterfall is what `HOST_ASSIGN_AUTO_POD` would refuse.
+
+## Withdrawing
+
+A venue or a host may take their enrolment back while the offer is still
+enrolling — the club admin's claim completes the pod, so there is nothing to
+leave after it. `AutoPodWithdrawAction` is the Cancel under a role's assigned
+heading: it draws nothing unless `autoPodWithdrawable(row, role)`, and opens
+`AutoPodWithdrawDialog`, which says (in the product's own words) that the
+offer depends on more partners than the one leaving and states the Account
+Health cost — `row.withdraw_penalty_points`, Pod Settings' *Auto Pods —
+cancellation penalty*, sent on the venue and host queues only. Confirming runs
+`VENUE_WITHDRAW_AUTO_POD` or `HOST_WITHDRAW_AUTO_POD`; the offer goes back on
+that role's list (a venue's window restarts) and everyone else on it is told.
+
+```tsx
+import { AutoPodWithdrawAction } from '@duncit/auto-pods';
+
+<AutoPodQueue
+  role="host"
+  {...queue}
+  renderAction={renderAssign}
+  renderMineAction={(row) => (
+    <AutoPodWithdrawAction row={row} role="host" labels={labels} onWithdrawn={refetch} />
+  )}
 />;
 ```
 

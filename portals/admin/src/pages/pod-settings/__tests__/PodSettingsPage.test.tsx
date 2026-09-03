@@ -23,6 +23,7 @@ const POD_SETTINGS = gql`
       pod_auto_cancel_lead_hours
       auto_pod_slot_window_days
       auto_pod_venue_expiry_hours
+      auto_pod_cancel_health_penalty
       updated_at
     }
   }
@@ -39,6 +40,7 @@ const UPDATE_POD_SETTINGS = gql`
       pod_auto_cancel_lead_hours
       auto_pod_slot_window_days
       auto_pod_venue_expiry_hours
+      auto_pod_cancel_health_penalty
       updated_at
     }
   }

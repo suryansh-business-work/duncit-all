@@ -7,4 +7,6 @@ export { AutoPodVenueRow } from './AutoPodVenueRow';
 export { AutoPodExpiryNote } from './AutoPodExpiryNote';
 export { VenueAcceptSheet } from './VenueAcceptSheet';
 export { HostClaimSheet } from './HostClaimSheet';
+export { HostProjectionLines } from './HostProjectionLines';
+export { AutoPodWithdrawSheet } from './AutoPodWithdrawSheet';
 export { ClubClaimSheet } from './ClubClaimSheet';

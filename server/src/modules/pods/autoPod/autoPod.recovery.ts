@@ -25,6 +25,7 @@ import {
   autoPodEvent,
   PHYSICAL_FILTER,
   PRE_LIVE_FILTER,
+  venueWindowPassed,
 } from './autoPod.common';
 import { autoPodService } from './autoPod.service';
 import { ensureClubPin } from './autoPod.location';
@@ -96,7 +97,7 @@ async function expireUnacceptedByVenue(): Promise<number> {
     ...PRE_LIVE_FILTER,
     ...PHYSICAL_FILTER,
     venue_claim: null,
-    created_at: { $lte: venueCutoff },
+    ...venueWindowPassed(venueCutoff),
   }).limit(100);
   let expired = 0;
   for (const doc of stale) {

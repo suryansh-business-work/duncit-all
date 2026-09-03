@@ -6,9 +6,14 @@
 import {
   ACTIVE_FILTER,
   AUTO_POD_COMPLETE_FILTER,
+  autoPodNextRole,
+  CLUB_TURN_FILTER,
+  HOST_TURN_FILTER,
   isAutoPodComplete,
   pendingBaseFilter,
   PHYSICAL_FILTER,
+  venueWindowOpen,
+  venueWindowPassed,
 } from '../../autoPod.common';
 
 const claim = {};
@@ -73,5 +78,54 @@ describe('pendingBaseFilter', () => {
 describe('ACTIVE_FILTER', () => {
   it('reads a row without the flag as active, so nothing written before it existed disappears', () => {
     expect(ACTIVE_FILTER).toEqual({ is_active: { $ne: false } });
+  });
+});
+
+// Enrolment runs venue → host → club admin; the queues and the notifier both
+// read whose turn it is from here.
+describe('autoPodNextRole', () => {
+  const nobody = { venue_claim: null, host_claim: null, club_claim: null };
+
+  it('names the venue, then the host, then the club admin, then nobody', () => {
+    expect(autoPodNextRole(nobody)).toBe('venue');
+    expect(autoPodNextRole({ ...nobody, venue_claim: claim })).toBe('host');
+    expect(autoPodNextRole({ ...nobody, venue_claim: claim, host_claim: claim })).toBe('club');
+    expect(autoPodNextRole({ venue_claim: claim, host_claim: claim, club_claim: claim })).toBeNull();
+  });
+
+  it('skips the venue on a virtual offer', () => {
+    expect(autoPodNextRole({ ...nobody, pod_mode: 'VIRTUAL' })).toBe('host');
+    expect(autoPodNextRole({ ...nobody, pod_mode: 'VIRTUAL', host_claim: claim })).toBe('club');
+  });
+
+  it('is written once more as the Mongo clause each later queue carries', () => {
+    expect(HOST_TURN_FILTER).toEqual({
+      $or: [{ pod_mode: 'VIRTUAL' }, { venue_claim: { $ne: null } }],
+    });
+    expect(CLUB_TURN_FILTER).toEqual({ host_claim: { $ne: null } });
+  });
+});
+
+// The venue window restarts when a venue withdraws, and rows from before the
+// field existed still count from creation.
+describe('the venue window', () => {
+  const cutoff = new Date('2026-09-01T00:00:00.000Z');
+
+  it('is open past venue_window_from, or past created_at when there is none', () => {
+    expect(venueWindowOpen(cutoff)).toEqual({
+      $or: [
+        { venue_window_from: { $gt: cutoff } },
+        { venue_window_from: null, created_at: { $gt: cutoff } },
+      ],
+    });
+  });
+
+  it('has passed by the mirror-image clause', () => {
+    expect(venueWindowPassed(cutoff)).toEqual({
+      $or: [
+        { venue_window_from: { $lte: cutoff } },
+        { venue_window_from: null, created_at: { $lte: cutoff } },
+      ],
+    });
   });
 });

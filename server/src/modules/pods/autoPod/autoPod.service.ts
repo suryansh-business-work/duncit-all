@@ -4,11 +4,14 @@ import {
   ACTIVE_FILTER,
   autoPodEvent,
   autoPodFail,
+  CLUB_TURN_FILTER,
+  HOST_TURN_FILTER,
   isAutoPodComplete,
   pendingBaseFilter,
   PHYSICAL_FILTER,
   PRE_LIVE_FILTER,
   PRE_LIVE_STAGES,
+  venueWindowOpen,
 } from './autoPod.common';
 import { autoPodCityLabel, locationScope, snapshotAutoPodLocation } from './autoPod.location';
 import { autoPodNotify } from './autoPod.notify';
@@ -26,6 +29,8 @@ import {
 import { breakdownService, venueSlotProjections } from '@modules/finance/finance/breakdown.service';
 import { ensureOwnedVenue, venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
+import { accountHealthService } from '@modules/access/accountHealth/accountHealth.service';
+import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 
@@ -51,7 +56,28 @@ const DAY_MS = 86_400_000;
 function venueExpiresAt(doc: IAutoPod, venueExpiryHours: number): string | null {
   if (doc.pod_mode === 'VIRTUAL' || doc.venue_claim) return null;
   if (!PRE_LIVE_STAGES.includes(doc.stage as any)) return null;
-  return new Date(doc.created_at.getTime() + venueExpiryHours * HOUR_MS).toISOString();
+  const from = doc.venue_window_from ?? doc.created_at;
+  return new Date(from.getTime() + venueExpiryHours * HOUR_MS).toISOString();
+}
+
+/** The most spots an Auto Pod may carry — the template's own ceiling. */
+const AUTO_POD_MAX_SPOTS = 999;
+
+/**
+ * The spots a host may set on this offer: at least the activity's minimum
+ * (and the two that bill anyone at all), at most the booked space's capacity
+ * — or the template's ceiling when the venue set none, or on a virtual offer.
+ */
+export async function spotLimits(doc: IAutoPod): Promise<{ min: number; max: number }> {
+  const { minPax } = await resolveCategoryPair(String(doc.sub_category_id));
+  const min = Math.max(2, minPax);
+  let capacity = 0;
+  if (doc.venue_claim) {
+    const slot: any = await VenueSlotModel.findById(doc.venue_claim.venue_slot_id).select('capacity').lean();
+    capacity = slot?.capacity ?? 0;
+  }
+  const ceiling = capacity > 0 ? Math.min(capacity, AUTO_POD_MAX_SPOTS) : AUTO_POD_MAX_SPOTS;
+  return { min, max: Math.max(min, ceiling) };
 }
 
 /** "Sports", "Racket", "Badminton" — the names walked up from the sub-category. */
@@ -438,6 +464,7 @@ export const autoPodService = {
       })),
       club_claim: clubClaim,
       location,
+      venue_window_from: new Date(),
       events: [
         autoPodEvent('CREATE', actorUserId, '', openedNote),
         ...(club
@@ -646,6 +673,59 @@ export const autoPodService = {
       slotWindowDays: settings.auto_pod_slot_window_days,
       venueExpiryHours,
       venueCutoff: new Date(Date.now() - venueExpiryHours * HOUR_MS),
+      cancelHealthPenalty: settings.auto_pod_cancel_health_penalty,
+    };
+  },
+
+  /**
+   * What a venue or host pays for withdrawing: the Pod Settings penalty off
+   * their Account Health, recorded with the offer it was for. Returns the
+   * points taken so the caller can say so.
+   */
+  async applyWithdrawPenalty(subjectType: 'VENUE' | 'USER', subjectId: string, remark: string) {
+    const { cancelHealthPenalty } = await this.windows();
+    if (cancelHealthPenalty > 0) {
+      await accountHealthService.applySystemPenalty({
+        subject_type: subjectType,
+        subject_id: subjectId,
+        points: cancelHealthPenalty,
+        remark,
+      });
+    }
+    return cancelHealthPenalty;
+  },
+
+  /**
+   * What the host's numbers add up to on this offer — under the host's own
+   * rates, the venue's slot price (once a venue is on it) and the club admin's
+   * cut — plus the spot limits the activity and the venue impose. The same
+   * waterfall the assignment is judged on, so "you earn" here is never a
+   * different figure from the one the save checks.
+   */
+  async hostProjection(userId: string, autoPodId: string, podAmount: number, noOfSpots: number) {
+    const doc = await this.loadById(autoPodId);
+    const limits = await spotLimits(doc);
+    const projection = await breakdownService.potentialPodEarnings(
+      userId,
+      podAmount,
+      noOfSpots,
+      doc.venue_claim ? String(doc.venue_claim.venue_id) : null,
+      doc.venue_claim?.slot_price ?? 0
+    );
+    const w = projection.waterfall;
+    const inRange = noOfSpots >= limits.min && noOfSpots <= limits.max;
+    return {
+      min_spots: limits.min,
+      max_spots: limits.max,
+      pod_amount: podAmount,
+      no_of_spots: noOfSpots,
+      total_collection: w.amount,
+      gst_amount: w.gst_amount,
+      platform_fee_amount: w.platform_fee_amount,
+      venue_amount: w.venue_amount,
+      club_admin_amount: w.club_admin_amount,
+      host_receives: w.host_receives,
+      viable: podAmount >= 1 && podAmount <= 1999 && inRange && w.host_receives > 0,
     };
   },
 
@@ -805,8 +885,7 @@ export const autoPodService = {
       ...PHYSICAL_FILTER,
       ...ACTIVE_FILTER,
       venue_claim: null,
-      created_at: { $gt: venueCutoff },
-      ...andOf({ $or: perVenue }, locationScope(scope?.location_id)),
+      ...andOf({ $or: perVenue }, locationScope(scope?.location_id), venueWindowOpen(venueCutoff)),
     };
   },
 
@@ -821,12 +900,13 @@ export const autoPodService = {
       ? subIds.filter((id) => String(id) === String(scope.sub_category_id))
       : subIds;
     if (wanted.length === 0) return null;
+    // A host's turn comes once a venue has fixed the slot (at once on a virtual offer).
     return {
       ...PRE_LIVE_FILTER,
       ...ACTIVE_FILTER,
       host_claim: null,
       sub_category_id: { $in: wanted },
-      ...locationScope(scope?.location_id),
+      ...andOf(HOST_TURN_FILTER, locationScope(scope?.location_id)),
     };
   },
 
@@ -846,9 +926,11 @@ export const autoPodService = {
           : [{ location: null }],
       }));
     if (perClub.length === 0) return null;
+    // A club admin's turn comes once a host is on it.
     return {
       ...PRE_LIVE_FILTER,
       ...ACTIVE_FILTER,
+      ...CLUB_TURN_FILTER,
       club_claim: null,
       ...andOf({ $or: perClub }, locationScope(scope?.location_id)),
     };
@@ -865,16 +947,17 @@ export const autoPodService = {
       ? owned.filter((venue) => String(venue.id) === scope.venue_id)
       : owned;
     if (venues.length === 0) return [];
-    const { venueCutoff, venueExpiryHours } = await this.windows();
+    const { venueCutoff, venueExpiryHours, cancelHealthPenalty } = await this.windows();
     const or: any[] = [{ 'venue_claim.owner_user_id': new Types.ObjectId(userId) }];
     const open = this.venueOpenFilter(venues, venueCutoff, scope);
     if (open) or.push(open);
     const docs = await AutoPodModel.find({ $or: or }).sort({ created_at: -1 }).limit(200);
     // The venue's list is the one place the countdown is shown, so it is the
-    // one payload that carries it.
+    // one payload that carries it — and what withdrawing would cost them.
     return docs.map((doc) => ({
       ...autoPodToPub(doc),
       venue_expires_at: venueExpiresAt(doc, venueExpiryHours),
+      withdraw_penalty_points: cancelHealthPenalty,
     }));
   },
 
@@ -882,11 +965,12 @@ export const autoPodService = {
    * ones they already assigned themselves to. */
   async listForHost(userId: string, scope?: AutoPodQueueScope) {
     const subIds = await this.hostSubCategoryIds(userId);
+    const { cancelHealthPenalty } = await this.windows();
     const or: any[] = [{ 'host_claim.user_id': new Types.ObjectId(userId) }];
     const open = this.hostOpenFilter(subIds, scope);
     if (open) or.push(open);
     const docs = await AutoPodModel.find({ $or: or }).sort({ created_at: -1 }).limit(200);
-    return docs.map(autoPodToPub);
+    return docs.map((doc) => ({ ...autoPodToPub(doc), withdraw_penalty_points: cancelHealthPenalty }));
   },
 
   /** Offers a club of theirs could still claim, plus their clubs' claims. */

@@ -30,6 +30,10 @@ const BUNDLE_KEYS = [
   'pinnedTo', 'unpinned', 'virtualPod', 'pickLocationFirst', 'willPinTo', 'noVenueInCity', 'noClubInCity',
   'venueLabel', 'noVenues', 'venueCategory', 'noVenueCategory', 'pickVenueFirst',
   'removedIn', 'slotWindow', 'potentialEarning', 'slotNotViable', 'acceptingWith',
+  'assignedVenue', 'assignedHost', 'assignedClub',
+  'withdrawCta', 'withdrawTitle', 'withdrawWarning', 'withdrawPenalty', 'withdrawConfirm', 'withdrawn',
+  'ticketPrice', 'spotsField', 'spotsRange', 'projectionTitle',
+  'projectionHost', 'projectionVenue', 'projectionClub', 'projectionFees', 'projectionNotViable',
   'liveNow', 'viewPod', 'cancelled', 'expired', 'claimedElsewhere', 'dismiss',
   'emptyVenue', 'emptyHost', 'emptyClub',
   'noSlots', 'addAvailability', 'loadFailed', 'retry',
@@ -86,6 +90,7 @@ const exercise = (labels: AutoPodLabels): Record<string, string> => {
     out[`tick:${role}`] = labels.tick(role);
     out[`waitingOn:${role}`] = labels.waitingOn(role);
     out[`empty:${role}`] = labels.empty(role);
+    out[`assignedHeading:${role}`] = labels.assignedHeading(role);
   }
   out.expectedEarnings = labels.expectedEarnings('₹1,200');
   out.waitingFor = labels.waitingFor(ROLES);
@@ -98,6 +103,12 @@ const exercise = (labels: AutoPodLabels): Record<string, string> => {
   out.slotWindow = labels.slotWindow(7);
   out.potentialEarning = labels.potentialEarning('₹1,080');
   out.acceptingWith = labels.acceptingWith('Play Arena');
+  out.withdrawPenalty = labels.withdrawPenalty(5);
+  out.spotsRange = labels.spotsRange(4, 12);
+  out.projectionHost = labels.projectionHost('₹3,200');
+  out.projectionVenue = labels.projectionVenue('₹1,200');
+  out.projectionClub = labels.projectionClub('₹300');
+  out.projectionFees = labels.projectionFees('₹900');
   return out;
 };
 
@@ -173,11 +184,17 @@ describe.each([
       { key: `${ns}.noVenueInCity`, vars: { city: CITY } },
       { key: `${ns}.pinnedTo`, vars: { city: CITY } },
       { key: `${ns}.potentialEarning`, vars: { amount: '₹1,080' } },
+      { key: `${ns}.projectionClub`, vars: { amount: '₹300' } },
+      { key: `${ns}.projectionFees`, vars: { amount: '₹900' } },
+      { key: `${ns}.projectionHost`, vars: { amount: '₹3,200' } },
+      { key: `${ns}.projectionVenue`, vars: { amount: '₹1,200' } },
       { key: `${ns}.removedIn`, vars: { hours: 5, minutes: 12 } },
       { key: `${ns}.slotWindow`, vars: { days: 7 } },
+      { key: `${ns}.spotsRange`, vars: { min: 4, max: 12 } },
       { key: `${ns}.venueCategory`, vars: { path: 'Sports › Racket › Badminton' } },
       { key: `${ns}.waitingFor`, vars: { roles: `t:${ns}.roleVenue, t:${ns}.roleHost, t:${ns}.roleClub` } },
       { key: `${ns}.willPinTo`, vars: { city: CITY } },
+      { key: `${ns}.withdrawPenalty`, vars: { points: 5 } },
     ]);
   });
 

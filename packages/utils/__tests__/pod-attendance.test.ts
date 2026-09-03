@@ -64,6 +64,15 @@ describe('attendanceRowState', () => {
   it('is READY for a single-seat booking on an open roster', () => {
     expect(attendanceRowState(row(), true)).toBe('READY');
   });
+
+  it('does not make a Club Admin wait for names collected at a door', () => {
+    // Naming the group is the HOST's door step, and the server's club-admin
+    // mark has never had that gate — applying it here disabled the only button
+    // an admin has, on exactly the bookings they are called about.
+    const group = row({ seats: 8, companions_required: 7 });
+    expect(attendanceRowState(group, true, 'HOST')).toBe('NEEDS_COMPANIONS');
+    expect(attendanceRowState(group, true, 'CLUB_ADMIN')).toBe('READY');
+  });
 });
 
 describe('splitAttendance', () => {

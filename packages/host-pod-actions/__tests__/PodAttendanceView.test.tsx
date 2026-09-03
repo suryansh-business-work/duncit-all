@@ -15,7 +15,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import PodAttendanceView from '../src/attendance/PodAttendanceView';
 import { HostPodActionsProvider } from '../src/HostPodActionsProvider';
-import { FORCE_ATTENDANCE, HOST_MARK_ATTENDANCE, POD_ATTENDANCE_BOARD } from '../src/attendance/queries';
+import {
+  FORCE_ATTENDANCE,
+  HOST_MARK_ATTENDANCE,
+  POD_ATTENDANCE_BOARD,
+  REQUEST_ATTENDANCE_OTP,
+  VERIFY_ATTENDANCE_OTP,
+} from '../src/attendance/queries';
 import { hostActionsConfig } from './host-actions-config';
 
 const POD_ID = 'pod-1';
@@ -253,11 +259,44 @@ describe('PodAttendanceView marking', () => {
       ...over,
     }) as MockedResponse;
 
+  const OTP_CHALLENGE = {
+    __typename: 'PhoneOtpChallenge',
+    challenge_id: 'ch-1',
+    expires_at: '2026-08-30T13:00:00.000Z',
+    resend_after_seconds: 30,
+    test_code: '123456',
+    deliveries: [
+      { __typename: 'PhoneOtpDelivery', medium: 'WHATSAPP', status: 'STUBBED', reason: null },
+    ],
+  };
+
+  const otpRequestMock = (): MockedResponse =>
+    ({
+      request: { query: REQUEST_ATTENDANCE_OTP, variables: () => true },
+      result: { data: { requestPodAttendanceOtp: OTP_CHALLENGE } },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    }) as MockedResponse;
+
+  const otpVerifyMock = (): MockedResponse =>
+    ({
+      request: { query: VERIFY_ATTENDANCE_OTP, variables: () => true },
+      result: { data: { verifyPodAttendanceOtp: true } },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    }) as MockedResponse;
+
   const forceMock = (over: Partial<MockedResponse> = {}): MockedResponse =>
     ({
       request: {
         query: FORCE_ATTENDANCE,
-        variables: { pod_doc_id: POD_ID, membership_id: 'm-1' },
+        // Both extras ride on every call and are null when the admin took the
+        // by-name door with nothing to add — a mock missing them matches
+        // nothing, and the write looks like it silently did not happen.
+        variables: {
+          pod_doc_id: POD_ID,
+          membership_id: 'm-1',
+          otp_challenge_id: null,
+          companions: null,
+        },
       },
       result: {
         data: {
@@ -295,6 +334,14 @@ describe('PodAttendanceView marking', () => {
 
   const markButton = () =>
     screen.getAllByRole('button', { name: labels.markButton })[0];
+
+  /** Mark, then take the by-name door out of the Club Admin's chooser. */
+  const chooseDirect = async () => {
+    fireEvent.click(markButton());
+    await settle();
+    fireEvent.click(screen.getByTestId('attendance-choose-direct'));
+    await settle();
+  };
 
   // The admin setting is off, so a scan is not the only proof and the host may
   // mark straight away.
@@ -352,25 +399,37 @@ describe('PodAttendanceView marking', () => {
     expect(notifySuccess).not.toHaveBeenCalled();
   });
 
-  // A Club Admin never proves anything — their path is the override, and it
-  // asks for a confirmation instead.
-  it('asks a Club Admin to confirm the override rather than for a code', async () => {
+  // A Club Admin gets asked WHICH door first — a code they send the attendee,
+  // or a mark from the names they were read. Neither is assumed for them.
+  it('asks a Club Admin which door before either form opens', async () => {
     mountWith([boardMock({ viewer: 'CLUB_ADMIN' })]);
     await settle();
 
     fireEvent.click(markButton());
     await settle();
 
-    expect(screen.getByText(labels.forceTitle)).toBeInTheDocument();
+    expect(screen.getByText(labels.chooseTitle('Asha Rao'))).toBeInTheDocument();
+    expect(screen.queryByText(labels.forceTitle)).not.toBeInTheDocument();
     expect(screen.queryByText(labels.otpTitle)).not.toBeInTheDocument();
   });
 
-  it('writes the override once the Club Admin has confirmed it', async () => {
-    const notifySuccess = vi.fn();
-    mountWith([boardMock({ viewer: 'CLUB_ADMIN' }), forceMock()], { notifySuccess });
+  it('opens the code sheet for a Club Admin who picked the code door', async () => {
+    mountWith([boardMock({ viewer: 'CLUB_ADMIN' })]);
     await settle();
     fireEvent.click(markButton());
     await settle();
+
+    fireEvent.click(screen.getByTestId('attendance-choose-otp'));
+    await settle();
+
+    expect(screen.getByText(labels.otpTitle)).toBeInTheDocument();
+  });
+
+  it('writes the mark once the Club Admin has confirmed the by-name door', async () => {
+    const notifySuccess = vi.fn();
+    mountWith([boardMock({ viewer: 'CLUB_ADMIN' }), forceMock()], { notifySuccess });
+    await settle();
+    await chooseDirect();
 
     fireEvent.click(screen.getByRole('button', { name: labels.forceConfirm }));
     await settle();
@@ -379,17 +438,108 @@ describe('PodAttendanceView marking', () => {
     expect(notifySuccess).toHaveBeenCalledWith('Asha Rao');
   });
 
-  it('writes nothing when the Club Admin backed out of the override', async () => {
+  it('writes nothing when the Club Admin backed out of the by-name door', async () => {
     const notifySuccess = vi.fn();
     mountWith([boardMock({ viewer: 'CLUB_ADMIN' }), forceMock()], { notifySuccess });
     await settle();
-    fireEvent.click(markButton());
-    await settle();
+    await chooseDirect();
 
     fireEvent.click(screen.getByRole('button', { name: labels.forceCancel }));
     await settle();
 
     await waitFor(() => expect(screen.queryByText(labels.forceTitle)).not.toBeInTheDocument());
+    expect(notifySuccess).not.toHaveBeenCalled();
+  });
+
+  // Same verified challenge, different mutation: the host's mark is closed to a
+  // Club Admin, so their code door has to spend the proof on their own write.
+  it('spends a verified code on the Club Admin mutation, not the host one', async () => {
+    const notifySuccess = vi.fn();
+    mountWith(
+      [
+        boardMock({ viewer: 'CLUB_ADMIN' }),
+        otpRequestMock(),
+        otpVerifyMock(),
+        forceMock({
+          request: {
+            query: FORCE_ATTENDANCE,
+            variables: {
+              pod_doc_id: POD_ID,
+              membership_id: 'm-1',
+              otp_challenge_id: 'ch-1',
+              companions: null,
+            },
+          },
+        }),
+      ],
+      { notifySuccess },
+    );
+    await settle();
+    fireEvent.click(markButton());
+    await settle();
+    fireEvent.click(screen.getByTestId('attendance-choose-otp'));
+    await settle();
+
+    fireEvent.click(screen.getByRole('button', { name: labels.otpSend }));
+    await settle();
+    await settle();
+    fireEvent.change(screen.getByLabelText(labels.otpCode), { target: { value: '123456' } });
+    fireEvent.click(screen.getByRole('button', { name: labels.otpVerify }));
+    await settle();
+    await settle();
+
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Asha Rao'));
+  });
+
+  it('sends the names the admin was read with the by-name mark', async () => {
+    const notifySuccess = vi.fn();
+    mountWith(
+      [
+        boardMock({
+          viewer: 'CLUB_ADMIN',
+          rows: [row({ seats: 2, companions_required: 1 })],
+        }),
+        forceMock({
+          request: {
+            query: FORCE_ATTENDANCE,
+            variables: {
+              pod_doc_id: POD_ID,
+              membership_id: 'm-1',
+              otp_challenge_id: null,
+              companions: [{ name: 'Ishita Rao', phone_extension: '', phone_number: '' }],
+            },
+          },
+        }),
+      ],
+      { notifySuccess },
+    );
+    await settle();
+    await chooseDirect();
+
+    fireEvent.change(screen.getByLabelText(labels.forceCompanionName), {
+      target: { value: 'Ishita Rao' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: labels.forceConfirm }));
+    await settle();
+    await settle();
+
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Asha Rao'));
+  });
+
+  it('closes the chooser without opening either door', async () => {
+    const notifySuccess = vi.fn();
+    mountWith([boardMock({ viewer: 'CLUB_ADMIN' })], { notifySuccess });
+    await settle();
+    fireEvent.click(markButton());
+    await settle();
+
+    fireEvent.click(screen.getByRole('button', { name: labels.chooseCancel }));
+    await settle();
+
+    await waitFor(() =>
+      expect(screen.queryByText(labels.chooseTitle('Asha Rao'))).not.toBeInTheDocument(),
+    );
+    expect(screen.queryByText(labels.forceTitle)).not.toBeInTheDocument();
     expect(notifySuccess).not.toHaveBeenCalled();
   });
 

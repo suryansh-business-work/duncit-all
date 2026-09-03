@@ -9,7 +9,7 @@
 import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { mwebAttendanceLabels, type PodAttendanceRow } from '@duncit/utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -284,12 +284,74 @@ describe('ForceMarkDialog', () => {
     expect(screen.getByText('Asha Rao')).toBeInTheDocument();
   });
 
-  it('marks the person it named, and only on confirm', () => {
+  it('marks the person it named, and only on confirm', async () => {
     const props = dialog();
 
     fireEvent.click(screen.getByRole('button', { name: labels.forceConfirm }));
 
-    expect(props.onConfirm).toHaveBeenCalledWith(props.row);
+    // A single-seat booking owes no names, so the second argument is empty —
+    // it is the multi-seat case that carries what the admin was read.
+    await waitFor(() => expect(props.onConfirm).toHaveBeenCalledWith(props.row, []));
+  });
+
+  it('carries the names the admin was read, and drops the rows they were not', async () => {
+    const props = dialog({ row: row({ seats: 3, companions_required: 2 }) });
+
+    const names = screen.getAllByLabelText(labels.forceCompanionName);
+    expect(names).toHaveLength(2);
+    fireEvent.change(names[0], { target: { value: 'Ishita Rao' } });
+    fireEvent.click(screen.getByRole('button', { name: labels.forceConfirm }));
+
+    await waitFor(() =>
+      expect(props.onConfirm).toHaveBeenCalledWith(props.row, [
+        { name: 'Ishita Rao', phone_extension: '', phone_number: '' },
+      ]),
+    );
+  });
+
+  it('asks for no names at all when the booking admits one', () => {
+    dialog();
+
+    expect(screen.queryByLabelText(labels.forceCompanionName)).not.toBeInTheDocument();
+  });
+
+  // A blank row is a legitimate answer — "I was not given that name" must not
+  // hold the mark. What is refused is half an answer: a one-letter name or a
+  // fragment of a number reads as a record when it is not one.
+  it('refuses half a name, and says why', async () => {
+    const props = dialog({ row: row({ seats: 2, companions_required: 1 }) });
+
+    fireEvent.change(screen.getByLabelText(labels.forceCompanionName), {
+      target: { value: 'R' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: labels.forceConfirm }));
+
+    expect(await screen.findByText(labels.otpNameRequired)).toBeInTheDocument();
+    expect(props.onConfirm).not.toHaveBeenCalled();
+  });
+
+  it('refuses half a phone number, and says why', async () => {
+    const props = dialog({ row: row({ seats: 2, companions_required: 1 }) });
+
+    fireEvent.change(screen.getByLabelText(labels.forceCompanionPhone), {
+      target: { value: '12' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: labels.forceConfirm }));
+
+    expect(await screen.findByText(labels.otpPhoneInvalid)).toBeInTheDocument();
+    expect(props.onConfirm).not.toHaveBeenCalled();
+  });
+
+  it('refuses a dial code that could not reach anywhere', async () => {
+    const props = dialog({ row: row({ seats: 2, companions_required: 1 }) });
+
+    fireEvent.change(screen.getByLabelText(labels.otpExtension), {
+      target: { value: 'ninety-one' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: labels.forceConfirm }));
+
+    expect(await screen.findByText(labels.otpExtensionInvalid)).toBeInTheDocument();
+    expect(props.onConfirm).not.toHaveBeenCalled();
   });
 
   it('closes without marking anybody', () => {

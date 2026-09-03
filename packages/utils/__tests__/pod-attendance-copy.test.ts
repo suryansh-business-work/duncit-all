@@ -56,6 +56,8 @@ const STATIC_PROPS = [
   'otpMediumWhatsapp', 'otpMediumSms', 'otpMediumRequired', 'otpNameRequired', 'otpExtensionInvalid',
   'otpPhoneInvalid', 'otpSend', 'otpSending', 'otpResend', 'otpCode', 'otpCodeInvalid', 'otpVerify',
   'otpVerifying', 'otpVerified', 'otpCancel', 'forceTitle', 'forceWarning', 'forceConfirm', 'forceCancel',
+  'chooseBody', 'chooseOtpTitle', 'chooseOtpBody', 'chooseDirectTitle', 'chooseDirectBody', 'chooseCancel',
+  'forceCompanionsTitle', 'forceCompanionName', 'forceCompanionPhone',
 ] as const satisfies readonly (keyof PodAttendanceLabels)[];
 
 /**
@@ -68,7 +70,7 @@ const BUNDLE_KEYS = [
   'summary', 'seatsSummary', 'seats', 'companionsNeeded', 'markedBy', 'markedAt', 'verifiedPhone',
   'methodScan', 'methodManual', 'methodClubAdmin', 'methodVirtualJoin', 'methodAdmin',
   'lockedCompletedTitle', 'lockedCompletedBody', 'lockedCancelledTitle', 'lockedCancelledBody',
-  'otpBody', 'otpTestCode',
+  'otpBody', 'otpTestCode', 'chooseTitle', 'forceCompanionsBody',
 ].toSorted((a, b) => a.localeCompare(b));
 
 /** Build with a recorder and invoke each dynamic label once per distinct variant. */
@@ -89,6 +91,8 @@ const renderEverything = (build: Builder): string[] => {
   }
   labels.otpBody('Asha');
   labels.otpTestCode('123456');
+  labels.chooseTitle('Asha');
+  labels.forceCompanionsBody(8, 7);
   return calls.map((c) => c.key);
 };
 
@@ -156,6 +160,13 @@ describe.each(NAMESPACES)('%s namespace', (namespace, build) => {
     ['verifiedPhone', (l) => l.verifiedPhone('+91 98765'), 'verifiedPhone', { phone: '+91 98765' }],
     ['otpBody', (l) => l.otpBody('Ravi'), 'otpBody', { name: 'Ravi' }],
     ['otpTestCode', (l) => l.otpTestCode('123456'), 'otpTestCode', { code: '123456' }],
+    ['chooseTitle', (l) => l.chooseTitle('Asha'), 'chooseTitle', { name: 'Asha' }],
+    [
+      'forceCompanionsBody',
+      (l) => l.forceCompanionsBody(8, 7),
+      'forceCompanionsBody',
+      { seats: 8, count: 7 },
+    ],
   ])('%s passes its arguments through as named vars', (_label, invoke, suffix, vars) => {
     const { t, calls } = recorder();
     const labels = build(t);

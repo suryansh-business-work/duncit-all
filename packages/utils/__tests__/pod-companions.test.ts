@@ -6,6 +6,7 @@ import {
   companionEntriesToInput,
   companionOtpState,
   isCompanionEntryComplete,
+  namedCompanionEntries,
   type CompanionEntry,
 } from '../src/pod-attendance';
 
@@ -124,5 +125,34 @@ describe('what a row’s verify control is doing', () => {
 
   it('is READY when nothing is in flight and the row is filled in', () => {
     expect(companionOtpState(entry(), 0, null)).toBe('READY');
+  });
+});
+
+describe('the names a Club Admin was read', () => {
+  it('drops a row nobody named, so a blank line never holds the mark', () => {
+    // The admin records what a phone call told them; refusing the mark for the
+    // names they were NOT given is the dead end this path exists to remove.
+    expect(
+      namedCompanionEntries([entry({ name: '' }), entry({ name: ' R ' })]),
+    ).toEqual([]);
+  });
+
+  it('trims what was typed and keeps a number when there is one', () => {
+    expect(
+      namedCompanionEntries([
+        entry({ name: ' Riya Sharma ', phone_extension: ' +91 ', phone_number: ' 9845012345 ' }),
+      ]),
+    ).toEqual([{ name: 'Riya Sharma', phone_extension: '+91', phone_number: '9845012345' }]);
+  });
+
+  it('drops a dial code with no number behind it, which is noise on the record', () => {
+    expect(namedCompanionEntries([entry({ phone_number: '  ' })])).toEqual([
+      { name: 'Riya Sharma', phone_extension: '', phone_number: '' },
+    ]);
+  });
+
+  it('never sends otp_challenge_id — PodForcedCompanionInput does not declare it', () => {
+    const [first] = namedCompanionEntries([entry({ otp_challenge_id: 'chal_9f21' })]);
+    expect(first).not.toHaveProperty('otp_challenge_id');
   });
 });

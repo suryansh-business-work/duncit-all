@@ -134,6 +134,16 @@ describe('OpenAiLogDrawer', () => {
     expect(screen.getAllByText('—').length).toBeGreaterThan(2);
   });
 
+  it('still chips a status it has no colour for', async () => {
+    renderWithProviders(<OpenAiLogDrawer logId="log-1" onClose={vi.fn()} />, {
+      mocks: [logMock({ status: 'THROTTLED' as OpenAiLogDetail['status'] })],
+    });
+
+    // A status added server-side must render as itself on an older client
+    // rather than crashing on a missing colour.
+    expect(await screen.findByText('THROTTLED')).toBeInTheDocument();
+  });
+
   it('closes from the header button', async () => {
     const onClose = vi.fn();
     renderWithProviders(<OpenAiLogDrawer logId="log-1" onClose={onClose} />, {

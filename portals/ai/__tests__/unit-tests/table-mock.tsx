@@ -22,6 +22,7 @@ interface MockTableProps {
   getRowId: (row: never) => string;
   onRowClick?: (row: never) => void;
   emptyText?: string;
+  searchPlaceholder?: string;
   defaultSort?: { field: string; dir: string };
   refetchRef?: { current: (() => void) | null };
 }
@@ -29,11 +30,12 @@ interface MockTableProps {
 export function DuncitTable(props: Readonly<MockTableProps>) {
   const { columns, fetchRows, getRowId, onRowClick, emptyText, defaultSort, refetchRef } = props;
   const [rows, setRows] = useState<unknown[]>([]);
+  const [search, setSearch] = useState('');
 
-  const load = () => {
+  const load = (term = search) => {
     Promise.resolve(
       fetchRows({
-        search: '',
+        search: term,
         page: 1,
         pageSize: 50,
         sortBy: defaultSort?.field ?? null,
@@ -46,7 +48,7 @@ export function DuncitTable(props: Readonly<MockTableProps>) {
   useEffect(() => {
     // A real refetch, so a page that calls refetchRef.current?.() takes the
     // non-null branch exactly as it does in production.
-    if (refetchRef) refetchRef.current = load;
+    if (refetchRef) refetchRef.current = () => load();
     load();
     // Mount-only: fetchRows identity is unstable across renders in the pages.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -54,6 +56,16 @@ export function DuncitTable(props: Readonly<MockTableProps>) {
 
   return (
     <div data-testid="duncit-table">
+      {/* A real search box, so a table's own search function is exercised
+          rather than assumed. */}
+      <input
+        aria-label="table-search"
+        value={search}
+        onChange={(event) => {
+          setSearch(event.target.value);
+          load(event.target.value);
+        }}
+      />
       {rows.length === 0 && <div data-testid="table-empty">{emptyText}</div>}
       {rows.map((row) => (
         <div

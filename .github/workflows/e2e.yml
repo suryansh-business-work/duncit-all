@@ -246,6 +246,16 @@ jobs:
           npx --yes wait-on http://localhost:2022 --timeout 120000
           npm run e2e
 
+      # The browser matrix uploads its failure screenshots; this job had no
+      # equivalent, so a red native leg could only be read from the log.
+      - name: Upload Cypress screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: native-web-cypress-screenshots
+          path: app/mobile-app/cypress-artifacts/screenshots
+          if-no-files-found: ignore
+
   # ---------------------------------------------------------------------------
   # A single check other workflows (and branch protection) can require. It is
   # `needs`-ed on every e2e job and re-asserts their results, because a `needs`

@@ -884,6 +884,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       save: 'Save',
       verifiedClub: 'Verified club',
       openPodDetails: 'Open pod details',
+      // Accessible names of the reel rail's icon buttons (the caption under
+      // each is a count, not a name).
+      join: 'Join',
+      like: 'Like',
+      comments: 'Comments',
     },
     // The bar offering the app. Shown only when the OS did not already hand
     // the link over — a verified App Link never reaches this code at all.

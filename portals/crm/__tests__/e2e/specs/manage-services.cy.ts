@@ -51,16 +51,16 @@ describe('Manage Venue Services — CRUD', () => {
   it('adds a new service', () => {
     cy.contains('button', /add service/i).click();
     cy.get('input[placeholder*="Coaching" i], input[placeholder*="e.g." i]').first().type('Bouncer / Security');
-    // The draft row's "Save" button surfaces a SaveIcon — MUI auto-sets
-    // data-testid="SaveIcon" on the SVG, which is the most stable target.
-    cy.get('[data-testid="SaveIcon"]').first().click({ force: true });
+    // The draft row's "Save" button is an icon button with an accessible name
+    // (MUI 9 icons no longer carry a data-testid).
+    cy.get('button[aria-label="Save"]').first().click({ force: true });
     cy.contains('td', /bouncer \/ security/i, { timeout: 8000 }).should('be.visible');
   });
 
   it('deletes a service via the confirm dialog', () => {
     cy.contains('td', 'Catering')
       .parent()
-      .find('[data-testid="DeleteIcon"]')
+      .find('button[aria-label="Delete"]')
       .click({ force: true });
     cy.contains(/delete service/i).should('be.visible');
     cy.contains('button', /^delete$/i).click();

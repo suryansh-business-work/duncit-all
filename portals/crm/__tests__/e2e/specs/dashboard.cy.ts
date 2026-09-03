@@ -17,8 +17,10 @@ describe('Dashboard', () => {
   it('renders each chart card', () => {
     cy.contains(/leads by stage/i).should('be.visible');
     cy.contains(/leads by priority/i).should('be.visible');
-    cy.contains(/leads by super category/i).should('be.visible');
-    cy.contains(/services mix/i).should('be.visible');
+    // The lower widgets sit below the fold of the dashboard's scroll area;
+    // Cypress counts an element clipped by a scroll ancestor as hidden.
+    cy.contains(/leads by super category/i).scrollIntoView().should('be.visible');
+    cy.contains(/services mix/i).scrollIntoView().should('be.visible');
   });
 
   it('shows a range filter', () => {

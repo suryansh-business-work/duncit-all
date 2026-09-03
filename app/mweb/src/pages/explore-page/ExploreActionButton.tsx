@@ -4,6 +4,8 @@ import { DuncitIconButton } from '@duncit/buttons';
 interface Props {
   icon: React.ReactNode;
   label: string;
+  /** The button's accessible name; the visible label under it is often a count. */
+  ariaLabel?: string;
   onClick: () => void;
   active?: boolean;
   loading?: boolean;
@@ -15,6 +17,7 @@ interface Props {
 export default function ExploreActionButton({
   icon,
   label,
+  ariaLabel,
   onClick,
   active,
   loading,
@@ -28,6 +31,7 @@ export default function ExploreActionButton({
       <DuncitIconButton
         onClick={onClick}
         disabled={loading}
+        aria-label={ariaLabel}
         title={tooltip}
         sx={{
           width: 42,

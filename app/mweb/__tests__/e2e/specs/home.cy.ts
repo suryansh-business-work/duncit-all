@@ -27,7 +27,8 @@ describe('Home', () => {
 
   it('"Happening nearby" header opens the nearby feed (bug 9)', () => {
     cy.visitApp('/');
-    cy.get('[aria-label="Open Happening nearby"]').click();
+    // The header row itself is the control (role=button, named after the section).
+    cy.get('[role="button"][aria-label="Happening nearby"]').click();
     cy.location('pathname').should('eq', '/happening-nearby');
   });
 
@@ -42,7 +43,7 @@ describe('Home', () => {
   });
 
   it('empty feed shows the no-clubs notice', () => {
-    cy.mockGraphql({ ...bootFixtures, HomeFeed: homeFeed({ pods: [] }) });
+    cy.mockGraphql({ ...bootFixtures, ...homeFeed({ pods: [] }) });
     cy.visitApp('/');
     cy.contains(/No clubs in this category/i).should('be.visible');
   });
@@ -58,7 +59,7 @@ describe('Home', () => {
   });
 
   it('renders only upcoming pods when there are no past pods', () => {
-    cy.mockGraphql({ ...bootFixtures, HomeFeed: homeFeed({ pods: [upcomingPod] }) });
+    cy.mockGraphql({ ...bootFixtures, ...homeFeed({ pods: [upcomingPod] }) });
     cy.visitApp('/');
     cy.contains('Sunset Jam').should('be.visible');
     cy.contains('Previous Pods').should('not.exist');

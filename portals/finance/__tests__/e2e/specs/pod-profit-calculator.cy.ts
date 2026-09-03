@@ -116,12 +116,15 @@ describe('Pod profit calculator', () => {
     percentInput('GST').type('{selectall}40').should('have.value', '28');
   });
 
-  it('clamps a venue price above the pool and zeroes the host', () => {
+  it('shows the host shortfall when the venue price exceeds the pool, and still reconciles', () => {
     setNumber('Venue fixed cost', '1000000');
 
-    // Venue takes the whole ₹23,347.46 pool (−10% commission), host gets nothing.
-    rowValue('Venue receives').should('have.text', '₹21,012.71');
-    rowValue('Host receives').should('have.text', '₹0.00');
+    // Nothing is clamped (the Finance formula audit): the venue is paid its
+    // full price less its 10% commission, the host carries the shortfall
+    // against the ₹23,347.46 pool, and the sheet still adds back up to the
+    // collection.
+    rowValue('Venue receives').should('have.text', '₹9,00,000.00');
+    rowValue('Host receives').should('have.text', '-₹9,76,652.54');
     rowValue('Reconciles to collection').should('have.text', '₹29,000.00');
   });
 

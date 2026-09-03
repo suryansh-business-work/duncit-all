@@ -72,9 +72,11 @@ describe('Support portal (authenticated)', () => {
     cy.visit('/tickets');
     cy.contains('button', /new ticket/i, { timeout: 10000 }).click();
     cy.contains('New Ticket').should('be.visible');
-    cy.get('[role="dialog"]').within(() => {
+    // The shell keeps the Agent dock's floating window (also role="dialog")
+    // mounted, so scope to the dialog that carries this title.
+    cy.contains('[role="dialog"]', 'New Ticket').within(() => {
       cy.contains(/attach/i).should('exist'); // common upload component
-      cy.get('.ql-editor').should('exist'); // rich-text editor
+      cy.get('.ProseMirror').should('exist'); // rich-text editor (TipTap)
     });
   });
 

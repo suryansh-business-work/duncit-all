@@ -177,7 +177,9 @@ Cypress.Commands.add('pickMuiOption', (labelText: RegExp | string, optionText: R
   // arrow, which IS inside the FormControl). One locator covers single-select
   // TextField, Select(multiple) and Autocomplete.
   const re = typeof labelText === 'string' ? new RegExp(labelText, 'i') : labelText;
-  cy.contains('label', re)
+  // MUI 9 renders a Select-mode TextField's label as a <div class="MuiInputLabel-root">
+  // (wired through aria-labelledby), not a <label>; the class covers both.
+  cy.contains('.MuiFormLabel-root', re)
     .closest('.MuiFormControl-root, .MuiTextField-root')
     .find('[role="combobox"], .MuiAutocomplete-popupIndicator')
     .first()

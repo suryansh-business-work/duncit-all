@@ -28,8 +28,10 @@ export const earningsBodyFor = (
 export interface PodAttendanceLabels {
   pageTitle: string;
   menuItem: string;
+  /** PEOPLE, not bookings — one booking can admit eight of them. */
   summary: (marked: number, total: number) => string;
-  seatsSummary: (marked: number, total: number) => string;
+  /** How many bookings those people arrived on, beside the headline. */
+  bookingsSummary: (marked: number, total: number) => string;
   markedHeading: string;
   unmarkedHeading: string;
   emptyRoster: string;
@@ -113,8 +115,8 @@ export function mwebAttendanceLabels(t: AttendanceTranslate): PodAttendanceLabel
     menuItem: t('mweb.attendance.menuItem'),
     summary: (marked, total) =>
       t('mweb.attendance.summary', { vars: { marked, total } }),
-    seatsSummary: (marked, total) =>
-      t('mweb.attendance.seatsSummary', { vars: { marked, total } }),
+    bookingsSummary: (marked, total) =>
+      t('mweb.attendance.bookingsSummary', { vars: { marked, total } }),
     markedHeading: t('mweb.attendance.markedHeading'),
     unmarkedHeading: t('mweb.attendance.unmarkedHeading'),
     emptyRoster: t('mweb.attendance.emptyRoster'),
@@ -211,8 +213,8 @@ export function shellAttendanceLabels(t: AttendanceTranslate): PodAttendanceLabe
     menuItem: t('shell.attendance.menuItem'),
     summary: (marked, total) =>
       t('shell.attendance.summary', { vars: { marked, total } }),
-    seatsSummary: (marked, total) =>
-      t('shell.attendance.seatsSummary', { vars: { marked, total } }),
+    bookingsSummary: (marked, total) =>
+      t('shell.attendance.bookingsSummary', { vars: { marked, total } }),
     markedHeading: t('shell.attendance.markedHeading'),
     unmarkedHeading: t('shell.attendance.unmarkedHeading'),
     emptyRoster: t('shell.attendance.emptyRoster'),

@@ -67,7 +67,7 @@ const STATIC_PROPS = [
  */
 const BUNDLE_KEYS = [
   ...STATIC_PROPS,
-  'summary', 'seatsSummary', 'seats', 'companionsNeeded', 'markedBy', 'markedAt', 'verifiedPhone',
+  'summary', 'bookingsSummary', 'seats', 'companionsNeeded', 'markedBy', 'markedAt', 'verifiedPhone',
   'methodScan', 'methodManual', 'methodClubAdmin', 'methodVirtualJoin', 'methodAdmin',
   'lockedCompletedTitle', 'lockedCompletedBody', 'lockedCancelledTitle', 'lockedCancelledBody',
   'otpBody', 'otpTestCode', 'chooseTitle', 'forceCompanionsBody',
@@ -78,7 +78,7 @@ const renderEverything = (build: Builder): string[] => {
   const { t, calls } = recorder();
   const labels = build(t);
   labels.summary(1, 2);
-  labels.seatsSummary(1, 2);
+  labels.bookingsSummary(1, 2);
   labels.seats(1);
   labels.companionsNeeded(1);
   labels.markedBy('Asha');
@@ -152,7 +152,7 @@ describe.each(NAMESPACES)('%s namespace', (namespace, build) => {
 
   it.each<[keyof PodAttendanceLabels, (l: PodAttendanceLabels) => string, string, Vars]>([
     ['summary', (l) => l.summary(3, 5), 'summary', { marked: 3, total: 5 }],
-    ['seatsSummary', (l) => l.seatsSummary(4, 9), 'seatsSummary', { marked: 4, total: 9 }],
+    ['bookingsSummary', (l) => l.bookingsSummary(4, 9), 'bookingsSummary', { marked: 4, total: 9 }],
     ['seats', (l) => l.seats(2), 'seats', { count: 2 }],
     ['companionsNeeded', (l) => l.companionsNeeded(3), 'companionsNeeded', { count: 3 }],
     ['markedBy', (l) => l.markedBy('Asha'), 'markedBy', { name: 'Asha' }],
@@ -181,7 +181,7 @@ describe.each(NAMESPACES)('%s namespace', (namespace, build) => {
     const labels = build(
       catalogue({
         [`${prefix}summary`]: '{marked} of {total} attendees marked',
-        [`${prefix}seatsSummary`]: '{marked} of {total} seats marked',
+        [`${prefix}bookingsSummary`]: '{marked} of {total} bookings',
         [`${prefix}seats`]: 'Admits {count}',
         [`${prefix}companionsNeeded`]: 'Add the other {count} on this booking at the door first.',
         [`${prefix}markedBy`]: 'Marked by {name}',
@@ -192,7 +192,7 @@ describe.each(NAMESPACES)('%s namespace', (namespace, build) => {
       }),
     );
     expect(labels.summary(3, 5)).toBe('3 of 5 attendees marked');
-    expect(labels.seatsSummary(0, 12)).toBe('0 of 12 seats marked');
+    expect(labels.bookingsSummary(0, 12)).toBe('0 of 12 bookings');
     expect(labels.seats(4)).toBe('Admits 4');
     expect(labels.companionsNeeded(2)).toBe('Add the other 2 on this booking at the door first.');
     expect(labels.markedBy('Asha')).toBe('Marked by Asha');

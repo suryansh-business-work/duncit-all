@@ -2246,7 +2246,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       pageTitle: 'Mark Attendance',
       menuItem: 'See Marked Attendance',
       summary: '{marked} of {total} attendees marked',
-      seatsSummary: '{marked} of {total} seats marked',
+      bookingsSummary: '{marked} of {total} bookings',
       markedHeading: 'Attendance marked',
       unmarkedHeading: 'Not marked yet',
       emptyRoster: 'Nobody has booked this pod yet.',

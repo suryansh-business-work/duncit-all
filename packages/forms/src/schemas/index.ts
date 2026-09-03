@@ -84,6 +84,9 @@ export {
 
 export {
   makeSignupSchema,
+  makeWhatsappNumberSchema,
   signupDefaults,
+  whatsappNumberDefaults,
   type SignupFormValues,
+  type WhatsappNumberValues,
 } from './signup';

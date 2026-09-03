@@ -8,10 +8,12 @@ import {
 /**
  * How far through the roster the host is.
  *
- * Seats, not people: one booking can admit four, and "3 of 12 marked" meaning
- * bookings while the payout counts seats is exactly the mismatch that made the
- * old settlement figure look wrong. Both numbers are shown, with seats carrying
- * the bar.
+ * The headline counts PEOPLE. Eight seats bought on one account are eight
+ * attendees, and counting the ROWS there read "1 of 1 attendees marked" over a
+ * booking that admitted eight — the one number on the page the host checks
+ * their payout against, saying the payout covers one seat. Seats are what the
+ * settlement is split on, so they carry the bar too; the bookings count moves
+ * beside it, because bookings are what the list below is made of.
  */
 export default function AttendanceSummary({
   board,
@@ -30,12 +32,12 @@ export default function AttendanceSummary({
           gap: 1
         }}>
         <Typography variant="body2" sx={{ fontWeight: 700 }}>
-          {labels.summary(board.marked_count, board.total_count)}
+          {labels.summary(board.marked_seats, board.total_seats)}
         </Typography>
         <Chip
           size="small"
           color={complete ? 'success' : 'default'}
-          label={labels.seatsSummary(board.marked_seats, board.total_seats)}
+          label={labels.bookingsSummary(board.marked_count, board.total_count)}
           sx={{ fontWeight: 700 }}
         />
       </Stack>

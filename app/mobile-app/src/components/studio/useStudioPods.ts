@@ -43,12 +43,13 @@ interface StudioPodsPayload {
   figures: StudioPodFiguresData;
 }
 
-/** Venue Studio: the pods booked at every venue the caller owns. The figures
- * come from the server, computed over EVERY approved booking while the list is
- * capped — the client used to fold the capped list and report a total of 500
- * for a busy venue. */
-async function fetchVenueStudioPods(): Promise<StudioPodsPayload> {
-  const data = await graphqlRequest(VenueStudioPodsDocument, undefined, { auth: true });
+/** Venue Studio: the pods booked at the venue the switcher has picked — or at
+ * every venue the caller owns when nothing is picked. The figures come from the
+ * server, computed over EVERY approved booking while the list is capped — the
+ * client used to fold the capped list and report a total of 500 for a busy
+ * venue. */
+async function fetchVenueStudioPods(venueId: string | null): Promise<StudioPodsPayload> {
+  const data = await graphqlRequest(VenueStudioPodsDocument, { venue_id: venueId }, { auth: true });
   return { pods: data.venuePods, figures: toFigures(data.venuePodsSummary) };
 }
 
@@ -95,9 +96,11 @@ function useStudioPodsSource(fetcher: () => Promise<StudioPodsPayload>): StudioP
   return { ...payload, isLoading, hasError, refetch };
 }
 
-/** "Pods hosted on your Venue" — Venue Studio. */
-export function useVenueStudioPods(): StudioPodsState {
-  return useStudioPodsSource(fetchVenueStudioPods);
+/** "Pods hosted on your Venue" — Venue Studio. Re-fetches when the switcher
+ * moves to another venue. */
+export function useVenueStudioPods(venueId?: string | null): StudioPodsState {
+  const fetcher = useCallback(() => fetchVenueStudioPods(venueId ?? null), [venueId]);
+  return useStudioPodsSource(fetcher);
 }
 
 /** "Your Pods" — Club Studio. */

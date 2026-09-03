@@ -180,6 +180,11 @@ export default function AccountDeletionSection({ onToast }: Readonly<Props>) {
                 : t('admin.accountDeletion.retentionHint')
             }
             slotProps={{
+              // The form seeds from `values` once the query answers, and
+              // `register` writes that number straight to the DOM node — MUI
+              // never re-reads it, so without this the label sits on top of the
+              // value it is meant to name.
+              inputLabel: { shrink: true },
               htmlInput: {
                 min: MIN_RETENTION_DAYS,
                 max: MAX_RETENTION_DAYS,

@@ -137,7 +137,7 @@ export default function ScheduleFields({
             ? t('admin.accountDeletion.batchRange')
             : t('admin.accountDeletion.batchHint')
         }
-        slotProps={{ htmlInput: { min: 1, max: 500, step: 1 } }}
+        slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: 1, max: 500, step: 1 } }}
         {...register('cron_batch_size')}
       />
     </Stack>

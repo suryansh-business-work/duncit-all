@@ -609,3 +609,12 @@ export {
   type SignupStepperLabels,
   type SignupTranslate,
 } from './signup-steps';
+export {
+  VENUE_APPLICATION_STATUSES,
+  canSwitchVenues,
+  defaultVenueId,
+  pickVenue,
+  venueLabel,
+  venueSubLabel,
+  type SwitchableVenue,
+} from './venue-switcher';

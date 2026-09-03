@@ -155,9 +155,20 @@ export const RequestWhatsAppOtpDocument = gql(`
 `);
 
 export const VerifyWhatsAppOtpDocument = gql(`
-  mutation MobileVerifyWhatsAppOtp($ext: String!, $num: String!, $otp: String!) {
-    verifyWhatsAppOtp(phone_extension: $ext, phone_number: $num, otp: $otp) {
+  mutation MobileVerifyWhatsAppOtp(
+    $ext: String!
+    $num: String!
+    $otp: String!
+    $alsoMobile: Boolean!
+  ) {
+    verifyWhatsAppOtp(
+      phone_extension: $ext
+      phone_number: $num
+      otp: $otp
+      also_mobile: $alsoMobile
+    ) {
       user_id
+      phone_number
       whatsapp_number
     }
   }

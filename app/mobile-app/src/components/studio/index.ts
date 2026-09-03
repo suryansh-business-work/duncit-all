@@ -11,3 +11,4 @@ export {
   type StudioPodFiguresData,
   type StudioPodSummaryResult,
 } from './studio-pods';
+export { VenueSwitcher } from './VenueSwitcher';

@@ -21,6 +21,17 @@ export const authTypeDefs = gql`
     phone_number: String!
     "The dial code the number belongs to, such as +91. Chosen from a list."
     phone_extension: String!
+    """
+    Whether the WhatsApp number above is ALSO the account's mobile number.
+
+    The form asks for one number, because one number is what most people have.
+    Ticked, it is written to the profile phone as well; unticked, the profile
+    phone is left blank on purpose — the person has said the two differ, and
+    filing the WhatsApp number as their mobile would put a number they never
+    gave us on their account. Either way the number is recorded as the WhatsApp
+    one, which is what the verification step proves.
+    """
+    whatsapp_is_mobile: Boolean = true
     password: String!
     dob: String!
     city: String

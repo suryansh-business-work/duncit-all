@@ -13,9 +13,15 @@ import { parseApiError } from '../../utils/parseApiError';
 import { REQUEST_OTP, SKIP, VERIFY_OTP } from '../signup-whatsapp-page/queries';
 
 interface Props {
-  /** The dial code and number step two collected. */
+  /** The dial code and number the step before this one settled. */
   extension: string;
   number: string;
+  /**
+   * The signup tick box. A proven number is written to the account's phone as
+   * well when it is on; when it is off the profile phone stays blank, because
+   * the person has said their mobile number is a different one.
+   */
+  alsoMobile: boolean;
   /** Where a verified — or skipped — number leads. */
   onDone: () => void;
 }
@@ -33,7 +39,12 @@ const otpInput = { inputMode: 'numeric' as const, maxLength: 6 };
  * Skipping is allowed and leaves the account exactly as it is — the number is
  * simply unverified, which is what `skipWhatsAppOtp` records.
  */
-export default function VerifyWhatsappStep({ extension, number, onDone }: Readonly<Props>) {
+export default function VerifyWhatsappStep({
+  extension,
+  number,
+  alsoMobile,
+  onDone,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = buildSignupStepperLabels(t);
   const [requestOtp, { loading: sending }] = useMutation<any>(REQUEST_OTP);
@@ -83,7 +94,9 @@ export default function VerifyWhatsappStep({ extension, number, onDone }: Readon
   const submit = handleSubmit(async (values) => {
     setError(null);
     try {
-      await verifyOtp({ variables: { ext: extension, num: number, otp: values.otp } });
+      await verifyOtp({
+        variables: { ext: extension, num: number, otp: values.otp, alsoMobile },
+      });
       onDone();
     } catch (e) {
       setError(parseApiError(e));

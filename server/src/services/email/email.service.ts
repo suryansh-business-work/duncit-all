@@ -183,10 +183,14 @@ async function deliver(
 async function renderTemplate(
   name: string,
   vars: Record<string, string>
-): Promise<{ subject?: string; html: string }> {
+): Promise<{ subject?: string; html: string; errors: string[] }> {
   try {
     const r = await emailTemplateService.render(name, vars);
-    return { subject: r.subject, html: r.html };
+    // The errors travel WITH the html. This path used to drop them on the
+    // floor, so a template that compiled to nothing reached the mail server as
+    // an empty body and was filed SENT — the one outcome nobody can debug,
+    // because the log row says the message went out and the reason is gone.
+    return { subject: r.subject, html: r.html, errors: r.errors };
   } catch (error) {
     // Fallback: the database could not answer, so read the file.
     //
@@ -212,7 +216,7 @@ async function renderTemplate(
       vars,
     });
     if (errors.length) logs.server.warn('email', 'mjml', { template: name, errors });
-    return { html };
+    return { html, errors };
   }
 }
 
@@ -353,6 +357,13 @@ export async function sendEmail(opts: {
       ...opts.vars,
     };
     const rendered = await renderTemplate(opts.template, vars);
+    // An empty body is never a sendable email, whatever MJML said about it.
+    // Refusing here is what keeps a broken template a FAILED row with a reason
+    // an admin can act on, instead of a blank message somebody has to receive
+    // before anyone finds out.
+    if (!rendered.html) {
+      return notSent(rendered.errors.join('; ') || 'Template rendered an empty body', 'FAILED');
+    }
     const html = swapLegacyLogo(rendered.html, brandLogoUrl);
     const info = await deliver({
       category,

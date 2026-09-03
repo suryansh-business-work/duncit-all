@@ -45,7 +45,7 @@ export const SIGNUP_STEP_COUNT = SIGNUP_STEPS.length;
  */
 export const SIGNUP_STEP_FIELDS: Record<SignupStep, readonly string[]> = {
   WHO: ['name', 'dobYear', 'referralCode'],
-  CONTACT: ['phoneExtension', 'phoneNumber', 'email'],
+  CONTACT: ['phoneExtension', 'phoneNumber', 'whatsappIsMobile', 'email'],
   SECURITY: ['password', 'confirmPassword', 'acceptedPolicyIds'],
   VERIFY: [],
 };
@@ -139,6 +139,12 @@ export interface SignupStepperLabels {
   skipForNow: string;
   /** The code the server echoes back while no transport can carry it. */
   testCode: (code: string) => string;
+  /** The Google door's number step, which has no form behind it. */
+  numberTitle: string;
+  numberSubtitle: string;
+  /** The tick box that decides whether the profile phone is written at all. */
+  sameAsMobile: string;
+  sameAsMobileHint: string;
 }
 
 /*
@@ -188,5 +194,9 @@ export function buildSignupStepperLabels(t: SignupTranslate): SignupStepperLabel
     resend: t('mweb.signupSteps.resend'),
     skipForNow: t('mweb.signupSteps.skipForNow'),
     testCode: (code) => t('mweb.signupSteps.testCode', { vars: { code } }),
+    numberTitle: t('mweb.signupSteps.numberTitle'),
+    numberSubtitle: t('mweb.signupSteps.numberSubtitle'),
+    sameAsMobile: t('mweb.signupSteps.sameAsMobile'),
+    sameAsMobileHint: t('mweb.signupSteps.sameAsMobileHint'),
   };
 }

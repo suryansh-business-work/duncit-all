@@ -22,7 +22,13 @@ import WebsiteAssetsSection from './WebsiteAssetsSection';
 import FontsSection from './FontsSection';
 import OccasionalIconsSection from './OccasionalIconsSection';
 import { PLATFORM_SECTIONS } from './sizeGuides';
-import { BRANDING, UPDATE_BRANDING, emptyBrandingForm, type BrandingFormState } from './queries';
+import {
+  BRANDING,
+  UPDATE_BRANDING,
+  emptyBrandingForm,
+  toIconLayoutInput,
+  type BrandingFormState,
+} from './queries';
 import { useTranslation } from '@duncit/shell';
 
 interface SectionProps {
@@ -57,7 +63,7 @@ function BrandingAccordion({ title, subtitle, defaultExpanded, children }: Reado
 export default function BrandingPage() {
   const { t } = useTranslation();
   const { data, loading, error } = useQuery<any>(BRANDING, { fetchPolicy: 'cache-and-network' });
-  const [updateMut] = useMutation<any>(UPDATE_BRANDING, { refetchQueries: [t('admin.branding.title')] });
+  const [updateMut] = useMutation<any>(UPDATE_BRANDING, { refetchQueries: ['Branding'] });
 
   const [form, setForm] = useState<BrandingFormState>(emptyBrandingForm);
   const [busy, setBusy] = useState(false);
@@ -76,6 +82,10 @@ export default function BrandingPage() {
         // widening the form's own types.
         (next as Record<string, unknown>)[key] = b[key] ?? emptyBrandingForm[key];
       });
+      // Every other field is a scalar; the layout is an object, so it arrives
+      // carrying Apollo's __typename and would be posted straight back into
+      // CategoryIconLayoutInput, which rejects it.
+      next.home_all_vibe_icon_layout = toIconLayoutInput(b.home_all_vibe_icon_layout);
       setForm(next);
     }
   }, [data]);

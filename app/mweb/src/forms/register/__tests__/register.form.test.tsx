@@ -248,6 +248,7 @@ describe('RegisterForm — loading, errors and toggles', () => {
         email: 'seed@x.com',
         phoneExtension: '+91',
         phoneNumber: '9845012345',
+        whatsappIsMobile: true,
         password: 'seedpass1',
         confirmPassword: 'seedpass1',
         dobYear: '2000',

@@ -16,8 +16,8 @@ describe('emailTemplate unit', () => {
     expect(applyVars('Hi {{name}}!', { name: 'Bob' })).toBe('Hi Bob!');
   });
 
-  it('renderMjml substitutes vars and compiles to HTML', () => {
-    const { html, errors } = renderMjml(
+  it('renderMjml substitutes vars and compiles to HTML', async () => {
+    const { html, errors } = await renderMjml(
       '<mjml><mj-body><mj-section><mj-column><mj-text>{{x}}</mj-text></mj-column></mj-section></mj-body></mjml>',
       { x: 'Yo' }
     );

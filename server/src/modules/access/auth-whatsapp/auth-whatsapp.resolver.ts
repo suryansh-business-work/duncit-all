@@ -19,7 +19,12 @@ export const whatsappResolvers = {
     },
     verifyWhatsAppOtp: async (
       _p: unknown,
-      args: { phone_extension: string; phone_number: string; otp: string },
+      args: {
+        phone_extension: string;
+        phone_number: string;
+        otp: string;
+        also_mobile?: boolean;
+      },
       ctx: GraphQLContext
     ) => {
       const auth = requireAuth(ctx);
@@ -27,7 +32,8 @@ export const whatsappResolvers = {
         auth.id,
         args.phone_extension,
         args.phone_number,
-        args.otp
+        args.otp,
+        args.also_mobile === true
       );
       return userService.me(auth.id);
     },

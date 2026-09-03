@@ -15,6 +15,11 @@ import {
   authMessageCardState,
   availableModes,
   resolveMode,
+  canSwitchVenues,
+  defaultVenueId,
+  pickVenue,
+  venueLabel,
+  venueSubLabel,
   autoPodActionable,
   autoPodCityLabel,
   autoPodEnrolledCount,
@@ -56,6 +61,7 @@ import {
   SIGNUP_STEPS,
   SIGNUP_STEP_COUNT,
   SIGNUP_STEP_FIELDS,
+  buildSignupStepperLabels,
   canLeaveSignupStep,
   nextSignupStep,
   previousSignupStep,
@@ -109,6 +115,12 @@ interface StudioModeMock {
   roles: string[];
   saved_mode: 'USER' | 'HOST' | 'VENUE' | 'ECOMM' | 'CLUB';
   is_product_visible: boolean;
+}
+
+/** The venues a partner owns, as `myVenues` answers them — newest first. */
+interface VenueSwitcherMock {
+  venues: { id: string; venue_name: string; city: string; status: string }[];
+  selected_venue_id: string | null;
 }
 
 /** One pending pod as the rating prompt receives it, plus the guest's answers. */
@@ -766,16 +778,27 @@ export default defineDemos('utils', [
       "button creates the account, and VERIFY is the only one with no way back — by then the account " +
       'exists, so Back could only offer a form that has been spent.',
     mock: { step: 'CONTACT' },
-    compute: (mock) => ({
-      'Step': `${signupStepIndex(mock.step)} of ${SIGNUP_STEP_COUNT}`,
-      'Boxes this step validates': SIGNUP_STEP_FIELDS[mock.step].join(', ') || '(none — the server checks the code)',
-      'Continue goes to': nextSignupStep(mock.step) ?? '(nowhere — this is the last)',
-      'Back goes to': canLeaveSignupStep(mock.step)
-        ? (previousSignupStep(mock.step) ?? '')
-        : '(no Back on this step)',
-      'Creates the account': String(stepSubmitsAccount(mock.step)),
-      'The four steps': SIGNUP_STEPS.join(' -> '),
-    }),
+    compute: (mock) => {
+      // Keys rather than English, so the demo shows WHICH sentence each label
+      // resolves to without pinning a translation.
+      const t = (key: string) => key;
+      const labels = buildSignupStepperLabels(t);
+      return {
+        'Step': `${signupStepIndex(mock.step)} of ${SIGNUP_STEP_COUNT}`,
+        'Boxes this step validates':
+          SIGNUP_STEP_FIELDS[mock.step].join(', ') || '(none — the server checks the code)',
+        'Continue goes to': nextSignupStep(mock.step) ?? '(nowhere — this is the last)',
+        'Back goes to': canLeaveSignupStep(mock.step)
+          ? (previousSignupStep(mock.step) ?? '')
+          : '(no Back on this step)',
+        'Creates the account': String(stepSubmitsAccount(mock.step)),
+        'The four steps': SIGNUP_STEPS.join(' -> '),
+        // The Google door has no form to have asked these, so it asks them
+        // inside VERIFY — same builder, so both doors word the box identically.
+        "Google's number half-step": labels.numberTitle,
+        'The tick box': labels.sameAsMobile,
+      };
+    },
   }),
   defineDemo<PasswordRecoveryMock>({
     id: 'password-recovery',
@@ -1029,6 +1052,34 @@ export default defineDemos('utils', [
         'The mode actually in effect': resolveMode(mock.saved_mode, mock.roles, access),
         'If products were on': resolveMode(mock.saved_mode, mock.roles, { products: true }),
         'Can switch at all': availableModes(mock.roles, access).length > 1,
+      };
+    },
+  }),
+  defineDemo<VenueSwitcherMock>({
+    id: 'venue-switcher',
+    title: 'Which venue the Venue Studio is showing',
+    note:
+      'Set selected_venue_id to null — the studio lands on The Loft, not the first row, because its application is still SUBMITTED and that is the one still needing work; the server picks the same way in its own myVenue. Point it at a venue id that is not in the list and it falls back identically rather than blanking the page. Cut the list down to one venue and canSwitchVenues turns false: the dropdown disappears instead of offering a list of one.',
+    mock: {
+      venues: [
+        { id: 'ven-4d81', venue_name: 'Wknd Coffee', city: 'Lucknow', status: 'APPROVED' },
+        { id: 'ven-9a02', venue_name: 'The Loft', city: 'Lucknow', status: 'SUBMITTED' },
+        { id: 'ven-2f55', venue_name: 'Indira Nagar Studio', city: 'Lucknow', status: 'APPROVED' },
+      ],
+      selected_venue_id: 'ven-4d81',
+    },
+    compute: (mock) => {
+      const showing = pickVenue(mock.venues, mock.selected_venue_id);
+      return {
+        'Draw the dropdown': canSwitchVenues(mock.venues),
+        'Venue the page is about': venueLabel(showing, 'Untitled venue'),
+        'Line under the name': venueSubLabel(showing),
+        'Lands here before anyone picks': venueLabel(
+          pickVenue(mock.venues, null),
+          'Untitled venue'
+        ),
+        'Seeded selection id': defaultVenueId(mock.venues),
+        'A venue that was deleted': venueLabel(pickVenue(mock.venues, 'ven-gone'), 'Untitled venue'),
       };
     },
   }),

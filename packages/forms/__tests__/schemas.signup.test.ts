@@ -16,6 +16,7 @@ const valid = {
   email: 'riya@duncit.com',
   phoneExtension: '+91',
   phoneNumber: '9845012345',
+  whatsappIsMobile: true,
   password: 'StrongPass123',
   confirmPassword: 'StrongPass123',
   referralCode: '',

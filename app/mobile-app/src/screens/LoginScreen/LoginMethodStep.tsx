@@ -8,6 +8,8 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
+  /** True while the screen is spending the id_token on the server. */
+  googleLoading?: boolean;
   onGoogle: (idToken: string) => void;
   onGoogleError: (message: string) => void;
   onChoosePassword: () => void;
@@ -25,6 +27,7 @@ interface Props {
  * belongs, since it is only ever about the password.
  */
 export function LoginMethodStep({
+  googleLoading,
   onGoogle,
   onGoogleError,
   onChoosePassword,
@@ -41,6 +44,7 @@ export function LoginMethodStep({
       </Text>
       <GoogleAuthButton
         label={t('mweb.login.googleSignIn')}
+        loading={googleLoading}
         onIdToken={onGoogle}
         onError={onGoogleError}
       />

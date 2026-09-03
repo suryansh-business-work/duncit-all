@@ -17,6 +17,7 @@ import {
   makeLoginSchema,
   makePasswordPairSchema,
   makeSignupSchema,
+  makeWhatsappNumberSchema,
   makeResetPasswordSchema,
   makeWithdrawSchema,
   buildWithdrawInput,
@@ -48,6 +49,8 @@ interface SchemaMock {
   channel: ContactChannel;
   extension: string;
   number: string;
+  /** Signup's tick box: is the WhatsApp number the mobile number too? */
+  whatsappIsMobile: boolean;
   /** The recipient on a saved address — name and number, as typed. */
   recipient_name: string;
   recipient_phone: string;
@@ -121,6 +124,7 @@ export default defineDemos('forms', [
       channel: 'PHONE',
       extension: '+91',
       number: '9845012345',
+      whatsappIsMobile: true,
       recipient_name: 'Ravi Kumar',
       recipient_phone: '+91 98450 12345',
     },
@@ -167,10 +171,20 @@ export default defineDemos('forms', [
             email: mock.email,
             phoneExtension: mock.extension,
             phoneNumber: mock.number,
+            whatsappIsMobile: mock.whatsappIsMobile,
             password: mock.new_password,
             confirmPassword: mock.confirm_password,
             referralCode: '',
             acceptedPolicyIds: [],
+          }),
+        ),
+        // The Google door asks for the same row on its own — untick
+        // whatsappIsMobile in the mock and the profile phone stays blank.
+        'WhatsApp number (Google door)': say(
+          makeWhatsappNumberSchema(t).safeParse({
+            phoneExtension: mock.extension,
+            phoneNumber: mock.number,
+            whatsappIsMobile: mock.whatsappIsMobile,
           }),
         ),
         'Recovery: new password only': say(

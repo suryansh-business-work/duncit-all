@@ -1,8 +1,9 @@
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { venueSubLabel } from '@duncit/utils';
 
 import { SimpleBarChart, buildMonthlyCounts } from '@/components/SimpleBarChart';
 import { StackScreen } from '@/components/StackScreen';
-import { StudioPodsSection, useVenueStudioPods } from '@/components/studio';
+import { StudioPodsSection, VenueSwitcher, useVenueStudioPods } from '@/components/studio';
 import { useVenueDashboard } from '@/hooks/useStudioDashboards';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -27,23 +28,29 @@ export function StatTile({ label, value }: Readonly<{ label: string; value: stri
   );
 }
 
-/** Venue studio dashboard — venues, capacity, status + bookings chart (B3-1). */
+/**
+ * Venue studio dashboard — venues, capacity, status + bookings chart (B3-1).
+ *
+ * A partner with more than one venue picks which one the screen is about from
+ * the switcher at the top; every figure below it belongs to that venue. Only
+ * "Listed" counts them all. mWeb reads the identical shape (rule 27).
+ */
 export function VenueManageScreen() {
   const { t } = useTranslation();
-  const { venues, podDates, isLoading } = useVenueDashboard();
-  const podsState = useVenueStudioPods();
-  const approved = venues.filter((venue) => venue.status === 'APPROVED' && venue.is_active);
-  const capacity = venues.reduce((sum, venue) => sum + (venue.capacity ?? 0), 0);
+  const { venues, venue, venueId, selectVenue, podDates, isLoading } = useVenueDashboard();
+  const podsState = useVenueStudioPods(venueId);
+  const capacity = venue?.capacity ?? 0;
 
   return (
     <StackScreen header title={t('mweb.venueManage.venueStudio')} testID="venue-manage-screen">
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={14} padding={16} paddingBottom={48}>
           {isLoading ? <Spinner testID="venue-dashboard-loading" color="$primary" /> : null}
+          <VenueSwitcher venues={venues} venueId={venueId} onSelect={selectVenue} />
           <XStack gap={10}>
-            <StatTile label={t('mweb.common.venues')} value={venues.length} />
-            <StatTile label={t('mweb.common.approved')} value={approved.length} />
+            <StatTile label={t('mweb.venueManagePage.listed')} value={venues.length} />
             <StatTile label={t('mweb.common.capacity')} value={capacity || '-'} />
+            <StatTile label={t('mweb.venueManagePage.status')} value={venue?.status ?? 'New'} />
           </XStack>
           <YStack
             gap={4}
@@ -74,9 +81,8 @@ export function VenueManageScreen() {
               No venues yet — register one to start hosting pods.
             </Text>
           ) : null}
-          {venues.map((venue) => (
+          {venue ? (
             <XStack
-              key={venue.id}
               testID={`venue-row-${venue.id}`}
               alignItems="center"
               gap={10}
@@ -91,11 +97,11 @@ export function VenueManageScreen() {
                   {venue.venue_name}
                 </Text>
                 <Text fontSize={12} color="$muted" numberOfLines={1}>
-                  {venue.city ?? '—'} · {venue.status}
+                  {venueSubLabel(venue)}
                 </Text>
               </YStack>
             </XStack>
-          ))}
+          ) : null}
         </YStack>
       </ScrollView>
     </StackScreen>

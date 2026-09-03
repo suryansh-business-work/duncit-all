@@ -16,7 +16,7 @@ import {
 import AppsIcon from '@mui/icons-material/Apps';
 import { DuncitButton } from '@duncit/buttons';
 import MediaPickerField from '../../components/MediaPickerField';
-import { BRANDING, UPDATE_BRANDING } from '../branding-page/queries';
+import { BRANDING, UPDATE_BRANDING, toIconLayoutInput } from '../branding-page/queries';
 import { useTranslation } from '@duncit/shell';
 
 const POSITIONS = ['TOP', 'LEFT', 'RIGHT', 'BOTTOM'] as const;
@@ -39,7 +39,7 @@ const titleCase = (p: Position) => p[0] + p.slice(1).toLowerCase();
 export default function AllVibeIconCard() {
   const { t } = useTranslation();
   const { data } = useQuery<any>(BRANDING, { fetchPolicy: 'cache-and-network' });
-  const [updateMut] = useMutation<any>(UPDATE_BRANDING, { refetchQueries: [t('admin.branding.title')] });
+  const [updateMut] = useMutation<any>(UPDATE_BRANDING, { refetchQueries: ['Branding'] });
 
   const savedIcon: string = data?.branding?.home_all_vibe_icon_url ?? '';
   const savedLayout: Layout | null = data?.branding?.home_all_vibe_icon_layout ?? null;
@@ -72,13 +72,7 @@ export default function AllVibeIconCard() {
           input: {
             home_all_vibe_icon_url: value,
             home_show_all_vibe_categories: showAll,
-            // Pick only the input fields — the layout loaded from the query
-            // carries Apollo's __typename, which CategoryIconLayoutInput rejects.
-            home_all_vibe_icon_layout: {
-              position: layout.position,
-              width: layout.width,
-              height: layout.height,
-            },
+            home_all_vibe_icon_layout: toIconLayoutInput(layout),
           },
         },
       });

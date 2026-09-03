@@ -41,31 +41,44 @@ export function applyVars(source: string, vars: Record<string, string>): string 
   return out;
 }
 
-export function renderMjml(
+/**
+ * Compile one MJML document to HTML.
+ *
+ * AWAITED, because mjml2html is asynchronous. It became so in mjml 5 and this
+ * file went on calling it as though it were not — a cast to a hand-written
+ * `{ html?: string }` shape hid the Promise from the compiler, so every render
+ * read `html` off a Promise, got `undefined`, and carried on. That is the whole
+ * of what the email system was doing wrong: the send path handed `undefined` to
+ * the logo swap and logged "Cannot read properties of undefined (reading
+ * 'split')", the editor's preview answered "Cannot return null for non-nullable
+ * field EmailTemplateRender.html", and once that crash was guarded both
+ * surfaces settled on the honest but useless "MJML produced no output".
+ *
+ * The cast is gone with it. `MJMLParseResults` is what the package declares, so
+ * the next major that changes this signature fails `tsc` here instead of
+ * shipping empty emails.
+ */
+export async function renderMjml(
   mjml: string,
   vars: Record<string, string> = {}
-): { html: string; errors: string[] } {
+): Promise<{ html: string; errors: string[] }> {
   const expanded = applyVars(mjml, vars);
   try {
     // `soft` validation COLLECTS problems instead of throwing, so a body mjml
     // cannot build anything from does not reach the catch below — it returns
-    // with no `html` at all. The old cast claimed `string` and passed that
-    // straight out, which failed every `html: String!` render type ("Cannot
-    // return null for non-nullable field EmailTemplateRender.html" killed the
-    // admin editor's preview) and, on a send path, would have mailed an empty
-    // body. The type below is what mjml actually returns.
-    const result = mjml2html(expanded, { validationLevel: 'soft' }) as unknown as {
-      html?: string | null;
-      errors?: { formattedMessage?: string; message?: string }[];
-    };
-    const errors = (result.errors || []).map(
+    // with no `html` at all.
+    const result = await mjml2html(expanded, { validationLevel: 'soft' });
+    const errors = (result.errors ?? []).map(
       (e) => e.formattedMessage || e.message || 'Unknown MJML error'
     );
     // Nothing rendered AND nothing said why is the worst pair: the preview
     // looks merely blank, and a send goes out empty in silence. Name it, so
     // the editor shows a reason and the send paths that check `errors` stop.
-    if (!result.html && errors.length === 0) errors.push('MJML produced no output');
-    return { html: result.html ?? '', errors };
+    // `|| ''` rather than the declared type alone — trusting that declaration
+    // is what produced this bug, and `html: String!` must never receive null.
+    const html = result.html || '';
+    if (!html && errors.length === 0) errors.push('MJML produced no output');
+    return { html, errors };
   } catch (e: any) {
     return { html: '', errors: [e.message || String(e)] };
   }

@@ -1,9 +1,3 @@
-import { z } from 'zod';
-import { BIRTH_YEAR, DIAL_CODE, EMAIL, PERSON_NAME, PHONE_INTL, REFERRAL_CODE } from '@duncit/regex';
-import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, isEligibleBirthYear } from '@duncit/datetime';
-
-import type { Translate } from './translate';
-
 /**
  * Joining Duncit — the ONE contract both signup surfaces validate against.
  *
@@ -22,6 +16,71 @@ import type { Translate } from './translate';
  * the shared catalogue (rule 38) and each surface binds this factory to its own
  * bundled English.
  */
+import { z } from 'zod';
+import { BIRTH_YEAR, DIAL_CODE, EMAIL, PERSON_NAME, PHONE_INTL, REFERRAL_CODE } from '@duncit/regex';
+import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, isEligibleBirthYear } from '@duncit/datetime';
+
+import type { Translate } from './translate';
+
+/**
+ * The WhatsApp row every signup door collects — the number, its dial code, and
+ * whether it is also the mobile number.
+ *
+ * Spelled once because two doors ask for it: the email form asks it as step
+ * two, and Google — which hands back a finished account with no form attached —
+ * asks it on a step of its own. A second copy would drift on exactly the rules
+ * that decide whether a real number is accepted (rule 40).
+ *
+ * Both halves are checked here only for SHAPE — the digits without a dial code,
+ * matching the server's own `phoneRegex`, so a number the form accepts is a
+ * number the mutation accepts. Whether it is already on another account is the
+ * server's answer: it holds the lookup, and a client-side check would race it.
+ */
+function whatsappNumberShape(t: Translate) {
+  return {
+    phoneExtension: z
+      .string()
+      .trim()
+      .min(1, t('mweb.signup.validation.codeRequired'))
+      .regex(DIAL_CODE, t('mweb.signup.validation.codeInvalid')),
+    phoneNumber: z
+      .string()
+      .trim()
+      .min(1, t('mweb.signup.validation.phoneRequired'))
+      .regex(PHONE_INTL, t('mweb.signup.validation.phoneInvalid')),
+    /*
+      Ticked, the number is written to the profile phone as well as to WhatsApp.
+      Unticked, the profile phone is left BLANK — the person is saying the two
+      numbers differ, and guessing the mobile from the WhatsApp one would put a
+      number they never gave us on their account.
+    */
+    whatsappIsMobile: z.boolean(),
+  };
+}
+
+/**
+ * The Google door's WhatsApp step: the same row, on its own.
+ *
+ * `signupWithGoogle` returns a finished account, so this is asked afterwards —
+ * which is also the only moment the code can be requested, since
+ * `requestWhatsAppOtp` authenticates its caller.
+ *
+ * This is the ONE public spelling of the row: `makeSignupSchema` spreads its
+ * `.shape` rather than calling the shape builder beside it, so there is no way
+ * to change the row for one door and not the other.
+ */
+export function makeWhatsappNumberSchema(t: Translate) {
+  return z.object(whatsappNumberShape(t));
+}
+
+export type WhatsappNumberValues = z.infer<ReturnType<typeof makeWhatsappNumberSchema>>;
+
+export const whatsappNumberDefaults: WhatsappNumberValues = {
+  phoneExtension: '+91',
+  phoneNumber: '',
+  whatsappIsMobile: true,
+};
+
 export function makeSignupSchema(
   t: Translate,
   minAge: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
@@ -62,24 +121,9 @@ export function makeSignupSchema(
         .min(1, t('mweb.auth.validation.emailRequired'))
         .refine((v) => EMAIL.test(v), t('mweb.auth.validation.emailInvalid'))
         .max(254),
-      /*
-        The WhatsApp number, and it is required and unique. Both halves are
-        checked here only for SHAPE — the digits without a dial code, matching
-        the server's own `phoneRegex`, so a number the form accepts is a number
-        the mutation accepts. Whether it is already on another account is the
-        server's answer: it holds the unique index, and a client-side check
-        would race it.
-      */
-      phoneExtension: z
-        .string()
-        .trim()
-        .min(1, t('mweb.signup.validation.codeRequired'))
-        .regex(DIAL_CODE, t('mweb.signup.validation.codeInvalid')),
-      phoneNumber: z
-        .string()
-        .trim()
-        .min(1, t('mweb.signup.validation.phoneRequired'))
-        .regex(PHONE_INTL, t('mweb.signup.validation.phoneInvalid')),
+      // The WhatsApp number, its dial code and the "same as my mobile" answer —
+      // the Google door's whole schema, spread in as this form's step two.
+      ...makeWhatsappNumberSchema(t).shape,
       password: z
         .string()
         .min(8, t('mweb.auth.validation.passwordMin'))
@@ -138,6 +182,7 @@ export const signupDefaults: SignupFormValues = {
   // market, and the box is a searchable list for everyone else.
   phoneExtension: '+91',
   phoneNumber: '',
+  whatsappIsMobile: true,
   password: '',
   confirmPassword: '',
   referralCode: '',

@@ -1339,12 +1339,24 @@ export const userService = {
     if (existing) {
       throw new GraphQLError('Email already in use', { extensions: { code: 'CONFLICT' } });
     }
-    // Signup always carries a phone, so this always runs. It is a friendlier
-    // read of the same rule the unique index enforces — the index is still what
-    // decides, and registerDuplicateError catches the race that gets past here.
+    /*
+      Signup always carries a number, so this always runs. It looks at BOTH
+      fields a number can live in: the tick box decides which one it is written
+      to, and a number that is somebody's WhatsApp number is just as taken as
+      one that is their mobile — `accountFor` matches either, so letting two
+      accounts share one would leave the phone doors picking between them.
+
+      It is still a friendlier read of the rule the unique index enforces on
+      auth.phone; registerDuplicateError catches the race that gets past here.
+    */
     const phoneExists = await UserModel.findOne({
-      'auth.phone.number': input.phone_number,
-      'auth.phone.extension': input.phone_extension,
+      $or: [
+        { 'auth.phone.number': input.phone_number, 'auth.phone.extension': input.phone_extension },
+        {
+          'communication.whatsapp.number': input.phone_number,
+          'communication.whatsapp.extension': input.phone_extension,
+        },
+      ],
     });
     if (phoneExists) {
       throw new GraphQLError(
@@ -1356,7 +1368,24 @@ export const userService = {
     let created: any;
     try {
       const username = await nextFreeUsername(input.first_name, input.last_name);
-      const doc = shapeUserDoc(input, { passwordHash: hashed, username });
+      /*
+        The number the form collects is the WhatsApp one — that is what its
+        label says and what the verification step proves — so it is always
+        recorded there, unverified until a code settles it. Whether it is ALSO
+        the mobile number is the tick box's answer, and the only thing that
+        writes auth.phone: unticked, the profile phone stays blank rather than
+        being guessed from a number the person said was different.
+      */
+      const alsoMobile = input.whatsapp_is_mobile !== false;
+      const doc = {
+        ...shapeUserDoc(
+          { ...input, phone_number: alsoMobile ? input.phone_number : '' },
+          { passwordHash: hashed, username }
+        ),
+        communication: {
+          whatsapp: { extension: input.phone_extension, number: input.phone_number },
+        },
+      };
       created = await UserModel.create(doc);
       await UserRoleModel.create({
         user_id: created._id,

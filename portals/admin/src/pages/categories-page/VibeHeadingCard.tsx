@@ -14,7 +14,7 @@ import { useTranslation } from '@duncit/shell';
 export default function VibeHeadingCard() {
   const { t } = useTranslation();
   const { data } = useQuery<any>(BRANDING, { fetchPolicy: 'cache-and-network' });
-  const [updateMut] = useMutation<any>(UPDATE_BRANDING, { refetchQueries: [t('admin.branding.title')] });
+  const [updateMut] = useMutation<any>(UPDATE_BRANDING, { refetchQueries: ['Branding'] });
 
   const savedHeading: string = data?.branding?.home_vibe_heading ?? '';
   const savedSubheading: string = data?.branding?.home_vibe_subheading ?? '';

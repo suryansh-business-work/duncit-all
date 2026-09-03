@@ -523,6 +523,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       googleContinue: 'Continue with Google',
       googleFailed: 'Google sign-in failed.',
       googleNoIdToken: 'Google did not return an id token.',
+      // Shown from the tap until the account is settled: the browser hand-off
+      // and the token exchange after it are both slow enough to look broken
+      // without it.
+      googleConnecting: 'Connecting to Google…',
       // The Terms & Privacy footer. The lead-in changes per screen and the two
       // links must stay tappable inside the sentence, so it is assembled from
       // parts rather than one template with markup in it.
@@ -676,6 +680,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       resend: 'Send again',
       skipForNow: 'Skip for now',
       testCode: 'Test code: {code}',
+      // The Google door has no form behind it, so it asks for the number on a
+      // step of its own before a code can be sent to it.
+      numberTitle: 'Your WhatsApp number',
+      numberSubtitle: 'We send your booking updates and your sign-up code here.',
+      sameAsMobile: 'This is also my mobile number',
+      sameAsMobileHint: 'Untick if your mobile number is different — we will leave the phone number on your profile blank.',
     },
     forgotPassword: {
       title: 'Forgot',
@@ -2246,7 +2256,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       pageTitle: 'Mark Attendance',
       menuItem: 'See Marked Attendance',
       summary: '{marked} of {total} attendees marked',
-      seatsSummary: '{marked} of {total} seats marked',
+      bookingsSummary: '{marked} of {total} bookings',
       markedHeading: 'Attendance marked',
       unmarkedHeading: 'Not marked yet',
       emptyRoster: 'Nobody has booked this pod yet.',
@@ -3831,8 +3841,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venueStudio: 'Venue Studio',
     },
     venueManagePage: {
+      listYourSpace: 'List your space, run events, get discovered',
       listed: 'Listed',
+      newVenue: 'New venue',
       status: 'Status',
+      switchYourVenue: 'Switch your venue',
+      untitledVenue: 'Untitled venue',
       yourVenues: 'Your venues',
     },
     venueMapPreview: {

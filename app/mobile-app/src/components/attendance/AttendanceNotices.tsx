@@ -17,7 +17,9 @@ const openUrl = (url: string) => {
   Linking.openURL(url).catch(() => undefined);
 };
 
-/** How far through the roster the host is — seats, because the payout is. */
+/** How far through the roster the host is. The headline counts PEOPLE, because
+ * eight seats on one booking are eight attendees and the payout is split on
+ * them; the bookings count sits beside it. Word-for-word the mWeb twin. */
 export function AttendanceSummary({
   board,
   labels,
@@ -31,10 +33,10 @@ export function AttendanceSummary({
     <YStack gap={6} testID="attendance-summary">
       <XStack alignItems="center" justifyContent="space-between" gap={8}>
         <Text fontSize={13.5} fontWeight="700" color="$color">
-          {labels.summary(board.marked_count, board.total_count)}
+          {labels.summary(board.marked_seats, board.total_seats)}
         </Text>
         <Text fontSize={12} fontWeight="700" color={tint}>
-          {labels.seatsSummary(board.marked_seats, board.total_seats)}
+          {labels.bookingsSummary(board.marked_count, board.total_count)}
         </Text>
       </XStack>
       <YStack height={8} borderRadius={999} backgroundColor="$surface" overflow="hidden">

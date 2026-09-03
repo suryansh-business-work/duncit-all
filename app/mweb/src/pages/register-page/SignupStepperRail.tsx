@@ -10,6 +10,12 @@ import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   step: SignupStep;
+  /**
+   * The Google door's number step, which sits inside VERIFY rather than beside
+   * it: Google has already answered the first three steps, so the position is
+   * right and only the words need to say which half of the last one is showing.
+   */
+  askingNumber?: boolean;
 }
 
 /**
@@ -19,11 +25,12 @@ interface Props {
  * the button that owns that and the last step has no way back at all — the
  * account exists by then.
  */
-export default function SignupStepperRail({ step }: Readonly<Props>) {
+export default function SignupStepperRail({ step, askingNumber }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = buildSignupStepperLabels(t);
   const active = signupStepIndex(step) - 1;
-  const current = labels.step(step);
+  // Decided above the JSX (S3358).
+  const subtitle = askingNumber ? labels.numberSubtitle : labels.step(step).subtitle;
 
   return (
     <Stack spacing={1}>
@@ -39,7 +46,7 @@ export default function SignupStepperRail({ step }: Readonly<Props>) {
           {labels.stepOf(signupStepIndex(step), SIGNUP_STEP_COUNT)}
         </Typography>
         <Typography variant="body2" sx={{ textAlign: 'center', color: 'text.secondary' }}>
-          {current.subtitle}
+          {subtitle}
         </Typography>
       </Stack>
     </Stack>

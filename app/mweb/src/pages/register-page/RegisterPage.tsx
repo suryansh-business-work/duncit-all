@@ -1,8 +1,4 @@
-import { useState } from 'react';
-import { readReferralCode, type SignupStep } from '@duncit/utils';
-import { birthYearToDob } from '@duncit/datetime';
-import { useMutation } from '@apollo/client/react';
-import { useNavigate } from 'react-router';
+import { readReferralCode } from '@duncit/utils';
 import { Alert, Box, Divider, Stack, Typography } from '@mui/material';
 import { auth } from '@duncit/auth-tokens';
 import AuthBackground from '../../components/AuthBackground';
@@ -11,45 +7,33 @@ import AuthModeToggle from '../../components/AuthModeToggle';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import LegalLinks from '../../components/LegalLinks';
 import { useTranslation } from '../../i18n/useTranslation';
-import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 import { useGoogleSignup } from '../../hooks/useGoogleSignup';
 import GoogleSignInButton from '../../components/GoogleSignInButton';
-import {
-  ACCEPTANCE_SURFACE,
-  GoogleSignupPolicyGate,
-  useSignupPolicies,
-} from '../../components/policy-acceptance';
-import { RegisterForm, registerDefaults, type RegisterFormValues } from '../../forms/register';
-import { parseApiError } from '../../utils/parseApiError';
-import { REGISTER } from './queries';
+import { GoogleSignupPolicyGate, useSignupPolicies } from '../../components/policy-acceptance';
+import { RegisterForm, registerDefaults } from '../../forms/register';
 import SignupStepperRail from './SignupStepperRail';
 import VerifyWhatsappStep from './VerifyWhatsappStep';
-
-/** Split a single "Name" into first/last; surname may be empty. */
-function splitName(name: string): { first_name: string; last_name?: string } {
-  const [first, ...rest] = name.trim().split(/\s+/).filter(Boolean);
-  return { first_name: first ?? '', last_name: rest.length ? rest.join(' ') : undefined };
-}
+import WhatsappNumberStep from './WhatsappNumberStep';
+import { useSignupFlow } from './useSignupFlow';
 
 /**
  * Join Duncit — four steps.
  *
- * The first three collect the account and are the form's; the fourth verifies
+ * The first three collect the account and are the form's; the fourth settles
  * the WhatsApp number and is this page's, because `requestWhatsAppOtp`
- * authenticates its caller and so can only run once `register` has returned a
- * token. That token is stored the moment the account exists, which is what
- * makes the last step authorised without the person having signed in.
+ * authenticates its caller and so can only run once an account exists. That
+ * token is stored the moment it does, which is what makes the last step
+ * authorised without the person having signed in.
+ *
+ * Google is the same four steps with the first three answered for it — so it
+ * lands straight on the last one, where it has to ask for the number before it
+ * can ask for the code. What each door does is `useSignupFlow`'s; this file is
+ * the view.
  *
  * RN twin: app/mobile-app/src/screens/SignupScreen.
  */
 export default function RegisterPage() {
   const { t } = useTranslation();
-  const [registerMutation, { loading, error }] = useMutation<any>(REGISTER);
-  const [registerError, setRegisterError] = useState<string | null>(null);
-  const [step, setStep] = useState<SignupStep>('WHO');
-  /** The number step two collected, kept for the code step four sends. */
-  const [verifying, setVerifying] = useState<{ extension: string; number: string } | null>(null);
-  const navigate = useNavigate();
 
   /*
     A shared referral link carries its code in the URL, and this page is where
@@ -68,53 +52,14 @@ export default function RegisterPage() {
     the Google gate reads it to know when the credential can be spent.
   */
   const { policies, loading: policiesLoading, failed: policiesFailed } = useSignupPolicies();
-  const google = useGoogleSignup(linkedCode);
+  const flow = useSignupFlow(linkedCode);
+  const google = useGoogleSignup(flow.googleCreated);
 
-  const whatsappStepEnabled = useFeatureFlag('whatsapp_signup_otp', true);
-
-  const handleRegister = async (values: RegisterFormValues) => {
-    setRegisterError(null);
-    try {
-      const { first_name, last_name } = splitName(values.name);
-      const code = values.referralCode.trim().toUpperCase();
-      const res = await registerMutation({
-        variables: {
-          input: {
-            first_name,
-            last_name,
-            email: values.email,
-            phone_number: values.phoneNumber,
-            phone_extension: values.phoneExtension,
-            password: values.password,
-            // A birth YEAR is stored as its January 1 — see `birthYearToDob`
-            // for why that is the reading the server agrees with.
-            dob: new Date(birthYearToDob(values.dobYear)).toISOString(),
-            ...(code ? { referral_code: code } : {}),
-            accepted_policy_ids: values.acceptedPolicyIds,
-            accepted_policy_surface: ACCEPTANCE_SURFACE,
-          },
-        },
-      });
-      const token = res.data?.register?.token;
-      if (!token) return;
-      /*
-        Stored, but NOT navigated on: the last step's mutations read this token
-        out of storage, and leaving the page now would skip the verification the
-        person is halfway through.
-      */
-      localStorage.setItem('token', token);
-      if (!whatsappStepEnabled) {
-        navigate('/signup-survey');
-        return;
-      }
-      setVerifying({ extension: values.phoneExtension, number: values.phoneNumber });
-      setStep('VERIFY');
-    } catch (e) {
-      setRegisterError(parseApiError(e));
-    }
-  };
-
-  const onVerifyStep = step === 'VERIFY' && verifying !== null;
+  const onNumberStep = flow.askingNumber;
+  const onVerifyStep = flow.step === 'VERIFY' && flow.verifying !== null;
+  // Decided above the JSX (S3358): the two doors reach the same code step from
+  // different places, and only the form door still has a form to show.
+  const showForm = !onNumberStep && !onVerifyStep;
 
   return (
     <AuthBackground>
@@ -134,15 +79,22 @@ export default function RegisterPage() {
             </Typography>
           </Stack>
 
-          <SignupStepperRail step={step} />
+          <SignupStepperRail step={flow.step} askingNumber={flow.askingNumber} />
 
-          {onVerifyStep ? (
+          {onNumberStep && (
+            <WhatsappNumberStep onSubmit={flow.submitNumber} onSkip={flow.finish} />
+          )}
+
+          {onVerifyStep && flow.verifying && (
             <VerifyWhatsappStep
-              extension={verifying.extension}
-              number={verifying.number}
-              onDone={() => navigate('/signup-survey')}
+              extension={flow.verifying.extension}
+              number={flow.verifying.number}
+              alsoMobile={flow.verifying.alsoMobile}
+              onDone={flow.finish}
             />
-          ) : (
+          )}
+
+          {showForm && (
             <>
               <GoogleSignInButton
                 onCredential={google.start}
@@ -165,12 +117,12 @@ export default function RegisterPage() {
               <Divider>{t('mweb.auth.orEmail')}</Divider>
 
               <RegisterForm
-                step={step}
-                onStep={setStep}
-                loading={loading}
+                step={flow.step}
+                onStep={flow.setStep}
+                loading={flow.loading}
                 initialValues={initialValues}
-                errorMessage={registerError ?? (error ? parseApiError(error) : null)}
-                onSubmit={handleRegister}
+                errorMessage={flow.error}
+                onSubmit={flow.submitForm}
               />
             </>
           )}

@@ -263,15 +263,19 @@ const AUTO_POD_TILES: Partial<Record<StudioMode, Omit<ProfileTile, 'label'>>> = 
  *
  * `autoPodLabel` opts the mode's Auto Pods row in: the caller passes the
  * translated label when the `auto_pods` flag is on, and nothing when it is off.
+ *
+ * `extraItems` are rows the caller builds with translated labels (rule 38),
+ * appended after the mode's own items and before Auto Pods.
  */
 export function buildPartnerMenus(
   roles: readonly string[],
   mode: StudioMode,
   autoPodLabel?: string,
+  extraItems: readonly ProfileTile[] = [],
 ): PartnerMenu[] {
   const active = PARTNER_MENUS.find((menu) => menu.mode === mode && roles.includes(menu.role));
   if (!active) return [];
-  const items = [...active.items];
+  const items = [...active.items, ...extraItems];
   const autoPods = AUTO_POD_TILES[mode];
   if (autoPodLabel && autoPods) {
     items.push({ ...autoPods, label: autoPodLabel });

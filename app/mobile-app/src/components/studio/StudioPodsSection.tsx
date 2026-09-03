@@ -1,9 +1,11 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { canCancelVenuePod } from '@duncit/utils';
 
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { asVenuePodRow, type StudioPod } from './studio-pods';
 import { StudioPodFigures } from './StudioPodFigures';
 import { StudioPodRow } from './StudioPodRow';
 import type { StudioPodsState } from './useStudioPods';
@@ -27,7 +29,14 @@ const VARIANT_COPY = {
   },
 } as const;
 
-interface StudioPodsBodyProps {
+/** The per-pod actions a studio may offer. Venue Studio passes both; Club
+ * Studio passes neither — a club admin has no cancel. */
+interface PodActions {
+  onOpenPod?: (pod: StudioPod) => void;
+  onCancelPod?: (pod: StudioPod) => void;
+}
+
+interface StudioPodsBodyProps extends PodActions {
   state: StudioPodsState;
   emptyKey: string;
   scopeKey: string;
@@ -36,7 +45,14 @@ interface StudioPodsBodyProps {
 
 /** Loading / error / empty / loaded — hoisted so the section itself stays a flat
  * header + body and never nests these branches (rule 26g). */
-function StudioPodsBody({ state, emptyKey, scopeKey, testID }: Readonly<StudioPodsBodyProps>) {
+function StudioPodsBody({
+  state,
+  emptyKey,
+  scopeKey,
+  testID,
+  onOpenPod,
+  onCancelPod,
+}: Readonly<StudioPodsBodyProps>) {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const { primary } = useThemeColors();
@@ -77,6 +93,11 @@ function StudioPodsBody({ state, emptyKey, scopeKey, testID }: Readonly<StudioPo
   // The list is capped server-side while the figures count every pod, so the
   // difference is stated rather than left to look like missing data.
   const capped = state.figures.total > state.pods.length;
+  // A venue owner may only pull the plug before the pod starts (shared rule).
+  const cancelFor = (pod: StudioPod) => {
+    if (!onCancelPod || !canCancelVenuePod(asVenuePodRow(pod))) return undefined;
+    return () => onCancelPod(pod);
+  };
 
   return (
     <YStack gap={12}>
@@ -102,13 +123,15 @@ function StudioPodsBody({ state, emptyKey, scopeKey, testID }: Readonly<StudioPo
           pod={pod}
           when={formatDateTime(pod.pod_date_time)}
           currencySymbol={state.figures.currency_symbol}
+          onOpen={onOpenPod ? () => onOpenPod(pod) : undefined}
+          onCancel={cancelFor(pod)}
         />
       ))}
     </YStack>
   );
 }
 
-interface StudioPodsSectionProps {
+interface StudioPodsSectionProps extends PodActions {
   variant: StudioPodsVariant;
   state: StudioPodsState;
   testID: string;
@@ -117,10 +140,16 @@ interface StudioPodsSectionProps {
 /**
  * The pod section both partner studios render: a figures strip over the pods in
  * scope, then every pod as a row. Venue Studio and Club Studio differ only in
- * their copy and their query — the numbers, the row and the states are one
- * component, so mWeb has one section to mirror rather than two (rules 27 + 34).
+ * their copy, their query and their actions — the numbers, the row and the
+ * states are one component, so mWeb has one section to mirror (rules 27 + 34).
  */
-export function StudioPodsSection({ variant, state, testID }: Readonly<StudioPodsSectionProps>) {
+export function StudioPodsSection({
+  variant,
+  state,
+  testID,
+  onOpenPod,
+  onCancelPod,
+}: Readonly<StudioPodsSectionProps>) {
   const { t } = useTranslation();
   const copy = VARIANT_COPY[variant];
 
@@ -134,7 +163,14 @@ export function StudioPodsSection({ variant, state, testID }: Readonly<StudioPod
           {t(copy.subtitle)}
         </Text>
       </YStack>
-      <StudioPodsBody state={state} emptyKey={copy.empty} scopeKey={copy.scope} testID={testID} />
+      <StudioPodsBody
+        state={state}
+        emptyKey={copy.empty}
+        scopeKey={copy.scope}
+        testID={testID}
+        onOpenPod={onOpenPod}
+        onCancelPod={onCancelPod}
+      />
     </YStack>
   );
 }

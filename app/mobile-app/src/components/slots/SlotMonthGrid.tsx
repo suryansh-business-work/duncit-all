@@ -5,6 +5,7 @@ import { addMonths, buildMonthGrid, clampMonth, monthKeyOf, weekdayInitials } fr
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { WeekdayHeader } from './WeekdayHeader';
 
 export interface SlotMonthGridProps {
   monthKey: string;
@@ -88,15 +89,7 @@ export default function SlotMonthGrid({
         </XStack>
       </XStack>
 
-      <XStack>
-        {initials.map((weekday) => (
-          <YStack key={weekday.id} flex={1} alignItems="center" paddingVertical={4}>
-            <Text fontSize={11} fontWeight="700" color="$muted">
-              {weekday.label}
-            </Text>
-          </YStack>
-        ))}
-      </XStack>
+      <WeekdayHeader initials={initials} />
 
       {/* The grid is deterministic for a given month, so a coordinate key is
        * stable — there is no reordering for an index-based key to break. */}

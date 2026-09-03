@@ -1,5 +1,4 @@
-import { useState, type ReactNode } from 'react';
-import { ScrollView } from 'react-native';
+import { useState } from 'react';
 import { addMonths, format } from 'date-fns';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -12,11 +11,8 @@ import {
   minuteBlocked,
   seedFor,
 } from './date-time-limits';
+import { chipStyle, MINUTES, TimeChipRows } from './TimeChipRows';
 import { PRESS_STYLE } from '@duncit/buttons-native';
-
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
-const MINUTES = [0, 15, 30, 45];
-const pad = (n: number) => String(n).padStart(2, '0');
 
 /** Day cells (with leading blanks) for the visible month. */
 export function buildMonthDays(year: number, month: number): (number | null)[] {
@@ -27,14 +23,6 @@ export function buildMonthDays(year: number, month: number): (number | null)[] {
     ...Array.from({ length: total }, (_, i) => i + 1),
   ];
 }
-
-const chip = (selected: boolean) =>
-  ({
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: selected ? '$primary' : '$borderColor',
-    backgroundColor: selected ? '$primary' : 'transparent',
-  }) as const;
 
 interface DayCellProps {
   testID: string;
@@ -71,52 +59,12 @@ function DayCell({ testID, d, selected, blocked, ariaLabel, onSelect }: Readonly
         alignItems="center"
         justifyContent="center"
         opacity={blocked ? 0.35 : 1}
-        {...chip(selected)}
+        {...chipStyle(selected)}
       >
         <Text fontSize={13} fontWeight="700" color={blocked ? '$muted' : ink}>
           {d}
         </Text>
       </YStack>
-    </YStack>
-  );
-}
-
-interface TimeChipProps {
-  testID: string;
-  ariaLabel: string;
-  selected: boolean;
-  blocked: boolean;
-  paddingHorizontal: number;
-  onPress: () => void;
-  children: ReactNode;
-}
-
-/** Hour / minute chip (hoisted, S6478). */
-function TimeChip({
-  testID,
-  ariaLabel,
-  selected,
-  blocked,
-  paddingHorizontal,
-  onPress,
-  children,
-}: Readonly<TimeChipProps>) {
-  const ink = selected ? '$onPrimary' : '$color';
-  return (
-    <YStack
-      testID={testID}
-      role="button"
-      aria-label={ariaLabel}
-      aria-disabled={blocked}
-      onPress={blocked ? undefined : onPress}
-      paddingHorizontal={paddingHorizontal}
-      paddingVertical={7}
-      opacity={blocked ? 0.35 : 1}
-      {...chip(selected)}
-    >
-      <Text fontSize={12.5} fontWeight="600" color={blocked ? '$muted' : ink}>
-        {children}
-      </Text>
     </YStack>
   );
 }
@@ -127,6 +75,9 @@ interface SheetProps {
   /** Earliest pickable moment — earlier days/hours/minutes are blocked. */
   minDateTime?: Date | null;
   muted: string;
+  /** Off for a date-only pick (a whole-day slot, a date range) — the hour and
+   * minute rows are not shown and the seed's time rides along unchanged. */
+  showTime?: boolean;
   onDone: (picked: Date) => void;
 }
 
@@ -136,6 +87,7 @@ export function CalendarSheet({
   initial,
   minDateTime = null,
   muted,
+  showTime = true,
   onDone,
 }: Readonly<SheetProps>) {
   const { t } = useTranslation();
@@ -189,41 +141,17 @@ export function CalendarSheet({
           />
         ))}
       </XStack>
-      <Text fontSize={12} fontWeight="700" color="$muted">
-        {t('mweb.createPod.timeHeading')}
-      </Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <XStack gap={6}>
-          {HOURS.map((h) => (
-            <TimeChip
-              key={h}
-              testID={`${testID}-hour-${h}`}
-              ariaLabel={t('mweb.createPod.hourAria', { vars: { hour: h } })}
-              selected={h === hour}
-              blocked={hourBlocked(view, day, h, minDateTime)}
-              paddingHorizontal={12}
-              onPress={() => setHour(h)}
-            >
-              {pad(h)}
-            </TimeChip>
-          ))}
-        </XStack>
-      </ScrollView>
-      <XStack gap={6}>
-        {MINUTES.map((m) => (
-          <TimeChip
-            key={m}
-            testID={`${testID}-minute-${m}`}
-            ariaLabel={t('mweb.createPod.minuteAria', { vars: { minute: m } })}
-            selected={m === minute}
-            blocked={minuteBlocked(view, day, hour, m, minDateTime)}
-            paddingHorizontal={14}
-            onPress={() => setMinute(m)}
-          >
-            :{pad(m)}
-          </TimeChip>
-        ))}
-      </XStack>
+      {showTime ? (
+        <TimeChipRows
+          testID={testID}
+          hour={hour}
+          minute={minute}
+          onHour={setHour}
+          onMinute={setMinute}
+          isHourBlocked={(h) => hourBlocked(view, day, h, minDateTime)}
+          isMinuteBlocked={(m) => minuteBlocked(view, day, hour, m, minDateTime)}
+        />
+      ) : null}
       <XStack
         testID={`${testID}-done`}
         role="button"

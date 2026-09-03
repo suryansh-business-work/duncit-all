@@ -1,8 +1,9 @@
-import { formatMoney } from '@duncit/utils';
 import { Text, XStack, YStack } from 'tamagui';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { useTranslation } from '@/hooks/useTranslation';
-import { bucketLabelKey, bucketTone, type StudioPod } from './studio-pods';
+import { bucketLabelKey, bucketTone, podPriceLabel, type StudioPod } from './studio-pods';
 
 interface RowMetricProps {
   label: string;
@@ -32,24 +33,36 @@ interface StudioPodRowProps {
   /** Server-provided currency symbol; null uses the formatter's default. */
   currencySymbol: string | null;
   testID: string;
+  /** Tap-through to the pod's detail; omitted, the row is not tappable. */
+  onOpen?: () => void;
+  /** The venue owner's cancel; only ever passed for a pod that may still be. */
+  onCancel?: () => void;
 }
 
 /**
  * One pod in a studio list — the same row for a pod at your venue and a pod in
  * your club, because VenuePod and ClubPod carry the same fields.
  */
-export function StudioPodRow({ pod, when, currencySymbol, testID }: Readonly<StudioPodRowProps>) {
+export function StudioPodRow({
+  pod,
+  when,
+  currencySymbol,
+  testID,
+  onOpen,
+  onCancel,
+}: Readonly<StudioPodRowProps>) {
   const { t } = useTranslation();
 
   const hosts = pod.host_names.filter(Boolean).join(', ');
-  const price =
-    pod.pod_type === 'FREE'
-      ? t('mweb.podDetails.free')
-      : formatMoney(pod.pod_amount, { symbol: currencySymbol ?? undefined });
+  const price = podPriceLabel(pod, t, currencySymbol);
 
   return (
     <YStack
       testID={testID}
+      role={onOpen ? 'button' : undefined}
+      aria-label={onOpen ? pod.pod_title : undefined}
+      onPress={onOpen}
+      pressStyle={onOpen ? PRESS_STYLE.surface : undefined}
       gap={8}
       padding={12}
       borderRadius={12}
@@ -96,6 +109,19 @@ export function StudioPodRow({ pod, when, currencySymbol, testID }: Readonly<Stu
         />
         <RowMetric testID={`${testID}-price`} label={t('mweb.studioPods.ticket')} value={price} />
       </XStack>
+
+      {onCancel ? (
+        <XStack justifyContent="flex-end">
+          <DuncitButton
+            testID={`${testID}-cancel`}
+            label={t('mweb.venuePods.cancelPod')}
+            onPress={onCancel}
+            variant="ghost"
+            tone="danger"
+            size="sm"
+          />
+        </XStack>
+      ) : null}
     </YStack>
   );
 }

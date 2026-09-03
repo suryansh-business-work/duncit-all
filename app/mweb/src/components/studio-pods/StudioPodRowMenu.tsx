@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ListItemText, Menu, MenuItem } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { DuncitIconButton } from '@duncit/buttons';
-import { cancelDisabledReason, type VenueCancelDisabledReason } from '@duncit/utils';
+import { venueCancelDisabledText } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { StudioPod } from './types';
 
@@ -20,14 +20,9 @@ interface Props {
 export default function StudioPodRowMenu({ pod, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
-  const reason = cancelDisabledReason(pod);
-  // Written out as literals so the shipped-key gate sees each one (rule 38).
-  const reasonText: Record<VenueCancelDisabledReason, string> = {
-    ALREADY_CANCELLED: t('mweb.venuePods.alreadyCancelled'),
-    ALREADY_STARTED: t('mweb.venuePods.alreadyStarted'),
-    ALREADY_FINISHED: t('mweb.venuePods.alreadyFinished'),
-  };
-  const secondary = reason ? reasonText[reason] : undefined;
+  // The shared rule answers why the action is closed, already worded.
+  const secondary = venueCancelDisabledText(pod, t) ?? undefined;
+  const disabled = secondary !== undefined;
 
   const pick = () => {
     setAnchor(null);
@@ -44,11 +39,11 @@ export default function StudioPodRowMenu({ pod, onCancel }: Readonly<Props>) {
         <MoreVertIcon fontSize="small" />
       </DuncitIconButton>
       <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
-        <MenuItem disabled={!!reason} onClick={pick}>
+        <MenuItem disabled={disabled} onClick={pick}>
           <ListItemText
             primary={t('mweb.venuePods.cancelPod')}
             secondary={secondary}
-            slotProps={{ primary: { color: reason ? 'text.primary' : 'error' } }}
+            slotProps={{ primary: { color: disabled ? 'text.primary' : 'error' } }}
           />
         </MenuItem>
       </Menu>

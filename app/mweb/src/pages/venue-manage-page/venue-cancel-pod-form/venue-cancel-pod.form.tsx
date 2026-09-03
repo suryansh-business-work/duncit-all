@@ -4,13 +4,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Stack } from '@mui/material';
 import { parseApiError } from '@duncit/utils';
 import RhfTextField from '../../../forms/components/RhfTextField';
-import { cancelPodDefaults, makeCancelPodSchema, type CancelPodValues } from './venue-cancel-pod.types';
+import {
+  makeVenueCancelPodSchema,
+  venueCancelPodDefaults,
+  type VenueCancelPodValues,
+} from './venue-cancel-pod.types';
 import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
   /** The dialog's submit button lives outside the form and targets it by id. */
   formId: string;
-  onSubmit: (values: CancelPodValues) => Promise<void>;
+  onSubmit: (values: VenueCancelPodValues) => Promise<void>;
 }
 
 /**
@@ -20,15 +24,19 @@ interface Props {
  */
 export default function VenueCancelPodForm({ formId, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
-  const schema = useMemo(() => makeCancelPodSchema(t), [t]);
+  const schema = useMemo(() => makeVenueCancelPodSchema(t), [t]);
   const {
     control,
     handleSubmit,
     setError,
     formState: { errors },
-  } = useForm<CancelPodValues, any, CancelPodValues>({
-    defaultValues: cancelPodDefaults,
-    resolver: zodResolver(schema) as unknown as Resolver<CancelPodValues, any, CancelPodValues>,
+  } = useForm<VenueCancelPodValues, any, VenueCancelPodValues>({
+    defaultValues: venueCancelPodDefaults,
+    resolver: zodResolver(schema) as unknown as Resolver<
+      VenueCancelPodValues,
+      any,
+      VenueCancelPodValues
+    >,
     mode: 'onTouched',
   });
 

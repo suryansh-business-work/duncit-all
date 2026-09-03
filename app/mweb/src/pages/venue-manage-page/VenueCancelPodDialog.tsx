@@ -10,28 +10,14 @@ import {
   Typography,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { cancelPenaltyHeadline, type VenueCancelPodResult } from '@duncit/utils';
+import { venueCancelPenaltyHeadline, type VenueCancelPodResult } from '@duncit/utils';
 import type { StudioPod } from '../../components/studio-pods';
 import { useDateFormat } from '../../utils/dateFormat';
-import { VenueCancelPodForm, type CancelPodValues } from './venue-cancel-pod-form';
+import { VenueCancelPodForm, type VenueCancelPodValues } from './venue-cancel-pod-form';
 import { VENUE_CANCEL_PENALTY, VENUE_CANCEL_POD } from './queries';
-import type { Translate } from '../../i18n/fallback';
 import { useTranslation } from '../../i18n/useTranslation';
 
 const FORM_ID = 'venue-cancel-pod-form';
-
-/**
- * The warning headline. Which of the three it is (no number yet, no penalty at
- * all, or the points) is the shared rule in @duncit/utils; the words are the
- * bundle's, written out as literals for the shipped-key gate (rule 38).
- */
-function penaltyHeadline(t: Translate, penalty: number | null): string {
-  const headline = cancelPenaltyHeadline(penalty);
-  if (headline === 'UNKNOWN') return t('mweb.venuePods.penaltyUnknown');
-  if (headline === 'NONE') return t('mweb.venuePods.penaltyNone');
-  const unit = penalty === 1 ? t('mweb.venuePods.point') : t('mweb.venuePods.points');
-  return t('mweb.venuePods.penaltyPoints', { vars: { penalty: penalty ?? 0, unit } });
-}
 
 interface BodyProps {
   pod: StudioPod;
@@ -51,7 +37,7 @@ function CancelPodBody({ pod, onClose, onCancelled }: Readonly<BodyProps>) {
     penaltyQuery.data?.publicAppSettings?.venue_cancel_health_penalty ?? null;
   const [cancelPod, state] = useMutation<any>(VENUE_CANCEL_POD);
 
-  const submit = async (values: CancelPodValues) => {
+  const submit = async (values: VenueCancelPodValues) => {
     const response = await cancelPod({ variables: { pod_id: pod.id, reason: values.reason } });
     await onCancelled(response.data.venueCancelPod as VenueCancelPodResult);
   };
@@ -70,7 +56,7 @@ function CancelPodBody({ pod, onClose, onCancelled }: Readonly<BodyProps>) {
             </Typography>
           </Stack>
           <Alert severity="warning">
-            <AlertTitle sx={{ fontWeight: 700 }}>{penaltyHeadline(t, penalty)}</AlertTitle>
+            <AlertTitle sx={{ fontWeight: 700 }}>{venueCancelPenaltyHeadline(penalty, t)}</AlertTitle>
             {t('mweb.venuePods.refundsNote')}
           </Alert>
           <VenueCancelPodForm formId={FORM_ID} onSubmit={submit} />

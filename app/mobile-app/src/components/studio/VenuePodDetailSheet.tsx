@@ -10,7 +10,7 @@ import { useDateFormat } from '@/hooks/useDateFormat';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 import { asVenuePodRow, bucketLabelKey, podPriceLabel, type StudioPod } from './studio-pods';
-import { cancelDisabledText } from './venue-cancel-pod.form';
+import { venueCancelDisabledText } from '@duncit/utils';
 
 type AttendeeProfile = ResultOf<
   typeof VenuePodAttendeeProfilesDocument
@@ -68,7 +68,7 @@ export function VenuePodDetailSheet({ pod, currencySymbol, onClose }: Readonly<P
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const { profiles, isLoading } = useAttendeeProfiles(pod);
-  const disabledReason = pod ? cancelDisabledText(asVenuePodRow(pod), t) : null;
+  const disabledReason = pod ? venueCancelDisabledText(asVenuePodRow(pod), t) : null;
 
   const footer = (
     <DuncitButton

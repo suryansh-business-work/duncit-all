@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Text, XStack, YStack } from 'tamagui';
-import type { VenueCancelPodResult } from '@duncit/utils';
+import { venueCancelPenaltyHeadline, type VenueCancelPodResult } from '@duncit/utils';
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
@@ -15,10 +15,9 @@ import { formResolver } from '@/utils/form-resolver';
 import type { StudioPod } from './studio-pods';
 import {
   makeVenueCancelPodSchema,
-  penaltyHeadline,
   venueCancelPodDefaults,
   type VenueCancelPodValues,
-} from './venue-cancel-pod.form';
+} from '@duncit/forms/schemas';
 
 interface Props {
   pod: StudioPod | null;
@@ -116,7 +115,7 @@ function CancelPodDialog({ pod, onClose, onCancelled }: Readonly<Props>) {
     >
       <YStack gap={12}>
         <Text testID="venue-cancel-pod-penalty" fontSize={13.5} fontWeight="700" color="$warning">
-          {penaltyHeadline(penalty, t)}
+          {venueCancelPenaltyHeadline(penalty, t)}
         </Text>
         <Text fontSize={12.5} color="$muted">
           {t('mweb.venuePods.refundsNote')}

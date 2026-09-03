@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
-import type { VenueCancelPodResult } from '@duncit/utils';
+import { venueCancelSuccessMessage, type VenueCancelPodResult } from '@duncit/utils';
 import {
   StudioPodsSection,
   EMPTY_STUDIO_SUMMARY,
@@ -41,17 +41,10 @@ export default function VenuePodsSection({ venueId, onPodsChanged }: Readonly<Pr
   const pods: StudioPod[] = data?.studioPods ?? [];
   const summary = data?.studioSummary ?? EMPTY_STUDIO_SUMMARY;
 
-  // Every number in the line comes from the server — the refund count and the
-  // venue's Account Health after the penalty.
+  // The line is the shared one — every number in it comes from the server.
   const handleCancelled = async (result: VenueCancelPodResult) => {
     setPodToCancel(null);
-    const refunds =
-      result.refunded_count === 1
-        ? t('mweb.venuePods.refundedOne')
-        : t('mweb.venuePods.refundedMany', { vars: { count: result.refunded_count } });
-    notifySuccess(
-      t('mweb.venuePods.cancelled', { vars: { refunds, score: result.venue_health_score } })
-    );
+    notifySuccess(venueCancelSuccessMessage(result, t));
     await refetch();
     await onPodsChanged?.();
   };

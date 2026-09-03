@@ -1,12 +1,14 @@
+import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
-import { canCancelVenuePod } from '@duncit/utils';
+import { venueCancelDisabledText } from '@duncit/utils';
 
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { asVenuePodRow, type StudioPod } from './studio-pods';
 import { StudioPodFigures } from './StudioPodFigures';
+import { StudioPodActionsSheet } from './StudioPodActionsSheet';
 import { StudioPodRow } from './StudioPodRow';
 import type { StudioPodsState } from './useStudioPods';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -29,11 +31,20 @@ const VARIANT_COPY = {
   },
 } as const;
 
-/** The per-pod actions a studio may offer. Venue Studio passes both; Club
- * Studio passes neither — a club admin has no cancel. */
+/**
+ * The per-pod actions a studio may offer.
+ *
+ * Both studios now offer at least one — a venue owner can cancel or ask for a
+ * different venue, a club admin can ask for a different club admin — so the
+ * overflow sheet appears in both. `onRequestChange` is what opens it; the
+ * studio supplies its own LABEL because a venue and a club admin are asking for
+ * different things.
+ */
 interface PodActions {
   onOpenPod?: (pod: StudioPod) => void;
   onCancelPod?: (pod: StudioPod) => void;
+  onRequestChange?: (pod: StudioPod) => void;
+  requestChangeLabel?: string;
 }
 
 interface StudioPodsBodyProps extends PodActions {
@@ -52,10 +63,13 @@ function StudioPodsBody({
   testID,
   onOpenPod,
   onCancelPod,
+  onRequestChange,
+  requestChangeLabel,
 }: Readonly<StudioPodsBodyProps>) {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
   const { primary } = useThemeColors();
+  const [actionsPod, setActionsPod] = useState<StudioPod | null>(null);
 
   if (state.isLoading) {
     return <Spinner testID={`${testID}-loading`} color="$primary" />;
@@ -94,10 +108,11 @@ function StudioPodsBody({
   // difference is stated rather than left to look like missing data.
   const capped = state.figures.total > state.pods.length;
   // A venue owner may only pull the plug before the pod starts (shared rule).
-  const cancelFor = (pod: StudioPod) => {
-    if (!onCancelPod || !canCancelVenuePod(asVenuePodRow(pod))) return undefined;
-    return () => onCancelPod(pod);
-  };
+  // The sheet SHOWS the action either way and states why it is closed — the row
+  // used to hide it, so an owner never learned the reason (rule 27, mWeb twin).
+  const cancelWhy = actionsPod
+    ? (venueCancelDisabledText(asVenuePodRow(actionsPod), t) ?? undefined)
+    : undefined;
 
   return (
     <YStack gap={12}>
@@ -124,9 +139,33 @@ function StudioPodsBody({
           when={formatDateTime(pod.pod_date_time)}
           currencySymbol={state.figures.currency_symbol}
           onOpen={onOpenPod ? () => onOpenPod(pod) : undefined}
-          onCancel={cancelFor(pod)}
+          onOpenActions={onCancelPod || onRequestChange ? () => setActionsPod(pod) : undefined}
         />
       ))}
+      <StudioPodActionsSheet
+        pod={actionsPod}
+        onClose={() => setActionsPod(null)}
+        onCancel={
+          onCancelPod && actionsPod
+            ? () => {
+                const pod = actionsPod;
+                setActionsPod(null);
+                onCancelPod(pod);
+              }
+            : undefined
+        }
+        cancelDisabledText={cancelWhy}
+        onRequestChange={
+          onRequestChange && actionsPod
+            ? () => {
+                const pod = actionsPod;
+                setActionsPod(null);
+                onRequestChange(pod);
+              }
+            : undefined
+        }
+        requestChangeLabel={requestChangeLabel}
+      />
     </YStack>
   );
 }
@@ -149,6 +188,8 @@ export function StudioPodsSection({
   testID,
   onOpenPod,
   onCancelPod,
+  onRequestChange,
+  requestChangeLabel,
 }: Readonly<StudioPodsSectionProps>) {
   const { t } = useTranslation();
   const copy = VARIANT_COPY[variant];
@@ -170,6 +211,8 @@ export function StudioPodsSection({
         testID={testID}
         onOpenPod={onOpenPod}
         onCancelPod={onCancelPod}
+        onRequestChange={onRequestChange}
+        requestChangeLabel={requestChangeLabel}
       />
     </YStack>
   );

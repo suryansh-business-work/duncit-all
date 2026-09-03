@@ -76,6 +76,7 @@ COPY packages/captcha/package.json ./packages/captcha/
 COPY packages/brand/package.json ./packages/brand/
 COPY packages/communication/package.json ./packages/communication/
 COPY packages/host-pod-actions/package.json ./packages/host-pod-actions/
+COPY packages/pod-change-requests/package.json ./packages/pod-change-requests/
 COPY packages/earn/package.json ./packages/earn/
 COPY packages/buttons-native/package.json ./packages/buttons-native/
 COPY packages/buttons/package.json ./packages/buttons/

@@ -10,6 +10,7 @@ import VenueHealthCard from './venue-manage-page/VenueHealthCard';
 import VenueListBody from './venue-manage-page/VenueListBody';
 import VenueOwnerStatsStrip from './venue-manage-page/VenueOwnerStatsStrip';
 import VenuePodsSection from './venue-manage-page/VenuePodsSection';
+import StudioChangeRequests from '../components/studio-pods/StudioChangeRequests';
 import VenueQuickActions from './venue-manage-page/VenueQuickActions';
 import VenueStatTiles from './venue-manage-page/VenueStatTiles';
 import VenueStudioHeader from './venue-manage-page/VenueStudioHeader';
@@ -71,6 +72,8 @@ export default function VenueManagePage() {
       <VenueEarningsLinkCard />
 
       {venue?.id && <VenuePodsSection venueId={venue.id} onPodsChanged={() => statsQ.refetch()} />}
+
+      <StudioChangeRequests role="VENUE" />
 
       <Card variant="outlined" sx={{ borderRadius: '16px' }}>
         <CardContent>

@@ -54,6 +54,14 @@ export interface ClubRow {
   locality?: string | null;
   matched_venues_count?: number | null;
   category_id?: string | null;
+  /**
+   * Who administers the club. EMPTY IS A BUG, not a state: a club with no admin
+   * has nobody to run its pods, nobody to mark attendance for them, and its
+   * club-admin share of every settlement quietly stays inside Duncit revenue
+   * (`clubAdminBeneficiary` returns null and the release is never created).
+   * The table flags it in red for exactly that reason.
+   */
+  admin_user_ids?: string[] | null;
   is_verified: boolean;
   is_active: boolean;
   created_at: string;

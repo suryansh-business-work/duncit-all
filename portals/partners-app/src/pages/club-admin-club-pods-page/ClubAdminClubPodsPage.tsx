@@ -7,6 +7,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
@@ -15,7 +16,12 @@ import PodActivityDialog from './PodActivityDialog';
 import AiMonitorPill from './AiMonitorPill';
 import PodStatusFilter from './PodStatusFilter';
 import PodsTable, { type PodRowBase } from '../../components/PodsTable';
-import { canOpenPodAttendance, type PodRowStatusFilter } from '@duncit/utils';
+import { useRequestPodChange } from '@duncit/pod-change-requests';
+import {
+  canOpenPodAttendance,
+  changeRequestMenuKey,
+  type PodRowStatusFilter,
+} from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 
 export default function ClubAdminClubPodsPage() {
@@ -34,6 +40,10 @@ export default function ClubAdminClubPodsPage() {
   const [podToDelete, setPodToDelete] = useState<any>(null);
   const [trailPod, setTrailPod] = useState<any>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // "Request Change Club Admin" — asking Duncit to hand this pod's club to a
+  // different admin. Club-level by design: the club owns that assignment, not
+  // the pod, so the whole club moves with it.
+  const change = useRequestPodChange({ onFiled: setMessage });
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const clubs = lookups.data?.myAdminClubs ?? [];
@@ -106,6 +116,23 @@ export default function ClubAdminClubPodsPage() {
           <EditIcon fontSize="small" />
         </DuncitIconButton>
       </Tooltip>
+      {!pod.is_deleted && (
+        <Tooltip title={t(changeRequestMenuKey('CLUB_ADMIN'))}>
+          <DuncitIconButton
+            size="small"
+            color="warning"
+            onClick={() =>
+              change.open({
+                podDocId: pod.id,
+                role: 'CLUB_ADMIN',
+                attendeeCount: pod.pod_attendees?.length ?? 0,
+              })
+            }
+          >
+            <SwapHorizIcon fontSize="small" />
+          </DuncitIconButton>
+        </Tooltip>
+      )}
       {/* An already-cancelled pod stays editable, but there is nothing left
           to delete. */}
       {!pod.is_deleted && (
@@ -190,6 +217,7 @@ export default function ClubAdminClubPodsPage() {
         onClose={() => setPodToDelete(null)}
       />
 
+      {change.dialog}
       <Snackbar open={!!message} autoHideDuration={2500} message={message ?? ''} onClose={() => setMessage(null)} />
     </Card>
   );

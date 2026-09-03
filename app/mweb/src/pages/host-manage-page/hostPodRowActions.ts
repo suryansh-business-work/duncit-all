@@ -15,4 +15,10 @@ export interface HostPodRowActions {
   onSeeAttendance: () => void;
   /** Opens the pod's "Slot Request Sent" PAGE — a route, same as above. */
   onSlotRequest: () => void;
+  /** "Request Change Host" — asks Duncit for a different host instead of
+   * cancelling the pod and refunding everyone who booked. */
+  onRequestChange: () => void;
+  /** Already translated: the label lives in `changeRequest.*`, a namespace
+   * @duncit/host-pod-actions' own label builders do not reach into. */
+  requestChangeLabel: string;
 }

@@ -89,6 +89,21 @@ const cleanAutoPodCancelHealthPenalty = (value: unknown) => {
   return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : DEFAULT_AUTO_POD_CANCEL_HEALTH_PENALTY;
 };
 
+/** Account Health points a partner loses for filing a Request Change. One
+ * default for all three roles — an admin sets each of them separately in
+ * Admin > Pods > Pod Settings > Request Change Setting. */
+const DEFAULT_CHANGE_REQUEST_HEALTH_PENALTY = 5;
+
+/** 0 is a legal value (it disables the deduction), so this takes the
+ * Number.isFinite form rather than `|| DEFAULT`. Capped at 10, which is what
+ * the three cards and the mongoose schema also cap at. */
+const cleanChangeRequestHealthPenalty = (value: unknown) => {
+  const n = Math.floor(Number(value));
+  return Number.isFinite(n)
+    ? Math.min(10, Math.max(0, n))
+    : DEFAULT_CHANGE_REQUEST_HEALTH_PENALTY;
+};
+
 const toAppPub = (d: any) => ({
   jwt_expires_in: d?.jwt_expires_in ?? null,
   jwt_no_expiry: true,
@@ -116,6 +131,15 @@ const toAppPub = (d: any) => ({
     d?.auto_pod_assignment_expiry_hours,
   ),
   auto_pod_cancel_health_penalty: cleanAutoPodCancelHealthPenalty(d?.auto_pod_cancel_health_penalty),
+  venue_change_request_health_penalty: cleanChangeRequestHealthPenalty(
+    d?.venue_change_request_health_penalty,
+  ),
+  host_change_request_health_penalty: cleanChangeRequestHealthPenalty(
+    d?.host_change_request_health_penalty,
+  ),
+  club_admin_change_request_health_penalty: cleanChangeRequestHealthPenalty(
+    d?.club_admin_change_request_health_penalty,
+  ),
   updated_at: d?.updated_at?.toISOString?.() ?? "",
 });
 
@@ -429,6 +453,9 @@ type AppSettingsUpdateInput = {
   auto_pod_venue_expiry_hours?: number;
   auto_pod_assignment_expiry_hours?: number;
   auto_pod_cancel_health_penalty?: number;
+  venue_change_request_health_penalty?: number;
+  host_change_request_health_penalty?: number;
+  club_admin_change_request_health_penalty?: number;
 };
 
 /** Fields copied to the update as-is when the caller supplied them. */
@@ -486,6 +513,18 @@ const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
     update.auto_pod_cancel_health_penalty = cleanAutoPodCancelHealthPenalty(
       input.auto_pod_cancel_health_penalty,
     );
+  if (input.venue_change_request_health_penalty !== undefined)
+    update.venue_change_request_health_penalty = cleanChangeRequestHealthPenalty(
+      input.venue_change_request_health_penalty,
+    );
+  if (input.host_change_request_health_penalty !== undefined)
+    update.host_change_request_health_penalty = cleanChangeRequestHealthPenalty(
+      input.host_change_request_health_penalty,
+    );
+  if (input.club_admin_change_request_health_penalty !== undefined)
+    update.club_admin_change_request_health_penalty = cleanChangeRequestHealthPenalty(
+      input.club_admin_change_request_health_penalty,
+    );
   return update;
 };
 
@@ -536,6 +575,29 @@ export const settingsService = {
   async getVenueCancelHealthPenalty(): Promise<number> {
     const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
     return cleanVenueCancelHealthPenalty(doc?.venue_cancel_health_penalty);
+  },
+
+  /**
+   * The three Request Change deductions (0–10 each, default 5), read together.
+   *
+   * One round trip rather than three: a request only ever charges ONE of them,
+   * but the studio cards state all three before anybody taps, and the
+   * autoPodService.windows() batch is the precedent for reading a related set
+   * in one go.
+   */
+  async getChangeRequestHealthPenalties(): Promise<{
+    VENUE: number;
+    HOST: number;
+    CLUB_ADMIN: number;
+  }> {
+    const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
+    return {
+      VENUE: cleanChangeRequestHealthPenalty(doc?.venue_change_request_health_penalty),
+      HOST: cleanChangeRequestHealthPenalty(doc?.host_change_request_health_penalty),
+      CLUB_ADMIN: cleanChangeRequestHealthPenalty(
+        doc?.club_admin_change_request_health_penalty,
+      ),
+    };
   },
 
   /** The auto-cancel sweep's knobs: whether it acts at all (default off) and

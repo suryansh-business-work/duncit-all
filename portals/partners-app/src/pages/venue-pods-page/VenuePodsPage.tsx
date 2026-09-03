@@ -10,6 +10,8 @@ import {
   type VenuePodTab,
 } from '@duncit/utils';
 import { MY_VENUES } from '../register-venue-page/queries';
+import { useRequestPodChange } from '@duncit/pod-change-requests';
+import { changeRequestMenuKey } from '@duncit/utils';
 import VenuePodsTable from './VenuePodsTable';
 import VenuePodDetailDialog from './VenuePodDetailDialog';
 import VenueCancelPodDialog from './VenueCancelPodDialog';
@@ -30,6 +32,9 @@ export default function VenuePodsPage() {
   const [selected, setSelected] = useState<VenuePodRow | null>(null);
   const [podToCancel, setPodToCancel] = useState<VenuePodRow | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // "Request Change Venue" — the venue owner asking Duncit to move the pod
+  // instead of cancelling it. One instance, its dialog rendered once below.
+  const change = useRequestPodChange({ onFiled: setMessage });
   const refetchRef = useRef<(() => void) | null>(null);
 
   const venuesQuery = useQuery<any>(MY_VENUES, { fetchPolicy: 'cache-first' });
@@ -135,7 +140,12 @@ export default function VenuePodsPage() {
         refetchRef={refetchRef}
         onRowClick={setSelected}
         onCancel={setPodToCancel}
+        onRequestChange={(row) =>
+          change.open({ podDocId: row.id, role: 'VENUE', attendeeCount: row.attendee_count })
+        }
+        requestChangeLabel={t(changeRequestMenuKey('VENUE'))}
       />
+      {change.dialog}
       <VenuePodDetailDialog row={selected} onClose={() => setSelected(null)} />
       <VenueCancelPodDialog
         row={podToCancel}

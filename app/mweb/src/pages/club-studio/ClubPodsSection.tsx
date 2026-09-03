@@ -1,4 +1,7 @@
 import { useQuery } from '@apollo/client/react';
+import { changeRequestMenuKey } from '@duncit/utils';
+import { useRequestPodChange } from '@duncit/pod-change-requests';
+import { notifySuccess } from '../../components/notify';
 import {
   CLUB_STUDIO_PODS,
   EMPTY_STUDIO_SUMMARY,
@@ -23,7 +26,13 @@ export default function ClubPodsSection() {
   const pods: StudioPod[] = data?.studioPods ?? [];
   const summary = data?.studioSummary ?? EMPTY_STUDIO_SUMMARY;
 
+  // "Request Change Club Admin" — a club admin asking Duncit to hand this
+  // pod's club to somebody else. The club, not the pod, carries that
+  // assignment, so the ask is club-wide and the copy says so.
+  const change = useRequestPodChange({ onFiled: notifySuccess });
+
   return (
+    <>
     <StudioPodsSection
       title={t('mweb.studioPods.clubTitle')}
       subtitle={t('mweb.studioPods.clubSubtitle')}
@@ -36,6 +45,12 @@ export default function ClubPodsSection() {
       onRetry={() => {
         refetch().catch(() => undefined);
       }}
+      onRequestChange={(pod) =>
+        change.open({ podDocId: pod.id, role: 'CLUB_ADMIN', attendeeCount: pod.attendee_count })
+      }
+      requestChangeLabel={t(changeRequestMenuKey('CLUB_ADMIN'))}
     />
+    {change.dialog}
+    </>
   );
 }

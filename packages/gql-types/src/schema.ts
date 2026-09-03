@@ -1263,6 +1263,8 @@ export type AppSettings = {
   auto_pod_slot_window_days: Scalars['Int']['output'];
   /** How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires. */
   auto_pod_venue_expiry_hours: Scalars['Int']['output'];
+  /** Account Health points a CLUB ADMIN loses for filing a Request Change on a pod in their club (0-10, 0 disables it). */
+  club_admin_change_request_health_penalty: Scalars['Int']['output'];
   /** CUSTOM anchor — the instant the apps' clock should read (ISO). */
   custom_time?: Maybe<Scalars['String']['output']>;
   /** Server's real time when the CUSTOM anchor was saved (ISO). */
@@ -1270,6 +1272,8 @@ export type AppSettings = {
   date_format: Scalars['String']['output'];
   /** Days a Create-Pod draft is kept (from last save) before auto-deletion. */
   draft_retention_days: Scalars['Int']['output'];
+  /** Account Health points a HOST loses for filing a Request Change on a pod they host (0-10, 0 disables it). */
+  host_change_request_health_penalty: Scalars['Int']['output'];
   jwt_expires_in?: Maybe<Scalars['String']['output']>;
   jwt_no_expiry: Scalars['Boolean']['output'];
   /** Max Backout attempts a user gets per pod (each 'Backout in process' counts one). */
@@ -1288,6 +1292,8 @@ export type AppSettings = {
   updated_at?: Maybe<Scalars['String']['output']>;
   /** Account Health points deducted from a venue when its owner cancels a pod booked there (0 disables the penalty). */
   venue_cancel_health_penalty: Scalars['Int']['output'];
+  /** Account Health points a VENUE loses for filing a Request Change on a pod booked at it (0-10, 0 disables it). */
+  venue_change_request_health_penalty: Scalars['Int']['output'];
 };
 
 export type AppVersionInfo = {
@@ -1626,15 +1632,18 @@ export type AutoPod = {
   location?: Maybe<AutoPodLocation>;
   materialized_at?: Maybe<Scalars['String']['output']>;
   meeting_notes?: Maybe<Scalars['String']['output']>;
+  /** VIRTUAL only — written by the host at assignment, null until then. */
   meeting_platform?: Maybe<Scalars['String']['output']>;
   meeting_url?: Maybe<Scalars['String']['output']>;
+  /** 0 until the host sets it at assignment, within the venue's capacity. */
   no_of_spots: Scalars['Int']['output'];
   payment_terms?: Maybe<Scalars['String']['output']>;
   place_charges: Array<PodPlaceCharge>;
   /** The materialized pod, once LIVE. */
   pod?: Maybe<Pod>;
+  /** 0 until the host prices the pod at assignment — the template carries no economics. */
   pod_amount: Scalars['Float']['output'];
-  /** VIRTUAL only — a physical offer's dates come from the venue's slot. */
+  /** VIRTUAL only — the window the host set; a physical offer's dates come from the venue's slot. */
   pod_date_time?: Maybe<Scalars['String']['output']>;
   pod_description: Scalars['String']['output'];
   pod_end_date_time?: Maybe<Scalars['String']['output']>;
@@ -1643,8 +1652,9 @@ export type AutoPod = {
   pod_images_and_videos: Array<PodMedia>;
   pod_info: Scalars['String']['output'];
   /**
-   * PHYSICAL waits on a venue to bring the slot; VIRTUAL carries its own
-   * meeting details and dates and waits on a host and a club only.
+   * PHYSICAL waits on a venue to bring the slot; VIRTUAL has no venue and
+   * waits on a host and a club only — the host brings the meeting details and
+   * the window when they assign themselves.
    */
   pod_mode: PodMode;
   pod_occurrence: PodOccurrence;
@@ -1745,6 +1755,15 @@ export type AutoPodHostClaim = {
   assigned_at: Scalars['String']['output'];
   host_name: Scalars['String']['output'];
   user_id: Scalars['ID']['output'];
+};
+
+/** What a host brings to a VIRTUAL offer when they assign themselves: where members join, and when. */
+export type AutoPodHostMeetingInput = {
+  meeting_notes?: InputMaybe<Scalars['String']['input']>;
+  meeting_platform?: InputMaybe<Scalars['String']['input']>;
+  meeting_url: Scalars['String']['input'];
+  pod_date_time: Scalars['String']['input'];
+  pod_end_date_time: Scalars['String']['input'];
 };
 
 /**
@@ -3767,24 +3786,21 @@ export type CreateAisensyTemplateInput = {
   type: Scalars['String']['input'];
 };
 
+/**
+ * The template an admin writes: the pod's content only. The ticket price, the
+ * spots and, on a virtual offer, the meeting details are the host's to set
+ * when they assign themselves; the venue's slot fixes a physical offer's date.
+ */
 export type CreateAutoPodInput = {
   available_perks?: InputMaybe<Array<Scalars['String']['input']>>;
-  meeting_notes?: InputMaybe<Scalars['String']['input']>;
-  meeting_platform?: InputMaybe<Scalars['String']['input']>;
-  meeting_url?: InputMaybe<Scalars['String']['input']>;
-  no_of_spots: Scalars['Int']['input'];
   payment_terms?: InputMaybe<Scalars['String']['input']>;
   place_charges?: InputMaybe<Array<PodPlaceChargeInput>>;
-  pod_amount: Scalars['Float']['input'];
-  pod_date_time?: InputMaybe<Scalars['String']['input']>;
   pod_description: Scalars['String']['input'];
-  pod_end_date_time?: InputMaybe<Scalars['String']['input']>;
   pod_hashtag?: InputMaybe<Array<Scalars['String']['input']>>;
   pod_images_and_videos: Array<PodMediaInput>;
   pod_info?: InputMaybe<Scalars['String']['input']>;
-  /** Defaults to PHYSICAL. VIRTUAL requires meeting_url, pod_date_time and pod_end_date_time. */
+  /** Defaults to PHYSICAL. VIRTUAL waits on a host and a club only. */
   pod_mode?: InputMaybe<PodMode>;
-  pod_occurrence?: InputMaybe<PodOccurrence>;
   pod_title: Scalars['String']['input'];
   product_requests?: InputMaybe<Array<PodProductRequestInput>>;
   reel_url?: InputMaybe<Scalars['String']['input']>;
@@ -8444,6 +8460,12 @@ export type Mutation = {
   cancelMyAccountDeletionRequest: AccountDeletionRequest;
   /** Cancel the caller's own pending meeting (with a reason). */
   cancelMyMeeting: OnboardingMeeting;
+  /**
+   * Admin: cancel the pod and refund every attendee instead of replacing anyone.
+   * Refunds are recorded against each payment; the money itself is returned by
+   * Finance, not by a live gateway call.
+   */
+  cancelPodForChange: PodChangeRequest;
   /** Call off a scheduled send before it runs. */
   cancelWaCampaign: WaCampaign;
   /** Auth-required: confirm the OTP and set the new password. */
@@ -8809,11 +8831,12 @@ export type Mutation = {
   getImagekitAuth: ImagekitAuth;
   grantAdminAccess: User;
   /**
-   * Host enrols: assigns themselves, setting the pod's ticket price and spots
-   * (the template's when omitted). Only once a venue has fixed the slot on a
-   * physical offer. location_id is the city the host had selected — required
-   * when nobody has enrolled yet on a virtual offer (it pins it), and must
-   * match the pinned city otherwise.
+   * Host enrols: assigns themselves, setting the pod's ticket price and spots.
+   * Only once a venue has fixed the slot on a physical offer. location_id is
+   * the city the host had selected — required when nobody has enrolled yet on
+   * a virtual offer (it pins it), and must match the pinned city otherwise.
+   * A virtual offer also needs meeting — the link and the window the host
+   * will run it in; it is ignored on a physical one.
    */
   hostAssignAutoPod: AutoPod;
   hostDeletePod: Scalars['Boolean']['output'];
@@ -8951,6 +8974,8 @@ export type Mutation = {
    * that people should have been told. Returns how many accounts it reached.
    */
   notifyPolicyAcceptedUsers: Scalars['Int']['output'];
+  /** Admin: offer the place to one matching partner. Nothing on the pod moves yet. */
+  offerPodChange: PodChangeRequest;
   permanentlyDeleteInventoryProduct: Scalars['Boolean']['output'];
   /** Pin, or take the pin off. Pins belong to the thread, so both people see them. */
   pinStaffMessage: StaffMessage;
@@ -9142,6 +9167,12 @@ export type Mutation = {
    */
   requestPodAttendanceOtp: PhoneOtpRequestResult;
   /**
+   * File a change request for one of a pod's three places. Costs the Account
+   * Health points configured in Admin > Pods > Pod Settings, and only one may
+   * be open per pod per role.
+   */
+  requestPodChange: PodChangeRequest;
+  /**
    * Send ONE of the extra people a multi-seat booking admits a one-time code.
    *
    * The same input and the same shared OTP service as the attendee's own code,
@@ -9193,6 +9224,8 @@ export type Mutation = {
   resolveTicket: Ticket;
   /** The invited user accepts or declines. */
   respondToCoHostInvite: Pod;
+  /** The offered partner answering: APPROVE takes the place, PASS declines it. */
+  respondToPodChange: PodChangeRequest;
   /**
    * Restore the live database from one archive. DESTRUCTIVE: every collection
    * the archive carries is dropped and rewritten, and anything written since it
@@ -9751,6 +9784,8 @@ export type Mutation = {
   /** Partner: pull a submitted brand back to draft for edits. */
   withdrawEcommBrand: EcommBrand;
   withdrawHostApplication: Host;
+  /** The requester pulling their request back, before anybody has been offered it. */
+  withdrawPodChange: PodChangeRequest;
 };
 
 
@@ -10144,6 +10179,12 @@ export type MutationCancelMeetingArgs = {
 export type MutationCancelMyMeetingArgs = {
   kind: SurveyKind;
   reason?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationCancelPodForChangeArgs = {
+  reason: Scalars['String']['input'];
+  request_id: Scalars['ID']['input'];
 };
 
 
@@ -11222,6 +11263,7 @@ export type MutationGrantAdminAccessArgs = {
 export type MutationHostAssignAutoPodArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
   location_id?: InputMaybe<Scalars['ID']['input']>;
+  meeting?: InputMaybe<AutoPodHostMeetingInput>;
   no_of_spots?: InputMaybe<Scalars['Int']['input']>;
   pod_amount?: InputMaybe<Scalars['Float']['input']>;
 };
@@ -11405,6 +11447,11 @@ export type MutationModerateProductContentArgs = {
 export type MutationNotifyPolicyAcceptedUsersArgs = {
   policy_doc_id: Scalars['ID']['input'];
   summary?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationOfferPodChangeArgs = {
+  input: OfferPodChangeInput;
 };
 
 
@@ -11741,6 +11788,13 @@ export type MutationRequestPodAttendanceOtpArgs = {
 };
 
 
+export type MutationRequestPodChangeArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+  role: PodChangeRole;
+};
+
+
 export type MutationRequestPodCompanionOtpArgs = {
   input: PodAttendanceOtpInput;
 };
@@ -11817,6 +11871,13 @@ export type MutationResolveTicketArgs = {
 export type MutationRespondToCoHostInviteArgs = {
   accept: Scalars['Boolean']['input'];
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRespondToPodChangeArgs = {
+  decision: PodChangeDecision;
+  reason?: InputMaybe<Scalars['String']['input']>;
+  request_id: Scalars['ID']['input'];
 };
 
 
@@ -13303,6 +13364,11 @@ export type MutationWithdrawEcommBrandArgs = {
   brand_doc_id: Scalars['ID']['input'];
 };
 
+
+export type MutationWithdrawPodChangeArgs = {
+  request_id: Scalars['ID']['input'];
+};
+
 /** Search + category + pagination filter for the Club Admin 'Your Clubs' list. */
 export type MyAdminClubsFilter = {
   /** Middle category — matches clubs whose sub-category sits under it. */
@@ -13488,6 +13554,15 @@ export type OccasionalIconInput = {
   slug: Scalars['String']['input'];
   sort_order?: InputMaybe<Scalars['Int']['input']>;
   starts_at: Scalars['String']['input'];
+};
+
+export type OfferPodChangeInput = {
+  request_id: Scalars['ID']['input'];
+  user_id: Scalars['ID']['input'];
+  /** VENUE requests only — the venue being offered the pod. */
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
+  /** VENUE requests only — the slot it would run in. */
+  venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type OnboardingMeeting = {
@@ -14650,6 +14725,160 @@ export type PodCancellationStats = {
   total_cancelled: Scalars['Int']['output'];
   total_refund_amount: Scalars['Float']['output'];
 };
+
+/**
+ * The Change Requests section of a partner studio: what I asked for, what is
+ * waiting on me, and what each role's request currently costs in Account Health.
+ */
+export type PodChangeBoard = {
+  __typename?: 'PodChangeBoard';
+  club_admin_penalty: Scalars['Int']['output'];
+  host_penalty: Scalars['Int']['output'];
+  incoming: Array<PodChangeRequest>;
+  mine: Array<PodChangeRequest>;
+  venue_penalty: Scalars['Int']['output'];
+};
+
+/** A partner an admin may offer the place to, with everything needed to reach them. */
+export type PodChangeCandidate = {
+  __typename?: 'PodChangeCandidate';
+  club_id?: Maybe<Scalars['ID']['output']>;
+  club_name: Scalars['String']['output'];
+  detail: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  full_name: Scalars['String']['output'];
+  /** Row id: the VENUE for a venue request, the user otherwise. */
+  id: Scalars['ID']['output'];
+  label: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+  venue_id?: Maybe<Scalars['ID']['output']>;
+};
+
+/** How to reach a partner. Phone prefers their WhatsApp number over the account's. */
+export type PodChangeContact = {
+  __typename?: 'PodChangeContact';
+  email: Scalars['String']['output'];
+  full_name: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+};
+
+export type PodChangeDecision =
+  | 'APPROVE'
+  | 'PASS';
+
+/** One appended line of a request's history. Never edited. */
+export type PodChangeEvent = {
+  __typename?: 'PodChangeEvent';
+  action: Scalars['String']['output'];
+  actor_name: Scalars['String']['output'];
+  at: Scalars['String']['output'];
+  note: Scalars['String']['output'];
+};
+
+/** The place, offered to one candidate. */
+export type PodChangeOffer = {
+  __typename?: 'PodChangeOffer';
+  club_id?: Maybe<Scalars['ID']['output']>;
+  contact: PodChangeContact;
+  display_name: Scalars['String']['output'];
+  offered_at: Scalars['String']['output'];
+  pass_reason: Scalars['String']['output'];
+  responded_at?: Maybe<Scalars['String']['output']>;
+  slot_end_at?: Maybe<Scalars['String']['output']>;
+  slot_price: Scalars['Float']['output'];
+  slot_start_at?: Maybe<Scalars['String']['output']>;
+  status: PodChangeOfferStatus;
+  user_id: Scalars['ID']['output'];
+  venue_id?: Maybe<Scalars['ID']['output']>;
+  venue_name: Scalars['String']['output'];
+  venue_slot_id?: Maybe<Scalars['ID']['output']>;
+};
+
+export type PodChangeOfferStatus =
+  | 'APPROVED'
+  | 'PASSED'
+  | 'PENDING';
+
+/** The pod a request is about, named the way every surface links to it. */
+export type PodChangePod = {
+  __typename?: 'PodChangePod';
+  /** Seats taken RIGHT NOW — attendees plus the extra seats they bought. */
+  attendee_count: Scalars['Int']['output'];
+  club_slug: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  pod_date_time: Scalars['String']['output'];
+  pod_slug: Scalars['String']['output'];
+  pod_title: Scalars['String']['output'];
+};
+
+export type PodChangeRequest = {
+  __typename?: 'PodChangeRequest';
+  /** Seats taken when it was filed, for the audit trail. */
+  attendees_at_request: Scalars['Int']['output'];
+  change_request_no: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  events: Array<PodChangeEvent>;
+  from_club_id?: Maybe<Scalars['ID']['output']>;
+  from_club_name: Scalars['String']['output'];
+  from_venue_id?: Maybe<Scalars['ID']['output']>;
+  from_venue_name: Scalars['String']['output'];
+  /** Account Health points actually deducted when this was filed. */
+  health_penalty: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  offer?: Maybe<PodChangeOffer>;
+  offer_history: Array<PodChangeOffer>;
+  pod: PodChangePod;
+  /** True once the pod behind this request has been cancelled. */
+  pod_cancelled: Scalars['Boolean']['output'];
+  reason: Scalars['String']['output'];
+  requested_by: PodChangeContact;
+  resolution: PodChangeResolution;
+  resolved_at?: Maybe<Scalars['String']['output']>;
+  role: PodChangeRole;
+  status: PodChangeStatus;
+};
+
+export type PodChangeRequestPage = {
+  __typename?: 'PodChangeRequestPage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PodChangeRequest>;
+  total: Scalars['Int']['output'];
+};
+
+export type PodChangeResolution =
+  | 'NONE'
+  | 'POD_CANCELLED'
+  | 'REPLACED';
+
+/**
+ * Which of a pod's three partner places a change request is about. There is no
+ * per-pod club-admin field: CLUB_ADMIN means the admin of the pod's CLUB.
+ */
+export type PodChangeRole =
+  | 'CLUB_ADMIN'
+  | 'HOST'
+  | 'VENUE';
+
+/** A free slot at a candidate venue. */
+export type PodChangeSlot = {
+  __typename?: 'PodChangeSlot';
+  capacity: Scalars['Int']['output'];
+  end_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  price: Scalars['Float']['output'];
+  space_label: Scalars['String']['output'];
+  start_at: Scalars['String']['output'];
+  venue_id: Scalars['ID']['output'];
+};
+
+export type PodChangeStatus =
+  | 'OFFERED'
+  | 'OPEN'
+  | 'RESOLVED'
+  | 'WITHDRAWN';
 
 /** A co-host on a pod. View-only: they cannot edit, complete or delete it, and the pod's earnings are unaffected. */
 export type PodCoHost = {
@@ -17133,6 +17362,8 @@ export type Query = {
    * CURRENT wording. A policy edited since they accepted comes back here.
    */
   myPendingPolicies: Array<Policy>;
+  /** The signed-in partner's Change Requests section. */
+  myPodChangeBoard: PodChangeBoard;
   myPodDraft?: Maybe<PodDraft>;
   myPodDrafts: Array<PodDraft>;
   myPodIdeas: Array<PodIdea>;
@@ -17230,6 +17461,14 @@ export type Query = {
   podBySlugs?: Maybe<Pod>;
   podCancellationStats: PodCancellationStats;
   podCancellations: Array<PodCancellation>;
+  /** Admin: partners matching this pod's category (and city, where they have one). */
+  podChangeCandidates: Array<PodChangeCandidate>;
+  /** Admin: one request, for the assign drawer's header. */
+  podChangeRequest: PodChangeRequest;
+  /** Admin: one role's queue of change requests, server-paged. */
+  podChangeRequests: PodChangeRequestPage;
+  /** Admin: free slots at a candidate venue, for a VENUE request. */
+  podChangeVenueSlots: Array<PodChangeSlot>;
   podComments: Array<PodComment>;
   /** The Admin panel's Pods dashboard, in one read. */
   podDashboard: PodDashboard;
@@ -19185,6 +19424,28 @@ export type QueryPodBySlugsArgs = {
 
 export type QueryPodCancellationsArgs = {
   kind?: InputMaybe<PodCancelKind>;
+};
+
+
+export type QueryPodChangeCandidatesArgs = {
+  request_id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodChangeRequestArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodChangeRequestsArgs = {
+  query?: InputMaybe<TableQueryInput>;
+  role: PodChangeRole;
+};
+
+
+export type QueryPodChangeVenueSlotsArgs = {
+  request_id: Scalars['ID']['input'];
+  venue_id: Scalars['ID']['input'];
 };
 
 
@@ -22769,11 +23030,15 @@ export type UpdateAppSettingsInput = {
   auto_pod_slot_window_days?: InputMaybe<Scalars['Int']['input']>;
   /** How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires (1-720). */
   auto_pod_venue_expiry_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** Account Health points a club admin loses for filing a Request Change (0-10, 0 disables it). */
+  club_admin_change_request_health_penalty?: InputMaybe<Scalars['Int']['input']>;
   /** CUSTOM anchor (ISO). Saving it stamps custom_time_set_at server-side. */
   custom_time?: InputMaybe<Scalars['String']['input']>;
   date_format?: InputMaybe<Scalars['String']['input']>;
   /** Days a Create-Pod draft is kept before auto-deletion (min 1). */
   draft_retention_days?: InputMaybe<Scalars['Int']['input']>;
+  /** Account Health points a host loses for filing a Request Change (0-10, 0 disables it). */
+  host_change_request_health_penalty?: InputMaybe<Scalars['Int']['input']>;
   jwt_expires_in?: InputMaybe<Scalars['String']['input']>;
   jwt_no_expiry?: InputMaybe<Scalars['Boolean']['input']>;
   /** Max Backout attempts a user gets per pod (min 1). */
@@ -22789,6 +23054,8 @@ export type UpdateAppSettingsInput = {
   time_zone?: InputMaybe<Scalars['String']['input']>;
   /** Account Health points deducted from a venue when its owner cancels a pod booked there (0-100, 0 disables the penalty). */
   venue_cancel_health_penalty?: InputMaybe<Scalars['Int']['input']>;
+  /** Account Health points a venue loses for filing a Request Change (0-10, 0 disables it). */
+  venue_change_request_health_penalty?: InputMaybe<Scalars['Int']['input']>;
 };
 
 /**
@@ -22810,21 +23077,13 @@ export type UpdateApprovedVenueInput = {
 
 export type UpdateAutoPodInput = {
   available_perks?: InputMaybe<Array<Scalars['String']['input']>>;
-  meeting_notes?: InputMaybe<Scalars['String']['input']>;
-  meeting_platform?: InputMaybe<Scalars['String']['input']>;
-  meeting_url?: InputMaybe<Scalars['String']['input']>;
-  no_of_spots?: InputMaybe<Scalars['Int']['input']>;
   payment_terms?: InputMaybe<Scalars['String']['input']>;
   place_charges?: InputMaybe<Array<PodPlaceChargeInput>>;
-  pod_amount?: InputMaybe<Scalars['Float']['input']>;
-  pod_date_time?: InputMaybe<Scalars['String']['input']>;
   pod_description?: InputMaybe<Scalars['String']['input']>;
-  pod_end_date_time?: InputMaybe<Scalars['String']['input']>;
   pod_hashtag?: InputMaybe<Array<Scalars['String']['input']>>;
   pod_images_and_videos?: InputMaybe<Array<PodMediaInput>>;
   pod_info?: InputMaybe<Scalars['String']['input']>;
   pod_mode?: InputMaybe<PodMode>;
-  pod_occurrence?: InputMaybe<PodOccurrence>;
   pod_title?: InputMaybe<Scalars['String']['input']>;
   product_requests?: InputMaybe<Array<PodProductRequestInput>>;
   reel_url?: InputMaybe<Scalars['String']['input']>;

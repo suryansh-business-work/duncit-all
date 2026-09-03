@@ -59,6 +59,9 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
   // Something changed on their account or booking.
   notification: [
     'attendance-marked',
+    'club-admin-change-request-offer',
+    'host-change-request-offer',
+    'venue-change-request-offer',
     'brand-activated',
     'brand-deactivated',
     'host-activated',

@@ -1,7 +1,8 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
-import { DuncitButton } from '@/components/DuncitButton';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { bucketLabelKey, bucketTone, podPriceLabel, type StudioPod } from './studio-pods';
 
@@ -35,8 +36,12 @@ interface StudioPodRowProps {
   testID: string;
   /** Tap-through to the pod's detail; omitted, the row is not tappable. */
   onOpen?: () => void;
-  /** The venue owner's cancel; only ever passed for a pod that may still be. */
-  onCancel?: () => void;
+  /**
+   * Opens the row's overflow sheet. Passed whenever the studio offers ANY
+   * per-row action — the sheet itself decides which rows it draws, and shows a
+   * closed Cancel with its reason rather than hiding it (rule 27, mWeb twin).
+   */
+  onOpenActions?: () => void;
 }
 
 /**
@@ -49,9 +54,10 @@ export function StudioPodRow({
   currencySymbol,
   testID,
   onOpen,
-  onCancel,
+  onOpenActions,
 }: Readonly<StudioPodRowProps>) {
   const { t } = useTranslation();
+  const { color: ink } = useThemeColors();
 
   const hosts = pod.host_names.filter(Boolean).join(', ');
   const price = podPriceLabel(pod, t, currencySymbol);
@@ -74,6 +80,24 @@ export function StudioPodRow({
         <Text flex={1} fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>
           {pod.pod_title}
         </Text>
+        {onOpenActions ? (
+          <XStack
+            testID={`${testID}-actions`}
+            role="button"
+            aria-label={t('mweb.hostManage.podActions')}
+            onPress={onOpenActions}
+            alignItems="center"
+            justifyContent="center"
+            width={32}
+            height={32}
+            borderRadius={10}
+            borderWidth={1}
+            borderColor="$borderColor"
+            pressStyle={PRESS_STYLE.row}
+          >
+            <MaterialIcons name="more-vert" size={18} color={ink} />
+          </XStack>
+        ) : null}
         <XStack
           testID={`${testID}-state`}
           paddingHorizontal={8}
@@ -109,19 +133,6 @@ export function StudioPodRow({
         />
         <RowMetric testID={`${testID}-price`} label={t('mweb.studioPods.ticket')} value={price} />
       </XStack>
-
-      {onCancel ? (
-        <XStack justifyContent="flex-end">
-          <DuncitButton
-            testID={`${testID}-cancel`}
-            label={t('mweb.venuePods.cancelPod')}
-            onPress={onCancel}
-            variant="ghost"
-            tone="danger"
-            size="sm"
-          />
-        </XStack>
-      ) : null}
     </YStack>
   );
 }

@@ -5,7 +5,9 @@ import { ScrollView, YStack } from 'tamagui';
 import { StackScreen } from '@/components/StackScreen';
 import { ClubQuickActions } from '@/components/club-admin/clubs/ClubQuickActions';
 import { YourClubsSection } from '@/components/club-admin/clubs/YourClubsSection';
-import { StudioPodsSection, useClubStudioPods } from '@/components/studio';
+import { useClubStudioPods } from '@/components/studio';
+import { StudioChangeRequests } from '@/components/change-requests/StudioChangeRequests';
+import { ClubStudioChangeRequests } from '@/components/change-requests/ClubStudioChangeRequests';
 import { useClubAdminClubs } from '@/hooks/useClubAdminClubs';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { MenuRoute, RootStackParamList } from '@/navigation/types';
@@ -40,7 +42,8 @@ export function ClubManageScreen() {
             onOpenPods={(clubId) => navigation.navigate('ClubPods', { clubId })}
             onEdit={(clubId) => navigation.navigate('ClubEdit', { clubId })}
           />
-          <StudioPodsSection variant="CLUB" state={podsState} testID="club-studio-pods" />
+          <ClubStudioChangeRequests state={podsState} />
+          <StudioChangeRequests role="CLUB_ADMIN" />
         </YStack>
       </ScrollView>
     </StackScreen>

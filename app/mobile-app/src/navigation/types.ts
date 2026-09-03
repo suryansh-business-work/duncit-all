@@ -53,6 +53,7 @@ export type RootStackParamList = {
   VenueManage: undefined;
   VenueEarnings: undefined;
   VenueSlotRequests: undefined;
+  ChangeRequests: undefined;
   /** /venues/availability — the owner's slot calendar (mWeb's exact path). */
   VenueAvailability: undefined;
   /** /venues/settings — the owner's cancellation policy (mWeb's exact path). */

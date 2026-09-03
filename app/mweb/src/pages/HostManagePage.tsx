@@ -10,6 +10,7 @@ import HostDraftsCard from './HostDraftsCard';
 import HostPodActionsBridge from './host-manage-page/HostPodActionsBridge';
 import HostPodSections from './host-manage-page/HostPodSections';
 import HostShareCard from './host-manage-page/HostShareCard';
+import StudioChangeRequests from '../components/studio-pods/StudioChangeRequests';
 import HostApplyBanner from './host-apply-page/HostApplyBanner';
 import HostCategoriesCard from './host-apply-page/HostCategoriesCard';
 
@@ -38,6 +39,7 @@ const HOST_PODS = gql`
       pod_type
       pod_mode
       no_of_spots
+      seats_taken
       location_id
       venue_id
       zone_name
@@ -116,6 +118,8 @@ export default function HostManagePage() {
           }}
         />
       </HostPodActionsBridge>
+
+      <StudioChangeRequests role="HOST" />
 
       <HostShareCard />
     </Stack>

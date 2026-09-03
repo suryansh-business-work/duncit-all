@@ -1,57 +1,31 @@
 import { useState } from 'react';
-import { gql } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { Box, Snackbar, Stack, Typography } from '@mui/material';
+import { Box, Divider, Snackbar, Stack, Typography } from '@mui/material';
 import { PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
-import NumberSettingCard from './pod-settings/NumberSettingCard';
-import ToggleSettingCard from './pod-settings/ToggleSettingCard';
 import { useTranslation } from '@duncit/shell';
+import PodLifecycleSettings from './pod-settings/PodLifecycleSettings';
+import AutoPodSettings from './pod-settings/AutoPodSettings';
+import RequestChangeSettings from './pod-settings/RequestChangeSettings';
+import { POD_SETTINGS, UPDATE_POD_SETTINGS } from './pod-settings/queries';
 
-const POD_SETTINGS = gql`
-  query PodSettings {
-    appSettings {
-      draft_retention_days
-      max_backout_attempts
-      venue_cancel_health_penalty
-      attendance_otp_required
-      pod_auto_cancel_enabled
-      pod_auto_cancel_lead_hours
-      auto_pod_slot_window_days
-      auto_pod_venue_expiry_hours
-      auto_pod_assignment_expiry_hours
-      auto_pod_cancel_health_penalty
-      updated_at
-    }
-  }
-`;
-
-const UPDATE_POD_SETTINGS = gql`
-  mutation UpdatePodSettings($input: UpdateAppSettingsInput!) {
-    updateAppSettings(input: $input) {
-      draft_retention_days
-      max_backout_attempts
-      venue_cancel_health_penalty
-      attendance_otp_required
-      pod_auto_cancel_enabled
-      pod_auto_cancel_lead_hours
-      auto_pod_slot_window_days
-      auto_pod_venue_expiry_hours
-      auto_pod_assignment_expiry_hours
-      auto_pod_cancel_health_penalty
-      updated_at
-    }
-  }
-`;
-
-/** Admin > Pods > Pod Settings — platform defaults for the Create-a-Pod flow:
- * the draft-pod retention window (daily cleanup job + Host Studio note), the
- * per-user-per-pod Backout attempt limit enforced by the backout flow, the
- * and the Account Health penalty a venue pays when its owner cancels a booked
- * pod. (The Duncit Coin earn rate used to sit here too; it moved to Finance >
- * Duncit Coin > Settings, with the rest of the coin payout rules.) */
+/**
+ * Admin > Pods > Pod Settings — the platform defaults every pod is created
+ * and run under.
+ *
+ * Three groups, each its own file: the pod's own lifecycle (drafts, backouts,
+ * venue cancellations, attendance verification, the auto-cancel sweep), the
+ * Auto Pods windows, and the Request Change deductions. The page itself is the
+ * query, the save and the order they appear in — anything more and it passes
+ * the 200-line ceiling (rule 9), which is exactly what happened before.
+ *
+ * (The Duncit Coin earn rate used to sit here too; it moved to Finance >
+ * Duncit Coin > Settings with the rest of the coin payout rules.)
+ */
 export default function PodSettingsPage() {
   const { t } = useTranslation();
-  const { data, loading, refetch } = useQuery<any>(POD_SETTINGS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, refetch } = useQuery<any>(POD_SETTINGS, {
+    fetchPolicy: 'cache-and-network',
+  });
   const [save] = useMutation<any>(UPDATE_POD_SETTINGS, {
     refetchQueries: [{ query: PUBLIC_APP_SETTINGS }],
   });
@@ -59,132 +33,29 @@ export default function PodSettingsPage() {
 
   const settings = data?.appSettings;
 
-  const saveField = async (input: Record<string, number | boolean>) => {
+  const onSave = async (input: Record<string, number | boolean>) => {
     await save({ variables: { input } });
     setToast(t('admin.podSettings.saved'));
     await refetch();
   };
 
+  const section = { settings, loading, onSave };
+
   return (
     <Stack spacing={3}>
       <Box>
         <Typography variant="h5">{t('admin.podSettings.title')}</Typography>
-        <Typography variant="body2" sx={{
-          color: "text.secondary"
-        }}>
-          Platform-level defaults for the Create-a-Pod flow.
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          {t('admin.podSettings.subtitle')}
         </Typography>
       </Box>
-      <NumberSettingCard
-        title={t('admin.podSettings.retentionLabel')}
-        description={t('admin.podSettings.retentionHint')}
-        label={t('admin.podSettings.retentionLabel')}
-        helperText={t('admin.podSettings.retentionMin')}
-        invalidText="Enter a whole number of 1 or more."
-        min={1}
-        loading={loading}
-        value={settings?.draft_retention_days ?? null}
-        onSave={(next) => saveField({ draft_retention_days: next })}
-      />
-      <NumberSettingCard
-        title={t('admin.podSettings.backoutLabel')}
-        description="Set the maximum number of Backout attempts a user can initiate for the same Pod. Each successful 'Backout in process' counts as one attempt; once the limit is reached the Backout action is blocked for that Pod."
-        label={t('admin.podSettings.backoutLabel')}
-        helperText={t('admin.podSettings.backoutMin')}
-        invalidText="Enter a whole number of 1 or more."
-        min={1}
-        loading={loading}
-        value={settings?.max_backout_attempts ?? null}
-        onSave={(next) => saveField({ max_backout_attempts: next })}
-      />
-      <NumberSettingCard
-        title={t('admin.podSettings.penaltyTitle')}
-        description="Points deducted from a venue's Account Health each time its owner cancels a pod booked at that venue. Set 0 to disable the penalty."
-        label={t('admin.podSettings.penaltyLabel')}
-        helperText={t('admin.podSettings.penaltyMin')}
-        invalidText="Enter a whole number of 0 or more."
-        min={0}
-        loading={loading}
-        value={settings?.venue_cancel_health_penalty ?? null}
-        onSave={(next) => saveField({ venue_cancel_health_penalty: next })}
-      />
-      <ToggleSettingCard
-        title={t('admin.podSettings.otpTitle')}
-        description="When on, a host marking an attendee present by hand must first verify that attendee's name and phone number with a one-time code. Scanning a ticket is proof on its own and is never gated by this, and a Club Admin's override never asks for a code either."
-        onHint="On — the host verifies the attendee's number before the Mark Attendance button unlocks."
-        offHint="Off — the host can mark an attendee present without verifying their number."
-        loading={loading}
-        value={settings?.attendance_otp_required ?? null}
-        onSave={(next) => saveField({ attendance_otp_required: next })}
-      />
-      <ToggleSettingCard
-        title={t('admin.podSettings.autoCancelTitle')}
-        description={t('admin.podSettings.autoCancelDesc')}
-        onHint={t('admin.podSettings.autoCancelOn')}
-        offHint={t('admin.podSettings.autoCancelOff')}
-        loading={loading}
-        value={settings?.pod_auto_cancel_enabled ?? null}
-        onSave={(next) => saveField({ pod_auto_cancel_enabled: next })}
-      />
-      <NumberSettingCard
-        title={t('admin.podSettings.autoCancelLeadTitle')}
-        description={t('admin.podSettings.autoCancelLeadDesc')}
-        label={t('admin.podSettings.autoCancelLeadLabel')}
-        helperText={t('admin.podSettings.autoCancelLeadMin')}
-        invalidText={t('admin.podSettings.autoCancelLeadInvalid')}
-        min={1}
-        loading={loading}
-        value={settings?.pod_auto_cancel_lead_hours ?? null}
-        onSave={(next) => saveField({ pod_auto_cancel_lead_hours: next })}
-      />
-      <NumberSettingCard
-        title={t('admin.podSettings.autoPodSlotWindowTitle')}
-        description={t('admin.podSettings.autoPodSlotWindowDesc')}
-        label={t('admin.podSettings.autoPodSlotWindowLabel')}
-        helperText={t('admin.podSettings.autoPodSlotWindowMin')}
-        invalidText={t('admin.podSettings.autoPodSlotWindowInvalid')}
-        min={1}
-        max={60}
-        loading={loading}
-        value={settings?.auto_pod_slot_window_days ?? null}
-        onSave={(next) => saveField({ auto_pod_slot_window_days: next })}
-      />
-      <NumberSettingCard
-        title={t('admin.podSettings.autoPodExpiryTitle')}
-        description={t('admin.podSettings.autoPodExpiryDesc')}
-        label={t('admin.podSettings.autoPodExpiryLabel')}
-        helperText={t('admin.podSettings.autoPodExpiryMin')}
-        invalidText={t('admin.podSettings.autoPodExpiryInvalid')}
-        min={1}
-        max={720}
-        loading={loading}
-        value={settings?.auto_pod_venue_expiry_hours ?? null}
-        onSave={(next) => saveField({ auto_pod_venue_expiry_hours: next })}
-      />
-      <NumberSettingCard
-        title={t('admin.podSettings.autoPodAssignmentTitle')}
-        description={t('admin.podSettings.autoPodAssignmentDesc')}
-        label={t('admin.podSettings.autoPodAssignmentLabel')}
-        helperText={t('admin.podSettings.autoPodAssignmentMin')}
-        invalidText={t('admin.podSettings.autoPodAssignmentInvalid')}
-        min={1}
-        max={720}
-        loading={loading}
-        value={settings?.auto_pod_assignment_expiry_hours ?? null}
-        onSave={(next) => saveField({ auto_pod_assignment_expiry_hours: next })}
-      />
-      <NumberSettingCard
-        title={t('admin.podSettings.autoPodPenaltyTitle')}
-        description={t('admin.podSettings.autoPodPenaltyDesc')}
-        label={t('admin.podSettings.autoPodPenaltyLabel')}
-        helperText={t('admin.podSettings.autoPodPenaltyMin')}
-        invalidText={t('admin.podSettings.autoPodPenaltyInvalid')}
-        min={0}
-        max={100}
-        loading={loading}
-        value={settings?.auto_pod_cancel_health_penalty ?? null}
-        onSave={(next) => saveField({ auto_pod_cancel_health_penalty: next })}
-      />
+
+      <PodLifecycleSettings {...section} />
+      <Divider />
+      <AutoPodSettings {...section} />
+      <Divider />
+      <RequestChangeSettings {...section} />
+
       <Snackbar
         open={!!toast}
         autoHideDuration={3000}

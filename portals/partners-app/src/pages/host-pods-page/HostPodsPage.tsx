@@ -5,6 +5,8 @@ import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { HostPodActionsMenu, useHostPodActions } from '@duncit/host-pod-actions';
+import { useRequestPodChange } from '@duncit/pod-change-requests';
+import { changeRequestMenuKey } from '@duncit/utils';
 import { buildPodInput, type PodFormValues } from '@duncit/pod-form';
 import PodsTable from '../../components/PodsTable';
 import HostPodActionsBridge from '../../components/HostPodActionsBridge';
@@ -54,6 +56,9 @@ function HostPodsContent() {
 
   const fetchRows = useApolloTableFetch<PartnerPodRow>(client, MY_HOST_PODS_TABLE, 'myHostPodsTable');
   const { menuHandlers, dialogs } = useHostPodActions(() => refetchRef.current?.());
+  // "Request Change Host" — one instance for the whole table, its dialog
+  // rendered once beside the host dialogs below.
+  const change = useRequestPodChange({ onFiled: setMessage });
 
   const submit = async (values: PodFormValues, options: { draft: boolean }) => {
     await createPod({
@@ -65,7 +70,18 @@ function HostPodsContent() {
   };
 
   const renderActions = (pod: PartnerPodRow) => (
-    <HostPodActionsMenu {...menuHandlers(pod)} disabled={isCancelled(pod)} />
+    <HostPodActionsMenu
+      {...menuHandlers(pod)}
+      disabled={isCancelled(pod)}
+      onRequestChange={() =>
+        change.open({
+          podDocId: pod.id,
+          role: 'HOST',
+          attendeeCount: pod.pod_attendees?.length ?? 0,
+        })
+      }
+      requestChangeLabel={t(changeRequestMenuKey('HOST'))}
+    />
   );
 
   return (
@@ -141,6 +157,7 @@ function HostPodsContent() {
         onSubmit={submit}
       />
       {dialogs}
+      {change.dialog}
       <Snackbar
         open={!!message}
         autoHideDuration={2500}

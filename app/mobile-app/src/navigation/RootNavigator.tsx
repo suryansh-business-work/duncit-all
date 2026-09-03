@@ -79,6 +79,7 @@ import { SurveyScreen } from '@/screens/SurveyScreen';
 import { VenueManageScreen } from '@/screens/VenueManageScreen';
 import { VenueEarningsScreen } from '@/screens/VenueEarningsScreen';
 import { VenueSlotRequestsScreen } from '@/screens/VenueSlotRequestsScreen';
+import { ChangeRequestsScreen } from '@/screens/ChangeRequestsScreen';
 import { VenueAvailabilityScreen } from '@/screens/VenueAvailabilityScreen';
 import { VenueSettingsScreen } from '@/screens/VenueSettingsScreen';
 import { VenueAutoPodsScreen } from '@/screens/VenueAutoPodsScreen';
@@ -192,6 +193,7 @@ export function RootNavigator() {
       <Stack.Screen name="VenueManage" component={VenueManageScreen} />
       <Stack.Screen name="VenueEarnings" component={VenueEarningsScreen} />
       <Stack.Screen name="VenueSlotRequests" component={VenueSlotRequestsScreen} />
+      <Stack.Screen name="ChangeRequests" component={ChangeRequestsScreen} />
       <Stack.Screen name="VenueAvailability" component={VenueAvailabilityScreen} />
       <Stack.Screen name="VenueSettings" component={VenueSettingsScreen} />
       <Stack.Screen name="VenueAutoPods" component={VenueAutoPodsScreen} />

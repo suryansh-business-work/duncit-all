@@ -3,6 +3,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import ClubPodsSection from './ClubPodsSection';
 import ClubQuickActions from './ClubQuickActions';
 import YourClubsSection from './YourClubsSection';
+import StudioChangeRequests from '../../components/studio-pods/StudioChangeRequests';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /**
@@ -54,6 +55,8 @@ export default function ClubStudioPage() {
       <YourClubsSection />
 
       <ClubPodsSection />
+
+      <StudioChangeRequests role="CLUB_ADMIN" />
     </Stack>
   );
 }

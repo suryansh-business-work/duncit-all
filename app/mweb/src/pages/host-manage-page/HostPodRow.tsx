@@ -27,6 +27,8 @@ export default function HostPodRow({
   onClubAdmin,
   onSeeAttendance,
   onSlotRequest,
+  onRequestChange,
+  requestChangeLabel,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const approvalChip = venueApprovalChip(pod.venue_approval_status);
@@ -82,6 +84,8 @@ export default function HostPodRow({
           onClubAdmin={onClubAdmin}
           onSeeAttendance={onSeeAttendance}
           onSlotRequest={onSlotRequest}
+          onRequestChange={onRequestChange}
+          requestChangeLabel={requestChangeLabel}
         />
       </Stack>
       {rejected && (

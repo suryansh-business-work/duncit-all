@@ -111,6 +111,7 @@ export const STATIC_ROUTES: StaticRoute[] = [
   { pattern: '/venues/manage', titleKey: 'mweb.meta.venuesManage.title' },
   { pattern: '/venues/earnings', titleKey: 'mweb.meta.venueEarnings.title' },
   { pattern: '/venues/slot-requests', titleKey: 'mweb.meta.slotRequests.title' },
+  { pattern: '/change-requests', titleKey: 'mweb.meta.changeRequests.title' },
   { pattern: '/venues/availability', titleKey: 'mweb.meta.venueAvailability.title' },
   { pattern: '/venues/settings', titleKey: 'mweb.meta.venueSettings.title' },
   { pattern: '/venues/:venueId/health', titleKey: 'mweb.meta.venueHealth.title' },

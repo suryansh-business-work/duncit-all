@@ -10,6 +10,7 @@ import {
   CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
   type FlatCatalogue,
+  CHANGE_REQUEST_BUNDLE,
   type NestedCatalogue,
   type Translator,
 } from '@duncit/i18n';
@@ -44,6 +45,9 @@ export const SHELL_FALLBACK: NestedCatalogue = {
   ...VENUE_SETTINGS_BUNDLE,
   ...CLUB_ADMIN_BUNDLE,
   ...FULFILMENT_BUNDLE,
+  // changeRequest.* is the Request Change flow, rendered by the Partners and
+  // Admin consoles AND by mWeb and native off the same pod row (rule 27).
+  ...CHANGE_REQUEST_BUNDLE,
 };
 
 /** Flat, runtime-ready form of the bundle above. */

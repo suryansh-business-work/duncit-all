@@ -55,6 +55,17 @@ export interface IAppSettings extends Document {
   /** Account Health points a venue or host loses by withdrawing from an Auto
    * Pod they had enrolled in (0 disables the penalty). */
   auto_pod_cancel_health_penalty: number;
+  /** Account Health points a VENUE loses when its owner files a Request Change
+   * asking Duncit to move a pod to a different venue (Admin > Pods > Pod
+   * Settings > Request Change Setting). 0 disables the deduction. */
+  venue_change_request_health_penalty: number;
+  /** Account Health points a HOST loses when they file a Request Change asking
+   * Duncit to hand their pod to a different host. 0 disables the deduction. */
+  host_change_request_health_penalty: number;
+  /** Account Health points a CLUB ADMIN loses when they file a Request Change
+   * asking Duncit to hand their club's pod to a different club admin. 0
+   * disables the deduction. */
+  club_admin_change_request_health_penalty: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -86,6 +97,11 @@ const appSettingsSchema = new Schema<IAppSettings>(
     auto_pod_venue_expiry_hours: { type: Number, default: 24, min: 1, max: 720 },
     auto_pod_assignment_expiry_hours: { type: Number, default: 72, min: 1, max: 720 },
     auto_pod_cancel_health_penalty: { type: Number, default: 5, min: 0, max: 100 },
+    // The three Request Change deductions are capped at 10, not 100: they are
+    // the price of ASKING for a replacement, not of walking out on a live pod.
+    venue_change_request_health_penalty: { type: Number, default: 5, min: 0, max: 10 },
+    host_change_request_health_penalty: { type: Number, default: 5, min: 0, max: 10 },
+    club_admin_change_request_health_penalty: { type: Number, default: 5, min: 0, max: 10 },
     // `coin_earn_pct` used to live here. It moved to CoinSettings — split into a
     // pod-join and a shop rate — where the rest of the coin payout rules are;
     // coinSettingsService.seed() carries the configured value across on the

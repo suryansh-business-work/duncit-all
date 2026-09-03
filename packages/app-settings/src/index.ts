@@ -79,6 +79,7 @@ export {
   CHALLENGE_BUNDLE,
   CONTENT_REPORT_BUNDLE,
   CRM_BUNDLE,
+  CHANGE_REQUEST_BUNDLE,
   DEVELOPERS_BUNDLE,
   allFallbackEntries,
   createTranslator,

@@ -30,6 +30,7 @@ import MobileUploadSettingPage from './pages/upload-settings/MobileUploadSetting
 import MwebUploadSettingPage from './pages/upload-settings/MwebUploadSettingPage';
 import PodMonitoringPage from './pages/pod-monitoring/PodMonitoringPage';
 import PodsDashboardPage from './pages/pods-dashboard/PodsDashboardPage';
+import PodChangeRequestsPage from './pages/pod-change-requests/PodChangeRequestsPage';
 import EventTicketsPage from './pages/EventTicketsPage';
 import BrandingPage from './pages/BrandingPage';
 import LocalesPage from './pages/localization-page/LocalesPage';
@@ -87,6 +88,7 @@ export default function App() {
                     pod id — React Router ranks it first either way, and the
                     order says so out loud. */}
                 <Route path="/pods/dashboard" element={<PodsDashboardPage />} />
+                <Route path="/pods/change-requests" element={<PodChangeRequestsPage />} />
                 <Route path="/pods/new" element={<PodEditorPage />} />
                 <Route path="/pods/:id" element={<PodDetailsPage />} />
                 <Route path="/pods/:id/edit" element={<PodEditorPage />} />

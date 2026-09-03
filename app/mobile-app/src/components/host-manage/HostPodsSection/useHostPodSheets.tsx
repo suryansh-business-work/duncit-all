@@ -9,6 +9,9 @@ import { useFeedbackLinkActions, usePodMediaLinkActions } from '@/hooks/usePodLi
 import type { HostPod } from '@/hooks/useHostPods';
 import { isVenueRejected } from '@/utils/venue-approval';
 import { PodActionsSheet } from '@/components/host-manage/PodActionsSheet';
+import { RequestChangeSheet } from '@/components/change-requests/RequestChangeSheet';
+import { usePodChangeRequests } from '@/hooks/usePodChangeRequests';
+import { useTranslation } from '@/hooks/useTranslation';
 import { PodClubAdminSheet } from '@/components/host-manage/PodClubAdminSheet';
 import { TicketScanDialog, type ScanTarget } from '@/components/host-manage/ticket-scan';
 import { PodDeleteDialog } from '@/components/host-manage/PodDeleteDialog';
@@ -52,6 +55,11 @@ export function useHostPodSheets({ refetch, onPodCompleted }: Readonly<Options>)
   // The whole row, not the narrower edit shape — the sheet routes to complete,
   // resubmit and cancel, which each need different fields off the pod.
   const [actionsPod, setActionsPod] = useState<HostPod | null>(null);
+  // "Request Change Host" — one instance for all three sections, exactly like
+  // the actions sheet above: a pod keeps the same behaviour wherever it sits.
+  const [changePod, setChangePod] = useState<HostPod | null>(null);
+  const change = usePodChangeRequests();
+  const { t } = useTranslation();
   const [scanPod, setScanPod] = useState<ScanTarget | null>(null);
   const [editPod, setEditPod] = useState<HostPodSummary | null>(null);
   const [resubmitPod, setResubmitPod] = useState<HostPodForResubmit | null>(null);
@@ -125,6 +133,30 @@ export function useHostPodSheets({ refetch, onPodCompleted }: Readonly<Options>)
         onClubAdmin={() => {
           setClubAdminPod(actionsPod);
           setActionsPod(null);
+        }}
+        onRequestChange={() => {
+          setChangePod(actionsPod);
+          setActionsPod(null);
+        }}
+      />
+      <RequestChangeSheet
+        open={!!changePod}
+        role="HOST"
+        penalty={change.board.penalties.host_penalty}
+        attendeeCount={changePod?.seats_taken ?? 0}
+        busy={change.busy}
+        errorText={change.feedback?.ok === false ? change.feedback.text : null}
+        onClose={() => setChangePod(null)}
+        onConfirm={(reason) => {
+          const pod = changePod;
+          if (!pod) return;
+          change
+            .file(pod.id, 'HOST', reason, t('changeRequest.filed'))
+            .then((ok) => {
+              if (ok) setChangePod(null);
+              return undefined;
+            })
+            .catch(() => undefined);
         }}
       />
       <PodClubAdminSheet

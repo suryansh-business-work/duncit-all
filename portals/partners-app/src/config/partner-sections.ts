@@ -35,6 +35,12 @@ export const PARTNER_SECTIONS: readonly PartnerSection[] = [
       children: [
         { label: 'Dashboard', to: '/club-admin/dashboard', icon: 'dashboard' },
         { label: 'Clubs', to: '/club-admin/clubs', icon: 'storefront' },
+        {
+          label: 'Change Requests',
+          labelKey: 'changeRequest.sectionTitle',
+          to: '/club-admin/change-requests',
+          icon: 'rule',
+        },
         { label: 'Pod Monitoring (AI)', to: '/club-admin/monitoring', icon: 'insights' },
       ],
     },
@@ -50,6 +56,12 @@ export const PARTNER_SECTIONS: readonly PartnerSection[] = [
         { label: 'Venue Dashboard', to: '/venues/dashboard', icon: 'analytics' },
         { label: 'Venue Management', to: '/register-venue', icon: 'storefront' },
         { label: 'Slot Requests', to: '/venues/requests', icon: 'calendar' },
+        {
+          label: 'Change Requests',
+          labelKey: 'changeRequest.sectionTitle',
+          to: '/venues/change-requests',
+          icon: 'rule',
+        },
         { label: 'Pods', to: '/venues/pods', icon: 'orders' },
         { label: 'Settings', labelKey: 'shell.nav.settings', to: '/venues/settings', icon: 'settings' },
       ],
@@ -65,6 +77,12 @@ export const PARTNER_SECTIONS: readonly PartnerSection[] = [
       children: [
         { label: 'Dashboard', to: '/host/dashboard', icon: 'analytics' },
         { label: 'Your Pods', to: '/host/pods', icon: 'orders' },
+        {
+          label: 'Change Requests',
+          labelKey: 'changeRequest.sectionTitle',
+          to: '/host/change-requests',
+          icon: 'rule',
+        },
       ],
     },
   },

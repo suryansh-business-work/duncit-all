@@ -47,6 +47,8 @@ export default function VenueRequestRow({
   onClubAdmin,
   onSeeAttendance,
   onSlotRequest,
+  onRequestChange,
+  requestChangeLabel,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const approvalChip = venueApprovalChip(pod.venue_approval_status);
@@ -89,6 +91,8 @@ export default function VenueRequestRow({
           onClubAdmin={onClubAdmin}
           onSeeAttendance={onSeeAttendance}
           onSlotRequest={onSlotRequest}
+          onRequestChange={onRequestChange}
+          requestChangeLabel={requestChangeLabel}
         />
       </Stack>
 

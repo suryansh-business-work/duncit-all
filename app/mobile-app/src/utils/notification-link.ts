@@ -1,5 +1,6 @@
 /** Param-less in-app deep-link routes reachable from a notification. */
-type ParamlessRoute = 'Earn' | 'PodIdeas' | 'VenueAutoPods' | 'HostAutoPods' | 'ClubAutoPods';
+type ParamlessRoute =
+  'Earn' | 'PodIdeas' | 'VenueAutoPods' | 'HostAutoPods' | 'ClubAutoPods' | 'ChangeRequests';
 
 /** Param-less in-app deep-link path → React Navigation screen.
  *
@@ -12,6 +13,10 @@ const IN_APP_ROUTES: Record<string, ParamlessRoute> = {
   '/venues/auto-pods': 'VenueAutoPods',
   '/host/auto-pods': 'HostAutoPods',
   '/clubs/auto-pods': 'ClubAutoPods',
+  // The `link_url` every Request Change notification carries — the offer, the
+  // filing acknowledgement and the resolution. Without this row the tap does
+  // nothing at all, silently.
+  '/change-requests': 'ChangeRequests',
 };
 
 /** Resolved navigation intent for a notification's `link_url`. */

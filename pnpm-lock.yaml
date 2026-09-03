@@ -106,6 +106,9 @@ importers:
       '@duncit/onboarding':
         specifier: workspace:*
         version: link:../../packages/onboarding
+      '@duncit/pod-change-requests':
+        specifier: workspace:*
+        version: link:../../packages/pod-change-requests
       '@duncit/pod-details':
         specifier: workspace:*
         version: link:../../packages/pod-details
@@ -1410,6 +1413,9 @@ importers:
       '@duncit/onboarding':
         specifier: workspace:*
         version: link:../onboarding
+      '@duncit/pod-change-requests':
+        specifier: workspace:*
+        version: link:../pod-change-requests
       '@duncit/pod-details':
         specifier: workspace:*
         version: link:../pod-details
@@ -1943,6 +1949,52 @@ importers:
       vitest:
         specifier: 3.2.4
         version: 3.2.4(@types/debug@4.1.13)(@types/node@26.4.0)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.33.0)(supports-color@8.1.1)(terser@5.49.0)(yaml@2.9.0)
+
+  packages/pod-change-requests:
+    dependencies:
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../app-settings
+      '@duncit/buttons':
+        specifier: workspace:*
+        version: link:../buttons
+      '@duncit/dialogs':
+        specifier: workspace:*
+        version: link:../dialogs
+      '@duncit/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@duncit/utils':
+        specifier: workspace:*
+        version: link:../utils
+    devDependencies:
+      '@apollo/client':
+        specifier: 4.2.12
+        version: 4.2.12(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.2)(ws@8.20.1))(graphql@16.14.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rxjs@7.8.2)
+      '@mui/icons-material':
+        specifier: ^9.4.0
+        version: 9.4.0(@mui/material@9.4.0(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)
+      '@mui/material':
+        specifier: ^9.4.0
+        version: 9.4.0(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@types/react':
+        specifier: ^19.2.18
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.2.5
+        version: 19.2.5(@types/react@19.2.18)
+      graphql:
+        specifier: 16.14.2
+        version: 16.14.2
+      react:
+        specifier: ^19.2.8
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.2.8
+        version: 19.2.8(react@19.2.8)
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
 
   packages/pod-details:
     dependencies:
@@ -2943,6 +2995,9 @@ importers:
       '@duncit/media-picker':
         specifier: workspace:*
         version: link:../../packages/media-picker
+      '@duncit/pod-change-requests':
+        specifier: workspace:*
+        version: link:../../packages/pod-change-requests
       '@duncit/pod-details':
         specifier: workspace:*
         version: link:../../packages/pod-details
@@ -4719,6 +4774,9 @@ importers:
       '@duncit/media-picker':
         specifier: workspace:*
         version: link:../../packages/media-picker
+      '@duncit/pod-change-requests':
+        specifier: workspace:*
+        version: link:../../packages/pod-change-requests
       '@duncit/pod-details':
         specifier: workspace:*
         version: link:../../packages/pod-details

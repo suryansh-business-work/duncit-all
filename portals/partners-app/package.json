@@ -36,6 +36,7 @@
     "@duncit/earn": "workspace:*",
     "@duncit/forms": "workspace:*",
     "@duncit/host-pod-actions": "workspace:*",
+    "@duncit/pod-change-requests": "workspace:*",
     "@duncit/location": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/media-picker": "workspace:*",

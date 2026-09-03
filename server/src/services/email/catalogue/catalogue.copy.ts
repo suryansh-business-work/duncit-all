@@ -131,4 +131,5 @@ export const HELP = {
   supportReply: 'email.help.supportReply',
   slotDecision: 'email.help.slotDecision',
   stockWhy: 'email.help.stockWhy',
+  changeRequestOffer: 'email.help.changeRequestOffer',
 } as const;

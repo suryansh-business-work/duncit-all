@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { venueCancelSuccessMessage, type VenueCancelPodResult } from '@duncit/utils';
+import {
+  canRequestPodChange,
+  changeRequestBlockedKey,
+  changeRequestMenuKey,
+  venueCancelSuccessMessage,
+  type VenueCancelPodResult,
+} from '@duncit/utils';
+import { useRequestPodChange } from '@duncit/pod-change-requests';
 import {
   StudioPodsSection,
   EMPTY_STUDIO_SUMMARY,
@@ -41,6 +48,11 @@ export default function VenuePodsSection({ venueId, onPodsChanged }: Readonly<Pr
   const pods: StudioPod[] = data?.studioPods ?? [];
   const summary = data?.studioSummary ?? EMPTY_STUDIO_SUMMARY;
 
+  // "Request Change Venue" — the venue owner asking Duncit to move the pod
+  // rather than cancelling it and refunding everybody. The dialog behind it is
+  // rendered once, below.
+  const change = useRequestPodChange({ onFiled: notifySuccess });
+
   // The line is the shared one — every number in it comes from the server.
   const handleCancelled = async (result: VenueCancelPodResult) => {
     setPodToCancel(null);
@@ -65,6 +77,10 @@ export default function VenuePodsSection({ venueId, onPodsChanged }: Readonly<Pr
         }}
         onOpenPod={setOpenPod}
         onCancelPod={setPodToCancel}
+        onRequestChange={(pod) =>
+          change.open({ podDocId: pod.id, role: 'VENUE', attendeeCount: pod.attendee_count })
+        }
+        requestChangeLabel={t(changeRequestMenuKey('VENUE'))}
       />
       <VenuePodDetailDialog
         pod={openPod}
@@ -76,6 +92,7 @@ export default function VenuePodsSection({ venueId, onPodsChanged }: Readonly<Pr
         onClose={() => setPodToCancel(null)}
         onCancelled={handleCancelled}
       />
+      {change.dialog}
     </>
   );
 }

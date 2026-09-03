@@ -94,6 +94,8 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       noPodsCreatedFromYourPartner: 'No pods created from your partner account yet.',
       partnerTools: 'Partner tools',
       partnerToolsVenues: 'Partner tools · Venues',
+      partnerToolsHost: 'Partner tools · Host',
+      partnerToolsClubAdmin: 'Partner tools · Club Admin',
       pod: 'Pod',
       price: 'Price',
       productManagement: 'Product management',

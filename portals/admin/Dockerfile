@@ -57,6 +57,7 @@ COPY packages/dashboard/package.json ./packages/dashboard/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/pod-product-picker/package.json ./packages/pod-product-picker/
 COPY packages/pod-details/package.json ./packages/pod-details/
+COPY packages/pod-change-requests/package.json ./packages/pod-change-requests/
 COPY packages/table/package.json ./packages/table/
 COPY packages/app-settings/package.json ./packages/app-settings/
 COPY packages/datetime/package.json ./packages/datetime/

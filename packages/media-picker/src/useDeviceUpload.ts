@@ -99,8 +99,14 @@ export function useDeviceUpload({
     setPicked(f);
   };
 
-  const uploadFromDevice = async () => {
-    if (!picked) return;
+  /**
+   * Uploads the chosen file and ANSWERS with its URL. The caller needs the URL
+   * back because the dialog finishes the pick in the same press that uploads:
+   * a multi-pick tray is React state, so the dialog cannot read the picture it
+   * just added before it closes.
+   */
+  const uploadFromDevice = async (): Promise<string | null> => {
+    if (!picked) return null;
     const isVideo = picked.type.startsWith('video/');
     setUploading(true);
     // Video shows a real byte %; image shows an honest indeterminate bar.
@@ -141,8 +147,10 @@ export function useDeviceUpload({
         if (fileInputRef.current) fileInputRef.current.value = '';
       }
       onClose();
+      return url;
     } catch (e: any) {
       setError(e.message);
+      return null;
     } finally {
       setUploading(false);
       setUploadPct(null);

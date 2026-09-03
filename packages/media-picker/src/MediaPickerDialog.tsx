@@ -12,8 +12,8 @@ import {
 } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { addToSelection } from '@duncit/utils';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import DeviceUploadTab from './DeviceUploadTab';
@@ -65,11 +65,6 @@ export default function MediaPickerDialog({
   const handlePicked = multi ? selection.add : onPicked;
   const closeAfterPick = multi ? noop : onClose;
 
-  const done = () => {
-    onPickedMany?.(selection.urls);
-    onClose();
-  };
-
   const allowImage = useMemo(() => /image\//.test(accept) || accept === '*', [accept]);
   const allowVideo = useMemo(() => /video\//.test(accept) || accept === '*', [accept]);
   // Documents are opt-in: an explicit prop wins, otherwise a pdf in the accept
@@ -103,10 +98,42 @@ export default function MediaPickerDialog({
     onPicked: handlePicked,
     onClose: closeAfterPick,
     // Multi-pick keeps the dialog open, so the tab has to let go of the file it
-    // just sent or the next Upload button press would send it again.
+    // just sent or the same file could be sent twice.
     clearAfterUpload: multi,
     setError,
   });
+
+  // A file chosen on the device tab is not on ImageKit yet. There is no second
+  // button to press for that: the action that finishes the pick uploads it
+  // first, so "chose a picture but never sent it" stops being a state the user
+  // can leave the dialog in.
+  const pendingFile = tab === 'device' && Boolean(device.picked);
+
+  const done = async () => {
+    const uploaded = pendingFile ? await device.uploadFromDevice() : null;
+    // The upload failed and said so on screen — closing now would throw the
+    // file away and look like it worked.
+    if (pendingFile && !uploaded) return;
+    // Single-pick is already finished: the upload reported the URL and closed.
+    if (!multi) return;
+    onPickedMany?.(uploaded ? addToSelection(selection.urls, uploaded, max) : selection.urls);
+    onClose();
+  };
+
+  // The tray is full and the device tab still holds a file — the same dead end
+  // the old Upload button showed, kept visible rather than silently dropping
+  // that file on the way out.
+  const trayFull = multi && pendingFile && selection.atLimit;
+
+  // What the button will hand back, so it can name it. The pending file is not
+  // in the tray yet (hence the +1), and the cap still applies.
+  const readyCount = Math.min((multi ? selection.urls.length : 0) + (pendingFile ? 1 : 0), max);
+
+  // Named above the return: three answers inside the JSX would be the nested
+  // ternary S3358 rejects.
+  const pluralLabel = t('media.picker.useTheseCount', { vars: { count: readyCount } });
+  const pickLabel = readyCount > 1 ? pluralLabel : t('media.picker.useThis');
+  const buttonLabel = device.uploading ? t('media.picker.uploading') : pickLabel;
 
   useEffect(() => {
     if (!open) return;
@@ -207,25 +234,14 @@ export default function MediaPickerDialog({
         <DuncitButton onClick={onClose} disabled={device.uploading}>
           Cancel
         </DuncitButton>
-        {tab === 'device' && (
-          <DuncitButton
-            variant={multi ? 'outlined' : 'contained'}
-            disabled={!device.picked || device.uploading || (multi && selection.atLimit)}
-            onClick={device.uploadFromDevice}
-            startIcon={device.uploading ? <CircularProgress size={16} /> : <CloudUploadIcon />}
-          >
-            {device.uploading ? t('media.picker.uploading') : t('media.picker.uploadToImagekit')}
-          </DuncitButton>
-        )}
-        {multi && (
+        {(multi || tab === 'device') && (
           <DuncitButton
             variant="contained"
             onClick={done}
-            disabled={selection.urls.length === 0 || device.uploading}
+            disabled={readyCount === 0 || device.uploading || trayFull}
+            startIcon={device.uploading ? <CircularProgress size={16} /> : undefined}
           >
-            {selection.urls.length > 1
-              ? `Use these ${selection.urls.length}`
-              : t('media.picker.useThis')}
+            {buttonLabel}
           </DuncitButton>
         )}
       </DialogActions>

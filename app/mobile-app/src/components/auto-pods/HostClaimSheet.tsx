@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Input, Text, XStack, YStack } from 'tamagui';
 import {
   autoPodCityLabel,
+  autoPodHostMeetingReady,
   autoPodHostNeedsLocation,
+  type AutoPodHostMeeting,
   type AutoPodLabels,
   type AutoPodRow,
 } from '@duncit/utils';
@@ -10,8 +12,16 @@ import {
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { PillButton } from '@/components/attendance/AttendanceOtpControls';
 import { HostProjectionLines } from '@/components/auto-pods/HostProjectionLines';
+import {
+  BLANK_HOST_MEETING,
+  HostMeetingFields,
+  hostMeetingInput,
+} from '@/components/auto-pods/HostMeetingFields';
 import { HostAssignAutoPodDocument } from '@/graphql/auto-pods';
-import { useAutoPodHostProjection } from '@/hooks/useAutoPodHostProjection';
+import {
+  useAutoPodHostProjection,
+  type AutoPodHostProjection,
+} from '@/hooks/useAutoPodHostProjection';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
@@ -32,6 +42,29 @@ interface Props {
   locationId: string;
   /** Display name of that city, for the "will be set to" line. */
   locationLabel?: string;
+}
+
+/**
+ * Everything that has to hold before "Assign Myself" may go: an offer, a city
+ * when the offer takes one from the host, numbers the server priced as viable
+ * and in range, and — on a virtual offer — a complete meeting. Hoisted out of
+ * the component so the sheet reads as one gate rather than six clauses.
+ */
+function claimReady({
+  autoPodId,
+  needsLocation,
+  projection,
+  inRange,
+  meetingReady,
+}: Readonly<{
+  autoPodId: string | null;
+  needsLocation: boolean;
+  projection: AutoPodHostProjection | null;
+  inRange: boolean;
+  meetingReady: boolean;
+}>): boolean {
+  if (!autoPodId || needsLocation || !meetingReady) return false;
+  return !!projection && projection.viable && inRange;
 }
 
 const inputStyle = {
@@ -66,22 +99,29 @@ export function HostClaimSheet({
   const [failure, setFailure] = useState('');
   const [amount, setAmount] = useState(0);
   const [spots, setSpots] = useState(0);
+  const [meeting, setMeeting] = useState<AutoPodHostMeeting>(BLANK_HOST_MEETING);
   const autoPodId = row?.id ?? null;
   const pinned = row?.location ?? null;
   const needsLocation = row ? autoPodHostNeedsLocation(row, locationId) : false;
   const pinsCity = !!row && !pinned && !!locationId;
+  const virtual = row?.pod_mode === 'VIRTUAL';
 
-  // The template's numbers are the starting point; a fresh offer resets them,
-  // and a stale failure from the last offer must not greet the next one.
+  // A fresh offer starts from whatever it already carries (nothing, on a
+  // template), and a stale failure must not greet the next one.
   useEffect(() => {
     setAmount(row?.pod_amount ?? 0);
     setSpots(row?.no_of_spots ?? 0);
+    setMeeting(BLANK_HOST_MEETING);
     setFailure('');
   }, [autoPodId, row?.pod_amount, row?.no_of_spots]);
 
   const { projection, failed } = useAutoPodHostProjection(autoPodId, amount, spots);
   const inRange = !!projection && spots >= projection.min_spots && spots <= projection.max_spots;
-  const canAssign = !!autoPodId && !needsLocation && !!projection && projection.viable && inRange;
+  // A virtual offer has no venue to fix its window, so the host's own meeting
+  // details have to hold before the claim may go — the server re-checks them.
+  const now = new Date();
+  const meetingReady = !virtual || autoPodHostMeetingReady(meeting, now.getTime());
+  const canAssign = claimReady({ autoPodId, needsLocation, projection, inRange, meetingReady });
 
   const assign = useCallback(async () => {
     if (!autoPodId || !canAssign) return;
@@ -96,6 +136,8 @@ export function HostClaimSheet({
           location_id: pinned ? null : locationId,
           pod_amount: amount,
           no_of_spots: spots,
+          // Only a virtual offer carries a meeting; a physical one sends none.
+          ...(virtual ? { meeting: hostMeetingInput(meeting) } : {}),
         },
         { auth: true },
       );
@@ -114,6 +156,8 @@ export function HostClaimSheet({
     locationId,
     amount,
     spots,
+    virtual,
+    meeting,
     labels.claimedElsewhere,
     onAssigned,
   ]);
@@ -201,6 +245,10 @@ export function HostClaimSheet({
           >
             {spotsHint}
           </Text>
+        ) : null}
+
+        {virtual ? (
+          <HostMeetingFields value={meeting} onChange={setMeeting} labels={labels} now={now} />
         ) : null}
 
         <HostProjectionLines projection={projection} labels={labels} formatMoney={formatMoney} />

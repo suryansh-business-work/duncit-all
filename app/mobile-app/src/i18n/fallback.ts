@@ -15,6 +15,8 @@ import {
   WITHDRAW_BUNDLE,
   AVAILABILITY_BUNDLE,
   VENUE_SETTINGS_BUNDLE,
+  CLUB_ADMIN_BUNDLE,
+  CLUB_FORM_BUNDLE,
   FULFILMENT_BUNDLE,
   type NestedCatalogue,
   type Translator,
@@ -58,6 +60,10 @@ export const NATIVE_FALLBACK: NestedCatalogue = {
   // Tamagui twins of the calendar + form the packages render on mWeb (rule 27).
   ...AVAILABILITY_BUNDLE,
   ...VENUE_SETTINGS_BUNDLE,
+  ...CLUB_ADMIN_BUNDLE,
+  // The club edit screen labels its fields with the shared club form's words
+  // — the same ones the MUI form renders on mWeb (rule 27).
+  ...CLUB_FORM_BUNDLE,
   ...FULFILMENT_BUNDLE,
 };
 

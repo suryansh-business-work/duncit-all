@@ -23,9 +23,9 @@ export type AutoPodRole = 'venue' | 'host' | 'club';
 export const AUTO_POD_ROLES: readonly AutoPodRole[] = ['venue', 'host', 'club'];
 
 /**
- * PHYSICAL — a venue enrols and brings the slot. VIRTUAL — the admin wrote the
- * meeting details and dates into the template, so there is no venue to enrol
- * and the offer waits on a host and a club only.
+ * PHYSICAL — a venue enrols and brings the slot. VIRTUAL — there is no venue
+ * to enrol, the offer waits on a host and a club only, and the host brings
+ * the meeting link and the window when they assign themselves.
  */
 export type AutoPodMode = 'PHYSICAL' | 'VIRTUAL';
 
@@ -86,11 +86,13 @@ export interface AutoPodRow {
   /** False while an admin has paused the offer. */
   is_active?: boolean;
   /**
-   * When the offer leaves venues' lists (and expires) if no venue has accepted
-   * it by then. Set on the venue queue only; null on a virtual offer, once a
-   * venue is on it, and everywhere else.
+   * When the offer is released unless everyone needed has enrolled by then —
+   * Pod Settings' assignment window past its roll-out, or the venue window if
+   * that closes sooner while it still waits on a venue. Set on every list
+   * while the offer is enrolling; null once it is live, cancelled or expired.
+   * Every card counts it down.
    */
-  venue_expires_at?: string | null;
+  expires_at?: string | null;
   /** Account Health points a venue or host loses by withdrawing (Pod Settings). Set on their queues. */
   withdraw_penalty_points?: number | null;
   pod_amount: number;
@@ -217,6 +219,45 @@ export function autoPodCityLabel(location: AutoPodLocation | null | undefined): 
   return [location.city || location.location_name, location.state].filter(Boolean).join(', ');
 }
 
+/**
+ * Has a host priced this offer yet? The template carries no ticket price or
+ * spots — the host sets both when they assign themselves — so until then a
+ * card draws no price and no spot count rather than "₹0" and "0".
+ */
+export function autoPodPriced(row: Pick<AutoPodRow, 'pod_amount' | 'no_of_spots'>): boolean {
+  return row.pod_amount > 0 && row.no_of_spots > 0;
+}
+
+/** What a host types to take a VIRTUAL offer: where members join, and when. */
+export interface AutoPodHostMeeting {
+  meeting_platform: string;
+  meeting_url: string;
+  pod_date_time: Date | null;
+  pod_end_date_time: Date | null;
+}
+
+/** An http(s) URL, and nothing else — the same rule the server refuses on. */
+function isHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Can the host's "Assign Myself" go ahead with these meeting details? Only
+ * consulted on a VIRTUAL offer — a physical one takes its window from the
+ * venue's slot. The link must be an http(s) URL, the start must be ahead of
+ * `nowMs`, and the end after the start; the server re-checks all three.
+ */
+export function autoPodHostMeetingReady(meeting: AutoPodHostMeeting, nowMs: number): boolean {
+  const start = meeting.pod_date_time?.getTime() ?? Number.NaN;
+  const end = meeting.pod_end_date_time?.getTime() ?? Number.NaN;
+  return isHttpUrl(meeting.meeting_url.trim()) && start > nowMs && end > start;
+}
+
 /** Per-role counts of Auto Pods waiting on the signed-in user. */
 export interface AutoPodActionCounts {
   venue: number;
@@ -251,21 +292,26 @@ export function autoPodModeCount(
   return counts[role] ?? 0;
 }
 
-/** What a countdown says: whole hours and the minutes left over. */
+/** What a countdown says: whole hours, the minutes over, and the seconds over. */
 export interface AutoPodTimeLeft {
   hours: number;
   minutes: number;
+  seconds: number;
 }
 
 /**
- * How long until `iso` — for the venue card's "Removed from your list in …"
- * line. Null when there is no deadline, or once it has passed; minutes are
- * rounded UP so the line never reads "0h 0m" while the offer is still there.
+ * How long until `iso` — for the card's "Expires in …" line, re-read every
+ * second. Null when there is no deadline, or once it has passed; seconds are
+ * rounded UP so the line never reads "0h 0m 0s" while the offer is still there.
  */
 export function autoPodTimeLeft(iso: string | null | undefined, nowMs: number): AutoPodTimeLeft | null {
   if (!iso) return null;
   const left = new Date(iso).getTime() - nowMs;
   if (!Number.isFinite(left) || left <= 0) return null;
-  const minutesTotal = Math.ceil(left / 60_000);
-  return { hours: Math.floor(minutesTotal / 60), minutes: minutesTotal % 60 };
+  const secondsTotal = Math.ceil(left / 1000);
+  return {
+    hours: Math.floor(secondsTotal / 3600),
+    minutes: Math.floor((secondsTotal % 3600) / 60),
+    seconds: secondsTotal % 60,
+  };
 }

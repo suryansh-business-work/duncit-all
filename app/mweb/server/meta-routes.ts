@@ -118,6 +118,15 @@ export const STATIC_ROUTES: StaticRoute[] = [
   { pattern: '/host/auto-pods', titleKey: 'mweb.meta.autoPodsHost.title' },
   { pattern: '/clubs/auto-pods', titleKey: 'mweb.meta.autoPodsClub.title' },
   { pattern: '/clubs/manage', titleKey: 'mweb.meta.clubStudio.title' },
+  { pattern: '/clubs/dashboard', titleKey: 'mweb.meta.clubDashboard.title' },
+  { pattern: '/clubs/monitoring', titleKey: 'mweb.meta.clubMonitoring.title' },
+  { pattern: '/clubs/:clubId/pods', titleKey: 'mweb.meta.clubPods.title' },
+  // `/pods/new` before `/pods/:id`: both are four segments, and the first row
+  // that matches wins.
+  { pattern: '/clubs/:clubId/pods/new', titleKey: 'mweb.meta.clubPodEditor.title' },
+  { pattern: '/clubs/:clubId/pods/:id/edit', titleKey: 'mweb.meta.clubPodEditor.title' },
+  { pattern: '/clubs/:clubId/pods/:id', titleKey: 'mweb.meta.clubPods.title' },
+  { pattern: '/clubs/:clubId/edit', titleKey: 'mweb.meta.clubEdit.title' },
   { pattern: '/faqs', titleKey: 'mweb.meta.faqs.title' },
   { pattern: '/badges', titleKey: 'mweb.meta.badges.title', descriptionKey: 'mweb.meta.badges.description' },
   { pattern: '/policies/:slug', titleKey: 'mweb.meta.policies.title' },

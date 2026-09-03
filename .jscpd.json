@@ -42,6 +42,8 @@
     "**/vitest.setup.ts",
     "portals/crm/open-wa-server/**",
     "packages/docs-demos/**",
-    "server/src/modules/ai/askBot/askBot.catalog.*.ts"
+    "server/src/modules/ai/askBot/askBot.catalog.*.ts",
+    "server/src/modules/platform/packageUpdates/package-manifest.ts",
+    "server/src/modules/platform/localization/shipped-keys.ts"
   ]
 }

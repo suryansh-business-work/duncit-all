@@ -624,8 +624,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       venueCategory: 'Category: {path}',
       noVenueCategory: 'This venue has no category yet — set one under Manage venue to be offered Auto Pods.',
       pickVenueFirst: 'Pick a venue at the top first.',
-      // The card's countdown — Pod Settings decides the window.
-      removedIn: 'Removed from your list in {hours}h {minutes}m',
+      // Every card's live countdown to the offer being released — Pod Settings decides the windows.
+      expiresIn: 'Expires in {hours}h {minutes}m {seconds}s',
       // The slot picker.
       slotWindow: 'Free slots in the next {days} days, nearest first.',
       potentialEarning: 'You earn {amount} from this slot, after Duncit’s deductions.',
@@ -658,6 +658,19 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       willPinTo: 'This pod will be set to {city}.',
       noVenueInCity: 'None of your venues is in {city}.',
       noClubInCity: 'None of your clubs is in {city}.',
+      // Every card wears its mode; the template carries no price, so until a
+      // host sets one the card says who will.
+      modePhysical: 'Physical',
+      modeVirtual: 'Virtual',
+      pricedByHost: 'Ticket price and spots are set by the host who takes it.',
+      // A virtual offer has no venue to fix its window: the host brings the
+      // meeting link and the dates when they assign themselves.
+      meetingHint: 'You run this pod online — set where members join and when it happens.',
+      meetingPlatform: 'Meeting platform',
+      meetingPlatformOther: 'Other',
+      meetingLink: 'Meeting link',
+      meetingStart: 'Start date & time',
+      meetingEnd: 'End date & time',
       liveNow: 'Live',
       viewPod: 'View pod',
       cancelled: 'Cancelled',
@@ -1574,6 +1587,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       colCreatedAt: 'Created',
       colUpdatedAt: 'Updated',
       colDependency: 'Pod dependency',
+      colExpiresIn: 'Expires in',
       // The green Venue dot opens the enrolled venue's details.
       venueDetailsTitle: 'Venue details',
       venueDetailsFailed: 'Could not load this venue.',
@@ -1630,6 +1644,45 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       updated: 'Auto Pod updated.',
       saveFailed: 'Could not save: {reason}',
       empty: 'No Auto Pods match the current filters.',
+      // The status filter beside "New Auto Pod", held in the URL so a reload keeps it.
+      filterStatus: 'Status',
+      filterStatusAll: 'All statuses',
+      colMode: 'Mode',
+      // The row opens the offer's own page; the menu offers the same door.
+      viewDetails: 'View details',
+      detailsLoadFailed: 'Could not load this Auto Pod.',
+      detailsNotFound: 'This Auto Pod no longer exists.',
+      // The three enrolment sections on that page, each with how many partners could fill it.
+      roleVenueTitle: 'Venue',
+      roleHostTitle: 'Host',
+      roleClubTitle: 'Club Admin',
+      eligibleCount: '{n} eligible',
+      eligibleHint: 'Approved partners in this category who could enrol.',
+      notNeededVirtual: 'Not needed — a virtual pod has no venue.',
+      enrolledAt: 'Enrolled',
+      // The green Host / Club Admin dots open who enrolled, like the venue's.
+      hostDetailsTitle: 'Host details',
+      hostDetailsFailed: 'Could not load this host.',
+      clubDetailsTitle: 'Club Admin details',
+      clubDetailsFailed: 'Could not load this club.',
+      detailName: 'Name',
+      detailEmail: 'Email',
+      detailPhone: 'Phone',
+      detailAddress: 'Address',
+      clubLabel: 'Club',
+      // The template read back on the details page.
+      summaryTitle: 'Pod details',
+      summaryDescription: 'Description',
+      summaryInfo: 'Pod info',
+      summaryHashtags: 'Hashtags',
+      summaryMedia: 'Images & videos',
+      summaryMediaCount: '{n} file(s)',
+      summaryOffers: 'What this pod offers',
+      summaryPerks: 'Available perks',
+      summaryMeeting: 'Meeting',
+      summaryMeetingPending: 'Set by the host when they assign themselves.',
+      summaryWhen: 'When',
+      summaryCancelReason: 'Cancel reason',
     },
 
     /** Admin > Portal Access — the Jump to Portal request inbox. */

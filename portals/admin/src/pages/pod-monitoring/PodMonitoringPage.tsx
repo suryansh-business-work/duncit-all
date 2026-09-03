@@ -5,7 +5,8 @@ import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import { useApolloTableFetch } from '@duncit/table';
 import PodAuditDetailDialog from './PodAuditDetailDialog';
 import PodMonitoringTable from './PodMonitoringTable';
-import { POD_AUDIT_LOGS_TABLE, type PodAuditLog } from './queries';
+import type { PodAuditLog } from '@duncit/utils';
+import { POD_AUDIT_LOGS_TABLE } from './queries';
 import { useTranslation } from '@duncit/shell';
 
 /** Admin > Pods > Pod Monitoring (AI) — the AI-monitored audit trail of every

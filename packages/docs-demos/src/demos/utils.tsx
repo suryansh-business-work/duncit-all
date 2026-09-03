@@ -23,6 +23,9 @@ import {
   canCancelVenuePod,
   cancelDisabledReason,
   cancelPenaltyHeadline,
+  venueCancelDisabledText,
+  venueCancelPenaltyHeadline,
+  venueCancelSuccessMessage,
   tabCounts,
   venueOwnerStatTiles,
   autoPodActionable,
@@ -113,9 +116,34 @@ import {
   type PodParticipationFields,
   type PodPhaseFields,
   type UsernameRejection,
+  type VenueCancelPodResult,
   type VenueOwnerStats,
   type VenuePodRow,
+  POD_ROW_STATUS_COLORS,
+  canOpenPodAttendance,
+  clubAdminGroupHeadings,
+  clubAdminKpiGroups,
+  clubAdminKpiLabels,
+  clubAdminKpiValue,
+  clubAdminLabels,
+  clubAdminRangeFrom,
+  clubAdminRangeLabels,
+  clubAdminSeriesLabels,
+  clubAdminTrendSeries,
+  podAuditActionLabel,
+  podAuditRiskLabel,
+  podAuditSourceLabel,
+  podRowStatus,
+  podRowStatusLabel,
+  podRowStatusOptions,
+  type ClubAdminKpis,
+  type ClubAdminRange,
+  type PodAuditAction,
+  type PodAuditRisk,
+  type PodAuditSource,
+  type PodStatusFields,
 } from '@duncit/utils';
+import { CLUB_ADMIN_BUNDLE, MWEB_BUNDLE, createTranslator, flattenCatalogue } from '@duncit/i18n';
 import { defineDemo, defineDemos } from '../types';
 
 interface StudioModeMock {
@@ -277,12 +305,35 @@ interface VenuePodsMock {
   pods: Array<VenuePodRow & { pod_id: string; pod_title: string }>;
   /** `publicAppSettings.venue_cancel_health_penalty`; null before the query answers. */
   cancel_penalty: number | null;
+  /** What `venueCancelPod` answered with once the upcoming pod was cancelled. */
+  cancel_result: VenueCancelPodResult;
 }
+
+/** The bundle's own English for `mweb.venuePods.*`, resolved the way mWeb and native do. */
+const { t: mwebT } = createTranslator({ locale: 'en-IN', fallback: flattenCatalogue(MWEB_BUNDLE) });
 
 /** One owner's figures across their venues, as `venueOwnerStats` answers them. */
 interface VenueDashboardMock {
   stats: VenueOwnerStats;
 }
+
+/** A Koramangala running club's admin: the dashboard figures, one pod row and one audit entry. */
+interface ClubAdminMock {
+  kpis: ClubAdminKpis;
+  range: ClubAdminRange;
+  /** The clock the range is measured from, so the boundary is reproducible. */
+  now: string;
+  /** One row of `clubAdminPodsTable`, as the status chip reads it. */
+  pod: PodStatusFields & { pod_title: string };
+  /** One entry of `clubAdminPodAuditLogs`. */
+  audit: { action: PodAuditAction; source: PodAuditSource; ai_risk: PodAuditRisk };
+}
+
+/** The bundle's own English for `clubAdmin.*`, resolved the way every surface does. */
+const { t: clubAdminT } = createTranslator({
+  locale: 'en-IN',
+  fallback: flattenCatalogue(CLUB_ADMIN_BUNDLE),
+});
 
 export default defineDemos('utils', [
   defineDemo<SpotsMock>({
@@ -1106,7 +1157,7 @@ export default defineDemos('utils', [
     id: 'venue-pods',
     title: 'Which pods a venue owner may still cancel',
     note:
-      'Only the UPCOMING pod offers Cancel; the ONGOING one answers ALREADY_STARTED because the owner may pull the plug before a pod starts, never during it. Stamp a cancelled_at onto the upcoming pod and it turns ALREADY_CANCELLED whatever its bucket says. Set cancel_penalty to 0 and the dialog headline stops promising an Account Health hit; set it to null and it is written without a number rather than a guessed one.',
+      'Only the UPCOMING pod offers Cancel; the ONGOING one answers ALREADY_STARTED because the owner may pull the plug before a pod starts, never during it. Stamp a cancelled_at onto the upcoming pod and it turns ALREADY_CANCELLED whatever its bucket says. Set cancel_penalty to 0 and the dialog headline stops promising an Account Health hit; set it to null and it is written without a number rather than a guessed one. The worded lines are those same codes through the mWeb bundle — the venueCancel* helpers both apps render — so set cancel_penalty to 1 or cancel_result.refunded_count to 1 and they go singular.',
     mock: {
       pods: [
         { pod_id: 'DUN-POD-4821', pod_title: 'Sunday Pottery Jam', bucket: 'UPCOMING', cancelled_at: null },
@@ -1114,13 +1165,19 @@ export default defineDemos('utils', [
         { pod_id: 'DUN-POD-4310', pod_title: 'Late Night Standup', bucket: 'COMPLETED', cancelled_at: null },
       ],
       cancel_penalty: 7,
+      cancel_result: { pod_id: 'DUN-POD-4821', health_penalty: 7, venue_health_score: 93, refunded_count: 3 },
     },
     compute: (mock) => ({
       'Cancel offered on': mock.pods.filter(canCancelVenuePod).map((pod) => pod.pod_title),
       'Why not, per pod': Object.fromEntries(
         mock.pods.map((pod) => [pod.pod_title, cancelDisabledReason(pod) ?? 'can cancel'])
       ),
+      'Why not, as the row menu says it': Object.fromEntries(
+        mock.pods.map((pod) => [pod.pod_title, venueCancelDisabledText(pod, mwebT) ?? 'can cancel'])
+      ),
       'Dialog headline': cancelPenaltyHeadline(mock.cancel_penalty),
+      'Dialog headline, worded': venueCancelPenaltyHeadline(mock.cancel_penalty, mwebT),
+      'After cancelling': venueCancelSuccessMessage(mock.cancel_result, mwebT),
       'Tab counts': tabCounts(mock.pods),
     }),
   }),
@@ -1147,5 +1204,65 @@ export default defineDemos('utils', [
         .filter((tile) => tile.kind === 'money')
         .map((tile) => `${tile.key}: ${formatMoney(tile.value)}`),
     }),
+  }),
+  defineDemo<ClubAdminMock>({
+    id: 'club-admin',
+    title: 'What a club admin’s dashboard, pod rows and audit trail say',
+    note:
+      'The cards come back in the four groups the console draws, each written the way every surface writes it — ₹1,86,500, 75%, 4.4 (97). Change range to "all" and the from boundary the query takes turns null. Set is_deleted on the pod and it chips CANCELLED and loses its Pod Attendance action; set venue_approval_status to PENDING and it reads "Awaiting venue" in warning. Every word is the clubAdmin.* bundle’s own English, so mWeb and the native app cannot say it differently.',
+    mock: {
+      kpis: {
+        assigned_clubs: 2,
+        total_pods: 38,
+        upcoming_pods: 5,
+        completed_pods: 31,
+        total_bookings: 412,
+        backed_out: 17,
+        total_attendees: 388,
+        total_spots: 520,
+        fill_rate: 0.746,
+        total_followers: 1284,
+        new_followers: 212,
+        avg_rating: 4.36,
+        ratings_count: 97,
+        active_hosts: 6,
+        total_revenue: 186500,
+        currency_symbol: '₹',
+      },
+      range: '12m',
+      now: '2026-09-03T10:00:00.000Z',
+      pod: {
+        pod_title: 'Sunday Long Run · Koramangala',
+        is_active: true,
+        completed_at: null,
+        is_deleted: false,
+        venue_approval_status: 'APPROVED',
+      },
+      audit: { action: 'UPDATE', source: 'CLUB_ADMIN', ai_risk: 'MEDIUM' },
+    },
+    compute: (mock) => {
+      const labels = clubAdminKpiLabels(clubAdminT);
+      const headings = clubAdminGroupHeadings(clubAdminT);
+      const seriesLabels = clubAdminSeriesLabels(clubAdminT);
+      const status = podRowStatus(mock.pod);
+      return {
+        'Cards, by group': Object.fromEntries(
+          clubAdminKpiGroups(mock.kpis).map((group) => [
+            headings[group.key],
+            group.cards.map(
+              (card) => `${labels[card.key].label}: ${clubAdminKpiValue(card, mock.kpis.currency_symbol)}`
+            ),
+          ])
+        ),
+        'Range, as the select says it': clubAdminRangeLabels(clubAdminT)[mock.range],
+        'from the query takes': clubAdminRangeFrom(mock.range, new Date(mock.now)) ?? '(none — all time)',
+        'Trend lines': clubAdminTrendSeries.map((series) => `${seriesLabels[series.key]} on ${series.palette}`),
+        'Pod row status': `${status} — "${podRowStatusLabel(status, clubAdminT)}" in ${POD_ROW_STATUS_COLORS[status]}`,
+        'Offers Pod Attendance': canOpenPodAttendance(mock.pod),
+        'Status filter rows': podRowStatusOptions(clubAdminT).map((option) => option.label),
+        'Audit entry reads': `${podAuditActionLabel(mock.audit.action, clubAdminT)} by ${podAuditSourceLabel(mock.audit.source, clubAdminT)} — AI risk ${podAuditRiskLabel(mock.audit.ai_risk, clubAdminT)}`,
+        'Dashboard subtitle': clubAdminLabels(clubAdminT).dashboard.subtitle,
+      };
+    },
   }),
 ]);

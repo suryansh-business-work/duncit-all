@@ -10,12 +10,12 @@ import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
-import { CLUB_ADMIN_DELETE_POD, CLUB_ADMIN_POD_LOOKUPS, CLUB_ADMIN_PODS_TABLE } from './queries';
+import { CLUB_ADMIN_DELETE_POD, CLUB_ADMIN_POD_LOOKUPS, CLUB_ADMIN_PODS_TABLE } from '@duncit/pod-form';
 import PodActivityDialog from './PodActivityDialog';
 import AiMonitorPill from './AiMonitorPill';
 import PodStatusFilter from './PodStatusFilter';
 import PodsTable, { type PodRowBase } from '../../components/PodsTable';
-import { canOpenPodAttendance, type PodRowStatusFilter } from '../../components/pod-status';
+import { canOpenPodAttendance, type PodRowStatusFilter } from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
 
 export default function ClubAdminClubPodsPage() {
@@ -72,7 +72,7 @@ export default function ClubAdminClubPodsPage() {
     try {
       await deletePod({ variables: { pod_doc_id: podToDelete.id } });
       setPodToDelete(null);
-      setMessage(t('partners.clubAdminClubPodsPage.podDeleted'));
+      setMessage(t('clubAdmin.pods.podDeleted'));
       refetchRef.current?.();
     } catch (error: any) {
       setDeleteError(error.message);
@@ -84,13 +84,13 @@ export default function ClubAdminClubPodsPage() {
     <Stack direction="row" component="span" sx={{
       justifyContent: "flex-end"
     }}>
-      <Tooltip title={t('partners.clubAdminClubPodsPage.podDetails')}>
+      <Tooltip title={t('clubAdmin.pods.podDetails')}>
         <DuncitIconButton size="small" component={RouterLink} to={`${podsPath}/${pod.id}`}>
           <VisibilityIcon fontSize="small" />
         </DuncitIconButton>
       </Tooltip>
       {canOpenPodAttendance(pod) && (
-        <Tooltip title={t('partners.clubAdminClubPodsPage.podAttendance')}>
+        <Tooltip title={t('clubAdmin.pods.podAttendance')}>
           <DuncitIconButton
             size="small"
             color="success"
@@ -101,7 +101,7 @@ export default function ClubAdminClubPodsPage() {
           </DuncitIconButton>
         </Tooltip>
       )}
-      <Tooltip title={t('partners.clubAdminClubPodsPage.editPod')}>
+      <Tooltip title={t('clubAdmin.pods.editPod')}>
         <DuncitIconButton size="small" component={RouterLink} to={`${podsPath}/${pod.id}/edit`}>
           <EditIcon fontSize="small" />
         </DuncitIconButton>
@@ -109,7 +109,7 @@ export default function ClubAdminClubPodsPage() {
       {/* An already-cancelled pod stays editable, but there is nothing left
           to delete. */}
       {!pod.is_deleted && (
-        <Tooltip title={t('partners.clubAdminClubPodsPage.deletePod')}>
+        <Tooltip title={t('clubAdmin.pods.deletePod')}>
           <DuncitIconButton size="small" color="error" onClick={() => { setDeleteError(null); setPodToDelete(pod); }}>
             <DeleteOutlineIcon fontSize="small" />
           </DuncitIconButton>
@@ -135,13 +135,13 @@ export default function ClubAdminClubPodsPage() {
                 sx={{
                   color: "text.secondary",
                   fontWeight: 800
-                }}>{t('partners.clubAdminClubPodsPage.clubAdminPods')}</Typography>
+                }}>{t('clubAdmin.pods.title')}</Typography>
               <Typography variant="h6" sx={{
                 fontWeight: 950
-              }}>{club?.club_name ?? 'Club pods'}</Typography>
+              }}>{club?.club_name ?? t('clubAdmin.pods.clubPods')}</Typography>
               <Typography variant="body2" sx={{
                 color: "text.secondary"
-              }}>{t('partners.clubAdminClubPodsPage.createEditAndDeletePodsFor')}</Typography>
+              }}>{t('clubAdmin.pods.createEditDelete')}</Typography>
             </Stack>
             <DuncitButton
               variant="outlined"
@@ -149,7 +149,7 @@ export default function ClubAdminClubPodsPage() {
               component={RouterLink}
               to={`/club-admin/clubs/${clubId}/edit`}
             >
-              Edit Club Details
+              {t('clubAdmin.clubs.editClub')}
             </DuncitButton>
           </Stack>
           {lookups.error && <Alert severity="error">{lookups.error.message}</Alert>}
@@ -159,7 +159,7 @@ export default function ClubAdminClubPodsPage() {
             fetchRows={fetchRows}
             refetchRef={refetchRef}
             venueName={venueName}
-            emptyText={t('partners.clubAdminClubPodsPage.thisClubHasNoPodsYet')}
+            emptyText={t('clubAdmin.pods.noPods')}
             toolbarActions={
               <>
                 <PodStatusFilter value={status} onChange={setStatus} />
@@ -180,16 +180,11 @@ export default function ClubAdminClubPodsPage() {
 
       <ConfirmDialog
         open={!!podToDelete}
-        title={t('partners.clubAdminClubPodsPage.deletePod2')}
-        message={
-          <>
-            This will remove <strong>{podToDelete?.pod_title}</strong> from the club. Members lose
-            access to it. This cannot be undone.
-          </>
-        }
+        title={t('clubAdmin.pods.deletePodConfirmTitle')}
+        message={t('clubAdmin.pods.deletePodConfirmBody', { vars: { title: podToDelete?.pod_title ?? '' } })}
         destructive
         busy={deleteState.loading}
-        busyLabel="Deleting..."
+        busyLabel={t('shell.common.deleting')}
         confirmLabel={t('shell.common.delete')}
         onConfirm={confirmDelete}
         onClose={() => setPodToDelete(null)}

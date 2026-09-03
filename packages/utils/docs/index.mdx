@@ -171,6 +171,8 @@ exports:
   - 'autoPodWaitingOn'
   - 'autoPodHostNeedsLocation'
   - 'autoPodCityLabel'
+  - 'autoPodPriced'
+  - 'autoPodHostMeetingReady'
   - 'autoPodTimeLeft'
   - 'autoPodModeCount'
   - 'STUDIO_OPTIONS'
@@ -185,6 +187,9 @@ exports:
   - 'canCancelVenuePod'
   - 'cancelDisabledReason'
   - 'cancelPenaltyHeadline'
+  - 'venueCancelPenaltyHeadline'
+  - 'venueCancelSuccessMessage'
+  - 'venueCancelDisabledText'
   - 'matchesTab'
   - 'tabCounts'
   - 'TAB_ORDER'
@@ -208,6 +213,39 @@ exports:
   - 'mwebAttendanceLabels'
   - 'shellAttendanceLabels'
   - 'buildAttendanceLabels'
+  - 'podRowStatus'
+  - 'canOpenPodAttendance'
+  - 'podRowStatusLabel'
+  - 'podRowStatusOptions'
+  - 'POD_ROW_STATUS_COLORS'
+  - 'POD_ROW_STATUS_ORDER'
+  - 'podAuditActionLabel'
+  - 'podAuditSourceLabel'
+  - 'podAuditRiskLabel'
+  - 'podAuditActionOptions'
+  - 'podAuditSourceOptions'
+  - 'podAuditRiskOptions'
+  - 'POD_AUDIT_ACTION_COLORS'
+  - 'POD_AUDIT_RISK_COLORS'
+  - 'POD_AUDIT_ACTION_ORDER'
+  - 'POD_AUDIT_SOURCE_ORDER'
+  - 'POD_AUDIT_RISK_ORDER'
+  - 'clubAdminKpiGroups'
+  - 'clubAdminKpiValue'
+  - 'clubAdminRanges'
+  - 'clubAdminRangeFrom'
+  - 'DEFAULT_CLUB_ADMIN_RANGE'
+  - 'clubAdminTrendSeries'
+  - 'emptyClubAdminKpis'
+  - 'emptyClubAdminDashboard'
+  - 'formatCount'
+  - 'formatPercent'
+  - 'formatRating'
+  - 'clubAdminKpiLabels'
+  - 'clubAdminGroupHeadings'
+  - 'clubAdminRangeLabels'
+  - 'clubAdminSeriesLabels'
+  - 'clubAdminLabels'
 ---
 
 ## Why this exists
@@ -839,7 +877,9 @@ twin cannot disagree on what an offer is waiting for.
 | `autoPodWaitingOn` | `(row) => AutoPodRole \| null` | The first missing role. |
 | `autoPodHostNeedsLocation` | `(row, locationId) => boolean` | True when the offer is unpinned AND the host has no city selected — their "Assign Myself" must wait. |
 | `autoPodCityLabel` | `(location) => string` | `"Bengaluru, Karnataka"`; `''` for an unpinned offer. |
-| `autoPodTimeLeft` | `(iso, nowMs) => { hours, minutes } \| null` | The venue card's countdown to `row.venue_expires_at` — minutes rounded up, null once passed. |
+| `autoPodPriced` | `(row) => boolean` | A host has set the ticket price and spots. The template carries neither, so an unpriced card draws `labels.pricedByHost` rather than "₹0". |
+| `autoPodHostMeetingReady` | `(meeting, nowMs) => boolean` | A VIRTUAL offer's "Assign Myself" may go: http(s) link, start after `nowMs`, end after start. The server re-checks all three. |
+| `autoPodTimeLeft` | `(iso, nowMs) => { hours, minutes, seconds } \| null` | Every card's live countdown to `row.expires_at` — seconds rounded up, null once passed. |
 | `autoPodModeCount` | `(counts, mode) => number` | How many offers wait on a studio mode (`HOST` / `VENUE` / `CLUB`); 0 for any other. |
 
 ### Studio modes
@@ -944,14 +984,19 @@ mwebAutoPodLabels(t).waitingFor(autoPodMissingRoles(row))  // 'Waiting for a ven
 The pods booked at a venue are one list on three surfaces: the Partners console's table, and
 the mWeb and native venue studios. Whether a pod can still be cancelled, why it cannot, and
 which tab a row sits under are one rule here, over the `venuePods` row's `bucket` and
-`cancelled_at`. Every answer is a **code** — the caller maps it to its own translated
-sentence, so no English lives in the rule.
+`cancelled_at`. Every answer is a **code**, so no English lives in the rule. `venue-pods-copy`
+is where each code becomes a sentence for mWeb and the native app — from the caller's own `t`
+and the `mweb.venuePods.*` keys both ship — so the two apps cannot word the same cancellation
+differently. (The Partners console still keeps its own English beside its table.)
 
 | Export | Signature | Meaning |
 | --- | --- | --- |
 | `canCancelVenuePod` | `(row) => boolean` | Only an `UPCOMING` pod with no `cancelled_at` — the owner may pull the plug before the pod starts, never after. |
 | `cancelDisabledReason` | `(row) => 'ALREADY_CANCELLED' \| 'ALREADY_STARTED' \| 'ALREADY_FINISHED' \| null` | Why Cancel is off; `null` while it is on. A `cancelled_at` wins over the bucket — the bucket is computed from the clock, the timestamp from the fact. |
 | `cancelPenaltyHeadline` | `(penalty) => 'UNKNOWN' \| 'NONE' \| 'POINTS'` | Which warning the cancel dialog opens with: no number until the admin-configured penalty has arrived, no penalty when it is 0. |
+| `venueCancelPenaltyHeadline` | `(penalty, t) => string` | That warning, worded: `cancelPenaltyHeadline`'s code put to the `mweb.venuePods.penalty*` keys, with the points and their unit (singular for one) filled in. |
+| `venueCancelSuccessMessage` | `(result, t) => string` | The notice after `venueCancelPod` — the refund count (singular for one) and the venue's Account Health after the penalty, both from the server's `VenueCancelPodResult`. |
+| `venueCancelDisabledText` | `(row, t) => string \| null` | `cancelDisabledReason`'s code as the sentence under the disabled Cancel item; `null` while the action is live. |
 | `matchesTab` / `tabCounts` / `TAB_ORDER` | | The Upcoming tab covers live (`ONGOING`) pods too. |
 
 ```ts
@@ -965,6 +1010,14 @@ cancelDisabledReason({ bucket: 'UPCOMING', cancelled_at: '2026-07-03T00:00:00.00
 cancelPenaltyHeadline(null)        // 'UNKNOWN' — the sentence is written without a number
 cancelPenaltyHeadline(0)           // 'NONE' — promising "0 points" would be a lie
 tabCounts([upcoming, ongoing])     // { ALL: 2, UPCOMING: 2, CANCELLED: 0, COMPLETED: 0 }
+
+// The same answers as sentences, through the surface's translator (`useTranslation().t`).
+venueCancelPenaltyHeadline(7, t)   // "Cancelling this pod will reduce this venue's Account Health by 7 points."
+venueCancelDisabledText(ongoing, t) // "This pod has already started, so it can no longer be cancelled."
+venueCancelSuccessMessage(
+  { pod_id: 'DUN-POD-4821', health_penalty: 7, venue_health_score: 93, refunded_count: 3 },
+  t,
+)                                  // "Pod cancelled — 3 payments refunded. This venue's Account Health is now 93."
 ```
 
 The Partners console keeps its own `applyVenuePodsQuery` (search, sort and paging over
@@ -988,6 +1041,56 @@ venueOwnerStatTiles({ ...emptyVenueOwnerStats, potential_earning: 86_500, booked
 //   { key: 'pending_requests',  kind: 'count', value: 0 },
 //   { key: 'total_capacity',    kind: 'count', value: 0 },
 // ]
+```
+
+### Club Admin — `pod-row-status`, `pod-audit`, `club-admin-dashboard` + `club-admin-copy`
+
+A club admin's dashboard, the status chip on their pod rows and the AI-monitored audit
+trail render on three surfaces — the Partners console, mWeb and the native app — and every
+rule behind them is answered here once, so the three cannot disagree about what a pod is
+called, what a figure means or which card comes first (rules 27 + 40). The words come from
+the `clubAdmin.*` namespace, which the shell, mWeb and native all ship, through the caller's
+own `t` — one literal key per value, because the shipped-key gate greps for the literal.
+Nothing here touches React or a date library.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `podRowStatus` | `(pod) => PodRowStatus` | Which of the six statuses a row is in, from `is_deleted`, `completed_at`, `venue_approval_status` and `is_active` — in that precedence, the same one the server's `PodRowStatus` enum filters by. |
+| `canOpenPodAttendance` | `(pod) => boolean` | Only an `ACTIVE` or `COMPLETED` pod offers the attendance board; a draft, a venue-blocked or a cancelled pod has no door to have stood at. |
+| `podRowStatusLabel` / `podRowStatusOptions` | `(status, t)` / `(t)` | The chip's words, and the filter's rows ("All statuses" first, then `POD_ROW_STATUS_ORDER`). |
+| `POD_ROW_STATUS_COLORS` | `Record<PodRowStatus, StatusTone>` | The chip's tone — `default` / `info` / `success` / `warning` / `error`, which MUI's `Chip` takes as-is. |
+| `podAuditActionLabel` / `podAuditSourceLabel` / `podAuditRiskLabel` | `(value, t) => string` | What an audit entry says it was, who did it and how risky the monitor scored it. |
+| `podAudit*Options` | `(t) => StatusOption[]` | The three filter selects, in `POD_AUDIT_*_ORDER` — risk lists the verdicts before `PENDING`. |
+| `POD_AUDIT_ACTION_COLORS` / `POD_AUDIT_RISK_COLORS` | | Tones for the action and risk chips. |
+| `clubAdminKpiGroups` | `(kpis) => ClubAdminKpiGroup[]` | Four groups, fourteen cards, in the console's order, each marked `count` / `money` / `percent` / `rating`; the rating card carries `count` (how many ratings). |
+| `clubAdminKpiValue` | `(card, symbol) => string` | The figure written the console's way: `1,284`, `₹1,86,500`, `75%`, `4.4 (97)`. |
+| `formatCount` / `formatPercent` / `formatRating` | | The three formatters behind it; money is `formatMoney`. |
+| `clubAdminRanges` / `clubAdminRangeFrom` | `[{ value, from(now) }]` / `(range, now?) => string \| null` | The range select's rows and the `from` boundary `clubAdminDashboard` takes for each — `30d`, `month`, `12m` as ISO, `all` as null. |
+| `clubAdminTrendSeries` | `[{ key, palette }]` | The four lines of the monthly trend and the theme colour each takes. |
+| `clubAdminKpiLabels` / `clubAdminGroupHeadings` / `clubAdminRangeLabels` / `clubAdminSeriesLabels` | `(t) => Record<…>` | Label + hint per card, and the words for each group, range and line. |
+| `clubAdminLabels` | `(t) => ClubAdminLabels` | The chrome of every Club Admin page — dashboard, clubs, pods, monitoring, edit club, editor — page by page. |
+| `emptyClubAdminKpis` / `emptyClubAdminDashboard` | | Every figure at zero, in rupees, before the query answers. |
+
+```ts
+const row = { is_active: true, completed_at: null, is_deleted: false, venue_approval_status: 'PENDING' };
+
+podRowStatus(row)                          // 'AWAITING_VENUE'
+podRowStatusLabel(podRowStatus(row), t)    // 'Awaiting venue'
+canOpenPodAttendance(row)                  // false — nobody has stood at a door the venue has not opened
+POD_ROW_STATUS_COLORS.AWAITING_VENUE       // 'warning'
+
+const groups = clubAdminKpiGroups(kpis);   // [{ key: 'overview', cards: [{ key: 'assigned_clubs', kind: 'count', value: 2 }, …] }, …]
+const labels = clubAdminKpiLabels(t);
+labels.avg_rating                          // { label: 'Avg Rating', hint: 'Average of user ratings' }
+clubAdminKpiValue({ key: 'avg_rating', kind: 'rating', value: 4.36, count: 97 }, '₹')  // '4.4 (97)'
+clubAdminKpiValue({ key: 'total_revenue', kind: 'money', value: 186_500 }, '₹')       // '₹1,86,500'
+
+clubAdminRangeFrom('month', new Date(2026, 8, 3))   // '2026-08-31T18:30:00.000Z' — 1 Sep, local midnight
+clubAdminRangeFrom('all')                            // null
+clubAdminRangeLabels(t)['12m']                       // 'Last 12 months'
+
+podAuditActionLabel('VENUE_DECLINED', t)   // 'Venue Rejected'
+podAuditRiskOptions(t).map((o) => o.value) // ['LOW', 'MEDIUM', 'HIGH', 'PENDING']
 ```
 
 ## The grievance form is one spec, four validators

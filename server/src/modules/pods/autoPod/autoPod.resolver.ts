@@ -10,6 +10,7 @@ import {
   hostWithdrawAutoPod,
   venueAcceptAutoPod,
   venueWithdrawAutoPod,
+  type HostMeetingInput,
 } from './autoPod.claims';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
@@ -55,6 +56,9 @@ export const autoPodResolvers = {
       return sub?.name ?? null;
     },
     category_path: (parent: any) => categoryPathOf(String(parent.sub_category_id)),
+    // Attached by every list and the single-row read; a mutation's own
+    // return carries no deadline (the queues re-read straight after).
+    expires_at: (parent: any) => parent.expires_at ?? null,
     // Attached by the venue queue only; every other list reads null.
     venue_expires_at: (parent: any) => parent.venue_expires_at ?? null,
     // Attached by the venue and host queues; every other list reads null.
@@ -201,6 +205,7 @@ export const autoPodResolvers = {
         location_id?: string | null;
         pod_amount?: number | null;
         no_of_spots?: number | null;
+        meeting?: HostMeetingInput | null;
       },
       ctx: GraphQLContext
     ) =>
@@ -209,7 +214,8 @@ export const autoPodResolvers = {
         args.auto_pod_doc_id,
         args.location_id,
         args.pod_amount,
-        args.no_of_spots
+        args.no_of_spots,
+        args.meeting
       ),
 
     // Ownership of the claim is asserted inside each.

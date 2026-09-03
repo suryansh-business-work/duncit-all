@@ -108,12 +108,13 @@ const placeChargesOf = (values: PodFormValues) =>
 
 /**
  * Auto Pod mode: form values → `CreateAutoPodInput` (the update input is the
- * same shape). Only the TEMPLATE goes: no club, venue or host — a venue, a
- * host and a club admin supply theirs when they enrol. A VIRTUAL offer has no
- * venue to bring the slot, so its meeting details and window travel here; a
- * PHYSICAL one sends them as null. Payment terms and place charges are not
- * the template's to write (the form has no section for them), so they are
- * left out rather than nulled — an edit keeps whatever a row already holds.
+ * same shape). Only the TEMPLATE goes — the pod's content. No club, venue or
+ * host, and no price, spots, occurrence or meeting details either: a venue
+ * brings the slot, and the host prices the pod and (on a VIRTUAL offer) sets
+ * the meeting link and window when they assign themselves. Payment terms and
+ * place charges are not the template's to write (the form has no section for
+ * them), so they are left out rather than nulled — an edit keeps whatever a
+ * row already holds.
  */
 export function buildAutoPodInput(values: PodFormValues) {
   const isVirtual = values.pod_mode === 'VIRTUAL';
@@ -122,19 +123,10 @@ export function buildAutoPodInput(values: PodFormValues) {
     pod_description: values.pod_description,
     sub_category_id: values.sub_category_id,
     pod_mode: values.pod_mode,
-    meeting_platform: isVirtual ? values.meeting_platform.trim() || null : null,
-    meeting_url: isVirtual ? values.meeting_url.trim() : null,
-    meeting_notes: isVirtual ? values.meeting_notes.trim() || null : null,
-    pod_date_time: isVirtual && values.pod_date_time ? values.pod_date_time.toISOString() : null,
-    pod_end_date_time:
-      isVirtual && values.pod_end_date_time ? values.pod_end_date_time.toISOString() : null,
-    pod_amount: Number(values.pod_amount) || 0,
-    no_of_spots: Number(values.no_of_spots) || 0,
     pod_images_and_videos: linesToMedia(values.media_text),
     pod_info: values.pod_info,
     pod_hashtag: hashtagsOf(values.pod_hashtag_text),
     reel_url: values.reel_url.trim() || null,
-    pod_occurrence: values.pod_occurrence,
     what_this_pod_offers: values.what_this_pod_offers,
     available_perks: values.available_perks,
     product_requests: isVirtual

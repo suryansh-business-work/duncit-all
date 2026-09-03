@@ -5,7 +5,10 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import { DuncitButton } from '@duncit/buttons';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
+import { useCategoryValue } from '@duncit/category';
+import { coverSearchTerm } from '@duncit/utils';
 import { usePodFormData } from './context';
+import { usePodCategoryClub } from './usePodCategoryClub';
 import MediaField from './components/MediaField';
 import ReelField from './components/ReelField';
 import BasicSection from './sections/BasicSection';
@@ -36,19 +39,16 @@ function whereSection(isVirtual: boolean, t: Translate): SectionDef {
   return { id: 'when', label: t('podForm.podSections.whenWhereAndMap'), render: () => <WhenWhereSection /> };
 }
 
-/** An Auto Pod's venue brings the slot, so only a VIRTUAL one has a "where"
- * section of its own — the meeting details. */
-function autoPodWhereSection(isVirtual: boolean, t: Translate): SectionDef[] {
-  if (!isVirtual) return [];
-  return [{ id: 'meeting', label: t('podForm.podSections.meetingDetails'), render: () => <MeetingSection /> }];
-}
-
+/**
+ * An Auto Pod has no "where" section at all: a venue brings the slot to a
+ * physical one, and the host brings the meeting link and window to a virtual
+ * one when they assign themselves.
+ */
 function buildSections(isVirtual: boolean, showProducts: boolean, autoPod: boolean, t: Translate): SectionDef[] {
   const list: SectionDef[] = [
     { id: 'basic', label: t('podForm.podSections.basicInformation'), render: () => <BasicSection /> },
   ];
-  if (autoPod) list.push(...autoPodWhereSection(isVirtual, t));
-  else list.push(whereSection(isVirtual, t));
+  if (!autoPod) list.push(whereSection(isVirtual, t));
   list.push(
     { id: 'about', label: t('podForm.podSections.aboutThisPod'), render: () => <AboutSection /> },
     { id: 'offers', label: t('podForm.podSections.whatThisPodOffers'), render: () => <OffersSection /> },
@@ -59,8 +59,9 @@ function buildSections(isVirtual: boolean, showProducts: boolean, autoPod: boole
   if (showProducts && !isVirtual) {
     list.push({ id: 'products', label: t('podForm.podSections.approvedProducts'), render: () => <ProductsSection /> });
   }
-  // An Auto Pod's price and spots sit in Basic Information; the rest of this
-  // section (place charges, the venue-priced projection) needs a venue.
+  // An Auto Pod's template carries no economics — the host prices it at
+  // assignment — and the rest of this section (place charges, the
+  // venue-priced projection) needs a venue.
   if (!autoPod) {
     list.push({ id: 'payment', label: t('podForm.podSections.paymentAndCharges'), render: () => <PaymentSection /> });
   }
@@ -73,6 +74,14 @@ export default function PodSections() {
   const { control, formState: { errors } } = useFormContext<PodFormValues>();
   const podMode = useWatch({ control, name: 'pod_mode' });
   const isVirtual = podMode === 'VIRTUAL';
+  // The Pexels tabs open on people doing THIS category — the pod's own
+  // sub-category, whether it comes from its club or an Auto Pod's template —
+  // so the picker never asks for what the form already knows.
+  const categoryClub = usePodCategoryClub();
+  const category = useCategoryValue(categoryClub?.super_category_id, categoryClub?.category_id);
+  const seedQuery = coverSearchTerm(category.sub_name);
+  const pickImage = onPickImage ? () => onPickImage({ seedQuery }) : undefined;
+  const pickVideo = onPickVideo ? () => onPickVideo({ seedQuery }) : undefined;
   const sections = buildSections(isVirtual, config.showProducts, !!config.autoPod, t).map((section, index) => ({
     ...section,
     title: `${index + 1}. ${section.label}`,
@@ -114,7 +123,7 @@ export default function PodSections() {
             label={t('podForm.podSections.imagesAndVideos')}
             value={field.value}
             onChange={field.onChange}
-            onPickImage={onPickImage}
+            onPickImage={pickImage}
             required
             error={errors.media_text?.message}
             helperText={t('podForm.podSections.coverImageFirstRestBecomeA')}
@@ -129,7 +138,7 @@ export default function PodSections() {
             <ReelField
               value={field.value}
               onChange={field.onChange}
-              onPickVideo={onPickVideo}
+              onPickVideo={pickVideo}
               error={errors.reel_url?.message}
             />
           )}

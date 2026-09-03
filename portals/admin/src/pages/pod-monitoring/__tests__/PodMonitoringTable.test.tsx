@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { createRef } from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import type { PodAuditLog } from '../queries';
+import type { PodAuditLog } from '@duncit/utils';
 import PodMonitoringTable from '../PodMonitoringTable';
 
 /**

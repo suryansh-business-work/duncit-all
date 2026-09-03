@@ -112,6 +112,7 @@ export const FOOTER = {
   venue: '{{t:email.footer.venue}}',
   host: '{{t:email.footer.host}}',
   clubAdmin: '{{t:email.footer.clubAdmin}}',
+  autoPod: '{{t:email.footer.autoPod}}',
   ads: '{{t:email.footer.ads}}',
   security: '{{t:email.footer.security}}',
 } as const;

@@ -67,6 +67,8 @@ describe('AutoPodsTable', () => {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         formatDateTime={(v) => v}
+        onRowClick={vi.fn()}
+        onViewDetails={vi.fn()}
         onEdit={vi.fn()}
         onCancel={vi.fn()}
         onDelete={vi.fn()}
@@ -94,6 +96,8 @@ describe('AutoPodsTable', () => {
         refetchRef={{ current: null }}
         formatDateTime={(v) => v}
         toolbarActions={<button type="button">New Auto Pod</button>}
+        onRowClick={vi.fn()}
+        onViewDetails={vi.fn()}
         onEdit={vi.fn()}
         onCancel={vi.fn()}
         onDelete={vi.fn()}
@@ -112,6 +116,8 @@ describe('AutoPodsTable', () => {
         fetchRows={vi.fn()}
         refetchRef={{ current: null }}
         formatDateTime={(v) => v}
+        onRowClick={vi.fn()}
+        onViewDetails={vi.fn()}
         onEdit={vi.fn()}
         onCancel={vi.fn()}
         onDelete={vi.fn()}
@@ -124,6 +130,7 @@ describe('AutoPodsTable', () => {
         'admin.autoPods.colAutoPodNo',
         'admin.autoPods.colTitle',
         'admin.autoPods.colCategory',
+        'admin.autoPods.colMode',
         'admin.autoPods.colDependency',
         'admin.autoPods.colStage',
         'admin.autoPods.colActive',
@@ -147,6 +154,8 @@ describe('AutoPodsTable', () => {
         fetchRows={vi.fn()}
         refetchRef={{ current: null }}
         formatDateTime={(v) => v}
+        onRowClick={vi.fn()}
+        onViewDetails={vi.fn()}
         onEdit={onEdit}
         onCancel={onCancel}
         onDelete={onDelete}

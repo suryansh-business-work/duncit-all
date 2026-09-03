@@ -254,6 +254,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venueAvailability: { title: 'Venue availability' },
       venueSettings: { title: 'Venue settings' },
       clubStudio: { title: 'Club studio' },
+      clubDashboard: { title: 'Club dashboard' },
+      clubMonitoring: { title: 'Pod monitoring' },
+      clubPods: { title: 'Club pods' },
+      clubPodEditor: { title: 'Club pod' },
+      clubEdit: { title: 'Edit club' },
       faqs: { title: 'FAQs' },
       policies: { title: 'Policies' },
       podIdeas: {
@@ -2951,8 +2956,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venueCategory: 'Category: {path}',
       noVenueCategory: 'This venue has no category yet — set one under Manage venue to be offered Auto Pods.',
       pickVenueFirst: 'Pick a venue at the top first.',
-      // The card's countdown — Pod Settings decides the window.
-      removedIn: 'Removed from your list in {hours}h {minutes}m',
+      // Every card's live countdown to the offer being released — Pod Settings decides the windows.
+      expiresIn: 'Expires in {hours}h {minutes}m {seconds}s',
       // The slot picker.
       slotWindow: 'Free slots in the next {days} days, nearest first.',
       potentialEarning: 'You earn {amount} from this slot, after Duncit’s deductions.',
@@ -2985,6 +2990,19 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       willPinTo: 'This pod will be set to {city}.',
       noVenueInCity: 'None of your venues is in {city}.',
       noClubInCity: 'None of your clubs is in {city}.',
+      // Every card wears its mode; the template carries no price, so until a
+      // host sets one the card says who will.
+      modePhysical: 'Physical',
+      modeVirtual: 'Virtual',
+      pricedByHost: 'Ticket price and spots are set by the host who takes it.',
+      // A virtual offer has no venue to fix its window: the host brings the
+      // meeting link and the dates when they assign themselves.
+      meetingHint: 'You run this pod online — set where members join and when it happens.',
+      meetingPlatform: 'Meeting platform',
+      meetingPlatformOther: 'Other',
+      meetingLink: 'Meeting link',
+      meetingStart: 'Start date & time',
+      meetingEnd: 'End date & time',
       liveNow: 'Live',
       viewPod: 'View pod',
       cancelled: 'Cancelled',
@@ -3847,6 +3865,47 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       availability: 'Availability Calendar',
       settings: 'Venue Settings',
     },
+    // The club admin menu's two rows after Club Studio — native renders the
+    // same keys (rule 27). The pages themselves speak `clubAdmin.*`, which the
+    // Partners console shares; only this app-side chrome lives here.
+    clubMenu: {
+      dashboard: 'Club Dashboard',
+      monitoring: 'Pod Monitoring (AI)',
+    },
+    // Club Studio's "Your clubs" list and its quick actions.
+    clubStudio: {
+      yourClubs: 'Your clubs',
+      yourClubsSubtitle: 'Clubs you administer — open one for its pods, or edit its page.',
+      openPods: 'Pods',
+      editClub: 'Edit club',
+      noClubs: 'No clubs are assigned to you yet.',
+      dashboardAction: 'Club dashboard',
+      monitoringAction: 'Pod monitoring (AI)',
+      // The paged lists (club pods, pod monitoring) fetch one more page on tap.
+      loadMore: 'Load more',
+    },
+    // The native club editor's own copy. Its field labels are the shared
+    // clubForm.* namespace, but the Tamagui form checks its own Zod rules —
+    // @duncit/club-form is an MUI build the app does not depend on — so the
+    // messages those rules stop a person with live here.
+    clubEdit: {
+      faqs: 'FAQs',
+      question: 'Question',
+      addFaq: 'Add FAQ',
+      saveFailed: 'Could not save the club. Please try again.',
+      validation: {
+        nameRequired: 'Club name is required',
+        descriptionRequired: 'A short description is required',
+        communityLinkRequired: 'WhatsApp community link is required',
+        groupLinkRequired: 'WhatsApp group link is required',
+        linkInvalid: 'Enter a valid link (https://…)',
+        whoWeAreRequired: 'Add at least one "Who we are" point',
+        whatWeDoRequired: 'Add at least one "What we do" point',
+        perksRequired: 'Add at least one perk',
+        valuesRequired: 'Add at least one value',
+        imageRequired: 'Add at least one feature image',
+      },
+    },
     venueManagePage: {
       listYourSpace: 'List your space, run events, get discovered',
       listed: 'Listed',
@@ -3920,11 +3979,23 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     venueSlotRequests: {
       allVenues: 'All venues',
+      approve: 'Approve',
+      // The approve confirmation names the pod, the venue and the slot window,
+      // so the owner reads what goes live before it does.
+      approveMessage:
+        '{pod} goes live at {venue} for {slot}. The host and everyone who joins will be told.',
       approveThisBooking: 'Approve this booking?',
       awaitingDecision: 'Awaiting decision',
       contact: 'Contact',
+      decline: 'Decline',
+      declineMessage:
+        'The slot opens again and the host is told. A reason helps them ask better next time.',
       declineThisBooking: 'Decline this booking?',
+      empty:
+        'No pending slot requests right now. New ones appear here the moment a host books one of your slots.',
       host: 'Host',
+      intro:
+        'Hosts who want to run their pod at your venue. A pod only goes live after you approve its slot.',
       requested: 'Requested',
       slot: 'Slot',
       slotPrice: 'Slot price',

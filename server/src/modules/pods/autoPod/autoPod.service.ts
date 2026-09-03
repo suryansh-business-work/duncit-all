@@ -20,12 +20,7 @@ import { ClubModel } from '@modules/clubs/club/club.model';
 import { HostModel } from '@modules/venues/host/host.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
-import {
-  buildProductRequests,
-  validateFutureDates,
-  validateHasImage,
-  validateMeetingDetails,
-} from '@modules/pods/pod/pod.service';
+import { buildProductRequests, validateHasImage } from '@modules/pods/pod/pod.service';
 import { breakdownService, venueSlotProjections } from '@modules/finance/finance/breakdown.service';
 import { ensureOwnedVenue, venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
@@ -59,6 +54,33 @@ function venueExpiresAt(doc: IAutoPod, venueExpiryHours: number): string | null 
   const from = doc.venue_window_from ?? doc.created_at;
   return new Date(from.getTime() + venueExpiryHours * HOUR_MS).toISOString();
 }
+
+/** The two Pod Settings windows an offer's deadline is read from. */
+interface ExpiryWindows {
+  assignmentExpiryHours: number;
+  venueExpiryHours: number;
+}
+
+/**
+ * When a still-enrolling offer is released unless everyone needed has enrolled
+ * by then: its roll-out plus Pod Settings' assignment window — or, while it
+ * still waits on a venue, the venue window if that closes sooner. Every card
+ * counts this one instant down, whichever role is looking. Null once the offer
+ * is live, cancelled or expired.
+ */
+function offerExpiresAt(doc: IAutoPod, windows: ExpiryWindows): string | null {
+  if (!PRE_LIVE_STAGES.includes(doc.stage as any)) return null;
+  const assignment = doc.created_at.getTime() + windows.assignmentExpiryHours * HOUR_MS;
+  const venue = venueExpiresAt(doc, windows.venueExpiryHours);
+  const soonest = venue ? Math.min(assignment, new Date(venue).getTime()) : assignment;
+  return new Date(soonest).toISOString();
+}
+
+/** The public row plus the deadline it counts down. */
+const withExpiry = (doc: IAutoPod, windows: ExpiryWindows) => ({
+  ...autoPodToPub(doc),
+  expires_at: offerExpiresAt(doc, windows),
+});
 
 /** The most spots an Auto Pod may carry — the template's own ceiling. */
 const AUTO_POD_MAX_SPOTS = 999;
@@ -260,20 +282,6 @@ export async function resolveCategoryPair(subCategoryId: string) {
   return { superCategoryId: superId, subName: sub.name as string, minPax: (sub.min_pax ?? 0) as number };
 }
 
-/**
- * The economics picture the template is checked against: whoever has enrolled
- * so far. On a fresh template both are null and the check is a sanity run on
- * default rates; once a venue has priced a slot or a host is on it, their real
- * figures are what the price and spot count must still cover.
- */
-function enrolledEconomics(doc: IAutoPod | null) {
-  return {
-    hostUserId: doc?.host_claim ? String(doc.host_claim.user_id) : null,
-    venueId: doc?.venue_claim ? String(doc.venue_claim.venue_id) : null,
-    venueAmount: doc?.venue_claim?.slot_price ?? 0,
-  };
-}
-
 /** The products a template carries, as the pod will: id + quantity, no zero rows. */
 const productRequestsOf = (input: any) =>
   ((input.product_requests ?? []) as any[])
@@ -281,9 +289,9 @@ const productRequestsOf = (input: any) =>
     .filter((item) => item.product_id && item.quantity > 0);
 
 /**
- * The mode-specific half of the template: a virtual offer must already carry
- * what its venue would otherwise bring — a meeting link and a future window —
- * and, like every virtual pod, it can carry no products. The products of a
+ * The mode-specific half of the template. A virtual offer, like every virtual
+ * pod, can carry no products — its meeting link and window are the HOST's to
+ * bring when they assign themselves, not the template's. The products of a
  * physical offer are checked against the category the pod will inherit, with
  * the same gate that would refuse them when the pod is created.
  */
@@ -293,8 +301,6 @@ async function validateModeFields(
 ) {
   const requests = productRequestsOf(input);
   if (modeOf(input) === 'VIRTUAL') {
-    validateMeetingDetails('VIRTUAL', input);
-    validateFutureDates(input.pod_date_time, input.pod_end_date_time, true);
     if (requests.length > 0) autoPodFail('BAD_USER_INPUT', 'A virtual pod cannot carry products');
     return;
   }
@@ -306,11 +312,14 @@ async function validateModeFields(
   }
 }
 
-/** The template must be viable BEFORE anyone else commits to it. */
+/**
+ * The template is the pod's CONTENT only. Its economics are not checked here
+ * because it has none: the host prices the pod and picks its spots at
+ * assignment, against the venue's real slot price, and that write is where
+ * viability is judged.
+ */
 async function validateTemplate(
   input: any,
-  minPax: number,
-  doc: IAutoPod | null,
   category: { superCategoryId: string; subCategoryId: string }
 ) {
   const title = String(input.pod_title ?? '').trim();
@@ -320,29 +329,14 @@ async function validateTemplate(
   }
   validateHasImage(input.pod_images_and_videos);
   await validateModeFields(input, category);
-  const amount = Number(input.pod_amount) || 0;
-  // An Auto Pod may never be free — so unlike an ordinary pod the floor here
-  // is 1, not 0.
-  if (amount < 1 || amount > 1999) {
-    autoPodFail('BAD_USER_INPUT', 'Ticket price must be between 1 and 1999');
-  }
-  const spots = Number(input.no_of_spots) || 0;
-  // The host occupies one spot for free, so a 1-spot pod bills nobody and can
-  // never cover a venue.
-  if (spots < 2) autoPodFail('BAD_USER_INPUT', 'An Auto Pod needs at least 2 spots');
-  if (minPax > 0 && spots < minPax) {
-    autoPodFail(
-      'BAD_USER_INPUT',
-      `This activity needs at least ${minPax} people — increase the number of spots`
-    );
-  }
-  await breakdownService.assertViablePodEconomics({
-    ...enrolledEconomics(doc),
-    podAmount: amount,
-    noOfSpots: spots,
-  });
 }
 
+/**
+ * What an admin's edit may rewrite. The price, the spots, the meeting details
+ * and the dates are deliberately absent: they belong to the host who enrolled
+ * (or the venue's slot), and an admin saving the template must never wipe
+ * them.
+ */
 const TEMPLATE_FIELDS = [
   'pod_title',
   'pod_description',
@@ -351,14 +345,6 @@ const TEMPLATE_FIELDS = [
   'pod_images_and_videos',
   'reel_url',
   'pod_mode',
-  'meeting_platform',
-  'meeting_url',
-  'meeting_notes',
-  'pod_date_time',
-  'pod_end_date_time',
-  'pod_amount',
-  'no_of_spots',
-  'pod_occurrence',
   'what_this_pod_offers',
   'available_perks',
   'payment_terms',
@@ -405,8 +391,8 @@ export const autoPodService = {
   async create(actorUserId: string, input: any, clubId?: string | null) {
     const club = clubId ? await loadOpeningClub(clubId) : null;
     const subCategoryId = club ? String(club.category_id) : input.sub_category_id;
-    const { superCategoryId, minPax } = await resolveCategoryPair(subCategoryId);
-    await validateTemplate(input, minPax, null, { superCategoryId, subCategoryId });
+    const { superCategoryId } = await resolveCategoryPair(subCategoryId);
+    await validateTemplate(input, { superCategoryId, subCategoryId });
     const mode = modeOf(input);
     const virtual = mode === 'VIRTUAL';
     const requests = productRequestsOf(input);
@@ -444,15 +430,17 @@ export const autoPodService = {
       super_category_id: new Types.ObjectId(superCategoryId),
       sub_category_id: new Types.ObjectId(subCategoryId),
       pod_mode: mode,
-      meeting_platform: virtual ? input.meeting_platform?.trim() || null : null,
-      meeting_url: virtual ? input.meeting_url?.trim() || null : null,
-      meeting_notes: virtual ? input.meeting_notes?.trim() || null : null,
-      pod_date_time: virtual ? new Date(input.pod_date_time) : null,
-      pod_end_date_time: virtual ? new Date(input.pod_end_date_time) : null,
+      // The host brings these when they assign themselves: the meeting details
+      // and window on a virtual offer, and the price and spots on every offer.
+      meeting_platform: null,
+      meeting_url: null,
+      meeting_notes: null,
+      pod_date_time: null,
+      pod_end_date_time: null,
       pod_type: 'PAID',
-      pod_amount: input.pod_amount,
-      no_of_spots: input.no_of_spots,
-      pod_occurrence: input.pod_occurrence ?? 'ONE_TIME',
+      pod_amount: 0,
+      no_of_spots: 0,
+      pod_occurrence: 'ONE_TIME',
       what_this_pod_offers: input.what_this_pod_offers ?? [],
       available_perks: input.available_perks ?? [],
       payment_terms: input.payment_terms ?? null,
@@ -507,9 +495,9 @@ export const autoPodService = {
         'A host or club has already enrolled on this category — it cannot be changed now'
       );
     }
-    const { superCategoryId, minPax } = await resolveCategoryPair(subCategoryId);
+    const { superCategoryId } = await resolveCategoryPair(subCategoryId);
     const merged: any = { ...autoPodToPub(doc), ...input };
-    await validateTemplate(merged, minPax, doc, { superCategoryId, subCategoryId });
+    await validateTemplate(merged, { superCategoryId, subCategoryId });
 
     const set: Record<string, unknown> = {
       super_category_id: new Types.ObjectId(superCategoryId),
@@ -637,7 +625,8 @@ export const autoPodService = {
   },
 
   async getById(autoPodId: string) {
-    return autoPodToPub(await this.loadById(autoPodId));
+    const [doc, windows] = await Promise.all([this.loadById(autoPodId), this.windows()]);
+    return withExpiry(doc, windows);
   },
 
   /**
@@ -652,27 +641,28 @@ export const autoPodService = {
       .filter((f) => f.field === 'pending')
       .flatMap((f) => (f.values?.length ? f.values : [f.value ?? '']));
     const query = input ? { ...input, filters: filters.filter((f) => f.field !== 'pending') } : input;
-    const { docs, total, page, page_size } = await runTableQuery<any>(
-      AutoPodModel,
-      pendingBaseFilter(roles) ?? {},
-      query,
-      AUTO_POD_TABLE_CONFIG
-    );
-    return { rows: docs.map(autoPodToPub), total, page, page_size };
+    const [{ docs, total, page, page_size }, windows] = await Promise.all([
+      runTableQuery<any>(AutoPodModel, pendingBaseFilter(roles) ?? {}, query, AUTO_POD_TABLE_CONFIG),
+      this.windows(),
+    ]);
+    return { rows: docs.map((doc: IAutoPod) => withExpiry(doc, windows)), total, page, page_size };
   },
 
   /**
-   * The two Auto Pod windows from Pod Settings, and the instant before which a
-   * venue-less offer is already off venues' lists. Read once per request, never
-   * per row.
+   * The Auto Pod windows from Pod Settings, and the instants before which a
+   * venue-less offer is already off venues' lists and an offer is past its
+   * assignment window. Read once per request, never per row.
    */
   async windows() {
     const settings = await settingsService.getAppSettings();
     const venueExpiryHours = settings.auto_pod_venue_expiry_hours;
+    const assignmentExpiryHours = settings.auto_pod_assignment_expiry_hours;
     return {
       slotWindowDays: settings.auto_pod_slot_window_days,
       venueExpiryHours,
       venueCutoff: new Date(Date.now() - venueExpiryHours * HOUR_MS),
+      assignmentExpiryHours,
+      assignmentCutoff: new Date(Date.now() - assignmentExpiryHours * HOUR_MS),
       cancelHealthPenalty: settings.auto_pod_cancel_health_penalty,
     };
   },
@@ -778,7 +768,8 @@ export const autoPodService = {
       autoPodFail('CONFLICT', 'This Auto Pod has already been accepted by another venue.');
     }
     const venue = await ensureOwnedVenue(userId, venueId);
-    const { slotWindowDays, venueExpiryHours } = await this.windows();
+    const windows = await this.windows();
+    const { slotWindowDays } = windows;
     const until = Date.now() + slotWindowDays * DAY_MS;
     const available = await venueSlotService.listAvailable(String(venue._id));
     const inWindow = available.filter((slot) => new Date(slot.start_at).getTime() <= until);
@@ -789,9 +780,13 @@ export const autoPodService = {
       noOfSpots: doc.no_of_spots ?? 0,
       slotPrices: inWindow.map((slot) => slot.price),
     });
+    // The venue goes first, so the offer is still unpriced: the host prices it
+    // afterwards against THIS slot's price, and that write is where coverage
+    // is judged. Only an offer that already carries a price can be found short.
+    const unpriced = (doc.pod_amount ?? 0) <= 0;
     return {
       window_days: slotWindowDays,
-      expires_at: venueExpiresAt(doc, venueExpiryHours),
+      expires_at: offerExpiresAt(doc, windows),
       slots: inWindow.map((slot, index) => ({
         id: slot.id,
         start_at: slot.start_at,
@@ -801,6 +796,7 @@ export const autoPodService = {
         capacity: slot.capacity,
         price: slot.price,
         ...projections[index],
+        viable: unpriced || projections[index].viable,
       })),
     };
   },
@@ -947,15 +943,16 @@ export const autoPodService = {
       ? owned.filter((venue) => String(venue.id) === scope.venue_id)
       : owned;
     if (venues.length === 0) return [];
-    const { venueCutoff, venueExpiryHours, cancelHealthPenalty } = await this.windows();
+    const windows = await this.windows();
+    const { venueCutoff, venueExpiryHours, cancelHealthPenalty } = windows;
     const or: any[] = [{ 'venue_claim.owner_user_id': new Types.ObjectId(userId) }];
     const open = this.venueOpenFilter(venues, venueCutoff, scope);
     if (open) or.push(open);
     const docs = await AutoPodModel.find({ $or: or }).sort({ created_at: -1 }).limit(200);
-    // The venue's list is the one place the countdown is shown, so it is the
-    // one payload that carries it — and what withdrawing would cost them.
+    // The venue's own window (older apps still count it down) and what
+    // withdrawing would cost them ride on this payload only.
     return docs.map((doc) => ({
-      ...autoPodToPub(doc),
+      ...withExpiry(doc, windows),
       venue_expires_at: venueExpiresAt(doc, venueExpiryHours),
       withdraw_penalty_points: cancelHealthPenalty,
     }));
@@ -965,23 +962,27 @@ export const autoPodService = {
    * ones they already assigned themselves to. */
   async listForHost(userId: string, scope?: AutoPodQueueScope) {
     const subIds = await this.hostSubCategoryIds(userId);
-    const { cancelHealthPenalty } = await this.windows();
+    const windows = await this.windows();
     const or: any[] = [{ 'host_claim.user_id': new Types.ObjectId(userId) }];
     const open = this.hostOpenFilter(subIds, scope);
     if (open) or.push(open);
     const docs = await AutoPodModel.find({ $or: or }).sort({ created_at: -1 }).limit(200);
-    return docs.map((doc) => ({ ...autoPodToPub(doc), withdraw_penalty_points: cancelHealthPenalty }));
+    return docs.map((doc) => ({
+      ...withExpiry(doc, windows),
+      withdraw_penalty_points: windows.cancelHealthPenalty,
+    }));
   },
 
   /** Offers a club of theirs could still claim, plus their clubs' claims. */
   async listForClubAdmin(userId: string, scope?: AutoPodQueueScope) {
     const clubs = await this.adminClubs(userId);
     if (clubs.length === 0) return [];
+    const windows = await this.windows();
     const or: any[] = [{ 'club_claim.club_id': { $in: clubs.map((c) => c.id) } }];
     const open = this.clubOpenFilter(clubs, scope);
     if (open) or.push(open);
     const docs = await AutoPodModel.find({ $or: or }).sort({ created_at: -1 }).limit(200);
-    return docs.map(autoPodToPub);
+    return docs.map((doc) => withExpiry(doc, windows));
   },
 
   /**

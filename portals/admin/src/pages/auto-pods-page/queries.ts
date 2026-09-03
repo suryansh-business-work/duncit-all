@@ -68,6 +68,7 @@ const ADMIN_AUTO_POD_FIELDS = gql`
       bound_at
     }
     pod_id
+    expires_at
     created_at
     updated_at
   }
@@ -210,6 +211,8 @@ export interface AutoPodTableRow {
   club_claim: AutoPodClubClaim | null;
   location: AutoPodLocation | null;
   pod_id: string | null;
+  /** When the offer is released unless everyone enrols by then; null once it is not enrolling. */
+  expires_at?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -254,4 +257,106 @@ export interface AutoPodVenueDetails {
   city: string;
   state: string;
   capacity: number;
+}
+
+/** The enrolled host behind a green Host dot — the person, and how to reach them. */
+export const AUTO_POD_HOST_DETAILS = gql`
+  query AutoPodHostDetails($user_id: ID!) {
+    hostByUser(user_id: $user_id) {
+      id
+      full_name
+      email
+      phone
+      full_address
+    }
+  }
+`;
+
+export interface AutoPodHostDetails {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  full_address: string;
+}
+
+/**
+ * The club behind a green Club Admin dot: the club, where it operates, and the
+ * admins who run it — `club_admins` already carries each one's contact details,
+ * so the person who claimed the offer is reachable without a second query.
+ */
+export const AUTO_POD_CLUB_DETAILS = gql`
+  query AutoPodClubDetails($club_doc_id: ID!) {
+    club(club_doc_id: $club_doc_id) {
+      id
+      club_name
+      locality
+      club_admins {
+        id
+        name
+        email
+        phone
+      }
+    }
+  }
+`;
+
+export interface AutoPodClubDetails {
+  id: string;
+  club_name: string;
+  locality: string;
+  club_admins: { id: string; name: string; email: string | null; phone: string | null }[];
+}
+
+/** One Auto Pod as its own admin page reads it — the whole staging record. */
+export const ADMIN_AUTO_POD_DETAILS = gql`
+  ${ADMIN_AUTO_POD_FIELDS}
+  query AdminAutoPodDetails($auto_pod_doc_id: ID!) {
+    autoPod(auto_pod_doc_id: $auto_pod_doc_id) {
+      ...AdminAutoPodFields
+      pod_description
+      pod_info
+      pod_hashtag
+      reel_url
+      meeting_platform
+      meeting_url
+      meeting_notes
+      pod_date_time
+      pod_end_date_time
+      what_this_pod_offers
+      available_perks
+      expires_at
+      cancel_reason
+    }
+  }
+`;
+
+/** The offer's own page: the table row plus everything the template says. */
+export interface AutoPodDetailsRow extends AutoPodTableRow {
+  reel_url: string | null;
+  meeting_platform: string | null;
+  meeting_url: string | null;
+  meeting_notes: string | null;
+  pod_date_time: string | null;
+  pod_end_date_time: string | null;
+  what_this_pod_offers: string[];
+  available_perks: string[];
+  cancel_reason: string | null;
+}
+
+/** How many partners could still enrol in this offer's category, per role. */
+export const AUTO_POD_AUDIENCE_COUNTS = gql`
+  query AdminAutoPodAudienceCounts($sub_category_id: ID!) {
+    autoPodAudience(sub_category_id: $sub_category_id) {
+      venue_count
+      host_count
+      club_admin_count
+    }
+  }
+`;
+
+export interface AutoPodAudienceCounts {
+  venue_count: number;
+  host_count: number;
+  club_admin_count: number;
 }

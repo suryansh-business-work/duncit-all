@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.72.214",
+  "version": "1.72.225",
   "private": true,
   "scripts": {
     "deps:check": "node ../../scripts/deps.mjs check",
@@ -30,6 +30,8 @@
     "@duncit/auto-pods": "workspace:*",
     "@duncit/availability-calendar": "workspace:*",
     "@duncit/buttons": "workspace:*",
+    "@duncit/category": "workspace:*",
+    "@duncit/club-form": "workspace:*",
     "@duncit/datetime": "workspace:*",
     "@duncit/earn": "workspace:*",
     "@duncit/errors": "workspace:*",
@@ -42,6 +44,8 @@
     "@duncit/logs": "workspace:*",
     "@duncit/media-picker": "workspace:*",
     "@duncit/onboarding": "workspace:*",
+    "@duncit/pod-details": "workspace:*",
+    "@duncit/pod-form": "workspace:*",
     "@duncit/pod-product-picker": "workspace:*",
     "@duncit/regex": "workspace:*",
     "@duncit/slack": "workspace:*",

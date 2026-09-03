@@ -1,9 +1,11 @@
 import { Text, XStack, YStack } from 'tamagui';
+import { slotSpanLabel } from '@duncit/slots';
 
 import { DuncitButton } from '@/components/DuncitButton';
+import { useDateFormat } from '@/hooks/useDateFormat';
 import type { VenueSlot } from '@/hooks/useOwnerVenueSlots';
 import { useTranslation } from '@/hooks/useTranslation';
-import { slotPriceLabel, slotWhenLabel } from './slot-labels';
+import { slotPriceLabel } from './slot-labels';
 
 const STATUS_TONE: Record<string, string> = {
   AVAILABLE: '$success',
@@ -26,8 +28,17 @@ interface Props {
  * pod holds it. The Tamagui twin of the MUI SlotList row (rule 27). */
 export function DaySlotRow({ slot, busy, onToggleBlock, onDelete }: Readonly<Props>) {
   const { t } = useTranslation();
+  const fmt = useDateFormat();
   const tone = STATUS_TONE[slot.status] ?? '$muted';
   const blocked = slot.status === 'BLOCKED';
+  // The shared when-sentence, whole-day and multi-day aware (rule 40).
+  const when = slotSpanLabel(
+    slot.start_at,
+    slot.end_at,
+    slot.whole_day,
+    fmt,
+    t('availability.wholeDay'),
+  );
   const holds = slot.capacity
     ? t('availability.holdsCapacity', { vars: { capacity: slot.capacity } })
     : '';
@@ -51,7 +62,7 @@ export function DaySlotRow({ slot, busy, onToggleBlock, onDelete }: Readonly<Pro
     >
       <XStack alignItems="center" gap={8}>
         <Text flex={1} fontSize={13.5} fontWeight="700" color="$color">
-          {slotWhenLabel(slot, t)}
+          {when}
         </Text>
         <Text fontSize={12} fontWeight="700" color="$muted">
           {slotPriceLabel(slot.price, t)}

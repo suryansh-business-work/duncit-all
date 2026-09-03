@@ -55,6 +55,14 @@ export const AUTO_POD_COMPLETE_FILTER = {
   $or: [{ pod_mode: 'VIRTUAL' }, { venue_claim: { $ne: null } }],
 };
 
+/**
+ * The mirror of AUTO_POD_COMPLETE_FILTER — an offer still waiting on somebody.
+ * Its one `$or` sits at the top, so a caller adding its own `$or` must `$and`.
+ */
+export const AUTO_POD_INCOMPLETE_FILTER = {
+  $or: [{ host_claim: null }, { club_claim: null }, { pod_mode: { $ne: 'VIRTUAL' }, venue_claim: null }],
+};
+
 /** Offers a venue can act on at all — the physical ones. */
 export const PHYSICAL_FILTER = { pod_mode: { $ne: 'VIRTUAL' } };
 
@@ -89,19 +97,27 @@ export function pendingBaseFilter(roles: readonly string[]): Record<string, unkn
 export const HOST_TURN_FILTER = { $or: [{ pod_mode: 'VIRTUAL' }, { venue_claim: { $ne: null } }] };
 export const CLUB_TURN_FILTER = { host_claim: { $ne: null } };
 
-type Turn = 'venue' | 'host' | 'club';
+export type AutoPodTurn = 'venue' | 'host' | 'club';
 
-/** Whose turn it is on this offer, or null once everyone needed is on it. */
-export function autoPodNextRole(doc: {
+type Claims = {
   pod_mode?: string | null;
   venue_claim: unknown;
   host_claim: unknown;
   club_claim: unknown;
-}): Turn | null {
-  if (doc.pod_mode !== 'VIRTUAL' && !doc.venue_claim) return 'venue';
-  if (!doc.host_claim) return 'host';
-  if (!doc.club_claim) return 'club';
-  return null;
+};
+
+/** Every role the offer is still waiting on, in enrolment order. */
+export function autoPodMissingRoles(doc: Claims): AutoPodTurn[] {
+  const missing: AutoPodTurn[] = [];
+  if (doc.pod_mode !== 'VIRTUAL' && !doc.venue_claim) missing.push('venue');
+  if (!doc.host_claim) missing.push('host');
+  if (!doc.club_claim) missing.push('club');
+  return missing;
+}
+
+/** Whose turn it is on this offer, or null once everyone needed is on it. */
+export function autoPodNextRole(doc: Claims): AutoPodTurn | null {
+  return autoPodMissingRoles(doc)[0] ?? null;
 }
 
 /**

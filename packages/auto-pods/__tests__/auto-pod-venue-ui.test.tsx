@@ -11,7 +11,7 @@ import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { mwebAutoPodLabels, type AutoPodRow } from '@duncit/utils';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AutoPodDependencyTimeline } from '../src/AutoPodDependencyTimeline';
 import { AutoPodExpiryNote } from '../src/AutoPodExpiryNote';
@@ -123,16 +123,27 @@ describe('AutoPodVenuePicker', () => {
 describe('AutoPodExpiryNote', () => {
   const now = Date.UTC(2026, 8, 2, 10, 0, 0);
 
-  it('counts the offer down off the venue list', () => {
-    const expiresAt = new Date(now + 5 * 3_600_000 + 12 * 60_000).toISOString();
-    render(<AutoPodExpiryNote expiresAt={expiresAt} nowMs={now} labels={labels} />);
-    expect(screen.getByTestId('auto-pod-expiry')).toHaveTextContent(labels.removedIn(5, 12));
+  beforeEach(() => {
+    vi.useFakeTimers({ now });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('counts the offer down live, one second at a time', () => {
+    const expiresAt = new Date(now + 5 * 3_600_000 + 12 * 60_000 + 30_000).toISOString();
+    render(<AutoPodExpiryNote expiresAt={expiresAt} labels={labels} />);
+    expect(screen.getByTestId('auto-pod-expiry')).toHaveTextContent(labels.expiresIn(5, 12, 30));
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(screen.getByTestId('auto-pod-expiry')).toHaveTextContent(labels.expiresIn(5, 12, 29));
   });
 
   it('draws nothing without a deadline, or once it has passed', () => {
-    const { container, rerender } = render(<AutoPodExpiryNote expiresAt={null} nowMs={now} labels={labels} />);
+    const { container, rerender } = render(<AutoPodExpiryNote expiresAt={null} labels={labels} />);
     expect(container.innerHTML).toBe('');
-    rerender(<AutoPodExpiryNote expiresAt={new Date(now - 1).toISOString()} nowMs={now} labels={labels} />);
+    rerender(<AutoPodExpiryNote expiresAt={new Date(now - 1).toISOString()} labels={labels} />);
     expect(container.innerHTML).toBe('');
   });
 });
@@ -162,8 +173,8 @@ describe('AutoPodDependencyTimeline', () => {
     expect(screen.getByLabelText(`${labels.tick('venue')} — ${labels.tickPending}`)).toBeInTheDocument();
   });
 
-  it('turns the green venue dot into a button when told what to open, and leaves an amber one alone', () => {
-    const onVenueClick = vi.fn();
+  it('turns every green dot into a button naming its role when told what to open, and leaves an amber one alone', () => {
+    const onEnrolledClick = vi.fn();
     const venue = {
       venue_id: 'v1',
       venue_slot_id: 's1',
@@ -174,16 +185,24 @@ describe('AutoPodDependencyTimeline', () => {
       slot_price: 1200,
       accepted_at: '2026-09-01T00:00:00.000Z',
     };
+    const host = { user_id: 'u1', host_name: 'Asha Menon', assigned_at: '2026-09-01T01:00:00.000Z' };
     const { unmount } = render(
-      <AutoPodDependencyTimeline row={row({ venue_claim: venue })} labels={labels} onVenueClick={onVenueClick} />,
+      <AutoPodDependencyTimeline
+        row={row({ venue_claim: venue, host_claim: host })}
+        labels={labels}
+        onEnrolledClick={onEnrolledClick}
+      />,
     );
     fireEvent.click(screen.getByTestId('auto-pod-dependency-venue'));
-    expect(onVenueClick).toHaveBeenCalledTimes(1);
+    expect(onEnrolledClick).toHaveBeenCalledWith('venue');
+    fireEvent.click(screen.getByTestId('auto-pod-dependency-host'));
+    expect(onEnrolledClick).toHaveBeenCalledWith('host');
     expect(screen.getByLabelText(`${labels.tick('venue')} — ${labels.tickDone}`).tagName).toBe('BUTTON');
     expect(screen.getByTestId('auto-pod-dependency-venue')).toHaveTextContent('Play Arena');
+    expect(screen.queryByTestId('auto-pod-dependency-club')).toBeNull();
     unmount();
 
-    render(<AutoPodDependencyTimeline row={row()} labels={labels} onVenueClick={onVenueClick} />);
+    render(<AutoPodDependencyTimeline row={row()} labels={labels} onEnrolledClick={onEnrolledClick} />);
     expect(screen.queryByTestId('auto-pod-dependency-venue')).toBeNull();
     expect(screen.getByLabelText(`${labels.tick('venue')} — ${labels.tickPending}`).tagName).toBe('SPAN');
   });

@@ -22,13 +22,11 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
         'Pick the category first — the club list below is narrowed to it. Leave blank to see every club.',
       noClubs:
         'No clubs in this category yet. Clear the category, or create a club for it first.',
-      // The template's own rules, mirroring the server's validateTemplate.
-      priceRange: 'Ticket price must be between 1 and 1999',
+      // The template's own rules, mirroring the server's validateTemplate. The
+      // price hint is the ordinary Payment section's — the template itself
+      // carries no price: the host sets it when they assign themselves.
       priceHint: 'GROSS price per person (incl. fee + GST). 1 – 1999 — an Auto Pod is never free.',
-      spotsMin: 'An Auto Pod needs at least 2 spots',
-      spotsMax: 'An Auto Pod cannot have more than 999 spots',
       mediaRequired: 'At least one image is required',
-      spotsHint: 'Total spots including the host’s free seat — at least 2.',
       // The three steps of the template stepper, and its buttons.
       stepCategory: 'Pod category',
       stepDetails: 'Pod details',
@@ -67,23 +65,17 @@ export const POD_FORM_BUNDLE: NestedCatalogue = {
       colEmail: 'Email',
       colPhone: 'Phone',
       colClubs: 'Clubs',
-      // Step 2: physical or virtual, chosen above the sections.
+      // Step 2: physical or virtual, chosen above the sections. A new key
+      // rather than a reworded `modeHint`: "Import app keys" never overwrites.
       modeLegend: 'Where the pod happens',
-      modeHint:
-        'A physical pod waits for a venue to bring a slot. A virtual pod needs only a host and a club — write the meeting details and the date here.',
+      modeHintHostBrings:
+        'A physical pod waits for a venue to bring a slot. A virtual pod needs only a host and a club — the host sets the meeting link and the date when they assign themselves.',
       // Step 3: everything read back before it goes out.
       reviewHint:
         'Read it through once more. Rolling out sends this offer to every venue, host and club admin in the category.',
       reviewCategory: 'Category',
       reviewMode: 'Mode',
       reviewTitle: 'Title',
-      reviewPrice: 'Ticket price',
-      reviewSpots: 'Spots',
-      reviewOccurrence: 'Occurrence',
-      reviewWhen: 'When',
-      reviewMeetingPlatform: 'Meeting platform',
-      reviewMeetingLink: 'Meeting link',
-      reviewMeetingNotes: 'Meeting notes',
       reviewDescription: 'Description',
       reviewInfo: 'Pod info',
       reviewHashtags: 'Hashtags',

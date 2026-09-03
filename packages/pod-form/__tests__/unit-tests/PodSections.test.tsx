@@ -123,18 +123,41 @@ describe('PodSections (autoPod)', () => {
     expect(screen.queryByText(/When, Where/)).not.toBeInTheDocument();
   });
 
-  it('adds Meeting Details for a virtual template, in the venue section’s place, and no products', () => {
+  // A virtual template has no Meeting Details either: the host writes the link
+  // and the window into their own claim, because no venue will bring them.
+  it('gives a virtual template no Meeting Details and no products', () => {
     renderSections(makeData({ config: makeConfig({ autoPod: true, showProducts: true }) }), {
       pod_type: 'PAID',
       pod_mode: 'VIRTUAL',
     });
-    expect(screen.getByText('2. Meeting Details')).toBeInTheDocument();
+    expect(screen.queryByText(/Meeting Details/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Approved Products/)).not.toBeInTheDocument();
+    expect(screen.getByText('2. About this Pod')).toBeInTheDocument();
   });
 
   it('offers Approved Products to a physical template when the surface shows them', () => {
     renderSections(makeData({ config: makeConfig({ autoPod: true, showProducts: true }) }), { pod_type: 'PAID' });
     expect(screen.getByText('5. Approved Products')).toBeInTheDocument();
     expect(screen.queryByText(/Payment & Charges/)).not.toBeInTheDocument();
+  });
+
+  // The form already knows the pod's category, so both pickers open on it —
+  // "Badminton group of people", not a blank Pexels box. `useCategoryValue` is
+  // mocked to nothing here, so the seed is the empty search a category-less
+  // template gets; what matters is that the option travels at all.
+  it('opens both media pickers with the pod’s own category as their search', async () => {
+    const user = userEvent.setup();
+    const onPickImage = vi.fn().mockResolvedValue(null);
+    const onPickVideo = vi.fn().mockResolvedValue(null);
+    renderSections(
+      makeData({ config: makeConfig({ autoPod: true, showReel: true }), onPickImage, onPickVideo }),
+      { pod_type: 'PAID' },
+    );
+
+    await user.click(screen.getByRole('button', { name: /Add image/ }));
+    expect(onPickImage).toHaveBeenCalledWith({ seedQuery: expect.any(String) });
+
+    await user.click(screen.getByRole('button', { name: /Pick video/ }));
+    expect(onPickVideo).toHaveBeenCalledWith({ seedQuery: expect.any(String) });
   });
 });

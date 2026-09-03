@@ -52,8 +52,9 @@ export interface MediaPickerDialogProps {
   onPickedMany?: (urls: string[]) => void;
   /**
    * What to search Pexels for before the user types anything — the pod's
-   * sub-category, say. A cover picker that opens on a blank search makes the
-   * user do work the form already knows the answer to.
+   * sub-category, say. Seeds BOTH the photos and the videos tab. A picker that
+   * opens on a blank search makes the user do work the form already knows the
+   * answer to.
    */
   seedQuery?: string;
   /** Pexels orientation to start on. A cover is wide, so callers pass 'landscape'. */

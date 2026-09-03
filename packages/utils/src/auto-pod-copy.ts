@@ -79,8 +79,8 @@ export interface AutoPodLabels {
   venueCategory: (path: string) => string;
   noVenueCategory: string;
   pickVenueFirst: string;
-  /** The venue card's countdown to the offer leaving their list. */
-  removedIn: (hours: number, minutes: number) => string;
+  /** Every card's live countdown to the offer being released unless everyone enrols. */
+  expiresIn: (hours: number, minutes: number, seconds: number) => string;
   /** The slot picker: how far ahead it reaches, and what a slot pays the venue. */
   slotWindow: (days: number) => string;
   potentialEarning: (amount: string) => string;
@@ -111,6 +111,18 @@ export interface AutoPodLabels {
   /** A pinned offer only takes a venue / club from its own city. */
   noVenueInCity: (city: string) => string;
   noClubInCity: (city: string) => string;
+  /** The card's mode tag — every offer wears one. */
+  modePhysical: string;
+  modeVirtual: string;
+  /** The card's price line while no host has priced the offer yet. */
+  pricedByHost: string;
+  /** The meeting details a host brings to a VIRTUAL offer when assigning. */
+  meetingHint: string;
+  meetingPlatform: string;
+  meetingPlatformOther: string;
+  meetingLink: string;
+  meetingStart: string;
+  meetingEnd: string;
 }
 
 /** "a venue, a host, a club admin" — the missing roles as one list. */
@@ -196,7 +208,8 @@ export function mwebAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     venueCategory: (path) => t('mweb.autoPods.venueCategory', { vars: { path } }),
     noVenueCategory: t('mweb.autoPods.noVenueCategory'),
     pickVenueFirst: t('mweb.autoPods.pickVenueFirst'),
-    removedIn: (hours, minutes) => t('mweb.autoPods.removedIn', { vars: { hours, minutes } }),
+    expiresIn: (hours, minutes, seconds) =>
+      t('mweb.autoPods.expiresIn', { vars: { hours, minutes, seconds } }),
     slotWindow: (days) => t('mweb.autoPods.slotWindow', { vars: { days } }),
     potentialEarning: (amount) => t('mweb.autoPods.potentialEarning', { vars: { amount } }),
     slotNotViable: t('mweb.autoPods.slotNotViable'),
@@ -221,6 +234,15 @@ export function mwebAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     willPinTo: (city) => t('mweb.autoPods.willPinTo', { vars: { city } }),
     noVenueInCity: (city) => t('mweb.autoPods.noVenueInCity', { vars: { city } }),
     noClubInCity: (city) => t('mweb.autoPods.noClubInCity', { vars: { city } }),
+    modePhysical: t('mweb.autoPods.modePhysical'),
+    modeVirtual: t('mweb.autoPods.modeVirtual'),
+    pricedByHost: t('mweb.autoPods.pricedByHost'),
+    meetingHint: t('mweb.autoPods.meetingHint'),
+    meetingPlatform: t('mweb.autoPods.meetingPlatform'),
+    meetingPlatformOther: t('mweb.autoPods.meetingPlatformOther'),
+    meetingLink: t('mweb.autoPods.meetingLink'),
+    meetingStart: t('mweb.autoPods.meetingStart'),
+    meetingEnd: t('mweb.autoPods.meetingEnd'),
   };
 }
 
@@ -303,7 +325,8 @@ export function shellAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     venueCategory: (path) => t('shell.autoPods.venueCategory', { vars: { path } }),
     noVenueCategory: t('shell.autoPods.noVenueCategory'),
     pickVenueFirst: t('shell.autoPods.pickVenueFirst'),
-    removedIn: (hours, minutes) => t('shell.autoPods.removedIn', { vars: { hours, minutes } }),
+    expiresIn: (hours, minutes, seconds) =>
+      t('shell.autoPods.expiresIn', { vars: { hours, minutes, seconds } }),
     slotWindow: (days) => t('shell.autoPods.slotWindow', { vars: { days } }),
     potentialEarning: (amount) => t('shell.autoPods.potentialEarning', { vars: { amount } }),
     slotNotViable: t('shell.autoPods.slotNotViable'),
@@ -328,6 +351,15 @@ export function shellAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     willPinTo: (city) => t('shell.autoPods.willPinTo', { vars: { city } }),
     noVenueInCity: (city) => t('shell.autoPods.noVenueInCity', { vars: { city } }),
     noClubInCity: (city) => t('shell.autoPods.noClubInCity', { vars: { city } }),
+    modePhysical: t('shell.autoPods.modePhysical'),
+    modeVirtual: t('shell.autoPods.modeVirtual'),
+    pricedByHost: t('shell.autoPods.pricedByHost'),
+    meetingHint: t('shell.autoPods.meetingHint'),
+    meetingPlatform: t('shell.autoPods.meetingPlatform'),
+    meetingPlatformOther: t('shell.autoPods.meetingPlatformOther'),
+    meetingLink: t('shell.autoPods.meetingLink'),
+    meetingStart: t('shell.autoPods.meetingStart'),
+    meetingEnd: t('shell.autoPods.meetingEnd'),
   };
 }
 

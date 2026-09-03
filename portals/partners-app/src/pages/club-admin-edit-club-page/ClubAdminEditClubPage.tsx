@@ -60,7 +60,7 @@ export default function ClubAdminEditClubPage() {
     const input = buildClubInput(values, { config: PARTNER_CLUB_CONFIG });
     try {
       await updateClub({ variables: { club_doc_id: clubId, input } });
-      notifySuccess('Club details updated.');
+      notifySuccess(t('clubAdmin.editClub.saved'));
       navigate(backTo);
     } catch (submitError: any) {
       setOpError(submitError.message);
@@ -74,15 +74,15 @@ export default function ClubAdminEditClubPage() {
         error={error}
         errorText={error?.message}
         notFound={!club}
-        notFoundText="Club not found."
+        notFoundText={t('clubAdmin.editClub.notFound')}
         notFoundSeverity="warning"
       >
         {() => (
           <ClubEditorPage
-            eyebrow="Club Admin · Edit"
+            eyebrow={t('clubAdmin.editClub.eyebrow')}
             heading={club.club_name}
             onBack={() => navigate(backTo)}
-            backLabel="Back to pods"
+            backLabel={t('clubAdmin.editClub.backToPods')}
             initialValues={initialValues}
             config={PARTNER_CLUB_CONFIG}
             busy={updateState.loading}
@@ -98,7 +98,7 @@ export default function ClubAdminEditClubPage() {
         onClose={() => settlePicker(null)}
         onPicked={(url) => settlePicker(url)}
         folder={pickerFolder}
-        title={t('partners.clubAdminEditClubPage.addClubImage')}
+        title={t('clubAdmin.editClub.addImage')}
       />
     </>
   );

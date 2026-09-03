@@ -204,25 +204,29 @@ describe('AutoPodStepper', () => {
     await waitFor(() => expect(screen.queryByTestId('auto-pod-audience-drawer')).not.toBeInTheDocument());
   });
 
-  it('gives a virtual template the Meeting Details section and no products', async () => {
+  // The host brings the meeting link and the window when they assign
+  // themselves, so a virtual template asks for neither — it only loses the
+  // products a virtual pod could never hand out.
+  it('gives a virtual template no Meeting Details section and no products', async () => {
     const user = userEvent.setup();
     apollo.audience = audience();
     renderStepper({
       config: makeConfig({ autoPod: true, showAutoPodAudience: true, showProducts: true }),
-      initialValues: template({ pod_mode: 'VIRTUAL', meeting_url: 'https://meet.google.com/abc' }),
+      initialValues: template({ pod_mode: 'VIRTUAL' }),
     });
     await clickNext(user);
-    expect(screen.getByText('2. Meeting Details')).toBeInTheDocument();
+    expect(screen.queryByText(/Meeting Details/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Approved Products/)).not.toBeInTheDocument();
   });
 
-  it('offers a physical template the products of its own category', async () => {
+  it('offers a physical template the products of its own category, and no venue section', async () => {
     const user = userEvent.setup();
     apollo.audience = audience();
     renderStepper({ config: makeConfig({ autoPod: true, showAutoPodAudience: true, showProducts: true }) });
     await clickNext(user);
     expect(screen.getByText('5. Approved Products')).toBeInTheDocument();
     expect(screen.queryByText(/Meeting Details/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/When, Where/)).not.toBeInTheDocument();
   });
 
   it('surfaces a submit error on whichever step is open, and cancels', async () => {

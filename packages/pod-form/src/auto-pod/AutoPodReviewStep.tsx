@@ -1,12 +1,11 @@
 import type { ReactNode } from 'react';
-import { Alert, Chip, Divider, Stack, Typography } from '@mui/material';
+import { Alert, Divider, Stack, Typography } from '@mui/material';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useCategoryValue } from '@duncit/category';
-import { InfoRow } from '@duncit/ui';
-import { formatMoney } from '@duncit/utils';
+import { ChipList, InfoRow } from '@duncit/ui';
 import { usePodFormData } from '../context';
 import { hashtagsOf, linesToMedia } from '../build-input';
-import { OCCURRENCES, POD_MODES, type PodFormData, type PodFormValues, type PodKeyedOption } from '../types';
+import { POD_MODES, type PodFormValues, type PodKeyedOption } from '../types';
 import { useTranslation, type Translate } from '../i18n/useTranslation';
 
 interface ReviewRow {
@@ -18,42 +17,6 @@ interface ReviewRow {
 function optionLabel(options: PodKeyedOption[], value: string, t: Translate): string {
   const hit = options.find((option) => option.value === value);
   return hit ? t(hit.labelKey) : value;
-}
-
-/** A list value as chips, or the "nothing" dash when it is empty. */
-function ChipList({ items, empty }: Readonly<{ items: string[]; empty: string }>) {
-  if (items.length === 0) return <>{empty}</>;
-  return (
-    <Stack direction="row" spacing={0.75} useFlexGap sx={{ flexWrap: 'wrap' }}>
-      {items.map((item) => (
-        <Chip key={item} size="small" variant="outlined" label={item} />
-      ))}
-    </Stack>
-  );
-}
-
-/** "12 Sep 2026 · 18:00 – 12 Sep 2026 · 19:30", in the admin-configured format (rule 11). */
-function windowLine(fmt: PodFormData['dateFormatter'], start: Date | null, end: Date | null, empty: string): string {
-  if (!start) return empty;
-  const from = `${fmt.formatDate(start)} · ${fmt.formatTime(start)}`;
-  if (!end) return from;
-  return `${from} – ${fmt.formatDate(end)} · ${fmt.formatTime(end)}`;
-}
-
-/** The meeting rows a virtual pod adds between the economics and the copy. */
-function virtualRows(values: PodFormValues, data: PodFormData, t: Translate, empty: string): ReviewRow[] {
-  const platform =
-    data.meetingPlatforms?.find((option) => option.value === values.meeting_platform)?.label ??
-    values.meeting_platform;
-  return [
-    {
-      label: t('podForm.autoPod.reviewWhen'),
-      value: windowLine(data.dateFormatter, values.pod_date_time, values.pod_end_date_time, empty),
-    },
-    { label: t('podForm.autoPod.reviewMeetingPlatform'), value: platform.trim() || empty },
-    { label: t('podForm.autoPod.reviewMeetingLink'), value: values.meeting_url.trim() || empty },
-    { label: t('podForm.autoPod.reviewMeetingNotes'), value: values.meeting_notes.trim() || empty },
-  ];
 }
 
 /** "Rackets × 4" per attached product, named off the catalogue the form holds. */
@@ -91,13 +54,6 @@ export default function AutoPodReviewStep() {
     },
     { label: t('podForm.autoPod.reviewMode'), value: optionLabel(POD_MODES, values.pod_mode, t) },
     { label: t('podForm.autoPod.reviewTitle'), value: values.pod_title.trim() || empty },
-    {
-      label: t('podForm.autoPod.reviewPrice'),
-      value: formatMoney(Number(values.pod_amount) || 0, { symbol: data.finance?.currency_symbol || '₹' }),
-    },
-    { label: t('podForm.autoPod.reviewSpots'), value: String(Number(values.no_of_spots) || 0) },
-    { label: t('podForm.autoPod.reviewOccurrence'), value: optionLabel(OCCURRENCES, values.pod_occurrence, t) },
-    ...(isVirtual ? virtualRows(values, data, t, empty) : []),
     { label: t('podForm.autoPod.reviewDescription'), value: values.pod_description.trim() || empty },
     { label: t('podForm.autoPod.reviewInfo'), value: values.pod_info.trim() || empty },
     { label: t('podForm.autoPod.reviewHashtags'), value: <ChipList items={hashtags} empty={empty} /> },

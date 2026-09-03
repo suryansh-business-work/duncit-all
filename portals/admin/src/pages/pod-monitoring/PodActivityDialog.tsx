@@ -13,14 +13,14 @@ import {
 import { DuncitButton } from '@duncit/buttons';
 import { StatusChip } from '@duncit/ui';
 import {
-  ACTION_COLORS,
-  ACTION_LABELS,
-  fmtWhen,
-  POD_AUDIT_LOGS,
-  RISK_COLORS,
-  SOURCE_LABELS,
+  POD_AUDIT_ACTION_COLORS,
+  POD_AUDIT_RISK_COLORS,
+  podAuditActionLabel,
+  podAuditRiskLabel,
+  podAuditSourceLabel,
   type PodAuditLog,
-} from './queries';
+} from '@duncit/utils';
+import { fmtWhen, POD_AUDIT_LOGS } from './queries';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {
@@ -46,7 +46,9 @@ export default function PodActivityDialog({ pod, onClose }: Readonly<Props>) {
     <Dialog open={!!pod} onClose={onClose} maxWidth="sm" fullWidth>
       {pod && (
         <>
-          <DialogTitle sx={{ fontWeight: 800 }}>Activity · {pod.pod_title}</DialogTitle>
+          <DialogTitle sx={{ fontWeight: 800 }}>
+            {t('clubAdmin.pods.activity', { vars: { title: pod.pod_title } })}
+          </DialogTitle>
           <DialogContent dividers>
             {error && <Alert severity="error">{error.message}</Alert>}
             {!error && loading && entries.length === 0 && <CircularProgress size={22} />}
@@ -54,7 +56,7 @@ export default function PodActivityDialog({ pod, onClose }: Readonly<Props>) {
               <Typography variant="body2" sx={{
                 color: "text.secondary"
               }}>
-                No recorded activity for this pod yet.
+                {t('clubAdmin.pods.noActivity')}
               </Typography>
             )}
             <Stack spacing={1.75}>
@@ -64,8 +66,8 @@ export default function PodActivityDialog({ pod, onClose }: Readonly<Props>) {
                 }}>
                   <StatusChip
                     status={entry.action}
-                    label={ACTION_LABELS[entry.action]}
-                    colorMap={ACTION_COLORS}
+                    label={podAuditActionLabel(entry.action, t)}
+                    colorMap={POD_AUDIT_ACTION_COLORS}
                     sx={{ mt: 0.25 }}
                   />
                   <Stack sx={{ minWidth: 0, flex: 1 }}>
@@ -80,10 +82,14 @@ export default function PodActivityDialog({ pod, onClose }: Readonly<Props>) {
                       <Typography variant="body2" sx={{
                         fontWeight: 700
                       }}>
-                        {entry.actor_name || SOURCE_LABELS[entry.source]}
+                        {entry.actor_name || podAuditSourceLabel(entry.source, t)}
                       </Typography>
-                      <Chip label={SOURCE_LABELS[entry.source]} size="small" variant="outlined" />
-                      <StatusChip status={entry.ai_risk} colorMap={RISK_COLORS} />
+                      <Chip label={podAuditSourceLabel(entry.source, t)} size="small" variant="outlined" />
+                      <StatusChip
+                        status={entry.ai_risk}
+                        label={podAuditRiskLabel(entry.ai_risk, t)}
+                        colorMap={POD_AUDIT_RISK_COLORS}
+                      />
                     </Stack>
                     {entry.changes.map((change) => (
                       <Typography key={change.field} variant="caption" sx={{
@@ -109,7 +115,7 @@ export default function PodActivityDialog({ pod, onClose }: Readonly<Props>) {
                           color: "text.secondary",
                           fontStyle: "italic"
                         }}>
-                        AI: {entry.ai_summary}
+                        {t('clubAdmin.pods.aiSummary', { vars: { summary: entry.ai_summary } })}
                       </Typography>
                     )}
                     <Typography variant="caption" sx={{

@@ -162,10 +162,10 @@ function refineProducts(
 /**
  * Auto Pod mode: the template's own rules, mirroring the server's
  * `validateTemplate` so a bad template never round-trips. No club, venue or
- * host exists yet — a category stands in for the club, the price floor is 1
- * (an Auto Pod is never free) and two spots are the fewest that bill anyone
- * (the host attends free). A VIRTUAL offer has no venue to bring the slot, so
- * it must carry the meeting link and the window itself.
+ * host exists yet — a category stands in for the club, and a cover image is
+ * the one thing every partner sees first. The price, the spots and (on a
+ * VIRTUAL offer) the meeting link and window are the host's to bring when
+ * they assign themselves, so none of them is a template rule.
  */
 function refineAutoPod(values: PodFormValues, ctx: z.RefinementCtx, t: Translate) {
   if (!values.sub_category_id) {
@@ -175,21 +175,8 @@ function refineAutoPod(values: PodFormValues, ctx: z.RefinementCtx, t: Translate
       message: t('podForm.autoPod.categoryRequired'),
     });
   }
-  if (values.pod_amount < 1) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_amount'], message: t('podForm.autoPod.priceRange') });
-  }
-  if (values.no_of_spots < 2) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['no_of_spots'], message: t('podForm.autoPod.spotsMin') });
-  }
-  if (values.no_of_spots > 999) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['no_of_spots'], message: t('podForm.autoPod.spotsMax') });
-  }
   if (!hasImage(values.media_text)) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['media_text'], message: t('podForm.autoPod.mediaRequired') });
-  }
-  if (values.pod_mode === 'VIRTUAL') {
-    refineMeeting(values, ctx, t);
-    refineDates(values, ctx, t);
   }
 }
 

@@ -104,6 +104,7 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.footer.venue': "You're receiving this because you list a venue on Duncit.",
   'email.footer.host': "You're receiving this because you host on Duncit.",
   'email.footer.clubAdmin': "You're receiving this because you are a Duncit club admin.",
+  'email.footer.autoPod': "You're receiving this because you enrolled in this Auto Pod on Duncit.",
   'email.footer.ads': "You're receiving this because you advertise on Duncit.",
   'email.footer.security':
     "You're receiving this because it affects the security of your Duncit account. Security notices cannot be switched off.",
@@ -259,6 +260,13 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.hostPodAutoCancelled.title': 'Your pod has been cancelled',
   'email.hostPodAutoCancelled.body':
     'The pod below could not cover its venue cost, so it has been cancelled automatically. Everyone who had booked is being told and refunded under the venue’s cancellation policy, and the venue slot is released.',
+  'email.autoPodReleased.title': 'This Auto Pod has been released',
+  'email.autoPodReleased.body':
+    'The Auto Pod below was not fully assigned within its window, so it has been released. Whatever you had enrolled — your venue slot, yourself as host, or your club — is released with it.',
+  'email.autoPodReleased.window': 'Assignment window',
+  'email.autoPodReleased.hoursUnit': 'hours',
+  'email.autoPodReleased.missing': 'Not completed by',
+  'email.autoPodReleased.yourPart': 'Your part',
   'email.hostCompletePodReminder.title': 'This pod still needs completing',
   'email.hostCompletePodReminder.body':
     'The pod below has finished but is not marked complete, and nobody is paid until it is. Completing it also locks the attendance, so check the roster first.',

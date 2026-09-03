@@ -23,7 +23,15 @@ import { toErrorMessage } from '@/utils/errors';
  */
 export function VenueSettingsScreen() {
   const { t } = useTranslation();
-  const { venues, venue, venueId, selectVenue, isLoading, refetch } = useVenuesWithSettings();
+  const {
+    venues,
+    venue,
+    venueId,
+    selectVenue,
+    isLoading,
+    error: loadError,
+    refetch,
+  } = useVenuesWithSettings();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +65,12 @@ export function VenueSettingsScreen() {
           <Text fontSize={12.5} color="$muted">
             {t('mweb.venueSettingsPage.subtitle')}
           </Text>
-          {!isLoading && venues.length === 0 ? (
+          {loadError ? (
+            <Text testID="venue-settings-error" fontSize={13} color="$danger">
+              {loadError}
+            </Text>
+          ) : null}
+          {!isLoading && !loadError && venues.length === 0 ? (
             <Text testID="venue-settings-empty" fontSize={13} color="$muted">
               {t('mweb.venueSettingsPage.noVenues')}
             </Text>

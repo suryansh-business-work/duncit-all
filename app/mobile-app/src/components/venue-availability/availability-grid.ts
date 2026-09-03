@@ -1,11 +1,28 @@
-import { addDays, endOfMonth, format, startOfDay, startOfMonth } from 'date-fns';
-import { MAX_FUTURE_DAYS, slotCoveredDays, slotCoversDay } from '@duncit/slots';
+import {
+  addDays,
+  addMonths,
+  endOfDay,
+  endOfMonth,
+  endOfWeek,
+  format,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+} from 'date-fns';
+import {
+  buildMonthGrid,
+  MAX_FUTURE_DAYS,
+  monthKeyOf,
+  slotCoveredDays,
+  slotCoversDay,
+} from '@duncit/slots';
 
 /**
- * The availability month grid's arithmetic — framework-free, so the grid, the
- * day sheet and the screen all read the same day keys and the same counts.
- * Day keys are 'yyyy-MM-dd' in the device zone, exactly as the MUI calendar
- * in @duncit/availability-calendar buckets them (rule 27).
+ * The availability calendar's arithmetic — framework-free, so the grid, the
+ * toolbar, the day sheet and the screen all read the same day keys, the same
+ * counts and the same periods. Day keys are 'yyyy-MM-dd' in the device zone,
+ * exactly as the MUI calendar in @duncit/availability-calendar buckets them
+ * (rule 27).
  */
 
 /** What a day cell shows: one count per slot status. */
@@ -31,10 +48,53 @@ export const dayKeyOf = (date: Date): string => format(date, DAY_KEY_PATTERN);
 /** A day key as a local midnight — never `new Date(key)`, which reads UTC. */
 export const dayFromKey = (dayKey: string): Date => new Date(`${dayKey}T00:00:00`);
 
-/** ISO bounds of a 'yyyy-MM' month, for the slots query. */
-export function monthRange(monthKey: string): { from: string; to: string } {
-  const first = dayFromKey(`${monthKey}-01`);
-  return { from: startOfMonth(first).toISOString(), to: endOfMonth(first).toISOString() };
+/** Which period the calendar shows — the same three the MUI toolbar offers. */
+export type CalendarView = 'month' | 'week' | 'day';
+
+// Monday-first, because `buildMonthGrid` is: the week row and the month grid
+// sit under one weekday header.
+const WEEK_OPTIONS = { weekStartsOn: 1 } as const;
+
+/** The window the active view shows, and so the range of slots to fetch. */
+export function viewRange(view: CalendarView, anchor: Date): { from: Date; to: Date } {
+  if (view === 'day') return { from: startOfDay(anchor), to: endOfDay(anchor) };
+  if (view === 'week') {
+    return { from: startOfWeek(anchor, WEEK_OPTIONS), to: endOfWeek(anchor, WEEK_OPTIONS) };
+  }
+  return { from: startOfMonth(anchor), to: endOfMonth(anchor) };
+}
+
+/** One step forward or back — a month, a week or a day, per the active view. */
+export function shiftAnchor(view: CalendarView, anchor: Date, direction: 1 | -1): Date {
+  if (view === 'month') return addMonths(anchor, direction);
+  if (view === 'week') return addDays(anchor, direction * 7);
+  return addDays(anchor, direction);
+}
+
+/** The formatter slice the period label needs — `useDateFormat()` satisfies it. */
+export interface PeriodFormatter {
+  formatDay: (dayKey: string) => string;
+  formatPattern: (input: Date, pattern: string) => string;
+}
+
+/** What the toolbar prints between the arrows, in the active view's units. */
+export function periodLabel(view: CalendarView, anchor: Date, fmt: PeriodFormatter): string {
+  if (view === 'day') return fmt.formatDay(dayKeyOf(anchor));
+  if (view === 'week') {
+    const { from, to } = viewRange(view, anchor);
+    return `${fmt.formatPattern(from, 'dd MMM')} – ${fmt.formatPattern(to, 'dd MMM')}`;
+  }
+  return fmt.formatPattern(anchor, 'MMMM yyyy');
+}
+
+/** The day keys each row of the active view draws; null pads a month row. */
+export function viewCells(view: CalendarView, anchor: Date): (string | null)[][] {
+  if (view === 'month') return buildMonthGrid(monthKeyOf(dayKeyOf(anchor)));
+  if (view === 'week') {
+    const start = startOfWeek(anchor, WEEK_OPTIONS);
+    return [Array.from({ length: 7 }, (_, i) => dayKeyOf(addDays(start, i)))];
+  }
+  return [[dayKeyOf(anchor)]];
 }
 
 const emptyCounts = (): DayCounts => ({ available: 0, pending: 0, booked: 0, blocked: 0 });

@@ -1,7 +1,7 @@
 import { useMemo, useState, type MutableRefObject, type ReactNode } from 'react';
-import { DuncitTable, type TableFetch } from '@duncit/table';
-import type { AutoPodLabels } from '@duncit/utils';
-import AutoPodVenueDetailsDialog from './AutoPodVenueDetailsDialog';
+import { DuncitTable, type TableFetch, type TableFilterValue } from '@duncit/table';
+import type { AutoPodLabels, AutoPodRole } from '@duncit/utils';
+import AutoPodEnrolledDialog from './enrolled/AutoPodEnrolledDialog';
 import { getAutoPodColumns } from './columns';
 import type { AutoPodTableRow } from './queries';
 
@@ -12,6 +12,10 @@ interface Props {
   refetchRef: MutableRefObject<(() => void) | null>;
   formatDateTime: (value: string) => string;
   toolbarActions?: ReactNode;
+  /** The page-level status filter; a change resets to page 1. */
+  externalFilters?: readonly TableFilterValue[];
+  onRowClick: (row: AutoPodTableRow) => void;
+  onViewDetails: (row: AutoPodTableRow) => void;
   onEdit: (row: AutoPodTableRow) => void;
   onCancel: (row: AutoPodTableRow) => void;
   onDelete: (row: AutoPodTableRow) => void;
@@ -21,6 +25,12 @@ interface Props {
 
 const getRowId = (row: AutoPodTableRow) => row.id;
 
+/** Which partner's details are open, and on which offer. */
+interface EnrolledTarget {
+  row: AutoPodTableRow;
+  role: AutoPodRole;
+}
+
 export default function AutoPodsTable({
   t,
   labels,
@@ -28,28 +38,32 @@ export default function AutoPodsTable({
   refetchRef,
   formatDateTime,
   toolbarActions,
+  externalFilters,
+  onRowClick,
+  onViewDetails,
   onEdit,
   onCancel,
   onDelete,
   onViewPod,
   onToggleActive,
 }: Readonly<Props>) {
-  // The row whose green Venue dot was clicked; the dialog reads the venue on open.
-  const [venueRow, setVenueRow] = useState<AutoPodTableRow | null>(null);
+  // The green dot that was clicked; the dialog reads that partner on open.
+  const [enrolled, setEnrolled] = useState<EnrolledTarget | null>(null);
   const columns = useMemo(
     () =>
       getAutoPodColumns({
         t,
         labels,
         formatDateTime,
+        onViewDetails,
         onEdit,
         onCancel,
         onDelete,
         onViewPod,
         onToggleActive,
-        onVenueDetails: setVenueRow,
+        onEnrolledDetails: (row, role) => setEnrolled({ row, role }),
       }),
-    [t, labels, formatDateTime, onEdit, onCancel, onDelete, onViewPod, onToggleActive]
+    [t, labels, formatDateTime, onViewDetails, onEdit, onCancel, onDelete, onViewPod, onToggleActive]
   );
 
   return (
@@ -60,14 +74,17 @@ export default function AutoPodsTable({
         fetchRows={fetchRows}
         getRowId={getRowId}
         toolbarActions={toolbarActions}
+        externalFilters={externalFilters}
         emptyText={t('admin.autoPods.empty')}
         defaultSort={{ field: 'created_at', dir: 'desc' }}
         refetchRef={refetchRef}
+        onRowClick={onRowClick}
       />
-      {venueRow ? (
-        <AutoPodVenueDetailsDialog
-          row={venueRow}
-          onClose={() => setVenueRow(null)}
+      {enrolled ? (
+        <AutoPodEnrolledDialog
+          row={enrolled.row}
+          role={enrolled.role}
+          onClose={() => setEnrolled(null)}
           t={t}
           labels={labels}
           formatDateTime={formatDateTime}

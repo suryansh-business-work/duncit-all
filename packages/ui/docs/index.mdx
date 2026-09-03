@@ -28,6 +28,7 @@ exports:
   - 'usageColor'
   - 'StatusChip'
   - 'STATUS_CHIP_COLORS'
+  - 'ChipList'
   - 'InfoRow'
   - 'ImagePreview'
   - 'PageHeader'
@@ -386,6 +387,12 @@ Silently adopting the defaults during a migration is a visual regression that no
 
 `usageColor(percent)` is the tech server convention for a usage bar: `error` at ≥90,
 `warning` at ≥75, otherwise `success`.
+
+`ChipList({ items, empty })` draws a list of short values — hashtags, perks, what a pod
+offers — as outlined chips, or the caller's `empty` text when there is nothing to draw.
+It lives here because two read-only summaries of the SAME Auto Pod render it: the
+template's review step in `@duncit/pod-form` and the admin console's offer page. A reader
+compares those two, so a second copy is the drift rule 40 exists to stop.
 
 <Preview
   title="StatCard — one tile per layout"

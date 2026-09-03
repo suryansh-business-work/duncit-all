@@ -48,6 +48,10 @@ export interface IAppSettings extends Document {
   /** How many hours a physical Auto Pod stays on venues' lists — and stays
    * open at all — before it expires if no venue has accepted it. */
   auto_pod_venue_expiry_hours: number;
+  /** How many hours after an Auto Pod is rolled out its venue, host and club
+   * admin have to ALL enrol. When it runs out with anyone still missing the
+   * offer is released — whoever had enrolled — and its slot and host freed. */
+  auto_pod_assignment_expiry_hours: number;
   /** Account Health points a venue or host loses by withdrawing from an Auto
    * Pod they had enrolled in (0 disables the penalty). */
   auto_pod_cancel_health_penalty: number;
@@ -80,6 +84,7 @@ const appSettingsSchema = new Schema<IAppSettings>(
     pod_auto_cancel_lead_hours: { type: Number, default: 24, min: 1, max: 8760 },
     auto_pod_slot_window_days: { type: Number, default: 7, min: 1, max: 60 },
     auto_pod_venue_expiry_hours: { type: Number, default: 24, min: 1, max: 720 },
+    auto_pod_assignment_expiry_hours: { type: Number, default: 72, min: 1, max: 720 },
     auto_pod_cancel_health_penalty: { type: Number, default: 5, min: 0, max: 100 },
     // `coin_earn_pct` used to live here. It moved to CoinSettings — split into a
     // pod-join and a shop rate — where the rest of the coin payout rules are;

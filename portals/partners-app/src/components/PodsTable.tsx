@@ -3,8 +3,8 @@ import { Box, Chip, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { AttendanceChip } from '@duncit/ui';
 import { formatDate, formatDateTime } from '@duncit/app-settings';
+import { POD_ROW_STATUS_COLORS, podRowStatus, podRowStatusLabel } from '@duncit/utils';
 import { useTranslation } from '../i18n';
-import { POD_ROW_STATUS_COLORS, POD_ROW_STATUS_KEYS, podRowStatus } from './pod-status';
 
 /** Minimal row shape shared by the partner + club-admin pods tables. */
 export interface PodRowBase {
@@ -68,7 +68,7 @@ export default function PodsTable<T extends PodRowBase>({
 }: Readonly<Props<T>>) {
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<T>[]>(() => {
-    const statusLabel = (pod: T) => t(POD_ROW_STATUS_KEYS[podRowStatus(pod)]);
+    const statusLabel = (pod: T) => podRowStatusLabel(podRowStatus(pod), t);
     const renderStatus = (pod: T) => (
       <Chip
         size="small"

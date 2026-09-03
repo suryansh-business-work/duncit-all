@@ -89,18 +89,22 @@ export const autoPodTypeDefs = gql`
     "Super › Category › Sub names, walked up from the sub-category."
     category_path: [String!]!
     """
-    PHYSICAL waits on a venue to bring the slot; VIRTUAL carries its own
-    meeting details and dates and waits on a host and a club only.
+    PHYSICAL waits on a venue to bring the slot; VIRTUAL has no venue and
+    waits on a host and a club only — the host brings the meeting details and
+    the window when they assign themselves.
     """
     pod_mode: PodMode!
+    "VIRTUAL only — written by the host at assignment, null until then."
     meeting_platform: String
     meeting_url: String
     meeting_notes: String
-    "VIRTUAL only — a physical offer's dates come from the venue's slot."
+    "VIRTUAL only — the window the host set; a physical offer's dates come from the venue's slot."
     pod_date_time: String
     pod_end_date_time: String
     pod_type: PodType!
+    "0 until the host prices the pod at assignment — the template carries no economics."
     pod_amount: Float!
+    "0 until the host sets it at assignment, within the venue's capacity."
     no_of_spots: Int!
     pod_occurrence: PodOccurrence!
     what_this_pod_offers: [String!]!
@@ -118,12 +122,19 @@ export const autoPodTypeDefs = gql`
     "The city the first enrolment pinned it to — null while nobody has enrolled."
     location: AutoPodLocation
     """
-    When this offer leaves venues' lists (and expires) if none has accepted it
-    by then — created_at plus Pod Settings' auto_pod_venue_expiry_hours. Null on
-    a virtual offer, once a venue has accepted, and on every list but the
-    venue's own queue.
+    When this offer is released unless everyone needed has enrolled by then —
+    its roll-out plus Pod Settings' auto_pod_assignment_expiry_hours, or the
+    venue window if that closes sooner while it still waits on a venue. Set on
+    every list and read while the offer is enrolling; null once it is live,
+    cancelled or expired. Every card counts it down.
     """
-    venue_expires_at: String
+    expires_at: String
+    """
+    When this offer leaves venues' lists if none has accepted it by then —
+    venue_window_from (or created_at) plus auto_pod_venue_expiry_hours. Set on
+    the venue queue only. Superseded by expires_at, which already folds it in.
+    """
+    venue_expires_at: String @deprecated(reason: "Read expires_at — the one deadline every list carries.")
     "Account Health points a venue or host loses by withdrawing (Pod Settings). Set on their own queues."
     withdraw_penalty_points: Int
     "True when the calling user (or one of their clubs) already enrolled."
@@ -244,25 +255,22 @@ export const autoPodTypeDefs = gql`
     page_size: Int!
   }
 
+  """
+  The template an admin writes: the pod's content only. The ticket price, the
+  spots and, on a virtual offer, the meeting details are the host's to set
+  when they assign themselves; the venue's slot fixes a physical offer's date.
+  """
   input CreateAutoPodInput {
     pod_title: String!
     pod_description: String!
     sub_category_id: ID!
-    "Defaults to PHYSICAL. VIRTUAL requires meeting_url, pod_date_time and pod_end_date_time."
+    "Defaults to PHYSICAL. VIRTUAL waits on a host and a club only."
     pod_mode: PodMode
-    meeting_platform: String
-    meeting_url: String
-    meeting_notes: String
-    pod_date_time: String
-    pod_end_date_time: String
-    pod_amount: Float!
-    no_of_spots: Int!
     pod_images_and_videos: [PodMediaInput!]!
     product_requests: [PodProductRequestInput!]
     pod_info: String
     pod_hashtag: [String!]
     reel_url: String
-    pod_occurrence: PodOccurrence
     what_this_pod_offers: [String!]
     available_perks: [String!]
     payment_terms: String
@@ -274,23 +282,24 @@ export const autoPodTypeDefs = gql`
     pod_description: String
     sub_category_id: ID
     pod_mode: PodMode
-    meeting_platform: String
-    meeting_url: String
-    meeting_notes: String
-    pod_date_time: String
-    pod_end_date_time: String
-    pod_amount: Float
-    no_of_spots: Int
     pod_images_and_videos: [PodMediaInput!]
     product_requests: [PodProductRequestInput!]
     pod_info: String
     pod_hashtag: [String!]
     reel_url: String
-    pod_occurrence: PodOccurrence
     what_this_pod_offers: [String!]
     available_perks: [String!]
     payment_terms: String
     place_charges: [PodPlaceChargeInput!]
+  }
+
+  "What a host brings to a VIRTUAL offer when they assign themselves: where members join, and when."
+  input AutoPodHostMeetingInput {
+    meeting_platform: String
+    meeting_url: String!
+    meeting_notes: String
+    pod_date_time: String!
+    pod_end_date_time: String!
   }
 
   extend type Query {
@@ -363,13 +372,20 @@ export const autoPodTypeDefs = gql`
     "Venue enrols: accepts the offer and commits one of its own slots."
     venueAcceptAutoPod(auto_pod_doc_id: ID!, venue_id: ID!, slot_id: ID!): AutoPod!
     """
-    Host enrols: assigns themselves, setting the pod's ticket price and spots
-    (the template's when omitted). Only once a venue has fixed the slot on a
-    physical offer. location_id is the city the host had selected — required
-    when nobody has enrolled yet on a virtual offer (it pins it), and must
-    match the pinned city otherwise.
+    Host enrols: assigns themselves, setting the pod's ticket price and spots.
+    Only once a venue has fixed the slot on a physical offer. location_id is
+    the city the host had selected — required when nobody has enrolled yet on
+    a virtual offer (it pins it), and must match the pinned city otherwise.
+    A virtual offer also needs meeting — the link and the window the host
+    will run it in; it is ignored on a physical one.
     """
-    hostAssignAutoPod(auto_pod_doc_id: ID!, location_id: ID, pod_amount: Float, no_of_spots: Int): AutoPod!
+    hostAssignAutoPod(
+      auto_pod_doc_id: ID!
+      location_id: ID
+      pod_amount: Float
+      no_of_spots: Int
+      meeting: AutoPodHostMeetingInput
+    ): AutoPod!
     "The venue takes its slot back while the offer is still enrolling; the offer returns to venues' lists and the venue pays the Pod Settings penalty."
     venueWithdrawAutoPod(auto_pod_doc_id: ID!): AutoPod!
     "The host steps off while the offer is still enrolling; the offer returns to hosts' lists and the host pays the Pod Settings penalty."

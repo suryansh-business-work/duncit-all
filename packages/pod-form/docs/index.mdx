@@ -1,6 +1,6 @@
 ---
 name: '@duncit/pod-form'
-summary: 'The full MUI pod create/edit form — Zod schema, GraphQL input builder, full-page editor and live member preview — shared by the Admin and Partners consoles.'
+summary: 'The full MUI pod create/edit form — Zod schema, GraphQL input builder, full-page editor, live member preview and the Club Admin editor wiring — shared by the Admin and Partners consoles and mWeb.'
 category: 'forms'
 zeroDeps: false
 frameworkFree: false
@@ -8,13 +8,28 @@ coverageGate: true
 consumers:
   - 'portals/admin'
   - 'portals/partners-app'
+  - 'app/mweb'
 exports:
   - 'PodForm'
+  - 'useClubAdminPodEditor'
+  - 'CLUB_ADMIN_POD_CONFIG'
+  - 'getClubVenueIds'
+  - 'CLUB_ADMIN_POD_LOOKUPS'
+  - 'CLUB_ADMIN_POD_ROW_FIELDS'
+  - 'CLUB_ADMIN_PODS_TABLE'
+  - 'CLUB_ADMIN_POD_FOR_EDIT'
+  - 'CLUB_ADMIN_POD_AUDIT_LOGS'
+  - 'CLUB_ADMIN_HOST_SEARCH'
+  - 'CLUB_ADMIN_CREATE_POD'
+  - 'CLUB_ADMIN_UPDATE_POD'
+  - 'CLUB_ADMIN_DELETE_POD'
+  - 'CLUB_ADMIN_CREATE_AUTO_POD'
   - 'PodEditorPage'
   - 'PodPreview'
   - 'buildPodPreview'
   - 'usePodEditorState'
   - 'useMediaPickerBridge'
+  - 'PodMediaPickOptions'
   - 'makePodSchema'
   - 'makeNativeParityPodConfig'
   - 'buildPodInput'
@@ -87,6 +102,71 @@ const submit = async (values: PodFormValues, options: { draft: boolean }) => {
   onPickVideo={picker.pickVideo}
 />
 ```
+
+## Club admin editor
+
+A Club Admin creates and edits pods from two places — the Partners console
+(`/club-admin/clubs/:clubId/pods/new`, `…/pods/:id/edit`) and mWeb — and both are one editor:
+`PodEditorPage` mounted over `useClubAdminPodEditor`, reading the `CLUB_ADMIN_*` documents this
+package exports. The hook pins every save to the club server-side (`club_id` rides on create and
+update), searches approved hosts through `clubAdminHostSearch`, and seeds the host picker from the
+pod's `pod_hosts_id` / `host_names` pair. `CLUB_ADMIN_POD_CONFIG` is
+`makeNativeParityPodConfig({ showProducts: true })` — venue slots, place charges, reel, optional
+hosts — so a club admin sees the same form on a portal as on a phone.
+
+The documents are club-scoped by the server from the caller's own membership, never by a client
+filter: `clubAdminPodsTable` pages every stage (awaiting venue approval and cancelled included) and
+`clubAdminPodForEdit` is the only read that returns a soft-deleted pod to its club admin. Nothing
+here imports `@duncit/shell`, which is what lets mWeb mount it outside a portal.
+
+From `portals/partners-app/src/pages/club-admin-pod-editor-page/index.tsx`:
+
+```tsx
+import {
+  CLUB_ADMIN_POD_CONFIG,
+  CLUB_ADMIN_POD_FOR_EDIT,
+  CLUB_ADMIN_POD_LOOKUPS,
+  getClubVenueIds,
+  PodEditorPage,
+  useClubAdminPodEditor,
+  useMediaPickerBridge,
+} from '@duncit/pod-form';
+import { MediaPickerDialog } from '@duncit/media-picker';
+
+const lookups = useQuery(CLUB_ADMIN_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
+const podQuery = useQuery(CLUB_ADMIN_POD_FOR_EDIT, { variables: { pod_doc_id: id }, skip: !id });
+const pod = podQuery.data?.clubAdminPodForEdit ?? null;
+const picker = useMediaPickerBridge();
+
+const editor = useClubAdminPodEditor({ clubId, editingPod: pod, onSaved: () => navigate(backTo) });
+
+<PodEditorPage
+  editing={!!pod}
+  initialValues={editor.initialValues}
+  config={CLUB_ADMIN_POD_CONFIG}
+  busy={editor.busy}
+  error={editor.opError}
+  clubs={lookups.data?.myAdminClubs ?? []}
+  venues={approvedVenues}
+  users={editor.hostSeed}
+  products={lookups.data?.availablePodProducts ?? []}
+  getClubVenueIds={getClubVenueIds}
+  searchHosts={editor.searchHosts}
+  onPickImage={picker.pickImage}
+  onPickVideo={picker.pickVideo}
+  editingPodDocId={editor.editingPodDocId}
+  onSubmit={editor.submit}
+  eyebrow={eyebrow}
+  backLabel={backLabel}
+  onBack={() => navigate(backTo)}
+/>
+<MediaPickerDialog open={picker.pickerOpen} onClose={() => picker.settlePicker(null)} onPicked={picker.settlePicker} title={picker.title} accept={picker.accept} folder="/pods/media" />
+```
+
+`CLUB_ADMIN_CREATE_AUTO_POD` is the club's door into Auto Pods: `club_id` enrols the club at
+creation, so the offer only waits on a venue and a host. `CLUB_ADMIN_POD_AUDIT_LOGS` is the
+AI-monitored trail behind the row's monitor pill, and `CLUB_ADMIN_DELETE_POD` the soft delete —
+a cancelled pod stays editable, there is just nothing left to delete.
 
 ## Sample data
 
@@ -337,12 +417,19 @@ both surfaces render can be asserted without mounting either.
 | `useMediaPickerBridge` | `() => …` | `{ pickerOpen, pickerKind, pickImage, pickVideo, settlePicker, accept, title }` |
 | `useVenueSlots` | `(venueId: string, skip?: boolean) => …` | `{ slots: VenueSlot[], loading, error }` — the one slot query the picker and the spots bounds share. |
 | `useAutoPodEditorState` | `(args: UseAutoPodEditorStateArgs) => …` | `{ initialValues, busy, opError, submit }` — the Auto Pod twin of `usePodEditorState`; see "Auto Pod mode". |
-| `buildAutoPodInput` | `(values: PodFormValues) => CreateAutoPodInput` | The template only — no club, venue or host. Carries `pod_mode`, the meeting details and dates of a VIRTUAL offer, and the product rows of a PHYSICAL one; leaves payment terms and place charges out. |
+| `buildAutoPodInput` | `(values: PodFormValues) => CreateAutoPodInput` | The template only — the pod's content. No club, venue or host, and no price, spots, occurrence or meeting details either: the venue's slot fixes the date, and the host prices the pod and (on a VIRTUAL offer) sets the meeting link and window when they assign themselves. Carries `pod_mode` and the product rows of a PHYSICAL offer; leaves payment terms and place charges out. |
 | `autoPodToFormValues` | `(row: AutoPodTemplateRow) => PodFormValues` | Form values for editing an Auto Pod, blank-defaulted over `blankAutoPodFormValues`. |
 | `useAutoPodAudience` | `(subCategoryId: string, enabled: boolean) => AutoPodAudienceState` | Step 1's counts: who could enrol in the category. `complete` is true only when every count is above zero. |
 | `AUTO_POD_AUDIENCE` | `DocumentNode` | The admin-only `autoPodAudience(sub_category_id)` query behind it. |
 | `AUTO_POD_AUDIENCE_ROLES` / `audienceCount` | `readonly AutoPodAudienceRole[]` / `(audience, role) => number` | The three counts in card order, and one role's count off the payload. |
 | `AUTO_POD_DETAIL_FIELDS` | `(keyof PodFormValues)[]` | What step 2 validates before the review opens. |
+| `useClubAdminPodEditor` | `({ clubId, editingPod?, onSaved }: UseClubAdminPodEditorArgs) => …` | `usePodEditorState` wired for a Club Admin — `{ initialValues, busy, opError, submit, editingPodDocId, searchHosts, hostSeed }`; every save carries the pinned `club_id`. |
+| `CLUB_ADMIN_POD_CONFIG` | `PodFormConfig` | `makeNativeParityPodConfig({ showProducts: true })` — the flags both club-admin surfaces mount. |
+| `getClubVenueIds` | `(club: any) => string[]` | A partner club's linked venues, read off `meetup_venues_id`. |
+| `CLUB_ADMIN_POD_LOOKUPS` | `DocumentNode` | `myAdminClubs` + `myVenues` + `availablePodProducts` — the three pickers in one round trip. |
+| `CLUB_ADMIN_PODS_TABLE` / `CLUB_ADMIN_POD_FOR_EDIT` | `DocumentNode` | The club-scoped table page and the single-pod edit read; both select `CLUB_ADMIN_POD_ROW_FIELDS`, so a row prefills the editor. |
+| `CLUB_ADMIN_HOST_SEARCH` / `CLUB_ADMIN_POD_AUDIT_LOGS` | `DocumentNode` | The assign-host search (max 20 rows) and the pod's AI-monitored action trail. |
+| `CLUB_ADMIN_CREATE_POD` / `CLUB_ADMIN_UPDATE_POD` / `CLUB_ADMIN_DELETE_POD` / `CLUB_ADMIN_CREATE_AUTO_POD` | `DocumentNode` | The four writes; the Auto Pod one enrols the club at creation. |
 
 `VENUE_AVAILABLE_SLOTS` is that query document, exported for a consumer that has to read the same
 slots outside the form tree — the admin AI-fill books the venue's next free slot before it resets
@@ -457,31 +544,34 @@ One form, one schema; the mode is one more config flag.
    is a button opening a side drawer (`DuncitTable`) listing who is behind it. **Next stays
    disabled until all three counts are above zero** — an offer nobody can complete never goes live,
    and the admin should learn that before writing the pod.
-2. **Pod details** — Physical / Virtual first (a virtual offer gains the Meeting Details section and
-   loses Approved Products), then Images & videos, the reel, Basic Information (title, ticket price,
-   spots and occurrence — there is no Payment & Charges section), About, What this pod offers,
-   Available perks and, for a physical offer, Approved Products filtered to the chosen category.
-   Next runs the schema over `AUTO_POD_DETAIL_FIELDS` and holds the step until it passes.
+2. **Pod details** — Physical / Virtual first (a virtual offer loses Approved Products), then
+   Images & videos, the reel, Basic Information (title and hashtags — no price, spots or
+   occurrence: the host sets them when they assign themselves, within the venue's capacity),
+   About, What this pod offers, Available perks and, for a physical offer, Approved Products
+   filtered to the chosen category. There is no where/when or Meeting Details section in either
+   mode. Next runs the schema over `AUTO_POD_DETAIL_FIELDS` and holds the step until it passes.
 3. **Review & roll out** — every field read back read-only above the one submit button:
-   *Roll out Auto Pod* on create, *Save changes* on edit.
+   *Roll out Auto Pod* on create, *Save changes* on edit. The Next and submit buttons are keyed
+   apart on purpose: React once re-rendered the review step INTO the Next button's DOM node while
+   its click was still being dispatched, the browser then saw a submit button, and the offer rolled
+   out the moment step 3 opened.
 
 What `autoPod: true` changes:
 
 | Ordinary pod | Auto Pod mode |
 | --- | --- |
 | Club picker (category inherited from the club) | `AutoPodCategoryField` — writes `super_category_id` + `sub_category_id`; only venues, hosts and clubs in that sub-category are ever offered the pod. |
-| Hosts, venue slot, date/time | Gone — a venue brings the slot when it enrols. A VIRTUAL offer has no venue, so its meeting link, notes and start/end are written here instead and it waits on a host and a club only. |
-| Payment & Charges section | Dropped. Price, spots and occurrence move into Basic Information; place charges and the earnings projection need a venue the template does not have. |
+| Hosts, venue slot, date/time, meeting details | Gone — a venue brings the slot when it enrols, and the host brings the meeting link and window to a VIRTUAL offer (which has no venue and waits on a host and a club only) when they assign themselves. |
+| Payment & Charges section | Dropped, and nothing replaces it: the template carries no price, spots or occurrence. The host prices the pod at assignment against the venue's real slot price; place charges and the earnings projection need a venue the template does not have. |
 | Products section | Kept for a PHYSICAL offer, filtered to the template's category (`usePodCategoryClub` hands the product rules a club-shaped stand-in). |
 | `pod_type` select | Fixed to `AUTO_POD_TYPE` (`'PAID'`) — an Auto Pod is never free. |
 | "Save as Draft" | Gone; the template is either rolled out or not. |
 
 `makePodSchema(config, t)` swaps the club/venue/host rules for the template's own: a category is
-required, the ticket price floor is 1, spots are 2–999 (the host attends free, so two is the fewest
-that bill anyone), at least one image, and — for a VIRTUAL offer — a valid meeting link plus a future
-start and end. `lockCategory: true` shows the category read-only — a Club Admin opening one for
-their club, or a template a host or club has already enrolled on (the server refuses a category
-change from then on).
+required and at least one image — nothing else, because the price, the spots and the meeting
+details are not the template's. `lockCategory: true` shows the category read-only — a Club Admin
+opening one for their club, or a template a host or club has already enrolled on (the server
+refuses a category change from then on).
 
 A sensible console config:
 

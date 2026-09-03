@@ -29,6 +29,8 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
+import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import type { ProfileIconKey } from './profileSections';
 
 const ICONS: Record<ProfileIconKey, JSX.Element> = {
@@ -72,6 +74,10 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   // An Auto Pod is a pod that assembled itself out of three enrolments — the
   // sparkle reads as "made for you" rather than as another studio destination.
   autopods: <AutoAwesomeIcon />,
+  // The Club Admin menu's dashboard and its AI pod monitor — the same glyphs
+  // the two pages open with, so a row reads like the page it leads to.
+  dashboard: <SpaceDashboardIcon />,
+  monitoring: <MonitorHeartIcon />,
 };
 
 export function profileIcon(key: ProfileIconKey): JSX.Element {

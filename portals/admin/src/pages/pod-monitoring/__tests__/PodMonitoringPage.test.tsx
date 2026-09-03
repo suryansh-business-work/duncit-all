@@ -4,7 +4,7 @@ import { fireEvent, screen } from '@testing-library/react';
 import type { TableFetch } from '@duncit/table';
 import { renderWithProviders } from '../../../__tests__/testkit';
 import PodMonitoringPage from '../PodMonitoringPage';
-import type { PodAuditLog } from '../queries';
+import type { PodAuditLog } from '@duncit/utils';
 
 const makeLog = (over: Partial<PodAuditLog> = {}): PodAuditLog => ({
   id: 'log-1',

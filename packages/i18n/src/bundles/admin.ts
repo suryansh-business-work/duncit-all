@@ -331,6 +331,12 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       autoPodExpiryLabel: 'Hours',
       autoPodExpiryMin: 'Between 1 and 720 hours.',
       autoPodExpiryInvalid: 'Enter a whole number between 1 and 720.',
+      autoPodAssignmentTitle: 'Auto Pods — assignment window',
+      autoPodAssignmentDesc:
+        'How many hours after an Auto Pod is rolled out its venue, host and club admin have to all enrol. Every card counts this down live. When it runs out with anyone still missing, the offer is released — the venue’s slot and the host are freed, and everyone who had enrolled is emailed which roles never completed.',
+      autoPodAssignmentLabel: 'Hours',
+      autoPodAssignmentMin: 'Between 1 and 720 hours. Default 72.',
+      autoPodAssignmentInvalid: 'Enter a whole number between 1 and 720.',
       autoPodPenaltyTitle: 'Auto Pods — cancellation penalty',
       autoPodPenaltyDesc:
         'Account Health points a venue or host loses by cancelling an Auto Pod they had enrolled in. The warning they see before cancelling states this number; 0 disables the penalty.',

@@ -44,22 +44,6 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       submitAddress: 'Submit address',
       submitting: 'Submitting…',
     },
-    /**
-     * The Status chip on every partner pods table AND the Club Admin pods
-     * page's status filter read these — one set of words, so a pod can never
-     * be filtered under one name and labelled with another. The English copy
-     * matches the chips these keys replaced.
-     */
-    podStatus: {
-      filterLabel: 'Status',
-      all: 'All statuses',
-      active: 'Active',
-      draft: 'Draft',
-      awaitingVenue: 'Awaiting venue',
-      venueRejected: 'Venue rejected',
-      completed: 'Completed',
-      cancelled: 'Cancelled',
-    },
     becomeHostPage: {
       aadharNumber: 'Aadhar number',
       applicationUnderReview: 'Application under review.',
@@ -80,75 +64,6 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       withdrawHostApplication: 'Withdraw host application?',
       yourHostApplicationWillMoveBack: 'Your host application will move back to draft and can be edited before submitting again.',
       yourHostedPods: 'Your hosted pods',
-    },
-
-    clubAdminClubPodsPage: {
-      clubAdminPods: 'Club Admin · Pods',
-      createEditAndDeletePodsFor: 'Create, edit and delete pods for this club.',
-      deletePod: 'Delete pod',
-      deletePod2: 'Delete pod?',
-      editPod: 'Edit pod',
-      podAttendance: 'Pod Attendance',
-      podDeleted: 'Pod deleted.',
-      podDetails: 'Pod details',
-      thisClubHasNoPodsYet: 'This club has no pods yet. Create the first one.',
-    },
-
-    clubAdminClubsPage: {
-      superCategory: 'Super category',
-      verified: 'Verified',
-      yourClubs: 'Your Clubs',
-    },
-
-    clubAdminDashboardPage: {
-      activeHosts: 'Active Hosts',
-      allTime: 'All time',
-      assignedClubs: 'Assigned Clubs',
-      avgRating: 'Avg Rating',
-      backedOut: 'Backed Out',
-      bookings: 'Bookings',
-      clubAdminDashboard: 'Club Admin Dashboard',
-      clubs: 'Clubs',
-      community: 'Community',
-      completedPods: 'Completed Pods',
-      fillRate: 'Fill Rate',
-      last12Months: 'Last 12 months',
-      last30Days: 'Last 30 days',
-      monthlyTrend: 'Monthly trend',
-      monthlyTrendChart: 'Monthly trend chart',
-      newFollowers: 'New Followers',
-      noCategoryOnYourClubs: 'No category is set on your clubs yet.',
-      notEnoughDataToDrawA: 'Not enough data to draw a trend yet.',
-      overview: 'Overview',
-      partnerToolsClubAdmin: 'Partner tools · Club Admin',
-      perClubBreakdown: 'Per-club breakdown',
-      range: 'Range',
-      rating: 'Rating',
-      revenue: 'Revenue',
-      thisMonth: 'This month',
-      totalAttendees: 'Total Attendees',
-      totalBookings: 'Total Bookings',
-      totalFollowers: 'Total Followers',
-      totalPods: 'Total pods',
-      totalSpots: 'Total Spots',
-      upcomingPods: 'Upcoming Pods',
-      yourCategories: 'Your Categories',
-      yourCategoriesHint: 'The categories your clubs run under.',
-    },
-
-    clubAdminEditClubPage: {
-      addClubImage: 'Add club image',
-    },
-
-    clubAdminMonitoringPage: {
-      aiRisk: 'AI Risk',
-      aiSummary: 'AI Summary',
-      changes: 'Changes',
-      noPodActivityRecordedYet: 'No pod activity recorded yet.',
-    },
-
-    clubAdminPodAttendancePage: {
-      backToClubPods: 'Club pods',
     },
 
     common: {
@@ -176,7 +91,6 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       ifscCode: 'IFSC code',
       locality: 'Locality',
       newPod: 'New Pod',
-      noClubsAreAssignedToYou: 'No clubs are assigned to you yet.',
       noPodsCreatedFromYourPartner: 'No pods created from your partner account yet.',
       partnerTools: 'Partner tools',
       partnerToolsVenues: 'Partner tools · Venues',
@@ -185,6 +99,7 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       productManagement: 'Product management',
       quickActions: 'Quick actions',
       registerYourVenue: 'Register your venue',
+      superCategory: 'Super category',
       totalPods: 'Total Pods',
       totalRevenue: 'Total Revenue',
       upcoming: 'Upcoming',

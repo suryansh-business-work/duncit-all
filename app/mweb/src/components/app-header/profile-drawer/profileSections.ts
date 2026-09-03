@@ -36,7 +36,9 @@ export type ProfileIconKey =
   | 'calendar'
   | 'availability'
   | 'settings'
-  | 'autopods';
+  | 'autopods'
+  | 'dashboard'
+  | 'monitoring';
 
 export interface ProfileTile {
   key: string;

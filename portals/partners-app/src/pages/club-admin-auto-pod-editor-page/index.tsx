@@ -5,7 +5,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import { QueryGuard } from '@duncit/ui';
-import { CLUB_ADMIN_POD_LOOKUPS } from '../club-admin-club-pods-page/queries';
+import { CLUB_ADMIN_POD_LOOKUPS } from '@duncit/pod-form';
 import ClubAutoPodEditor, { type ClubAutoPodClub } from './ClubAutoPodEditor';
 
 /**

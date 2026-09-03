@@ -41,12 +41,13 @@ const makeDeps = (over: Partial<AutoPodColumnDeps> = {}): AutoPodColumnDeps => (
   t,
   labels,
   formatDateTime: (value: string) => `FMT<${value}>`,
+  onViewDetails: vi.fn(),
   onEdit: vi.fn(),
   onCancel: vi.fn(),
   onDelete: vi.fn(),
   onViewPod: vi.fn(),
   onToggleActive: vi.fn(),
-  onVenueDetails: vi.fn(),
+  onEnrolledDetails: vi.fn(),
   ...over,
 });
 
@@ -68,12 +69,13 @@ const renderCell = (field: string, row: AutoPodTableRow, deps: Partial<AutoPodCo
 const HOST = { user_id: 'u2', host_name: 'Jane Doe', assigned_at: '2026-01-06T00:00:00.000Z' };
 
 describe('getAutoPodColumns / column set', () => {
-  it('builds the PRD column set in order: id, title, category, dependency, stage, status, created, updated, actions', () => {
+  it('builds the PRD column set in order: id, title, category, mode, dependency, stage, status, created, updated, actions', () => {
     const fields = getAutoPodColumns(makeDeps()).map((c) => c.field);
     expect(fields).toEqual([
       'auto_pod_no',
       'pod_title',
       'category_path',
+      'pod_mode',
       'pending',
       'stage',
       'is_active',
@@ -184,9 +186,10 @@ describe('getAutoPodColumns / cell renderers', () => {
     expect(screen.getByLabelText(`${labels.tick('club')} — ${labels.tickPending}`)).toBeInTheDocument();
   });
 
-  // The green Venue dot is the way into the venue's details; a pending one is not a button.
-  it('opens the venue’s details from its green dot, and only from a green one', () => {
-    const onVenueDetails = vi.fn();
+  // A green dot is the way into whoever took that place, named by its role; a
+  // pending one is not a button at all.
+  it('opens the enrolled partner’s details from a green dot, and only from a green one', () => {
+    const onEnrolledDetails = vi.fn();
     const row = makeRow({
       venue_claim: {
         venue_id: 'ven-1',
@@ -198,13 +201,18 @@ describe('getAutoPodColumns / cell renderers', () => {
         slot_price: 1200,
         accepted_at: '2026-09-01T07:00:00.000Z',
       },
+      host_claim: { user_id: 'u-9', host_name: 'Asha Menon', assigned_at: '2026-09-01T08:00:00.000Z' },
     });
-    renderCell('pending', row, { onVenueDetails });
+    renderCell('pending', row, { onEnrolledDetails });
     fireEvent.click(screen.getByTestId('auto-pod-dependency-venue'));
-    expect(onVenueDetails).toHaveBeenCalledWith(row);
+    expect(onEnrolledDetails).toHaveBeenCalledWith(row, 'venue');
+    fireEvent.click(screen.getByTestId('auto-pod-dependency-host'));
+    expect(onEnrolledDetails).toHaveBeenCalledWith(row, 'host');
+    // Nobody has claimed it for a club yet, so that stop stays a plain dot.
+    expect(screen.queryByTestId('auto-pod-dependency-club')).toBeNull();
 
     cleanup();
-    renderCell('pending', makeRow(), { onVenueDetails });
+    renderCell('pending', makeRow(), { onEnrolledDetails });
     expect(screen.queryByTestId('auto-pod-dependency-venue')).toBeNull();
   });
 

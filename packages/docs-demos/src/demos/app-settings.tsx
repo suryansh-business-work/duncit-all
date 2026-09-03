@@ -19,6 +19,14 @@ const productVisibility = (mock: FlagMock) => {
   return { pending, visible: !pending && flag?.enabled === true };
 };
 
+/** What `useFeatureFlagState(key)` answers for any flag: the same derivation,
+ * with `pending` telling a route gate to wait rather than redirect. */
+const flagState = (mock: FlagMock, key: string) => {
+  const pending = mock.loading && mock.publicFeatureFlags.length === 0;
+  const flag = mock.publicFeatureFlags.find((f) => f.key === key);
+  return { pending, enabled: !pending && flag?.enabled === true };
+};
+
 export default defineDemos('app-settings', [
   defineDemo<TitleMock>({
     id: 'page-title',
@@ -38,7 +46,7 @@ export default defineDemos('app-settings', [
     id: 'product-visibility',
     title: 'The product kill switch, and why a route gate waits',
     note:
-      "Flip is_product_visible to true and every product surface returns. Empty the flag list to see the loading beat: visible is already false (nothing flashes on), but pending says a route gate must WAIT rather than redirect a bookmarked /shop link home.",
+      "Flip is_product_visible to true and every product surface returns. Empty the flag list to see the loading beat: visible is already false (nothing flashes on), but pending says a route gate must WAIT rather than redirect a bookmarked /shop link home. The last line is useFeatureFlagState('auto_pods') — the same two-part answer for any flag, which is what keeps a reload of Admin > Auto Pods on Auto Pods.",
     mock: {
       loading: true,
       publicFeatureFlags: [
@@ -49,12 +57,17 @@ export default defineDemos('app-settings', [
     },
     compute: (mock) => {
       const { pending, visible } = productVisibility(mock);
+      const autoPods = flagState(mock, 'auto_pods');
+      let autoPodsGate = autoPods.enabled ? 'render Auto Pods' : 'redirect to /pods';
+      if (autoPods.pending) autoPodsGate = 'wait — the flags have not landed';
       return {
         [PRODUCT_VISIBILITY_FLAG]: visible,
         'header cart icon': visible ? 'shown' : 'hidden',
         'Pod Shop on a pod': visible ? 'shown' : 'hidden',
         '/shop, /cart, /orders': visible ? 'render' : 'redirect to /',
         'route gate verdict': pending ? 'wait — the flags have not landed' : 'decide now',
+        "useFeatureFlagState('auto_pods')": autoPods,
+        '/auto-pods on reload': autoPodsGate,
       };
     },
   }),

@@ -156,6 +156,7 @@ export default function PodsPage() {
         onPicked={(url) => picker.settlePicker(url)}
         folder="/pods/media"
         title={picker.title}
+        seedQuery={picker.seedQuery}
         accept={picker.accept}
       />
 

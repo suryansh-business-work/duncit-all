@@ -1,14 +1,19 @@
-import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 
-import { DuncitButton } from '@/components/DuncitButton';
-import { useTranslation } from '@/hooks/useTranslation';
+import { AvailabilityGrid } from './AvailabilityGrid';
 import { AvailabilityLegend } from './AvailabilityLegend';
-import { AvailabilityMonthGrid } from './AvailabilityMonthGrid';
-import type { DayCounts } from './availability-grid';
+import { AvailabilityToolbar } from './AvailabilityToolbar';
+import type { CalendarView, DayCounts } from './availability-grid';
 
 interface Props {
-  monthKey: string;
-  onMonthChange: (monthKey: string) => void;
+  view: CalendarView;
+  onView: (view: CalendarView) => void;
+  /** The instant the active period is built around. */
+  anchor: Date;
+  periodLabel: string;
+  onShift: (direction: 1 | -1) => void;
+  canGoNext: boolean;
+  onToday: () => void;
   counts: ReadonlyMap<string, DayCounts>;
   holidays: ReadonlySet<string>;
   todayKey: string;
@@ -20,11 +25,16 @@ interface Props {
   onRecurring: () => void;
 }
 
-/** The calendar card: the recurring action, the month grid and its legend —
- * the body of the MUI VenueAvailabilityEditor's card (rule 27). */
+/** The calendar card: the toolbar, the period's grid and its legend — the
+ * body of the MUI VenueAvailabilityEditor's card (rule 27). */
 export function AvailabilityCalendarCard({
-  monthKey,
-  onMonthChange,
+  view,
+  onView,
+  anchor,
+  periodLabel,
+  onShift,
+  canGoNext,
+  onToday,
   counts,
   holidays,
   todayKey,
@@ -35,7 +45,6 @@ export function AvailabilityCalendarCard({
   error,
   onRecurring,
 }: Readonly<Props>) {
-  const { t } = useTranslation();
   return (
     <YStack
       testID="availability-calendar"
@@ -46,24 +55,24 @@ export function AvailabilityCalendarCard({
       borderColor="$borderColor"
       backgroundColor="$surface"
     >
-      <XStack alignItems="center" justifyContent="flex-end" gap={10}>
-        {isLoading ? <Spinner testID="availability-loading" color="$primary" /> : null}
-        <DuncitButton
-          testID="availability-recurring"
-          label={t('availability.toolbar.recurring')}
-          onPress={onRecurring}
-          variant="outline"
-          size="sm"
-        />
-      </XStack>
+      <AvailabilityToolbar
+        view={view}
+        onView={onView}
+        periodLabel={periodLabel}
+        onShift={onShift}
+        canGoNext={canGoNext}
+        onToday={onToday}
+        onRecurring={onRecurring}
+      />
       {error ? (
         <Text testID="availability-error" fontSize={12.5} color="$danger">
           {error}
         </Text>
       ) : null}
-      <AvailabilityMonthGrid
-        monthKey={monthKey}
-        onMonthChange={onMonthChange}
+      {isLoading ? <Spinner testID="availability-loading" color="$primary" /> : null}
+      <AvailabilityGrid
+        view={view}
+        anchor={anchor}
         counts={counts}
         holidays={holidays}
         todayKey={todayKey}

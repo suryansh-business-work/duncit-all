@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { Text, YStack } from 'tamagui';
-import type { VenueCancelPodResult } from '@duncit/utils';
+import { venueCancelSuccessMessage, type VenueCancelPodResult } from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import type { StudioPod } from './studio-pods';
 import { StudioPodsSection } from './StudioPodsSection';
 import type { StudioPodsState } from './useStudioPods';
-import { cancelSuccessMessage } from './venue-cancel-pod.form';
 import { VenueCancelPodSheet } from './VenueCancelPodSheet';
 import { VenuePodDetailSheet } from './VenuePodDetailSheet';
 
@@ -28,7 +27,7 @@ export function VenueStudioPods({ state, testID }: Readonly<Props>) {
 
   const onCancelled = (result: VenueCancelPodResult) => {
     setCancelling(null);
-    setNotice(cancelSuccessMessage(result, t));
+    setNotice(venueCancelSuccessMessage(result, t));
     state.refetch();
   };
 

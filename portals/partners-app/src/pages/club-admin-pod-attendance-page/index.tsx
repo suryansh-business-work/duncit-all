@@ -27,7 +27,7 @@ export default function ClubAdminPodAttendancePage() {
   return (
     <Stack spacing={2}>
       <BackButton to={`/club-admin/clubs/${clubId}`} sx={{ alignSelf: 'flex-start' }}>
-        {t('partners.clubAdminPodAttendancePage.backToClubPods')}
+        {t('clubAdmin.pods.clubPods')}
       </BackButton>
       <ClubAdminAttendanceSection podId={id} />
     </Stack>

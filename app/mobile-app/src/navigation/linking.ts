@@ -93,6 +93,13 @@ export const linking: LinkingOptions<RootStackParamList> = {
       ClubAutoPods: 'clubs/auto-pods',
       ProductsManage: 'products/manage',
       ClubManage: 'clubs/manage',
+      // The Club Admin's pages, on mWeb's exact paths (rule 27).
+      ClubAdminDashboard: 'clubs/dashboard',
+      ClubPodMonitoring: 'clubs/monitoring',
+      ClubPods: 'clubs/:clubId/pods',
+      ClubPodEditor: 'clubs/:clubId/pods/new',
+      ClubPodEdit: 'clubs/:clubId/pods/:podId/edit',
+      ClubEdit: 'clubs/:clubId/edit',
       BeClubAdmin: 'be-club-admin',
       Support: 'support',
       Sos: 'support/sos',

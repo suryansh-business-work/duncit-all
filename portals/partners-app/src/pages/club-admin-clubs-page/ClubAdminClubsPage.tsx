@@ -27,11 +27,11 @@ export default function ClubAdminClubsPage() {
       <Stack spacing={0.25}>
         <Typography variant="h5" sx={{
           fontWeight: 950
-        }}>{t('partners.clubAdminClubsPage.yourClubs')}</Typography>
+        }}>{t('clubAdmin.clubs.yourClubs')}</Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
-          Clubs you administer. Click a club to open its details, or jump straight to its pods.
+          {t('clubAdmin.clubs.subtitle')}
         </Typography>
       </Stack>
 
@@ -41,9 +41,9 @@ export default function ClubAdminClubsPage() {
         fetchRows={fetchRows}
         getRowId={getClubRowId}
         onRowClick={(club) => navigate(`/club-admin/clubs/${club.id}/edit`)}
-        emptyText={t('partners.common.noClubsAreAssignedToYou')}
+        emptyText={t('clubAdmin.clubs.noClubs')}
         defaultSort={{ field: 'club_name', dir: 'asc' }}
-        searchPlaceholder="Search clubs"
+        searchPlaceholder={t('clubAdmin.clubs.search')}
       />
     </Stack>
   );

@@ -23,6 +23,7 @@ import {
   buildWithdrawInput,
   blankWithdrawValues,
   makeCancellationPolicySchema,
+  makeVenueCancelPodSchema,
   toPolicyInput,
   type CancellationPolicyValues,
   type WithdrawValues,
@@ -199,6 +200,8 @@ export default defineDemos('forms', [
         'Delete account': say(
           makeDeleteAccountSchema(t).safeParse({ otp: mock.otp, reason: mock.reason }),
         ),
+        // The venue owner's reason for cancelling a pod: the same box, a floor of 5.
+        'Venue cancels a pod': say(makeVenueCancelPodSchema(t).safeParse({ reason: mock.reason })),
         [`Contact change (${mock.channel})`]: say(
           makeContactValueSchema(mock.channel, t).safeParse({
             email: mock.email,

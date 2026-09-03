@@ -1,30 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, MenuItem, Stack, TextField, Typography } from '@mui/material';
-import { subDays, subMonths, startOfMonth } from 'date-fns';
 import { useApolloTableFetch } from '@duncit/table';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import {
-  CLUB_ADMIN_DASHBOARD,
-  CLUB_ADMIN_DASHBOARD_TABLE,
+  DEFAULT_CLUB_ADMIN_RANGE,
+  clubAdminRangeFrom,
+  clubAdminRangeLabels,
+  clubAdminRanges,
   emptyClubAdminDashboard,
   type ClubAdminClubRow,
   type ClubAdminDashboard,
-} from './queries';
+  type ClubAdminRange,
+} from '@duncit/utils';
+import { CLUB_ADMIN_DASHBOARD, CLUB_ADMIN_DASHBOARD_TABLE } from './queries';
 import ClubAdminCategoryCard from './ClubAdminCategoryCard';
 import ClubAdminKpiCards from './ClubAdminKpiCards';
 import ClubAdminTrendChart from './ClubAdminTrendChart';
 import ClubAdminClubsTable from './ClubAdminClubsTable';
 import { useTranslation } from '@duncit/shell';
-
-type Translate = ReturnType<typeof useTranslation>['t'];
-
-const ranges = (t: Translate) =>[
-  { value: '30d', label: t('partners.clubAdminDashboardPage.last30Days'), from: () => subDays(new Date(), 30) },
-  { value: 'month', label: t('partners.clubAdminDashboardPage.thisMonth'), from: () => startOfMonth(new Date()) },
-  { value: '12m', label: t('partners.clubAdminDashboardPage.last12Months'), from: () => subMonths(new Date(), 12) },
-  { value: 'all', label: t('partners.clubAdminDashboardPage.allTime'), from: () => null },
-];
 
 const HERO_SX = {
   p: { xs: 2, md: 3 },
@@ -42,14 +36,12 @@ const RANGE_SX = {
 
 export default function ClubAdminDashboardPage() {
   const { t } = useTranslation();
-  const [range, setRange] = useState('12m');
+  const [range, setRange] = useState<ClubAdminRange>(DEFAULT_CLUB_ADMIN_RANGE);
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
+  const rangeLabels = useMemo(() => clubAdminRangeLabels(t), [t]);
 
-  const from = useMemo(() => {
-    const start = ranges(t).find((item) => item.value === range)?.from() ?? null;
-    return start ? start.toISOString() : null;
-  }, [range]);
+  const from = useMemo(() => clubAdminRangeFrom(range), [range]);
 
   const { data, loading, error } = useQuery<any>(CLUB_ADMIN_DASHBOARD, {
     variables: { from, to: null },
@@ -124,24 +116,24 @@ export default function ClubAdminDashboardPage() {
               alignItems: { md: 'center' }
             }}>
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="overline" sx={{ opacity: 0.7, fontWeight: 800 }}>{t('partners.clubAdminDashboardPage.partnerToolsClubAdmin')}</Typography>
+                <Typography variant="overline" sx={{ opacity: 0.7, fontWeight: 800 }}>{t('clubAdmin.dashboard.eyebrow')}</Typography>
                 <Typography variant="h5" sx={{
                   fontWeight: 950
-                }}>{t('partners.clubAdminDashboardPage.clubAdminDashboard')}</Typography>
+                }}>{t('clubAdmin.dashboard.title')}</Typography>
                 <Typography variant="body2" sx={{ opacity: 0.75 }}>
-                  Pods, bookings, community and revenue across every club you administer.
+                  {t('clubAdmin.dashboard.subtitle')}
                 </Typography>
               </Box>
               <TextField
                 select
                 size="small"
-                label={t('partners.clubAdminDashboardPage.range')}
+                label={t('clubAdmin.dashboard.range')}
                 value={range}
-                onChange={(event) => setRange(event.target.value)}
+                onChange={(event) => setRange(event.target.value as ClubAdminRange)}
                 sx={RANGE_SX}
               >
-                {ranges(t).map((item) => (
-                  <MenuItem key={item.value} value={item.value}>{item.label}</MenuItem>
+                {clubAdminRanges.map((item) => (
+                  <MenuItem key={item.value} value={item.value}>{rangeLabels[item.value]}</MenuItem>
                 ))}
               </TextField>
             </Stack>

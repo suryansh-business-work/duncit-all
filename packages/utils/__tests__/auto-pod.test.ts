@@ -3,10 +3,12 @@ import {
   autoPodActionable,
   autoPodCityLabel,
   autoPodEnrolledCount,
+  autoPodHostMeetingReady,
   autoPodHostNeedsLocation,
   autoPodMissingRoles,
   autoPodModeCount,
   autoPodNextRole,
+  autoPodPriced,
   autoPodRoles,
   autoPodTicks,
   autoPodTimeLeft,
@@ -354,11 +356,15 @@ describe('a virtual offer', () => {
 describe('autoPodTimeLeft', () => {
   const now = Date.UTC(2026, 8, 2, 10, 0, 0);
 
-  it('splits what is left into whole hours and the minutes over, rounding minutes up', () => {
-    expect(autoPodTimeLeft(new Date(now + 5 * 3_600_000 + 12 * 60_000).toISOString(), now)).toEqual({ hours: 5, minutes: 12 });
-    // Ten seconds left still reads as a minute, never "0h 0m" while the offer is there.
-    expect(autoPodTimeLeft(new Date(now + 10_000).toISOString(), now)).toEqual({ hours: 0, minutes: 1 });
-    expect(autoPodTimeLeft(new Date(now + 24 * 3_600_000).toISOString(), now)).toEqual({ hours: 24, minutes: 0 });
+  it('splits what is left into whole hours, the minutes over and the seconds over, rounding seconds up', () => {
+    expect(autoPodTimeLeft(new Date(now + 5 * 3_600_000 + 12 * 60_000 + 30_000).toISOString(), now)).toEqual({
+      hours: 5,
+      minutes: 12,
+      seconds: 30,
+    });
+    // Half a second left still reads as a second, never "0h 0m 0s" while the offer is there.
+    expect(autoPodTimeLeft(new Date(now + 500).toISOString(), now)).toEqual({ hours: 0, minutes: 0, seconds: 1 });
+    expect(autoPodTimeLeft(new Date(now + 24 * 3_600_000).toISOString(), now)).toEqual({ hours: 24, minutes: 0, seconds: 0 });
   });
 
   it('is null with no deadline, a past one, or an unreadable one', () => {
@@ -366,5 +372,48 @@ describe('autoPodTimeLeft', () => {
     expect(autoPodTimeLeft(undefined, now)).toBeNull();
     expect(autoPodTimeLeft(new Date(now - 1).toISOString(), now)).toBeNull();
     expect(autoPodTimeLeft('not a date', now)).toBeNull();
+  });
+});
+
+describe('autoPodPriced', () => {
+  it('is priced only once the host has set both a ticket price and spots', () => {
+    expect(autoPodPriced({ pod_amount: 499, no_of_spots: 8 })).toBe(true);
+    expect(autoPodPriced({ pod_amount: 0, no_of_spots: 8 })).toBe(false);
+    expect(autoPodPriced({ pod_amount: 499, no_of_spots: 0 })).toBe(false);
+  });
+});
+
+describe('autoPodHostMeetingReady', () => {
+  const now = Date.UTC(2026, 8, 4, 10, 0, 0);
+  const ready = {
+    meeting_platform: 'Google Meet',
+    meeting_url: ' https://meet.google.com/abc-defg-hij ',
+    pod_date_time: new Date(now + 3_600_000),
+    pod_end_date_time: new Date(now + 7_200_000),
+  };
+
+  it('accepts an http(s) link with a future start and a later end', () => {
+    expect(autoPodHostMeetingReady(ready, now)).toBe(true);
+    expect(autoPodHostMeetingReady({ ...ready, meeting_url: 'http://duncit.com/live' }, now)).toBe(
+      true
+    );
+  });
+
+  it('refuses a link that is not an http(s) URL', () => {
+    expect(autoPodHostMeetingReady({ ...ready, meeting_url: 'meet.google.com/abc' }, now)).toBe(
+      false
+    );
+    expect(autoPodHostMeetingReady({ ...ready, meeting_url: 'ftp://duncit.com/live' }, now)).toBe(
+      false
+    );
+  });
+
+  it('refuses a start that is not ahead, an end before the start, or a missing date', () => {
+    expect(autoPodHostMeetingReady({ ...ready, pod_date_time: new Date(now) }, now)).toBe(false);
+    expect(
+      autoPodHostMeetingReady({ ...ready, pod_end_date_time: new Date(now + 1_800_000) }, now)
+    ).toBe(false);
+    expect(autoPodHostMeetingReady({ ...ready, pod_date_time: null }, now)).toBe(false);
+    expect(autoPodHostMeetingReady({ ...ready, pod_end_date_time: null }, now)).toBe(false);
   });
 });

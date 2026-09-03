@@ -9,6 +9,8 @@ export { StatCard, usageColor } from './stat-card';
 export type { StatCardBarColor, StatCardIconBox, StatCardLayout, StatCardProps } from './stat-card';
 export { STATUS_CHIP_COLORS, StatusChip } from './StatusChip';
 export type { StatusChipColor, StatusChipProps, StatusColorMap } from './StatusChip';
+export { ChipList } from './ChipList';
+export type { ChipListProps } from './ChipList';
 export { InfoRow } from './InfoRow';
 export type { InfoRowProps, InfoRowVariant } from './InfoRow';
 export { ImagePreview } from './ImagePreview';

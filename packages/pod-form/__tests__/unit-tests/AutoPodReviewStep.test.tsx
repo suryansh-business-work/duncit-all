@@ -18,16 +18,12 @@ vi.mock('@apollo/client/react', () => ({
 }));
 
 const PRODUCTS = [{ id: 'p1', product_name: 'Rackets', unit_cost: 450 }];
-const PLATFORMS = [{ value: 'GOOGLE_MEET', label: 'Google Meet' }];
 
 const filled: Partial<PodFormValues> = {
   super_category_id: 'sup-sports',
   sub_category_id: 'sub-badminton',
   pod_title: '  Sunday Doubles  ',
   pod_type: 'PAID',
-  pod_amount: 500,
-  no_of_spots: 8,
-  pod_occurrence: 'WEEKLY',
   pod_description: 'Friendly doubles.',
   pod_info: 'Bring shoes.',
   pod_hashtag_text: '#badminton, weekend',
@@ -53,15 +49,14 @@ function renderReview(defaults: Partial<PodFormValues>, data: Partial<PodFormDat
 }
 
 describe('AutoPodReviewStep', () => {
+  // The template is the pod's CONTENT: no price, spots, occurrence or meeting
+  // rows, because the host brings all of those when they assign themselves.
   it('reads every field of a physical template back, read-only', () => {
     renderReview(filled, { finance: { platform_fee_pct: 5, gst_pct: 18, currency_symbol: '₹' } });
     expect(screen.getByRole('alert')).toHaveTextContent('Read it through once more.');
     expect(screen.getByText('Sports › Racket › Badminton')).toBeInTheDocument();
     expect(screen.getByText('Physical')).toBeInTheDocument();
     expect(screen.getByText('Sunday Doubles')).toBeInTheDocument();
-    expect(screen.getByText(/₹\s?500/)).toBeInTheDocument();
-    expect(screen.getByText('8')).toBeInTheDocument();
-    expect(screen.getByText('Weekly')).toBeInTheDocument();
     expect(screen.getByText('Friendly doubles.')).toBeInTheDocument();
     expect(screen.getByText('Bring shoes.')).toBeInTheDocument();
     expect(screen.getByText('badminton')).toBeInTheDocument();
@@ -73,57 +68,39 @@ describe('AutoPodReviewStep', () => {
     expect(screen.getByText('gone × 1')).toBeInTheDocument();
     expect(screen.getByText('2 file(s)')).toBeInTheDocument();
     expect(screen.getByText('https://cdn.example.com/reel.mp4')).toBeInTheDocument();
-    // A physical template has no meeting rows.
+    // None of these belong to a template any more.
+    expect(screen.queryByText('Ticket price')).not.toBeInTheDocument();
+    expect(screen.queryByText('Spots')).not.toBeInTheDocument();
+    expect(screen.queryByText('Occurrence')).not.toBeInTheDocument();
     expect(screen.queryByText('Meeting link')).not.toBeInTheDocument();
   });
 
-  it('adds the meeting window and details of a virtual template, and drops the products', () => {
-    renderReview(
-      {
-        ...filled,
-        pod_mode: 'VIRTUAL',
-        meeting_platform: 'GOOGLE_MEET',
-        meeting_url: 'https://meet.google.com/abc',
-        meeting_notes: '',
-        pod_date_time: new Date(Date.UTC(2030, 0, 5, 10, 0, 0)),
-        pod_end_date_time: new Date(Date.UTC(2030, 0, 5, 11, 30, 0)),
-      },
-      { meetingPlatforms: PLATFORMS },
-    );
+  it('names a virtual template as such, and drops the products it could not hand out', () => {
+    renderReview({ ...filled, pod_mode: 'VIRTUAL' });
     expect(screen.getByText('Virtual')).toBeInTheDocument();
-    expect(screen.getByText('2030-01-05 · 10:00 – 2030-01-05 · 11:30')).toBeInTheDocument();
-    // The platform's label, not its stored value.
-    expect(screen.getByText('Google Meet')).toBeInTheDocument();
-    expect(screen.getByText('https://meet.google.com/abc')).toBeInTheDocument();
     expect(screen.queryByText('Approved products')).not.toBeInTheDocument();
     expect(screen.queryByText('Rackets × 2')).not.toBeInTheDocument();
+    // Still the host's to bring, on a virtual offer above all.
+    expect(screen.queryByText('When')).not.toBeInTheDocument();
+    expect(screen.queryByText('Meeting platform')).not.toBeInTheDocument();
   });
 
-  it('shows the raw platform when it is not in the menu, and a start without an end on its own', () => {
-    renderReview({
-      ...filled,
-      pod_mode: 'VIRTUAL',
-      meeting_platform: 'Jitsi',
-      pod_date_time: new Date(Date.UTC(2030, 0, 5, 10, 0, 0)),
-      pod_end_date_time: null,
-    });
-    expect(screen.getByText('Jitsi')).toBeInTheDocument();
-    expect(screen.getByText('2030-01-05 · 10:00')).toBeInTheDocument();
+  // A row written before a mode existed carries a value no menu knows; the
+  // review echoes it rather than drawing a blank where the mode should be.
+  it('echoes a mode the menu does not know', () => {
+    renderReview({ ...filled, pod_mode: 'HYBRID' as PodFormValues['pod_mode'] });
+    expect(screen.getByText('HYBRID')).toBeInTheDocument();
   });
 
-  it('draws a dash for everything not written yet, and echoes a value no menu knows', () => {
+  it('draws a dash for everything not written yet', () => {
     renderReview({
       pod_type: 'PAID',
-      pod_amount: 0,
-      no_of_spots: 0,
       pod_mode: 'VIRTUAL',
-      pod_occurrence: 'CUSTOM',
       pod_hashtag_text: '',
     });
-    // Category, title, when, platform, link, notes, description, info, hashtags,
-    // offers, perks, reel — every empty row reads the same.
-    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(12);
-    expect(screen.getByText('CUSTOM')).toBeInTheDocument();
+    // Category, title, description, info, hashtags, offers, perks, reel — every
+    // empty row reads the same.
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(8);
     expect(screen.getByText('0 file(s)')).toBeInTheDocument();
   });
 });

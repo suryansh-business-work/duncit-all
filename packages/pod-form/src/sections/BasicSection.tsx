@@ -4,7 +4,6 @@ import HostSelectField from '../components/HostSelectField';
 import HostsField from '../components/HostsField';
 import PodModeToggle from '../components/PodModeToggle';
 import RhfTextField from '../components/RhfTextField';
-import AutoPodEconomicsFields from './AutoPodEconomicsFields';
 import { usePodFormData } from '../context';
 import type { PodFormValues } from '../types';
 import { useTranslation } from '../i18n/useTranslation';
@@ -44,14 +43,14 @@ export default function BasicSection() {
   const { control, setValue, formState: { errors } } = useFormContext<PodFormValues>();
   const clubId = useWatch({ control, name: 'club_id' });
 
-  // An Auto Pod's author decides the title, the economics and the tags: the
-  // club and the hosts are what the partners who enrol bring, and the mode is
-  // chosen above the sections by the stepper.
+  // An Auto Pod's author decides the title and the tags only: the club and
+  // the hosts are what the partners who enrol bring, the host prices the pod
+  // and picks its spots when they assign themselves (a venue's capacity
+  // bounds them), and the mode is chosen above the sections by the stepper.
   if (config.autoPod) {
     return (
       <Stack spacing={2}>
         <TitleField />
-        <AutoPodEconomicsFields />
         <HashtagsField />
       </Stack>
     );

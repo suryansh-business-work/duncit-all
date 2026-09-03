@@ -28,6 +28,8 @@ interface Props {
   pricing: PodPricingState;
   /** The range the host may size this pod within (sub-category min → venue capacity). */
   spots: SpotsBounds;
+  /** Off in Club Admin mode — the Organizer Terms are the host's undertaking. */
+  showTerms?: boolean;
 }
 
 /** Step 4 — Free/Paid cards, ticket price (with its suggested-price helper and
@@ -40,6 +42,7 @@ export function PricingStep({
   finance,
   pricing,
   spots,
+  showTerms = true,
 }: Readonly<Props>) {
   const { control, watch, setValue } = form;
   const { t } = useTranslation();
@@ -121,7 +124,7 @@ export function PricingStep({
           )}
         />
       ) : null}
-      <TermsAgreement form={form} />
+      {showTerms ? <TermsAgreement form={form} /> : null}
       <SuggestedPricesModal
         open={suggestionsOpen}
         onClose={() => setSuggestionsOpen(false)}

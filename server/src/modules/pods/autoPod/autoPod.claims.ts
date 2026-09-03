@@ -22,7 +22,12 @@ import { UserModel } from '@modules/access/user/user.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { venueSlotService, ensureOwnedVenue } from '@modules/venues/venueSlot/venueSlot.service';
-import { assertActiveHost, podService } from '@modules/pods/pod/pod.service';
+import {
+  assertActiveHost,
+  podService,
+  validateFutureDates,
+  validateMeetingDetails,
+} from '@modules/pods/pod/pod.service';
 import { breakdownService } from '@modules/finance/finance/breakdown.service';
 import { clubAdminService } from '@modules/clubs/clubAdmin/clubAdmin.service';
 import { logs } from '@observability/log';
@@ -211,12 +216,44 @@ export async function venueAcceptAutoPod(
  * A host assigns themselves. `locationId` is the city the host had selected on
  * the Auto Pods page: it pins an unpinned offer, and must match a pinned one.
  */
+/** What a host brings to a VIRTUAL offer: where members join, and when. */
+export interface HostMeetingInput {
+  meeting_platform?: string | null;
+  meeting_url: string;
+  meeting_notes?: string | null;
+  pod_date_time: string;
+  pod_end_date_time: string;
+}
+
+/**
+ * The meeting fields the host's claim writes. A virtual offer has no venue to
+ * fix its window, so the host's link and dates are required and checked with
+ * the same rules an ordinary virtual pod is; a physical offer takes its dates
+ * from the venue's slot and carries no meeting, whatever was sent.
+ */
+function hostMeetingFields(doc: IAutoPod, meeting?: HostMeetingInput | null) {
+  if (doc.pod_mode !== 'VIRTUAL') return {};
+  if (!meeting) {
+    autoPodFail('BAD_USER_INPUT', 'Set the meeting link and when the pod happens to host this virtual pod');
+  }
+  validateMeetingDetails('VIRTUAL', meeting);
+  validateFutureDates(meeting!.pod_date_time, meeting!.pod_end_date_time, true);
+  return {
+    meeting_platform: meeting!.meeting_platform?.trim() || null,
+    meeting_url: meeting!.meeting_url.trim(),
+    meeting_notes: meeting!.meeting_notes?.trim() || null,
+    pod_date_time: new Date(meeting!.pod_date_time),
+    pod_end_date_time: new Date(meeting!.pod_end_date_time),
+  };
+}
+
 export async function hostAssignAutoPod(
   userId: string,
   autoPodId: string,
   locationId?: string | null,
   podAmount?: number | null,
-  noOfSpots?: number | null
+  noOfSpots?: number | null,
+  meeting?: HostMeetingInput | null
 ) {
   const doc = await loadOffer(autoPodId);
   // Idempotent: a double tap is the same host arriving twice, not a conflict —
@@ -234,7 +271,8 @@ export async function hostAssignAutoPod(
   }
   await assertActiveHost(userId);
 
-  // The host's own numbers on the pod — the template's when none were sent.
+  // The host's own numbers on the pod. The template carries none, so what
+  // the host sends is what the pod is priced at.
   const amount = podAmount ?? doc.pod_amount ?? 0;
   const spots = noOfSpots ?? doc.no_of_spots ?? 0;
   if (amount < 1 || amount > 1999) {
@@ -244,6 +282,7 @@ export async function hostAssignAutoPod(
   if (spots < limits.min || spots > limits.max) {
     autoPodFail('BAD_USER_INPUT', `Spots must be between ${limits.min} and ${limits.max}`);
   }
+  const meetingFields = hostMeetingFields(doc, meeting);
 
   const subIds = await autoPodService.hostSubCategoryIds(userId);
   if (!subIds.some((id) => String(id) === String(doc.sub_category_id))) {
@@ -278,6 +317,7 @@ export async function hostAssignAutoPod(
             },
             pod_amount: amount,
             no_of_spots: spots,
+            ...meetingFields,
           },
           loc
         ),
@@ -440,6 +480,15 @@ export async function hostWithdrawAutoPod(userId: string, autoPodId: string) {
         host_claim: null,
         stage: others ? 'CLAIMING' : 'OPEN',
         ...(unpin ? { location: null } : {}),
+        // The price, the spots and (on a virtual offer) the meeting were this
+        // host's; the next one brings their own.
+        pod_amount: 0,
+        no_of_spots: 0,
+        meeting_platform: null,
+        meeting_url: null,
+        meeting_notes: null,
+        pod_date_time: null,
+        pod_end_date_time: null,
       },
       $push: { events: autoPodEvent('HOST_WITHDRAW', userId, claim.host_name, 'Host stepped off') },
     },

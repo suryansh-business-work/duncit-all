@@ -52,7 +52,7 @@ export const VenueAutoPodsDocument = gql(`
       viewer_claimed
       pod_id
       expected_host_earnings
-      venue_expires_at
+      expires_at
       withdraw_penalty_points
       location {
         location_id
@@ -110,7 +110,7 @@ export const HostAutoPodsDocument = gql(`
       viewer_claimed
       pod_id
       expected_host_earnings
-      venue_expires_at
+      expires_at
       withdraw_penalty_points
       location {
         location_id
@@ -168,7 +168,7 @@ export const ClubAdminAutoPodsDocument = gql(`
       viewer_claimed
       pod_id
       expected_host_earnings
-      venue_expires_at
+      expires_at
       withdraw_penalty_points
       location {
         location_id
@@ -249,12 +249,13 @@ export const VenueAcceptAutoPodDocument = gql(`
  * spots. `location_id` is REQUIRED on a virtual offer nobody has enrolled in
  * yet (the host's city pins it) and null once the offer is already pinned. */
 export const HostAssignAutoPodDocument = gql(`
-  mutation MobileHostAssignAutoPod($auto_pod_doc_id: ID!, $location_id: ID, $pod_amount: Float, $no_of_spots: Int) {
+  mutation MobileHostAssignAutoPod($auto_pod_doc_id: ID!, $location_id: ID, $pod_amount: Float, $no_of_spots: Int, $meeting: AutoPodHostMeetingInput) {
     hostAssignAutoPod(
       auto_pod_doc_id: $auto_pod_doc_id
       location_id: $location_id
       pod_amount: $pod_amount
       no_of_spots: $no_of_spots
+      meeting: $meeting
     ) {
       id
       stage

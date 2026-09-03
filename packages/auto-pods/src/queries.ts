@@ -24,7 +24,7 @@ const AUTO_POD_FIELDS = `
   viewer_claimed
   pod_id
   expected_host_earnings
-  venue_expires_at
+  expires_at
   withdraw_penalty_points
   venue_claim {
     venue_id
@@ -115,14 +115,22 @@ export const VENUE_ACCEPT_AUTO_POD = gql`
 
 /** `location_id` is the city the host had selected: it pins a virtual offer
  * nobody has enrolled in yet, and must match the city of one that is already
- * pinned. The price and spots are the host's own numbers on the pod. */
+ * pinned. The price and spots are the host's own numbers on the pod, and
+ * `meeting` is the link and window they bring to a VIRTUAL offer. */
 export const HOST_ASSIGN_AUTO_POD = gql`
-  mutation HostAssignAutoPod($auto_pod_doc_id: ID!, $location_id: ID, $pod_amount: Float, $no_of_spots: Int) {
+  mutation HostAssignAutoPod(
+    $auto_pod_doc_id: ID!
+    $location_id: ID
+    $pod_amount: Float
+    $no_of_spots: Int
+    $meeting: AutoPodHostMeetingInput
+  ) {
     hostAssignAutoPod(
       auto_pod_doc_id: $auto_pod_doc_id
       location_id: $location_id
       pod_amount: $pod_amount
       no_of_spots: $no_of_spots
+      meeting: $meeting
     ) {
       ${AUTO_POD_FIELDS}
     }

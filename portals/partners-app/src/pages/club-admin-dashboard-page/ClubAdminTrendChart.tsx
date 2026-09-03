@@ -1,30 +1,18 @@
+import { useMemo } from 'react';
 import { Box, Card, Stack, Typography, useTheme } from '@mui/material';
-import type { ClubAdminTrendPoint } from './queries';
+import {
+  clubAdminSeriesLabels,
+  clubAdminTrendSeries,
+  type ClubAdminTrendKey,
+  type ClubAdminTrendPoint,
+} from '@duncit/utils';
 import { useTranslation } from '@duncit/shell';
-
-type MetricKey = 'pods' | 'bookings' | 'followers' | 'revenue';
-type PaletteKey = 'primary' | 'success' | 'info' | 'warning';
-
-interface SeriesDef {
-  key: MetricKey;
-  label: string;
-  palette: PaletteKey;
-}
-
-type Translate = ReturnType<typeof useTranslation>['t'];
-
-const series = (t: Translate): SeriesDef[] =>[
-  { key: 'pods', label: t('shell.nav.pods'), palette: 'primary' },
-  { key: 'bookings', label: t('partners.clubAdminDashboardPage.bookings'), palette: 'success' },
-  { key: 'followers', label: t('partners.common.followers'), palette: 'info' },
-  { key: 'revenue', label: t('partners.clubAdminDashboardPage.revenue'), palette: 'warning' },
-];
 
 const WIDTH = 640;
 const HEIGHT = 200;
 const PAD = 8;
 
-function buildLine(points: readonly ClubAdminTrendPoint[], key: MetricKey): string {
+function buildLine(points: readonly ClubAdminTrendPoint[], key: ClubAdminTrendKey): string {
   const values = points.map((point) => point[key]);
   const max = Math.max(...values, 0);
   const span = max || 1;
@@ -45,6 +33,7 @@ interface Props {
 export default function ClubAdminTrendChart({ trend }: Readonly<Props>) {
   const { t } = useTranslation();
   const theme = useTheme();
+  const seriesLabels = useMemo(() => clubAdminSeriesLabels(t), [t]);
   const hasData = trend.length >= 2;
 
   return (
@@ -52,12 +41,12 @@ export default function ClubAdminTrendChart({ trend }: Readonly<Props>) {
       <Stack spacing={1.5}>
         <Typography variant="subtitle2" sx={{
           fontWeight: 900
-        }}>{t('partners.clubAdminDashboardPage.monthlyTrend')}</Typography>
+        }}>{t('clubAdmin.dashboard.monthlyTrend')}</Typography>
         {hasData ? (
           <>
             <Box sx={{ width: '100%', overflowX: 'auto' }}>
-              <svg width="100%" height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="none" role="img" aria-label={t('partners.clubAdminDashboardPage.monthlyTrendChart')}>
-                {series(t).map((series) => (
+              <svg width="100%" height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="none" role="img" aria-label={t('clubAdmin.dashboard.monthlyTrendChart')}>
+                {clubAdminTrendSeries.map((series) => (
                   <polyline
                     key={series.key}
                     points={buildLine(trend, series.key)}
@@ -86,14 +75,14 @@ export default function ClubAdminTrendChart({ trend }: Readonly<Props>) {
             <Stack direction="row" spacing={2} sx={{
               flexWrap: "wrap"
             }}>
-              {series(t).map((series) => (
+              {clubAdminTrendSeries.map((series) => (
                 <Stack key={series.key} direction="row" spacing={0.75} sx={{
                   alignItems: "center"
                 }}>
                   <Box sx={{ width: 12, height: 3, borderRadius: 1, bgcolor: theme.palette[series.palette].main }} />
                   <Typography variant="caption" sx={{
                     color: "text.secondary"
-                  }}>{series.label}</Typography>
+                  }}>{seriesLabels[series.key]}</Typography>
                 </Stack>
               ))}
             </Stack>
@@ -101,7 +90,7 @@ export default function ClubAdminTrendChart({ trend }: Readonly<Props>) {
         ) : (
           <Typography variant="body2" sx={{
             color: "text.secondary"
-          }}>{t('partners.clubAdminDashboardPage.notEnoughDataToDrawA')}</Typography>
+          }}>{t('clubAdmin.dashboard.trendEmpty')}</Typography>
         )}
       </Stack>
     </Card>

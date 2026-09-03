@@ -1,11 +1,11 @@
 /**
  * Background sweep for the states an Auto Pod cannot leave on its own.
  *
- * 1. EXPIRY — a CLAIMING offer whose accepted slot (or, for a virtual offer,
- *    whose own start) has already passed can never materialize
- *    (`validateFutureDates` would reject it), so it is marked EXPIRED and the
- *    venue gets its slot back rather than having it held forever by an offer
- *    nobody completed.
+ * 1. EXPIRY — three windows close an offer nobody completed, each releasing
+ *    the venue's slot rather than holding it forever: its start has passed
+ *    (`validateFutureDates` would reject it), no venue accepted inside Pod
+ *    Settings' venue window, or the assignment window ran out with a role
+ *    still missing — whoever had enrolled, and each of them is told.
  * 2. STUCK MATERIALIZATION — the MATERIALIZING lock is held by one request; if
  *    that process died mid-way the offer would sit locked for good. Anything
  *    older than the grace window is reconciled: if the pod it was creating
@@ -22,7 +22,9 @@
 import { AutoPodModel, type IAutoPod } from './autoPod.model';
 import {
   AUTO_POD_COMPLETE_FILTER,
+  AUTO_POD_INCOMPLETE_FILTER,
   autoPodEvent,
+  autoPodMissingRoles,
   PHYSICAL_FILTER,
   PRE_LIVE_FILTER,
   venueWindowPassed,
@@ -57,37 +59,52 @@ const startAhead = (now: Date) => ({
   ],
 });
 
-/** Expire offers whose start has already passed, releasing the venue's slot. */
-async function expireStaleClaiming(): Promise<number> {
-  const stale = await AutoPodModel.find({
-    stage: 'CLAIMING',
-    ...startPassed(new Date()),
-  }).limit(100);
+/**
+ * Flip each offer to EXPIRED — conditionally, so a claim racing it to
+ * materialization wins cleanly — free whatever slot it held, and tell everyone
+ * on it. Returns how many this call actually expired.
+ */
+async function expireOffers(
+  docs: IAutoPod[],
+  note: (doc: IAutoPod) => string,
+  notify: (won: IAutoPod) => Promise<void>
+): Promise<number> {
   let expired = 0;
-  for (const doc of stale) {
+  for (const doc of docs) {
     const won = await AutoPodModel.findOneAndUpdate(
-      { _id: doc._id, stage: 'CLAIMING' },
+      { _id: doc._id, ...PRE_LIVE_FILTER },
       {
         $set: { stage: 'EXPIRED' },
-        $push: {
-          events: autoPodEvent('EXPIRED', null, '', 'Start date passed before everyone enrolled'),
-        },
+        $push: { events: autoPodEvent('EXPIRED', null, '', note(doc)) },
       },
       { new: true }
     );
     if (!won) continue;
     await venueSlotService.releaseForAutoPod(String(doc._id));
     expired += 1;
-    autoPodNotify.expired(won).catch((error) =>
+    notify(won).catch((error) =>
       logs.server.error('autoPod', 'notifyExpired', { error, auto_pod_id: String(doc._id) })
     );
   }
   return expired;
 }
 
+/** Expire offers whose start has already passed, releasing the venue's slot. */
+async function expireStaleClaiming(): Promise<number> {
+  const stale = await AutoPodModel.find({
+    stage: 'CLAIMING',
+    ...startPassed(new Date()),
+  }).limit(100);
+  return expireOffers(
+    stale,
+    () => 'Start date passed before everyone enrolled',
+    (won) => autoPodNotify.expired(won)
+  );
+}
+
 /**
  * A physical offer no venue accepted inside Pod Settings' venue window is
- * already off every venue's list, so it can never complete — expire it and
+ * already off every venue's list, so it can never complete — release it and
  * tell whoever had enrolled. The same window is what the venue's card counts
  * down.
  */
@@ -99,25 +116,33 @@ async function expireUnacceptedByVenue(): Promise<number> {
     venue_claim: null,
     ...venueWindowPassed(venueCutoff),
   }).limit(100);
-  let expired = 0;
-  for (const doc of stale) {
-    const won = await AutoPodModel.findOneAndUpdate(
-      { _id: doc._id, ...PRE_LIVE_FILTER },
-      {
-        $set: { stage: 'EXPIRED' },
-        $push: {
-          events: autoPodEvent('EXPIRED', null, '', `No venue accepted within ${venueExpiryHours} hours`),
-        },
-      },
-      { new: true }
-    );
-    if (!won) continue;
-    expired += 1;
-    autoPodNotify.expired(won).catch((error) =>
-      logs.server.error('autoPod', 'notifyExpired', { error, auto_pod_id: String(doc._id) })
-    );
-  }
-  return expired;
+  return expireOffers(
+    stale,
+    () => `No venue accepted within ${venueExpiryHours} hours`,
+    (won) => autoPodNotify.released(won, venueExpiryHours)
+  );
+}
+
+/**
+ * Pod Settings' assignment window: an offer nobody completed within it is
+ * released — however many had enrolled — so a venue's slot and a host are not
+ * held by an offer going nowhere, and each of them is told why. The venue
+ * window above already catches most venue-less offers; this catches the rest,
+ * and every offer left waiting on a host or a club admin.
+ */
+async function expireUnassigned(): Promise<number> {
+  const { assignmentCutoff, assignmentExpiryHours } = await autoPodService.windows();
+  const stale = await AutoPodModel.find({
+    ...PRE_LIVE_FILTER,
+    created_at: { $lte: assignmentCutoff },
+    ...AUTO_POD_INCOMPLETE_FILTER,
+  }).limit(100);
+  return expireOffers(
+    stale,
+    (doc) =>
+      `Not fully assigned within ${assignmentExpiryHours} hours — still waiting on ${autoPodMissingRoles(doc).join(', ')}`,
+    (won) => autoPodNotify.released(won, assignmentExpiryHours)
+  );
 }
 
 /** The pod a stuck materialization was creating — `podService.create` stamps
@@ -221,7 +246,8 @@ export async function runAutoPodSweep(): Promise<{
   pinned: number;
 }> {
   const pinned = await backfillClubPins();
-  const expired = (await expireStaleClaiming()) + (await expireUnacceptedByVenue());
+  const expired =
+    (await expireStaleClaiming()) + (await expireUnacceptedByVenue()) + (await expireUnassigned());
   const recovered = await recoverStuckMaterializing();
   const retried = await retryCompleteClaiming();
   return { expired, recovered, retried, pinned };

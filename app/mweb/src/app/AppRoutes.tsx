@@ -105,6 +105,12 @@ const ProductsManagePage = lazy(() => import('../pages/products-manage-page'));
 const SavedItemsPage = lazy(() => import('../pages/SavedItemsPage'));
 const ClubsPage = lazy(() => import('../pages/ClubsPage'));
 const ClubStudioPage = lazy(() => import('../pages/club-studio'));
+const ClubAdminDashboardPage = lazy(() => import('../pages/club-admin-dashboard-page'));
+const ClubMonitoringPage = lazy(() => import('../pages/club-monitoring-page'));
+const ClubPodsPage = lazy(() => import('../pages/club-pods-page'));
+const ClubPodEditorPage = lazy(() => import('../pages/club-pod-editor-page'));
+const ClubPodDetailsPage = lazy(() => import('../pages/club-pod-details-page'));
+const ClubEditPage = lazy(() => import('../pages/club-edit-page'));
 const ChatsPage = lazy(() => import('../pages/ChatsPage'));
 const ChatRoomPage = lazy(() => import('../pages/ChatRoomPage'));
 const MenuPage = lazy(() => import('../pages/menu-page'));
@@ -214,6 +220,15 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         {/* Club Studio. `/clubs/manage` and NOT `/club/manage`, which would sit
             under the `/club/:clubSlug` pattern and shadow a real club slug. */}
         <Route path="/clubs/manage" element={withAuth(<ClubStudioPage />)} />
+        {/* The Club Admin's own pages — the Partners console's club-admin
+            console, on the phone. `/clubs/...` for the same reason. */}
+        <Route path="/clubs/dashboard" element={withAuth(<ClubAdminDashboardPage />)} />
+        <Route path="/clubs/monitoring" element={withAuth(<ClubMonitoringPage />)} />
+        <Route path="/clubs/:clubId/pods" element={withAuth(<ClubPodsPage />)} />
+        <Route path="/clubs/:clubId/pods/new" element={withAuth(<ClubPodEditorPage />)} />
+        <Route path="/clubs/:clubId/pods/:id/edit" element={withAuth(<ClubPodEditorPage />)} />
+        <Route path="/clubs/:clubId/pods/:id" element={withAuth(<ClubPodDetailsPage />)} />
+        <Route path="/clubs/:clubId/edit" element={withAuth(<ClubEditPage />)} />
         {/* Auto Pods — one queue per enrolment. Reached through the flag-gated
             drawer row, and `/clubs/...` for the same reason Club Studio is. */}
         <Route path="/venues/auto-pods" element={withAuth(<VenueAutoPodsPage locationId={locationId} />)} />

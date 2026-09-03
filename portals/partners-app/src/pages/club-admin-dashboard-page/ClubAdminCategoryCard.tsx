@@ -1,8 +1,7 @@
 import { Box, Card, Divider, Grid, Skeleton, Stack, Typography } from '@mui/material';
 import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
 import { useTranslation } from '@duncit/shell';
-import type { ClubAdminCategoryRow } from './queries';
-import { formatCount } from './format';
+import { formatCount, type ClubAdminCategoryRow } from '@duncit/utils';
 
 /** One labelled figure inside a tile — the club and pod counts read the same. */
 function TileStat({ value, label }: Readonly<{ value: number; label: string }>) {
@@ -94,7 +93,7 @@ export default function ClubAdminCategoryCard({ categories, loading }: Readonly<
 
   let body = (
     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-      {t('partners.clubAdminDashboardPage.noCategoryOnYourClubs')}
+      {t('clubAdmin.dashboard.categoriesEmpty')}
     </Typography>
   );
   if (loading) {
@@ -114,8 +113,8 @@ export default function ClubAdminCategoryCard({ categories, loading }: Readonly<
           <Grid key={row.category_id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <CategoryTile
               row={row}
-              clubsLabel={t('partners.clubAdminDashboardPage.clubs')}
-              podsLabel={t('shell.nav.pods')}
+              clubsLabel={t('clubAdmin.dashboard.clubs')}
+              podsLabel={t('clubAdmin.dashboard.pods')}
             />
           </Grid>
         ))}
@@ -128,10 +127,10 @@ export default function ClubAdminCategoryCard({ categories, loading }: Readonly<
       <Stack spacing={1.5}>
         <Stack spacing={0.25}>
           <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>
-            {t('partners.clubAdminDashboardPage.yourCategories')}
+            {t('clubAdmin.dashboard.yourCategories')}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            {t('partners.clubAdminDashboardPage.yourCategoriesHint')}
+            {t('clubAdmin.dashboard.yourCategoriesHint')}
           </Typography>
         </Stack>
         {body}

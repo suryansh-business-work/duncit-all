@@ -5,17 +5,17 @@ import { Alert } from '@mui/material';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { buildSlotLabels } from '@duncit/slots';
 import { notifySuccess } from '@duncit/dialogs';
-import { PodEditorPage, useMediaPickerBridge } from '@duncit/pod-form';
-import { QueryGuard } from '@duncit/ui';
-import MediaPickerDialog from '../../components/MediaPickerDialog';
-import { getClubVenueIds } from '../pods-page/partner-pod-config';
 import {
+  CLUB_ADMIN_POD_CONFIG,
   CLUB_ADMIN_POD_FOR_EDIT,
   CLUB_ADMIN_POD_LOOKUPS,
-} from '../club-admin-club-pods-page/queries';
-import useClubAdminPodEditor, {
-  CLUB_ADMIN_POD_CONFIG,
-} from '../club-admin-club-pods-page/useClubAdminPodEditor';
+  getClubVenueIds,
+  PodEditorPage,
+  useClubAdminPodEditor,
+  useMediaPickerBridge,
+} from '@duncit/pod-form';
+import { QueryGuard } from '@duncit/ui';
+import { MediaPickerDialog } from '@duncit/media-picker';
 
 /**
  * The Club Admin's pod editor, as a page rather than a dialog:
@@ -49,8 +49,8 @@ export default function ClubAdminPodEditorPage() {
     clubId,
     editingPod: pod,
     onSaved: ({ created, draft }) => {
-      const createdMessage = draft ? 'Pod draft saved.' : 'Pod created.';
-      notifySuccess(created ? createdMessage : 'Pod updated.');
+      const createdMessage = draft ? t('clubAdmin.editor.draftSaved') : t('clubAdmin.editor.podCreated');
+      notifySuccess(created ? createdMessage : t('clubAdmin.editor.podUpdated'));
       navigate(backTo);
     },
   });
@@ -62,15 +62,15 @@ export default function ClubAdminPodEditorPage() {
         error={podQuery.error}
         errorText={podQuery.error?.message}
         notFound={!!id && !pod}
-        notFoundText="Pod not found in this club."
+        notFoundText={t('clubAdmin.editor.notFound')}
         notFoundSeverity="warning"
       >
         {() => (
           <PodEditorPage
             editing={!!pod}
-            eyebrow={`Club Admin · ${club?.club_name ?? 'Pods'}`}
+            eyebrow={t('clubAdmin.editor.eyebrow', { vars: { club: club?.club_name ?? t('clubAdmin.clubs.pods') } })}
             onBack={() => navigate(backTo)}
-            backLabel="Back to pods"
+            backLabel={t('clubAdmin.editor.backLabel')}
             initialValues={editor.initialValues}
             config={CLUB_ADMIN_POD_CONFIG}
             busy={editor.busy}
@@ -90,9 +90,7 @@ export default function ClubAdminPodEditorPage() {
             intro={
               <>
                 {lookups.error && <Alert severity="error">{lookups.error.message}</Alert>}
-                <Alert severity="info">
-                  You are added as the pod host automatically unless you assign hosts below.
-                </Alert>
+                <Alert severity="info">{t('clubAdmin.editor.hostNote')}</Alert>
               </>
             }
           />
@@ -105,6 +103,7 @@ export default function ClubAdminPodEditorPage() {
         onPicked={(url) => picker.settlePicker(url)}
         folder="/pods/media"
         title={picker.title}
+        seedQuery={picker.seedQuery}
         accept={picker.accept}
       />
     </>

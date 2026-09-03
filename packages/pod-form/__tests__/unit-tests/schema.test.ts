@@ -306,19 +306,12 @@ describe('makePodSchema (autoPod)', () => {
     expect(paths).toContain('sub_category_id');
   });
 
-  it('holds the price floor at 1 - an Auto Pod is never free', () => {
-    const paths = errorPaths(autoConfig, template({ pod_amount: 0 }));
-    expect(paths).toContain('pod_amount');
-  });
-
-  it('needs at least the 2 spots that bill anyone at all', () => {
-    const paths = errorPaths(autoConfig, template({ no_of_spots: 1 }));
-    expect(paths).toContain('no_of_spots');
-  });
-
-  it('caps the template at 999 spots', () => {
-    const paths = errorPaths(autoConfig, template({ no_of_spots: 999.5 }));
-    expect(paths).toContain('no_of_spots');
+  // The price and the spots are the HOST's, set when they assign themselves
+  // against the venue's real slot price — so a template carrying neither is
+  // valid, and the server judges the numbers at the claim instead.
+  it('faults neither the price nor the spots — the template has none', () => {
+    const res = makePodSchema(autoConfig, fallbackT).safeParse(template({ pod_amount: 0, no_of_spots: 0 }));
+    expect(res.success).toBe(true);
   });
 
   it('still needs one image', () => {
@@ -344,27 +337,21 @@ describe('makePodSchema (autoPod, virtual)', () => {
     no_of_spots: 10,
     media_text: 'https://cdn.example.com/quiz.jpg',
     pod_mode: 'VIRTUAL',
-    meeting_url: 'https://meet.google.com/abc',
-    pod_date_time: new Date(Date.now() + 86_400_000),
-    pod_end_date_time: new Date(Date.now() + 90_000_000),
     ...over,
   });
 
-  it('accepts a virtual template that carries its own meeting link and window', () => {
+  it('accepts a virtual template with no meeting link and no window', () => {
     expect(makePodSchema(autoConfig, fallbackT).safeParse(virtual()).success).toBe(true);
   });
 
-  it('needs the meeting link a venue would otherwise bring, and a real one', () => {
-    expect(errorPaths(autoConfig, virtual({ meeting_url: '' }))).toContain('meeting_url');
-    expect(errorPaths(autoConfig, virtual({ meeting_url: 'not a url' }))).toContain('meeting_url');
-  });
-
-  it('needs a future start and an end after it', () => {
-    expect(errorPaths(autoConfig, virtual({ pod_date_time: null }))).toContain('pod_date_time');
-    expect(errorPaths(autoConfig, virtual({ pod_end_date_time: null }))).toContain('pod_end_date_time');
-    expect(
-      errorPaths(autoConfig, virtual({ pod_end_date_time: new Date(Date.now() + 80_000_000) })),
-    ).toContain('pod_end_date_time');
+  // The host writes the meeting into their own claim, so the template neither
+  // asks for it nor faults its absence — `autoPodHostMeetingReady` gates the
+  // claim, and the server refuses one without it.
+  it('faults neither the meeting link nor the window', () => {
+    const res = makePodSchema(autoConfig, fallbackT).safeParse(
+      virtual({ meeting_url: '', pod_date_time: null, pod_end_date_time: null }),
+    );
+    expect(res.success).toBe(true);
   });
 
   it('cannot carry products', () => {

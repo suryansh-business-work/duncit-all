@@ -1,16 +1,15 @@
 import { useCallback, useMemo, useRef } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client/react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { Box, Stack, Typography } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import AutoModeIcon from '@mui/icons-material/AutoMode';
-import { DuncitButton } from '@duncit/buttons';
-import { useApolloTableFetch } from '@duncit/table';
+import { useApolloTableFetch, type TableFilterValue } from '@duncit/table';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { notifyError, notifySuccess, useConfirm } from '@duncit/dialogs';
 import { parseApiError, shellAutoPodLabels } from '@duncit/utils';
 import { AUTO_PODS_PATH } from '../../config/app-config';
 import AutoPodsTable from './AutoPodsTable';
+import AutoPodsToolbar, { STATUS_PARAM } from './AutoPodsToolbar';
 import CancelReasonField from './CancelReasonField';
 import {
   ADMIN_AUTO_PODS_TABLE,
@@ -130,6 +129,34 @@ export default function AutoPodsPage() {
     [navigate]
   );
 
+  // The row is the door into the offer's own page (the menu offers the same).
+  const handleViewDetails = useCallback(
+    (row: AutoPodTableRow) => navigate(`${AUTO_PODS_PATH}/${row.id}`),
+    [navigate]
+  );
+
+  // The status filter lives in the URL, so a reload (or a shared link) keeps it.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const status = searchParams.get(STATUS_PARAM) ?? '';
+  const setStatus = useCallback(
+    (next: string) => {
+      setSearchParams(
+        (current) => {
+          const params = new URLSearchParams(current);
+          if (next) params.set(STATUS_PARAM, next);
+          else params.delete(STATUS_PARAM);
+          return params;
+        },
+        { replace: true }
+      );
+    },
+    [setSearchParams]
+  );
+  const externalFilters = useMemo<TableFilterValue[]>(
+    () => (status ? [{ field: 'stage', op: 'eq', value: status }] : []),
+    [status]
+  );
+
   return (
     <Stack spacing={2}>
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
@@ -150,16 +177,17 @@ export default function AutoPodsPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         formatDateTime={formatDateTime}
+        externalFilters={externalFilters}
         toolbarActions={
-          <DuncitButton
-            size="small"
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => navigate(`${AUTO_PODS_PATH}/new`)}
-          >
-            {t('admin.autoPods.newCta')}
-          </DuncitButton>
+          <AutoPodsToolbar
+            t={t}
+            status={status}
+            onStatusChange={setStatus}
+            onNew={() => navigate(`${AUTO_PODS_PATH}/new`)}
+          />
         }
+        onRowClick={handleViewDetails}
+        onViewDetails={handleViewDetails}
         onEdit={handleEdit}
         onCancel={handleCancel}
         onDelete={handleDelete}

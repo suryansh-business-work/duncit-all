@@ -205,7 +205,10 @@ export function CreatePodStepper({
   // assigned hosts, or the host's draft persisted and published.
   const publishValues = async (values: CreatePodFormValues) => {
     if (clubAdmin) {
-      await clubAdmin.submit(buildCreatePodInput(values), hosts.map((host) => host.user_id));
+      await clubAdmin.submit(
+        buildCreatePodInput(values),
+        hosts.map((host) => host.user_id),
+      );
       return;
     }
     const id = await persist(step);

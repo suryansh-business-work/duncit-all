@@ -28,7 +28,10 @@ export function TrendCard({ trend }: Readonly<Props>) {
   const palette = useTrendPalette();
   const [series, setSeries] = useState<ClubAdminTrendKey>('pods');
   const labels = clubAdminSeriesLabels(t);
-  const options = clubAdminTrendSeries.map((item) => ({ value: item.key, label: labels[item.key] }));
+  const options = clubAdminTrendSeries.map((item) => ({
+    value: item.key,
+    label: labels[item.key],
+  }));
   const paletteName =
     clubAdminTrendSeries.find((item) => item.key === series)?.palette ?? 'primary';
   const data: ChartDatum[] = trend.map((point) => ({ label: point.label, value: point[series] }));

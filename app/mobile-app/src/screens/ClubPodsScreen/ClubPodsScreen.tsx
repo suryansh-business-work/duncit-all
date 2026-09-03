@@ -89,7 +89,9 @@ export function ClubPodsScreen() {
             </Text>
           ) : null}
           {pods.isLoading ? <Spinner testID="club-pods-loading" color="$primary" /> : null}
-          {pods.hasError ? <LoadErrorNotice testID="club-pods-error" onRetry={pods.refetch} /> : null}
+          {pods.hasError ? (
+            <LoadErrorNotice testID="club-pods-error" onRetry={pods.refetch} />
+          ) : null}
           {empty ? (
             <Text testID="club-pods-empty" fontSize={13} color="$muted">
               {t('clubAdmin.pods.noPods')}
@@ -106,7 +108,11 @@ export function ClubPodsScreen() {
             />
           ))}
           {pods.hasMore ? (
-            <LoadMoreButton testID="club-pods-more" busy={pods.isLoadingMore} onPress={pods.loadMore} />
+            <LoadMoreButton
+              testID="club-pods-more"
+              busy={pods.isLoadingMore}
+              onPress={pods.loadMore}
+            />
           ) : null}
         </YStack>
       </ScrollView>

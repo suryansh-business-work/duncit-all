@@ -29,12 +29,7 @@ const locationLabel = (location: CreatePodLocation) =>
 /** Step 2 — pod city + locality (chosen in the header location picker, which
  * shows the club count per locality), the pod mode and the club. The category
  * moved above the page title, so the club list arrives already scoped to it. */
-export function LocationClubStep({
-  form,
-  clubs,
-  locations,
-  pinnedClub = null,
-}: Readonly<Props>) {
+export function LocationClubStep({ form, clubs, locations, pinnedClub = null }: Readonly<Props>) {
   const { control, getValues, setValue, watch } = form;
   const { primary } = useThemeColors();
   const { t } = useTranslation();

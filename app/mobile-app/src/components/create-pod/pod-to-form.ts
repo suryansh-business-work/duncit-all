@@ -48,8 +48,7 @@ export function podToCreatePodForm(
 ): CreatePodFormValues {
   const virtual = pod.pod_mode === 'VIRTUAL';
   const mode = virtual ? 'VIRTUAL' : 'PHYSICAL';
-  const toText = (iso?: string | null) =>
-    iso ? format(new Date(iso), dateTimeInputFormat) : '';
+  const toText = (iso?: string | null) => (iso ? format(new Date(iso), dateTimeInputFormat) : '');
   return {
     ...blankCreatePodForm,
     location_id: pod.location_id ?? '',

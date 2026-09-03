@@ -65,10 +65,7 @@ const hasEntry = (list: string[]) => list.some((item) => item.trim());
 export function makeClubEditSchema(t: Translate) {
   return z.object({
     club_name: z.string().trim().min(1, t('mweb.clubEdit.validation.nameRequired')),
-    club_description: z
-      .string()
-      .trim()
-      .min(1, t('mweb.clubEdit.validation.descriptionRequired')),
+    club_description: z.string().trim().min(1, t('mweb.clubEdit.validation.descriptionRequired')),
     feature_text: z
       .string()
       .refine((text) => lines(text).length > 0, t('mweb.clubEdit.validation.imageRequired')),
@@ -82,8 +79,12 @@ export function makeClubEditSchema(t: Translate) {
       .trim()
       .min(1, t('mweb.clubEdit.validation.groupLinkRequired'))
       .refine(isLink, t('mweb.clubEdit.validation.linkInvalid')),
-    who_we_are: z.array(z.string()).refine(hasEntry, t('mweb.clubEdit.validation.whoWeAreRequired')),
-    what_we_do: z.array(z.string()).refine(hasEntry, t('mweb.clubEdit.validation.whatWeDoRequired')),
+    who_we_are: z
+      .array(z.string())
+      .refine(hasEntry, t('mweb.clubEdit.validation.whoWeAreRequired')),
+    what_we_do: z
+      .array(z.string())
+      .refine(hasEntry, t('mweb.clubEdit.validation.whatWeDoRequired')),
     perks: z.array(z.string()).refine(hasEntry, t('mweb.clubEdit.validation.perksRequired')),
     values: z.array(z.string()).refine(hasEntry, t('mweb.clubEdit.validation.valuesRequired')),
     faqs: z.array(z.object({ id: z.string(), question: z.string(), answer: z.string() })),

@@ -61,29 +61,31 @@ export default function ClubEditPage() {
     }
   };
 
+  // Everything the editor needs that does not depend on the club having
+  // arrived; the heading and the back route join it once the guard passes.
+  const editorProps = {
+    config: CLUB_ADMIN_CLUB_CONFIG,
+    initialValues,
+    busy: updateState.loading,
+    error: opError,
+    onSubmit: submit,
+    onPickImage: () => picker.pickImage(),
+    backLabel: t('clubAdmin.editClub.backToPods'),
+    eyebrow: t('clubAdmin.editClub.eyebrow'),
+  };
+
   return (
     <Box sx={{ maxWidth: 960, mx: 'auto', width: '100%' }}>
       <QueryGuard
-        loading={loading && !club}
-        error={error}
-        errorText={error?.message}
         notFound={!club}
         notFoundText={t('clubAdmin.editClub.notFound')}
         notFoundSeverity="warning"
+        loading={loading && !club}
+        error={error}
+        errorText={error?.message}
       >
         {() => (
-          <ClubEditorPage
-            eyebrow={t('clubAdmin.editClub.eyebrow')}
-            heading={club.club_name}
-            onBack={() => navigate(backTo)}
-            backLabel={t('clubAdmin.editClub.backToPods')}
-            initialValues={initialValues}
-            config={CLUB_ADMIN_CLUB_CONFIG}
-            busy={updateState.loading}
-            error={opError}
-            onSubmit={submit}
-            onPickImage={() => picker.pickImage()}
-          />
+          <ClubEditorPage heading={club.club_name} onBack={() => navigate(backTo)} {...editorProps} />
         )}
       </QueryGuard>
 

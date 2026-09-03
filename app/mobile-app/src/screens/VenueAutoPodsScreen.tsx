@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, YStack } from 'tamagui';
-import { autoPodActionable, type AutoPodRow } from '@duncit/utils';
+import { autoPodActionable, autoPodWithdrawable, type AutoPodRow } from '@duncit/utils';
 
 import { StackScreen } from '@/components/StackScreen';
 import { PillButton } from '@/components/attendance/AttendanceOtpControls';
@@ -11,6 +11,7 @@ import {
   AutoPodLocationRow,
   AutoPodQueue,
   AutoPodVenueRow,
+  AutoPodWithdrawSheet,
   VenueAcceptSheet,
 } from '@/components/auto-pods';
 import { useAutoPodScreen } from '@/hooks/useAutoPodScreen';
@@ -36,8 +37,10 @@ function useMinuteTick(): number {
  * venue could take (its category, its city), each counting down the window
  * Pod Settings gives venues to accept. Accepting picks one of the venue's free
  * slots in the next few days, nearest first, priced as the venue would be paid
- * — in one step. The header's city narrows the queue to offers pinned there
- * plus every unpinned one.
+ * — in one step. The venue goes first: hosts are offered the pod only once
+ * the slot is fixed, and an accepted offer sits under "Assigned slot" with a
+ * Cancel until a host and a club admin are on it. The header's city narrows
+ * the queue to offers pinned there plus every unpinned one.
  *
  * The mWeb twin is `/venues/auto-pods` (rule 27); the logic both read is
  * `@duncit/utils`' auto-pod helpers.
@@ -54,6 +57,18 @@ export function VenueAutoPodsScreen() {
   useMinuteTick();
   const nowMs = clock.nowMs();
   const [offer, setOffer] = useState<AutoPodRow | null>(null);
+  const [withdrawing, setWithdrawing] = useState<AutoPodRow | null>(null);
+
+  const renderMineAction = (row: AutoPodRow) =>
+    autoPodWithdrawable(row, 'venue') ? (
+      <PillButton
+        testID={`auto-pod-withdraw-${row.id}`}
+        label={labels.withdrawCta}
+        onPress={() => setWithdrawing(row)}
+        variant="ghost"
+        disabled={false}
+      />
+    ) : null;
 
   const renderAction = (row: AutoPodRow) =>
     autoPodActionable(row, 'venue') ? (
@@ -85,9 +100,21 @@ export function VenueAutoPodsScreen() {
             formatWhen={formatWhen}
             formatMoney={formatMoney}
             renderAction={renderAction}
+            renderMineAction={renderMineAction}
           />
         </YStack>
       </ScrollView>
+
+      <AutoPodWithdrawSheet
+        row={withdrawing}
+        role="venue"
+        labels={labels}
+        onClose={() => setWithdrawing(null)}
+        onWithdrawn={() => {
+          setWithdrawing(null);
+          refetch();
+        }}
+      />
 
       <VenueAcceptSheet
         row={offer}

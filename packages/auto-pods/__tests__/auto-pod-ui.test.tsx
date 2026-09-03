@@ -159,7 +159,7 @@ describe('AutoPodQueue', () => {
   const queue = (over: Record<string, unknown> = {}) =>
     wrapped(
       <AutoPodQueue
-        role="VENUE"
+        role="venue"
         rows={[row(), row({ id: 'ap-2', auto_pod_no: 'DUN-AP-002', pod_title: 'Sunday Chess' })]}
         labels={labels}
         loading={false}
@@ -178,6 +178,37 @@ describe('AutoPodQueue', () => {
 
     expect(container.textContent).toContain('Weekly Badminton');
     expect(container.textContent).toContain('Sunday Chess');
+  });
+
+  // The second section is titled for the role: "Assigned slot" for a venue,
+  // "Assigned Auto Pods" for a host, "Final assigned Auto Pods" for a club admin.
+  it('titles a role’s own enrolments with that role’s heading', async () => {
+    const mine = row({ id: 'ap-mine', stage: 'CLAIMING', viewer_claimed: true });
+    const { container, rerender } = queue({ role: 'venue', rows: [row(), mine] });
+    await settle();
+    expect(container.textContent).toContain(labels.assignedHeading('venue'));
+    expect(container.textContent).toContain(labels.needsAction);
+
+    rerender(
+      <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
+        <ThemeProvider theme={testTheme}>
+          <AutoPodQueue
+            role="club"
+            rows={[mine]}
+            labels={labels}
+            loading={false}
+            error={false}
+            onRetry={vi.fn()}
+            formatWhen={formatWhen}
+            formatMoney={formatMoney}
+            renderAction={() => null}
+          />
+        </ThemeProvider>
+      </MockedProvider>,
+    );
+    await settle();
+    expect(container.textContent).toContain(labels.assignedHeading('club'));
+    expect(container.textContent).not.toContain(labels.assignedHeading('venue'));
   });
 
   it('shows a loading state rather than an empty list while it waits', async () => {
@@ -216,8 +247,20 @@ describe('AutoPodQueue', () => {
     expect(container.textContent).toContain('Open the pod');
   });
 
-  it.each(['VENUE', 'HOST', 'CLUB_ADMIN'] as const)('renders for the %s reader', async (role) => {
-    const { container } = queue({ role });
+  // Enrolment runs venue → host → club admin, so each reader is handed a row
+  // that is on their turn: fresh for the venue, dated for the host, hosted for
+  // the club admin.
+  it.each(['venue', 'host', 'club'] as const)('renders for the %s reader', async (role) => {
+    const onTurn: Record<typeof role, Partial<AutoPodRow>> = {
+      venue: {},
+      host: { stage: 'CLAIMING', venue_claim: VENUE_CLAIM },
+      club: {
+        stage: 'CLAIMING',
+        venue_claim: VENUE_CLAIM,
+        host_claim: { user_id: 'u-1', host_name: 'Asha', assigned_at: '2026-08-21T10:00:00.000Z' },
+      },
+    };
+    const { container } = queue({ role, rows: [row(onTurn[role])] });
     await settle();
 
     expect(container.textContent).toContain('Weekly Badminton');
@@ -347,7 +390,7 @@ describe('AutoPodQueue already-enrolled rows', () => {
   it('leaves the enrolled slot empty when the surface passes no renderer for it', async () => {
     const { container } = wrapped(
       <AutoPodQueue
-        role="VENUE"
+        role="venue"
         rows={[row({ viewer_claimed: true, pod_id: 'pod-9' })]}
         labels={labels}
         loading={false}

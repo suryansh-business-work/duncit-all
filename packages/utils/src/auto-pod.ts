@@ -91,6 +91,8 @@ export interface AutoPodRow {
    * venue is on it, and everywhere else.
    */
   venue_expires_at?: string | null;
+  /** Account Health points a venue or host loses by withdrawing (Pod Settings). Set on their queues. */
+  withdraw_penalty_points?: number | null;
   pod_amount: number;
   no_of_spots: number;
   venue_claim: AutoPodVenueClaim | null;
@@ -144,16 +146,34 @@ export function autoPodPreLive(stage: AutoPodStage): boolean {
 }
 
 /**
- * Can this role still act on this row? Any role may enrol at any point before
- * the pod is live, as long as its own tick is still empty. The server enforces
- * the same rule on every mutation — this only decides whether to draw the
- * button.
+ * Whose turn it is: enrolment runs venue → host → club admin. A venue acts on
+ * an offer with no venue yet; a host once a venue has fixed a slot (at once on
+ * a virtual offer, which has no venue); a club admin once a host is on it.
+ * Null once nobody is missing.
+ */
+export function autoPodNextRole(row: Claims): AutoPodRole | null {
+  return autoPodRoles(row).find((role) => !claimOf(row, role)) ?? null;
+}
+
+/**
+ * Can this role act on this row? Only when it is that role's turn, the offer
+ * is still enrolling, and this viewer has not enrolled already. The server
+ * enforces the same order on every mutation — this only decides whether to
+ * draw the button.
  */
 export function autoPodActionable(row: AutoPodRow, role: AutoPodRole): boolean {
   if (row.viewer_claimed) return false;
-  // A virtual offer is never a venue's to act on.
-  if (role === 'venue' && row.pod_mode === 'VIRTUAL') return false;
-  return autoPodPreLive(row.stage) && !claimOf(row, role);
+  return autoPodPreLive(row.stage) && autoPodNextRole(row) === role;
+}
+
+/**
+ * Can this viewer take their enrolment back? A venue or a host may withdraw
+ * while the offer is still enrolling — the club admin's claim is the last one
+ * and completes the pod, so there is nothing to withdraw from after it.
+ */
+export function autoPodWithdrawable(row: AutoPodRow, role: AutoPodRole): boolean {
+  if (role === 'club' || !row.viewer_claimed) return false;
+  return autoPodPreLive(row.stage) && !!claimOf(row, role);
 }
 
 /** Split a role's queue into what needs them and what they already took. */

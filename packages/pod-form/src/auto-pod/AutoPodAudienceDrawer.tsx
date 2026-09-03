@@ -17,7 +17,18 @@ interface DrawerTable {
   search: (row: Row) => string;
 }
 
-const text = (row: Row, field: string) => String(row[field] ?? '');
+/**
+ * One field of a row as searchable text.
+ *
+ * A Row is Record<string, unknown>, so a field that turns out to be an object
+ * would stringify to '[object Object]' and quietly pollute the search index
+ * with a value no one can ever match. Only scalars are text.
+ */
+const text = (row: Row, field: string): string => {
+  const value = row[field];
+  if (typeof value === 'string') return value;
+  return typeof value === 'number' ? String(value) : '';
+};
 
 /** Each role's list, as the table shows it. */
 function tableFor(role: AutoPodAudienceRole, audience: AutoPodAudience, t: Translate): DrawerTable {

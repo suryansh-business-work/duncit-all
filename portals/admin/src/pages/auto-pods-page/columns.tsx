@@ -24,6 +24,8 @@ export interface AutoPodColumnDeps {
   onDelete: (row: AutoPodTableRow) => void;
   onViewPod: (row: AutoPodTableRow) => void;
   onToggleActive: (row: AutoPodTableRow) => void;
+  /** The green Venue dot on the dependency line opens that venue's details. */
+  onVenueDetails: (row: AutoPodTableRow) => void;
 }
 
 /**
@@ -39,7 +41,8 @@ export interface AutoPodColumnDeps {
  * which is what keeps the dots repainting as partners enrol.
  */
 export function getAutoPodColumns(deps: Readonly<AutoPodColumnDeps>): DuncitColumn<AutoPodTableRow>[] {
-  const { t, labels, formatDateTime, onEdit, onCancel, onDelete, onViewPod, onToggleActive } = deps;
+  const { t, labels, formatDateTime, onEdit, onCancel, onDelete, onViewPod, onToggleActive, onVenueDetails } =
+    deps;
   const formatDate = (date: Date) => formatDateTime(date.toISOString());
 
   return [
@@ -69,7 +72,9 @@ export function getAutoPodColumns(deps: Readonly<AutoPodColumnDeps>): DuncitColu
       sortable: false,
       minWidth: 380,
       filter: { type: 'select', options: pendingFilterOptions(t), multiple: true },
-      cellRenderer: (row) => <AutoPodDependencyTimeline row={row} labels={labels} />,
+      cellRenderer: (row) => (
+        <AutoPodDependencyTimeline row={row} labels={labels} onVenueClick={() => onVenueDetails(row)} />
+      ),
       // Keyed on who has enrolled so the cell's plain-text value (search,
       // export) tracks the dots rather than going stale at three dashes.
       valueGetter: (row) => `${venueNameOf(row)} / ${hostNameOf(row)} / ${clubNameOf(row)}`,

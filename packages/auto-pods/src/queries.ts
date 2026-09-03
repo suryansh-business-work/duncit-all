@@ -25,6 +25,7 @@ const AUTO_POD_FIELDS = `
   pod_id
   expected_host_earnings
   venue_expires_at
+  withdraw_penalty_points
   venue_claim {
     venue_id
     venue_slot_id
@@ -112,11 +113,58 @@ export const VENUE_ACCEPT_AUTO_POD = gql`
   }
 `;
 
-/** `location_id` is the city the host had selected: it pins an offer nobody has
- * enrolled in yet, and must match the city of one that is already pinned. */
+/** `location_id` is the city the host had selected: it pins a virtual offer
+ * nobody has enrolled in yet, and must match the city of one that is already
+ * pinned. The price and spots are the host's own numbers on the pod. */
 export const HOST_ASSIGN_AUTO_POD = gql`
-  mutation HostAssignAutoPod($auto_pod_doc_id: ID!, $location_id: ID) {
-    hostAssignAutoPod(auto_pod_doc_id: $auto_pod_doc_id, location_id: $location_id) {
+  mutation HostAssignAutoPod($auto_pod_doc_id: ID!, $location_id: ID, $pod_amount: Float, $no_of_spots: Int) {
+    hostAssignAutoPod(
+      auto_pod_doc_id: $auto_pod_doc_id
+      location_id: $location_id
+      pod_amount: $pod_amount
+      no_of_spots: $no_of_spots
+    ) {
+      ${AUTO_POD_FIELDS}
+    }
+  }
+`;
+
+/**
+ * What the host's numbers add up to on this offer — under their own rates,
+ * the venue's slot price and the club admin's cut — plus the spot limits the
+ * activity and the venue impose. Re-read on every change of price or spots.
+ */
+export const AUTO_POD_HOST_PROJECTION = gql`
+  query AutoPodHostProjection($auto_pod_doc_id: ID!, $pod_amount: Float!, $no_of_spots: Int!) {
+    autoPodHostProjection(auto_pod_doc_id: $auto_pod_doc_id, pod_amount: $pod_amount, no_of_spots: $no_of_spots) {
+      min_spots
+      max_spots
+      pod_amount
+      no_of_spots
+      total_collection
+      gst_amount
+      platform_fee_amount
+      venue_amount
+      club_admin_amount
+      host_receives
+      viable
+    }
+  }
+`;
+
+/** A venue takes its slot back; the offer returns to venues' lists. */
+export const VENUE_WITHDRAW_AUTO_POD = gql`
+  mutation VenueWithdrawAutoPod($auto_pod_doc_id: ID!) {
+    venueWithdrawAutoPod(auto_pod_doc_id: $auto_pod_doc_id) {
+      ${AUTO_POD_FIELDS}
+    }
+  }
+`;
+
+/** A host steps off; the offer returns to hosts' lists. */
+export const HOST_WITHDRAW_AUTO_POD = gql`
+  mutation HostWithdrawAutoPod($auto_pod_doc_id: ID!) {
+    hostWithdrawAutoPod(auto_pod_doc_id: $auto_pod_doc_id) {
       ${AUTO_POD_FIELDS}
     }
   }

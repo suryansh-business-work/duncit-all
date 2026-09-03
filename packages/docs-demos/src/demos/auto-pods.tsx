@@ -11,7 +11,7 @@ import {
 import { defineDemo, defineDemos } from '../types';
 
 interface AutoPodMock {
-  /** Whether each partner has enrolled yet — in any order. */
+  /** Whether each partner has enrolled yet — venue, then host, then club admin. */
   venue_claimed: boolean;
   host_claimed: boolean;
   club_claimed: boolean;

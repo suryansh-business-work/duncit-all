@@ -162,6 +162,32 @@ describe('AutoPodDependencyTimeline', () => {
     expect(screen.getByLabelText(`${labels.tick('venue')} — ${labels.tickPending}`)).toBeInTheDocument();
   });
 
+  it('turns the green venue dot into a button when told what to open, and leaves an amber one alone', () => {
+    const onVenueClick = vi.fn();
+    const venue = {
+      venue_id: 'v1',
+      venue_slot_id: 's1',
+      owner_user_id: 'o1',
+      venue_name: 'Play Arena',
+      pod_date_time: '2026-09-06T07:00:00.000Z',
+      pod_end_date_time: null,
+      slot_price: 1200,
+      accepted_at: '2026-09-01T00:00:00.000Z',
+    };
+    const { unmount } = render(
+      <AutoPodDependencyTimeline row={row({ venue_claim: venue })} labels={labels} onVenueClick={onVenueClick} />,
+    );
+    fireEvent.click(screen.getByTestId('auto-pod-dependency-venue'));
+    expect(onVenueClick).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText(`${labels.tick('venue')} — ${labels.tickDone}`).tagName).toBe('BUTTON');
+    expect(screen.getByTestId('auto-pod-dependency-venue')).toHaveTextContent('Play Arena');
+    unmount();
+
+    render(<AutoPodDependencyTimeline row={row()} labels={labels} onVenueClick={onVenueClick} />);
+    expect(screen.queryByTestId('auto-pod-dependency-venue')).toBeNull();
+    expect(screen.getByLabelText(`${labels.tick('venue')} — ${labels.tickPending}`).tagName).toBe('SPAN');
+  });
+
   it('falls back to the "enrolled" word when a claim carries no name', () => {
     render(
       <AutoPodDependencyTimeline

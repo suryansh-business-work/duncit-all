@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ScrollView, YStack } from 'tamagui';
-import { autoPodActionable, type AutoPodRow } from '@duncit/utils';
+import { autoPodActionable, autoPodWithdrawable, type AutoPodRow } from '@duncit/utils';
 
 import { StackScreen } from '@/components/StackScreen';
 import { PillButton } from '@/components/attendance/AttendanceOtpControls';
@@ -8,6 +8,7 @@ import {
   AutoPodCategoryChips,
   AutoPodLocationRow,
   AutoPodQueue,
+  AutoPodWithdrawSheet,
   HostClaimSheet,
 } from '@/components/auto-pods';
 import { useAutoPodScreen } from '@/hooks/useAutoPodScreen';
@@ -17,11 +18,13 @@ import { useLocations } from '@/hooks/useLocations';
  * Host Studio > Auto Pods — offers in the host's approved sub-categories,
  * waiting for a host to take them.
  *
- * A host may enrol at any point. On an offer nobody has enrolled in yet, the
- * host's city — the one chosen in the header — is what pins it, which is why
- * "Assign Myself" needs a city selected. Whatever a venue has already fixed
- * (date, price) is shown, along with what the host would earn under their own
- * rates.
+ * The host goes second: a physical offer arrives once a venue has fixed its
+ * slot, a virtual one straight away — and on a virtual offer nobody has
+ * enrolled in yet the host's city (the one chosen in the header) is what pins
+ * it, which is why "Assign Myself" needs a city selected. The host prices the
+ * pod and picks its spots in the sheet, against what the venue fixed. An
+ * assigned offer sits under "Assigned Auto Pods" with a Cancel until a club
+ * admin claims it.
  *
  * The mWeb twin is `/host/auto-pods` (rule 27).
  */
@@ -33,6 +36,18 @@ export function HostAutoPodsScreen() {
     { locationId: selectedId, subCategoryId },
   );
   const [offer, setOffer] = useState<AutoPodRow | null>(null);
+  const [withdrawing, setWithdrawing] = useState<AutoPodRow | null>(null);
+
+  const renderMineAction = (row: AutoPodRow) =>
+    autoPodWithdrawable(row, 'host') ? (
+      <PillButton
+        testID={`auto-pod-withdraw-${row.id}`}
+        label={labels.withdrawCta}
+        onPress={() => setWithdrawing(row)}
+        variant="ghost"
+        disabled={false}
+      />
+    ) : null;
 
   const renderAction = (row: AutoPodRow) =>
     autoPodActionable(row, 'host') ? (
@@ -61,9 +76,21 @@ export function HostAutoPodsScreen() {
             formatWhen={formatWhen}
             formatMoney={formatMoney}
             renderAction={renderAction}
+            renderMineAction={renderMineAction}
           />
         </YStack>
       </ScrollView>
+
+      <AutoPodWithdrawSheet
+        row={withdrawing}
+        role="host"
+        labels={labels}
+        onClose={() => setWithdrawing(null)}
+        onWithdrawn={() => {
+          setWithdrawing(null);
+          refetch();
+        }}
+      />
 
       <HostClaimSheet
         row={offer}

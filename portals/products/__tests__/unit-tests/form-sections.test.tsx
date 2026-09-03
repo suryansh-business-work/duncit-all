@@ -89,11 +89,9 @@ describe('DeliveryAvailabilitySection', () => {
     expect(screen.getByText(/Enable "Delivery available" to set a charge/i)).toBeInTheDocument();
     // The required warehouse picker is rendered alongside the shipping fields.
     await waitFor(() => expect(screen.getByText('Main WH — Pune')).toBeInTheDocument());
-    // Toggle the "Delivery available" switch on.
-    const deliverySwitch = within(
-      screen.getByText('Delivery available').closest('label') as HTMLElement,
-    ).getByRole('checkbox');
-    fireEvent.click(deliverySwitch);
+    // Toggle the "Delivery available" switch on. MUI's Switch exposes role
+    // "switch", not "checkbox", so the label is the stable way in.
+    fireEvent.click(screen.getByLabelText('Delivery available'));
     expect(screen.getByLabelText(/Delivery charge/i)).not.toBeDisabled();
     expect(screen.getByText(/set 0 for free delivery/i)).toBeInTheDocument();
   });

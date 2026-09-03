@@ -124,6 +124,8 @@ export const autoPodTypeDefs = gql`
     venue's own queue.
     """
     venue_expires_at: String
+    "Account Health points a venue or host loses by withdrawing (Pod Settings). Set on their own queues."
+    withdraw_penalty_points: Int
     "True when the calling user (or one of their clubs) already enrolled."
     viewer_claimed: Boolean!
     pod_id: ID
@@ -215,6 +217,26 @@ export const autoPodTypeDefs = gql`
     slots: [AutoPodVenueSlot!]!
   }
 
+  """
+  What the host's numbers add up to on an offer — under their own rates, the
+  venue's slot price and the club admin's cut — and the spot limits the
+  activity and the booked space impose.
+  """
+  type AutoPodHostProjection {
+    min_spots: Int!
+    max_spots: Int!
+    pod_amount: Float!
+    no_of_spots: Int!
+    total_collection: Float!
+    gst_amount: Float!
+    platform_fee_amount: Float!
+    venue_amount: Float!
+    club_admin_amount: Float!
+    host_receives: Float!
+    "False when the numbers would be refused: out of range, or the host would earn nothing."
+    viable: Boolean!
+  }
+
   type AutoPodTablePage {
     rows: [AutoPod!]!
     total: Int!
@@ -289,6 +311,8 @@ export const autoPodTypeDefs = gql`
     venue would be paid after Finance's deductions.
     """
     autoPodVenueSlots(auto_pod_doc_id: ID!, venue_id: ID!): AutoPodVenueSlots!
+    "What a ticket price and spot count would earn the CALLING host on this offer, plus the spot limits."
+    autoPodHostProjection(auto_pod_doc_id: ID!, pod_amount: Float!, no_of_spots: Int!): AutoPodHostProjection!
     """
     Offers this host may still take (in a sub-category they are approved in),
     plus the ones they took. sub_category_id narrows to one of their categories;
@@ -339,11 +363,17 @@ export const autoPodTypeDefs = gql`
     "Venue enrols: accepts the offer and commits one of its own slots."
     venueAcceptAutoPod(auto_pod_doc_id: ID!, venue_id: ID!, slot_id: ID!): AutoPod!
     """
-    Host enrols: assigns themselves. location_id is the city the host had
-    selected — required when nobody has enrolled yet (it pins the offer), and
-    must match the pinned city otherwise.
+    Host enrols: assigns themselves, setting the pod's ticket price and spots
+    (the template's when omitted). Only once a venue has fixed the slot on a
+    physical offer. location_id is the city the host had selected — required
+    when nobody has enrolled yet on a virtual offer (it pins it), and must
+    match the pinned city otherwise.
     """
-    hostAssignAutoPod(auto_pod_doc_id: ID!, location_id: ID): AutoPod!
+    hostAssignAutoPod(auto_pod_doc_id: ID!, location_id: ID, pod_amount: Float, no_of_spots: Int): AutoPod!
+    "The venue takes its slot back while the offer is still enrolling; the offer returns to venues' lists and the venue pays the Pod Settings penalty."
+    venueWithdrawAutoPod(auto_pod_doc_id: ID!): AutoPod!
+    "The host steps off while the offer is still enrolling; the offer returns to hosts' lists and the host pays the Pod Settings penalty."
+    hostWithdrawAutoPod(auto_pod_doc_id: ID!): AutoPod!
     "Club Admin enrols: claims the offer for one of their clubs."
     clubClaimAutoPod(auto_pod_doc_id: ID!, club_id: ID!): AutoPod!
   }

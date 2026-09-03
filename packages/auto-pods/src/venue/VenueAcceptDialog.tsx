@@ -10,10 +10,11 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { DuncitButton } from '@duncit/buttons';
-import { autoPodCityLabel, type AutoPodRow, type AutoPodLabels } from '@duncit/utils';
+import type { AutoPodRow, AutoPodLabels } from '@duncit/utils';
 import { AUTO_POD_VENUE_SLOTS, VENUE_ACCEPT_AUTO_POD } from '../queries';
 import { enrolmentFailure } from '../failure-message';
 import type { AutoPodVenueOption } from './AutoPodVenuePicker';
+import { NoSlotsNotice, VenueAcceptContext } from './VenueAcceptSections';
 
 /** One of the venue's free slots, priced as the venue would be paid for it. */
 export interface AutoPodVenueSlot {
@@ -152,20 +153,7 @@ export function VenueAcceptDialog({
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {labels.confirmAcceptBody}
           </Typography>
-          {row ? <Typography variant="subtitle2">{row.pod_title}</Typography> : null}
-          {row?.location ? (
-            <Typography variant="body2">{labels.pinnedTo(autoPodCityLabel(row.location))}</Typography>
-          ) : null}
-          {venue ? (
-            <Typography variant="body2" data-testid="auto-pod-accepting-with">
-              {labels.acceptingWith(venue.venue_name)}
-            </Typography>
-          ) : (
-            <Alert severity="info">{labels.pickVenueFirst}</Alert>
-          )}
-          {venue && !venueInCity ? (
-            <Alert severity="warning">{labels.noVenueInCity(autoPodCityLabel(row?.location))}</Alert>
-          ) : null}
+          <VenueAcceptContext row={row} venue={venue} venueInCity={venueInCity} labels={labels} />
 
           <TextField
             select
@@ -185,20 +173,7 @@ export function VenueAcceptDialog({
 
           <SlotEarnings slot={selected} labels={labels} formatMoney={formatMoney} />
 
-          {noSlots ? (
-            <Alert
-              severity="info"
-              action={
-                onAddAvailability ? (
-                  <DuncitButton color="inherit" size="small" onClick={onAddAvailability}>
-                    {labels.addAvailability}
-                  </DuncitButton>
-                ) : undefined
-              }
-            >
-              {labels.noSlots}
-            </Alert>
-          ) : null}
+          {noSlots ? <NoSlotsNotice labels={labels} onAddAvailability={onAddAvailability} /> : null}
 
           {failure ? <Alert severity="error">{failure}</Alert> : null}
         </Stack>

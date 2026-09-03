@@ -6,10 +6,12 @@ import {
   autoPodHostNeedsLocation,
   autoPodMissingRoles,
   autoPodModeCount,
+  autoPodNextRole,
   autoPodRoles,
   autoPodTicks,
   autoPodTimeLeft,
   autoPodWaitingOn,
+  autoPodWithdrawable,
   splitAutoPods,
   type AutoPodClubClaim,
   type AutoPodHostClaim,
@@ -100,51 +102,64 @@ describe('autoPodEnrolledCount', () => {
 });
 
 describe('autoPodActionable', () => {
-  // Each row here is one the role COULD act on (right stage, no claim for that
-  // role) — the viewer's own claim is the only thing taking the button away.
-  it('never offers a row the viewer already took, even one they could otherwise act on', () => {
+  // Enrolment runs venue → host → club admin: a role's button appears only on
+  // its turn, and the viewer's own claim always takes it away.
+  it('never offers a row the viewer already took', () => {
     expect(autoPodActionable(row({ viewer_claimed: true }), 'venue')).toBe(false);
     expect(autoPodActionable(row({ stage: 'CLAIMING', venue_claim: venueClaim, viewer_claimed: true }), 'host')).toBe(false);
-    expect(autoPodActionable(row({ stage: 'CLAIMING', venue_claim: venueClaim, viewer_claimed: true }), 'club')).toBe(false);
   });
 
-  // Enrolment is ANY-ORDER: a role's own empty tick is the whole condition, so
-  // the venue's button is there on an untouched OPEN row and on a CLAIMING one
-  // that a host or club got to first. Its own claim is what takes it away.
-  it('lets a venue act on any pre-live row that has no venue yet', () => {
+  it('starts with the venue on a physical offer, and with the host on a virtual one', () => {
     expect(autoPodActionable(row(), 'venue')).toBe(true);
-    expect(autoPodActionable(row({ stage: 'CLAIMING', host_claim: hostClaim }), 'venue')).toBe(true);
-    expect(autoPodActionable(row({ venue_claim: venueClaim }), 'venue')).toBe(false);
+    expect(autoPodActionable(row(), 'host')).toBe(false);
+    expect(autoPodActionable(row(), 'club')).toBe(false);
+    expect(autoPodActionable(row({ pod_mode: 'VIRTUAL' }), 'venue')).toBe(false);
+    expect(autoPodActionable(row({ pod_mode: 'VIRTUAL' }), 'host')).toBe(true);
+    expect(autoPodActionable(row({ pod_mode: 'VIRTUAL' }), 'club')).toBe(false);
   });
 
-  it('lets a host act on any pre-live row that has no host yet, venue or not', () => {
-    expect(autoPodActionable(row({ stage: 'CLAIMING', venue_claim: venueClaim }), 'host')).toBe(true);
-    expect(autoPodActionable(row({ stage: 'CLAIMING', venue_claim: venueClaim, host_claim: hostClaim }), 'host')).toBe(false);
-    // Nothing has been enrolled yet — the host may still be the one to start it.
-    expect(autoPodActionable(row(), 'host')).toBe(true);
-  });
-
-  it('lets a club act on any pre-live row that has no club yet, venue or not', () => {
-    expect(autoPodActionable(row({ stage: 'CLAIMING', venue_claim: venueClaim }), 'club')).toBe(true);
-    expect(autoPodActionable(row({ stage: 'CLAIMING', venue_claim: venueClaim, club_claim: clubClaim }), 'club')).toBe(false);
-    expect(autoPodActionable(row(), 'club')).toBe(true);
-  });
-
-  // Host and Club Admin enrol in parallel once a venue has committed: one of
-  // them claiming must not take the button away from the other.
-  it('keeps the host and club buttons independent of each other’s claim', () => {
-    const clubTaken = row({ stage: 'CLAIMING', venue_claim: venueClaim, club_claim: clubClaim });
-    const hostTaken = row({ stage: 'CLAIMING', venue_claim: venueClaim, host_claim: hostClaim });
-    expect(autoPodActionable(clubTaken, 'host')).toBe(true);
-    expect(autoPodActionable(hostTaken, 'club')).toBe(true);
+  it('hands the offer to a host once a venue has fixed a slot, and to a club admin once a host is on it', () => {
+    const withVenue = row({ stage: 'CLAIMING', venue_claim: venueClaim });
+    expect(autoPodActionable(withVenue, 'venue')).toBe(false);
+    expect(autoPodActionable(withVenue, 'host')).toBe(true);
+    expect(autoPodActionable(withVenue, 'club')).toBe(false);
+    const withHost = row({ stage: 'CLAIMING', venue_claim: venueClaim, host_claim: hostClaim });
+    expect(autoPodActionable(withHost, 'host')).toBe(false);
+    expect(autoPodActionable(withHost, 'club')).toBe(true);
+    expect(autoPodActionable(fullyClaimed(), 'club')).toBe(false);
   });
 
   it('offers nothing once the row is materializing, live, cancelled or expired', () => {
     for (const stage of ['MATERIALIZING', 'LIVE', 'CANCELLED', 'EXPIRED'] as const) {
       expect(autoPodActionable(row({ stage }), 'venue')).toBe(false);
-      expect(autoPodActionable(row({ stage }), 'host')).toBe(false);
-      expect(autoPodActionable(row({ stage }), 'club')).toBe(false);
+      expect(autoPodActionable(row({ stage, venue_claim: venueClaim }), 'host')).toBe(false);
+      expect(autoPodActionable(row({ stage, venue_claim: venueClaim, host_claim: hostClaim }), 'club')).toBe(false);
     }
+  });
+});
+
+describe('autoPodNextRole', () => {
+  it('names whose turn it is, in order, and null once nobody is missing', () => {
+    expect(autoPodNextRole(row())).toBe('venue');
+    expect(autoPodNextRole(row({ venue_claim: venueClaim }))).toBe('host');
+    expect(autoPodNextRole(row({ venue_claim: venueClaim, host_claim: hostClaim }))).toBe('club');
+    expect(autoPodNextRole(fullyClaimed())).toBeNull();
+    expect(autoPodNextRole(row({ pod_mode: 'VIRTUAL' }))).toBe('host');
+  });
+});
+
+describe('autoPodWithdrawable', () => {
+  it('lets a venue or host take back their own enrolment while the offer is still enrolling', () => {
+    expect(autoPodWithdrawable(row({ stage: 'CLAIMING', venue_claim: venueClaim, viewer_claimed: true }), 'venue')).toBe(true);
+    expect(autoPodWithdrawable(row({ stage: 'CLAIMING', venue_claim: venueClaim, host_claim: hostClaim, viewer_claimed: true }), 'host')).toBe(true);
+    // Not theirs, or not their role's claim.
+    expect(autoPodWithdrawable(row({ stage: 'CLAIMING', venue_claim: venueClaim }), 'venue')).toBe(false);
+    expect(autoPodWithdrawable(row({ stage: 'CLAIMING', venue_claim: venueClaim, viewer_claimed: true }), 'host')).toBe(false);
+  });
+
+  it('never offers it to a club admin, nor on an offer that is no longer enrolling', () => {
+    expect(autoPodWithdrawable(fullyClaimed({ viewer_claimed: true }), 'club')).toBe(false);
+    expect(autoPodWithdrawable(row({ stage: 'LIVE', venue_claim: venueClaim, viewer_claimed: true }), 'venue')).toBe(false);
   });
 });
 
@@ -179,11 +194,14 @@ describe('splitAutoPods', () => {
     expect(splitAutoPods(mineRows, 'host').mine.map((r) => r.id)).toEqual(['y', 'x']);
   });
 
-  it('splits by the role asked for, not by whichever role could act', () => {
+  it('splits by the role asked for: only the role whose turn it is sees the row', () => {
     const claiming = row({ id: 'c', stage: 'CLAIMING', venue_claim: venueClaim });
     expect(splitAutoPods([claiming], 'venue').actionable).toEqual([]);
     expect(splitAutoPods([claiming], 'host').actionable.map((r) => r.id)).toEqual(['c']);
-    expect(splitAutoPods([claiming], 'club').actionable.map((r) => r.id)).toEqual(['c']);
+    // The club admin's turn comes only once a host is on it.
+    expect(splitAutoPods([claiming], 'club').actionable).toEqual([]);
+    const hosted = row({ id: 'h', stage: 'CLAIMING', venue_claim: venueClaim, host_claim: hostClaim });
+    expect(splitAutoPods([hosted], 'club').actionable.map((r) => r.id)).toEqual(['h']);
   });
 
   it('returns two empty lists for an empty queue', () => {
@@ -319,10 +337,11 @@ describe('a virtual offer', () => {
     expect(autoPodEnrolledCount(virtual({ host_claim: hostClaim, club_claim: clubClaim }))).toBe(2);
   });
 
-  it('is never a venue’s to act on, and still the host’s and the club’s', () => {
+  it('is never a venue’s to act on: the host goes first, then the club', () => {
     expect(autoPodActionable(virtual(), 'venue')).toBe(false);
     expect(autoPodActionable(virtual(), 'host')).toBe(true);
-    expect(autoPodActionable(virtual(), 'club')).toBe(true);
+    expect(autoPodActionable(virtual(), 'club')).toBe(false);
+    expect(autoPodActionable(virtual({ stage: 'CLAIMING', host_claim: hostClaim }), 'club')).toBe(true);
   });
 
   it('waits on the host and the club only', () => {

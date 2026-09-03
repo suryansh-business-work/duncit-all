@@ -4,6 +4,7 @@ import { DuncitButton } from '@duncit/buttons';
 import {
   AutoPodCategoryFilter,
   AutoPodQueue,
+  AutoPodWithdrawAction,
   HOST_AUTO_PODS,
   HostClaimDialog,
 } from '@duncit/auto-pods';
@@ -20,10 +21,13 @@ interface Props {
 /**
  * Host Studio > Auto Pods.
  *
- * Enrolments happen in any order, so a host may be the first in — the city
- * selected at the top of this page then pins the offer — or the last, taking a
- * pod a venue has already dated. The category filter is the host's own
- * approved sub-categories; the server offers nothing outside them anyway.
+ * The host goes second: a physical offer reaches this page only once a venue
+ * has fixed its slot, so the host prices the pod and picks its spots against
+ * a real date, and a virtual offer reaches it first — the city selected at
+ * the top of this page then pins it. An assigned offer sits under "Assigned
+ * Auto Pods" with a Cancel until a club admin claims it. The category filter
+ * is the host's own approved sub-categories; the server offers nothing
+ * outside them anyway.
  */
 export default function HostAutoPodsPage({ locationId }: Readonly<Props>) {
   const [subCategoryId, setSubCategoryId] = useState('');
@@ -60,6 +64,9 @@ export default function HostAutoPodsPage({ locationId }: Readonly<Props>) {
           <DuncitButton fullWidth variant="contained" onClick={() => setTarget(row)}>
             {queue.labels.assignMyselfCta}
           </DuncitButton>
+        )}
+        renderMineAction={(row) => (
+          <AutoPodWithdrawAction row={row} role="host" labels={queue.labels} onWithdrawn={queue.reload} />
         )}
       />
 

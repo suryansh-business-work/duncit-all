@@ -2921,6 +2921,29 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       potentialEarning: 'You earn {amount} from this slot, after Duncit’s deductions.',
       slotNotViable: 'The pod cannot cover this slot’s price.',
       acceptingWith: 'Accepting with {venue}',
+      // The heading over what this partner already enrolled in. Enrolment runs
+      // venue → host → club admin, so the club admin's is the final list.
+      assignedVenue: 'Assigned slot',
+      assignedHost: 'Assigned Auto Pods',
+      assignedClub: 'Final assigned Auto Pods',
+      // Taking an enrolment back — the warning is the product's own sentence.
+      withdrawCta: 'Cancel Auto Pod',
+      withdrawTitle: 'Cancel this Auto Pod?',
+      withdrawWarning:
+        'This Auto Pod is dependent on multiple resources. Please make sure your profile health may be impacted if you cancel this Auto Pod.',
+      withdrawPenalty: 'Cancelling deducts {points} Account Health points.',
+      withdrawConfirm: 'Yes, cancel',
+      withdrawn: 'You have cancelled this Auto Pod. It is back on the list for others.',
+      // The host's numbers on the offer, and what they add up to after every deduction.
+      ticketPrice: 'Ticket price',
+      spotsField: 'Number of spots',
+      spotsRange: 'Between {min} and {max} spots.',
+      projectionTitle: 'Your potential earning',
+      projectionHost: 'You earn {amount}',
+      projectionVenue: 'Venue: {amount}',
+      projectionClub: 'Club admin: {amount}',
+      projectionFees: 'Duncit fee and GST: {amount}',
+      projectionNotViable: 'At this price you would earn nothing — raise the ticket price or the number of spots.',
       pickLocationFirst: 'Select your city at the top first — this pod takes its city from you.',
       willPinTo: 'This pod will be set to {city}.',
       noVenueInCity: 'None of your venues is in {city}.',

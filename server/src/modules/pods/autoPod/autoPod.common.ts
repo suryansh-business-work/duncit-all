@@ -80,3 +80,44 @@ export function pendingBaseFilter(roles: readonly string[]): Record<string, unkn
   if (clauses.length === 0) return null;
   return clauses.length === 1 ? clauses[0] : { $or: clauses };
 }
+
+/**
+ * Enrolment runs venue → host → club admin. The host's turn comes once a venue
+ * has fixed a slot (at once on a virtual offer, which has no venue); the club
+ * admin's once a host is on it. The venue's turn is simply "no venue yet".
+ */
+export const HOST_TURN_FILTER = { $or: [{ pod_mode: 'VIRTUAL' }, { venue_claim: { $ne: null } }] };
+export const CLUB_TURN_FILTER = { host_claim: { $ne: null } };
+
+type Turn = 'venue' | 'host' | 'club';
+
+/** Whose turn it is on this offer, or null once everyone needed is on it. */
+export function autoPodNextRole(doc: {
+  pod_mode?: string | null;
+  venue_claim: unknown;
+  host_claim: unknown;
+  club_claim: unknown;
+}): Turn | null {
+  if (doc.pod_mode !== 'VIRTUAL' && !doc.venue_claim) return 'venue';
+  if (!doc.host_claim) return 'host';
+  if (!doc.club_claim) return 'club';
+  return null;
+}
+
+/**
+ * The venue window counts from the last time the offer was put in front of
+ * venues — `venue_window_from`, reset when a venue withdraws — and from
+ * `created_at` on rows written before that field existed.
+ */
+export const venueWindowOpen = (cutoff: Date) => ({
+  $or: [
+    { venue_window_from: { $gt: cutoff } },
+    { venue_window_from: null, created_at: { $gt: cutoff } },
+  ],
+});
+export const venueWindowPassed = (cutoff: Date) => ({
+  $or: [
+    { venue_window_from: { $lte: cutoff } },
+    { venue_window_from: null, created_at: { $lte: cutoff } },
+  ],
+});

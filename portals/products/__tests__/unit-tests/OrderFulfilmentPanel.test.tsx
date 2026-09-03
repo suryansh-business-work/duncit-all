@@ -90,8 +90,9 @@ describe('OrderFulfilmentPanel', () => {
     expect(screen.getByRole('button', { name: 'Update status' })).toBeDisabled();
     fireEvent.mouseDown(screen.getByLabelText('Set status to'));
     const listbox = await screen.findByRole('listbox');
-    // humaniseStatus leaves already-upper-case statuses upper-cased.
-    fireEvent.click(within(listbox).getByText('SHIPPED'));
+    // humaniseStatus goes through the shared statusLabel now, so the option
+    // reads as translated copy rather than the raw enum.
+    fireEvent.click(within(listbox).getByText('Shipped'));
     const note = screen.getByLabelText(/Note/i);
     fireEvent.change(note, { target: { value: 'go' } });
     const update = screen.getByRole('button', { name: 'Update status' });

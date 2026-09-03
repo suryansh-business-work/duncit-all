@@ -1,4 +1,5 @@
 import type { IAutoPod } from './autoPod.model';
+import { autoPodNextRole } from './autoPod.common';
 import { autoPodCityLabel } from './autoPod.location';
 import { audienceClubs, audienceHosts, audienceVenues } from './autoPod.audience';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -122,44 +123,32 @@ function whereLine(doc: IAutoPod): string {
 const ROLE_NOUN: Record<Role, string> = { venue: 'a venue', host: 'a host', club: 'a club' };
 
 /**
- * Tell each role that has NOT enrolled yet that the offer is waiting on them.
- * Enrolments happen in any order, so this is the one audience computation:
- * the opener calls it with nobody enrolled, and every enrolment calls it again
- * for whoever is still missing — now narrowed to the pinned city. `skip` holds
- * roles for whom this enrolment changed nothing, so they are not told twice.
+ * Tell the role whose turn it is that the offer is waiting on them. Enrolment
+ * runs venue → host → club admin, so this is the one audience computation:
+ * the opener calls it with nobody enrolled (venues, or hosts on a virtual
+ * offer), every enrolment calls it again for the next role — now narrowed to
+ * the pinned city — and a withdrawal calls it for the role that just left.
  */
-async function remaining(doc: IAutoPod, skip: Role[] = []): Promise<void> {
+async function remaining(doc: IAutoPod): Promise<void> {
   if (doc.is_active === false) return;
-  const missing: Role[] = [];
-  // A virtual offer has no venue to wait for.
-  const needsVenue = doc.pod_mode !== 'VIRTUAL' && !doc.venue_claim;
-  if (needsVenue && !skip.includes('venue')) missing.push('venue');
-  if (!doc.host_claim && !skip.includes('host')) missing.push('host');
-  if (!doc.club_claim && !skip.includes('club')) missing.push('club');
-  if (missing.length === 0) return;
+  const role = autoPodNextRole(doc);
+  if (!role) return;
 
-  const where = whereLine(doc);
-  const audiences = await Promise.all(
-    missing.map(async (role) => {
-      if (role === 'venue') return venueOwnerIds(doc);
-      if (role === 'host') return hostIds(doc);
-      return clubAdminIds(doc);
-    })
-  );
+  const audience = await (async () => {
+    if (role === 'venue') return venueOwnerIds(doc);
+    if (role === 'host') return hostIds(doc);
+    return clubAdminIds(doc);
+  })();
   const actions: Record<Role, string> = {
     venue: 'Accept it with one of your slots.',
     host: 'Assign yourself to host it.',
     club: 'Claim it for your club.',
   };
-  await Promise.all(
-    missing.map((role, index) =>
-      push(
-        audiences[index],
-        `Auto Pod needs ${ROLE_NOUN[role]}`,
-        `"${doc.pod_title}"${where} is waiting for ${ROLE_NOUN[role]}. ${actions[role]}`,
-        AUTO_POD_LINKS[role]
-      )
-    )
+  await push(
+    audience,
+    `Auto Pod needs ${ROLE_NOUN[role]}`,
+    `"${doc.pod_title}"${whereLine(doc)} is waiting for ${ROLE_NOUN[role]}. ${actions[role]}`,
+    AUTO_POD_LINKS[role]
   );
 }
 
@@ -171,9 +160,7 @@ export const autoPodNotify = {
 
   /**
    * One partner enrolled: everyone already on it (and the opener) hears who,
-   * and whoever is still missing is asked again — now for this city. A club's
-   * enrolment changes nothing a host sees unless it was the one that pinned
-   * the city, so hosts are not re-told in that case.
+   * and the next role in line is asked — now for this city.
    */
   async enrolled(doc: IAutoPod, who: Role) {
     const headline: Record<Role, string> = {
@@ -186,10 +173,25 @@ export const autoPodNotify = {
       host: doc.host_claim ? String(doc.host_claim.user_id) : '',
       club: doc.club_claim ? String(doc.club_claim.user_id) : '',
     }[who];
-    const skip: Role[] = who === 'club' && doc.location?.bound_by !== 'CLUB' ? ['host'] : [];
     await Promise.all([
       pushStakeholders(stakeholders(doc), `Auto Pod has ${ROLE_NOUN[who]}`, headline[who], [actorId]),
-      remaining(doc, skip),
+      remaining(doc),
+    ]);
+  },
+
+  /**
+   * A venue or host withdrew: everyone still on it (and the opener) hears who
+   * left, and the role that just emptied is asked again.
+   */
+  async withdrawn(doc: IAutoPod, who: 'venue' | 'host', name: string) {
+    const noun = who === 'venue' ? 'venue' : 'host';
+    await Promise.all([
+      pushStakeholders(
+        stakeholders(doc),
+        `Auto Pod lost its ${noun}`,
+        `${name || 'A partner'} withdrew from "${doc.pod_title}". It is back on the list for ${ROLE_NOUN[who]}.`
+      ),
+      remaining(doc),
     ]);
   },
 

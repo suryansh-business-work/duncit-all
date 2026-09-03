@@ -9,15 +9,21 @@ vi.mock('@mui/x-date-pickers/DatePicker', () => ({
     return <div data-testid="date-picker" />;
   },
 }));
-// useDateFormat hits Apollo; stub it to a fixed format so DateField renders solo.
-vi.mock('@duncit/app-settings', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@duncit/app-settings')>()), useDateFormat: () => ({ dateFormat: 'dd MMM yyyy' }) }));
-
 describe('DateField', () => {
-  it('parses a valid ISO value into a Date and forwards the format', () => {
+  it('parses a valid ISO value into a Date', () => {
     render(<DateField label="Expiry" value="2026-05-20" onChange={vi.fn()} />);
-    expect(picker.props?.format).toBe('dd MMM yyyy');
+
     expect(picker.props?.value).toBeInstanceOf(Date);
+    expect(picker.props?.label).toBe('Expiry');
+  });
+
+  it('leaves the display format to the app-wide provider', () => {
+    render(<DateField label="Expiry" value="2026-05-20" onChange={vi.fn()} />);
+
+    // The admin-configured format reaches MUI X once, through
+    // DuncitLocalizationProvider's dateFormats — a per-field format prop here
+    // would be a second source of truth for the same setting (rule 40).
+    expect(picker.props?.format).toBeUndefined();
   });
 
   it('treats an empty or invalid value as null', () => {

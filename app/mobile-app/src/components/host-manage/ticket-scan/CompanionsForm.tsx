@@ -61,7 +61,10 @@ export function CompanionsForm({
   const { t } = useTranslation();
   const [rows, setRows] = useState<CompanionEntry[]>(() => blankCompanionEntries(required));
   const [rowKeys] = useState<string[]>(() =>
-    rows.map(() => `companion-${(nextCompanionKey += 1)}`),
+    rows.map(() => {
+      nextCompanionKey += 1;
+      return `companion-${nextCompanionKey}`;
+    }),
   );
   const [touched, setTouched] = useState(false);
   const otp = useCompanionOtp(

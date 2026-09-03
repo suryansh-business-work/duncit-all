@@ -2,7 +2,8 @@
  * The three enrolment dialogs — one per partner.
  *
  * Each is the moment a partner commits, and each commits something different:
- * the host commits themselves, and the club admin commits one of their clubs
+ * the host commits themselves plus the pod's price and spots, and the club
+ * admin commits one of their clubs
  * (the venue's dialog, which commits a real slot, is proven in
  * auto-pod-venue-dialog.test.tsx). None of them may report success the server
  * never gave, which is what these hold: with nothing answering, no callback
@@ -20,6 +21,7 @@ import { ClubClaimDialog } from '../src/club/ClubClaimDialog';
 import { HostClaimDialog } from '../src/host/HostClaimDialog';
 import { enrolmentFailure } from '../src/failure-message';
 import {
+  AUTO_POD_HOST_PROJECTION,
   CLUB_CLAIM_AUTO_POD,
   HOST_ASSIGN_AUTO_POD,
   MY_ADMIN_CLUBS_FOR_AUTO_POD,
@@ -131,10 +133,50 @@ describe('HostClaimDialog', () => {
 
   const assignMock = (variables: Record<string, unknown>, over: Partial<MockedResponse> = {}) =>
     ({
-      request: { query: HOST_ASSIGN_AUTO_POD, variables },
+      request: {
+        query: HOST_ASSIGN_AUTO_POD,
+        variables: { auto_pod_doc_id: 'ap-1', location_id: 'loc-blr', pod_amount: 250, no_of_spots: 8, ...variables },
+      },
       result: { data: { hostAssignAutoPod: null } },
       ...over,
     }) as MockedResponse;
+
+  /** The server's pricing of the numbers typed — re-read on every change, so reusable. */
+  const projectionMock = (
+    variables: Record<string, unknown> = {},
+    over: Record<string, unknown> = {},
+  ): MockedResponse => ({
+    request: {
+      query: AUTO_POD_HOST_PROJECTION,
+      variables: { auto_pod_doc_id: 'ap-1', pod_amount: 250, no_of_spots: 8, ...variables },
+    },
+    maxUsageCount: Number.POSITIVE_INFINITY,
+    result: {
+      data: {
+        autoPodHostProjection: {
+          __typename: 'AutoPodHostProjection',
+          min_spots: 2,
+          max_spots: 20,
+          pod_amount: 250,
+          no_of_spots: 8,
+          total_collection: 1750,
+          gst_amount: 267,
+          platform_fee_amount: 88,
+          venue_amount: 500,
+          club_admin_amount: 100,
+          host_receives: 1400,
+          viable: true,
+          ...over,
+        },
+      },
+    },
+  });
+
+  const typeSpots = async (value: string) => {
+    fireEvent.change(screen.getByLabelText(labels.spotsField), { target: { value } });
+    await settle();
+    await settle();
+  };
 
   it('renders nothing while it is closed', () => {
     wrap(<HostClaimDialog {...props} row={row()} open={false} />);
@@ -150,20 +192,51 @@ describe('HostClaimDialog', () => {
     expect(document.body.textContent).not.toContain('Weekly Badminton');
   });
 
-  it('shows the host what this pod is worth to them before they commit', async () => {
-    wrap(<HostClaimDialog {...props} row={row({ expected_host_earnings: 1400 })} open />);
+  // The template's numbers are the starting point, priced by the server the
+  // moment the dialog opens: what the host keeps, then what everyone else takes.
+  it('prices the template’s numbers and shows the host what they would keep', async () => {
+    wrap(<HostClaimDialog {...props} row={row()} open />, [projectionMock()]);
+    await settle();
     await settle();
 
     expect(document.body.textContent).toContain('Weekly Badminton');
-    expect(document.body.textContent).toContain(labels.expectedEarnings('₹1400'));
+    expect(screen.getByLabelText(labels.ticketPrice)).toHaveValue(250);
+    expect(screen.getByLabelText(labels.spotsField)).toHaveValue(8);
+    expect(document.body.textContent).toContain(labels.projectionHost('₹1400'));
+    expect(document.body.textContent).toContain(labels.projectionVenue('₹500'));
+    expect(document.body.textContent).toContain(labels.projectionClub('₹100'));
+    expect(document.body.textContent).toContain(labels.projectionFees('₹355'));
+    expect(document.body.textContent).toContain(labels.spotsRange(2, 20));
   });
 
-  it('opens on a pod whose earnings have not been worked out yet', async () => {
-    wrap(<HostClaimDialog {...props} row={row({ expected_host_earnings: null })} open />);
+  it('says when the numbers would be refused, and keeps the button shut', async () => {
+    wrap(<HostClaimDialog {...props} row={row()} open />, [projectionMock({}, { viable: false, host_receives: 0 })]);
+    await settle();
     await settle();
 
-    expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
-    expect(document.body.textContent).not.toContain(labels.expectedEarnings('₹1400'));
+    expect(document.body.textContent).toContain(labels.projectionNotViable);
+    expect(screen.getByRole('button', { name: labels.assignMyselfCta })).toBeDisabled();
+  });
+
+  it('keeps the button shut until the server has priced the pod', async () => {
+    wrap(<HostClaimDialog {...props} row={row()} open />);
+    await settle();
+
+    expect(screen.getByRole('button', { name: labels.assignMyselfCta })).toBeDisabled();
+  });
+
+  // The venue's capacity is the ceiling: a count above it is flagged on the
+  // field and the button stays shut, whatever the money says.
+  it('flags a spot count outside the limits the server sent', async () => {
+    wrap(<HostClaimDialog {...props} row={row()} open />, [
+      projectionMock({}, { min_spots: 4, max_spots: 6, viable: true }),
+    ]);
+    await settle();
+    await settle();
+
+    expect(document.body.textContent).toContain(labels.spotsRange(4, 6));
+    expect(screen.getByLabelText(labels.spotsField)).toBeInvalid();
+    expect(screen.getByRole('button', { name: labels.assignMyselfCta })).toBeDisabled();
   });
 
   it('shows the date and place a venue has already fixed', async () => {
@@ -201,7 +274,10 @@ describe('HostClaimDialog', () => {
   // and the dialog says why rather than failing at the server.
   it('refuses to assign an unpinned offer until the host has picked a city', async () => {
     const onAssigned = vi.fn();
-    wrap(<HostClaimDialog {...props} locationId="" onAssigned={onAssigned} row={row()} open />);
+    wrap(<HostClaimDialog {...props} locationId="" onAssigned={onAssigned} row={row()} open />, [
+      projectionMock(),
+    ]);
+    await settle();
     await settle();
 
     expect(document.body.textContent).toContain(labels.pickLocationFirst);
@@ -209,13 +285,53 @@ describe('HostClaimDialog', () => {
     expect(onAssigned).not.toHaveBeenCalled();
   });
 
-  it('pins an unclaimed offer to the host’s city on assign', async () => {
+  it('assigns with the host’s numbers, pinning an unclaimed offer to their city', async () => {
     const onAssigned = vi.fn();
     wrap(<HostClaimDialog {...props} onAssigned={onAssigned} row={row()} open />, [
-      assignMock({ auto_pod_doc_id: 'ap-1', location_id: 'loc-blr' }),
+      projectionMock(),
+      assignMock({}),
     ]);
     await settle();
+    await settle();
 
+    await press(labels.assignMyselfCta);
+
+    expect(onAssigned).toHaveBeenCalledTimes(1);
+  });
+
+  // A cleared field is 0 — nothing to price — and the button waits for a real number.
+  it('prices nothing while a field is cleared, then re-prices the price typed', async () => {
+    wrap(<HostClaimDialog {...props} row={row()} open />, [
+      projectionMock(),
+      projectionMock({ pod_amount: 300 }, { pod_amount: 300, host_receives: 1700 }),
+    ]);
+    await settle();
+    await settle();
+
+    fireEvent.change(screen.getByLabelText(labels.ticketPrice), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText(labels.spotsField), { target: { value: '' } });
+    await settle();
+    expect(screen.getByRole('button', { name: labels.assignMyselfCta })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText(labels.ticketPrice), { target: { value: '300' } });
+    await typeSpots('8');
+
+    expect(document.body.textContent).toContain(labels.projectionHost('₹1700'));
+  });
+
+  it('re-prices as the host edits, and sends the numbers they typed', async () => {
+    const onAssigned = vi.fn();
+    wrap(<HostClaimDialog {...props} onAssigned={onAssigned} row={row()} open />, [
+      projectionMock(),
+      projectionMock({ no_of_spots: 10 }, { no_of_spots: 10, host_receives: 1800 }),
+      assignMock({ no_of_spots: 10 }),
+    ]);
+    await settle();
+    await settle();
+
+    await typeSpots('10');
+
+    expect(document.body.textContent).toContain(labels.projectionHost('₹1800'));
     await press(labels.assignMyselfCta);
 
     expect(onAssigned).toHaveBeenCalledTimes(1);
@@ -224,8 +340,10 @@ describe('HostClaimDialog', () => {
   it('sends no city for an offer that already has one', async () => {
     const onAssigned = vi.fn();
     wrap(<HostClaimDialog {...props} onAssigned={onAssigned} row={row({ location: BENGALURU })} open />, [
-      assignMock({ auto_pod_doc_id: 'ap-1', location_id: null }),
+      projectionMock(),
+      assignMock({ location_id: null }),
     ]);
+    await settle();
     await settle();
 
     await press(labels.assignMyselfCta);
@@ -236,11 +354,10 @@ describe('HostClaimDialog', () => {
   it('shows the server’s refusal and reports nothing when another host got there first', async () => {
     const onAssigned = vi.fn();
     wrap(<HostClaimDialog {...props} onAssigned={onAssigned} row={row()} open />, [
-      assignMock({ auto_pod_doc_id: 'ap-1', location_id: 'loc-blr' }, {
-        result: undefined,
-        error: new Error('Another host has already taken this'),
-      }),
+      projectionMock(),
+      assignMock({}, { result: undefined, error: new Error('Another host has already taken this') }),
     ]);
+    await settle();
     await settle();
 
     await press(labels.assignMyselfCta);

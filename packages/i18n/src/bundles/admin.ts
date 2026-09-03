@@ -331,6 +331,12 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       autoPodExpiryLabel: 'Hours',
       autoPodExpiryMin: 'Between 1 and 720 hours.',
       autoPodExpiryInvalid: 'Enter a whole number between 1 and 720.',
+      autoPodPenaltyTitle: 'Auto Pods — cancellation penalty',
+      autoPodPenaltyDesc:
+        'Account Health points a venue or host loses by cancelling an Auto Pod they had enrolled in. The warning they see before cancelling states this number; 0 disables the penalty.',
+      autoPodPenaltyLabel: 'Points',
+      autoPodPenaltyMin: 'Between 0 and 100 points. Default 5.',
+      autoPodPenaltyInvalid: 'Enter a whole number between 0 and 100.',
     },
 
     completePod: {

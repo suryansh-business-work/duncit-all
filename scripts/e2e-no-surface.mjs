@@ -80,6 +80,29 @@ const NO_E2E_SURFACE = new Map([
     'library — the verification cards are rendered end-to-end by mWeb /verification and partners-app Verification',
   ],
   ['@duncit/virtual-scroll', 'pure windowing/search math, no DOM — driven end-to-end by the mWeb + native pod lists'],
+  // Shared libraries added after the list above was written. The e2e audit
+  // proves every workspace SHIPS an e2e script; this is where a library's
+  // no-op is declared honest, so a new package lands here in the same commit.
+  [
+    '@duncit/ai-monitoring',
+    'library — the AI Monitoring notice is rendered end-to-end by every upload field in the portals + mWeb',
+  ],
+  ['@duncit/auto-pods', 'library — the Auto Pod queue is rendered end-to-end by mWeb, partners-app and admin'],
+  ['@duncit/brand', 'Astro-only brand chrome — rendered by the static websites, which have no app state to drive'],
+  ['@duncit/buttons', 'library — DuncitButton is rendered end-to-end by every portal + mWeb'],
+  ['@duncit/buttons-native', 'framework-free press recipe (numbers only), no DOM — consumed by the native app'],
+  ['@duncit/captcha', 'library — the human check is driven end-to-end by every public form in the websites + mWeb'],
+  ['@duncit/dashboard', 'library — the GridStack dashboard is rendered end-to-end by every portal home'],
+  ['@duncit/dialogs-native', 'framework-free sheet sizing + keyboard contract, no DOM — consumed by the native app'],
+  ['@duncit/docs-demos', 'library — the runnable package demos are rendered end-to-end by the tech portal'],
+  ['@duncit/pod-details', 'library — the pod detail view is rendered end-to-end by admin + partners-app'],
+  ['@duncit/pod-product-picker', 'library — the Add a Product dialog is rendered end-to-end by mWeb Create a Pod'],
+  ['@duncit/rich-text', 'library — the rich-text input is rendered end-to-end by the portal forms'],
+  ['@duncit/tabs', 'library — DuncitTabs is rendered end-to-end by every portal + mWeb tab strip'],
+  [
+    '@duncit/user-core',
+    'framework-free session core, no DOM — driven end-to-end by every portal login spec, mWeb and the app',
+  ],
 
   // --- the Astro marketing sites are static, prerendered HTML with no app
   // state, no auth and no GraphQL. They are covered by their own vitest suites

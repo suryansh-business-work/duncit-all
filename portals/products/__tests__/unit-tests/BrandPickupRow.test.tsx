@@ -59,4 +59,36 @@ describe('BrandPickupRow', () => {
     expect(h.onEdit).toHaveBeenCalled();
     expect(h.onDelete).toHaveBeenCalled();
   });
+
+  it('shows why an automatic ShipRocket registration did not land', () => {
+    const h = handlers();
+    renderWithProviders(
+      <BrandPickupRow
+        location={location({ shiprocket_error: 'Invalid ShipRocket credentials' })}
+        busy={false}
+        {...h}
+      />,
+    );
+
+    // Registration runs automatically on approval; without the reason, a host
+    // sees only a button that already failed once and no way to know why.
+    expect(screen.getByText('Invalid ShipRocket credentials')).toBeInTheDocument();
+  });
+
+  it('falls back to the pending chip for a review state it does not know', () => {
+    const h = handlers();
+    renderWithProviders(
+      <BrandPickupRow location={location({ review_status: 'SOMETHING_NEW' })} busy={false} {...h} />,
+    );
+
+    // A status added server-side must not render a blank chip on an older build.
+    expect(screen.getByText('Main WH')).toBeInTheDocument();
+  });
+
+  it('locks the register button while a request is already running', () => {
+    const h = handlers();
+    renderWithProviders(<BrandPickupRow location={location()} busy {...h} />);
+
+    expect(screen.getByRole('button', { name: /Register with ShipRocket/i })).toBeDisabled();
+  });
 });

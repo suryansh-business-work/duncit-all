@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { shellAutoPodLabels, type AutoPodLabels } from '@duncit/utils';
 import { getAutoPodColumns, type AutoPodColumnDeps } from '../columns';
 import { STAGE_LABEL_KEY } from '../helpers';
@@ -46,6 +46,7 @@ const makeDeps = (over: Partial<AutoPodColumnDeps> = {}): AutoPodColumnDeps => (
   onDelete: vi.fn(),
   onViewPod: vi.fn(),
   onToggleActive: vi.fn(),
+  onVenueDetails: vi.fn(),
   ...over,
 });
 
@@ -181,6 +182,30 @@ describe('getAutoPodColumns / cell renderers', () => {
     expect(screen.getByLabelText(`${labels.tick('host')} — ${labels.tickDone}`)).toBeInTheDocument();
     expect(screen.getByLabelText(`${labels.tick('venue')} — ${labels.tickPending}`)).toBeInTheDocument();
     expect(screen.getByLabelText(`${labels.tick('club')} — ${labels.tickPending}`)).toBeInTheDocument();
+  });
+
+  // The green Venue dot is the way into the venue's details; a pending one is not a button.
+  it('opens the venue’s details from its green dot, and only from a green one', () => {
+    const onVenueDetails = vi.fn();
+    const row = makeRow({
+      venue_claim: {
+        venue_id: 'ven-1',
+        venue_slot_id: 'slot-1',
+        owner_user_id: 'u-1',
+        venue_name: 'Play Arena',
+        pod_date_time: '2026-09-06T07:00:00.000Z',
+        pod_end_date_time: null,
+        slot_price: 1200,
+        accepted_at: '2026-09-01T07:00:00.000Z',
+      },
+    });
+    renderCell('pending', row, { onVenueDetails });
+    fireEvent.click(screen.getByTestId('auto-pod-dependency-venue'));
+    expect(onVenueDetails).toHaveBeenCalledWith(row);
+
+    cleanup();
+    renderCell('pending', makeRow(), { onVenueDetails });
+    expect(screen.queryByTestId('auto-pod-dependency-venue')).toBeNull();
   });
 
   it('renders the stage chip for the row', () => {

@@ -33,24 +33,24 @@ export default function ClubPodsSection() {
 
   return (
     <>
-    <StudioPodsSection
-      title={t('mweb.studioPods.clubTitle')}
-      subtitle={t('mweb.studioPods.clubSubtitle')}
-      scopeLabel={t('mweb.studioPods.clubs')}
-      emptyText={t('mweb.studioPods.clubEmpty')}
-      pods={pods}
-      summary={summary}
-      loading={loading && !data}
-      failed={!!error && !data}
-      onRetry={() => {
-        refetch().catch(() => undefined);
-      }}
-      onRequestChange={(pod) =>
-        change.open({ podDocId: pod.id, role: 'CLUB_ADMIN', attendeeCount: pod.attendee_count })
-      }
-      requestChangeLabel={t(changeRequestMenuKey('CLUB_ADMIN'))}
-    />
-    {change.dialog}
+      <StudioPodsSection
+        title={t('mweb.studioPods.clubTitle')}
+        subtitle={t('mweb.studioPods.clubSubtitle')}
+        scopeLabel={t('mweb.studioPods.clubs')}
+        emptyText={t('mweb.studioPods.clubEmpty')}
+        pods={pods}
+        summary={summary}
+        loading={loading && !data}
+        failed={!!error && !data}
+        onRetry={() => {
+          refetch().catch(() => undefined);
+        }}
+        onRequestChange={(pod) =>
+          change.open({ podDocId: pod.id, role: 'CLUB_ADMIN', attendeeCount: pod.attendee_count })
+        }
+        requestChangeLabel={t(changeRequestMenuKey('CLUB_ADMIN'))}
+      />
+      {change.dialog}
     </>
   );
 }

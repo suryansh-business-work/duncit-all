@@ -191,9 +191,12 @@ export async function notifyRequestResolved(
  */
 export async function notifyAdmins(title: string, body: string) {
   try {
+    // `metadata.role_keys`, NOT `roles`: the latter is a mongoose virtual over
+    // it, and a virtual cannot be queried — a filter on it silently matches
+    // nobody, which would make this whole fan-out a no-op with no error.
     const admins = await UserModel.find({
       'metadata.status': 'ACTIVE',
-      roles: { $in: ['SUPER_ADMIN', 'CITY_ADMIN'] },
+      'metadata.role_keys': { $in: ['SUPER_ADMIN', 'CITY_ADMIN'] },
     })
       .select('_id')
       .limit(50)

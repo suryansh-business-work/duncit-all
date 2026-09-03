@@ -24,7 +24,7 @@ import {
 } from './podChangeRequest.common';
 import { candidatesForRequest, slotsForVenue } from './podChangeRequest.candidates';
 import { applyReplacement, assertOfferableSlot, logAssignFailure } from './podChangeRequest.assign';
-import { hydrateRequests } from './podChangeRequest.rows';
+import { hydrateRequests, withoutRequesterContacts } from './podChangeRequest.rows';
 import {
   notifyAdmins,
   notifyChangeOffer,
@@ -255,7 +255,9 @@ export const podChangeRequestService = {
     ]);
     return {
       mine: mineRows,
-      incoming: incomingRows,
+      // Redacted: see `withoutRequesterContacts`. `mine` is the viewer's own
+      // requests, so their own details there are theirs already.
+      incoming: incomingRows.map(withoutRequesterContacts),
       venue_penalty: penalties.VENUE,
       host_penalty: penalties.HOST,
       club_admin_penalty: penalties.CLUB_ADMIN,

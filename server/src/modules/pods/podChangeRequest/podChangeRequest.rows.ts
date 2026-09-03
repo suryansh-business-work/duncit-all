@@ -192,3 +192,20 @@ export function toRow(doc: IPodChangeRequest, lookups: Lookups) {
 }
 
 export type PodChangeRequestRow = Awaited<ReturnType<typeof hydrateRequests>>[number];
+/**
+ * The same row, with the outgoing partner's contact details removed.
+ *
+ * A candidate being offered a pod is shown WHO is stepping away — that is
+ * context they need — but not their phone number or email address. Duncit is
+ * the one brokering the swap; handing one partner another's private contacts
+ * because they were offered a pod is a leak, not a feature. The ADMIN queue and
+ * the assign drawer still carry the full contact card, which is where the spec
+ * asks for it.
+ */
+export function withoutRequesterContacts(row: PodChangeRequestRow): PodChangeRequestRow {
+  return {
+    ...row,
+    requested_by: { ...row.requested_by, email: '', phone: '' },
+  };
+}
+

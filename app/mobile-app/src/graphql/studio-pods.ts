@@ -9,11 +9,12 @@ import { gql } from '@/generated/graphql';
  * mWeb render the identical figures from the identical fields (rule 27).
  */
 
-/** Every pod booked at the caller's venues, newest first. Scope comes from the
- * session (no venue_id = all owned venues). */
+/** Every pod booked at the caller's venue, newest first. `venue_id` is the
+ * Venue Studio switcher's pick; left null the server answers for every venue
+ * the caller owns. Ownership is checked server-side either way. */
 export const VenueStudioPodsDocument = gql(`
-  query MobileVenueStudioPods {
-    venuePods {
+  query MobileVenueStudioPods($venue_id: ID) {
+    venuePods(venue_id: $venue_id) {
       id
       pod_slug
       pod_title
@@ -33,7 +34,7 @@ export const VenueStudioPodsDocument = gql(`
       cancelled_at
       created_at
     }
-    venuePodsSummary {
+    venuePodsSummary(venue_id: $venue_id) {
       scope_count
       total
       upcoming

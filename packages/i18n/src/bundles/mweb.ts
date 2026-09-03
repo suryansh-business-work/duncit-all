@@ -3831,8 +3831,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venueStudio: 'Venue Studio',
     },
     venueManagePage: {
+      listYourSpace: 'List your space, run events, get discovered',
       listed: 'Listed',
+      newVenue: 'New venue',
       status: 'Status',
+      switchYourVenue: 'Switch your venue',
+      untitledVenue: 'Untitled venue',
       yourVenues: 'Your venues',
     },
     venueMapPreview: {

@@ -7,8 +7,8 @@ import { Link as RouterLink } from 'react-router';
 import { formatDate } from '../../utils/dateFormat';
 
 const MY_VENUE = gql`
-  query ProfileMyVenue {
-    myVenue {
+  query ProfileMyVenue($venue_id: ID) {
+    myVenue(venue_id: $venue_id) {
       id
       venue_name
       status
@@ -20,8 +20,19 @@ const MY_VENUE = gql`
   }
 `;
 
-export default function UserVenuePanel() {
-  const { data, loading, error } = useQuery<any>(MY_VENUE, { fetchPolicy: 'cache-and-network' });
+/**
+ * The venue application card — its progress, the reviewer's note and the button
+ * back into the form.
+ *
+ * `venueId` is how Venue Studio keeps this panel on the venue its switcher has
+ * selected. Left out (the profile page), the server picks: the newest
+ * application still in flight, else the newest venue.
+ */
+export default function UserVenuePanel({ venueId = null }: Readonly<{ venueId?: string | null }>) {
+  const { data, loading, error } = useQuery<any>(MY_VENUE, {
+    variables: { venue_id: venueId },
+    fetchPolicy: 'cache-and-network',
+  });
   const venue = data?.myVenue;
 
   if (loading && !data) return <CircularProgress size={22} />;

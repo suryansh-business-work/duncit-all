@@ -176,6 +176,12 @@ exports:
   - 'STUDIO_OPTIONS'
   - 'availableModes'
   - 'resolveMode'
+  - 'VENUE_APPLICATION_STATUSES'
+  - 'canSwitchVenues'
+  - 'defaultVenueId'
+  - 'pickVenue'
+  - 'venueLabel'
+  - 'venueSubLabel'
   - 'mwebAutoPodLabels'
   - 'shellAutoPodLabels'
   - 'shellPodKindLabels'
@@ -855,6 +861,46 @@ availableModes(roles, { products: false }).map((o) => o.mode) // ['USER', 'HOST'
 resolveMode('ECOMM', roles)                    // 'ECOMM'
 resolveMode('ECOMM', roles, { products: false })  // 'USER' — the saved studio is gone
 resolveMode('VENUE', roles)                    // 'USER' — never held the role
+```
+
+### Which venue the Venue Studio is showing
+
+A partner with more than one venue had no way to change the venue their studio was about:
+mWeb read `myVenue` (the server's own pick) and the native screen took the first row, so
+every figure on the page belonged to a venue nobody chose. The switcher is MUI on mWeb and
+Tamagui on native, but WHICH venue it lands on — and whether it appears at all — is one rule
+and lives here, so the two cannot disagree (rules 27 + 40). No user-facing word is in this
+module: the caller passes its own translated fallback into `venueLabel`.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `canSwitchVenues` | `(venues) => boolean` | True from the second venue on. Below that the control is hidden — an empty dropdown reads as a missing venue. |
+| `pickVenue` | `(venues, selectedId) => T | null` | The venue to show. Falls back when nothing is selected yet OR the id names a venue that is gone. |
+| `defaultVenueId` | `(venues) => string | null` | The id `pickVenue` falls back to — what a screen seeds its selection with. |
+| `venueLabel` | `(venue, fallback) => string` | The name, or the caller's translated word for an unnamed draft. |
+| `venueSubLabel` | `(venue) => string` | The line under the name — `"Lucknow · APPROVED"`. |
+| `VENUE_APPLICATION_STATUSES` | `Set<string>` | `DRAFT`, `REJECTED`, `SUBMITTED` — an application still in flight. |
+
+The fallback mirrors the server's `myVenue`: the newest venue whose application is still in
+flight, else the newest venue. `myVenues` answers newest-first, so "first row" is "newest".
+Getting that wrong would have quietly moved a one-venue owner onto a different venue the day
+the switcher shipped.
+
+```ts
+const venues = [
+  { id: 'ven-4d81', venue_name: 'Wknd Coffee', city: 'Lucknow', status: 'APPROVED' },
+  { id: 'ven-9a02', venue_name: 'The Loft', city: 'Lucknow', status: 'SUBMITTED' },
+];
+
+canSwitchVenues(venues)              // true — draw the dropdown
+canSwitchVenues(venues.slice(0, 1))  // false — nothing to switch to
+
+pickVenue(venues, 'ven-4d81')?.venue_name  // 'Wknd Coffee' — the owner's pick
+pickVenue(venues, null)?.venue_name        // 'The Loft' — the application still in flight
+pickVenue(venues, 'ven-gone')?.venue_name  // 'The Loft' — a stale id falls back, never blanks
+
+venueSubLabel(venues[0])                   // 'Lucknow · APPROVED'
+venueLabel({ id: 'ven-77c1' }, 'Untitled venue')  // 'Untitled venue'
 ```
 | `mwebAutoPodLabels` / `shellAutoPodLabels` | `(t) => AutoPodLabels` | Every word the queue renders — `mweb.autoPods.*` for mWeb + native, `shell.autoPods.*` for the portals, word-for-word identical. |
 | `shellPodKindLabels` | `(t) => PodKindLabels` | The "Normal Pod or Auto Pod?" question a portal's New Pod button asks. |

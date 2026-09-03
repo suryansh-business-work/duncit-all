@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
+import { pickVenue } from '@duncit/utils';
 
 import {
   EcommDashboardDocument,
@@ -13,28 +14,25 @@ export type DashboardProduct = ResultOf<
   typeof EcommDashboardDocument
 >['availablePodProducts'][number];
 
-/** Venue studio dashboard — my venues + booked-pod dates at the first venue. */
+/**
+ * Venue studio dashboard — every venue the partner owns, plus the booked-pod
+ * dates at the ONE the switcher has selected.
+ *
+ * The selection lives here rather than in the screen because the pod-dates
+ * fetch hangs off it: a switch has to re-ask for the chart's bookings, and
+ * `pickVenue` (shared with mWeb) decides which venue that is before the user
+ * has touched anything.
+ */
 export function useVenueDashboard() {
   const [venues, setVenues] = useState<DashboardVenue[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [podDates, setPodDates] = useState<(string | null)[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
-    (async () => {
-      const data = await graphqlRequest(VenueDashboardDocument, undefined, { auth: true });
-      if (!active) return;
-      setVenues(data.myVenues);
-      const first = data.myVenues[0];
-      if (first) {
-        const pods = await graphqlRequest(
-          VenuePodsDocument,
-          { venue_id: first.id },
-          { auth: true },
-        ).catch(() => null);
-        if (active) setPodDates(pods ? pods.pods.map((pod) => pod.pod_date_time) : []);
-      }
-    })()
+    graphqlRequest(VenueDashboardDocument, undefined, { auth: true })
+      .then((data) => active && setVenues(data.myVenues))
       .catch(() => undefined)
       .finally(() => active && setIsLoading(false));
     return () => {
@@ -42,7 +40,21 @@ export function useVenueDashboard() {
     };
   }, []);
 
-  return { venues, podDates, isLoading };
+  const venue = pickVenue(venues, selectedId);
+  const venueId = venue?.id ?? null;
+
+  useEffect(() => {
+    if (!venueId) return undefined;
+    let active = true;
+    graphqlRequest(VenuePodsDocument, { venue_id: venueId }, { auth: true })
+      .then((res) => active && setPodDates(res.pods.map((pod) => pod.pod_date_time)))
+      .catch(() => active && setPodDates([]));
+    return () => {
+      active = false;
+    };
+  }, [venueId]);
+
+  return { venues, venue, venueId, selectVenue: setSelectedId, podDates, isLoading };
 }
 
 /** ecomm studio dashboard — the product catalogue with stock + price. The

@@ -1,4 +1,5 @@
 import { localizationService } from "./localization.service";
+import { autoTranslateService } from "./autoTranslate.service";
 import type { GraphQLContext } from "@context";
 import { requireRole } from "@middleware/rbac";
 import type { TableQueryInput } from "@utils/table-query";
@@ -38,6 +39,26 @@ export const localizationResolvers = {
       requireRole(ctx, ADMIN_READ);
       return Object.entries(EMAIL_FALLBACK).map(([key, value]) => ({ key, value }));
     },
+    localeCoverage: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_READ);
+      return autoTranslateService.coverage();
+    },
+    autoTranslatePending: async (
+      _p: unknown,
+      args: { locale: string; replace_existing?: boolean | null },
+      ctx: GraphQLContext,
+    ) => {
+      requireRole(ctx, ADMIN_READ);
+      return autoTranslateService.pendingCount(args.locale, args.replace_existing === true);
+    },
+    autoTranslateJob: async (_p: unknown, args: { locale: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_READ);
+      return autoTranslateService.latestJob(args.locale);
+    },
+    autoTranslateJobs: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_READ);
+      return autoTranslateService.recentJobs();
+    },
   },
   Mutation: {
     upsertLocale: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -63,6 +84,22 @@ export const localizationResolvers = {
     ) => {
       requireRole(ctx, ADMIN_WRITE);
       return localizationService.importTranslationKeys(args.locale, args.entries);
+    },
+    startAutoTranslate: async (
+      _p: unknown,
+      args: { locale: string; replace_existing?: boolean | null },
+      ctx: GraphQLContext,
+    ) => {
+      requireRole(ctx, ADMIN_WRITE);
+      return autoTranslateService.start({
+        locale: args.locale,
+        replace_existing: args.replace_existing,
+        userId: ctx.user?.id ?? null,
+      });
+    },
+    cancelAutoTranslate: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_WRITE);
+      return autoTranslateService.cancel(args.id);
     },
   },
 };

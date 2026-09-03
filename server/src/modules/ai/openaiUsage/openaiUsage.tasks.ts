@@ -36,6 +36,7 @@ export const OPENAI_TASKS = {
   'crm.lead_chat': { label: 'Lead assistant chat', module: 'CRM' },
   'crm.call_assistant': { label: 'Call assistant turn', module: 'CRM' },
   'platform.release_notes': { label: 'Release changelog', module: 'Platform' },
+  'localization.auto_translate': { label: 'Locale auto-translation', module: 'Platform' },
   'askbot.navigation': { label: 'Navigation bot answer', module: 'Ask Bot' },
   'agent.console': { label: 'Agent console turn', module: 'Agent' },
 } as const satisfies Record<string, OpenAiTaskMeta>;

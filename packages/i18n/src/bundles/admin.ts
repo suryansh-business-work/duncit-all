@@ -568,6 +568,51 @@ changeRequests: {
       noteHint: 'What this string is and where it appears — context for translators',
       colKeys: 'Keys',
       colFlags: 'Flags',
+
+      localesTitle: 'Locales',
+      localesIntro:
+        'Languages offered across the apps, portals and websites. The default is the source language every other falls back to.',
+      addLocale: 'Add locale',
+      code: 'Code',
+      translated: 'Translated',
+      defaultNotRemovable: 'The default language cannot be removed',
+      localeAdded: 'Locale added',
+      localeUpdated: 'Locale updated',
+      localeRemoved: '{code} removed',
+
+      // Auto-translation. A language added here starts empty, and the
+      // catalogue is thousands of keys — this is the only way one gets filled
+      // in without somebody typing for a week.
+      autoTranslate: 'Auto-translate',
+      autoTranslateOn: 'Auto-translate {language}',
+      autoTranslateIntro:
+        'OpenAI translates the default language into this one and writes the result straight into Translations. The apps, portals and websites then pick it up on their own.',
+      autoTranslateDefault:
+        'This is the default language — it is the source everything else is translated from.',
+      scopeLabel: 'What to send',
+      scopeMissing: 'Only the keys with no text yet',
+      scopeMissingHint:
+        'Leaves anything already written by hand untouched. This is also how a run that stopped part-way is picked up again.',
+      scopeAll: 'Every key, replacing what is there',
+      scopeAllHint:
+        'Re-translates keys that already carry text, hand-written ones included. Use it after the source copy changes.',
+      willSend: '{keys} key(s) will be sent',
+      nothingToSend: 'Nothing to send — every key already has text in this language.',
+      startRun: 'Start translating',
+      startingRun: 'Starting…',
+      startFailed: 'Could not start the run',
+      stopRun: 'Stop',
+      stopFailed: 'Could not stop the run',
+      runProgress: '{done} of {total} keys',
+      runHint:
+        'This takes a few minutes. Closing this window is fine — the run carries on and the progress is here when you come back.',
+      runSucceeded: 'Finished — {translated} keys translated',
+      runFailed: 'The run failed',
+      runCancelled: 'Stopped — {translated} keys were translated first',
+      runSomeFailed:
+        '{failed} key(s) came back unusable and were left untranslated. Run it again to retry just those.',
+      runApplies: 'The apps and portals show the new text within a minute.',
+      modelUsed: 'Model: {model}',
     },
 
     locations: {

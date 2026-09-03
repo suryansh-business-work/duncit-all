@@ -53,6 +53,8 @@ const SHIPPED_KEYS = [
   'generate.product_copy.user',
   'generate.rich_text',
   'generate.rich_text.user',
+  'localization.auto_translate',
+  'localization.auto_translate.user',
   'moderation.meeting_reason',
   'moderation.pod',
   'moderation.pod.user',

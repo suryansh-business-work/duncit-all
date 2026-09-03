@@ -97,6 +97,45 @@ export const localizationTypeDefs = gql`
     page_size: Int!
   }
 
+  """
+  One auto-translation run — an admin filling a language in through OpenAI.
+
+  The catalogue is thousands of keys, so a run takes minutes and lives on as a
+  row rather than inside the request that started it: the browser can be closed,
+  a second admin sees the same progress, and a run interrupted by a restart is
+  reported instead of spinning forever.
+  """
+  type AutoTranslateJob {
+    id: ID!
+    "The language being filled in."
+    locale: String!
+    "The default language its text was translated from."
+    source_locale: String!
+    "RUNNING | SUCCEEDED | FAILED | CANCELLED"
+    status: String!
+    "Re-translated keys that already had text, rather than only the gaps."
+    replace_existing: Boolean!
+    total_keys: Int!
+    "Keys finished with, translated or not — what the progress bar reads."
+    done_keys: Int!
+    translated_keys: Int!
+    "Keys the model returned nothing usable for. Running again retries them."
+    failed_keys: Int!
+    "The model that answered, as the OpenAI client reported it."
+    ai_model: String!
+    error: String!
+    started_by: String!
+    started_at: String
+    finished_at: String
+  }
+
+  "How much of the catalogue one locale carries text for."
+  type LocaleCoverage {
+    locale: String!
+    total_keys: Int!
+    translated_keys: Int!
+  }
+
   extend type Query {
     "Every locale, for admin lists."
     locales: [Locale!]!
@@ -123,6 +162,17 @@ export const localizationTypeDefs = gql`
     bundles when seeding Translations, so email copy is translatable too.
     """
     serverTranslationSeed: [TranslationEntry!]!
+    """
+    How complete each ACTIVE locale is — the Locales table's progress column,
+    and how an admin tells at a glance which language still needs a run.
+    """
+    localeCoverage: [LocaleCoverage!]!
+    "How many keys an auto-translate run would send for this locale right now."
+    autoTranslatePending(locale: String!, replace_existing: Boolean): Int!
+    "The most recent run for one locale — what the progress dialog polls."
+    autoTranslateJob(locale: String!): AutoTranslateJob
+    "Recent runs across every locale, newest first."
+    autoTranslateJobs: [AutoTranslateJob!]!
   }
 
   extend type Mutation {
@@ -136,6 +186,18 @@ export const localizationTypeDefs = gql`
     keys keep their translations; only missing ones are created.
     """
     importTranslationKeys(locale: String!, entries: [TranslationValueEntry!]!): Int!
+    """
+    Translate the default language's text into this locale with OpenAI, in the
+    background. Writes the same values.<code> field the admin's own editor
+    writes, so the apps, portals and websites pick the text up with no further
+    step.
+
+    replace_existing re-translates keys that already carry text; left off, only
+    the gaps are sent — which is also how a run is resumed after a failure.
+    """
+    startAutoTranslate(locale: String!, replace_existing: Boolean): AutoTranslateJob!
+    "Stop a run after the batches already in flight finish."
+    cancelAutoTranslate(id: ID!): AutoTranslateJob!
   }
 
   input TranslationValueEntry {

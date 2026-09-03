@@ -8,6 +8,8 @@ export interface ExploreAction {
   key: string;
   icon: React.ReactNode;
   label: string;
+  /** The button's accessible name — the caption under it is a count, not a name. */
+  ariaLabel?: string;
   onClick: () => void;
   active?: boolean;
   loading?: boolean;
@@ -72,6 +74,7 @@ export default function ExploreActionRail({ actions }: Readonly<{ actions: Explo
           key={action.key}
           icon={action.icon}
           label={action.label}
+          ariaLabel={action.ariaLabel}
           onClick={action.onClick}
           active={action.active}
           loading={action.loading}
@@ -84,6 +87,7 @@ export default function ExploreActionRail({ actions }: Readonly<{ actions: Explo
           <ExploreActionButton
             icon={<MoreVertIcon />}
             label={t('mweb.explore.more')}
+            ariaLabel={t('mweb.explore.moreActions')}
             tooltip={t('mweb.explore.moreActions')}
             onClick={() => setMenuOpen(true)}
           />

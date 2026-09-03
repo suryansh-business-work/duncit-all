@@ -369,7 +369,12 @@ export default function ManageServicesPage({
                           <>
                             <Tooltip title={t('shell.common.edit')}>
                               <span>
-                                <DuncitIconButton size="small" onClick={() => startEdit(row)} disabled={busy || !!draft}>
+                                <DuncitIconButton
+                                  size="small"
+                                  aria-label={t('shell.common.edit')}
+                                  onClick={() => startEdit(row)}
+                                  disabled={busy || !!draft}
+                                >
                                   <EditIcon fontSize="small" />
                                 </DuncitIconButton>
                               </span>
@@ -379,6 +384,7 @@ export default function ManageServicesPage({
                                 <DuncitIconButton
                                   size="small"
                                   color="error"
+                                  aria-label={t('shell.common.delete')}
                                   onClick={() => setRemoving(row)}
                                   disabled={busy || !!draft}
                                 >

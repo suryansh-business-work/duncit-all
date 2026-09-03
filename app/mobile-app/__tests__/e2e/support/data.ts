@@ -122,7 +122,9 @@ export function homeFixtures(over: { pods?: unknown[]; stories?: unknown[] } = {
     MobileBranding: { branding },
     MobileSuperCategories: { categories: superCategories },
     MobileLocations: { locations, activePodLocationIds: ['loc1'] },
-    MobileHomeFeed: { categories, clubs, pods: over.pods ?? [upcomingPod, previousPod] },
+    // The home feed is two documents: the cacheable catalogue and the live pods.
+    MobileHomeStatic: { categories, clubs },
+    MobileHomePods: { pods: over.pods ?? [upcomingPod, previousPod] },
     MobileStatusFeed: { stories: over.stories ?? [], myStories: [] },
     MobileNotifications: { myNotifications: [], myUnreadNotificationCount: 0 },
   };

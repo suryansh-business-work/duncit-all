@@ -53,7 +53,12 @@ beforeEach(() => {
       headers: {
         'access-control-allow-origin': req.headers['origin'] ?? '*',
         'access-control-allow-methods': 'POST, OPTIONS',
-        'access-control-allow-headers': 'authorization,content-type,x-duid',
+        // Echo whatever the app asks for: the client adds headers over time
+        // (x-duncit-surface, x-duncit-app, …) and a fixed list silently
+        // fails every request the moment one is added — the browser blocks
+        // the POST and every data-driven screen renders empty.
+        'access-control-allow-headers':
+          req.headers['access-control-request-headers'] ?? 'authorization,content-type',
         'access-control-allow-credentials': 'true',
       },
     });

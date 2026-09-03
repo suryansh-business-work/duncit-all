@@ -123,16 +123,23 @@ export const appHeader = {
   activePodLocationIds: ['loc1'],
 };
 
-/** The HomeFeed query — pods + clubs + categories + stories for the home shell. */
-export function homeFeed(over: Partial<{ pods: unknown[] }> = {}) {
+/**
+ * The home feed is TWO documents: HomeFeedStatic (the cacheable catalogue —
+ * clubs, hosts, categories) and HomeFeedLive (pods + stories). `useHomeData`
+ * merges them, so a spec that overrides the pods overrides the live half only.
+ */
+export const homeStatic = { clubs, publicHosts, categories };
+
+export function homeLive(over: Partial<{ pods: unknown[]; stories: unknown[] }> = {}) {
   return {
-    sliders: [],
-    clubs,
     pods: over.pods ?? [upcomingPod, previousPod],
-    publicHosts,
-    categories,
-    stories,
+    stories: over.stories ?? stories,
   };
+}
+
+/** Both halves, keyed by operation name, for a spec that swaps the whole feed. */
+export function homeFeed(over: Partial<{ pods: unknown[]; stories: unknown[] }> = {}) {
+  return { HomeFeedStatic: homeStatic, HomeFeedLive: homeLive(over) };
 }
 
 /** A single pod for the Pod Detail page (PodDetails query → `pod`). */
@@ -199,9 +206,13 @@ export function podDetails(over: Record<string, unknown> = {}) {
   };
 }
 
-/** The Pod Shop section is gated behind the `is_product_visible` public flag. */
+/** The Pod Shop section is gated behind the `is_product_visible` public flag,
+ * and the guided tours behind `tour_guide`. */
 export const publicFeatureFlags = {
-  publicFeatureFlags: [{ key: 'is_product_visible', enabled: true }],
+  publicFeatureFlags: [
+    { key: 'is_product_visible', enabled: true },
+    { key: 'tour_guide', enabled: true },
+  ],
 };
 
 /** Boot fixtures for the Pod Detail route (/club/:slug/pod/:slug). */
@@ -258,7 +269,8 @@ export const bootFixtures = {
   MwebSessionMe: { me },
   MwebPublicClientConfig: { publicClientConfig: { google_client_id: '', google_maps_api_key: 'e2e-maps-key' } },
   AppHeader: appHeader,
-  HomeFeed: homeFeed(),
+  ...homeFeed(),
+  PublicFeatureFlags: publicFeatureFlags,
   MyNotifications: { myNotifications: [], myUnreadNotificationCount: 0 },
   PublicPoliciesNav: { publicPolicies: [] },
   HomeFollowedUsers: { publicUsersByIds: [] },

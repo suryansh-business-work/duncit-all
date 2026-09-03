@@ -63,9 +63,11 @@ describe('Legal portal (authenticated)', () => {
     cy.contains('Master NDA', { timeout: 10000 }).should('be.visible');
     cy.contains('button', /new document/i).click();
     cy.contains('New Document').should('be.visible');
-    cy.get('[role="dialog"]').within(() => {
+    // The shell keeps the Agent dock's floating window (also role="dialog")
+    // mounted, so scope to the dialog that carries this title.
+    cy.contains('[role="dialog"]', 'New Document').within(() => {
       cy.get('[role="combobox"]').should('exist'); // grouped, searchable type picker
-      cy.get('.ql-editor').should('exist'); // rich-text editor
+      cy.get('.ProseMirror').should('exist'); // rich-text editor (TipTap)
     });
   });
 

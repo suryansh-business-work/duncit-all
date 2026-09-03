@@ -21,7 +21,7 @@ describe('debug · story rail', () => {
       });
       cy.byTestId('status-mine').then(($mine) => {
         const rail = $mine[0].closest('[data-testid], div')?.parentElement?.parentElement;
-        const html = (rail?.outerHTML ?? '').replaceAll(/\s+/g, ' ').slice(0, 2500);
+        const html = (rail?.outerHTML ?? '').replace(/\s+/g, ' ').slice(0, 2500);
         const tiles = [...$mine[0].ownerDocument.querySelectorAll('[data-testid^="status-"]')]
           .map((el) => el.getAttribute('data-testid'))
           .join(',');

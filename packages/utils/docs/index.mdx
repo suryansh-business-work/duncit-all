@@ -185,6 +185,9 @@ exports:
   - 'canCancelVenuePod'
   - 'cancelDisabledReason'
   - 'cancelPenaltyHeadline'
+  - 'venueCancelPenaltyHeadline'
+  - 'venueCancelSuccessMessage'
+  - 'venueCancelDisabledText'
   - 'matchesTab'
   - 'tabCounts'
   - 'TAB_ORDER'
@@ -944,14 +947,19 @@ mwebAutoPodLabels(t).waitingFor(autoPodMissingRoles(row))  // 'Waiting for a ven
 The pods booked at a venue are one list on three surfaces: the Partners console's table, and
 the mWeb and native venue studios. Whether a pod can still be cancelled, why it cannot, and
 which tab a row sits under are one rule here, over the `venuePods` row's `bucket` and
-`cancelled_at`. Every answer is a **code** — the caller maps it to its own translated
-sentence, so no English lives in the rule.
+`cancelled_at`. Every answer is a **code**, so no English lives in the rule. `venue-pods-copy`
+is where each code becomes a sentence for mWeb and the native app — from the caller's own `t`
+and the `mweb.venuePods.*` keys both ship — so the two apps cannot word the same cancellation
+differently. (The Partners console still keeps its own English beside its table.)
 
 | Export | Signature | Meaning |
 | --- | --- | --- |
 | `canCancelVenuePod` | `(row) => boolean` | Only an `UPCOMING` pod with no `cancelled_at` — the owner may pull the plug before the pod starts, never after. |
 | `cancelDisabledReason` | `(row) => 'ALREADY_CANCELLED' \| 'ALREADY_STARTED' \| 'ALREADY_FINISHED' \| null` | Why Cancel is off; `null` while it is on. A `cancelled_at` wins over the bucket — the bucket is computed from the clock, the timestamp from the fact. |
 | `cancelPenaltyHeadline` | `(penalty) => 'UNKNOWN' \| 'NONE' \| 'POINTS'` | Which warning the cancel dialog opens with: no number until the admin-configured penalty has arrived, no penalty when it is 0. |
+| `venueCancelPenaltyHeadline` | `(penalty, t) => string` | That warning, worded: `cancelPenaltyHeadline`'s code put to the `mweb.venuePods.penalty*` keys, with the points and their unit (singular for one) filled in. |
+| `venueCancelSuccessMessage` | `(result, t) => string` | The notice after `venueCancelPod` — the refund count (singular for one) and the venue's Account Health after the penalty, both from the server's `VenueCancelPodResult`. |
+| `venueCancelDisabledText` | `(row, t) => string \| null` | `cancelDisabledReason`'s code as the sentence under the disabled Cancel item; `null` while the action is live. |
 | `matchesTab` / `tabCounts` / `TAB_ORDER` | | The Upcoming tab covers live (`ONGOING`) pods too. |
 
 ```ts
@@ -965,6 +973,14 @@ cancelDisabledReason({ bucket: 'UPCOMING', cancelled_at: '2026-07-03T00:00:00.00
 cancelPenaltyHeadline(null)        // 'UNKNOWN' — the sentence is written without a number
 cancelPenaltyHeadline(0)           // 'NONE' — promising "0 points" would be a lie
 tabCounts([upcoming, ongoing])     // { ALL: 2, UPCOMING: 2, CANCELLED: 0, COMPLETED: 0 }
+
+// The same answers as sentences, through the surface's translator (`useTranslation().t`).
+venueCancelPenaltyHeadline(7, t)   // "Cancelling this pod will reduce this venue's Account Health by 7 points."
+venueCancelDisabledText(ongoing, t) // "This pod has already started, so it can no longer be cancelled."
+venueCancelSuccessMessage(
+  { pod_id: 'DUN-POD-4821', health_penalty: 7, venue_health_score: 93, refunded_count: 3 },
+  t,
+)                                  // "Pod cancelled — 3 payments refunded. This venue's Account Health is now 93."
 ```
 
 The Partners console keeps its own `applyVenuePodsQuery` (search, sort and paging over

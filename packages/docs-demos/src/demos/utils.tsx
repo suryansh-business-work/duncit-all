@@ -23,6 +23,9 @@ import {
   canCancelVenuePod,
   cancelDisabledReason,
   cancelPenaltyHeadline,
+  venueCancelDisabledText,
+  venueCancelPenaltyHeadline,
+  venueCancelSuccessMessage,
   tabCounts,
   venueOwnerStatTiles,
   autoPodActionable,
@@ -113,9 +116,11 @@ import {
   type PodParticipationFields,
   type PodPhaseFields,
   type UsernameRejection,
+  type VenueCancelPodResult,
   type VenueOwnerStats,
   type VenuePodRow,
 } from '@duncit/utils';
+import { MWEB_BUNDLE, createTranslator, flattenCatalogue } from '@duncit/i18n';
 import { defineDemo, defineDemos } from '../types';
 
 interface StudioModeMock {
@@ -277,7 +282,12 @@ interface VenuePodsMock {
   pods: Array<VenuePodRow & { pod_id: string; pod_title: string }>;
   /** `publicAppSettings.venue_cancel_health_penalty`; null before the query answers. */
   cancel_penalty: number | null;
+  /** What `venueCancelPod` answered with once the upcoming pod was cancelled. */
+  cancel_result: VenueCancelPodResult;
 }
+
+/** The bundle's own English for `mweb.venuePods.*`, resolved the way mWeb and native do. */
+const { t: mwebT } = createTranslator({ locale: 'en-IN', fallback: flattenCatalogue(MWEB_BUNDLE) });
 
 /** One owner's figures across their venues, as `venueOwnerStats` answers them. */
 interface VenueDashboardMock {
@@ -1106,7 +1116,7 @@ export default defineDemos('utils', [
     id: 'venue-pods',
     title: 'Which pods a venue owner may still cancel',
     note:
-      'Only the UPCOMING pod offers Cancel; the ONGOING one answers ALREADY_STARTED because the owner may pull the plug before a pod starts, never during it. Stamp a cancelled_at onto the upcoming pod and it turns ALREADY_CANCELLED whatever its bucket says. Set cancel_penalty to 0 and the dialog headline stops promising an Account Health hit; set it to null and it is written without a number rather than a guessed one.',
+      'Only the UPCOMING pod offers Cancel; the ONGOING one answers ALREADY_STARTED because the owner may pull the plug before a pod starts, never during it. Stamp a cancelled_at onto the upcoming pod and it turns ALREADY_CANCELLED whatever its bucket says. Set cancel_penalty to 0 and the dialog headline stops promising an Account Health hit; set it to null and it is written without a number rather than a guessed one. The worded lines are those same codes through the mWeb bundle — the venueCancel* helpers both apps render — so set cancel_penalty to 1 or cancel_result.refunded_count to 1 and they go singular.',
     mock: {
       pods: [
         { pod_id: 'DUN-POD-4821', pod_title: 'Sunday Pottery Jam', bucket: 'UPCOMING', cancelled_at: null },
@@ -1114,13 +1124,19 @@ export default defineDemos('utils', [
         { pod_id: 'DUN-POD-4310', pod_title: 'Late Night Standup', bucket: 'COMPLETED', cancelled_at: null },
       ],
       cancel_penalty: 7,
+      cancel_result: { pod_id: 'DUN-POD-4821', health_penalty: 7, venue_health_score: 93, refunded_count: 3 },
     },
     compute: (mock) => ({
       'Cancel offered on': mock.pods.filter(canCancelVenuePod).map((pod) => pod.pod_title),
       'Why not, per pod': Object.fromEntries(
         mock.pods.map((pod) => [pod.pod_title, cancelDisabledReason(pod) ?? 'can cancel'])
       ),
+      'Why not, as the row menu says it': Object.fromEntries(
+        mock.pods.map((pod) => [pod.pod_title, venueCancelDisabledText(pod, mwebT) ?? 'can cancel'])
+      ),
       'Dialog headline': cancelPenaltyHeadline(mock.cancel_penalty),
+      'Dialog headline, worded': venueCancelPenaltyHeadline(mock.cancel_penalty, mwebT),
+      'After cancelling': venueCancelSuccessMessage(mock.cancel_result, mwebT),
       'Tab counts': tabCounts(mock.pods),
     }),
   }),

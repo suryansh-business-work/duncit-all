@@ -3920,11 +3920,23 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     },
     venueSlotRequests: {
       allVenues: 'All venues',
+      approve: 'Approve',
+      // The approve confirmation names the pod, the venue and the slot window,
+      // so the owner reads what goes live before it does.
+      approveMessage:
+        '{pod} goes live at {venue} for {slot}. The host and everyone who joins will be told.',
       approveThisBooking: 'Approve this booking?',
       awaitingDecision: 'Awaiting decision',
       contact: 'Contact',
+      decline: 'Decline',
+      declineMessage:
+        'The slot opens again and the host is told. A reason helps them ask better next time.',
       declineThisBooking: 'Decline this booking?',
+      empty:
+        'No pending slot requests right now. New ones appear here the moment a host books one of your slots.',
       host: 'Host',
+      intro:
+        'Hosts who want to run their pod at your venue. A pod only goes live after you approve its slot.',
       requested: 'Requested',
       slot: 'Slot',
       slotPrice: 'Slot price',

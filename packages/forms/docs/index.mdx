@@ -63,6 +63,8 @@ exports:
   - 'toPolicyValues'
   - 'toPolicyInput'
   - 'emptyTier'
+  - 'makeVenueCancelPodSchema'
+  - 'venueCancelPodDefaults'
 ---
 
 ## Why this exists
@@ -428,6 +430,7 @@ directly.
 | `makeSignupSchema` | joining Duncit | the whole four-step signup, in ONE contract — see below |
 | `makeWhatsappNumberSchema` | the Google door's number step | the WhatsApp row on its own — see below |
 | `makeCancellationPolicySchema` | a venue's cancellation policy | any number of bands, each a window + a charge — see below |
+| `makeVenueCancelPodSchema` | a venue owner cancelling a pod | the reason that goes into the cancellation email, at least 5 characters — see below |
 
 `makeContactValueSchema(channel, t)` returns a different object schema per channel rather than
 one schema with every field optional. A schema that accepts a blank number because the caller
@@ -578,6 +581,23 @@ and `toPolicyInput(values, t)` parses the form back into `VenueSettingsInput.can
 throwing rather than sending an invalid policy. The bands are kept even while
 `reschedule_only` is on, so switching it back off restores what the owner wrote instead of an
 empty list. `emptyTier` is the band "Add a charge" appends: 24 hours, 50%.
+
+### Cancelling a pod at the venue
+
+`makeVenueCancelPodSchema(t)` is the one thing a venue owner has to give before a pod at their
+venue is cancelled and its attendees refunded: a reason, which goes into the email the host and
+everyone booked in receive. It is trimmed and must be at least 5 characters, and the refusal is
+`mweb.venuePods.reasonRequired` — a key mWeb and the native app both ship. mWeb and the app had
+each written this rule beside their own dialog; the sentences around that dialog (the Account
+Health warning, the success notice, why Cancel is off) are `@duncit/utils`' `venueCancel*`
+helpers. `venueCancelPodDefaults` starts the form blank.
+
+```ts
+const schema = makeVenueCancelPodSchema(t);
+
+schema.safeParse({ reason: '  Venue flooded overnight  ' }); // { success: true, data: { reason: 'Venue flooded overnight' } }
+schema.safeParse({ reason: 'Rain' });                        // reason — mweb.venuePods.reasonRequired
+```
 
 ### Still to move
 

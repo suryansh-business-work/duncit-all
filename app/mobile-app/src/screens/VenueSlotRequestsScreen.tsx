@@ -3,11 +3,12 @@ import { Button, ScrollView, Spinner, Text, XStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { SlotRequestCard } from '@/components/venue-slot-requests/SlotRequestCard';
+import { SlotRequestDecisionSheets } from '@/components/venue-slot-requests/SlotRequestDecisionSheets';
 import {
-  SlotRequestDecisionSheets,
-  type DecisionCopy,
-} from '@/components/venue-slot-requests/SlotRequestDecisionSheets';
-import { useVenueSlotRequests, ALL_VENUES } from '@/hooks/useVenueSlotRequests';
+  useVenueSlotRequests,
+  ALL_VENUES,
+  type SlotRequestRow,
+} from '@/hooks/useVenueSlotRequests';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -17,23 +18,12 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
  * Same queue, same wording, same decisions: a pod stays unlisted until its slot
  * is approved, so a request sitting unread is a pod that cannot sell a seat.
  */
-
-/** The decisions' own words — the same sentences mWeb's card shows in its two
- * dialogs. */
-const DECISION_COPY: DecisionCopy = {
-  approveLabel: 'Approve',
-  approveMessage: 'The pod goes live and the host is told.',
-  declineLabel: 'Decline',
-  declineMessage:
-    'The slot opens again and the host is told. A reason helps them ask better next time.',
-};
-
 export function VenueSlotRequestsScreen() {
   const { t } = useTranslation();
   const slots = useVenueSlotRequests();
   // A pod goes live the moment you say yes, so neither answer is a tap to make
   // by accident: approving asks once, declining takes a reason.
-  const [approving, setApproving] = useState<string | null>(null);
+  const [approving, setApproving] = useState<SlotRequestRow | null>(null);
   const [declining, setDeclining] = useState<string | null>(null);
   const [reason, setReason] = useState('');
 
@@ -42,7 +32,7 @@ export function VenueSlotRequestsScreen() {
     setDeclining(null);
   };
   const approve = () => {
-    const slotId = approving;
+    const slotId = approving?.slot_id;
     dismiss();
     if (slotId) slots.approve(slotId).catch(() => undefined);
   };
@@ -63,8 +53,7 @@ export function VenueSlotRequestsScreen() {
     >
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
         <Text fontSize={12.5} color="$muted">
-          Hosts who want to run their pod at your venue. A pod only goes live after you approve its
-          slot.
+          {t('mweb.venueSlotRequests.intro')}
         </Text>
 
         {slots.venues.length > 1 && (
@@ -105,8 +94,7 @@ export function VenueSlotRequestsScreen() {
 
         {!slots.isLoading && slots.requests.length === 0 && (
           <Text fontSize={13} color="$muted">
-            No pending slot requests right now. New ones appear here the moment a host books one of
-            your slots.
+            {t('mweb.venueSlotRequests.empty')}
           </Text>
         )}
 
@@ -115,8 +103,6 @@ export function VenueSlotRequestsScreen() {
             key={request.slot_id}
             request={request}
             busy={slots.busy}
-            approveLabel={DECISION_COPY.approveLabel}
-            declineLabel={DECISION_COPY.declineLabel}
             onApprove={setApproving}
             onDecline={openDecline}
           />
@@ -124,11 +110,10 @@ export function VenueSlotRequestsScreen() {
       </ScrollView>
 
       <SlotRequestDecisionSheets
-        approving={!!approving}
+        approving={approving}
         declining={!!declining}
         reason={reason}
         onReason={setReason}
-        copy={DECISION_COPY}
         onApprove={approve}
         onDecline={decline}
         onDismiss={dismiss}

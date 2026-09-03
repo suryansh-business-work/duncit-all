@@ -27,7 +27,8 @@ describe('ProductOrdersTable', () => {
     expect(screen.getByText('AWB9')).toBeInTheDocument();
     expect(screen.getByText('₹500')).toBeInTheDocument();
     // Status label goes through humaniseStatus.
-    expect(screen.getAllByText('OUT FOR DELIVERY').length).toBeGreaterThan(0);
+    // Statuses render through the shared catalogue now, not as raw enum codes.
+    expect(screen.getAllByText('Out for delivery').length).toBeGreaterThan(0);
   });
 
   it('falls back to dashes for missing pod, AWB and date', async () => {

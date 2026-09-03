@@ -84,8 +84,10 @@ describe('section nullish fallbacks', () => {
         <InventoryManagementSection />
       </UndefinedForm>,
     );
-    expect(screen.getByLabelText(/Manufacturing date/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Expiry date/i)).toBeInTheDocument();
+    // MUI X's sectioned date field puts the label on more than one node, so
+    // the query has to name the input it actually means.
+    expect(screen.getByLabelText(/Manufacturing date/i, { selector: 'input' })).toBeInTheDocument();
+    expect(screen.getByLabelText(/Expiry date/i, { selector: 'input' })).toBeInTheDocument();
   });
 
   it('MediaBrandingSection defaults undefined images/cover to empty', () => {

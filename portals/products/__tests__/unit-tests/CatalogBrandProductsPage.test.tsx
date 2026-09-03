@@ -13,6 +13,8 @@ const m = vi.hoisted(() => ({
   restore: vi.fn(),
   restoreState: { loading: false },
   duplicate: vi.fn(),
+  setActive: vi.fn(),
+  pauseState: { loading: false },
 }));
 
 vi.mock('react-router', async (io) => ({
@@ -30,6 +32,7 @@ vi.mock('@apollo/client/react', async (io) => {
       const name = doc?.definitions?.[0]?.name?.value;
       if (name === 'ArchiveInventoryProduct') return [m.archive, m.archiveState];
       if (name === 'RestoreInventoryProduct') return [m.restore, m.restoreState];
+      if (name === 'SetInventoryProductActive') return [m.setActive, m.pauseState];
       return [m.duplicate, { loading: false }];
     },
   };
@@ -86,6 +89,8 @@ beforeEach(() => {
   m.restore = vi.fn().mockResolvedValue({});
   m.restoreState = { loading: false };
   m.duplicate = vi.fn().mockResolvedValue({ data: { duplicateInventoryProduct: { id: 'p9' } } });
+  m.setActive = vi.fn().mockResolvedValue({});
+  m.pauseState = { loading: false };
   nav.fn = vi.fn();
   vi.mocked(notifySuccess).mockClear();
   vi.mocked(notifyError).mockClear();
@@ -196,5 +201,61 @@ describe('CatalogBrandProductsPage', () => {
     await rowsReady();
     fireEvent.click(screen.getByRole('button', { name: 'Duplicate' }));
     await waitFor(() => expect(notifyError).toHaveBeenCalledWith('SKU already exists'));
+  });
+
+  it('temporarily deactivates a live product and refreshes the table', async () => {
+    renderPage();
+    await rowsReady();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Temporarily deactivate' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Deactivate product?')).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Deactivate' }));
+
+    await waitFor(() =>
+      expect(m.setActive).toHaveBeenCalledWith({ variables: { id: 'p1', active: false } }),
+    );
+    expect(notifySuccess).toHaveBeenCalledWith('Product temporarily deactivated');
+  });
+
+  it('reactivates a paused product, moving it the other way', async () => {
+    __setTableRows([makeRow({ is_active: false })]);
+    renderPage();
+    await rowsReady();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reactivate' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Reactivate product?')).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Reactivate' }));
+
+    await waitFor(() =>
+      expect(m.setActive).toHaveBeenCalledWith({ variables: { id: 'p1', active: true } }),
+    );
+    expect(notifySuccess).toHaveBeenCalledWith('Product reactivated');
+  });
+
+  it('reports a refused pause rather than pretending it worked', async () => {
+    m.setActive = vi.fn().mockRejectedValue(new Error('not allowed'));
+    renderPage();
+    await rowsReady();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Temporarily deactivate' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Deactivate' }));
+
+    await waitFor(() => expect(notifyError).toHaveBeenCalled());
+    expect(notifySuccess).not.toHaveBeenCalled();
+  });
+
+  it('closes the pause dialog without touching the product', async () => {
+    renderPage();
+    await rowsReady();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Temporarily deactivate' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(m.setActive).not.toHaveBeenCalled();
   });
 });

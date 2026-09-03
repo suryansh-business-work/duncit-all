@@ -27,10 +27,11 @@ describe('OrderTrackingTimeline', () => {
         ]}
       />,
     );
-    expect(screen.getByText('SHIPPED')).toBeInTheDocument();
+    // Statuses render through the shared catalogue now, not as raw enum codes.
+    expect(screen.getByText('Shipped')).toBeInTheDocument();
     expect(screen.getByText('Left hub')).toBeInTheDocument();
     // location + formatted date joined by a middot.
     expect(screen.getByText('Pune · DT')).toBeInTheDocument();
-    expect(screen.getByText('PENDING')).toBeInTheDocument();
+    expect(screen.getByText('Order placed')).toBeInTheDocument();
   });
 });

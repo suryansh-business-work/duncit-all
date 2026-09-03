@@ -26,6 +26,7 @@ import {
   INVENTORY_STOCK_MOVEMENTS,
   PERMANENT_DELETE_INVENTORY_PRODUCT,
   RESTORE_INVENTORY_PRODUCT,
+  SET_INVENTORY_PRODUCT_ACTIVE,
 } from '../../src/pages/inventory-page/inventory-product-page/productQueries';
 
 /**
@@ -348,3 +349,29 @@ export const generateSkuMock = (over: { value?: string; fail?: boolean } = {}): 
     : { data: { generateInventorySku: over.value ?? 'GEN-0001' } },
   maxUsageCount: 20,
 });
+
+/**
+ * Pausing a product, or bringing it back. `active` is what the caller is
+ * moving the product TO, so a paused row is reactivated with `active: true`.
+ */
+export const setProductActiveMock = (
+  over: { id?: string; active?: boolean; fail?: boolean } = {},
+): MockedResponse => {
+  const id = over.id ?? 'i1';
+  const active = over.active ?? false;
+  return {
+    request: { query: SET_INVENTORY_PRODUCT_ACTIVE, variables: { id, active } },
+    result: over.fail
+      ? { errors: [{ message: 'not allowed' }] }
+      : {
+          data: {
+            setInventoryProductActive: {
+              __typename: 'InventoryProduct',
+              id,
+              is_active: active,
+            },
+          },
+        },
+    maxUsageCount: 5,
+  };
+};

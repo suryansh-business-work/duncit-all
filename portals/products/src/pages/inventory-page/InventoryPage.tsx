@@ -35,6 +35,7 @@ export default function InventoryPage() {
   const pauseLabel = activating ? 'Reactivate' : 'Deactivate';
 
   const runPauseToggle = async () => {
+    /* v8 ignore next -- TS narrowing guard: the confirm dialog only mounts once pauseTarget is set, so this never fires via the UI */
     if (!pauseTarget) return;
     try {
       await setProductActive({ variables: { id: pauseTarget.id, active: activating } });

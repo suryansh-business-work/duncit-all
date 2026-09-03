@@ -8,12 +8,22 @@ import {
 } from '../../src/pages/orders/constants';
 
 describe('orders constants', () => {
-  it('replaces underscores with spaces and upper-cases each word start', () => {
-    // The source only upper-cases the first char of each word; already-upper
-    // input therefore stays upper-cased.
-    expect(humaniseStatus('OUT_FOR_DELIVERY')).toBe('OUT FOR DELIVERY');
-    expect(humaniseStatus('shipped')).toBe('Shipped');
-    expect(humaniseStatus('awb_assigned')).toBe('Awb Assigned');
+  it('reads a status through the shared catalogue rather than title-casing it', () => {
+    // This replaced a version that title-cased the raw code — it rendered
+    // "Awb Assigned" and "Rto", and reached no translator at all (rule 38).
+    const t = (key: string) => key;
+
+    expect(humaniseStatus('OUT_FOR_DELIVERY', t)).toBe('fulfilment.statusOutForDelivery');
+    expect(humaniseStatus('SHIPPED', t)).toBe('fulfilment.statusShipped');
+    expect(humaniseStatus('AWB_ASSIGNED', t)).toBe('fulfilment.statusAwbAssigned');
+  });
+
+  it('falls back to the raw code for a status it has no words for', () => {
+    // A status added server-side must render as itself rather than blank on a
+    // client that has not shipped a key for it yet.
+    const t = (key: string) => key;
+
+    expect(humaniseStatus('SOMETHING_NEW', t)).toBe('SOMETHING_NEW');
   });
 
   it('maps every status to a chip colour', () => {

@@ -8,12 +8,15 @@ import {
   joinPhone,
   type PodAttendanceLabels,
   type PodAttendanceRow,
+  type PodAttendanceViewer,
 } from '@duncit/utils';
 
 interface Props {
   row: PodAttendanceRow;
   labels: PodAttendanceLabels;
   canMark: boolean;
+  /** Who is reading the roster: only the host waits on the door's companions. */
+  viewer: PodAttendanceViewer;
   /** True only for the row currently being written. */
   busy: boolean;
   formatDateTime: (iso: string) => string;
@@ -33,11 +36,12 @@ export default function AttendanceRow({
   row,
   labels,
   canMark,
+  viewer,
   busy,
   formatDateTime,
   onMark,
 }: Readonly<Props>) {
-  const state = attendanceRowState(row, canMark);
+  const state = attendanceRowState(row, canMark, viewer);
   const marked = state === 'MARKED';
   const phone = joinPhone(row.phone_extension, row.phone_number);
 

@@ -75,7 +75,18 @@ const podMemberSchema = new Schema<IPodMember>(
           {
             name: { type: String, required: true, trim: true },
             phone_extension: { type: String, default: null, trim: true },
-            phone_number: { type: String, required: true, trim: true },
+            /**
+             * Required AT THE DOOR, not by the schema.
+             *
+             * `podCompanionSchema` demands a number on the host's scan: the
+             * person is standing there, and a number is what makes the seat
+             * contestable afterwards. A Club Admin fixing a roster after the
+             * fact is read the names down a phone line and rarely has more, so
+             * their path validates with `podForcedCompanionsSchema` and stores
+             * ''. Making the model the gate meant "the names we were given"
+             * could not be recorded at all.
+             */
+            phone_number: { type: String, default: '', trim: true },
             added_at: { type: Date, default: () => new Date() },
             verified_at: { type: Date, default: null },
             verified_medium: { type: String, default: '' },

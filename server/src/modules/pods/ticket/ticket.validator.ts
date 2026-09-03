@@ -10,7 +10,9 @@ import { PHONE_EXTENSION_REGEX, PHONE_NUMBER_REGEX } from '@utils/phone';
  * undeclared field is deleted in silence, which is exactly how a multi-seat
  * booking ended up charging for one seat.
  */
-export const podCompanionSchema = yup.object({
+/** Who they are, and what to dial before the number. Identical on both doors —
+ * only whether a NUMBER is owed differs, which is the field below. */
+const companionIdentityFields = {
   name: yup
     .string()
     .trim()
@@ -26,6 +28,10 @@ export const podCompanionSchema = yup.object({
     })
     .nullable()
     .default(null),
+};
+
+export const podCompanionSchema = yup.object({
+  ...companionIdentityFields,
   phone_number: yup
     .string()
     .trim()
@@ -45,5 +51,38 @@ export const podCompanionSchema = yup.object({
 export const podCompanionsSchema = yup.object({
   companions: yup.array().of(podCompanionSchema.required()).default([]),
 });
+
+/**
+ * The same people, as a Club Admin is given them.
+ *
+ * A separate schema rather than a looser `podCompanionSchema`, because the two
+ * are asked in different rooms. At the door the host has the group in front of
+ * them, so a number is reasonable and is what makes the seat contestable later.
+ * A Club Admin correcting a roster the host forgot is read names down a phone
+ * line — demanding a number there is demanding they ring every attendee, which
+ * is the exact call this path exists to avoid. So: a name, and whatever else
+ * they happen to have.
+ *
+ * No `otp_challenge_id`: a companion proved by code belongs to the door's flow,
+ * and `validate()` strips anything not declared here, so it cannot be smuggled
+ * in through this one.
+ */
+export const podForcedCompanionSchema = yup.object({
+  ...companionIdentityFields,
+  phone_number: yup
+    .string()
+    .trim()
+    .matches(PHONE_NUMBER_REGEX, {
+      message: 'Phone must contain only digits (6-15 digits)',
+      excludeEmptyString: true,
+    })
+    .default(''),
+});
+
+export const podForcedCompanionsSchema = yup.object({
+  companions: yup.array().of(podForcedCompanionSchema.required()).default([]),
+});
+
+export type PodForcedCompanionDTO = yup.InferType<typeof podForcedCompanionSchema>;
 
 export type PodCompanionDTO = yup.InferType<typeof podCompanionSchema>;

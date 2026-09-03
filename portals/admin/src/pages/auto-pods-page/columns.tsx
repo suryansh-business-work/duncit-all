@@ -1,4 +1,4 @@
-import { AutoPodDependencyTimeline } from '@duncit/auto-pods';
+import { AutoPodDependencyTimeline, AutoPodExpiryNote } from '@duncit/auto-pods';
 import { activeChipColumn, dateColumn, entityIdColumn, EM_DASH, type DuncitColumn } from '@duncit/table';
 import type { AutoPodLabels } from '@duncit/utils';
 import { AutoPodStageChip } from './AutoPodStageChip';
@@ -94,6 +94,17 @@ export function getAutoPodColumns(deps: Readonly<AutoPodColumnDeps>): DuncitColu
       inactiveLabel: t('admin.autoPods.paused'),
       width: 110,
     }),
+    {
+      // Pod Settings' assignment window, counted down live off the shared note.
+      // Not a stored field, so the server can neither sort nor filter on it
+      // (no `filter` = no filter).
+      field: 'expires_at',
+      headerName: t('admin.autoPods.colExpiresIn'),
+      sortable: false,
+      width: 190,
+      cellRenderer: (row) => <AutoPodExpiryNote expiresAt={row.expires_at} labels={labels} />,
+      valueGetter: (row) => (row.expires_at ? formatDateTime(row.expires_at) : EM_DASH),
+    },
     dateColumn<AutoPodTableRow>({
       field: 'created_at',
       headerName: t('admin.autoPods.colCreatedAt'),

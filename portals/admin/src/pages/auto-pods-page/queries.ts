@@ -68,6 +68,7 @@ const ADMIN_AUTO_POD_FIELDS = gql`
       bound_at
     }
     pod_id
+    expires_at
     created_at
     updated_at
   }
@@ -210,6 +211,8 @@ export interface AutoPodTableRow {
   club_claim: AutoPodClubClaim | null;
   location: AutoPodLocation | null;
   pod_id: string | null;
+  /** When the offer is released unless everyone enrols by then; null once it is not enrolling. */
+  expires_at?: string | null;
   created_at: string;
   updated_at: string;
 }

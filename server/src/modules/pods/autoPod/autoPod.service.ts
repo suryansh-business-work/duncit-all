@@ -60,6 +60,33 @@ function venueExpiresAt(doc: IAutoPod, venueExpiryHours: number): string | null 
   return new Date(from.getTime() + venueExpiryHours * HOUR_MS).toISOString();
 }
 
+/** The two Pod Settings windows an offer's deadline is read from. */
+interface ExpiryWindows {
+  assignmentExpiryHours: number;
+  venueExpiryHours: number;
+}
+
+/**
+ * When a still-enrolling offer is released unless everyone needed has enrolled
+ * by then: its roll-out plus Pod Settings' assignment window — or, while it
+ * still waits on a venue, the venue window if that closes sooner. Every card
+ * counts this one instant down, whichever role is looking. Null once the offer
+ * is live, cancelled or expired.
+ */
+function offerExpiresAt(doc: IAutoPod, windows: ExpiryWindows): string | null {
+  if (!PRE_LIVE_STAGES.includes(doc.stage as any)) return null;
+  const assignment = doc.created_at.getTime() + windows.assignmentExpiryHours * HOUR_MS;
+  const venue = venueExpiresAt(doc, windows.venueExpiryHours);
+  const soonest = venue ? Math.min(assignment, new Date(venue).getTime()) : assignment;
+  return new Date(soonest).toISOString();
+}
+
+/** The public row plus the deadline it counts down. */
+const withExpiry = (doc: IAutoPod, windows: ExpiryWindows) => ({
+  ...autoPodToPub(doc),
+  expires_at: offerExpiresAt(doc, windows),
+});
+
 /** The most spots an Auto Pod may carry — the template's own ceiling. */
 const AUTO_POD_MAX_SPOTS = 999;
 
@@ -637,7 +664,8 @@ export const autoPodService = {
   },
 
   async getById(autoPodId: string) {
-    return autoPodToPub(await this.loadById(autoPodId));
+    const [doc, windows] = await Promise.all([this.loadById(autoPodId), this.windows()]);
+    return withExpiry(doc, windows);
   },
 
   /**
@@ -652,27 +680,28 @@ export const autoPodService = {
       .filter((f) => f.field === 'pending')
       .flatMap((f) => (f.values?.length ? f.values : [f.value ?? '']));
     const query = input ? { ...input, filters: filters.filter((f) => f.field !== 'pending') } : input;
-    const { docs, total, page, page_size } = await runTableQuery<any>(
-      AutoPodModel,
-      pendingBaseFilter(roles) ?? {},
-      query,
-      AUTO_POD_TABLE_CONFIG
-    );
-    return { rows: docs.map(autoPodToPub), total, page, page_size };
+    const [{ docs, total, page, page_size }, windows] = await Promise.all([
+      runTableQuery<any>(AutoPodModel, pendingBaseFilter(roles) ?? {}, query, AUTO_POD_TABLE_CONFIG),
+      this.windows(),
+    ]);
+    return { rows: docs.map((doc: IAutoPod) => withExpiry(doc, windows)), total, page, page_size };
   },
 
   /**
-   * The two Auto Pod windows from Pod Settings, and the instant before which a
-   * venue-less offer is already off venues' lists. Read once per request, never
-   * per row.
+   * The Auto Pod windows from Pod Settings, and the instants before which a
+   * venue-less offer is already off venues' lists and an offer is past its
+   * assignment window. Read once per request, never per row.
    */
   async windows() {
     const settings = await settingsService.getAppSettings();
     const venueExpiryHours = settings.auto_pod_venue_expiry_hours;
+    const assignmentExpiryHours = settings.auto_pod_assignment_expiry_hours;
     return {
       slotWindowDays: settings.auto_pod_slot_window_days,
       venueExpiryHours,
       venueCutoff: new Date(Date.now() - venueExpiryHours * HOUR_MS),
+      assignmentExpiryHours,
+      assignmentCutoff: new Date(Date.now() - assignmentExpiryHours * HOUR_MS),
       cancelHealthPenalty: settings.auto_pod_cancel_health_penalty,
     };
   },
@@ -778,7 +807,8 @@ export const autoPodService = {
       autoPodFail('CONFLICT', 'This Auto Pod has already been accepted by another venue.');
     }
     const venue = await ensureOwnedVenue(userId, venueId);
-    const { slotWindowDays, venueExpiryHours } = await this.windows();
+    const windows = await this.windows();
+    const { slotWindowDays } = windows;
     const until = Date.now() + slotWindowDays * DAY_MS;
     const available = await venueSlotService.listAvailable(String(venue._id));
     const inWindow = available.filter((slot) => new Date(slot.start_at).getTime() <= until);
@@ -791,7 +821,7 @@ export const autoPodService = {
     });
     return {
       window_days: slotWindowDays,
-      expires_at: venueExpiresAt(doc, venueExpiryHours),
+      expires_at: offerExpiresAt(doc, windows),
       slots: inWindow.map((slot, index) => ({
         id: slot.id,
         start_at: slot.start_at,
@@ -947,15 +977,16 @@ export const autoPodService = {
       ? owned.filter((venue) => String(venue.id) === scope.venue_id)
       : owned;
     if (venues.length === 0) return [];
-    const { venueCutoff, venueExpiryHours, cancelHealthPenalty } = await this.windows();
+    const windows = await this.windows();
+    const { venueCutoff, venueExpiryHours, cancelHealthPenalty } = windows;
     const or: any[] = [{ 'venue_claim.owner_user_id': new Types.ObjectId(userId) }];
     const open = this.venueOpenFilter(venues, venueCutoff, scope);
     if (open) or.push(open);
     const docs = await AutoPodModel.find({ $or: or }).sort({ created_at: -1 }).limit(200);
-    // The venue's list is the one place the countdown is shown, so it is the
-    // one payload that carries it — and what withdrawing would cost them.
+    // The venue's own window (older apps still count it down) and what
+    // withdrawing would cost them ride on this payload only.
     return docs.map((doc) => ({
-      ...autoPodToPub(doc),
+      ...withExpiry(doc, windows),
       venue_expires_at: venueExpiresAt(doc, venueExpiryHours),
       withdraw_penalty_points: cancelHealthPenalty,
     }));
@@ -965,23 +996,27 @@ export const autoPodService = {
    * ones they already assigned themselves to. */
   async listForHost(userId: string, scope?: AutoPodQueueScope) {
     const subIds = await this.hostSubCategoryIds(userId);
-    const { cancelHealthPenalty } = await this.windows();
+    const windows = await this.windows();
     const or: any[] = [{ 'host_claim.user_id': new Types.ObjectId(userId) }];
     const open = this.hostOpenFilter(subIds, scope);
     if (open) or.push(open);
     const docs = await AutoPodModel.find({ $or: or }).sort({ created_at: -1 }).limit(200);
-    return docs.map((doc) => ({ ...autoPodToPub(doc), withdraw_penalty_points: cancelHealthPenalty }));
+    return docs.map((doc) => ({
+      ...withExpiry(doc, windows),
+      withdraw_penalty_points: windows.cancelHealthPenalty,
+    }));
   },
 
   /** Offers a club of theirs could still claim, plus their clubs' claims. */
   async listForClubAdmin(userId: string, scope?: AutoPodQueueScope) {
     const clubs = await this.adminClubs(userId);
     if (clubs.length === 0) return [];
+    const windows = await this.windows();
     const or: any[] = [{ 'club_claim.club_id': { $in: clubs.map((c) => c.id) } }];
     const open = this.clubOpenFilter(clubs, scope);
     if (open) or.push(open);
     const docs = await AutoPodModel.find({ $or: or }).sort({ created_at: -1 }).limit(200);
-    return docs.map(autoPodToPub);
+    return docs.map((doc) => withExpiry(doc, windows));
   },
 
   /**

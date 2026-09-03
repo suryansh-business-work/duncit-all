@@ -42,6 +42,8 @@ export const settingsTypeDefs = gql`
     auto_pod_slot_window_days: Int!
     "How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires."
     auto_pod_venue_expiry_hours: Int!
+    "How many hours after an Auto Pod is rolled out its venue, host and club admin have to all enrol; past that it is released."
+    auto_pod_assignment_expiry_hours: Int!
     "Account Health points a venue or host loses by withdrawing from an Auto Pod (0 disables the penalty)."
     auto_pod_cancel_health_penalty: Int!
     updated_at: String
@@ -104,6 +106,8 @@ export const settingsTypeDefs = gql`
     auto_pod_slot_window_days: Int
     "How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires (1-720)."
     auto_pod_venue_expiry_hours: Int
+    "How many hours after an Auto Pod is rolled out its venue, host and club admin have to all enrol before it is released (1-720)."
+    auto_pod_assignment_expiry_hours: Int
     "Account Health points a venue or host loses by withdrawing from an Auto Pod (0-100, 0 disables the penalty)."
     auto_pod_cancel_health_penalty: Int
   }

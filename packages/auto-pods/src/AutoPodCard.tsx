@@ -19,6 +19,7 @@ import {
   type AutoPodLabels,
 } from '@duncit/utils';
 import { AutoPodTicks } from './AutoPodTicks';
+import { AutoPodExpiryNote } from './AutoPodExpiryNote';
 
 /**
  * The card's cover image. A template's URL is whatever was uploaded for it, and
@@ -154,6 +155,8 @@ export function AutoPodCard({
             {labels.expectedEarnings(formatMoney(row.expected_host_earnings))}
           </Typography>
         ) : null}
+
+        <AutoPodExpiryNote expiresAt={row.expires_at} labels={labels} />
 
         {missing.length > 0 ? (
           <Typography variant="caption" sx={{

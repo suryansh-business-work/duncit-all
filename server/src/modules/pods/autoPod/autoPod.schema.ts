@@ -118,12 +118,19 @@ export const autoPodTypeDefs = gql`
     "The city the first enrolment pinned it to — null while nobody has enrolled."
     location: AutoPodLocation
     """
-    When this offer leaves venues' lists (and expires) if none has accepted it
-    by then — created_at plus Pod Settings' auto_pod_venue_expiry_hours. Null on
-    a virtual offer, once a venue has accepted, and on every list but the
-    venue's own queue.
+    When this offer is released unless everyone needed has enrolled by then —
+    its roll-out plus Pod Settings' auto_pod_assignment_expiry_hours, or the
+    venue window if that closes sooner while it still waits on a venue. Set on
+    every list and read while the offer is enrolling; null once it is live,
+    cancelled or expired. Every card counts it down.
     """
-    venue_expires_at: String
+    expires_at: String
+    """
+    When this offer leaves venues' lists if none has accepted it by then —
+    venue_window_from (or created_at) plus auto_pod_venue_expiry_hours. Set on
+    the venue queue only. Superseded by expires_at, which already folds it in.
+    """
+    venue_expires_at: String @deprecated(reason: "Read expires_at — the one deadline every list carries.")
     "Account Health points a venue or host loses by withdrawing (Pod Settings). Set on their own queues."
     withdraw_penalty_points: Int
     "True when the calling user (or one of their clubs) already enrolled."

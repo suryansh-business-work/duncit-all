@@ -37,6 +37,8 @@ const DEFAULT_POD_AUTO_CANCEL_LEAD_HOURS = 24;
 const DEFAULT_AUTO_POD_SLOT_WINDOW_DAYS = 7;
 /** Hours an Auto Pod waits for a venue before it leaves venues' lists and expires. */
 const DEFAULT_AUTO_POD_VENUE_EXPIRY_HOURS = 24;
+/** Hours an Auto Pod's venue, host and club admin have to all enrol before it is released. */
+const DEFAULT_AUTO_POD_ASSIGNMENT_EXPIRY_HOURS = 72;
 /** Account Health points a venue or host loses by withdrawing from an Auto Pod. */
 const DEFAULT_AUTO_POD_CANCEL_HEALTH_PENALTY = 5;
 
@@ -73,6 +75,13 @@ const cleanAutoPodSlotWindowDays = (value: unknown) =>
 const cleanAutoPodVenueExpiryHours = (value: unknown) =>
   Math.min(720, Math.max(1, Math.floor(Number(value)) || DEFAULT_AUTO_POD_VENUE_EXPIRY_HOURS));
 
+/** Auto Pod assignment window, clamped to 1 hour – 30 days. */
+const cleanAutoPodAssignmentExpiryHours = (value: unknown) =>
+  Math.min(
+    720,
+    Math.max(1, Math.floor(Number(value)) || DEFAULT_AUTO_POD_ASSIGNMENT_EXPIRY_HOURS),
+  );
+
 // 0 is a legal value here (it disables the penalty), so the `|| DEFAULT` idiom
 // would silently turn a saved 0 back into 5.
 const cleanAutoPodCancelHealthPenalty = (value: unknown) => {
@@ -103,6 +112,9 @@ const toAppPub = (d: any) => ({
     d?.pod_auto_cancel_lead_hours ?? DEFAULT_POD_AUTO_CANCEL_LEAD_HOURS,
   auto_pod_slot_window_days: cleanAutoPodSlotWindowDays(d?.auto_pod_slot_window_days),
   auto_pod_venue_expiry_hours: cleanAutoPodVenueExpiryHours(d?.auto_pod_venue_expiry_hours),
+  auto_pod_assignment_expiry_hours: cleanAutoPodAssignmentExpiryHours(
+    d?.auto_pod_assignment_expiry_hours,
+  ),
   auto_pod_cancel_health_penalty: cleanAutoPodCancelHealthPenalty(d?.auto_pod_cancel_health_penalty),
   updated_at: d?.updated_at?.toISOString?.() ?? "",
 });
@@ -415,6 +427,7 @@ type AppSettingsUpdateInput = {
   pod_auto_cancel_lead_hours?: number;
   auto_pod_slot_window_days?: number;
   auto_pod_venue_expiry_hours?: number;
+  auto_pod_assignment_expiry_hours?: number;
   auto_pod_cancel_health_penalty?: number;
 };
 
@@ -464,6 +477,10 @@ const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
   if (input.auto_pod_venue_expiry_hours !== undefined)
     update.auto_pod_venue_expiry_hours = cleanAutoPodVenueExpiryHours(
       input.auto_pod_venue_expiry_hours,
+    );
+  if (input.auto_pod_assignment_expiry_hours !== undefined)
+    update.auto_pod_assignment_expiry_hours = cleanAutoPodAssignmentExpiryHours(
+      input.auto_pod_assignment_expiry_hours,
     );
   if (input.auto_pod_cancel_health_penalty !== undefined)
     update.auto_pod_cancel_health_penalty = cleanAutoPodCancelHealthPenalty(

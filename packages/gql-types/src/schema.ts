@@ -1255,6 +1255,8 @@ export type AppSettings = {
   __typename?: 'AppSettings';
   /** Whether a host must verify an attendee's name and phone over OTP before marking them present by hand. The door scan is proof on its own and is never gated by this. */
   attendance_otp_required: Scalars['Boolean']['output'];
+  /** How many hours after an Auto Pod is rolled out its venue, host and club admin have to all enrol; past that it is released. */
+  auto_pod_assignment_expiry_hours: Scalars['Int']['output'];
   /** Account Health points a venue or host loses by withdrawing from an Auto Pod (0 disables the penalty). */
   auto_pod_cancel_health_penalty: Scalars['Int']['output'];
   /** How many days ahead a venue is shown its free slots when accepting an Auto Pod. */
@@ -1607,6 +1609,14 @@ export type AutoPod = {
    * venue has priced it, and for callers who are not hosts.
    */
   expected_host_earnings?: Maybe<Scalars['Float']['output']>;
+  /**
+   * When this offer is released unless everyone needed has enrolled by then —
+   * its roll-out plus Pod Settings' auto_pod_assignment_expiry_hours, or the
+   * venue window if that closes sooner while it still waits on a venue. Set on
+   * every list and read while the offer is enrolling; null once it is live,
+   * cancelled or expired. Every card counts it down.
+   */
+  expires_at?: Maybe<Scalars['String']['output']>;
   /** Host enrolment — null until a host assigns themselves. */
   host_claim?: Maybe<AutoPodHostClaim>;
   id: Scalars['ID']['output'];
@@ -1650,10 +1660,10 @@ export type AutoPod = {
   /** Venue enrolment — null until a venue accepts and picks its slot. Always null on a VIRTUAL offer. */
   venue_claim?: Maybe<AutoPodVenueClaim>;
   /**
-   * When this offer leaves venues' lists (and expires) if none has accepted it
-   * by then — created_at plus Pod Settings' auto_pod_venue_expiry_hours. Null on
-   * a virtual offer, once a venue has accepted, and on every list but the
-   * venue's own queue.
+   * When this offer leaves venues' lists if none has accepted it by then —
+   * venue_window_from (or created_at) plus auto_pod_venue_expiry_hours. Set on
+   * the venue queue only. Superseded by expires_at, which already folds it in.
+   * @deprecated Read expires_at — the one deadline every list carries.
    */
   venue_expires_at?: Maybe<Scalars['String']['output']>;
   /** True when the calling user (or one of their clubs) already enrolled. */
@@ -22751,6 +22761,8 @@ export type UpdateAppBuildSettingsInput = {
 export type UpdateAppSettingsInput = {
   /** Whether a host must verify an attendee's name and phone over OTP before marking them present by hand. The door scan is proof on its own and is never gated by this. */
   attendance_otp_required?: InputMaybe<Scalars['Boolean']['input']>;
+  /** How many hours after an Auto Pod is rolled out its venue, host and club admin have to all enrol before it is released (1-720). */
+  auto_pod_assignment_expiry_hours?: InputMaybe<Scalars['Int']['input']>;
   /** Account Health points a venue or host loses by withdrawing from an Auto Pod (0-100, 0 disables the penalty). */
   auto_pod_cancel_health_penalty?: InputMaybe<Scalars['Int']['input']>;
   /** How many days ahead a venue is shown its free slots when accepting an Auto Pod (1-60). */

@@ -1,8 +1,10 @@
 import type { IAutoPod } from './autoPod.model';
-import { autoPodNextRole } from './autoPod.common';
+import { autoPodMissingRoles, autoPodNextRole } from './autoPod.common';
 import { autoPodCityLabel } from './autoPod.location';
 import { audienceClubs, audienceHosts, audienceVenues } from './autoPod.audience';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { UserModel } from '@modules/access/user/user.model';
+import { sendAutoPodReleasedEmail } from '@services/email/email.service';
 import { logs } from '@observability/log';
 
 /**
@@ -229,7 +231,59 @@ export const autoPodNotify = {
       `"${doc.pod_title}" expired because its date passed before everyone enrolled.`
     );
   },
+
+  /**
+   * A Pod Settings window ran out with a role still missing, so the offer is
+   * released. Everyone on it (and the opener) gets the push; each partner who
+   * HAD enrolled is also emailed, because their slot, their hosting or their
+   * club's claim just went with it.
+   */
+  async released(doc: IAutoPod, hours: number) {
+    const missing = autoPodMissingRoles(doc);
+    const waiting = missing.map((role) => ROLE_NOUN[role]).join(', ');
+    await Promise.all([
+      pushStakeholders(
+        stakeholders(doc),
+        'Auto Pod released',
+        `"${doc.pod_title}" was released — not fully assigned within ${hours} hours. Still waiting on ${waiting}.`
+      ),
+      emailEnrolled(doc, hours, missing),
+    ]);
+  },
 };
+
+/** The partners who had enrolled, each with the role they filled. */
+function enrolledParties(doc: IAutoPod): { userId: string; part: Role }[] {
+  const rows: { userId: string; part: Role }[] = [];
+  if (doc.venue_claim) rows.push({ userId: String(doc.venue_claim.owner_user_id), part: 'venue' });
+  if (doc.host_claim) rows.push({ userId: String(doc.host_claim.user_id), part: 'host' });
+  if (doc.club_claim) rows.push({ userId: String(doc.club_claim.user_id), part: 'club' });
+  return rows;
+}
+
+/** One email per enrolled partner; sendEmail picks their language. */
+async function emailEnrolled(doc: IAutoPod, hours: number, missing: Role[]): Promise<void> {
+  await Promise.all(
+    enrolledParties(doc).map(async ({ userId, part }) => {
+      const user: any = await UserModel.findById(userId)
+        .select('profile.first_name profile.last_name auth.email')
+        .lean();
+      const to = user?.auth?.email;
+      if (!to) return;
+      const name =
+        `${user.profile?.first_name ?? ''} ${user.profile?.last_name ?? ''}`.trim() || 'there';
+      await sendAutoPodReleasedEmail({
+        to,
+        name,
+        pod_title: doc.pod_title,
+        auto_pod_no: doc.auto_pod_no,
+        hours,
+        missing,
+        part,
+      });
+    })
+  );
+}
 
 /** Fire-and-forget wrapper for callers that must never fail on a notification. */
 export function notifyQuietly(promise: Promise<void>, component: string, autoPodId: string) {

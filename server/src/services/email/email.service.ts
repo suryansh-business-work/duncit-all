@@ -1138,6 +1138,54 @@ export function sendHostPodAutoCancelledEmail(opts: {
   });
 }
 
+/** A partner an Auto Pod's assignment window ran out on — the role they filled. */
+export type AutoPodPartyRole = 'venue' | 'host' | 'club';
+
+/** The one word each role goes by in an email, from the shared field labels. */
+const AUTO_POD_ROLE_KEY: Record<AutoPodPartyRole, string> = {
+  venue: 't:email.field.venue',
+  host: 't:email.field.host',
+  club: 't:email.field.clubAdmin',
+};
+
+/**
+ * The Auto Pod sweep released an offer nobody completed inside Pod Settings'
+ * assignment window. Sent to each partner who HAD enrolled — their slot, their
+ * hosting or their club's claim went with it. The role words are resolved in
+ * the recipient's own language here, because a list of roles is built per
+ * message and a template cannot join one.
+ */
+export async function sendAutoPodReleasedEmail(opts: {
+  to: string;
+  name: string;
+  pod_title: string;
+  auto_pod_no: string;
+  hours: number;
+  /** The roles that never enrolled — why the offer was released. */
+  missing: AutoPodPartyRole[];
+  /** The role this recipient had filled. */
+  part: AutoPodPartyRole;
+}) {
+  const locale = await recipientLocale(opts.to);
+  const words = await emailTranslationVars(locale);
+  const roleWord = (role: AutoPodPartyRole) => words[AUTO_POD_ROLE_KEY[role]];
+  return sendEmail({
+    to: opts.to,
+    subject: `Auto Pod released — ${opts.pod_title}`,
+    template: 'auto-pod-released',
+    category: 'notification',
+    locale,
+    vars: {
+      name: opts.name,
+      pod_title: opts.pod_title,
+      auto_pod_no: opts.auto_pod_no,
+      window: `${opts.hours} ${words['t:email.autoPodReleased.hoursUnit']}`,
+      missing: opts.missing.map(roleWord).join(', '),
+      your_part: roleWord(opts.part),
+    },
+  });
+}
+
 /** A replacement booked the seat a member released via Backout. */
 export function sendBackoutSpotFilledEmail(opts: {
   to: string;

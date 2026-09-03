@@ -192,10 +192,13 @@ what the venue is paid after Finance's deductions — and `viable`, false when
 the pod's money could not cover it (`labels.slotNotViable`, and the button
 stays shut). The chosen slot's pay shows as `labels.potentialEarning(amount)`.
 
-A venue's card also counts the offer down: `AutoPodExpiryNote` reads
-`row.venue_expires_at` (set on the venue queue only — Pod Settings' *Auto
-Pods — venue window* past `created_at`) and says "Removed from your list in
-5h 12m"; when it runs out with no venue the server expires the offer.
+Every card counts the offer down: `AutoPodCard` renders `AutoPodExpiryNote`
+off `row.expires_at` (set on every list — Pod Settings' *Auto Pods —
+assignment window* past the roll-out, or the *venue window* if that closes
+sooner while no venue is on it) and says "Expires in 5h 12m 30s", ticking
+once a second off the admin-configured clock; when it runs out with a role
+still missing the server releases the offer, frees the venue's slot and the
+host, and emails everyone who had enrolled.
 
 `VenueAcceptDialog` and `ClubClaimDialog` refuse a venue / club outside the
 pinned city when there is one, and say so (`labels.noVenueInCity(city)` /

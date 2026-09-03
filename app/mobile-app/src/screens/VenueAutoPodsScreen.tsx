@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, YStack } from 'tamagui';
@@ -7,7 +7,6 @@ import { autoPodActionable, autoPodWithdrawable, type AutoPodRow } from '@duncit
 import { StackScreen } from '@/components/StackScreen';
 import { PillButton } from '@/components/attendance/AttendanceOtpControls';
 import {
-  AutoPodExpiryNote,
   AutoPodLocationRow,
   AutoPodQueue,
   AutoPodVenueRow,
@@ -16,26 +15,15 @@ import {
 } from '@/components/auto-pods';
 import { useAutoPodScreen } from '@/hooks/useAutoPodScreen';
 import type { AutoPodVenueOption } from '@/hooks/useAutoPodVenues';
-import { useDateFormat } from '@/hooks/useDateFormat';
 import { useLocations } from '@/hooks/useLocations';
 import type { RootStackParamList } from '@/navigation/types';
-
-/** Re-renders once a minute, so the cards' countdowns keep moving. */
-function useMinuteTick(): number {
-  const [tick, setTick] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setTick((n) => n + 1), 60_000);
-    return () => clearInterval(id);
-  }, []);
-  return tick;
-}
 
 /**
  * Venue Studio > Auto Pods — the offers a venue may take.
  *
  * The venue picked at the top is the one looking: the offers are what THAT
- * venue could take (its category, its city), each counting down the window
- * Pod Settings gives venues to accept. Accepting picks one of the venue's free
+ * venue could take (its category, its city), each card counting down the
+ * window Pod Settings gives the offer. Accepting picks one of the venue's free
  * slots in the next few days, nearest first, priced as the venue would be paid
  * — in one step. The venue goes first: hosts are offered the pod only once
  * the slot is fixed, and an accepted offer sits under "Assigned slot" with a
@@ -53,9 +41,6 @@ export function VenueAutoPodsScreen() {
     'venue',
     { locationId: selectedId, venueId: venue?.id },
   );
-  const { clock } = useDateFormat();
-  useMinuteTick();
-  const nowMs = clock.nowMs();
   const [offer, setOffer] = useState<AutoPodRow | null>(null);
   const [withdrawing, setWithdrawing] = useState<AutoPodRow | null>(null);
 
@@ -72,16 +57,13 @@ export function VenueAutoPodsScreen() {
 
   const renderAction = (row: AutoPodRow) =>
     autoPodActionable(row, 'venue') ? (
-      <YStack gap={8}>
-        <AutoPodExpiryNote expiresAt={row.venue_expires_at} nowMs={nowMs} labels={labels} />
-        <PillButton
-          testID={`auto-pod-accept-${row.id}`}
-          label={labels.acceptCta}
-          onPress={() => setOffer(row)}
-          variant="solid"
-          disabled={!venue}
-        />
-      </YStack>
+      <PillButton
+        testID={`auto-pod-accept-${row.id}`}
+        label={labels.acceptCta}
+        onPress={() => setOffer(row)}
+        variant="solid"
+        disabled={!venue}
+      />
     ) : null;
 
   return (

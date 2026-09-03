@@ -11,7 +11,7 @@ import { type MockedResponse } from '@apollo/client/testing';
 import { MockedProvider } from '@apollo/client/testing/react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { mwebAutoPodLabels, type AutoPodRow } from '@duncit/utils';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AutoPodDependencyTimeline } from '../src/AutoPodDependencyTimeline';
 import { AutoPodExpiryNote } from '../src/AutoPodExpiryNote';
@@ -123,16 +123,27 @@ describe('AutoPodVenuePicker', () => {
 describe('AutoPodExpiryNote', () => {
   const now = Date.UTC(2026, 8, 2, 10, 0, 0);
 
-  it('counts the offer down off the venue list', () => {
-    const expiresAt = new Date(now + 5 * 3_600_000 + 12 * 60_000).toISOString();
-    render(<AutoPodExpiryNote expiresAt={expiresAt} nowMs={now} labels={labels} />);
-    expect(screen.getByTestId('auto-pod-expiry')).toHaveTextContent(labels.removedIn(5, 12));
+  beforeEach(() => {
+    vi.useFakeTimers({ now });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('counts the offer down live, one second at a time', () => {
+    const expiresAt = new Date(now + 5 * 3_600_000 + 12 * 60_000 + 30_000).toISOString();
+    render(<AutoPodExpiryNote expiresAt={expiresAt} labels={labels} />);
+    expect(screen.getByTestId('auto-pod-expiry')).toHaveTextContent(labels.expiresIn(5, 12, 30));
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(screen.getByTestId('auto-pod-expiry')).toHaveTextContent(labels.expiresIn(5, 12, 29));
   });
 
   it('draws nothing without a deadline, or once it has passed', () => {
-    const { container, rerender } = render(<AutoPodExpiryNote expiresAt={null} nowMs={now} labels={labels} />);
+    const { container, rerender } = render(<AutoPodExpiryNote expiresAt={null} labels={labels} />);
     expect(container.innerHTML).toBe('');
-    rerender(<AutoPodExpiryNote expiresAt={new Date(now - 1).toISOString()} nowMs={now} labels={labels} />);
+    rerender(<AutoPodExpiryNote expiresAt={new Date(now - 1).toISOString()} labels={labels} />);
     expect(container.innerHTML).toBe('');
   });
 });

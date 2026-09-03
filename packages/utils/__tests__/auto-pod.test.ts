@@ -354,11 +354,15 @@ describe('a virtual offer', () => {
 describe('autoPodTimeLeft', () => {
   const now = Date.UTC(2026, 8, 2, 10, 0, 0);
 
-  it('splits what is left into whole hours and the minutes over, rounding minutes up', () => {
-    expect(autoPodTimeLeft(new Date(now + 5 * 3_600_000 + 12 * 60_000).toISOString(), now)).toEqual({ hours: 5, minutes: 12 });
-    // Ten seconds left still reads as a minute, never "0h 0m" while the offer is there.
-    expect(autoPodTimeLeft(new Date(now + 10_000).toISOString(), now)).toEqual({ hours: 0, minutes: 1 });
-    expect(autoPodTimeLeft(new Date(now + 24 * 3_600_000).toISOString(), now)).toEqual({ hours: 24, minutes: 0 });
+  it('splits what is left into whole hours, the minutes over and the seconds over, rounding seconds up', () => {
+    expect(autoPodTimeLeft(new Date(now + 5 * 3_600_000 + 12 * 60_000 + 30_000).toISOString(), now)).toEqual({
+      hours: 5,
+      minutes: 12,
+      seconds: 30,
+    });
+    // Half a second left still reads as a second, never "0h 0m 0s" while the offer is there.
+    expect(autoPodTimeLeft(new Date(now + 500).toISOString(), now)).toEqual({ hours: 0, minutes: 0, seconds: 1 });
+    expect(autoPodTimeLeft(new Date(now + 24 * 3_600_000).toISOString(), now)).toEqual({ hours: 24, minutes: 0, seconds: 0 });
   });
 
   it('is null with no deadline, a past one, or an unreadable one', () => {

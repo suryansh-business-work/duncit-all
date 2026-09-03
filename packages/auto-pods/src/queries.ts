@@ -24,7 +24,7 @@ const AUTO_POD_FIELDS = `
   viewer_claimed
   pod_id
   expected_host_earnings
-  venue_expires_at
+  expires_at
   withdraw_penalty_points
   venue_claim {
     venue_id

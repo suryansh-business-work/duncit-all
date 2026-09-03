@@ -79,8 +79,8 @@ export interface AutoPodLabels {
   venueCategory: (path: string) => string;
   noVenueCategory: string;
   pickVenueFirst: string;
-  /** The venue card's countdown to the offer leaving their list. */
-  removedIn: (hours: number, minutes: number) => string;
+  /** Every card's live countdown to the offer being released unless everyone enrols. */
+  expiresIn: (hours: number, minutes: number, seconds: number) => string;
   /** The slot picker: how far ahead it reaches, and what a slot pays the venue. */
   slotWindow: (days: number) => string;
   potentialEarning: (amount: string) => string;
@@ -196,7 +196,8 @@ export function mwebAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     venueCategory: (path) => t('mweb.autoPods.venueCategory', { vars: { path } }),
     noVenueCategory: t('mweb.autoPods.noVenueCategory'),
     pickVenueFirst: t('mweb.autoPods.pickVenueFirst'),
-    removedIn: (hours, minutes) => t('mweb.autoPods.removedIn', { vars: { hours, minutes } }),
+    expiresIn: (hours, minutes, seconds) =>
+      t('mweb.autoPods.expiresIn', { vars: { hours, minutes, seconds } }),
     slotWindow: (days) => t('mweb.autoPods.slotWindow', { vars: { days } }),
     potentialEarning: (amount) => t('mweb.autoPods.potentialEarning', { vars: { amount } }),
     slotNotViable: t('mweb.autoPods.slotNotViable'),
@@ -303,7 +304,8 @@ export function shellAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     venueCategory: (path) => t('shell.autoPods.venueCategory', { vars: { path } }),
     noVenueCategory: t('shell.autoPods.noVenueCategory'),
     pickVenueFirst: t('shell.autoPods.pickVenueFirst'),
-    removedIn: (hours, minutes) => t('shell.autoPods.removedIn', { vars: { hours, minutes } }),
+    expiresIn: (hours, minutes, seconds) =>
+      t('shell.autoPods.expiresIn', { vars: { hours, minutes, seconds } }),
     slotWindow: (days) => t('shell.autoPods.slotWindow', { vars: { days } }),
     potentialEarning: (amount) => t('shell.autoPods.potentialEarning', { vars: { amount } }),
     slotNotViable: t('shell.autoPods.slotNotViable'),

@@ -2951,8 +2951,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venueCategory: 'Category: {path}',
       noVenueCategory: 'This venue has no category yet — set one under Manage venue to be offered Auto Pods.',
       pickVenueFirst: 'Pick a venue at the top first.',
-      // The card's countdown — Pod Settings decides the window.
-      removedIn: 'Removed from your list in {hours}h {minutes}m',
+      // Every card's live countdown to the offer being released — Pod Settings decides the windows.
+      expiresIn: 'Expires in {hours}h {minutes}m {seconds}s',
       // The slot picker.
       slotWindow: 'Free slots in the next {days} days, nearest first.',
       potentialEarning: 'You earn {amount} from this slot, after Duncit’s deductions.',

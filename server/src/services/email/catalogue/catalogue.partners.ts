@@ -287,6 +287,41 @@ export const HOST_EMAILS: readonly EmailDef[] = [
   }),
 
   defineEmail({
+    slug: 'auto-pod-released',
+    name: 'Partner: Auto Pod Released',
+    description:
+      'A venue, host or club admin who had enrolled in an Auto Pod, when Pod Settings’ assignment window closes before every role is on it. The offer is released: the venue’s slot and the host are freed.',
+    audience: 'HOST',
+    category: 'notification',
+    fires: 'The Auto Pod sweep releases an offer whose assignment window closed with a role still missing',
+    subject: 'Auto Pod released — {{pod_title}}',
+    footerNote: FOOTER.autoPod,
+    vars: [
+      v('name', 'The partner’s first name.', 'Meera'),
+      v('pod_title', 'The Auto Pod’s title, as the heading names it.', 'Sunday Badminton Doubles'),
+      v('auto_pod_no', 'The Auto Pod’s id.', 'DUN-APOD-1042'),
+      v('window', 'The assignment window, already worded.', '72 hours'),
+      v('missing', 'The roles that never enrolled, in the reader’s language.', 'Host, Club admin'),
+      v('your_part', 'The role this reader had filled.', 'Venue'),
+    ],
+    body: {
+      copyKey: 'email.autoPodReleased',
+      nameVar: 'name',
+      tone: STOPPED,
+      calloutLabelKey: LABEL.pod,
+      calloutVar: 'pod_title',
+      rows: [
+        { labelKey: 'email.autoPodReleased.window', valueVar: 'window' },
+        { labelKey: 'email.autoPodReleased.missing', valueVar: 'missing' },
+        { labelKey: 'email.autoPodReleased.yourPart', valueVar: 'your_part' },
+      ],
+      ctaKey: CTA.openPartners,
+      ctaVar: 'app_url',
+      helpKey: HELP.noAction,
+    },
+  }),
+
+  defineEmail({
     slug: 'host-complete-pod-reminder',
     name: 'Host: Complete Pod Reminder',
     description: 'The host, when a pod that has finished is still not marked complete — nobody is paid until it is.',

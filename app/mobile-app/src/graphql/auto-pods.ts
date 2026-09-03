@@ -52,7 +52,7 @@ export const VenueAutoPodsDocument = gql(`
       viewer_claimed
       pod_id
       expected_host_earnings
-      venue_expires_at
+      expires_at
       withdraw_penalty_points
       location {
         location_id
@@ -110,7 +110,7 @@ export const HostAutoPodsDocument = gql(`
       viewer_claimed
       pod_id
       expected_host_earnings
-      venue_expires_at
+      expires_at
       withdraw_penalty_points
       location {
         location_id
@@ -168,7 +168,7 @@ export const ClubAdminAutoPodsDocument = gql(`
       viewer_claimed
       pod_id
       expected_host_earnings
-      venue_expires_at
+      expires_at
       withdraw_penalty_points
       location {
         location_id

@@ -842,7 +842,7 @@ twin cannot disagree on what an offer is waiting for.
 | `autoPodWaitingOn` | `(row) => AutoPodRole \| null` | The first missing role. |
 | `autoPodHostNeedsLocation` | `(row, locationId) => boolean` | True when the offer is unpinned AND the host has no city selected — their "Assign Myself" must wait. |
 | `autoPodCityLabel` | `(location) => string` | `"Bengaluru, Karnataka"`; `''` for an unpinned offer. |
-| `autoPodTimeLeft` | `(iso, nowMs) => { hours, minutes } \| null` | The venue card's countdown to `row.venue_expires_at` — minutes rounded up, null once passed. |
+| `autoPodTimeLeft` | `(iso, nowMs) => { hours, minutes, seconds } \| null` | Every card's live countdown to `row.expires_at` — seconds rounded up, null once passed. |
 | `autoPodModeCount` | `(counts, mode) => number` | How many offers wait on a studio mode (`HOST` / `VENUE` / `CLUB`); 0 for any other. |
 
 ### Studio modes

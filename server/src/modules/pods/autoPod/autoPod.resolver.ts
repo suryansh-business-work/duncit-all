@@ -55,6 +55,9 @@ export const autoPodResolvers = {
       return sub?.name ?? null;
     },
     category_path: (parent: any) => categoryPathOf(String(parent.sub_category_id)),
+    // Attached by every list and the single-row read; a mutation's own
+    // return carries no deadline (the queues re-read straight after).
+    expires_at: (parent: any) => parent.expires_at ?? null,
     // Attached by the venue queue only; every other list reads null.
     venue_expires_at: (parent: any) => parent.venue_expires_at ?? null,
     // Attached by the venue and host queues; every other list reads null.

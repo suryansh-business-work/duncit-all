@@ -18,6 +18,7 @@ const POD_SETTINGS = gql`
       pod_auto_cancel_lead_hours
       auto_pod_slot_window_days
       auto_pod_venue_expiry_hours
+      auto_pod_assignment_expiry_hours
       auto_pod_cancel_health_penalty
       updated_at
     }
@@ -35,6 +36,7 @@ const UPDATE_POD_SETTINGS = gql`
       pod_auto_cancel_lead_hours
       auto_pod_slot_window_days
       auto_pod_venue_expiry_hours
+      auto_pod_assignment_expiry_hours
       auto_pod_cancel_health_penalty
       updated_at
     }
@@ -158,6 +160,18 @@ export default function PodSettingsPage() {
         loading={loading}
         value={settings?.auto_pod_venue_expiry_hours ?? null}
         onSave={(next) => saveField({ auto_pod_venue_expiry_hours: next })}
+      />
+      <NumberSettingCard
+        title={t('admin.podSettings.autoPodAssignmentTitle')}
+        description={t('admin.podSettings.autoPodAssignmentDesc')}
+        label={t('admin.podSettings.autoPodAssignmentLabel')}
+        helperText={t('admin.podSettings.autoPodAssignmentMin')}
+        invalidText={t('admin.podSettings.autoPodAssignmentInvalid')}
+        min={1}
+        max={720}
+        loading={loading}
+        value={settings?.auto_pod_assignment_expiry_hours ?? null}
+        onSave={(next) => saveField({ auto_pod_assignment_expiry_hours: next })}
       />
       <NumberSettingCard
         title={t('admin.podSettings.autoPodPenaltyTitle')}

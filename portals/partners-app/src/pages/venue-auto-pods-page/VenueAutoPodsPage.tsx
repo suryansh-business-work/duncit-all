@@ -1,10 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Stack } from '@mui/material';
-import { useDateFormat } from '@duncit/app-settings';
 import { DuncitButton } from '@duncit/buttons';
 import {
-  AutoPodExpiryNote,
   AutoPodQueue,
   AutoPodVenuePicker,
   AutoPodWithdrawAction,
@@ -19,23 +17,13 @@ import AutoPodMineAction from '../../components/auto-pods/AutoPodMineAction';
 import AutoPodsPageHeader from '../../components/auto-pods/AutoPodsPageHeader';
 import useAutoPodsQueue from '../../components/auto-pods/useAutoPodsQueue';
 
-/** Re-renders once a minute, so the cards' countdowns keep moving. */
-function useMinuteTick(): number {
-  const [tick, setTick] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setTick((n) => n + 1), 60_000);
-    return () => clearInterval(id);
-  }, []);
-  return tick;
-}
-
 /**
  * Auto Pods a venue may take — the venue goes first: a host is offered the pod
  * only once a venue has fixed its slot, and a club admin once a host is on it.
  * An accepted offer sits under "Assigned slot" with a Cancel until both are.
  * The venue picked at the top is the one looking — the offers are what THAT
- * venue could take (its category, its city), each counting down the window
- * Pod Settings gives venues to accept. Accepting commits one of the venue's
+ * venue could take (its category, its city), each card counting down the
+ * window Pod Settings gives the offer. Accepting commits one of the venue's
  * own published slots, priced as the venue would be paid; when the venue is
  * the first to enrol its city pins the offer, and a venue elsewhere can no
  * longer take it. First venue to accept wins.
@@ -49,23 +37,16 @@ export default function VenueAutoPodsPage() {
     location_id: location.location_id || null,
     venue_id: venue?.id ?? null,
   });
-  const { clock } = useDateFormat();
-  useMinuteTick();
-  const nowMs = clock.nowMs();
-
   const renderAction = (row: AutoPodRow) => (
-    <Stack spacing={1}>
-      <AutoPodExpiryNote expiresAt={row.venue_expires_at} nowMs={nowMs} labels={queue.labels} />
-      <DuncitButton
-        fullWidth
-        size="small"
-        variant="contained"
-        onClick={() => setSelected(row)}
-        disabled={!venue}
-      >
-        {queue.labels.acceptCta}
-      </DuncitButton>
-    </Stack>
+    <DuncitButton
+      fullWidth
+      size="small"
+      variant="contained"
+      onClick={() => setSelected(row)}
+      disabled={!venue}
+    >
+      {queue.labels.acceptCta}
+    </DuncitButton>
   );
 
   return (

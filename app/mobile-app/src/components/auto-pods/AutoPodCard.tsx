@@ -9,6 +9,7 @@ import {
 } from '@duncit/utils';
 
 import { AppImage } from '@/components/AppImage';
+import { AutoPodExpiryNote } from '@/components/auto-pods/AutoPodExpiryNote';
 import { AutoPodTicksRow } from '@/components/auto-pods/AutoPodTicksRow';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
@@ -160,6 +161,8 @@ export function AutoPodCard({ row, labels, formatWhen, formatMoney, action }: Re
             {labels.expectedEarnings(formatMoney(row.expected_host_earnings))}
           </Text>
         ) : null}
+
+        <AutoPodExpiryNote expiresAt={row.expires_at} labels={labels} />
 
         {missing.length > 0 ? (
           <Text fontSize={11.5} color="$muted">

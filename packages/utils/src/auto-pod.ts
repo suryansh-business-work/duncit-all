@@ -86,11 +86,13 @@ export interface AutoPodRow {
   /** False while an admin has paused the offer. */
   is_active?: boolean;
   /**
-   * When the offer leaves venues' lists (and expires) if no venue has accepted
-   * it by then. Set on the venue queue only; null on a virtual offer, once a
-   * venue is on it, and everywhere else.
+   * When the offer is released unless everyone needed has enrolled by then —
+   * Pod Settings' assignment window past its roll-out, or the venue window if
+   * that closes sooner while it still waits on a venue. Set on every list
+   * while the offer is enrolling; null once it is live, cancelled or expired.
+   * Every card counts it down.
    */
-  venue_expires_at?: string | null;
+  expires_at?: string | null;
   /** Account Health points a venue or host loses by withdrawing (Pod Settings). Set on their queues. */
   withdraw_penalty_points?: number | null;
   pod_amount: number;
@@ -251,21 +253,26 @@ export function autoPodModeCount(
   return counts[role] ?? 0;
 }
 
-/** What a countdown says: whole hours and the minutes left over. */
+/** What a countdown says: whole hours, the minutes over, and the seconds over. */
 export interface AutoPodTimeLeft {
   hours: number;
   minutes: number;
+  seconds: number;
 }
 
 /**
- * How long until `iso` — for the venue card's "Removed from your list in …"
- * line. Null when there is no deadline, or once it has passed; minutes are
- * rounded UP so the line never reads "0h 0m" while the offer is still there.
+ * How long until `iso` — for the card's "Expires in …" line, re-read every
+ * second. Null when there is no deadline, or once it has passed; seconds are
+ * rounded UP so the line never reads "0h 0m 0s" while the offer is still there.
  */
 export function autoPodTimeLeft(iso: string | null | undefined, nowMs: number): AutoPodTimeLeft | null {
   if (!iso) return null;
   const left = new Date(iso).getTime() - nowMs;
   if (!Number.isFinite(left) || left <= 0) return null;
-  const minutesTotal = Math.ceil(left / 60_000);
-  return { hours: Math.floor(minutesTotal / 60), minutes: minutesTotal % 60 };
+  const secondsTotal = Math.ceil(left / 1000);
+  return {
+    hours: Math.floor(secondsTotal / 3600),
+    minutes: Math.floor((secondsTotal % 3600) / 60),
+    seconds: secondsTotal % 60,
+  };
 }

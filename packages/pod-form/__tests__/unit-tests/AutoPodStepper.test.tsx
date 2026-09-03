@@ -224,7 +224,7 @@ describe('AutoPodStepper', () => {
     apollo.audience = audience();
     renderStepper({ config: makeConfig({ autoPod: true, showAutoPodAudience: true, showProducts: true }) });
     await clickNext(user);
-    expect(screen.getByText('4. Approved Products')).toBeInTheDocument();
+    expect(screen.getByText('5. Approved Products')).toBeInTheDocument();
     expect(screen.queryByText(/Meeting Details/)).not.toBeInTheDocument();
     expect(screen.queryByText(/When, Where/)).not.toBeInTheDocument();
   });

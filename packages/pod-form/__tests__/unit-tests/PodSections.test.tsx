@@ -137,7 +137,27 @@ describe('PodSections (autoPod)', () => {
 
   it('offers Approved Products to a physical template when the surface shows them', () => {
     renderSections(makeData({ config: makeConfig({ autoPod: true, showProducts: true }) }), { pod_type: 'PAID' });
-    expect(screen.getByText('4. Approved Products')).toBeInTheDocument();
+    expect(screen.getByText('5. Approved Products')).toBeInTheDocument();
     expect(screen.queryByText(/Payment & Charges/)).not.toBeInTheDocument();
+  });
+
+  // The form already knows the pod's category, so both pickers open on it —
+  // "Badminton group of people", not a blank Pexels box. `useCategoryValue` is
+  // mocked to nothing here, so the seed is the empty search a category-less
+  // template gets; what matters is that the option travels at all.
+  it('opens both media pickers with the pod’s own category as their search', async () => {
+    const user = userEvent.setup();
+    const onPickImage = vi.fn().mockResolvedValue(null);
+    const onPickVideo = vi.fn().mockResolvedValue(null);
+    renderSections(
+      makeData({ config: makeConfig({ autoPod: true, showReel: true }), onPickImage, onPickVideo }),
+      { pod_type: 'PAID' },
+    );
+
+    await user.click(screen.getByRole('button', { name: /Add image/ }));
+    expect(onPickImage).toHaveBeenCalledWith({ seedQuery: expect.any(String) });
+
+    await user.click(screen.getByRole('button', { name: /Pick video/ }));
+    expect(onPickVideo).toHaveBeenCalledWith({ seedQuery: expect.any(String) });
   });
 });

@@ -85,6 +85,13 @@ describe('AutoPodReviewStep', () => {
     expect(screen.queryByText('Meeting platform')).not.toBeInTheDocument();
   });
 
+  // A row written before a mode existed carries a value no menu knows; the
+  // review echoes it rather than drawing a blank where the mode should be.
+  it('echoes a mode the menu does not know', () => {
+    renderReview({ ...filled, pod_mode: 'HYBRID' as PodFormValues['pod_mode'] });
+    expect(screen.getByText('HYBRID')).toBeInTheDocument();
+  });
+
   it('draws a dash for everything not written yet', () => {
     renderReview({
       pod_type: 'PAID',

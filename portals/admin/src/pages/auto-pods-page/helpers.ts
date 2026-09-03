@@ -1,4 +1,4 @@
-import { autoPodPreLive, type AutoPodStage } from '@duncit/utils';
+import { autoPodPreLive, type AutoPodLabels, type AutoPodStage } from '@duncit/utils';
 import { EM_DASH } from '@duncit/table';
 import type { AutoPodTableRow } from './queries';
 
@@ -60,6 +60,10 @@ export const isAutoPodCancellable = (row: AutoPodTableRow): boolean => autoPodPr
 /** A live (or materializing) offer is a real pod — delete that on the Pods page. */
 export const isAutoPodDeletable = (row: AutoPodTableRow): boolean =>
   row.stage !== 'LIVE' && row.stage !== 'MATERIALIZING';
+
+/** "Physical" or "Virtual" — the same two words every card's mode tag reads. */
+export const modeLabelOf = (row: AutoPodTableRow, labels: AutoPodLabels): string =>
+  row.pod_mode === 'VIRTUAL' ? labels.modeVirtual : labels.modePhysical;
 
 export const venueNameOf = (row: AutoPodTableRow): string => row.venue_claim?.venue_name || EM_DASH;
 export const hostNameOf = (row: AutoPodTableRow): string => row.host_claim?.host_name || EM_DASH;

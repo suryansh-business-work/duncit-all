@@ -22,6 +22,7 @@ import {
   stepForField,
 } from './create-pod.form';
 import type {
+  ClubAdminStepperMode,
   CreatePodClub,
   CreatePodFinance,
   CreatePodFormValues,
@@ -30,6 +31,7 @@ import type {
   CreatePodProduct,
   CreatePodSubCategory,
   CreatePodVenue,
+  PodHostOption,
   PodModerationResult,
   PodModerationViolation,
 } from './create-pod.types';
@@ -39,6 +41,7 @@ import { LocationClubStep } from './steps/LocationClubStep';
 import { VenueSlotStep } from './steps/VenueSlotStep';
 import { PricingStep } from './steps/PricingStep';
 import { AiMonitorOverlay } from './AiMonitorOverlay';
+import { AssignHostsField } from './AssignHostsField';
 import { StepHeader } from './StepHeader';
 import { ModerationBlockedDialog, type BlockedViolation } from './ModerationBlockedDialog';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
@@ -62,6 +65,12 @@ interface Props {
   onSaveDraft: (draftId: string | null, payload: DraftPayload) => Promise<string>;
   onModerate: (input: ReturnType<typeof buildModerationInput>) => Promise<PodModerationResult>;
   onPublish: (draftId: string, input: ReturnType<typeof buildCreatePodInput>) => Promise<void>;
+  /**
+   * Club Admin mode — the club is pinned, drafts are off, hosts may be
+   * assigned and the last step writes through the club-admin mutations.
+   * Absent for the host flow.
+   */
+  clubAdmin?: ClubAdminStepperMode;
 }
 
 /** 4-step host Create Pod stepper (mobile twin of mWeb): Basics →
@@ -83,6 +92,7 @@ export function CreatePodStepper({
   onSaveDraft,
   onModerate,
   onPublish,
+  clubAdmin,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   // The schema cannot call `t` at module scope, so it is built here from the
@@ -102,7 +112,13 @@ export function CreatePodStepper({
   const draftIdRef = useRef(initialDraftId);
   const dupTitleRef = useRef(false);
   const isLast = step === STEP_TITLE_KEYS.length - 1;
-  const submitLabel = busy ? t('mweb.createPod.creating') : t('mweb.createPod.createPod');
+  const hostSubmitLabel = busy ? t('mweb.createPod.creating') : t('mweb.createPod.createPod');
+  let submitLabel = hostSubmitLabel;
+  if (clubAdmin) submitLabel = busy ? clubAdmin.busyLabel : clubAdmin.submitLabel;
+  // Club Admin mode has no draft: the pod is written straight through the
+  // club-admin mutation, so nothing autosaves and nothing persists per step.
+  const draftsOn = !clubAdmin;
+  const [hosts, setHosts] = useState<PodHostOption[]>(clubAdmin?.initialHosts ?? []);
 
   // With products gated off, drop any product values a stale draft may carry.
   useEffect(() => {
@@ -136,17 +152,20 @@ export function CreatePodStepper({
     draftIdRef.current = id;
     return id;
   };
-  const persistSafely = (forStep: number) => persist(forStep).catch(() => undefined);
+  const persistSafely = (forStep: number) => {
+    if (!draftsOn) return;
+    persist(forStep).catch(() => undefined);
+  };
   const latest = useRef({ step, persistSafely });
   latest.current = { step, persistSafely };
 
   const valuesKey = JSON.stringify(form.watch());
   const dirty = form.formState.isDirty;
   useEffect(() => {
-    if (!dirty) return undefined;
+    if (!dirty || !draftsOn) return undefined;
     const handle = setTimeout(() => latest.current.persistSafely(latest.current.step), 4000);
     return () => clearTimeout(handle);
-  }, [valuesKey, dirty]);
+  }, [valuesKey, dirty, draftsOn]);
 
   const goTo = (target: number) => {
     setStep(target);
@@ -182,6 +201,17 @@ export function CreatePodStepper({
     setStep((mapped[0] as BlockedViolation).stepIndex);
   };
 
+  // The one write at the end of the stepper: the club-admin mutation with the
+  // assigned hosts, or the host's draft persisted and published.
+  const publishValues = async (values: CreatePodFormValues) => {
+    if (clubAdmin) {
+      await clubAdmin.submit(buildCreatePodInput(values), hosts.map((host) => host.user_id));
+      return;
+    }
+    const id = await persist(step);
+    await onPublish(id, buildCreatePodInput(values));
+  };
+
   const submit = form.handleSubmit(async (values) => {
     setBusy(true);
     setError('');
@@ -191,8 +221,7 @@ export function CreatePodStepper({
         applyModeration(moderation.violations);
         return;
       }
-      const id = await persist(step);
-      await onPublish(id, buildCreatePodInput(values));
+      await publishValues(values);
     } catch (e) {
       const message = e instanceof Error ? e.message : t('mweb.createPod.createFailed');
       if (/already exists/i.test(message)) {
@@ -214,13 +243,16 @@ export function CreatePodStepper({
 
   // Clubs are scoped by the selected host category (Super + Sub), then the picked
   // city and locality (helper shared with mWeb + covered by unit tests).
-  const clubsForLocation = filterClubs(clubs, {
-    hostCategories,
-    selectedCategoryKey: form.watch('host_category_key'),
-    locationId: form.watch('location_id'),
-    locality: form.watch('locality'),
-    podMode: form.watch('pod_mode'),
-  });
+  // A pinned club is the only club, whatever city the admin picks for the pod.
+  const clubsForLocation = clubAdmin
+    ? clubs
+    : filterClubs(clubs, {
+        hostCategories,
+        selectedCategoryKey: form.watch('host_category_key'),
+        locationId: form.watch('location_id'),
+        locality: form.watch('locality'),
+        podMode: form.watch('pod_mode'),
+      });
 
   // Step 3 venues are scoped to the selected club's auto-matched venues.
   const clubId = form.watch('club_id');
@@ -267,8 +299,19 @@ export function CreatePodStepper({
   });
 
   const steps = [
-    <BasicsStep key="basics" form={form} hostCategories={hostCategories} />,
-    <LocationClubStep key="location" form={form} clubs={clubsForLocation} locations={locations} />,
+    <BasicsStep
+      key="basics"
+      form={form}
+      hostCategories={hostCategories}
+      showCategory={!clubAdmin}
+    />,
+    <LocationClubStep
+      key="location"
+      form={form}
+      clubs={clubsForLocation}
+      locations={locations}
+      pinnedClub={clubAdmin?.club ?? null}
+    />,
     <VenueSlotStep
       key="venue"
       form={form}
@@ -284,6 +327,7 @@ export function CreatePodStepper({
       finance={finance}
       pricing={pricing}
       spots={spots}
+      showTerms={!clubAdmin}
     />,
   ];
 
@@ -296,6 +340,9 @@ export function CreatePodStepper({
         <StepHeader step={step} podMode={podMode} />
       </TourAnchor>
       {steps[step]}
+      {clubAdmin && step === 0 ? (
+        <AssignHostsField hosts={hosts} onChange={setHosts} search={clubAdmin.searchHosts} />
+      ) : null}
       {error ? (
         <Text testID="create-pod-error" fontSize={12.5} color="$danger">
           {error}

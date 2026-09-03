@@ -322,8 +322,6 @@ describe('buildAutoPodInput', () => {
     const input = buildAutoPodInput(templateValues());
     expect(input.pod_title).toBe('Morning Badminton');
     expect(input.sub_category_id).toBe('sub-badminton');
-    expect(input.pod_amount).toBe(500);
-    expect(input.no_of_spots).toBe(8);
     expect(input.pod_hashtag).toEqual(['badminton', 'weekend']);
     expect(input.pod_images_and_videos).toEqual([
       { url: 'https://cdn.example.com/court.jpg', type: 'IMAGE' },
@@ -331,12 +329,17 @@ describe('buildAutoPodInput', () => {
     ]);
     expect(input.reel_url).toBeNull();
     expect(input.pod_mode).toBe('PHYSICAL');
-    // A physical offer's venue brings the slot — nothing about where or when travels.
-    expect(input.meeting_platform).toBeNull();
-    expect(input.meeting_url).toBeNull();
-    expect(input.meeting_notes).toBeNull();
-    expect(input.pod_date_time).toBeNull();
-    expect(input.pod_end_date_time).toBeNull();
+    // The venue brings the slot and the HOST brings the price, the spots and
+    // (on a virtual offer) the meeting — none of it is the template's, so none
+    // of it is sent at all, even when the form values still carry numbers.
+    expect('pod_amount' in input).toBe(false);
+    expect('no_of_spots' in input).toBe(false);
+    expect('pod_occurrence' in input).toBe(false);
+    expect('meeting_platform' in input).toBe(false);
+    expect('meeting_url' in input).toBe(false);
+    expect('meeting_notes' in input).toBe(false);
+    expect('pod_date_time' in input).toBe(false);
+    expect('pod_end_date_time' in input).toBe(false);
     // The form has no Payment & Charges section, so neither field is the
     // template's to write: left OUT (an edit keeps what the row holds), not nulled.
     expect('payment_terms' in input).toBe(false);
@@ -347,17 +350,9 @@ describe('buildAutoPodInput', () => {
     expect('pod_hosts_id' in input).toBe(false);
   });
 
-  it('keeps a real reel URL and coerces broken numbers to zero', () => {
-    const input = buildAutoPodInput(
-      templateValues({
-        reel_url: 'https://cdn.example.com/reel.mp4',
-        pod_amount: 'x' as unknown as number,
-        no_of_spots: 'y' as unknown as number,
-      }),
-    );
+  it('keeps a real reel URL', () => {
+    const input = buildAutoPodInput(templateValues({ reel_url: 'https://cdn.example.com/reel.mp4' }));
     expect(input.reel_url).toBe('https://cdn.example.com/reel.mp4');
-    expect(input.pod_amount).toBe(0);
-    expect(input.no_of_spots).toBe(0);
   });
 
   it('sends only real product rows on a physical offer, with quantities as numbers', () => {
@@ -373,34 +368,28 @@ describe('buildAutoPodInput', () => {
     expect(input.product_requests).toEqual([{ product_id: 'prod-1', quantity: 2 }]);
   });
 
-  it('carries the meeting details and window of a virtual offer, and never its products', () => {
-    const start = new Date('2030-01-05T10:00:00.000Z');
-    const end = new Date('2030-01-05T11:30:00.000Z');
+  // Even with meeting values sitting in the form, a virtual template sends
+  // none of them: the host writes the meeting into their own claim. All it
+  // loses beyond that are the products a virtual pod could never hand out.
+  it('sends no meeting and no products for a virtual offer', () => {
     const input = buildAutoPodInput(
       templateValues({
         pod_mode: 'VIRTUAL',
         meeting_platform: ' GOOGLE_MEET ',
         meeting_url: ' https://meet.google.com/abc ',
-        meeting_notes: '  ',
-        pod_date_time: start,
-        pod_end_date_time: end,
+        meeting_notes: 'Password 1234',
+        pod_date_time: new Date('2030-01-05T10:00:00.000Z'),
+        pod_end_date_time: new Date('2030-01-05T11:30:00.000Z'),
         product_requests: [{ product_id: 'prod-1', quantity: 2 }],
       }),
     );
     expect(input.pod_mode).toBe('VIRTUAL');
-    expect(input.meeting_platform).toBe('GOOGLE_MEET');
-    expect(input.meeting_url).toBe('https://meet.google.com/abc');
-    // A blank note is null, not an empty string the server would store.
-    expect(input.meeting_notes).toBeNull();
-    expect(input.pod_date_time).toBe(start.toISOString());
-    expect(input.pod_end_date_time).toBe(end.toISOString());
+    expect('meeting_platform' in input).toBe(false);
+    expect('meeting_url' in input).toBe(false);
+    expect('meeting_notes' in input).toBe(false);
+    expect('pod_date_time' in input).toBe(false);
+    expect('pod_end_date_time' in input).toBe(false);
     expect(input.product_requests).toEqual([]);
-  });
-
-  it('sends null dates for a virtual offer that has none picked yet', () => {
-    const input = buildAutoPodInput(templateValues({ pod_mode: 'VIRTUAL', meeting_url: 'https://x.y' }));
-    expect(input.pod_date_time).toBeNull();
-    expect(input.pod_end_date_time).toBeNull();
   });
 });
 

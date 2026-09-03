@@ -2,6 +2,7 @@ import { useState, type MouseEvent } from 'react';
 import { ListItemIcon, ListItemText, Menu, MenuItem } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelScheduleSendIcon from '@mui/icons-material/CancelScheduleSend';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -14,6 +15,7 @@ import type { AutoPodTableRow } from './queries';
 export interface AutoPodRowMenuProps {
   row: AutoPodTableRow;
   t: (key: string) => string;
+  onViewDetails: (row: AutoPodTableRow) => void;
   onEdit: (row: AutoPodTableRow) => void;
   onCancel: (row: AutoPodTableRow) => void;
   onDelete: (row: AutoPodTableRow) => void;
@@ -31,6 +33,7 @@ export interface AutoPodRowMenuProps {
 export default function AutoPodRowMenu({
   row,
   t,
+  onViewDetails,
   onEdit,
   onCancel,
   onDelete,
@@ -60,6 +63,13 @@ export default function AutoPodRowMenu({
         <MoreVertIcon fontSize="small" />
       </DuncitIconButton>
       <Menu anchorEl={anchor} open={open} onClose={close}>
+        {/* The same door the row itself opens — the menu says so out loud. */}
+        <MenuItem onClick={run(onViewDetails)}>
+          <ListItemIcon>
+            <VisibilityIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>{t('admin.autoPods.viewDetails')}</ListItemText>
+        </MenuItem>
         <MenuItem onClick={run(onEdit)} disabled={!isAutoPodEditable(row)}>
           <ListItemIcon>
             <EditIcon fontSize="small" />

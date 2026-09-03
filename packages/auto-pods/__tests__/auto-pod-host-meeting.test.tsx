@@ -77,8 +77,15 @@ const wrap = (ui: ReactNode, mocks: readonly MockedResponse[] = []) =>
     </MockedProvider>
   );
 
+/**
+ * A required MUI field's accessible name carries the asterisk MUI appends
+ * ("Meeting link *"), so every lookup here matches on the label as a
+ * substring rather than exactly.
+ */
+const field = (label: string) => screen.getByLabelText(label, { exact: false });
+
 const type = async (label: string, value: string) => {
-  fireEvent.change(screen.getByLabelText(label), { target: { value } });
+  fireEvent.change(field(label), { target: { value } });
   await settle();
   await settle();
 };
@@ -125,7 +132,7 @@ describe('HostMeetingFields', () => {
     );
     expect(screen.getByText(labels.meetingHint)).toBeInTheDocument();
     // No start yet: the end may not be before now.
-    expect(screen.getByLabelText(labels.meetingEnd)).toHaveAttribute('data-min', now.toISOString());
+    expect(field(labels.meetingEnd)).toHaveAttribute('data-min', now.toISOString());
 
     await type(labels.meetingLink, 'https://meet.google.com/abc-defg');
     expect(onChange).toHaveBeenLastCalledWith({ ...BLANK_HOST_MEETING, meeting_url: 'https://meet.google.com/abc-defg' });
@@ -134,7 +141,7 @@ describe('HostMeetingFields', () => {
     await type(labels.meetingStart, start.toISOString());
     expect(onChange).toHaveBeenLastCalledWith({ ...BLANK_HOST_MEETING, pod_date_time: start });
 
-    fireEvent.mouseDown(screen.getByLabelText(labels.meetingPlatform));
+    fireEvent.mouseDown(field(labels.meetingPlatform));
     await settle();
     fireEvent.click(await screen.findByRole('option', { name: labels.meetingPlatformOther }));
     await settle();
@@ -151,7 +158,7 @@ describe('HostMeetingFields', () => {
         />
       </ThemeProvider>
     );
-    expect(screen.getByLabelText(labels.meetingEnd)).toHaveAttribute('data-min', start.toISOString());
+    expect(field(labels.meetingEnd)).toHaveAttribute('data-min', start.toISOString());
     rerender(
       <ThemeProvider theme={testTheme}>
         <HostMeetingFields
@@ -162,7 +169,7 @@ describe('HostMeetingFields', () => {
         />
       </ThemeProvider>
     );
-    expect(screen.getByLabelText(labels.meetingEnd)).toHaveAttribute('data-min', now.toISOString());
+    expect(field(labels.meetingEnd)).toHaveAttribute('data-min', now.toISOString());
     await type(labels.meetingEnd, '');
     expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ pod_end_date_time: null }));
   });

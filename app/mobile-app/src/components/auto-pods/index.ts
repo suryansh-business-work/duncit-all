@@ -8,5 +8,6 @@ export { AutoPodExpiryNote } from './AutoPodExpiryNote';
 export { VenueAcceptSheet } from './VenueAcceptSheet';
 export { HostClaimSheet } from './HostClaimSheet';
 export { HostProjectionLines } from './HostProjectionLines';
+export { BLANK_HOST_MEETING, HostMeetingFields, hostMeetingInput } from './HostMeetingFields';
 export { AutoPodWithdrawSheet } from './AutoPodWithdrawSheet';
 export { ClubClaimSheet } from './ClubClaimSheet';

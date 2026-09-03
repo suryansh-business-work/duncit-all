@@ -1,12 +1,13 @@
-import { AutoPodDependencyTimeline, AutoPodExpiryNote } from '@duncit/auto-pods';
+import { AutoPodDependencyTimeline } from '@duncit/auto-pods';
 import { activeChipColumn, dateColumn, entityIdColumn, EM_DASH, type DuncitColumn } from '@duncit/table';
-import type { AutoPodLabels } from '@duncit/utils';
+import type { AutoPodLabels, AutoPodRole } from '@duncit/utils';
 import { AutoPodStageChip } from './AutoPodStageChip';
 import AutoPodRowMenu from './AutoPodRowMenu';
 import {
   categoryPathOf,
   clubNameOf,
   hostNameOf,
+  modeLabelOf,
   pendingFilterOptions,
   stageFilterOptions,
   STAGE_LABEL_KEY,
@@ -19,30 +20,42 @@ export interface AutoPodColumnDeps {
   /** The shared Auto Pod copy — the dependency line uses the same three role words as every card. */
   labels: AutoPodLabels;
   formatDateTime: (value: string) => string;
+  onViewDetails: (row: AutoPodTableRow) => void;
   onEdit: (row: AutoPodTableRow) => void;
   onCancel: (row: AutoPodTableRow) => void;
   onDelete: (row: AutoPodTableRow) => void;
   onViewPod: (row: AutoPodTableRow) => void;
   onToggleActive: (row: AutoPodTableRow) => void;
-  /** The green Venue dot on the dependency line opens that venue's details. */
-  onVenueDetails: (row: AutoPodTableRow) => void;
+  /** A green dot on the dependency line opens whoever took that place. */
+  onEnrolledDetails: (row: AutoPodTableRow, role: AutoPodRole) => void;
 }
 
 /**
  * Columns for `adminAutoPodsTable`: the offer's id and title, its Super ›
- * Category › Sub, the Venue → Host → Club Admin dependency line, the stage,
- * whether it is paused, when it was written and last touched, and the row
- * menu. Only the fields the server allowlists are sortable or filterable —
- * the dependency filter is not a field at all: the server lifts `pending`
- * out of the filters and turns it into a "still waiting on" clause.
+ * Category › Sub, whether it is physical or virtual, the Venue → Host → Club
+ * Admin dependency line, the stage, whether it is paused, when it was written
+ * and last touched, and the row menu. Only the fields the server allowlists
+ * are sortable or filterable — the dependency filter is not a field at all:
+ * the server lifts `pending` out of the filters and turns it into a "still
+ * waiting on" clause.
  *
  * The dependency cell renders a React component; DuncitTable's column builder
  * already stamps `equals: () => false` on every column with a `cellRenderer`,
  * which is what keeps the dots repainting as partners enrol.
  */
 export function getAutoPodColumns(deps: Readonly<AutoPodColumnDeps>): DuncitColumn<AutoPodTableRow>[] {
-  const { t, labels, formatDateTime, onEdit, onCancel, onDelete, onViewPod, onToggleActive, onVenueDetails } =
-    deps;
+  const {
+    t,
+    labels,
+    formatDateTime,
+    onViewDetails,
+    onEdit,
+    onCancel,
+    onDelete,
+    onViewPod,
+    onToggleActive,
+    onEnrolledDetails,
+  } = deps;
   const formatDate = (date: Date) => formatDateTime(date.toISOString());
 
   return [
@@ -67,13 +80,30 @@ export function getAutoPodColumns(deps: Readonly<AutoPodColumnDeps>): DuncitColu
       valueGetter: (row) => categoryPathOf(row) || EM_DASH,
     },
     {
+      field: 'pod_mode',
+      headerName: t('admin.autoPods.colMode'),
+      width: 120,
+      filter: {
+        type: 'select',
+        options: [
+          { value: 'PHYSICAL', label: labels.modePhysical },
+          { value: 'VIRTUAL', label: labels.modeVirtual },
+        ],
+      },
+      valueGetter: (row) => modeLabelOf(row, labels),
+    },
+    {
       field: 'pending',
       headerName: t('admin.autoPods.colDependency'),
       sortable: false,
       minWidth: 380,
       filter: { type: 'select', options: pendingFilterOptions(t), multiple: true },
       cellRenderer: (row) => (
-        <AutoPodDependencyTimeline row={row} labels={labels} onVenueClick={() => onVenueDetails(row)} />
+        <AutoPodDependencyTimeline
+          row={row}
+          labels={labels}
+          onEnrolledClick={(role) => onEnrolledDetails(row, role)}
+        />
       ),
       // Keyed on who has enrolled so the cell's plain-text value (search,
       // export) tracks the dots rather than going stale at three dashes.
@@ -94,17 +124,6 @@ export function getAutoPodColumns(deps: Readonly<AutoPodColumnDeps>): DuncitColu
       inactiveLabel: t('admin.autoPods.paused'),
       width: 110,
     }),
-    {
-      // Pod Settings' assignment window, counted down live off the shared note.
-      // Not a stored field, so the server can neither sort nor filter on it
-      // (no `filter` = no filter).
-      field: 'expires_at',
-      headerName: t('admin.autoPods.colExpiresIn'),
-      sortable: false,
-      width: 190,
-      cellRenderer: (row) => <AutoPodExpiryNote expiresAt={row.expires_at} labels={labels} />,
-      valueGetter: (row) => (row.expires_at ? formatDateTime(row.expires_at) : EM_DASH),
-    },
     dateColumn<AutoPodTableRow>({
       field: 'created_at',
       headerName: t('admin.autoPods.colCreatedAt'),
@@ -128,6 +147,7 @@ export function getAutoPodColumns(deps: Readonly<AutoPodColumnDeps>): DuncitColu
         <AutoPodRowMenu
           row={row}
           t={t}
+          onViewDetails={onViewDetails}
           onEdit={onEdit}
           onCancel={onCancel}
           onDelete={onDelete}

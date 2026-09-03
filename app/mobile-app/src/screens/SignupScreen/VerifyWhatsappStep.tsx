@@ -13,9 +13,15 @@ import { requestWhatsAppOtp, skipWhatsAppOtp, verifyWhatsAppOtp } from '@/servic
 import { toErrorMessage } from '@/utils/errors';
 
 interface Props {
-  /** The dial code and number step two collected. */
+  /** The dial code and number the step before this one settled. */
   extension: string;
   number: string;
+  /**
+   * The signup tick box. A proven number is written to the account's phone as
+   * well when it is on; when it is off the profile phone stays blank, because
+   * the person has said their mobile number is a different one.
+   */
+  alsoMobile: boolean;
   /** Where a verified — or skipped — number leads. */
   onDone: () => void;
 }
@@ -31,7 +37,7 @@ interface Props {
  * Skipping is allowed and leaves the account exactly as it is — the number is
  * simply unverified.
  */
-export function VerifyWhatsappStep({ extension, number, onDone }: Readonly<Props>) {
+export function VerifyWhatsappStep({ extension, number, alsoMobile, onDone }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = buildSignupStepperLabels(t);
   const [error, setError] = useState<string | null>(null);
@@ -83,7 +89,7 @@ export function VerifyWhatsappStep({ extension, number, onDone }: Readonly<Props
     setError(null);
     setVerifying(true);
     try {
-      await verifyWhatsAppOtp(extension, number, values.otp);
+      await verifyWhatsAppOtp(extension, number, values.otp, alsoMobile);
       onDone();
     } catch (e) {
       setError(toErrorMessage(e, t('mweb.auth.somethingWentWrong')));

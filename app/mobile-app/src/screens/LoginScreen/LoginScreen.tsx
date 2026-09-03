@@ -27,6 +27,13 @@ export function LoginScreen() {
   const authenticate = useAuthStore((s) => s.authenticate);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  /*
+    The Google exchange, which is the slow half. Google returning is the halfway
+    point, not the end: `loginWithGoogle` still has to run, and until it does
+    the screen had nothing on it — a person who has just come back from a
+    browser was left looking at an idle button.
+  */
+  const [googleBusy, setGoogleBusy] = useState(false);
   // A choice of method, not a place — reopening the app lands on the options.
   const [step, setStep] = useState<LoginStep>('CHOOSE');
   // The pending consent grant. Holds the id_token loginWithGoogle just refused
@@ -56,6 +63,7 @@ export function LoginScreen() {
 
   const handleGoogle = async (idToken: string) => {
     setError(null);
+    setGoogleBusy(true);
     try {
       const result = await loginWithGoogle(idToken);
       authenticate(result.token, result.surveyCompleted);
@@ -69,6 +77,8 @@ export function LoginScreen() {
         return;
       }
       setError(toErrorMessage(e, t('mweb.auth.googleFailed')));
+    } finally {
+      setGoogleBusy(false);
     }
   };
 
@@ -118,6 +128,7 @@ export function LoginScreen() {
     >
       {choosing ? (
         <LoginMethodStep
+          googleLoading={googleBusy}
           onGoogle={(idToken) => {
             handleGoogle(idToken).catch(() => undefined);
           }}

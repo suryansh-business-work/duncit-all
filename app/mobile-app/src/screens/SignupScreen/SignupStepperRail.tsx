@@ -11,6 +11,12 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   step: SignupStep;
+  /**
+   * The Google door's number step, which sits inside VERIFY rather than beside
+   * it: Google has already answered the first three steps, so the position is
+   * right and only the words need to say which half of the last one is showing.
+   */
+  askingNumber?: boolean;
 }
 
 /**
@@ -21,10 +27,14 @@ interface Props {
  * fit side by side, so the position is shown and the current step names itself
  * underneath.
  */
-export function SignupStepperRail({ step }: Readonly<Props>) {
+export function SignupStepperRail({ step, askingNumber }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = buildSignupStepperLabels(t);
   const current = signupStepIndex(step);
+  // Decided above the JSX (S3358).
+  const heading = askingNumber
+    ? { title: labels.numberTitle, subtitle: labels.numberSubtitle }
+    : labels.step(step);
 
   return (
     <YStack gap={8} testID="signup-stepper">
@@ -44,10 +54,10 @@ export function SignupStepperRail({ step }: Readonly<Props>) {
           {labels.stepOf(current, SIGNUP_STEP_COUNT)}
         </Text>
         <Text fontSize={15} fontWeight="700" color="$color">
-          {labels.step(step).title}
+          {heading.title}
         </Text>
         <Text fontSize={13} color="$muted" textAlign="center">
-          {labels.step(step).subtitle}
+          {heading.subtitle}
         </Text>
       </YStack>
     </YStack>

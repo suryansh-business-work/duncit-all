@@ -51,6 +51,9 @@ export default function SignupWhatsappPage() {
           ext: requested.phone_extension,
           num: requested.phone_number,
           otp: values.otp,
+          // This page only ADDS a WhatsApp number — it never asked whether it
+          // is the mobile number too, so it must not answer for the person.
+          alsoMobile: false,
         },
       });
       navigate('/signup-survey');

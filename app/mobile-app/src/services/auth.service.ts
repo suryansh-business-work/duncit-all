@@ -26,10 +26,15 @@ export interface SignupValues {
   /** YYYY-MM-DD; the server stores a full date. */
   dob: string;
   email: string;
-  /** Digits only, without the dial code. Required and unique server-side. */
+  /** The WhatsApp number — digits only, without the dial code. Unique. */
   phoneNumber: string;
   /** The dial code the number belongs to, e.g. '+91'. */
   phoneExtension: string;
+  /**
+   * The tick box: write the number to the account's phone as well, or leave
+   * the profile phone blank because the person's mobile is a different one.
+   */
+  whatsappIsMobile: boolean;
   password: string;
   /** A friend's code, checked by the server BEFORE the account is created. */
   referralCode?: string;
@@ -76,6 +81,7 @@ export async function register(values: SignupValues): Promise<AuthOutcome> {
       email: values.email.trim().toLowerCase(),
       phone_number: values.phoneNumber.trim(),
       phone_extension: values.phoneExtension.trim(),
+      whatsapp_is_mobile: values.whatsappIsMobile,
       password: values.password,
       dob: dobToIso(values.dob),
       // Omitted rather than sent empty: the server treats a present-but-blank
@@ -314,16 +320,23 @@ export async function requestWhatsAppOtp(
   return { testCode: data.requestWhatsAppOtp.dev_otp ?? null };
 }
 
-/** Prove the number. A wrong code throws, exactly as the server refused it. */
+/**
+ * Prove the number. A wrong code throws, exactly as the server refused it.
+ *
+ * `alsoMobile` is the signup tick box: it is what writes the proven number to
+ * the account's phone as well, and the server leaves that blank without it.
+ */
 export async function verifyWhatsAppOtp(
   extension: string,
   number: string,
   otp: string,
+  alsoMobile: boolean,
 ): Promise<void> {
   await graphqlRequest(VerifyWhatsAppOtpDocument, {
     ext: extension.trim(),
     num: number.trim(),
     otp: otp.trim(),
+    alsoMobile,
   });
 }
 

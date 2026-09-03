@@ -277,19 +277,34 @@ describe('VenueAvailabilityEditor refresh', () => {
     result: { data: { updateVenueSettings: savedVenue } },
   });
 
-  it('reloads the visible range and tells the host once the dialog saves the venue settings', async () => {
-    const seen: Record<string, any>[] = [];
-    const onVenueChanged = vi.fn();
-    renderEditor([slotsMock([], seen), templatesMock, settingsMock()], { onVenueChanged });
-    await saveAutoExtend(seen);
-    await waitFor(() => expect(onVenueChanged).toHaveBeenCalledTimes(1));
-  });
+  // Each of these mounts the whole recurring dialog — MUI Dialog, four
+  // accordions, MUI X pickers — under MockedProvider, saves, and then waits for
+  // the refetch. That is an integration render, and on the serialised CI runner
+  // it has overrun vitest's default 5s once while passing everywhere else; the
+  // budget below is for the runner, not for the code.
+  const REFRESH_TIMEOUT_MS = 20_000;
 
-  it('still reloads when the host has nothing to be told', async () => {
-    const seen: Record<string, any>[] = [];
-    renderEditor([slotsMock([], seen), templatesMock, settingsMock()]);
-    await saveAutoExtend(seen);
-  });
+  it(
+    'reloads the visible range and tells the host once the dialog saves the venue settings',
+    async () => {
+      const seen: Record<string, any>[] = [];
+      const onVenueChanged = vi.fn();
+      renderEditor([slotsMock([], seen), templatesMock, settingsMock()], { onVenueChanged });
+      await saveAutoExtend(seen);
+      await waitFor(() => expect(onVenueChanged).toHaveBeenCalledTimes(1));
+    },
+    REFRESH_TIMEOUT_MS,
+  );
+
+  it(
+    'still reloads when the host has nothing to be told',
+    async () => {
+      const seen: Record<string, any>[] = [];
+      renderEditor([slotsMock([], seen), templatesMock, settingsMock()]);
+      await saveAutoExtend(seen);
+    },
+    REFRESH_TIMEOUT_MS,
+  );
 });
 
 describe('VenueAvailabilityEditor day drawer', () => {

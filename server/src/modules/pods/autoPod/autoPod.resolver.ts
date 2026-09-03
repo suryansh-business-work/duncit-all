@@ -10,6 +10,7 @@ import {
   hostWithdrawAutoPod,
   venueAcceptAutoPod,
   venueWithdrawAutoPod,
+  type HostMeetingInput,
 } from './autoPod.claims';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
@@ -204,6 +205,7 @@ export const autoPodResolvers = {
         location_id?: string | null;
         pod_amount?: number | null;
         no_of_spots?: number | null;
+        meeting?: HostMeetingInput | null;
       },
       ctx: GraphQLContext
     ) =>
@@ -212,7 +214,8 @@ export const autoPodResolvers = {
         args.auto_pod_doc_id,
         args.location_id,
         args.pod_amount,
-        args.no_of_spots
+        args.no_of_spots,
+        args.meeting
       ),
 
     // Ownership of the claim is asserted inside each.

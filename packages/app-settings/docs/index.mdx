@@ -18,6 +18,7 @@ exports:
   - 'useDateFormat'
   - 'PUBLIC_APP_SETTINGS'
   - 'useFeatureFlag'
+  - 'useFeatureFlagState'
   - 'PUBLIC_FEATURE_FLAGS'
   - 'useProductVisibility'
   - 'PRODUCT_VISIBILITY_FLAG'
@@ -176,6 +177,18 @@ useFeatureFlag('shop.pod_shop', true)       // true
 
 An unknown key and a still-loading query both return `defaultValue`. Default to `false` for
 anything that must not flash on before the server confirms it.
+
+### `useFeatureFlagState`
+
+The same read, with the loading beat exposed — what a route gate needs. A gate that reads
+only `useFeatureFlag` sees `false` on the first render after a reload and redirects a
+bookmarked page away before the flags land; the Admin Auto Pods page did exactly that.
+
+```ts
+const { pending, enabled } = useFeatureFlagState('auto_pods');
+if (pending) return null;                       // wait — the answer has not arrived
+if (!enabled) return <Navigate to="/pods" />;   // decided: the feature really is off
+```
 
 ### `useProductVisibility`
 

@@ -2985,6 +2985,19 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       willPinTo: 'This pod will be set to {city}.',
       noVenueInCity: 'None of your venues is in {city}.',
       noClubInCity: 'None of your clubs is in {city}.',
+      // Every card wears its mode; the template carries no price, so until a
+      // host sets one the card says who will.
+      modePhysical: 'Physical',
+      modeVirtual: 'Virtual',
+      pricedByHost: 'Ticket price and spots are set by the host who takes it.',
+      // A virtual offer has no venue to fix its window: the host brings the
+      // meeting link and the dates when they assign themselves.
+      meetingHint: 'You run this pod online — set where members join and when it happens.',
+      meetingPlatform: 'Meeting platform',
+      meetingPlatformOther: 'Other',
+      meetingLink: 'Meeting link',
+      meetingStart: 'Start date & time',
+      meetingEnd: 'End date & time',
       liveNow: 'Live',
       viewPod: 'View pod',
       cancelled: 'Cancelled',

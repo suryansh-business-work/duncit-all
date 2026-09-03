@@ -81,6 +81,10 @@ COPY packages/buttons-native/package.json ./packages/buttons-native/
 COPY packages/buttons/package.json ./packages/buttons/
 COPY packages/verification/package.json ./packages/verification/
 COPY packages/availability-calendar/package.json ./packages/availability-calendar/
+COPY packages/category/package.json ./packages/category/
+COPY packages/club-form/package.json ./packages/club-form/
+COPY packages/pod-form/package.json ./packages/pod-form/
+COPY packages/pod-details/package.json ./packages/pod-details/
 
 RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
 RUN pnpm install --frozen-lockfile

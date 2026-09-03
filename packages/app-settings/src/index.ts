@@ -3,7 +3,13 @@ export { DuncitLocalizationProvider } from './DuncitLocalizationProvider';
 export type { DuncitLocalizationProviderProps } from './DuncitLocalizationProvider';
 export { PUBLIC_APP_SETTINGS, useDateFormat } from './useDateFormat';
 export type { DateInput, UseDateFormatOptions } from './useDateFormat';
-export { PUBLIC_FEATURE_FLAGS, useFeatureFlag, useFeatureFlags } from './useFeatureFlag';
+export {
+  PUBLIC_FEATURE_FLAGS,
+  useFeatureFlag,
+  useFeatureFlagState,
+  useFeatureFlags,
+} from './useFeatureFlag';
+export type { FeatureFlagState } from './useFeatureFlag';
 export { PRODUCT_VISIBILITY_FLAG, useProductVisibility } from './useProductVisibility';
 export type { ProductVisibility } from './useProductVisibility';
 export { applyPageMeta, pageTitle, usePageMeta } from './usePageMeta';

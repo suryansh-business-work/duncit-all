@@ -15,6 +15,7 @@ import {
   WITHDRAW_BUNDLE,
   AVAILABILITY_BUNDLE,
   VENUE_SETTINGS_BUNDLE,
+  CLUB_ADMIN_BUNDLE,
   FULFILMENT_BUNDLE,
   type NestedCatalogue,
   type Translator,
@@ -58,6 +59,7 @@ export const NATIVE_FALLBACK: NestedCatalogue = {
   // Tamagui twins of the calendar + form the packages render on mWeb (rule 27).
   ...AVAILABILITY_BUNDLE,
   ...VENUE_SETTINGS_BUNDLE,
+  ...CLUB_ADMIN_BUNDLE,
   ...FULFILMENT_BUNDLE,
 };
 

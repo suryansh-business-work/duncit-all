@@ -23,9 +23,9 @@ export type AutoPodRole = 'venue' | 'host' | 'club';
 export const AUTO_POD_ROLES: readonly AutoPodRole[] = ['venue', 'host', 'club'];
 
 /**
- * PHYSICAL — a venue enrols and brings the slot. VIRTUAL — the admin wrote the
- * meeting details and dates into the template, so there is no venue to enrol
- * and the offer waits on a host and a club only.
+ * PHYSICAL — a venue enrols and brings the slot. VIRTUAL — there is no venue
+ * to enrol, the offer waits on a host and a club only, and the host brings
+ * the meeting link and the window when they assign themselves.
  */
 export type AutoPodMode = 'PHYSICAL' | 'VIRTUAL';
 
@@ -217,6 +217,45 @@ export function autoPodHostNeedsLocation(row: Pick<AutoPodRow, 'location'>, loca
 export function autoPodCityLabel(location: AutoPodLocation | null | undefined): string {
   if (!location) return '';
   return [location.city || location.location_name, location.state].filter(Boolean).join(', ');
+}
+
+/**
+ * Has a host priced this offer yet? The template carries no ticket price or
+ * spots — the host sets both when they assign themselves — so until then a
+ * card draws no price and no spot count rather than "₹0" and "0".
+ */
+export function autoPodPriced(row: Pick<AutoPodRow, 'pod_amount' | 'no_of_spots'>): boolean {
+  return row.pod_amount > 0 && row.no_of_spots > 0;
+}
+
+/** What a host types to take a VIRTUAL offer: where members join, and when. */
+export interface AutoPodHostMeeting {
+  meeting_platform: string;
+  meeting_url: string;
+  pod_date_time: Date | null;
+  pod_end_date_time: Date | null;
+}
+
+/** An http(s) URL, and nothing else — the same rule the server refuses on. */
+function isHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Can the host's "Assign Myself" go ahead with these meeting details? Only
+ * consulted on a VIRTUAL offer — a physical one takes its window from the
+ * venue's slot. The link must be an http(s) URL, the start must be ahead of
+ * `nowMs`, and the end after the start; the server re-checks all three.
+ */
+export function autoPodHostMeetingReady(meeting: AutoPodHostMeeting, nowMs: number): boolean {
+  const start = meeting.pod_date_time?.getTime() ?? Number.NaN;
+  const end = meeting.pod_end_date_time?.getTime() ?? Number.NaN;
+  return isHttpUrl(meeting.meeting_url.trim()) && start > nowMs && end > start;
 }
 
 /** Per-role counts of Auto Pods waiting on the signed-in user. */

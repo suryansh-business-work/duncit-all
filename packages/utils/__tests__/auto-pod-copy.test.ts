@@ -28,6 +28,8 @@ const BUNDLE_KEYS = [
   'waitingVenue', 'waitingHost', 'waitingClub', 'waitingFor', 'roleVenue', 'roleHost', 'roleClub',
   'locationLabel', 'allLocations', 'changeLocation', 'categoryLabel', 'allCategories', 'noHostCategories',
   'pinnedTo', 'unpinned', 'virtualPod', 'pickLocationFirst', 'willPinTo', 'noVenueInCity', 'noClubInCity',
+  'modePhysical', 'modeVirtual', 'pricedByHost',
+  'meetingHint', 'meetingPlatform', 'meetingPlatformOther', 'meetingLink', 'meetingStart', 'meetingEnd',
   'venueLabel', 'noVenues', 'venueCategory', 'noVenueCategory', 'pickVenueFirst',
   'expiresIn', 'slotWindow', 'potentialEarning', 'slotNotViable', 'acceptingWith',
   'assignedVenue', 'assignedHost', 'assignedClub',

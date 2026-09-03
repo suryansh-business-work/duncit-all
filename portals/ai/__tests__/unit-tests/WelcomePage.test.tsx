@@ -4,6 +4,24 @@ import WelcomePage from '../../src/pages/WelcomePage';
 import { appConfig } from '../../src/config/app-config';
 import { renderWithProviders } from '../testkit';
 
+/**
+ * The real dashboard is GridStack, which needs a live layout engine jsdom does
+ * not have — left real, none of the widgets' content mounts and the page looks
+ * empty. Here it simply renders each widget, which is all this page asks of it.
+ */
+vi.mock('@duncit/dashboard', () => ({
+  DuncitDashboard: ({ header, widgets }: { header: React.ReactNode; widgets: { id: string; content: React.ReactNode }[] }) => (
+    <div data-testid="dashboard">
+      {header}
+      {widgets.map((widget) => (
+        <div key={widget.id} data-testid={`widget-${widget.id}`}>
+          {widget.content}
+        </div>
+      ))}
+    </div>
+  ),
+}));
+
 const userMock = vi.hoisted(() => ({ value: {} as { user: unknown } }));
 vi.mock('@duncit/user-context', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/user-context')>()),

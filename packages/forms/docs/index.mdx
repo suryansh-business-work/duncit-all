@@ -47,7 +47,6 @@ exports:
   - 'makePasswordPairSchema'
   - 'makeSignupSchema'
   - 'makeWhatsappNumberSchema'
-  - 'whatsappNumberShape'
   - 'buildWithdrawInput'
   - 'blankWithdrawValues'
   - 'WITHDRAW_METHODS'
@@ -488,15 +487,16 @@ all gate on one calendar.
 
 ### The WhatsApp row, asked at two doors
 
-Signup collects ONE number, and `whatsappNumberShape(t)` is it: the dial code, the digits, and
-`whatsappIsMobile` — the tick box saying whether that number is the person's mobile number too.
-Unticked, the profile phone is left **blank**; the person has said the two differ, and filing
-the WhatsApp number as their mobile would put a number they never gave us on their account.
+Signup collects ONE number, and `makeWhatsappNumberSchema(t)` is it: the dial code, the digits,
+and `whatsappIsMobile` — the tick box saying whether that number is the person's mobile number
+too. Unticked, the profile phone is left **blank**; the person has said the two differ, and
+filing the WhatsApp number as their mobile would put a number they never gave us on their
+account.
 
-The shape is spread into `makeSignupSchema` and exported on its own as
-`makeWhatsappNumberSchema` because two doors ask for it. The email form asks as step two.
-Google hands back a finished account with no form attached, so it asks on a step of its own —
-which is also the only moment `requestWhatsAppOtp` can be called, since that mutation
+It is its own schema because two doors ask for it. The email form asks as step two —
+`makeSignupSchema` spreads this schema's `.shape` in, so the row cannot change for one door and
+not the other. Google hands back a finished account with no form attached, so it asks on a step
+of its own, which is also the only moment `requestWhatsAppOtp` can be called: that mutation
 authenticates its caller.
 
 ```ts

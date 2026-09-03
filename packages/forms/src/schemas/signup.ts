@@ -1,9 +1,3 @@
-import { z } from 'zod';
-import { BIRTH_YEAR, DIAL_CODE, EMAIL, PERSON_NAME, PHONE_INTL, REFERRAL_CODE } from '@duncit/regex';
-import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, isEligibleBirthYear } from '@duncit/datetime';
-
-import type { Translate } from './translate';
-
 /**
  * Joining Duncit — the ONE contract both signup surfaces validate against.
  *
@@ -22,6 +16,12 @@ import type { Translate } from './translate';
  * the shared catalogue (rule 38) and each surface binds this factory to its own
  * bundled English.
  */
+import { z } from 'zod';
+import { BIRTH_YEAR, DIAL_CODE, EMAIL, PERSON_NAME, PHONE_INTL, REFERRAL_CODE } from '@duncit/regex';
+import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, isEligibleBirthYear } from '@duncit/datetime';
+
+import type { Translate } from './translate';
+
 /**
  * The WhatsApp row every signup door collects — the number, its dial code, and
  * whether it is also the mobile number.
@@ -36,7 +36,7 @@ import type { Translate } from './translate';
  * number the mutation accepts. Whether it is already on another account is the
  * server's answer: it holds the lookup, and a client-side check would race it.
  */
-export function whatsappNumberShape(t: Translate) {
+function whatsappNumberShape(t: Translate) {
   return {
     phoneExtension: z
       .string()
@@ -64,6 +64,10 @@ export function whatsappNumberShape(t: Translate) {
  * `signupWithGoogle` returns a finished account, so this is asked afterwards —
  * which is also the only moment the code can be requested, since
  * `requestWhatsAppOtp` authenticates its caller.
+ *
+ * This is the ONE public spelling of the row: `makeSignupSchema` spreads its
+ * `.shape` rather than calling the shape builder beside it, so there is no way
+ * to change the row for one door and not the other.
  */
 export function makeWhatsappNumberSchema(t: Translate) {
   return z.object(whatsappNumberShape(t));
@@ -118,8 +122,8 @@ export function makeSignupSchema(
         .refine((v) => EMAIL.test(v), t('mweb.auth.validation.emailInvalid'))
         .max(254),
       // The WhatsApp number, its dial code and the "same as my mobile" answer —
-      // shared with the Google door, which asks for exactly this row on its own.
-      ...whatsappNumberShape(t),
+      // the Google door's whole schema, spread in as this form's step two.
+      ...makeWhatsappNumberSchema(t).shape,
       password: z
         .string()
         .min(8, t('mweb.auth.validation.passwordMin'))

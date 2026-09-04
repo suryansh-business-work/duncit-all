@@ -22,7 +22,7 @@ export function ReelVideo({
       return undefined;
     }
     // The remote source may still be loading when the card becomes active —
-    // start now and re-assert once it reports ready (same as SidebarVenuesCard).
+    // start now and re-assert once it reports ready (same as BrandBackdrop).
     player.play();
     const sub = player.addListener('statusChange', ({ status }) => {
       if (status === 'readyToPlay') player.play();

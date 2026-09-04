@@ -2,19 +2,56 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, XStack, YStack } from 'tamagui';
+import { cartBadgeLabel } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TAB_CONFIG } from '@/navigation/tabs';
+import { selectCartCount, useCartStore } from '@/stores/cart.store';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
-/** Edge-to-edge flat tab bar — full width, no border radius, with the active
- * tab tinted in the primary colour (icon scales in smoothly). Identical to
- * mWeb's BottomNav. Used as React Navigation's custom `tabBar`. */
+/**
+ * How much is in the basket, on the Cart tab's icon. The other four pass 0 and
+ * draw nothing, so one component covers the whole bar — the count is the only
+ * thing the header entry point carried that the bar had to inherit.
+ */
+function TabBadge({ count }: Readonly<{ count: number }>) {
+  if (count <= 0) return null;
+  return (
+    <YStack
+      testID="tab-bar-cart-count"
+      position="absolute"
+      top={2}
+      right={4}
+      minWidth={16}
+      height={16}
+      paddingHorizontal={3}
+      alignItems="center"
+      justifyContent="center"
+      borderRadius={999}
+      backgroundColor="$danger"
+    >
+      <Text fontSize={9} fontWeight="700" color="#ffffff">
+        {cartBadgeLabel(count)}
+      </Text>
+    </YStack>
+  );
+}
+
+/**
+ * Edge-to-edge flat tab bar — full width, no border radius, with the active tab
+ * tinted in the primary colour (icon scales in smoothly). Identical to mWeb's
+ * BottomNav. Used as React Navigation's custom `tabBar`.
+ *
+ * It draws whatever the navigator registered, and every tab is `flex: 1` — so
+ * with products switched off, where `MainTabs` never registers the Cart, the
+ * remaining four spread across the whole bar instead of leaving a gap.
+ */
 export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
   const insets = useSafeAreaInsets();
   const { muted, primary } = useThemeColors();
   const { t } = useTranslation();
+  const cartCount = useCartStore(selectCartCount);
 
   return (
     <XStack
@@ -64,6 +101,7 @@ export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
             {/* Active tab = primary tint only, no background shape (user ask). */}
             <YStack width={44} height={30} alignItems="center" justifyContent="center">
               <MaterialIcons name={cfg.icon} size={21} color={focused ? primary : muted} />
+              <TabBadge count={cfg.name === 'Cart' ? cartCount : 0} />
             </YStack>
             <Text fontSize={11} fontWeight="600" color={focused ? '$primary' : '$muted'}>
               {t(cfg.labelKey)}

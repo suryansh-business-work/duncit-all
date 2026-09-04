@@ -41,7 +41,7 @@ export function StatusVideo({ uri, muted, onEnded }: Readonly<StatusVideoProps>)
 
   // The viewer lives inside a Modal, where the setup-time play() can be
   // swallowed before the remote source finishes loading — re-assert play once
-  // it reports ready (same as SidebarVenuesCard).
+  // it reports ready (same as BrandBackdrop).
   useEffect(() => {
     const ready = player.addListener('statusChange', ({ status }) => {
       if (status === 'readyToPlay') player.play();

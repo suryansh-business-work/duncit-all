@@ -1,4 +1,4 @@
-import { brand, dark, light, neutral, radii, semantic, typography } from '@duncit/auth-tokens';
+import { auth, brand, dark, light, neutral, radii, semantic, typography } from '@duncit/auth-tokens';
 import { defineDemo, defineDemos } from '../types';
 
 interface SwatchMock {
@@ -49,6 +49,10 @@ export default defineDemos('auth-tokens', [
       'Neutral scale': neutral,
       'Semantic colours': semantic,
       'Mode read': mock.mode,
+      // The haze mWeb and native draw over an admin's login backdrop. It flips
+      // with the mode on purpose: the old scrim was always dark, so light mode
+      // put near-black headings over a darkened photo.
+      'Login fog': mock.mode === 'dark' ? auth.fog.dark : auth.fog.light,
       'Radii': radii,
       'Typography': typography,
     }),

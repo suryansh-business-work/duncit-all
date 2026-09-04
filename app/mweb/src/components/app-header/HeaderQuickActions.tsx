@@ -3,7 +3,6 @@ import { Avatar, Badge, Box, Stack, Tooltip, Typography } from '@mui/material';
 import { DuncitIconButton } from '@duncit/buttons';
 import HeaderNotificationsBell from './HeaderNotificationsBell';
 import HeaderSearchButton from './HeaderSearchButton';
-import HeaderCartButton from '../cart/HeaderCartButton';
 import { initials, normalizeMe } from '@duncit/user-core';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -44,8 +43,12 @@ interface Props {
 
 /**
  * The header's right-side cluster (mock): labelled circular actions — Search,
- * Cart, Alerts — then the avatar with its online dot. Extracted from AppHeader
+ * Alerts — then the avatar with its online dot. Extracted from AppHeader
  * (which is over the line cap) and keeps every tour anchor in place.
+ *
+ * The cart used to sit between them and no longer does: it is a bottom-bar
+ * destination now, so the header would have been a second door to the same
+ * page, appearing and disappearing as the basket filled.
  */
 export default function HeaderQuickActions({
   showSearch,
@@ -63,8 +66,6 @@ export default function HeaderQuickActions({
           <HeaderSearchButton locationId={locationId} zoneName={zoneName} />
         </QuickAction>
       )}
-      {/* The cart caption ships inside the button — it hides with it. */}
-      <HeaderCartButton label={t('mweb.home.actionCart')} />
       <QuickAction label={t('mweb.home.actionAlerts')}>
         <Box data-tour="home-notifications" component="span" sx={{ display: 'inline-flex' }}>
           <HeaderNotificationsBell onToast={onToast} />

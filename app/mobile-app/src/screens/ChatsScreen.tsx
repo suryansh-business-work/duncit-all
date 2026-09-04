@@ -7,7 +7,7 @@ import { Input, XStack } from 'tamagui';
 import { ChatPodFilter, type ChatPodFilterValue } from '@/components/chat/ChatPodFilter';
 import { ChatRoomCard } from '@/components/chat/ChatRoomCard';
 import { FeedList } from '@/components/FeedList';
-import { TabScreen } from '@/components/TabScreen';
+import { StackScreen } from '@/components/StackScreen';
 import { useChatRooms } from '@/hooks/useChat';
 import { useSuperCategories } from '@/hooks/useSuperCategories';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -46,7 +46,7 @@ export function ChatsScreen() {
     : 'No chats yet. Join a pod to start chatting.';
 
   return (
-    <TabScreen testID="chats-screen">
+    <StackScreen title={t('mweb.nav.chats')} testID="chats-screen">
       <XStack
         alignItems="center"
         gap={8}
@@ -93,6 +93,6 @@ export function ChatsScreen() {
           />
         )}
       />
-    </TabScreen>
+    </StackScreen>
   );
 }

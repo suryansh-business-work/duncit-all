@@ -3,7 +3,6 @@ import { Alert, Box, Divider, Stack, Typography } from '@mui/material';
 import { auth } from '@duncit/auth-tokens';
 import AuthBackground from '../../components/AuthBackground';
 import AuthLogo from '../../components/AuthLogo';
-import AuthModeToggle from '../../components/AuthModeToggle';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import LegalLinks from '../../components/LegalLinks';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -63,7 +62,6 @@ export default function RegisterPage() {
 
   return (
     <AuthBackground>
-      <AuthModeToggle />
       <AuthScreenFrame>
         <Stack spacing={1.45}>
           <Stack spacing={1.1} sx={{ alignItems: 'center', pt: 0.5 }}>

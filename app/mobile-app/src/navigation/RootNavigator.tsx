@@ -15,13 +15,13 @@ import { ChatRoomScreen } from '@/screens/ChatRoomScreen';
 import { ClubDetailsScreen } from '@/screens/ClubDetailsScreen';
 import { HappeningNearbyScreen } from '@/screens/HappeningNearbyScreen';
 import { HostsVenuesScreen } from '@/screens/HostsVenuesScreen';
-import { VenuesScreen } from '@/screens/VenuesScreen';
+import { ChatsScreen } from '@/screens/ChatsScreen';
+import { FollowingScreen } from '@/screens/FollowingScreen';
 import { PublicProfileScreen } from '@/screens/PublicProfileScreen';
 import { PostDetailScreen } from '@/screens/PostDetailScreen';
 import { FollowListScreen } from '@/screens/FollowListScreen';
 import { VenueDetailsScreen } from '@/screens/VenueDetailsScreen';
 import { AddressBookScreen } from '@/screens/AddressBookScreen';
-import { CartScreen } from '@/screens/CartScreen';
 import { OrdersHistoryScreen } from '@/screens/OrdersHistoryScreen';
 import { LeaderboardScreen } from '@/screens/LeaderboardScreen';
 import { MembershipScreen } from '@/screens/MembershipScreen';
@@ -120,7 +120,6 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
  * the screen under it (S6478).
  */
 const GatedProductCheckoutScreen = withProductGate(ProductCheckoutScreen);
-const GatedCartScreen = withProductGate(CartScreen);
 const GatedShopScreen = withProductGate(ShopScreen);
 const GatedProductDetailScreen = withProductGate(ProductDetailScreen);
 const GatedOrdersHistoryScreen = withProductGate(OrdersHistoryScreen);
@@ -236,14 +235,15 @@ export function RootNavigator() {
       <Stack.Screen name="PodFeedback" component={PodFeedbackScreen} />
       <Stack.Screen name="ClubDetails" component={ClubDetailsScreen} />
       <Stack.Screen name="HostsVenues" component={HostsVenuesScreen} />
-      <Stack.Screen name="Venues" component={VenuesScreen} />
+      {/* Both were bottom tabs; the account menu's grid pushes them now. */}
+      <Stack.Screen name="Chats" component={ChatsScreen} />
+      <Stack.Screen name="Following" component={FollowingScreen} />
       <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
       <Stack.Screen name="PostDetail" component={PostDetailScreen} />
       <Stack.Screen name="Follow" component={FollowListScreen} />
       <Stack.Screen name="VenueDetails" component={VenueDetailsScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
       <Stack.Screen name="ProductCheckout" component={GatedProductCheckoutScreen} />
-      <Stack.Screen name="Cart" component={GatedCartScreen} />
       <Stack.Screen name="Shop" component={GatedShopScreen} />
       <Stack.Screen name="ProductDetail" component={GatedProductDetailScreen} />
       <Stack.Screen name="OrdersHistory" component={GatedOrdersHistoryScreen} />

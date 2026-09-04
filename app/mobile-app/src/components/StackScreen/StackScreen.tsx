@@ -5,7 +5,6 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
 import { AppHeader } from '@/components/AppHeader';
-import { HeaderCartButton } from '@/components/cart/HeaderCartButton';
 import { useGoBack } from '@/hooks/useGoBack';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -65,10 +64,6 @@ export function StackScreen({
             {title}
           </Text>
           {right}
-          {/* The back-bar IS this screen's header, so the cart entry point
-           * belongs here — unless the full app header above already carries
-           * it. */}
-          {header ? null : <HeaderCartButton />}
         </XStack>
         <KeyboardScreen>{children}</KeyboardScreen>
       </SafeAreaView>

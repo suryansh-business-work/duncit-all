@@ -205,8 +205,9 @@ export default function AppHeader({
               }}
             />
 
-            {/* Labelled circular actions (mock): Search · Cart · Alerts · avatar
-             * with online dot. The cart still hides itself when empty. */}
+            {/* Labelled circular actions (mock): Search · Alerts · avatar with
+             * online dot. The cart is a bottom-bar destination, not a header
+             * action. */}
             <HeaderQuickActions
               showSearch={effectiveStudio === 'USER'}
               locationId={selectedLocationId}

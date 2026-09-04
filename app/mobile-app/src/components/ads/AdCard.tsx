@@ -9,7 +9,7 @@ export type AdVariant = 'banner' | 'card' | 'tile';
 
 /** Dark caption scrim so the title stays readable over any media frame. */
 const SCRIM = 'rgba(0,0,0,0.45)';
-/** Matches SidebarVenuesCard so the sidebar rail stays visually consistent. */
+/** Matches the sidebar rail's featured cards so it stays visually consistent. */
 const CARD_HEIGHT = 132;
 const BANNER_HEIGHT = 120;
 
@@ -69,7 +69,7 @@ function AdTile({
 /**
  * A rounded ad card with a Sponsored badge and title caption; tapping opens the
  * advertiser link when one is set. `banner` is a flush full-width rectangle,
- * `card` self-pads to sit in the sidebar rail (SidebarVenuesCard metrics) and
+ * `card` self-pads to sit in the sidebar rail (the featured-card metrics) and
  * `tile` matches the StatusTile footprint for the story rail.
  *
  * `onPress` replaces the link entirely — the story rail passes it so its tile

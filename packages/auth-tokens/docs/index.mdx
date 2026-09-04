@@ -113,6 +113,12 @@ auth
 //   avatarRing: '#201529',
 //   bgGradient:   { light: ['#f7f2ea','#fffaf4','#f5e6e8'], dark: ['#100f18','#191326','#25151d'] },
 //   cardGradient: { light: ['#ffffff','#fff6f7','#ffecef'], dark: ['#2c1c4a','#14111f','#30161e'] },
+//   fog: {
+//     light: { veil: 'rgba(250,248,245,0.74)', edge: 'rgba(250,248,245,0.94)', clear: 'rgba(250,248,245,0)' },
+//     dark:  { veil: 'rgba(11,9,16,0.70)',     edge: 'rgba(11,9,16,0.94)',     clear: 'rgba(11,9,16,0)' },
+//     mediaOpacity: 0.9,
+//     edgeStop: 0.26,
+//   },
 //   legal: { termsUrl: 'https://duncit.com/terms', privacyUrl: 'https://duncit.com/privacy/policy' },
 // }
 ```
@@ -188,7 +194,7 @@ functions, no options and no defaults to pass.
 | `surface` | `SurfaceColors` | `bg`, `paper`, `soft`, `border` (light-mode surfaces). |
 | `light` | `ModeColors` | Light palette — 10 keys. |
 | `dark` | `ModeColors` | Dark palette — the same 10 keys. |
-| `auth` | `AuthVisuals` | `accent`, `avatars`, `avatarRing`, `bgGradient`, `cardGradient`, `legal`. |
+| `auth` | `AuthVisuals` | `accent`, `avatars`, `avatarRing`, `bgGradient`, `cardGradient`, `fog`, `legal`. |
 | `radii` | `Radii` | `sm`, `md`, `lg`, `xl`, `pill` (numbers, px). |
 | `typography` | `Typography` | `fontFamily` plus six named `weight`s. |
 | default | the whole object | All nine under one import. |
@@ -198,7 +204,9 @@ functions, no options and no defaults to pass.
 | `ColorScale` | `Record<'50'\|'100'\|…\|'900', string>` |
 | `ModeColors` | `bg, surface, soft, ink, muted, border, primary, primaryHover, primaryActive, onPrimary` — all `string` |
 | `GradientPair` | `{ light: [string, string, string]; dark: [string, string, string] }` |
-| `AuthVisuals` | `accent: string`, `avatars: [string,string,string]`, `avatarRing: string`, `bgGradient: GradientPair`, `cardGradient: GradientPair`, `legal: { termsUrl, privacyUrl }` |
+| `AuthVisuals` | `accent: string`, `avatars: [string,string,string]`, `avatarRing: string`, `bgGradient: GradientPair`, `cardGradient: GradientPair`, `fog: AuthFog`, `legal: { termsUrl, privacyUrl }` |
+| `FogLayer` | `veil`, `edge`, `clear` — all `string` |
+| `AuthFog` | `light: FogLayer`, `dark: FogLayer`, `mediaOpacity: number`, `edgeStop: number` |
 
 ## No live preview
 
@@ -259,6 +267,26 @@ those URLs directly. They are configuration, not business data — a legal URL c
 
 Note the gradients are typed as fixed-length triples (`[string, string, string]`). Adding a
 fourth stop is a type change, not a data change.
+
+### `auth.fog` — the haze over an admin's login backdrop
+
+Branding lets an admin put a photo or a looping video behind the login screen, and whatever
+they picked has to keep the heading, the subtitle and the legal line readable. `fog` is what
+both apps draw over it, and it **follows the theme**: the flat scrim it replaced was always
+dark, so light mode darkened the photo and then wrote near-black copy on top of it.
+
+```ts
+const fog = isDark ? auth.fog.dark : auth.fog.light;
+// media at auth.fog.mediaOpacity (0.9)
+// then a flat  fog.veil  over the whole frame
+// then fog.edge → fog.clear → fog.clear → fog.edge at
+//      0, edgeStop, 1 - edgeStop, 1  ← thicker where the logo and the version sit
+```
+
+`clear` is the same colour at zero alpha rather than the string `transparent`, because a
+native gradient stop written as `transparent` fades through black on iOS. mWeb spends the
+numbers as a CSS `linear-gradient`; native spends them as an `expo-linear-gradient` — same
+picture, one source (rule 27).
 
 ## Coverage
 

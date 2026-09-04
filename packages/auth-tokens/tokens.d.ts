@@ -47,12 +47,34 @@ export interface GradientPair {
   dark: [string, string, string];
 }
 
+/**
+ * One mode's haze over the admin-chosen login backdrop. `veil` covers the whole
+ * frame, `edge` deepens the top and bottom, and `clear` is the SAME colour at
+ * zero alpha — a gradient stop written as `transparent` fades through black on
+ * iOS, which is why the clear end is spelled out rather than assumed.
+ */
+export interface FogLayer {
+  veil: string;
+  edge: string;
+  clear: string;
+}
+
+export interface AuthFog {
+  light: FogLayer;
+  dark: FogLayer;
+  /** How much of the photo/video survives under the haze. */
+  mediaOpacity: number;
+  /** Where the edge fade reaches the clear middle, as a 0–1 fraction of height. */
+  edgeStop: number;
+}
+
 export interface AuthVisuals {
   accent: string;
   avatars: [string, string, string];
   avatarRing: string;
   bgGradient: GradientPair;
   cardGradient: GradientPair;
+  fog: AuthFog;
   legal: {
     termsUrl: string;
     privacyUrl: string;

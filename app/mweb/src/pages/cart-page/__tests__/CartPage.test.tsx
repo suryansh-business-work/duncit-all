@@ -4,7 +4,6 @@ import { MockedProvider } from '@apollo/client/testing/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { CartProvider, useCart, type CartLineMeta } from '../../../components/cart/CartContext';
-import HeaderCartButton from '../../../components/cart/HeaderCartButton';
 import CartPage from '../../CartPage';
 
 const meta = (over: Partial<CartLineMeta> = {}): CartLineMeta => ({
@@ -37,7 +36,6 @@ const renderCart = (lines: Array<{ meta: CartLineMeta; qty: number }> = []) =>
       <CartProvider>
         <MemoryRouter initialEntries={['/cart']}>
           <Seed lines={lines} />
-          <HeaderCartButton />
           <Routes>
             <Route path="/cart" element={<CartPage />} />
             <Route path="/shop" element={<div>SHOP</div>} />

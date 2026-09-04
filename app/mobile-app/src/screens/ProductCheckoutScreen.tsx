@@ -267,7 +267,7 @@ export function ProductCheckoutScreen() {
       </ScrollView>
     );
   } else if (lines.length === 0) {
-    body = <EmptyProductCart onCart={() => navigation.navigate('Cart')} />;
+    body = <EmptyProductCart onCart={() => navigation.navigate('Home', { screen: 'Cart' })} />;
   } else if (isLoading && !finance) {
     body = (
       <YStack flex={1} alignItems="center" justifyContent="center">

@@ -1,22 +1,49 @@
-import { useEffect, useRef } from 'react';
-import { Box, Paper, BottomNavigation, BottomNavigationAction } from '@mui/material';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { Badge, Box, Paper, BottomNavigation, BottomNavigationAction } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import HomeIcon from '@mui/icons-material/Home';
 import ExploreIcon from '@mui/icons-material/Explore';
 import GroupsIcon from '@mui/icons-material/Groups';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import StoreIcon from '@mui/icons-material/Store';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useLocation, useNavigate } from 'react-router';
+import { CART_BADGE_MAX } from '@duncit/utils';
+import { useProductVisibility } from '@duncit/app-settings';
 import { APP_SHELL_MAX_WIDTH } from '../app/appLayout';
+import { useCart } from './cart/CartContext';
 import { useTranslation } from '../i18n/useTranslation';
 
+const CART_PATH = '/cart';
+
+/** The four destinations that are always in the bar. Chats and Following moved
+ * into the account menu; a visitor reaches a space to meet and their basket
+ * from here instead. */
 const TABS = [
   { value: '/', labelKey: 'mweb.nav.home', icon: <HomeIcon /> },
   { value: '/explore', labelKey: 'mweb.nav.explore', icon: <ExploreIcon /> },
   { value: '/clubs', labelKey: 'mweb.nav.clubs', icon: <GroupsIcon /> },
-  { value: '/chats', labelKey: 'mweb.nav.chats', icon: <ChatBubbleOutlineIcon /> },
-  { value: '/follow', labelKey: 'mweb.nav.following', icon: <FavoriteBorderIcon /> },
+  { value: '/venues', labelKey: 'mweb.nav.venues', icon: <StoreIcon /> },
 ];
+
+/** The fifth, and only while there is something to buy. With products off the
+ * remaining four keep the whole bar — MUI gives every action `flex: 1`, so they
+ * redistribute on their own rather than leaving a gap where the cart was. */
+const CART_TAB = { value: CART_PATH, labelKey: 'mweb.nav.cart', icon: <ShoppingCartIcon /> };
+
+/**
+ * One tab's glyph. Every tab is drawn through the badge, not just the cart:
+ * MUI renders nothing for `badgeContent={0}`, so a single branchless wrapper
+ * carries the cart count and leaves the other four untouched.
+ */
+function NavIcon({ icon, count }: Readonly<{ icon: ReactNode; count: number }>) {
+  return (
+    <Box className="nav-icon-wrap">
+      <Badge badgeContent={count} color="error" max={CART_BADGE_MAX}>
+        {icon}
+      </Badge>
+    </Box>
+  );
+}
 
 const NAV_BOTTOM_GAP = 0;
 const NAV_CONTENT_GAP = 56;
@@ -26,7 +53,10 @@ export default function BottomNav() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { t } = useTranslation();
+  const { totalCount } = useCart();
+  const { visible: productsVisible } = useProductVisibility();
   const paperRef = useRef<HTMLDivElement | null>(null);
+  const tabs = productsVisible ? [...TABS, CART_TAB] : TABS;
 
   useEffect(() => {
     const node = paperRef.current;
@@ -61,8 +91,9 @@ export default function BottomNav() {
     if (pathname === '/') return '/';
     if (pathname.startsWith('/explore')) return '/explore';
     if (pathname.startsWith('/clubs') || pathname.startsWith('/club/')) return '/clubs';
-    if (pathname.startsWith('/chats')) return '/chats';
-    if (pathname.startsWith('/follow')) return '/follow';
+    // `/venue/:id` too — a venue's own page belongs to the tab that lists them.
+    if (pathname.startsWith('/venue')) return '/venues';
+    if (pathname.startsWith(CART_PATH)) return CART_PATH;
     return false;
   };
   const active = matchActive();
@@ -145,12 +176,12 @@ export default function BottomNav() {
           },
         }}
       >
-        {TABS.map((tab) => (
+        {tabs.map((tab) => (
           <BottomNavigationAction
             key={tab.value}
             value={tab.value}
             label={t(tab.labelKey)}
-            icon={<Box className="nav-icon-wrap">{tab.icon}</Box>}
+            icon={<NavIcon icon={tab.icon} count={tab.value === CART_PATH ? totalCount : 0} />}
           />
         ))}
       </BottomNavigation>

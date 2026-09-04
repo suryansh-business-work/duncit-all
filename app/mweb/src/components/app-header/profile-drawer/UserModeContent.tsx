@@ -5,10 +5,15 @@ import IncompleteBanner from './IncompleteBanner';
 import QuickActionGrid from './QuickActionGrid';
 import ReferralCard from './ReferralCard';
 import DuncitCoinCard from './DuncitCoinCard';
-import VenuesCard from './VenuesCard';
 import ManageAccountList from './ManageAccountList';
 import AdSlot from '../../ads/AdSlot';
-import { buildManageItems, buildPartnerMenus, SHOP_ITEMS, type ProfileTile } from './profileSections';
+import {
+  buildManageItems,
+  buildPartnerMenus,
+  PROFILE_GRID,
+  SHOP_ITEMS,
+  type ProfileTile,
+} from './profileSections';
 import { AUTO_POD_PATH, type StudioMode } from '../../../studio-mode';
 import { profileCompletion } from '../../../pages/account-page/account-edit/completion';
 import { useTranslation } from '../../../i18n/useTranslation';
@@ -117,14 +122,37 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
       to: '/gift-cards/redeem',
     },
   ];
+  /*
+    Chats and Following open the grid, ahead of the config's own four. They came
+    down from the bottom bar — where Venues and the cart now sit — and they are
+    used far more often than Pod Ideas, so they take the first row rather than
+    the last. Built here because their labels are translated and
+    `profileSections` holds no copy (rule 38).
+  */
+  const gridTiles: ProfileTile[] = [
+    {
+      key: 'chats',
+      label: t('mweb.nav.chats'),
+      caption: t('mweb.sidebar.chatsCaption'),
+      icon: 'chats',
+      to: '/chats',
+    },
+    {
+      key: 'following',
+      label: t('mweb.nav.following'),
+      caption: t('mweb.sidebar.followingCaption'),
+      icon: 'following',
+      to: '/follow',
+    },
+    ...PROFILE_GRID,
+  ];
   return (
     <>
       <Box data-tour="profile-details">
         <ProfileIdentity me={me} onClick={() => onNavigate('/profile')} />
       </Box>
       {percent < 100 && <IncompleteBanner percent={percent} onComplete={() => onNavigate('/account')} />}
-      <QuickActionGrid onNavigate={onNavigate} />
-      <VenuesCard onNavigate={onNavigate} />
+      <QuickActionGrid tiles={gridTiles} onNavigate={onNavigate} />
       <AdSlot position="SIDEBAR" variant="card" sx={{ width: 'auto', mx: 2, mb: 1.25 }} />
       {mode === 'USER' && <DuncitCoinCard onNavigate={onNavigate} />}
       <ReferralCard onNavigate={onNavigate} />

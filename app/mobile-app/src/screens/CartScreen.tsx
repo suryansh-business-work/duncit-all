@@ -5,7 +5,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { CartPodGroup } from '@/components/cart/CartPodGroup';
-import { StackScreen } from '@/components/StackScreen';
+import { TabScreen } from '@/components/TabScreen';
+import { useBottomNavSpace } from '@/hooks/useBottomNavSpace';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cartLineKey, groupLinesByPod, selectCartTotal, useCartStore } from '@/stores/cart.store';
@@ -27,6 +28,7 @@ export function CartScreen() {
   const removeLine = useCartStore((s) => s.removeLine);
   const clearAll = useCartStore((s) => s.clearAll);
   const total = useCartStore(selectCartTotal);
+  const bottomSpace = useBottomNavSpace();
 
   const groups = useMemo(() => groupLinesByPod(lines), [lines]);
 
@@ -116,8 +118,16 @@ export function CartScreen() {
   }
 
   return (
-    <StackScreen title={t('mweb.cart.title')} testID="cart-screen">
-      <ScrollView flex={1}>{body}</ScrollView>
-    </StackScreen>
+    <TabScreen testID="cart-screen">
+      {/* A tab, not a pushed screen, so there is no back-bar to carry the title
+          and no safe-area strip below — mWeb's CartPage puts its heading in the
+          page for the same reason, and the bar has to be cleared here. */}
+      <ScrollView flex={1} contentContainerStyle={{ paddingBottom: bottomSpace }}>
+        <Text paddingHorizontal={16} paddingTop={12} fontSize={20} fontWeight="700" color="$color">
+          {t('mweb.cart.title')}
+        </Text>
+        {body}
+      </ScrollView>
+    </TabScreen>
   );
 }

@@ -5,7 +5,7 @@ import type { ActiveAd } from '@/hooks/useActiveAds';
 /**
  * The media area of an ad card: a cached image, or a muted looping video via
  * ReelVideo. Card placements leave `isActive` at its always-playing default
- * (the SidebarVenuesCard pattern); the Explore reel gates it on visibility.
+ * (the featured-card pattern); the Explore reel gates it on visibility.
  * Fills its parent, which owns the shape (rounded card, circle tile, …).
  */
 export function AdMedia({

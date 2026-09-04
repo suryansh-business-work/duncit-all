@@ -1,4 +1,6 @@
 import { JSX } from 'react';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
@@ -34,6 +36,10 @@ import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import type { ProfileIconKey } from './profileSections';
 
 const ICONS: Record<ProfileIconKey, JSX.Element> = {
+  // The two glyphs the bottom bar used, kept exactly as they were so the tiles
+  // read as the destinations that moved rather than as new ones.
+  chats: <ChatBubbleOutlineIcon />,
+  following: <FavoriteBorderIcon />,
   bookings: <ReceiptLongIcon />,
   saved: <BookmarkBorderIcon />,
   verification: <VerifiedUserIcon />,

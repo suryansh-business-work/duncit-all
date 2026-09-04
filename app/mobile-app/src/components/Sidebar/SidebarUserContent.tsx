@@ -11,13 +11,13 @@ import { SidebarIncompleteBanner } from './SidebarIncompleteBanner';
 import { SidebarQuickGrid } from './SidebarQuickGrid';
 import { SidebarDuncitCoinCard } from './SidebarDuncitCoinCard';
 import { SidebarReferralCard } from './SidebarReferralCard';
-import { SidebarVenuesCard } from './SidebarVenuesCard';
 import { SidebarManageList } from './SidebarManageList';
 import { buildClubMenuItems } from './clubMenuItems';
 import { buildVenueMenuItems } from './venueMenuItems';
 import {
   buildManageItems,
   buildPartnerMenus,
+  PROFILE_GRID,
   SHOP_ITEMS,
   type ProfileTile,
 } from './profileSections';
@@ -126,6 +126,30 @@ export function SidebarUserContent({
       route: 'GiftCardRedeem',
     },
   ];
+  /*
+    Chats and Following open the grid, ahead of the config's own four. They came
+    down from the bottom bar — where Venues and the cart now sit — and they are
+    used far more often than Pod Ideas, so they take the first row rather than
+    the last. Built here because their labels are translated and
+    `profileSections` holds no copy (rule 38).
+  */
+  const gridTiles: ProfileTile[] = [
+    {
+      key: 'chats',
+      label: t('mweb.nav.chats'),
+      caption: t('mweb.sidebar.chatsCaption'),
+      icon: 'chat-bubble-outline',
+      route: 'Chats',
+    },
+    {
+      key: 'following',
+      label: t('mweb.nav.following'),
+      caption: t('mweb.sidebar.followingCaption'),
+      icon: 'favorite-border',
+      route: 'Following',
+    },
+    ...PROFILE_GRID,
+  ];
   return (
     <YStack>
       <TourAnchor tour="profile" anchor="profile-details">
@@ -134,8 +158,7 @@ export function SidebarUserContent({
       {showIncomplete ? (
         <SidebarIncompleteBanner percent={percent} onComplete={() => onNavigate('Account')} />
       ) : null}
-      <SidebarQuickGrid onNavigate={onNavigate} />
-      <SidebarVenuesCard onNavigate={onNavigate} />
+      <SidebarQuickGrid tiles={gridTiles} onNavigate={onNavigate} />
       <AdSlot position="SIDEBAR" variant="card" />
       {mode === 'USER' ? <SidebarDuncitCoinCard onNavigate={onNavigate} /> : null}
       <SidebarReferralCard onNavigate={onNavigate} />

@@ -20,15 +20,11 @@ import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
-<<<<<<< Updated upstream
 import { breakdownService, bucketForPod } from '@modules/finance/finance/breakdown.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { podImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
 import { accountHealthService } from '@modules/access/accountHealth/accountHealth.service';
-=======
-import { breakdownService } from '@modules/finance/finance/breakdown.service';
->>>>>>> Stashed changes
 import {
   sendHostPodAutoCancelledEmail,
   sendPodRefundEmail,
@@ -2275,15 +2271,8 @@ export const podService = {
     // Same Step-4 economics guard as create, on the MERGED (input over stored)
     // values — a resubmitted paid pod must still cover its venue price and
     // leave the host a positive projected payout.
-<<<<<<< Updated upstream
     const docVenueId = doc.venue_id ? String(doc.venue_id) : null;
     const resubmitVenueId = nextMode === 'PHYSICAL' ? (input.venue_id ?? docVenueId) : null;
-=======
-    const resubmitVenueId =
-      nextMode === 'PHYSICAL'
-        ? input.venue_id ?? (doc.venue_id ? String(doc.venue_id) : null)
-        : null;
->>>>>>> Stashed changes
     await breakdownService.assertViablePodEconomics({
       hostUserId: userId,
       podAmount: input.pod_amount ?? doc.pod_amount ?? 0,

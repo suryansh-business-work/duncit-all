@@ -77,11 +77,8 @@ export const linking: LinkingOptions<RootStackParamList> = {
       Wallet: 'host/wallet',
       CreatePod: 'create-pod',
       PodPending: 'host/pod-pending/:podId',
-<<<<<<< Updated upstream
       // Mirrors mWeb's /host/pod/:podId/attendance exactly.
       PodAttendance: 'host/pod/:podId/attendance',
-=======
->>>>>>> Stashed changes
       Earn: 'earn',
       RegisterVenue: 'register-venue',
       VenueManage: 'venues/manage',

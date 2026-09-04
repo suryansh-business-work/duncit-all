@@ -333,17 +333,10 @@ export function toWaterfall(b: PodFinanceBreakdown): SettlementWaterfall {
 }
 
 /** Waterfall for an arbitrary GST-inclusive rupee amount + venue slot price at
-<<<<<<< Updated upstream
  * the given rates — powers the create-pod potential-earnings preview, live pod
  * breakdowns and settlement itself. Every caller that quotes or settles real
  * money passes `clampVenueToPool: false`: the venue keeps its full booked
  * price and a shortfall shows as negative host earnings. */
-=======
- * the given rates — powers the create-pod potential-earnings preview and live
- * pod breakdowns. `options.clampVenueToPool: false` (preview) keeps the venue's
- * full price so a shortfall shows as negative host earnings; settlement callers
- * omit it and keep the legacy clamp. */
->>>>>>> Stashed changes
 export function waterfallForAmount(
   amountRupees: number,
   venueAmountRupees: number,

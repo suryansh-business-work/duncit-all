@@ -14,9 +14,11 @@
  * across the screen that spends it: the challenge id alone would be guessable.
  */
 import { GraphQLError } from 'graphql';
+import { logs } from '@observability/log';
 import { UserModel } from '@modules/access/user/user.model';
-import type { IOtpChallenge } from '@modules/platform/otp/otp.model';
-import { normalizePhone, otpService } from '@modules/platform/otp/otp.service';
+import { isAisensyConfigured } from '@modules/platform/aisensy/aisensy.gateway';
+import type { IOtpChallenge, IOtpDelivery } from '@modules/platform/otp/otp.model';
+import { anyDelivered, normalizePhone, otpService } from '@modules/platform/otp/otp.service';
 
 const PURPOSE = 'WHATSAPP_SIGNUP' as const;
 
@@ -42,6 +44,37 @@ function numberTakenError(): GraphQLError {
   return new GraphQLError(
     'This phone number is already registered. Please use a different number or login.',
     { extensions: { code: 'CONFLICT' } }
+  );
+}
+
+/**
+ * Refuse a code that AiSensy could not actually carry.
+ *
+ * `otpService` answers an undelivered code by handing the fixed development
+ * code back to the caller, which the signup screen then prints. Everywhere else
+ * that is a harmless convenience on an account that already exists. HERE it
+ * would be the way in: a missing API key, an unapproved template or an AiSensy
+ * outage would put the code on screen, and the WhatsApp gate would be off for
+ * as long as the outage lasted — for every number, including ones nobody holds.
+ *
+ * So the rule is: a transport that IS configured and did not deliver is an
+ * outage, and an outage must never become a bypass. A platform with no AiSensy
+ * key at all is a different thing — nothing is wired yet, nobody is signing up
+ * against it, and the echoed code is what makes a fresh install usable.
+ */
+async function assertDelivered(deliveries: readonly IOtpDelivery[], number: string) {
+  if (anyDelivered(deliveries)) return;
+  const reason = deliveries.find((d) => d.reason)?.reason ?? 'AiSensy did not accept the message';
+  if (!(await isAisensyConfigured())) return;
+  logs.server.error('auth-whatsapp', 'signup-otp-undelivered', {
+    msg: 'AiSensy is configured but the signup code did not go out',
+    reason,
+    // The number, never the code.
+    phone_number: number,
+  });
+  throw new GraphQLError(
+    'We could not send your WhatsApp code right now. Please try again in a few minutes.',
+    { extensions: { code: 'OTP_DELIVERY_FAILED' } }
   );
 }
 
@@ -77,14 +110,19 @@ export const whatsappAuthService = {
     }
     const result = await otpService.request({
       purpose: PURPOSE,
-      // The medium is an argument, not a second code path.
+      // The medium is an argument, not a second code path. WhatsApp is the one
+      // this door uses: the number being proved IS the WhatsApp number, and
+      // AiSensy carries it over the approved Meta authentication template.
       mediums: ['WHATSAPP'],
       ...target,
       requested_by: null,
     });
+    await assertDelivered(result.deliveries, target.phone_number);
     return {
       ok: true,
       // Kept as `dev_otp` because the signup screens already read that field.
+      // Null on any platform with AiSensy wired: `assertDelivered` has already
+      // refused the only case that would fill it in.
       dev_otp: result.test_code,
     };
   },

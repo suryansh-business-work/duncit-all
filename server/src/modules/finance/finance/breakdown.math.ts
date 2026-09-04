@@ -49,20 +49,12 @@ export interface BreakdownRates {
 /** Behaviour switches for `computePodFinanceBreakdown`. */
 export interface BreakdownOptions {
   /**
-<<<<<<< Updated upstream
    * Default `true` (legacy engine default): the venue amount is clamped to the
    * pool so the host side never goes negative. Every current server caller
    * that quotes or settles real money — settlement, the create-pod previews,
    * the live pod breakdown — passes `false`: the venue keeps its full fixed
    * price and host_amount / host_receives go negative honestly so the real
    * shortfall is visible instead of quietly shrinking the venue's money.
-=======
-   * Default `true` (SETTLEMENT behaviour): the venue amount is clamped to the
-   * pool so the host side never goes negative — legacy shortfall pods keep
-   * settling exactly as before. Pass `false` for the create-pod PREVIEW: the
-   * venue keeps its full fixed price and host_amount / host_receives go
-   * negative honestly so clients can render the real shortfall.
->>>>>>> Stashed changes
    */
   clampVenueToPool?: boolean;
 }
@@ -174,16 +166,10 @@ export function payingSeats(
  *
  * @param amountPaise      what customers paid in total (GST-inclusive)
  * @param venueAmountPaise the venue's booked slot price (0 when no venue)
-<<<<<<< Updated upstream
  * @param options          clampVenueToPool defaults to true (legacy); every
  *                         current caller — settlement, previews, live
  *                         breakdown — passes false so a venue-price shortfall
  *                         surfaces as negative host earnings.
-=======
- * @param options          clampVenueToPool defaults to true (settlement); the
- *                         create-pod preview passes false so a venue-price
- *                         shortfall surfaces as negative host earnings.
->>>>>>> Stashed changes
  */
 /**
  * The venue's side of the split: its fixed slot price minus Duncit's venue
@@ -226,21 +212,13 @@ export function computePodFinanceBreakdown(
   const clampVenueToPool = options?.clampVenueToPool ?? true;
   const venueAmount = clampVenueToPool ? Math.min(venueAmountPaise, splitPool) : venueAmountPaise;
   const hostAmount = splitPool - venueAmount;
-<<<<<<< Updated upstream
   const venueSide = venueSideOf(venueAmount, rates.venue_commission_percent);
   const venueCommission = venueSide.commission_paise;
-=======
-  const venueCommission = Math.round((venueAmount * rates.venue_commission_percent) / 100);
->>>>>>> Stashed changes
   // No commission is charged on a non-positive host side — the shortfall passes
   // through whole (and the reconciliation invariant still holds exactly).
   const hostCommission =
     hostAmount > 0 ? Math.round((hostAmount * rates.host_commission_percent) / 100) : 0;
-<<<<<<< Updated upstream
   const venueReceives = venueSide.receives_paise;
-=======
-  const venueReceives = venueAmount - venueCommission;
->>>>>>> Stashed changes
   const hostReceives = hostAmount - hostCommission;
   const duncitRevenue = fee + hostCommission + venueCommission + clubAdmin;
 

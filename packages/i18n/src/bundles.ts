@@ -65,7 +65,6 @@ import { WHATSAPP_BUNDLE } from './bundles/whatsapp';
  * Each surface still SHIPS its bundle — it re-exports the slice it renders, so
  * the copy is compiled into that build and available offline.
  */
-<<<<<<< Updated upstream
 export {
   ADMIN_BUNDLE,
   ADS_BUNDLE,
@@ -111,96 +110,6 @@ export {
   WEBSITE_APP_BUNDLE,
   WEBSITE_BUNDLE,
   WHATSAPP_BUNDLE,
-=======
-
-/** Copy shared by mWeb and the native app — one namespace, one source. */
-export const MWEB_BUNDLE: NestedCatalogue = {
-  mweb: {
-    common: {
-      language: 'Language',
-      languageHint: 'Choose the language for the app.',
-      languageSaved: 'Language updated',
-    },
-    account: {
-      preferences: 'Preferences',
-    },
-    createPod: {
-      step4: {
-        noEarningsTitle: 'No Earnings Generated',
-        noEarningsDescription:
-          'Based on the current Ticket Price, your estimated earnings are ₹0 after applicable deductions. Please increase the Ticket Price to earn from this Pod.',
-        venueShortfall:
-          'Your venue price is greater than the total Pod value. Please increase the Ticket Price so that the total Pod value is equal to or greater than the Venue Price.',
-        suggestedPriceLink: 'Suggested Price',
-        suggestedPriceModalTitle: 'Suggested Ticket Prices',
-        suggestedPriceColumn: 'Suggested Price',
-        whatYouGetColumn: 'What You Get',
-        close: 'Close',
-        tierFirst: 'Most affordable option for attendees, with a small earning for you.',
-        tierSecond: 'A balanced price point between affordability and your earnings.',
-        tierThird: 'Better earnings while keeping the Pod accessible to attendees.',
-        tierFourth: 'Premium pricing with strong earnings on every spot.',
-        tierFifth: 'Best suited for high-value, exclusive Pod experiences.',
-        recommendationNote:
-          'We recommend choosing a price that balances affordability for attendees with meaningful earnings for you. Prices ending in ₹99 tend to perform best.',
-      },
-    },
-    shop: {
-      title: 'Pod Shop',
-      emptyState: 'No products match your filters.',
-      featured: 'Featured Products',
-      outOfStock: 'Out of stock',
-      includeOutOfStock: 'Include out of stock',
-      searchPlaceholder: 'Search products or brands…',
-    },
-  },
-};
-
-/** Chrome rendered by the portal shell, shared by every MUI portal. */
-export const SHELL_BUNDLE: NestedCatalogue = {
-  mweb: {
-    common: {
-      language: 'Language',
-      languageSaved: 'Language updated',
-    },
-  },
-  shell: {
-    profile: {
-      accessRoles: 'ACCESS ROLES',
-      noRoles: 'No roles assigned.',
-      // NOT mweb.common.languageHint: the portal wording differs from the app's,
-      // and the server stores ONE row per key — a second value for the same key
-      // is unrepresentable, so whichever bundle merged last would silently
-      // overwrite the other surface's copy.
-      languageHint: 'Choose the language for this portal.',
-    },
-  },
-};
-
-/**
- * The marketing websites' own chrome. Navigation and footer LINK labels are
- * not here — those are content from the Website portal's Navigation manager,
- * and duplicating them as translation keys would give the same text two
- * owners.
- */
-export const WEBSITE_BUNDLE: NestedCatalogue = {
-  website: {
-    footer: {
-      newsletterTitle: 'Get Duncit updates',
-      emailPlaceholder: 'Email address',
-      notify: 'Notify',
-      sending: 'Sending',
-      subscribed: 'Subscribed!',
-      tryAgain: 'Try again',
-      policyHub: 'Policy Hub',
-      allPolicies: 'All policies',
-      rights: 'All Rights Reserved',
-    },
-    nav: {
-      closeMenu: 'Close menu',
-    },
-  },
->>>>>>> Stashed changes
 };
 
 /** Every client bundle, by the surface that ships it. */

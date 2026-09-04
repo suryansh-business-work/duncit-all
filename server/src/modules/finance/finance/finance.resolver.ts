@@ -203,7 +203,6 @@ export const financeResolvers = {
         args.venue_amount ?? null
       );
     },
-<<<<<<< Updated upstream
     adminPotentialPodEarnings: async (
       _p: unknown,
       args: {
@@ -235,8 +234,6 @@ export const financeResolvers = {
         args.no_of_spots,
         args.venue_amount ?? null
       ),
-=======
->>>>>>> Stashed changes
     suggestedTicketPrices: async (
       _p: unknown,
       args: { no_of_spots: number; venue_id?: string | null; venue_amount?: number | null },

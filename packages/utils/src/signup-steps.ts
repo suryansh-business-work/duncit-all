@@ -6,8 +6,9 @@
  * separate WhatsApp screen after it. It is four steps now, and the reason the
  * order is what it is: the two steps that cost nothing come first (who you are,
  * how we reach you), the password comes third so it is typed once the person is
- * already committed, and the WhatsApp code is last because it can only be asked
- * for AFTER the account exists — `requestWhatsAppOtp` authenticates the caller.
+ * already committed, and the WhatsApp code is last because it is the step that
+ * creates the account. Nothing exists until it is answered — which is why there
+ * is no way past it, on either door.
  *
  * The two surfaces render MUI and Tamagui respectively; what lives here is the
  * step order, which fields each step is answerable for, and every word either
@@ -21,9 +22,9 @@
 /**
  * The four steps, in order.
  *
- * ACCOUNT is the one that creates anything: finishing WHO/CONTACT/SECURITY is
- * what calls `register`, and VERIFY is the WhatsApp code checked against the
- * account that now exists.
+ * VERIFY is the one that creates anything: WHO/CONTACT/SECURITY only collect,
+ * and `register` is called with the proven WhatsApp code alongside them. A
+ * person who leaves before answering it leaves nothing behind.
  */
 export const SIGNUP_STEPS = ['WHO', 'CONTACT', 'SECURITY', 'VERIFY'] as const;
 export type SignupStep = (typeof SIGNUP_STEPS)[number];
@@ -68,19 +69,20 @@ export function nextSignupStep(step: SignupStep): SignupStep | null {
 }
 
 /**
- * Whether leaving this step creates the account.
+ * Whether leaving this step submits the form.
  *
- * SECURITY is the last step whose answers `register` needs, so it is the one
- * whose "Next" is really "create my account". Both surfaces branch on this
- * rather than on the step name, so the day a field moves between steps there is
- * one place to move the submit with it.
+ * SECURITY is the last step with boxes on it, so it is the one whose "Next" is
+ * really "I am done filling this in" — the answers are held while the code step
+ * proves the number, and `register` is called with both. Both surfaces branch
+ * on this rather than on the step name, so the day a field moves between steps
+ * there is one place to move the submit with it.
  */
 export const stepSubmitsAccount = (step: SignupStep): boolean => step === 'SECURITY';
 
 /** Whether a step's Back button should exist at all. */
 export function canLeaveSignupStep(step: SignupStep): boolean {
-  // VERIFY has no way back: the account is already created by the time it
-  // shows, so "Back" could only offer to fill in a form that has been spent.
+  // VERIFY has no way back: a code is already on its way to the number that was
+  // typed, and changing that number means asking for a new one from the start.
   return step !== 'VERIFY' && previousSignupStep(step) !== null;
 }
 
@@ -124,8 +126,10 @@ export interface SignupStepperLabels {
   stepOf: (current: number, total: number) => string;
   next: string;
   back: string;
-  /** The button that actually creates the account (end of SECURITY). */
+  /** The button that finishes the form (end of SECURITY). */
   createAccount: string;
+  /** Shown on the code step while the proven number is being turned into an
+   * account — the last thing signup does. */
   creating: string;
   /** The last step. */
   sendCode: string;
@@ -135,8 +139,6 @@ export interface SignupStepperLabels {
   codeSentTo: (destination: string) => string;
   didntGetIt: string;
   resend: string;
-  /** Leaving the number unverified — allowed, and the account still exists. */
-  skipForNow: string;
   /** The code the server echoes back while no transport can carry it. */
   testCode: (code: string) => string;
   /** The Google door's number step, which has no form behind it. */
@@ -192,7 +194,6 @@ export function buildSignupStepperLabels(t: SignupTranslate): SignupStepperLabel
       t('mweb.signupSteps.codeSentTo', { vars: { destination } }),
     didntGetIt: t('mweb.signupSteps.didntGetIt'),
     resend: t('mweb.signupSteps.resend'),
-    skipForNow: t('mweb.signupSteps.skipForNow'),
     testCode: (code) => t('mweb.signupSteps.testCode', { vars: { code } }),
     numberTitle: t('mweb.signupSteps.numberTitle'),
     numberSubtitle: t('mweb.signupSteps.numberSubtitle'),

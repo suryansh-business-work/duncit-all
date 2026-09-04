@@ -673,7 +673,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       securityTitle: 'Your password',
       securitySubtitle: 'Pick something only you would guess.',
       verifyTitle: 'Verify WhatsApp',
-      verifySubtitle: 'Type the code we sent, and your number is confirmed.',
+      verifySubtitle: 'Type the code we sent. Your account is created the moment your number answers.',
       stepOf: 'Step {current} of {total}',
       next: 'Continue',
       back: 'Back',
@@ -686,7 +686,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       codeSentTo: 'We sent a 6-digit code to {destination} on WhatsApp.',
       didntGetIt: 'Didn’t get it?',
       resend: 'Send again',
-      skipForNow: 'Skip for now',
       testCode: 'Test code: {code}',
       // The Google door has no form behind it, so it asks for the number on a
       // step of its own before a code can be sent to it.

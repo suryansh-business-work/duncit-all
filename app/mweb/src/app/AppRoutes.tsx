@@ -14,7 +14,6 @@ const RegisterPage = lazy(() => import('../pages/RegisterPage'));
 const LoginPage = lazy(() => import('../pages/LoginPage'));
 const ForgotPasswordPage = lazy(() => import('../pages/ForgotPasswordPage'));
 const SignupSurveyPage = lazy(() => import('../pages/SignupSurveyPage'));
-const SignupWhatsappPage = lazy(() => import('../pages/SignupWhatsappPage'));
 const SignupReferralPage = lazy(() => import('../pages/signup-referral-page'));
 const AccountPage = lazy(() => import('../pages/AccountPage'));
 const ProfilePage = lazy(() => import('../pages/ProfilePage'));
@@ -290,7 +289,6 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/account/sms-preference" element={withAuth(<SmsPreferencePage />)} />
         <Route path="/venues/:venueId/health" element={withAuth(<VenueHealthPage />)} />
         <Route path="/signup-survey" element={withAuth(<SignupSurveyPage />)} />
-        <Route path="/signup-whatsapp" element={withAuth(<SignupWhatsappPage />)} />
         <Route path="/signup-referral" element={withAuth(<SignupReferralPage />)} />
         <Route path="/checkout" element={withAuth(<CheckoutPage />)} />
         <Route path="/checkout/:podId" element={withAuth(<CheckoutPage />)} />

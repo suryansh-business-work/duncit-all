@@ -389,12 +389,6 @@ const DEFAULT_FLAGS: {
     enabled: false,
   },
   {
-    key: "whatsapp_signup_otp",
-    name: "WhatsApp Signup OTP",
-    description: "Ask the user to verify a WhatsApp number after signup.",
-    enabled: false,
-  },
-  {
     // The one system kill switch for e-commerce. Off, and the server refuses
     // every product operation as well — hiding a button is never the only thing
     // holding the line. Seeded OFF: a fresh install ships without a shop.

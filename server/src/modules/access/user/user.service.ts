@@ -26,6 +26,7 @@ import {
   type PasswordResetRequestResult,
 } from '@modules/access/auth/password-reset.service';
 import { anyDelivered, otpService } from '@modules/platform/otp/otp.service';
+import { whatsappAuthService } from '@modules/access/auth-whatsapp/auth-whatsapp.service';
 import { OTP_TTL_MINUTES } from '@modules/platform/otp/otp.constants';
 
 import { syncUserMirrors } from './user.mirrors';
@@ -897,7 +898,14 @@ function connectedAccountsOf(u: any) {
 // Shape a CreateUserDTO / RegisterDTO into the nested storage layout.
 function shapeUserDoc(
   input: any,
-  opts?: { passwordHash?: string; googleId?: string; emailVerified?: boolean; username?: string }
+  opts?: {
+    passwordHash?: string;
+    googleId?: string;
+    emailVerified?: boolean;
+    username?: string;
+    /** Signup proved this number with a code before the document existed. */
+    phoneVerified?: boolean;
+  }
 ) {
   const phoneNumber = String(input.phone_number || '').trim();
   if (phoneNumber && isPlaceholderPhone(phoneNumber)) {
@@ -917,7 +925,7 @@ function shapeUserDoc(
             phone: {
               number: phoneNumber,
               extension: input.phone_extension,
-              is_verified: false,
+              is_verified: !!opts?.phoneVerified,
             },
           }
         : {}),
@@ -1364,26 +1372,46 @@ export const userService = {
         { extensions: { code: 'CONFLICT' } }
       );
     }
+    /*
+      The number has to have answered before any of this exists.
+
+      Redeemed here rather than checked on a later screen: an account created
+      first and verified afterwards is an account that survives every way of
+      leaving that screen, which is exactly what this door used to do. Spent
+      immediately after — single use is what stops one proof opening two
+      accounts, and it has to be true before anything is written.
+    */
+    const proof = await whatsappAuthService.redeemSignupProof(
+      input.whatsapp_token,
+      input.phone_extension,
+      input.phone_number
+    );
+    await whatsappAuthService.spendSignupProof(proof);
+
     const hashed = await bcrypt.hash(input.password, 10);
     let created: any;
     try {
       const username = await nextFreeUsername(input.first_name, input.last_name);
       /*
         The number the form collects is the WhatsApp one — that is what its
-        label says and what the verification step proves — so it is always
-        recorded there, unverified until a code settles it. Whether it is ALSO
-        the mobile number is the tick box's answer, and the only thing that
-        writes auth.phone: unticked, the profile phone stays blank rather than
-        being guessed from a number the person said was different.
+        label says and what the code just proved — so it is always recorded
+        there, verified. Whether it is ALSO the mobile number is the tick box's
+        answer, and the only thing that writes auth.phone: unticked, the profile
+        phone stays blank rather than being guessed from a number the person
+        said was different.
       */
       const alsoMobile = input.whatsapp_is_mobile !== false;
       const doc = {
         ...shapeUserDoc(
           { ...input, phone_number: alsoMobile ? input.phone_number : '' },
-          { passwordHash: hashed, username }
+          { passwordHash: hashed, username, phoneVerified: alsoMobile }
         ),
         communication: {
-          whatsapp: { extension: input.phone_extension, number: input.phone_number },
+          whatsapp: {
+            extension: input.phone_extension,
+            number: input.phone_number,
+            verified_at: new Date(),
+          },
         },
       };
       created = await UserModel.create(doc);
@@ -1746,9 +1774,25 @@ export const userService = {
   async signupWithGoogle(input: GoogleSignupDTO, acceptance?: PolicyAcceptanceIntent) {
     const info = await verifyGoogleIdToken(input.id_token);
     const email = info.email.toLowerCase();
-    if (input.phone_number && isPlaceholderPhone(input.phone_number)) {
+    if (isPlaceholderPhone(input.phone_number)) {
       throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
     }
+    /*
+      The same proof the email door spends, for the same reason: a Google
+      credential says which mailbox somebody holds and nothing about how to
+      reach them. Redeemed and spent BEFORE the transaction — an account whose
+      number is verified afterwards is an account that can skip the step.
+    */
+    const proof = await whatsappAuthService.redeemSignupProof(
+      input.whatsapp_token,
+      input.phone_extension,
+      input.phone_number
+    );
+    await whatsappAuthService.spendSignupProof(proof);
+    // Unticked, the profile phone stays blank on purpose — the person said
+    // their mobile number is a different one. The WhatsApp number is written
+    // either way, below.
+    const alsoMobile = input.whatsapp_is_mobile !== false;
     let created: any = null;
     const session = await UserModel.db.startSession();
     try {
@@ -1764,17 +1808,26 @@ export const userService = {
             : 'Google account already exists. Please login with Google.';
           throw new GraphQLError(message, { extensions: { code: 'CONFLICT' } });
         }
-        if (input.phone_number) {
-          const phoneExists = await UserModel.findOne({
-            'auth.phone.number': input.phone_number,
-            'auth.phone.extension': input.phone_extension,
-          }).session(session);
-          if (phoneExists) {
-            throw new GraphQLError(
-              'This phone number is already registered. Please use a different number or login.',
-              { extensions: { code: 'CONFLICT' } }
-            );
-          }
+        // Both fields a number can live in, exactly as the email door checks:
+        // one number on two accounts leaves the three phone doors picking
+        // between them.
+        const phoneExists = await UserModel.findOne({
+          $or: [
+            {
+              'auth.phone.number': input.phone_number,
+              'auth.phone.extension': input.phone_extension,
+            },
+            {
+              'communication.whatsapp.number': input.phone_number,
+              'communication.whatsapp.extension': input.phone_extension,
+            },
+          ],
+        }).session(session);
+        if (phoneExists) {
+          throw new GraphQLError(
+            'This phone number is already registered. Please use a different number or login.',
+            { extensions: { code: 'CONFLICT' } }
+          );
         }
         const googleFirst = info.given_name || info.name?.split(' ')[0] || 'Google';
         const googleLast =
@@ -1782,20 +1835,34 @@ export const userService = {
         const googleUsername = await nextFreeUsername(googleFirst, googleLast);
         const docs = await UserModel.create(
           [
-            shapeUserDoc(
-              {
-                first_name: googleFirst,
-                last_name: googleLast,
-                email,
-                phone_number: input.phone_number,
-                phone_extension: input.phone_extension,
-                dob: input.dob,
-                city: input.city ?? null,
-                zone: input.zone ?? null,
-                profile_photo: info.picture || undefined,
+            {
+              ...shapeUserDoc(
+                {
+                  first_name: googleFirst,
+                  last_name: googleLast,
+                  email,
+                  phone_number: alsoMobile ? input.phone_number : '',
+                  phone_extension: input.phone_extension,
+                  dob: input.dob,
+                  city: input.city ?? null,
+                  zone: input.zone ?? null,
+                  profile_photo: info.picture || undefined,
+                },
+                {
+                  googleId: info.sub,
+                  emailVerified: true,
+                  username: googleUsername,
+                  phoneVerified: alsoMobile,
+                }
+              ),
+              communication: {
+                whatsapp: {
+                  extension: input.phone_extension,
+                  number: input.phone_number,
+                  verified_at: new Date(),
+                },
               },
-              { googleId: info.sub, emailVerified: true, username: googleUsername }
-            ),
+            },
           ],
           { session }
         );

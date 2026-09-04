@@ -53,7 +53,7 @@ export default function RegisterPage() {
   */
   const { policies, loading: policiesLoading, failed: policiesFailed } = useSignupPolicies();
   const flow = useSignupFlow(linkedCode);
-  const google = useGoogleSignup(flow.googleCreated);
+  const google = useGoogleSignup(flow.googleAccepted);
 
   const onNumberStep = flow.askingNumber;
   const onVerifyStep = flow.step === 'VERIFY' && flow.verifying !== null;
@@ -81,16 +81,15 @@ export default function RegisterPage() {
 
           <SignupStepperRail step={flow.step} askingNumber={flow.askingNumber} />
 
-          {onNumberStep && (
-            <WhatsappNumberStep onSubmit={flow.submitNumber} onSkip={flow.finish} />
-          )}
+          {onNumberStep && <WhatsappNumberStep onSubmit={flow.submitNumber} />}
 
           {onVerifyStep && flow.verifying && (
             <VerifyWhatsappStep
               extension={flow.verifying.extension}
               number={flow.verifying.number}
-              alsoMobile={flow.verifying.alsoMobile}
-              onDone={flow.finish}
+              email={flow.pendingEmail}
+              creating={flow.creating}
+              onVerified={flow.createAccount}
             />
           )}
 
@@ -98,7 +97,7 @@ export default function RegisterPage() {
             <>
               <GoogleSignInButton
                 onCredential={google.start}
-                loading={google.loading}
+                loading={flow.creating}
                 text="signup_with"
               />
               <GoogleSignupPolicyGate
@@ -119,7 +118,6 @@ export default function RegisterPage() {
               <RegisterForm
                 step={flow.step}
                 onStep={flow.setStep}
-                loading={flow.loading}
                 initialValues={initialValues}
                 errorMessage={flow.error}
                 onSubmit={flow.submitForm}

@@ -25,10 +25,9 @@ import { makeRegisterSchema, registerDefaults, type RegisterFormValues } from '.
 
 interface Props {
   /** Which of the first three steps is showing. VERIFY is the page's, not the
-   * form's — it needs the account that this form's last step creates. */
+   * form's — it proves the number, and creates the account with these answers. */
   step: SignupStep;
   onStep: (step: SignupStep) => void;
-  loading?: boolean;
   errorMessage?: string | null;
   initialValues?: RegisterFormValues;
   onSubmit: (values: RegisterFormValues) => Promise<void> | void;
@@ -38,7 +37,8 @@ interface Props {
  * Join Duncit, steps one to three.
  *
  * ONE react-hook-form across all three, not a form per step: the answers have
- * to survive going back, and `register` needs every one of them at once. What
+ * to survive going back, and `register` needs every one of them at once — held
+ * by the page until the code step proves the number they are created against. What
  * the step changes is which boxes are shown and which are validated — "Continue"
  * runs `trigger` over `SIGNUP_STEP_FIELDS[step]` alone, so a person is never
  * told off about a box two screens ahead that they have not reached.
@@ -49,7 +49,6 @@ interface Props {
 export default function RegisterForm({
   step,
   onStep,
-  loading,
   errorMessage,
   initialValues,
   onSubmit,
@@ -122,8 +121,7 @@ export default function RegisterForm({
   };
 
   const creating = stepSubmitsAccount(step);
-  let nextLabel = labels.next;
-  if (creating) nextLabel = loading ? labels.creating : labels.createAccount;
+  const nextLabel = creating ? labels.createAccount : labels.next;
 
   return (
     <form
@@ -168,7 +166,6 @@ export default function RegisterForm({
           <DuncitButton
             type="submit"
             variant="contained"
-            disabled={loading}
             fullWidth
             endIcon={<ArrowForwardIcon />}
             data-testid="signup-next"

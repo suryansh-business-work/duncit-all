@@ -124,7 +124,6 @@ const PAGES: PageEntry[] = [
   ['/account/whatsapp-preference', '/account/whatsapp-preference', () => import('../pages/whatsapp-preference-page')],
   ['/venues/:venueId/health', '/venues/smoke-id/health', () => import('../pages/VenueHealthPage')],
   ['/signup-survey', '/signup-survey', () => import('../pages/SignupSurveyPage')],
-  ['/signup-whatsapp', '/signup-whatsapp', () => import('../pages/SignupWhatsappPage')],
   ['/signup-referral', '/signup-referral', () => import('../pages/signup-referral-page')],
   ['/checkout', '/checkout', () => import('../pages/CheckoutPage')],
   ['/checkout/:podId', '/checkout/smoke-id', () => import('../pages/CheckoutPage')],

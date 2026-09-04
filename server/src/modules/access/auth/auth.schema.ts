@@ -32,6 +32,14 @@ export const authTypeDefs = gql`
     one, which is what the verification step proves.
     """
     whatsapp_is_mobile: Boolean = true
+    """
+    The proof that the number above answered, from verifySignupWhatsAppOtp.
+
+    Required. Signup does not create an account for a number nobody has replied
+    on — that is the whole reason the code is asked for before this mutation
+    rather than on a screen after it, which anything could leave.
+    """
+    whatsapp_token: String!
     password: String!
     dob: String!
     city: String
@@ -194,8 +202,20 @@ export const authTypeDefs = gql`
 
   input GoogleSignupInput {
     id_token: String!
-    phone_number: String
-    phone_extension: String
+    """
+    The WhatsApp number joining Duncit, and the proof it answered.
+
+    Google proves an address and nothing else, so this door asks for the same
+    number the email form asks for, on a step of its own after the credential
+    comes back — and it is just as required. Which door somebody arrived
+    through cannot decide whether their number was ever verified.
+    """
+    phone_number: String!
+    phone_extension: String!
+    "Whether that number is ALSO the account's mobile number. Same tick box."
+    whatsapp_is_mobile: Boolean = true
+    "From verifySignupWhatsAppOtp. Spent here, once."
+    whatsapp_token: String!
     dob: String
     city: String
     zone: String

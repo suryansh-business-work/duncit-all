@@ -31,6 +31,9 @@ export const registerSchema = yup.object({
   // too. Defaulted rather than required, so every shipped build that predates
   // the tick box keeps writing the phone exactly as it always did.
   whatsapp_is_mobile: yup.boolean().default(true),
+  // The proof that the number above answered, minted by verifySignupWhatsAppOtp
+  // and required: an account is not created for a number nobody has answered on.
+  whatsapp_token: yup.string().min(10).max(200).required(),
   password: yup.string().min(8).max(100).required(),
   dob: yup.date().max(new Date(), 'DOB must be in the past').required(),
   city: yup.string().optional(),
@@ -149,17 +152,16 @@ export const changePasswordSchema = yup.object({
 
 export const googleSignupSchema = yup.object({
   id_token: yup.string().min(20).required(),
-  // Token-only Google signup: the account is created from the verified Google
-  // profile and the user lands straight on the survey. Phone/dob are optional
-  // and collected later.
-  phone_number: yup
-    .string()
-    .matches(phoneRegex, { message: 'Invalid phone', excludeEmptyString: true })
-    .optional(),
-  phone_extension: yup
-    .string()
-    .matches(extRegex, { message: 'Invalid extension', excludeEmptyString: true })
-    .optional(),
+  /*
+    Google proves an email address and nothing else, so this door asks for the
+    same WhatsApp number the email form asks for — and the same proof. Required
+    here exactly as it is there: which door somebody came through cannot decide
+    whether their number was ever answered on.
+  */
+  phone_number: yup.string().matches(phoneRegex, { message: 'Invalid phone' }).required(),
+  phone_extension: yup.string().matches(extRegex, { message: 'Invalid extension' }).required(),
+  whatsapp_is_mobile: yup.boolean().default(true),
+  whatsapp_token: yup.string().min(10).max(200).required(),
   dob: yup.date().max(new Date(), 'DOB must be in the past').optional(),
   city: yup.string().optional(),
   zone: yup.string().optional(),

@@ -502,7 +502,7 @@ describe('a proved row that is then edited', () => {
     await settle();
   };
 
-  it('throws the proof away when the number under it is retyped', async () => {
+  it('settles the row so the proved number can no longer be retyped', async () => {
     wrap(<TicketScanDialog pod={POD} onClose={vi.fn()} />, mocks);
     await settle();
     await pasteCode();
@@ -524,12 +524,15 @@ describe('a proved row that is then edited', () => {
     await settle();
     expect(screen.getByTestId('companion-verified-0')).toBeInTheDocument();
 
-    // The host corrects the number. The code proved the OLD one.
-    fireEvent.input(phone, { target: { value: '9000000002' } });
-    await settle();
-
-    expect(screen.queryByTestId('companion-verified-0')).not.toBeInTheDocument();
-    expect(screen.getByTestId('companion-otp-send-0')).toBeInTheDocument();
+    // A row that stayed editable dropped its tick the moment a digit changed,
+    // leaving a host who corrected a typo staring at an unverified row with no
+    // reason given — and letting a deliberate edit carry the proof of one
+    // number onto another. Settled rows read back as text instead.
+    // readOnly rather than disabled: the host still has to be able to READ the
+    // number they proved, and MUI greys a disabled field past legibility.
+    expect(phone).toHaveAttribute('readonly');
+    expect(screen.getByTestId('companion-verified-0')).toBeInTheDocument();
+    expect(screen.queryByTestId('companion-otp-send-0')).not.toBeInTheDocument();
   });
 
   it('warns rather than submitting a group that is not filled in', async () => {

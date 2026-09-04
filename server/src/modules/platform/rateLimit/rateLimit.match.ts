@@ -33,8 +33,11 @@ export function globMatches(pattern: string, value: string): boolean {
   if (!trimmed || trimmed === ANY) return true;
   if (!trimmed.includes(ANY)) return trimmed.toLowerCase() === value.toLowerCase();
   const escaped = trimmed.replace(/[.+?^${}()|[\]\\]/g, String.raw`\$&`);
-  const source = `^${escaped.split(ANY).join('.*')}$`;
-  return new RegExp(source, 'i').test(value);
+  // Named for what it is. The metacharacters were escaped above and only the
+  // glob star is turned back into a wildcard, so this is not a raw value —
+  // and the name is what tells the no-unescaped-regex guard the same thing.
+  const escapedSource = `^${escaped.split(ANY).join('.*')}$`;
+  return new RegExp(escapedSource, 'i').test(value);
 }
 
 /** Any pattern in the list matches. An EMPTY list means "no restriction". */

@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { Box } from '@mui/material';
-import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
-import Underline from '@tiptap/extension-underline';
 import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useTranslation } from '@duncit/app-settings';
@@ -41,14 +39,20 @@ export function DuncitRichTextInput({
   );
   const extensions = useMemo(
     () => [
-      StarterKit.configure({ heading: { levels: [2, 3] } }),
-      Underline,
-      Placeholder.configure({ placeholder: resolvedPlaceholder }),
-      Link.configure({
-        autolink: true,
-        openOnClick: readOnly,
-        HTMLAttributes: { rel: 'noreferrer', target: '_blank' },
+      // Link and Underline are configured HERE rather than added beside the
+      // kit: StarterKit 3 bundles both, and registering one twice makes tiptap
+      // keep the FIRST registration and drop this configuration silently — so
+      // openOnClick and the rel/target attributes were not being applied at
+      // all, and setLink stopped working on a selection.
+      StarterKit.configure({
+        heading: { levels: [2, 3] },
+        link: {
+          autolink: true,
+          openOnClick: readOnly,
+          HTMLAttributes: { rel: 'noreferrer', target: '_blank' },
+        },
       }),
+      Placeholder.configure({ placeholder: resolvedPlaceholder }),
     ],
     [readOnly, resolvedPlaceholder],
   );

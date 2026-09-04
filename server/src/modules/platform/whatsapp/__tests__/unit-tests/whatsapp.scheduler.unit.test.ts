@@ -42,6 +42,10 @@ jest.mock('./../../waEventSetting.model', () => ({
 jest.mock('./../../whatsapp.service', () => ({
   whatsappService: { sendEach: jest.fn(), send: jest.fn() },
 }));
+// Every scenario this file sweeps for goes out as an email as well as a
+// WhatsApp, filled from the same `params` array — so the scheduler hands
+// notifyEach the messages and never calls whatsappService itself.
+jest.mock('@services/notify/notify.service', () => ({ notifyEach: jest.fn() }));
 // The complete-pod nudge reads its hours from Admin > Pods > Pod Settings. Left
 // real it is a Mongo round trip that never resolves here, and every sweep in
 // this file hangs behind it.
@@ -62,6 +66,7 @@ import { ClubModel } from '@modules/clubs/club/club.model';
 
 import { WaEventSettingModel } from '../../waEventSetting.model';
 import { whatsappService } from '../../whatsapp.service';
+import { notifyEach } from '@services/notify/notify.service';
 import { runWhatsappSweeps, startWhatsappScheduler } from '../../whatsapp.scheduler';
 
 const settings = WaEventSettingModel as unknown as Record<string, jest.Mock>;
@@ -72,6 +77,7 @@ const venues = VenueModel as unknown as Record<string, jest.Mock>;
 const clubs = ClubModel as unknown as Record<string, jest.Mock>;
 const backouts = BackoutRequestModel as unknown as Record<string, jest.Mock>;
 const wa = whatsappService as unknown as Record<string, jest.Mock>;
+const notify = notifyEach as unknown as jest.Mock;
 const slugMap = loadPodClubSlugMap as unknown as jest.Mock;
 const urls = getUrlConfigs as unknown as jest.Mock;
 
@@ -113,8 +119,9 @@ const nothingAnywhere = () => {
   backouts.find.mockReturnValue(chain([]));
 };
 
+/** Every message the sweep handed to the notifier, across all its calls. */
 const sentEvents = () =>
-  wa.sendEach.mock.calls.flatMap((call) => (call[0] as { event: string }[]) ?? []);
+  notify.mock.calls.flatMap((call) => (call[0] as { event: string }[]) ?? []);
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -122,6 +129,7 @@ beforeEach(() => {
   urls.mockResolvedValue({ mwebUrl: 'https://mweb.duncit.com/' });
   slugMap.mockResolvedValue(new Map([['club-1', 'sunset-club']]));
   wa.sendEach.mockResolvedValue(undefined);
+  notify.mockResolvedValue([]);
   nothingAnywhere();
 });
 
@@ -134,7 +142,7 @@ describe('the global switch', () => {
     // Not one query — sending into the funnel to have it record a skip per
     // recipient is the expensive way to do nothing.
     expect(pods.find).not.toHaveBeenCalled();
-    expect(wa.sendEach).not.toHaveBeenCalled();
+    expect(notify).not.toHaveBeenCalled();
   });
 
   it('runs nothing when nobody has ever turned it on', async () => {

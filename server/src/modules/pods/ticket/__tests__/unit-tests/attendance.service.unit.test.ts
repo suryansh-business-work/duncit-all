@@ -386,11 +386,35 @@ describe('attendanceService.requestOtp', () => {
     );
   });
 
-  it('refuses a Club Admin — a screen with no reason to text a member must not be able to', async () => {
+  /*
+   * Which viewers may raise a code is decided per PURPOSE, not per service.
+   * The attendee’s OWN code is open to the Club Admin: a code is an option on
+   * their board, never a requirement, and their override marks without one — so
+   * offering it widens what they can PROVE, not what they can reach. The
+   * booking still has to be live on a pod of a club they administer.
+   */
+  it('lets a Club Admin raise the attendee’s own code', async () => {
+    arrangeBoard();
+    clubAdmins.assertClubAdminForPod.mockResolvedValue(undefined);
+    members.findOne.mockResolvedValue(membership());
+    otp.request.mockResolvedValue({ challenge_id: 'c-2' });
+
+    await expect(attendanceService.requestOtp(input, admin)).resolves.toMatchObject({
+      challenge_id: 'c-2',
+    });
+  });
+
+  /*
+   * A COMPANION’s code stays host-only. That one is addressed to somebody on
+   * no roster at all, so it is tied to a person only by the host standing at a
+   * door with them — opening it wider is the generic "text any number" entry
+   * point rule 41 refuses to build.
+   */
+  it('refuses a Club Admin a COMPANION code — that one only the host can raise', async () => {
     arrangeBoard();
     clubAdmins.assertClubAdminForPod.mockResolvedValue(undefined);
 
-    await expect(attendanceService.requestOtp(input, admin)).rejects.toThrow(
+    await expect(attendanceService.requestCompanionOtp(input, admin)).rejects.toThrow(
       'Only the pod host verifies an attendee here'
     );
     expect(otp.request).not.toHaveBeenCalled();

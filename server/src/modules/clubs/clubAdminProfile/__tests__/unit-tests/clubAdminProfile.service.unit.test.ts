@@ -33,6 +33,11 @@ jest.mock('@modules/access/user/user.model', () => ({ UserModel: { findById: jes
 jest.mock('@modules/platform/whatsapp/whatsapp.service', () => ({
   whatsappService: { send: jest.fn() },
 }));
+// Activation goes out as an email as well as a WhatsApp now — the club admin
+// was the one partner kind that had no email for it. Left unmocked,
+// notifyEvent reaches for the database and the suite dies on a timeout
+// rather than an assertion.
+jest.mock('@services/notify/notify.service', () => ({ notifyEvent: jest.fn() }));
 jest.mock('@modules/venues/entityIdCounter', () => ({ nextEntityNo: jest.fn() }));
 jest.mock('@utils/table-query', () => {
   const actual = jest.requireActual('@utils/table-query');
@@ -44,6 +49,7 @@ import { ClubModel } from '@modules/clubs/club/club.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
+import { notifyEvent } from '@services/notify/notify.service';
 import { runTableQuery } from '@utils/table-query';
 import { clubAdminProfileService } from '../../clubAdminProfile.service';
 
@@ -52,6 +58,7 @@ const clubs = ClubModel as unknown as Record<string, jest.Mock>;
 const categories = CategoryModel as unknown as Record<string, jest.Mock>;
 const users = UserModel as unknown as Record<string, jest.Mock>;
 const whatsapp = whatsappService as unknown as Record<string, jest.Mock>;
+const notify = notifyEvent as unknown as jest.Mock;
 const tableQuery = runTableQuery as unknown as jest.Mock;
 
 const ID = '65b000000000000000000001';
@@ -95,6 +102,7 @@ beforeEach(() => {
   clubs.updateMany.mockResolvedValue({});
   users.findById.mockReturnValue(chain({ auth: { phone: { number: '9000000001' } } }));
   whatsapp.send.mockResolvedValue(undefined);
+  notify.mockResolvedValue(undefined);
 });
 
 describe('table', () => {
@@ -260,7 +268,7 @@ describe('setActive', () => {
     await clubAdminProfileService.setActive(ID, false);
 
     expect(doc.is_active).toBe(false);
-    expect(whatsapp.send).toHaveBeenCalledWith(
+    expect(notify).toHaveBeenCalledWith(
       expect.objectContaining({ event: 'CLUB_ADMIN_ACCOUNT_SUSPENDED', name: 'Meera N' })
     );
   });
@@ -271,7 +279,7 @@ describe('setActive', () => {
 
     await clubAdminProfileService.setActive(ID, true);
 
-    expect(whatsapp.send).toHaveBeenCalledWith(
+    expect(notify).toHaveBeenCalledWith(
       expect.objectContaining({ event: 'CLUB_ADMIN_ACCOUNT_REACTIVATED' })
     );
   });
@@ -282,7 +290,7 @@ describe('setActive', () => {
 
     await clubAdminProfileService.setActive(ID, true);
 
-    expect(whatsapp.send).not.toHaveBeenCalled();
+    expect(notify).not.toHaveBeenCalled();
     expect(doc.save).not.toHaveBeenCalled();
   });
 

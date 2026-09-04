@@ -565,6 +565,7 @@ export const financeTypeDefs = /* GraphQL */ `
       venue_amount: Float
     ): PodEarningsProjection!
     """
+<<<<<<< Updated upstream
     The admin consoles' projection for a pod they are writing. Prices at the
     CHOSEN host's rates (host_user_id — the host picked in the editor) or, with
     none chosen, at the platform's default rates, which is exactly what an Auto
@@ -592,6 +593,8 @@ export const financeTypeDefs = /* GraphQL */ `
       venue_amount: Float
     ): PodEarningsProjection!
     """
+=======
+>>>>>>> Stashed changes
     Suggested ₹x99 ticket prices for Create-a-Pod Step 4 — the same input
     surface as potentialPodEarnings minus the ticket price. Walks 99, 199, 299…
     and returns the first candidates whose projected host payout is strictly

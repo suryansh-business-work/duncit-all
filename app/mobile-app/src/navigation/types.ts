@@ -151,8 +151,11 @@ export type MenuRoute = Exclude<
   | 'Menu'
   | 'CreatePod'
   | 'PodPending'
+<<<<<<< Updated upstream
   | 'PodAttendance'
   | 'PodMedia'
+=======
+>>>>>>> Stashed changes
   | 'Policy'
   | 'TicketDetails'
   | 'Login'

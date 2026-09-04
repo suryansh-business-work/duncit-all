@@ -14,6 +14,10 @@ import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 /** Order states that never count toward a partner's e-commerce sales. */
 const EXCLUDED_ORDER_STATUSES = ['CANCELLED', 'FAILED', 'RTO'];
 
+/** How many products the E-Commerce Brand Dashboard's performance chart plots.
+ * Earnings are summed over EVERY sold product — only the chart is topped. */
+const PERFORMANCE_ROWS = 12;
+
 interface DashboardRange {
   from: string;
   to: string;
@@ -77,6 +81,99 @@ function productTotal(pods: any[], productIds: Set<string>, commissionByProduct:
       return itemSum + gross * (1 - pct / 100);
     }, 0);
   }, 0));
+}
+
+/**
+ * Duncit's cut of one product, as a percentage: the brand's override first, then
+ * the product's own, then the finance default. Same precedence — and therefore
+ * the same number — as the product invoice a seller is actually paid on.
+ */
+function commissionPctFor(product: any, brandPctById: Map<string, number>, defaultPct: number) {
+  const brandPct = product.brand_id ? brandPctById.get(String(product.brand_id)) ?? 0 : 0;
+  return clampPct(brandPct || product.commission_pct || defaultPct);
+}
+
+/**
+ * One pass over the partner's sold line items: the headline totals AND the same
+ * money split per product, so the KPI cards and the performance chart can never
+ * disagree about what sold.
+ */
+async function ecommSales(brandIds: any[]) {
+  const empty = { items: 0, revenue: 0, orders: [] as any[], byProduct: [] as any[] };
+  if (brandIds.length === 0) return empty;
+  const mine = { 'line_items.brand_id': { $in: brandIds } };
+  const rows = await ProductOrderModel.aggregate([
+    { $match: { ...mine, fulfilment_status: { $nin: EXCLUDED_ORDER_STATUSES } } },
+    { $unwind: '$line_items' },
+    { $match: mine },
+    {
+      $facet: {
+        totals: [
+          {
+            $group: {
+              _id: null,
+              items: { $sum: '$line_items.qty' },
+              revenue: { $sum: '$line_items.gross' },
+              orders: { $addToSet: '$_id' },
+            },
+          },
+        ],
+        byProduct: [
+          {
+            $group: {
+              _id: '$line_items.product_id',
+              name: { $first: '$line_items.name' },
+              units: { $sum: '$line_items.qty' },
+              gross: { $sum: '$line_items.gross' },
+            },
+          },
+          { $sort: { gross: -1 } },
+        ],
+      },
+    },
+  ]);
+  const facet = rows[0] ?? {};
+  const totals = facet.totals?.[0] ?? empty;
+  return { ...empty, ...totals, byProduct: facet.byProduct ?? [] };
+}
+
+/** Duncit's cut per sold product, keyed by product id. */
+async function soldCommissionPcts(soldProductIds: any[]) {
+  const byProduct = new Map<string, number>();
+  if (soldProductIds.length === 0) return byProduct;
+  const [products, fs] = await Promise.all([
+    InventoryProductModel.find({ _id: { $in: soldProductIds } })
+      .select('_id commission_pct brand_id')
+      .lean(),
+    getFinanceSettings(),
+  ]);
+  const brandIds = [...new Set(products.map((p: any) => String(p.brand_id ?? '')).filter(Boolean))];
+  const brands = brandIds.length
+    ? await EcommBrandModel.find({ _id: { $in: brandIds } }).select('product_commission_pct').lean()
+    : [];
+  const brandPctById = new Map(brands.map((b: any) => [String(b._id), b.product_commission_pct ?? 0]));
+  products.forEach((product: any) => {
+    byProduct.set(
+      String(product._id),
+      commissionPctFor(product, brandPctById, fs.default_product_commission_pct),
+    );
+  });
+  return byProduct;
+}
+
+/** Sold products with the Duncit commission taken off, best-selling first. */
+function performanceRows(byProduct: any[], pctById: Map<string, number>) {
+  return byProduct.map((row: any) => {
+    const gross = money(row.gross);
+    const pct = pctById.get(String(row._id)) ?? 0;
+    return {
+      product_id: String(row._id),
+      name: row.name ?? '',
+      units_sold: row.units ?? 0,
+      gross_revenue: gross,
+      net_earnings: money(gross * (1 - pct / 100)),
+    };
+  });
 }
 
 function uniquePods(groups: any[][]) {
@@ -175,27 +272,9 @@ export const partnerDashboardService = {
         ])
       : [0, 0, 0];
 
-    const orderRows = brandIds.length
-      ? await ProductOrderModel.aggregate([
-          {
-            $match: {
-              'line_items.brand_id': { $in: brandIds },
-              fulfilment_status: { $nin: EXCLUDED_ORDER_STATUSES },
-            },
-          },
-          { $unwind: '$line_items' },
-          { $match: { 'line_items.brand_id': { $in: brandIds } } },
-          {
-            $group: {
-              _id: null,
-              items: { $sum: '$line_items.qty' },
-              revenue: { $sum: '$line_items.gross' },
-              orders: { $addToSet: '$_id' },
-            },
-          },
-        ])
-      : [];
-    const orderAgg = orderRows[0] ?? { items: 0, revenue: 0, orders: [] };
+    const sales = await ecommSales(brandIds);
+    const pctById = await soldCommissionPcts(sales.byProduct.map((row: any) => row._id));
+    const performance = performanceRows(sales.byProduct, pctById);
 
     return {
       total_brands: brands.length,
@@ -203,9 +282,13 @@ export const partnerDashboardService = {
       total_products: totalProducts,
       approved_products: approvedProducts,
       total_warehouses: totalWarehouses,
-      total_orders: orderAgg.orders.length,
-      total_items_sold: orderAgg.items,
-      gross_revenue: money(orderAgg.revenue),
+      total_orders: sales.orders.length,
+      total_items_sold: sales.items,
+      gross_revenue: money(sales.revenue),
+      // Netted, like the venue/host payout releases — what the partner is paid,
+      // not what the shopper paid.
+      net_earnings: money(performance.reduce((sum, row) => sum + row.net_earnings, 0)),
+      product_performance: performance.slice(0, PERFORMANCE_ROWS),
     };
   },
 
@@ -236,10 +319,10 @@ export const partnerDashboardService = {
       : [];
     const brandPctById = new Map(brands.map((b: any) => [String(b._id), b.product_commission_pct ?? 0]));
     const commissionByProduct = new Map<string, number>(
-      products.map((p: any) => {
-        const brandPct = p.brand_id ? brandPctById.get(String(p.brand_id)) ?? 0 : 0;
-        return [String(p._id), clampPct(brandPct || p.commission_pct || fs.default_product_commission_pct)];
-      }),
+      products.map((p: any) => [
+        String(p._id),
+        commissionPctFor(p, brandPctById, fs.default_product_commission_pct),
+      ]),
     );
 
     // Pods drive pod counts + product earning (current membership, in range).

@@ -753,6 +753,25 @@ async function refundAndNotifyCancellation(
     });
   }
 
+  // Same reasoning, same place: a cancelled pod must not leave a Request Change
+  // sitting in the admin queue for a pod that no longer exists — nor keep its
+  // "one live request per pod per role" index held.
+  //
+  // Wrapped INCLUDING the dynamic import: `closeAllForPod` swallows its own
+  // errors, but a module that fails to resolve throws before it is ever called,
+  // and by this line the refunds have already been written.
+  try {
+    const { podChangeRequestService } = await import(
+      '@modules/pods/podChangeRequest/podChangeRequest.service'
+    );
+    await podChangeRequestService.closeAllForPod(String(doc._id), reason);
+  } catch (err) {
+    logs.server.error('pod', logComponent, {
+      error: err,
+      msg: 'closing open change requests failed',
+    });
+  }
+
   // Best-effort after the delete commits: the payers' refund records.
   //
   // The CANCELLATION email is not here any more. It used to be one generic
@@ -1056,7 +1075,10 @@ async function assertVenueAllowedForClub(input: any, venue: any) {
   }
 }
 
-async function resolveVenueLocation(input: any) {
+/** Exported so the Request Change flow resolves a swapped-in venue's place
+ * through this exact function rather than a second copy of the city lookup
+ * (rule 40). Pass `venue_slot_id` for a partner booking, as create does. */
+export async function resolveVenueLocation(input: any) {
   const venueId = input.venue_id || null;
   let locationId = input.location_id || null;
   if (!venueId) {

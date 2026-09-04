@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router';
 import { Stack } from '@mui/material';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 import CancelScheduleSendIcon from '@mui/icons-material/CancelScheduleSend';
-import { splitHostPods } from '@duncit/utils';
+import { changeRequestMenuKey, splitHostPods } from '@duncit/utils';
 import { useHostPodActions } from '@duncit/host-pod-actions';
+import { useRequestPodChange } from '@duncit/pod-change-requests';
+import { notifySuccess } from '../../components/notify';
 import HostPodsCard from './HostPodsCard';
 import PodClubAdminDialog, { type PodClubAdminTarget } from './PodClubAdminDialog';
 import { VenueRequestsCard } from './venue-requests';
@@ -40,6 +42,9 @@ export default function HostPodSections({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { menuHandlers, dialogs } = useHostPodActions(onChanged);
+  // One instance for all three sections, exactly like the actions above: a pod
+  // keeps the same menu wherever it currently sits, and one dialog is mounted.
+  const change = useRequestPodChange({ onFiled: notifySuccess });
   const [clubAdminPod, setClubAdminPod] = useState<PodClubAdminTarget | null>(null);
 
   // A failed read means the split is unknown, so the request sections stay away
@@ -51,6 +56,13 @@ export default function HostPodSections({
     onClubAdmin: () => setClubAdminPod(pod),
     onSeeAttendance: () => navigate(`/host/pod/${pod.id}/attendance`),
     onSlotRequest: () => navigate(`/host/pod-pending/${pod.id}`),
+    onRequestChange: () =>
+      change.open({
+        podDocId: pod.id,
+        role: 'HOST',
+        attendeeCount: pod.seats_taken ?? pod.pod_attendees?.length ?? 0,
+      }),
+    requestChangeLabel: t(changeRequestMenuKey('HOST')),
   });
 
   const requestedEmpty = {
@@ -93,6 +105,7 @@ export default function HostPodSections({
 
       <PodClubAdminDialog pod={clubAdminPod} onClose={() => setClubAdminPod(null)} />
       {dialogs}
+      {change.dialog}
     </Stack>
   );
 }

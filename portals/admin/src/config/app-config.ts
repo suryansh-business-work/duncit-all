@@ -60,6 +60,7 @@ export const appConfig = {
         { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/pods/dashboard', icon: 'insights' },
         { label: 'All Pods', labelKey: 'shell.nav.allPods', to: '/pods', icon: 'calendar' },
         { label: 'Auto Pods', labelKey: 'shell.nav.autoPods', to: AUTO_PODS_PATH, icon: 'handshake' },
+        { label: 'Change Requests', labelKey: 'changeRequest.sectionTitle', to: '/pods/change-requests', icon: 'rule' },
         { label: 'Pod Ideas', labelKey: 'shell.nav.podIdeas', to: '/pod-ideas', icon: 'insights' },
         { label: 'Pod Plans', labelKey: 'shell.nav.podPlans', to: '/pod-plans', icon: 'description' },
         { label: 'Event Tickets', labelKey: 'shell.nav.eventTickets', to: '/event-tickets', icon: 'ticket' },
@@ -149,6 +150,7 @@ export const appConfig = {
     { label: 'Pod Plans', labelKey: 'shell.nav.podPlans', to: '/pod-plans', section: 'Pods', sectionKey: 'shell.nav.pods' },
     { label: 'Event Tickets', labelKey: 'shell.nav.eventTickets', to: '/event-tickets', section: 'Pods', sectionKey: 'shell.nav.pods', keywords: ['qr', 'check-in'] },
     { label: 'Pod Settings', labelKey: 'shell.nav.podSettings', to: '/pod-settings', section: 'Pods', sectionKey: 'shell.nav.pods', keywords: ['draft', 'retention', 'config'] },
+    { label: 'Change Requests', labelKey: 'changeRequest.sectionTitle', to: '/pods/change-requests', section: 'Pods', sectionKey: 'shell.nav.pods', keywords: ['change', 'replace', 'venue', 'host', 'club admin', 'swap'] },
     { label: 'Pod Monitoring (AI)', labelKey: 'shell.nav.podMonitoringAi', to: '/pod-monitoring', section: 'Pods', sectionKey: 'shell.nav.pods', keywords: ['audit', 'ai', 'activity', 'risk', 'log'] },
     {
       label: 'Plans', labelKey: 'shell.nav.plans',

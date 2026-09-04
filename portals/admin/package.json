@@ -38,6 +38,7 @@
     "@duncit/logs": "workspace:*",
     "@duncit/media-picker": "workspace:*",
     "@duncit/pod-details": "workspace:*",
+    "@duncit/pod-change-requests": "workspace:*",
     "@duncit/pod-form": "workspace:*",
     "@duncit/pod-product-picker": "workspace:*",
     "@duncit/portal-pod-form": "workspace:*",

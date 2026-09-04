@@ -47,6 +47,7 @@
     "@duncit/geo": "workspace:*",
     "@duncit/gql-types": "workspace:*",
     "@duncit/host-pod-actions": "workspace:*",
+    "@duncit/pod-change-requests": "workspace:*",
     "@duncit/i18n": "workspace:*",
     "@duncit/location": "workspace:*",
     "@duncit/logs": "workspace:*",

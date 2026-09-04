@@ -38,6 +38,11 @@ interface Props {
   onCopyFeedback: () => void;
   onCancel: () => void;
   onClubAdmin: () => void;
+  /** "Request Change Host" — asks Duncit for a different host instead of
+   * cancelling the pod and refunding everyone. The mWeb twin makes it an
+   * optional menu item for the same reason: a surface with no board to answer
+   * it on should not offer it. */
+  onRequestChange?: () => void;
 }
 
 /** Every per-pod action in one sheet, opened from the row's overflow button —
@@ -61,6 +66,7 @@ export function PodActionsSheet({
   onCopyFeedback,
   onCancel,
   onClubAdmin,
+  onRequestChange,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { color: ink, danger, primary, success, warning } = useThemeColors();
@@ -161,6 +167,17 @@ export function PodActionsSheet({
           tint={primary}
           onPress={onClubAdmin}
         />
+        {/* Above Cancel on purpose: asking for a different host keeps the pod
+            and everyone's seat, and it is what a host should reach for first. */}
+        {onRequestChange ? (
+          <ActionRow
+            testID="pod-action-request-change"
+            icon="swap-horiz"
+            label={t('changeRequest.menuHost')}
+            tint={warning}
+            onPress={onRequestChange}
+          />
+        ) : null}
         <ActionRow
           testID="pod-action-cancel"
           icon="cancel"

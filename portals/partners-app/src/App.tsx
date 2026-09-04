@@ -8,6 +8,7 @@ import VenueListingsPage from './pages/venue-listings-page/VenueListingsPage';
 import VenueAvailabilityPage from './pages/venue-availability-page/VenueAvailabilityPage';
 import VenueDashboardPage from './pages/venue-dashboard-page/VenueDashboardPage';
 import SlotRequestsPage from './pages/slot-requests-page/SlotRequestsPage';
+import ChangeRequestsPage from './pages/change-requests-page';
 import SlotDecisionPage from './pages/slot-decision-page/SlotDecisionPage';
 import VenuePodsPage from './pages/venue-pods-page/VenuePodsPage';
 import VenueAutoPodsPage from './pages/venue-auto-pods-page/VenueAutoPodsPage';
@@ -67,14 +68,26 @@ export default function App() {
       {/* Opened by the request email's Approve / Decline buttons (?action=…). */}
       <Route path="/venues/requests/:slotId" element={authed(<SlotDecisionPage />)} />
       <Route path="/venues/pods" element={authed(<VenuePodsPage />)} />
+      {/* One page, three routes: each studio scopes the board to its own role
+          so a venue owner who also hosts is never shown the wrong queue. */}
+      <Route
+        path="/venues/change-requests"
+        element={authed(<ChangeRequestsPage role="VENUE" />)}
+      />
       <Route path="/venues/auto-pods" element={authed(<VenueAutoPodsPage />)} />
       <Route path="/venues/settings" element={authed(<VenueSettingsPage />)} />
       <Route path="/venues/:venueId/availability" element={authed(<VenueAvailabilityPage />)} />
       <Route path="/host" element={authed(<Navigate to="/host/dashboard" replace />)} />
       <Route path="/host/dashboard" element={authed(<HostDashboardPage />)} />
       <Route path="/host/pods" element={authed(<HostPodsPage />)} />
+      <Route path="/host/change-requests" element={authed(<ChangeRequestsPage role="HOST" />)} />
       <Route path="/host/auto-pods" element={authed(<HostAutoPodsPage />)} />
       <Route path="/become-host" element={authed(<BecomeHostPage />)} />
+      {/* The two sidebar entries a not-yet-partner sees: each opens the Earn with
+          Duncit page ON its own journey, so the click lands in the onboarding
+          flow rather than on the menu that contains it. */}
+      <Route path="/be-a-host" element={authed(<EarnPage focus="HOST" />)} />
+      <Route path="/become-a-brand-partner" element={authed(<EarnPage focus="ECOMM" />)} />
       <Route path="/ecomm-brand" element={authed(<EcommBrandPage />)} />
       <Route path="/ecomm/dashboard" element={authed(<EcommDashboardPage />)} />
       <Route path="/ecomm-brand/:brandId/settings" element={authed(<BrandSettingsPage />)} />
@@ -88,6 +101,10 @@ export default function App() {
       <Route path="/club-admin" element={authed(<Navigate to="/club-admin/dashboard" replace />)} />
       <Route path="/club-admin/dashboard" element={authed(<ClubAdminDashboardPage />)} />
       <Route path="/club-admin/clubs" element={authed(<ClubAdminClubsPage />)} />
+      <Route
+        path="/club-admin/change-requests"
+        element={authed(<ChangeRequestsPage role="CLUB_ADMIN" />)}
+      />
       <Route path="/club-admin/clubs/:clubId" element={authed(<ClubAdminClubPodsPage />)} />
       <Route path="/club-admin/monitoring" element={authed(<ClubAdminPodMonitoringPage />)} />
       <Route path="/club-admin/auto-pods" element={authed(<ClubAdminAutoPodsPage />)} />

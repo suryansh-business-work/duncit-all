@@ -97,19 +97,38 @@ export interface BuildNavOptions {
 }
 
 /**
+ * One partner section as the sidebar shows it, or `null` when it shows nothing.
+ *
+ * Holding the role gives the area's own entries. Without it, a section that
+ * defines an `onboarding` entry (Host, E-Commerce Brand) keeps its dropdown with
+ * that single way in; one that does not (Club Admin, Venue Owner) stays absent.
+ */
+function sectionNav(
+  section: PartnerSection,
+  roles: readonly string[] | null | undefined,
+  autoPods: boolean,
+): AppNavItem | null {
+  if (hasPartnerRole(roles, section.role)) return withAutoPods(section, autoPods);
+  if (!section.onboarding) return null;
+  return { ...section.nav, children: [section.onboarding] };
+}
+
+/**
  * Sidebar nav for the signed-in user: the partner sections they hold (in
- * catalogue order), Wallet when any of them can earn a payout, then the
- * role-independent tail. A section they were never granted is simply absent —
- * applying for one starts from Earn with Duncit, which closes the sidebar for
- * everyone.
+ * catalogue order) plus the two that invite them in, Wallet when any of them can
+ * earn a payout, then the role-independent tail.
  */
 export function buildNav(
   roles?: readonly string[] | null,
   options?: Readonly<BuildNavOptions>,
 ): AppNavItem[] {
   const autoPods = options?.autoPods === true;
-  const shown = visibleSections(roles, options?.products === true);
-  const sections = shown.map((section) => withAutoPods(section, autoPods));
+  const products = options?.products === true;
+  // The product switch is a kill switch for the whole E-Commerce Brand area —
+  // with it off there is nothing to invite anyone into either.
+  const sections = PARTNER_SECTIONS.filter((section) => products || !section.products)
+    .map((section) => sectionNav(section, roles, autoPods))
+    .filter((item): item is AppNavItem => item !== null);
   // Wallet follows the ROLE, not the product switch: an e-commerce partner with
   // earnings already banked must still be able to withdraw them after the shop
   // is switched off.

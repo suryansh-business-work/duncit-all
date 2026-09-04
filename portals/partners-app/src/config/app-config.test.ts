@@ -2,18 +2,32 @@ import { describe, expect, it } from 'vitest';
 import { appConfig, buildNav, landingPath } from './app-config';
 
 describe('buildNav', () => {
-  it('shows only the common tail to a user with no partner role', () => {
+  it('invites a user with no partner role in, and offers nothing they cannot use', () => {
     const nav = buildNav([]);
-    expect(nav.map((i) => i.label)).toEqual(appConfig.nav.map((i) => i.label));
+    // Host keeps its dropdown with the single way in. The areas with no
+    // onboarding entry, and the product area while its switch is off, stay away.
+    expect(nav.map((i) => i.label)).toEqual(['Host', ...appConfig.nav.map((i) => i.label)]);
+    expect(nav.find((i) => i.label === 'Host')?.children?.map((c) => c.to)).toEqual(['/be-a-host']);
     expect(nav.some((i) => i.to === '/wallet')).toBe(false);
     expect(nav.some((i) => i.label === 'Club Admin')).toBe(false);
+    expect(nav.some((i) => i.label === 'E-Commerce Brand')).toBe(false);
   });
 
-  it('never puts the host application in the sidebar', () => {
+  it('offers the brand journey once products are switched on', () => {
+    const nav = buildNav([], { products: true });
+    expect(nav.find((i) => i.label === 'E-Commerce Brand')?.children?.map((c) => c.to)).toEqual([
+      '/become-a-brand-partner',
+    ]);
+  });
+
+  it('never puts the host application form in the sidebar', () => {
     expect(buildNav([]).some((i) => i.to === '/become-host')).toBe(false);
     const host = buildNav(['HOST']);
     expect(host.some((i) => i.to === '/become-host')).toBe(false);
-    expect(host.find((i) => i.label === 'Host')?.children?.map((c) => c.label)).toEqual(['Dashboard', 'Your Pods']);
+    // An approved host is past the invitation: the area itself replaces it.
+    const children = host.find((i) => i.label === 'Host')?.children?.map((c) => c.to);
+    expect(children).not.toContain('/be-a-host');
+    expect(children?.[0]).toBe('/host/dashboard');
   });
 
   it('handles null / undefined roles as no partner roles', () => {

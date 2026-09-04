@@ -119,7 +119,45 @@ describe('HostPodActionsMenu rows', () => {
     expect(itemNames().some((name) => name.includes(labels.clubAdmin))).toBe(false);
   });
 
-  it('reports the slot request to the surface that owns that page', async () => {
+/**
+   * "Request Change Host" is opt-in on BOTH props, and the label is passed in
+   * rather than built here: it lives in `changeRequest.*`, a namespace owned by
+   * @duncit/pod-change-requests, which this package does not depend on. A
+   * surface with no board to answer the request on passes neither and keeps the
+   * menu it had.
+   */
+  it('offers Request Change only when the surface passes a handler AND a label', async () => {
+    const requestChangeLabel = 'Request Change Host';
+
+    await open({ onRequestChange: vi.fn(), requestChangeLabel });
+    expect(itemNames().some((name) => name.includes(requestChangeLabel))).toBe(true);
+
+    // A handler with no label would render an empty row.
+    cleanup();
+    await open({ onRequestChange: vi.fn() });
+    expect(itemNames().some((name) => name.includes(requestChangeLabel))).toBe(false);
+
+    // A label with no handler would render a row that does nothing.
+    cleanup();
+    await open({ requestChangeLabel });
+    expect(itemNames().some((name) => name.includes(requestChangeLabel))).toBe(false);
+
+    cleanup();
+    await open();
+    expect(itemNames().some((name) => name.includes(requestChangeLabel))).toBe(false);
+  });
+
+  it('reports Request Change to its own handler and closes the menu', async () => {
+    const onRequestChange = vi.fn();
+    const requestChangeLabel = 'Request Change Host';
+    await open({ onRequestChange, requestChangeLabel });
+
+    fireEvent.click(screen.getByText(requestChangeLabel));
+
+    expect(onRequestChange).toHaveBeenCalledTimes(1);
+  });
+
+    it('reports the slot request to the surface that owns that page', async () => {
     const onSlotRequest = vi.fn();
     await open({ onSlotRequest });
 

@@ -6,4 +6,4 @@ export {
   earnBoxState,
   meetingNotice,
 } from './state';
-export { EARN_JOURNEYS, PARTNER_PORTAL_URL, partnerPortalUrl } from './journeys';
+export { EARN_JOURNEYS, EARN_KINDS, PARTNER_PORTAL_URL, partnerPortalUrl } from './journeys';

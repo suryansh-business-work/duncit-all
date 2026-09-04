@@ -298,9 +298,67 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       downloadTicket: 'Download ticket',
     },
 
+changeRequests: {
+      title: 'Change Requests',
+      subtitle:
+        'Partners asking Duncit to hand their place on a pod to somebody else. Find a replacement, or cancel the pod and refund everyone.',
+      tabVenue: 'Venue',
+      tabHost: 'Host',
+      tabClubAdmin: 'Club Admin',
+      colRequestId: 'Request ID',
+      colPod: 'Pod',
+      colRequestedBy: 'Requested by',
+      colRequestedAt: 'Requested',
+      colAttendees: 'Attendees',
+      colStatus: 'Status',
+      empty: 'No change requests in this queue.',
+      searchPlaceholder: 'Search by request ID or reason',
+      cancelTooltip:
+        'Cancel this pod and record a refund for every attendee. The money is returned by Finance, not by a live gateway call.',
+      cancelDone: 'Pod cancelled. Every attendee’s payment is marked refunded.',
+      cancelTitle: 'Cancel the pod and refund everyone?',
+      cancelBody:
+        'This ends the pod. Every paid attendee’s payment is marked refunded and the venue slot is released. It cannot be undone.',
+      cancelReasonLabel: 'Why is Duncit cancelling this pod?',
+      cancelReasonHint: 'Attendees are told a pod was cancelled; this note is for the audit trail.',
+      cancelReasonRequired: 'Say why the pod is being cancelled (at least 5 characters).',
+      cancelCta: 'Cancel pod and refund',
+      assignVenue: 'Assign a different venue',
+      assignHost: 'Assign a different host',
+      assignClubAdmin: 'Assign a different club admin',
+      drawerTitle: 'Find a replacement',
+      drawerVenueHint:
+        'Approved venues that host this pod’s category, in its city. Pick one and then a slot — the pod’s date moves with it.',
+      drawerHostHint:
+        'Approved hosts onboarded into this pod’s category. A host has no city of their own, so this list is matched on category alone — check the number before you ask.',
+      drawerClubAdminHint:
+        'Club admins running a club in this pod’s category and city. The pod’s CLUB is handed over, not just the pod.',
+      colName: 'Name',
+      colDetail: 'Details',
+      colEmail: 'Email',
+      colPhone: 'Phone',
+      colSlot: 'Slot',
+      colPrice: 'Price',
+      colCapacity: 'Capacity',
+      pickSlot: 'Pick a slot at {venue}',
+      backToCandidates: 'Back to the list',
+      sendRequest: 'Send request',
+      sendDone: 'Request sent. They will get an email, a WhatsApp message and an app notification.',
+      noCandidates:
+        'Nobody matches this pod’s category and city yet. Onboard a partner, or cancel the pod and refund everyone.',
+      noSlots: 'This venue has no free slots. Pick a different venue.',
+      alreadyOffered:
+        'Waiting on {name}. You can act again once they approve or pass.',
+      passedBy: 'Passed by {names}',
+      offeredTo: 'Offered to',
+      reason: 'Reason',
+      close: 'Close',
+    },
+
     podSettings: {
       title: 'Pod Settings',
       saved: 'Pod settings saved',
+      subtitle: 'Platform-level defaults for the Create-a-Pod flow.',
       retentionLabel: 'Draft Pod Retention Period (Days)',
       retentionHint: 'Defines how many days a Pod can remain in Draft before permanent deletion. Changes apply only to unexpired Draft Pods.',
       retentionMin: 'Minimum 1 day. Default 3.',
@@ -310,6 +368,17 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       penaltyTitle: 'Account Health Penalty When a Venue Cancels a Pod',
       penaltyMin: 'Minimum 0 points. Default 5.',
       otpTitle: 'OTP Verification Before Marking Attendance',
+      retentionInvalid: 'Enter a whole number of 1 or more.',
+      backoutDesc:
+        'The maximum number of Backout attempts a user can start for the same pod. Each successful "Backout in process" counts as one; once the limit is reached the action is blocked for that pod.',
+      backoutInvalid: 'Enter a whole number of 1 or more.',
+      penaltyDesc:
+        "Points deducted from a venue's Account Health each time its owner cancels a pod booked at that venue. Set 0 to disable the penalty.",
+      penaltyInvalid: 'Enter a whole number of 0 or more.',
+      otpDesc:
+        "When on, a host marking an attendee present by hand must first verify that attendee's name and phone number with a one-time code. Scanning a ticket is proof on its own and is never gated by this, and a Club Admin's override never asks for a code either.",
+      otpOn: 'On — the host verifies the attendee’s number before the Mark Attendance button unlocks.',
+      otpOff: 'Off — the host can mark an attendee present without verifying their number.',
       autoCancelTitle: 'Auto-Cancel Finance-Negative Pods',
       autoCancelDesc:
         "When on, a sweep checks every pod inside the lead window before its start: if ticket collections cannot cover the venue's booked slot price (the host side would settle negative), the pod is cancelled automatically, attendees are refunded under that venue's cancellation policy, and the host and attendees are emailed. Venues whose policy is reschedule-only are never auto-cancelled.",
@@ -343,6 +412,23 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       autoPodPenaltyLabel: 'Points',
       autoPodPenaltyMin: 'Between 0 and 100 points. Default 5.',
       autoPodPenaltyInvalid: 'Enter a whole number between 0 and 100.',
+
+      // Request Change Setting — one card per role, all three 0-10.
+      changeRequestGroupTitle: 'Request Change Setting',
+      changeRequestGroupDesc:
+        'What a partner pays in Account Health for asking Duncit to hand their place on a pod to somebody else. Charged the moment the request is filed, not when it is answered — withdrawing does not return the points. Set 0 to make the ask free.',
+      changeRequestVenueTitle: 'Request Change — Venue',
+      changeRequestVenueDesc:
+        'Points deducted from the VENUE’s Account Health when its owner asks Duncit to move a pod booked there to a different venue.',
+      changeRequestHostTitle: 'Request Change — Host',
+      changeRequestHostDesc:
+        'Points deducted from the HOST’s Account Health when they ask Duncit to hand a pod they run to a different host.',
+      changeRequestClubAdminTitle: 'Request Change — Club Admin',
+      changeRequestClubAdminDesc:
+        'Points deducted from the CLUB ADMIN’s Account Health when they ask Duncit to hand their club to a different admin. The whole club moves, not just the pod.',
+      changeRequestLabel: 'Points',
+      changeRequestMin: 'Between 0 and 10 points. Default 5.',
+      changeRequestInvalid: 'Enter a whole number between 0 and 10.',
     },
 
     completePod: {
@@ -482,6 +568,51 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       noteHint: 'What this string is and where it appears — context for translators',
       colKeys: 'Keys',
       colFlags: 'Flags',
+
+      localesTitle: 'Locales',
+      localesIntro:
+        'Languages offered across the apps, portals and websites. The default is the source language every other falls back to.',
+      addLocale: 'Add locale',
+      code: 'Code',
+      translated: 'Translated',
+      defaultNotRemovable: 'The default language cannot be removed',
+      localeAdded: 'Locale added',
+      localeUpdated: 'Locale updated',
+      localeRemoved: '{code} removed',
+
+      // Auto-translation. A language added here starts empty, and the
+      // catalogue is thousands of keys — this is the only way one gets filled
+      // in without somebody typing for a week.
+      autoTranslate: 'Auto-translate',
+      autoTranslateOn: 'Auto-translate {language}',
+      autoTranslateIntro:
+        'OpenAI translates the default language into this one and writes the result straight into Translations. The apps, portals and websites then pick it up on their own.',
+      autoTranslateDefault:
+        'This is the default language — it is the source everything else is translated from.',
+      scopeLabel: 'What to send',
+      scopeMissing: 'Only the keys with no text yet',
+      scopeMissingHint:
+        'Leaves anything already written by hand untouched. This is also how a run that stopped part-way is picked up again.',
+      scopeAll: 'Every key, replacing what is there',
+      scopeAllHint:
+        'Re-translates keys that already carry text, hand-written ones included. Use it after the source copy changes.',
+      willSend: '{keys} key(s) will be sent',
+      nothingToSend: 'Nothing to send — every key already has text in this language.',
+      startRun: 'Start translating',
+      startingRun: 'Starting…',
+      startFailed: 'Could not start the run',
+      stopRun: 'Stop',
+      stopFailed: 'Could not stop the run',
+      runProgress: '{done} of {total} keys',
+      runHint:
+        'This takes a few minutes. Closing this window is fine — the run carries on and the progress is here when you come back.',
+      runSucceeded: 'Finished — {translated} keys translated',
+      runFailed: 'The run failed',
+      runCancelled: 'Stopped — {translated} keys were translated first',
+      runSomeFailed:
+        '{failed} key(s) came back unusable and were left untranslated. Run it again to retry just those.',
+      runApplies: 'The apps and portals show the new text within a minute.',
+      modelUsed: 'Model: {model}',
     },
 
     locations: {
@@ -717,6 +848,9 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       colLocality: 'Locality',
       colCover: 'Cover',
       verified: 'Verified',
+      noAdminHint: 'No club admin assigned',
+      noAdminTooltip:
+        'This club has nobody to run it. Open the club and assign a Club Admin — until then its pods have no owner and its club-admin share of every settlement is never paid out.',
       viewPods: 'View Pods',
       deleteClub: 'Delete club',
       addImage: 'Add club image',

@@ -61,6 +61,7 @@ COPY packages/forms/package.json ./packages/forms/
 COPY packages/geo/package.json ./packages/geo/
 COPY packages/gql-types/package.json ./packages/gql-types/
 COPY packages/host-pod-actions/package.json ./packages/host-pod-actions/
+COPY packages/pod-change-requests/package.json ./packages/pod-change-requests/
 COPY packages/i18n/package.json ./packages/i18n/
 COPY packages/location/package.json ./packages/location/
 COPY packages/logs/package.json ./packages/logs/

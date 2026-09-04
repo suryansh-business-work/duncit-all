@@ -99,14 +99,24 @@ export function useDeviceUpload({
     setPicked(f);
   };
 
-  const uploadFromDevice = async () => {
-    if (!picked) return;
+  /**
+   * Uploads the chosen file and ANSWERS with its URL. The caller needs the URL
+   * back because the dialog finishes the pick in the same press that uploads:
+   * a multi-pick tray is React state, so the dialog cannot read the picture it
+   * just added before it closes.
+   */
+  const uploadFromDevice = async (): Promise<string | null> => {
+    if (!picked) return null;
     const isVideo = picked.type.startsWith('video/');
     setUploading(true);
     // Video shows a real byte %; image shows an honest indeterminate bar.
     setStage(isVideo ? 'uploading' : 'processing');
     setUploadPct(isVideo ? 0 : null);
     setError(null);
+    // One exit, below the finally: a `return` inside both the try and the
+    // catch gives the finally a second completion path, which v8 counts as a
+    // branch nothing can reach.
+    let uploadedUrl: string | null = null;
     try {
       let url: string;
       if (isVideo) {
@@ -141,6 +151,7 @@ export function useDeviceUpload({
         if (fileInputRef.current) fileInputRef.current.value = '';
       }
       onClose();
+      uploadedUrl = url;
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -148,6 +159,7 @@ export function useDeviceUpload({
       setUploadPct(null);
       setStage('uploading');
     }
+    return uploadedUrl;
   };
 
   return {

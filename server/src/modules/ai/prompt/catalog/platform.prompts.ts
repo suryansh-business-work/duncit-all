@@ -8,6 +8,12 @@ const RICH_TEXT_SITE = {
   trigger: 'An author clicks "Improve with AI"',
 } as const;
 
+const AUTO_TRANSLATE_SITE = {
+  file: 'server/src/modules/platform/localization/autoTranslate.runner.ts',
+  surface: 'Admin · Localization > Locales',
+  trigger: 'An admin presses "Auto-translate" on a language',
+} as const;
+
 const CHANGELOG_SITE = {
   file: 'server/src/modules/platform/appRelease/appRelease.changelog.ts',
   surface: 'Tech · App Builds',
@@ -199,5 +205,70 @@ export const PLATFORM_PROMPTS = [
       'Return STRICT JSON only, no markdown fence, exactly this shape:',
       '{ "action": string, "count": number, "topic": string, "reply": string }',
     ].join('\n'),
+  },
+  {
+    key: 'localization.auto_translate',
+    name: 'Locale auto-translation',
+    description:
+      'Translates the app catalogue into a language an admin added, one batch of keys at a time.',
+    category: PLATFORM,
+    role: 'SYSTEM',
+    tasks: ['localization.auto_translate'],
+    target_model: '',
+    variables: [
+      required(
+        'language',
+        'Target language',
+        'The language being filled in, in words — the locale row’s English name.',
+        'Hindi (India)',
+      ),
+      required(
+        'language_code',
+        'Target locale code',
+        'The BCP-47 tag of the language being filled in.',
+        'hi-IN',
+      ),
+      required(
+        'source_language',
+        'Source language',
+        'The platform’s default language, whose text is being translated.',
+        'English (India)',
+      ),
+    ],
+    usage: [AUTO_TRANSLATE_SITE],
+    content: [
+      'You localize the interface of "Duncit", a community-events app used in India where clubs run in-person and online events called "pods" at partner venues.',
+      'Translate each value from {{source_language}} into {{language}} ({{language_code}}).',
+      '',
+      'RULES:',
+      '1. Return STRICT JSON only, exactly this shape: { "translations": { "<key>": "<translated text>" } }. No markdown fence, no commentary.',
+      '2. Answer with one entry for every key you were given, and no key you were not given.',
+      '3. Translate the VALUE only. Never translate, rename, shorten or reorder a key — the key is an identifier the app looks the text up by.',
+      '4. Keep every {placeholder} in single curly braces exactly as written — same spelling, same count, same braces. The app substitutes real values into them at render time, so a dropped or renamed one puts a hole in the sentence on every phone.',
+      '5. Keep URLs, email addresses, HTML entities, numbers, currency symbols, emoji and punctuation as they are.',
+      '6. Leave the product words "Duncit", "Pod", "Club" and "Duncit Coin" untranslated unless the target language has an established everyday form for them.',
+      '7. Match the register and the LENGTH of the source: a two-word button label stays a two-word button label, an error sentence stays a sentence. This text lands in buttons, chips and table headers that do not grow.',
+      '8. The key names the screen the text appears on (mweb.shop.emptyState is the shop page). Use that for context when a word is ambiguous.',
+      '9. When a value is a proper noun, a code, or already correct in the target language, return it unchanged rather than inventing a translation.',
+    ].join('\n'),
+  },
+  {
+    key: 'localization.auto_translate.user',
+    name: 'Locale auto-translation — the batch',
+    description: 'Hands over one batch of keys and their source text, as a JSON object.',
+    category: PLATFORM,
+    role: 'USER',
+    tasks: ['localization.auto_translate'],
+    target_model: '',
+    variables: [
+      required(
+        'entries',
+        'The batch',
+        'A JSON object of key -> source text for the keys in this batch.',
+        '{"mweb.shop.emptyState":"Nothing here yet"}',
+      ),
+    ],
+    usage: [AUTO_TRANSLATE_SITE],
+    content: 'Translate every value in this JSON object:\n{{entries}}',
   },
 ] as const satisfies readonly InAppPromptDef[];

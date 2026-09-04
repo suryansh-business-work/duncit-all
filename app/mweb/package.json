@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.72.225",
+  "version": "1.72.232",
   "private": true,
   "scripts": {
     "deps:check": "node ../../scripts/deps.mjs check",
@@ -39,6 +39,7 @@
     "@duncit/forms": "workspace:*",
     "@duncit/geo": "workspace:*",
     "@duncit/host-pod-actions": "workspace:*",
+    "@duncit/pod-change-requests": "workspace:*",
     "@duncit/i18n": "workspace:*",
     "@duncit/location": "workspace:*",
     "@duncit/logs": "workspace:*",

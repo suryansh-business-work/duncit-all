@@ -14,6 +14,11 @@ const stats: PartnerEcommStats = {
   total_orders: 27,
   total_items_sold: 61,
   gross_revenue: 125000,
+  net_earnings: 106250,
+  product_performance: [
+    { product_id: 'p1', name: 'Cold Brew Starter Kit', units_sold: 38, gross_revenue: 76000, net_earnings: 64600 },
+    { product_id: 'p2', name: 'Pour-Over Set', units_sold: 23, gross_revenue: 49000, net_earnings: 41650 },
+  ],
 };
 
 describe('ecommStatCards', () => {

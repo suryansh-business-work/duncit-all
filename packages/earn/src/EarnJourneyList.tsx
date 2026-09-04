@@ -29,19 +29,28 @@ interface Props {
   /** The product-seller path is hidden when products are gated off — mirrors
    * the native EarnScreen so all surfaces behave identically. */
   showProducts: boolean;
+  /**
+   * Which journeys to render, by `kind`. Pass `EARN_KINDS` for the whole menu.
+   *
+   * Required rather than defaulted: the Partners sidebar links a not-yet-partner
+   * straight at ONE journey ("Be a Host"), so a caller that wants all four says
+   * so at the call site rather than by omission.
+   */
+  kinds: readonly string[];
 }
 
 /** The "Earn with Duncit" journey cards. A box is disabled when the user
  * already holds the matching role, or while an onboarding meeting for it is
  * still pending. Navigation and slot-picker copy come from the surrounding
  * EarnSurfaceProvider. */
-export default function EarnJourneyList({ showProducts }: Readonly<Props>) {
+export default function EarnJourneyList({ showProducts, kinds }: Readonly<Props>) {
   const { openJourney, runCta } = useEarnSurface();
   const { data, loading, refetch } = useQuery<any>(EARN_ME, { fetchPolicy: 'cache-and-network' });
   const roles: string[] = data?.me?.roles ?? [];
   const meetings: EarnMeeting[] = data?.myMeetings ?? [];
   const showSkeleton = loading && !data;
-  const boxes = showProducts ? EARN_JOURNEYS : EARN_JOURNEYS.filter((box) => box.kind !== 'ECOMM');
+  const scoped = EARN_JOURNEYS.filter((box) => kinds.includes(box.kind));
+  const boxes = showProducts ? scoped : scoped.filter((box) => box.kind !== 'ECOMM');
 
   return (
     <Stack spacing={1.5}>

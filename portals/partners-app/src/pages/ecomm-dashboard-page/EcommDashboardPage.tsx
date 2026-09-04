@@ -5,6 +5,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { useNavigate } from 'react-router';
 import { DuncitDashboard, type DashboardWidget } from '@duncit/dashboard';
 import EcommStatCards from './EcommStatCards';
+import EcommProductsChart from './EcommProductsChart';
 import { PARTNER_ECOMM_STATS } from './ecomm-dashboard.queries';
 import { useTranslation } from '@duncit/shell';
 
@@ -28,6 +29,17 @@ export default function EcommDashboardPage() {
       // minH floors the measured height — keep it low or empty stats pin a void.
       minH: 2,
       content: <EcommStatCards stats={stats} />,
+    },
+    {
+      id: 'products',
+      title: t('partners.ecommDashboardPage.productsPerformance'),
+      // One row per sold product — a fixed h either clips a full catalogue or
+      // pins a void under an empty state.
+      fitContent: true,
+      defaultLayout: { x: 0, y: 4, w: 12, h: 5 },
+      minW: 4,
+      minH: 2,
+      content: <EcommProductsChart rows={stats?.product_performance ?? []} />,
     },
   ];
 

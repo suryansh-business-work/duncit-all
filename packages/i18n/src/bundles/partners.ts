@@ -15,6 +15,8 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
     earn: {
       title: 'Earn with Duncit',
       subtitle: 'Pick a way to start earning on Duncit.',
+      focusSubtitle: 'Start here — the steps below are your onboarding.',
+      seeAllWays: 'See all the ways to earn with Duncit',
     },
     verification: {
       title: 'Verification',
@@ -94,6 +96,8 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
       noPodsCreatedFromYourPartner: 'No pods created from your partner account yet.',
       partnerTools: 'Partner tools',
       partnerToolsVenues: 'Partner tools · Venues',
+      partnerToolsHost: 'Partner tools · Host',
+      partnerToolsClubAdmin: 'Partner tools · Club Admin',
       pod: 'Pod',
       price: 'Price',
       productManagement: 'Product management',
@@ -166,11 +170,15 @@ export const PARTNERS_BUNDLE: NestedCatalogue = {
 
     ecommDashboardPage: {
       eCommercePerformance: 'E-commerce performance',
+      noProductSalesYet: 'No product sales yet. Once a product sells it appears here.',
+      productsPerformance: 'Products Performance',
       totalBrands: 'Total Brands',
+      totalEarnings: 'Total Earnings',
       totalItemsSold: 'Total Items Sold',
       totalOrders: 'Total Orders',
       totalProducts: 'Total Products',
       totalWarehouses: 'Total Warehouses',
+      unitsSold: 'Units sold',
     },
 
     forms: {

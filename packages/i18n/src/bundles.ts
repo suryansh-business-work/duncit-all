@@ -5,6 +5,7 @@ import { AI_BUNDLE } from './bundles/ai';
 import { AI_MONITORING_BUNDLE } from './bundles/ai-monitoring';
 import { CAPTCHA_BUNDLE } from './bundles/captcha';
 import { CHALLENGE_BUNDLE } from './bundles/challenge';
+import { CHANGE_REQUEST_BUNDLE } from './bundles/change-request';
 import { CONTENT_REPORT_BUNDLE } from './bundles/content-report';
 import { CRM_BUNDLE } from './bundles/crm';
 import { DEVELOPERS_BUNDLE } from './bundles/developers';
@@ -74,6 +75,7 @@ export {
   CHALLENGE_BUNDLE,
   CONTENT_REPORT_BUNDLE,
   CRM_BUNDLE,
+  CHANGE_REQUEST_BUNDLE,
   DEVELOPERS_BUNDLE,
   EARNINGS_BUNDLE,
   POD_TIMELINE_BUNDLE,
@@ -118,6 +120,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   aiMonitoring: AI_MONITORING_BUNDLE,
   captcha: CAPTCHA_BUNDLE,
   challenge: CHALLENGE_BUNDLE,
+  changeRequest: CHANGE_REQUEST_BUNDLE,
   contentReport: CONTENT_REPORT_BUNDLE,
   crm: CRM_BUNDLE,
   developers: DEVELOPERS_BUNDLE,

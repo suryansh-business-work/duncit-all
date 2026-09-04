@@ -52,13 +52,23 @@ interface Props {
   onOpen?: (pod: StudioPod) => void;
   /** Venue Studio only: "Cancel pod" behind the row's overflow menu. */
   onCancel?: (pod: StudioPod) => void;
+  /** "Request Change …" behind the same menu — Venue Studio and Club Studio. */
+  onRequestChange?: (pod: StudioPod) => void;
+  requestChangeLabel?: string;
 }
 
 /**
  * One pod row, identical in Venue Studio and Club Studio: what it is, when it
  * runs, who hosts it, how full it is and what a seat costs — not just a name.
  */
-export default function StudioPodRow({ pod, currencySymbol, onOpen, onCancel }: Readonly<Props>) {
+export default function StudioPodRow({
+  pod,
+  currencySymbol,
+  onOpen,
+  onCancel,
+  onRequestChange,
+  requestChangeLabel,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
 
@@ -131,7 +141,14 @@ export default function StudioPodRow({ pod, currencySymbol, onOpen, onCancel }: 
         </Stack>
       </RowSurface>
 
-      {onCancel && <StudioPodRowMenu pod={pod} onCancel={() => onCancel(pod)} />}
+      {(onCancel ?? onRequestChange) && (
+        <StudioPodRowMenu
+          pod={pod}
+          onCancel={onCancel ? () => onCancel(pod) : undefined}
+          onRequestChange={onRequestChange ? () => onRequestChange(pod) : undefined}
+          requestChangeLabel={requestChangeLabel}
+        />
+      )}
     </Stack>
   );
 }

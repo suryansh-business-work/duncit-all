@@ -6,6 +6,10 @@ export { EarnSurfaceProvider, useEarnSurface } from './EarnSurfaceProvider';
 export type { EarnSurfaceConfig } from './EarnSurfaceProvider';
 
 export { default as EarnJourneyList } from './EarnJourneyList';
+// Re-exported so a surface can ask for "the whole menu" without taking a direct
+// dependency on @duncit/onboarding — which, for a Docker-built portal, is also a
+// Dockerfile COPY line and a package-manifest entry.
+export { EARN_KINDS } from '@duncit/onboarding';
 export { default as EarnBox } from './EarnBox';
 export type { EarnBoxCta } from './EarnBox';
 export { default as EarnMeetingActions } from './EarnMeetingActions';

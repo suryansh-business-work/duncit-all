@@ -106,6 +106,63 @@ export const IMPORT_TRANSLATION_KEYS = gql`
   }
 `;
 
+export const LOCALE_COVERAGE = gql`
+  query LocaleCoverage {
+    localeCoverage {
+      locale
+      total_keys
+      translated_keys
+    }
+  }
+`;
+
+/** Field list only — no braces of its own, so interpolating it stays parseable. */
+const AUTO_TRANSLATE_JOB_FIELDS = `
+  id
+  locale
+  source_locale
+  status
+  replace_existing
+  total_keys
+  done_keys
+  translated_keys
+  failed_keys
+  ai_model
+  error
+  started_at
+  finished_at
+`;
+
+export const AUTO_TRANSLATE_JOB = gql`
+  query AutoTranslateJob($locale: String!) {
+    autoTranslateJob(locale: $locale) {
+      ${AUTO_TRANSLATE_JOB_FIELDS}
+    }
+  }
+`;
+
+export const AUTO_TRANSLATE_PENDING = gql`
+  query AutoTranslatePending($locale: String!, $replace_existing: Boolean) {
+    autoTranslatePending(locale: $locale, replace_existing: $replace_existing)
+  }
+`;
+
+export const START_AUTO_TRANSLATE = gql`
+  mutation StartAutoTranslate($locale: String!, $replace_existing: Boolean) {
+    startAutoTranslate(locale: $locale, replace_existing: $replace_existing) {
+      ${AUTO_TRANSLATE_JOB_FIELDS}
+    }
+  }
+`;
+
+export const CANCEL_AUTO_TRANSLATE = gql`
+  mutation CancelAutoTranslate($id: ID!) {
+    cancelAutoTranslate(id: $id) {
+      ${AUTO_TRANSLATE_JOB_FIELDS}
+    }
+  }
+`;
+
 export interface LocaleRow {
   id: string;
   code: string;
@@ -138,6 +195,30 @@ export interface TranslationGroupRow {
   key_count: number;
   /** One entry per active locale; translated < key_count means a gap. */
   locales: { locale: string; translated: number }[];
+}
+
+/** How much of the catalogue one locale carries text for. */
+export interface LocaleCoverageRow {
+  locale: string;
+  total_keys: number;
+  translated_keys: number;
+}
+
+/** One auto-translation run. `status` is RUNNING | SUCCEEDED | FAILED | CANCELLED. */
+export interface AutoTranslateJobRow {
+  id: string;
+  locale: string;
+  source_locale: string;
+  status: string;
+  replace_existing: boolean;
+  total_keys: number;
+  done_keys: number;
+  translated_keys: number;
+  failed_keys: number;
+  ai_model: string;
+  error: string;
+  started_at?: string | null;
+  finished_at?: string | null;
 }
 
 /** Text for one locale on a translation row, '' when untranslated. */

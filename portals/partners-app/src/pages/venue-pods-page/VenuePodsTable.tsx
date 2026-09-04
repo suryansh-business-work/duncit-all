@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Stack, Tooltip, Typography } from '@mui/material';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { DuncitButton } from '@duncit/buttons';
 import {
   DuncitTable,
@@ -78,13 +79,52 @@ function CancelPodCell({
  */
 type Translate = ReturnType<typeof useTranslation>['t'];
 
-const actionsColumn = (onCancel: (row: VenuePodRow) => void, t: Translate): DuncitColumn<VenuePodRow> => ({
+/**
+ * "Request Change Venue" — the non-destructive answer beside Cancel.
+ *
+ * Deliberately FIRST in the cell: cancelling refunds every attendee and ends
+ * the pod, and asking Duncit for a different venue keeps both. A venue owner
+ * reaching for the destructive one should have passed this on the way.
+ */
+function RequestChangeCell({
+  row,
+  onRequestChange,
+  label,
+}: Readonly<{ row: VenuePodRow; onRequestChange: (row: VenuePodRow) => void; label: string }>) {
+  return (
+    <DuncitButton
+      size="small"
+      variant="text"
+      color="warning"
+      startIcon={<SwapHorizIcon fontSize="small" />}
+      onClick={(event) => {
+        event.stopPropagation();
+        onRequestChange(row);
+      }}
+      sx={{ whiteSpace: 'nowrap' }}
+    >
+      {label}
+    </DuncitButton>
+  );
+}
+
+const actionsColumn = (
+  onCancel: (row: VenuePodRow) => void,
+  onRequestChange: (row: VenuePodRow) => void,
+  requestChangeLabel: string,
+  t: Translate,
+): DuncitColumn<VenuePodRow> => ({
   field: 'actions',
   headerName: t('shell.common.actions'),
-  width: 160,
+  width: 300,
   sortable: false,
   valueGetter: (row) => cancelDisabledText(row) ?? CANCEL_HINT,
-  cellRenderer: (row: VenuePodRow) => <CancelPodCell row={row} onCancel={onCancel} />,
+  cellRenderer: (row: VenuePodRow) => (
+    <Stack component="span" direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+      <RequestChangeCell row={row} onRequestChange={onRequestChange} label={requestChangeLabel} />
+      <CancelPodCell row={row} onCancel={onCancel} />
+    </Stack>
+  ),
 });
 
 interface Props {
@@ -93,6 +133,9 @@ interface Props {
   refetchRef: React.MutableRefObject<(() => void) | null>;
   onRowClick: (row: VenuePodRow) => void;
   onCancel: (row: VenuePodRow) => void;
+  onRequestChange: (row: VenuePodRow) => void;
+  /** Already translated — the label lives in the shared `changeRequest.*`. */
+  requestChangeLabel: string;
 }
 
 /** All pods booked at the partner's venues; click a row for attendees. */
@@ -102,6 +145,8 @@ export default function VenuePodsTable({
   refetchRef,
   onRowClick,
   onCancel,
+  onRequestChange,
+  requestChangeLabel,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<VenuePodRow>[]>(
@@ -163,9 +208,9 @@ export default function VenuePodsTable({
         sortable: false,
         valueGetter: (row) => fmtDate(row.cancelled_at),
       },
-      actionsColumn(onCancel, t),
+      actionsColumn(onCancel, onRequestChange, requestChangeLabel, t),
     ],
-    [onCancel],
+    [onCancel, onRequestChange, requestChangeLabel],
   );
 
   return (

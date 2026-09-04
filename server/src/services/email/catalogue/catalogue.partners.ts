@@ -423,6 +423,117 @@ export const VENUE_EMAILS: readonly EmailDef[] = [
     },
   }),
 
+
+  /**
+   * "A pod is looking for you" — the offer an admin makes when a partner asked
+   * to be changed off a pod.
+   *
+   * Three rows rather than one shared builder: the fifth value differs by role
+   * (a venue and a club admin need to know the CLUB, a host needs to know the
+   * VENUE) because that is the fact each of them decides on, and the sentence
+   * under the heading is written for that reader. The first six vars are in
+   * their WhatsApp event's params order, which is what lets one array fill
+   * both channels.
+   */
+  defineEmail({
+    slug: 'venue-change-request-offer',
+    name: 'Venue: Pod Offered After a Change Request',
+    description:
+      'A venue owner, when Duncit offers them a pod whose current venue asked to be changed.',
+    audience: 'VENUE',
+    category: 'notification',
+    fires: 'An admin offers a venue a pod with an open change request',
+    waEvent: 'VENUE_CHANGE_REQUEST_OFFER',
+    subject: 'Can you take {{pod}}?',
+    footerNote: FOOTER.venue,
+    vars: [
+      v('name', 'The owner’s first name.', 'Rohit'),
+      v('pod', 'The pod’s title.', 'Sunday Badminton Doubles'),
+      v('date', 'The offered slot’s date, already formatted.', '24 Aug 2026'),
+      v('time', 'The offered slot’s start time, already formatted.', '7:00 AM'),
+      v('club', 'The club the pod belongs to.', 'Noida Racquet Club'),
+      v('studio_url', 'Where the offer is answered.', 'https://mweb.duncit.com/change-requests'),
+      v('change_request_no', 'The request’s permanent id.', 'DUN-CRQ-000042'),
+    ],
+    body: {
+      copyKey: 'email.venueChangeRequestOffer',
+      nameVar: 'name',
+      tone: PAUSED,
+      calloutLabelKey: LABEL.pod,
+      calloutVar: 'pod',
+      rows: [...POD_ROWS, { labelKey: FIELD.club, valueVar: 'club' }],
+      ctaKey: CTA.reviewRequest,
+      ctaVar: 'studio_url',
+      helpKey: HELP.changeRequestOffer,
+    },
+  }),
+
+  defineEmail({
+    slug: 'host-change-request-offer',
+    name: 'Host: Pod Offered After a Change Request',
+    description:
+      'A host, when Duncit offers them a pod whose current host asked to be changed.',
+    audience: 'HOST',
+    category: 'notification',
+    fires: 'An admin offers a host a pod with an open change request',
+    waEvent: 'HOST_CHANGE_REQUEST_OFFER',
+    subject: 'Can you run {{pod}}?',
+    footerNote: FOOTER.host,
+    vars: [
+      v('name', 'The host’s first name.', 'Meera'),
+      v('pod', 'The pod’s title.', 'Sunday Badminton Doubles'),
+      v('date', 'The pod’s date, already formatted.', '24 Aug 2026'),
+      v('time', 'The pod’s start time, already formatted.', '7:00 AM'),
+      v('venue', 'Where it runs.', 'Sector 62 Sports Arena'),
+      v('studio_url', 'Where the offer is answered.', 'https://mweb.duncit.com/change-requests'),
+      v('change_request_no', 'The request’s permanent id.', 'DUN-CRQ-000042'),
+    ],
+    body: {
+      copyKey: 'email.hostChangeRequestOffer',
+      nameVar: 'name',
+      tone: PAUSED,
+      calloutLabelKey: LABEL.pod,
+      calloutVar: 'pod',
+      rows: [...POD_ROWS, { labelKey: FIELD.venue, valueVar: 'venue' }],
+      ctaKey: CTA.reviewRequest,
+      ctaVar: 'studio_url',
+      helpKey: HELP.changeRequestOffer,
+    },
+  }),
+
+  defineEmail({
+    slug: 'club-admin-change-request-offer',
+    name: 'Club Admin: Club Offered After a Change Request',
+    description:
+      'A club admin, when Duncit offers them a club whose current admin asked to be changed.',
+    audience: 'CLUB_ADMIN',
+    category: 'notification',
+    fires: 'An admin offers a club admin a pod with an open change request',
+    waEvent: 'CLUB_ADMIN_CHANGE_REQUEST_OFFER',
+    subject: 'Can you take over {{club}}?',
+    footerNote: FOOTER.clubAdmin,
+    vars: [
+      v('name', 'The club admin’s first name.', 'Priya'),
+      v('pod', 'The pod that prompted the ask.', 'Sunday Badminton Doubles'),
+      v('date', 'The pod’s date, already formatted.', '24 Aug 2026'),
+      v('time', 'The pod’s start time, already formatted.', '7:00 AM'),
+      v('club', 'The club being handed over.', 'Noida Racquet Club'),
+      v('studio_url', 'Where the offer is answered.', 'https://mweb.duncit.com/change-requests'),
+      v('change_request_no', 'The request’s permanent id.', 'DUN-CRQ-000042'),
+    ],
+    body: {
+      copyKey: 'email.clubAdminChangeRequestOffer',
+      nameVar: 'name',
+      tone: PAUSED,
+      calloutLabelKey: LABEL.pod,
+      calloutVar: 'pod',
+      rows: [...POD_ROWS, { labelKey: FIELD.club, valueVar: 'club' }],
+      ctaKey: CTA.reviewRequest,
+      ctaVar: 'studio_url',
+      helpKey: HELP.changeRequestOffer,
+    },
+  }),
+
   defineEmail({
     slug: 'venue-slot-approved',
     name: 'Venue: Slot Approved',

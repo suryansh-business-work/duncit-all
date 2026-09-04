@@ -89,6 +89,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       // Auto Pods, on mWeb's exact paths — the server's enrolment
       // notifications carry these three URLs verbatim.
       VenueAutoPods: 'venues/auto-pods',
+      ChangeRequests: 'change-requests',
       HostAutoPods: 'host/auto-pods',
       ClubAutoPods: 'clubs/auto-pods',
       ProductsManage: 'products/manage',

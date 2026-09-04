@@ -101,6 +101,7 @@ const ROUTES = [
   '/pods/smoke-id/edit',
   '/auto-pods',
   '/pod-settings',
+  '/pods/change-requests',
   '/pod-monitoring',
   '/event-tickets',
   '/pod-ideas',

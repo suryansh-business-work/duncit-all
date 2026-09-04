@@ -250,6 +250,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venuesManage: { title: 'Manage venues' },
       venueEarnings: { title: 'Venue earnings' },
       slotRequests: { title: 'Slot requests' },
+      changeRequests: { title: 'Change requests' },
       venueHealth: { title: 'Venue health' },
       venueAvailability: { title: 'Venue availability' },
       venueSettings: { title: 'Venue settings' },

@@ -1,0 +1,113 @@
+---
+name: '@duncit/pod-change-requests'
+summary: 'Request Change — a venue, host or club admin asking Duncit to hand their place on one pod to somebody else, and the studio board where the replacement approves or passes.'
+category: 'domain'
+zeroDeps: false
+frameworkFree: false
+coverageGate: false
+consumers:
+  - 'app/mweb'
+  - 'portals/partners-app'
+  - 'portals/admin'
+exports:
+  - 'ChangeRequestBoard'
+  - 'ChangeRequestCard'
+  - 'RequestChangeDialog'
+  - 'useRequestPodChange'
+  - 'useTranslation'
+  - 'fallbackT'
+  - 'MY_POD_CHANGE_BOARD'
+  - 'REQUEST_POD_CHANGE'
+  - 'RESPOND_TO_POD_CHANGE'
+  - 'WITHDRAW_POD_CHANGE'
+  - 'POD_CHANGE_REQUESTS_TABLE'
+  - 'POD_CHANGE_CANDIDATES'
+  - 'POD_CHANGE_VENUE_SLOTS'
+  - 'OFFER_POD_CHANGE'
+  - 'CANCEL_POD_FOR_CHANGE'
+---
+
+## Why this exists
+
+A pod carries three partners: the venue it is booked at, the host who runs it,
+and the admin of the club it belongs to. Any of them can find themselves unable
+to keep it — a room floods, a host's flight moves, a club admin steps back — and
+before this there was exactly one thing they could do about a pod that had
+already sold seats: cancel it, and refund everybody.
+
+**Request Change** is the other answer. A partner asks Duncit to replace them,
+pays for the ask in Account Health points, and Duncit finds somebody in the same
+category and city. The pod, its date and everyone holding a ticket stay where
+they are until the replacement actually says yes.
+
+The same board renders in mWeb, in the native app's Tamagui twin and in all
+three Partners studios, and the same request is what the Admin console works
+from — so it lives here rather than four times over (rule 40).
+
+## What it does NOT do
+
+- **It never touches the pod on a Pass.** Passing closes only the offer; the pod
+  keeps the partner it has and the request goes back to the admin queue. A pod
+  can never end up live with no host, at no venue, or in a club with no admin.
+- **It does not decide who the replacement is.** That is an admin's judgement,
+  made in Admin > Pods > Change Requests against a candidate list the server
+  builds from the pod's club category and city.
+- **It does not cancel pods.** The admin's cancel action calls the platform's
+  one cancel-and-refund path (`podService.remove` with an `ADMIN` source).
+
+## The flow
+
+| Step | Who | What happens |
+| --- | --- | --- |
+| File | Venue / Host / Club Admin | `requestPodChange` — Account Health points deducted, one live request per pod per role |
+| Queue | Platform admin | The request appears under its role's tab in Admin > Pods > Change Requests |
+| Offer | Platform admin | `offerPodChange` — mail + WhatsApp + in-app notification to one matching partner |
+| Answer | The offered partner | `respondToPodChange` — APPROVE takes the place, PASS returns it to the queue |
+| Or cancel | Platform admin | `cancelPodForChange` — the pod is cancelled and every attendee refunded |
+
+## Reference
+
+| Export | What it is |
+| --- | --- |
+| `ChangeRequestBoard` | The studio section: "waiting on you" over "your requests". Pass `role` to scope it to one studio. |
+| `ChangeRequestCard` | One request, rendered the same whichever end you read it from. |
+| `RequestChangeDialog` | The confirm that states the health cost and the seats already sold before anything is filed. |
+| `useRequestPodChange` | The pod-row action. Returns `{ open, dialog, busy }`; render `dialog` once per screen. |
+| `useTranslation` / `fallbackT` | `changeRequest.*`, layered over the host surface's bundle. |
+| `MY_POD_CHANGE_BOARD` | The one partner-facing read: both lists plus the three current penalties. |
+| `POD_CHANGE_REQUESTS_TABLE` | The admin queue, server-paged, one role per call. |
+| `POD_CHANGE_CANDIDATES` / `POD_CHANGE_VENUE_SLOTS` | What the admin's assign drawer lists. |
+
+## Using it on a pod row
+
+```tsx
+import { useRequestPodChange } from '@duncit/pod-change-requests';
+import { changeRequestMenuKey } from '@duncit/utils';
+
+function VenuePodsSection() {
+  const change = useRequestPodChange({ onFiled: notifySuccess });
+  return (
+    <>
+      {pods.map((pod) => (
+        <StudioPodRow
+          key={pod.id}
+          pod={pod}
+          onRequestChange={() =>
+            change.open({ podDocId: pod.id, role: 'VENUE', attendeeCount: pod.attendee_count })
+          }
+        />
+      ))}
+      {change.dialog}
+    </>
+  );
+}
+```
+
+## The rules live elsewhere
+
+Everything a Tamagui screen needs too — `canRequestPodChange`,
+`changeRequestBlockedKey`, `changeRequestMenuKey`, `changeRequestStatusKey`,
+`changeRequestTone`, `splitChangeRequests`, `changePenaltyFor` and the
+`PodChangeRow` shape — is in `@duncit/utils`, because the native app cannot
+import a MUI package. This package is the MUI VIEW of those rules and nothing
+more (rule 40: share the logic, never the UI).

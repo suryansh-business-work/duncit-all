@@ -26,6 +26,7 @@ export const HostPodsDocument = gql(`
       pod_type
       pod_mode
       no_of_spots
+      seats_taken
       location_id
       venue_id
       zone_name

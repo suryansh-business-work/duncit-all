@@ -131,6 +131,8 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
     'Reply to this email and it lands straight on the ticket — no need to open anything.',
   'email.help.slotDecision':
     'A slot only holds while the request is open. If nobody decides, the host has to find another room.',
+  'email.help.changeRequestOffer':
+    'Nothing changes until you answer. Passing costs you nothing and simply sends the pod to the next partner on the list.',
   'email.help.stockWhy':
     'A product with no stock stops being sellable and drops out of the pod product picker until you restock it.',
 
@@ -281,6 +283,15 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.venueSlotPendingReminder.title': 'A slot request is still waiting',
   'email.venueSlotPendingReminder.body':
     'A host is waiting on your decision for the slot below, and the pod is close. Approving or declining takes one tap.',
+  'email.venueChangeRequestOffer.title': 'A pod needs a venue',
+  'email.venueChangeRequestOffer.body':
+    'The venue currently holding this pod has asked Duncit to move it. If you can take it, approve the slot below and the pod moves to you — the seats already sold come with it. If you cannot, pass and we will ask somebody else.',
+  'email.hostChangeRequestOffer.title': 'A pod needs a host',
+  'email.hostChangeRequestOffer.body':
+    'The host running this pod has asked Duncit to hand it over. If you can run it, approve below and it becomes yours — the venue, the date and everyone who has already booked stay exactly as they are. If you cannot, pass and we will ask somebody else.',
+  'email.clubAdminChangeRequestOffer.title': 'A club needs an admin',
+  'email.clubAdminChangeRequestOffer.body':
+    'The admin of this club has asked Duncit to hand it over. If you can take it on, approve below and you become the club’s admin — its pods, its members and its payouts come with it. If you cannot, pass and we will ask somebody else.',
   'email.venueSlotApproved.title': 'You approved a slot',
   'email.venueSlotApproved.body':
     'You approved the slot below, so it is now blocked in your calendar and the pod can go live.',

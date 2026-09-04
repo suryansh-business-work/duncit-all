@@ -11,6 +11,13 @@ interface RowActions {
   onOpenPod?: (pod: StudioPod) => void;
   /** "Cancel pod" behind the row's overflow menu — Venue Studio only. */
   onCancelPod?: (pod: StudioPod) => void;
+  /**
+   * "Request Change …" behind the same menu. Both studios pass it — a venue
+   * owner asks for a different venue, a club admin for a different club admin —
+   * so the LABEL comes from the caller rather than being decided here.
+   */
+  onRequestChange?: (pod: StudioPod) => void;
+  requestChangeLabel?: string;
 }
 
 interface BodyProps extends RowActions {
@@ -32,6 +39,8 @@ function StudioPodsBody({
   onRetry,
   onOpenPod,
   onCancelPod,
+  onRequestChange,
+  requestChangeLabel,
 }: Readonly<BodyProps>) {
   const { t } = useTranslation();
   if (loading) {
@@ -77,6 +86,8 @@ function StudioPodsBody({
           currencySymbol={currencySymbol}
           onOpen={onOpenPod}
           onCancel={onCancelPod}
+          onRequestChange={onRequestChange}
+          requestChangeLabel={requestChangeLabel}
         />
       ))}
     </Stack>
@@ -113,6 +124,8 @@ export default function StudioPodsSection({
   onRetry,
   onOpenPod,
   onCancelPod,
+  onRequestChange,
+  requestChangeLabel,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   // The summary counts every pod in scope while the list is capped, so this is
@@ -160,6 +173,8 @@ export default function StudioPodsSection({
             onRetry={onRetry}
             onOpenPod={onOpenPod}
             onCancelPod={onCancelPod}
+            onRequestChange={onRequestChange}
+            requestChangeLabel={requestChangeLabel}
           />
         </Stack>
       </CardContent>

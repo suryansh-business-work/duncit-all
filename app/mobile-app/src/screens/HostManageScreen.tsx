@@ -10,6 +10,7 @@ import { DraftDeleteConfirm } from '@/components/host-manage/DraftDeleteConfirm'
 import { HostApplyBanner } from '@/components/host-manage/HostApplyBanner';
 import { HostCategoriesCard } from '@/components/host-manage/HostCategoriesCard';
 import { HostDraftsSection } from '@/components/host-manage/HostDraftsSection';
+import { StudioChangeRequests } from '@/components/change-requests/StudioChangeRequests';
 import { HostPodsSection } from '@/components/host-manage/HostPodsSection';
 import { HostShareSection } from '@/components/host-manage/HostShareSection';
 import { useHostPayouts } from '@/hooks/useHostPayouts';
@@ -82,6 +83,8 @@ export function HostManageScreen() {
           {/* Completing a pod creates the payout the share section lists, so
               the screen owns the hook and threads the refetch across. */}
           <HostPodsSection onPodCompleted={() => fireAndForget(payoutsApi.refetch())} />
+
+          <StudioChangeRequests role="HOST" />
 
           <HostShareSection {...payoutsApi} />
 

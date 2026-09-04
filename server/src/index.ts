@@ -309,6 +309,17 @@ async function bootstrap() {
     const { WaMessageLogModel } = await import('@modules/platform/whatsapp/waMessageLog.model');
     await WaMessageLogModel.syncIndexes();
   });
+  // Builds the "one live change request per pod per role" unique partial index.
+  // It IS the duplicate guard: filing a request deducts Account Health points,
+  // so without this index a second tap is a second deduction for the same ask —
+  // and a partial index only lands on an already-deployed database through
+  // syncIndexes.
+  await safeSeed('podChangeRequestIndexes', async () => {
+    const { PodChangeRequestModel } = await import(
+      '@modules/pods/podChangeRequest/podChangeRequest.model'
+    );
+    await PodChangeRequestModel.syncIndexes();
+  });
   // Creates the gift card sales policy singleton (amount presets, validity) so
   // the buy page has amounts on day one.
   await safeSeed('giftCardSettings', async () => {

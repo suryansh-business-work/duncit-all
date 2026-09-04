@@ -36,6 +36,7 @@ const WalletPage = lazy(() => import('../pages/wallet-page'));
 const VenueManagePage = lazy(() => import('../pages/VenueManagePage'));
 const VenueEarningsPage = lazy(() => import('../pages/venue-earnings-page'));
 const VenueSlotRequestsPage = lazy(() => import('../pages/venue-slot-requests-page'));
+const ChangeRequestsPage = lazy(() => import('../pages/change-requests-page'));
 const VenueAvailabilityPage = lazy(() => import('../pages/venue-availability-page'));
 const VenueSettingsPage = lazy(() => import('../pages/venue-settings-page'));
 const VenueDetailsPage = lazy(() => import('../pages/VenueDetailsPage'));
@@ -215,6 +216,10 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/venues/manage" element={withAuth(<VenueManagePage />)} />
         <Route path="/venues/earnings" element={withAuth(<VenueEarningsPage />)} />
         <Route path="/venues/slot-requests" element={withAuth(<VenueSlotRequestsPage />)} />
+        {/* One route for all three roles: a person can be a venue owner AND a
+            host, and it is where the offer email, the WhatsApp CTA and the
+            notification all land. */}
+        <Route path="/change-requests" element={withAuth(<ChangeRequestsPage />)} />
         <Route path="/venues/availability" element={withAuth(<VenueAvailabilityPage />)} />
         <Route path="/venues/settings" element={withAuth(<VenueSettingsPage />)} />
         {/* Club Studio. `/clubs/manage` and NOT `/club/manage`, which would sit

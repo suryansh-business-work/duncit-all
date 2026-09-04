@@ -4,6 +4,7 @@ import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 import { venueSubLabel } from '@duncit/utils';
 
 import { SimpleBarChart, buildMonthlyCounts } from '@/components/SimpleBarChart';
+import { StudioChangeRequests } from '@/components/change-requests/StudioChangeRequests';
 import { StackScreen } from '@/components/StackScreen';
 import {
   StatTile,
@@ -83,6 +84,7 @@ export function VenueManageScreen() {
           {venues.length > 0 ? (
             <VenueStudioPods state={podsState} testID="venue-studio-pods" />
           ) : null}
+          {venues.length > 0 ? <StudioChangeRequests role="VENUE" /> : null}
           {!isLoading && venues.length === 0 ? (
             <Text testID="venue-dashboard-empty" fontSize={13} color="$muted">
               No venues yet — register one to start hosting pods.

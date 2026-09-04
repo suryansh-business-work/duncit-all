@@ -46,6 +46,12 @@ export const settingsTypeDefs = gql`
     auto_pod_assignment_expiry_hours: Int!
     "Account Health points a venue or host loses by withdrawing from an Auto Pod (0 disables the penalty)."
     auto_pod_cancel_health_penalty: Int!
+    "Account Health points a VENUE loses for filing a Request Change on a pod booked at it (0-10, 0 disables it)."
+    venue_change_request_health_penalty: Int!
+    "Account Health points a HOST loses for filing a Request Change on a pod they host (0-10, 0 disables it)."
+    host_change_request_health_penalty: Int!
+    "Account Health points a CLUB ADMIN loses for filing a Request Change on a pod in their club (0-10, 0 disables it)."
+    club_admin_change_request_health_penalty: Int!
     updated_at: String
   }
 
@@ -110,6 +116,12 @@ export const settingsTypeDefs = gql`
     auto_pod_assignment_expiry_hours: Int
     "Account Health points a venue or host loses by withdrawing from an Auto Pod (0-100, 0 disables the penalty)."
     auto_pod_cancel_health_penalty: Int
+    "Account Health points a venue loses for filing a Request Change (0-10, 0 disables it)."
+    venue_change_request_health_penalty: Int
+    "Account Health points a host loses for filing a Request Change (0-10, 0 disables it)."
+    host_change_request_health_penalty: Int
+    "Account Health points a club admin loses for filing a Request Change (0-10, 0 disables it)."
+    club_admin_change_request_health_penalty: Int
   }
 
   type FeatureFlag {

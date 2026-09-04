@@ -61,3 +61,13 @@ export const EARN_JOURNEYS: readonly EarnJourney[] = [
 export function partnerPortalUrl(path: string): string {
   return `${PARTNER_PORTAL_URL}${path}`;
 }
+
+/**
+ * Every journey kind, in display order — the "show them all" argument for
+ * `EarnJourneyList`'s `kinds`.
+ *
+ * The prop is REQUIRED rather than defaulted so a surface that wants one
+ * journey (the Partners sidebar links straight at "Be a Host") and a surface
+ * that wants the whole menu read the same way at the call site.
+ */
+export const EARN_KINDS: readonly string[] = EARN_JOURNEYS.map((journey) => journey.kind);

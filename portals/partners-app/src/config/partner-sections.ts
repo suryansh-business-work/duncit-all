@@ -3,9 +3,14 @@ import type { AppNavItem } from '@duncit/shell';
 /**
  * The four partner areas of this console. Each is an access the Onboarding
  * portal (on an approved application) or the Admin portal grants as a role, so
- * holding the role is the only thing that puts an area in the sidebar or lets
- * its routes render. Order here is sidebar order — and, via `landingPath()`,
- * which area `/` opens for somebody who holds more than one.
+ * holding the role is the only thing that lets an area's ROUTES render, and the
+ * only thing that puts its own entries in the sidebar.
+ *
+ * Two of them (Host, E-Commerce Brand) also keep their sidebar group for
+ * somebody who holds no role yet — see `onboarding` — because being invited in
+ * is the point of this console for a not-yet-partner. Order here is sidebar
+ * order — and, via `landingPath()`, which area `/` opens for somebody who holds
+ * more than one.
  */
 export type PartnerRole = 'CLUB_ADMIN' | 'VENUE_OWNER' | 'HOST' | 'ECOMM_MANAGER';
 
@@ -22,6 +27,17 @@ export interface PartnerSection {
   nav: AppNavItem;
   /** The area's Auto Pods route, for the sections that take part. */
   autoPodsTo?: string;
+  /**
+   * The ONE entry the group shows to somebody who does not hold the role yet.
+   *
+   * A section without it is simply absent until it is granted (Club Admin and
+   * Venue Owner are reached from Earn with Duncit). Host and E-Commerce Brand
+   * keep their dropdown either way, so the sidebar reads the same for a partner
+   * and a not-yet-partner and the way IN is where the area itself is — the
+   * entry opens the matching Earn with Duncit journey, not a dashboard with no
+   * data behind it.
+   */
+  onboarding?: AppNavItem;
 }
 
 export const PARTNER_SECTIONS: readonly PartnerSection[] = [
@@ -35,6 +51,12 @@ export const PARTNER_SECTIONS: readonly PartnerSection[] = [
       children: [
         { label: 'Dashboard', to: '/club-admin/dashboard', icon: 'dashboard' },
         { label: 'Clubs', to: '/club-admin/clubs', icon: 'storefront' },
+        {
+          label: 'Change Requests',
+          labelKey: 'changeRequest.sectionTitle',
+          to: '/club-admin/change-requests',
+          icon: 'rule',
+        },
         { label: 'Pod Monitoring (AI)', to: '/club-admin/monitoring', icon: 'insights' },
       ],
     },
@@ -50,6 +72,12 @@ export const PARTNER_SECTIONS: readonly PartnerSection[] = [
         { label: 'Venue Dashboard', to: '/venues/dashboard', icon: 'analytics' },
         { label: 'Venue Management', to: '/register-venue', icon: 'storefront' },
         { label: 'Slot Requests', to: '/venues/requests', icon: 'calendar' },
+        {
+          label: 'Change Requests',
+          labelKey: 'changeRequest.sectionTitle',
+          to: '/venues/change-requests',
+          icon: 'rule',
+        },
         { label: 'Pods', to: '/venues/pods', icon: 'orders' },
         { label: 'Settings', labelKey: 'shell.nav.settings', to: '/venues/settings', icon: 'settings' },
       ],
@@ -59,12 +87,21 @@ export const PARTNER_SECTIONS: readonly PartnerSection[] = [
     role: 'HOST',
     paths: ['/host'],
     autoPodsTo: '/host/auto-pods',
+    // Deliberately NOT `/become-host`: that is the application FORM, the half
+    // of hosting that follows the onboarding meeting. The way in is the journey.
+    onboarding: { label: 'Be a Host', labelKey: 'shell.nav.beAHost', to: '/be-a-host', icon: 'volunteer-activism' },
     nav: {
       label: 'Host',
       icon: 'work',
       children: [
-        { label: 'Dashboard', to: '/host/dashboard', icon: 'analytics' },
+        { label: 'Host Dashboard', labelKey: 'shell.nav.hostDashboard', to: '/host/dashboard', icon: 'analytics' },
         { label: 'Your Pods', to: '/host/pods', icon: 'orders' },
+        {
+          label: 'Change Requests',
+          labelKey: 'changeRequest.sectionTitle',
+          to: '/host/change-requests',
+          icon: 'rule',
+        },
       ],
     },
   },
@@ -72,11 +109,22 @@ export const PARTNER_SECTIONS: readonly PartnerSection[] = [
     role: 'ECOMM_MANAGER',
     products: true,
     paths: ['/ecomm', '/ecomm-brand'],
+    onboarding: {
+      label: 'Become an E-Commerce Brand Partner',
+      labelKey: 'shell.nav.becomeAnECommerceBrandPartner',
+      to: '/become-a-brand-partner',
+      icon: 'volunteer-activism',
+    },
     nav: {
       label: 'E-Commerce Brand',
       icon: 'marketplace',
       children: [
-        { label: 'Dashboard', to: '/ecomm/dashboard', icon: 'analytics' },
+        {
+          label: 'E-Commerce Brand Dashboard',
+          labelKey: 'shell.nav.eCommerceBrandDashboard',
+          to: '/ecomm/dashboard',
+          icon: 'analytics',
+        },
         { label: 'Your Brands', to: '/ecomm-brand', icon: 'storefront' },
       ],
     },

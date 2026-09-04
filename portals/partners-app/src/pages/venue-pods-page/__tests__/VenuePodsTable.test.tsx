@@ -58,6 +58,8 @@ const renderTable = (data: VenuePodRow[] = rows) => {
       externalFilters={[{ field: 'tab', op: 'eq', value: 'ALL' }]}
       refetchRef={{ current: null }}
       onRowClick={onRowClick}
+      onRequestChange={vi.fn()}
+      requestChangeLabel="Request Change Venue"
       onCancel={onCancel}
     />,
   );

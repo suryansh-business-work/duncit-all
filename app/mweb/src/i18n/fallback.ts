@@ -1,6 +1,7 @@
 import {
   CONTENT_REPORT_BUNDLE,
   EARNINGS_BUNDLE,
+  CHANGE_REQUEST_BUNDLE,
   POD_TIMELINE_BUNDLE,
   createTranslator,
   flattenCatalogue,
@@ -43,6 +44,7 @@ import {
 // dialog render here too.
 export const MWEB_FALLBACK: NestedCatalogue = {
   ...MWEB_BUNDLE,
+  ...CHANGE_REQUEST_BUNDLE,
   ...CONTENT_REPORT_BUNDLE,
   ...EARNINGS_BUNDLE,
   ...POD_TIMELINE_BUNDLE,

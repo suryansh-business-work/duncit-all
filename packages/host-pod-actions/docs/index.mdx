@@ -134,6 +134,21 @@ const { menuHandlers, dialogs } = useHostPodActions(() => refetch());
 `PodResubmitDialog` (new venue + slot, same pod reused); every other pod opens the narrow
 `PodEditDialog` — title, description, media and the pod's capacity.
 
+### The rows are their own file
+
+`HostPodActionsMenu` is the button, the anchor and the popover; the ROWS inside it live in
+`HostPodActionsItems`, which the menu spreads its remaining props onto. The split happened when the
+menu passed the 200-line ceiling (rule 9) — nothing about the menu's public props changed.
+
+### "Request Change Host" is opt-in
+
+Pass `onRequestChange` and an already-translated `requestChangeLabel` and the menu grows one row,
+directly above Cancel: asking Duncit for a different host keeps the pod and everyone's seat, so a
+host should pass it on the way to the destructive one. The label is handed in rather than built
+here because it lives in `changeRequest.*` — a namespace owned by `@duncit/pod-change-requests`,
+which this package deliberately does not depend on. A surface with no board to answer the request
+on passes neither prop and keeps the menu it had.
+
 ### Complete Pod is a PAST-pod action
 
 `menuHandlers` reads `canCompletePod` from `@duncit/utils` off the pod's own

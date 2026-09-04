@@ -84,6 +84,7 @@ export const productSchema = z
     host_request_allowed: z.boolean(),
     delivery_available: z.boolean(),
     delivery_charge: z.number({ error: 'Number required' }).min(0).max(100000),
+    delivery_target: z.enum(['HOST', 'VENUE', 'SHIPROCKET']),
     // Required for Duncit products only — see the ownership refine below.
     pickup_location_id: z.string(),
 

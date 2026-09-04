@@ -8,6 +8,7 @@ import {
 } from '@mui/material';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import RhfNumberField from './RhfNumberField';
+import DeliveryTargetSelect from './DeliveryTargetSelect';
 import WarehouseSelect from './WarehouseSelect';
 import type { InventoryProductFormValues } from './types';
 import { useTranslation } from '@duncit/shell';
@@ -27,9 +28,13 @@ export default function DeliveryAvailabilitySection() {
   const { control } = useFormContext<InventoryProductFormValues>();
   const deliveryAvailable = useWatch({ control, name: 'delivery_available' });
   const ownership = useWatch({ control, name: 'ownership' });
-  const chargeHint = deliveryAvailable
-    ? 'Flat fee per order; set 0 for free delivery'
-    : 'Enable "Delivery available" to set a charge';
+  const shiprocket = useWatch({ control, name: 'delivery_target' }) === 'SHIPROCKET';
+  // On ShipRocket the live warehouse rate is what the buyer pays, so this
+  // number is only the fallback when the lane cannot be rated — saying
+  // "flat fee" there is what has admins leaving it at 0.
+  let chargeHint = 'Enable "Delivery available" to set a charge';
+  if (deliveryAvailable && shiprocket) chargeHint = t('products.delivery.chargeFallbackHint');
+  else if (deliveryAvailable) chargeHint = 'Flat fee per order; set 0 for free delivery';
 
   return (
     <Grid container spacing={2}>
@@ -73,15 +78,25 @@ export default function DeliveryAvailabilitySection() {
           slotProps={{ input: { startAdornment: <InputAdornment position="start">₹</InputAdornment> } }}
         />
       </Grid>
-      {/* Duncit warehouses only — a brand product ships from the brand's own. */}
+      {/* Duncit products only — a brand product keeps the delivery method and
+          warehouse it was listed with, neither of which this form manages. */}
       {ownership === 'DUNCIT' && (
-        <Grid
-          size={{
-            xs: 12,
-            md: 6
-          }}>
-          <WarehouseSelect />
-        </Grid>
+        <>
+          <Grid
+            size={{
+              xs: 12,
+              md: 6
+            }}>
+            <DeliveryTargetSelect />
+          </Grid>
+          <Grid
+            size={{
+              xs: 12,
+              md: 6
+            }}>
+            <WarehouseSelect />
+          </Grid>
+        </>
       )}
       <Grid size={12}>
         <Typography variant="subtitle2" sx={{

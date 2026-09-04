@@ -585,7 +585,22 @@ changeRequests: {
       localesIntro:
         'Languages offered across the apps, portals and websites. The default is the source language every other falls back to.',
       addLocale: 'Add locale',
+      editLocale: 'Edit {code}',
       code: 'Code',
+
+      // The locale picker. Choosing a language fills its tag, both names and
+      // its writing direction, which is what stopped anyone adding one before.
+      localePickerHint:
+        'Search the ISO language list, or type a BCP-47 tag such as en-IN. Picking one fills in the names and the writing direction.',
+      localeCodeFixed: 'The code is stored on every profile, so it cannot be changed',
+      languageNameHint: "Shown in the switcher, in the language's own script",
+      englishNameHint: 'Shown in admin lists',
+      sortOrderHint: 'Order in the language switcher',
+
+      // The source language everything falls back to.
+      defaultLocked:
+        'This is the default language — the source every other one falls back to. It cannot be switched off or removed; make another language the default to move it.',
+      defaultLockedSwitch: 'Locked while this is the default language',
       translated: 'Translated',
       defaultNotRemovable: 'The default language cannot be removed',
       localeAdded: 'Locale added',

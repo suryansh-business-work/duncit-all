@@ -163,6 +163,22 @@ export const localizationService = {
       update.is_default = input.is_default;
     }
 
+    // The source language is what every other locale falls back to, so it is
+    // not a row an edit may switch off. Demoting or deactivating it would
+    // leave the platform with nothing to fall back to; MOVING the default is
+    // done by promoting another locale, which demotes this one below.
+    const current = await LocaleModel.findOne({ code });
+    if (current?.is_default) {
+      if (update.is_default === false) {
+        throw badInput(
+          "This is the default language. Make another language the default instead of turning this one off.",
+        );
+      }
+      if (update.is_active === false) {
+        throw badInput("The default language cannot be deactivated");
+      }
+    }
+
     const doc = await LocaleModel.findOneAndUpdate({ code }, { $set: update }, {
       new: true,
       upsert: true,

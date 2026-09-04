@@ -37,6 +37,43 @@ describe('localizationService — locales', () => {
     expect((await localizationService.listLocales()).map((l) => l.code)).toContain('hi-IN');
   });
 
+  // The source language is what every other locale falls back to. Turning it
+  // off would leave nothing to fall back TO, so an edit cannot: the default is
+  // moved by promoting a different language, which demotes this one.
+  it('refuses to demote or deactivate the default locale', async () => {
+    await seedLocales();
+
+    await expect(
+      localizationService.upsertLocale({ code: 'en-IN', label: 'English', is_default: false }),
+    ).rejects.toThrow(/Make another language the default/i);
+
+    await expect(
+      localizationService.upsertLocale({ code: 'en-IN', label: 'English', is_active: false }),
+    ).rejects.toThrow(/cannot be deactivated/i);
+
+    // Neither attempt changed anything.
+    const before = (await localizationService.listLocales()).find((l) => l.code === 'en-IN');
+    expect(before).toMatchObject({ is_default: true, is_active: true });
+
+    // An unrelated edit to the default still goes through.
+    const renamed = await localizationService.upsertLocale({
+      code: 'en-IN',
+      label: 'English',
+      english_label: 'English (Bharat)',
+      sort_order: 3,
+    });
+    expect(renamed).toMatchObject({ english_label: 'English (Bharat)', is_default: true });
+
+    // And promoting another language releases the old default to be edited freely.
+    await localizationService.upsertLocale({ code: 'hi-IN', label: 'हिन्दी', is_default: true });
+    const demoted = await localizationService.upsertLocale({
+      code: 'en-IN',
+      label: 'English',
+      is_active: false,
+    });
+    expect(demoted).toMatchObject({ is_default: false, is_active: false });
+  });
+
   it('rejects a blank code or label', async () => {
     await expect(localizationService.upsertLocale({ code: '  ', label: 'X' })).rejects.toThrow(
       /code is required/i,

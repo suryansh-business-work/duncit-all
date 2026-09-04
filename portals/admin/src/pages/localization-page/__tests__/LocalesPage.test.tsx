@@ -7,6 +7,17 @@ import { DELETE_LOCALE, LOCALES, UPSERT_LOCALE, type LocaleRow } from '../querie
 import LocalesPage from '../LocalesPage';
 import type { LocaleFormValues } from '../LocaleDialog';
 
+/**
+ * A locale row carries three actions, in this order. Naming them is what
+ * stopped this suite breaking the last time one was added in front of the
+ * others — an index counted from the left is a test that fails somewhere
+ * unrelated to the change that broke it.
+ */
+const rowActions = (row: HTMLElement) => {
+  const [autoTranslate, edit, remove] = within(row).getAllByRole('button');
+  return { autoTranslate, edit, remove };
+};
+
 /** The real dialog is a react-hook-form + zod form of its own; this stub keeps
  * the page's own wiring (which row is being edited, saving flag, submit) under
  * test without re-testing the form. */
@@ -107,9 +118,9 @@ describe('LocalesPage', () => {
     expect(within(defaultRow).getByText('Active')).toBeInTheDocument();
 
     const hindiRow = screen.getByText('हिन्दी').closest('tr') as HTMLElement;
-    // english_label is blank on this row -> em dash placeholder.
-    expect(within(hindiRow).getByText('—')).toBeInTheDocument();
-    expect(within(hindiRow).getByText('Off')).toBeInTheDocument();
+    // Blank english_label and no coverage row yet -> an em dash in both cells.
+    expect(within(hindiRow).getAllByText('—')).toHaveLength(2);
+    expect(within(hindiRow).getByText('Inactive')).toBeInTheDocument();
     expect(within(hindiRow).queryByText('Default')).not.toBeInTheDocument();
     expect(within(hindiRow).queryByText('RTL')).not.toBeInTheDocument();
 
@@ -145,7 +156,7 @@ describe('LocalesPage', () => {
   it('opens the dialog pre-loaded with the row being edited', async () => {
     renderWithProviders(<LocalesPage />, { mocks: [localesMock([makeLocale(), HINDI])] });
     const hindiRow = (await screen.findByText('hi-IN')).closest('tr') as HTMLElement;
-    fireEvent.click(within(hindiRow).getAllByRole('button')[0]);
+    fireEvent.click(rowActions(hindiRow).edit);
     expect(screen.getByTestId('dialog-editing')).toHaveTextContent('hi-IN');
   });
 
@@ -183,7 +194,7 @@ describe('LocalesPage', () => {
       ],
     });
     const hindiRow = (await screen.findByText('hi-IN')).closest('tr') as HTMLElement;
-    fireEvent.click(within(hindiRow).getAllByRole('button')[0]);
+    fireEvent.click(rowActions(hindiRow).edit);
     fireEvent.click(screen.getByText('dialog-submit'));
 
     expect(await screen.findByText('Locale updated')).toBeInTheDocument();
@@ -219,18 +230,22 @@ describe('LocalesPage', () => {
       ],
     });
     const hindiRow = (await screen.findByText('hi-IN')).closest('tr') as HTMLElement;
-    const [, deleteButton] = within(hindiRow).getAllByRole('button');
-    expect(deleteButton).not.toBeDisabled();
-    fireEvent.click(deleteButton);
+    const { remove } = rowActions(hindiRow);
+    expect(remove).not.toBeDisabled();
+    fireEvent.click(remove);
 
     expect(await screen.findByText('hi-IN removed')).toBeInTheDocument();
   });
 
-  it('cannot delete the default locale', async () => {
+  it('cannot delete or auto-translate the default locale', async () => {
     renderWithProviders(<LocalesPage />, { mocks: [localesMock([makeLocale()])] });
     const defaultRow = (await screen.findByText('en-IN')).closest('tr') as HTMLElement;
-    const [, deleteButton] = within(defaultRow).getAllByRole('button');
-    expect(deleteButton).toBeDisabled();
+    const { autoTranslate, edit, remove } = rowActions(defaultRow);
+    expect(remove).toBeDisabled();
+    // It is the source language: there is nothing to translate it from.
+    expect(autoTranslate).toBeDisabled();
+    // Editing it is still allowed — the locked fields are the dialog's job.
+    expect(edit).not.toBeDisabled();
   });
 
   it('surfaces a delete failure', async () => {
@@ -244,7 +259,7 @@ describe('LocalesPage', () => {
       ],
     });
     const hindiRow = (await screen.findByText('hi-IN')).closest('tr') as HTMLElement;
-    fireEvent.click(within(hindiRow).getAllByRole('button')[1]);
+    fireEvent.click(rowActions(hindiRow).remove);
 
     expect(await screen.findByText('Locale is still in use')).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByText('hi-IN removed')).not.toBeInTheDocument());

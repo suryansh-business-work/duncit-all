@@ -3,18 +3,20 @@ import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
+  Alert,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
   Stack,
-  Switch,
   TextField,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import type { LocaleRow } from './queries';
+import type { LocaleOption } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
+import LocalePicker from './LocalePicker';
+import LocaleFlagSwitches from './LocaleFlagSwitches';
+import type { LocaleRow } from './queries';
 
 /** BCP-47-ish: a language, optionally a region — e.g. en, en-IN, zh-Hant-HK. */
 const localeSchema = z.object({
@@ -60,7 +62,10 @@ export default function LocaleDialog({ open, editing, saving, onClose, onSubmit 
     watch,
     setValue,
     formState: { errors },
-  } = useForm<LocaleFormValues, any, LocaleFormValues>({ resolver: zodResolver(localeSchema) as unknown as Resolver<LocaleFormValues, any, LocaleFormValues>, defaultValues: blank });
+  } = useForm<LocaleFormValues, any, LocaleFormValues>({
+    resolver: zodResolver(localeSchema) as unknown as Resolver<LocaleFormValues, any, LocaleFormValues>,
+    defaultValues: blank,
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -79,76 +84,85 @@ export default function LocaleDialog({ open, editing, saving, onClose, onSubmit 
     );
   }, [open, editing, reset]);
 
+  /** A picked (or typed) language fills the tag, both names and the direction. */
+  const applyPick = (option: LocaleOption) => {
+    setValue('code', option.code, { shouldValidate: true });
+    setValue('label', option.label);
+    setValue('english_label', option.english_label);
+    setValue('is_rtl', option.is_rtl);
+  };
+
+  // The platform's source language: everything else falls back to it, so it
+  // must stay the default and stay switched on. Promote another language to
+  // move it — there is no state in which no language is the default.
+  const isDefault = editing?.is_default === true;
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{editing ? `Edit ${editing.code}` : 'Add locale'}</DialogTitle>
+      <DialogTitle>
+        {editing
+          ? t('admin.localization.editLocale', { vars: { code: editing.code } })
+          : t('admin.localization.addLocale')}
+      </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 1 }}>
-          <TextField
-            label={t('admin.localization.localeCode')}
-            placeholder="hi-IN"
-            // The code is the stable id stored on every user's profile, so it
-            // cannot be edited once created.
-            disabled={!!editing}
-            error={!!errors.code}
-            helperText={errors.code?.message ?? 'BCP-47 tag, e.g. en-IN, hi-IN, ar-AE'}
-            fullWidth
-            {...register('code')}
-          />
+          {isDefault && <Alert severity="info">{t('admin.localization.defaultLocked')}</Alert>}
+          {editing ? (
+            <TextField
+              label={t('admin.localization.localeCode')}
+              // The code is the stable id stored on every user's profile, so it
+              // cannot be edited once created.
+              disabled
+              value={editing.code}
+              helperText={t('admin.localization.localeCodeFixed')}
+              fullWidth
+            />
+          ) : (
+            <LocalePicker
+              value={watch('code')}
+              error={errors.code?.message}
+              onPick={applyPick}
+            />
+          )}
           <TextField
             label={t('admin.localization.languageName')}
             placeholder="हिन्दी"
             error={!!errors.label}
-            helperText={errors.label?.message ?? "Shown in the switcher, in the language's own script"}
+            helperText={errors.label?.message ?? t('admin.localization.languageNameHint')}
             fullWidth
+            slotProps={{ inputLabel: { shrink: !!watch('label') } }}
             {...register('label')}
           />
           <TextField
             label={t('admin.localization.englishName')}
             placeholder={t('admin.localization.englishNamePlaceholder')}
             error={!!errors.english_label}
-            helperText={errors.english_label?.message ?? 'Shown in admin lists'}
+            helperText={errors.english_label?.message ?? t('admin.localization.englishNameHint')}
             fullWidth
+            slotProps={{ inputLabel: { shrink: !!watch('english_label') } }}
             {...register('english_label')}
           />
           <TextField
             label={t('admin.podPlans.sortOrder')}
             type="number"
             error={!!errors.sort_order}
-            helperText={errors.sort_order?.message ?? 'Order in the language switcher'}
+            helperText={errors.sort_order?.message ?? t('admin.localization.sortOrderHint')}
             fullWidth
             {...register('sort_order')}
           />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={watch('is_active')}
-                onChange={(_, v) => setValue('is_active', v)}
-              />
-            }
-            label={t('admin.localization.activeHint')}
-          />
-          <FormControlLabel
-            control={
-              <Switch checked={watch('is_rtl')} onChange={(_, v) => setValue('is_rtl', v)} />
-            }
-            label={t('admin.localization.rtl')}
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={watch('is_default')}
-                onChange={(_, v) => setValue('is_default', v)}
-              />
-            }
-            label={t('admin.localization.defaultHint')}
+          <LocaleFlagSwitches
+            isActive={watch('is_active')}
+            isRtl={watch('is_rtl')}
+            isDefault={watch('is_default')}
+            lockedAsDefault={isDefault}
+            onChange={(field, value) => setValue(field, value)}
           />
         </Stack>
       </DialogContent>
       <DialogActions>
         <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
         <DuncitButton variant="contained" onClick={handleSubmit(onSubmit)} disabled={saving}>
-          {saving ? 'Saving…' : 'Save'}
+          {saving ? t('shell.common.saving') : t('shell.common.save')}
         </DuncitButton>
       </DialogActions>
     </Dialog>

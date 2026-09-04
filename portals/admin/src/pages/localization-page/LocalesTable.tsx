@@ -87,11 +87,20 @@ export default function LocalesTable({
                   </Stack>
                 </TableCell>
                 <TableCell align="right">
-                  <Tooltip title={t('admin.localization.autoTranslate')}>
+                  {/* The source language is what everything else is
+                      translated FROM, so there is nothing to fill it in with. */}
+                  <Tooltip
+                    title={
+                      row.is_default
+                        ? t('admin.localization.autoTranslateDefault')
+                        : t('admin.localization.autoTranslate')
+                    }
+                  >
                     <span>
                       <DuncitIconButton
                         size="small"
                         color="primary"
+                        disabled={row.is_default}
                         onClick={() => onAutoTranslate(row)}
                       >
                         <AutoAwesomeIcon fontSize="small" />

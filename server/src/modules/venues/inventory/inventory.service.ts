@@ -1475,6 +1475,14 @@ export const inventoryService = {
     applyInput(doc, input);
     // Duncit-owned products must keep a valid Duncit warehouse after any edit.
     if (doc.ownership === 'DUNCIT') await assertDuncitWarehouse(doc.pickup_location_id);
+    // A ShipRocket product IS its warehouse — the rate and the shipment both
+    // start at that pincode — so no product may carry the target without one.
+    // Without this guard the checkout quotes it at ₹0 instead of failing loudly.
+    if (doc.delivery_target === 'SHIPROCKET' && !doc.pickup_location_id) {
+      throw new GraphQLError('Select the warehouse this product ships from', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
     const info = userInfo(user);
     doc.last_updated_by_id = info.id;
     await doc.save();

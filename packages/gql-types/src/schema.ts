@@ -7133,6 +7133,8 @@ export type InventoryProductInput = {
   damaged_count?: InputMaybe<Scalars['Int']['input']>;
   delivery_available?: InputMaybe<Scalars['Boolean']['input']>;
   delivery_charge?: InputMaybe<Scalars['Float']['input']>;
+  /** How this product reaches the buyer. SHIPROCKET is what makes the checkout rate the parcel live from the pickup_location_id warehouse pincode; HOST/VENUE are hand-carried and never quoted. */
+  delivery_target?: InputMaybe<ProductListingDeliveryTarget>;
   description?: InputMaybe<Scalars['String']['input']>;
   discount_percent?: InputMaybe<Scalars['Float']['input']>;
   expiry_date?: InputMaybe<Scalars['String']['input']>;
@@ -23562,6 +23564,8 @@ export type UpdateInventoryProductInput = {
   damaged_count?: InputMaybe<Scalars['Int']['input']>;
   delivery_available?: InputMaybe<Scalars['Boolean']['input']>;
   delivery_charge?: InputMaybe<Scalars['Float']['input']>;
+  /** How this product reaches the buyer. SHIPROCKET is what makes the checkout rate the parcel live from the pickup_location_id warehouse pincode; HOST/VENUE are hand-carried and never quoted. */
+  delivery_target?: InputMaybe<ProductListingDeliveryTarget>;
   description?: InputMaybe<Scalars['String']['input']>;
   discount_percent?: InputMaybe<Scalars['Float']['input']>;
   expiry_date?: InputMaybe<Scalars['String']['input']>;

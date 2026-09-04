@@ -100,6 +100,22 @@ async function loadSnapshotUnitCosts(podIds: string[]): Promise<Map<string, numb
   return map;
 }
 
+/** The chosen variant of a product, or null for a non-variant line. */
+const findVariant = (product: any, variantId: string) =>
+  variantId ? ((product.variants ?? []).find((v: any) => String(v._id) === variantId) ?? null) : null;
+
+/** Shipment weight of one product's cart lines. A variant carries its OWN
+ * weight_kg and the flat product field only ever mirrors the FIRST variant, so
+ * rating every line at the flat weight mis-charges the moment a buyer picks any
+ * other one. A variant left at 0 (never entered) falls back to the product. */
+function productLinesWeight(product: any, lines: CartLineSelection[]): number {
+  return lines.reduce((sum, line) => {
+    const variant = findVariant(product, line.variant_id);
+    const weight = Number(variant?.weight_kg) || Number(product.weight_kg) || 0;
+    return sum + weight * line.quantity;
+  }, 0);
+}
+
 /** Free-delivery rule (per cart line): a line qualifies when its goods value
  * (qty × unit price) meets the product's free_delivery_above threshold. The
  * unit price mirrors what the checkout charges: the chosen variant's live
@@ -114,9 +130,7 @@ function productLinesQualifyFree(
   if (threshold === null || threshold === undefined) return false;
   if (lines.length === 0) return false;
   return lines.every((line) => {
-    const variant = line.variant_id
-      ? (product.variants ?? []).find((v: any) => String(v._id) === line.variant_id)
-      : null;
+    const variant = findVariant(product, line.variant_id);
     let unitCost: number;
     if (variant) {
       unitCost = Number(variant.unit_cost ?? 0);
@@ -151,7 +165,7 @@ function buildShipGroups(
     const key = `${podId}|${warehouseId}`;
     const group =
       groups.get(key) ?? { pod_id: podId, warehouse_id: warehouseId, weight: 0, manual: 0, free: true };
-    group.weight += Number(product.weight_kg || 0) * qty;
+    group.weight += productLinesWeight(product, lines);
     group.manual = Math.max(group.manual, Number(product.delivery_charge || 0));
     group.free =
       group.free && productLinesQualifyFree(product, lines, snapshotUnitCosts.get(`${podId}|${productId}`));

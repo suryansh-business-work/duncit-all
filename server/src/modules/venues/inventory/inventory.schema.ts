@@ -341,6 +341,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     length_cm: Float
     breadth_cm: Float
     weight_kg: Float
+    "How this product reaches the buyer. SHIPROCKET is what makes the checkout rate the parcel live from the pickup_location_id warehouse pincode; HOST/VENUE are hand-carried and never quoted."
+    delivery_target: ProductListingDeliveryTarget
     "Duncit warehouse (owner_kind DUNCIT) origin. Required for Duncit-owned products (enforced server-side)."
     pickup_location_id: ID
     is_active: Boolean
@@ -388,6 +390,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     length_cm: Float
     breadth_cm: Float
     weight_kg: Float
+    "How this product reaches the buyer. SHIPROCKET is what makes the checkout rate the parcel live from the pickup_location_id warehouse pincode; HOST/VENUE are hand-carried and never quoted."
+    delivery_target: ProductListingDeliveryTarget
     "Duncit warehouse (owner_kind DUNCIT) origin. Required for Duncit-owned products (enforced server-side)."
     pickup_location_id: ID
     is_active: Boolean

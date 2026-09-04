@@ -10,6 +10,7 @@ export type UnitType =
   | 'OTHER';
 export type InventoryStatus = 'ACTIVE' | 'DRAFT' | 'OUT_OF_STOCK' | 'ARCHIVED';
 export type ProductOwnership = 'DUNCIT' | 'BRAND';
+export type DeliveryTarget = 'HOST' | 'VENUE' | 'SHIPROCKET';
 export type InventoryVisibility = 'PUBLIC' | 'INTERNAL';
 export type StockMovementType =
   | 'IN'
@@ -69,6 +70,9 @@ export interface InventoryProductFormValues {
   host_request_allowed: boolean;
   delivery_available: boolean;
   delivery_charge: number;
+  /** How the parcel reaches the buyer. SHIPROCKET is what makes the checkout
+   * rate it live from the warehouse below; HOST/VENUE are hand-carried. */
+  delivery_target: DeliveryTarget;
   pickup_location_id: string;
 
   height_cm: number;
@@ -115,6 +119,7 @@ export const blankProductForm: InventoryProductFormValues = {
   host_request_allowed: true,
   delivery_available: false,
   delivery_charge: 0,
+  delivery_target: 'HOST',
   pickup_location_id: '',
   height_cm: 0,
   length_cm: 0,
@@ -165,6 +170,7 @@ export function toFormValues(product: any): InventoryProductFormValues {
     host_request_allowed: product.host_request_allowed ?? true,
     delivery_available: product.delivery_available ?? false,
     delivery_charge: product.delivery_charge ?? 0,
+    delivery_target: (product.delivery_target as DeliveryTarget) ?? 'HOST',
     pickup_location_id: product.pickup_location_id ?? '',
     height_cm: product.height_cm ?? 0,
     length_cm: product.length_cm ?? 0,
@@ -175,7 +181,7 @@ export function toFormValues(product: any): InventoryProductFormValues {
 
 export function toSubmitInput(values: InventoryProductFormValues) {
   // `ownership` is read-only context, not a field of UpdateInventoryProductInput.
-  const { id: _id, ownership, pickup_location_id, ...rest } = values;
+  const { id: _id, ownership, pickup_location_id, delivery_target, ...rest } = values;
   const input = {
     ...rest,
     sku: rest.sku.trim().toUpperCase(),
@@ -185,7 +191,8 @@ export function toSubmitInput(values: InventoryProductFormValues) {
     images: rest.images.filter(Boolean),
   };
   // A brand-owned product ships from the brand's own warehouse, which this form
-  // never lists — so it must not write that field back either.
+  // never lists — so it must not write that field, or the delivery method that
+  // depends on it, back either.
   if (ownership === 'BRAND') return input;
-  return { ...input, pickup_location_id };
+  return { ...input, delivery_target, pickup_location_id };
 }

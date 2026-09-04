@@ -204,6 +204,9 @@ export const PRODUCTS_BUNDLE: NestedCatalogue = {
 
     delivery: {
       charge: 'Delivery charge',
+      target: 'Delivery method',
+      targetHint: 'ShipRocket rates and books the courier live from the warehouse below. Host and Venue delivery are hand-carried and never quoted.',
+      chargeFallbackHint: 'Fallback only — charged when ShipRocket cannot rate the warehouse to the buyer.',
       length: 'Length',
       breadth: 'Breadth',
       height: 'Height',

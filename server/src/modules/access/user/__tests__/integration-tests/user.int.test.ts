@@ -1,16 +1,20 @@
 // Stub the email transport: register() fires a welcome email as fire-and-forget,
 // which otherwise hits Mongo after the per-suite teardown closes the client and
 // surfaces a spurious unhandled rejection (non-zero exit despite green tests).
-jest.mock("@services/email/email.service", () => ({
-  sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
-  sendAdminCredentialsEmail: jest.fn().mockResolvedValue(undefined),
-  sendEmailVerificationOtpEmail: jest.fn().mockResolvedValue(undefined),
-  sendPasswordResetOtpEmail: jest.fn().mockResolvedValue(undefined),
-  sendPasswordChangeOtpEmail: jest.fn().mockResolvedValue(undefined),
-  sendAccountDeletionOtpEmail: jest.fn().mockResolvedValue(undefined),
-  sendAdminAccessGrantedEmail: jest.fn().mockResolvedValue(undefined),
-  sendAdminAccessRevokedEmail: jest.fn().mockResolvedValue(undefined),
-}));
+//
+// Every sender, read off the real module rather than listed here. A named
+// list goes stale the moment a sender is added: the missing export arrives
+// undefined and the call site throws "is not a function", which is exactly
+// what sendPasswordChangedEmail did to four tests here.
+jest.mock("@services/email/email.service", () => {
+  const actual = jest.requireActual("@services/email/email.service");
+  return Object.fromEntries(
+    Object.entries(actual).map(([key, value]) => [
+      key,
+      typeof value === "function" ? jest.fn().mockResolvedValue(undefined) : value,
+    ]),
+  );
+});
 
 import { userService } from "../../user.service";
 import { accountDeletionService } from "@modules/access/accountDeletion/accountDeletion.service";
@@ -19,6 +23,27 @@ import { UserRoleModel } from "../../relations";
 import { RoleModel } from "@modules/access/role/rbac.model";
 import { LocationModel } from "@modules/platform/location/location.model";
 import { Types } from "mongoose";
+import { whatsappAuthService } from "@modules/access/auth-whatsapp/auth-whatsapp.service";
+
+/**
+ * A number that has ANSWERED its signup code, minted the way the app mints
+ * one: request the code, read it back, trade it for the proof. Signup redeems
+ * that proof for real, so a made-up token is refused — and going through the
+ * door means these fixtures keep working when the door changes.
+ */
+let phoneSeq = 0;
+const provenNumber = async () => {
+  const phone_extension = "+91";
+  phoneSeq += 1;
+  const phone_number = String(9000000000 + phoneSeq);
+  const requested = await whatsappAuthService.requestSignupOtp(phone_extension, phone_number, "");
+  const { whatsapp_token } = await whatsappAuthService.verifySignupOtp(
+    phone_extension,
+    phone_number,
+    String(requested.dev_otp),
+  );
+  return { phone_extension, phone_number, whatsapp_token };
+};
 
 describe("userService integration", () => {
   it("rejects login for a non-existent account", async () => {
@@ -39,8 +64,10 @@ describe("userService integration", () => {
     ).rejects.toThrow();
   });
 
-  it("registers an account without a phone number (simplified signup)", async () => {
+  it("registers an account and reports the number it was signed up with", async () => {
+    const proven = await provenNumber();
     const res = await userService.register({
+      ...proven,
       first_name: "Riya",
       last_name: "Sharma",
       email: "nophone@duncit.com",
@@ -49,12 +76,15 @@ describe("userService integration", () => {
     } as any);
     expect(res.token).toBeTruthy();
     expect(res.user.email).toBe("nophone@duncit.com");
-    // No phone collected -> resolver falls back to empty string, not null.
-    expect(res.user.phone_number).toBe("");
+    // Signup requires a verified number: the account is identified by it as
+    // well as by the email, and the unique index only means something if
+    // every account created through this door carries one.
+    expect(res.user.phone_number).toBe(proven.phone_number);
   });
 
   it("registers an account with a single-word name (no last_name)", async () => {
     const res = await userService.register({
+      ...(await provenNumber()),
       first_name: "Madonna",
       email: "oneword@duncit.com",
       password: "StrongPass123",
@@ -65,14 +95,16 @@ describe("userService integration", () => {
     expect(res.user.last_name).toBe("");
   });
 
-  it("allows multiple phone-less accounts without unique-index collisions", async () => {
+  it("keeps two accounts apart when each brings its own number", async () => {
     const a = await userService.register({
+      ...(await provenNumber()),
       first_name: "NoPhoneOne",
       email: "nophone1@duncit.com",
       password: "StrongPass123",
       dob: new Date("1992-03-03").toISOString(),
     } as any);
     const b = await userService.register({
+      ...(await provenNumber()),
       first_name: "NoPhoneTwo",
       email: "nophone2@duncit.com",
       password: "StrongPass123",
@@ -83,42 +115,44 @@ describe("userService integration", () => {
     expect(a.user.user_id).not.toBe(b.user.user_id);
   });
 
-  it("stores an optional phone when supplied", async () => {
+  it("stores the number the account was signed up with", async () => {
+    const proven = await provenNumber();
     const res = await userService.register({
+      ...proven,
       first_name: "WithPhone",
       email: "with-phone@duncit.com",
       password: "StrongPass123",
       dob: new Date("1992-02-02").toISOString(),
-      phone_number: "9876500001",
-      phone_extension: "+91",
     } as any);
-    expect(res.user.phone_number).toBe("9876500001");
+    expect(res.user.phone_number).toBe(proven.phone_number);
   });
 
-  it("enforces phone uniqueness only when a phone is supplied", async () => {
+  // One proof opens ONE account: the second attempt is refused for the
+  // number already having one, before the grant is even looked at.
+  it("refuses a second account on a number that already has one", async () => {
+    const proven = await provenNumber();
     await userService.register({
+      ...proven,
       first_name: "PhoneOwner",
       email: "phone-owner@duncit.com",
       password: "StrongPass123",
       dob: new Date("1990-01-01").toISOString(),
-      phone_number: "9876512345",
-      phone_extension: "+91",
     } as any);
 
     await expect(
       userService.register({
+        ...proven,
         first_name: "PhoneDup",
         email: "phone-dup@duncit.com",
         password: "StrongPass123",
         dob: new Date("1990-01-01").toISOString(),
-        phone_number: "9876512345",
-        phone_extension: "+91",
       } as any),
     ).rejects.toThrow(/already registered/i);
   });
 
   it("logs in successfully with the correct credentials", async () => {
     await userService.register({
+      ...(await provenNumber()),
       first_name: "Login",
       email: "login-ok@duncit.com",
       password: "StrongPass123",
@@ -136,6 +170,7 @@ describe("userService integration", () => {
 
   it("rejects login with an incorrect password", async () => {
     await userService.register({
+      ...(await provenNumber()),
       first_name: "BadPass",
       email: "login-bad@duncit.com",
       password: "StrongPass123",
@@ -147,11 +182,12 @@ describe("userService integration", () => {
         email: "login-bad@duncit.com",
         password: "WrongPass999",
       } as any),
-    ).rejects.toThrow(/invalid credentials/i);
+    ).rejects.toThrow(/invalid email or password/i);
   });
 
   it("rejects registering a duplicate email", async () => {
     await userService.register({
+      ...(await provenNumber()),
       first_name: "Dup",
       email: "dup@duncit.com",
       password: "StrongPass123",
@@ -160,6 +196,7 @@ describe("userService integration", () => {
 
     await expect(
       userService.register({
+        ...(await provenNumber()),
         first_name: "DupTwo",
         email: "dup@duncit.com",
         password: "StrongPass123",
@@ -170,6 +207,7 @@ describe("userService integration", () => {
 
   it("protects the root super admin from revocation", async () => {
     await userService.register({
+      ...(await provenNumber()),
       first_name: "Root",
       email: "admin@duncit.com",
       password: "StrongPass123",
@@ -182,6 +220,7 @@ describe("userService integration", () => {
   describe("password reset", () => {
     it("resets the password end-to-end via OTP and logs in with the new one", async () => {
       await userService.register({
+        ...(await provenNumber()),
         first_name: "Reset",
         email: "reset-ok@duncit.com",
         password: "OldPass123",
@@ -207,7 +246,7 @@ describe("userService integration", () => {
       expect(res.token).toBeTruthy();
       await expect(
         userService.login({ email: "reset-ok@duncit.com", password: "OldPass123" } as any),
-      ).rejects.toThrow(/invalid credentials/i);
+      ).rejects.toThrow(/invalid email or password/i);
     });
 
     it("reports an unregistered email and sends no OTP", async () => {
@@ -217,6 +256,7 @@ describe("userService integration", () => {
 
     it("rejects a wrong OTP", async () => {
       await userService.register({
+        ...(await provenNumber()),
         first_name: "WrongOtp",
         email: "reset-wrong@duncit.com",
         password: "OldPass123",
@@ -234,6 +274,7 @@ describe("userService integration", () => {
 
     it("rejects a reset when no OTP was requested", async () => {
       await userService.register({
+        ...(await provenNumber()),
         first_name: "NoOtp",
         email: "reset-none@duncit.com",
         password: "OldPass123",
@@ -262,6 +303,7 @@ describe("userService integration", () => {
   describe("change password (knows current password)", () => {
     const registerUser = async (email: string, password = "OldPass123") => {
       const res = await userService.register({
+        ...(await provenNumber()),
         first_name: "Change",
         email,
         password,
@@ -292,7 +334,7 @@ describe("userService integration", () => {
       expect(res.token).toBeTruthy();
       await expect(
         userService.login({ email: "change-ok@duncit.com", password: "OldPass123" } as any),
-      ).rejects.toThrow(/invalid credentials/i);
+      ).rejects.toThrow(/invalid email or password/i);
     });
 
     it("rejects requesting an OTP with the wrong current password", async () => {
@@ -333,6 +375,7 @@ describe("userService integration", () => {
   describe("request account deletion (self-serve, OTP)", () => {
     const registerUser = async (email: string) => {
       const res = await userService.register({
+        ...(await provenNumber()),
         first_name: "Del",
         email,
         password: "StrongPass123",
@@ -341,7 +384,7 @@ describe("userService integration", () => {
       return res.user.user_id;
     };
 
-    it("files a pending request and leaves the account able to sign in", async () => {
+    it("files a pending request and closes the account to sign-in", async () => {
       const userId = await registerUser("delete-ok@duncit.com");
 
       const req = await userService.requestAccountDeletionOtp(userId);
@@ -355,17 +398,19 @@ describe("userService integration", () => {
       expect(filed).toMatchObject({ status: "PENDING", reason: "Not using it any more" });
       expect(filed?.request_id).toBeTruthy();
 
-      // Nothing is erased yet — that is the whole point of the change. The
-      // account is untouched and the credentials still work, so somebody who
-      // changes their mind has something to come back to.
+      // Nothing is ERASED yet — the row is still there for the thirty days,
+      // so somebody who changes their mind has something to come back to.
       const stored = await UserModel.findById(userId)
         .select("metadata.status metadata.deleted_at auth.email")
         .lean();
       expect((stored as any).metadata.deleted_at).toBeFalsy();
       expect((stored as any).auth.email).toBe("delete-ok@duncit.com");
+      // But filing it ENDS the account: every sign-in door refuses from that
+      // moment, and refuses generically — an account being mid-deletion is not
+      // something a stranger typing an address gets told.
       await expect(
         userService.login({ email: "delete-ok@duncit.com", password: "StrongPass123" } as any),
-      ).resolves.toBeTruthy();
+      ).rejects.toThrow(/invalid email or password/i);
 
       // Their own open request is what the apps read to show the banner.
       expect(await accountDeletionService.myRequest(userId)).toMatchObject({
@@ -422,6 +467,7 @@ describe("userService integration", () => {
   describe("selected location", () => {
     const newUser = async (email: string) => {
       const res = await userService.register({
+        ...(await provenNumber()),
         first_name: "Loc",
         email,
         password: "StrongPass123",
@@ -468,6 +514,7 @@ describe("userService integration", () => {
       await RoleModel.create({ key: "CRM_MANAGER", name: "CRM Manager", is_system: true });
 
       const res = await userService.register({
+        ...(await provenNumber()),
         first_name: "Crm",
         email: "crm-person@duncit.com",
         password: "StrongPass123",
@@ -495,6 +542,7 @@ describe("userService integration", () => {
 
     it("escapes regex special characters in the search term", async () => {
       await userService.register({
+        ...(await provenNumber()),
         first_name: "Regex",
         email: "regex-test@duncit.com",
         password: "StrongPass123",
@@ -509,6 +557,7 @@ describe("userService integration", () => {
   describe("portal-gated login (server-side portal access)", () => {
     const registerUser = async (email: string) => {
       const res = await userService.register({
+        ...(await provenNumber()),
         first_name: "Gate",
         email,
         password: "StrongPass123",
@@ -567,6 +616,7 @@ describe("userService integration", () => {
   describe("update persists state + pincode (B15)", () => {
     it("stores and returns profile.state and profile.pincode", async () => {
       const reg = await userService.register({
+        ...(await provenNumber()),
         first_name: "Addr",
         email: "addr@duncit.com",
         password: "StrongPass123",
@@ -587,6 +637,7 @@ describe("userService integration", () => {
 
     it("saves and returns the structured main address via updateMyProfile", async () => {
       const reg = await userService.register({
+        ...(await provenNumber()),
         first_name: "Main",
         email: "mainaddr@duncit.com",
         password: "StrongPass123",

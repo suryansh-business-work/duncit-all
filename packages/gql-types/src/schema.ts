@@ -6376,8 +6376,20 @@ export type GoogleSignupInput = {
   city?: InputMaybe<Scalars['String']['input']>;
   dob?: InputMaybe<Scalars['String']['input']>;
   id_token: Scalars['String']['input'];
-  phone_extension?: InputMaybe<Scalars['String']['input']>;
-  phone_number?: InputMaybe<Scalars['String']['input']>;
+  phone_extension: Scalars['String']['input'];
+  /**
+   * The WhatsApp number joining Duncit, and the proof it answered.
+   *
+   * Google proves an address and nothing else, so this door asks for the same
+   * number the email form asks for, on a step of its own after the credential
+   * comes back — and it is just as required. Which door somebody arrived
+   * through cannot decide whether their number was ever verified.
+   */
+  phone_number: Scalars['String']['input'];
+  /** Whether that number is ALSO the account's mobile number. Same tick box. */
+  whatsapp_is_mobile?: InputMaybe<Scalars['Boolean']['input']>;
+  /** From verifySignupWhatsAppOtp. Spent here, once. */
+  whatsapp_token: Scalars['String']['input'];
   zone?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -9259,7 +9271,15 @@ export type Mutation = {
    * works here and what they can reach.
    */
   requestPortalLoginOtp: OtpRequestResult;
-  requestWhatsAppOtp: WhatsAppOtpRequestResult;
+  /**
+   * Signup step one: send a code to the WhatsApp number joining Duncit.
+   *
+   * Public, because the account this belongs to does not exist yet — proving
+   * the number is what decides whether it ever will. Refused for a number
+   * already registered, and for an email already in use, so neither is
+   * discovered only after a code has been typed.
+   */
+  requestSignupWhatsAppOtp: WhatsAppOtpRequestResult;
   requestWithdrawal: WalletWithdrawal;
   /** Move the caller's own meeting to a new open slot (one-time; keeps contact details, resets staff scheduling). */
   rescheduleMyMeeting: OnboardingMeeting;
@@ -9499,7 +9519,6 @@ export type Mutation = {
   /** Sign as the acting user. Locks the contract once nobody is left to sign. */
   signLegalDocument: LegalDocument;
   signupWithGoogle: AuthPayload;
-  skipWhatsAppOtp: User;
   /**
    * Translate the default language's text into this locale with OpenAI, in the
    * background. Writes the same values.<code> field the admin's own editor
@@ -9822,15 +9841,10 @@ export type Mutation = {
   verifyPodAttendanceOtp: Scalars['Boolean']['output'];
   verifyRazorpayPayment: Payment;
   /**
-   * Prove the WhatsApp number, and write it where signup said it belongs.
-   *
-   * also_mobile is the signup tick box: true writes the proven number to the
-   * account's phone as well, false leaves that blank on purpose. It defaults to
-   * false so a shipped build that predates the box never fills in a number the
-   * person did not agree to — the email door has already written its own phone
-   * by the time this runs.
+   * Signup step two: prove the code and receive the token that creates the
+   * account. Nothing is written — there is no account to write to yet.
    */
-  verifyWhatsAppOtp: User;
+  verifySignupWhatsAppOtp: SignupWhatsAppProof;
   /** Thumbs up/down a review. vote: 1 up, -1 down, 0 clears. */
   voteProductReview: ProductReview;
   /** Cancel the running extraction job. */
@@ -11896,7 +11910,8 @@ export type MutationRequestPortalLoginOtpArgs = {
 };
 
 
-export type MutationRequestWhatsAppOtpArgs = {
+export type MutationRequestSignupWhatsAppOtpArgs = {
+  email?: InputMaybe<Scalars['String']['input']>;
   phone_extension: Scalars['String']['input'];
   phone_number: Scalars['String']['input'];
 };
@@ -13401,8 +13416,7 @@ export type MutationVerifyRazorpayPaymentArgs = {
 };
 
 
-export type MutationVerifyWhatsAppOtpArgs = {
-  also_mobile?: InputMaybe<Scalars['Boolean']['input']>;
+export type MutationVerifySignupWhatsAppOtpArgs = {
   otp: Scalars['String']['input'];
   phone_extension: Scalars['String']['input'];
   phone_number: Scalars['String']['input'];
@@ -20873,6 +20887,14 @@ export type RegisterInput = {
    * one, which is what the verification step proves.
    */
   whatsapp_is_mobile?: InputMaybe<Scalars['Boolean']['input']>;
+  /**
+   * The proof that the number above answered, from verifySignupWhatsAppOtp.
+   *
+   * Required. Signup does not create an account for a number nobody has replied
+   * on — that is the whole reason the code is asked for before this mutation
+   * rather than on a screen after it, which anything could leave.
+   */
+  whatsapp_token: Scalars['String']['input'];
   zone?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -21639,6 +21661,18 @@ export type SignatureMethod =
 export type SigningStatus =
   | 'SIGNED'
   | 'UNSIGNED';
+
+/** A proven WhatsApp number, on its way to the signup door that spends it. */
+export type SignupWhatsAppProof = {
+  __typename?: 'SignupWhatsAppProof';
+  ok: Scalars['Boolean']['output'];
+  /**
+   * One-shot token naming the number that answered. Passed to the signup door
+   * that creates the account, which is the only thing that can spend it, and
+   * only once.
+   */
+  whatsapp_token: Scalars['String']['output'];
+};
 
 export type SlackChannel = {
   __typename?: 'SlackChannel';

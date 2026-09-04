@@ -1,4 +1,3 @@
-import { Types } from 'mongoose';
 import { whatsappAuthService } from '../../auth-whatsapp.service';
 
 const EXT = '+91';
@@ -7,14 +6,13 @@ const NUMBER = '9999999999';
 /**
  * Proving a WhatsApp number end to end against the real challenge collection.
  *
- * The order matters and is deliberate: the code is checked BEFORE the user is
- * looked up, so a caller who never asked for a code cannot learn whether an
- * account exists by watching which error comes back. Collections are wiped
- * between tests, so each one starts with no live challenge.
+ * There is no account behind any of this: the proof comes BEFORE signup creates
+ * one, which is what makes the step unskippable. Collections are wiped between
+ * tests, so each one starts with no live challenge.
  */
 describe('whatsappAuthService integration', () => {
   it('hands the code back while no medium can actually deliver it', async () => {
-    const res = await whatsappAuthService.requestOtp('91', NUMBER);
+    const res = await whatsappAuthService.requestSignupOtp('91', NUMBER);
 
     expect(res.ok).toBe(true);
     expect(res.dev_otp).toBe('123456');
@@ -22,29 +20,53 @@ describe('whatsappAuthService integration', () => {
 
   it('rejects a verify when no code was ever requested', async () => {
     await expect(
-      whatsappAuthService.verifyOtp(new Types.ObjectId().toString(), EXT, NUMBER, '000000')
+      whatsappAuthService.verifySignupOtp(EXT, NUMBER, '000000')
     ).rejects.toThrow(/expired/i);
   });
 
   it('rejects a wrong code against a live challenge', async () => {
-    await whatsappAuthService.requestOtp('91', NUMBER);
+    await whatsappAuthService.requestSignupOtp('91', NUMBER);
 
     await expect(
-      whatsappAuthService.verifyOtp(new Types.ObjectId().toString(), EXT, NUMBER, '000000')
+      whatsappAuthService.verifySignupOtp(EXT, NUMBER, '000000')
     ).rejects.toThrow(/incorrect code/i);
   });
 
-  it('throws when the code is right but the user is gone', async () => {
-    const { dev_otp } = await whatsappAuthService.requestOtp('91', NUMBER);
+  it('trades a right code for a one-shot proof', async () => {
+    const { dev_otp } = await whatsappAuthService.requestSignupOtp('91', NUMBER);
 
-    await expect(
-      whatsappAuthService.verifyOtp(new Types.ObjectId().toString(), EXT, NUMBER, dev_otp as string)
-    ).rejects.toThrow(/user not found/i);
+    const proved = await whatsappAuthService.verifySignupOtp(EXT, NUMBER, dev_otp as string);
+
+    expect(proved.ok).toBe(true);
+    expect(proved.whatsapp_token).toContain('.');
   });
 
-  it('throws when skipping for a non-existent user', async () => {
-    await expect(whatsappAuthService.skip(new Types.ObjectId().toString())).rejects.toThrow(
-      /user not found/i
+  it('refuses a proof redeemed against a different number', async () => {
+    const { dev_otp } = await whatsappAuthService.requestSignupOtp('91', NUMBER);
+    const { whatsapp_token } = await whatsappAuthService.verifySignupOtp(
+      EXT,
+      NUMBER,
+      dev_otp as string
     );
+
+    await expect(
+      whatsappAuthService.redeemSignupProof(whatsapp_token, EXT, '9888877777')
+    ).rejects.toThrow(/different number/i);
+  });
+
+  it('spends a proof once', async () => {
+    const { dev_otp } = await whatsappAuthService.requestSignupOtp('91', NUMBER);
+    const { whatsapp_token } = await whatsappAuthService.verifySignupOtp(
+      EXT,
+      NUMBER,
+      dev_otp as string
+    );
+
+    const challenge = await whatsappAuthService.redeemSignupProof(whatsapp_token, EXT, NUMBER);
+    await whatsappAuthService.spendSignupProof(challenge);
+
+    await expect(
+      whatsappAuthService.redeemSignupProof(whatsapp_token, EXT, NUMBER)
+    ).rejects.toThrow(/expired|start again/i);
   });
 });

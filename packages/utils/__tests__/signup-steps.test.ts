@@ -103,7 +103,6 @@ describe('buildSignupStepperLabels', () => {
     expect(labels.verifying).toBe('mweb.signupSteps.verifying');
     expect(labels.didntGetIt).toBe('mweb.signupSteps.didntGetIt');
     expect(labels.resend).toBe('mweb.signupSteps.resend');
-    expect(labels.skipForNow).toBe('mweb.signupSteps.skipForNow');
   });
 
   it('passes the values a sentence interpolates', () => {

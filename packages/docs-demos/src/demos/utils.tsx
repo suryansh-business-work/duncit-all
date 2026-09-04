@@ -851,9 +851,9 @@ export default defineDemos('utils', [
     id: 'signup-steps',
     title: 'Joining Duncit, one question at a time',
     note:
-      "Move `step` through the four and watch what each one owns. SECURITY is the only step whose " +
-      "button creates the account, and VERIFY is the only one with no way back — by then the account " +
-      'exists, so Back could only offer a form that has been spent.',
+      "Move `step` through the four and watch what each one owns. SECURITY is the last step with " +
+      "boxes, and VERIFY is the one that creates the account — it has no way back, because a code is " +
+      'already on its way to the number that was typed.',
     mock: { step: 'CONTACT' },
     compute: (mock) => {
       // Keys rather than English, so the demo shows WHICH sentence each label
@@ -868,7 +868,7 @@ export default defineDemos('utils', [
         'Back goes to': canLeaveSignupStep(mock.step)
           ? (previousSignupStep(mock.step) ?? '')
           : '(no Back on this step)',
-        'Creates the account': String(stepSubmitsAccount(mock.step)),
+        'Submits the form': String(stepSubmitsAccount(mock.step)),
         'The four steps': SIGNUP_STEPS.join(' -> '),
         // The Google door has no form to have asked these, so it asks them
         // inside VERIFY — same builder, so both doors word the box identically.

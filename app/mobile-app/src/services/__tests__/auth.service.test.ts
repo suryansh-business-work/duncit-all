@@ -62,7 +62,7 @@ describe('auth.service mutations', () => {
       whatsappIsMobile: true,
       password: 'StrongPass123',
       acceptedPolicyIds: ['pol-1'],
-    });
+    }, 'wa-proof-1');
 
     expect(mockedRequest).toHaveBeenCalledTimes(1);
     const variables = mockedRequest.mock.calls[0]?.[1];
@@ -73,6 +73,8 @@ describe('auth.service mutations', () => {
         email: 'riya@duncit.com',
         phone_number: '9845012345',
         phone_extension: '+91',
+        whatsapp_is_mobile: true,
+        whatsapp_token: 'wa-proof-1',
         password: 'StrongPass123',
         dob: '1995-01-01T00:00:00.000Z',
         accepted_policy_ids: ['pol-1'],
@@ -102,11 +104,20 @@ describe('auth.service mutations', () => {
       signupWithGoogle: { token: 'tok-3', user: { onboarding_survey_completed: false } },
     } as never);
 
-    const result = await signupWithGoogle('google-id-token', ['pol-1']);
+    const result = await signupWithGoogle('google-id-token', ['pol-1'], {
+      extension: '+91',
+      number: '9845012345',
+      alsoMobile: true,
+      whatsappToken: 'wa-proof-2',
+    });
 
     expect(mockedRequest.mock.calls[0]?.[1]).toEqual({
       input: {
         id_token: 'google-id-token',
+        phone_number: '9845012345',
+        phone_extension: '+91',
+        whatsapp_is_mobile: true,
+        whatsapp_token: 'wa-proof-2',
         accepted_policy_ids: ['pol-1'],
         accepted_policy_surface: 'APP',
       },

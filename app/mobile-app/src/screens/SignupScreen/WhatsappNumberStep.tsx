@@ -16,21 +16,19 @@ import { useTranslation } from '@/hooks/useTranslation';
 interface Props {
   /** The number and the tick box, on their way to the code step. */
   onSubmit: (values: WhatsappNumberValues) => void;
-  /** Leaving without a number. The account exists and is untouched. */
-  onSkip: () => void;
 }
 
 /**
  * The Google door's number step. Tamagui twin of mWeb's <WhatsappNumberStep/>.
  *
- * Google returns a finished account and no phone number, so the row the email
- * form asks as step two is asked here instead — after the account exists, which
- * is also the only moment `requestWhatsAppOtp` can be called at all.
+ * Google proves an address and no phone number, so the row the email form asks
+ * as step two is asked here instead — before there is an account, exactly as it
+ * is on the other door.
  *
  * Nothing is sent from here: submitting hands the number to the code step,
  * which asks for the code as it opens.
  */
-export function WhatsappNumberStep({ onSubmit, onSkip }: Readonly<Props>) {
+export function WhatsappNumberStep({ onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = buildSignupStepperLabels(t);
   const {
@@ -70,16 +68,6 @@ export function WhatsappNumberStep({ onSubmit, onSkip }: Readonly<Props>) {
           submit().catch(() => undefined);
         }}
       />
-      <Text
-        testID="signup-skip-number"
-        pressStyle={PRESS_STYLE.inline}
-        fontSize={14}
-        color="$muted"
-        textAlign="center"
-        onPress={onSkip}
-      >
-        {labels.skipForNow}
-      </Text>
     </YStack>
   );
 }

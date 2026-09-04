@@ -16,7 +16,6 @@ import { SignupStepperRail } from './SignupStepperRail';
 import { VerifyWhatsappStep } from './VerifyWhatsappStep';
 import { WhatsappNumberStep } from './WhatsappNumberStep';
 import { useSignupFlow } from './useSignupFlow';
-import { fireAndForget } from '@/utils/fire-and-forget';
 import { allPoliciesAccepted } from '@/utils/policy-acceptance';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -41,7 +40,7 @@ export function SignupScreen() {
     flow.setError(null);
     setGoogleAccepted([]);
     if (loaded && policies.length === 0) {
-      fireAndForget(flow.submitGoogle(idToken, []));
+      flow.googleAccepted(idToken, []);
       return;
     }
     setGoogleToken(idToken);
@@ -51,7 +50,7 @@ export function SignupScreen() {
     setGoogleAccepted(ids);
     if (googleToken && loaded && allPoliciesAccepted(policies, ids)) {
       setGoogleToken(null);
-      fireAndForget(flow.submitGoogle(googleToken, ids));
+      flow.googleAccepted(googleToken, ids);
     }
   };
 
@@ -70,20 +69,21 @@ export function SignupScreen() {
     >
       <SignupStepperRail step={flow.step} askingNumber={flow.askingNumber} />
       {onNumberStep ? (
-        <WhatsappNumberStep onSubmit={flow.submitNumber} onSkip={flow.finish} />
+        <WhatsappNumberStep onSubmit={flow.submitNumber} />
       ) : null}
       {onVerifyStep && flow.verifying ? (
         <VerifyWhatsappStep
           extension={flow.verifying.extension}
           number={flow.verifying.number}
-          alsoMobile={flow.verifying.alsoMobile}
-          onDone={flow.finish}
+          email={flow.pendingEmail}
+          creating={flow.creating}
+          onVerified={flow.createAccount}
         />
       ) : null}
       {showForm ? (
         <>
           <GoogleAuthButton
-            loading={flow.googleBusy}
+            loading={flow.creating}
             onIdToken={handleGoogle}
             onError={flow.setError}
           />
@@ -91,7 +91,6 @@ export function SignupScreen() {
           <SignupForm
             step={flow.step}
             onStep={flow.setStep}
-            loading={flow.loading}
             errorMessage={flow.error}
             onSubmit={flow.submitForm}
           />

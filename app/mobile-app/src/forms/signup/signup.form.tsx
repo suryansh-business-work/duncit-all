@@ -28,7 +28,6 @@ export interface SignupFormProps {
   /** Which of the first three steps is showing. VERIFY is the screen's. */
   step: SignupStep;
   onStep: (step: SignupStep) => void;
-  loading?: boolean;
   errorMessage?: string | null;
   initialValues?: SignupFormValues;
   onSubmit: (values: SignupFormValues) => void | Promise<void>;
@@ -45,7 +44,6 @@ export interface SignupFormProps {
 export function SignupForm({
   step,
   onStep,
-  loading,
   errorMessage,
   initialValues,
   onSubmit,
@@ -113,8 +111,7 @@ export function SignupForm({
   };
 
   const creating = stepSubmitsAccount(step);
-  let nextLabel = labels.next;
-  if (creating) nextLabel = loading ? labels.creating : labels.createAccount;
+  const nextLabel = creating ? labels.createAccount : labels.next;
 
   return (
     <YStack gap={16}>
@@ -150,7 +147,6 @@ export function SignupForm({
           <PrimaryButton
             testID="signup-next"
             label={nextLabel}
-            loading={loading}
             disabled={creating && !policiesAccepted}
             onPress={() => {
               advance().catch(() => undefined);

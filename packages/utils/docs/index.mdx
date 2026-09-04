@@ -1636,8 +1636,8 @@ buildOtpLoginLabels(t).resend; // identical to recovery: same cooldown, same mec
 
 Signup is four steps, and the order is the point: the two that cost nothing come first (who
 you are, how we reach you), the password comes third so it is typed once the person is already
-committed, and the WhatsApp code is last because it can only be asked for AFTER the account
-exists — `requestWhatsAppOtp` authenticates its caller.
+committed, and the WhatsApp code is last because it is the step that CREATES the account —
+nothing exists until it is answered, which is why there is no way past it on either door.
 
 `SIGNUP_STEP_FIELDS` is what "Continue" validates: RHF's `trigger` takes exactly that list, so
 a step can only be left once its OWN boxes are right and nobody is told off about a box two
@@ -1647,7 +1647,7 @@ screens ahead.
 SIGNUP_STEP_FIELDS.WHO;       // ['name', 'dobYear', 'referralCode']
 SIGNUP_STEP_FIELDS.CONTACT;   // includes 'whatsappIsMobile' — the tick box is CONTACT's
 nextSignupStep('CONTACT');    // 'SECURITY'
-stepSubmitsAccount('SECURITY'); // true — this step's button IS "create my account"
+stepSubmitsAccount('SECURITY'); // true — the last step with boxes; VERIFY spends the answers
 canLeaveSignupStep('VERIFY'); // false — the account exists; Back would offer a spent form
 ```
 

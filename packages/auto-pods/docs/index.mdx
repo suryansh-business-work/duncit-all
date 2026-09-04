@@ -237,7 +237,7 @@ import { AutoPodCategoryFilter } from '@duncit/auto-pods';
 | Dialog | Role | What it collects |
 | --- | --- | --- |
 | `VenueAcceptDialog` | Venue | Which of the chosen venue's free slots — each priced as the venue would be paid |
-| `HostClaimDialog` | Host | The ticket price and the number of spots — re-priced on every change — and, on a VIRTUAL offer, the meeting platform, link, start and end (`HostMeetingFields`); the template carries none of these |
+| `HostClaimDialog` | Host | Step 4's calculator (`HostEarningsFields`): a ticket price and a spots slider bounded by the server's own limits, re-priced on every change — and, on a VIRTUAL offer, the meeting platform, link, start and end (`HostMeetingFields`); the template carries none of these |
 | `ClubClaimDialog` | Club Admin | Which of their clubs (only category-matching ones) |
 
 Accepting and picking a slot are **one** action: an acceptance with no date

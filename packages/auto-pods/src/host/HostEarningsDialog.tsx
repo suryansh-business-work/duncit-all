@@ -36,10 +36,10 @@ export function HostEarningsDialog({
 
   // The card's earn line follows the calculator live, so closing the dialog is
   // never the moment a host discovers what they had worked out.
-  const host = state.viable ? state.projection?.host_receives ?? null : null;
+  const { hostReceives } = state;
   useEffect(() => {
-    if (open && onEarnings) onEarnings(host);
-  }, [open, host, onEarnings]);
+    if (open && onEarnings) onEarnings(hostReceives);
+  }, [open, hostReceives, onEarnings]);
 
   return (
     <EarningsDialogShell labels={labels} open={open} onClose={onClose}>

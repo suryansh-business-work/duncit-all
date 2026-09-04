@@ -82,8 +82,12 @@ export function HostClaimDialog({
   const meetingReady = !virtual || autoPodHostMeetingReady(meeting, now.getTime());
   const needsLocation = row ? autoPodHostNeedsLocation(row, locationId) : false;
   const pinsCity = !!row && !row.location && !!locationId;
-  const canAssign = !!row && !needsLocation && pricing.viable && meetingReady && !assignState.loading;
-  const locked = !canAssign;
+  // What an assignment would commit — only once there is an offer, a city
+  // where the offer takes one from the host, numbers the server priced as
+  // viable and, on a virtual offer, a complete meeting. The button is the only
+  // way in, and it stays shut until then.
+  const target =
+    row && !needsLocation && pricing.viable && meetingReady && !assignState.loading ? row : null;
 
   const handleClose = () => {
     setFailure(null);
@@ -91,14 +95,13 @@ export function HostClaimDialog({
     onClose();
   };
 
-  const handleAssign = async () => {
-    if (!row || !canAssign) return;
+  const assignTo = async (chosen: NonNullable<typeof target>) => {
     setFailure(null);
     try {
       await assign({
         variables: {
-          auto_pod_doc_id: row.id,
-          location_id: row.location ? null : locationId,
+          auto_pod_doc_id: chosen.id,
+          location_id: chosen.location ? null : locationId,
           pod_amount: pricing.amount,
           no_of_spots: pricing.spots,
           // Only a virtual offer carries a meeting; a physical one sends none.
@@ -111,6 +114,7 @@ export function HostClaimDialog({
       setFailure(enrolmentFailure(err, labels.claimedElsewhere));
     }
   };
+  const handleAssign = target ? () => assignTo(target) : undefined;
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
@@ -152,7 +156,7 @@ export function HostClaimDialog({
         <DuncitButton
           variant="contained"
           onClick={handleAssign}
-          disabled={locked}
+          disabled={!handleAssign}
           loading={assignState.loading}
         >
           {labels.assignMyselfCta}

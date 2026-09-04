@@ -20,6 +20,8 @@ export interface HostProjectionState {
   inRange: boolean;
   /** The host would take something home at these numbers. */
   viable: boolean;
+  /** What the host keeps at these numbers, or null while they do not work. */
+  hostReceives: number | null;
   /** The price field holds something that is not a positive number. */
   priceInvalid: boolean;
 }
@@ -63,6 +65,10 @@ export function useHostProjection(
     if (projection && spots < projection.min_spots) setSpots(projection.min_spots);
   }, [projection, spots]);
 
+  // One expression answers both "does this work" and "what is it worth", so
+  // the two can never disagree about the same numbers.
+  const hostReceives = projection && projection.viable && inRange ? projection.host_receives : null;
+
   return {
     price,
     setPrice,
@@ -72,7 +78,8 @@ export function useHostProjection(
     projection,
     loading: query.loading,
     inRange,
-    viable: !!projection && projection.viable && inRange,
+    viable: hostReceives !== null,
+    hostReceives,
     priceInvalid: price.trim() !== '' && amount <= 0,
   };
 }

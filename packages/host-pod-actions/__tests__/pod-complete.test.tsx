@@ -185,6 +185,15 @@ describe('SettlementPreview', () => {
     expect(screen.queryByTestId('settlement-shortfall')).not.toBeInTheDocument();
   });
 
+  // The window to complete has passed, so the host's share is forfeited. The
+  // figures still render — the host is owed the arithmetic behind a nil payout.
+  it('says the share is forfeited once the window to complete has passed', async () => {
+    preview([previewMock({ complete_expired: true })]);
+    await settle();
+
+    expect(screen.getByTestId('settlement-expired')).toBeInTheDocument();
+  });
+
   // Silently hiding the calculation would leave the host guessing.
   it('shows the server reason when the preview could not be computed', async () => {
     preview([

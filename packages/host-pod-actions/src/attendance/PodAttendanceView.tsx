@@ -129,17 +129,20 @@ export default function PodAttendanceView({
   const earningsBody = earningsBodyFor(board, labels);
   const showScan = canScanTickets(board);
   // The host's clock, while there is still one to beat. Hoisted for the same
-  // reason as `onMark` — the conditional sits at nesting 0 (Sonar S3358).
-  const showDeadline = showsCompleteDeadline(board);
+  // reason as `onMark` — the conditional sits at nesting 0 (Sonar S3358). It
+  // carries the date rather than a boolean because `showsCompleteDeadline` is
+  // already false without one: a `?? ''` at the call site was a fallback for a
+  // state that cannot happen (rule 17).
+  const deadlineAt = showsCompleteDeadline(board) ? board.complete_deadline : null;
 
   return (
     <Stack spacing={2} data-testid="pod-attendance-view">
       <AttendanceSummary board={board} labels={labels} />
       {board.can_mark ? <EarningsNotice labels={labels} body={earningsBody} /> : <LockedNotice lock={board.lock} labels={labels} />}
-      {showDeadline && (
+      {deadlineAt && (
         <DeadlineNotice
           labels={labels}
-          when={formatDateTime(board.complete_deadline ?? '')}
+          when={formatDateTime(deadlineAt)}
           hours={board.complete_timeout_hours}
         />
       )}

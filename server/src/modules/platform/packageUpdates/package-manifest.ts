@@ -2567,6 +2567,8 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "ag-grid-community", range: "^36.1.0", kind: "dependencies" },
       { name: "ag-grid-react", range: "^36.1.0", kind: "dependencies" },
       { name: "date-fns", range: "^4.4.0", kind: "dependencies" },
+      { name: "grapesjs", range: "0.23.6", kind: "dependencies" },
+      { name: "grapesjs-mjml", range: "1.0.8", kind: "dependencies" },
       { name: "graphql", range: "^16.14.2", kind: "dependencies" },
       { name: "react", range: "^19.2.8", kind: "dependencies" },
       { name: "react-dom", range: "^19.2.8", kind: "dependencies" },

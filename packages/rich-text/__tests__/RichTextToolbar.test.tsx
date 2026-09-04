@@ -5,8 +5,6 @@
  * toolbar reads `editor.can()` / `isActive()` once, so the state each test
  * needs (a link under the cursor, history to walk) has to be there already.
  */
-import Link from '@tiptap/extension-link';
-import Underline from '@tiptap/extension-underline';
 import { Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -19,7 +17,10 @@ const editors: Editor[] = [];
 const editorWith = (content: string) => {
   const editor = new Editor({
     content,
-    extensions: [StarterKit, Underline, Link.configure({ openOnClick: false })],
+    // StarterKit 3 bundles link and underline. Adding them again registers a
+    // duplicate, which tiptap resolves by keeping the first — and setLink then
+    // does nothing at all. Configure through the kit, exactly as the component does.
+    extensions: [StarterKit.configure({ link: { openOnClick: false } })],
   });
   editors.push(editor);
   return editor;

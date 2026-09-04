@@ -7,46 +7,74 @@ import {
   changePasswordSchema,
 } from '../../auth.validator';
 
-describe('auth validators — simplified signup contract', () => {
-  it('registerSchema accepts a payload with no phone and no last_name', async () => {
-    const value = await registerSchema.validate({
-      first_name: 'Riya',
-      email: 'riya@duncit.com',
-      password: 'StrongPass123',
-      dob: new Date('1995-01-01'),
-    });
+/**
+ * Both signup doors ask for the same thing, and the reason is the point of
+ * these tests: an account is identified by its number as well as its email, so
+ * neither door may create one for a number nobody has answered on. Which door
+ * somebody came through cannot decide whether their number was verified.
+ */
+describe('auth validators — the signup contract', () => {
+  /** A payload that satisfies the email door, minus whatever a case removes. */
+  const registration = {
+    first_name: 'Riya',
+    email: 'riya@duncit.com',
+    password: 'StrongPass123',
+    dob: new Date('1995-01-01'),
+    phone_number: '9876543210',
+    phone_extension: '+91',
+    whatsapp_token: 'wa-proof-token-value',
+  };
+
+  it('accepts a verified number and leaves last_name optional', async () => {
+    const value = await registerSchema.validate(registration);
     expect(value.first_name).toBe('Riya');
-    expect(value.phone_number).toBeUndefined();
+    expect(value.phone_number).toBe('9876543210');
     expect(value.last_name).toBeUndefined();
+    // The number is taken as the mobile number too unless the tick box says not.
+    expect(value.whatsapp_is_mobile).toBe(true);
   });
 
-  it('registerSchema still requires first_name, email, password and dob', async () => {
+  it('still requires first_name, email, password and dob', async () => {
     await expect(
       registerSchema.validate({ email: 'x@duncit.com', password: 'StrongPass123' })
     ).rejects.toThrow();
   });
 
-  it('registerSchema rejects an invalid phone when one is supplied', async () => {
+  // The unique index on the number only means something if every account
+  // created through this door actually carries one.
+  it('refuses a registration with no phone at all', async () => {
+    const { phone_number, ...withoutPhone } = registration;
+    await expect(registerSchema.validate(withoutPhone)).rejects.toThrow();
+  });
+
+  it('refuses a registration whose number was never answered on', async () => {
+    const { whatsapp_token, ...unproven } = registration;
+    await expect(registerSchema.validate(unproven)).rejects.toThrow(/whatsapp_token/i);
+  });
+
+  it('rejects a phone number that is not one', async () => {
     await expect(
-      registerSchema.validate({
-        first_name: 'Riya',
-        email: 'riya@duncit.com',
-        password: 'StrongPass123',
-        dob: new Date('1995-01-01'),
-        phone_number: 'abc',
-        phone_extension: '+91',
-      })
+      registerSchema.validate({ ...registration, phone_number: 'abc' }),
     ).rejects.toThrow(/invalid phone/i);
   });
 
-  it('googleSignupSchema accepts a token-only payload (no phone, no dob)', async () => {
-    const value = await googleSignupSchema.validate({ id_token: 'a'.repeat(24) });
+  // Google proves an email address and nothing else, so this door asks for the
+  // same number and the same proof as the form does.
+  it('makes the Google door ask for the number and its proof too', async () => {
+    const value = await googleSignupSchema.validate({
+      id_token: 'a'.repeat(24),
+      phone_number: '9876543210',
+      phone_extension: '+91',
+      whatsapp_token: 'wa-proof-token-value',
+    });
     expect(value.id_token).toHaveLength(24);
-    expect(value.phone_number).toBeUndefined();
+    expect(value.phone_number).toBe('9876543210');
+    // Date of birth is the one thing the Google door does not insist on.
     expect(value.dob).toBeUndefined();
   });
 
-  it('googleSignupSchema still requires the id_token', async () => {
+  it('refuses a Google signup carrying only the id_token', async () => {
+    await expect(googleSignupSchema.validate({ id_token: 'a'.repeat(24) })).rejects.toThrow();
     await expect(googleSignupSchema.validate({})).rejects.toThrow();
   });
 

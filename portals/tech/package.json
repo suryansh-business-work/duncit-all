@@ -52,6 +52,8 @@
     "ag-grid-community": "^36.1.0",
     "ag-grid-react": "^36.1.0",
     "date-fns": "^4.4.0",
+    "grapesjs": "0.23.6",
+    "grapesjs-mjml": "1.0.8",
     "graphql": "^16.14.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

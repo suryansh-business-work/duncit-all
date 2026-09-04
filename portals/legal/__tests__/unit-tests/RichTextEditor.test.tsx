@@ -1,26 +1,18 @@
-import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { DuncitRichTextInput, htmlToText as packageHtmlToText } from '@duncit/rich-text';
 import RichTextEditor, { htmlToText, toPrintableHtml } from '../../src/components/RichTextEditor';
 
-vi.mock('react-quill', () => ({
-  default: ({ value, onChange, placeholder }: any) => (
-    <textarea data-testid="quill" placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} />
-  ),
-}));
-
-describe('RichTextEditor', () => {
-  it('renders the editor and forwards changes', () => {
-    const onChange = vi.fn();
-    render(<RichTextEditor value="<p>hi</p>" onChange={onChange} placeholder="Write…" />);
-    const editor = screen.getByTestId('quill');
-    expect(editor).toHaveAttribute('placeholder', 'Write…');
-    fireEvent.change(editor, { target: { value: '<p>x</p>' } });
-    expect(onChange).toHaveBeenCalledWith('<p>x</p>');
-  });
-
-  it('accepts a custom minHeight', () => {
-    const { container } = render(<RichTextEditor value="" onChange={vi.fn()} minHeight={120} />);
-    expect(container.firstChild).toBeTruthy();
+/**
+ * This module is a compatibility shim: the editor itself lives in
+ * `@duncit/rich-text`, which owns its own suite. What is worth pinning HERE is
+ * that the shim still points at that one implementation — an older import path
+ * quietly resolving to a second editor is the drift this file exists to catch —
+ * plus the printable wrapper, which is this portal's own.
+ */
+describe('RichTextEditor re-export', () => {
+  it('is the shared editor, not a second implementation', () => {
+    expect(RichTextEditor).toBe(DuncitRichTextInput);
+    expect(htmlToText).toBe(packageHtmlToText);
   });
 });
 
@@ -28,9 +20,11 @@ describe('htmlToText', () => {
   it('returns empty for empty input', () => {
     expect(htmlToText('')).toBe('');
   });
+
   it('strips tags and decodes entities', () => {
     expect(htmlToText('<p>Hello &amp; bye</p>')).toBe('Hello & bye');
   });
+
   it('handles markup with no text', () => {
     expect(htmlToText('<br>')).toBe('');
   });
@@ -44,7 +38,18 @@ describe('toPrintableHtml', () => {
     expect(html).toContain('<p>Body</p>');
   });
 
-  it('shows a placeholder when there is no content', () => {
-    expect(toPrintableHtml('Empty', '')).toContain('No content.');
+  // A policy is a legal document that gets downloaded and kept: the title has
+  // to survive being one, and it must not be able to close the tag it sits in.
+  it('escapes a title that contains markup rather than rendering it', () => {
+    const html = toPrintableHtml('Terms <b>& Conditions</b>', '');
+    expect(html).toContain('<title>Terms &lt;b&gt;&amp; Conditions&lt;/b&gt;</title>');
+    expect(html).not.toContain('<b>');
+  });
+
+  it('produces a complete document even with no content at all', () => {
+    const html = toPrintableHtml('Empty', '');
+    expect(html).toContain('<!doctype html>');
+    expect(html).toContain('<h1>Empty</h1>');
+    expect(html).toContain('</body></html>');
   });
 });

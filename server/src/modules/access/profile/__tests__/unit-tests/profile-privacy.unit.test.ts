@@ -1,8 +1,16 @@
 import { Types } from 'mongoose';
 
 const create = jest.fn();
+// The service clears the older row about this follower before writing the
+// new one. A mock without it throws inside notifyNewFollower, whose catch
+// then swallows the failure — so `create` is simply never reached and every
+// assertion about the notification reads zero calls.
+const removeFollowRowsAbout = jest.fn();
 jest.mock('@modules/engagement/notification/notification.service', () => ({
-  notificationService: { create: (...args: unknown[]) => create(...args) },
+  notificationService: {
+    create: (...args: unknown[]) => create(...args),
+    removeFollowRowsAbout: (...args: unknown[]) => removeFollowRowsAbout(...args),
+  },
 }));
 
 import { userService } from '@modules/access/user/user.service';
@@ -44,8 +52,15 @@ describe('notifyNewFollower', () => {
         link_url: `/u/${followerId}`,
         scope: 'USER',
         target_user_ids: [targetId],
+        // A new-follower row references no document, so the actor column is
+        // the only record of who it is about — and what the inbox follows back.
+        action_type: 'NEW_FOLLOWER',
+        action_actor_id: followerId,
       })
     );
+    // One row per relationship: a re-follow replaces the older row rather
+    // than stacking a second one above it.
+    expect(removeFollowRowsAbout).toHaveBeenCalledWith(targetId, followerId);
   });
 
   it('falls back to a generic name and null link/image when the follower is unknown', async () => {

@@ -19,9 +19,22 @@ describe('Duncit Legal app config', () => {
     expect(appConfig.requiredRoles).toEqual(['LEGAL_MANAGER']);
   });
 
-  it('exposes the dashboard, documents and policies sections', () => {
-    const targets = appConfig.nav.map((n) => n.to);
-    expect(targets).toEqual(['/', '/documents', '/policies']);
+  // Every destination this console offers, in order, including the ones
+  // reached through the Grievance group. Listed in full rather than spot-
+  // checked: the nav IS the console, and a route that quietly disappears is
+  // exactly what this should fail on.
+  it('offers every legal section, groups included', () => {
+    const targets = appConfig.nav.flatMap((n) => (n.to ? [n.to] : (n.children ?? []).map((c) => c.to)));
+    expect(targets).toEqual([
+      '/',
+      '/documents',
+      '/policies',
+      '/policy-acceptance-logs',
+      '/contracts',
+      '/reports',
+      '/grievance/tickets',
+      '/grievance/info',
+    ]);
     expect(appConfig.nav.find((n) => n.to === '/')?.label).toBe('Dashboard');
   });
 

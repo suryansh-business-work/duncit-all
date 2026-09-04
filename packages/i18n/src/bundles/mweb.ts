@@ -2926,8 +2926,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       confirmAcceptAnyOrder:
         'Your slot is booked for this pod straight away. It goes live once everyone else has enrolled too.',
       confirmAssign: 'Host this Auto Pod?',
-      confirmAssignAnyOrder:
-        'You become the host of this pod. It goes live once everyone else has enrolled too.',
+      confirmAssignClubNext:
+        'You become the host of this pod. It goes live once the Club Admin accepts it.',
       confirmClaim: 'Claim this Auto Pod?',
       confirmClaimBody: 'The pod is created under this club as soon as everyone has enrolled.',
       priceLabel: 'Ticket',
@@ -3018,6 +3018,24 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       addAvailability: 'Add availability',
       loadFailed: 'Could not load Auto Pods. Please try again.',
       retry: 'Try again',
+      // The potential-earnings calculator each queue card can open. The venue's
+      // lists its spaces and prices each one itself; the host's runs the same
+      // Step 4 waterfall Create a Pod does.
+      viewEarningsCta: 'View Potential Earnings',
+      earningsTitle: 'Potential Earnings',
+      earningsSpacesHint:
+        'Enter a ticket price for a space to see what this pod could take there.',
+      earningsSpaceCapacity: 'Capacity: {capacity}',
+      earningsWholeVenue: 'Whole venue',
+      earningsNoSpaces: 'Add a space with a capacity to this venue to see its potential earnings.',
+      earningsFormula: 'Potential Earnings (Ticket Price × Slots): {price} × {capacity} = {total}',
+      earningsTotalSpots: 'Total Spots Allowed at Venue: {spots}',
+      earningsAddPrice: 'Add Ticket Price',
+      earningsPricePositive: 'Enter a ticket price above zero.',
+      earningsEnterPrice: 'Enter a ticket price to see what you could earn.',
+      earningsUnknown: 'You could earn',
+      close: 'Close',
+      closeAria: 'Close potential earnings',
     },
     accountEdit: {
       discardChanges: 'Discard changes',

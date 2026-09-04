@@ -135,7 +135,7 @@ export const autoPodTypeDefs = gql`
     the venue queue only. Superseded by expires_at, which already folds it in.
     """
     venue_expires_at: String @deprecated(reason: "Read expires_at — the one deadline every list carries.")
-    "Account Health points a venue or host loses by withdrawing (Pod Settings). Set on their own queues."
+    "Account Health points a partner loses by withdrawing (Pod Settings). Set on every partner queue."
     withdraw_penalty_points: Int
     "True when the calling user (or one of their clubs) already enrolled."
     viewer_claimed: Boolean!
@@ -147,6 +147,19 @@ export const autoPodTypeDefs = gql`
     venue has priced it, and for callers who are not hosts.
     """
     expected_host_earnings: Float
+    """
+    What the offer would gross at the venue's booked space — the ticket price
+    times that space's capacity, the same Ticket Price × Slots sum the venue's
+    potential-earnings calculator shows. Null until there is both a booked slot
+    and a ticket price. Set on the venue queue only.
+    """
+    expected_venue_earnings: Float
+    """
+    The club admin's cut under Finance's waterfall, from the venue's slot price,
+    the host's ticket price and the spots the host chose. Null until a host has
+    priced the offer. Set on the club admin queue only.
+    """
+    expected_club_earnings: Float
     materialized_at: String
     cancel_reason: String
     cancelled_at: String
@@ -390,6 +403,12 @@ export const autoPodTypeDefs = gql`
     venueWithdrawAutoPod(auto_pod_doc_id: ID!): AutoPod!
     "The host steps off while the offer is still enrolling; the offer returns to hosts' lists and the host pays the Pod Settings penalty."
     hostWithdrawAutoPod(auto_pod_doc_id: ID!): AutoPod!
+    """
+    The club admin takes their club's claim back while the offer is still
+    enrolling; the offer returns to club admins' lists and the admin pays the
+    Pod Settings penalty. Any admin of the claiming club may do it.
+    """
+    clubWithdrawAutoPod(auto_pod_doc_id: ID!): AutoPod!
     "Club Admin enrols: claims the offer for one of their clubs."
     clubClaimAutoPod(auto_pod_doc_id: ID!, club_id: ID!): AutoPod!
   }

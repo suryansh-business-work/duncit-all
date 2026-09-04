@@ -2,6 +2,7 @@ import { useQuery } from '@apollo/client/react';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import type { AutoPodLabels } from '@duncit/utils';
+import { SelectSpinner } from './SelectSpinner';
 import { MY_HOST_CATEGORIES_FOR_AUTO_POD } from './queries';
 
 interface HostCategory {
@@ -77,6 +78,7 @@ export function AutoPodCategoryFilter({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       disabled={loading}
+      slotProps={{ input: { endAdornment: <SelectSpinner busy={loading} /> } }}
     >
       <MenuItem value={ALL}>{labels.allCategories}</MenuItem>
       {rows.map((row) => (

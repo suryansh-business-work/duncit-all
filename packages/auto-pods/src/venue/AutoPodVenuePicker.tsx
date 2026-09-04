@@ -5,8 +5,9 @@ import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import type { AutoPodLabels } from '@duncit/utils';
+import type { AutoPodLabels, AutoPodVenueSpace } from '@duncit/utils';
 import { MY_VENUES_FOR_AUTO_POD } from '../queries';
+import { SelectSpinner } from '../SelectSpinner';
 
 /** One of the owner's venues, as the queue and the accept dialog need it. */
 export interface AutoPodVenueOption {
@@ -16,6 +17,10 @@ export interface AutoPodVenueOption {
   is_active: boolean;
   location_id: string | null;
   city: string;
+  /** The whole venue's seats — what stands in when no space is named. */
+  capacity: number;
+  /** The venue's named spaces, which its potential-earnings calculator prices. */
+  capacity_items: AutoPodVenueSpace[];
   venue_category: {
     sub_category_id: string | null;
     super_category_name: string;
@@ -79,6 +84,7 @@ export function AutoPodVenuePicker({ value, onChange, labels, size = 'small' }: 
         // The select only ever hands back an id it listed, so the venue is there.
         onChange={(event) => onChange(venues.find((venue) => venue.id === event.target.value)!)}
         disabled={loading}
+        slotProps={{ input: { endAdornment: <SelectSpinner busy={loading} /> } }}
       >
         {venues.map((venue) => (
           <MenuItem key={venue.id} value={venue.id}>

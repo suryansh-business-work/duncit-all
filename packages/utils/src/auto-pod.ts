@@ -8,6 +8,10 @@
  * and the one predicate the role switch consults.
  */
 
+// Type-only, and so erased at build: the copy module imports AutoPodRole back
+// from here, and a value import either way would be a real cycle.
+import type { AutoPodLabels } from './auto-pod-copy';
+
 export type AutoPodStage =
   | 'OPEN'
   | 'CLAIMING'
@@ -104,6 +108,10 @@ export interface AutoPodRow {
   viewer_claimed: boolean;
   pod_id?: string | null;
   expected_host_earnings?: number | null;
+  /** Ticket price × the booked space's capacity. Venue queue only. */
+  expected_venue_earnings?: number | null;
+  /** The club admin's cut under Finance's waterfall. Club queue only. */
+  expected_club_earnings?: number | null;
 }
 
 /** One enrolment tick: amber while `done` is false, green once it is true. */
@@ -169,13 +177,148 @@ export function autoPodActionable(row: AutoPodRow, role: AutoPodRole): boolean {
 }
 
 /**
- * Can this viewer take their enrolment back? A venue or a host may withdraw
- * while the offer is still enrolling — the club admin's claim is the last one
- * and completes the pod, so there is nothing to withdraw from after it.
+ * Can this viewer take their enrolment back? Any of the three may, while the
+ * offer is still enrolling: enrolments happen in ANY order, so a club admin's
+ * claim is not necessarily the last one — a club that opened the offer for
+ * itself is often the first partner on it. Once everyone needed has enrolled
+ * the pod exists and the row is no longer pre-live, which is what closes the
+ * door for all three.
  */
 export function autoPodWithdrawable(row: AutoPodRow, role: AutoPodRole): boolean {
-  if (role === 'club' || !row.viewer_claimed) return false;
+  if (!row.viewer_claimed) return false;
   return autoPodPreLive(row.stage) && !!claimOf(row, role);
+}
+
+/**
+ * The "You could earn …" figure for the role whose queue is being read. Each
+ * role is paid for something different — the venue for the seats its space
+ * holds, the host for what is left after every deduction, the club admin for
+ * its cut of the same waterfall — so a shared card must never render one
+ * role's number to another. `estimate` is what this viewer worked out for
+ * themselves in the potential-earnings dialog and always wins: it is the
+ * number they just typed.
+ */
+export function autoPodRoleEarnings(
+  row: AutoPodRow,
+  role: AutoPodRole,
+  estimate?: number | null
+): number | null {
+  if (typeof estimate === 'number') return estimate;
+  const byRole: Record<AutoPodRole, number | null | undefined> = {
+    venue: row.expected_venue_earnings,
+    host: row.expected_host_earnings,
+    club: row.expected_club_earnings,
+  };
+  const value = byRole[role];
+  return typeof value === 'number' ? value : null;
+}
+
+/**
+ * What every Auto Pod card needs besides its own row and its buttons. The MUI
+ * queue and the Tamagui one take the identical set, so it is named once here
+ * rather than written out in both (rule 40).
+ */
+export interface AutoPodCardChrome {
+  role: AutoPodRole;
+  labels: AutoPodLabels;
+  /** Formats a slot window in the viewer's configured date/time settings. */
+  formatWhen: (iso: string) => string;
+  /** Formats money in the viewer's currency. */
+  formatMoney: (amount: number) => string;
+}
+
+/** One titled block of a role's queue. */
+export interface AutoPodQueueSection {
+  /** 'actionable' takes the role's primary button; 'mine' takes its own. */
+  key: 'actionable' | 'mine';
+  heading: string;
+  rows: AutoPodRow[];
+}
+
+/**
+ * A role's queue as the two titled blocks every surface draws: what is waiting
+ * on them, then what they already enrolled in — the venue's "Assigned slot",
+ * the host's "Assigned Auto Pods", the club admin's "Final assigned Auto Pods".
+ * Empty blocks are dropped, so a caller renders whatever comes back and never
+ * decides for itself which heading applies.
+ */
+export function autoPodQueueSections(
+  rows: AutoPodRow[],
+  role: AutoPodRole,
+  labels: AutoPodLabels
+): AutoPodQueueSection[] {
+  const { actionable, mine } = splitAutoPods(rows, role);
+  return [
+    { key: 'actionable' as const, heading: labels.needsAction, rows: actionable },
+    { key: 'mine' as const, heading: labels.assignedHeading(role), rows: mine },
+  ].filter((section) => section.rows.length > 0);
+}
+
+/**
+ * What each partner has worked out for themselves in a potential-earnings
+ * calculator, by Auto Pod id, and which card's calculator is open.
+ *
+ * The figures are deliberately NOT saved anywhere: a potential earning is a
+ * partner asking "what if", not a commitment, and persisting it would turn a
+ * hypothetical price into something the pod appears to carry.
+ */
+export interface AutoPodEarningsState {
+  row: AutoPodRow | null;
+  open: (row: AutoPodRow) => void;
+  close: () => void;
+  /** What the open calculator has worked out — null clears the card's figure. */
+  record: (amount: number | null) => void;
+  values: Readonly<Record<string, number>>;
+}
+
+/**
+ * The earnings map with one Auto Pod's figure set, cleared (null), or left
+ * exactly as it was. Returning the SAME object when nothing changed is what
+ * keeps a calculator that re-reports the same number from re-rendering the
+ * whole queue behind it.
+ */
+export function autoPodEarningsPatch(
+  values: Readonly<Record<string, number>>,
+  id: string,
+  amount: number | null
+): Readonly<Record<string, number>> {
+  if (amount === null) {
+    if (!(id in values)) return values;
+    const { [id]: _cleared, ...rest } = values;
+    return rest;
+  }
+  return values[id] === amount ? values : { ...values, [id]: amount };
+}
+
+/** One bookable space at a venue — a named capacity the venue published. */
+export interface AutoPodVenueSpace {
+  label: string;
+  capacity: number;
+}
+
+/**
+ * The spaces the venue's potential-earnings calculator lists. A venue that
+ * named none is one undivided room, so its scalar capacity stands in as a
+ * single unnamed space rather than the dialog opening empty; a venue with
+ * neither has nothing to project and gets an empty list.
+ */
+export function autoPodVenueSpaces(
+  venue: { capacity?: number | null; capacity_items?: readonly AutoPodVenueSpace[] | null } | null
+): AutoPodVenueSpace[] {
+  const named = (venue?.capacity_items ?? []).filter((item) => item.capacity > 0);
+  if (named.length > 0) return named.map((item) => ({ label: item.label, capacity: item.capacity }));
+  const whole = venue?.capacity ?? 0;
+  return whole > 0 ? [{ label: '', capacity: whole }] : [];
+}
+
+/**
+ * What one space could gross: the ticket price every attendee pays times the
+ * seats it holds. Null when either half is missing, so the dialog shows the
+ * row without inventing a ₹0 earning for a price nobody has typed yet.
+ */
+export function autoPodSpaceEarnings(ticketPrice: number, capacity: number): number | null {
+  if (ticketPrice <= 0 || capacity <= 0) return null;
+  return ticketPrice * capacity;
 }
 
 /** Split a role's queue into what needs them and what they already took. */

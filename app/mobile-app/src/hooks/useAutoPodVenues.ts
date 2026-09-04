@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import type { AutoPodVenueSpace } from '@duncit/utils';
+
 import { MyVenuesForAutoPodDocument } from '@/graphql/auto-pods';
 import { graphqlRequest } from '@/services/graphql.client';
 
@@ -9,6 +11,10 @@ export interface AutoPodVenueOption {
   venue_name: string;
   location_id: string | null;
   city: string;
+  /** The whole venue's seats: what stands in when no space is named. */
+  capacity: number;
+  /** The venue's named spaces, which its potential-earnings sheet prices. */
+  capacity_items: AutoPodVenueSpace[];
   venue_category: {
     sub_category_id: string | null;
     super_category_name: string;
@@ -48,6 +54,11 @@ export function useAutoPodVenues() {
               venue_name: venue.venue_name,
               location_id: venue.location_id ?? null,
               city: venue.city,
+              capacity: venue.capacity ?? 0,
+              capacity_items: (venue.capacity_items ?? []).map((item) => ({
+                label: item.label,
+                capacity: item.capacity,
+              })),
               venue_category: venue.venue_category
                 ? {
                     sub_category_id: venue.venue_category.sub_category_id ?? null,

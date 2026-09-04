@@ -1,10 +1,15 @@
 import { useState } from 'react';
 import { ScrollView, YStack } from 'tamagui';
-import { autoPodActionable, type AutoPodRow } from '@duncit/utils';
+import { autoPodActionable, autoPodWithdrawable, type AutoPodRow } from '@duncit/utils';
 
 import { StackScreen } from '@/components/StackScreen';
 import { PillButton } from '@/components/attendance/AttendanceOtpControls';
-import { AutoPodLocationRow, AutoPodQueue, ClubClaimSheet } from '@/components/auto-pods';
+import {
+  AutoPodLocationRow,
+  AutoPodQueue,
+  AutoPodWithdrawSheet,
+  ClubClaimSheet,
+} from '@/components/auto-pods';
 import { useAutoPodScreen } from '@/hooks/useAutoPodScreen';
 import { useLocations } from '@/hooks/useLocations';
 
@@ -30,6 +35,20 @@ export function ClubAutoPodsScreen() {
   // showing what the server last said rather than a stale copy.
   const [offerId, setOfferId] = useState<string | null>(null);
   const offer = rows.find((row) => row.id === offerId) ?? null;
+  const [withdrawing, setWithdrawing] = useState<AutoPodRow | null>(null);
+
+  // Enrolments happen in any order, so a club is often not the last partner in
+  // and its claim can still be taken back, at the same Account Health cost.
+  const renderMineAction = (row: AutoPodRow) =>
+    autoPodWithdrawable(row, 'club') ? (
+      <PillButton
+        testID={`auto-pod-withdraw-${row.id}`}
+        label={labels.withdrawCta}
+        onPress={() => setWithdrawing(row)}
+        variant="ghost"
+        disabled={false}
+      />
+    ) : null;
 
   const renderAction = (row: AutoPodRow) =>
     autoPodActionable(row, 'club') ? (
@@ -57,9 +76,21 @@ export function ClubAutoPodsScreen() {
             formatWhen={formatWhen}
             formatMoney={formatMoney}
             renderAction={renderAction}
+            renderMineAction={renderMineAction}
           />
         </YStack>
       </ScrollView>
+
+      <AutoPodWithdrawSheet
+        row={withdrawing}
+        role="club"
+        labels={labels}
+        onClose={() => setWithdrawing(null)}
+        onWithdrawn={() => {
+          setWithdrawing(null);
+          refetch();
+        }}
+      />
 
       <ClubClaimSheet
         row={offer}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Text, YStack } from 'tamagui';
 import type { AutoPodLabels } from '@duncit/utils';
 
+import { LoadingIndicator } from '@/components/LoadingIndicator';
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
 import { MyHostCategoriesForAutoPodDocument } from '@/graphql/auto-pods';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -67,6 +68,9 @@ export function AutoPodCategoryChips({ value, onChange, labels }: Readonly<Props
       <Text fontSize={11.5} fontWeight="600" color="$muted" textTransform="uppercase">
         {labels.categoryLabel}
       </Text>
+      {/* Until the host's approved categories are back, "All my categories"
+          on its own is the only chip, which reads as having none. */}
+      {loaded ? null : <LoadingIndicator testID="auto-pods-categories-loading" />}
       <OptionChipRow
         layout="scroll"
         testIDPrefix="auto-pods-category"

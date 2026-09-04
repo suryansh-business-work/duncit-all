@@ -24,6 +24,8 @@ const AUTO_POD_FIELDS = `
   viewer_claimed
   pod_id
   expected_host_earnings
+  expected_venue_earnings
+  expected_club_earnings
   expires_at
   withdraw_penalty_points
   venue_claim {
@@ -178,6 +180,16 @@ export const HOST_WITHDRAW_AUTO_POD = gql`
   }
 `;
 
+/** A club admin takes their club's claim back; the offer returns to club
+ * admins' lists and lands back under "Needs your action". */
+export const CLUB_WITHDRAW_AUTO_POD = gql`
+  mutation ClubWithdrawAutoPod($auto_pod_doc_id: ID!) {
+    clubWithdrawAutoPod(auto_pod_doc_id: $auto_pod_doc_id) {
+      ${AUTO_POD_FIELDS}
+    }
+  }
+`;
+
 export const CLUB_CLAIM_AUTO_POD = gql`
   mutation ClubClaimAutoPod($auto_pod_doc_id: ID!, $club_id: ID!) {
     clubClaimAutoPod(auto_pod_doc_id: $auto_pod_doc_id, club_id: $club_id) {
@@ -197,6 +209,11 @@ export const MY_VENUES_FOR_AUTO_POD = gql`
       is_active
       location_id
       city
+      capacity
+      capacity_items {
+        label
+        capacity
+      }
       venue_category {
         sub_category_id
         super_category_name

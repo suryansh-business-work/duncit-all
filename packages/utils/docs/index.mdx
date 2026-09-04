@@ -175,6 +175,11 @@ exports:
   - 'autoPodHostMeetingReady'
   - 'autoPodTimeLeft'
   - 'autoPodModeCount'
+  - 'autoPodQueueSections'
+  - 'autoPodRoleEarnings'
+  - 'autoPodEarningsPatch'
+  - 'autoPodVenueSpaces'
+  - 'autoPodSpaceEarnings'
   - 'STUDIO_OPTIONS'
   - 'availableModes'
   - 'resolveMode'
@@ -871,7 +876,7 @@ twin cannot disagree on what an offer is waiting for.
 | `autoPodPreLive` | `(stage) => boolean` | `OPEN` (nobody yet) or `CLAIMING` (at least one) — still enrolling. |
 | `autoPodActionable` | `(row, role) => boolean` | Pre-live, this viewer has not enrolled, and it is this role's TURN — the venue's until a slot is fixed, then the host's, then the club admin's. Never true for a venue on a virtual offer. |
 | `autoPodNextRole` | `(row) => AutoPodRole \| null` | Whose turn it is, or null once everyone needed is on it. |
-| `autoPodWithdrawable` | `(row, role) => boolean` | Pre-live, this viewer enrolled as this role, and the role is a venue or a host — a club admin's claim completes the pod, so it cannot be taken back. |
+| `autoPodWithdrawable` | `(row, role) => boolean` | Pre-live, and this viewer enrolled as this role. All three may leave: enrolments happen in any order, so a club admin is often not the last one in, and once everyone needed IS on it the row is no longer pre-live. |
 | `splitAutoPods` | `(rows, role) => { actionable, mine }` | A role's queue: what needs them, then what they already took. |
 | `autoPodMissingRoles` | `(row) => AutoPodRole[]` | Every role still missing, in tick order; `[]` once live or gone. |
 | `autoPodWaitingOn` | `(row) => AutoPodRole \| null` | The first missing role. |
@@ -881,6 +886,11 @@ twin cannot disagree on what an offer is waiting for.
 | `autoPodHostMeetingReady` | `(meeting, nowMs) => boolean` | A VIRTUAL offer's "Assign Myself" may go: http(s) link, start after `nowMs`, end after start. The server re-checks all three. |
 | `autoPodTimeLeft` | `(iso, nowMs) => { hours, minutes, seconds } \| null` | Every card's live countdown to `row.expires_at` — seconds rounded up, null once passed. |
 | `autoPodModeCount` | `(counts, mode) => number` | How many offers wait on a studio mode (`HOST` / `VENUE` / `CLUB`); 0 for any other. |
+| `autoPodQueueSections` | `(rows, role, labels) => AutoPodQueueSection[]` | A role's queue as the two titled blocks every surface draws — what needs them, then what they enrolled in — with empty blocks dropped. The MUI queue and its Tamagui twin both read it, so neither decides its own headings. |
+| `autoPodRoleEarnings` | `(row, role, estimate?) => number \| null` | The "You could earn …" figure for the role whose queue this is: the venue's ticket × capacity, the host's payout, the club admin's cut. `estimate` — what the viewer typed into their own calculator — always wins. |
+| `autoPodEarningsPatch` | `(values, id, amount) => values` | The earnings map with one Auto Pod set or cleared (`null`), returning the SAME object when nothing changed so a re-reported figure does not re-render the queue. |
+| `autoPodVenueSpaces` | `(venue) => AutoPodVenueSpace[]` | The spaces a venue's calculator lists. A venue that named none is one undivided room, so its scalar `capacity` stands in as a single unnamed space rather than the dialog opening empty. |
+| `autoPodSpaceEarnings` | `(ticketPrice, capacity) => number \| null` | What one space could gross — ticket × seats. Null when either half is missing, so the row shows without inventing a ₹0 earning for a price nobody typed. |
 
 ### Studio modes
 

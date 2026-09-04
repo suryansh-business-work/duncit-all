@@ -108,6 +108,26 @@ export interface IAutoPodLocation {
   bound_at: Date;
 }
 
+/**
+ * ONE partner's own clock on this offer — what the card counts down as
+ * "removed from your list in 23h 49m".
+ *
+ * It runs from the moment the offer first reached THEM rather than from the
+ * offer's creation, so a partner shown a three-day-old Auto Pod still gets the
+ * whole window to decide. It is never restarted: enrolling PAUSES it (the
+ * offer is theirs, so it is not about to leave their list) by banking the time
+ * spent into `consumed_ms`, and withdrawing resumes it from exactly what was
+ * left. A venue that accepted at "20h 45m" and later cancels sees 20h 45m
+ * again, not a fresh 24 hours.
+ */
+export interface IAutoPodViewerWindow {
+  user_id: Types.ObjectId;
+  /** When the running stretch began; null while the clock is paused. */
+  started_at: Date | null;
+  /** Time already spent across every earlier stretch. */
+  consumed_ms: number;
+}
+
 export interface IAutoPodEvent {
   action: string;
   actor_user_id: Types.ObjectId | null;
@@ -157,6 +177,8 @@ export interface IAutoPod extends Document {
   club_claim: IAutoPodClubClaim | null;
   /** Null until the first enrolment pins it. */
   location: IAutoPodLocation | null;
+  /** One row per partner who has seen this offer — their own countdown's start. */
+  viewer_windows: IAutoPodViewerWindow[];
   pod_id: Types.ObjectId | null;
   materialized_at: Date | null;
   cancelled_at: Date | null;
@@ -241,6 +263,15 @@ const locationSchema = new Schema<IAutoPodLocation>(
   { _id: false }
 );
 
+const viewerWindowSchema = new Schema<IAutoPodViewerWindow>(
+  {
+    user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    started_at: { type: Date, default: () => new Date() },
+    consumed_ms: { type: Number, default: 0, min: 0 },
+  },
+  { _id: false }
+);
+
 const eventSchema = new Schema<IAutoPodEvent>(
   {
     action: { type: String, required: true, trim: true, maxlength: 40 },
@@ -297,6 +328,7 @@ const autoPodSchema = new Schema<IAutoPod>(
     host_claim: { type: hostClaimSchema, default: null },
     club_claim: { type: clubClaimSchema, default: null },
     location: { type: locationSchema, default: null },
+    viewer_windows: { type: [viewerWindowSchema], default: [] },
     pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', default: null },
     materialized_at: { type: Date, default: null },
     cancelled_at: { type: Date, default: null },
@@ -313,6 +345,7 @@ autoPodSchema.index({ 'host_claim.user_id': 1 });
 autoPodSchema.index({ 'club_claim.club_id': 1 });
 autoPodSchema.index({ sub_category_id: 1, stage: 1 });
 autoPodSchema.index({ 'location.location_id': 1, stage: 1 });
+autoPodSchema.index({ 'viewer_windows.user_id': 1 });
 
 autoPodSchema.pre('save', async function assignAutoPodNo(next) {
   if (!this.auto_pod_no) {

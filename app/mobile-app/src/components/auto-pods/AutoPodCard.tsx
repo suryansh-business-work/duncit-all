@@ -5,7 +5,9 @@ import {
   autoPodCityLabel,
   autoPodMissingRoles,
   autoPodPriced,
+  autoPodRoleEarnings,
   type AutoPodLabels,
+  type AutoPodRole,
   type AutoPodRow,
 } from '@duncit/utils';
 
@@ -16,6 +18,12 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface Props {
   row: AutoPodRow;
+  /**
+   * Whose queue this card is in. Each role is paid for something different, so
+   * the "You could earn" line reads that role's own figure — a venue used to be
+   * shown the HOST's payout, which is a different number entirely.
+   */
+  role: AutoPodRole;
   labels: AutoPodLabels;
   /** Formats the slot window in the viewer's configured date/time settings. */
   formatWhen: (iso: string) => string;
@@ -23,6 +31,10 @@ interface Props {
   formatMoney: (amount: number) => string;
   /** The role's primary button — the caller owns the action. */
   action?: ReactNode;
+  /** The "View Potential Earnings" control, under the card's details. */
+  earningsAction?: ReactNode;
+  /** What this viewer worked out in that sheet — it wins over the server's. */
+  earnings?: number | null;
 }
 
 const firstImage = (row: AutoPodRow): string | null =>
@@ -39,9 +51,9 @@ function DetailLine({
   tint: string;
 }>) {
   return (
-    <XStack alignItems="center" gap={6}>
-      <MaterialIcons name={icon} size={14} color={tint} />
-      <Text flex={1} fontSize={12.5} color="$color" numberOfLines={1}>
+    <XStack alignItems="flex-start" gap={6}>
+      <MaterialIcons name={icon} size={14} color={tint} style={{ marginTop: 2 }} />
+      <Text flex={1} fontSize={12.5} color="$color">
         {value}
       </Text>
     </XStack>
@@ -136,7 +148,16 @@ function AutoPodCover({ url }: Readonly<{ url: string }>) {
  *
  * The Tamagui twin of `@duncit/auto-pods`' `AutoPodCard` (rule 27).
  */
-export function AutoPodCard({ row, labels, formatWhen, formatMoney, action }: Readonly<Props>) {
+export function AutoPodCard({
+  row,
+  role,
+  labels,
+  formatWhen,
+  formatMoney,
+  action,
+  earningsAction,
+  earnings,
+}: Readonly<Props>) {
   const { muted, success } = useThemeColors();
   const image = firstImage(row);
   const missing = autoPodMissingRoles(row);
@@ -147,6 +168,7 @@ export function AutoPodCard({ row, labels, formatWhen, formatMoney, action }: Re
   const modeLabel = virtual ? labels.modeVirtual : labels.modePhysical;
   // The template carries no price: until a host sets one the card says who will.
   const priced = autoPodPriced(row);
+  const earning = autoPodRoleEarnings(row, role, earnings);
   const subtitle = row.category_name
     ? `${row.auto_pod_no} · ${row.category_name}`
     : row.auto_pod_no;
@@ -185,6 +207,7 @@ export function AutoPodCard({ row, labels, formatWhen, formatMoney, action }: Re
               <DetailLine icon="event" value={formatWhen(venue.pod_date_time)} tint={muted} />
             </>
           ) : null}
+          {earningsAction}
         </YStack>
 
         <Separator borderColor="$borderColor" />
@@ -200,11 +223,13 @@ export function AutoPodCard({ row, labels, formatWhen, formatMoney, action }: Re
           </Text>
         )}
 
-        {typeof row.expected_host_earnings === 'number' ? (
-          <Text fontSize={12.5} fontWeight="700" color={success}>
-            {labels.expectedEarnings(formatMoney(row.expected_host_earnings))}
-          </Text>
-        ) : null}
+        {/* "You could earn 1,500" — or just "You could earn" until this
+            viewer has priced the pod in the calculator above. */}
+        <Text testID="auto-pod-earnings" fontSize={12.5} fontWeight="700" color={success}>
+          {earning === null
+            ? labels.earningsUnknown
+            : labels.expectedEarnings(formatMoney(earning))}
+        </Text>
 
         <AutoPodExpiryNote expiresAt={row.expires_at} labels={labels} />
 

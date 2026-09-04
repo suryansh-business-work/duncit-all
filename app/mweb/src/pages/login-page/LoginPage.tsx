@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { useLocation, useNavigate } from 'react-router';
 import AuthBackground from '../../components/AuthBackground';
-import AuthModeToggle from '../../components/AuthModeToggle';
 import GoogleAuthNoticeDialog from '../../components/GoogleAuthNoticeDialog';
 import { type LoginSubmitValues } from '../../forms/login';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -136,8 +135,6 @@ export default function LoginPage() {
 
   return (
     <AuthBackground>
-      <AuthModeToggle />
-
       <LoginCard
         otp={otp}
         step={step}

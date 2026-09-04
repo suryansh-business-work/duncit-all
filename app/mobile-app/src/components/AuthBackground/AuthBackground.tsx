@@ -31,7 +31,9 @@ export function AuthBackground({ children }: Readonly<{ children: ReactNode }>) 
 
   return (
     <LinearGradient colors={colors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ flex: 1 }}>
-      {videoUrl || imageUrl ? <BrandBackdrop videoUrl={videoUrl} imageUrl={imageUrl} /> : null}
+      {videoUrl || imageUrl ? (
+        <BrandBackdrop videoUrl={videoUrl} imageUrl={imageUrl} isDark={isDark} />
+      ) : null}
       {children}
     </LinearGradient>
   );

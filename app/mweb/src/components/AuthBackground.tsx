@@ -1,5 +1,6 @@
 import { Box, keyframes, useTheme } from '@mui/material';
 import { auth } from '@duncit/auth-tokens';
+import AuthModeToggle from './AuthModeToggle';
 import { useBrandingAssets } from '../hooks/useBrandingAssets';
 
 const gradientShift = keyframes`
@@ -39,11 +40,47 @@ function BrandBackdrop({ videoUrl, imageUrl }: Readonly<{ videoUrl: string; imag
     height: '100%',
     objectFit: 'cover' as const,
     pointerEvents: 'none' as const,
+    // How much of the admin's frame survives under the fog. Shared with native
+    // so both apps dim it by the same amount (rule 27).
+    opacity: auth.fog.mediaOpacity,
   };
   if (videoUrl) {
     return <Box component="video" src={videoUrl} muted loop autoPlay playsInline sx={cover} />;
   }
   return <Box component="img" src={imageUrl} alt="" sx={cover} />;
+}
+
+/**
+ * The theme-following haze over the backdrop. Its own component so the numbers
+ * are read in one place and the gradient string stays out of the frame's sx.
+ */
+function FogLayer({ isDark }: Readonly<{ isDark: boolean }>) {
+  const fog = isDark ? auth.fog.dark : auth.fog.light;
+  const near = `${auth.fog.edgeStop * 100}%`;
+  const far = `${(1 - auth.fog.edgeStop) * 100}%`;
+  // The four stops as a list rather than one long template: the middle two are
+  // the same colour at zero alpha, which is what keeps the centre of the frame
+  // clear while the edges thicken.
+  const stops = [
+    `${fog.edge} 0%`,
+    `${fog.clear} ${near}`,
+    `${fog.clear} ${far}`,
+    `${fog.edge} 100%`,
+  ].join(', ');
+
+  return (
+    <Box
+      data-testid="auth-backdrop-fog"
+      sx={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: -1,
+        pointerEvents: 'none',
+        backgroundColor: fog.veil,
+        backgroundImage: `linear-gradient(180deg, ${stops})`,
+      }}
+    />
+  );
 }
 
 export default function AuthBackground({ children }: Readonly<Props>) {
@@ -90,22 +127,37 @@ export default function AuthBackground({ children }: Readonly<Props>) {
         <BrandBackdrop videoUrl={loginBackgroundVideoUrl} imageUrl={loginBackgroundImageUrl} />
       )}
       {/*
-        A scrim, only when there is a backdrop to sit on. A photograph or a
-        video is whatever an admin picked, and the card's text has to stay
-        readable over a bright one without the gradient behind it.
+        The fog, only when there is a backdrop to sit on — and it FOLLOWS THE
+        THEME, which the flat scrim before it did not. That scrim darkened the
+        frame in both modes, so light mode drew near-black headings over a
+        darkened photo and the copy was unreadable over anything an admin
+        actually picked. Light mode now hazes white and dark mode hazes
+        near-black, so the text keeps the contrast its own theme gives it.
+
+        Two layers on one element: `veil` covers the whole frame, and the
+        gradient thickens to `edge` at the top and bottom, where the logo, the
+        legal line and the version sit. Both numbers are shared with native.
       */}
-      {backdrop && (
-        <Box
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: -1,
-            pointerEvents: 'none',
-            backgroundColor: isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.28)',
-          }}
-        />
-      )}
-      {children}
+      {backdrop && <FogLayer isDark={isDark} />}
+      {/*
+        The card and the light/dark switch stack; the frame outside stays a row
+        so its centring is untouched. The switch is the last thing on the page
+        because a signed-out person has no sidebar to reach the other one.
+      */}
+      <Box
+        sx={{
+          position: 'relative',
+          zIndex: 1,
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 2,
+        }}
+      >
+        {children}
+        <AuthModeToggle />
+      </Box>
     </Box>
   );
 }

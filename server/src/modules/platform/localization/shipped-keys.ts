@@ -3852,6 +3852,8 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "mweb.auth.switchToDark": "Switch to dark mode",
   "mweb.auth.switchToLight": "Switch to light mode",
   "mweb.auth.terms": "Terms & Conditions",
+  "mweb.auth.themeDark": "Dark",
+  "mweb.auth.themeLight": "Light",
   "mweb.auth.toggleColorMode": "Toggle color mode",
   "mweb.auth.validation.emailInvalid": "Enter a valid email",
   "mweb.auth.validation.emailRequired": "Email is required",

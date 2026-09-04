@@ -6,6 +6,7 @@ import { auth } from '@duncit/auth-tokens';
 
 import { AuthBackground } from '@/components/AuthBackground';
 import { AuthLogo } from '@/components/AuthLogo';
+import { AuthModeToggle } from '@/components/AuthModeToggle';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 
 export interface AuthScaffoldProps {
@@ -58,6 +59,12 @@ export function AuthScaffold({
               </YStack>
               <YStack marginTop={20} gap={16}>
                 {children}
+              </YStack>
+              {/* Last thing on the screen, on every auth screen: a signed-out
+                  person cannot reach the sidebar switch, and this is the choice
+                  that decides whether the copy over an admin's backdrop reads. */}
+              <YStack marginTop={20}>
+                <AuthModeToggle />
               </YStack>
             </YStack>
           </ScrollView>

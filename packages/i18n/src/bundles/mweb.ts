@@ -545,8 +545,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       legalAnd: 'and',
       terms: 'Terms & Conditions',
       privacy: 'Privacy Policy',
-      // mWeb only: the native auth screens follow the device theme, so there is
-      // nothing for a light/dark toggle to sit on.
+      // The light/dark switch at the foot of every auth screen. Both apps keep
+      // their own theme choice, so both render it (rule 27) — it is offered as
+      // two named segments rather than a bare icon because it is the first
+      // control a signed-out person meets and has to explain itself.
+      themeLight: 'Light',
+      themeDark: 'Dark',
       switchToLight: 'Switch to light mode',
       switchToDark: 'Switch to dark mode',
       toggleColorMode: 'Toggle color mode',

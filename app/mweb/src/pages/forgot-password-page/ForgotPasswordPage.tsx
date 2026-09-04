@@ -1,5 +1,4 @@
 import AuthBackground from '../../components/AuthBackground';
-import AuthModeToggle from '../../components/AuthModeToggle';
 import ForgotPasswordCard from './ForgotPasswordCard';
 import { usePasswordRecovery } from './usePasswordRecovery';
 
@@ -13,7 +12,6 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthBackground>
-      <AuthModeToggle />
       <ForgotPasswordCard recovery={recovery} resendIn={recovery.resendIn} />
     </AuthBackground>
   );

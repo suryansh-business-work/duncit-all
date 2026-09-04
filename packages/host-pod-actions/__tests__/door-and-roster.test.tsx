@@ -164,7 +164,7 @@ const companionRow = (container: HTMLElement, index: number) => {
 describe('CompanionsForm', () => {
   it('asks for exactly the seats still unaccounted for', () => {
     const { container } = wrap(
-      <CompanionsForm podId="pod-1" membershipId="pm-1" seats={4} required={3} onSubmit={vi.fn()} />
+      <CompanionsForm reserved={[]} podId="pod-1" membershipId="pm-1" seats={4} required={3} onSubmit={vi.fn()} />
     );
 
     // Three people, each needing a name, a dial code and a number.
@@ -174,7 +174,7 @@ describe('CompanionsForm', () => {
   it('does not submit a half-filled group — the server enforces the same count', async () => {
     const onSubmit = vi.fn();
     const { container } = wrap(
-      <CompanionsForm podId="pod-1" membershipId="pm-1" seats={3} required={2} onSubmit={onSubmit} />
+      <CompanionsForm reserved={[]} podId="pod-1" membershipId="pm-1" seats={3} required={2} onSubmit={onSubmit} />
     );
 
     const { name } = companionRow(container, 0);
@@ -191,7 +191,7 @@ describe('CompanionsForm', () => {
   it('reports one entry per seat once every one has a name and a number', async () => {
     const onSubmit = vi.fn();
     const { container } = wrap(
-      <CompanionsForm podId="pod-1" membershipId="pm-1" seats={3} required={2} onSubmit={onSubmit} />
+      <CompanionsForm reserved={[]} podId="pod-1" membershipId="pm-1" seats={3} required={2} onSubmit={onSubmit} />
     );
 
     for (const index of [0, 1]) {
@@ -214,7 +214,7 @@ describe('CompanionsForm', () => {
 
   it('renders while the mark is in flight', () => {
     const { container } = wrap(
-      <CompanionsForm podId="pod-1" membershipId="pm-1" seats={2} required={1} busy onSubmit={vi.fn()} />
+      <CompanionsForm reserved={[]} podId="pod-1" membershipId="pm-1" seats={2} required={1} busy onSubmit={vi.fn()} />
     );
 
     expect(container.innerHTML).not.toBe('');

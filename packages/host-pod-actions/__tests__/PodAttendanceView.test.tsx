@@ -81,6 +81,10 @@ const board = (over: Record<string, unknown> = {}) => ({
   viewer: 'HOST',
   lock: null,
   can_mark: true,
+  // Null: the deadline notice is opt-in per test, so the default board draws
+  // the roster and nothing else.
+  complete_deadline: null,
+  complete_timeout_hours: 24,
   otp_required: true,
   marked_count: 1,
   total_count: 2,
@@ -151,6 +155,24 @@ describe('PodAttendanceView', () => {
     await settle();
 
     expect(container.textContent).toContain(labels.earningsTitle);
+  });
+
+  // The one thing on this page that costs the host money by being ignored, so
+  // it is a warning above the roster rather than a footnote under it.
+  it('warns the host how long is left to complete, while the window is open', async () => {
+    mount([boardMock({ lock: 'OPEN', complete_deadline: '2026-08-31T14:00:00.000Z' })]);
+    await settle();
+
+    const note = await screen.findByTestId('attendance-deadline-note');
+    expect(note.textContent).toContain(labels.deadlineTitle('at:2026-08-31T14:00:00.000Z'));
+    expect(note.textContent).toContain(labels.deadlineBody(24));
+  });
+
+  it('leaves the deadline warning off a board that has no window running', async () => {
+    mount();
+    await settle();
+
+    expect(screen.queryByTestId('attendance-deadline-note')).not.toBeInTheDocument();
   });
 
   it('survives the board failing rather than showing a blank page', async () => {

@@ -181,11 +181,10 @@ describe('RegisterForm — a step validates its own boxes only', () => {
   });
 });
 
-describe('RegisterForm — loading, errors and toggles', () => {
-  it('says it is creating the account while the mutation runs', () => {
-    renderForm({ step: 'SECURITY', loading: true });
-    expect(screen.getByTestId('signup-next')).toBeDisabled();
-    expect(screen.getByTestId('signup-next')).toHaveTextContent(/creating/i);
+describe('RegisterForm — errors and toggles', () => {
+  it('offers to create the account on the last step', () => {
+    renderForm({ step: 'SECURITY' });
+    expect(screen.getByTestId('signup-next')).toHaveTextContent(/create account/i);
   });
 
   it('renders the errorMessage prop in an alert', () => {

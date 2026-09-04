@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Text, YStack } from 'tamagui';
 import type { AutoPodLabels } from '@duncit/utils';
 
+import { LoadingIndicator } from '@/components/LoadingIndicator';
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
 import {
   useAutoPodVenues,
@@ -35,7 +36,13 @@ export function AutoPodVenueRow({ value, onChange, labels }: Readonly<Props>) {
     if (!value && first) onChange(first);
   }, [value, venues, onChange]);
 
-  if (loaded && venues.length === 0) {
+  // A picker that is simply empty mid-read is indistinguishable from a venue
+  // owner with no venues, which is exactly the wrong thing to tell them.
+  if (!loaded) {
+    return <LoadingIndicator testID="auto-pod-venues-loading" />;
+  }
+
+  if (venues.length === 0) {
     return (
       <Text testID="auto-pods-no-venues" fontSize={12.5} color="$muted">
         {labels.noVenues}

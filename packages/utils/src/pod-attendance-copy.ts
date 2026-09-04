@@ -57,6 +57,9 @@ export interface PodAttendanceLabels {
   /** The roster is closed. */
   lockedTitle: (lock: PodAttendanceLock) => string;
   lockedBody: (lock: PodAttendanceLock) => string;
+  /** The window the host is still inside — stated while it can be acted on. */
+  deadlineTitle: (when: string) => string;
+  deadlineBody: (hours: number) => string;
   clubAdminTitle: string;
   clubAdminBody: string;
   clubAdminNone: string;
@@ -138,6 +141,8 @@ export function mwebAttendanceLabels(t: AttendanceTranslate): PodAttendanceLabel
     earningsBodyVirtual: t('mweb.attendance.earningsBodyVirtual'),
     lockedTitle: (lock) => mwebLockedTitle(t, lock),
     lockedBody: (lock) => mwebLockedBody(t, lock),
+    deadlineTitle: (when) => t('mweb.attendance.deadlineTitle', { vars: { when } }),
+    deadlineBody: (hours) => t('mweb.attendance.deadlineBody', { vars: { hours } }),
     clubAdminTitle: t('mweb.attendance.clubAdminTitle'),
     clubAdminBody: t('mweb.attendance.clubAdminBody'),
     clubAdminNone: t('mweb.attendance.clubAdminNone'),
@@ -198,11 +203,13 @@ function mwebMethodLabel(t: AttendanceTranslate, method: AttendanceMarkMethod): 
 
 function mwebLockedTitle(t: AttendanceTranslate, lock: PodAttendanceLock): string {
   if (lock === 'CANCELLED') return t('mweb.attendance.lockedCancelledTitle');
+  if (lock === 'EXPIRED') return t('mweb.attendance.lockedExpiredTitle');
   return t('mweb.attendance.lockedCompletedTitle');
 }
 
 function mwebLockedBody(t: AttendanceTranslate, lock: PodAttendanceLock): string {
   if (lock === 'CANCELLED') return t('mweb.attendance.lockedCancelledBody');
+  if (lock === 'EXPIRED') return t('mweb.attendance.lockedExpiredBody');
   return t('mweb.attendance.lockedCompletedBody');
 }
 
@@ -236,6 +243,8 @@ export function shellAttendanceLabels(t: AttendanceTranslate): PodAttendanceLabe
     earningsBodyVirtual: t('shell.attendance.earningsBodyVirtual'),
     lockedTitle: (lock) => shellLockedTitle(t, lock),
     lockedBody: (lock) => shellLockedBody(t, lock),
+    deadlineTitle: (when) => t('shell.attendance.deadlineTitle', { vars: { when } }),
+    deadlineBody: (hours) => t('shell.attendance.deadlineBody', { vars: { hours } }),
     clubAdminTitle: t('shell.attendance.clubAdminTitle'),
     clubAdminBody: t('shell.attendance.clubAdminBody'),
     clubAdminNone: t('shell.attendance.clubAdminNone'),
@@ -295,11 +304,13 @@ function shellMethodLabel(t: AttendanceTranslate, method: AttendanceMarkMethod):
 
 function shellLockedTitle(t: AttendanceTranslate, lock: PodAttendanceLock): string {
   if (lock === 'CANCELLED') return t('shell.attendance.lockedCancelledTitle');
+  if (lock === 'EXPIRED') return t('shell.attendance.lockedExpiredTitle');
   return t('shell.attendance.lockedCompletedTitle');
 }
 
 function shellLockedBody(t: AttendanceTranslate, lock: PodAttendanceLock): string {
   if (lock === 'CANCELLED') return t('shell.attendance.lockedCancelledBody');
+  if (lock === 'EXPIRED') return t('shell.attendance.lockedExpiredBody');
   return t('shell.attendance.lockedCompletedBody');
 }
 

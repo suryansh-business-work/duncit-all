@@ -1284,6 +1284,10 @@ export type AppSettings = {
   pod_auto_cancel_enabled: Scalars['Boolean']['output'];
   /** How many hours before a pod's start the auto-cancel finance check runs. */
   pod_auto_cancel_lead_hours: Scalars['Int']['output'];
+  /** How many hours after a pod ends the host is emailed and WhatsApped a reminder to complete it. */
+  pod_complete_reminder_hours: Scalars['Int']['output'];
+  /** How many hours after a pod ends its host has to complete it. Past that they can no longer mark attendance and the pod settles with no host earnings. */
+  pod_complete_timeout_hours: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
   /** Where every app reads 'now' from: SERVER, BROWSER or CUSTOM. */
   time_source: TimeSource;
@@ -1611,10 +1615,23 @@ export type AutoPod = {
   created_at: Scalars['String']['output'];
   events: Array<AutoPodEvent>;
   /**
+   * The club admin's cut under Finance's waterfall, from the venue's slot price,
+   * the host's ticket price and the spots the host chose. Null until a host has
+   * priced the offer. Set on the club admin queue only.
+   */
+  expected_club_earnings?: Maybe<Scalars['Float']['output']>;
+  /**
    * Projected earnings for the CALLING host under their own rates. Null before a
    * venue has priced it, and for callers who are not hosts.
    */
   expected_host_earnings?: Maybe<Scalars['Float']['output']>;
+  /**
+   * What the offer would gross at the venue's booked space — the ticket price
+   * times that space's capacity, the same Ticket Price × Slots sum the venue's
+   * potential-earnings calculator shows. Null until there is both a booked slot
+   * and a ticket price. Set on the venue queue only.
+   */
+  expected_venue_earnings?: Maybe<Scalars['Float']['output']>;
   /**
    * When this offer is released unless everyone needed has enrolled by then —
    * its roll-out plus Pod Settings' auto_pod_assignment_expiry_hours, or the
@@ -1679,7 +1696,7 @@ export type AutoPod = {
   /** True when the calling user (or one of their clubs) already enrolled. */
   viewer_claimed: Scalars['Boolean']['output'];
   what_this_pod_offers: Array<Scalars['String']['output']>;
-  /** Account Health points a venue or host loses by withdrawing (Pod Settings). Set on their own queues. */
+  /** Account Health points a partner loses by withdrawing (Pod Settings). Set on every partner queue. */
   withdraw_penalty_points?: Maybe<Scalars['Int']['output']>;
 };
 
@@ -1871,6 +1888,39 @@ export type AutoPodVenueSlots = {
   slots: Array<AutoPodVenueSlot>;
   /** How many days ahead the list reaches — Pod Settings' auto_pod_slot_window_days. */
   window_days: Scalars['Int']['output'];
+};
+
+/**
+ * One auto-translation run — an admin filling a language in through OpenAI.
+ *
+ * The catalogue is thousands of keys, so a run takes minutes and lives on as a
+ * row rather than inside the request that started it: the browser can be closed,
+ * a second admin sees the same progress, and a run interrupted by a restart is
+ * reported instead of spinning forever.
+ */
+export type AutoTranslateJob = {
+  __typename?: 'AutoTranslateJob';
+  /** The model that answered, as the OpenAI client reported it. */
+  ai_model: Scalars['String']['output'];
+  /** Keys finished with, translated or not — what the progress bar reads. */
+  done_keys: Scalars['Int']['output'];
+  error: Scalars['String']['output'];
+  /** Keys the model returned nothing usable for. Running again retries them. */
+  failed_keys: Scalars['Int']['output'];
+  finished_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  /** The language being filled in. */
+  locale: Scalars['String']['output'];
+  /** Re-translated keys that already had text, rather than only the gaps. */
+  replace_existing: Scalars['Boolean']['output'];
+  /** The default language its text was translated from. */
+  source_locale: Scalars['String']['output'];
+  started_at?: Maybe<Scalars['String']['output']>;
+  started_by: Scalars['String']['output'];
+  /** RUNNING | SUCCEEDED | FAILED | CANCELLED */
+  status: Scalars['String']['output'];
+  total_keys: Scalars['Int']['output'];
+  translated_keys: Scalars['Int']['output'];
 };
 
 /** One recorded Backout lifecycle event (immutable, chronological). */
@@ -6326,8 +6376,20 @@ export type GoogleSignupInput = {
   city?: InputMaybe<Scalars['String']['input']>;
   dob?: InputMaybe<Scalars['String']['input']>;
   id_token: Scalars['String']['input'];
-  phone_extension?: InputMaybe<Scalars['String']['input']>;
-  phone_number?: InputMaybe<Scalars['String']['input']>;
+  phone_extension: Scalars['String']['input'];
+  /**
+   * The WhatsApp number joining Duncit, and the proof it answered.
+   *
+   * Google proves an address and nothing else, so this door asks for the same
+   * number the email form asks for, on a step of its own after the credential
+   * comes back — and it is just as required. Which door somebody arrived
+   * through cannot decide whether their number was ever verified.
+   */
+  phone_number: Scalars['String']['input'];
+  /** Whether that number is ALSO the account's mobile number. Same tick box. */
+  whatsapp_is_mobile?: InputMaybe<Scalars['Boolean']['input']>;
+  /** From verifySignupWhatsAppOtp. Spent here, once. */
+  whatsapp_token: Scalars['String']['input'];
   zone?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -7534,6 +7596,14 @@ export type Locale = {
   updated_at?: Maybe<Scalars['String']['output']>;
 };
 
+/** How much of the catalogue one locale carries text for. */
+export type LocaleCoverage = {
+  __typename?: 'LocaleCoverage';
+  locale: Scalars['String']['output'];
+  total_keys: Scalars['Int']['output'];
+  translated_keys: Scalars['Int']['output'];
+};
+
 export type Location = {
   __typename?: 'Location';
   /** Count of active clubs currently operating in this city (Home location selector). */
@@ -8444,6 +8514,8 @@ export type Mutation = {
   callVenueLeadContact: LeadContactActionResult;
   /** Pulls a pre-live offer: everyone enrolled is told and the venue's slot is released. */
   cancelAutoPod: AutoPod;
+  /** Stop a run after the batches already in flight finish. */
+  cancelAutoTranslate: AutoTranslateJob;
   /** Keep My Spot — cancel an in-process backout and restore the booking (seat must still be free). */
   cancelBackoutPod: PodMember;
   /** The requester withdraws their own pending ask (tapping Requested). */
@@ -8513,6 +8585,12 @@ export type Mutation = {
   clubAdminUpdatePod: Pod;
   /** Club Admin enrols: claims the offer for one of their clubs. */
   clubClaimAutoPod: AutoPod;
+  /**
+   * The club admin takes their club's claim back while the offer is still
+   * enrolling; the offer returns to club admins' lists and the admin pays the
+   * Pod Settings penalty. Any admin of the claiming club may do it.
+   */
+  clubWithdrawAutoPod: AutoPod;
   /**
    * The upload finished: read the archive end to end and, if it is whole, turn
    * it into a restorable backup. Returns immediately — the read continues
@@ -9193,7 +9271,15 @@ export type Mutation = {
    * works here and what they can reach.
    */
   requestPortalLoginOtp: OtpRequestResult;
-  requestWhatsAppOtp: WhatsAppOtpRequestResult;
+  /**
+   * Signup step one: send a code to the WhatsApp number joining Duncit.
+   *
+   * Public, because the account this belongs to does not exist yet — proving
+   * the number is what decides whether it ever will. Refused for a number
+   * already registered, and for an email already in use, so neither is
+   * discovered only after a code has been typed.
+   */
+  requestSignupWhatsAppOtp: WhatsAppOtpRequestResult;
   requestWithdrawal: WalletWithdrawal;
   /** Move the caller's own meeting to a new open slot (one-time; keeps contact details, resets staff scheduling). */
   rescheduleMyMeeting: OnboardingMeeting;
@@ -9433,7 +9519,16 @@ export type Mutation = {
   /** Sign as the acting user. Locks the contract once nobody is left to sign. */
   signLegalDocument: LegalDocument;
   signupWithGoogle: AuthPayload;
-  skipWhatsAppOtp: User;
+  /**
+   * Translate the default language's text into this locale with OpenAI, in the
+   * background. Writes the same values.<code> field the admin's own editor
+   * writes, so the apps, portals and websites pick the text up with no further
+   * step.
+   *
+   * replace_existing re-translates keys that already carry text; left off, only
+   * the gaps are sent — which is also how a run is resumed after a failure.
+   */
+  startAutoTranslate: AutoTranslateJob;
   /** Place an outbound AI call (Servam-driven) using a Static Content prompt and Servam voice. */
   startCrmAiCall: CrmAiCallResult;
   /** Place a portal call: Twilio rings the agent leg (agent_number, else the user's profile phone), then bridges to the customer. */
@@ -9746,15 +9841,10 @@ export type Mutation = {
   verifyPodAttendanceOtp: Scalars['Boolean']['output'];
   verifyRazorpayPayment: Payment;
   /**
-   * Prove the WhatsApp number, and write it where signup said it belongs.
-   *
-   * also_mobile is the signup tick box: true writes the proven number to the
-   * account's phone as well, false leaves that blank on purpose. It defaults to
-   * false so a shipped build that predates the box never fills in a number the
-   * person did not agree to — the email door has already written its own phone
-   * by the time this runs.
+   * Signup step two: prove the code and receive the token that creates the
+   * account. Nothing is written — there is no account to write to yet.
    */
-  verifyWhatsAppOtp: User;
+  verifySignupWhatsAppOtp: SignupWhatsAppProof;
   /** Thumbs up/down a review. vote: 1 up, -1 down, 0 clears. */
   voteProductReview: ProductReview;
   /** Cancel the running extraction job. */
@@ -10159,6 +10249,11 @@ export type MutationCancelAutoPodArgs = {
 };
 
 
+export type MutationCancelAutoTranslateArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationCancelBackoutPodArgs = {
   backout_id?: InputMaybe<Scalars['ID']['input']>;
   pod_doc_id: Scalars['ID']['input'];
@@ -10263,6 +10358,11 @@ export type MutationClubAdminUpdatePodArgs = {
 export type MutationClubClaimAutoPodArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
   club_id: Scalars['ID']['input'];
+};
+
+
+export type MutationClubWithdrawAutoPodArgs = {
+  auto_pod_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -11810,7 +11910,8 @@ export type MutationRequestPortalLoginOtpArgs = {
 };
 
 
-export type MutationRequestWhatsAppOtpArgs = {
+export type MutationRequestSignupWhatsAppOtpArgs = {
+  email?: InputMaybe<Scalars['String']['input']>;
   phone_extension: Scalars['String']['input'];
   phone_number: Scalars['String']['input'];
 };
@@ -12392,6 +12493,12 @@ export type MutationSignLegalDocumentArgs = {
 
 export type MutationSignupWithGoogleArgs = {
   input: GoogleSignupInput;
+};
+
+
+export type MutationStartAutoTranslateArgs = {
+  locale: Scalars['String']['input'];
+  replace_existing?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -13309,8 +13416,7 @@ export type MutationVerifyRazorpayPaymentArgs = {
 };
 
 
-export type MutationVerifyWhatsAppOtpArgs = {
-  also_mobile?: InputMaybe<Scalars['Boolean']['input']>;
+export type MutationVerifySignupWhatsAppOtpArgs = {
   otp: Scalars['String']['input'];
   phone_extension: Scalars['String']['input'];
   phone_number: Scalars['String']['input'];
@@ -14507,10 +14613,14 @@ export type PodAspectRating = {
  */
 export type PodAttendanceBoard = {
   __typename?: 'PodAttendanceBoard';
-  /** False once the pod is completed or cancelled — nothing can be marked then. */
+  /** Whether THIS viewer can still mark. False once the pod is completed or cancelled; false for the host once the completion window has expired, and still true for a Club Admin — the override exists for exactly that roster. */
   can_mark: Scalars['Boolean']['output'];
   /** The club's admins — the people to ask once the roster is locked. */
   club_admins: Array<PodAttendanceClubAdmin>;
+  /** When the host's window to complete this pod runs out (ISO). Null when the pod has no usable start time. */
+  complete_deadline?: Maybe<Scalars['String']['output']>;
+  /** How many hours after the pod ends that window is (Admin > Pods > Pod Settings). */
+  complete_timeout_hours: Scalars['Int']['output'];
   lock: PodAttendanceLock;
   marked_count: Scalars['Int']['output'];
   marked_seats: Scalars['Int']['output'];
@@ -14550,13 +14660,17 @@ export type PodAttendanceCompanion = {
 /**
  * Why the roster can no longer be changed.
  *
- * Completion is the real deadline: it computes the payout from exactly who is
- * marked and hands the releases to Finance, so a late mark would claim money
- * that was already split.
+ * Completion is one deadline: it computes the payout from exactly who is marked
+ * and hands the releases to Finance, so a late mark would claim money that was
+ * already split. EXPIRED is the other — the host's admin-configured window to
+ * complete the pod ran out, which shuts the HOST's side of the roster while
+ * leaving the Club Admin's override open.
  */
 export type PodAttendanceLock =
   | 'CANCELLED'
   | 'COMPLETED'
+  /** The host's window to complete this pod has passed (Admin > Pods > Pod Settings). */
+  | 'EXPIRED'
   | 'OPEN';
 
 export type PodAttendanceOtpInput = {
@@ -15728,11 +15842,17 @@ export type PodSettlement = {
   /** Seats booked on the pod, attended or not — the denominator beside it. */
   booked_seats: Scalars['Int']['output'];
   collected_total: Scalars['Float']['output'];
+  /** When the host's window to complete this pod runs out (ISO). Null when the pod has no usable start time. */
+  complete_deadline?: Maybe<Scalars['String']['output']>;
+  /** True once that window has passed with the pod still uncompleted — the host can no longer mark attendance and their share of this pod is nil. */
+  complete_expired: Scalars['Boolean']['output'];
   currency_symbol: Scalars['String']['output'];
   gst_pct: Scalars['Float']['output'];
   has_venue: Scalars['Boolean']['output'];
   host: PodSettlementParty;
   host_commission_pct: Scalars['Float']['output'];
+  /** What the host is actually paid on completion: the floored host remainder, or 0 once the completion window has expired. */
+  host_payout_amount: Scalars['Float']['output'];
   /**
    * SEATS the settlement was computed on — the ones a host scanned in. Kept
    * under its original name for older consumers; attended_seats is the same
@@ -16571,6 +16691,8 @@ export type PublicAppSettings = {
   max_backout_attempts: Scalars['Int']['output'];
   /** Minimum age (whole years) required to sign up or save a date of birth. */
   min_signup_age: Scalars['Int']['output'];
+  /** How many hours after a pod ends its host has to complete it. Past that the host can no longer mark attendance and the pod settles with no host earnings. */
+  pod_complete_timeout_hours: Scalars['Int']['output'];
   /** The server's clock at the moment this response was built (ISO). Clients add their own elapsed time to keep it ticking. */
   server_time: Scalars['String']['output'];
   time_format: Scalars['String']['output'];
@@ -16810,6 +16932,12 @@ export type Query = {
    * venue would be paid after Finance's deductions.
    */
   autoPodVenueSlots: AutoPodVenueSlots;
+  /** The most recent run for one locale — what the progress dialog polls. */
+  autoTranslateJob?: Maybe<AutoTranslateJob>;
+  /** Recent runs across every locale, newest first. */
+  autoTranslateJobs: Array<AutoTranslateJob>;
+  /** How many keys an auto-translate run would send for this locale right now. */
+  autoTranslatePending: Scalars['Int']['output'];
   /** Active, currently-valid coupons a shopper can apply (global + this pod). */
   availableCouponsForPod: Array<Coupon>;
   availablePodProducts: Array<InventoryProduct>;
@@ -17207,6 +17335,11 @@ export type Query = {
    * a date window rather than a stored status, so it needs its own query.
    */
   liveAdsTable: AdRequestTablePage;
+  /**
+   * How complete each ACTIVE locale is — the Locales table's progress column,
+   * and how an admin tells at a glance which language still needs a run.
+   */
+  localeCoverage: Array<LocaleCoverage>;
   /** Every locale, for admin lists. */
   locales: Array<Locale>;
   location?: Maybe<Location>;
@@ -18105,6 +18238,17 @@ export type QueryAutoPodHostProjectionArgs = {
 export type QueryAutoPodVenueSlotsArgs = {
   auto_pod_doc_id: Scalars['ID']['input'];
   venue_id: Scalars['ID']['input'];
+};
+
+
+export type QueryAutoTranslateJobArgs = {
+  locale: Scalars['String']['input'];
+};
+
+
+export type QueryAutoTranslatePendingArgs = {
+  locale: Scalars['String']['input'];
+  replace_existing?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -20743,6 +20887,14 @@ export type RegisterInput = {
    * one, which is what the verification step proves.
    */
   whatsapp_is_mobile?: InputMaybe<Scalars['Boolean']['input']>;
+  /**
+   * The proof that the number above answered, from verifySignupWhatsAppOtp.
+   *
+   * Required. Signup does not create an account for a number nobody has replied
+   * on — that is the whole reason the code is asked for before this mutation
+   * rather than on a screen after it, which anything could leave.
+   */
+  whatsapp_token: Scalars['String']['input'];
   zone?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -21509,6 +21661,18 @@ export type SignatureMethod =
 export type SigningStatus =
   | 'SIGNED'
   | 'UNSIGNED';
+
+/** A proven WhatsApp number, on its way to the signup door that spends it. */
+export type SignupWhatsAppProof = {
+  __typename?: 'SignupWhatsAppProof';
+  ok: Scalars['Boolean']['output'];
+  /**
+   * One-shot token naming the number that answered. Passed to the signup door
+   * that creates the account, which is the only thing that can spend it, and
+   * only once.
+   */
+  whatsapp_token: Scalars['String']['output'];
+};
 
 export type SlackChannel = {
   __typename?: 'SlackChannel';
@@ -23065,6 +23229,10 @@ export type UpdateAppSettingsInput = {
   pod_auto_cancel_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   /** How many hours before a pod's start the auto-cancel finance check runs (1-8760). */
   pod_auto_cancel_lead_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** How many hours after a pod ends the host is reminded to complete it (1-8760). */
+  pod_complete_reminder_hours?: InputMaybe<Scalars['Int']['input']>;
+  /** How many hours after a pod ends its host has to complete it (1-8760). */
+  pod_complete_timeout_hours?: InputMaybe<Scalars['Int']['input']>;
   time_format?: InputMaybe<Scalars['String']['input']>;
   time_source?: InputMaybe<TimeSource>;
   time_zone?: InputMaybe<Scalars['String']['input']>;

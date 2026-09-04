@@ -1,7 +1,10 @@
-import { AutoPodDependencyTimeline, AutoPodTicks } from '@duncit/auto-pods';
+import { AutoPodDependencyTimeline, AutoPodTicks, VenueEarningsDialog } from '@duncit/auto-pods';
 import {
   autoPodMissingRoles,
+  autoPodRoleEarnings,
+  autoPodSpaceEarnings,
   autoPodTicks,
+  autoPodVenueSpaces,
   shellAutoPodLabels,
   type AutoPodClubClaim,
   type AutoPodHostClaim,
@@ -67,6 +70,42 @@ const rowFrom = (mock: AutoPodMock): TickRow => {
 // chip reads, which is the thing that silently drifts between surfaces.
 const LABELS = shellAutoPodLabels((key: string) => key);
 
+/** What a venue owner types into the potential-earnings calculator. */
+interface VenueEarningsMock {
+  /** The venue's published spaces, each with the seats it holds. */
+  spaces: { label: string; capacity: number }[];
+  /** The scalar capacity that stands in when the venue named no space. */
+  capacity: number;
+  /** A ticket price, to see the sum the dialog spells out. */
+  ticket_price: number;
+}
+
+/** The three role figures a card could be handed for the SAME offer. */
+interface RoleEarningsMock {
+  expected_venue_earnings: number | null;
+  expected_host_earnings: number | null;
+  expected_club_earnings: number | null;
+}
+
+const money = (amount: number) => `₹${amount.toLocaleString('en-IN')}`;
+
+/** The venue the calculator lists spaces for; only the capacity half matters. */
+const venueFrom = (mock: VenueEarningsMock) => ({
+  id: 'ven-2207',
+  venue_name: 'Play Arena, Sarjapur',
+  status: 'APPROVED',
+  is_active: true,
+  location_id: 'loc-560103',
+  city: 'Bengaluru',
+  capacity: mock.capacity,
+  capacity_items: mock.spaces,
+  venue_category: null,
+});
+
+/** A row carrying nothing but the three role figures. */
+const earningsRow = (mock: RoleEarningsMock) =>
+  ({ ...rowFrom({ venue_claimed: true, host_claimed: true, club_claimed: false, virtual: false }), ...mock }) as AutoPodRow;
+
 export default defineDemos('auto-pods', [
   defineDemo<AutoPodMock>({
     id: 'ticks',
@@ -91,6 +130,61 @@ export default defineDemos('auto-pods', [
           missing.length > 0
             ? LABELS.waitingFor(missing)
             : 'nobody — this one materialises into a real Pod',
+      };
+    },
+  }),
+
+  defineDemo<VenueEarningsMock>({
+    id: 'venue-earnings',
+    title: 'What an Auto Pod could take at each of a venue\'s spaces',
+    note:
+      'Type a ticket price against a space and the dialog spells the sum out — "Potential Earnings (Ticket Price × Slots): ₹250 × 6 = ₹1,500". This is the pod\'s GROSS at that space, not the venue payout after Finance\'s deductions: a venue opens it to size the opportunity before accepting. Empty the spaces array and the venue\'s scalar capacity stands in as one unnamed space, which is what autoPodVenueSpaces() is for.',
+    mock: {
+      spaces: [
+        { label: 'Court 1 (indoor)', capacity: 6 },
+        { label: 'Rooftop turf', capacity: 20 },
+      ],
+      capacity: 40,
+      ticket_price: 250,
+    },
+    render: (mock) => (
+      <VenueEarningsDialog
+        venue={venueFrom(mock)}
+        labels={LABELS}
+        open
+        onClose={() => undefined}
+        formatMoney={money}
+      />
+    ),
+    compute: (mock) => {
+      const spaces = autoPodVenueSpaces(venueFrom(mock));
+      return {
+        'autoPodVenueSpaces(venue)': spaces,
+        'Per space at this price': spaces.map((space) => ({
+          space: space.label || LABELS.earningsWholeVenue,
+          earnings: autoPodSpaceEarnings(mock.ticket_price, space.capacity),
+        })),
+      };
+    },
+  }),
+
+  defineDemo<RoleEarningsMock>({
+    id: 'role-earnings',
+    title: 'One card, three "You could earn" figures',
+    note:
+      'The three partners are paid for different things, so the card reads the figure for the role whose queue it is in — a venue was once shown the HOST\'s payout, which is a different number entirely. Null on a role means that partner has nothing to project yet (no booked slot, or no ticket price), and the card falls back to a bare "You could earn" beside its calculator.',
+    mock: {
+      expected_venue_earnings: 5000,
+      expected_host_earnings: 3113,
+      expected_club_earnings: 114.72,
+    },
+    compute: (mock) => {
+      const row = earningsRow(mock);
+      return {
+        'Venue queue': autoPodRoleEarnings(row, 'venue'),
+        'Host queue': autoPodRoleEarnings(row, 'host'),
+        'Club Admin queue': autoPodRoleEarnings(row, 'club'),
+        "A viewer's own calculator wins": autoPodRoleEarnings(row, 'host', 1500),
       };
     },
   }),

@@ -7,35 +7,40 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { DuncitButton } from '@duncit/buttons';
 import {
-  splitAutoPods,
-  type AutoPodRole,
+  autoPodQueueSections,
+  type AutoPodCardChrome,
   type AutoPodRow,
-  type AutoPodLabels,
 } from '@duncit/utils';
 import { AutoPodCard } from './AutoPodCard';
 
-export interface AutoPodQueueProps {
-  role: AutoPodRole;
+/** Stable module-scope defaults, so an omitted prop never re-renders the grid. */
+const noNode = () => null;
+const NO_EARNINGS: Readonly<Record<string, number>> = {};
+
+export interface AutoPodQueueProps extends AutoPodCardChrome {
   rows: AutoPodRow[];
-  labels: AutoPodLabels;
   loading: boolean;
   error: boolean;
   onRetry: () => void;
-  formatWhen: (iso: string) => string;
-  formatMoney: (amount: number) => string;
   /** The role's button for a row it can still act on. */
   renderAction: (row: AutoPodRow) => ReactNode;
   /** Anything to show on a row this viewer already enrolled in (e.g. a pod link). */
   renderMineAction?: (row: AutoPodRow) => ReactNode;
+  /** The row's "View Potential Earnings" control, drawn under its details. */
+  renderEarningsAction?: (row: AutoPodRow) => ReactNode;
+  /**
+   * What this viewer worked out in that dialog, by Auto Pod id. It wins over
+   * the server's figure on the card, because it is the number they just typed.
+   */
+  earnings?: Readonly<Record<string, number>>;
 }
 
-interface SectionProps {
+interface SectionProps extends AutoPodCardChrome {
   heading: string;
   rows: AutoPodRow[];
-  labels: AutoPodLabels;
-  formatWhen: (iso: string) => string;
-  formatMoney: (amount: number) => string;
   renderAction: (row: AutoPodRow) => ReactNode;
+  renderEarningsAction: (row: AutoPodRow) => ReactNode;
+  earnings: Readonly<Record<string, number>>;
 }
 
 /** One titled block of cards. Hoisted to module scope so it is never redefined
@@ -43,34 +48,25 @@ interface SectionProps {
 function AutoPodSection({
   heading,
   rows,
-  labels,
-  formatWhen,
-  formatMoney,
   renderAction,
+  renderEarningsAction,
+  earnings,
+  ...chrome
 }: Readonly<SectionProps>) {
-  if (rows.length === 0) return null;
   return (
     <Box>
-      <Typography variant="subtitle2" gutterBottom sx={{
-        color: "text.secondary"
-      }}>
+      <Typography variant="subtitle2" gutterBottom sx={{ color: 'text.secondary' }}>
         {heading}
       </Typography>
       <Grid container spacing={2}>
         {rows.map((row) => (
-          <Grid
-            key={row.id}
-            size={{
-              xs: 12,
-              sm: 6,
-              md: 4
-            }}>
+          <Grid key={row.id} size={{ xs: 12, sm: 6, md: 4 }}>
             <AutoPodCard
               row={row}
-              labels={labels}
-              formatWhen={formatWhen}
-              formatMoney={formatMoney}
               action={renderAction(row)}
+              earningsAction={renderEarningsAction(row)}
+              earnings={earnings[row.id] ?? null}
+              {...chrome}
             />
           </Grid>
         ))}
@@ -83,21 +79,20 @@ function AutoPodSection({
  * A role's whole Auto Pod queue: what is waiting on them (enrolment runs venue
  * → host → club admin, so an offer reaches a host only once a venue has fixed
  * a slot, and a club admin once a host is on it), then what they already
- * enrolled in — the venue's "Assigned slot", the host's "Assigned Auto Pods",
- * the club admin's "Final assigned Auto Pods". Both sections render the same
- * card, so a venue watching its accepted offer sees exactly what a host does.
+ * enrolled in. Both sections render the same card, so a venue watching its
+ * accepted offer sees exactly what a host does; `autoPodQueueSections` decides
+ * which blocks there are, and the native twin reads the same function.
  */
 export function AutoPodQueue({
-  role,
   rows,
-  labels,
   loading,
   error,
   onRetry,
-  formatWhen,
-  formatMoney,
   renderAction,
   renderMineAction,
+  renderEarningsAction,
+  earnings,
+  ...chrome
 }: Readonly<AutoPodQueueProps>) {
   if (loading) {
     return (
@@ -113,39 +108,34 @@ export function AutoPodQueue({
         severity="error"
         action={
           <DuncitButton color="inherit" size="small" onClick={onRetry}>
-            {labels.retry}
+            {chrome.labels.retry}
           </DuncitButton>
         }
       >
-        {labels.loadFailed}
+        {chrome.labels.loadFailed}
       </Alert>
     );
   }
 
-  const { actionable, mine } = splitAutoPods(rows, role);
-  if (actionable.length === 0 && mine.length === 0) {
-    return <Alert severity="info">{labels.empty(role)}</Alert>;
+  const sections = autoPodQueueSections(rows, chrome.role, chrome.labels);
+  if (sections.length === 0) {
+    return <Alert severity="info">{chrome.labels.empty(chrome.role)}</Alert>;
   }
 
-  const mineAction = renderMineAction ?? (() => null);
+  const mineAction = renderMineAction ?? noNode;
   return (
     <Stack spacing={3}>
-      <AutoPodSection
-        heading={labels.needsAction}
-        rows={actionable}
-        labels={labels}
-        formatWhen={formatWhen}
-        formatMoney={formatMoney}
-        renderAction={renderAction}
-      />
-      <AutoPodSection
-        heading={labels.assignedHeading(role)}
-        rows={mine}
-        labels={labels}
-        formatWhen={formatWhen}
-        formatMoney={formatMoney}
-        renderAction={mineAction}
-      />
+      {sections.map((section) => (
+        <AutoPodSection
+          key={section.key}
+          heading={section.heading}
+          rows={section.rows}
+          renderAction={section.key === 'actionable' ? renderAction : mineAction}
+          renderEarningsAction={renderEarningsAction ?? noNode}
+          earnings={earnings ?? NO_EARNINGS}
+          {...chrome}
+        />
+      ))}
     </Stack>
   );
 }

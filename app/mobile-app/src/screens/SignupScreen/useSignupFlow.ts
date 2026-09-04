@@ -1,83 +1,81 @@
-import { useState } from 'react';
+import { useReducer, useState, type Reducer } from 'react';
 import { birthYearToDob } from '@duncit/datetime';
-import { type SignupStep } from '@duncit/utils';
+import {
+  initialSignupFlowState,
+  signupFlowReducer,
+  type SignupFlowAction,
+  type SignupFlowState,
+  type SignupGoogleCredential,
+  type SignupNumber,
+  type SignupStep,
+} from '@duncit/utils';
 import type { WhatsappNumberValues } from '@duncit/forms/schemas';
 
 import { type SignupFormValues } from '@/forms/signup';
-import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useTranslation } from '@/hooks/useTranslation';
 import { register, signupWithGoogle } from '@/services/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 import { toErrorMessage } from '@/utils/errors';
 
-/** The number the code goes to, and what a proven one is written to. */
-export interface VerifyingNumber {
-  extension: string;
-  number: string;
-  /** The tick box: also write this to the account's phone, or leave it blank. */
-  alsoMobile: boolean;
-}
-
-/** The session a door handed back, spent once the number step is settled. */
-interface PendingSession {
-  token: string;
-  surveyCompleted: boolean;
-  /** Google only — its referral question has no form to have asked it. */
-  referralPrompt: boolean;
-}
+/*
+  The machine itself is `@duncit/utils`' — it was written twice, identically,
+  because there is only one right answer to what signup is holding at each step
+  (rule 40). The cast is what binds its type parameter to THIS surface's form
+  values, whose schema lives in a package @duncit/utils cannot import.
+*/
+type FlowReducer = Reducer<SignupFlowState<SignupFormValues>, SignupFlowAction<SignupFormValues>>;
 
 /**
- * Joining Duncit, both doors, as one state machine.
+ * Joining Duncit, both doors — the side effects. What signup is HOLDING is the
+ * shared reducer's; what it DOES is this file's.
  *
- * The two doors differ only in what they know by the time the number step
- * opens: the email form has already collected the number and the tick box, so
- * it goes straight to the code; Google hands back a finished account with no
- * form attached, so the number is asked for first. Everything after that — the
- * code, the skip, and the moment the session is finally opened — is one path.
+ * NOTHING is created until the WhatsApp code answers. The account is made on
+ * the last step with the proof of the number beside it, so force-closing the
+ * app mid-signup leaves nothing behind rather than an account nobody can be
+ * reached on. That is the whole reason the order is this way round: it used to
+ * register first and ask afterwards, and every way of leaving that screen was a
+ * way past it. It ends by opening the session, which is the only moment there
+ * is one to open.
  *
- * Neither door authenticates before the number is settled: flipping the auth
- * gate unmounts this screen, which would skip the step the person is halfway
- * through. Both `register` and `signupWithGoogle` store their token as they
- * return, which is what makes the WhatsApp mutations authorised meanwhile.
+ * mWeb twin: app/mweb/src/pages/register-page/useSignupFlow.ts — the same
+ * effects against Apollo, over the same machine.
  */
 export function useSignupFlow() {
   const { t } = useTranslation();
   const authenticate = useAuthStore((s) => s.authenticate);
-  // Default true while the flags load, exactly as mWeb reads it, so the step is
-  // never skipped by a request that has not answered yet.
-  const whatsappStepEnabled = useFeatureFlag('whatsapp_signup_otp', true);
 
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [googleBusy, setGoogleBusy] = useState(false);
-  const [step, setStep] = useState<SignupStep>('WHO');
-  const [verifying, setVerifying] = useState<VerifyingNumber | null>(null);
-  const [pending, setPending] = useState<PendingSession | null>(null);
-  /** Google only: the number step, which nothing has asked for yet. */
-  const [askingNumber, setAskingNumber] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [flow, dispatch] = useReducer(
+    signupFlowReducer as FlowReducer,
+    initialSignupFlowState<SignupFormValues>(),
+  );
 
-  /** Open the gate. New accounts always land on the survey. */
-  const finish = () => {
-    if (pending) authenticate(pending.token, pending.surveyCompleted, pending.referralPrompt);
-  };
+  const setStep = (step: SignupStep) => dispatch({ type: 'STEP', step });
 
-  /** Both doors end here: either verify the number, or go straight through. */
-  const afterAccount = (session: PendingSession, number: VerifyingNumber | null) => {
-    setPending(session);
-    if (!whatsappStepEnabled) {
-      authenticate(session.token, session.surveyCompleted, session.referralPrompt);
-      return;
-    }
-    setStep('VERIFY');
-    if (number) setVerifying(number);
-    else setAskingNumber(true);
-  };
-
-  const submitForm = async (values: SignupFormValues) => {
+  /** The form is filled in; the code step turns it into an account. */
+  const submitForm = (values: SignupFormValues) => {
     setError(null);
-    setLoading(true);
-    try {
-      const result = await register({
+    dispatch({ type: 'FORM_FILLED', values });
+  };
+
+  /*
+    Google proves an address and nothing else, so its credential is held —
+    unspent — while the number step and the code step run. There is no account
+    to back out of until both have answered, which is what the acceptance
+    sheet's Google wording promises.
+  */
+  const googleAccepted = (idToken: string, policyIds: string[]) => {
+    setError(null);
+    dispatch({ type: 'GOOGLE_ACCEPTED', credential: { idToken, policyIds } });
+  };
+
+  /** The number step's answer: from here the two doors run the same code step. */
+  const submitNumber = (values: WhatsappNumberValues) => dispatch({ type: 'NUMBER_GIVEN', values });
+
+  const createFromForm = (values: SignupFormValues, whatsappToken: string) =>
+    register(
+      {
         name: values.name,
         // A birth YEAR is stored as its January 1 — see `birthYearToDob`.
         dob: birthYearToDob(values.dobYear),
@@ -88,62 +86,65 @@ export function useSignupFlow() {
         password: values.password,
         referralCode: values.referralCode,
         acceptedPolicyIds: values.acceptedPolicyIds,
-      });
-      afterAccount(
-        { ...result, referralPrompt: false },
-        {
-          extension: values.phoneExtension,
-          number: values.phoneNumber,
-          alsoMobile: values.whatsappIsMobile,
-        },
-      );
+      },
+      whatsappToken,
+    );
+
+  const createFromGoogle = (
+    google: SignupGoogleCredential,
+    number: SignupNumber,
+    whatsappToken: string,
+  ) =>
+    signupWithGoogle(google.idToken, [...google.policyIds], {
+      extension: number.extension,
+      number: number.number,
+      alsoMobile: number.alsoMobile,
+      whatsappToken,
+    });
+
+  /**
+   * The code answered: spend its proof on the account it was asked for, then
+   * open the session.
+   *
+   * Which door is being finished is read off what is being held, so the code
+   * step itself knows nothing about either. Google's referral question has no
+   * form to have asked it, hence the extra prompt on that door alone.
+   */
+  const createAccount = async (whatsappToken: string) => {
+    setError(null);
+    setCreating(true);
+    try {
+      if (flow.pendingGoogle && flow.verifying) {
+        const result = await createFromGoogle(flow.pendingGoogle, flow.verifying, whatsappToken);
+        authenticate(result.token, result.surveyCompleted, true);
+        return;
+      }
+      if (flow.pendingForm) {
+        const result = await createFromForm(flow.pendingForm, whatsappToken);
+        authenticate(result.token, result.surveyCompleted, false);
+      }
     } catch (e) {
       setError(toErrorMessage(e, t('mweb.auth.somethingWentWrong')));
     } finally {
-      setLoading(false);
+      setCreating(false);
     }
-  };
-
-  /*
-    Google's account arrives with no phone on it at all, so the number step is
-    where its WhatsApp number and the "also my mobile" answer are collected —
-    the same two things the email form asked for two steps earlier.
-  */
-  const submitGoogle = async (idToken: string, policyIds: string[]) => {
-    setError(null);
-    setGoogleBusy(true);
-    try {
-      const result = await signupWithGoogle(idToken, policyIds);
-      afterAccount({ ...result, referralPrompt: true }, null);
-    } catch (e) {
-      setError(toErrorMessage(e, t('mweb.auth.googleFailed')));
-    } finally {
-      setGoogleBusy(false);
-    }
-  };
-
-  /** The number step's answer: from here the two doors run the same code step. */
-  const submitNumber = (values: WhatsappNumberValues) => {
-    setAskingNumber(false);
-    setVerifying({
-      extension: values.phoneExtension,
-      number: values.phoneNumber,
-      alsoMobile: values.whatsappIsMobile,
-    });
   };
 
   return {
     error,
     setError,
-    loading,
-    googleBusy,
-    step,
+    creating,
+    step: flow.step,
     setStep,
-    verifying,
-    askingNumber,
-    finish,
+    verifying: flow.verifying,
+    askingNumber: flow.askingNumber,
+    /* Checked alongside the number before a code goes out, so "email already in
+       use" is a correction on the form rather than a dead end after the code.
+       Google has no form to have asked it — the credential carries it. */
+    pendingEmail: flow.pendingForm?.email,
     submitForm,
-    submitGoogle,
+    googleAccepted,
     submitNumber,
+    createAccount,
   };
 }

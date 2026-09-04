@@ -123,6 +123,25 @@ export interface AutoPodLabels {
   meetingLink: string;
   meetingStart: string;
   meetingEnd: string;
+  /** The potential-earnings calculator every queue card can open. */
+  viewEarningsCta: string;
+  earningsTitle: string;
+  /** The venue calculator: one row per space, priced by the venue itself. */
+  earningsSpacesHint: string;
+  earningsSpaceCapacity: (capacity: number) => string;
+  earningsWholeVenue: string;
+  earningsNoSpaces: string;
+  /** "Potential Earnings (Ticket Price x Slots): ₹250 × 6 = ₹1,500" */
+  earningsFormula: (price: string, capacity: number, total: string) => string;
+  /** The host calculator: the venue's ceiling, then the host's own numbers. */
+  earningsTotalSpots: (spots: number) => string;
+  earningsAddPrice: string;
+  earningsPricePositive: string;
+  earningsEnterPrice: string;
+  /** "You could earn" with no figure yet — the card's default. */
+  earningsUnknown: string;
+  close: string;
+  closeAria: string;
 }
 
 /** "a venue, a host, a club admin" — the missing roles as one list. */
@@ -174,7 +193,7 @@ export function mwebAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     confirmAccept: t('mweb.autoPods.confirmAccept'),
     confirmAcceptBody: t('mweb.autoPods.confirmAcceptAnyOrder'),
     confirmAssign: t('mweb.autoPods.confirmAssign'),
-    confirmAssignBody: t('mweb.autoPods.confirmAssignAnyOrder'),
+    confirmAssignBody: t('mweb.autoPods.confirmAssignClubNext'),
     confirmClaim: t('mweb.autoPods.confirmClaim'),
     confirmClaimBody: t('mweb.autoPods.confirmClaimBody'),
     priceLabel: t('mweb.autoPods.priceLabel'),
@@ -243,6 +262,22 @@ export function mwebAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     meetingLink: t('mweb.autoPods.meetingLink'),
     meetingStart: t('mweb.autoPods.meetingStart'),
     meetingEnd: t('mweb.autoPods.meetingEnd'),
+      viewEarningsCta: t('mweb.autoPods.viewEarningsCta'),
+      earningsTitle: t('mweb.autoPods.earningsTitle'),
+      earningsSpacesHint: t('mweb.autoPods.earningsSpacesHint'),
+      earningsSpaceCapacity: (capacity) =>
+        t('mweb.autoPods.earningsSpaceCapacity', { vars: { capacity } }),
+      earningsWholeVenue: t('mweb.autoPods.earningsWholeVenue'),
+      earningsNoSpaces: t('mweb.autoPods.earningsNoSpaces'),
+      earningsFormula: (price, capacity, total) =>
+        t('mweb.autoPods.earningsFormula', { vars: { price, capacity, total } }),
+      earningsTotalSpots: (spots) => t('mweb.autoPods.earningsTotalSpots', { vars: { spots } }),
+      earningsAddPrice: t('mweb.autoPods.earningsAddPrice'),
+      earningsPricePositive: t('mweb.autoPods.earningsPricePositive'),
+      earningsEnterPrice: t('mweb.autoPods.earningsEnterPrice'),
+      earningsUnknown: t('mweb.autoPods.earningsUnknown'),
+      close: t('mweb.autoPods.close'),
+      closeAria: t('mweb.autoPods.closeAria'),
   };
 }
 
@@ -291,7 +326,7 @@ export function shellAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     confirmAccept: t('shell.autoPods.confirmAccept'),
     confirmAcceptBody: t('shell.autoPods.confirmAcceptAnyOrder'),
     confirmAssign: t('shell.autoPods.confirmAssign'),
-    confirmAssignBody: t('shell.autoPods.confirmAssignAnyOrder'),
+    confirmAssignBody: t('shell.autoPods.confirmAssignClubNext'),
     confirmClaim: t('shell.autoPods.confirmClaim'),
     confirmClaimBody: t('shell.autoPods.confirmClaimBody'),
     priceLabel: t('shell.autoPods.priceLabel'),
@@ -360,6 +395,22 @@ export function shellAutoPodLabels(t: AutoPodTranslate): AutoPodLabels {
     meetingLink: t('shell.autoPods.meetingLink'),
     meetingStart: t('shell.autoPods.meetingStart'),
     meetingEnd: t('shell.autoPods.meetingEnd'),
+      viewEarningsCta: t('shell.autoPods.viewEarningsCta'),
+      earningsTitle: t('shell.autoPods.earningsTitle'),
+      earningsSpacesHint: t('shell.autoPods.earningsSpacesHint'),
+      earningsSpaceCapacity: (capacity) =>
+        t('shell.autoPods.earningsSpaceCapacity', { vars: { capacity } }),
+      earningsWholeVenue: t('shell.autoPods.earningsWholeVenue'),
+      earningsNoSpaces: t('shell.autoPods.earningsNoSpaces'),
+      earningsFormula: (price, capacity, total) =>
+        t('shell.autoPods.earningsFormula', { vars: { price, capacity, total } }),
+      earningsTotalSpots: (spots) => t('shell.autoPods.earningsTotalSpots', { vars: { spots } }),
+      earningsAddPrice: t('shell.autoPods.earningsAddPrice'),
+      earningsPricePositive: t('shell.autoPods.earningsPricePositive'),
+      earningsEnterPrice: t('shell.autoPods.earningsEnterPrice'),
+      earningsUnknown: t('shell.autoPods.earningsUnknown'),
+      close: t('shell.autoPods.close'),
+      closeAria: t('shell.autoPods.closeAria'),
   };
 }
 

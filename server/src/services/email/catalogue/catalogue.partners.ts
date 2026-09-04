@@ -336,6 +336,9 @@ export const HOST_EMAILS: readonly EmailDef[] = [
       v('pod', 'The pod’s title.', 'Sunday Badminton Doubles'),
       v('date', 'The date it ran, already formatted.', '24 Aug 2026'),
       v('time', 'The start time, already formatted.', '7:00 AM'),
+      // Email-only: the approved WhatsApp template has four placeholders, and
+      // the deadline is the one thing the host most needs to read.
+      v('deadline', 'When the completion window closes, already formatted.', '25 Aug 2026, 11:00 AM'),
     ],
     body: {
       copyKey: 'email.hostCompletePodReminder',
@@ -343,7 +346,10 @@ export const HOST_EMAILS: readonly EmailDef[] = [
       tone: PAUSED,
       calloutLabelKey: LABEL.pod,
       calloutVar: 'pod',
-      rows: POD_ROWS,
+      rows: [
+        ...POD_ROWS,
+        { labelKey: 'email.hostCompletePodReminder.deadline', valueVar: 'deadline' },
+      ],
       ctaKey: CTA.completePod,
       ctaVar: 'app_url',
     },

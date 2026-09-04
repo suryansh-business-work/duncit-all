@@ -240,7 +240,7 @@ describe('HostClaimDialog on a virtual offer', () => {
     expect(screen.getByTestId('auto-pod-host-meeting')).toBeInTheDocument();
 
     // Priced, but no meeting yet: the claim waits.
-    await type(labels.ticketPrice, '300');
+    await type(labels.earningsAddPrice, '300');
     await type(labels.spotsField, '6');
     expect(screen.getByRole('button', { name: labels.assignMyselfCta })).toBeDisabled();
 
@@ -265,7 +265,7 @@ describe('HostClaimDialog on a virtual offer', () => {
 describe('AutoPodCard mode and price', () => {
   it('wears its mode, and says who prices it until a host has', () => {
     const { container } = render(
-      <AutoPodCard row={row()} labels={labels} formatWhen={formatWhen} formatMoney={formatMoney} />
+      <AutoPodCard role="host" row={row()} labels={labels} formatWhen={formatWhen} formatMoney={formatMoney} />
     );
     expect(screen.getByTestId('auto-pod-mode-tag')).toHaveTextContent(labels.modeVirtual);
     expect(screen.getByTestId('auto-pod-priced-by-host')).toHaveTextContent(labels.pricedByHost);

@@ -1,22 +1,32 @@
-import { useState } from 'react';
+import { useReducer, useState, type Reducer } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
 import { birthYearToDob } from '@duncit/datetime';
-import { type SignupStep } from '@duncit/utils';
+import {
+  initialSignupFlowState,
+  signupFlowReducer,
+  type SignupFlowAction,
+  type SignupFlowState,
+  type SignupGoogleCredential,
+  type SignupNumber,
+  type SignupStep,
+} from '@duncit/utils';
 import type { WhatsappNumberValues } from '@duncit/forms/schemas';
 import { ACCEPTANCE_SURFACE } from '../../components/policy-acceptance';
 import type { RegisterFormValues } from '../../forms/register';
-import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 import { parseApiError } from '../../utils/parseApiError';
-import { REGISTER } from './queries';
+import { REGISTER, SIGNUP_GOOGLE } from './queries';
 
-/** The number the code goes to, and what a proven one is written to. */
-export interface VerifyingNumber {
-  extension: string;
-  number: string;
-  /** The tick box: also write this to the account's phone, or leave it blank. */
-  alsoMobile: boolean;
-}
+/*
+  The machine itself is `@duncit/utils`' — it was written twice, identically,
+  because there is only one right answer to what signup is holding at each step
+  (rule 40). The cast is what binds its type parameter to THIS surface's form
+  values, whose schema lives in a package @duncit/utils cannot import.
+*/
+type FlowReducer = Reducer<
+  SignupFlowState<RegisterFormValues>,
+  SignupFlowAction<RegisterFormValues>
+>;
 
 /** Split a single "Name" into first/last; surname may be empty. */
 function splitName(name: string): { first_name: string; last_name?: string } {
@@ -25,118 +35,143 @@ function splitName(name: string): { first_name: string; last_name?: string } {
 }
 
 /**
- * Joining Duncit, both doors, as one state machine.
+ * Joining Duncit, both doors — the side effects. What signup is HOLDING is the
+ * shared reducer's; what it DOES is this file's.
  *
- * The two doors differ only in what they know by the time the number step
- * opens: the email form has already collected the number and the tick box, so
- * it goes straight to the code; Google hands back a finished account with no
- * form attached, so the number is asked for first. Everything after that — the
- * code, the skip, and where the person is finally sent — is one path.
+ * NOTHING is created until the WhatsApp code answers. The account is made on
+ * the last step with the proof of the number beside it, so leaving early, by
+ * any means, leaves nothing behind rather than an account nobody can be reached
+ * on. That is the whole reason the order is this way round: it used to register
+ * first and ask afterwards, and every way of closing that screen was a way past
+ * it.
  *
- * Neither door navigates before the number is settled: leaving the page would
- * skip the step the person is halfway through. Both doors store their token as
- * it arrives, which is what makes the WhatsApp mutations authorised meanwhile.
- *
- * RN twin: app/mobile-app/src/screens/SignupScreen/useSignupFlow.ts.
+ * RN twin: app/mobile-app/src/screens/SignupScreen/useSignupFlow.ts — the same
+ * effects against the native services, over the same machine.
  */
 export function useSignupFlow(linkedCode: string) {
   const navigate = useNavigate();
-  const [registerMutation, { loading }] = useMutation<any>(REGISTER);
+  const [registerMutation, { loading: registering }] = useMutation<any>(REGISTER);
+  const [signupGoogle, { loading: creatingGoogle }] = useMutation<any>(SIGNUP_GOOGLE);
   const [error, setError] = useState<string | null>(null);
-  const [step, setStep] = useState<SignupStep>('WHO');
-  const [verifying, setVerifying] = useState<VerifyingNumber | null>(null);
-  /** Google only: the number step, which nothing has asked for yet. */
-  const [askingNumber, setAskingNumber] = useState(false);
-  /** Where the person goes once the number is settled — the doors differ. */
-  const [destination, setDestination] = useState('/signup-survey');
+  const [flow, dispatch] = useReducer(
+    signupFlowReducer as FlowReducer,
+    initialSignupFlowState<RegisterFormValues>(),
+  );
 
-  const whatsappStepEnabled = useFeatureFlag('whatsapp_signup_otp', true);
+  /** Where the finished account lands — the doors ask different questions. */
+  const destination = flow.pendingGoogle ? '/signup-referral' : '/signup-survey';
 
-  const finish = () => navigate(destination, { state: { code: linkedCode } });
-
-  /** Both doors end here: either verify the number, or go straight through. */
-  const afterAccount = (next: string, number: VerifyingNumber | null) => {
-    setDestination(next);
-    if (!whatsappStepEnabled) {
-      navigate(next, { state: { code: linkedCode } });
-      return;
-    }
-    setStep('VERIFY');
-    if (number) setVerifying(number);
-    else setAskingNumber(true);
+  const finish = (token: string) => {
+    localStorage.setItem('token', token);
+    navigate(destination, { state: { code: linkedCode } });
   };
 
-  const submitForm = async (values: RegisterFormValues) => {
+  const setStep = (step: SignupStep) => dispatch({ type: 'STEP', step });
+
+  /** The form is filled in; the code step turns it into an account. */
+  const submitForm = (values: RegisterFormValues) => {
+    setError(null);
+    dispatch({ type: 'FORM_FILLED', values });
+  };
+
+  /*
+    Google proves an address and nothing else, so its credential is held —
+    unspent — while the number step and the code step run. There is no account
+    to back out of until both have answered, which is what the acceptance
+    dialog's Google wording promises.
+  */
+  const googleAccepted = (idToken: string, policyIds: string[]) => {
+    setError(null);
+    dispatch({ type: 'GOOGLE_ACCEPTED', credential: { idToken, policyIds } });
+  };
+
+  /** The number step's answer: from here the two doors run the same code step. */
+  const submitNumber = (values: WhatsappNumberValues) =>
+    dispatch({ type: 'NUMBER_GIVEN', values });
+
+  const createFromForm = async (values: RegisterFormValues, whatsappToken: string) => {
+    const { first_name, last_name } = splitName(values.name);
+    const code = values.referralCode.trim().toUpperCase();
+    const res = await registerMutation({
+      variables: {
+        input: {
+          first_name,
+          last_name,
+          email: values.email,
+          phone_number: values.phoneNumber,
+          phone_extension: values.phoneExtension,
+          whatsapp_is_mobile: values.whatsappIsMobile,
+          whatsapp_token: whatsappToken,
+          password: values.password,
+          // A birth YEAR is stored as its January 1 — see `birthYearToDob`
+          // for why that is the reading the server agrees with.
+          dob: new Date(birthYearToDob(values.dobYear)).toISOString(),
+          ...(code ? { referral_code: code } : {}),
+          accepted_policy_ids: values.acceptedPolicyIds,
+          accepted_policy_surface: ACCEPTANCE_SURFACE,
+        },
+      },
+    });
+    return res.data?.register?.token as string | undefined;
+  };
+
+  const createFromGoogle = async (
+    google: SignupGoogleCredential,
+    number: SignupNumber,
+    whatsappToken: string,
+  ) => {
+    const res = await signupGoogle({
+      variables: {
+        input: {
+          id_token: google.idToken,
+          phone_number: number.number,
+          phone_extension: number.extension,
+          whatsapp_is_mobile: number.alsoMobile,
+          whatsapp_token: whatsappToken,
+          accepted_policy_ids: google.policyIds,
+          accepted_policy_surface: ACCEPTANCE_SURFACE,
+        },
+      },
+    });
+    return res.data?.signupWithGoogle?.token as string | undefined;
+  };
+
+  /**
+   * The code answered: spend its proof on the account it was asked for.
+   *
+   * Which door is being finished is read off what is being held, so the code
+   * step itself knows nothing about either.
+   */
+  const createAccount = async (whatsappToken: string) => {
     setError(null);
     try {
-      const { first_name, last_name } = splitName(values.name);
-      const code = values.referralCode.trim().toUpperCase();
-      const res = await registerMutation({
-        variables: {
-          input: {
-            first_name,
-            last_name,
-            email: values.email,
-            phone_number: values.phoneNumber,
-            phone_extension: values.phoneExtension,
-            whatsapp_is_mobile: values.whatsappIsMobile,
-            password: values.password,
-            // A birth YEAR is stored as its January 1 — see `birthYearToDob`
-            // for why that is the reading the server agrees with.
-            dob: new Date(birthYearToDob(values.dobYear)).toISOString(),
-            ...(code ? { referral_code: code } : {}),
-            accepted_policy_ids: values.acceptedPolicyIds,
-            accepted_policy_surface: ACCEPTANCE_SURFACE,
-          },
-        },
-      });
-      const token = res.data?.register?.token;
-      if (!token) return;
-      /*
-        Stored, but NOT navigated on: the last step's mutations read this token
-        out of storage, and leaving the page now would skip the verification the
-        person is halfway through.
-      */
-      localStorage.setItem('token', token);
-      afterAccount('/signup-survey', {
-        extension: values.phoneExtension,
-        number: values.phoneNumber,
-        alsoMobile: values.whatsappIsMobile,
-      });
+      let token: string | undefined;
+      if (flow.pendingGoogle && flow.verifying) {
+        token = await createFromGoogle(flow.pendingGoogle, flow.verifying, whatsappToken);
+      } else if (flow.pendingForm) {
+        token = await createFromForm(flow.pendingForm, whatsappToken);
+      }
+      if (token) finish(token);
     } catch (e) {
       setError(parseApiError(e));
     }
   };
 
-  /*
-    Google's account arrives with no phone on it at all, so the number step is
-    where its WhatsApp number and the "also my mobile" answer are collected —
-    the same two things the email form asked for two steps earlier. Its referral
-    question has no form to have asked it either, hence the different landing.
-  */
-  const googleCreated = () => afterAccount('/signup-referral', null);
-
-  /** The number step's answer: from here the two doors run the same code step. */
-  const submitNumber = (values: WhatsappNumberValues) => {
-    setAskingNumber(false);
-    setVerifying({
-      extension: values.phoneExtension,
-      number: values.phoneNumber,
-      alsoMobile: values.whatsappIsMobile,
-    });
-  };
-
   return {
     error,
     setError,
-    loading,
-    step,
+    creating: registering || creatingGoogle,
+    step: flow.step,
     setStep,
-    verifying,
-    askingNumber,
-    finish,
+    verifying: flow.verifying,
+    askingNumber: flow.askingNumber,
+    /* Checked alongside the number before a code goes out, so "email already in
+       use" is a correction on the form rather than a dead end after the code.
+       Google has no form to have asked it — the credential carries it. */
+    pendingEmail: flow.pendingForm?.email,
     submitForm,
-    googleCreated,
+    googleAccepted,
     submitNumber,
+    createAccount,
   };
 }

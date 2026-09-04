@@ -3,10 +3,13 @@ import { Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import {
   AutoPodCategoryFilter,
+  AutoPodEarningsButton,
   AutoPodQueue,
   AutoPodWithdrawAction,
   HOST_AUTO_PODS,
   HostClaimDialog,
+  HostEarningsDialog,
+  useAutoPodEarnings,
 } from '@duncit/auto-pods';
 import type { AutoPodRow } from '@duncit/utils';
 import AutoPodLocationBar from '../../components/auto-pods/AutoPodLocationBar';
@@ -37,6 +40,7 @@ export default function HostAutoPodsPage({ locationId }: Readonly<Props>) {
   });
   const cityLabel = useAutoPodCityLabel(locationId);
   const [target, setTarget] = useState<AutoPodRow | null>(null);
+  const earnings = useAutoPodEarnings();
 
   return (
     <Stack spacing={2} sx={{ p: 2, pb: 4 }}>
@@ -68,6 +72,19 @@ export default function HostAutoPodsPage({ locationId }: Readonly<Props>) {
         renderMineAction={(row) => (
           <AutoPodWithdrawAction row={row} role="host" labels={queue.labels} onWithdrawn={queue.reload} />
         )}
+        renderEarningsAction={(row) => (
+          <AutoPodEarningsButton labels={queue.labels} onClick={() => earnings.open(row)} />
+        )}
+        earnings={earnings.values}
+      />
+
+      <HostEarningsDialog
+        row={earnings.row}
+        labels={queue.labels}
+        open={earnings.row !== null}
+        onClose={earnings.close}
+        formatMoney={queue.formatMoney}
+        onEarnings={earnings.record}
       />
 
       <HostClaimDialog

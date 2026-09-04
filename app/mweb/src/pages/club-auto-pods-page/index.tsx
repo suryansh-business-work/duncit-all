@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { AutoPodQueue, CLUB_ADMIN_AUTO_PODS, ClubClaimDialog } from '@duncit/auto-pods';
+import {
+  AutoPodQueue,
+  AutoPodWithdrawAction,
+  CLUB_ADMIN_AUTO_PODS,
+  ClubClaimDialog,
+} from '@duncit/auto-pods';
 import type { AutoPodRow } from '@duncit/utils';
 import AutoPodLocationBar from '../../components/auto-pods/AutoPodLocationBar';
 import { useAutoPodCityLabel } from '../../hooks/useAutoPodCityLabel';
@@ -51,6 +56,9 @@ export default function ClubAutoPodsPage({ locationId }: Readonly<Props>) {
           <DuncitButton fullWidth variant="contained" onClick={() => setTarget(row)}>
             {queue.labels.claimForClubCta}
           </DuncitButton>
+        )}
+        renderMineAction={(row) => (
+          <AutoPodWithdrawAction row={row} role="club" labels={queue.labels} onWithdrawn={queue.reload} />
         )}
       />
 

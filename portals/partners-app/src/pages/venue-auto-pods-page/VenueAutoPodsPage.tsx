@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router';
 import { Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import {
+  AutoPodEarningsButton,
   AutoPodQueue,
   AutoPodVenuePicker,
   AutoPodWithdrawAction,
+  useAutoPodEarnings,
   VenueAcceptDialog,
+  VenueEarningsDialog,
   VENUE_AUTO_PODS,
   type AutoPodVenueOption,
 } from '@duncit/auto-pods';
@@ -37,6 +40,7 @@ export default function VenueAutoPodsPage() {
     location_id: location.location_id || null,
     venue_id: venue?.id ?? null,
   });
+  const earnings = useAutoPodEarnings();
   const renderAction = (row: AutoPodRow) => (
     <DuncitButton
       fullWidth
@@ -70,6 +74,18 @@ export default function VenueAutoPodsPage() {
             <AutoPodWithdrawAction row={row} role="venue" labels={queue.labels} onWithdrawn={queue.refetch} />
           </Stack>
         )}
+        renderEarningsAction={(row) => (
+          <AutoPodEarningsButton labels={queue.labels} onClick={() => earnings.open(row)} />
+        )}
+        earnings={earnings.values}
+      />
+      <VenueEarningsDialog
+        venue={venue}
+        labels={queue.labels}
+        open={earnings.row !== null}
+        onClose={earnings.close}
+        formatMoney={queue.formatMoney}
+        onEarnings={earnings.record}
       />
       <VenueAcceptDialog
         row={selected}
@@ -80,8 +96,9 @@ export default function VenueAutoPodsPage() {
         onAccepted={queue.refetch}
         formatWhen={queue.formatWhen}
         formatMoney={queue.formatMoney}
-        // Venue Management lists every venue with a link into its availability.
-        onAddAvailability={() => navigate('/register-venue')}
+        // Venues > this venue > Availability: the calendar the venue has to
+        // publish a slot on before it can accept anything.
+        onAddAvailability={() => navigate(venue ? `/venues/${venue.id}/availability` : '/register-venue')}
       />
     </Stack>
   );

@@ -32,6 +32,14 @@ const DEFAULT_ATTENDANCE_OTP_REQUIRED = true;
 const DEFAULT_POD_AUTO_CANCEL_ENABLED = false;
 /** Hours before a pod's start when the auto-cancel finance check runs. */
 const DEFAULT_POD_AUTO_CANCEL_LEAD_HOURS = 24;
+/** Hours after a pod ends within which its host must complete it. A day: long
+ * enough that a pod finishing late at night is still settleable the next
+ * evening, short enough that the payout is priced while the host still
+ * remembers who turned up. */
+const DEFAULT_POD_COMPLETE_TIMEOUT_HOURS = 24;
+/** Hours after a pod ends when the host is reminded to complete it — half the
+ * default window, so the nudge lands with time left to act on it. */
+const DEFAULT_POD_COMPLETE_REMINDER_HOURS = 12;
 /** Days of free slots a venue is offered when accepting an Auto Pod — short,
  * because the host and the club admin still need time to enrol before the date. */
 const DEFAULT_AUTO_POD_SLOT_WINDOW_DAYS = 7;
@@ -66,6 +74,14 @@ const cleanVenueCancelHealthPenalty = (value: unknown) => {
 /** Auto-cancel lead window, clamped to 1 hour – 1 year. */
 const cleanPodAutoCancelLeadHours = (value: unknown) =>
   Math.min(8760, Math.max(1, Math.floor(Number(value)) || DEFAULT_POD_AUTO_CANCEL_LEAD_HOURS));
+
+/** Host's window to complete a pod, clamped to 1 hour – 1 year. */
+const cleanPodCompleteTimeoutHours = (value: unknown) =>
+  Math.min(8760, Math.max(1, Math.floor(Number(value)) || DEFAULT_POD_COMPLETE_TIMEOUT_HOURS));
+
+/** When the complete-pod reminder goes out, clamped to 1 hour – 1 year. */
+const cleanPodCompleteReminderHours = (value: unknown) =>
+  Math.min(8760, Math.max(1, Math.floor(Number(value)) || DEFAULT_POD_COMPLETE_REMINDER_HOURS));
 
 /** Auto Pod slot window, clamped to 1 – 60 days. */
 const cleanAutoPodSlotWindowDays = (value: unknown) =>
@@ -122,6 +138,8 @@ const toAppPub = (d: any) => ({
   // path with no scan behind it, so it starts verified until an admin says
   // otherwise.
   attendance_otp_required: d?.attendance_otp_required ?? DEFAULT_ATTENDANCE_OTP_REQUIRED,
+  pod_complete_timeout_hours: cleanPodCompleteTimeoutHours(d?.pod_complete_timeout_hours),
+  pod_complete_reminder_hours: cleanPodCompleteReminderHours(d?.pod_complete_reminder_hours),
   pod_auto_cancel_enabled: d?.pod_auto_cancel_enabled ?? DEFAULT_POD_AUTO_CANCEL_ENABLED,
   pod_auto_cancel_lead_hours:
     d?.pod_auto_cancel_lead_hours ?? DEFAULT_POD_AUTO_CANCEL_LEAD_HOURS,
@@ -371,12 +389,6 @@ const DEFAULT_FLAGS: {
     enabled: false,
   },
   {
-    key: "whatsapp_signup_otp",
-    name: "WhatsApp Signup OTP",
-    description: "Ask the user to verify a WhatsApp number after signup.",
-    enabled: false,
-  },
-  {
     // The one system kill switch for e-commerce. Off, and the server refuses
     // every product operation as well — hiding a button is never the only thing
     // holding the line. Seeded OFF: a fresh install ships without a shop.
@@ -447,6 +459,8 @@ type AppSettingsUpdateInput = {
   max_backout_attempts?: number;
   venue_cancel_health_penalty?: number;
   attendance_otp_required?: boolean;
+  pod_complete_timeout_hours?: number;
+  pod_complete_reminder_hours?: number;
   pod_auto_cancel_enabled?: boolean;
   pod_auto_cancel_lead_hours?: number;
   auto_pod_slot_window_days?: number;
@@ -494,6 +508,14 @@ const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
   if (input.venue_cancel_health_penalty !== undefined)
     update.venue_cancel_health_penalty = cleanVenueCancelHealthPenalty(
       input.venue_cancel_health_penalty,
+    );
+  if (input.pod_complete_timeout_hours !== undefined)
+    update.pod_complete_timeout_hours = cleanPodCompleteTimeoutHours(
+      input.pod_complete_timeout_hours,
+    );
+  if (input.pod_complete_reminder_hours !== undefined)
+    update.pod_complete_reminder_hours = cleanPodCompleteReminderHours(
+      input.pod_complete_reminder_hours,
     );
   if (input.pod_auto_cancel_lead_hours !== undefined)
     update.pod_auto_cancel_lead_hours = cleanPodAutoCancelLeadHours(
@@ -554,6 +576,24 @@ export const settingsService = {
         doc.venue_cancel_health_penalty ?? DEFAULT_VENUE_CANCEL_HEALTH_PENALTY,
       attendance_otp_required:
         doc.attendance_otp_required ?? DEFAULT_ATTENDANCE_OTP_REQUIRED,
+      pod_complete_timeout_hours: cleanPodCompleteTimeoutHours(doc.pod_complete_timeout_hours),
+    };
+  },
+
+  /**
+   * The complete-pod window: how long after a pod ends its host may still
+   * settle it, and when they are nudged about it.
+   *
+   * Read as a pair because they are one rule stated twice — the reminder only
+   * means anything relative to the deadline it is warning about — and because
+   * the attendance board and the WhatsApp sweep would otherwise each make their
+   * own round trip for half of it.
+   */
+  async getPodCompletionSettings(): Promise<{ timeout_hours: number; reminder_hours: number }> {
+    const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
+    return {
+      timeout_hours: cleanPodCompleteTimeoutHours(doc?.pod_complete_timeout_hours),
+      reminder_hours: cleanPodCompleteReminderHours(doc?.pod_complete_reminder_hours),
     };
   },
 

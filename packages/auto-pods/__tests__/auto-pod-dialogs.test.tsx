@@ -200,8 +200,10 @@ describe('HostClaimDialog', () => {
     await settle();
 
     expect(document.body.textContent).toContain('Weekly Badminton');
-    expect(screen.getByLabelText(labels.ticketPrice)).toHaveValue(250);
-    expect(screen.getByLabelText(labels.spotsField)).toHaveValue(8);
+    expect(screen.getByLabelText(labels.earningsAddPrice)).toHaveValue(250);
+    expect(screen.getByLabelText(labels.spotsField)).toHaveValue('8');
+    // The venue's booked space is the ceiling, stated before the host drags to it.
+    expect(document.body.textContent).toContain(labels.earningsTotalSpots(20));
     expect(document.body.textContent).toContain(labels.projectionHost('₹1400'));
     expect(document.body.textContent).toContain(labels.projectionVenue('₹500'));
     expect(document.body.textContent).toContain(labels.projectionClub('₹100'));
@@ -225,17 +227,21 @@ describe('HostClaimDialog', () => {
     expect(screen.getByRole('button', { name: labels.assignMyselfCta })).toBeDisabled();
   });
 
-  // The venue's capacity is the ceiling: a count above it is flagged on the
-  // field and the button stays shut, whatever the money says.
-  it('flags a spot count outside the limits the server sent', async () => {
+  // The venue's capacity is the ceiling: the slider is drawn between the
+  // server's own bounds, and a seeded count above them keeps the button shut
+  // until the host drags back inside, whatever the money says.
+  it('bounds the spots slider by the limits the server sent, and shuts the button outside them', async () => {
     wrap(<HostClaimDialog {...props} row={row()} open />, [
       projectionMock({}, { min_spots: 4, max_spots: 6, viable: true }),
     ]);
     await settle();
     await settle();
 
+    const slider = screen.getByLabelText(labels.spotsField);
     expect(document.body.textContent).toContain(labels.spotsRange(4, 6));
-    expect(screen.getByLabelText(labels.spotsField)).toBeInvalid();
+    expect(slider).toHaveAttribute('min', '4');
+    expect(slider).toHaveAttribute('max', '6');
+    // The row seeded 8, which is past the ceiling the venue imposes.
     expect(screen.getByRole('button', { name: labels.assignMyselfCta })).toBeDisabled();
   });
 
@@ -299,8 +305,10 @@ describe('HostClaimDialog', () => {
     expect(onAssigned).toHaveBeenCalledTimes(1);
   });
 
-  // A cleared field is 0 — nothing to price — and the button waits for a real number.
-  it('prices nothing while a field is cleared, then re-prices the price typed', async () => {
+  // A cleared price is nothing to price — the calculator says so in words and
+  // the button waits for a real number. (The spots cannot be cleared: they are
+  // a slider between the server's own bounds.)
+  it('prices nothing while the price is cleared, then re-prices the one typed', async () => {
     wrap(<HostClaimDialog {...props} row={row()} open />, [
       projectionMock(),
       projectionMock({ pod_amount: 300 }, { pod_amount: 300, host_receives: 1700 }),
@@ -308,15 +316,29 @@ describe('HostClaimDialog', () => {
     await settle();
     await settle();
 
-    fireEvent.change(screen.getByLabelText(labels.ticketPrice), { target: { value: '' } });
-    fireEvent.change(screen.getByLabelText(labels.spotsField), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText(labels.earningsAddPrice), { target: { value: '' } });
     await settle();
+    expect(document.body.textContent).toContain(labels.earningsEnterPrice);
     expect(screen.getByRole('button', { name: labels.assignMyselfCta })).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText(labels.ticketPrice), { target: { value: '300' } });
+    fireEvent.change(screen.getByLabelText(labels.earningsAddPrice), { target: { value: '300' } });
     await typeSpots('8');
 
     expect(document.body.textContent).toContain(labels.projectionHost('₹1700'));
+  });
+
+  // A price field holding something that is not a positive number is the one
+  // thing the calculator can say is wrong without asking the server.
+  it('names a non-positive ticket price on the field itself', async () => {
+    wrap(<HostClaimDialog {...props} row={row()} open />, [projectionMock()]);
+    await settle();
+    await settle();
+
+    fireEvent.change(screen.getByLabelText(labels.earningsAddPrice), { target: { value: '0' } });
+    await settle();
+
+    expect(document.body.textContent).toContain(labels.earningsPricePositive);
+    expect(screen.getByRole('button', { name: labels.assignMyselfCta })).toBeDisabled();
   });
 
   it('re-prices as the host edits, and sends the numbers they typed', async () => {

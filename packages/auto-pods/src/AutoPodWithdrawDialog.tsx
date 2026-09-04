@@ -9,13 +9,24 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { DuncitButton } from '@duncit/buttons';
 import type { AutoPodLabels, AutoPodRole, AutoPodRow } from '@duncit/utils';
-import { HOST_WITHDRAW_AUTO_POD, VENUE_WITHDRAW_AUTO_POD } from './queries';
+import {
+  CLUB_WITHDRAW_AUTO_POD,
+  HOST_WITHDRAW_AUTO_POD,
+  VENUE_WITHDRAW_AUTO_POD,
+} from './queries';
 import { enrolmentFailure } from './failure-message';
+
+/** One mutation per role — the server authorises each against its own claim. */
+const WITHDRAW_BY_ROLE: Record<AutoPodRole, typeof VENUE_WITHDRAW_AUTO_POD> = {
+  venue: VENUE_WITHDRAW_AUTO_POD,
+  host: HOST_WITHDRAW_AUTO_POD,
+  club: CLUB_WITHDRAW_AUTO_POD,
+};
 
 export interface AutoPodWithdrawDialogProps {
   row: AutoPodRow | null;
-  /** Whose enrolment is being taken back — a venue's slot or a host's assignment. */
-  role: Extract<AutoPodRole, 'venue' | 'host'>;
+  /** Whose enrolment is being taken back — the slot, the hosting or the claim. */
+  role: AutoPodRole;
   labels: AutoPodLabels;
   open: boolean;
   onClose: () => void;
@@ -23,11 +34,12 @@ export interface AutoPodWithdrawDialogProps {
 }
 
 /**
- * Taking an enrolment back. The offer depends on more partners than the one
- * leaving, so the dialog says so in the product's own words and states the
- * Account Health cost (Pod Settings) before the button. Once confirmed the
- * offer goes back on the list for that role, and everyone else on it is told.
- * Native twin: `AutoPodWithdrawSheet` (rule 27).
+ * Taking an enrolment back — a venue's slot, a host's assignment or a club
+ * admin's claim. The offer depends on more partners than the one leaving, so
+ * the dialog says so in the product's own words and states the Account Health
+ * cost (Pod Settings) before the button. Once confirmed the offer goes back on
+ * the list for that role — under "Needs your action" again — and everyone else
+ * on it is told. Native twin: `AutoPodWithdrawSheet` (rule 27).
  */
 export function AutoPodWithdrawDialog({
   row,
@@ -38,9 +50,7 @@ export function AutoPodWithdrawDialog({
   onWithdrawn,
 }: Readonly<AutoPodWithdrawDialogProps>) {
   const [failure, setFailure] = useState<string | null>(null);
-  const [withdraw, withdrawState] = useMutation<any>(
-    role === 'venue' ? VENUE_WITHDRAW_AUTO_POD : HOST_WITHDRAW_AUTO_POD,
-  );
+  const [withdraw, withdrawState] = useMutation<any>(WITHDRAW_BY_ROLE[role]);
   const points = row?.withdraw_penalty_points ?? 0;
 
   const handleClose = () => {
@@ -82,6 +92,7 @@ export function AutoPodWithdrawDialog({
           color="error"
           onClick={handleWithdraw}
           disabled={withdrawState.loading}
+          loading={withdrawState.loading}
         >
           {labels.withdrawConfirm}
         </DuncitButton>

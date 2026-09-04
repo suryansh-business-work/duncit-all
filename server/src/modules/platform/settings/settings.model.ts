@@ -32,6 +32,16 @@ export interface IAppSettings extends Document {
    * the host vouches for the identity themselves and the mark is recorded as
    * unverified. The door scan is proof on its own and is unaffected either way. */
   attendance_otp_required: boolean;
+  /** How many hours after a pod ENDS its host has to complete it (Admin > Pods
+   * > Pod Settings). Past that the host can no longer mark attendance and the
+   * pod settles with NO host earnings — the venue, the club admin and the
+   * product sellers are still paid from the same collection. */
+  pod_complete_timeout_hours: number;
+  /** How many hours after a pod ENDS the host is emailed and WhatsApped a
+   * reminder to complete it (Admin > Pods > Pod Settings). Meant to sit BELOW
+   * `pod_complete_timeout_hours` — a nudge that lands after the deadline is a
+   * notification about money the host has already lost. */
+  pod_complete_reminder_hours: number;
   /** Whether the auto-cancel sweep cancels upcoming pods whose live settlement
    * would leave the host side negative — the pool after GST, platform fee and
    * the club-admin cut cannot cover the venue's booked slot price (Admin >
@@ -91,6 +101,8 @@ const appSettingsSchema = new Schema<IAppSettings>(
     max_backout_attempts: { type: Number, default: 3, min: 1 },
     venue_cancel_health_penalty: { type: Number, default: 5, min: 0, max: 100 },
     attendance_otp_required: { type: Boolean, default: true },
+    pod_complete_timeout_hours: { type: Number, default: 24, min: 1, max: 8760 },
+    pod_complete_reminder_hours: { type: Number, default: 12, min: 1, max: 8760 },
     pod_auto_cancel_enabled: { type: Boolean, default: false },
     pod_auto_cancel_lead_hours: { type: Number, default: 24, min: 1, max: 8760 },
     auto_pod_slot_window_days: { type: Number, default: 7, min: 1, max: 60 },

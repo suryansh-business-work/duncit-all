@@ -1,45 +1,17 @@
 import { whatsappAuthService } from './auth-whatsapp.service';
-import { userService } from '@modules/access/user/user.service';
-import { requireAuth } from '@middleware/rbac';
-import type { GraphQLContext } from '@context';
+
+interface OtpArgs {
+  phone_extension: string;
+  phone_number: string;
+  email?: string | null;
+  otp: string;
+}
 
 export const whatsappResolvers = {
   Mutation: {
-    requestWhatsAppOtp: async (
-      _p: unknown,
-      args: { phone_extension: string; phone_number: string },
-      ctx: GraphQLContext
-    ) => {
-      const auth = requireAuth(ctx);
-      return whatsappAuthService.requestOtp(
-        args.phone_extension,
-        args.phone_number,
-        auth.id
-      );
-    },
-    verifyWhatsAppOtp: async (
-      _p: unknown,
-      args: {
-        phone_extension: string;
-        phone_number: string;
-        otp: string;
-        also_mobile?: boolean;
-      },
-      ctx: GraphQLContext
-    ) => {
-      const auth = requireAuth(ctx);
-      await whatsappAuthService.verifyOtp(
-        auth.id,
-        args.phone_extension,
-        args.phone_number,
-        args.otp,
-        args.also_mobile === true
-      );
-      return userService.me(auth.id);
-    },
-    skipWhatsAppOtp: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      const auth = requireAuth(ctx);
-      return userService.me(auth.id);
-    },
+    requestSignupWhatsAppOtp: (_p: unknown, args: Omit<OtpArgs, 'otp'>) =>
+      whatsappAuthService.requestSignupOtp(args.phone_extension, args.phone_number, args.email),
+    verifySignupWhatsAppOtp: (_p: unknown, args: Omit<OtpArgs, 'email'>) =>
+      whatsappAuthService.verifySignupOtp(args.phone_extension, args.phone_number, args.otp),
   },
 };

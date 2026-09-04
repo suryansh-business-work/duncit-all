@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { AutoPodQueue, ClubClaimDialog, CLUB_ADMIN_AUTO_PODS } from '@duncit/auto-pods';
+import {
+  AutoPodQueue,
+  AutoPodWithdrawAction,
+  ClubClaimDialog,
+  CLUB_ADMIN_AUTO_PODS,
+} from '@duncit/auto-pods';
 import { EMPTY_LOCATION, type AdminLocationValue } from '@duncit/location';
 import type { AutoPodRow } from '@duncit/utils';
 import AutoPodFilters from '../../components/auto-pods/AutoPodFilters';
@@ -49,7 +54,10 @@ export default function ClubAdminAutoPodsPage() {
         formatMoney={queue.formatMoney}
         renderAction={renderAction}
         renderMineAction={(row) => (
-          <AutoPodMineAction row={row} labels={queue.labels} podHref={clubPodHref(row)} />
+          <Stack spacing={1}>
+            <AutoPodMineAction row={row} labels={queue.labels} podHref={clubPodHref(row)} />
+            <AutoPodWithdrawAction row={row} role="club" labels={queue.labels} onWithdrawn={queue.refetch} />
+          </Stack>
         )}
       />
       <ClubClaimDialog

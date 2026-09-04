@@ -390,6 +390,18 @@ changeRequests: {
       autoCancelLeadLabel: 'Lead Window (Hours)',
       autoCancelLeadMin: 'Minimum 1 hour. Default 24.',
       autoCancelLeadInvalid: 'Enter a whole number of 1 or more.',
+      completeTimeoutTitle: 'Complete Pod Timeout (Hours)',
+      completeTimeoutDesc:
+        'How long after a pod ENDS its host may still complete it. Inside the window the host can scan tickets and mark attendance as usual; once it passes, attendance marking is disabled for the host and the pod settles with no host earnings — the venue, the club admin and product sellers are still paid. A Club Admin can always record attendance afterwards.',
+      completeTimeoutLabel: 'Timeout (Hours)',
+      completeTimeoutMin: 'Between 1 and 8760 hours. Default 24.',
+      completeTimeoutInvalid: 'Enter a whole number between 1 and 8760.',
+      completeReminderTitle: 'Complete Pod Reminder (Hours)',
+      completeReminderDesc:
+        'How long after a pod ends the host is sent an email and a WhatsApp reminder to complete it. The reminder names the exact deadline, so keep this below the timeout above — a nudge that arrives after the window has closed is a notice about money the host has already lost.',
+      completeReminderLabel: 'Reminder After (Hours)',
+      completeReminderMin: 'Between 1 and 8760 hours. Default 12.',
+      completeReminderInvalid: 'Enter a whole number between 1 and 8760.',
       autoPodSlotWindowTitle: 'Auto Pods — slot window',
       autoPodSlotWindowDesc: 'How many days ahead a venue is shown its free slots when accepting an Auto Pod. Keep it short: the host and the club admin still need time to enrol before the date.',
       autoPodSlotWindowLabel: 'Days ahead',

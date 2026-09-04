@@ -792,21 +792,33 @@ export const paymentReleaseService = {
     // one-way mistake, since the release is what Finance later reviews. Refuse
     // it while it is still fixable. Only pods that HAD bookings are gated: a
     // pod nobody booked has nothing to scan and must still be completable.
-    if (settlement.booked_seats > 0 && settlement.attended_seats === 0) {
+    // An EXPIRED pod is exempt: its host can no longer mark anybody, so
+    // demanding a scan they cannot perform would strand the pod uncompleted and
+    // leave the venue, the club admin and the product sellers unpaid for a
+    // deadline only the host missed.
+    if (
+      !settlement.complete_expired &&
+      settlement.booked_seats > 0 &&
+      settlement.attended_seats === 0
+    ) {
       throw new GraphQLError(
         'No attendance has been recorded for this pod. Scan each guest’s ticket before completing it — the payout is calculated from who attended.',
         { extensions: { code: 'ATTENDANCE_REQUIRED' } }
       );
     }
 
-    // The venue is now paid its full booked price rather than being clamped to
-    // the pool, so a pod that took less at the door than the room cost leaves
-    // the host side NEGATIVE. That is honest in the statement — the shortfall is
-    // shown — but a release is money moving out, and a negative one would credit
-    // a wallet backwards. Floor it: the host is owed nothing, never owes.
-    // Recovering a shortfall is a separate decision, not a side effect of
-    // completing a pod.
-    const hostPayout = Math.max(0, settlement.host.payout_amount);
+    // Floored (the venue keeps its full booked price, so a thin pod leaves the
+    // host side negative and a negative release would credit a wallet
+    // backwards) and zeroed once the completion window has expired. Computed by
+    // the settlement itself so the preview the host read and the release
+    // Finance reviews can never quote different money.
+    const hostPayout = settlement.host_payout_amount;
+    // Why the release is nil, on the release — this is the row an operator
+    // opens when the host asks where their money went.
+    const forfeitNote = settlement.complete_expired
+      ? `Host earnings forfeited: this pod was not completed before ${settlement.complete_deadline}, the deadline set by Admin > Pods > Pod Settings.`
+      : '';
+    const notes = [clean(input.notes), forfeitNote].filter(Boolean).join(' ');
 
     const releases: IPaymentRelease[] = [];
     const hostBeneficiary = await beneficiaryFor('HOST_PAYMENT', pod, input.host_user_id);
@@ -823,7 +835,7 @@ export const paymentReleaseService = {
         amount_requested: hostPayout,
         bill_url: '',
         evidence_media: evidence,
-        notes: clean(input.notes),
+        notes,
         requested_by: new Types.ObjectId(actor.id),
         requested_at: new Date(),
         breakdown: settlementToBreakdown(settlement, 'HOST'),

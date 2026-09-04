@@ -77,6 +77,11 @@ const settlement = (over: Record<string, unknown> = {}) => ({
   booked_seats: 10,
   attended_total: 1000,
   attendees: [attendee()],
+  complete_deadline: '2026-08-31T14:00:00.000Z',
+  complete_expired: false,
+  // The "You receive" line reads this, not waterfall.host_receives — it is what
+  // the release will actually carry.
+  host_payout_amount: 400,
   waterfall,
   ...over,
 });
@@ -178,6 +183,15 @@ describe('SettlementPreview', () => {
     await settle();
 
     expect(screen.queryByTestId('settlement-shortfall')).not.toBeInTheDocument();
+  });
+
+  // The window to complete has passed, so the host's share is forfeited. The
+  // figures still render — the host is owed the arithmetic behind a nil payout.
+  it('says the share is forfeited once the window to complete has passed', async () => {
+    preview([previewMock({ complete_expired: true })]);
+    await settle();
+
+    expect(screen.getByTestId('settlement-expired')).toBeInTheDocument();
   });
 
   // Silently hiding the calculation would leave the host guessing.

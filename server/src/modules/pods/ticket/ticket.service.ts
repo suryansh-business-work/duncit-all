@@ -2,7 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types, type ClientSession } from 'mongoose';
 import crypto from 'node:crypto';
 import { TicketModel, type ITicket } from './ticket.model';
-import { consumeAttendanceProof, markTicketPresent } from './attendance.service';
+import { attendanceLock, consumeAttendanceProof, markTicketPresent } from './attendance.service';
 import { signTicketToken, verifyTicketToken } from './ticket.token';
 import { ticketPdfFilename, ticketPdfUrl } from './ticket.download';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
@@ -22,6 +22,7 @@ import type { StoredMedia } from '@utils/media';
 import { sendEmail } from '@services/email/email.service';
 import { bookingLinkUrl, getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { phoneKey } from '@utils/phone';
 import { logs } from '@observability/log';
 
 const newTicketCode = () =>
@@ -114,6 +115,65 @@ async function toStoredCompanion(membership: any, companion: PodCompanionDTO) {
 }
 
 /**
+ * Every number this booking has already spoken for.
+ *
+ * The buyer's own phone and WhatsApp, plus everyone already written onto the
+ * ticket. One number is one person: a group of eight is eight phones, and the
+ * same WhatsApp standing in for two of them is a seat nobody accounted for —
+ * worse, once that number has answered one code it is a second seat proved by
+ * somebody who was already counted.
+ *
+ * Reads the NESTED storage paths, not the flat virtuals: `.lean()` drops
+ * virtuals, and this is the only thing the read is for.
+ */
+async function bookedPhoneKeys(membership: any): Promise<Set<string>> {
+  const buyer: any = await UserModel.findById(membership?.user_id)
+    .select('auth.phone communication.whatsapp')
+    .lean();
+  const keys = new Set<string>();
+  // The NUMBER decides whether there is anything to key: a dial code on its
+  // own is not a phone, and `phoneKey('+91', '')` is '91'. The client half
+  // learned that the hard way — every blank row on a fresh multi-seat ticket
+  // carries the prefilled dial code, so keying the pair read them all as the
+  // same person. Inert here (a stored number is 6-15 digits, so it can never
+  // collide with a bare code) but the same trap, one edit from being live.
+  const add = (extension: unknown, number: unknown) => {
+    if (!String(number ?? '').trim()) return;
+    const key = phoneKey(extension, number);
+    if (key) keys.add(key);
+  };
+  add(buyer?.auth?.phone?.extension, buyer?.auth?.phone?.number);
+  add(buyer?.communication?.whatsapp?.extension, buyer?.communication?.whatsapp?.number);
+  for (const companion of (membership?.companions ?? []) as any[]) {
+    add(companion?.phone_extension, companion?.phone_number);
+  }
+  return keys;
+}
+
+/**
+ * Refuse a batch that names one number twice, or names one the booking already
+ * has. The client greys the row out first; this is the rule itself, because
+ * attendance is what a host is paid on and the mutation is reachable without
+ * the form.
+ */
+function assertCompanionNumbersAreNew(
+  companions: readonly { name: string; phone_number: string; phone_extension?: string | null }[],
+  taken: Set<string>
+) {
+  for (const companion of companions) {
+    const key = phoneKey(companion.phone_extension, companion.phone_number);
+    if (!key) continue;
+    if (taken.has(key)) {
+      throw new GraphQLError(
+        `${companion.phone_number} is already on this ticket — every person needs their own number`,
+        { extensions: { code: 'BAD_USER_INPUT' } }
+      );
+    }
+    taken.add(key);
+  }
+}
+
+/**
  * The door's rule for a ticket that admits more than one person.
  *
  * A multi-seat booking is a number until someone writes down who it covers, and
@@ -148,6 +208,7 @@ async function recordCompanions(
   const { validate } = await import('@utils/validate');
   const { podCompanionsSchema } = await import('./ticket.validator');
   const { companions } = await validate(podCompanionsSchema, { companions: list });
+  assertCompanionNumbersAreNew(companions, await bookedPhoneKeys(membership));
   // Exactly, not "at least": a short list leaves people unaccounted for and a
   // long one admits more than the booking paid for.
   if (companions.length !== remaining) {
@@ -789,7 +850,22 @@ export const ticketService = {
    */
   async hostScan(podDocId: string, token: string, hostUserId: string, companions?: unknown) {
     const { findHostedPod } = await import('@modules/pods/pod/pod.service');
-    await findHostedPod(podDocId, hostUserId);
+    const pod = await findHostedPod(podDocId, hostUserId);
+
+    // The door shuts with the host's completion window (Admin > Pods > Pod
+    // Settings). Refused HERE rather than inside the mark, so a scanned ticket
+    // is answered with the reason instead of being silently accepted by a
+    // scanner that no longer records anything.
+    const { settingsService } = await import('@modules/platform/settings/settings.service');
+    const { timeout_hours } = await settingsService.getPodCompletionSettings();
+    const lock = attendanceLock(pod, timeout_hours);
+    if (lock !== 'OPEN') {
+      const reason =
+        lock === 'EXPIRED'
+          ? `The ${timeout_hours}-hour window to complete this pod has passed — ask your Club Admin to mark attendance`
+          : 'Attendance is closed for this pod';
+      return { ok: false, message: reason, already_checked_in: false, requires_companions: false, companions_required: 0, companions: [], ticket: null, attendee: null };
+    }
 
     const payload = verifyTicketToken(token);
     if (!payload) {

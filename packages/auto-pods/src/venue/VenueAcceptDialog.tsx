@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import Alert from '@mui/material/Alert';
 import Dialog from '@mui/material/Dialog';
+import LinearProgress from '@mui/material/LinearProgress';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -171,6 +172,10 @@ export function VenueAcceptDialog({
             ))}
           </TextField>
 
+          {/* Reading a venue's free slots is a round trip; without this the
+              picker just sits empty and reads as "no slots". */}
+          {slotsQuery.loading ? <LinearProgress data-testid="auto-pod-slots-loading" /> : null}
+
           <SlotEarnings slot={selected} labels={labels} formatMoney={formatMoney} />
 
           {noSlots ? <NoSlotsNotice labels={labels} onAddAvailability={onAddAvailability} /> : null}
@@ -180,7 +185,12 @@ export function VenueAcceptDialog({
       </DialogContent>
       <DialogActions>
         <DuncitButton onClick={handleClose}>{labels.dismiss}</DuncitButton>
-        <DuncitButton variant="contained" onClick={handleAccept} disabled={!handleAccept}>
+        <DuncitButton
+          variant="contained"
+          onClick={handleAccept}
+          disabled={!handleAccept}
+          loading={acceptState.loading}
+        >
           {labels.acceptCta}
         </DuncitButton>
       </DialogActions>

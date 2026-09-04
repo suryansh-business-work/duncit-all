@@ -47,6 +47,12 @@ const settlement = (has_venue: boolean): PodSettlement =>
     booked_seats: 10,
     attended_total: 1000,
     attendees: [],
+    // Inside the completion window, so the host line is the computed remainder.
+    // The line reads `host_payout_amount` rather than `waterfall.host_receives`
+    // — it is the figure the release carries.
+    complete_deadline: '2026-08-25T05:30:00.000Z',
+    complete_expired: false,
+    host_payout_amount: 400,
     waterfall
   }) as PodSettlement);
 

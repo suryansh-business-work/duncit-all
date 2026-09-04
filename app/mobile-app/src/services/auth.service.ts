@@ -5,9 +5,8 @@ import {
   CompletePasswordResetDocument,
   LoginWithOtpDocument,
   RequestLoginOtpDocument,
-  RequestWhatsAppOtpDocument,
-  SkipWhatsAppOtpDocument,
-  VerifyWhatsAppOtpDocument,
+  RequestSignupWhatsAppOtpDocument,
+  VerifySignupWhatsAppOtpDocument,
   RequestPasswordResetCodeDocument,
   VerifyPasswordResetCodeDocument,
   SignupWithGoogleDocument,
@@ -71,7 +70,7 @@ export function dobToIso(dob: string): string {
   return new Date(Date.UTC(year ?? 0, (month ?? 1) - 1, day ?? 1)).toISOString();
 }
 
-export async function register(values: SignupValues): Promise<AuthOutcome> {
+export async function register(values: SignupValues, whatsappToken: string): Promise<AuthOutcome> {
   const { first_name, last_name } = splitName(values.name);
   const referralCode = (values.referralCode ?? '').trim().toUpperCase();
   const data = await graphqlRequest(RegisterDocument, {
@@ -82,6 +81,7 @@ export async function register(values: SignupValues): Promise<AuthOutcome> {
       phone_number: values.phoneNumber.trim(),
       phone_extension: values.phoneExtension.trim(),
       whatsapp_is_mobile: values.whatsappIsMobile,
+      whatsapp_token: whatsappToken,
       password: values.password,
       dob: dobToIso(values.dob),
       // Omitted rather than sent empty: the server treats a present-but-blank
@@ -249,20 +249,36 @@ export async function loginWithOtp(lookup: PasswordResetLookup, otp: string): Pr
   };
 }
 
+/** The WhatsApp number a Google signup proved, and what it is written to. */
+export interface ProvenNumber {
+  extension: string;
+  number: string;
+  /** The tick box: also write this to the account's phone, or leave it blank. */
+  alsoMobile: boolean;
+  /** From verifySignupWhatsAppOtp. Spent here, once. */
+  whatsappToken: string;
+}
+
 /**
  * Google signup: account created server-side, land on survey.
  *
- * The accepted policies ride the same input as the token, because this mutation
- * is new-account-only — so the acceptance sheet runs BEFORE it is called and
- * there is no post-signup step to bolt one onto.
+ * The accepted policies AND the proven number ride the same input as the
+ * credential, because this mutation is new-account-only — so the acceptance
+ * sheet and the code step both run BEFORE it is called, and there is no
+ * post-signup step to bolt either onto.
  */
 export async function signupWithGoogle(
   idToken: string,
   acceptedPolicyIds: string[],
+  proven: ProvenNumber,
 ): Promise<AuthOutcome> {
   const data = await graphqlRequest(SignupWithGoogleDocument, {
     input: {
       id_token: idToken,
+      phone_number: proven.number.trim(),
+      phone_extension: proven.extension.trim(),
+      whatsapp_is_mobile: proven.alsoMobile,
+      whatsapp_token: proven.whatsappToken,
       accepted_policy_ids: acceptedPolicyIds,
       accepted_policy_surface: PolicyAcceptanceSurface.App,
     },
@@ -305,42 +321,39 @@ export async function logout(): Promise<void> {
 /**
  * Signup step four: send the code that proves the WhatsApp number.
  *
- * Authorised by the token `register` has already stored — the account exists
- * by the time this runs, which is the only way these mutations can be called.
- * Returns the development code while no transport can carry a real one.
+ * Public — there is no account yet, and whether there ever is one is what this
+ * step decides. The email travels with it so "already in use" is answered here
+ * rather than after a code has been typed. Returns the development code while
+ * no transport can carry a real one.
  */
-export async function requestWhatsAppOtp(
+export async function requestSignupWhatsAppOtp(
   extension: string,
   number: string,
+  email?: string,
 ): Promise<{ testCode: string | null }> {
-  const data = await graphqlRequest(RequestWhatsAppOtpDocument, {
+  const data = await graphqlRequest(RequestSignupWhatsAppOtpDocument, {
     ext: extension.trim(),
     num: number.trim(),
+    email: email?.trim().toLowerCase() ?? null,
   });
-  return { testCode: data.requestWhatsAppOtp.dev_otp ?? null };
+  return { testCode: data.requestSignupWhatsAppOtp.dev_otp ?? null };
 }
 
 /**
- * Prove the number. A wrong code throws, exactly as the server refused it.
+ * Prove the number and receive the one-shot token that creates the account.
  *
- * `alsoMobile` is the signup tick box: it is what writes the proven number to
- * the account's phone as well, and the server leaves that blank without it.
+ * A wrong code throws, exactly as the server refused it. Nothing is written
+ * here: the token is spent by `register` or `signupWithGoogle`.
  */
-export async function verifyWhatsAppOtp(
+export async function verifySignupWhatsAppOtp(
   extension: string,
   number: string,
   otp: string,
-  alsoMobile: boolean,
-): Promise<void> {
-  await graphqlRequest(VerifyWhatsAppOtpDocument, {
+): Promise<string> {
+  const data = await graphqlRequest(VerifySignupWhatsAppOtpDocument, {
     ext: extension.trim(),
     num: number.trim(),
     otp: otp.trim(),
-    alsoMobile,
   });
-}
-
-/** Leave the number unverified. The account is untouched either way. */
-export async function skipWhatsAppOtp(): Promise<void> {
-  await graphqlRequest(SkipWhatsAppOtpDocument, {});
+  return data.verifySignupWhatsAppOtp.whatsapp_token;
 }

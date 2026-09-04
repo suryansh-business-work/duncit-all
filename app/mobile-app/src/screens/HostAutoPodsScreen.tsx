@@ -10,7 +10,10 @@ import {
   AutoPodQueue,
   AutoPodWithdrawSheet,
   HostClaimSheet,
+  HostEarningsSheet,
+  autoPodEarningsRenderer,
 } from '@/components/auto-pods';
+import { useAutoPodEarnings } from '@/hooks/useAutoPodEarnings';
 import { useAutoPodScreen } from '@/hooks/useAutoPodScreen';
 import { useLocations } from '@/hooks/useLocations';
 
@@ -37,6 +40,7 @@ export function HostAutoPodsScreen() {
   );
   const [offer, setOffer] = useState<AutoPodRow | null>(null);
   const [withdrawing, setWithdrawing] = useState<AutoPodRow | null>(null);
+  const earnings = useAutoPodEarnings();
 
   const renderMineAction = (row: AutoPodRow) =>
     autoPodWithdrawable(row, 'host') ? (
@@ -77,9 +81,19 @@ export function HostAutoPodsScreen() {
             formatMoney={formatMoney}
             renderAction={renderAction}
             renderMineAction={renderMineAction}
+            renderEarningsAction={autoPodEarningsRenderer(labels, earnings.open)}
+            earnings={earnings.values}
           />
         </YStack>
       </ScrollView>
+
+      <HostEarningsSheet
+        row={earnings.row}
+        labels={labels}
+        onClose={earnings.close}
+        formatMoney={formatMoney}
+        onEarnings={earnings.record}
+      />
 
       <AutoPodWithdrawSheet
         row={withdrawing}

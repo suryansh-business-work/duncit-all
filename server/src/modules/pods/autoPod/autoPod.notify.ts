@@ -182,15 +182,14 @@ export const autoPodNotify = {
   },
 
   /**
-   * A venue or host withdrew: everyone still on it (and the opener) hears who
-   * left, and the role that just emptied is asked again.
+   * A partner withdrew: everyone still on it (and the opener) hears who left,
+   * and the role that just emptied is asked again.
    */
-  async withdrawn(doc: IAutoPod, who: 'venue' | 'host', name: string) {
-    const noun = who === 'venue' ? 'venue' : 'host';
+  async withdrawn(doc: IAutoPod, who: Role, name: string) {
     await Promise.all([
       pushStakeholders(
         stakeholders(doc),
-        `Auto Pod lost its ${noun}`,
+        `Auto Pod lost ${ROLE_NOUN[who]}`,
         `${name || 'A partner'} withdrew from "${doc.pod_title}". It is back on the list for ${ROLE_NOUN[who]}.`
       ),
       remaining(doc),

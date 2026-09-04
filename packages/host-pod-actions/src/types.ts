@@ -113,6 +113,13 @@ export interface PodSettlement {
   attended_total: number;
   attendees: PodSettlementAttendee[];
   waterfall: PodFinanceWaterfall;
+  /** When the host's window to complete this pod closes (ISO), or null. */
+  complete_deadline: string | null;
+  /** True once it has closed — the host's share of this pod is nil. */
+  complete_expired: boolean;
+  /** What the host is actually paid: the floored remainder, or 0 once expired.
+   * The waterfall still states the computed split. */
+  host_payout_amount: number;
 }
 
 /** One scanned attendee — the same shape the native twin renders (rule 27). */

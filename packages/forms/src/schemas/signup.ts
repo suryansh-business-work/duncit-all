@@ -61,9 +61,9 @@ function whatsappNumberShape(t: Translate) {
 /**
  * The Google door's WhatsApp step: the same row, on its own.
  *
- * `signupWithGoogle` returns a finished account, so this is asked afterwards —
- * which is also the only moment the code can be requested, since
- * `requestWhatsAppOtp` authenticates its caller.
+ * Google proves an address and no number, so this row is asked on a step of its
+ * own — before `signupWithGoogle` is called, because that mutation now needs
+ * the number and the code that proved it.
  *
  * This is the ONE public spelling of the row: `makeSignupSchema` spreads its
  * `.shape` rather than calling the shape builder beside it, so there is no way

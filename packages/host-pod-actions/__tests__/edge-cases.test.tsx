@@ -220,6 +220,8 @@ describe('useAttendanceBoard before the board has arrived', () => {
           viewer: 'HOST',
           lock: null,
           can_mark: true,
+          complete_deadline: null,
+          complete_timeout_hours: 24,
           otp_required: true,
           marked_count: 0,
           total_count: 1,
@@ -372,6 +374,9 @@ describe('SettlementPreview thin answers', () => {
                 booked_seats: 0,
                 attended_total: 0,
                 attendees: null,
+                complete_deadline: null,
+                complete_expired: false,
+                host_payout_amount: 0,
                 waterfall: {
                   version: 1,
                   amount: 0,
@@ -507,7 +512,7 @@ describe('CompanionsForm refusals', () => {
   it('says what is wrong under each companion field', async () => {
     const onSubmit = vi.fn();
     wrap(
-      <CompanionsForm podId="pod-1" membershipId="pm-1" seats={2} required={1} onSubmit={onSubmit} />
+      <CompanionsForm reserved={[]} podId="pod-1" membershipId="pm-1" seats={2} required={1} onSubmit={onSubmit} />
     );
 
     // name, dial code, number — the dial code is the middle one.

@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { AutoPodModel, type IAutoPod } from './autoPod.model';
+import { AutoPodModel, type IAutoPod, type IAutoPodViewerWindow } from './autoPod.model';
 import {
   ACTIVE_FILTER,
   autoPodEvent,
@@ -81,6 +81,108 @@ const withExpiry = (doc: IAutoPod, windows: ExpiryWindows) => ({
   ...autoPodToPub(doc),
   expires_at: offerExpiresAt(doc, windows),
 });
+
+/** This partner's own clock on the offer, or null before they have seen it. */
+function viewerWindow(doc: IAutoPod, userId: string): IAutoPodViewerWindow | null {
+  return (doc.viewer_windows ?? []).find((w) => String(w.user_id) === userId) ?? null;
+}
+
+/**
+ * How long is left on ONE partner's clock, in ms. The window is the Pod
+ * Settings assignment hours; `consumed_ms` is what earlier stretches already
+ * spent, and a running stretch adds the time since it began. A partner who has
+ * never seen the offer has the whole window.
+ */
+function viewerMsLeft(window: IAutoPodViewerWindow | null, windows: ExpiryWindows, nowMs: number) {
+  const total = windows.assignmentExpiryHours * HOUR_MS;
+  if (!window) return total;
+  const running = window.started_at ? nowMs - window.started_at.getTime() : 0;
+  return total - (window.consumed_ms ?? 0) - running;
+}
+
+/**
+ * The deadline ONE partner counts down, capped by the offer's own deadline —
+ * no partner's clock may outlive the offer itself.
+ *
+ * Null while the clock is PAUSED, which is the case for every offer this
+ * partner has already enrolled in: their slot (or hosting, or claim) is not
+ * about to be taken off them, so a card under "Assigned slot" carries no
+ * countdown at all. Null too once the offer is no longer enrolling.
+ */
+function viewerExpiresAt(
+  doc: IAutoPod,
+  window: IAutoPodViewerWindow | null,
+  windows: ExpiryWindows,
+  nowMs: number
+): string | null {
+  const offer = offerExpiresAt(doc, windows);
+  if (!offer) return null;
+  // A window that exists but is not running is paused; one that does not exist
+  // yet is about to be stamped as running by the same read.
+  if (window && !window.started_at) return null;
+  const mine = nowMs + viewerMsLeft(window, windows, nowMs);
+  return new Date(Math.min(mine, new Date(offer).getTime())).toISOString();
+}
+
+/**
+ * Opens a clock on the offers this partner had never been shown before.
+ * Conditional on their row being absent, so a partner who accepts and later
+ * cancels keeps the clock they started with rather than being handed a fresh
+ * window (`$ne` on the array's user_id is what makes the write idempotent).
+ * Fire-and-forget: a read must never fail because a bookkeeping write did.
+ */
+function stampViewerWindows(userId: string, docs: IAutoPod[], at: Date) {
+  const fresh = docs.filter((doc) => !viewerWindow(doc, userId));
+  if (fresh.length === 0) return;
+  const uid = new Types.ObjectId(userId);
+  AutoPodModel.bulkWrite(
+    fresh.map((doc) => ({
+      updateOne: {
+        filter: { _id: doc._id, 'viewer_windows.user_id': { $ne: uid } },
+        update: { $push: { viewer_windows: { user_id: uid, started_at: at, consumed_ms: 0 } } },
+      },
+    })),
+    { ordered: false }
+  ).catch((error) => logs.server.error('autoPod', 'stampViewerWindows', { error, user_id: userId }));
+}
+
+/** Has this partner (or a club of theirs) enrolled in this offer? Their clock
+ * is paused exactly while that is true. */
+const viewerHolds = (doc: IAutoPod, userId: string, clubIds: readonly Types.ObjectId[]) =>
+  String(doc.venue_claim?.owner_user_id ?? '') === userId ||
+  String(doc.host_claim?.user_id ?? '') === userId ||
+  (!!doc.club_claim && clubIds.some((id) => String(id) === String(doc.club_claim!.club_id)));
+
+/**
+ * A role queue's rows, each carrying the deadline THIS partner counts down —
+ * and WITHOUT the offers whose clock has run out, which is what "removed from
+ * your list" means. A row they already enrolled in always stays: their own
+ * enrolment is not something a clock takes away.
+ *
+ * The stamp and the payload read the same instant, so the first render already
+ * shows the window that was just opened.
+ */
+function viewerQueue(
+  userId: string,
+  docs: IAutoPod[],
+  windows: ExpiryWindows,
+  clubIds: readonly Types.ObjectId[] = []
+) {
+  const at = new Date();
+  stampViewerWindows(userId, docs, at);
+  const rows = [];
+  for (const doc of docs) {
+    const window = viewerWindow(doc, userId);
+    const mine = viewerHolds(doc, userId, clubIds);
+    if (!mine && viewerMsLeft(window, windows, at.getTime()) <= 0) continue;
+    const pub = {
+      ...withExpiry(doc, windows),
+      expires_at: viewerExpiresAt(doc, window, windows, at.getTime()),
+    };
+    rows.push({ doc, pub });
+  }
+  return rows;
+}
 
 /** The most spots an Auto Pod may carry — the template's own ceiling. */
 const AUTO_POD_MAX_SPOTS = 999;
@@ -668,21 +770,117 @@ export const autoPodService = {
   },
 
   /**
-   * What a venue or host pays for withdrawing: the Pod Settings penalty off
-   * their Account Health, recorded with the offer it was for. Returns the
-   * points taken so the caller can say so.
+   * What a partner pays for withdrawing: the Pod Settings penalty off their
+   * Account Health, recorded with the offer it was for. Returns the points
+   * taken so the caller can say so.
+   *
+   * A venue's cancellation lands on TWO subjects — the venue's own health and
+   * its owner's — because the owner is the person the product holds
+   * responsible: the deduction has to be visible on their Profile Settings >
+   * Account Health and under their Health tab in Admin, not only on a venue
+   * page they may never open.
    */
-  async applyWithdrawPenalty(subjectType: 'VENUE' | 'USER', subjectId: string, remark: string) {
+  async applyWithdrawPenalty(
+    subjects: readonly { type: 'VENUE' | 'USER'; id: string }[],
+    remark: string
+  ) {
     const { cancelHealthPenalty } = await this.windows();
-    if (cancelHealthPenalty > 0) {
+    if (cancelHealthPenalty <= 0) return 0;
+    for (const subject of subjects) {
       await accountHealthService.applySystemPenalty({
-        subject_type: subjectType,
-        subject_id: subjectId,
+        subject_type: subject.type,
+        subject_id: subject.id,
         points: cancelHealthPenalty,
         remark,
       });
     }
     return cancelHealthPenalty;
+  },
+
+  /**
+   * Stops or restarts ONE partner's "removed from your list" clock.
+   *
+   * Enrolling pauses it — the offer is theirs now, so it is not about to leave
+   * their list — by banking the running stretch into `consumed_ms`; withdrawing
+   * starts a new stretch from exactly what was left. This is what makes a venue
+   * that accepted at "20h 45m" see 20h 45m again after cancelling instead of a
+   * fresh window, and it is the ONE place either side of that is written.
+   *
+   * A partner who enrols from a link without the queue ever having stamped them
+   * has no row to pause, which is correct: their clock starts when the offer
+   * first reaches their list.
+   */
+  async setViewerClock(autoPodId: string, userId: string, running: boolean) {
+    if (!Types.ObjectId.isValid(userId)) return;
+    const uid = new Types.ObjectId(userId);
+    const doc: any = await AutoPodModel.findOne(
+      { _id: autoPodId, 'viewer_windows.user_id': uid },
+      { 'viewer_windows.$': 1 }
+    ).lean();
+    const window = doc?.viewer_windows?.[0];
+    if (!window) return;
+    // Pausing an already-paused clock (or resuming a running one) would either
+    // double-count the stretch or throw the elapsed time away.
+    if (running === !!window.started_at) return;
+    const banked = window.started_at
+      ? (window.consumed_ms ?? 0) + (Date.now() - new Date(window.started_at).getTime())
+      : (window.consumed_ms ?? 0);
+    await AutoPodModel.updateOne(
+      { _id: autoPodId, 'viewer_windows.user_id': uid },
+      {
+        $set: {
+          'viewer_windows.$.consumed_ms': banked,
+          'viewer_windows.$.started_at': running ? new Date() : null,
+        },
+      }
+    );
+  },
+
+  /**
+   * What this offer could gross at the venue's booked space: the ticket price
+   * every attendee pays, times the seats that space holds. This is the venue's
+   * own "potential earnings" figure — the same Ticket Price × Slots sum the
+   * venue's calculator dialog shows before it accepts — and NOT the host's
+   * payout, which is what a venue used to be shown by mistake.
+   *
+   * Null until there is both a booked slot and a ticket price to multiply: the
+   * host prices the pod, so a freshly accepted offer has nothing to project.
+   */
+  async expectedVenueEarnings(doc: IAutoPod) {
+    if (!doc.venue_claim) return null;
+    const amount = doc.pod_amount ?? 0;
+    if (amount <= 0) return null;
+    const slot: any = await VenueSlotModel.findById(doc.venue_claim.venue_slot_id)
+      .select('capacity')
+      .lean();
+    const capacity = slot?.capacity ?? 0;
+    if (capacity <= 0) return null;
+    return amount * capacity;
+  },
+
+  /**
+   * What the club admin's cut of this offer comes to — the same Finance
+   * waterfall Step 4 of Create a Pod runs, read off the venue's slot price,
+   * the host's ticket price and the spots the host chose. Null until a host
+   * has priced it, since every figure below depends on that price.
+   */
+  async expectedClubEarnings(doc: IAutoPod) {
+    if (!doc.host_claim) return null;
+    if ((doc.pod_amount ?? 0) <= 0 || (doc.no_of_spots ?? 0) <= 0) return null;
+    try {
+      const projection = await breakdownService.potentialPodEarnings(
+        String(doc.host_claim.user_id),
+        doc.pod_amount ?? 0,
+        doc.no_of_spots ?? 0,
+        doc.venue_claim ? String(doc.venue_claim.venue_id) : null,
+        doc.venue_claim?.slot_price ?? 0
+      );
+      return projection.waterfall.club_admin_amount;
+    } catch {
+      // A combination the waterfall refuses is not an error to READ — the
+      // claim itself reports it. The card just shows no figure.
+      return null;
+    }
   },
 
   /**
@@ -951,8 +1149,8 @@ export const autoPodService = {
     const docs = await AutoPodModel.find({ $or: or }).sort({ created_at: -1 }).limit(200);
     // The venue's own window (older apps still count it down) and what
     // withdrawing would cost them ride on this payload only.
-    return docs.map((doc) => ({
-      ...withExpiry(doc, windows),
+    return viewerQueue(userId, docs, windows).map(({ doc, pub }) => ({
+      ...pub,
       venue_expires_at: venueExpiresAt(doc, venueExpiryHours),
       withdraw_penalty_points: cancelHealthPenalty,
     }));
@@ -967,8 +1165,8 @@ export const autoPodService = {
     const open = this.hostOpenFilter(subIds, scope);
     if (open) or.push(open);
     const docs = await AutoPodModel.find({ $or: or }).sort({ created_at: -1 }).limit(200);
-    return docs.map((doc) => ({
-      ...withExpiry(doc, windows),
+    return viewerQueue(userId, docs, windows).map(({ pub }) => ({
+      ...pub,
       withdraw_penalty_points: windows.cancelHealthPenalty,
     }));
   },
@@ -982,7 +1180,17 @@ export const autoPodService = {
     const open = this.clubOpenFilter(clubs, scope);
     if (open) or.push(open);
     const docs = await AutoPodModel.find({ $or: or }).sort({ created_at: -1 }).limit(200);
-    return docs.map((doc) => withExpiry(doc, windows));
+    // A club admin may take their claim back too, so their queue carries the
+    // same Account Health cost the venue's and the host's do.
+    return viewerQueue(
+      userId,
+      docs,
+      windows,
+      clubs.map((club) => club.id)
+    ).map(({ pub }) => ({
+      ...pub,
+      withdraw_penalty_points: windows.cancelHealthPenalty,
+    }));
   },
 
   /**
@@ -1052,6 +1260,10 @@ export const autoPodService = {
   async expectedHostEarnings(doc: IAutoPod, userId: string | null) {
     if (!userId) return null;
     if (doc.pod_mode !== 'VIRTUAL' && !doc.venue_claim) return null;
+    // The template carries no price, so an unpriced offer has nothing to
+    // project — the card says "You could earn" beside its calculator rather
+    // than claiming a confident ₹0.
+    if ((doc.pod_amount ?? 0) <= 0 || (doc.no_of_spots ?? 0) <= 0) return null;
     try {
       const projection = await breakdownService.potentialPodEarnings(
         userId,

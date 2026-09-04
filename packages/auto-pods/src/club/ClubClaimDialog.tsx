@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import Alert from '@mui/material/Alert';
 import Dialog from '@mui/material/Dialog';
+import LinearProgress from '@mui/material/LinearProgress';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
@@ -118,12 +119,15 @@ export function ClubClaimDialog({
             <Alert severity="warning">{labels.noClubInCity(autoPodCityLabel(row?.location))}</Alert>
           ) : null}
 
+          {clubsQuery.loading ? <LinearProgress data-testid="auto-pod-clubs-loading" /> : null}
+
           <TextField
             select
             fullWidth
             label={labels.pickClub}
             value={clubId}
             onChange={(e) => setClubId(e.target.value)}
+            disabled={clubsQuery.loading}
           >
             {clubs.map((club) => (
               <MenuItem key={club.id} value={club.id}>
@@ -137,7 +141,12 @@ export function ClubClaimDialog({
       </DialogContent>
       <DialogActions>
         <DuncitButton onClick={handleClose}>{labels.dismiss}</DuncitButton>
-        <DuncitButton variant="contained" onClick={handleClaim} disabled={!clubId || claimState.loading}>
+        <DuncitButton
+          variant="contained"
+          onClick={handleClaim}
+          disabled={!clubId || claimState.loading}
+          loading={claimState.loading}
+        >
           {labels.claimForClubCta}
         </DuncitButton>
       </DialogActions>

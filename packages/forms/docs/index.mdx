@@ -503,9 +503,9 @@ account.
 
 It is its own schema because two doors ask for it. The email form asks as step two —
 `makeSignupSchema` spreads this schema's `.shape` in, so the row cannot change for one door and
-not the other. Google hands back a finished account with no form attached, so it asks on a step
-of its own, which is also the only moment `requestWhatsAppOtp` can be called: that mutation
-authenticates its caller.
+not the other. Google hands back a credential with no form attached, so it asks on a step of
+its own — before `signupWithGoogle` is called, because that mutation now needs the number and
+the code that proved it.
 
 ```ts
 const schema = makeWhatsappNumberSchema(t);
@@ -515,7 +515,7 @@ schema.safeParse({ ...whatsappNumberDefaults, phoneNumber: '9845012345' }); // p
 ```
 
 Whether the number is already on another account is the server's answer, checked twice: before
-a code is sent, and again before a proven number is written.
+a code is sent, and again before the account it belongs to is created.
 
 ### The withdrawal floor
 

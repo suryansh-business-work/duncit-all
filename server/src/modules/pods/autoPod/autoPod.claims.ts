@@ -206,6 +206,9 @@ export async function venueAcceptAutoPod(
     autoPodFail('CONFLICT', 'This Auto Pod has already been accepted by another venue.');
   }
 
+  // The offer is theirs now, so it is not about to leave their list: their
+  // "removed from your list" clock stops here and resumes only if they cancel.
+  await autoPodService.setViewerClock(autoPodId, userId, false);
   autoPodNotify.enrolled(claimed, 'venue').catch((error) =>
     logs.server.error('autoPod', 'notifyVenueEnrolled', { error, auto_pod_id: autoPodId })
   );
@@ -335,6 +338,7 @@ export async function hostAssignAutoPod(
   const claimed = await claimWrite(doc._id as Types.ObjectId, location, write);
   if (!claimed) autoPodFail('CONFLICT', 'Another host has already taken this Auto Pod.');
 
+  await autoPodService.setViewerClock(autoPodId, userId, false);
   autoPodNotify.enrolled(claimed, 'host').catch((error) =>
     logs.server.error('autoPod', 'notifyHostEnrolled', { error, auto_pod_id: autoPodId })
   );
@@ -406,6 +410,7 @@ export async function clubClaimAutoPod(actor: any, autoPodId: string, clubId: st
   const claimed = await claimWrite(doc._id as Types.ObjectId, location, write);
   if (!claimed) autoPodFail('CONFLICT', 'Another club has already claimed this Auto Pod.');
 
+  await autoPodService.setViewerClock(autoPodId, userId, false);
   autoPodNotify.enrolled(claimed, 'club').catch((error) =>
     logs.server.error('autoPod', 'notifyClubEnrolled', { error, auto_pod_id: autoPodId })
   );
@@ -448,10 +453,14 @@ export async function venueWithdrawAutoPod(userId: string, autoPodId: string) {
   }
   await venueSlotService.releaseAutoPodSlot(String(claim.venue_slot_id), autoPodId);
   await autoPodService.applyWithdrawPenalty(
-    'VENUE',
-    String(claim.venue_id),
+    [
+      { type: 'VENUE', id: String(claim.venue_id) },
+      { type: 'USER', id: userId },
+    ],
     `Withdrew the slot from Auto Pod "${doc.pod_title}"`
   );
+  // Back on their list, with exactly the time that was left when they accepted.
+  await autoPodService.setViewerClock(autoPodId, userId, true);
   autoPodNotify.withdrawn(updated, 'venue', claim.venue_name).catch((error) =>
     logs.server.error('autoPod', 'notifyVenueWithdrawn', { error, auto_pod_id: autoPodId })
   );
@@ -497,9 +506,62 @@ export async function hostWithdrawAutoPod(userId: string, autoPodId: string) {
   if (!updated) {
     autoPodFail('CONFLICT', 'This Auto Pod changed while you were cancelling — refresh and try again');
   }
-  await autoPodService.applyWithdrawPenalty('USER', userId, `Stepped off Auto Pod "${doc.pod_title}"`);
+  await autoPodService.applyWithdrawPenalty(
+    [{ type: 'USER', id: userId }],
+    `Stepped off Auto Pod "${doc.pod_title}"`
+  );
+  await autoPodService.setViewerClock(autoPodId, userId, true);
   autoPodNotify.withdrawn(updated, 'host', claim.host_name).catch((error) =>
     logs.server.error('autoPod', 'notifyHostWithdrawn', { error, auto_pod_id: autoPodId })
+  );
+  return autoPodToPub(updated);
+}
+
+/**
+ * A club admin takes their club's claim back. Allowed while the offer is still
+ * enrolling — once everyone is on it the pod exists and is cancelled from the
+ * Pods page instead. The offer returns to the club queue's "Needs your action"
+ * (a host is still on it, so it is a club's turn again), the pin is dropped
+ * when the club was the only partner — the case for an Auto Pod a club admin
+ * opened for their own club — and the Pod Settings penalty comes off the
+ * admin's own Account Health, exactly as a venue's or a host's does.
+ */
+export async function clubWithdrawAutoPod(actor: any, autoPodId: string) {
+  const userId = String(actor.id);
+  const doc = await autoPodService.loadById(autoPodId);
+  if (!isPreLive(doc)) autoPodFail('CONFLICT', 'This Auto Pod is no longer enrolling.');
+  const claim = doc.club_claim;
+  if (!claim) autoPodFail('FORBIDDEN', 'No club has claimed this Auto Pod.');
+  // Any admin of the claiming club may take it back, not only whoever claimed
+  // it — the claim belongs to the club, and its admins share it.
+  await clubAdminService.assertClubAdmin(actor, String(claim!.club_id));
+
+  const others = !!doc.venue_claim || !!doc.host_claim;
+  const unpin = doc.location?.bound_by === 'CLUB' && !others;
+  const updated = await AutoPodModel.findOneAndUpdate(
+    { _id: doc._id, ...PRE_LIVE_FILTER, 'club_claim.club_id': claim!.club_id },
+    {
+      $set: {
+        club_claim: null,
+        stage: others ? 'CLAIMING' : 'OPEN',
+        ...(unpin ? { location: null } : {}),
+      },
+      $push: {
+        events: autoPodEvent('CLUB_WITHDRAW', userId, claim!.club_name, 'Club admin withdrew the claim'),
+      },
+    },
+    { new: true }
+  );
+  if (!updated) {
+    autoPodFail('CONFLICT', 'This Auto Pod changed while you were cancelling — refresh and try again');
+  }
+  await autoPodService.applyWithdrawPenalty(
+    [{ type: 'USER', id: userId }],
+    `Withdrew the club claim on Auto Pod "${doc.pod_title}"`
+  );
+  await autoPodService.setViewerClock(autoPodId, userId, true);
+  autoPodNotify.withdrawn(updated, 'club', claim!.club_name).catch((error) =>
+    logs.server.error('autoPod', 'notifyClubWithdrawn', { error, auto_pod_id: autoPodId })
   );
   return autoPodToPub(updated);
 }

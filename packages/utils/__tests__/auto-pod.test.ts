@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   autoPodActionable,
   autoPodCityLabel,
+  autoPodEarningsPatch,
   autoPodEnrolledCount,
   autoPodHostMeetingReady,
   autoPodHostNeedsLocation,
@@ -9,9 +10,13 @@ import {
   autoPodModeCount,
   autoPodNextRole,
   autoPodPriced,
+  autoPodQueueSections,
+  autoPodRoleEarnings,
   autoPodRoles,
+  autoPodSpaceEarnings,
   autoPodTicks,
   autoPodTimeLeft,
+  autoPodVenueSpaces,
   autoPodWaitingOn,
   autoPodWithdrawable,
   splitAutoPods,
@@ -20,6 +25,7 @@ import {
   type AutoPodRow,
   type AutoPodVenueClaim,
 } from '../src/auto-pod';
+import { shellAutoPodLabels } from '../src/auto-pod-copy';
 
 const venueClaim: AutoPodVenueClaim = {
   venue_id: 'v1',
@@ -151,7 +157,7 @@ describe('autoPodNextRole', () => {
 });
 
 describe('autoPodWithdrawable', () => {
-  it('lets a venue or host take back their own enrolment while the offer is still enrolling', () => {
+  it('lets any partner take back their own enrolment while the offer is still enrolling', () => {
     expect(autoPodWithdrawable(row({ stage: 'CLAIMING', venue_claim: venueClaim, viewer_claimed: true }), 'venue')).toBe(true);
     expect(autoPodWithdrawable(row({ stage: 'CLAIMING', venue_claim: venueClaim, host_claim: hostClaim, viewer_claimed: true }), 'host')).toBe(true);
     // Not theirs, or not their role's claim.
@@ -159,9 +165,24 @@ describe('autoPodWithdrawable', () => {
     expect(autoPodWithdrawable(row({ stage: 'CLAIMING', venue_claim: venueClaim, viewer_claimed: true }), 'host')).toBe(false);
   });
 
-  it('never offers it to a club admin, nor on an offer that is no longer enrolling', () => {
-    expect(autoPodWithdrawable(fullyClaimed({ viewer_claimed: true }), 'club')).toBe(false);
-    expect(autoPodWithdrawable(row({ stage: 'LIVE', venue_claim: venueClaim, viewer_claimed: true }), 'venue')).toBe(false);
+  // A club that opened an Auto Pod for itself is the FIRST partner on it, so
+  // "the club admin is always last, therefore cannot leave" was never true.
+  it('lets a club admin take their claim back too', () => {
+    const clubFirst = row({ stage: 'CLAIMING', club_claim: clubClaim, viewer_claimed: true });
+    expect(autoPodWithdrawable(clubFirst, 'club')).toBe(true);
+    expect(autoPodWithdrawable(fullyClaimed({ viewer_claimed: true }), 'club')).toBe(true);
+    // Still nothing to take back where this viewer's role has no claim.
+    expect(autoPodWithdrawable(clubFirst, 'venue')).toBe(false);
+  });
+
+  // Everyone needed is on it, the pod exists, and it is cancelled from the
+  // Pods page instead — which is what closes the door for every role at once.
+  it('offers it to nobody once the offer is no longer enrolling', () => {
+    for (const role of ['venue', 'host', 'club'] as const) {
+      expect(
+        autoPodWithdrawable(fullyClaimed({ stage: 'LIVE', viewer_claimed: true }), role),
+      ).toBe(false);
+    }
   });
 });
 
@@ -415,5 +436,139 @@ describe('autoPodHostMeetingReady', () => {
     ).toBe(false);
     expect(autoPodHostMeetingReady({ ...ready, pod_date_time: null }, now)).toBe(false);
     expect(autoPodHostMeetingReady({ ...ready, pod_end_date_time: null }, now)).toBe(false);
+  });
+});
+
+// The labels a surface injects, echoing each key back — so a heading assertion
+// names the key it came from rather than copy that could drift.
+const LABELS = shellAutoPodLabels((key) => key);
+
+describe('autoPodQueueSections', () => {
+  it('splits a role queue into the two headed blocks every surface draws', () => {
+    const open = row({ id: 'open' });
+    const taken = row({ id: 'taken', stage: 'CLAIMING', venue_claim: venueClaim, viewer_claimed: true });
+    expect(autoPodQueueSections([open, taken], 'venue', LABELS)).toEqual([
+      { key: 'actionable', heading: 'shell.autoPods.needsAction', rows: [open] },
+      { key: 'mine', heading: 'shell.autoPods.assignedVenue', rows: [taken] },
+    ]);
+  });
+
+  // Each role's "assigned" heading is its own — the club admin's is the final
+  // list, because everyone needed is on it once they claim.
+  it('heads the second block with the looking role’s own wording', () => {
+    const mine = fullyClaimed({ viewer_claimed: true });
+    const headings = (['venue', 'host', 'club'] as const).map(
+      (role) => autoPodQueueSections([mine], role, LABELS)[0]?.heading,
+    );
+    expect(headings).toEqual([
+      'shell.autoPods.assignedVenue',
+      'shell.autoPods.assignedHost',
+      'shell.autoPods.assignedClub',
+    ]);
+  });
+
+  // An empty block would draw a heading over nothing; the caller renders
+  // whatever comes back rather than deciding which blocks exist for itself.
+  it('drops the blocks that have no rows, and answers nothing for an empty queue', () => {
+    expect(autoPodQueueSections([row()], 'venue', LABELS).map((s) => s.key)).toEqual(['actionable']);
+    expect(autoPodQueueSections([], 'venue', LABELS)).toEqual([]);
+  });
+});
+
+describe('autoPodRoleEarnings', () => {
+  const priced = row({
+    expected_venue_earnings: 5000,
+    expected_host_earnings: 3113,
+    expected_club_earnings: 114.72,
+  });
+
+  // The three partners are paid for different things: the venue for the seats
+  // its space holds, the host for what is left after every deduction, the club
+  // admin for its cut. One card must never show one role's number to another.
+  it('reads the figure belonging to the role whose queue the card is in', () => {
+    expect(autoPodRoleEarnings(priced, 'venue')).toBe(5000);
+    expect(autoPodRoleEarnings(priced, 'host')).toBe(3113);
+    expect(autoPodRoleEarnings(priced, 'club')).toBe(114.72);
+  });
+
+  // What the viewer typed into their own calculator is the number they are
+  // reasoning about, so it outranks the server's.
+  it('lets this viewer’s own estimate win, including a zero', () => {
+    expect(autoPodRoleEarnings(priced, 'host', 1500)).toBe(1500);
+    expect(autoPodRoleEarnings(row(), 'host', 0)).toBe(0);
+  });
+
+  // Null is what makes a card read "You could earn" beside its calculator
+  // rather than claiming a confident ₹0.
+  it('answers null where that role has nothing to project yet', () => {
+    expect(autoPodRoleEarnings(row(), 'venue')).toBeNull();
+    expect(autoPodRoleEarnings(row({ expected_host_earnings: null }), 'host')).toBeNull();
+    expect(autoPodRoleEarnings(priced, 'club', null)).toBe(114.72);
+  });
+});
+
+describe('autoPodEarningsPatch', () => {
+  it('sets one Auto Pod’s figure without disturbing the rest', () => {
+    expect(autoPodEarningsPatch({ a: 1 }, 'b', 2)).toEqual({ a: 1, b: 2 });
+    expect(autoPodEarningsPatch({ a: 1 }, 'a', 9)).toEqual({ a: 9 });
+  });
+
+  it('clears one on null', () => {
+    expect(autoPodEarningsPatch({ a: 1, b: 2 }, 'a', null)).toEqual({ b: 2 });
+  });
+
+  // Returning the SAME object is what keeps a calculator that re-reports the
+  // figure it last reported from re-rendering the whole queue behind it.
+  it('returns the very same object when nothing would change', () => {
+    const values = { a: 1 };
+    expect(autoPodEarningsPatch(values, 'a', 1)).toBe(values);
+    expect(autoPodEarningsPatch(values, 'missing', null)).toBe(values);
+  });
+});
+
+describe('autoPodVenueSpaces', () => {
+  it('lists the venue’s named spaces', () => {
+    const venue = {
+      capacity: 40,
+      capacity_items: [
+        { label: 'Court 1', capacity: 6 },
+        { label: 'Rooftop', capacity: 20 },
+      ],
+    };
+    expect(autoPodVenueSpaces(venue)).toEqual([
+      { label: 'Court 1', capacity: 6 },
+      { label: 'Rooftop', capacity: 20 },
+    ]);
+  });
+
+  // A venue that named none is one undivided room, so the calculator opens on
+  // its whole capacity rather than on nothing.
+  it('stands the whole venue in as one unnamed space when none is named', () => {
+    expect(autoPodVenueSpaces({ capacity: 40, capacity_items: [] })).toEqual([
+      { label: '', capacity: 40 },
+    ]);
+    expect(autoPodVenueSpaces({ capacity: 40, capacity_items: [{ label: 'Unset', capacity: 0 }] })).toEqual([
+      { label: '', capacity: 40 },
+    ]);
+  });
+
+  it('has nothing to offer for a venue with no capacity at all', () => {
+    expect(autoPodVenueSpaces({ capacity: 0, capacity_items: [] })).toEqual([]);
+    expect(autoPodVenueSpaces(null)).toEqual([]);
+    expect(autoPodVenueSpaces({})).toEqual([]);
+  });
+});
+
+describe('autoPodSpaceEarnings', () => {
+  it('multiplies the ticket price by the seats the space holds', () => {
+    expect(autoPodSpaceEarnings(250, 6)).toBe(1500);
+  });
+
+  // Null rather than 0, so a row shows without inventing an earning for a
+  // price nobody has typed yet.
+  it('answers null while either half is missing', () => {
+    expect(autoPodSpaceEarnings(0, 6)).toBeNull();
+    expect(autoPodSpaceEarnings(250, 0)).toBeNull();
+    expect(autoPodSpaceEarnings(-250, 6)).toBeNull();
   });
 });

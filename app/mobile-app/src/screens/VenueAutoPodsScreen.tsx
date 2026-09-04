@@ -12,7 +12,10 @@ import {
   AutoPodVenueRow,
   AutoPodWithdrawSheet,
   VenueAcceptSheet,
+  VenueEarningsSheet,
+  autoPodEarningsRenderer,
 } from '@/components/auto-pods';
+import { useAutoPodEarnings } from '@/hooks/useAutoPodEarnings';
 import { useAutoPodScreen } from '@/hooks/useAutoPodScreen';
 import type { AutoPodVenueOption } from '@/hooks/useAutoPodVenues';
 import { useLocations } from '@/hooks/useLocations';
@@ -43,6 +46,7 @@ export function VenueAutoPodsScreen() {
   );
   const [offer, setOffer] = useState<AutoPodRow | null>(null);
   const [withdrawing, setWithdrawing] = useState<AutoPodRow | null>(null);
+  const earnings = useAutoPodEarnings();
 
   const renderMineAction = (row: AutoPodRow) =>
     autoPodWithdrawable(row, 'venue') ? (
@@ -83,9 +87,20 @@ export function VenueAutoPodsScreen() {
             formatMoney={formatMoney}
             renderAction={renderAction}
             renderMineAction={renderMineAction}
+            renderEarningsAction={autoPodEarningsRenderer(labels, earnings.open)}
+            earnings={earnings.values}
           />
         </YStack>
       </ScrollView>
+
+      <VenueEarningsSheet
+        open={earnings.row !== null}
+        venue={venue}
+        labels={labels}
+        onClose={earnings.close}
+        formatMoney={formatMoney}
+        onEarnings={earnings.record}
+      />
 
       <AutoPodWithdrawSheet
         row={withdrawing}
@@ -111,9 +126,11 @@ export function VenueAutoPodsScreen() {
         }}
         formatWhen={formatWhen}
         formatMoney={formatMoney}
+        // Straight to the venue's own availability calendar: the venue is
+        // here BECAUSE it has no free slot, so Manage venue was a detour.
         onAddAvailability={() => {
           setOffer(null);
-          navigation.navigate('VenueManage');
+          navigation.navigate('VenueAvailability');
         }}
       />
     </StackScreen>

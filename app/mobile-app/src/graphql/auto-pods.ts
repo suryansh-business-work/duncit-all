@@ -52,6 +52,8 @@ export const VenueAutoPodsDocument = gql(`
       viewer_claimed
       pod_id
       expected_host_earnings
+      expected_venue_earnings
+      expected_club_earnings
       expires_at
       withdraw_penalty_points
       location {
@@ -110,6 +112,8 @@ export const HostAutoPodsDocument = gql(`
       viewer_claimed
       pod_id
       expected_host_earnings
+      expected_venue_earnings
+      expected_club_earnings
       expires_at
       withdraw_penalty_points
       location {
@@ -168,6 +172,8 @@ export const ClubAdminAutoPodsDocument = gql(`
       viewer_claimed
       pod_id
       expected_host_earnings
+      expected_venue_earnings
+      expected_club_earnings
       expires_at
       withdraw_penalty_points
       location {
@@ -350,6 +356,11 @@ export const MyVenuesForAutoPodDocument = gql(`
       is_active
       location_id
       city
+      capacity
+      capacity_items {
+        label
+        capacity
+      }
       venue_category {
         sub_category_id
         super_category_name
@@ -415,6 +426,17 @@ export const AutoPodHostProjectionDocument = gql(`
 export const VenueWithdrawAutoPodDocument = gql(`
   mutation MobileVenueWithdrawAutoPod($auto_pod_doc_id: ID!) {
     venueWithdrawAutoPod(auto_pod_doc_id: $auto_pod_doc_id) {
+      id
+      stage
+      viewer_claimed
+    }
+  }
+`);
+
+/** The club admin takes the claim back; the offer returns to club admins' lists. */
+export const ClubWithdrawAutoPodDocument = gql(`
+  mutation MobileClubWithdrawAutoPod($auto_pod_doc_id: ID!) {
+    clubWithdrawAutoPod(auto_pod_doc_id: $auto_pod_doc_id) {
       id
       stage
       viewer_claimed

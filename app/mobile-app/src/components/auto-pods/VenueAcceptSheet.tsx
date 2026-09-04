@@ -2,6 +2,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { autoPodCityLabel, type AutoPodLabels, type AutoPodRow } from '@duncit/utils';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
+import { LoadingIndicator } from '@/components/LoadingIndicator';
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
 import { PillButton } from '@/components/attendance/AttendanceOtpControls';
 import type { AutoPodVenueOption } from '@/hooks/useAutoPodVenues';
@@ -148,6 +149,9 @@ export function VenueAcceptSheet({
               {labels.slotWindow(accept.windowDays)}
             </Text>
           ) : null}
+          {/* Reading a venue's free slots is a round trip; without this the
+              chip column just sits empty and reads as "no slots". */}
+          {accept.slotsLoading ? <LoadingIndicator testID="auto-pod-slots-loading" /> : null}
           <OptionChipRow
             layout="column"
             testIDPrefix="auto-pod-slot"
@@ -174,6 +178,8 @@ export function VenueAcceptSheet({
             ) : null}
           </YStack>
         ) : null}
+
+        {accept.busy ? <LoadingIndicator testID="auto-pod-accept-busy" /> : null}
 
         {accept.failure ? (
           <Text testID="auto-pod-accept-error" fontSize={12} color="$danger">

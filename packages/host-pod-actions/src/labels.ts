@@ -61,7 +61,13 @@ export interface HostPodActionLabels {
   companionExtension: string;
   companionVerifyCta: string;
   companionOtpHint: string;
+  /** Why the code button is dead: no name, or not a whole number yet. */
+  companionOtpIncomplete: string;
+  /** Why the code button is dead: somebody on this ticket has this number. */
+  companionOtpDuplicate: string;
   companionVerified: string;
+  /** Under a proved row, saying why its number can no longer be typed in. */
+  companionLocked: string;
   companionOtpBlocked: string;
   companionOtpFailed: string;
   otpSend: string;
@@ -140,6 +146,10 @@ export interface HostPodActionLabels {
   shareVenueReceives: string;
   shareYouReceive: string;
   shareDuncitRevenue: string;
+  /** The completion window closed before this pod was settled. No date in it:
+   * this package has no admin-formatted clock, and the attendance page — which
+   * does — is where the exact deadline is quoted. */
+  shareExpired: string;
   podMedia: string;
   completing: string;
   cancelNoOthers: string;
@@ -210,7 +220,10 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     companionExtension: t('mweb.hostScan.companionExtension'),
     companionVerifyCta: t('mweb.hostScan.companionVerifyCta'),
     companionOtpHint: t('mweb.hostScan.companionOtpHint'),
+    companionOtpIncomplete: t('mweb.hostScan.companionOtpIncomplete'),
+    companionOtpDuplicate: t('mweb.hostScan.companionOtpDuplicate'),
     companionVerified: t('mweb.hostScan.companionVerified'),
+    companionLocked: t('mweb.hostScan.companionLocked'),
     companionOtpBlocked: t('mweb.hostScan.companionOtpBlocked'),
     companionOtpFailed: t('mweb.hostScan.companionOtpFailed'),
     otpSend: t('mweb.attendance.otpSend'),
@@ -277,6 +290,7 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     shareVenueReceives: t('mweb.hostShare.venueReceives'),
     shareYouReceive: t('mweb.hostShare.youReceive'),
     shareDuncitRevenue: t('mweb.hostShare.duncitRevenue'),
+    shareExpired: t('mweb.hostShare.expired'),
     podMedia: t('mweb.hostPodActions.podMedia'),
     completing: t('mweb.hostPodActions.completing'),
     cancelNoOthers: t('mweb.hostPodActions.cancelNoOthers'),
@@ -324,7 +338,10 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     companionExtension: t('shell.hostScan.companionExtension'),
     companionVerifyCta: t('shell.hostScan.companionVerifyCta'),
     companionOtpHint: t('shell.hostScan.companionOtpHint'),
+    companionOtpIncomplete: t('shell.hostScan.companionOtpIncomplete'),
+    companionOtpDuplicate: t('shell.hostScan.companionOtpDuplicate'),
     companionVerified: t('shell.hostScan.companionVerified'),
+    companionLocked: t('shell.hostScan.companionLocked'),
     companionOtpBlocked: t('shell.hostScan.companionOtpBlocked'),
     companionOtpFailed: t('shell.hostScan.companionOtpFailed'),
     otpSend: t('shell.attendance.otpSend'),
@@ -391,6 +408,7 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     shareVenueReceives: t('shell.hostShare.venueReceives'),
     shareYouReceive: t('shell.hostShare.youReceive'),
     shareDuncitRevenue: t('shell.hostShare.duncitRevenue'),
+    shareExpired: t('shell.hostShare.expired'),
     podMedia: t('shell.hostPodActions.podMedia'),
     completing: t('shell.hostPodActions.completing'),
     cancelNoOthers: t('shell.hostPodActions.cancelNoOthers'),

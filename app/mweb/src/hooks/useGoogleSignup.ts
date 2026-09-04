@@ -1,39 +1,21 @@
 import { useState } from 'react';
-import { gql } from '@apollo/client';
-import { useMutation } from '@apollo/client/react';
-import { ACCEPTANCE_SURFACE } from '../components/policy-acceptance';
 import { useTranslation } from '../i18n/useTranslation';
-import { parseApiError } from '../utils/parseApiError';
-
-const SIGNUP_GOOGLE = gql`
-  mutation SignupWithGoogle($input: GoogleSignupInput!) {
-    signupWithGoogle(input: $input) {
-      token
-      user {
-        user_id
-        email
-        onboarding_survey_completed
-      }
-    }
-  }
-`;
 
 /**
- * Google signup, held open across the policy gate.
+ * Google signup, held open across the policy gate AND the WhatsApp code.
  *
  * `signupWithGoogle` is new-account-only, so the credential Google returns is
- * kept here — unspent — while the acceptance dialog runs, and the mutation is
- * called exactly once, with the accepted ids. There is no post-signup screen to
- * add because at that point there is still no account: backing out leaves
- * nothing behind, which is what the dialog's Google wording promises.
+ * kept unspent — first while the acceptance dialog runs, then while the number
+ * step and the code step do. Nothing is created until all three have answered,
+ * which is what the dialog's Google wording promises: backing out at any point
+ * leaves nothing behind.
  *
- * Where the new account goes next is the SIGNUP FLOW's answer, not this hook's:
- * a Google account has no phone number on it, so the WhatsApp step runs before
- * the referral question, and only the flow knows whether that step is on.
+ * This hook holds the credential and nothing else. The mutation belongs to the
+ * SIGNUP FLOW, which is the only thing that knows the number the code proved —
+ * and a Google account with no proven number is exactly what must not exist.
  */
-export function useGoogleSignup(onCreated: () => void) {
+export function useGoogleSignup(onAccepted: (idToken: string, policyIds: string[]) => void) {
   const { t } = useTranslation();
-  const [signupGoogle, { loading }] = useMutation<any>(SIGNUP_GOOGLE);
   const [credential, setCredential] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,36 +24,18 @@ export function useGoogleSignup(onCreated: () => void) {
     setCredential(idToken);
   };
 
-  const create = async (idToken: string, acceptedPolicyIds: string[]) => {
-    const res = await signupGoogle({
-      variables: {
-        input: {
-          id_token: idToken,
-          accepted_policy_ids: acceptedPolicyIds,
-          accepted_policy_surface: ACCEPTANCE_SURFACE,
-        },
-      },
-    });
-    const token = res.data?.signupWithGoogle?.token;
-    if (token) {
-      localStorage.setItem('token', token);
-      onCreated();
-    }
-  };
-
   const accept = (acceptedPolicyIds: string[]) => {
     const idToken = credential;
     setCredential(null);
-    if (!idToken) return;
-    create(idToken, acceptedPolicyIds).catch((e) => setError(parseApiError(e)));
+    if (idToken) onAccepted(idToken, acceptedPolicyIds);
   };
 
   // Backing out drops the credential: they can press Google again, and until
-  // every policy is accepted there is nothing to create.
+  // every policy is accepted there is nothing to carry forward.
   const cancel = () => {
     setCredential(null);
     setError(t('policyAcceptance.mustAcceptHint'));
   };
 
-  return { credential, error, loading, start, accept, cancel };
+  return { credential, error, start, accept, cancel };
 }

@@ -1,6 +1,6 @@
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { DuncitButton } from '@duncit/buttons';
 import { buildSignupStepperLabels } from '@duncit/utils';
@@ -15,22 +15,20 @@ import { useTranslation } from '../../i18n/useTranslation';
 interface Props {
   /** The number and the tick box, on their way to the code step. */
   onSubmit: (values: WhatsappNumberValues) => void;
-  /** Leaving without a number. The account exists and is untouched. */
-  onSkip: () => void;
 }
 
 /**
  * The Google door's number step.
  *
- * Google returns a finished account and no phone number, so the row the email
- * form asks as step two is asked here instead — after the account exists, which
- * is also the only moment `requestWhatsAppOtp` can be called at all.
+ * Google proves an address and no phone number, so the row the email form asks
+ * as step two is asked here instead — before there is an account, exactly as it
+ * is on the other door.
  *
  * Nothing is sent from here: submitting hands the number to the code step,
  * which asks for the code as it opens. RN twin:
  * app/mobile-app/src/screens/SignupScreen/WhatsappNumberStep.tsx.
  */
-export default function WhatsappNumberStep({ onSubmit, onSkip }: Readonly<Props>) {
+export default function WhatsappNumberStep({ onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = buildSignupStepperLabels(t);
   const {
@@ -79,17 +77,6 @@ export default function WhatsappNumberStep({ onSubmit, onSkip }: Readonly<Props>
         >
           {labels.sendCode}
         </DuncitButton>
-        <Link
-          component="button"
-          type="button"
-          onClick={onSkip}
-          underline="hover"
-          variant="body2"
-          data-testid="signup-skip-number"
-          sx={{ alignSelf: 'center' }}
-        >
-          {labels.skipForNow}
-        </Link>
       </Stack>
     </form>
   );

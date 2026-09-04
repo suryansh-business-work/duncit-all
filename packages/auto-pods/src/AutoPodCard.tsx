@@ -16,6 +16,8 @@ import {
   autoPodCityLabel,
   autoPodMissingRoles,
   autoPodPriced,
+  autoPodRoleEarnings,
+  type AutoPodRole,
   type AutoPodRow,
   type AutoPodLabels,
 } from '@duncit/utils';
@@ -58,20 +60,30 @@ function AutoPodCover({ url }: Readonly<{ url: string }>) {
   );
 }
 
-/** One icon + text line: the pinned city, the venue, the slot. */
+/**
+ * One icon + text line: the pinned city, the venue, the slot.
+ *
+ * The text WRAPS rather than truncating. A card's city line is a full sentence
+ * while nobody has enrolled — "Any city — the first partner to enrol sets it"
+ * — and clipping it to one line hid the half that says what happens next.
+ */
 function DetailLine({ icon, text }: Readonly<{ icon: ReactNode; text: string }>) {
   return (
-    <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
-      {icon}
-      <Typography variant="body2" noWrap title={text}>
-        {text}
-      </Typography>
+    <Stack direction="row" spacing={0.75} sx={{ alignItems: 'flex-start' }}>
+      <Box sx={{ display: 'flex', pt: '2px' }}>{icon}</Box>
+      <Typography variant="body2">{text}</Typography>
     </Stack>
   );
 }
 
 export interface AutoPodCardProps {
   row: AutoPodRow;
+  /**
+   * Whose queue this card is in. Each role is paid for something different, so
+   * the "You could earn" line reads that role's own figure — a venue used to be
+   * shown the HOST's payout, which is a different number entirely.
+   */
+  role: AutoPodRole;
   labels: AutoPodLabels;
   /** Formats the slot window in the viewer's configured date/time settings. */
   formatWhen: (iso: string) => string;
@@ -79,6 +91,10 @@ export interface AutoPodCardProps {
   formatMoney: (amount: number) => string;
   /** The role's primary button — the caller owns the action. */
   action?: ReactNode;
+  /** The "View Potential Earnings" control, under the card's details. */
+  earningsAction?: ReactNode;
+  /** What this viewer worked out in that dialog — it wins over the server's. */
+  earnings?: number | null;
 }
 
 const firstImage = (row: AutoPodRow): string | null =>
@@ -92,10 +108,13 @@ const firstImage = (row: AutoPodRow): string | null =>
  */
 export function AutoPodCard({
   row,
+  role,
   labels,
   formatWhen,
   formatMoney,
   action,
+  earningsAction,
+  earnings,
 }: Readonly<AutoPodCardProps>) {
   const image = firstImage(row);
   const missing = autoPodMissingRoles(row);
@@ -107,6 +126,7 @@ export function AutoPodCard({
   const modeLabel = virtual ? labels.modeVirtual : labels.modePhysical;
   const modeIcon = virtual ? <VideocamIcon /> : <PlaceIcon />;
   const priced = autoPodPriced(row);
+  const earning = autoPodRoleEarnings(row, role, earnings);
 
   return (
     <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -152,6 +172,7 @@ export function AutoPodCard({
               />
             </>
           ) : null}
+          {earningsAction}
         </Stack>
 
         <Divider />
@@ -171,13 +192,15 @@ export function AutoPodCard({
           </Typography>
         )}
 
-        {typeof row.expected_host_earnings === 'number' ? (
-          <Typography variant="body2" sx={{
-            color: "success.main"
-          }}>
-            {labels.expectedEarnings(formatMoney(row.expected_host_earnings))}
-          </Typography>
-        ) : null}
+        {/* "You could earn ₹1,500" — or just "You could earn" until this
+            viewer has priced the pod in the calculator above. */}
+        <Typography
+          variant="body2"
+          data-testid="auto-pod-earnings"
+          sx={{ color: 'success.main', fontWeight: 600 }}
+        >
+          {earning === null ? labels.earningsUnknown : labels.expectedEarnings(formatMoney(earning))}
+        </Typography>
 
         <AutoPodExpiryNote expiresAt={row.expires_at} labels={labels} />
 

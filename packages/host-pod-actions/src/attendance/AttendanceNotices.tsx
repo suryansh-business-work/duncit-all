@@ -28,6 +28,27 @@ export function EarningsNotice({
   );
 }
 
+/**
+ * How long the host still has.
+ *
+ * A `warning`, not an `info`: this is the one thing on the page that costs the
+ * host money by being ignored. Rendered only while the window is still open and
+ * only to the host (`showsCompleteDeadline`) — once it has passed, the EXPIRED
+ * `LockedNotice` below says the same thing in the past tense.
+ */
+export function DeadlineNotice({
+  labels,
+  when,
+  hours,
+}: Readonly<{ labels: PodAttendanceLabels; when: string; hours: number }>) {
+  return (
+    <Alert severity="warning" data-testid="attendance-deadline-note">
+      <AlertTitle sx={{ fontWeight: 800 }}>{labels.deadlineTitle(when)}</AlertTitle>
+      {labels.deadlineBody(hours)}
+    </Alert>
+  );
+}
+
 /** The roster is closed and nothing on it can move. */
 export function LockedNotice({
   lock,

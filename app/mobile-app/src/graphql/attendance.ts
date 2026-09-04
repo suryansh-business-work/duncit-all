@@ -20,6 +20,8 @@ export const PodAttendanceBoardDocument = gql(`
       viewer
       lock
       can_mark
+      complete_deadline
+      complete_timeout_hours
       otp_required
       marked_count
       total_count

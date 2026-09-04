@@ -60,7 +60,16 @@ export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
       );
     }
     lines.push(
-      { label: t('mweb.hostManage.youReceive'), value: w.host_receives, strong: true },
+      // `host_payout_amount`, not `w.host_receives`: it is the number the
+      // release will actually carry — floored at zero on a pod that took less
+      // than the room cost, and zeroed outright once the completion window has
+      // expired — so this line and the money that lands cannot differ. mWeb's
+      // buildHostShareLines reads the same field.
+      {
+        label: t('mweb.hostManage.youReceive'),
+        value: settlement.host_payout_amount,
+        strong: true,
+      },
       { label: t('mweb.hostManage.duncitRevenue'), value: w.duncit_revenue },
     );
     body = (
@@ -75,6 +84,11 @@ export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
         {lines.map((line) => (
           <SettlementRow key={line.label} symbol={settlement.currency_symbol} line={line} />
         ))}
+        {settlement.complete_expired ? (
+          <Text testID="settlement-expired" fontSize={12} color="$danger">
+            {t('mweb.hostShare.expired')}
+          </Text>
+        ) : null}
       </YStack>
     );
   } else {

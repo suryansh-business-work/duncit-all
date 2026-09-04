@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { autoPodCityLabel, type AutoPodLabels, type AutoPodRow } from '@duncit/utils';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
+import { LoadingIndicator } from '@/components/LoadingIndicator';
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
 import { PillButton } from '@/components/attendance/AttendanceOtpControls';
 import { ClubClaimAutoPodDocument, MyAdminClubsForAutoPodDocument } from '@/graphql/auto-pods';
@@ -164,6 +165,9 @@ export function ClubClaimSheet({
           <Text fontSize={12} fontWeight="700" color="$color">
             {labels.pickClub}
           </Text>
+          {/* Reading the caller's clubs is a round trip; an empty chip column
+              mid-read reads as "you administer no club in this city". */}
+          {loaded ? null : <LoadingIndicator testID="auto-pod-clubs-loading" />}
           <OptionChipRow
             layout="column"
             testIDPrefix="auto-pod-club"
@@ -172,6 +176,8 @@ export function ClubClaimSheet({
             onSelect={setClubId}
           />
         </YStack>
+
+        {busy ? <LoadingIndicator testID="auto-pod-claim-busy" /> : null}
 
         {failure ? (
           <Text testID="auto-pod-claim-error" fontSize={12} color="$danger">

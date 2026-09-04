@@ -13,6 +13,8 @@ const FIELDS = `
   max_backout_attempts
   venue_cancel_health_penalty
   attendance_otp_required
+  pod_complete_timeout_hours
+  pod_complete_reminder_hours
   pod_auto_cancel_enabled
   pod_auto_cancel_lead_hours
   auto_pod_slot_window_days

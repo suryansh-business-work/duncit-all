@@ -107,7 +107,7 @@ describe('AutoPodTicks', () => {
 describe('AutoPodCard', () => {
   it('shows the pod, its number and the money, all through the caller formatters', () => {
     const { container } = render(
-      <AutoPodCard row={row()} labels={labels} formatWhen={formatWhen} formatMoney={formatMoney} />
+      <AutoPodCard role="host" row={row()} labels={labels} formatWhen={formatWhen} formatMoney={formatMoney} />
     );
 
     expect(container.textContent).toContain('Weekly Badminton');
@@ -117,6 +117,7 @@ describe('AutoPodCard', () => {
   it('renders the role action the caller owns', () => {
     render(
       <AutoPodCard
+        role="host"
         row={row()}
         labels={labels}
         formatWhen={formatWhen}
@@ -131,6 +132,7 @@ describe('AutoPodCard', () => {
   it('renders a row with no image rather than a broken one', () => {
     const { container } = render(
       <AutoPodCard
+        role="host"
         row={row({ pod_images_and_videos: [] })}
         labels={labels}
         formatWhen={formatWhen}
@@ -144,6 +146,7 @@ describe('AutoPodCard', () => {
   it('renders a row this viewer has already enrolled in', () => {
     const { container } = render(
       <AutoPodCard
+        role="host"
         row={row({ viewer_claimed: true, pod_id: 'pod-9' })}
         labels={labels}
         formatWhen={formatWhen}
@@ -315,7 +318,7 @@ const VENUE_CLAIM = {
 
 const card = (over: Partial<AutoPodRow> = {}) =>
   render(
-    <AutoPodCard row={row(over)} labels={labels} formatWhen={formatWhen} formatMoney={formatMoney} />
+    <AutoPodCard role="host" row={row(over)} labels={labels} formatWhen={formatWhen} formatMoney={formatMoney} />
   );
 
 describe('AutoPodCard details', () => {
@@ -339,11 +342,57 @@ describe('AutoPodCard details', () => {
     expect(card({ category_name: null }).container.textContent).toContain('DUN-AP-001');
   });
 
-  it('states the earnings only once the server has worked them out', () => {
+  it('states the earnings once the server has worked them out, and says so plainly until then', () => {
     expect(card().container.textContent).toContain(labels.expectedEarnings('₹1400'));
-    expect(card({ expected_host_earnings: null }).container.textContent).not.toContain(
-      labels.expectedEarnings('₹1400')
+
+    const unpriced = card({ expected_host_earnings: null }).container.textContent;
+    expect(unpriced).not.toContain(labels.expectedEarnings('₹1400'));
+    expect(unpriced).toContain(labels.earningsUnknown);
+  });
+
+  // Each partner is paid for something different — the venue for the seats its
+  // space holds, the host for what is left after every deduction — so a shared
+  // card must read its OWN role's figure. It used to show every role the
+  // host's payout.
+  it('reads the figure belonging to the role whose queue the card is in', () => {
+    const earnings = {
+      expected_venue_earnings: 5000,
+      expected_host_earnings: 1400,
+      expected_club_earnings: 115,
+    };
+    const forRole = (role: 'venue' | 'host' | 'club') =>
+      wrapped(
+        <AutoPodCard
+          role={role}
+          row={row(earnings)}
+          labels={labels}
+          formatWhen={formatWhen}
+          formatMoney={formatMoney}
+        />
+      ).container.textContent;
+
+    expect(forRole('venue')).toContain(labels.expectedEarnings('₹5000'));
+    expect(forRole('host')).toContain(labels.expectedEarnings('₹1400'));
+    expect(forRole('club')).toContain(labels.expectedEarnings('₹115'));
+  });
+
+  // What the viewer typed into their own calculator is the number they are
+  // reasoning about, so it outranks whatever the server last said.
+  it('lets this viewer’s own estimate override the server’s figure', () => {
+    const { container } = wrapped(
+      <AutoPodCard
+        role="host"
+        row={row()}
+        labels={labels}
+        formatWhen={formatWhen}
+        formatMoney={formatMoney}
+        earnings={9999}
+        earningsAction={<button type="button">calculate</button>}
+      />
     );
+
+    expect(container.textContent).toContain(labels.expectedEarnings('₹9999'));
+    expect(screen.getByRole('button', { name: 'calculate' })).toBeInTheDocument();
   });
 
   it('says who the offer is still waiting on, and stops once all three have enrolled', () => {
@@ -519,7 +568,7 @@ describe('a virtual offer', () => {
     expect(container.querySelectorAll('.MuiChip-root')).toHaveLength(2);
 
     wrapped(
-      <AutoPodCard row={row({ pod_mode: 'VIRTUAL' })} labels={labels} formatWhen={formatWhen} formatMoney={formatMoney} />
+      <AutoPodCard role="host" row={row({ pod_mode: 'VIRTUAL' })} labels={labels} formatWhen={formatWhen} formatMoney={formatMoney} />
     );
     expect(screen.getByText('mweb.autoPods.virtualPod')).toBeInTheDocument();
   });

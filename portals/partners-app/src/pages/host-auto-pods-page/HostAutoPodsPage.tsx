@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import {
+  AutoPodEarningsButton,
   AutoPodQueue,
   AutoPodWithdrawAction,
   HostClaimDialog,
+  HostEarningsDialog,
+  useAutoPodEarnings,
   HOST_AUTO_PODS,
 } from '@duncit/auto-pods';
 import { EMPTY_LOCATION, type AdminLocationValue } from '@duncit/location';
@@ -31,6 +34,7 @@ export default function HostAutoPodsPage() {
     sub_category_id: category || null,
   });
   const locationLabel = [location.city, location.state].filter(Boolean).join(', ');
+  const earnings = useAutoPodEarnings();
 
   const renderAction = (row: AutoPodRow) => (
     <DuncitButton fullWidth size="small" variant="contained" onClick={() => setSelected(row)}>
@@ -65,6 +69,18 @@ export default function HostAutoPodsPage() {
             <AutoPodWithdrawAction row={row} role="host" labels={queue.labels} onWithdrawn={queue.refetch} />
           </Stack>
         )}
+        renderEarningsAction={(row) => (
+          <AutoPodEarningsButton labels={queue.labels} onClick={() => earnings.open(row)} />
+        )}
+        earnings={earnings.values}
+      />
+      <HostEarningsDialog
+        row={earnings.row}
+        labels={queue.labels}
+        open={earnings.row !== null}
+        onClose={earnings.close}
+        formatMoney={queue.formatMoney}
+        onEarnings={earnings.record}
       />
       <HostClaimDialog
         row={selected}

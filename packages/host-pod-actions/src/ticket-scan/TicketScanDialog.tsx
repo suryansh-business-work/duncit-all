@@ -71,6 +71,27 @@ function confirmationText(
  * host verified them one at a time, and this is where they see which of them
  * it worked for.
  */
+/**
+ * The numbers this booking has already spoken for.
+ *
+ * The buyer's own phone and WhatsApp, plus everyone already written onto the
+ * ticket. A companion row may not repeat one: a single WhatsApp answering a
+ * single code must never tick two seats.
+ *
+ * Takes a SETTLED result, because its only caller sits inside the guard that
+ * already proved one. `attendee` stays optional and genuinely is — the scan
+ * answers with none when the buyer's account is gone — and then there is
+ * simply no number of theirs to reserve. That degrades the check rather than
+ * holding the group at the door, which is the trade rule 41 asks for
+ * everywhere else.
+ */
+function reservedPhones(result: HostTicketScanResult): string[] {
+  const { attendee } = result;
+  return [attendee?.phone ?? '', attendee?.whatsapp ?? ''].concat(
+    result.companions.map((companion) => companion.phone_number),
+  );
+}
+
 function companionLine(companion: PodCompanionRecord, labels: HostPodActionLabels): string {
   if (!companion.verified_at) return companion.phone_number;
   return `${companion.phone_number} · ${labels.companionVerified}`;
@@ -219,6 +240,7 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
                   membershipId={result.ticket.membership_id}
                   seats={result.ticket.seats ?? 1}
                   required={result.companions_required}
+                  reserved={reservedPhones(result)}
                   busy={scanState.loading}
                   onSubmit={(companions) => submit(pendingToken, companions)}
                 />

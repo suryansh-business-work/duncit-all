@@ -139,45 +139,26 @@ export const LinkGoogleAccountDocument = gql(`
 `);
 
 /**
- * Signup step four — proving the WhatsApp number the account was created with.
+ * Signup step four — proving the WhatsApp number BEFORE the account exists.
  *
- * All three authenticate the caller, which is why the step can only run after
- * `register` has returned a token: the account has to exist before its number
- * can be proved.
+ * Both are public, because there is nobody to authenticate yet: this step is
+ * what decides whether an account is created at all. The proof the second one
+ * returns is spent by `register` / `signupWithGoogle`, once.
  */
-export const RequestWhatsAppOtpDocument = gql(`
-  mutation MobileRequestWhatsAppOtp($ext: String!, $num: String!) {
-    requestWhatsAppOtp(phone_extension: $ext, phone_number: $num) {
+export const RequestSignupWhatsAppOtpDocument = gql(`
+  mutation MobileRequestSignupWhatsAppOtp($ext: String!, $num: String!, $email: String) {
+    requestSignupWhatsAppOtp(phone_extension: $ext, phone_number: $num, email: $email) {
       ok
       dev_otp
     }
   }
 `);
 
-export const VerifyWhatsAppOtpDocument = gql(`
-  mutation MobileVerifyWhatsAppOtp(
-    $ext: String!
-    $num: String!
-    $otp: String!
-    $alsoMobile: Boolean!
-  ) {
-    verifyWhatsAppOtp(
-      phone_extension: $ext
-      phone_number: $num
-      otp: $otp
-      also_mobile: $alsoMobile
-    ) {
-      user_id
-      phone_number
-      whatsapp_number
-    }
-  }
-`);
-
-export const SkipWhatsAppOtpDocument = gql(`
-  mutation MobileSkipWhatsAppOtp {
-    skipWhatsAppOtp {
-      user_id
+export const VerifySignupWhatsAppOtpDocument = gql(`
+  mutation MobileVerifySignupWhatsAppOtp($ext: String!, $num: String!, $otp: String!) {
+    verifySignupWhatsAppOtp(phone_extension: $ext, phone_number: $num, otp: $otp) {
+      ok
+      whatsapp_token
     }
   }
 `);

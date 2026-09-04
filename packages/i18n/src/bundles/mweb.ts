@@ -673,7 +673,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       securityTitle: 'Your password',
       securitySubtitle: 'Pick something only you would guess.',
       verifyTitle: 'Verify WhatsApp',
-      verifySubtitle: 'Type the code we sent, and your number is confirmed.',
+      verifySubtitle: 'Type the code we sent. Your account is created the moment your number answers.',
       stepOf: 'Step {current} of {total}',
       next: 'Continue',
       back: 'Back',
@@ -686,7 +686,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       codeSentTo: 'We sent a 6-digit code to {destination} on WhatsApp.',
       didntGetIt: 'Didn’t get it?',
       resend: 'Send again',
-      skipForNow: 'Skip for now',
       testCode: 'Test code: {code}',
       // The Google door has no form behind it, so it asks for the number on a
       // step of its own before a code can be sent to it.
@@ -2295,6 +2294,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       lockedCancelledTitle: 'This pod was cancelled',
       lockedCancelledBody:
         'A cancelled pod has no attendance to record. Contact your Club Admin below if you think this is wrong.',
+      lockedExpiredTitle: 'The time to complete this pod has passed',
+      lockedExpiredBody:
+        'This pod was never completed within the allowed window, so attendance can no longer be marked here and no earnings are paid for it. Your Club Admin can still record who came — contact them below.',
+      deadlineTitle: 'Complete this pod before {when}',
+      deadlineBody:
+        'You have {hours} hours after a pod ends to mark everyone who came and complete it. Miss that and attendance closes, and this pod pays you nothing.',
       clubAdminTitle: 'Need help? Contact your Club Admin',
       clubAdminBody:
         'They can mark an attendee present after the fact — have the booking details ready.',
@@ -2378,7 +2383,17 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       companionVerifyCta: 'Verify on WhatsApp',
       companionOtpHint:
         'Optional. Send this number a code and type it back — one person at a time.',
+      // Why the button is dead. Six digits into a mobile number is not a
+      // number yet, and a number already on this ticket proves nobody new —
+      // one WhatsApp answering once must not tick two seats.
+      companionOtpIncomplete:
+        'Enter the name and all 10 digits of the number to send a code.',
+      companionOtpDuplicate:
+        'Someone on this ticket already has this number. Every person needs their own.',
       companionVerified: 'Verified',
+      // A proved number is settled: changing it would keep the tick and lose
+      // what it was proof of.
+      companionLocked: 'Verified — this number cannot be changed.',
       companionOtpBlocked: 'Finish verifying the person above first.',
       companionOtpFailed: 'Could not send the code. Try again.',
       companionsSubmit: 'Mark attendance',
@@ -2416,6 +2431,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     hostShare: {
       customerPaid: 'Customer Paid',
       duncitRevenue: 'Duncit revenue',
+      expired:
+        'The window to complete this pod has closed, so your share of it is nil. Completing it still pays the venue, the club admin and any product sellers as usual.',
       gst: '− GST ({pct}%)',
       platformFee: '− Platform Fee ({pct}%)',
       pool: 'Pool',
@@ -2926,8 +2943,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       confirmAcceptAnyOrder:
         'Your slot is booked for this pod straight away. It goes live once everyone else has enrolled too.',
       confirmAssign: 'Host this Auto Pod?',
-      confirmAssignAnyOrder:
-        'You become the host of this pod. It goes live once everyone else has enrolled too.',
+      confirmAssignClubNext:
+        'You become the host of this pod. It goes live once the Club Admin accepts it.',
       confirmClaim: 'Claim this Auto Pod?',
       confirmClaimBody: 'The pod is created under this club as soon as everyone has enrolled.',
       priceLabel: 'Ticket',
@@ -3018,6 +3035,24 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       addAvailability: 'Add availability',
       loadFailed: 'Could not load Auto Pods. Please try again.',
       retry: 'Try again',
+      // The potential-earnings calculator each queue card can open. The venue's
+      // lists its spaces and prices each one itself; the host's runs the same
+      // Step 4 waterfall Create a Pod does.
+      viewEarningsCta: 'View Potential Earnings',
+      earningsTitle: 'Potential Earnings',
+      earningsSpacesHint:
+        'Enter a ticket price for a space to see what this pod could take there.',
+      earningsSpaceCapacity: 'Capacity: {capacity}',
+      earningsWholeVenue: 'Whole venue',
+      earningsNoSpaces: 'Add a space with a capacity to this venue to see its potential earnings.',
+      earningsFormula: 'Potential Earnings (Ticket Price × Slots): {price} × {capacity} = {total}',
+      earningsTotalSpots: 'Total Spots Allowed at Venue: {spots}',
+      earningsAddPrice: 'Add Ticket Price',
+      earningsPricePositive: 'Enter a ticket price above zero.',
+      earningsEnterPrice: 'Enter a ticket price to see what you could earn.',
+      earningsUnknown: 'You could earn',
+      close: 'Close',
+      closeAria: 'Close potential earnings',
     },
     accountEdit: {
       discardChanges: 'Discard changes',

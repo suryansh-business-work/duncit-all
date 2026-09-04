@@ -45,7 +45,7 @@ const METHODS: readonly AttendanceMarkMethod[] = [
   'VIRTUAL_JOIN',
   'ADMIN',
 ];
-const LOCKS: readonly PodAttendanceLock[] = ['OPEN', 'COMPLETED', 'CANCELLED'];
+const LOCKS: readonly PodAttendanceLock[] = ['OPEN', 'COMPLETED', 'CANCELLED', 'EXPIRED'];
 
 /** Label props that are plain strings, i.e. resolved once when the bundle is built. */
 const STATIC_PROPS = [
@@ -70,6 +70,7 @@ const BUNDLE_KEYS = [
   'summary', 'bookingsSummary', 'seats', 'companionsNeeded', 'markedBy', 'markedAt', 'verifiedPhone',
   'methodScan', 'methodManual', 'methodClubAdmin', 'methodVirtualJoin', 'methodAdmin',
   'lockedCompletedTitle', 'lockedCompletedBody', 'lockedCancelledTitle', 'lockedCancelledBody',
+  'lockedExpiredTitle', 'lockedExpiredBody', 'deadlineTitle', 'deadlineBody',
   'otpBody', 'otpTestCode', 'chooseTitle', 'forceCompanionsBody',
 ].toSorted((a, b) => a.localeCompare(b));
 
@@ -85,10 +86,12 @@ const renderEverything = (build: Builder): string[] => {
   labels.markedAt('today');
   labels.verifiedPhone('+91 9876543210');
   for (const method of METHODS) labels.methodLabel(method);
-  for (const lock of ['COMPLETED', 'CANCELLED'] as const) {
+  for (const lock of ['COMPLETED', 'CANCELLED', 'EXPIRED'] as const) {
     labels.lockedTitle(lock);
     labels.lockedBody(lock);
   }
+  labels.deadlineTitle('10 Sep 2026, 6:30 PM');
+  labels.deadlineBody(48);
   labels.otpBody('Asha');
   labels.otpTestCode('123456');
   labels.chooseTitle('Asha');
@@ -220,23 +223,25 @@ describe.each(NAMESPACES)('%s namespace', (namespace, build) => {
     expect(new Set(METHODS.map((m) => labels.methodLabel(m))).size).toBe(METHODS.length);
   });
 
-  it('explains a cancelled roster differently from a completed one', () => {
+  // Three reasons a roster is shut, and a host meeting a shut roster needs to
+  // know WHICH: a cancellation is somebody's decision, an expiry is a window
+  // they missed, and a completion is money already split.
+  it('explains a cancelled, an expired and a completed roster each in its own words', () => {
     const labels = build(recorder().t);
     expect(labels.lockedTitle('CANCELLED')).toBe(`t:${prefix}lockedCancelledTitle`);
     expect(labels.lockedBody('CANCELLED')).toBe(`t:${prefix}lockedCancelledBody`);
+    expect(labels.lockedTitle('EXPIRED')).toBe(`t:${prefix}lockedExpiredTitle`);
+    expect(labels.lockedBody('EXPIRED')).toBe(`t:${prefix}lockedExpiredBody`);
     expect(labels.lockedTitle('COMPLETED')).toBe(`t:${prefix}lockedCompletedTitle`);
     expect(labels.lockedBody('COMPLETED')).toBe(`t:${prefix}lockedCompletedBody`);
   });
 
-  // An OPEN roster never renders the lock banner, so there are only two real
-  // variants of the locked copy; anything that is not a cancellation reads as
-  // the completed-and-settled case.
-  it('treats any non-cancelled lock as the completed copy', () => {
+  // An OPEN roster never renders the lock banner at all, so it has no copy of
+  // its own and falls through to the completed-and-settled wording.
+  it('falls back to the completed copy for a lock with nothing of its own to say', () => {
     const labels = build(recorder().t);
-    for (const lock of LOCKS.filter((l) => l !== 'CANCELLED')) {
-      expect(labels.lockedTitle(lock)).toBe(`t:${prefix}lockedCompletedTitle`);
-      expect(labels.lockedBody(lock)).toBe(`t:${prefix}lockedCompletedBody`);
-    }
+    expect(labels.lockedTitle('OPEN')).toBe(`t:${prefix}lockedCompletedTitle`);
+    expect(labels.lockedBody('OPEN')).toBe(`t:${prefix}lockedCompletedBody`);
   });
 });
 

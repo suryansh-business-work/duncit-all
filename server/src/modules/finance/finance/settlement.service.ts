@@ -6,6 +6,7 @@ import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { getFinanceSettings } from './finance.model';
+import { podCompleteDeadline } from '@modules/pods/ticket/attendance.service';
 import {
   computePodFinanceBreakdown,
   type BreakdownOptions,
@@ -88,6 +89,16 @@ export interface PodSettlement {
   attended_total: number;
   /** Every JOINED booking, attended first — the completion roster. */
   attendees: SettlementAttendee[];
+  /** When the host's window to complete this pod runs out (ISO), or null when
+   * the pod has no usable start. Admin > Pods > Pod Settings sets the length. */
+  complete_deadline: string | null;
+  /** True once that window has passed with the pod still uncompleted. */
+  complete_expired: boolean;
+  /** What the host is ACTUALLY paid on completion: the floored host remainder,
+   * or zero once the window has expired. The waterfall above still states the
+   * computed split — this is the amount the release carries, so a preview and a
+   * completion can never quote different money. */
+  host_payout_amount: number;
 }
 
 /** Engine version stamped on new settlement snapshots — v2 = venue slot price
@@ -371,6 +382,13 @@ export async function computePodSettlement(
   }
 
   const fs = await getFinanceSettings();
+  // The completion window. A pod already stamped complete is never "expired" —
+  // it was settled, whenever that happened — so only a live pod is measured
+  // against the deadline.
+  const { settingsService } = await import('@modules/platform/settings/settings.service');
+  const { timeout_hours } = await settingsService.getPodCompletionSettings();
+  const deadline = podCompleteDeadline(pod, timeout_hours);
+  const expired = !pod.completed_at && !!deadline && Date.now() > deadline.getTime();
   const roster = await podAttendanceRoster(String(pod._id));
   // THE BASIS IS ATTENDANCE, not what was collected. A pod settles on the
   // bookings a host actually scanned in — money from a no-show is not paid out
@@ -449,5 +467,14 @@ export async function computePodSettlement(
     booked_seats: roster.booked_seats,
     attended_total: roster.attended_total,
     attendees: roster.rows,
+    complete_deadline: deadline?.toISOString() ?? null,
+    complete_expired: expired,
+    // Floored, because the venue keeps its full booked price and a shortfall
+    // shows as a negative host remainder — a release is money moving out and a
+    // negative one would credit a wallet backwards. Zeroed outright once the
+    // window has expired: the host had the pod's own length plus the configured
+    // hours to settle it, and the seats they never marked are the reason the
+    // number could not be trusted afterwards.
+    host_payout_amount: expired ? 0 : Math.max(0, host.payout_amount),
   };
 }

@@ -19,7 +19,12 @@ export interface AutoPodHostProjection {
 }
 
 export interface HostProjectionLinesProps {
-  projection: AutoPodHostProjection | null;
+  /**
+   * A projection the server has already answered with. Whether there is one to
+   * draw at all is the caller's question — `HostEarningsFields` asks the host
+   * for a price first — so this is never null by the time it gets here.
+   */
+  projection: AutoPodHostProjection;
   labels: AutoPodLabels;
   formatMoney: (amount: number) => string;
 }
@@ -30,7 +35,6 @@ export function HostProjectionLines({
   labels,
   formatMoney,
 }: Readonly<HostProjectionLinesProps>) {
-  if (!projection) return null;
   if (!projection.viable) return <Alert severity="warning">{labels.projectionNotViable}</Alert>;
   const fees = projection.gst_amount + projection.platform_fee_amount;
   return (

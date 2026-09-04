@@ -42,6 +42,14 @@ jest.mock('./../../waEventSetting.model', () => ({
 jest.mock('./../../whatsapp.service', () => ({
   whatsappService: { sendEach: jest.fn(), send: jest.fn() },
 }));
+// The complete-pod nudge reads its hours from Admin > Pods > Pod Settings. Left
+// real it is a Mongo round trip that never resolves here, and every sweep in
+// this file hangs behind it.
+jest.mock('@modules/platform/settings/settings.service', () => ({
+  settingsService: {
+    getPodCompletionSettings: jest.fn(async () => ({ timeout_hours: 24, reminder_hours: 12 })),
+  },
+}));
 
 import { getUrlConfigs } from '@config/url-configs';
 import { UserModel } from '@modules/access/user/user.model';

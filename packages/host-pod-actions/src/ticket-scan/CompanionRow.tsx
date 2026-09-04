@@ -6,15 +6,32 @@ import type { CompanionValues } from './companions.form';
 import type { CompanionOtpApi } from './useCompanionOtp';
 import type { HostPodActionLabels } from '../labels';
 
+/**
+ * What the number field says under itself.
+ *
+ * Hoisted so the three-way choice sits at nesting 0 (S3358), and worth
+ * saying: a field that stops accepting keystrokes without a word under it
+ * reads as broken rather than as settled.
+ */
+function numberHelper(
+  settled: boolean,
+  duplicate: boolean,
+  labels: HostPodActionLabels,
+): string {
+  if (settled) return labels.companionLocked;
+  if (duplicate) return labels.companionOtpDuplicate;
+  return labels.fieldRequired;
+}
+
 interface Props {
   index: number;
   control: Control<CompanionValues>;
   /** This row's live values — what decides whether it can be verified. */
   entry: CompanionEntry;
+  /** Somebody on this ticket already has this row's number. */
+  duplicate: boolean;
   labels: HostPodActionLabels;
   otp: CompanionOtpApi;
-  /** Editing a proved row drops its proof; the number it named has changed. */
-  onEdit: (index: number) => void;
   onVerified: (index: number, challengeId: string) => void;
 }
 
@@ -23,17 +40,30 @@ interface Props {
  *
  * Name and number are what the booking owes the door; the WhatsApp code under
  * them is the option to prove that number belongs to the person holding it.
+ *
+ * Once that code is answered the row is SETTLED and reads back as text only.
+ * It used to stay editable, and retyping the number silently dropped the tick
+ * it had earned — so a host who corrected a digit was left looking at an
+ * unverified row with no idea why, and one who did it deliberately would have
+ * carried a proof of one number onto another.
  */
 export default function CompanionRow({
   index,
   control,
   entry,
+  duplicate,
   labels,
   otp,
-  onEdit,
   onVerified,
 }: Readonly<Props>) {
-  const state = companionOtpState(entry, index, otp.activeIndex);
+  const state = companionOtpState(entry, index, otp.activeIndex, duplicate);
+  const settled = state === 'VERIFIED';
+  // Read-only rather than disabled: the host still has to be able to READ the
+  // number they proved, and MUI greys a disabled field past legibility.
+  const lock = { readOnly: settled };
+  // The number is the field both of these are about, so that is where they
+  // are said.
+  const numberHelp = numberHelper(settled, duplicate, labels);
 
   return (
     <Stack spacing={1}>
@@ -53,10 +83,7 @@ export default function CompanionRow({
             label={labels.companionName}
             error={!!fieldState.error}
             helperText={fieldState.error?.message ?? labels.fieldRequired}
-            onChange={(e) => {
-              field.onChange(e);
-              onEdit(index);
-            }}
+            slotProps={{ input: lock }}
           />
         )}
       />
@@ -73,10 +100,7 @@ export default function CompanionRow({
               sx={{ width: 120 }}
               error={!!fieldState.error}
               helperText={fieldState.error?.message}
-              onChange={(e) => {
-                field.onChange(e);
-                onEdit(index);
-              }}
+              slotProps={{ input: lock }}
             />
           )}
         />
@@ -91,12 +115,9 @@ export default function CompanionRow({
               fullWidth
               label={labels.companionPhone}
               inputMode="numeric"
-              error={!!fieldState.error}
-              helperText={fieldState.error?.message ?? labels.fieldRequired}
-              onChange={(e) => {
-                field.onChange(e);
-                onEdit(index);
-              }}
+              error={!!fieldState.error || duplicate}
+              helperText={fieldState.error?.message ?? numberHelp}
+              slotProps={{ input: lock }}
             />
           )}
         />

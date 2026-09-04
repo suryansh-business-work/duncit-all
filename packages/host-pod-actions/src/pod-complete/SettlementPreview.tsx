@@ -106,6 +106,11 @@ export default function SettlementPreview({
           symbol={settlement.currency_symbol}
           lines={buildHostShareLines(settlement, labels)}
         />
+        {settlement.complete_expired && (
+          <Typography variant="caption" color="error" data-testid="settlement-expired">
+            {labels.shareExpired}
+          </Typography>
+        )}
         {settlement.waterfall.host_receives < 0 && (
           <Typography variant="caption" color="error" data-testid="settlement-shortfall">
             The venue&apos;s booked price is more than this pod took at the door. The venue is paid

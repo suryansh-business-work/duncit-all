@@ -8,8 +8,9 @@ import { CompanionOtpPanel } from './CompanionOtpPanel';
 interface Props {
   index: number;
   entry: CompanionEntry;
+  /** Somebody on this ticket already has this row's number. */
+  duplicate: boolean;
   otp: CompanionOtpApi;
-  /** Editing a proved row drops its proof; the number it named has changed. */
   onChange: (index: number, patch: Partial<CompanionEntry>) => void;
   onVerified: (index: number, challengeId: string) => void;
 }
@@ -20,10 +21,26 @@ interface Props {
  *
  * Name and number are what the booking owes the door; the WhatsApp code under
  * them is the option to prove that number belongs to the person holding it.
+ *
+ * Once that code is answered the row is SETTLED and reads back as text only.
+ * It used to stay editable, and retyping the number silently dropped the tick
+ * it had earned — so a host who corrected a digit was left looking at an
+ * unverified row with no idea why.
  */
-export function CompanionRow({ index, entry, otp, onChange, onVerified }: Readonly<Props>) {
+export function CompanionRow({
+  index,
+  entry,
+  duplicate,
+  otp,
+  onChange,
+  onVerified,
+}: Readonly<Props>) {
   const { t } = useTranslation();
-  const state = companionOtpState(entry, index, otp.activeIndex);
+  const state = companionOtpState(entry, index, otp.activeIndex, duplicate);
+  const settled = state === 'VERIFIED';
+  // `readOnly` alongside `editable`: Tamagui's web Input drops React Native's
+  // props, so Native Web would otherwise stay typeable.
+  const lock = { editable: !settled, readOnly: settled };
 
   return (
     <YStack gap={6}>
@@ -39,6 +56,7 @@ export function CompanionRow({ index, entry, otp, onChange, onVerified }: Readon
         onChangeText={(name) => onChange(index, { name })}
         placeholder={t('mweb.hostScan.companionName')}
         size="$4"
+        {...lock}
       />
       <Text fontSize={11.5} color="$muted">
         {t('mweb.hostScan.companionPhone')} · {t('mweb.hostScan.fieldRequired')}
@@ -52,6 +70,7 @@ export function CompanionRow({ index, entry, otp, onChange, onVerified }: Readon
             placeholder={t('mweb.hostScan.companionExtension')}
             keyboardType="phone-pad"
             size="$4"
+            {...lock}
           />
         </YStack>
         <YStack flex={1}>
@@ -62,9 +81,15 @@ export function CompanionRow({ index, entry, otp, onChange, onVerified }: Readon
             placeholder={t('mweb.hostScan.companionPhone')}
             keyboardType="number-pad"
             size="$4"
+            {...lock}
           />
         </YStack>
       </XStack>
+      {settled ? (
+        <Text testID={`companion-locked-${index}`} fontSize={11.5} color="$muted">
+          {t('mweb.hostScan.companionLocked')}
+        </Text>
+      ) : null}
 
       <CompanionOtpPanel
         index={index}

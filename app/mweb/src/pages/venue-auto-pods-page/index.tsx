@@ -3,12 +3,15 @@ import { useNavigate } from 'react-router';
 import { Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import {
+  AutoPodEarningsButton,
   AutoPodQueue,
   AutoPodVenuePicker,
   AutoPodWithdrawAction,
   VENUE_AUTO_PODS,
   VenueAcceptDialog,
+  VenueEarningsDialog,
   type AutoPodVenueOption,
+  useAutoPodEarnings,
 } from '@duncit/auto-pods';
 import type { AutoPodRow } from '@duncit/utils';
 import AutoPodLocationBar from '../../components/auto-pods/AutoPodLocationBar';
@@ -42,6 +45,7 @@ export default function VenueAutoPodsPage({ locationId }: Readonly<Props>) {
   });
   const cityLabel = useAutoPodCityLabel(locationId);
   const [target, setTarget] = useState<AutoPodRow | null>(null);
+  const earnings = useAutoPodEarnings();
 
   return (
     <Stack spacing={2} sx={{ p: 2, pb: 4 }}>
@@ -69,6 +73,19 @@ export default function VenueAutoPodsPage({ locationId }: Readonly<Props>) {
         renderMineAction={(row) => (
           <AutoPodWithdrawAction row={row} role="venue" labels={queue.labels} onWithdrawn={queue.reload} />
         )}
+        renderEarningsAction={(row) => (
+          <AutoPodEarningsButton labels={queue.labels} onClick={() => earnings.open(row)} />
+        )}
+        earnings={earnings.values}
+      />
+
+      <VenueEarningsDialog
+        venue={venue}
+        labels={queue.labels}
+        open={earnings.row !== null}
+        onClose={earnings.close}
+        formatMoney={queue.formatMoney}
+        onEarnings={earnings.record}
       />
 
       <VenueAcceptDialog
@@ -80,7 +97,9 @@ export default function VenueAutoPodsPage({ locationId }: Readonly<Props>) {
         onAccepted={queue.reload}
         formatWhen={queue.formatWhen}
         formatMoney={queue.formatMoney}
-        onAddAvailability={() => navigate('/venues/manage')}
+        // Straight to the venue's own availability calendar — the venue is
+        // here BECAUSE it has no free slot, so the manage page was a detour.
+        onAddAvailability={() => navigate('/venues/availability')}
       />
     </Stack>
   );

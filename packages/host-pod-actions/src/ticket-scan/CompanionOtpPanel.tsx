@@ -7,6 +7,20 @@ import type { CompanionEntry, CompanionOtpState } from '@duncit/utils';
 import type { HostPodActionLabels } from '../labels';
 import type { CompanionOtpApi } from './useCompanionOtp';
 
+/**
+ * Why the button is dead, in one line under it.
+ *
+ * A lookup at module scope rather than a ternary chain in the JSX (S3358).
+ * Every dead state says WHICH thing is wrong — the host is at a door with a
+ * queue behind them, and "nothing happens" is what this was reported as.
+ */
+function hintFor(state: CompanionOtpState, labels: HostPodActionLabels): string {
+  if (state === 'BLOCKED') return labels.companionOtpBlocked;
+  if (state === 'DUPLICATE') return labels.companionOtpDuplicate;
+  if (state === 'INCOMPLETE') return labels.companionOtpIncomplete;
+  return labels.companionOtpHint;
+}
+
 interface Props {
   index: number;
   entry: CompanionEntry;
@@ -73,7 +87,7 @@ export default function CompanionOtpPanel({
   return (
     <Stack spacing={0.75}>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-        {state === 'BLOCKED' ? labels.companionOtpBlocked : labels.companionOtpHint}
+        {hintFor(state, labels)}
       </Typography>
       <DuncitButton
         size="small"

@@ -23,7 +23,7 @@ const BUNDLE_KEYS = [
   'tickVenue', 'tickHost', 'tickClubAdmin', 'tickPending', 'tickDone',
   'needsAction', 'claimedByYou', 'acceptCta', 'assignMyselfCta', 'claimForClubCta',
   'pickVenue', 'pickSlot', 'pickClub',
-  'confirmAccept', 'confirmAcceptAnyOrder', 'confirmAssign', 'confirmAssignAnyOrder', 'confirmClaim', 'confirmClaimBody',
+  'confirmAccept', 'confirmAcceptAnyOrder', 'confirmAssign', 'confirmAssignClubNext', 'confirmClaim', 'confirmClaimBody',
   'priceLabel', 'spotsLabel', 'expectedEarnings',
   'waitingVenue', 'waitingHost', 'waitingClub', 'waitingFor', 'roleVenue', 'roleHost', 'roleClub',
   'locationLabel', 'allLocations', 'changeLocation', 'categoryLabel', 'allCategories', 'noHostCategories',
@@ -39,15 +39,22 @@ const BUNDLE_KEYS = [
   'liveNow', 'viewPod', 'cancelled', 'expired', 'claimedElsewhere', 'dismiss',
   'emptyVenue', 'emptyHost', 'emptyClub',
   'noSlots', 'addAvailability', 'loadFailed', 'retry',
+  'viewEarningsCta', 'earningsTitle', 'earningsSpacesHint', 'earningsSpaceCapacity',
+  'earningsWholeVenue', 'earningsNoSpaces', 'earningsFormula', 'earningsTotalSpots',
+  'earningsAddPrice', 'earningsPricePositive', 'earningsEnterPrice', 'earningsUnknown',
+  'close', 'closeAria',
 ].toSorted((a, b) => a.localeCompare(b));
 
 /**
  * The two confirm bodies were reworded when enrolment stopped being
- * venue-first; the label field kept its name, the bundle row did not.
+ * venue-first, and the host's again when the dialog started naming the club
+ * admin as who it waits on; the label field kept its name, the bundle row did
+ * not. Rewording in place is not an option — "Import app keys" never
+ * overwrites an existing row, so new wording needs a new key.
  */
 const BUNDLE_KEY_OF: Record<string, string> = {
   confirmAcceptBody: 'confirmAcceptAnyOrder',
-  confirmAssignBody: 'confirmAssignAnyOrder',
+  confirmAssignBody: 'confirmAssignClubNext',
 };
 
 const CITY = 'Bengaluru, Karnataka';
@@ -111,6 +118,9 @@ const exercise = (labels: AutoPodLabels): Record<string, string> => {
   out.projectionVenue = labels.projectionVenue('₹1,200');
   out.projectionClub = labels.projectionClub('₹300');
   out.projectionFees = labels.projectionFees('₹900');
+  out.earningsSpaceCapacity = labels.earningsSpaceCapacity(6);
+  out.earningsFormula = labels.earningsFormula('₹250', 6, '₹1,500');
+  out.earningsTotalSpots = labels.earningsTotalSpots(20);
   return out;
 };
 
@@ -181,6 +191,9 @@ describe.each([
       .toSorted((a, b) => a.key.localeCompare(b.key));
     expect(withVars).toEqual([
       { key: `${ns}.acceptingWith`, vars: { venue: 'Play Arena' } },
+      { key: `${ns}.earningsFormula`, vars: { price: '₹250', capacity: 6, total: '₹1,500' } },
+      { key: `${ns}.earningsSpaceCapacity`, vars: { capacity: 6 } },
+      { key: `${ns}.earningsTotalSpots`, vars: { spots: 20 } },
       { key: `${ns}.expectedEarnings`, vars: { amount: '₹1,200' } },
       { key: `${ns}.expiresIn`, vars: { hours: 5, minutes: 12, seconds: 30 } },
       { key: `${ns}.noClubInCity`, vars: { city: CITY } },

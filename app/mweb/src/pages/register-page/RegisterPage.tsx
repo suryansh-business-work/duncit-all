@@ -19,11 +19,11 @@ import { useSignupFlow } from './useSignupFlow';
 /**
  * Join Duncit — four steps.
  *
- * The first three collect the account and are the form's; the fourth settles
- * the WhatsApp number and is this page's, because `requestWhatsAppOtp`
- * authenticates its caller and so can only run once an account exists. That
- * token is stored the moment it does, which is what makes the last step
- * authorised without the person having signed in.
+ * The first three collect the answers and are the form's; the fourth proves the
+ * WhatsApp number and is this page's — and it is the one that creates the
+ * account, with the proof beside the answers. Nothing exists before it, so
+ * there is nothing to leave behind by closing the tab: the step cannot be
+ * skipped because there is no account to skip it with.
  *
  * Google is the same four steps with the first three answered for it — so it
  * lands straight on the last one, where it has to ask for the number before it
@@ -53,7 +53,7 @@ export default function RegisterPage() {
   */
   const { policies, loading: policiesLoading, failed: policiesFailed } = useSignupPolicies();
   const flow = useSignupFlow(linkedCode);
-  const google = useGoogleSignup(flow.googleCreated);
+  const google = useGoogleSignup(flow.googleAccepted);
 
   const onNumberStep = flow.askingNumber;
   const onVerifyStep = flow.step === 'VERIFY' && flow.verifying !== null;
@@ -81,16 +81,15 @@ export default function RegisterPage() {
 
           <SignupStepperRail step={flow.step} askingNumber={flow.askingNumber} />
 
-          {onNumberStep && (
-            <WhatsappNumberStep onSubmit={flow.submitNumber} onSkip={flow.finish} />
-          )}
+          {onNumberStep && <WhatsappNumberStep onSubmit={flow.submitNumber} />}
 
           {onVerifyStep && flow.verifying && (
             <VerifyWhatsappStep
               extension={flow.verifying.extension}
               number={flow.verifying.number}
-              alsoMobile={flow.verifying.alsoMobile}
-              onDone={flow.finish}
+              email={flow.pendingEmail}
+              creating={flow.creating}
+              onVerified={flow.createAccount}
             />
           )}
 
@@ -98,7 +97,7 @@ export default function RegisterPage() {
             <>
               <GoogleSignInButton
                 onCredential={google.start}
-                loading={google.loading}
+                loading={flow.creating}
                 text="signup_with"
               />
               <GoogleSignupPolicyGate
@@ -119,7 +118,6 @@ export default function RegisterPage() {
               <RegisterForm
                 step={flow.step}
                 onStep={flow.setStep}
-                loading={flow.loading}
                 initialValues={initialValues}
                 errorMessage={flow.error}
                 onSubmit={flow.submitForm}

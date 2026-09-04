@@ -5,13 +5,14 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
+import { podLiveEnd } from '@modules/pods/pod/pod.lifecycle';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { otpService } from '@modules/platform/otp/otp.service';
 import type { OtpPurpose } from '@modules/platform/otp/otp.model';
 import { TicketModel, type AttendanceMethod, type ITicket } from './ticket.model';
 
 /** Why the roster is read-only, or OPEN when it is not. */
-export type AttendanceLock = 'OPEN' | 'COMPLETED' | 'CANCELLED';
+export type AttendanceLock = 'OPEN' | 'COMPLETED' | 'CANCELLED' | 'EXPIRED';
 export type AttendanceViewer = 'HOST' | 'CLUB_ADMIN';
 
 const badInput = (message: string) =>
@@ -51,22 +52,62 @@ const fullName = (u: any) =>
   'Guest';
 
 /**
+ * The instant the host's window to complete this pod runs out.
+ *
+ * Anchored on the pod's END, not its start: the window is time to settle a pod
+ * that has finished, and anchoring it on the start would make a long pod's
+ * deadline fall while the room is still full. Null when the pod cannot be
+ * placed on a clock — no start means no deadline, never an expired one.
+ */
+export function podCompleteDeadline(pod: any, timeoutHours: number): Date | null {
+  const end = podLiveEnd(pod);
+  if (!end) return null;
+  return new Date(end.getTime() + Math.max(1, timeoutHours) * 60 * 60_000);
+}
+
+/**
  * When attendance closes.
  *
- * Completion is the real deadline, not a clock: completing a pod computes the
- * payout from exactly who is marked, creates the payout releases and hands them
- * to Finance. Adding someone afterwards would claim money that was already
- * split. A cancelled pod never happened, so nobody attended it.
+ * Completion is one deadline: completing a pod computes the payout from exactly
+ * who is marked, creates the payout releases and hands them to Finance, so
+ * adding someone afterwards would claim money that was already split. A
+ * cancelled pod never happened, so nobody attended it.
+ *
+ * EXPIRED is the other, and it is the one that closes a roster nobody ever
+ * settled. A pod left uncompleted used to stay markable forever, so attendance
+ * — the record a host is PAID on — could be written weeks later against
+ * whatever the host remembered. `pod_complete_timeout_hours` (Admin > Pods >
+ * Pod Settings) ends that: the host gets that many hours after the pod ends to
+ * complete it, and past them their side of the roster is shut.
  *
  * This is why the page a host lands on can say "ask your Club Admin" and mean
- * it — the Club Admin's override is the only path left, and it is deliberately
- * NOT reopened here.
+ * it — the Club Admin's override is the only path left on an EXPIRED pod too,
+ * and it is deliberately NOT reopened for the host here.
  */
-export function attendanceLock(pod: any): AttendanceLock {
+export function attendanceLock(
+  pod: any,
+  timeoutHours: number,
+  now: Date = new Date()
+): AttendanceLock {
   if (pod?.deleted_at) return 'CANCELLED';
   if (pod?.completed_at) return 'COMPLETED';
+  const deadline = podCompleteDeadline(pod, timeoutHours);
+  if (deadline && now.getTime() > deadline.getTime()) return 'EXPIRED';
   return 'OPEN';
 }
+
+/**
+ * Whether THIS viewer may still write to the roster.
+ *
+ * The two locks part company here. COMPLETED and CANCELLED shut the roster for
+ * everybody — the money is split, or there was no pod. EXPIRED shuts the
+ * HOST's side only: it is the host's window that ran out, and the Club Admin's
+ * override exists precisely for the roster the host never finished (rule 41).
+ * Taking it away from them too would leave an unmarked attendee with nobody at
+ * all who can record that they came.
+ */
+export const canMarkAttendance = (lock: AttendanceLock, viewer: AttendanceViewer): boolean =>
+  lock === 'OPEN' || (lock === 'EXPIRED' && viewer === 'CLUB_ADMIN');
 
 /** How far either side of the pod a link-open still counts as attending. */
 const VIRTUAL_JOIN_LEAD_MS = 60 * 60_000;
@@ -316,7 +357,10 @@ export const attendanceService = {
     // Outside the window the link still opens — checking it works the day
     // before is reasonable — but nothing is recorded, because nothing was
     // attended. Completion closes it for good, as it does every other path.
-    if (attendanceLock(pod) !== 'OPEN' || !withinVirtualJoinWindow(pod)) return access;
+    const { timeout_hours } = await settingsService.getPodCompletionSettings();
+    if (attendanceLock(pod, timeout_hours) !== 'OPEN' || !withinVirtualJoinWindow(pod)) {
+      return access;
+    }
 
     await markTicketPresent(ticket, actor.id, 'VIRTUAL_JOIN');
     const { notifyAttendanceMarked } = await import('./ticket.service');
@@ -345,12 +389,13 @@ export const attendanceService = {
       .sort({ joined_at: 1 })
       .lean();
 
-    const [users, tickets, settings, club_admins] = await Promise.all([
+    const [users, tickets, settings, completion, club_admins] = await Promise.all([
       UserModel.find({ _id: { $in: memberships.map((m: any) => m.user_id) } })
         .select('profile auth.email auth.phone')
         .lean(),
       TicketModel.find({ pod_id: pod._id }),
       settingsService.getPublicAppSettings(),
+      settingsService.getPodCompletionSettings(),
       clubAdminsFor(pod),
     ]);
 
@@ -362,7 +407,8 @@ export const attendanceService = {
       toRow(m, userById.get(String(m.user_id)), ticketByMembership.get(String(m._id)), markedBy)
     );
     const attended = rows.filter((r) => r.attended);
-    const lock = attendanceLock(pod);
+    const lock = attendanceLock(pod, completion.timeout_hours);
+    const deadline = podCompleteDeadline(pod, completion.timeout_hours);
 
     return {
       pod_id: String(pod._id),
@@ -372,7 +418,13 @@ export const attendanceService = {
       pod_mode: pod.pod_mode ?? 'PHYSICAL',
       viewer,
       lock,
-      can_mark: lock === 'OPEN',
+      // Per VIEWER, not per lock: an expired roster is shut to the host and
+      // still open to the Club Admin who is being asked to fix it.
+      can_mark: canMarkAttendance(lock, viewer),
+      // What the host is racing, so the page can say the date rather than
+      // "soon" — and, once it has passed, why the buttons are gone.
+      complete_deadline: deadline?.toISOString() ?? null,
+      complete_timeout_hours: completion.timeout_hours,
       // The Club Admin's mark is the override for when proof cannot be
       // produced, so asking it for proof would defeat its only purpose.
       otp_required: viewer === 'HOST' && settings.attendance_otp_required,
@@ -419,7 +471,8 @@ export const attendanceService = {
         extensions: { code: 'FORBIDDEN' },
       });
     }
-    if (attendanceLock(pod) !== 'OPEN') {
+    const { timeout_hours } = await settingsService.getPodCompletionSettings();
+    if (!canMarkAttendance(attendanceLock(pod, timeout_hours), viewer)) {
       throw badInput('Attendance is closed for this pod');
     }
     const membership = await this.membershipOnPod(input.pod_doc_id, input.membership_id);
@@ -505,7 +558,14 @@ export const attendanceService = {
         extensions: { code: 'FORBIDDEN' },
       });
     }
-    if (attendanceLock(pod) !== 'OPEN') {
+    const completion = await settingsService.getPodCompletionSettings();
+    const lock = attendanceLock(pod, completion.timeout_hours);
+    if (lock === 'EXPIRED') {
+      throw badInput(
+        `The ${completion.timeout_hours}-hour window to complete this pod has passed, so attendance can no longer be marked here — ask your Club Admin to mark it`
+      );
+    }
+    if (lock !== 'OPEN') {
       throw badInput('Attendance is closed for this pod — ask your Club Admin to mark it');
     }
     const membership = await this.membershipOnPod(podDocId, membershipId);

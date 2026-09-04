@@ -24,8 +24,16 @@ export type AttendanceMarkMethod =
 /** The two kinds of pod. Mirrors the server's `PodMode`. */
 export type PodAttendanceMode = 'PHYSICAL' | 'VIRTUAL';
 
-/** Why the roster is read-only, or OPEN when it is not. */
-export type PodAttendanceLock = 'OPEN' | 'COMPLETED' | 'CANCELLED';
+/**
+ * Why the roster is read-only, or OPEN when it is not.
+ *
+ * EXPIRED is the host's completion window running out (Admin > Pods > Pod
+ * Settings): the pod was never completed, so the payout was never priced, and
+ * attendance written weeks after the door is not a record anybody can be paid
+ * on. It shuts the HOST's side only — the Club Admin's override is exactly the
+ * path an abandoned roster still needs.
+ */
+export type PodAttendanceLock = 'OPEN' | 'COMPLETED' | 'CANCELLED' | 'EXPIRED';
 
 export type PodAttendanceViewer = 'HOST' | 'CLUB_ADMIN';
 
@@ -81,7 +89,14 @@ export interface PodAttendanceBoard {
   pod_mode: PodAttendanceMode;
   viewer: PodAttendanceViewer;
   lock: PodAttendanceLock;
+  /** Whether THIS viewer may still write to the roster — the server decides it,
+   * because an EXPIRED board is shut to the host and open to the Club Admin. */
   can_mark: boolean;
+  /** When the host's window to complete this pod runs out (ISO), or null when
+   * the pod has no usable start. */
+  complete_deadline: string | null;
+  /** How long that window is, in hours — the number the copy quotes. */
+  complete_timeout_hours: number;
   otp_required: boolean;
   marked_count: number;
   total_count: number;
@@ -170,6 +185,21 @@ export const needsOtp = (
 ): boolean => board.viewer === 'HOST' && board.otp_required;
 
 /**
+ * Whether the page states the completion deadline.
+ *
+ * Only to the HOST, and only while there is still a deadline to beat: it is
+ * the host's window, and it is the one thing on this page they can still lose
+ * money by ignoring. A Club Admin reading the same board is not racing it, and
+ * once it has passed the EXPIRED notice says so in past tense instead.
+ *
+ * Shared rather than restated per surface so the MUI page and the Tamagui
+ * screen cannot disagree about when the warning appears (rule 27).
+ */
+export const showsCompleteDeadline = (
+  board: Readonly<Pick<PodAttendanceBoard, 'viewer' | 'lock' | 'complete_deadline'>>
+): boolean => board.viewer === 'HOST' && board.lock === 'OPEN' && !!board.complete_deadline;
+
+/**
  * Whether the host has a door to scan at.
  *
  * Only a physical pod does; a virtual pod's attendance is recorded when a
@@ -195,6 +225,35 @@ export const canScanTickets = (
 export const isOtpCodeShape = (value: string): boolean => /^\d{6}$/.test(value.trim());
 export const isOtpPhoneShape = (value: string): boolean => /^\d{6,15}$/.test(value.trim());
 export const isOtpExtensionShape = (value: string): boolean => /^\+?\d{1,5}$/.test(value.trim());
+
+/**
+ * The shortest number worth sending a one-time code to.
+ *
+ * `isOtpPhoneShape` accepts six digits because that is what the record stores
+ * and what a landline abroad legitimately is. Offering to send a WhatsApp code
+ * is a different question: at six digits the host is still halfway through
+ * typing a mobile number, so the button lit up on a number nobody holds and
+ * spent a code proving it. The door waits for the whole number.
+ */
+export const OTP_PHONE_MIN_DIGITS = 10;
+
+/** True once the number is long enough to be worth a code (see the constant). */
+export const isVerifiablePhoneShape = (value: string): boolean =>
+  /^\d{10,15}$/.test(value.trim());
+
+/**
+ * The comparable form of a phone number.
+ *
+ * Digits only and, past ten of them, only the last ten: the same phone reaches
+ * the door written `+91 98765 43210`, `919876543210` and `9876543210`, and a
+ * check that reads those as three different people is not a check. Shorter
+ * numbers are compared whole. The pieces are taken separately so a split
+ * extension/number pair and an already-joined line key the same way.
+ */
+export const phoneKey = (...parts: readonly string[]): string => {
+  const digits = (parts.join('').match(/\d+/g) ?? []).join('');
+  return digits.length > OTP_PHONE_MIN_DIGITS ? digits.slice(-OTP_PHONE_MIN_DIGITS) : digits;
+};
 
 /**
  * The dial code a phone field starts on.
@@ -305,13 +364,62 @@ export const namedCompanionEntries = (
       phone_number: entry.phone_number.trim(),
     }));
 
+/**
+ * What one row compares by — '' until the host has actually typed a number.
+ *
+ * Keying the whole row would read the PREFILLED DIAL CODE as a phone number:
+ * every blank row on a fresh multi-seat ticket carries `DEFAULT_DIAL_CODE`, so
+ * `phoneKey('+91', '')` is `'91'` and every row after the first would be
+ * reported as a repeat of it before anybody typed anything.
+ */
+const entryPhoneKey = (entry: Readonly<CompanionEntry>): string =>
+  entry.phone_number.trim() ? phoneKey(entry.phone_extension, entry.phone_number) : '';
+
+/**
+ * The rows whose number somebody else already has.
+ *
+ * One number is one person. A ticket that admits eight admits eight people, so
+ * the same WhatsApp number cannot stand for two of them — nor for the buyer,
+ * whose own number is already on the booking. `reserved` carries those: the
+ * buyer's phone and WhatsApp, plus anyone already recorded against the ticket.
+ *
+ * A row that has already been PROVED keeps its number whatever order the form
+ * was filled in; among the rest the first to use a number keeps it, so the row
+ * asked to change is the one that repeated it.
+ */
+export function duplicateCompanionIndexes(
+  entries: readonly CompanionEntry[],
+  reserved: readonly string[]
+): Set<number> {
+  const taken = new Set<string>();
+  for (const line of reserved) {
+    const key = phoneKey(line);
+    if (key) taken.add(key);
+  }
+  for (const entry of entries) {
+    if (entry.otp_challenge_id) taken.add(entryPhoneKey(entry));
+  }
+
+  const repeats = new Set<number>();
+  entries.forEach((entry, index) => {
+    if (entry.otp_challenge_id) return;
+    const key = entryPhoneKey(entry);
+    if (!key) return;
+    if (taken.has(key)) repeats.add(index);
+    else taken.add(key);
+  });
+  return repeats;
+}
+
 /** What one row's verify control is doing right now. */
 export type CompanionOtpState =
   /** This number already answered a code. */
   | 'VERIFIED'
   /** Somebody else's code is in flight — the host proves them one at a time. */
   | 'BLOCKED'
-  /** No number to send to yet. */
+  /** Somebody on this ticket already has this number. */
+  | 'DUPLICATE'
+  /** No whole number to send to yet. */
   | 'INCOMPLETE'
   /** Ready to send. */
   | 'READY';
@@ -322,15 +430,27 @@ export type CompanionOtpState =
  * One at a time is the whole point: a code proves the person standing in front
  * of the host, and two live challenges at a door is how the wrong person gets
  * ticked. `activeIndex` is the row with a challenge open, or null when none is.
+ *
+ * `duplicate` comes from `duplicateCompanionIndexes` — a number already spoken
+ * for on this ticket proves nobody new, and sending it a code would tick a
+ * second seat off the back of one person answering once.
+ *
+ * INCOMPLETE covers the half-typed number too: the row is only ready at
+ * `OTP_PHONE_MIN_DIGITS`, so the button no longer lights up six digits into a
+ * mobile number.
  */
 export function companionOtpState(
   entry: Readonly<CompanionEntry>,
   index: number,
-  activeIndex: number | null
+  activeIndex: number | null,
+  duplicate: boolean
 ): CompanionOtpState {
   if (entry.otp_challenge_id) return 'VERIFIED';
   if (activeIndex !== null && activeIndex !== index) return 'BLOCKED';
-  if (!isCompanionEntryComplete(entry)) return 'INCOMPLETE';
+  if (duplicate) return 'DUPLICATE';
+  if (!isCompanionEntryComplete(entry) || !isVerifiablePhoneShape(entry.phone_number)) {
+    return 'INCOMPLETE';
+  }
   return 'READY';
 }
 

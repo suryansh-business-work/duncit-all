@@ -9,41 +9,44 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useTranslation } from '@/hooks/useTranslation';
-import { requestWhatsAppOtp, skipWhatsAppOtp, verifyWhatsAppOtp } from '@/services/auth.service';
+import { requestSignupWhatsAppOtp, verifySignupWhatsAppOtp } from '@/services/auth.service';
 import { toErrorMessage } from '@/utils/errors';
 
 interface Props {
   /** The dial code and number the step before this one settled. */
   extension: string;
   number: string;
-  /**
-   * The signup tick box. A proven number is written to the account's phone as
-   * well when it is on; when it is off the profile phone stays blank, because
-   * the person has said their mobile number is a different one.
-   */
-  alsoMobile: boolean;
-  /** Where a verified — or skipped — number leads. */
-  onDone: () => void;
+  /** The address the same signup is about to use, checked alongside the number. */
+  email?: string;
+  /** True while the proof is being spent on the account. */
+  creating: boolean;
+  /** The proof of the number, on its way to the door that creates the account. */
+  onVerified: (whatsappToken: string) => void;
 }
 
 /**
- * Step four — the WhatsApp code. Tamagui twin of mWeb's <VerifyWhatsappStep/>.
+ * Step four — the WhatsApp code, and the end of signup. Tamagui twin of mWeb's
+ * <VerifyWhatsappStep/>.
  *
- * It can only run here, after `register`: all three mutations authenticate the
- * caller, so the account has to exist before a code can be asked for. The token
- * is already stored by the time this mounts, which is what makes them
- * authorised without the person having "logged in" yet.
- *
- * Skipping is allowed and leaves the account exactly as it is — the number is
- * simply unverified.
+ * Both mutations here are PUBLIC, because there is no account yet: this step is
+ * what decides whether there will be one. Proving the code returns a one-shot
+ * token, and the flow spends it on `register` (or `signupWithGoogle`) straight
+ * away. There is deliberately no way past this screen — leaving it leaves
+ * nothing behind, which is the point.
  */
-export function VerifyWhatsappStep({ extension, number, alsoMobile, onDone }: Readonly<Props>) {
+export function VerifyWhatsappStep({
+  extension,
+  number,
+  email,
+  creating,
+  onVerified,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = buildSignupStepperLabels(t);
   const [error, setError] = useState<string | null>(null);
   const [testCode, setTestCode] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const [verifying, setVerifying] = useState(false);
+  const [proving, setProving] = useState(false);
   /** The first send is automatic; this stops a re-render sending twice. */
   const asked = useRef(false);
 
@@ -65,7 +68,7 @@ export function VerifyWhatsappStep({ extension, number, alsoMobile, onDone }: Re
     setError(null);
     setSending(true);
     try {
-      const { testCode: code } = await requestWhatsAppOtp(extension, number);
+      const { testCode: code } = await requestSignupWhatsAppOtp(extension, number, email);
       setTestCode(code);
     } catch (e) {
       setError(toErrorMessage(e, t('mweb.auth.somethingWentWrong')));
@@ -87,23 +90,23 @@ export function VerifyWhatsappStep({ extension, number, alsoMobile, onDone }: Re
 
   const submit = handleSubmit(async (values) => {
     setError(null);
-    setVerifying(true);
+    setProving(true);
     try {
-      await verifyWhatsAppOtp(extension, number, values.otp, alsoMobile);
-      onDone();
+      const proof = await verifySignupWhatsAppOtp(extension, number, values.otp);
+      onVerified(proof);
     } catch (e) {
       setError(toErrorMessage(e, t('mweb.auth.somethingWentWrong')));
     } finally {
-      setVerifying(false);
+      setProving(false);
     }
   });
 
-  const skip = async () => {
-    // A failure here changes nothing about the account, so the person is let
-    // through either way rather than trapped on a step they chose to leave.
-    await skipWhatsAppOtp().catch(() => undefined);
-    onDone();
-  };
+  const busy = proving || creating;
+  // Decided above the JSX (S3358): proving the code and spending it are two
+  // waits in a row, and they say different things.
+  let buttonLabel = labels.verify;
+  if (proving) buttonLabel = labels.verifying;
+  else if (creating) buttonLabel = labels.creating;
 
   return (
     <YStack gap={16}>
@@ -132,9 +135,9 @@ export function VerifyWhatsappStep({ extension, number, alsoMobile, onDone }: Re
       ) : null}
       <PrimaryButton
         testID="signup-verify"
-        label={verifying ? labels.verifying : labels.verify}
-        loading={verifying}
-        disabled={verifying || !isValid}
+        label={buttonLabel}
+        loading={busy}
+        disabled={busy || !isValid}
         onPress={() => {
           submit().catch(() => undefined);
         }}
@@ -160,18 +163,6 @@ export function VerifyWhatsappStep({ extension, number, alsoMobile, onDone }: Re
           {sending ? labels.sending : labels.resend}
         </Text>
       </XStack>
-      <Text
-        testID="signup-skip-whatsapp"
-        pressStyle={PRESS_STYLE.inline}
-        fontSize={14}
-        color="$muted"
-        textAlign="center"
-        onPress={() => {
-          skip().catch(() => undefined);
-        }}
-      >
-        {labels.skipForNow}
-      </Text>
     </YStack>
   );
 }

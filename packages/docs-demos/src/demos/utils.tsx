@@ -66,6 +66,7 @@ import {
   mwebAttendanceLabels,
   namedCompanionEntries,
   needsOtp,
+  showsCompleteDeadline,
   SIGNUP_STEPS,
   SIGNUP_STEP_COUNT,
   SIGNUP_STEP_FIELDS,
@@ -73,7 +74,11 @@ import {
   canLeaveSignupStep,
   nextSignupStep,
   previousSignupStep,
+  initialSignupFlowState,
+  signupFlowReducer,
+  signupNumberOf,
   signupStepIndex,
+  type SignupNumberFields,
   stepSubmitsAccount,
   PASSWORD_RECOVERY_CHANNELS,
   PASSWORD_RECOVERY_STEP_COUNT,
@@ -109,6 +114,7 @@ import {
   type PasswordRecoveryChannel,
   type SignupStep,
   type PasswordRecoveryStep,
+  type PodAttendanceLock,
   type PodAttendanceMode,
   type PodAttendanceViewer,
   type PodFeedbackReminderChoice,
@@ -201,6 +207,13 @@ interface SignupStepMock {
   step: SignupStep;
 }
 
+interface SignupFlowMock {
+  /** Which door is being walked: the email form, or Google. */
+  door: 'EMAIL' | 'GOOGLE';
+  /** The three number boxes both signup forms spell the same way. */
+  values: SignupNumberFields;
+}
+
 interface PasswordRecoveryMock {
   channel: PasswordRecoveryChannel;
   step: PasswordRecoveryStep;
@@ -219,13 +232,18 @@ interface HandleMock {
   reason: UsernameRejection | null;
 }
 
-/** The head of a `podAttendanceBoard` answer — the four fields every attendance rule reads. */
+/** The head of a `podAttendanceBoard` answer — the fields every attendance rule reads. */
 interface AttendanceBoardMock {
   pod_id: string;
   viewer: PodAttendanceViewer;
   can_mark: boolean;
   otp_required: boolean;
   pod_mode: PodAttendanceMode;
+  /** Why the roster is read-only, or OPEN. EXPIRED is the host's completion
+   * window running out — it shuts their side and leaves the admin's open. */
+  lock: PodAttendanceLock;
+  /** When that window closes (ISO), or null when the pod has no usable start. */
+  complete_deadline: string | null;
   /** Seats on one booking still without a name against them. */
   companions_required: number;
 }
@@ -844,9 +862,9 @@ export default defineDemos('utils', [
     id: 'signup-steps',
     title: 'Joining Duncit, one question at a time',
     note:
-      "Move `step` through the four and watch what each one owns. SECURITY is the only step whose " +
-      "button creates the account, and VERIFY is the only one with no way back — by then the account " +
-      'exists, so Back could only offer a form that has been spent.',
+      "Move `step` through the four and watch what each one owns. SECURITY is the last step with " +
+      "boxes, and VERIFY is the one that creates the account — it has no way back, because a code is " +
+      'already on its way to the number that was typed.',
     mock: { step: 'CONTACT' },
     compute: (mock) => {
       // Keys rather than English, so the demo shows WHICH sentence each label
@@ -861,12 +879,56 @@ export default defineDemos('utils', [
         'Back goes to': canLeaveSignupStep(mock.step)
           ? (previousSignupStep(mock.step) ?? '')
           : '(no Back on this step)',
-        'Creates the account': String(stepSubmitsAccount(mock.step)),
+        'Submits the form': String(stepSubmitsAccount(mock.step)),
         'The four steps': SIGNUP_STEPS.join(' -> '),
         // The Google door has no form to have asked these, so it asks them
         // inside VERIFY — same builder, so both doors word the box identically.
         "Google's number half-step": labels.numberTitle,
         'The tick box': labels.sameAsMobile,
+      };
+    },
+  }),
+  defineDemo<SignupFlowMock>({
+    id: 'signup-flow',
+    title: 'What signup is holding at each step',
+    note:
+      "Switch `door` and watch what the machine ends up holding. Nothing is created until the " +
+      'WhatsApp code answers, so exactly one of pendingForm/pendingGoogle is ever set — that is ' +
+      'how the last step knows which door it is finishing. Google is the one that needs the ' +
+      'number step, because its credential proves an address and nothing else.',
+    mock: {
+      door: 'GOOGLE',
+      values: { phoneExtension: '+91', phoneNumber: '9845012345', whatsappIsMobile: true },
+    },
+    compute: (mock) => {
+      // The email form's answers, as far as the machine cares about them.
+      const form = { ...mock.values, email: 'riya@duncit.com' };
+      type Form = typeof form;
+      let state = initialSignupFlowState<Form>();
+      const opened = state.step;
+      if (mock.door === 'GOOGLE') {
+        state = signupFlowReducer<Form>(state, {
+          type: 'GOOGLE_ACCEPTED',
+          credential: { idToken: 'google-id-token', policyIds: ['terms', 'privacy'] },
+        });
+      } else {
+        state = signupFlowReducer<Form>(state, { type: 'FORM_FILLED', values: form });
+      }
+      const askedForNumber = state.askingNumber;
+      if (askedForNumber) {
+        state = signupFlowReducer<Form>(state, { type: 'NUMBER_GIVEN', values: mock.values });
+      }
+      return {
+        'Opens on': opened,
+        'After the door answers': state.step,
+        'Needed a number step': String(askedForNumber),
+        'Code goes to': state.verifying
+          ? `${state.verifying.extension} ${state.verifying.number}`
+          : '(no number settled yet)',
+        'Writes the profile phone too': String(state.verifying?.alsoMobile ?? false),
+        'Holding the form': String(state.pendingForm !== null),
+        'Holding a Google credential': String(state.pendingGoogle !== null),
+        'signupNumberOf': JSON.stringify(signupNumberOf(mock.values)),
       };
     },
   }),
@@ -992,13 +1054,17 @@ export default defineDemos('utils', [
       'Now set viewer to CLUB_ADMIN with companions_required above 0: the row state flips from ' +
       'NEEDS_COMPANIONS to READY, because naming the group is the HOST’s door step and the ' +
       'admin is correcting the roster long after that door shut. needsOtp also answers false for ' +
-      'them — not because they cannot send a code, but because they are never made to.',
+      'them — not because they cannot send a code, but because they are never made to. ' +
+      'Set lock to EXPIRED: the host’s completion window ran out, the deadline banner gives way ' +
+      'to the locked notice, and only a Club Admin can still record who came.',
     mock: {
       pod_id: 'DUN-POD-4821',
       viewer: 'HOST',
       can_mark: true,
       otp_required: true,
       pod_mode: 'PHYSICAL',
+      lock: 'OPEN',
+      complete_deadline: '2026-08-31T14:00:00.000Z',
       companions_required: 7,
     },
     compute: (mock) => {
@@ -1010,6 +1076,8 @@ export default defineDemos('utils', [
       return {
         'needsOtp(board)': needsOtp(mock),
         'canScanTickets(board)': canScanTickets(mock),
+        'showsCompleteDeadline(board)': showsCompleteDeadline(mock),
+        'Locked notice': labels.lockedTitle(mock.lock),
         'earningsBodyFor(board, labels)': earningsBodyFor(mock, labels),
         'Scan CTA': scanCta,
         'How a member gets marked': labels.methodLabel(door),

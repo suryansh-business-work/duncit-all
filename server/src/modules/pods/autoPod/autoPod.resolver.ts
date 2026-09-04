@@ -6,6 +6,7 @@ import { autoPodService, categoryPathOf, type AutoPodQueueScope } from './autoPo
 import { autoPodAudience } from './autoPod.audience';
 import {
   clubClaimAutoPod,
+  clubWithdrawAutoPod,
   hostAssignAutoPod,
   hostWithdrawAutoPod,
   venueAcceptAutoPod,
@@ -73,6 +74,19 @@ export const autoPodResolvers = {
       if (!ctx.user?.id || !parent.venue_claim) return null;
       const doc = await AutoPodModel.findById(parent.id);
       return doc ? autoPodService.expectedHostEarnings(doc, ctx.user.id) : null;
+    },
+    // Ticket price × the booked space's capacity — the venue's own figure,
+    // never the host's payout.
+    expected_venue_earnings: async (parent: any) => {
+      if (!parent.venue_claim) return null;
+      const doc = await AutoPodModel.findById(parent.id);
+      return doc ? autoPodService.expectedVenueEarnings(doc) : null;
+    },
+    // The club admin's cut of the same waterfall Step 4 of Create a Pod runs.
+    expected_club_earnings: async (parent: any) => {
+      if (!parent.host_claim) return null;
+      const doc = await AutoPodModel.findById(parent.id);
+      return doc ? autoPodService.expectedClubEarnings(doc) : null;
     },
   },
 
@@ -224,6 +238,10 @@ export const autoPodResolvers = {
 
     hostWithdrawAutoPod: (_p: unknown, args: { auto_pod_doc_id: string }, ctx: GraphQLContext) =>
       hostWithdrawAutoPod(requireAuth(ctx).id, args.auto_pod_doc_id),
+
+    // Membership of the CLAIMING club is what authorises this, asserted inside.
+    clubWithdrawAutoPod: (_p: unknown, args: { auto_pod_doc_id: string }, ctx: GraphQLContext) =>
+      clubWithdrawAutoPod(requireAuth(ctx), args.auto_pod_doc_id),
 
     clubClaimAutoPod: (
       _p: unknown,

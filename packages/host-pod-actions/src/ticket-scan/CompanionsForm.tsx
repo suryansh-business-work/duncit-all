@@ -3,7 +3,11 @@ import { useFieldArray, useForm, useWatch, type Resolver } from 'react-hook-form
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { companionEntriesToInput, type CompanionEntry } from '@duncit/utils';
+import {
+  companionEntriesToInput,
+  duplicateCompanionIndexes,
+  type CompanionEntry,
+} from '@duncit/utils';
 import CompanionRow from './CompanionRow';
 import { useCompanionOtp } from './useCompanionOtp';
 import {
@@ -23,6 +27,13 @@ interface Props {
   seats: number;
   /** How many still need a name and a phone number. */
   required: number;
+  /**
+   * Numbers this booking has already spoken for — the buyer's own phone and
+   * WhatsApp, plus anyone already recorded against the ticket. A companion
+   * may not repeat one: a single WhatsApp answering a single code must never
+   * tick two seats.
+   */
+  reserved: readonly string[];
   busy?: boolean;
   onSubmit: (companions: PodCompanionInput[]) => void;
 }
@@ -39,12 +50,17 @@ interface Props {
  * That part is OPTIONAL and deliberately so: a dead phone or a number abroad
  * must never hold a group at the door, so the code records who was actually
  * proved rather than deciding who gets in.
+ *
+ * Optional, but never loose: one number is one person, so a row repeating
+ * another row's number or the buyer's own can neither be verified nor
+ * submitted, and a row that HAS answered a code is read-only from then on.
  */
 export default function CompanionsForm({
   podId,
   membershipId,
   seats,
   required,
+  reserved,
   busy,
   onSubmit,
 }: Readonly<Props>) {
@@ -65,13 +81,10 @@ export default function CompanionsForm({
   }) as CompanionEntry[];
   const otp = useCompanionOtp(podId, membershipId, labels);
 
-  // A proof names ONE number. Retyping the name or the number makes it a
-  // different person, so the challenge it earned no longer describes this row.
-  const dropProof = (index: number) => {
-    if (entries[index].otp_challenge_id) {
-      setValue(`companions.${index}.otp_challenge_id`, '', { shouldDirty: true });
-    }
-  };
+  // One number is one person. The rows that repeat one cannot be verified and
+  // cannot be submitted — a group of eight is eight phones, and the same
+  // WhatsApp standing in for two of them is a seat nobody accounted for.
+  const duplicates = duplicateCompanionIndexes(entries, reserved);
 
   const keepProof = (index: number, challengeId: string) => {
     setValue(`companions.${index}.otp_challenge_id`, challengeId, { shouldDirty: true });
@@ -96,9 +109,9 @@ export default function CompanionsForm({
           index={index}
           control={control}
           entry={entries[index]}
+          duplicate={duplicates.has(index)}
           labels={labels}
           otp={otp}
-          onEdit={dropProof}
           onVerified={keepProof}
         />
       ))}
@@ -107,7 +120,7 @@ export default function CompanionsForm({
         <Alert severity="warning">{labels.companionsIncomplete}</Alert>
       )}
 
-      <DuncitButton type="submit" variant="contained" disabled={busy}>
+      <DuncitButton type="submit" variant="contained" disabled={busy || duplicates.size > 0}>
         {labels.companionsSubmit}
       </DuncitButton>
     </Stack>

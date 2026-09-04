@@ -235,3 +235,142 @@ describe('shiprocketService.quoteShipping free-delivery threshold', () => {
     expect(missed.breakup[0]).toMatchObject({ charge: 30, free: false });
   });
 });
+
+/**
+ * The parcel weight ShipRocket is asked to rate. The flat product `weight_kg`
+ * only ever mirrors the FIRST variant (applyVariants writes it), so a cart line
+ * naming any other variant must be weighed by that variant.
+ */
+describe('shiprocketService.quoteShipping parcel weight', () => {
+  const rate = (freight: number) => ({
+    serviceable: true, courier_name: 'Blue', courier_company_id: '1', freight_charge: freight, etd: '3',
+  });
+
+  it("rates the chosen variant by ITS weight, not the product's flat weight", async () => {
+    mockConfigured.mockResolvedValue(true);
+    mockServ.mockResolvedValue(rate(90));
+    const wh = await seedWarehouse();
+    // Flat weight 1 kg mirrors the first variant; the buyer picks the 5 kg one.
+    const product = await seedShip(wh._id, {
+      weight_kg: 1,
+      variants: [
+        { option_label: 'Small', unit_cost: 100, inventory_count: 5, weight_kg: 1, images: [] },
+        { option_label: 'Large', unit_cost: 100, inventory_count: 5, weight_kg: 5, images: [] },
+      ],
+    });
+    const large = String(product.variants[1]._id);
+    await shiprocketService.quoteShipping(
+      [{ product_id: String(product._id), variant_id: large, quantity: 2 }],
+      '560001',
+    );
+    expect(mockServ).toHaveBeenCalledWith(expect.objectContaining({ weightKg: 10 }));
+  });
+
+  it('falls back to the product weight for a variant that carries none', async () => {
+    mockConfigured.mockResolvedValue(true);
+    mockServ.mockResolvedValue(rate(60));
+    const wh = await seedWarehouse();
+    const product = await seedShip(wh._id, {
+      weight_kg: 3,
+      variants: [{ option_label: 'Only', unit_cost: 100, inventory_count: 5, images: [] }],
+    });
+    await shiprocketService.quoteShipping(
+      [{ product_id: String(product._id), variant_id: String(product.variants[0]._id), quantity: 1 }],
+      '560001',
+    );
+    expect(mockServ).toHaveBeenCalledWith(expect.objectContaining({ weightKg: 3 }));
+  });
+
+  it('falls back to the product weight when the cart names a variant the product no longer has', async () => {
+    mockConfigured.mockResolvedValue(true);
+    mockServ.mockResolvedValue(rate(60));
+    const wh = await seedWarehouse();
+    const product = await seedShip(wh._id, { weight_kg: 4 });
+    await shiprocketService.quoteShipping(
+      [{ product_id: String(product._id), variant_id: String(new Types.ObjectId()), quantity: 1 }],
+      '560001',
+    );
+    expect(mockServ).toHaveBeenCalledWith(expect.objectContaining({ weightKg: 4 }));
+  });
+
+  it("floors a weightless product at ShipRocket's 0.1 kg minimum", async () => {
+    mockConfigured.mockResolvedValue(true);
+    mockServ.mockResolvedValue(rate(40));
+    const wh = await seedWarehouse();
+    const product = await seedShip(wh._id, { weight_kg: 0 });
+    await shiprocketService.quoteShipping([{ product_id: String(product._id), quantity: 3 }], '560001');
+    expect(mockServ).toHaveBeenCalledWith(expect.objectContaining({ weightKg: 0.1 }));
+  });
+});
+
+/**
+ * Shapes the cart and the database can really produce but the happy path
+ * never does: a line worth nothing, a pod that predates product_requests, and
+ * a SHIPROCKET product with no warehouse to rate from.
+ */
+describe('shiprocketService.quoteShipping edge shapes', () => {
+  it('drops a line with no quantity instead of grouping it', async () => {
+    mockConfigured.mockResolvedValue(false);
+    const wh = await seedWarehouse();
+    const product = await seedShip(wh._id);
+    const quote = await shiprocketService.quoteShipping(
+      [{ product_id: String(product._id), quantity: 0 }],
+      '560001',
+    );
+    expect(quote).toEqual({ total: 0, breakup: [], all_quoted: true });
+  });
+
+  // The pod snapshot is read with .lean(), so a document written before
+  // product_requests existed arrives without the field at all.
+  it('prices against the live product when the pod carries no snapshot at all', async () => {
+    mockConfigured.mockResolvedValue(false);
+    const wh = await seedWarehouse();
+    const product = await seedShip(wh._id, { unit_cost: 200, free_delivery_above: 150 });
+    const legacyPodId = new Types.ObjectId();
+    await PodModel.collection.insertOne({ _id: legacyPodId } as never);
+    const quote = await shiprocketService.quoteShipping(
+      [{ product_id: String(product._id), pod_id: String(legacyPodId), quantity: 1 }],
+      '560001',
+    );
+    // Live price 200 >= the 150 threshold, so the group ships free.
+    expect(quote.breakup[0]).toMatchObject({ charge: 0, free: true });
+  });
+
+  it('ignores a snapshot row whose unit_cost is not a number', async () => {
+    mockConfigured.mockResolvedValue(false);
+    const wh = await seedWarehouse();
+    const product = await seedShip(wh._id, { unit_cost: 200, free_delivery_above: 150 });
+    const brokenPodId = new Types.ObjectId();
+    await PodModel.collection.insertOne({
+      _id: brokenPodId,
+      product_requests: [{ product_id: product._id, unit_cost: 'free' }],
+    } as never);
+    const quote = await shiprocketService.quoteShipping(
+      [{ product_id: String(product._id), pod_id: String(brokenPodId), quantity: 1 }],
+      '560001',
+    );
+    // The unusable snapshot is skipped and the live 200 qualifies instead.
+    expect(quote.breakup[0]).toMatchObject({ charge: 0, free: true });
+  });
+
+  // The save-time guard stops this being created now, but a product that
+  // predates it has no pincode to rate from and must not silently read as free.
+  it('reports a warehouseless ShipRocket product as unquoted, not as free', async () => {
+    mockConfigured.mockResolvedValue(true);
+    const product = await InventoryProductModel.create({
+      product_name: 'Orphan',
+      sku: `SQ-${++seq}`,
+      unit_cost: 100,
+      delivery_target: 'SHIPROCKET',
+      weight_kg: 1,
+      delivery_charge: 0,
+    });
+    const quote = await shiprocketService.quoteShipping(
+      [{ product_id: String(product._id), quantity: 1 }],
+      '560001',
+    );
+    expect(mockServ).not.toHaveBeenCalled();
+    expect(quote.breakup[0]).toMatchObject({ warehouse_id: '', pickup_pincode: '', charge: 0, quoted: false, free: false });
+    expect(quote.all_quoted).toBe(false);
+  });
+});

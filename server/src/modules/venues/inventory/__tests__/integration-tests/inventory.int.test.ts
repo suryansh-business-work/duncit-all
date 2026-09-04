@@ -701,4 +701,39 @@ describe('inventoryService Duncit warehouse guard', () => {
     expect(updated.product_name).toBe('Brand Item 2');
     expect(updated.pickup_location_id).toBeNull();
   });
+
+  // A ShipRocket product IS its warehouse: the rate and the shipment both start
+  // at that pincode. Without a warehouse the checkout quotes it at zero rather
+  // than failing, so the pairing is refused at save time.
+  it('refuses to put a product on ShipRocket while it has no warehouse', async () => {
+    const doc = await InventoryProductModel.create({
+      product_name: 'Warehouseless',
+      sku: 'BWH-GUARD-2',
+      unit_cost: 5,
+      brand_id: new Types.ObjectId(),
+      ownership: 'BRAND',
+    });
+    await expect(
+      inventoryService.update(String(doc._id), { delivery_target: 'SHIPROCKET' }, admin),
+    ).rejects.toThrow(/warehouse this product ships from/i);
+  });
+
+  it('accepts ShipRocket once the product has a warehouse to ship from', async () => {
+    const wh = await BrandPickupLocationModel.create({ owner_kind: 'BRAND', nickname: 'BR-SHIP-WH' });
+    const doc = await InventoryProductModel.create({
+      product_name: 'Warehoused',
+      sku: 'BWH-GUARD-3',
+      unit_cost: 5,
+      brand_id: new Types.ObjectId(),
+      ownership: 'BRAND',
+      pickup_location_id: wh._id,
+    });
+    const updated = await inventoryService.update(
+      String(doc._id),
+      { delivery_target: 'SHIPROCKET' },
+      admin,
+    );
+    expect(updated.delivery_target).toBe('SHIPROCKET');
+    expect(updated.pickup_location_id).toBe(String(wh._id));
+  });
 });

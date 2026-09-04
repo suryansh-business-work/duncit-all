@@ -96,7 +96,23 @@ describe('DeliveryAvailabilitySection', () => {
     expect(screen.getByText(/set 0 for free delivery/i)).toBeInTheDocument();
   });
 
-  it('hides the Duncit warehouse picker for a brand-owned product', async () => {
+  it('calls the delivery charge a fallback once the product ships via ShipRocket', async () => {
+    renderWithProviders(
+      <ProductFormHarness values={{ delivery_target: 'SHIPROCKET', delivery_available: true }}>
+        <DeliveryAvailabilitySection />
+      </ProductFormHarness>,
+      { mocks: [brandPickupLocationsMock([makeBrandPickupLocation({ owner_kind: 'DUNCIT', brand_id: null })])] },
+    );
+    // ShipRocket prices the parcel live from the warehouse, so the flat number
+    // is only what is charged when the lane cannot be rated — the hint must not
+    // keep calling it a flat fee per order.
+    expect(screen.getByText(/Fallback only/i)).toBeInTheDocument();
+    expect(screen.queryByText(/set 0 for free delivery/i)).not.toBeInTheDocument();
+    // The method picker sits beside the warehouse it depends on.
+    await waitFor(() => expect(screen.getByText('ShipRocket delivery')).toBeInTheDocument());
+  });
+
+  it('hides the delivery method and warehouse pickers for a brand-owned product', async () => {
     renderWithProviders(
       <ProductFormHarness values={{ ownership: 'BRAND' }}>
         <DeliveryAvailabilitySection />
@@ -107,5 +123,6 @@ describe('DeliveryAvailabilitySection', () => {
     expect(screen.getByLabelText(/Weight/i)).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByText('Main WH — Pune')).not.toBeInTheDocument());
     expect(screen.queryByLabelText(/Warehouse/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Delivery method/i)).not.toBeInTheDocument();
   });
 });

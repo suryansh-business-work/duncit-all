@@ -70,6 +70,14 @@ export {
   type GrievanceTranslate,
 } from './grievance';
 export {
+  COMMON_REGION_LOCALES,
+  ISO_639_1_LANGUAGES,
+  describeLocale,
+  isRtlLocale,
+  localeOptions,
+  type LocaleOption,
+} from './locales';
+export {
   mailCategoryCopy,
   type MailCategoryCopy,
   type MailCategoryTranslate,

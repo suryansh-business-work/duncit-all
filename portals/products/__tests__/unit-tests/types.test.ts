@@ -87,4 +87,31 @@ describe('inventory product form mappers', () => {
     expect(toFormValues({ id: 'p1' }).ownership).toBe('DUNCIT');
     expect(blankProductForm.ownership).toBe('DUNCIT');
   });
+
+  // delivery_target is the switch that puts a product on the ShipRocket lane:
+  // anything else and the checkout never rates the parcel from its warehouse.
+  it('round-trips the delivery method and defaults it to hand-carried', () => {
+    expect(toFormValues({ id: 'p1', delivery_target: 'SHIPROCKET' }).delivery_target).toBe('SHIPROCKET');
+    expect(toFormValues({ id: 'p1' }).delivery_target).toBe('HOST');
+    expect(blankProductForm.delivery_target).toBe('HOST');
+  });
+
+  it('submits the delivery method for a Duncit product and withholds it for a brand one', () => {
+    const duncit = toSubmitInput({
+      ...blankProductForm,
+      delivery_target: 'SHIPROCKET',
+      pickup_location_id: 'wh1',
+    });
+    expect(duncit).toMatchObject({ delivery_target: 'SHIPROCKET', pickup_location_id: 'wh1' });
+
+    // A brand product keeps the method it was listed with, alongside the brand
+    // warehouse this form never lists.
+    const brand = toSubmitInput({
+      ...blankProductForm,
+      ownership: 'BRAND',
+      delivery_target: 'SHIPROCKET',
+    });
+    expect('delivery_target' in brand).toBe(false);
+    expect('pickup_location_id' in brand).toBe(false);
+  });
 });

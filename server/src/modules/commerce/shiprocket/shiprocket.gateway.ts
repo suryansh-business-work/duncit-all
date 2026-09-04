@@ -102,7 +102,7 @@ async function getToken(force = false): Promise<string> {
   return token;
 }
 
-async function srRequest<T = any>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
+async function srRequest<T = any>(path: string, init: RequestInit, retry = true): Promise<T> {
   const token = await getToken();
   const res = await fetch(`${SR_BASE}${path}`, {
     ...init,

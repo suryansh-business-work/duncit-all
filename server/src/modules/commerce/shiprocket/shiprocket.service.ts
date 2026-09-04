@@ -100,9 +100,12 @@ async function loadSnapshotUnitCosts(podIds: string[]): Promise<Map<string, numb
   return map;
 }
 
-/** The chosen variant of a product, or null for a non-variant line. */
+/** The chosen variant of a product — null for a non-variant line, and null for
+ * a stale cart line naming a variant the product no longer carries. The
+ * `variants` path is a schema array defaulting to `[]` and is always selected,
+ * so it never needs a nullish guard of its own. */
 const findVariant = (product: any, variantId: string) =>
-  variantId ? ((product.variants ?? []).find((v: any) => String(v._id) === variantId) ?? null) : null;
+  variantId ? (product.variants.find((v: any) => String(v._id) === variantId) ?? null) : null;
 
 /** Shipment weight of one product's cart lines. A variant carries its OWN
  * weight_kg and the flat product field only ever mirrors the FIRST variant, so
@@ -128,14 +131,13 @@ function productLinesQualifyFree(
 ): boolean {
   const threshold = product.free_delivery_above;
   if (threshold === null || threshold === undefined) return false;
-  if (lines.length === 0) return false;
   return lines.every((line) => {
     const variant = findVariant(product, line.variant_id);
     let unitCost: number;
     if (variant) {
-      unitCost = Number(variant.unit_cost ?? 0);
+      unitCost = Number(variant.unit_cost);
     } else {
-      unitCost = Number(snapshotUnitCost ?? product.unit_cost ?? 0);
+      unitCost = Number(snapshotUnitCost ?? product.unit_cost);
     }
     return unitCost * line.quantity >= Number(threshold);
   });
@@ -159,8 +161,6 @@ function buildShipGroups(
     const { pod_id: podId, product_id: productId } = lines[0];
     const product = productById.get(productId);
     if (product?.delivery_target !== 'SHIPROCKET') continue;
-    const qty = lines.reduce((sum, line) => sum + line.quantity, 0);
-    if (qty <= 0) continue;
     const warehouseId = product.pickup_location_id ? String(product.pickup_location_id) : '';
     const key = `${podId}|${warehouseId}`;
     const group =
@@ -238,17 +238,17 @@ async function resolvePickup(order: IProductOrder): Promise<string> {
 
 function buildAdhocPayload(order: IProductOrder, pickup: string): Record<string, unknown> {
   const addr = (order.shipping_address ?? {}) as Record<string, any>;
-  const nameParts = String(addr.name ?? order.buyer_name ?? 'Customer').trim().split(/\s+/);
+  const nameParts = String(addr.name ?? order.buyer_name).trim().split(/\s+/);
   const first = nameParts.shift() || 'Customer';
   const last = nameParts.join(' ') || '.';
-  const items = order.line_items ?? [];
+  const items = order.line_items;
   const weight = Math.max(0.1, items.reduce((s, l) => s + Number(l.weight_kg || 0) * l.qty, 0));
   const length = Math.max(1, ...items.map((l) => Number(l.length_cm || 0)), 10);
   const breadth = Math.max(1, ...items.map((l) => Number(l.breadth_cm || 0)), 10);
   const height = Math.max(1, ...items.map((l) => Number(l.height_cm || 0)), 5);
   return {
     order_id: order.order_no,
-    order_date: (order.created_at ?? new Date()).toISOString().slice(0, 10),
+    order_date: order.created_at.toISOString().slice(0, 10),
     pickup_location: pickup,
     billing_customer_name: first,
     billing_last_name: last,
@@ -319,7 +319,7 @@ export const shiprocketService = {
       ...new Set([...groups.values()].map((g) => g.warehouse_id)),
     ].filter((id) => id && Types.ObjectId.isValid(id));
     const warehouses = await BrandPickupLocationModel.find({ _id: { $in: warehouseIds } }).select('pincode');
-    const pincodeByWarehouse = new Map(warehouses.map((w) => [String(w._id), String(w.pincode ?? '')]));
+    const pincodeByWarehouse = new Map(warehouses.map((w) => [String(w._id), String(w.pincode)]));
     const configured = await isShiprocketConfigured();
 
     const breakup: ShipQuoteLine[] = [];

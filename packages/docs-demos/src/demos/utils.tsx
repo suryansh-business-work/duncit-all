@@ -74,7 +74,11 @@ import {
   canLeaveSignupStep,
   nextSignupStep,
   previousSignupStep,
+  initialSignupFlowState,
+  signupFlowReducer,
+  signupNumberOf,
   signupStepIndex,
+  type SignupNumberFields,
   stepSubmitsAccount,
   PASSWORD_RECOVERY_CHANNELS,
   PASSWORD_RECOVERY_STEP_COUNT,
@@ -201,6 +205,13 @@ interface ContactChangeMock {
 
 interface SignupStepMock {
   step: SignupStep;
+}
+
+interface SignupFlowMock {
+  /** Which door is being walked: the email form, or Google. */
+  door: 'EMAIL' | 'GOOGLE';
+  /** The three number boxes both signup forms spell the same way. */
+  values: SignupNumberFields;
 }
 
 interface PasswordRecoveryMock {
@@ -874,6 +885,50 @@ export default defineDemos('utils', [
         // inside VERIFY — same builder, so both doors word the box identically.
         "Google's number half-step": labels.numberTitle,
         'The tick box': labels.sameAsMobile,
+      };
+    },
+  }),
+  defineDemo<SignupFlowMock>({
+    id: 'signup-flow',
+    title: 'What signup is holding at each step',
+    note:
+      "Switch `door` and watch what the machine ends up holding. Nothing is created until the " +
+      'WhatsApp code answers, so exactly one of pendingForm/pendingGoogle is ever set — that is ' +
+      'how the last step knows which door it is finishing. Google is the one that needs the ' +
+      'number step, because its credential proves an address and nothing else.',
+    mock: {
+      door: 'GOOGLE',
+      values: { phoneExtension: '+91', phoneNumber: '9845012345', whatsappIsMobile: true },
+    },
+    compute: (mock) => {
+      // The email form's answers, as far as the machine cares about them.
+      const form = { ...mock.values, email: 'riya@duncit.com' };
+      type Form = typeof form;
+      let state = initialSignupFlowState<Form>();
+      const opened = state.step;
+      if (mock.door === 'GOOGLE') {
+        state = signupFlowReducer<Form>(state, {
+          type: 'GOOGLE_ACCEPTED',
+          credential: { idToken: 'google-id-token', policyIds: ['terms', 'privacy'] },
+        });
+      } else {
+        state = signupFlowReducer<Form>(state, { type: 'FORM_FILLED', values: form });
+      }
+      const askedForNumber = state.askingNumber;
+      if (askedForNumber) {
+        state = signupFlowReducer<Form>(state, { type: 'NUMBER_GIVEN', values: mock.values });
+      }
+      return {
+        'Opens on': opened,
+        'After the door answers': state.step,
+        'Needed a number step': String(askedForNumber),
+        'Code goes to': state.verifying
+          ? `${state.verifying.extension} ${state.verifying.number}`
+          : '(no number settled yet)',
+        'Writes the profile phone too': String(state.verifying?.alsoMobile ?? false),
+        'Holding the form': String(state.pendingForm !== null),
+        'Holding a Google credential': String(state.pendingGoogle !== null),
+        'signupNumberOf': JSON.stringify(signupNumberOf(mock.values)),
       };
     },
   }),

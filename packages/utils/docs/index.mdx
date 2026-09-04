@@ -139,6 +139,9 @@ exports:
   - 'stepSubmitsAccount'
   - 'canLeaveSignupStep'
   - 'buildSignupStepperLabels'
+  - 'initialSignupFlowState'
+  - 'signupFlowReducer'
+  - 'signupNumberOf'
   - 'USERNAME_PATTERN'
   - 'normalizeUsername'
   - 'usernameStatus'
@@ -1659,6 +1662,40 @@ VERIFY — where it has to ask for the WhatsApp number before it can ask for the
 Google hands back an account with no phone on it. `numberTitle` / `numberSubtitle` are that
 half-step's words, and `sameAsMobile` / `sameAsMobileHint` are the tick box's, rendered from
 the same builder so neither door words it differently.
+
+### What signup is holding, and what it is doing
+
+`signupFlowReducer` is the state machine both doors run on. Nothing is created until the
+WhatsApp code answers, so signup spends three steps HOLDING things: the form's answers, or —
+on the Google door — a credential that has proved an address and nothing else. Exactly one of
+`pendingForm` / `pendingGoogle` is ever set, which is how the last step knows which door it is
+finishing without the code step knowing about either.
+
+The reducer had been written twice, byte-identical, in the two `useSignupFlow` hooks. It is a
+function, not a hook, so this zero-dependency package can own it while the effects that differ
+per surface — Apollo vs the native services, navigate vs flipping the auth gate — stay in each
+app (rule 40). The form values are a type parameter because their schema lives in
+`@duncit/forms`, which this package cannot import; all the machine needs from them is the
+three number boxes in `SignupNumberFields`.
+
+```ts
+let state = initialSignupFlowState<SignupFormValues>();
+state.step;              // 'WHO' — holding nothing yet
+
+state = signupFlowReducer(state, { type: 'GOOGLE_ACCEPTED', credential });
+state.step;              // 'VERIFY'
+state.askingNumber;      // true — Google brought no number to send a code to
+
+state = signupFlowReducer(state, { type: 'NUMBER_GIVEN', values: whatsappNumberValues });
+state.askingNumber;      // false — both doors meet at the code step now
+state.verifying;         // { extension: '+91', number: '9845012345', alsoMobile: true }
+
+signupNumberOf({ phoneExtension: '+91', phoneNumber: '9845012345', whatsappIsMobile: false });
+// { extension: '+91', number: '9845012345', alsoMobile: false }
+```
+
+The email door skips the number step entirely: `FORM_FILLED` sets `verifying` from the answers
+it already carries, because that form asked for the number two steps earlier.
 
 ### The follow button, and the follow rows in the inbox
 

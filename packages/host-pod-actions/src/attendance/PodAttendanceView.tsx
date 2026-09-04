@@ -5,6 +5,7 @@ import { DuncitButton } from '@duncit/buttons';
 import {
   canScanTickets,
   earningsBodyFor,
+  showsCompleteDeadline,
   splitAttendance,
   type PodAttendanceLabels,
   type PodAttendanceRow as AttendanceRowData,
@@ -15,6 +16,7 @@ import AttendanceDialogs from './AttendanceDialogs';
 import AttendanceSummary from './AttendanceSummary';
 import {
   ClubAdminHelpCard,
+  DeadlineNotice,
   EarningsNotice,
   LockedNotice,
   ScanCta,
@@ -126,11 +128,21 @@ export default function PodAttendanceView({
   // A virtual pod's door is the meeting link: the payout sentence and the scanner follow the kind.
   const earningsBody = earningsBodyFor(board, labels);
   const showScan = canScanTickets(board);
+  // The host's clock, while there is still one to beat. Hoisted for the same
+  // reason as `onMark` — the conditional sits at nesting 0 (Sonar S3358).
+  const showDeadline = showsCompleteDeadline(board);
 
   return (
     <Stack spacing={2} data-testid="pod-attendance-view">
       <AttendanceSummary board={board} labels={labels} />
       {board.can_mark ? <EarningsNotice labels={labels} body={earningsBody} /> : <LockedNotice lock={board.lock} labels={labels} />}
+      {showDeadline && (
+        <DeadlineNotice
+          labels={labels}
+          when={formatDateTime(board.complete_deadline ?? '')}
+          hours={board.complete_timeout_hours}
+        />
+      )}
 
       {board.rows.length === 0 && (
         <Typography variant="body2" sx={{

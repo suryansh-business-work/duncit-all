@@ -20,7 +20,7 @@ jest.mock('@modules/pods/podMember/podMember.model', () => ({
 jest.mock('@modules/access/user/user.model', () => ({ UserModel: { find: jest.fn() } }));
 jest.mock('@modules/clubs/club/club.model', () => ({ ClubModel: { findById: jest.fn() } }));
 jest.mock('@modules/platform/settings/settings.service', () => ({
-  settingsService: { getPublicAppSettings: jest.fn() },
+  settingsService: { getPublicAppSettings: jest.fn(), getPodCompletionSettings: jest.fn() },
 }));
 jest.mock('@modules/platform/otp/otp.service', () => ({
   otpService: { request: jest.fn(), verify: jest.fn(), consume: jest.fn() },
@@ -71,8 +71,11 @@ const pod = (over: Record<string, unknown> = {}) => ({
   _id: POD_ID,
   pod_title: 'Sunday Badminton',
   pod_hosts_id: [HOST_ID],
-  pod_date_time: new Date('2026-08-30T12:30:00.000Z'),
-  pod_end_date_time: new Date('2026-08-30T14:00:00.000Z'),
+  // A pod that ended an hour ago, RELATIVE to now: attendance is measured
+  // against the host's completion window, so a fixture pinned to a fixed date
+  // silently ages into EXPIRED and every roster test with it.
+  pod_date_time: new Date(Date.now() - 3 * 60 * 60_000),
+  pod_end_date_time: new Date(Date.now() - 60 * 60_000),
   club_id: null,
   completed_at: null,
   deleted_at: null,
@@ -115,6 +118,10 @@ const arrangeBoard = (over: { pod?: unknown; memberships?: unknown[]; tickets?: 
   settings.getPublicAppSettings.mockResolvedValue({
     attendance_otp_required: over.otpRequired ?? true,
   });
+  settings.getPodCompletionSettings.mockResolvedValue({
+    timeout_hours: over.completeTimeoutHours ?? 24,
+    reminder_hours: 12,
+  });
 };
 
 beforeEach(() => {
@@ -123,23 +130,23 @@ beforeEach(() => {
 
 describe('attendanceLock', () => {
   it('is OPEN for a live pod', () => {
-    expect(attendanceLock(pod())).toBe('OPEN');
+    expect(attendanceLock(pod(), 24)).toBe('OPEN');
   });
 
   it('closes on completion, because the payout is already split by then', () => {
-    expect(attendanceLock(pod({ completed_at: new Date() }))).toBe('COMPLETED');
+    expect(attendanceLock(pod({ completed_at: new Date() }), 24)).toBe('COMPLETED');
   });
 
   it('closes for a cancelled pod, which never happened', () => {
-    expect(attendanceLock(pod({ deleted_at: new Date() }))).toBe('CANCELLED');
+    expect(attendanceLock(pod({ deleted_at: new Date() }), 24)).toBe('CANCELLED');
   });
 
   it('reports a cancelled-and-completed pod as CANCELLED', () => {
-    expect(attendanceLock(pod({ completed_at: new Date(), deleted_at: new Date() }))).toBe('CANCELLED');
+    expect(attendanceLock(pod({ completed_at: new Date(), deleted_at: new Date() }), 24)).toBe('CANCELLED');
   });
 
   it('survives being handed nothing', () => {
-    expect(attendanceLock(null)).toBe('OPEN');
+    expect(attendanceLock(null, 24)).toBe('OPEN');
   });
 });
 

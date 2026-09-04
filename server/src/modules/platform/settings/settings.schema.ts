@@ -34,6 +34,10 @@ export const settingsTypeDefs = gql`
     venue_cancel_health_penalty: Int!
     "Whether a host must verify an attendee's name and phone over OTP before marking them present by hand. The door scan is proof on its own and is never gated by this."
     attendance_otp_required: Boolean!
+    "How many hours after a pod ends its host has to complete it. Past that they can no longer mark attendance and the pod settles with no host earnings."
+    pod_complete_timeout_hours: Int!
+    "How many hours after a pod ends the host is emailed and WhatsApped a reminder to complete it."
+    pod_complete_reminder_hours: Int!
     "Whether the sweep auto-cancels an upcoming pod whose finances are negative, refunding attendees under the venue's cancellation policy."
     pod_auto_cancel_enabled: Boolean!
     "How many hours before a pod's start the auto-cancel finance check runs."
@@ -78,6 +82,8 @@ export const settingsTypeDefs = gql`
     venue_cancel_health_penalty: Int!
     "Whether a host must verify an attendee's name and phone over OTP before marking them present by hand. The door scan is proof on its own and is never gated by this."
     attendance_otp_required: Boolean!
+    "How many hours after a pod ends its host has to complete it. Past that the host can no longer mark attendance and the pod settles with no host earnings."
+    pod_complete_timeout_hours: Int!
   }
 
   type PublicClientConfig {
@@ -104,6 +110,10 @@ export const settingsTypeDefs = gql`
     venue_cancel_health_penalty: Int
     "Whether a host must verify an attendee's name and phone over OTP before marking them present by hand. The door scan is proof on its own and is never gated by this."
     attendance_otp_required: Boolean
+    "How many hours after a pod ends its host has to complete it (1-8760)."
+    pod_complete_timeout_hours: Int
+    "How many hours after a pod ends the host is reminded to complete it (1-8760)."
+    pod_complete_reminder_hours: Int
     "Whether the sweep auto-cancels an upcoming pod whose finances are negative, refunding attendees under the venue's cancellation policy."
     pod_auto_cancel_enabled: Boolean
     "How many hours before a pod's start the auto-cancel finance check runs (1-8760)."

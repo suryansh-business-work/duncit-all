@@ -63,6 +63,30 @@ export default function PodLifecycleSettings({
         value={settings?.attendance_otp_required ?? null}
         onSave={(next) => onSave({ attendance_otp_required: next })}
       />
+      <NumberSettingCard
+        title={t('admin.podSettings.completeTimeoutTitle')}
+        description={t('admin.podSettings.completeTimeoutDesc')}
+        label={t('admin.podSettings.completeTimeoutLabel')}
+        helperText={t('admin.podSettings.completeTimeoutMin')}
+        invalidText={t('admin.podSettings.completeTimeoutInvalid')}
+        min={1}
+        max={8760}
+        loading={loading}
+        value={settings?.pod_complete_timeout_hours ?? null}
+        onSave={(next) => onSave({ pod_complete_timeout_hours: next })}
+      />
+      <NumberSettingCard
+        title={t('admin.podSettings.completeReminderTitle')}
+        description={t('admin.podSettings.completeReminderDesc')}
+        label={t('admin.podSettings.completeReminderLabel')}
+        helperText={t('admin.podSettings.completeReminderMin')}
+        invalidText={t('admin.podSettings.completeReminderInvalid')}
+        min={1}
+        max={8760}
+        loading={loading}
+        value={settings?.pod_complete_reminder_hours ?? null}
+        onSave={(next) => onSave({ pod_complete_reminder_hours: next })}
+      />
       <ToggleSettingCard
         title={t('admin.podSettings.autoCancelTitle')}
         description={t('admin.podSettings.autoCancelDesc')}

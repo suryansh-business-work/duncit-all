@@ -211,9 +211,15 @@ exports:
   - 'PodAttendanceMode'
   - 'attendanceRowState'
   - 'splitAttendance'
+  - 'companionOtpState'
+  - 'duplicateCompanionIndexes'
+  - 'phoneKey'
+  - 'isVerifiablePhoneShape'
+  - 'OTP_PHONE_MIN_DIGITS'
   - 'namedCompanionEntries'
   - 'needsOtp'
   - 'canScanTickets'
+  - 'showsCompleteDeadline'
   - 'earningsBodyFor'
   - 'mwebAttendanceLabels'
   - 'shellAttendanceLabels'
@@ -806,8 +812,13 @@ inside the pod window (`joinPodMeeting`, recorded as method `VIRTUAL_JOIN`).
 | `attendanceRowState` | `(row, canMark, viewer?) => AttendanceRowState` | `MARKED`, `READY`, `NEEDS_COMPANIONS` or `LOCKED` — one value, never three booleans. `NEEDS_COMPANIONS` is the HOST's wait only (viewer defaults to `'HOST'`). |
 | `splitAttendance` | `(rows) => { marked, unmarked }` | The two lists, in the order the page shows them. |
 | `namedCompanionEntries` | `(entries) => NamedCompanionInput[]` | The names a Club Admin was read, blanks dropped, numbers optional — `PodForcedCompanionInput` for `clubAdminForceAttendance`. |
+| `companionOtpState` | `(entry, index, activeIndex, duplicate) => CompanionOtpState` | `VERIFIED`, `BLOCKED` (another row holds the live code), `DUPLICATE`, `INCOMPLETE` or `READY` — what one companion row's verify control may do. |
+| `duplicateCompanionIndexes` | `(entries, reserved) => Set<number>` | The rows repeating a number. `reserved` is the buyer's own phone and WhatsApp plus anyone already on the ticket; a PROVED row keeps its number whatever order the form was filled in. |
+| `phoneKey` | `(...parts) => string` | Digits only, last ten past ten — so `+91 98765 43210`, `919876543210` and `9876543210` compare equal. |
+| `isVerifiablePhoneShape` / `OTP_PHONE_MIN_DIGITS` | `(value) => boolean` / `10` | Long enough to be worth a WhatsApp code. `isOtpPhoneShape` still accepts six digits — that is what the record stores, not what a code should be spent on. |
 | `needsOtp` | `(board) => boolean` | HOST viewer AND `otp_required`. The Club Admin is never *required* to send a code — their board offers it as one of two doors. |
 | `canScanTickets` | `(board) => boolean` | HOST viewer AND `can_mark` AND not `VIRTUAL`. False hides the scan CTA. |
+| `showsCompleteDeadline` | `(board) => boolean` | HOST viewer AND `lock === 'OPEN'` AND a `complete_deadline`. The banner naming the hours the host has left to complete the pod; past it the `EXPIRED` locked notice says it in past tense instead. |
 | `earningsBodyFor` | `(board, labels) => string` | `labels.earningsBodyVirtual` for a virtual pod, `labels.earningsBody` otherwise — the sentence above the roster. |
 | `mwebAttendanceLabels` / `shellAttendanceLabels` / `buildAttendanceLabels` | `(t) => PodAttendanceLabels` | Every word the surfaces render — `mweb.attendance.*` for mWeb + native, `shell.attendance.*` for the portals, word-for-word identical. |
 
@@ -821,10 +832,14 @@ const board = {
   can_mark: true,
   otp_required: true,
   pod_mode: 'PHYSICAL',
+  lock: 'OPEN',
+  complete_deadline: '2026-08-31T14:00:00.000Z',
+  complete_timeout_hours: 24,
 } as const;
 
 needsOtp(board)                   // true  — prove the number before a by-hand mark
 canScanTickets(board)             // true  — there is a door to scan at
+showsCompleteDeadline(board)      // true  — 24 hours from the pod's end, and it has not passed
 earningsBodyFor(board, labels)    // 'Your earnings are calculated only from the attendees you mark. …'
 
 const online = { ...board, pod_id: 'DUN-POD-5502', pod_mode: 'VIRTUAL' } as const;
@@ -839,6 +854,25 @@ needsOtp({ viewer: 'CLUB_ADMIN', otp_required: true })  // false — never REQUI
 const group = { attended: false, companions_required: 7 };
 attendanceRowState(group, true, 'HOST')        // 'NEEDS_COMPANIONS' — name them at the door
 attendanceRowState(group, true, 'CLUB_ADMIN')  // 'READY' — their dialog collects the names
+
+// The window ran out. The server answers can_mark false for the host and true
+// for the Club Admin, so the copy is the only thing the client has to pick.
+const expired = { ...board, lock: 'EXPIRED' } as const;
+showsCompleteDeadline(expired)    // false — nothing left to beat
+labels.lockedTitle('EXPIRED')     // 'The time to complete this pod has passed'
+
+// One number is one person. The buyer holds +91 8791234693, so a companion
+// row repeating it — or repeating another row — cannot be verified or
+// submitted, and the row that must change is the one that repeated it.
+const rows = [
+  { name: 'Prakhar Srivastava', phone_extension: '+91', phone_number: '9569912921', otp_challenge_id: 'otp_4c11' },
+  { name: 'Shivam Gupta', phone_extension: '+91', phone_number: '9569912921', otp_challenge_id: '' },
+  { name: 'Ishita Rao', phone_extension: '+91', phone_number: '8791234693', otp_challenge_id: '' },
+];
+duplicateCompanionIndexes(rows, ['+91 8791234693'])  // Set { 1, 2 }
+companionOtpState(rows[0], 0, null, false)           // 'VERIFIED' — settled, and read-only
+companionOtpState(rows[1], 1, null, true)            // 'DUPLICATE'
+companionOtpState({ ...rows[1], phone_number: '95699' }, 1, null, false)  // 'INCOMPLETE'
 
 namedCompanionEntries([
   { name: 'Ishita Rao', phone_extension: '+91', phone_number: '9876543210' },

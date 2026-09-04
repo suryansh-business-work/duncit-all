@@ -401,6 +401,12 @@ export const financeTypeDefs = /* GraphQL */ `
     attended_total: Float!
     "Every JOINED booking, attended first — the completion roster."
     attendees: [PodSettlementAttendee!]!
+    "When the host's window to complete this pod runs out (ISO). Null when the pod has no usable start time."
+    complete_deadline: String
+    "True once that window has passed with the pod still uncompleted — the host can no longer mark attendance and their share of this pod is nil."
+    complete_expired: Boolean!
+    "What the host is actually paid on completion: the floored host remainder, or 0 once the completion window has expired."
+    host_payout_amount: Float!
   }
 
   """

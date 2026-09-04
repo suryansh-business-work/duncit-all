@@ -1,11 +1,26 @@
 import { useState } from 'react';
 import { Text, YStack } from 'tamagui';
+import type { Translator } from '@duncit/i18n';
 import type { CompanionEntry, CompanionOtpState } from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CompanionOtpApi } from '@/hooks/useCompanionOtp';
 import { CompanionSendButton } from './CompanionSendButton';
 import { CompanionCodeEntry } from './CompanionCodeEntry';
+
+/**
+ * Why the button is dead, in one line under it. The Tamagui twin of mWeb's
+ * hintFor (rule 27), word for word through the shared bundle.
+ *
+ * Every key is written out in full: the localization gate reads literal
+ * t('…') calls, so a key built from a variable ships untranslated.
+ */
+function hintFor(state: CompanionOtpState, t: Translator['t']): string {
+  if (state === 'BLOCKED') return t('mweb.hostScan.companionOtpBlocked');
+  if (state === 'DUPLICATE') return t('mweb.hostScan.companionOtpDuplicate');
+  if (state === 'INCOMPLETE') return t('mweb.hostScan.companionOtpIncomplete');
+  return t('mweb.hostScan.companionOtpHint');
+}
 
 interface Props {
   index: number;
@@ -58,10 +73,7 @@ export function CompanionOtpPanel({ index, entry, state, otp, onVerified }: Read
   };
 
   // Hoisted out of the JSX so the choice sits at nesting 0 (S3358).
-  const hint =
-    state === 'BLOCKED'
-      ? t('mweb.hostScan.companionOtpBlocked')
-      : t('mweb.hostScan.companionOtpHint');
+  const hint = hintFor(state, t);
 
   return (
     <YStack gap={6}>

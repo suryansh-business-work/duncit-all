@@ -24,14 +24,18 @@ export const podAttendanceTypeDefs = /* GraphQL */ `
   """
   Why the roster can no longer be changed.
 
-  Completion is the real deadline: it computes the payout from exactly who is
-  marked and hands the releases to Finance, so a late mark would claim money
-  that was already split.
+  Completion is one deadline: it computes the payout from exactly who is marked
+  and hands the releases to Finance, so a late mark would claim money that was
+  already split. EXPIRED is the other — the host's admin-configured window to
+  complete the pod ran out, which shuts the HOST's side of the roster while
+  leaving the Club Admin's override open.
   """
   enum PodAttendanceLock {
     OPEN
     COMPLETED
     CANCELLED
+    "The host's window to complete this pod has passed (Admin > Pods > Pod Settings)."
+    EXPIRED
   }
 
   type PodAttendanceCompanion {
@@ -92,8 +96,12 @@ export const podAttendanceTypeDefs = /* GraphQL */ `
     pod_mode: PodMode!
     viewer: PodAttendanceViewer!
     lock: PodAttendanceLock!
-    "False once the pod is completed or cancelled — nothing can be marked then."
+    "Whether THIS viewer can still mark. False once the pod is completed or cancelled; false for the host once the completion window has expired, and still true for a Club Admin — the override exists for exactly that roster."
     can_mark: Boolean!
+    "When the host's window to complete this pod runs out (ISO). Null when the pod has no usable start time."
+    complete_deadline: String
+    "How many hours after the pod ends that window is (Admin > Pods > Pod Settings)."
+    complete_timeout_hours: Int!
     "Whether a by-hand mark must be preceded by a verified one-time code."
     otp_required: Boolean!
     marked_count: Int!

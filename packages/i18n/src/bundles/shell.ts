@@ -1011,6 +1011,12 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       lockedCancelledTitle: 'This pod was cancelled',
       lockedCancelledBody:
         'A cancelled pod has no attendance to record. Contact your Club Admin below if you think this is wrong.',
+      lockedExpiredTitle: 'The time to complete this pod has passed',
+      lockedExpiredBody:
+        'This pod was never completed within the allowed window, so attendance can no longer be marked here and no earnings are paid for it. Your Club Admin can still record who came — contact them below.',
+      deadlineTitle: 'Complete this pod before {when}',
+      deadlineBody:
+        'You have {hours} hours after a pod ends to mark everyone who came and complete it. Miss that and attendance closes, and this pod pays you nothing.',
       clubAdminTitle: 'Need help? Contact your Club Admin',
       clubAdminBody:
         'They can mark an attendee present after the fact — have the booking details ready.',
@@ -1088,7 +1094,17 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       companionVerifyCta: 'Verify on WhatsApp',
       companionOtpHint:
         'Optional. Send this number a code and type it back — one person at a time.',
+      // Why the button is dead. Six digits into a mobile number is not a
+      // number yet, and a number already on this ticket proves nobody new —
+      // one WhatsApp answering once must not tick two seats.
+      companionOtpIncomplete:
+        'Enter the name and all 10 digits of the number to send a code.',
+      companionOtpDuplicate:
+        'Someone on this ticket already has this number. Every person needs their own.',
       companionVerified: 'Verified',
+      // A proved number is settled: changing it would keep the tick and lose
+      // what it was proof of.
+      companionLocked: 'Verified — this number cannot be changed.',
       companionOtpBlocked: 'Finish verifying the person above first.',
       companionOtpFailed: 'Could not send the code. Try again.',
       companionsSubmit: 'Mark attendance',
@@ -1117,6 +1133,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     hostShare: {
       customerPaid: 'Customer Paid',
       duncitRevenue: 'Duncit revenue',
+      expired:
+        'The window to complete this pod has closed, so your share of it is nil. Completing it still pays the venue, the club admin and any product sellers as usual.',
       gst: '− GST ({pct}%)',
       platformFee: '− Platform Fee ({pct}%)',
       pool: 'Pool',

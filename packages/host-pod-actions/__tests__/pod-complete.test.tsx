@@ -77,6 +77,11 @@ const settlement = (over: Record<string, unknown> = {}) => ({
   booked_seats: 10,
   attended_total: 1000,
   attendees: [attendee()],
+  complete_deadline: '2026-08-31T14:00:00.000Z',
+  complete_expired: false,
+  // The "You receive" line reads this, not waterfall.host_receives — it is what
+  // the release will actually carry.
+  host_payout_amount: 400,
   waterfall,
   ...over,
 });

@@ -4,6 +4,7 @@ import {
   areCompanionEntriesComplete,
   blankCompanionEntries,
   companionEntriesToInput,
+  duplicateCompanionIndexes,
   type CompanionEntry,
   type CompanionRecordInput,
 } from '@duncit/utils';
@@ -33,6 +34,13 @@ interface Props {
   seats: number;
   /** How many still need a name and a phone number. */
   required: number;
+  /**
+   * Numbers this booking has already spoken for — the buyer's own phone and
+   * WhatsApp, plus anyone already recorded against the ticket. A companion
+   * may not repeat one: a single WhatsApp answering a single code must never
+   * tick two seats.
+   */
+  reserved: readonly string[];
   busy?: boolean;
   onSubmit: (companions: CompanionRecordInput[]) => void;
 }
@@ -49,12 +57,17 @@ interface Props {
  * That part is OPTIONAL and deliberately so: a dead phone or a number abroad
  * must never hold a group at the door, so the code records who was actually
  * proved rather than deciding who gets in.
+ *
+ * Optional, but never loose: one number is one person, so a row repeating
+ * another row's number or the buyer's own can neither be verified nor
+ * submitted, and a row that HAS answered a code is read-only from then on.
  */
 export function CompanionsForm({
   podId,
   membershipId,
   seats,
   required,
+  reserved,
   busy,
   onSubmit,
 }: Readonly<Props>) {
@@ -74,12 +87,15 @@ export function CompanionsForm({
     t('mweb.hostScan.companionOtpFailed'),
   );
 
-  // A proof names ONE number. Retyping the name or the number makes it a
-  // different person, so the challenge it earned no longer describes this row.
+  // A proved row is read-only, so nothing here can reach one — the challenge
+  // it earned still describes the number beside it.
   const edit = (index: number, patch: Partial<CompanionEntry>) =>
-    setRows((current) =>
-      current.map((row, i) => (i === index ? { ...row, ...patch, otp_challenge_id: '' } : row)),
-    );
+    setRows((current) => current.map((row, i) => (i === index ? { ...row, ...patch } : row)));
+
+  // One number is one person. A group of eight is eight phones, and the same
+  // WhatsApp standing in for two of them is a seat nobody accounted for.
+  const duplicates = duplicateCompanionIndexes(rows, reserved);
+  const ready = areCompanionEntriesComplete(rows) && duplicates.size === 0;
 
   const keepProof = (index: number, otp_challenge_id: string) =>
     setRows((current) =>
@@ -88,7 +104,7 @@ export function CompanionsForm({
 
   const press = () => {
     setTouched(true);
-    if (areCompanionEntriesComplete(rows)) onSubmit(companionEntriesToInput(rows));
+    if (ready) onSubmit(companionEntriesToInput(rows));
   };
 
   return (
@@ -105,15 +121,21 @@ export function CompanionsForm({
           key={rowKeys[index]}
           index={index}
           entry={row}
+          duplicate={duplicates.has(index)}
           otp={otp}
           onChange={edit}
           onVerified={keepProof}
         />
       ))}
 
-      {touched && !areCompanionEntriesComplete(rows) ? (
+      {touched && !ready ? (
         <Text testID="companions-incomplete" fontSize={12} color="$danger">
           {t('mweb.hostScan.companionsIncomplete')}
+        </Text>
+      ) : null}
+      {duplicates.size > 0 ? (
+        <Text testID="companions-duplicate" fontSize={12} color="$danger">
+          {t('mweb.hostScan.companionOtpDuplicate')}
         </Text>
       ) : null}
 

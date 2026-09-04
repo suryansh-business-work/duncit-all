@@ -36,6 +36,21 @@ function resultTone(result: HostTicketScanResult): string {
  * host verified them one at a time, and this is where they see which of them
  * it worked for.
  */
+/**
+ * The numbers this booking has already spoken for — twin of mWeb's
+ * reservedPhones (rule 27).
+ *
+ * The buyer's own phone and WhatsApp, plus everyone already written onto the
+ * ticket. A companion row may not repeat one: a single WhatsApp answering a
+ * single code must never tick two seats.
+ */
+function reservedPhones(result: HostTicketScanResult | null): string[] {
+  const attendee = result?.attendee;
+  return [attendee?.phone ?? '', attendee?.whatsapp ?? ''].concat(
+    (result?.companions ?? []).map((companion) => companion.phone_number),
+  );
+}
+
 function companionLine(companion: PodCompanionRecord, verified: string): string {
   if (!companion.verified_at) return companion.phone_number;
   return `${companion.phone_number} · ${verified}`;
@@ -243,6 +258,7 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                         membershipId={result.ticket.membership_id}
                         seats={result.ticket.seats ?? 1}
                         required={result.companions_required}
+                        reserved={reservedPhones(result)}
                         busy={busy}
                         onSubmit={(companions) => void submit(pendingToken, companions)}
                       />

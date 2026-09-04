@@ -22,6 +22,7 @@ describe('CompanionRow', () => {
       <CompanionRow
         index={0}
         entry={blank}
+        duplicate={false}
         otp={otpApi()}
         onChange={jest.fn()}
         onVerified={jest.fn()}
@@ -38,6 +39,7 @@ describe('CompanionRow', () => {
       <CompanionRow
         index={2}
         entry={blank}
+        duplicate={false}
         otp={otpApi()}
         onChange={onChange}
         onVerified={jest.fn()}
@@ -59,6 +61,7 @@ describe('CompanionRow', () => {
       <CompanionRow
         index={0}
         entry={blank}
+        duplicate={false}
         otp={otpApi()}
         onChange={jest.fn()}
         onVerified={jest.fn()}
@@ -82,6 +85,7 @@ describe('CompanionRow', () => {
       <CompanionRow
         index={3}
         entry={filled}
+        duplicate={false}
         otp={otpApi({ activeIndex: 3, challengeId: 'ch-1', submit: jest.fn() })}
         onChange={jest.fn()}
         onVerified={onVerified}
@@ -105,6 +109,7 @@ describe('CompanionRow', () => {
       <CompanionRow
         index={4}
         entry={complete}
+        duplicate={false}
         otp={otpApi({ activeIndex: 4, challengeId: 'ch-1', submit })}
         onChange={jest.fn()}
         onVerified={onVerified}
@@ -130,6 +135,7 @@ describe('CompanionRow', () => {
       <CompanionRow
         index={0}
         entry={proved}
+        duplicate={false}
         otp={otpApi()}
         onChange={jest.fn()}
         onVerified={jest.fn()}

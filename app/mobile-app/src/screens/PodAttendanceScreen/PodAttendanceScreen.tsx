@@ -7,6 +7,7 @@ import {
   canScanTickets,
   earningsBodyFor,
   mwebAttendanceLabels,
+  showsCompleteDeadline,
   splitAttendance,
 } from '@duncit/utils';
 
@@ -18,6 +19,7 @@ import { PillButton } from '@/components/attendance/AttendanceOtpControls';
 import {
   AttendanceSummary,
   ClubAdminHelpCard,
+  DeadlineNotice,
   EarningsNotice,
   LockedNotice,
 } from '@/components/attendance/AttendanceNotices';
@@ -79,6 +81,13 @@ export function PodAttendanceScreen() {
         ) : (
           <LockedNotice lock={data.lock} labels={labels} />
         )}
+        {showsCompleteDeadline(data) ? (
+          <DeadlineNotice
+            labels={labels}
+            when={formatDateTime(data.complete_deadline ?? '')}
+            hours={data.complete_timeout_hours}
+          />
+        ) : null}
 
         {data.rows.length === 0 ? (
           <Text fontSize={13} color="$muted">

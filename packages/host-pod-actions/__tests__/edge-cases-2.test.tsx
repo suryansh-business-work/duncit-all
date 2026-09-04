@@ -281,6 +281,9 @@ describe('PodCompleteDialog scanner', () => {
           attended_seats: 1,
           booked_seats: 2,
           attended_total: 500,
+          complete_deadline: '2026-08-31T14:00:00.000Z',
+          complete_expired: false,
+          host_payout_amount: 369,
           attendees: [
             {
               membership_id: 'm-2',
@@ -749,6 +752,8 @@ describe('a by-hand mark, all the way through its code', () => {
     viewer: 'HOST',
     lock: null,
     can_mark: true,
+    complete_deadline: null,
+    complete_timeout_hours: 24,
     otp_required: true,
     marked_count: 0,
     total_count: 1,

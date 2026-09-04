@@ -50,3 +50,22 @@ export function podLifecycleFilter(bucket: PodLifecycle, now: Date): Record<stri
   }
   return { deleted_at: null, completed_at: null, pod_date_time: { $gt: now } };
 }
+
+/**
+ * When a pod is OVER, for a document already in memory.
+ *
+ * The in-memory twin of the `LIVE_END` expression above — same rule, same
+ * fallback — so a caller holding a pod does not have to restate the tail. Null
+ * when the pod carries no usable start, which means "cannot be placed on a
+ * clock" rather than "already ended": every deadline derived from this must
+ * treat null as no deadline at all.
+ */
+export function podLiveEnd(pod: {
+  pod_date_time?: Date | string | null;
+  pod_end_date_time?: Date | string | null;
+}): Date | null {
+  const start = pod?.pod_date_time ? new Date(pod.pod_date_time).getTime() : Number.NaN;
+  if (Number.isNaN(start)) return null;
+  const end = pod?.pod_end_date_time ? new Date(pod.pod_end_date_time).getTime() : Number.NaN;
+  return new Date(Number.isNaN(end) ? start + POD_LIVE_TAIL_MS : end);
+}

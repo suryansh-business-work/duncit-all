@@ -22,6 +22,10 @@ const settlement = {
   has_venue: true,
   // Four guests paid; the host's own seat is free and never counted.
   paying_attendees: 4,
+  // Inside the completion window, so the host is paid the computed remainder.
+  complete_deadline: '2026-08-25T05:30:00.000Z',
+  complete_expired: false,
+  host_payout_amount: 454.58,
   waterfall,
 };
 
@@ -69,6 +73,9 @@ describe('SettlementSummary', () => {
     const noVenue = {
       ...settlement,
       has_venue: false,
+      // The "You receive" line reads host_payout_amount now (the figure the
+      // release carries), so it moves with the waterfall rather than beside it.
+      host_payout_amount: 724.58,
       waterfall: { ...waterfall, venue_amount: 0, venue_receives: 0, host_receives: 724.58 },
     };
     renderWithProviders(<SettlementSummary settlement={noVenue} isLoading={false} />);

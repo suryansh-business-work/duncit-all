@@ -81,6 +81,10 @@ const board = (over: Record<string, unknown> = {}) => ({
   viewer: 'HOST',
   lock: null,
   can_mark: true,
+  // Null: the deadline notice is opt-in per test, so the default board draws
+  // the roster and nothing else.
+  complete_deadline: null,
+  complete_timeout_hours: 24,
   otp_required: true,
   marked_count: 1,
   total_count: 2,

@@ -263,9 +263,9 @@ describe('the button that sends one companion a code', () => {
 /** A row needs a form around it; this is the smallest one that will do. */
 function RowHarness({
   otp,
-  onEdit,
+  duplicate = false,
   seed = entry(),
-}: Readonly<{ otp: CompanionOtpApi; onEdit: (i: number) => void; seed?: CompanionEntry }>) {
+}: Readonly<{ otp: CompanionOtpApi; duplicate?: boolean; seed?: CompanionEntry }>) {
   const { control, trigger } = useForm<CompanionValues>({
     resolver: zodResolver(buildCompanionsSchema(labels)) as never,
     defaultValues: { companions: [seed] },
@@ -278,29 +278,17 @@ function RowHarness({
       index={0}
       control={control}
       entry={entry()}
+      duplicate={duplicate}
       labels={labels}
       otp={otp}
-      onEdit={onEdit}
       onVerified={vi.fn()}
     />
   );
 }
 
 describe('one companion row', () => {
-  it('drops the proof when the DIAL CODE is retyped, not just the number', () => {
-    // A proof names one number. +91 9000000001 and +44 9000000001 are two
-    // different phones, so the challenge no longer describes this row.
-    const onEdit = vi.fn();
-    wrap(<RowHarness otp={otpApi()} onEdit={onEdit} />);
-    const [, extension] = screen.getAllByRole('textbox');
-
-    fireEvent.input(extension, { target: { value: '+44' } });
-
-    expect(onEdit).toHaveBeenCalledWith(0);
-  });
-
   it('says all three parts are required before a failed submit, not after', () => {
-    wrap(<RowHarness otp={otpApi()} onEdit={vi.fn()} />);
+    wrap(<RowHarness otp={otpApi()} />);
 
     expect(screen.getAllByText(labels.fieldRequired).length).toBeGreaterThan(0);
   });
@@ -308,7 +296,7 @@ describe('one companion row', () => {
   it('puts the dial code complaint under the dial code box', async () => {
     // The extension is the only one of the three with no standing hint under
     // it, so a bad value there has to replace nothing — it just appears.
-    wrap(<RowHarness otp={otpApi()} onEdit={vi.fn()} seed={entry({ phone_extension: 'IN' })} />);
+    wrap(<RowHarness otp={otpApi()} seed={entry({ phone_extension: 'IN' })} />);
     await settle();
 
     expect(screen.getByText(labels.otpExtensionInvalid)).toBeInTheDocument();

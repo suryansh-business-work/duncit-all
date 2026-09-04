@@ -33,6 +33,8 @@ import { loadPodClubSlugMap } from '@modules/pods/pod/pod.service';
 import { BackoutRequestModel } from '@modules/pods/podMember/backoutRequest.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
+import { settingsService } from '@modules/platform/settings/settings.service';
+import { podCompleteDeadline } from '@modules/pods/ticket/attendance.service';
 import { WaEventSettingModel, WA_GLOBAL_KEY } from './waEventSetting.model';
 // `notifyEach`, not `whatsappService.sendEach`: every scenario this file
 // sweeps for now goes out as an email too — the pod reminder, the complete-pod
@@ -53,8 +55,6 @@ const FIRST_SWEEP_DELAY_MS = 90_000;
 const POD_REMINDER_LEAD_MS = 24 * HOUR_MS;
 /** How close to the pod an unanswered slot request gets chased. */
 const SLOT_REMINDER_LEAD_MS = 48 * HOUR_MS;
-/** How long a finished pod may sit uncompleted before the host is nudged. */
-const COMPLETE_REMINDER_AFTER_MS = 24 * HOUR_MS;
 
 /**
  * How wide each sweep's window is. Three ticks, so a tick that dies on a
@@ -76,6 +76,7 @@ interface SweptPod {
   pod_id: string;
   pod_title: string;
   pod_date_time: Date;
+  pod_end_date_time?: Date | null;
   pod_attendees?: any[];
   pod_hosts_id?: any[];
   club_id?: any;
@@ -235,13 +236,31 @@ async function remindAttendees(now: number, cutoff: Date, mwebUrl: string) {
  * 2. HOST_COMPLETE_POD_REMINDER — a finished pod is still not completed.
  * ------------------------------------------------------------------ */
 
+/**
+ * Anchored on when the pod ENDED, and on the admin's clock rather than a
+ * constant.
+ *
+ * Both halves come from Admin > Pods > Pod Settings: the host is nudged
+ * `pod_complete_reminder_hours` after their pod finishes, and the deadline the
+ * nudge names is `pod_complete_timeout_hours` after the same moment — the exact
+ * instant `attendanceLock` shuts their roster. A reminder that quoted a
+ * different clock from the gate would be worse than no reminder at all.
+ *
+ * The deadline rides as an email-only `vars` entry: the approved WhatsApp
+ * template has four placeholders and adding a fifth would break the campaign,
+ * so the message that CAN carry it does.
+ */
 async function remindHostsToComplete(now: number, cutoff: Date) {
+  const { reminder_hours, timeout_hours } = await settingsService.getPodCompletionSettings();
+  // The same "end, or the start plus the tail" fallback podLiveEnd applies, as
+  // a query: a pod with no end recorded is treated as ending when it starts.
+  const window = crossing(now - reminder_hours * HOUR_MS, cutoff);
   const pods = await PodModel.find({
     is_active: true,
     completed_at: null,
-    pod_date_time: crossing(now - COMPLETE_REMINDER_AFTER_MS, cutoff),
+    $or: [{ pod_end_date_time: window }, { pod_end_date_time: null, pod_date_time: window }],
   })
-    .select('pod_id pod_title pod_date_time pod_hosts_id pod_images_and_videos')
+    .select('pod_id pod_title pod_date_time pod_end_date_time pod_hosts_id pod_images_and_videos')
     .lean<SweptPod[]>();
   if (pods.length === 0) return;
   const users = await waUsers(pods.map(firstHostId));
@@ -249,6 +268,7 @@ async function remindHostsToComplete(now: number, cutoff: Date) {
     pods.map((pod) => {
       const host = users.get(firstHostId(pod));
       const name = nameOf(host);
+      const deadline = podCompleteDeadline(pod, timeout_hours);
       return {
         event: 'HOST_COMPLETE_POD_REMINDER',
         entityId: String(pod._id),
@@ -256,6 +276,11 @@ async function remindHostsToComplete(now: number, cutoff: Date) {
         name,
         assets: podImageAssets(pod.pod_images_and_videos),
         params: [name, pod.pod_title, dateLabel(pod.pod_date_time), timeLabel(pod.pod_date_time)],
+        vars: {
+          deadline: deadline
+            ? `${dateLabel(deadline)}, ${timeLabel(deadline)}`
+            : `${timeout_hours} hours after the pod ended`,
+        },
       };
     })
   );

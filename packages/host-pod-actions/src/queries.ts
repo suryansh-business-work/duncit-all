@@ -89,6 +89,9 @@ export const POD_SETTLEMENT_PREVIEW = gql`
       attended_seats
       booked_seats
       attended_total
+      complete_deadline
+      complete_expired
+      host_payout_amount
       attendees {
         membership_id
         user_id

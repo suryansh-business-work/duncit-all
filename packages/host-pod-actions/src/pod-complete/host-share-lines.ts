@@ -36,7 +36,16 @@ export function buildHostShareLines(
     },
     { key: 'pool', label: labels.sharePool, value: w.pool_amount },
     ...venueLines,
-    { key: 'host', label: labels.shareYouReceive, value: w.host_receives, strong: true },
+    // `host_payout_amount`, not `w.host_receives`: it is the number the release
+    // will actually carry — the same figure floored at zero on a thin pod and
+    // zeroed outright once the completion window has expired — so the line a
+    // host reads here and the money that lands in their wallet cannot differ.
+    {
+      key: 'host',
+      label: labels.shareYouReceive,
+      value: settlement.host_payout_amount,
+      strong: true,
+    },
     { key: 'duncit', label: labels.shareDuncitRevenue, value: w.duncit_revenue },
   ];
 }

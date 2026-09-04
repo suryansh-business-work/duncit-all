@@ -102,6 +102,31 @@ export function EarningsNotice({
   );
 }
 
+/**
+ * How long the host still has.
+ *
+ * Warning-tinted, not info: it is the one thing on this screen that costs the
+ * host money by being ignored. Shown only while the window is open and only to
+ * the host (`showsCompleteDeadline`) — past it, the EXPIRED `LockedNotice`
+ * below says the same thing in the past tense. Word-for-word the mWeb twin.
+ */
+export function DeadlineNotice({
+  labels,
+  when,
+  hours,
+}: Readonly<{ labels: PodAttendanceLabels; when: string; hours: number }>) {
+  const { warning } = useThemeColors();
+  return (
+    <NoticeBlock
+      testID="attendance-deadline-note"
+      tint={warning}
+      icon="schedule"
+      title={labels.deadlineTitle(when)}
+      body={labels.deadlineBody(hours)}
+    />
+  );
+}
+
 /** The roster is closed and nothing on it can move. */
 export function LockedNotice({
   lock,

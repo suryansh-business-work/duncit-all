@@ -31,6 +31,7 @@ const props = {
   membershipId: 'm-1',
   seats: 3,
   required: 2,
+  reserved: [] as string[],
   onSubmit: jest.fn(),
 };
 

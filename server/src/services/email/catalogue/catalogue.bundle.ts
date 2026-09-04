@@ -271,7 +271,8 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.autoPodReleased.yourPart': 'Your part',
   'email.hostCompletePodReminder.title': 'This pod still needs completing',
   'email.hostCompletePodReminder.body':
-    'The pod below has finished but is not marked complete, and nobody is paid until it is. Completing it also locks the attendance, so check the roster first.',
+    'The pod below has finished but is not marked complete, and nobody is paid until it is. Completing it also locks the attendance, so check the roster first. Miss the deadline and you can no longer mark attendance for this pod, and your share of it is nil.',
+  'email.hostCompletePodReminder.deadline': 'Complete it before',
   'email.hostPodFeedback.title': 'How did your pod go?',
   'email.hostPodFeedback.body':
     'You ran the pod below. Tell us how the venue, the turnout and the day itself went — it is what decides where we book you next.',

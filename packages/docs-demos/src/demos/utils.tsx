@@ -66,6 +66,7 @@ import {
   mwebAttendanceLabels,
   namedCompanionEntries,
   needsOtp,
+  showsCompleteDeadline,
   SIGNUP_STEPS,
   SIGNUP_STEP_COUNT,
   SIGNUP_STEP_FIELDS,
@@ -109,6 +110,7 @@ import {
   type PasswordRecoveryChannel,
   type SignupStep,
   type PasswordRecoveryStep,
+  type PodAttendanceLock,
   type PodAttendanceMode,
   type PodAttendanceViewer,
   type PodFeedbackReminderChoice,
@@ -219,13 +221,18 @@ interface HandleMock {
   reason: UsernameRejection | null;
 }
 
-/** The head of a `podAttendanceBoard` answer — the four fields every attendance rule reads. */
+/** The head of a `podAttendanceBoard` answer — the fields every attendance rule reads. */
 interface AttendanceBoardMock {
   pod_id: string;
   viewer: PodAttendanceViewer;
   can_mark: boolean;
   otp_required: boolean;
   pod_mode: PodAttendanceMode;
+  /** Why the roster is read-only, or OPEN. EXPIRED is the host's completion
+   * window running out — it shuts their side and leaves the admin's open. */
+  lock: PodAttendanceLock;
+  /** When that window closes (ISO), or null when the pod has no usable start. */
+  complete_deadline: string | null;
   /** Seats on one booking still without a name against them. */
   companions_required: number;
 }
@@ -992,13 +999,17 @@ export default defineDemos('utils', [
       'Now set viewer to CLUB_ADMIN with companions_required above 0: the row state flips from ' +
       'NEEDS_COMPANIONS to READY, because naming the group is the HOST’s door step and the ' +
       'admin is correcting the roster long after that door shut. needsOtp also answers false for ' +
-      'them — not because they cannot send a code, but because they are never made to.',
+      'them — not because they cannot send a code, but because they are never made to. ' +
+      'Set lock to EXPIRED: the host’s completion window ran out, the deadline banner gives way ' +
+      'to the locked notice, and only a Club Admin can still record who came.',
     mock: {
       pod_id: 'DUN-POD-4821',
       viewer: 'HOST',
       can_mark: true,
       otp_required: true,
       pod_mode: 'PHYSICAL',
+      lock: 'OPEN',
+      complete_deadline: '2026-08-31T14:00:00.000Z',
       companions_required: 7,
     },
     compute: (mock) => {
@@ -1010,6 +1021,8 @@ export default defineDemos('utils', [
       return {
         'needsOtp(board)': needsOtp(mock),
         'canScanTickets(board)': canScanTickets(mock),
+        'showsCompleteDeadline(board)': showsCompleteDeadline(mock),
+        'Locked notice': labels.lockedTitle(mock.lock),
         'earningsBodyFor(board, labels)': earningsBodyFor(mock, labels),
         'Scan CTA': scanCta,
         'How a member gets marked': labels.methodLabel(door),

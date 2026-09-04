@@ -68,9 +68,7 @@ export function SignupScreen() {
       subtitle={t('mweb.signup.subtitle')}
     >
       <SignupStepperRail step={flow.step} askingNumber={flow.askingNumber} />
-      {onNumberStep ? (
-        <WhatsappNumberStep onSubmit={flow.submitNumber} />
-      ) : null}
+      {onNumberStep ? <WhatsappNumberStep onSubmit={flow.submitNumber} /> : null}
       {onVerifyStep && flow.verifying ? (
         <VerifyWhatsappStep
           extension={flow.verifying.extension}

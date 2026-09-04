@@ -71,8 +71,7 @@ export function useSignupFlow() {
   };
 
   /** The number step's answer: from here the two doors run the same code step. */
-  const submitNumber = (values: WhatsappNumberValues) =>
-    dispatch({ type: 'NUMBER_GIVEN', values });
+  const submitNumber = (values: WhatsappNumberValues) => dispatch({ type: 'NUMBER_GIVEN', values });
 
   const createFromForm = (values: SignupFormValues, whatsappToken: string) =>
     register(

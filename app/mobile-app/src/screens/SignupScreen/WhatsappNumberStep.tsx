@@ -1,7 +1,6 @@
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, YStack } from 'tamagui';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 import { buildSignupStepperLabels } from '@duncit/utils';
 import {
   makeWhatsappNumberSchema,

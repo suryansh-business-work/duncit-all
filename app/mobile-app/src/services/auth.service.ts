@@ -70,10 +70,7 @@ export function dobToIso(dob: string): string {
   return new Date(Date.UTC(year ?? 0, (month ?? 1) - 1, day ?? 1)).toISOString();
 }
 
-export async function register(
-  values: SignupValues,
-  whatsappToken: string,
-): Promise<AuthOutcome> {
+export async function register(values: SignupValues, whatsappToken: string): Promise<AuthOutcome> {
   const { first_name, last_name } = splitName(values.name);
   const referralCode = (values.referralCode ?? '').trim().toUpperCase();
   const data = await graphqlRequest(RegisterDocument, {

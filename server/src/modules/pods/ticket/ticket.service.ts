@@ -131,7 +131,14 @@ async function bookedPhoneKeys(membership: any): Promise<Set<string>> {
     .select('auth.phone communication.whatsapp')
     .lean();
   const keys = new Set<string>();
+  // The NUMBER decides whether there is anything to key: a dial code on its
+  // own is not a phone, and `phoneKey('+91', '')` is '91'. The client half
+  // learned that the hard way — every blank row on a fresh multi-seat ticket
+  // carries the prefilled dial code, so keying the pair read them all as the
+  // same person. Inert here (a stored number is 6-15 digits, so it can never
+  // collide with a bare code) but the same trap, one edit from being live.
   const add = (extension: unknown, number: unknown) => {
+    if (!String(number ?? '').trim()) return;
     const key = phoneKey(extension, number);
     if (key) keys.add(key);
   };

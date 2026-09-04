@@ -6,7 +6,7 @@ import { Text, XStack } from 'tamagui';
 import { FeedList } from '@/components/FeedList';
 import { FeedPostCard } from '@/components/following/FeedPostCard';
 import { PostViewerSheet } from '@/components/profile/post-viewer/PostViewerSheet';
-import { TabScreen } from '@/components/TabScreen';
+import { StackScreen } from '@/components/StackScreen';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useFollowing } from '@/hooks/useFollowing';
 import { useFollowingFeed, type FeedPost, type FeedSource } from '@/hooks/useFollowingFeed';
@@ -56,7 +56,7 @@ export function FollowingScreen() {
   };
 
   return (
-    <TabScreen testID="following-screen">
+    <StackScreen title={t('mweb.nav.following')} testID="following-screen">
       <XStack gap={8} paddingHorizontal={16} paddingVertical={8}>
         {TABS.map((value) => {
           const selected = tab === value;
@@ -114,6 +114,6 @@ export function FollowingScreen() {
           }}
         />
       ) : null}
-    </TabScreen>
+    </StackScreen>
   );
 }

@@ -64,7 +64,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       emailTranscript: 'Email transcript',
       emailVerified: 'Email verified.',
       enterOtp: 'Enter OTP',
-      exploreVenues: 'Explore venues',
       facilities: 'Facilities',
       fileIsTooLargeMax: 'File is too large (max {max} MB)',
       filter: 'Filter',
@@ -160,7 +159,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       upcomingOngoingCompletedAndCancelled: 'Upcoming, ongoing, completed and cancelled.',
       values: 'Values',
       venue: 'Venue',
-      venues: 'Venues',
       venueSecurity: 'Venue Security',
       verification: 'Verification',
       verify: 'Verify',
@@ -820,7 +818,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // resolved from a base key would fail.
       greetingSubtitle: 'Discover. Connect. Create memories.',
       actionSearch: 'Search',
-      actionCart: 'Cart',
       actionAlerts: 'Alerts',
       forYouSubtitle: 'Personalized for you',
       forPetSubtitle: 'Fun for your furry friend',
@@ -940,6 +937,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       home: 'Home',
       explore: 'Explore',
       clubs: 'Clubs',
+      // The bottom bar's last two. Chats and Following moved into the account
+      // menu, where they sit beside the other personal destinations; the bar
+      // now carries the two places a visitor GOES — spaces to meet, and the
+      // basket they are carrying.
+      venues: 'Venues',
+      cart: 'Cart',
+      // Still rendered — as the first two tiles of the account menu's grid.
       chats: 'Chats',
       following: 'Following',
     },
@@ -1556,7 +1560,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       decrease: 'Decrease {name}',
       increase: 'Increase {name}',
       removeItem: 'Remove {name}',
-      open: 'Open cart ({count} items)',
     },
     // The money path: the pod-membership checkout, the standalone product
     // checkout, and the confirmation both of them end on. mWeb and the native
@@ -3656,6 +3659,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       completeYourProfile: 'Complete your profile',
       refreshing: 'Refreshing your menu',
       toggleDarkMode: 'Toggle dark mode',
+      // Captions for the two tiles that came down from the bottom bar. Every
+      // other tile in that grid says what it is for, so these do too.
+      chatsCaption: 'Your pod conversations',
+      followingCaption: 'People and clubs you follow',
     },
     sos: {
       sendSos: 'Send SOS',

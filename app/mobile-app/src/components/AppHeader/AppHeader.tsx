@@ -4,7 +4,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
 import { AccountButton } from '@/components/AccountButton';
-import { HeaderCartButton } from '@/components/cart/HeaderCartButton';
 import { LocationDialog } from '@/components/LocationDialog';
 import { LogoutButton } from '@/components/LogoutButton';
 import { NotificationsBell } from '@/components/notifications';
@@ -105,9 +104,9 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
         )}
       </XStack>
       <XStack alignItems="center" gap={8}>
-        {/* Labelled circular actions (mock): Search · Cart · Alerts · avatar
-         * with online dot. Studio modes keep their focused header (no search),
-         * and the cart still hides itself when empty. */}
+        {/* Labelled circular actions (mock): Search · Alerts · avatar with
+         * online dot. Studio modes keep their focused header (no search). The
+         * cart is a bottom-bar destination now, not a header action. */}
         {showBrowseActions ? (
           <TourAnchor tour="home" anchor="home-search">
             <QuickAction label={t('mweb.home.actionSearch')}>
@@ -131,7 +130,6 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
             </QuickAction>
           </TourAnchor>
         ) : null}
-        {minimal ? null : <HeaderCartButton label={t('mweb.home.actionCart')} />}
         {minimal ? null : (
           <TourAnchor tour="home" anchor="home-notifications">
             <QuickAction label={t('mweb.home.actionAlerts')}>

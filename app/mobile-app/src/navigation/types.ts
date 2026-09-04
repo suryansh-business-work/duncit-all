@@ -120,7 +120,6 @@ export type RootStackParamList = {
   Checkout: { podId: string; seats?: number };
   // Standalone product checkout — EVERY cart line pays in one product payment.
   ProductCheckout: undefined;
-  Cart: undefined;
   Shop: undefined;
   OrdersHistory: undefined;
   AddressBook: undefined;
@@ -132,7 +131,10 @@ export type RootStackParamList = {
   GiftCardClaim: { code: string };
   ProductDetail: { productId: string };
   HostsVenues: undefined;
-  Venues: undefined;
+  /** Pod rooms and the people you follow. Both were bottom tabs; they are
+   * pushed screens now, opened from the account menu's grid. */
+  Chats: undefined;
+  Following: undefined;
   /**
    * Someone else’s profile. `userId` carries the @handle when the link came
    * from a share (`/u/<handle>`) and a raw user id when it came from inside
@@ -145,8 +147,16 @@ export type RootStackParamList = {
   NotFound: undefined;
 };
 
-/** Param-less destinations reachable from the account drawer menu. */
-export type MenuRoute = Exclude<
+/**
+ * Param-less destinations reachable from the account drawer menu — the stack's
+ * own screens plus the bottom tabs, because the menu's Shop group still offers
+ * the Cart and the cart is a tab now. {@link TAB_ROUTE_NAMES} is how a caller
+ * tells the two apart at runtime.
+ */
+export type MenuRoute = keyof TabParamList | MenuStackRoute;
+
+/** The stack half of {@link MenuRoute}. */
+export type MenuStackRoute = Exclude<
   keyof RootStackParamList,
   | 'Menu'
   | 'CreatePod'

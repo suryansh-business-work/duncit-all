@@ -14,7 +14,7 @@ function BackdropVideo({ url }: Readonly<{ url: string }>) {
   });
   // The setup-time play() can be swallowed before the remote source finishes
   // loading, so re-assert it once the player reports ready — the same thing
-  // SidebarVenuesCard has to do for the same reason.
+  // every other remote-video surface in the app has to do for the same reason.
   useEffect(() => {
     const sub = player.addListener('statusChange', ({ status }) => {
       if (status === 'readyToPlay') player.play();

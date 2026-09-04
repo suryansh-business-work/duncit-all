@@ -4,7 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { TourAnchor } from '@/tours/TourAnchor';
 import type { MenuRoute } from '@/navigation/types';
-import { PROFILE_GRID, type ProfileTile } from './profileSections';
+import { type ProfileTile } from './profileSections';
 
 /** Pink-tinted icon chip background — mirrors mWeb's alpha(primary, 0.14). */
 const PINK_CHIP = 'rgba(255,87,87,0.14)';
@@ -72,10 +72,17 @@ function TileWithTour({
   );
 }
 
-/** 2×2 quick-action grid — RN port of mWeb's <QuickActionGrid/>. */
+/**
+ * Two-column quick-action grid — RN port of mWeb's <QuickActionGrid/>.
+ *
+ * The tiles are composed by the caller: two of them (Chats, Following) came
+ * down from the bottom bar carrying translated labels, and `profileSections`
+ * holds no copy (rule 38).
+ */
 export function SidebarQuickGrid({
+  tiles,
   onNavigate,
-}: Readonly<{ onNavigate: (route: MenuRoute) => void }>) {
+}: Readonly<{ tiles: readonly ProfileTile[]; onNavigate: (route: MenuRoute) => void }>) {
   return (
     <XStack
       paddingHorizontal={16}
@@ -84,7 +91,7 @@ export function SidebarQuickGrid({
       gap={10}
       justifyContent="space-between"
     >
-      {PROFILE_GRID.map((tile) => (
+      {tiles.map((tile) => (
         // The CELL owns the 48%/grow sizing, not the tile, because a tour wraps
         // two of these tiles in an extra View and TourAnchor renders nothing at
         // all when no tour is on — so the sizing has to sit on something that is

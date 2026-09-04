@@ -1,7 +1,7 @@
 import { Box, Paper, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { profileIcon } from './profileIcons';
-import { PROFILE_GRID, type ProfileTile } from './profileSections';
+import { type ProfileTile } from './profileSections';
 
 /** Which grid tiles the Profile tour walks through. Keyed off the tile, so a
  * reordered grid cannot point a step at the wrong destination. Native twin:
@@ -66,7 +66,14 @@ function ActionTile({ tile, onNavigate }: Readonly<{ tile: ProfileTile; onNaviga
   );
 }
 
-export default function QuickActionGrid({ onNavigate }: Readonly<{ onNavigate: (to: string) => void }>) {
+interface Props {
+  /** The tiles to draw, in order. Composed by the caller because two of them
+   * (Chats, Following) carry translated copy and the config module holds none. */
+  tiles: readonly ProfileTile[];
+  onNavigate: (to: string) => void;
+}
+
+export default function QuickActionGrid({ tiles, onNavigate }: Readonly<Props>) {
   return (
     <Box sx={{ px: 2, pb: 1.25 }}>
       <Stack
@@ -77,7 +84,7 @@ export default function QuickActionGrid({ onNavigate }: Readonly<{ onNavigate: (
           gridTemplateColumns: '1fr 1fr',
           gap: 1.25
         }}>
-        {PROFILE_GRID.map((tile) => (
+        {tiles.map((tile) => (
           <ActionTile key={tile.key} tile={tile} onNavigate={onNavigate} />
         ))}
       </Stack>

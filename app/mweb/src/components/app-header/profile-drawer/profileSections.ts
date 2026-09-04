@@ -7,6 +7,8 @@ import type { StudioMode } from '../../../studio-mode';
  * so this module stays pure and unit-testable.
  */
 export type ProfileIconKey =
+  | 'chats'
+  | 'following'
   | 'bookings'
   | 'saved'
   | 'verification'
@@ -51,7 +53,9 @@ export interface ProfileTile {
   badge?: string;
 }
 
-/** The 2×2 quick-action grid — the four primary consumer destinations. */
+/** The quick-action grid's own four tiles. Chats and Following are prepended by
+ * the view, which has the translator the two of them need — they came down from
+ * the bottom bar, where their labels were already localized. */
 export const PROFILE_GRID: readonly ProfileTile[] = [
   { key: 'pod-history', label: 'Pod History', caption: 'Your bookings & history', icon: 'bookings', to: '/pod-history' },
   { key: 'support', label: 'Help & Support', caption: 'Get quick help', icon: 'support', to: '/support' },

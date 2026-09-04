@@ -2,11 +2,12 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Input, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
-import { StackScreen } from '@/components/StackScreen';
+import { TabScreen } from '@/components/TabScreen';
 import { AdCard } from '@/components/ads/AdCard';
 import { interleaveAds, isAdEntry } from '@/components/ads/interleaveAds';
 import { VenueCard, VenuesLocationBar } from '@/components/hosts-venues';
 import { useActiveAds } from '@/hooks/useActiveAds';
+import { useBottomNavSpace } from '@/hooks/useBottomNavSpace';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useVenuesExplore, type VenueCategoryOption } from '@/hooks/useVenuesExplore';
 import type { RootStackParamList } from '@/navigation/types';
@@ -76,11 +77,14 @@ export function VenuesScreen() {
   } = useVenuesExplore();
   // A sponsored banner every 4 venues (server returns [] when none are booked).
   const { ads } = useActiveAds('VENUE_LIST');
+  const bottomSpace = useBottomNavSpace();
 
   return (
-    <StackScreen title={t('mweb.common.venues')} testID="venues-screen">
+    <TabScreen testID="venues-screen">
       <ScrollView showsVerticalScrollIndicator={false}>
-        <YStack gap={12} padding={16} paddingBottom={40}>
+        {/* A tab, not a pushed screen, since the bar carries Venues now — so the
+            last venue has to clear the floating bar itself. */}
+        <YStack gap={12} padding={16} paddingBottom={bottomSpace}>
           <VenuesLocationBar cityLabel={cityLabel} />
           <Input
             testID="venues-search"
@@ -123,6 +127,6 @@ export function VenuesScreen() {
           })}
         </YStack>
       </ScrollView>
-    </StackScreen>
+    </TabScreen>
   );
 }

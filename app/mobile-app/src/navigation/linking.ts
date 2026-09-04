@@ -48,10 +48,13 @@ export const linking: LinkingOptions<RootStackParamList> = {
           HomeTab: '',
           Explore: 'explore',
           Clubs: 'clubs',
-          Chats: 'chats',
-          Following: 'following',
+          Venues: 'venues',
+          Cart: 'cart',
         },
       },
+      // Both were tabs; they are pushed screens now, opened from the menu.
+      Chats: 'chats',
+      Following: 'following',
       Search: 'search',
       Profile: 'profile',
       Account: 'account',
@@ -130,7 +133,6 @@ export const linking: LinkingOptions<RootStackParamList> = {
       PodFeedback: 'pod/:podId/feedback',
       ClubDetails: 'club/:clubSlug',
       HostsVenues: 'hosts-venues',
-      Venues: 'venues',
       // The segment is the @handle on every link shared since handles
       // existed, and a raw user id on the ones shared before. The server
       // resolves both, so the pattern stays one param either way.
@@ -152,7 +154,6 @@ export const linking: LinkingOptions<RootStackParamList> = {
       // were missing from this map, so a shared /shop or /product link opened
       // the app on NotFound — the one outcome worse than staying in the browser.
       Shop: 'shop',
-      Cart: 'cart',
       OrdersHistory: 'orders',
       ProductDetail: 'product/:productId',
       Feedback: 'support/feedback',

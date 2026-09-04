@@ -20,7 +20,8 @@ import { useAutoPodCountsStore } from '@/stores/auto-pod-counts.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { STUDIO_LABEL, availableModes, resolveMode, studioSwitchRoute } from '@/utils/studio-mode';
 import { StudioSwitchDialog } from '@/components/StudioSwitchDialog';
-import type { MenuRoute, RootStackParamList } from '@/navigation/types';
+import { isTabRoute } from '@/navigation/tabs';
+import type { MenuRoute, MenuStackRoute, RootStackParamList } from '@/navigation/types';
 import { SidebarFooter } from './SidebarFooter';
 import { SidebarPolicies } from './SidebarPolicies';
 import { SidebarRefreshBar } from './SidebarRefreshBar';
@@ -87,16 +88,22 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
     setSwitchOpen(true);
   };
 
-  // MenuRoute is a union of param-less screens; RN v7's distributive `navigate`
-  // overload can't accept a union arg directly, so reshape the method to a
-  // single-arg signature (safe — none of these screens take required params).
-  const navigate: (screen: MenuRoute) => void = navigation.navigate;
+  // MenuStackRoute is a union of param-less screens; RN v7's distributive
+  // `navigate` overload can't accept a union arg directly, so reshape the method
+  // to a single-arg signature (safe — none of these screens take required params).
+  const navigate: (screen: MenuStackRoute) => void = navigation.navigate;
   // Leave the menu BEFORE navigating: `navigate` rewinds to a route already in
   // the stack rather than pushing, so a menu left underneath would swallow the
   // destination (Switch role -> "User" targets Home, and every header avatar
   // targets Menu itself). mWeb replaces its /menu entry for the same reason.
   const go = (route: MenuRoute) => {
     onClose();
+    // The Shop group still offers the Cart, and the cart is a TAB now — a bare
+    // navigate would bubble up past a destination that lives one level down.
+    if (isTabRoute(route)) {
+      navigation.navigate('Home', { screen: route });
+      return;
+    }
     navigate(route);
   };
 

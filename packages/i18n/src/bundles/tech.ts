@@ -242,6 +242,16 @@ export const TECH_BUNDLE: NestedCatalogue = {
     },
     emailTemplates: {
       allChangesSaved: 'All changes saved',
+
+      // The two halves of the body editor. Same MJML either way — the toggle
+      // changes how it is edited, never what is stored.
+      viewLabel: 'How to edit the body',
+      viewCode: 'Code',
+      viewDesign: 'Design',
+      sourceTitle: 'MJML source',
+      designerTitle: 'Visual designer',
+      designerLoading: 'Loading the designer…',
+      designerFailed: 'The designer could not start: {reason}. The Code view still works.',
       anyHeaderFooter: 'Any header / footer',
       autoSave: 'Auto-save',
       autoSaveHint: 'Saves on its own a moment after you stop typing. Switch it off to save by hand.',

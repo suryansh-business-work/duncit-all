@@ -3,13 +3,16 @@ import FunctionsIcon from '@mui/icons-material/Functions';
 import { useTranslation } from '@duncit/app-settings';
 import { formatRupees } from '../types';
 import PodStat from './PodStat';
-import type { MultiPodTotals as Totals } from './types';
+import type { PodTotals } from './types';
 
 /**
- * Every pod in the comparison added up — the same four figures each accordion
+ * Every pod in the calculation added up — the same four figures each accordion
  * header carries, plus the collection they were split out of.
+ *
+ * The pod count is pods MODELLED, not rows: a row standing for ten identical
+ * pods contributes ten, which is what makes the projection worth having.
  */
-export default function MultiPodTotals({ totals }: Readonly<{ totals: Totals }>) {
+export default function TotalsCard({ totals }: Readonly<{ totals: PodTotals }>) {
   const { t } = useTranslation();
   return (
     <Card variant="outlined" sx={{ borderColor: 'primary.main' }}>

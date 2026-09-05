@@ -8,13 +8,14 @@ import { DuncitButton } from '@duncit/buttons';
 import { notifyError, notifySuccess, useConfirm } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
 import MultiPodAccordion from './MultiPodAccordion';
-import MultiPodTotals from './MultiPodTotals';
+import TotalsCard from '../saved/TotalsCard';
+import ReportActions from '../saved/ReportActions';
 import { useMultiPodEditor } from './useMultiPodEditor';
-import { DELETE_MULTI_POD_CALCULATOR, UPDATE_MULTI_POD_CALCULATOR } from './queries';
-import { podPayload, type SavedMultiPodCalculator } from './types';
+import { DELETE_POD_CALCULATOR, UPDATE_POD_CALCULATOR } from '../saved/queries';
+import { podPayload, type SavedPodCalculator } from '../saved/types';
 
 interface Props {
-  saved: SavedMultiPodCalculator;
+  saved: SavedPodCalculator;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -31,8 +32,8 @@ export default function MultiPodEditor({ saved, onClose, onSaved }: Readonly<Pro
   const { t } = useTranslation();
   const confirm = useConfirm();
   const editor = useMultiPodEditor(saved, t('finance.common.pod'));
-  const [save, saveState] = useMutation<any>(UPDATE_MULTI_POD_CALCULATOR);
-  const [remove, removeState] = useMutation<any>(DELETE_MULTI_POD_CALCULATOR);
+  const [save, saveState] = useMutation<any>(UPDATE_POD_CALCULATOR);
+  const [remove, removeState] = useMutation<any>(DELETE_POD_CALCULATOR);
 
   const trimmedName = editor.name.trim();
   const busy = saveState.loading || removeState.loading;
@@ -100,6 +101,11 @@ export default function MultiPodEditor({ saved, onClose, onSaved }: Readonly<Pro
           {t('finance.calculators.backToComparisons')}
         </DuncitButton>
         <Box sx={{ flex: 1 }} />
+        <ReportActions
+          calculatorId={saved.id}
+          calculatorName={saved.name}
+          disabled={editor.dirty}
+        />
         <DuncitButton
           size="small"
           color="error"
@@ -154,7 +160,7 @@ export default function MultiPodEditor({ saved, onClose, onSaved }: Readonly<Pro
         </DuncitButton>
       </Box>
 
-      <MultiPodTotals totals={editor.totals} />
+      <TotalsCard totals={editor.totals} />
     </Stack>
   );
 }

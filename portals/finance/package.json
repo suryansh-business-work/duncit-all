@@ -34,6 +34,7 @@
     "@duncit/dialogs": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/media-picker": "workspace:*",
+    "@duncit/regex": "workspace:*",
     "@duncit/shell": "workspace:*",
     "@duncit/table": "workspace:*",
     "@duncit/tabs": "workspace:*",

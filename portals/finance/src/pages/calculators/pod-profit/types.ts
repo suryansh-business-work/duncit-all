@@ -7,6 +7,15 @@ export interface PodProfitInputs {
    * spots (total − 1, because the host's spot is free) so the venue's fixed slot
    * price is counted once for the whole pod. */
   no_of_spots: number;
+  /**
+   * How many identical pods this row stands for.
+   *
+   * A projection multiplier, not part of the waterfall: the engine still
+   * computes ONE pod, and `scaled` is that answer times this count. Keeping
+   * the two apart is what lets the per-pod breakdown stay readable while the
+   * headline figure answers "and if we run ten of these?".
+   */
+  pod_count: number;
   /** GST % extracted from the GST-inclusive pod amount. */
   gst_percent: number;
   /** Duncit platform fee % charged on the net (post-GST) amount. */
@@ -20,6 +29,16 @@ export interface PodProfitInputs {
   /** Club-admin cut % off the pool (after GST + platform fee, before the
    * venue/host split). Becomes Duncit revenue — mirrors breakdown.math.ts. */
   club_admin_percent: number;
+}
+
+/** One pod's figures times `pod_count` — what the headers and totals add up. */
+export interface PodProfitScaled {
+  pod_count: number;
+  collection_total: number;
+  gst_amount: number;
+  venue_receives: number;
+  host_receives: number;
+  duncit_revenue_total: number;
 }
 
 export interface PodProfitResults {
@@ -49,11 +68,14 @@ export interface PodProfitResults {
   host_earn_percent: number;
   /** gst + host_receives + venue_receives + duncit — reconciles to collection_total. */
   reconciled_total: number;
+  /** The same figures across `pod_count` identical pods. */
+  scaled: PodProfitScaled;
 }
 
 export const DEFAULT_INPUTS: PodProfitInputs = {
   pod_amount: 1000,
   no_of_spots: 30,
+  pod_count: 1,
   gst_percent: 18,
   platform_fee_percent: 5,
   venue_amount: 400,

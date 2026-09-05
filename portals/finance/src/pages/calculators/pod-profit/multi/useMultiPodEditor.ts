@@ -2,21 +2,22 @@ import { useCallback, useMemo, useState } from 'react';
 import { DEFAULT_INPUTS, type PodProfitInputs } from '../types';
 import {
   entriesOfSaved,
+  newEntry,
   rowsOf,
   signatureOf,
-  sumMultiPods,
-  type MultiPodEntry,
-  type MultiPodRow,
-  type MultiPodTotals,
-  type SavedMultiPodCalculator,
-} from './types';
+  sumPods,
+  type PodEntry,
+  type PodRow,
+  type PodTotals,
+  type SavedPodCalculator,
+} from '../saved/types';
 
 export interface MultiPodEditor {
   name: string;
-  rows: MultiPodRow[];
-  totals: MultiPodTotals;
+  rows: PodRow[];
+  totals: PodTotals;
   expandedKeys: ReadonlySet<string>;
-  entries: MultiPodEntry[];
+  entries: PodEntry[];
   /** True while the editor holds anything the server has not been told about. */
   dirty: boolean;
   setName: (name: string) => void;
@@ -31,8 +32,6 @@ export interface MultiPodEditor {
   toggleExpanded: (podKey: string) => void;
 }
 
-const newKey = () => globalThis.crypto.randomUUID();
-
 /**
  * One saved comparison, while it is being edited.
  *
@@ -44,31 +43,25 @@ const newKey = () => globalThis.crypto.randomUUID();
  * `podLabel` is the reader's word for "Pod" — the hook names a new row
  * "Pod 3" without owning a translator of its own.
  */
-export function useMultiPodEditor(
-  saved: SavedMultiPodCalculator,
-  podLabel: string
-): MultiPodEditor {
+export function useMultiPodEditor(saved: SavedPodCalculator, podLabel: string): MultiPodEditor {
   const [name, setName] = useState(saved.name);
-  const [entries, setEntries] = useState<MultiPodEntry[]>(() => entriesOfSaved(saved));
+  const [entries, setEntries] = useState<PodEntry[]>(() => entriesOfSaved(saved));
   const [expandedKeys, setExpandedKeys] = useState<ReadonlySet<string>>(
     () => new Set(entries.slice(0, 1).map((entry) => entry.pod_key))
   );
 
   const addPod = useCallback(() => {
-    const pod_key = newKey();
-    setEntries((prev) => [
-      ...prev,
-      {
-        pod_key,
-        name: `${podLabel} ${prev.length + 1}`,
-        // A new pod starts from the previous one's numbers: a comparison
-        // almost always shares GST, platform fee and commission rates, and it
-        // is the ticket, spots or venue price that differ.
-        inputs: prev.at(-1)?.inputs ?? DEFAULT_INPUTS,
-      },
-    ]);
-    setExpandedKeys((keys) => new Set(keys).add(pod_key));
-  }, [podLabel]);
+    // A new pod starts from the previous one's numbers: a comparison almost
+    // always shares GST, platform fee and commission rates, and it is the
+    // ticket, spots or venue price that differ.
+    //
+    // Minted OUTSIDE both updaters: a setState updater must be pure, and under
+    // StrictMode's double invoke one that called newEntry() would mint two
+    // ids and leave the discarded one expanded forever.
+    const entry = newEntry(podLabel, entries.length + 1, entries.at(-1)?.inputs ?? DEFAULT_INPUTS);
+    setEntries((prev) => [...prev, entry]);
+    setExpandedKeys((keys) => new Set(keys).add(entry.pod_key));
+  }, [entries, podLabel]);
 
   const removePod = useCallback((podKey: string) => {
     setEntries((prev) => prev.filter((entry) => entry.pod_key !== podKey));
@@ -109,7 +102,7 @@ export function useMultiPodEditor(
   }, []);
 
   const rows = useMemo(() => rowsOf(entries), [entries]);
-  const totals = useMemo(() => sumMultiPods(rows), [rows]);
+  const totals = useMemo(() => sumPods(rows), [rows]);
 
   // Re-derived from `saved` rather than latched: a successful save refetches
   // the row, the signature it produces then matches what is on screen, and the

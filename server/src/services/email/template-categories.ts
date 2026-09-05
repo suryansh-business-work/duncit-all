@@ -51,6 +51,7 @@ const BY_CATEGORY: Record<EmailCategory, string[]> = {
     'meeting-scheduled-admin',
     'portal-access-approved',
     'portal-access-declined',
+    'pod-calculator-report',
   ],
 
   // Opt-out-able.

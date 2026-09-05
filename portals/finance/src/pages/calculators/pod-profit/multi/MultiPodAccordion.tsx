@@ -16,11 +16,11 @@ import PodInputsCard from '../PodInputsCard';
 import VenueHostCard from '../VenueHostCard';
 import ResultsCard from '../ResultsCard';
 import { formatRupees, type PodProfitInputs } from '../types';
-import PodStat from './PodStat';
-import type { MultiPodRow } from './types';
+import PodStat from '../saved/PodStat';
+import type { PodRow } from '../saved/types';
 
 interface Props {
-  row: MultiPodRow;
+  row: PodRow;
   expanded: boolean;
   onToggle: () => void;
   onRename: (name: string) => void;
@@ -48,7 +48,8 @@ export default function MultiPodAccordion({
   onRemove,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { results } = row;
+  const { scaled } = row.results;
+  const countSuffix = scaled.pod_count > 1 ? ` · x${scaled.pod_count}` : '';
   return (
     <Accordion expanded={expanded} onChange={onToggle} disableGutters>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -63,30 +64,31 @@ export default function MultiPodAccordion({
               {row.name}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              {t('finance.calculators.totalCollection')} {formatRupees(results.collection_total)}
+              {t('finance.calculators.totalCollection')} {formatRupees(scaled.collection_total)}
+              {countSuffix}
             </Typography>
           </Box>
           <PodStat
             label={t('finance.calculators.duncitRevenue')}
-            value={formatRupees(results.duncit_revenue_total)}
+            value={formatRupees(scaled.duncit_revenue_total)}
             tone="primary"
             size="sm"
           />
           <PodStat
             label={t('finance.calculators.venueReceives')}
-            value={formatRupees(results.venue_receives)}
+            value={formatRupees(scaled.venue_receives)}
             tone="success"
             size="sm"
           />
           <PodStat
             label={t('finance.calculators.hostReceives')}
-            value={formatRupees(results.host_receives)}
-            tone={results.host_receives < 0 ? 'warning' : 'success'}
+            value={formatRupees(scaled.host_receives)}
+            tone={scaled.host_receives < 0 ? 'warning' : 'success'}
             size="sm"
           />
           <PodStat
             label={t('finance.calculators.gst')}
-            value={formatRupees(results.gst_amount)}
+            value={formatRupees(scaled.gst_amount)}
             tone="warning"
             size="sm"
           />
@@ -109,7 +111,7 @@ export default function MultiPodAccordion({
               <VenueHostCard inputs={row.inputs} onChange={onInputChange} />
             </Stack>
             <Box sx={{ width: { xs: '100%', lg: 360 }, flexShrink: 0 }}>
-              <ResultsCard results={results} />
+              <ResultsCard results={row.results} />
             </Box>
           </Stack>
           <Divider />

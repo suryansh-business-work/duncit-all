@@ -1,14 +1,14 @@
-import { useCallback } from 'react';
-import { useSearchParams } from 'react-router';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { Alert, Skeleton, Stack } from '@mui/material';
+import { Alert, Skeleton, Stack, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import { DuncitButton } from '@duncit/buttons';
 import { notifyError } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
-import { DEFAULT_INPUTS } from '../types';
 import MultiPodEditor from './MultiPodEditor';
-import MultiPodList from './MultiPodList';
-import { CREATE_MULTI_POD_CALCULATOR, MULTI_POD_CALCULATORS } from './queries';
-import type { SavedMultiPodCalculator } from './types';
+import SavedCalculatorsTable from '../saved/SavedCalculatorsTable';
+import { CREATE_POD_CALCULATOR, POD_CALCULATORS } from '../saved/queries';
+import { useOpenParam } from '../saved/useOpenParam';
+import { newEntry, podPayload, type SavedPodCalculator } from '../saved/types';
 
 /** Which comparison is open. Its own query key, so it survives a reload and a
  * pasted link, and so the tab strip's `selectedtab` keeps its own meaning. */
@@ -24,50 +24,32 @@ const OPEN_PARAM = 'calculator';
  */
 export default function MultiPodCalculator() {
   const { t } = useTranslation();
-  const [params, setParams] = useSearchParams();
-  const openId = params.get(OPEN_PARAM);
+  const [openId, setOpen] = useOpenParam(OPEN_PARAM);
 
-  const { data, loading, error, refetch } = useQuery<any>(MULTI_POD_CALCULATORS, {
+  const { data, loading, error, refetch } = useQuery<any>(POD_CALCULATORS, {
+    variables: { kind: 'MULTI' },
     fetchPolicy: 'cache-and-network',
   });
-  const [create, createState] = useMutation<any>(CREATE_MULTI_POD_CALCULATOR);
+  const [create, createState] = useMutation<any>(CREATE_POD_CALCULATOR);
 
-  const rows: SavedMultiPodCalculator[] = data?.multiPodCalculators ?? [];
+  const rows: SavedPodCalculator[] = data?.podCalculators ?? [];
   const open = rows.find((row) => row.id === openId) ?? null;
 
-  const setOpen = useCallback(
-    (id: string | null) => {
-      setParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          if (id) {
-            next.set(OPEN_PARAM, id);
-          } else {
-            next.delete(OPEN_PARAM);
-          }
-          return next;
-        },
-        { replace: true }
-      );
-    },
-    [setParams]
-  );
 
   const onCreate = () => {
     create({
       variables: {
         input: {
           name: t('finance.calculators.untitledComparison'),
+          kind: 'MULTI',
           // One pod to start from, so the editor opens on something to edit
           // rather than an empty list.
-          pods: [
-            { pod_key: globalThis.crypto.randomUUID(), name: `${t('finance.common.pod')} 1`, ...DEFAULT_INPUTS },
-          ],
+          pods: podPayload([newEntry(t('finance.common.pod'), 1)]),
         },
       },
     })
       .then((res) => {
-        const created = res.data?.createMultiPodCalculator;
+        const created = res.data?.createPodCalculator;
         return refetch().then(() => {
           if (created?.id) setOpen(created.id);
           return undefined;
@@ -104,11 +86,27 @@ export default function MultiPodCalculator() {
   }
 
   return (
-    <MultiPodList
-      rows={rows}
-      creating={createState.loading}
-      onCreate={onCreate}
-      onOpen={setOpen}
-    />
+    <Stack spacing={2}>
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+        {t('finance.calculators.savedComparisonsIntro')}
+      </Typography>
+      <SavedCalculatorsTable
+        kind="MULTI"
+        rows={rows}
+        emptyText={t('finance.calculators.noComparisonsYet')}
+        onOpen={setOpen}
+        toolbarActions={
+          <DuncitButton
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={onCreate}
+            disabled={createState.loading}
+          >
+            {t('finance.calculators.newComparison')}
+          </DuncitButton>
+        }
+      />
+    </Stack>
   );
 }

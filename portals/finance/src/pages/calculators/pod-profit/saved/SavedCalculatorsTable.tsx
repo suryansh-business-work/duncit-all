@@ -1,13 +1,10 @@
 import { useMemo } from 'react';
-import { Stack, Typography } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
 import { formatRupees } from '../types';
-import { totalsOfSaved, type SavedMultiPodCalculator } from './types';
+import { totalsOfSaved, type PodCalculatorKind, type SavedPodCalculator } from './types';
 
-/** A saved comparison plus the figures its pods add up to — what a row shows. */
+/** A saved calculation plus the figures its pods add up to — what a row shows. */
 interface CalculatorRow {
   id: string;
   name: string;
@@ -20,23 +17,33 @@ interface CalculatorRow {
 }
 
 interface Props {
-  rows: readonly SavedMultiPodCalculator[];
-  creating: boolean;
-  onCreate: () => void;
+  kind: PodCalculatorKind;
+  rows: readonly SavedPodCalculator[];
+  toolbarActions: React.ReactNode;
+  emptyText: string;
   onOpen: (id: string) => void;
 }
 
 const searchOf = (row: CalculatorRow) => row.name;
 
 /**
- * Every saved comparison, one per row.
+ * Every saved calculation of one kind, one per row.
  *
  * The four money columns are computed here from the pods the query already
  * returned, rather than stored on the document: the finance waterfall is the
  * server's to change, and a figure frozen at save time would quietly disagree
  * with the editor the moment a rate moved.
+ *
+ * One table for both tabs — the kind only decides which rows and which
+ * `tableId` its column preferences are remembered under.
  */
-export default function MultiPodList({ rows, creating, onCreate, onOpen }: Readonly<Props>) {
+export default function SavedCalculatorsTable({
+  kind,
+  rows,
+  toolbarActions,
+  emptyText,
+  onOpen,
+}: Readonly<Props>) {
   const { t } = useTranslation();
 
   const tableRows = useMemo<CalculatorRow[]>(
@@ -97,35 +104,17 @@ export default function MultiPodList({ rows, creating, onCreate, onOpen }: Reado
     [t]
   );
 
-  const createButton = (
-    <DuncitButton
-      variant="contained"
-      size="small"
-      startIcon={<AddIcon />}
-      onClick={onCreate}
-      disabled={creating}
-    >
-      {t('finance.calculators.newComparison')}
-    </DuncitButton>
-  );
-
   return (
-    <Stack spacing={2}>
-      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-        {t('finance.calculators.savedComparisonsIntro')}
-      </Typography>
-
-      <DuncitTable<CalculatorRow>
-        tableId="finance-multi-pod-calculators"
-        columns={columns}
-        fetchRows={fetchRows}
-        getRowId={(row) => row.id}
-        onRowClick={(row) => onOpen(row.id)}
-        toolbarActions={createButton}
-        emptyText={t('finance.calculators.noComparisonsYet')}
-        searchPlaceholder={t('finance.calculators.searchComparisons')}
-        defaultSort={{ field: 'updated_at', dir: 'desc' }}
-      />
-    </Stack>
+    <DuncitTable<CalculatorRow>
+      tableId={`finance-pod-calculators-${kind.toLowerCase()}`}
+      columns={columns}
+      fetchRows={fetchRows}
+      getRowId={(row) => row.id}
+      onRowClick={(row) => onOpen(row.id)}
+      toolbarActions={toolbarActions}
+      emptyText={emptyText}
+      searchPlaceholder={t('finance.calculators.searchComparisons')}
+      defaultSort={{ field: 'updated_at', dir: 'desc' }}
+    />
   );
 }

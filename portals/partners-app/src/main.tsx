@@ -1,5 +1,5 @@
 import { mountPortal } from '@duncit/shell';
-import { NotifyHost } from '@duncit/dialogs';
+import { ConfirmProvider, NotifyHost } from '@duncit/dialogs';
 import { createSessionUserLoader } from '@duncit/user-context';
 import { logs } from '@duncit/logs';
 import { urlConfigs } from './config/url-configs';
@@ -30,5 +30,9 @@ mountPortal({
   // The pod and club editors are pages now: they navigate back to their list on
   // save, so the confirmation has to outlive the screen that triggered it.
   extras: <NotifyHost />,
+  // Same arrangement as the other portals: useConfirm() needs this above the
+  // routed pages. Nothing here calls it directly — @duncit/pod-change-requests
+  // does, from the Change Requests board this console mounts.
+  wrap: (node) => <ConfirmProvider>{node}</ConfirmProvider>,
   children: <App />,
 });

@@ -28,6 +28,13 @@ export const EMAIL_FALLBACK: Record<string, string> = {
   "email.common.supportNote":
     "Contact support if you have any questions.",
   "email.common.footerNote": "You are receiving this because you use Duncit.",
+  "email.podCalculator.title": "Pod profit report",
+  "email.podCalculator.intro":
+    "The report you asked for is attached as a PDF. It sets out every pod in the calculation, what each one collects, and how that splits between GST, the venue, the host and Duncit.",
+  "email.podCalculator.estimateNote":
+    "These are estimates from the rates saved in the calculation, produced by the same finance engine that settles real pods. It is not an invoice and settles nothing.",
+  "email.podCalculator.footer":
+    "You are receiving this because somebody on the Duncit finance team emailed you this report.",
   "email.podRefund.title": "Refund initiated",
   "email.podRefund.intro":
     "Your payment for the cancelled pod below has been marked for refund:",

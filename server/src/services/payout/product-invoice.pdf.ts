@@ -1,4 +1,4 @@
-import PDFDocument from 'pdfkit';
+import { loadPdfImage, renderPdf } from '@services/pdf/document';
 
 export interface ProductInvoiceLine {
   name: string;
@@ -36,27 +36,12 @@ const INK = '#111827';
 const MUTED = '#6b7280';
 const LINE = '#e5e7eb';
 
-async function loadLogo(url?: string): Promise<Buffer | null> {
-  if (!url) return null;
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    return Buffer.from(await res.arrayBuffer());
-  } catch {
-    return null;
-  }
-}
+
 
 /** Per-seller product invoice for products sold on a completed pod. */
 export async function generateProductInvoicePdf(d: ProductInvoiceData): Promise<Buffer> {
-  const logo = await loadLogo(d.invoice_logo_url);
-  return new Promise((resolve, reject) => {
-    try {
-      const doc = new PDFDocument({ size: 'A4', margin: 0 });
-      const chunks: Buffer[] = [];
-      doc.on('data', (c: Buffer) => chunks.push(c));
-      doc.on('end', () => resolve(Buffer.concat(chunks)));
-      doc.on('error', reject);
+  const logo = await loadPdfImage(d.invoice_logo_url);
+  return renderPdf((doc) => {
 
       const W = doc.page.width;
       const L = 48;
@@ -151,9 +136,5 @@ export async function generateProductInvoicePdf(d: ProductInvoiceData): Promise<
           { align: 'center', width: R - L }
         );
 
-      doc.end();
-    } catch (e) {
-      reject(e);
-    }
   });
 }

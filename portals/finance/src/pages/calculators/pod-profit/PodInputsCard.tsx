@@ -52,6 +52,18 @@ export default function PodInputsCard({ inputs, onChange }: Readonly<Props>) {
               htmlInput: { min: 0, step: 1 }
             }}
           />
+          <TextField
+            label={t('finance.calculators.totalNumberOfPods')}
+            type="number"
+            size="small"
+            value={inputs.pod_count}
+            onChange={(e) => onChange('pod_count', Math.max(1, Math.round(Number(e.target.value) || 1)))}
+            helperText={t('finance.calculators.totalNumberOfPodsHint')}
+            fullWidth
+            slotProps={{
+              htmlInput: { min: 1, step: 1 }
+            }}
+          />
           <PercentSlider
             label="GST"
             value={inputs.gst_percent}

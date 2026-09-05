@@ -1,9 +1,11 @@
 import { payableSpots } from '@duncit/utils';
-import type { PodProfitInputs, PodProfitResults } from './types';
+import type { PodProfitInputs, PodProfitResults, PodProfitScaled } from './types';
 
 const toPaise = (rupees: number) => Math.round(Math.max(0, rupees) * 100);
 const toRupees = (paise: number) => paise / 100;
 const clampPercent = (value: number) => Math.min(Math.max(value, 0), 100);
+/** Paise x count, back to rupees — the projection never re-rounds a rupee value. */
+const scaleRupees = (paise: number, count: number) => Math.round(paise * count) / 100;
 
 /**
  * Calculator math — a faithful mirror of the server finance engine
@@ -31,6 +33,9 @@ const clampPercent = (value: number) => Math.min(Math.max(value, 0), 100);
  */
 export function calculatePodProfit(inputs: PodProfitInputs): PodProfitResults {
   const totalSpots = Math.max(0, Math.round(inputs.no_of_spots));
+  // At least one: a projection of zero pods would print an all-zero report
+  // that reads as a broken calculator rather than an empty one.
+  const podCount = Math.max(1, Math.round(inputs.pod_count || 1));
   // The host's spot is free — only (total - 1) spots are ever billed.
   const spots = payableSpots(totalSpots);
   const amount = toPaise(inputs.pod_amount) * spots;
@@ -82,5 +87,13 @@ export function calculatePodProfit(inputs: PodProfitInputs): PodProfitResults {
     duncit_revenue_total: toRupees(duncitRevenue),
     host_earn_percent: hostEarn,
     reconciled_total: toRupees(gst + hostReceives + venueReceives + duncitRevenue),
+    scaled: {
+      pod_count: podCount,
+      collection_total: scaleRupees(amount, podCount),
+      gst_amount: scaleRupees(gst, podCount),
+      venue_receives: scaleRupees(venueReceives, podCount),
+      host_receives: scaleRupees(hostReceives, podCount),
+      duncit_revenue_total: scaleRupees(duncitRevenue, podCount),
+    } satisfies PodProfitScaled,
   };
 }

@@ -140,7 +140,6 @@ async function reportFor(doc: IPodCalculator): Promise<Buffer> {
     lines,
     totals: totalsOf(lines),
     invoice_logo_url: settings.invoice_logo_url,
-    invoice_footer_note: settings.invoice_footer_note,
   });
 }
 

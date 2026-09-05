@@ -10,6 +10,7 @@ import OpenInAppBanner from './components/OpenInAppBanner';
 import SplashScreen from './components/SplashScreen';
 import OfflineBanner from './components/OfflineBanner';
 import ErrorBoundary from './components/ErrorBoundary';
+import { ConfirmProvider } from '@duncit/dialogs';
 import { NotifyHost } from './components/notify';
 import PodFeedbackPrompt from './components/pod-feedback';
 import AppPopupDialog from './components/app-popup';
@@ -75,6 +76,7 @@ export default function App() {
   useShortLinkJourney(isAuthed);
 
   return (
+    <ConfirmProvider>
     <StatusUploadProvider>
     <CartProvider>
     <TourProvider>
@@ -160,5 +162,6 @@ export default function App() {
     </TourProvider>
     </CartProvider>
     </StatusUploadProvider>
+    </ConfirmProvider>
   );
 }

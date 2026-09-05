@@ -38,7 +38,14 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((c) => c.put(req, copy)).catch(() => undefined);
           return res;
         })
-        .catch(() => caches.match('/index.html').then((r) => r || caches.match('/')))
+        .catch(() => caches.match('/index.html').then((r) => r ?? caches.match('/')))
+        // Nothing cached — a first visit, or the install-time addAll() failed
+        // and swallowed it. Resolving `undefined` here is what turned an
+        // ordinary offline navigation into "Failed to convert value to
+        // 'Response'"; the network error itself is the honest answer, and it
+        // leaves the browser to handle the navigation exactly as it would
+        // with no service worker at all.
+        .then((res) => res ?? Response.error())
     );
     return;
   }
@@ -54,7 +61,9 @@ self.addEventListener('fetch', (event) => {
           }
           return res;
         })
-        .catch(() => cached);
+        // Same rule as the navigation branch: an uncached asset whose fetch
+        // fails must still resolve to a Response.
+        .catch(() => cached ?? Response.error());
       return cached || fetchPromise;
     })
   );

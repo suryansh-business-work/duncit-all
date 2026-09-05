@@ -73,6 +73,9 @@ importers:
       '@duncit/datetime':
         specifier: workspace:*
         version: link:../../packages/datetime
+      '@duncit/dialogs':
+        specifier: workspace:*
+        version: link:../../packages/dialogs
       '@duncit/earn':
         specifier: workspace:*
         version: link:../../packages/earn

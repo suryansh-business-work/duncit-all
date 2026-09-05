@@ -1,6 +1,6 @@
 import { mountPortal } from '@duncit/shell';
 import { createSessionUserLoader } from '@duncit/user-context';
-import { NotifyHost } from '@duncit/dialogs';
+import { ConfirmProvider, NotifyHost } from '@duncit/dialogs';
 import { logs } from '@duncit/logs';
 // Via @duncit/app-settings, which already re-exports the i18n package — the
 // portal gains the copy without gaining a dependency (and without the matching
@@ -28,5 +28,9 @@ mountPortal({
   i18nFallback: flattenCatalogue(FINANCE_BUNDLE),
   loadUser: createSessionUserLoader(apolloClient),
   extras: <NotifyHost />,
+  // Same arrangement as the other portals: useConfirm() needs this above the
+  // routed pages, and the Pod Profit Calculator's delete is the first screen
+  // here to ask for a confirmation (rule 12 — never window.confirm).
+  wrap: (node) => <ConfirmProvider>{node}</ConfirmProvider>,
   children: <App />,
 });

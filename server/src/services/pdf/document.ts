@@ -29,6 +29,36 @@ export function renderPdf(draw: (doc: PDFKit.PDFDocument) => void): Promise<Buff
 }
 
 /**
+ * Symbols the 14 built-in PDF fonts cannot draw, and what to print instead.
+ *
+ * pdfkit's Helvetica is WinAnsi-encoded, which has no rupee sign (U+20B9) —
+ * `₹1,000` comes out as a stray mark followed by the number, which on a
+ * financial document reads as a rendering fault. Until a Unicode font is
+ * embedded, the ISO code is the honest substitute.
+ */
+const UNPRINTABLE_CURRENCY: Record<string, string> = {
+  '₹': 'INR ',
+  '₽': 'RUB ',
+  '₩': 'KRW ',
+  '₪': 'ILS ',
+  '₫': 'VND ',
+  '₴': 'UAH ',
+  '₦': 'NGN ',
+  '₱': 'PHP ',
+};
+
+/**
+ * A currency symbol the built-in fonts can actually draw.
+ *
+ * `$`, `£`, `¥` and `€` are all in WinAnsi and pass through untouched; the ones
+ * that are not are swapped for their code. Every PDF in the product
+ * interpolates the admin's `currency_symbol` into a standard font, so this is
+ * the one place that decision should live (rule 40).
+ */
+export const pdfCurrency = (symbol: string): string =>
+  UNPRINTABLE_CURRENCY[symbol] ?? symbol;
+
+/**
  * A branding image for a PDF, or null.
  *
  * Null on anything at all — no URL, a 404, a DNS failure, a timeout — because

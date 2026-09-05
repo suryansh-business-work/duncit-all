@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.73.0",
+  "version": "1.73.1",
   "private": true,
   "scripts": {
     "deps:check": "node ../../scripts/deps.mjs check",
@@ -33,6 +33,7 @@
     "@duncit/category": "workspace:*",
     "@duncit/club-form": "workspace:*",
     "@duncit/datetime": "workspace:*",
+    "@duncit/dialogs": "workspace:*",
     "@duncit/earn": "workspace:*",
     "@duncit/errors": "workspace:*",
     "@duncit/fallback-icons": "workspace:*",

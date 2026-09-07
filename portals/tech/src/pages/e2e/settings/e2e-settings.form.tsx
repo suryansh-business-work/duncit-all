@@ -1,4 +1,4 @@
-import { Controller, useForm, type Resolver } from 'react-hook-form';
+import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Divider, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
@@ -10,6 +10,7 @@ import type { E2eRunSettings, E2eSuite } from '../queries';
 import ScheduleFields from './ScheduleFields';
 import IdentityFields from './IdentityFields';
 import OverrideFields from './OverrideFields';
+import SwitchRow from './SwitchRow';
 import {
   e2eSettingsSchema,
   toFormValues,
@@ -57,6 +58,11 @@ export default function E2eSettingsForm({
   });
 
   const weekly = watch('frequency') === 'WEEKLY';
+  const recording = useWatch({ control, name: 'record_videos' });
+  // A token that cannot write files is the ONE way this can be switched on and
+  // still produce nothing, and it is fixed in the Slack admin rather than here
+  // — so it has to be said out loud rather than discovered the morning after.
+  const cannotUpload = recording && settings.can_upload_videos === false;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -125,6 +131,24 @@ export default function E2eSettingsForm({
         ) : (
           <Alert severity="info" variant="outlined">
             {t('tech.e2e.slackNotConfigured')}
+          </Alert>
+        )}
+
+        <Controller
+          control={control}
+          name="record_videos"
+          render={({ field }) => (
+            <SwitchRow
+              checked={field.value}
+              onChange={field.onChange}
+              label={t('tech.e2e.recordVideos')}
+              hint={t('tech.e2e.recordVideosHint')}
+            />
+          )}
+        />
+        {cannotUpload && (
+          <Alert severity="warning" variant="outlined">
+            {t('tech.e2e.recordVideosNoScope')}
           </Alert>
         )}
 

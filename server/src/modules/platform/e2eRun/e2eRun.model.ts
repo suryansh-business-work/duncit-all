@@ -44,6 +44,19 @@ export interface IE2eSuiteResult {
   error: string;
   /** The GitHub job this leg ran as, so a red row leads straight to its log. */
   job_url: string;
+  /**
+   * The Slack file this leg's recording became — every spec it ran, stitched
+   * into one video of the whole suite from start to end.
+   *
+   * The id is kept rather than only the link because it is the handle the file
+   * is DELETED by: a workspace has a storage quota, and a nightly sweep that
+   * only ever added to it would exhaust that quota inside a month.
+   */
+  video_file_id: string;
+  /** Where the recording sits in Slack. Empty until the run shares it. */
+  video_permalink: string;
+  video_seconds: number | null;
+  video_bytes: number | null;
   reported_at: Date;
 }
 
@@ -118,6 +131,15 @@ export interface IE2eRun extends Document {
   slack_channel: string | null;
   slack_ts: string | null;
   slack_error: string | null;
+  /**
+   * Why the recordings did not reach Slack, when the run itself did.
+   *
+   * Kept apart from {@link slack_error} because they fail for different reasons
+   * and only one of them means nobody was told: a message that posted with no
+   * videos under it is a working announcement missing its evidence, most often
+   * a token without `files:write`.
+   */
+  video_error: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -138,6 +160,10 @@ const suiteResultSchema = new Schema<IE2eSuiteResult>(
     duration_seconds: { type: Number, default: null },
     error: { type: String, default: '' },
     job_url: { type: String, default: '' },
+    video_file_id: { type: String, default: '' },
+    video_permalink: { type: String, default: '' },
+    video_seconds: { type: Number, default: null },
+    video_bytes: { type: Number, default: null },
     reported_at: { type: Date, default: Date.now },
   },
   { _id: false }
@@ -201,6 +227,7 @@ const e2eRunSchema = new Schema<IE2eRun>(
     slack_channel: { type: String, default: null },
     slack_ts: { type: String, default: null },
     slack_error: { type: String, default: null },
+    video_error: { type: String, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
@@ -275,6 +302,17 @@ export interface IE2eRunSettings extends Document {
    * code handed straight back, for any address or number.
    */
   otp_bypass: boolean;
+  /**
+   * Record every suite and post the recordings to the results channel.
+   *
+   * A switch rather than a constant because the cost is somebody else's disk:
+   * a sweep of twenty suites is tens of megabytes of video a night against the
+   * workspace's storage quota, and a quota that fills stops Slack accepting
+   * ANY upload — not only these. Turning it off has to be a click, not a
+   * deploy. {@link IE2eRunSettings.keep_last} is the other half: the
+   * recordings of a pruned run are deleted from Slack with it.
+   */
+  record_videos: boolean;
   last_run_at: Date | null;
   created_at: Date;
   updated_at: Date;
@@ -306,6 +344,10 @@ const e2eRunSettingsSchema = new Schema<IE2eRunSettings>(
     // deploys.
     mute_communications: { type: Boolean, default: false },
     otp_bypass: { type: Boolean, default: false },
+    // ON, unlike the two switches above, because this one reveals nothing and
+    // changes nothing about how the platform behaves — it only decides whether
+    // the run that already happened can be watched afterwards.
+    record_videos: { type: Boolean, default: true },
     last_run_at: { type: Date, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

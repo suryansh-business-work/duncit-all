@@ -3,7 +3,15 @@ import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getUrlConfigs } from '@config/url-configs';
-import { isSlackConfigured, postMessage } from '@modules/platform/slack/slack.gateway';
+import {
+  authStatus,
+  completeFileUpload,
+  deleteFile,
+  getFileUploadUrl,
+  isSlackConfigured,
+  postMessage,
+  SLACK_FILES_PER_MESSAGE,
+} from '@modules/platform/slack/slack.gateway';
 import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
 import { clip, contextBlock, escapeMrkdwn } from '@utils/slack-blocks';
 import type { AuthUser } from '@context';
@@ -75,6 +83,10 @@ const pubSuite = (r: IE2eSuiteResult) => ({
   duration_seconds: r.duration_seconds,
   error: r.error ?? '',
   job_url: r.job_url ?? '',
+  video_file_id: r.video_file_id ?? '',
+  video_permalink: r.video_permalink ?? '',
+  video_seconds: r.video_seconds ?? null,
+  video_bytes: r.video_bytes ?? null,
   reported_at: r.reported_at?.toISOString() ?? null,
 });
 
@@ -115,6 +127,7 @@ const pub = (doc: IE2eRun) => ({
   slack_channel: doc.slack_channel ?? null,
   slack_ts: doc.slack_ts ?? null,
   slack_error: doc.slack_error ?? null,
+  video_error: doc.video_error ?? null,
   created_at: doc.created_at?.toISOString() ?? null,
 });
 
@@ -197,6 +210,15 @@ function nextStages(existing: IE2eRun | null, stage: string): { stages?: IE2eRun
 async function applySuiteResult(id: unknown, suite: any): Promise<void> {
   const key = str(suite.key);
   if (!key) throw badInput('A suite result needs a key.');
+  // A re-report replaces the row wholesale, so anything written to it by
+  // something OTHER than the runner has to be carried across. The recordings
+  // are attached at the gate, after every leg has reported, and a leg that
+  // reported twice would otherwise take its own video off the row.
+  const previous = await E2eRunModel.findOne(
+    { _id: id, 'results.key': key },
+    { 'results.$': 1 }
+  ).lean();
+  const kept = previous?.results?.[0];
   const row: IE2eSuiteResult = {
     key,
     status: suite.status,
@@ -208,6 +230,10 @@ async function applySuiteResult(id: unknown, suite: any): Promise<void> {
     duration_seconds: num(suite.duration_seconds),
     error: str(suite.error),
     job_url: str(suite.job_url),
+    video_file_id: str(kept?.video_file_id),
+    video_permalink: str(kept?.video_permalink),
+    video_seconds: kept?.video_seconds ?? null,
+    video_bytes: kept?.video_bytes ?? null,
     reported_at: new Date(),
   };
   await E2eRunModel.updateOne({ _id: id }, { $pull: { results: { key } } });
@@ -392,6 +418,121 @@ async function announceOutcome(run: IE2eRun): Promise<void> {
   }
 }
 
+/* ── the recordings ───────────────────────────────────────────────────────── */
+
+/**
+ * `m:ss` — how long the recording runs, in the shape a video player shows.
+ * Slack renders the title verbatim, so it has to read like one.
+ */
+function clockLabel(seconds: number | null): string {
+  if (seconds == null || seconds <= 0) return '';
+  const mins = Math.floor(seconds / 60);
+  return ` · ${mins}:${String(Math.round(seconds % 60)).padStart(2, '0')}`;
+}
+
+/**
+ * What the file is called in Slack. The suite and its verdict, because a
+ * thread of twenty players is unreadable unless each one says which suite it
+ * is and whether that suite went red.
+ */
+function videoTitle(result: IE2eSuiteResult): string {
+  return `${result.key} — ${result.status.toLowerCase()}${clockLabel(result.video_seconds)}`;
+}
+
+/** Slice a list into runs of `size`. */
+function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
+/**
+ * Hang every recording under the run's own Slack message.
+ *
+ * One `files.completeUploadExternal` per ten files, which is Slack's ceiling,
+ * and `thread_ts` on all of them: twenty recordings posted to the channel
+ * itself would drown the announcement they belong to.
+ */
+async function shareVideos(run: IE2eRun): Promise<string | null> {
+  const pending = (run.results ?? []).filter((r) => str(r.video_file_id));
+  if (pending.length === 0) return null;
+  if (!run.slack_channel || !run.slack_ts) {
+    return 'The run was not announced, so there is no message to hang the recordings under.';
+  }
+  const shared: Array<{ id: string; permalink: string }> = [];
+  const batches = chunk(pending, SLACK_FILES_PER_MESSAGE);
+  for (const [index, batch] of batches.entries()) {
+    const files = await completeFileUpload({
+      files: batch.map((r) => ({ id: r.video_file_id, title: videoTitle(r) })),
+      channel: run.slack_channel,
+      thread_ts: run.slack_ts,
+      // Only on the first, or every batch repeats the same sentence.
+      initial_comment:
+        index === 0 ? `Recordings for ${run.run_no} — every suite, start to end.` : undefined,
+    });
+    shared.push(...files.map((f) => ({ id: f.id, permalink: f.permalink })));
+  }
+  // Written with the positional operator rather than by saving the document:
+  // `results` is the array every leg reports into, and assigning it here would
+  // undo whatever landed while this was talking to Slack.
+  for (const file of shared) {
+    const row = pending.find((r) => r.video_file_id === file.id);
+    if (!row) continue;
+    await E2eRunModel.updateOne(
+      { _id: run._id, 'results.key': row.key },
+      { $set: { 'results.$.video_permalink': file.permalink } }
+    );
+  }
+  return null;
+}
+
+/**
+ * Whether the installed bot token may upload a file at all.
+ *
+ * `files:write` is granted at INSTALL time and cannot be added from here, so a
+ * workspace whose token predates the recordings has everything else about its
+ * Slack working and no videos — which, without this, is only discovered the
+ * morning after the first sweep. Null when Slack is not connected: the page
+ * already says that, and a second way of saying it would read as a third
+ * problem.
+ */
+async function canUploadVideos(slackReady: boolean): Promise<boolean | null> {
+  if (!slackReady) return null;
+  try {
+    const status = await authStatus();
+    // A token whose scopes Slack did not report is not evidence of a missing
+    // one — say "yes" and let the upload be the thing that finds out.
+    if (!status.scopes_known) return true;
+    return status.scopes.some((s) => s.scope === 'files:write' && s.granted);
+  } catch {
+    // A Slack that cannot be reached is a different problem, and the page has
+    // other ways of showing it. Claiming the scope is missing would be a lie.
+    return null;
+  }
+}
+
+/**
+ * Remove these runs' recordings from Slack.
+ *
+ * The history's ceiling has to reach into the workspace as well as into this
+ * database: a nightly sweep is tens of megabytes of video against a storage
+ * quota, and a full quota stops Slack accepting ANY upload, not only these.
+ * Best-effort by design — a file that cannot be deleted must never keep the row
+ * that points at it alive.
+ */
+async function forgetVideos(runs: Array<{ results?: IE2eSuiteResult[] }>): Promise<void> {
+  const ids = runs
+    .flatMap((run) => (run.results ?? []).map((r) => str(r.video_file_id)))
+    .filter(Boolean);
+  for (const id of ids) {
+    try {
+      await deleteFile(id);
+    } catch (err) {
+      logs.server.warn('e2eRun', 'forgetVideo', { error: err, file_id: id });
+    }
+  }
+}
+
 /** Everything a scheduled or portal-started dispatch needs to decide. */
 interface DispatchOptions {
   suites: string[];
@@ -450,10 +591,15 @@ async function prune(keepLast: number): Promise<void> {
     .sort({ created_at: -1 })
     .limit(keepLast)
     .lean();
-  await E2eRunModel.deleteMany({
+  const filter = {
     _id: { $nin: survivors.map((s) => s._id) },
     status: { $in: ['SUCCESS', 'FAILED'] },
-  });
+  };
+  // Read the doomed rows BEFORE deleting them: their recordings are held in
+  // Slack, and the file ids that free that storage exist nowhere else.
+  const doomed = await E2eRunModel.find(filter, { 'results.video_file_id': 1 }).lean();
+  await E2eRunModel.deleteMany(filter);
+  await forgetVideos(doomed);
 }
 
 export const e2eRunService = {
@@ -502,6 +648,8 @@ export const e2eRunService = {
       identity_phone: doc.identity_phone ?? '',
       mute_communications: Boolean(doc.mute_communications),
       otp_bypass: Boolean(doc.otp_bypass),
+      record_videos: Boolean(doc.record_videos),
+      can_upload_videos: await canUploadVideos(slackReady),
       slack_channel: str(channel) || null,
       slack_configured: slackReady,
       login_email_preview: identity?.login_email ?? '',
@@ -535,6 +683,7 @@ export const e2eRunService = {
       identity_phone: str(input.identity_phone),
       mute_communications: Boolean(input.mute_communications),
       otp_bypass: Boolean(input.otp_bypass),
+      record_videos: Boolean(input.record_videos),
     };
     // Absent leaves the saved password alone. The form cannot read it back, so
     // a field that always wrote would blank it every time it was opened.
@@ -689,8 +838,82 @@ export const e2eRunService = {
     return pub(run);
   },
 
+  /**
+   * A place in Slack for one suite's recording, or the reason there is none.
+   *
+   * Answers rather than throws for every reason a recording cannot be taken —
+   * videos switched off, no results channel, a token without `files:write`. CI
+   * prints the reason and carries on: a suite that passed must not be recorded
+   * as broken because nobody could watch it afterwards.
+   */
+  async videoUploadAuth(input: any) {
+    const refused = (reason: string) => ({ ok: false, upload_url: '', file_id: '', reason });
+    const run = await openRowFor(input);
+    if (!run) throw badInput('No e2e run matches this dispatch or workflow run.');
+    const settings = await settingsDoc();
+    if (!settings.record_videos) {
+      return refused('Recording is switched off in Tech → E2E Tests → Settings.');
+    }
+    const channel = str(await getRuntimeEnvValue(CHANNEL_ENV_KEY));
+    if (!channel) return refused('No Slack channel is configured for e2e results.');
+    const length = num(input.length) ?? 0;
+    if (length <= 0) return refused('A recording with no bytes in it cannot be uploaded.');
+    try {
+      const slot = await getFileUploadUrl(str(input.file_name) || `${str(input.suite)}.mp4`, length);
+      return { ok: true, upload_url: slot.upload_url, file_id: slot.file_id, reason: '' };
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
+      logs.server.warn('e2eRun', 'videoUploadAuth', { error: err, suite: str(input.suite) });
+      return refused(reason);
+    }
+  },
+
+  /**
+   * Share the uploaded recordings under the run's announcement.
+   *
+   * Called once, by the gate, after the outcome has been reported — that is the
+   * only moment a thread to hang them under exists. Every failure is recorded
+   * on `video_error` rather than thrown, for the reason the announcement itself
+   * is: the run is already decided, and a workspace that would not take a video
+   * must not turn a green sweep red.
+   */
+  async attachVideos(input: any) {
+    const run = await openRowFor(input);
+    if (!run) throw badInput('No e2e run matches this dispatch or workflow run.');
+    const videos: any[] = Array.isArray(input.videos) ? input.videos : [];
+    for (const video of videos) {
+      const suite = str(video.suite);
+      const fileId = str(video.file_id);
+      if (!suite || !fileId) continue;
+      await E2eRunModel.updateOne(
+        { _id: run._id, 'results.key': suite },
+        {
+          $set: {
+            'results.$.video_file_id': fileId,
+            'results.$.video_seconds': num(video.seconds),
+            'results.$.video_bytes': num(video.bytes),
+          },
+        }
+      );
+    }
+    // Re-read so the share works from what is actually stored, including the
+    // legs that reported while this request was in flight.
+    const fresh = (await E2eRunModel.findById(run._id)) ?? run;
+    try {
+      fresh.video_error = await shareVideos(fresh);
+    } catch (err) {
+      fresh.video_error = err instanceof Error ? err.message : String(err);
+      logs.server.error('e2eRun', 'shareVideos', { error: err, run_no: fresh.run_no });
+    }
+    await fresh.save();
+    return pub((await E2eRunModel.findById(run._id)) ?? fresh);
+  },
+
   async remove(id: string) {
+    // Same order as prune: the recordings can only be found through the row.
+    const doomed = await E2eRunModel.findById(id, { 'results.video_file_id': 1 }).lean();
     const res = await E2eRunModel.deleteOne({ _id: id });
+    if (res.deletedCount > 0 && doomed) await forgetVideos([doomed]);
     return res.deletedCount > 0;
   },
 

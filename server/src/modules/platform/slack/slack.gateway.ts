@@ -43,6 +43,9 @@ const REQUIRED_SCOPES = new Map<string, string[]>([
   ['conversations.history', ['channels:history', 'groups:history']],
   ['users.list', ['users:read']],
   ['conversations.join', ['channels:join']],
+  ['files.getUploadURLExternal', ['files:write']],
+  ['files.completeUploadExternal', ['files:write']],
+  ['files.delete', ['files:write']],
 ]);
 
 /**
@@ -53,8 +56,13 @@ const REQUIRED_SCOPES = new Map<string, string[]>([
  * behalf; without it the same thing is done by typing /invite in Slack. Putting
  * it in the required set would fail the connection test — and light up every
  * existing install as broken — for a workspace whose Slack is entirely fine.
+ *
+ * `files:write` is the same shape of thing. It carries the e2e run recordings
+ * into the results channel; a workspace whose token predates it keeps every
+ * other Slack feature and loses only the videos, which the run row then says so
+ * about. Marking it required would report every existing install as broken.
  */
-export const SLACK_OPTIONAL_SCOPES: string[] = ['channels:join'];
+export const SLACK_OPTIONAL_SCOPES: string[] = ['channels:join', 'files:write'];
 
 /** Every scope this gateway needs to do its job, deduped. */
 export const SLACK_BOT_SCOPES: string[] = [
@@ -375,6 +383,105 @@ export async function postMessage(input: PostMessageInput): Promise<PostMessageR
   return { channel: String(data.channel ?? ''), ts: String(data.ts ?? '') };
 }
 
+/* ── files ────────────────────────────────────────────────────────────────── */
+
+export interface SlackUploadUrl {
+  upload_url: string;
+  file_id: string;
+}
+
+/**
+ * Reserve a slot for one file and get the URL its bytes go to (`files:write`).
+ *
+ * Slack's external upload is three calls, and the middle one is the reason this
+ * exists as its own step: the returned `upload_url` is PRE-AUTHORISED, so
+ * whoever holds it can POST the bytes without the bot token. That is what lets
+ * CI send a 30 MB recording straight to Slack — the token never leaves this
+ * process and the bytes never touch our disk.
+ *
+ * `length` is the exact byte count and Slack checks it: a wrong number is
+ * rejected at the upload, not here.
+ */
+export async function getFileUploadUrl(
+  filename: string,
+  length: number
+): Promise<SlackUploadUrl> {
+  const data = await slackGet('files.getUploadURLExternal', {
+    filename,
+    length: String(length),
+  });
+  return { upload_url: String(data.upload_url ?? ''), file_id: String(data.file_id ?? '') };
+}
+
+/** One uploaded file, waiting to be shared. */
+export interface SlackUploadedFile {
+  id: string;
+  title: string;
+}
+
+export interface SlackSharedFile {
+  id: string;
+  title: string;
+  permalink: string;
+}
+
+/**
+ * Slack's own ceiling on one completeUploadExternal call. More than this in a
+ * single request is refused outright, so a sweep of twenty suites has to be
+ * sent as chunks — hence the export: the caller does the chunking, because only
+ * it knows what a sensible message looks like.
+ */
+export const SLACK_FILES_PER_MESSAGE = 10;
+
+/**
+ * Finish uploads and share them as ONE message (needs `files:write`).
+ *
+ * Passing `thread_ts` is what keeps twenty recordings out of the channel
+ * proper: they hang under the run's own message instead of being twenty posts
+ * nobody asked for.
+ */
+export async function completeFileUpload(input: {
+  files: SlackUploadedFile[];
+  channel?: string;
+  thread_ts?: string;
+  initial_comment?: string;
+}): Promise<SlackSharedFile[]> {
+  if (input.files.length > SLACK_FILES_PER_MESSAGE) {
+    throw new GraphQLError(
+      `Slack accepts at most ${SLACK_FILES_PER_MESSAGE} files per message — send them in chunks.`,
+      { extensions: { code: 'BAD_REQUEST' } }
+    );
+  }
+  const body: Record<string, unknown> = { files: input.files };
+  if (input.channel) body.channel_id = input.channel;
+  if (input.thread_ts) body.thread_ts = input.thread_ts;
+  if (input.initial_comment) body.initial_comment = input.initial_comment;
+  const data = await slackPost('files.completeUploadExternal', body);
+  return (data.files ?? []).map((f: any) => ({
+    id: String(f.id ?? ''),
+    title: String(f.title ?? ''),
+    permalink: String(f.permalink ?? ''),
+  }));
+}
+
+/**
+ * Remove a file from the workspace (needs `files:write`).
+ *
+ * A workspace has a storage quota and a nightly sweep of recordings would eat
+ * it, so the run history's own ceiling has to reach into Slack as well as into
+ * our database. `file_not_found` is success: something already deleted must not
+ * block deleting the row that pointed at it.
+ */
+export async function deleteFile(fileId: string): Promise<void> {
+  try {
+    await slackPost('files.delete', { file: fileId });
+  } catch (err) {
+    const code = (err as GraphQLError)?.extensions?.slack_error;
+    if (code === 'file_not_found' || code === 'file_deleted') return;
+    throw err;
+  }
+}
+
 /**
  * Add the bot to a PUBLIC channel (needs `channels:join`).
  *
@@ -397,6 +504,8 @@ const SCOPE_PURPOSE: Record<string, string> = {
   'groups:history': 'Read the messages in a private channel.',
   'users:read': 'Show the names and avatars of the people who wrote those messages.',
   'channels:join': 'Let this page add the bot to a public channel, instead of typing /invite in Slack.',
+  'files:write':
+    'Carry the e2e run recordings into the results channel, and remove them again when the run history is trimmed.',
 };
 
 export interface SlackScopeStatus {

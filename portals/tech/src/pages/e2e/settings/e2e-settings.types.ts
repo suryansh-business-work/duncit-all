@@ -40,6 +40,9 @@ export const e2eSettingsSchema = (messages: E2eSettingsMessages) =>
       // spelled out beside it rather than guarded here.
       mute_communications: z.boolean(),
       otp_bypass: z.boolean(),
+      // Also a bare switch. What it costs — workspace storage — is spelled out
+      // beside it, and the ceiling that bounds it is keep_last above.
+      record_videos: z.boolean(),
       // Empty clears the channel, which is how a run goes back to being
       // recorded here and announced nowhere.
       slack_channel: z
@@ -85,6 +88,7 @@ export const toFormValues = (settings: E2eRunSettings): E2eSettingsValues => ({
   identity_phone: settings.identity_phone,
   mute_communications: settings.mute_communications,
   otp_bypass: settings.otp_bypass,
+  record_videos: settings.record_videos,
   slack_channel: settings.slack_channel ?? '',
 });
 

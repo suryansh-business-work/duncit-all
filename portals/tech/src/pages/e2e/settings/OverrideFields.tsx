@@ -1,35 +1,8 @@
 import { Controller, useWatch, type Control } from 'react-hook-form';
-import { Alert, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
+import { Alert, Stack } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
+import SwitchRow from './SwitchRow';
 import type { E2eSettingsValues } from './e2e-settings.types';
-
-interface SwitchRowProps {
-  checked: boolean;
-  onChange: (value: boolean) => void;
-  label: string;
-  hint: string;
-}
-
-/**
- * One override: the switch, and the sentence saying what it actually does.
- *
- * Hoisted to module scope rather than written inside the component below — a
- * component defined inside another is remounted on every render, which loses
- * the focus ring the moment the switch is used with a keyboard.
- */
-function SwitchRow({ checked, onChange, label, hint }: Readonly<SwitchRowProps>) {
-  return (
-    <Stack spacing={0.5}>
-      <FormControlLabel
-        control={<Switch checked={checked} onChange={(e) => onChange(e.target.checked)} />}
-        label={label}
-      />
-      <Typography variant="caption" sx={{ color: 'text.secondary', pl: 6 }}>
-        {hint}
-      </Typography>
-    </Stack>
-  );
-}
 
 /**
  * The two switches that exist only so a suite can run against a real server.

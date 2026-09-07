@@ -40,6 +40,14 @@ export const e2eRunResolvers = {
       const user = requireRole(ctx, E2E_MANAGE);
       return e2eRunService.report(args.input, user.email ?? user.id);
     },
+    e2eVideoUploadAuth: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, E2E_MANAGE);
+      return e2eRunService.videoUploadAuth(args.input);
+    },
+    attachE2eRunVideos: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, E2E_MANAGE);
+      return e2eRunService.attachVideos(args.input);
+    },
     updateE2eRunSettings: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, E2E_MANAGE);
       return e2eRunService.updateSettings(args.input);

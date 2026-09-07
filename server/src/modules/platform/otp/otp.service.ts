@@ -171,7 +171,7 @@ export const anyDelivered = (deliveries: readonly IOtpDelivery[]) =>
  * mailer outage or a bad AiSensy key handed the fixed test code back for any
  * address that asked — including a login code for somebody else's account.
  */
-const deliberatelyStubbed = (deliveries: readonly IOtpDelivery[]) =>
+export const deliberatelyStubbed = (deliveries: readonly IOtpDelivery[]) =>
   deliveries.length > 0 && deliveries.every((d) => d.status === 'STUBBED');
 
 /**

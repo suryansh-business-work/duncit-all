@@ -18,7 +18,12 @@ import { logs } from '@observability/log';
 import { UserModel } from '@modules/access/user/user.model';
 import { isAisensyConfigured } from '@modules/platform/aisensy/aisensy.gateway';
 import type { IOtpChallenge, IOtpDelivery } from '@modules/platform/otp/otp.model';
-import { anyDelivered, normalizePhone, otpService } from '@modules/platform/otp/otp.service';
+import {
+  anyDelivered,
+  deliberatelyStubbed,
+  normalizePhone,
+  otpService,
+} from '@modules/platform/otp/otp.service';
 
 const PURPOSE = 'WHATSAPP_SIGNUP' as const;
 
@@ -64,6 +69,14 @@ function numberTakenError(): GraphQLError {
  */
 async function assertDelivered(deliveries: readonly IOtpDelivery[], number: string) {
   if (anyDelivered(deliveries)) return;
+  // A DELIBERATE stub is not an outage, and this is the one place that has to
+  // tell them apart. The rule above is "a transport that IS configured and did
+  // not deliver is an outage" — an operator switching the E2E bypass on in Tech
+  // > E2E Tests > Settings is neither a transport nor a failure, and refusing
+  // it here would leave the suite unable to finish the very signup the bypass
+  // exists for. `deliberatelyStubbed` is the same predicate `otpService` uses
+  // to decide the code may be shown, so the two can never disagree.
+  if (deliberatelyStubbed(deliveries)) return;
   const reason = deliveries.find((d) => d.reason)?.reason ?? 'AiSensy did not accept the message';
   if (!(await isAisensyConfigured())) return;
   logs.server.error('auth-whatsapp', 'signup-otp-undelivered', {
@@ -121,8 +134,9 @@ export const whatsappAuthService = {
     return {
       ok: true,
       // Kept as `dev_otp` because the signup screens already read that field.
-      // Null on any platform with AiSensy wired: `assertDelivered` has already
-      // refused the only case that would fill it in.
+      // Filled in exactly two cases, both of them deliberate: a platform with
+      // no AiSensy key at all (nothing is wired yet), and the E2E bypass — the
+      // two `assertDelivered` lets through. An outage still refuses above.
       dev_otp: result.test_code,
     };
   },

@@ -37,6 +37,7 @@ import ClubAdminPodEditorPage from './pages/club-admin-pod-editor-page';
 import ClubAdminAutoPodEditorPage from './pages/club-admin-auto-pod-editor-page';
 import ClubAdminPodMonitoringPage from './pages/club-admin-monitoring-page/ClubAdminPodMonitoringPage';
 import ClubAdminAutoPodsPage from './pages/club-admin-auto-pods-page/ClubAdminAutoPodsPage';
+import { RegionStructurePage, RegionClubAdminsPage } from './pages/regional-page';
 import VerificationPage from './pages/verification-page/VerificationPage';
 import EarnPage from './pages/earn-page/EarnPage';
 import AppShell from './components/AppShell';
@@ -108,6 +109,8 @@ export default function App() {
       <Route path="/club-admin/clubs/:clubId" element={authed(<ClubAdminClubPodsPage />)} />
       <Route path="/club-admin/monitoring" element={authed(<ClubAdminPodMonitoringPage />)} />
       <Route path="/club-admin/auto-pods" element={authed(<ClubAdminAutoPodsPage />)} />
+      <Route path="/regional/structure" element={authed(<RegionStructurePage />)} />
+      <Route path="/regional/club-admins" element={authed(<RegionClubAdminsPage />)} />
       <Route path="/club-admin/clubs/:clubId/edit" element={authed(<ClubAdminEditClubPage />)} />
       {/* Static before dynamic so /pods/new is never read as a pod id —
           React Router ranks it first either way, and the order says so. */}

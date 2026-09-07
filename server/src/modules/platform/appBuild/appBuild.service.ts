@@ -10,6 +10,7 @@ import { signToken } from '@modules/access/user/user.service';
 import { getUrlConfigs } from '@config/url-configs';
 import type { AuthUser } from '@context';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { clip, contextBlock, escapeMrkdwn } from '@utils/slack-blocks';
 import {
   AppBuildModel,
   nextBuildNo,
@@ -26,8 +27,17 @@ import {
   githubRepoConfig,
   requireGithubRepoConfig,
   workflowRunsUrl,
-  WORKFLOW_FILE,
-} from './github.gateway';
+} from '@utils/github-actions';
+
+/**
+ * Which workflow file builds each platform. Stays here rather than in the
+ * gateway: the gateway dispatches ANY workflow, and E2E Tests dispatches a
+ * different one through it.
+ */
+const WORKFLOW_FILE: Record<AppBuildPlatform, string> = {
+  ANDROID: 'android-build.yml',
+  IOS: 'ios-build.yml',
+};
 
 /** Where CI build artifacts land on ImageKit (release-notify's folder). */
 export const APP_BUILDS_FOLDER = '/app-builds';
@@ -176,13 +186,6 @@ const pub = (doc: IAppBuild) => ({
   created_at: doc.created_at?.toISOString() ?? null,
 });
 
-/** Slack mrkdwn treats &, < and > as control characters — a commit subject
- * containing `<!channel>` would otherwise ping the whole channel. */
-const escapeMrkdwn = (s: string): string =>
-  s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-
-const clip = (s: string, max: number): string => (s.length > max ? `${s.slice(0, max - 1)}…` : s);
-
 /** GitHub commit link derived from the run URL — both live on the same repo. */
 function commitUrl(build: IAppBuild): string {
   const base = build.workflow_run_url.split('/actions/')[0];
@@ -240,8 +243,6 @@ function commitsBlock(build: IAppBuild): unknown {
   if (build.commits.length > 8) lines.push(`… and ${build.commits.length - 8} more`);
   return { type: 'section', text: { type: 'mrkdwn', text: lines.join('\n') } };
 }
-
-const contextBlock = (text: string) => ({ type: 'context', elements: [{ type: 'mrkdwn', text }] });
 
 /**
  * The one line that explains an unhappy outcome, or null for a plain success.

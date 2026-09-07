@@ -2,6 +2,7 @@ import { Controller, type Control, type FieldErrors } from 'react-hook-form';
 import { MenuItem, Stack, TextField } from '@mui/material';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { useTranslation } from '@duncit/shell';
+import { dateToTime, timeToDate } from '../../../lib/time-of-day';
 import type { BackupSettingsForm } from './schema';
 
 interface Props {
@@ -9,19 +10,6 @@ interface Props {
   errors: FieldErrors<BackupSettingsForm>;
   weekly: boolean;
 }
-
-/** `HH:mm` onto a Date the picker can hold, and back again. */
-const timeToDate = (value: string): Date => {
-  const [h, m] = (value || '03:00').split(':').map(Number);
-  const date = new Date();
-  date.setHours(h || 0, m || 0, 0, 0);
-  return date;
-};
-
-const dateToTime = (date: Date | null): string => {
-  if (!date || Number.isNaN(date.getTime())) return '03:00';
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-};
 
 /** The four inputs that make up a schedule. Split out of BackupScheduleCard to
  * keep that file inside the 200-line limit; it owns the card and the footer. */

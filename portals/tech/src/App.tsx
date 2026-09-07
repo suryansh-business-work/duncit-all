@@ -31,6 +31,8 @@ import RateLimitSettingsPage from './pages/rate-limiting/settings';
 import SlackSettingsPage from './pages/slack/SlackSettingsPage';
 import AppBuildsPage from './pages/app-builds';
 import AppBuildSettingsPage from './pages/app-builds/AppBuildSettingsPage';
+import E2eRunsPage from './pages/e2e';
+import { E2eSettingsPage } from './pages/e2e/settings';
 import MailAutomationPage from './pages/mail-automation';
 import StatusReportsPage from './pages/status-reports-page';
 import AppShell from './components/AppShell';
@@ -110,6 +112,12 @@ export default function App() {
           element={authed(<AppBuildsPage key="ios" platform="IOS" />)}
         />
         <Route path="/app-builds/settings" element={authed(<AppBuildSettingsPage />)} />
+        {/* Every run of the end-to-end suite, and the nightly schedule that
+            produces most of them. The workflow has no cron of its own — the
+            schedule below is the only thing that starts a scheduled run. */}
+        <Route path="/e2e" element={<Navigate to="/e2e/runs" replace />} />
+        <Route path="/e2e/runs" element={authed(<E2eRunsPage />)} />
+        <Route path="/e2e/settings" element={authed(<E2eSettingsPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <NotifyHost />

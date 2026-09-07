@@ -105,6 +105,7 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'feedback_channel', label: 'Feedback Channel (optional)', hint: 'Channel ID in-app feedback posts to (falls back to Default Channel)' },
     { name: 'android_builds_channel', label: 'Android Builds Channel (optional)', hint: 'Channel ID CI Android builds announce to (Tech → App Builds → Settings)' },
     { name: 'ios_builds_channel', label: 'iOS Builds Channel (optional)', hint: 'Channel ID CI iOS builds announce to (Tech → App Builds → Settings)' },
+    { name: 'e2e_channel', label: 'E2E Results Channel (optional)', hint: 'Channel ID e2e run results announce to (Tech → E2E Tests → Settings)' },
   ],
   // Two different AiSensy credentials, on purpose. The campaign API key SENDS
   // (backend.aisensy.com/campaign/t1/api/v2) and can do nothing else — it
@@ -226,6 +227,7 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   SLACK_FEEDBACK_CHANNEL: { category: 'SLACK', field: 'feedback_channel' },
   SLACK_ANDROID_BUILDS_CHANNEL: { category: 'SLACK', field: 'android_builds_channel' },
   SLACK_IOS_BUILDS_CHANNEL: { category: 'SLACK', field: 'ios_builds_channel' },
+  SLACK_E2E_CHANNEL: { category: 'SLACK', field: 'e2e_channel' },
   TURN_URLS: { category: 'TURN', field: 'urls' },
   TURN_USERNAME: { category: 'TURN', field: 'username' },
   TURN_CREDENTIAL: { category: 'TURN', field: 'credential' },

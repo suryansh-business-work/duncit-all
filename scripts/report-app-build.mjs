@@ -50,7 +50,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { execFileSync } from 'node:child_process';
-import { setTimeout as sleep } from 'node:timers/promises';
+import { createCiClient, describeError, MISSING_CREDENTIALS } from './lib/ci-report.mjs';
 
 const GRAPHQL_URL = process.env.DUNCIT_GRAPHQL_URL || 'https://server.duncit.com/graphql';
 const MAX_COMMITS = 50;
@@ -128,44 +128,6 @@ function getStats(range) {
 /* ── surviving a server that is briefly not there ─────────────────────────── */
 
 /**
- * `fetch` reports every network-level failure as the same three words —
- * "fetch failed" — and hides the errno that says which failure it was on
- * `cause`. Printing only the message turns a DNS miss, a refused connection and
- * a connect timeout into one indistinguishable line, which is how a build can
- * fail twenty-eight times over without anyone learning what it could not reach.
- */
-function describeError(err) {
-  const seen = [];
-  let current = err;
-  while (current && seen.length < 4) {
-    const message = current instanceof Error ? current.message : String(current);
-    if (message && !seen.includes(message)) seen.push(message);
-    current = current.cause;
-  }
-  return seen.join(': ') || 'unknown error';
-}
-
-/** What nginx answers with while the container behind it is coming back up. */
-const TRANSIENT_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
-
-/**
- * Transient means "the server is not answering right now", which is worth
- * asking again. An ANSWER is not transient however unwelcome it is: a GraphQL
- * error or any other 4xx says the request itself is wrong, and repetition does
- * not improve it — retrying a schema mismatch would just take ten minutes to
- * report the same thing.
- */
-function isTransient(err) {
-  if (err?.graphQLErrors) return false;
-  if (typeof err?.status === 'number') return TRANSIENT_STATUS.has(err.status);
-  // Everything undici raises for "could not complete the round trip" — refused,
-  // timed out, reset, DNS — arrives as a TypeError carrying the errno on cause.
-  return err instanceof TypeError;
-}
-
-const RETRY_DELAYS_MS = [5_000, 15_000, 30_000, 60_000];
-
-/**
  * How long to keep trying a round trip that keeps failing transiently.
  *
  * Sized against the thing that actually causes it: THIS SAME MERGE fired the
@@ -188,82 +150,10 @@ const RETRY_DELAYS_MS = [5_000, 15_000, 30_000, 60_000];
  */
 const RETRY_WINDOW_MS = process.env.PROGRESS_ONLY === '1' ? 0 : 20 * 60 * 1000;
 
-/**
- * ONE deadline for the whole reporting phase, fixed when the script starts.
- *
- * It used to be a window granted afresh to every call, which is the wrong shape
- * for the only thing that ever spends it. An unreachable server is unreachable
- * for all of them, so a single outage was paid for three times over — the
- * window on the APK, the whole of it again on the AAB, and again on the report
- * — half an hour of runner time that still ended with the build thrown away,
- * written into the log as three unrelated failures rather than one outage.
- * Sharing the deadline spends that wall-clock once, and because the whole of it
- * is now available to whichever call is in flight, any single call can ride out
- * twice the outage it could before.
- */
-const RETRY_DEADLINE = Date.now() + RETRY_WINDOW_MS;
-
-/**
- * The same treatment the workflow already gives the Gradle distribution fetch:
- * try again, backing off, and give up only once the outage has outlived the
- * deadline rather than on the first refusal. A deadline of 0 is already in the
- * past, which is how a caller asks for no retry at all.
- */
-async function withRetry(label, run, giveUpAt = RETRY_DEADLINE) {
-  for (let attempt = 0; ; attempt += 1) {
-    try {
-      return await run();
-    } catch (err) {
-      const delay = RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)];
-      if (!isTransient(err) || Date.now() + delay >= giveUpAt) throw err;
-      console.warn(`⚠ ${label}: ${describeError(err)} — retrying in ${delay / 1000}s`);
-      await sleep(delay);
-    }
-  }
-}
-
-/* ── graphql + upload ─────────────────────────────────────────────────────── */
-
-async function gqlOnce(query, variables, token) {
-  const headers = { 'content-type': 'application/json' };
-  if (token) headers.authorization = `Bearer ${token}`;
-  const res = await fetch(GRAPHQL_URL, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ query, variables }),
-  });
-  const json = await res.json().catch(() => ({}));
-  if (json.errors?.length) {
-    const err = new Error(json.errors[0].message || 'GraphQL error');
-    err.graphQLErrors = json.errors;
-    throw err;
-  }
-  if (!res.ok) {
-    // Carried so isTransient can tell a gateway that is restarting from a
-    // request the server has understood and rejected.
-    const err = new Error(`GraphQL HTTP ${res.status}`);
-    err.status = res.status;
-    throw err;
-  }
-  return json.data;
-}
-
-const gql = (query, variables, token, giveUpAt) =>
-  withRetry('server request failed', () => gqlOnce(query, variables, token), giveUpAt);
-
-async function resolveToken() {
-  if (process.env.DUNCIT_RELEASE_TOKEN) return process.env.DUNCIT_RELEASE_TOKEN;
-  const email = process.env.DUNCIT_RELEASE_EMAIL;
-  const password = process.env.DUNCIT_RELEASE_PASSWORD;
-  if (!email || !password) return null;
-  // undefined (not null): JSON.stringify drops the key, and the server's yup
-  // schema rejects an explicit null portal_key.
-  const data = await gql(
-    'mutation($input: LoginInput!){ login(input:$input){ token } }',
-    { input: { email, password, portal_key: process.env.DUNCIT_RELEASE_PORTAL_KEY || undefined } }
-  );
-  return data?.login?.token || null;
-}
+const { gql, gqlOnce, withRetry, resolveToken } = createCiClient({
+  url: GRAPHQL_URL,
+  retryWindowMs: RETRY_WINDOW_MS,
+});
 
 /**
  * The newest build the server has for this platform — the changelog base.
@@ -514,16 +404,7 @@ try {
   }
 
   const token = await resolveToken();
-  if (!token) {
-    throw new Error(
-      [
-        'no Duncit credentials — the build cannot be recorded or announced.',
-        'Add ONE of these as GitHub Actions repo secrets:',
-        '  • DUNCIT_RELEASE_TOKEN=<SUPER_ADMIN / TECH_MANAGER JWT>',
-        '  • DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD (a TECH_MANAGER account)',
-      ].join('\n')
-    );
-  }
+  if (!token) throw new Error(MISSING_CREDENTIALS);
 
   // Nothing below this line is needed to move a progress label, and all of it
   // costs git work or a round trip.

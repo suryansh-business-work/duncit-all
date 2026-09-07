@@ -1,31 +1,26 @@
 import { GraphQLError } from 'graphql';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
-import type { AppBuildPlatform } from './appBuild.model';
 
 /**
- * Starting a GitHub Actions workflow from the portal.
+ * Starting a GitHub Actions workflow from a portal.
  *
- * This is the only outbound WRITE in App Builds. Everything else in the feature
- * records what CI already did; this makes CI do something, which is why the
- * credential is a separate env category and the resolver gates it on the same
- * roles as the rest of the module.
+ * This is the only outbound WRITE any of these features make: everything else
+ * records what CI already did, and this makes CI do something. It lives in
+ * utils rather than beside one caller because two now dispatch through it —
+ * App Builds starts a mobile build, E2E Tests starts the suite — and two copies
+ * of "what did GitHub mean by that status" would be two places for the operator
+ * advice to drift.
  *
  * Deliberately small: one dispatch call and the links around it. No run polling
  * — a dispatch answers 204 with no run id, and rather than hunting for the run
- * it just created (which is a guess against a list, and wrong whenever two
- * builds start together), the workflow tells us who it is on its first report.
+ * it just created (which is a guess against a list, and wrong whenever two runs
+ * start together), the workflow tells us who it is on its first report.
  */
 
 const GITHUB_API = 'https://api.github.com';
 
 /** GitHub gets no longer than this to accept a dispatch. */
 const TIMEOUT_MS = 15_000;
-
-/** Which workflow file builds each platform. */
-export const WORKFLOW_FILE: Record<AppBuildPlatform, string> = {
-  ANDROID: 'android-build.yml',
-  IOS: 'ios-build.yml',
-};
 
 export interface GithubRepoConfig {
   token: string;
@@ -86,19 +81,19 @@ function dispatchFailure(status: number, message: string, ref: string, workflowF
   }
   if (status === 422) {
     return new GraphQLError(
-      `GitHub refused the build: ${message} — usually the branch "${ref}" does not have a copy of ${workflowFile} that accepts these inputs. Merge the workflow change into that branch first.`,
+      `GitHub refused the run: ${message} — usually the branch "${ref}" does not have a copy of ${workflowFile} that accepts these inputs. Merge the workflow change into that branch first.`,
       { extensions: { code: 'BAD_GATEWAY', github_status: status } }
     );
   }
-  return new GraphQLError(`GitHub refused the build (HTTP ${status}): ${message}`, {
+  return new GraphQLError(`GitHub refused the run (HTTP ${status}): ${message}`, {
     extensions: { code: 'BAD_GATEWAY', github_status: status },
   });
 }
 
 /**
  * Ask GitHub to run a workflow. Resolves only when GitHub has ACCEPTED it
- * (204); every other answer throws, so a queued row is never written for a
- * build that was refused.
+ * (204); every other answer throws, so a queued row is never left behind for a
+ * run that was refused.
  */
 export async function dispatchWorkflow(
   cfg: GithubRepoConfig,
@@ -123,7 +118,7 @@ export async function dispatchWorkflow(
     });
   } catch (err: any) {
     if (err?.name === 'AbortError' || err?.name === 'TimeoutError') {
-      throw new GraphQLError(`GitHub did not answer within ${TIMEOUT_MS / 1000}s — the build was not started.`, {
+      throw new GraphQLError(`GitHub did not answer within ${TIMEOUT_MS / 1000}s — nothing was started.`, {
         extensions: { code: 'BAD_GATEWAY' },
       });
     }

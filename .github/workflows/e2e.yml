@@ -1,6 +1,7 @@
 name: E2E
 
-# The end-to-end gate for the whole repo.
+# The end-to-end gate for the whole repo, and the thing the Tech portal's
+# E2E Tests page is a view of.
 #
 # It replaces `console-e2e.yml`, which ran Cypress for SIX of the seventeen
 # consoles and nothing else. Everything not in that matrix — admin, ads-portal,
@@ -9,7 +10,7 @@ name: E2E
 # `challenge-portal` shipped a `test:e2e` script pointing at a cypress.config.ts
 # that did not exist, so their "gate" could never have gone green or red.
 #
-# Two rules this workflow exists to keep:
+# Three rules this workflow exists to keep:
 #
 #  1. NOTHING here may swallow a failure. No `continue-on-error`, no `|| true`,
 #     no `--no-bail`, no `pnpm run --if-present e2e`. `--if-present` in
@@ -18,27 +19,63 @@ name: E2E
 #     static sites use the allowlisted no-op in scripts/e2e-no-surface.mjs), so
 #     a plain `pnpm e2e` is correct and a missing script is a hard error.
 #
-#  2. NO `paths:` filter. The old workflow filtered on six portal directories,
+#  2. A suite that did NOT run must say so. Every leg reports — the ones that
+#     ran with their counts, the ones the operator filtered out as SKIPPED —
+#     because "the admin suite is green" and "nobody ran the admin suite" look
+#     identical on a page that only records what happened.
+#
+#  3. NO `paths:` filter. The old workflow filtered on six portal directories,
 #     so a change outside them skipped e2e entirely and the branch still went
 #     green. The shell, theme, user-context and every other shared package are
 #     rendered by all of these surfaces; there is no edit to this repo that is
 #     provably safe for e2e.
+#
+# WHY THERE IS NO `on: schedule` HERE. The nightly run is owned by the server
+# (Tech > E2E Tests > Settings, 03:00 by default), which dispatches this
+# workflow when the configured window passes. A cron baked into this file could
+# not be changed without a commit, and having both would mean two runs a night.
+# The trade is that a server which is down at 03:00 does not start the suite;
+# its catch-up rule runs it as soon as the server is back, which for a test
+# suite is the right answer.
+#
 # TEST PAUSE (temporary — see the banner at the top of .claude/CLAUDE.md).
-# This whole workflow IS the e2e suite, so it is off the automatic triggers for
-# the duration of the pause and only runs on demand from the Actions tab.
-# deploy.yml's `E2E must be green` gate is paused in the same commit — with the
-# suite not running, a missing check is (correctly) a hard failure there.
-# Re-enabling the pause means restoring the two commented triggers below.
+# This whole workflow IS the e2e suite, so it stays off the push/PR triggers for
+# the duration of the pause: it runs nightly on the portal's schedule, and on
+# demand from Tech > E2E Tests or the Actions tab. deploy.yml's `E2E must be
+# green` gate is paused in the same commit — with the suite not running on a
+# push, a missing check is (correctly) a hard failure there. Re-enabling the
+# pause means restoring the two commented triggers below.
 on:
   # push:
   #   branches: [main, master, develop, staging]
   # pull_request:
   #   branches: [main, master, develop, staging]
   workflow_dispatch:
+    inputs:
+      suites:
+        description: >-
+          Which suites to run, comma-separated (e.g. admin,mweb). Leave empty
+          for every suite. Names are listed by scripts/e2e-matrix.mjs.
+        type: string
+        default: ''
+      dispatch_id:
+        description: Set by the Tech portal to claim the run it already created. Leave empty by hand.
+        type: string
+        default: ''
+      report_url:
+        description: GraphQL endpoint to record the run in. Empty reports to production.
+        type: string
+        default: ''
 
+# Never kill a run that is already going. A nightly sweep takes half an hour and
+# a colleague pressing Run tests in the portal must not throw it away — the row
+# would sit RUNNING forever with nothing left to close it.
 concurrency:
   group: e2e-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -62,9 +99,81 @@ jobs:
       - name: Audit e2e scripts
         run: node scripts/verify-e2e-scripts.mjs
 
+  # ---------------------------------------------------------------------------
+  # Work out what this run is, and open its row.
+  #
+  # The plan comes first and needs no server: a suite name that does not exist
+  # fails here, in seconds, rather than after twenty legs have installed
+  # dependencies. Only then does the run claim its row and collect the identity
+  # it should test with.
+  # ---------------------------------------------------------------------------
+  setup:
+    name: Plan the run
+    needs: audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      browser_count: ${{ steps.plan.outputs.browser_count }}
+      selected: ${{ steps.plan.outputs.selected }}
+      run_no: ${{ steps.claim.outputs.run_no }}
+      started_at: ${{ steps.stamp.outputs.at }}
+    env:
+      DUNCIT_GRAPHQL_URL: ${{ inputs.report_url || 'https://server.duncit.com/graphql' }}
+      # Each server signs its own tokens, so a production JWT is not valid on
+      # staging. Picking the secret from where the run reports is what lets a
+      # staging portal start runs at all. The secrets context is unavailable in
+      # workflow-level env, which is why this lives on every job that reports.
+      DUNCIT_RELEASE_TOKEN: >-
+        ${{ contains(inputs.report_url, 'staging.') && secrets.DUNCIT_RELEASE_TOKEN_STAGING || secrets.DUNCIT_RELEASE_TOKEN }}
+      DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+      DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+      DISPATCH_ID: ${{ inputs.dispatch_id }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Stamp the start
+        id: stamp
+        run: echo "at=$(date +%s)" >> "$GITHUB_OUTPUT"
+
+      # Through env, not interpolated into the command line: a dispatch input
+      # pasted straight into `run:` is a shell-injection seam, and "only people
+      # with write access can dispatch" is a reason it is unlikely, not a reason
+      # it is safe.
+      - name: Decide which suites run
+        id: plan
+        env:
+          SUITES: ${{ inputs.suites }}
+        run: node scripts/e2e-matrix.mjs "$SUITES"
+
+      - name: Claim the run and collect its identity
+        id: claim
+        env:
+          MODE: start
+          SUITES: ${{ inputs.suites }}
+        run: node scripts/report-e2e-run.mjs
+
+      # Rule 2 at the top of this file. A leg the operator did not pick gets its
+      # row saying so, in the same run, so a partial sweep can never be read as
+      # a full green one.
+      - name: Record the suites this run is not doing
+        if: steps.plan.outputs.skipped != ''
+        env:
+          MODE: suite
+          SKIPPED: ${{ steps.plan.outputs.skipped }}
+        run: |
+          IFS=',' read -ra names <<< "$SKIPPED"
+          for name in "${names[@]}"; do
+            SUITE_KEY="$name" SUITE_STATUS=SKIPPED node scripts/report-e2e-run.mjs
+          done
+
   browser:
     name: e2e ${{ matrix.name }}
-    needs: audit
+    needs: setup
+    # fromJSON of an empty array is a workflow error, not an empty matrix, so a
+    # run that selected only the standalone legs has to skip this job outright.
+    if: needs.setup.outputs.browser_count != '0'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
@@ -72,25 +181,20 @@ jobs:
       # leg reports. The JOB still fails, which is what gates the workflow.
       fail-fast: false
       matrix:
-        include:
-          - { name: admin, dir: portals/admin, port: 2002 }
-          - { name: ads-portal, dir: portals/ads-portal, port: 2006 }
-          - { name: ai, dir: portals/ai, port: 2013 }
-          - { name: challenge-portal, dir: portals/challenge-portal, port: 2026 }
-          - { name: crm, dir: portals/crm, port: 2007 }
-          - { name: developers, dir: portals/developers, port: 2027 }
-          - { name: employee, dir: portals/employee, port: 2018 }
-          - { name: finance, dir: portals/finance, port: 2008 }
-          - { name: hr, dir: portals/hr, port: 2017 }
-          - { name: legal, dir: portals/legal, port: 2012 }
-          - { name: marketing, dir: portals/marketing, port: 2015 }
-          - { name: onboarding, dir: portals/onboarding, port: 2016 }
-          - { name: partners-app, dir: portals/partners-app, port: 2005 }
-          - { name: products, dir: portals/products, port: 2014 }
-          - { name: support, dir: portals/support, port: 2010 }
-          - { name: tech, dir: portals/tech, port: 2009 }
-          - { name: website-app, dir: portals/website-app, port: 2011 }
-          - { name: mweb, dir: app/mweb, port: 2003 }
+        include: ${{ fromJSON(needs.setup.outputs.matrix) }}
+    env:
+      DUNCIT_GRAPHQL_URL: ${{ inputs.report_url || 'https://server.duncit.com/graphql' }}
+      DUNCIT_RELEASE_TOKEN: >-
+        ${{ contains(inputs.report_url, 'staging.') && secrets.DUNCIT_RELEASE_TOKEN_STAGING || secrets.DUNCIT_RELEASE_TOKEN }}
+      DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+      DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+      DISPATCH_ID: ${{ inputs.dispatch_id }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # What the leg is doing, rewritten by a marker step before each long
+      # stage. A value written to GITHUB_ENV lands on the NEXT step, which is
+      # exactly what makes this work: the marker names the step that follows it,
+      # so whatever E2E_STAGE holds when the job dies is the stage that broke.
+      E2E_STAGE: Preparing the runner
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4.4.0
@@ -100,6 +204,16 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
+
+      # The identity is fetched per job rather than passed down from `setup`,
+      # because a job output is NOT masked in the job that reads it and the
+      # password would end up in twenty logs. Fetched here it is masked by the
+      # reporter in this job, where it is used.
+      - name: Fetch the run identity
+        id: identity
+        env:
+          MODE: start
+        run: node scripts/report-e2e-run.mjs
 
       - name: Install workspace deps
         run: pnpm install --frozen-lockfile
@@ -111,14 +225,17 @@ jobs:
         working-directory: ${{ matrix.dir }}
         run: pnpm exec cypress install
 
+      - run: echo "E2E_STAGE=Type-checking the source" >> "$GITHUB_ENV"
       - name: Type-check source
         working-directory: ${{ matrix.dir }}
         run: pnpm exec tsc -b --noEmit
 
+      - run: echo "E2E_STAGE=Type-checking the Cypress specs" >> "$GITHUB_ENV"
       - name: Type-check Cypress specs
         working-directory: ${{ matrix.dir }}
         run: pnpm exec tsc --noEmit -p __tests__/e2e/tsconfig.json
 
+      - run: echo "E2E_STAGE=Building the e2e bundle" >> "$GITHUB_ENV"
       # `build:e2e` forces VITE_GRAPHQL_URL=/graphql (via .env.e2e) so the
       # bundled app talks same-origin and cy.intercept catches every GraphQL
       # call without a CORS preflight hitting the real server.
@@ -126,23 +243,52 @@ jobs:
         working-directory: ${{ matrix.dir }}
         run: pnpm build:e2e
 
+      - run: echo "E2E_STAGE=Running Cypress" >> "$GITHUB_ENV"
       # Same runner and the same start/wait-on handshake the six consoles and
       # the CRM deploy gate already used — `command:` just makes it invoke the
       # workspace's canonical `e2e` script instead of a hand-written cypress
       # line, so CI and a developer's machine run the identical thing. No
       # --if-present: a workspace without an `e2e` script must fail here.
+      #
+      # The junit reporter ships WITH Cypress, so the counts on the E2E Tests
+      # page cost no dependency; without it a leg could only report pass/fail
+      # and the page could never say how many tests that was.
+      #
+      # CYPRESS_* variables reach a spec as Cypress.env('E2E_EMAIL') and friends.
+      # No spec signs in today — every suite stubs its GraphQL — so these are
+      # the plumbing a real login/signup spec picks up, and the addresses they
+      # carry are the ones recorded against this run.
       - name: Run e2e suite (pnpm e2e)
         uses: cypress-io/github-action@v6
+        env:
+          CYPRESS_E2E_EMAIL: ${{ steps.identity.outputs.e2e_email }}
+          CYPRESS_E2E_SIGNUP_EMAIL: ${{ steps.identity.outputs.e2e_signup_email }}
+          CYPRESS_E2E_PASSWORD: ${{ steps.identity.outputs.e2e_password }}
+          CYPRESS_E2E_PHONE: ${{ steps.identity.outputs.e2e_phone }}
+          CYPRESS_E2E_STAMP: ${{ steps.identity.outputs.e2e_stamp }}
         with:
           working-directory: ${{ matrix.dir }}
           install: false
           # No `--` separator: pnpm forwards it literally, which would hand
           # Cypress a bare `--` argument. `pnpm e2e --browser chrome` appends
           # cleanly (verified: argv becomes ["--browser","chrome"]).
-          command: pnpm e2e --browser chrome
+          command: >-
+            pnpm e2e --browser chrome --reporter junit
+            --reporter-options "mochaFile=cypress-artifacts/junit/results-[hash].xml"
           start: pnpm preview
           wait-on: 'http://localhost:${{ matrix.port }}'
           wait-on-timeout: 120
+
+      - name: Record this suite's result
+        if: always()
+        env:
+          MODE: suite
+          SUITE_KEY: ${{ matrix.name }}
+          SUITE_STATUS: ${{ job.status == 'success' && 'PASSED' || 'FAILED' }}
+          SUITE_ERROR: "${{ job.status == 'success' && '' || format('Failed during: {0}', env.E2E_STAGE) }}"
+          JUNIT_DIR: ${{ matrix.dir }}/cypress-artifacts/junit
+          STAGE: Running suites
+        run: node scripts/report-e2e-run.mjs
 
       - name: Upload Cypress screenshots on failure
         if: failure()
@@ -160,9 +306,19 @@ jobs:
   # ---------------------------------------------------------------------------
   no-surface:
     name: e2e (no browser surface)
-    needs: audit
+    needs: setup
+    if: contains(format(',{0},', needs.setup.outputs.selected), ',no-surface,')
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      DUNCIT_GRAPHQL_URL: ${{ inputs.report_url || 'https://server.duncit.com/graphql' }}
+      DUNCIT_RELEASE_TOKEN: >-
+        ${{ contains(inputs.report_url, 'staging.') && secrets.DUNCIT_RELEASE_TOKEN_STAGING || secrets.DUNCIT_RELEASE_TOKEN }}
+      DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+      DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+      DISPATCH_ID: ${{ inputs.dispatch_id }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      E2E_STAGE: Preparing the runner
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4.4.0
@@ -172,11 +328,25 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
+      - run: echo "E2E_STAGE=Installing workspace deps" >> "$GITHUB_ENV"
       - run: pnpm install --frozen-lockfile
+      - run: echo "E2E_STAGE=Running the no-surface e2e scripts" >> "$GITHUB_ENV"
       - name: Run e2e for packages, websites, docs and server
         run: >-
           pnpm --filter "./packages/**" --filter "./website/**"
           --filter duncit-docs --filter server e2e
+
+      # No JUNIT_DIR: these workspaces run an allowlist check, not a browser, so
+      # there are no tests to count and the row carries its status alone.
+      - name: Record this suite's result
+        if: always()
+        env:
+          MODE: suite
+          SUITE_KEY: no-surface
+          SUITE_STATUS: ${{ job.status == 'success' && 'PASSED' || 'FAILED' }}
+          SUITE_ERROR: "${{ job.status == 'success' && '' || format('Failed during: {0}', env.E2E_STAGE) }}"
+          STAGE: Running suites
+        run: node scripts/report-e2e-run.mjs
 
   # ---------------------------------------------------------------------------
   # The native app's web e2e. It gets its own job rather than a matrix leg
@@ -191,9 +361,19 @@ jobs:
   # ---------------------------------------------------------------------------
   native-web:
     name: e2e (app/mobile-app, web)
-    needs: audit
+    needs: setup
+    if: contains(format(',{0},', needs.setup.outputs.selected), ',native-web,')
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    env:
+      DUNCIT_GRAPHQL_URL: ${{ inputs.report_url || 'https://server.duncit.com/graphql' }}
+      DUNCIT_RELEASE_TOKEN: >-
+        ${{ contains(inputs.report_url, 'staging.') && secrets.DUNCIT_RELEASE_TOKEN_STAGING || secrets.DUNCIT_RELEASE_TOKEN }}
+      DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+      DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+      DISPATCH_ID: ${{ inputs.dispatch_id }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      E2E_STAGE: Preparing the runner
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -202,10 +382,18 @@ jobs:
           cache: npm
           cache-dependency-path: app/mobile-app/package-lock.json
 
+      - name: Fetch the run identity
+        id: identity
+        env:
+          MODE: start
+        run: node scripts/report-e2e-run.mjs
+
+      - run: echo "E2E_STAGE=Installing the app's deps" >> "$GITHUB_ENV"
       - name: Install
         working-directory: app/mobile-app
         run: npm ci
 
+      - run: echo "E2E_STAGE=Generating GraphQL types" >> "$GITHUB_ENV"
       # src/generated/** is gitignored (root .gitignore, `generated/`), so a
       # fresh checkout has no typed GraphQL operations and Metro cannot resolve
       # `@/generated/graphql` — 84 source files import it and the export dies on
@@ -217,10 +405,12 @@ jobs:
         working-directory: app/mobile-app
         run: npm run codegen
 
+      - run: echo "E2E_STAGE=Type-checking the Cypress specs" >> "$GITHUB_ENV"
       - name: Type-check Cypress specs
         working-directory: app/mobile-app
         run: npx tsc --noEmit -p __tests__/e2e/tsconfig.json
 
+      - run: echo "E2E_STAGE=Exporting the web build" >> "$GITHUB_ENV"
       # Expo's web export is the same target native.duncit.com ships. It is the
       # slow step (Metro bundles the whole app), hence the 40-minute budget and
       # the heap bump the app's own scripts already use.
@@ -230,6 +420,7 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=8192
 
+      - run: echo "E2E_STAGE=Running Cypress" >> "$GITHUB_ENV"
       # cypress.config.ts defaults baseUrl to http://localhost:2022.
       #
       # `--single` is NOT optional: app.json sets `web.output: "single"`, so the
@@ -239,12 +430,33 @@ jobs:
       # every spec that visits a deep route died in `cy.visit()` before the app
       # ever booted. SPA fallback is what the real host does; this makes the
       # static server match it.
+      #
+      # `npm run e2e --` forwards the reporter flags; without the separator npm
+      # would keep them for itself.
       - name: Serve the export and run Cypress
         working-directory: app/mobile-app
+        env:
+          CYPRESS_E2E_EMAIL: ${{ steps.identity.outputs.e2e_email }}
+          CYPRESS_E2E_SIGNUP_EMAIL: ${{ steps.identity.outputs.e2e_signup_email }}
+          CYPRESS_E2E_PASSWORD: ${{ steps.identity.outputs.e2e_password }}
+          CYPRESS_E2E_PHONE: ${{ steps.identity.outputs.e2e_phone }}
+          CYPRESS_E2E_STAMP: ${{ steps.identity.outputs.e2e_stamp }}
         run: |
           npx --yes serve dist --single -l 2022 &
           npx --yes wait-on http://localhost:2022 --timeout 120000
-          npm run e2e
+          npm run e2e -- --reporter junit \
+            --reporter-options "mochaFile=cypress-artifacts/junit/results-[hash].xml"
+
+      - name: Record this suite's result
+        if: always()
+        env:
+          MODE: suite
+          SUITE_KEY: native-web
+          SUITE_STATUS: ${{ job.status == 'success' && 'PASSED' || 'FAILED' }}
+          SUITE_ERROR: "${{ job.status == 'success' && '' || format('Failed during: {0}', env.E2E_STAGE) }}"
+          JUNIT_DIR: app/mobile-app/cypress-artifacts/junit
+          STAGE: Running suites
+        run: node scripts/report-e2e-run.mjs
 
       # The browser matrix uploads its failure screenshots; this job had no
       # equivalent, so a red native leg could only be read from the log.
@@ -259,25 +471,70 @@ jobs:
   # ---------------------------------------------------------------------------
   # A single check other workflows (and branch protection) can require. It is
   # `needs`-ed on every e2e job and re-asserts their results, because a `needs`
-  # alone would let a SKIPPED upstream count as success.
+  # alone would let a FAILED upstream count as success.
+  #
+  # `skipped` passes HERE and only here: a job is skipped when the operator did
+  # not select that suite, and the run already carries a SKIPPED row saying so.
+  # A `cancelled` or `failure` result never passes.
   # ---------------------------------------------------------------------------
   e2e-gate:
     name: E2E gate
-    needs: [audit, browser, no-surface, native-web]
+    needs: [audit, setup, browser, no-surface, native-web]
     if: always()
     runs-on: ubuntu-latest
+    env:
+      DUNCIT_GRAPHQL_URL: ${{ inputs.report_url || 'https://server.duncit.com/graphql' }}
+      DUNCIT_RELEASE_TOKEN: >-
+        ${{ contains(inputs.report_url, 'staging.') && secrets.DUNCIT_RELEASE_TOKEN_STAGING || secrets.DUNCIT_RELEASE_TOKEN }}
+      DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+      DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+      DISPATCH_ID: ${{ inputs.dispatch_id }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
+      - uses: actions/checkout@v5
+
       - name: Assert every e2e job succeeded
+        id: verdict
         run: |
-          echo "audit=${{ needs.audit.result }}"
-          echo "browser=${{ needs.browser.result }}"
-          echo "no-surface=${{ needs.no-surface.result }}"
-          echo "native-web=${{ needs.native-web.result }}"
-          if [ "${{ needs.audit.result }}" != "success" ] ||
-             [ "${{ needs.browser.result }}" != "success" ] ||
-             [ "${{ needs.no-surface.result }}" != "success" ] ||
-             [ "${{ needs.native-web.result }}" != "success" ]; then
-            echo "::error::E2E failed. This gate is blocking by design — fix the suite, do not bypass it."
-            exit 1
+          failed=""
+          for leg in \
+            "audit=${{ needs.audit.result }}" \
+            "setup=${{ needs.setup.result }}" \
+            "browser=${{ needs.browser.result }}" \
+            "no-surface=${{ needs['no-surface'].result }}" \
+            "native-web=${{ needs['native-web'].result }}"
+          do
+            echo "$leg"
+            result="${leg#*=}"
+            if [ "$result" != "success" ] && [ "$result" != "skipped" ]; then
+              failed="$failed ${leg%%=*}"
+            fi
+          done
+          # Deliberately does NOT exit 1 here. The run has to be closed before
+          # the workflow goes red, or a failing sweep would leave its row
+          # RUNNING forever — the verdict is recorded first and enforced last.
+          if [ -n "$failed" ]; then
+            echo "outcome=FAILED" >> "$GITHUB_OUTPUT"
+            echo "reason=These jobs did not pass:$failed" >> "$GITHUB_OUTPUT"
+          else
+            echo "outcome=SUCCESS" >> "$GITHUB_OUTPUT"
+            echo "reason=" >> "$GITHUB_OUTPUT"
+            echo "All selected e2e suites passed."
           fi
-          echo "All e2e suites passed."
+
+      # `always()` so the row is closed either way. A run that ends without this
+      # is exactly the stuck RUNNING row the page warns about.
+      - name: Record the run's outcome
+        if: always()
+        env:
+          MODE: finish
+          RUN_STATUS: ${{ steps.verdict.outputs.outcome || 'FAILED' }}
+          RUN_ERROR: ${{ steps.verdict.outputs.reason || 'The gate did not finish — see the run log.' }}
+          STARTED_AT: ${{ needs.setup.outputs.started_at }}
+        run: node scripts/report-e2e-run.mjs
+
+      - name: Fail the workflow when the gate did not pass
+        if: steps.verdict.outputs.outcome != 'SUCCESS'
+        run: |
+          echo "::error::E2E failed. This gate is blocking by design — fix the suite, do not bypass it."
+          exit 1

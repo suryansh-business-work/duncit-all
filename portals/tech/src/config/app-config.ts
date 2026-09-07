@@ -109,6 +109,18 @@ export const appConfig = {
         { label: 'Settings', labelKey: 'shell.nav.settings', to: '/app-builds/settings', icon: 'settings' },
       ],
     },
+    {
+      // Beside App Builds because both are views of what CI did — one records
+      // the binaries a workflow produced, the other what the suite found. The
+      // nightly schedule lives under Settings, and is the ONLY thing that
+      // starts a scheduled run: the workflow declares no cron of its own.
+      label: 'E2E Tests', labelKey: 'shell.nav.e2eTests',
+      icon: 'rule',
+      children: [
+        { label: 'Runs', labelKey: 'shell.nav.runs', to: '/e2e/runs', icon: 'article' },
+        { label: 'Settings', labelKey: 'shell.nav.settings', to: '/e2e/settings', icon: 'settings' },
+      ],
+    },
     { label: 'Package Documentation', labelKey: 'shell.nav.packageDocumentation', to: '/package-docs', icon: 'menuBook' },
     // Beside the docs, because both answer a question about the same manifests:
     // what a package exports, and how far behind what it depends on is.

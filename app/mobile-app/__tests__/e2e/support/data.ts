@@ -142,9 +142,7 @@ const homeExtras = {
       allowed_image_formats: ['jpg', 'png'],
       allowed_video_formats: ['mp4'],
       default_crop_key: 'story',
-      crop_presets: [
-        { key: 'story', label: 'Story', width: 1080, height: 1920, enabled: true },
-      ],
+      crop_presets: [{ key: 'story', label: 'Story', width: 1080, height: 1920, enabled: true }],
     },
   },
 };

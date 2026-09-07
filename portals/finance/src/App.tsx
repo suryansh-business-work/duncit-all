@@ -23,6 +23,8 @@ import {
   LedgerPage,
   PodExpensePage,
   EmployeeExpensePage,
+  ExpenseDashboardPage,
+  ExpenseSettingsPage,
   PayoutCyclesPage,
   ReferralsPage,
   StartupDashboardPage,
@@ -68,6 +70,8 @@ export default function App() {
       <Route path="/ledger" element={authed(<LedgerPage />)} />
       <Route path="/pod-expenses" element={authed(<PodExpensePage />)} />
       <Route path="/employee-expenses" element={authed(<EmployeeExpensePage />)} />
+      <Route path="/expenses/dashboard" element={authed(<ExpenseDashboardPage />)} />
+      <Route path="/settings/expenses" element={authed(<ExpenseSettingsPage />)} />
       <Route path="/referrals" element={authed(<ReferralsPage />)} />
       <Route path="/duncit-coin/dashboard" element={authed(<CoinDashboardPage />)} />
       <Route path="/duncit-coin/transactions" element={authed(<CoinTransactionsPage />)} />

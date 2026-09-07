@@ -116,8 +116,25 @@ export const POD_EXPENSE_CATEGORIES = [
   'OTHER',
 ] as const;
 
-/** The company ledger's list — one set of ways money leaves Duncit (rule 34). */
-export { PAYMENT_METHODS as POD_EXPENSE_PAYMENT_METHODS, labelize } from '../expense-management-page/queries';
+export { labelize } from '../expense-management-page/queries';
+
+/**
+ * Mirrors EXPENSE_PAYMENT_METHODS on the server, which is still a compiled enum
+ * for POD expenses.
+ *
+ * The COMPANY ledger's methods moved into the editable ExpenseOption list;
+ * this screen writes a different collection whose mongoose enum has not, so it
+ * keeps the compiled list rather than offering options the pod expense would
+ * silently reject.
+ */
+export const POD_EXPENSE_PAYMENT_METHODS = [
+  'UPI',
+  'BANK_TRANSFER',
+  'CASH',
+  'CARD',
+  'CHEQUE',
+  'OTHER',
+];
 
 export type PodExpensePodStatus = 'UPCOMING' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
 

@@ -600,7 +600,6 @@
   "portals/finance/src/pages/finance/duncit-coin/CoinSettingsPage.tsx": 2,
   "portals/finance/src/pages/finance/duncit-coin/CoinTransactionsPage.tsx": 1,
   "portals/finance/src/pages/finance/duncit-coin/queries.ts": 7,
-  "portals/finance/src/pages/finance/expense-management-page/ExpenseManagementPage.tsx": 6,
   "portals/finance/src/pages/finance/expense-management-page/RefundTimeline.tsx": 2,
   "portals/finance/src/pages/finance/invoice-management-page/InvoiceBrandingForm.tsx": 3,
   "portals/finance/src/pages/finance/invoice-management-page/InvoiceManagementPage.tsx": 2,

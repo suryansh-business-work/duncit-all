@@ -1,123 +1,116 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
-import {
-  Alert,
-  Box,
-  Divider,
-  Drawer,
-  InputAdornment,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Divider, Drawer, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
-import { SingleImageUploadField } from '@duncit/media-picker';
-import {
-  ADD_REFUND,
-  CREATE_EXPENSE,
-  DELETE_EXPENSE,
-  EXPENSE_CATEGORIES,
-  PAYMENT_METHODS,
-  REMOVE_REFUND,
-  UPDATE_EXPENSE,
-  labelize,
-} from './queries';
-import RefundTimeline from './RefundTimeline';
+import { DuncitIconButton } from '@duncit/buttons';
+import { ConfirmDialog } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
-
-const BLANK = { category: 'RENT', amount: '', vendor_name: '', payment_method: 'BANK_TRANSFER', reference: '', description: '', attachment_url: '' };
+import { parseApiError } from '@duncit/utils';
+import ExpenseForm, {
+  toExpenseInput,
+  type ExpenseFormValues,
+  type ExpenseRecord,
+} from './expense-form';
+import RefundTimeline from './RefundTimeline';
+import { ADD_REFUND, CREATE_EXPENSE, DELETE_EXPENSE, REMOVE_REFUND, UPDATE_EXPENSE } from './queries';
 
 interface Props {
   open: boolean;
-  expense: any;
+  expense: ExpenseRecord | null;
+  currency: string;
   onClose: () => void;
   onSaved: () => void;
 }
 
-export default function ExpenseDrawer({ open, expense, onClose, onSaved }: Readonly<Props>) {
+/**
+ * The side panel one ledger row opens in.
+ *
+ * It holds the expense itself and, once saved, the refunds received against
+ * it. Refunds and COMPENSATION are different things and both are kept: a
+ * refund is money the vendor gave back, compensation is somebody inside Duncit
+ * settling the cost — an expense can have either, both or neither.
+ */
+export default function ExpenseDrawer({
+  open,
+  expense,
+  currency,
+  onClose,
+  onSaved,
+}: Readonly<Props>) {
   const { t } = useTranslation();
-  const [current, setCurrent] = useState<any>(null);
-  const [date, setDate] = useState<Date | null>(new Date());
-  const [form, setForm] = useState(BLANK);
+  const [current, setCurrent] = useState<ExpenseRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [create, createState] = useMutation<any>(CREATE_EXPENSE);
-  const [update, updateState] = useMutation<any>(UPDATE_EXPENSE);
-  const [addRefund] = useMutation<any>(ADD_REFUND);
-  const [removeRefund] = useMutation<any>(REMOVE_REFUND);
-  const [del] = useMutation<any>(DELETE_EXPENSE);
-  const editing = !!current;
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [create, createState] = useMutation<{ createExpense: ExpenseRecord }>(CREATE_EXPENSE);
+  const [update, updateState] = useMutation<{ updateExpense: ExpenseRecord }>(UPDATE_EXPENSE);
+  const [addRefund] = useMutation<{ addExpenseRefund: ExpenseRecord }>(ADD_REFUND);
+  const [removeRefund] = useMutation<{ removeExpenseRefund: ExpenseRecord }>(REMOVE_REFUND);
+  const [del, delState] = useMutation(DELETE_EXPENSE);
   const saving = createState.loading || updateState.loading;
 
   useEffect(() => {
     setError(null);
+    setConfirmingDelete(false);
     setCurrent(expense);
-    setDate(expense ? new Date(expense.date) : new Date());
-    setForm(
-      expense
-        ? { category: expense.category, amount: String(expense.amount), vendor_name: expense.vendor_name, payment_method: expense.payment_method, reference: expense.reference, description: expense.description, attachment_url: expense.attachment_url }
-        : BLANK
-    );
   }, [expense, open]);
 
-  const set = (key: keyof typeof BLANK) => (value: string) => setForm((p) => ({ ...p, [key]: value }));
-  const currentDate = () => date ?? new Date();
-  const input = () => ({ ...form, amount: Number(form.amount), date: currentDate().toISOString() });
-
-  const save = async () => {
+  const save = async (values: ExpenseFormValues) => {
     setError(null);
-    if (Number(form.amount) <= 0) return setError(t('finance.expenseManagement.enterAnAmountGreaterThan0'));
+    const input = toExpenseInput(values);
     try {
-      if (editing) await update({ variables: { id: current.id, input: input() } });
-      else await create({ variables: { input: input() } });
+      if (current) await update({ variables: { id: current.id, input } });
+      else await create({ variables: { input } });
       onSaved();
       onClose();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(parseApiError(e));
     }
   };
 
-  const refund = async (refundInput: { date: string; amount: number; note: string }) => {
-    const res = await addRefund({ variables: { id: current.id, input: refundInput } });
+  const refund = async (input: { date: string; amount: number; note: string }) => {
+    if (!current) return;
+    const res = await addRefund({ variables: { id: current.id, input } });
     setCurrent(res.data?.addExpenseRefund ?? current);
     onSaved();
   };
   const dropRefund = async (refund_id: string) => {
+    if (!current) return;
     const res = await removeRefund({ variables: { id: current.id, refund_id } });
     setCurrent(res.data?.removeExpenseRefund ?? current);
     onSaved();
   };
-  const remove = async () => {
-    await del({ variables: { id: current.id } });
-    onSaved();
-    onClose();
+  const remove = async (row: ExpenseRecord) => {
+    try {
+      await del({ variables: { id: row.id } });
+      setConfirmingDelete(false);
+      onSaved();
+      onClose();
+    } catch (e) {
+      setConfirmingDelete(false);
+      setError(parseApiError(e));
+    }
   };
 
-  const saveLabel = editing ? 'Save changes' : 'Add expense';
-
   return (
-    <Drawer anchor="right" open={open} onClose={onClose} slotProps={{
-      paper: { sx: { width: { xs: '100%', sm: 440 }, p: 2.5 } }
-    }}>
-      <Stack
-        direction="row"
-        sx={{
-          alignItems: "center",
-          mb: 1
-        }}>
-        <Typography
-          variant="h6"
-          sx={{
-            fontWeight: 800,
-            flex: 1
-          }}>
-          {editing ? 'Expense details' : 'New expense'}
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      slotProps={{ paper: { sx: { width: { xs: '100%', sm: 480 }, p: 2.5 } } }}
+    >
+      <Stack direction="row" sx={{ alignItems: 'center', mb: 1 }}>
+        <Typography variant="h6" sx={{ fontWeight: 800, flex: 1 }}>
+          {current
+            ? t('finance.expenseManagement.expenseDetails')
+            : t('finance.expenseManagement.newExpense')}
         </Typography>
-        {editing && (
-          <DuncitIconButton color="error" aria-label={t('finance.expenseManagement.deleteExpense')} onClick={remove}>
+        {current && (
+          <DuncitIconButton
+            color="error"
+            aria-label={t('finance.expenseManagement.deleteExpense')}
+            onClick={() => setConfirmingDelete(true)}
+          >
             <DeleteOutlineIcon />
           </DuncitIconButton>
         )}
@@ -125,42 +118,39 @@ export default function ExpenseDrawer({ open, expense, onClose, onSaved }: Reado
           <CloseIcon />
         </DuncitIconButton>
       </Stack>
-      {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
 
-      <Stack spacing={1.75}>
-        <DatePicker label={t('finance.common.date')} value={date} onChange={setDate} slotProps={{ textField: { fullWidth: true } }} />
-        <TextField select label={t('finance.expenseManagement.category')} value={form.category} onChange={(e) => set('category')(e.target.value)} fullWidth>
-          {EXPENSE_CATEGORIES.map((c) => <MenuItem key={c} value={c}>{labelize(c)}</MenuItem>)}
-        </TextField>
-        <TextField label={t('finance.common.amount')} required type="number" value={form.amount} onChange={(e) => set('amount')(e.target.value)} fullWidth slotProps={{
-          input: { startAdornment: <InputAdornment position="start">₹</InputAdornment> }
-        }} />
-        <TextField label={t('finance.expenseManagement.vendorPayee')} value={form.vendor_name} onChange={(e) => set('vendor_name')(e.target.value)} fullWidth />
-        <TextField select label={t('finance.expenseManagement.paymentMethod')} value={form.payment_method} onChange={(e) => set('payment_method')(e.target.value)} fullWidth>
-          {PAYMENT_METHODS.map((m) => <MenuItem key={m} value={m}>{labelize(m)}</MenuItem>)}
-        </TextField>
-        <TextField label={t('finance.expenseManagement.referenceTxnId')} value={form.reference} onChange={(e) => set('reference')(e.target.value)} fullWidth />
-        <TextField label={t('shell.common.description')} value={form.description} onChange={(e) => set('description')(e.target.value)} multiline minRows={2} fullWidth />
-        <SingleImageUploadField
-          variant="url-button"
-          label={t('finance.expenseManagement.receiptAttachmentUrl')}
-          value={form.attachment_url}
-          onChange={set('attachment_url')}
-          folder="/expenses"
-          accept="image/*,.pdf"
-          maxBytes={null}
-          buttonLabel="Upload"
-        />
-        <DuncitButton variant="contained" onClick={save} disabled={saving}>
-          {saving ? 'Saving…' : saveLabel}
-        </DuncitButton>
-      </Stack>
+      {error && (
+        <Alert severity="error" sx={{ mb: 1.5 }}>
+          {error}
+        </Alert>
+      )}
 
-      {editing && (
+      <ExpenseForm
+        expense={current}
+        currency={currency}
+        busy={saving}
+        onCancel={onClose}
+        onSubmit={save}
+      />
+
+      {current && (
         <Box sx={{ mt: 3 }}>
           <Divider sx={{ mb: 2 }} />
           <RefundTimeline expense={current} onAdd={refund} onRemove={dropRefund} />
         </Box>
+      )}
+
+      {confirmingDelete && current && (
+        <ConfirmDialog
+          open
+          destructive
+          busy={delState.loading}
+          title={t('finance.expenseManagement.deleteExpense')}
+          message={t('finance.expenseManagement.deleteExpenseConfirm')}
+          confirmLabel={t('shell.common.delete')}
+          onConfirm={() => remove(current)}
+          onClose={() => setConfirmingDelete(false)}
+        />
       )}
     </Drawer>
   );

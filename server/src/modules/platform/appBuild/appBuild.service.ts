@@ -26,8 +26,17 @@ import {
   githubRepoConfig,
   requireGithubRepoConfig,
   workflowRunsUrl,
-  WORKFLOW_FILE,
-} from './github.gateway';
+} from '@utils/github-actions';
+
+/**
+ * Which workflow file builds each platform. Stays here rather than in the
+ * gateway: the gateway dispatches ANY workflow, and E2E Tests dispatches a
+ * different one through it.
+ */
+const WORKFLOW_FILE: Record<AppBuildPlatform, string> = {
+  ANDROID: 'android-build.yml',
+  IOS: 'ios-build.yml',
+};
 
 /** Where CI build artifacts land on ImageKit (release-notify's folder). */
 export const APP_BUILDS_FOLDER = '/app-builds';

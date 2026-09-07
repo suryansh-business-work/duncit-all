@@ -1,0 +1,527 @@
+import { randomUUID } from 'node:crypto';
+import { GraphQLError } from 'graphql';
+import { logs } from '@observability/log';
+import { getUrlConfigs } from '@config/url-configs';
+import type { AuthUser } from '@context';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { isDue, nextRunAt, parseTimeOfDay, type CronSchedule } from '@utils/cron-schedule';
+import {
+  dispatchWorkflow,
+  githubRepoConfig,
+  requireGithubRepoConfig,
+  workflowRunsUrl,
+} from '@utils/github-actions';
+import {
+  E2E_SETTINGS_KEY,
+  E2eRunModel,
+  E2eRunSettingsModel,
+  nextRunNo,
+  type E2eRunStatus,
+  type E2eRunTrigger,
+  type IE2eRun,
+  type IE2eRunSettings,
+  type IE2eRunStage,
+  type IE2eSuiteResult,
+} from './e2eRun.model';
+import { E2E_SUITES, normaliseSuites, suitesInput } from './e2eRun.suites';
+import { buildIdentity, type E2eIdentity } from './e2eRun.identity';
+
+/** The one workflow this module drives. */
+const WORKFLOW_FILE = 'e2e.yml';
+
+const badInput = (msg: string) => new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
+
+const str = (v: unknown): string => String(v ?? '').trim();
+const num = (v: unknown): number | null => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+
+const E2E_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['run_no', 'ref', 'commit_sha', 'triggered_by', 'signup_email', 'error_message'],
+  // Every column the table renders sortable must be listed here — resolveSort
+  // silently ignores anything else, so a gap makes the header arrow lie.
+  sortFields: {
+    run_no: 'run_no',
+    status: 'status',
+    trigger_source: 'trigger_source',
+    triggered_by: 'triggered_by',
+    ref: 'ref',
+    duration_seconds: 'duration_seconds',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    status: { type: 'enum' },
+    trigger_source: { type: 'enum' },
+    ref: { type: 'string' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
+
+const pubSuite = (r: IE2eSuiteResult) => ({
+  key: r.key,
+  status: r.status,
+  specs: r.specs,
+  tests: r.tests,
+  passed: r.passed,
+  failed: r.failed,
+  skipped: r.skipped,
+  duration_seconds: r.duration_seconds,
+  error: r.error ?? '',
+  job_url: r.job_url ?? '',
+  reported_at: r.reported_at?.toISOString() ?? null,
+});
+
+const pub = (doc: IE2eRun) => ({
+  id: String(doc._id),
+  run_no: doc.run_no,
+  status: doc.status,
+  trigger_source: doc.trigger_source,
+  triggered_by: doc.triggered_by ?? '',
+  ref: doc.ref ?? '',
+  commit_sha: doc.commit_sha ?? '',
+  requested_suites: doc.requested_suites ?? [],
+  results: (doc.results ?? []).map(pubSuite),
+  // A row written before totals existed, or one whose legs have not reported
+  // yet, still has to answer with the whole shape — every field is non-null.
+  totals: {
+    suites: doc.totals?.suites ?? 0,
+    suites_passed: doc.totals?.suites_passed ?? 0,
+    suites_failed: doc.totals?.suites_failed ?? 0,
+    suites_skipped: doc.totals?.suites_skipped ?? 0,
+    tests: doc.totals?.tests ?? 0,
+    passed: doc.totals?.passed ?? 0,
+    failed: doc.totals?.failed ?? 0,
+    skipped: doc.totals?.skipped ?? 0,
+  },
+  workflow_run_id: doc.workflow_run_id ?? '',
+  workflow_run_url: doc.workflow_run_url ?? '',
+  dispatch_id: doc.dispatch_id ?? '',
+  duration_seconds: doc.duration_seconds,
+  stage: doc.stage ?? '',
+  stages: (doc.stages ?? []).map((s) => ({ name: s.name, at: s.at.toISOString() })),
+  error_message: doc.error_message ?? '',
+  reported_by: doc.reported_by ?? '',
+  identity_stamp: doc.identity_stamp ?? '',
+  login_email: doc.login_email ?? '',
+  signup_email: doc.signup_email ?? '',
+  identity_phone: doc.identity_phone ?? '',
+  created_at: doc.created_at?.toISOString() ?? null,
+});
+
+/** The settings singleton, created with defaults on first read. */
+async function settingsDoc(): Promise<IE2eRunSettings> {
+  return E2eRunSettingsModel.findOneAndUpdate(
+    { key: E2E_SETTINGS_KEY },
+    { $setOnInsert: { key: E2E_SETTINGS_KEY } },
+    { new: true, upsert: true, setDefaultsOnInsert: true }
+  ).exec() as Promise<IE2eRunSettings>;
+}
+
+const scheduleOf = (doc: IE2eRunSettings): CronSchedule => ({
+  enabled: doc.enabled,
+  frequency: doc.frequency,
+  time_of_day: doc.time_of_day,
+  weekday: doc.weekday,
+});
+
+/** The run's arithmetic, recomputed from scratch whenever a leg reports. */
+function totalsOf(results: IE2eSuiteResult[]) {
+  const sum = (pick: (r: IE2eSuiteResult) => number | null) =>
+    results.reduce((acc, r) => acc + (pick(r) ?? 0), 0);
+  const count = (status: string) => results.filter((r) => r.status === status).length;
+  return {
+    suites: results.length,
+    suites_passed: count('PASSED'),
+    suites_failed: count('FAILED'),
+    suites_skipped: count('SKIPPED'),
+    tests: sum((r) => r.tests),
+    passed: sum((r) => r.passed),
+    failed: sum((r) => r.failed),
+    skipped: sum((r) => r.skipped),
+  };
+}
+
+/**
+ * The row this report belongs to.
+ *
+ * Two join keys, checked in this order because they become available in this
+ * order. A dispatched run has a row BEFORE it has a run id — the dispatch
+ * answers 204 with nothing in it — so `dispatch_id` is the only thing that can
+ * claim it on the first report. Everything after that joins on the run.
+ */
+async function openRowFor(input: any): Promise<IE2eRun | null> {
+  const dispatchId = str(input.dispatch_id);
+  if (dispatchId) {
+    const claimed = await E2eRunModel.findOne({ dispatch_id: dispatchId });
+    if (claimed) return claimed;
+  }
+  const runId = str(input.workflow_run_id);
+  // A hand-made report has no run id, and every one of those would otherwise
+  // look like the same run and overwrite the last.
+  if (!runId) return null;
+  return E2eRunModel.findOne({ workflow_run_id: runId });
+}
+
+/**
+ * The stage list after this report. A stage is appended only when it CHANGES,
+ * so twenty legs all reporting from the same phase do not fill the timeline
+ * with the same line over and over.
+ */
+function nextStages(existing: IE2eRun | null, stage: string): { stages?: IE2eRunStage[] } {
+  if (!stage) return {};
+  const current = existing?.stages ?? [];
+  if (current.at(-1)?.name === stage) return {};
+  return { stages: [...current, { name: stage, at: new Date() }] };
+}
+
+/**
+ * One leg's result, replacing whatever that leg said before.
+ *
+ * Written with two atomic array operators rather than by rewriting the array
+ * in memory. Twenty legs of the matrix report independently and several finish
+ * within the same second; a read-modify-write would let the last one to save
+ * overwrite the results that landed while it was thinking, and the suite that
+ * vanished would be indistinguishable from one that never ran. `$pull` then
+ * `$push` touches only this leg's entry, so a concurrent leg's is never lost.
+ */
+async function applySuiteResult(id: unknown, suite: any): Promise<void> {
+  const key = str(suite.key);
+  if (!key) throw badInput('A suite result needs a key.');
+  const row: IE2eSuiteResult = {
+    key,
+    status: suite.status,
+    specs: num(suite.specs),
+    tests: num(suite.tests),
+    passed: num(suite.passed),
+    failed: num(suite.failed),
+    skipped: num(suite.skipped),
+    duration_seconds: num(suite.duration_seconds),
+    error: str(suite.error),
+    job_url: str(suite.job_url),
+    reported_at: new Date(),
+  };
+  await E2eRunModel.updateOne({ _id: id }, { $pull: { results: { key } } });
+  await E2eRunModel.updateOne({ _id: id }, { $push: { results: row } });
+}
+
+/** The identity for a run, and the fields that record it on the row. */
+function identityFields(identity: E2eIdentity | null) {
+  if (!identity) return {};
+  return {
+    identity_stamp: identity.stamp,
+    login_email: identity.login_email,
+    signup_email: identity.signup_email,
+    identity_phone: identity.phone,
+  };
+}
+
+/** Everything a scheduled or portal-started dispatch needs to decide. */
+interface DispatchOptions {
+  suites: string[];
+  ref: string;
+  trigger_source: E2eRunTrigger;
+  triggered_by: string;
+}
+
+/**
+ * Write the QUEUED row, ask GitHub to run the workflow, and take the row back
+ * out again if GitHub refuses.
+ *
+ * The row comes first because a person pressing a button needs to see that it
+ * landed, and the runner needs a `dispatch_id` to claim. It is deleted on a
+ * refusal so a run that never existed does not sit in the table forever.
+ */
+async function dispatchRun(options: DispatchOptions): Promise<IE2eRun> {
+  const cfg = await requireGithubRepoConfig();
+  const { serverUrl } = await getUrlConfigs();
+  const settings = await settingsDoc();
+  const identity = buildIdentity(settings, new Date());
+  const dispatchId = randomUUID();
+
+  const run = await E2eRunModel.create({
+    run_no: await nextRunNo(),
+    status: 'QUEUED',
+    trigger_source: options.trigger_source,
+    triggered_by: options.triggered_by,
+    ref: options.ref,
+    requested_suites: options.suites,
+    dispatch_id: dispatchId,
+    stage: 'Waiting for a runner',
+    stages: [{ name: 'Queued', at: new Date() }],
+    ...identityFields(identity),
+  });
+
+  try {
+    // Every input is a STRING: workflow_dispatch has no array type on the wire,
+    // so the suite list travels comma-separated and the workflow splits it.
+    await dispatchWorkflow(cfg, WORKFLOW_FILE, options.ref, {
+      suites: suitesInput(options.suites),
+      dispatch_id: dispatchId,
+      report_url: `${serverUrl.replace(/\/$/, '')}/graphql`,
+    });
+  } catch (err) {
+    await E2eRunModel.deleteOne({ _id: run._id });
+    throw err;
+  }
+  return run;
+}
+
+/** Trim the history to the configured ceiling. Never touches a live run. */
+async function prune(keepLast: number): Promise<void> {
+  if (!Number.isFinite(keepLast) || keepLast <= 0) return;
+  const survivors = await E2eRunModel.find({}, { _id: 1 })
+    .sort({ created_at: -1 })
+    .limit(keepLast)
+    .lean();
+  await E2eRunModel.deleteMany({
+    _id: { $nin: survivors.map((s) => s._id) },
+    status: { $in: ['SUCCESS', 'FAILED'] },
+  });
+}
+
+export const e2eRunService = {
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IE2eRun>(
+      E2eRunModel,
+      {},
+      input,
+      E2E_TABLE_CONFIG
+    );
+    return { rows: docs.map(pub), total, page, page_size };
+  },
+
+  suiteCatalogue() {
+    return E2E_SUITES.map((suite) => ({ ...suite }));
+  },
+
+  async settings() {
+    const doc = await settingsDoc();
+    const now = new Date();
+    const identity = buildIdentity(doc, now);
+    // Whether CI can actually reach us is not knowable from here — the secret
+    // lives in GitHub. The last report is the only honest evidence, so the page
+    // shows that instead of claiming a status it cannot check.
+    const latest = await E2eRunModel.findOne(
+      { reported_by: { $ne: '' } },
+      { created_at: 1, reported_by: 1 }
+    )
+      .sort({ created_at: -1 })
+      .lean();
+    return {
+      enabled: doc.enabled,
+      frequency: doc.frequency,
+      time_of_day: doc.time_of_day,
+      weekday: doc.weekday,
+      ref: doc.ref,
+      suites: doc.suites ?? [],
+      keep_last: doc.keep_last,
+      email_prefix: doc.email_prefix ?? '',
+      email_domain: doc.email_domain ?? '',
+      password_set: Boolean(str(doc.password)),
+      identity_phone: doc.identity_phone ?? '',
+      login_email_preview: identity?.login_email ?? '',
+      signup_email_preview: identity?.signup_email ?? '',
+      last_run_at: doc.last_run_at?.toISOString() ?? null,
+      next_run_at: nextRunAt(scheduleOf(doc), now)?.toISOString() ?? null,
+      last_reported_at: latest?.created_at?.toISOString() ?? null,
+      last_reported_by: str(latest?.reported_by) || null,
+    };
+  },
+
+  async updateSettings(input: any) {
+    if (!parseTimeOfDay(str(input.time_of_day))) {
+      throw badInput('Time of day must be HH:mm, e.g. 03:00.');
+    }
+    const keepLast = num(input.keep_last) ?? 0;
+    if (keepLast < 1) throw badInput('Keep at least one run.');
+    const ref = str(input.ref);
+    if (!ref) throw badInput('Pick a branch for scheduled runs.');
+    const set: Record<string, unknown> = {
+      enabled: Boolean(input.enabled),
+      frequency: input.frequency,
+      time_of_day: str(input.time_of_day),
+      weekday: num(input.weekday) ?? 1,
+      ref,
+      suites: normaliseSuitesOrThrow(input.suites),
+      keep_last: keepLast,
+      email_prefix: str(input.email_prefix),
+      email_domain: str(input.email_domain).replace(/^@/, ''),
+      identity_phone: str(input.identity_phone),
+    };
+    // Absent leaves the saved password alone. The form cannot read it back, so
+    // a field that always wrote would blank it every time it was opened.
+    if (input.password !== undefined && input.password !== null) {
+      set.password = String(input.password);
+    }
+    await E2eRunSettingsModel.updateOne({ key: E2E_SETTINGS_KEY }, { $set: set }, { upsert: true });
+    return this.settings();
+  },
+
+  async triggerConfig() {
+    const [cfg, doc, urls] = await Promise.all([
+      githubRepoConfig(),
+      settingsDoc(),
+      getUrlConfigs(),
+    ]);
+    return {
+      configured: Boolean(cfg),
+      repository: cfg ? `${cfg.owner}/${cfg.repo}` : '',
+      default_ref: doc.ref,
+      reports_to: urls.serverUrl,
+    };
+  },
+
+  /** Start a run from the portal. */
+  async trigger(input: any, user: AuthUser) {
+    const doc = await settingsDoc();
+    const run = await dispatchRun({
+      suites: normaliseSuitesOrThrow(input.suites),
+      ref: str(input.ref) || doc.ref,
+      trigger_source: 'PORTAL',
+      triggered_by: user.email ?? user.id,
+    });
+    const cfg = await requireGithubRepoConfig();
+    return { run: pub(run), actions_url: workflowRunsUrl(cfg, WORKFLOW_FILE, run.ref) };
+  },
+
+  /**
+   * The workflow claiming its run and collecting the identity to test with.
+   *
+   * A run started by hand from the Actions tab has no row yet, so this opens
+   * one; a dispatched run already has its QUEUED row and this finds it. Either
+   * way the answer carries the suites to execute, so the runner never has to
+   * work out what "all" meant.
+   */
+  async start(input: any, reportedBy: string) {
+    const existing = await openRowFor(input);
+    const settings = await settingsDoc();
+    const runId = str(input.workflow_run_id);
+    const fields = {
+      status: 'RUNNING' as E2eRunStatus,
+      workflow_run_id: runId,
+      workflow_run_url: str(input.workflow_run_url),
+      ref: str(input.ref) || existing?.ref || settings.ref,
+      commit_sha: str(input.commit_sha),
+      stage: 'Running suites',
+      ...nextStages(existing, 'Running suites'),
+      reported_by: reportedBy,
+    };
+
+    let run: IE2eRun;
+    if (existing) {
+      existing.set(fields);
+      await existing.save();
+      run = existing;
+    } else {
+      const identity = buildIdentity(settings, new Date());
+      run = await E2eRunModel.create({
+        run_no: await nextRunNo(),
+        trigger_source: 'MANUAL',
+        triggered_by: str(input.triggered_by),
+        requested_suites: normaliseSuitesOrThrow(input.suites),
+        dispatch_id: str(input.dispatch_id),
+        ...identityFields(identity),
+        ...fields,
+      });
+    }
+
+    // Rebuilt from the ROW, not from the settings: an identity is fixed when
+    // the run is created, and reading the settings again here would hand a
+    // re-dispatched runner a different address from the one on its own row.
+    const credentials = run.signup_email
+      ? {
+          stamp: run.identity_stamp,
+          login_email: run.login_email,
+          signup_email: run.signup_email,
+          password: settings.password ?? '',
+          phone: run.identity_phone,
+        }
+      : null;
+    return { run: pub(run), credentials, suites: run.requested_suites ?? [] };
+  },
+
+  /**
+   * Progress, one suite's result, or the run's outcome.
+   *
+   * A workflow reports MANY times — once per matrix leg, then once at the gate
+   * — and all of them describe one run, so later reports merge into the same
+   * row instead of multiplying the table.
+   */
+  async report(input: any, reportedBy: string) {
+    const found = await openRowFor(input);
+    if (!found) {
+      throw badInput('No e2e run matches this dispatch or workflow run. Call startE2eRun first.');
+    }
+    if (input.suite) await applySuiteResult(found._id, input.suite);
+    // Re-read AFTER the atomic write, so the totals are summed over every leg
+    // that has landed — including the ones that reported while this request was
+    // in flight. `results` is deliberately never assigned below: mongoose only
+    // sends the paths it sees change, and leaving it alone is what keeps a
+    // concurrent leg's row safe.
+    const run = (await E2eRunModel.findById(found._id)) ?? found;
+    const stage = str(input.stage);
+    const status: E2eRunStatus | null = input.status ?? null;
+    run.totals = totalsOf(run.results ?? []) as IE2eRun['totals'];
+
+    const stages = nextStages(run, stage);
+    if (stages.stages) run.stages = stages.stages;
+    if (status) run.status = status;
+    // The runner is the authority on progress while it is running, and on
+    // nothing once it has stopped: a finished run is not "Running suites".
+    const finished = status === 'SUCCESS' || status === 'FAILED';
+    run.stage = finished ? '' : stage || run.stage;
+    if (finished) {
+      run.error_message = status === 'FAILED' ? str(input.error_message) : '';
+      run.duration_seconds = num(input.duration_seconds) ?? run.duration_seconds;
+    }
+    if (str(input.workflow_run_id)) run.workflow_run_id = str(input.workflow_run_id);
+    if (str(input.workflow_run_url)) run.workflow_run_url = str(input.workflow_run_url);
+    if (str(input.ref)) run.ref = str(input.ref);
+    if (str(input.commit_sha)) run.commit_sha = str(input.commit_sha);
+    run.reported_by = reportedBy;
+    await run.save();
+    return pub(run);
+  },
+
+  async remove(id: string) {
+    const res = await E2eRunModel.deleteOne({ _id: id });
+    return res.deletedCount > 0;
+  },
+
+  /**
+   * The nightly run, if one is owed.
+   *
+   * `last_run_at` is stamped BEFORE the dispatch and whether or not it
+   * succeeds: GitHub that cannot be reached now will not be reachable a minute
+   * later either, and retrying every tick would bury the one failure worth
+   * reading under a thousand more.
+   */
+  async runIfDue(now: Date = new Date()): Promise<string | null> {
+    const doc = await settingsDoc();
+    if (!isDue(scheduleOf(doc), doc.last_run_at, now)) return null;
+    await E2eRunSettingsModel.updateOne(
+      { key: E2E_SETTINGS_KEY },
+      { $set: { last_run_at: now } }
+    ).exec();
+    const run = await dispatchRun({
+      suites: doc.suites ?? [],
+      ref: doc.ref,
+      trigger_source: 'SCHEDULE',
+      triggered_by: 'schedule',
+    });
+    logs.server.info('e2eRun', 'scheduled', { run_no: run.run_no, ref: run.ref });
+    await prune(doc.keep_last);
+    return run.run_no;
+  },
+};
+
+/** The catalogue's own validation, re-thrown as a GraphQL user error. */
+function normaliseSuitesOrThrow(asked: unknown): string[] {
+  try {
+    return normaliseSuites(asked);
+  } catch (err) {
+    throw badInput(err instanceof Error ? err.message : String(err));
+  }
+}

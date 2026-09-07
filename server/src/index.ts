@@ -21,6 +21,7 @@ import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/m
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
 import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
+import { startE2eRunScheduler } from '@modules/platform/e2eRun/e2eRun.scheduler';
 import { startAccountDeletionScheduler } from '@modules/access/accountDeletion/accountDeletion.scheduler';
 import { startAccountLockRefresh } from '@modules/access/accountDeletion/accountDeletion.lock';
 import { startSessionSealRefresh } from '@modules/access/auth/session-seal';
@@ -400,6 +401,12 @@ async function bootstrap() {
   // admin-configured window has passed (Tech > Database > Backups; off until
   // an operator turns it on) and prunes past the keep-last count.
   startDbBackupScheduler();
+
+  // End-to-end tests: a one-minute tick that dispatches the E2E workflow when
+  // the admin-configured window has passed (Tech > E2E Tests > Settings,
+  // nightly at 03:00 by default). The workflow declares no cron of its own, so
+  // this is the only thing that starts a scheduled run.
+  startE2eRunScheduler();
 
   // Account deletions: a one-minute tick that carries out requests whose grace
   // period has run out (Admin Panel > Settings > Account deletion; off until an

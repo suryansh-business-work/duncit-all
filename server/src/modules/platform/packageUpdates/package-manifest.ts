@@ -2410,6 +2410,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@mui/system", range: "^9.4.0", kind: "dependencies" },
       { name: "@mui/x-date-pickers", range: "^9.12.0", kind: "dependencies" },
       { name: "@react-oauth/google", range: "^0.13.5", kind: "dependencies" },
+      { name: "@xyflow/react", range: "^12.10.0", kind: "dependencies" },
       { name: "ag-grid-community", range: "^36.1.0", kind: "dependencies" },
       { name: "ag-grid-react", range: "^36.1.0", kind: "dependencies" },
       { name: "chart.js", range: "^4.5.1", kind: "dependencies" },

@@ -12,7 +12,12 @@ import type { AppNavItem } from '@duncit/shell';
  * order — and, via `landingPath()`, which area `/` opens for somebody who holds
  * more than one.
  */
-export type PartnerRole = 'CLUB_ADMIN' | 'VENUE_OWNER' | 'HOST' | 'ECOMM_MANAGER';
+export type PartnerRole =
+  | 'REGIONAL_CLUB_ADMIN'
+  | 'CLUB_ADMIN'
+  | 'VENUE_OWNER'
+  | 'HOST'
+  | 'ECOMM_MANAGER';
 
 export interface PartnerSection {
   role: PartnerRole;
@@ -41,6 +46,23 @@ export interface PartnerSection {
 }
 
 export const PARTNER_SECTIONS: readonly PartnerSection[] = [
+  {
+    // No `onboarding` entry, deliberately: a Regional Club Admin is an internal
+    // appointment the Admin portal grants, not a partner who applies. There is
+    // no journey to invite somebody into, so the group is simply absent until
+    // the role is held.
+    role: 'REGIONAL_CLUB_ADMIN',
+    paths: ['/regional'],
+    nav: {
+      label: 'Regional Club Admin',
+      labelKey: 'shell.nav.regionalClubAdmin',
+      icon: 'hub',
+      children: [
+        { label: 'Region Structure', labelKey: 'shell.nav.regionStructure', to: '/regional/structure', icon: 'timeline' },
+        { label: 'Club Admins', labelKey: 'shell.nav.clubAdmins', to: '/regional/club-admins', icon: 'groups' },
+      ],
+    },
+  },
   {
     role: 'CLUB_ADMIN',
     paths: ['/club-admin'],

@@ -42,11 +42,31 @@ const refuse = (key: string) =>
     extensions: { code: "FEATURE_DISABLED", flag: key },
   });
 
+/** How a gated map is narrowed. */
+export type GateOptions = {
+  /**
+   * Gate only these root fields; omit to gate every field in the map. The
+   * payment module owns three product-only operations beside the pod-ticket
+   * ones, which must keep working with the shop off.
+   */
+  readonly fields?: readonly string[];
+  /**
+   * Root LIST reads that answer `[]` while the flag is off instead of refusing.
+   *
+   * A refusal is the right answer for anything the switched-off feature owns
+   * outright. It is the WRONG answer for a lookup a surface OUTSIDE the feature
+   * asks for: a non-null field (`[T!]!`) that throws does not fail one field —
+   * GraphQL propagates the null to the query root and takes every sibling field
+   * in the document down with it. `availablePodProducts` is exactly that case,
+   * and "which products may I attach?" with the shop off is honestly "none".
+   */
+  readonly emptyList?: readonly string[];
+};
+
 /**
  * Wraps a resolver map's `Query`/`Mutation` fields behind a feature flag, so a
  * whole module goes dark from one place rather than from a guard repeated in a
- * hundred resolvers. Pass `fields` to gate only part of a map — the payment
- * module owns three product-only operations beside the pod-ticket ones.
+ * hundred resolvers.
  *
  * Only the entry points are gated. Field resolvers on the module's own types
  * stay untouched (they can only be reached through a gated entry point), and
@@ -56,20 +76,24 @@ const refuse = (key: string) =>
 export function gateResolvers<T extends object>(
   map: T,
   key: string,
-  fields?: readonly string[],
+  options: GateOptions = {},
 ): T {
-  const gateField = (fn: ResolverFn): ResolverFn =>
+  const wanted = options.fields ? new Set(options.fields) : null;
+  const answersEmpty = new Set(options.emptyList ?? []);
+
+  const gateField = (fn: ResolverFn, empty: boolean): ResolverFn =>
     async (...args: unknown[]) => {
-      if (!(await isFeatureEnabled(key))) throw refuse(key);
-      return fn(...args);
+      if (await isFeatureEnabled(key)) return fn(...args);
+      if (empty) return [];
+      throw refuse(key);
     };
 
-  const wanted = fields ? new Set(fields) : null;
   const gateRoot = (root: Record<string, unknown>) =>
     Object.fromEntries(
       Object.entries(root).map(([field, fn]) => {
         const gate = typeof fn === "function" && (!wanted || wanted.has(field));
-        return [field, gate ? gateField(fn as ResolverFn) : fn];
+        if (!gate) return [field, fn];
+        return [field, gateField(fn as ResolverFn, answersEmpty.has(field))];
       }),
     );
 

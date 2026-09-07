@@ -289,6 +289,8 @@ export const telemetryTypeDefs = gql`
     telemetrySettings: TelemetrySettings!
     telemetryDashboard(range_days: Int): TelemetryDashboard!
     telemetryLogsTable(query: TableQueryInput): TelemetryLogTablePage!
+    "One persisted log by id — the row behind its own address in the Tech portal."
+    telemetryLog(id: ID!): TelemetryLog
     bugsTable(query: TableQueryInput): BugTablePage!
     bug(id: ID!): Bug
     "Recent persisted error logs that roll up into this bug (same fingerprint)."

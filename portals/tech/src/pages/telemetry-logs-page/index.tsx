@@ -1,10 +1,10 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router';
 import { useApolloClient } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import LogsTable from './LogsTable';
-import LogDetailDialog from './LogDetailDialog';
 import LogImportExport from './LogImportExport';
 import {
   LEVEL_TABS,
@@ -25,12 +25,15 @@ const TAB_ITEMS = LEVEL_TABS.map((tab) => ({ value: tab.value, label: tab.label 
  * trail and `debug` is only ever read while chasing one thing. Each keeps its
  * own column layout and its own file, and the open tab is in the URL so a
  * pasted link lands where it was sent from.
+ *
+ * A row opens at its own address rather than in a dialog over the table, for
+ * the same reason: the log is what gets pasted to whoever has to fix it.
  */
 export default function TelemetryLogsPage() {
   const { t } = useTranslation();
   const client = useApolloClient();
+  const navigate = useNavigate();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [selected, setSelected] = useState<TelemetryLogRow | null>(null);
   const tabs = useTabParam<TelemetryLevel>({ items: TAB_ITEMS, fallback: 'error' });
   const fetchRows = useApolloTableFetch<TelemetryLogRow>(
     client,
@@ -38,6 +41,10 @@ export default function TelemetryLogsPage() {
     'telemetryLogsTable',
   );
   const refetch = useCallback(() => refetchRef.current?.(), []);
+  const openLog = useCallback(
+    (row: TelemetryLogRow) => navigate(`/telemetry/log/${row.id}`),
+    [navigate],
+  );
 
   const active = LEVEL_TABS.find((tab) => tab.value === tabs.value) ?? LEVEL_TABS[0];
 
@@ -70,11 +77,10 @@ export default function TelemetryLogsPage() {
         level={tabs.value}
         fetchRows={fetchRows}
         refetchRef={refetchRef}
-        onOpen={setSelected}
+        onOpen={openLog}
         toolbarActions={<LogImportExport level={tabs.value} onImported={refetch} />}
       />
 
-      <LogDetailDialog row={selected} onClose={() => setSelected(null)} />
     </Stack>
   );
 }

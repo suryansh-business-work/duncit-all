@@ -1,5 +1,6 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Chip, Typography } from '@mui/material';
+import { Link as RouterLink } from 'react-router';
+import { Chip, Link, Typography } from '@mui/material';
 import {
   DuncitTable,
   type DuncitColumn,
@@ -26,12 +27,25 @@ const renderEnvironment = (row: TelemetryLogRow) => (
 
 const renderUser = (row: TelemetryLogRow) => <UserCell user={row.user} />;
 
+/**
+ * The message is a real link to the log's own page, not just a click handler:
+ * a row worth reading is a row worth opening in a second tab, and `a` is in
+ * DuncitTable's row-click ignore list, so the anchor navigates once rather
+ * than racing the row handler to the same address.
+ */
 const renderMessage = (row: TelemetryLogRow) => {
   const text = row.error?.message ?? row.component;
   return (
-    <Typography variant="body2" noWrap title={text}>
+    <Link
+      component={RouterLink}
+      to={`/telemetry/log/${row.id}`}
+      variant="body2"
+      noWrap
+      title={text}
+      sx={{ display: 'block' }}
+    >
       {text}
-    </Typography>
+    </Link>
   );
 };
 

@@ -77,7 +77,7 @@ describe('feature flag gate', () => {
     const gated = gateResolvers(
       { Mutation: { productCheckout, podCheckout } },
       'gate_probe',
-      ['productCheckout'],
+      { fields: ['productCheckout'] },
     );
 
     await expect((gated.Mutation as any).productCheckout()).rejects.toThrow(/unavailable/i);

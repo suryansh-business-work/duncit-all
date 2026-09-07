@@ -505,10 +505,23 @@ async function welcomeNewAccount(created: any, origin: string) {
   sendWelcomeEmail(created.auth?.email ?? '', created.profile?.first_name).catch((e) =>
     logs.server.error('user.service', origin, { error: e, msg: 'Email send failed' })
   );
-  // A phone is optional and is not asked for at signup, so most fresh accounts
-  // have no reachable number and record a SKIPPED row.
+  /*
+    The ACCOUNT is what this message is about, so the account is what holds the
+    one-message-per-recipient slot.
+
+    Left empty — the shape for a message with no entity above it — the slot is
+    `(USER_WELCOME, '', number)`, one welcome per NUMBER for all time. The
+    signup form now proves a WhatsApp number with a code before the account
+    exists, so a number that has ever been through signup silently answers
+    "Already sent" on every later attempt: a person who deleted their account
+    and came back, a family sharing one phone, and every test signup after the
+    first. Keyed on the account instead it is still exactly once — a user id is
+    created once and never reused — and it is once per PERSON rather than once
+    per handset.
+  */
   await whatsappService.send({
     event: 'USER_WELCOME',
+    entityId: String(created._id),
     user: created,
     name: created.profile?.first_name,
     params: [created.profile?.first_name],

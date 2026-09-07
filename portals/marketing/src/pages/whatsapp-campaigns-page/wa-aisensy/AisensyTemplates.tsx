@@ -2,82 +2,28 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
-import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
+import { DuncitTable, clientTableFetch } from '@duncit/table';
 import { useConfirm } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
-import { StatusChip } from '@duncit/ui';
 import type { AisensyTemplate } from '../queries';
 import AisensySection from './AisensySection';
 import AisensyDetailDialog, { type AisensyFact } from './AisensyDetailDialog';
-import TemplateRowActions from './TemplateRowActions';
 import { CreateTemplateForm } from './create-template-form';
+import { getTemplateColumns, type TemplateSendRow } from './templateColumns';
+import { useWaSendCounts, withSendCounts } from './useWaSendCounts';
 import { useAisensyCatalogue } from './useAisensyCatalogue';
 import { useAisensyDrafts } from './useAisensyDrafts';
 import {
   AISENSY_TEMPLATE_STATUS_COLORS,
+  campaignsSending,
   paramsLabel,
-  statusKey,
   templateRowId,
   templateSearchText,
 } from './helpers';
 
 const EMPTY = '—';
 
-const renderStatus = (template: AisensyTemplate) => (
-  <StatusChip
-    status={statusKey(template.status)}
-    label={template.status}
-    colorMap={AISENSY_TEMPLATE_STATUS_COLORS}
-  />
-);
-
-/** The first line of the body, so a row hints at the message without becoming
- * the message — the full text is one click away in the sample. */
-const renderBody = (template: AisensyTemplate) => (
-  <Typography variant="body2" noWrap sx={{
-    color: "text.secondary"
-  }}>
-    {template.body}
-  </Typography>
-);
-
 type Translate = ReturnType<typeof useTranslation>['t'];
-
-const baseColumns = (t: Translate): DuncitColumn<AisensyTemplate>[] => [
-  { field: 'name', headerName: t('marketing.whatsappCampaigns.template'), minWidth: 220, flex: 1 },
-  { field: 'category', headerName: t('marketing.whatsappCampaigns.category'), width: 140 },
-  { field: 'language', headerName: t('marketing.common.language'), width: 120 },
-  { field: 'status', headerName: t('shell.common.status'), width: 130, cellRenderer: renderStatus },
-  { field: 'param_count', headerName: t('marketing.whatsappCampaigns.params'), width: 100 },
-  {
-    field: 'body',
-    headerName: t('marketing.whatsappCampaigns.message'),
-    minWidth: 260,
-    flex: 2,
-    cellRenderer: renderBody,
-  },
-];
-
-interface RowActionDeps {
-  busy: boolean;
-  onDelete: (template: AisensyTemplate) => void;
-}
-
-const buildColumns = (
-  { busy, onDelete }: Readonly<RowActionDeps>,
-  t: Translate,
-): DuncitColumn<AisensyTemplate>[] => [
-  ...baseColumns(t),
-  {
-    field: 'actions',
-    headerName: t('shell.common.actions'),
-    width: 100,
-    sortable: false,
-    cellRenderer: (template) => (
-      <TemplateRowActions template={template} busy={busy} onDelete={onDelete} />
-    ),
-  },
-];
 
 const factsFor = (template: AisensyTemplate, t: Translate): AisensyFact[] => [
   { label: t('marketing.whatsappCampaigns.category'), value: template.category || EMPTY },
@@ -93,12 +39,18 @@ const factsFor = (template: AisensyTemplate, t: Translate): AisensyFact[] => [
   },
 ];
 
+interface Props {
+  /** Opens the Logs tab narrowed to a set of campaigns — what the Sent count does. */
+  onOpenLogs: (campaigns: readonly string[]) => void;
+}
+
 /** The WhatsApp templates AiSensy has for this project, read live — and where
  * a new one is submitted to Meta. */
-export default function AisensyTemplates() {
+export default function AisensyTemplates({ onOpenLogs }: Readonly<Props>) {
   const { t } = useTranslation();
   const confirm = useConfirm();
-  const { configured, templates, loading, error, refetch } = useAisensyCatalogue();
+  const { configured, campaigns, templates, loading, error, refetch } = useAisensyCatalogue();
+  const counts = useWaSendCounts();
   const [openId, setOpenId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
 
@@ -107,7 +59,13 @@ export default function AisensyTemplates() {
   }, [refetch]);
   const drafts = useAisensyDrafts(onChanged);
 
-  const fetchRows = useMemo(() => clientTableFetch(templates, templateSearchText), [templates]);
+  const rows = useMemo(
+    () =>
+      withSendCounts(templates, counts, (template) => campaignsSending(template.name, campaigns)),
+    [templates, counts, campaigns]
+  );
+
+  const fetchRows = useMemo(() => clientTableFetch(rows, templateSearchText), [rows]);
 
   // The table re-reads only when its own query changes, so a fresh AiSensy
   // answer has to ask for the re-read — otherwise it keeps showing the list it
@@ -141,8 +99,8 @@ export default function AisensyTemplates() {
   );
 
   const columns = useMemo(
-    () => buildColumns({ busy: drafts.deletingTemplate, onDelete }, t),
-    [t, drafts.deletingTemplate, onDelete]
+    () => getTemplateColumns({ t, busy: drafts.deletingTemplate, onDelete, onOpenLogs }),
+    [t, drafts.deletingTemplate, onDelete, onOpenLogs]
   );
 
   const selected = templates.find((template) => templateRowId(template) === openId) ?? null;
@@ -176,7 +134,7 @@ export default function AisensyTemplates() {
         count={templates.length}
         emptyText={t('marketing.whatsappCampaigns.aisensyReturnedNoTemplatesForThis')}
       >
-        <DuncitTable<AisensyTemplate>
+        <DuncitTable<TemplateSendRow>
           tableId="marketing-aisensy-templates"
           columns={columns}
           fetchRows={fetchRows}

@@ -342,6 +342,16 @@ export const waCampaignTypeDefs = gql`
     page_size: Int!
   }
 
+  "What one AiSensy campaign name has produced, counting both records."
+  type WaSendCount {
+    "The campaign name, which is the only name both records share."
+    campaign: String!
+    "Messages AiSensy accepted."
+    sent: Int!
+    "Everything that was tried, including what was skipped or failed."
+    attempts: Int!
+  }
+
   extend type Query {
     "Whether the Tech portal's AiSensy API key is configured."
     waCampaignConfigured: Boolean!
@@ -365,6 +375,8 @@ export const waCampaignTypeDefs = gql`
     waCampaignsTable(query: TableQueryInput): WaCampaignTablePage!
     "Every WhatsApp send in one feed: campaign sends and the messages the platform sent on its own."
     waLogs(query: TableQueryInput): WaLogPage!
+    "How many messages each AiSensy campaign has produced — the count beside a campaign or template row."
+    waSendCounts: [WaSendCount!]!
     "One campaign in full — the detail view behind a table row."
     waCampaign(campaign_id: ID!): WaCampaign!
     "Everyone that campaign walked over, with what happened to each."

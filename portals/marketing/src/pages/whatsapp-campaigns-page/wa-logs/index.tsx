@@ -1,6 +1,7 @@
 import { useMemo, useState, type MutableRefObject } from 'react';
 import { useApolloClient } from '@apollo/client/react';
-import { Stack, Typography } from '@mui/material';
+import { Alert, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
@@ -22,6 +23,16 @@ interface Props {
   onDuplicate: (campaign: WaCampaignRow) => void;
   /** Filled with a "reload the table" fn so a send elsewhere refreshes it. */
   refetchRef: MutableRefObject<(() => void) | null>;
+  /**
+   * Show only the sends made on these AiSensy campaigns.
+   *
+   * It arrives from the URL, which is what a Sent count on the Campaigns or
+   * Templates tab writes — so the narrowed view survives a reload and can be
+   * pasted to somebody else. Empty means the whole feed.
+   */
+  campaigns: readonly string[];
+  /** Drops the narrowing and shows everything again. */
+  onClearCampaigns: () => void;
 }
 
 /**
@@ -42,6 +53,8 @@ export default function WaLogs({
   actions,
   onDuplicate,
   refetchRef,
+  campaigns,
+  onClearCampaigns,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
@@ -51,6 +64,15 @@ export default function WaLogs({
   const [target, setTarget] = useState<WaCampaignRow | null>(null);
 
   const fetchRows = useApolloTableFetch<WaLogRow>(client, WA_LOGS, 'waLogs');
+  // `in` over the whole list rather than a filter per name: a template is sent
+  // by however many campaigns point at it, and its count covers all of them.
+  const externalFilters = useMemo(
+    () =>
+      campaigns.length > 0
+        ? [{ field: 'campaign', op: 'in' as const, values: [...campaigns] }]
+        : [],
+    [campaigns]
+  );
   const columns = useMemo(
     () => getLogColumns({ t, formatDateTime, currency }),
     [t, formatDateTime, currency]
@@ -86,6 +108,19 @@ export default function WaLogs({
         </Typography>
       </Stack>
 
+      {campaigns.length > 0 && (
+        <Alert
+          severity="info"
+          action={
+            <DuncitButton size="small" onClick={onClearCampaigns}>
+              {t('marketingWhatsapp.logs.showEverything')}
+            </DuncitButton>
+          }
+        >
+          {t('marketingWhatsapp.logs.narrowedTo', { vars: { campaigns: campaigns.join(', ') } })}
+        </Alert>
+      )}
+
       <DuncitTable<WaLogRow>
         tableId="wa-logs"
         columns={columns}
@@ -96,6 +131,7 @@ export default function WaLogs({
         defaultSort={{ field: 'created_at', dir: 'desc' }}
         searchPlaceholder={t('marketingWhatsapp.logs.search')}
         refetchRef={refetchRef}
+        externalFilters={externalFilters}
       />
 
       <WaCampaignDetailDialog

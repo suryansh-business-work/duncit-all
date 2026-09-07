@@ -194,6 +194,24 @@ export const WA_LOGS = gql`
   }
 `;
 
+/**
+ * How many messages each AiSensy campaign has actually produced.
+ *
+ * The whole catalogue in one answer, keyed by campaign name — the only name a
+ * marketing send and an automatic message both store. A template's figure is
+ * the sum of the campaigns that send it, which this tab already knows from the
+ * live catalogue.
+ */
+export const WA_SEND_COUNTS = gql`
+  query WaSendCounts {
+    waSendCounts {
+      campaign
+      sent
+      attempts
+    }
+  }
+`;
+
 /** One automatic message in full — the fields the merged feed has no column
  * for, read only when its row is opened. */
 export const WHATSAPP_MESSAGE_LOG = gql`
@@ -531,6 +549,14 @@ export interface WaLogRow {
   cost: number;
   reason: string;
   created_at: string | null;
+}
+
+/** What one AiSensy campaign name has produced, across both records. `attempts`
+ * rides beside `sent` because "0 of 40" and "0 of 0" are opposite problems. */
+export interface WaSendCount {
+  campaign: string;
+  sent: number;
+  attempts: number;
 }
 
 /** One automatic message, in the detail behind its row. */

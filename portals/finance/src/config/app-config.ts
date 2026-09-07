@@ -62,8 +62,16 @@ export const appConfig = {
         { label: 'Product Invoice', labelKey: 'shell.nav.productInvoice', to: '/invoices/product', icon: 'description' },
       ],
     },
-    { label: 'Duncit Expenses', labelKey: 'shell.nav.duncitExpenses', to: '/ledger', icon: 'menuBook' },
-    { label: 'Pod Expenses', labelKey: 'shell.nav.podExpenses', to: '/pod-expenses', icon: 'receipt' },
+    {
+      label: 'Expenses', labelKey: 'shell.nav.expenses',
+      icon: 'expenses',
+      children: [
+        { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/expenses/dashboard', icon: 'insights' },
+        { label: 'Duncit Expenses', labelKey: 'shell.nav.duncitExpenses', to: '/ledger', icon: 'menuBook' },
+        { label: 'Pod Expenses', labelKey: 'shell.nav.podExpenses', to: '/pod-expenses', icon: 'receipt' },
+        { label: 'Employee Expenses', labelKey: 'shell.nav.employeeExpenses', to: '/employee-expenses', icon: 'quote' },
+      ],
+    },
     {
       label: 'Duncit Coin', labelKey: 'shell.nav.duncitCoin',
       icon: 'wallet',
@@ -84,6 +92,13 @@ export const appConfig = {
     },
     { label: 'Referrals', labelKey: 'shell.nav.referrals', to: '/referrals', icon: 'campaign' },
     { label: 'Payout Cycles', labelKey: 'shell.nav.payoutCycles', to: '/payouts', icon: 'calendar' },
+    {
+      label: 'Settings', labelKey: 'shell.nav.settings',
+      icon: 'settings',
+      children: [
+        { label: 'Expense Settings', labelKey: 'shell.nav.expenseSettings', to: '/settings/expenses', icon: 'tune' },
+      ],
+    },
     {
       label: 'Calculators', labelKey: 'shell.nav.calculators',
       icon: 'calculator',

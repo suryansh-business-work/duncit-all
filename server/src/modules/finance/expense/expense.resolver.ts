@@ -1,4 +1,5 @@
 import { expenseService } from './expense.service';
+import { expenseDashboard } from './expense.dashboard';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
@@ -18,6 +19,10 @@ export const expenseResolvers = {
       requireRole(ctx, FINANCE_RW);
       return expenseService.summary(args.filter);
     },
+    expenseDashboard: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, FINANCE_RW);
+      return expenseDashboard(args.filter);
+    },
   },
   Mutation: {
     createExpense: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -25,8 +30,8 @@ export const expenseResolvers = {
       return expenseService.create(args.input, user.id);
     },
     updateExpense: async (_p: unknown, args: { expense_doc_id: string; input: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, FINANCE_RW);
-      return expenseService.update(args.expense_doc_id, args.input);
+      const user = requireRole(ctx, FINANCE_RW);
+      return expenseService.update(args.expense_doc_id, args.input, user.id);
     },
     deleteExpense: async (_p: unknown, args: { expense_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, FINANCE_RW);

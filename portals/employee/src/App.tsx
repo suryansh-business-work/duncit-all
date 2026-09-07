@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router';
 import { createAuthed, ProfilePage } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import ExpensesPage from './pages/expenses';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -13,6 +14,7 @@ export default function App() {
         <Route path="/profile" element={authed(<ProfilePage />)} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={authed(<DashboardPage />)} />
+      <Route path="/expenses" element={authed(<ExpensesPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

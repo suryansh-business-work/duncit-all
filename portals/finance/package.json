@@ -32,6 +32,7 @@
     "@duncit/buttons": "workspace:*",
     "@duncit/dashboard": "workspace:*",
     "@duncit/dialogs": "workspace:*",
+    "@duncit/forms": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/media-picker": "workspace:*",
     "@duncit/regex": "workspace:*",

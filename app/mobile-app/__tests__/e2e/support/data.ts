@@ -114,10 +114,44 @@ export const story = {
  * so the empty list the server would return is part of every boot fixture. */
 export const noAds = { MobileActiveAds: { activeAds: [] } };
 
+/**
+ * The rest of what Home asks for on mount, none of it about pods or stories.
+ *
+ * They are here for the reason `noAds` is: an operation with no fixture is
+ * answered `{ data: {} }`, and a hook that assigns the missing field straight
+ * into state defeats its own default. `useSomethingForYou` is the one that bit
+ * — `setItems(data.publicSomethingForYou)` turns `useState([])` into
+ * `undefined`, the rail maps over it, and the whole screen becomes the error
+ * boundary. Its own comment says "a promotion that could not load must never be
+ * the reason Home looks broken", which is exactly what happened.
+ *
+ * The crash is asynchronous, which is why it hid: a spec that asserts and
+ * finishes quickly is green, and only the one that clicks and waits sees the
+ * screen fall over. Every empty value below is what the server really returns
+ * for a fresh account with nothing pending.
+ */
+const homeExtras = {
+  MobilePublicSomethingForYou: { publicSomethingForYou: [] },
+  MobileActiveAppPopup: { activeAppPopup: null },
+  MobilePendingPodFeedback: { myPendingPodFeedback: null },
+  MobileMyAccountDeletionRequest: { myAccountDeletionRequest: null },
+  MobileUploadSettings: {
+    uploadSettings: {
+      max_image_mb: 10,
+      max_video_mb: 50,
+      allowed_image_formats: ['jpg', 'png'],
+      allowed_video_formats: ['mp4'],
+      default_crop_key: 'story',
+      crop_presets: [{ key: 'story', label: 'Story', width: 1080, height: 1920, enabled: true }],
+    },
+  },
+};
+
 /** Boot fixtures for the signed-in Home tab. */
 export function homeFixtures(over: { pods?: unknown[]; stories?: unknown[] } = {}) {
   return {
     ...noAds,
+    ...homeExtras,
     MobileMe: { me },
     MobileBranding: { branding },
     MobileSuperCategories: { categories: superCategories },

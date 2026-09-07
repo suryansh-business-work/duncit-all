@@ -333,6 +333,17 @@ async function bootstrap() {
     const { serviceOfferedService } = await import('@modules/crm/serviceOffered/serviceOffered.service');
     await serviceOfferedService.backfillSlugs();
   });
+  // Every dropdown on the Expense form. Insert-only, so a list Finance
+  // has reworded, reordered or switched off survives every redeploy — and the
+  // unique {kind,key} index has to exist before the first upsert races it.
+  await safeSeed('expenseOptions', async () => {
+    const { expenseOptionService } = await import(
+      '@modules/finance/expenseOption/expenseOption.service'
+    );
+    await expenseOptionService.syncIndexes();
+    const created = await expenseOptionService.seedDefaults();
+    if (created > 0) logs.server.info('bootstrap', 'expenseOptions', { created });
+  });
   await safeSeed('crmManagedOptions', async () => {
     const { managedOptionService } = await import('@modules/crm/managedOption/managedOption.service');
     await managedOptionService.seedDefaults();

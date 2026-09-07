@@ -13,6 +13,16 @@ const EXPENSE_FIELDS = `
   payment_method
   reference
   attachment_url
+  related_from_type
+  related_from_id
+  related_from_name
+  paid_by
+  compensation_status
+  compensation_method
+  compensated_amount
+  pending_compensation
+  compensation_date
+  compensation_reference
   refunds {
     refund_id
     date
@@ -94,20 +104,13 @@ export const REMOVE_REFUND = gql`
   }
 `;
 
-export const EXPENSE_CATEGORIES = [
-  'RENT',
-  'SALARY',
-  'MARKETING',
-  'UTILITIES',
-  'SOFTWARE',
-  'TRAVEL',
-  'LOGISTICS',
-  'OFFICE',
-  'PROFESSIONAL_FEES',
-  'OTHER',
-];
-
-export const PAYMENT_METHODS = ['UPI', 'BANK_TRANSFER', 'CASH', 'CARD', 'CHEQUE', 'OTHER'];
+/**
+ * The categories and payment methods used to be two constant arrays here, and
+ * a third and fourth copy of them lived on the server. They are now rows in
+ * `ExpenseOption`, edited from Finance > Settings > Expense Settings and read
+ * through `ExpenseOptionSelect` / `useExpenseOptions` — so adding one is a
+ * change an admin makes, not a deploy (spec rule 9).
+ */
 
 export const labelize = (value: string) =>
   value
@@ -120,6 +123,8 @@ export interface ExpenseSummaryFilter {
   search?: string;
   category?: string;
   payment_method?: string;
+  related_from_type?: string;
+  compensation_status?: string;
   from?: string;
   to?: string;
   min_amount?: number;
@@ -136,6 +141,12 @@ const rangeBounds = (f: TableFilterValue): [string | undefined, string | undefin
 const applyExpenseFilter = (filter: ExpenseSummaryFilter, f: TableFilterValue) => {
   if (f.field === 'category' && f.op === 'eq' && f.value) filter.category = f.value;
   if (f.field === 'payment_method' && f.op === 'eq' && f.value) filter.payment_method = f.value;
+  if (f.field === 'related_from_type' && f.op === 'eq' && f.value) {
+    filter.related_from_type = f.value;
+  }
+  if (f.field === 'compensation_status' && f.op === 'eq' && f.value) {
+    filter.compensation_status = f.value;
+  }
   if (f.field === 'date') {
     const [from, to] = rangeBounds(f);
     if (from) filter.from = from;

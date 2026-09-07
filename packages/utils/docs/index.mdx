@@ -260,6 +260,12 @@ exports:
   - 'clubAdminRangeLabels'
   - 'clubAdminSeriesLabels'
   - 'clubAdminLabels'
+  - 'EMPLOYEE_EXPENSE_CATEGORIES'
+  - 'EMPLOYEE_EXPENSE_PAYMENT_METHODS'
+  - 'EMPLOYEE_EXPENSE_STATUSES'
+  - 'EMPLOYEE_EXPENSE_STATUS_COLORS'
+  - 'EMPLOYEE_EXPENSE_STATUS_KEYS'
+  - 'EMPLOYEE_EXPENSE_SELECTION'
 ---
 
 ## Why this exists
@@ -1875,3 +1881,30 @@ knows about it, and a visible `AWAITING_QUANTUM_TUNNEL` beats a blank chip.
 `FULFILMENT_TONE` names the chip weight by meaning (`pending` / `moving` / `done` / `failed` /
 `neutral`) and `TONE_CHIP_COLOR` maps it onto MUI's palette, so no surface picks its own
 colours — the same shape [@duncit/verification](/packages/verification) uses.
+
+## Employee expense claims
+
+`employee-expense.ts` is the shape the two ends of one flow agree on. An employee files a
+claim in the Employee console; Finance approves or rejects it in the Finance console. Same
+row, same categories, same selection — read by two different portals.
+
+Both halves were plausible to write independently, and both would have been wrong the same
+way. A category added on the server and to one portal's list is a claim the other portal
+renders with a blank cell. A field added to one console's selection is a column the other
+console shows as empty, with nothing failing anywhere.
+
+```ts
+EMPLOYEE_EXPENSE_CATEGORIES; // ['TRAVEL', 'FUEL', 'MEALS', … 'MEDICAL', 'OTHER']
+EMPLOYEE_EXPENSE_STATUSES; // ['PENDING', 'APPROVED', 'REJECTED']
+EMPLOYEE_EXPENSE_STATUS_COLORS.PENDING; // 'warning' — one meaning of amber, both consoles
+EMPLOYEE_EXPENSE_STATUS_KEYS.REJECTED; // 'employeeExpense.status.REJECTED'
+EMPLOYEE_EXPENSE_SELECTION; // the GraphQL field list both queries interpolate
+```
+
+The status keys are written out rather than composed from the status value. The rule-38 gate
+only sees a key that appears somewhere as a quoted literal, so a key built inside a template
+string ships three rows of copy the checker reports as unrendered — and a translator never
+sees them.
+
+It is deliberately **data only**: no formatter, no component. The two consoles are MUI twins
+of one screen, and rule 40's twin clause applies — they share the shape, never the UI.

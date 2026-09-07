@@ -88,6 +88,7 @@ export {
   describeLocale,
   isRtlLocale,
   localeOptions,
+  EMPLOYEE_EXPENSE_BUNDLE,
   FINANCE_BUNDLE,
   flattenCatalogue,
   GRIEVANCE_BUNDLE,

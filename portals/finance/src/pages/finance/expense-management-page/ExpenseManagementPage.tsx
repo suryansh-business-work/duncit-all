@@ -1,37 +1,60 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client/react';
 import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
 import AddIcon from '@mui/icons-material/Add';
+import { PageHeader } from '@duncit/ui';
 import { DuncitButton } from '@duncit/buttons';
 import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useTranslation } from '@duncit/app-settings';
+import { logs } from '@duncit/logs';
+import { formatMoney } from '@duncit/utils';
+import ExpenseTable from './ExpenseTable';
+import ExpenseDrawer from './ExpenseDrawer';
+import { useExpenseOptions } from '../expense-config';
+import type { ExpenseRecord } from './expense-form';
 import {
   EXPENSES_TABLE,
   EXPENSE_SUMMARY,
-  labelize,
   tableStateToExpenseFilter,
   type ExpenseSummaryFilter,
 } from './queries';
-import { logs } from '@duncit/logs';
-import ExpenseTable from './ExpenseTable';
-import ExpenseDrawer from './ExpenseDrawer';
 
-const CURRENCY = '₹';
+interface SummaryData {
+  expenseSummary: {
+    total: number;
+    gross_total: number;
+    refund_total: number;
+    count: number;
+    by_category: Array<{ category: string; total: number }>;
+  };
+  publicFinanceSettings: { currency_symbol: string };
+}
 
+/**
+ * Finance > Expenses > Duncit Expenses.
+ *
+ * The ledger of what Duncit spent, what it was for, and how much of it has
+ * been paid back. The summary chips share the table's filters — `fetchRows`
+ * mirrors the query state into `ExpenseFilterInput` — so the numbers above the
+ * table always describe the rows inside it.
+ */
 export default function ExpenseManagementPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [active, setActive] = useState<any>(null);
+  const [active, setActive] = useState<ExpenseRecord | null>(null);
+  const categories = useExpenseOptions('CATEGORY');
 
-  // The summary chips share the table's filters: fetchRows mirrors the table's
-  // query state into ExpenseFilterInput so both stay in sync.
   const [summaryFilter, setSummaryFilter] = useState<ExpenseSummaryFilter | undefined>(undefined);
   const summaryKeyRef = useRef('null');
-  const summaryQ = useQuery<any>(EXPENSE_SUMMARY, {
+  const summaryQ = useQuery<SummaryData>(EXPENSE_SUMMARY, {
     variables: { filter: summaryFilter ?? null },
     fetchPolicy: 'cache-and-network',
   });
+  const currency = summaryQ.data?.publicFinanceSettings?.currency_symbol ?? '';
+  const money = (value: number) =>
+    formatMoney(value, { symbol: currency, decimals: 2, grouping: false });
 
   const fetchRows = useCallback(
     async (q: TableQueryState) => {
@@ -41,12 +64,14 @@ export default function ExpenseManagementPage() {
         summaryKeyRef.current = key;
         setSummaryFilter(filter);
       }
-      const { data } = await client.query<any>({
+      const { data } = await client.query<{
+        expensesTable: { rows: ExpenseRecord[]; total: number };
+      }>({
         query: EXPENSES_TABLE,
         variables: tableQueryToGql(q),
         fetchPolicy: 'network-only',
       });
-      return { rows: data.expensesTable.rows as any[], total: data.expensesTable.total as number };
+      return { rows: data?.expensesTable.rows ?? [], total: data?.expensesTable.total ?? 0 };
     },
     [client],
   );
@@ -54,7 +79,7 @@ export default function ExpenseManagementPage() {
   const handleSaved = () => {
     refetchRef.current?.();
     summaryQ.refetch().catch((e) =>
-      logs.portal['finance'].warn('ExpenseManagementPage', 'handleSaved', {
+      logs.portal.finance.warn('ExpenseManagementPage', 'handleSaved', {
         error: e,
         msg: 'Expense summary refresh failed',
       }),
@@ -64,7 +89,7 @@ export default function ExpenseManagementPage() {
     setActive(null);
     setDrawerOpen(true);
   };
-  const openRow = useCallback((expense: any) => {
+  const openRow = useCallback((expense: ExpenseRecord) => {
     setActive(expense);
     setDrawerOpen(true);
   }, []);
@@ -73,27 +98,11 @@ export default function ExpenseManagementPage() {
 
   return (
     <Box>
-      <Stack
-        direction="row"
-        spacing={1.5}
-        sx={{
-          alignItems: "center",
-          mb: 3
-        }}>
-        <MenuBookIcon color="primary" sx={{ fontSize: 28 }} />
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" sx={{
-            fontWeight: 700
-          }}>
-            Duncit Expense Management
-          </Typography>
-          <Typography variant="body2" sx={{
-            color: "text.secondary"
-          }}>
-            Track internal business expenses and refunds. Click a row to view, edit or refund.
-          </Typography>
-        </Box>
-      </Stack>
+      <PageHeader
+        title={t('finance.expenseManagement.title')}
+        subtitle={t('finance.expenseManagement.subtitle')}
+        sx={{ mb: 3 }}
+      />
 
       <Stack spacing={2}>
         {summary && (
@@ -103,31 +112,28 @@ export default function ExpenseManagementPage() {
                 direction="row"
                 spacing={1}
                 useFlexGap
-                sx={{
-                  flexWrap: "wrap",
-                  alignItems: "center"
-                }}>
-                <Chip label={`Gross ${CURRENCY}${summary.gross_total.toFixed(2)}`} />
-                <Chip color="warning" label={`Refunds ${CURRENCY}${summary.refund_total.toFixed(2)}`} />
-                <Chip color="success" label={`Net ${CURRENCY}${summary.total.toFixed(2)}`} />
+                sx={{ flexWrap: 'wrap', alignItems: 'center' }}
+              >
+                <Chip label={`${t('finance.expenseManagement.gross')} ${money(summary.gross_total)}`} />
+                <Chip
+                  color="warning"
+                  label={`${t('finance.common.refund')} ${money(summary.refund_total)}`}
+                />
+                <Chip color="success" label={`${t('finance.expenseManagement.net')} ${money(summary.total)}`} />
                 <Box sx={{ flex: 1 }} />
-                <Typography variant="caption" sx={{
-                  color: "text.secondary"
-                }}>
-                  {summary.count} expense{summary.count === 1 ? '' : 's'}
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  {t('finance.expenseDashboard.expenseCount', { vars: { count: summary.count } })}
                 </Typography>
               </Stack>
               {summary.by_category.length > 0 && (
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  useFlexGap
-                  sx={{
-                    flexWrap: "wrap",
-                    mt: 1.5
-                  }}>
-                  {summary.by_category.map((c: any) => (
-                    <Chip key={c.category} size="small" variant="outlined" label={`${labelize(c.category)}: ${CURRENCY}${c.total.toFixed(2)}`} />
+                <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap', mt: 1.5 }}>
+                  {summary.by_category.map((row) => (
+                    <Chip
+                      key={row.category}
+                      size="small"
+                      variant="outlined"
+                      label={`${categories.labelOf(row.category)}: ${money(row.total)}`}
+                    />
                   ))}
                 </Stack>
               )}
@@ -138,17 +144,23 @@ export default function ExpenseManagementPage() {
         <ExpenseTable
           fetchRows={fetchRows}
           refetchRef={refetchRef}
-          currency={CURRENCY}
+          currency={currency}
           onRowClick={openRow}
           toolbarActions={
             <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
-              New expense
+              {t('finance.expenseManagement.newExpense')}
             </DuncitButton>
           }
         />
       </Stack>
 
-      <ExpenseDrawer open={drawerOpen} expense={active} onClose={() => setDrawerOpen(false)} onSaved={handleSaved} />
+      <ExpenseDrawer
+        open={drawerOpen}
+        expense={active}
+        currency={currency}
+        onClose={() => setDrawerOpen(false)}
+        onSaved={handleSaved}
+      />
     </Box>
   );
 }

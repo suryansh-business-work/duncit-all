@@ -3,6 +3,11 @@ import {
   BADGE_GOAL_KEY,
   BADGE_WINDOW,
   BADGE_WINDOW_KEY,
+  EMPLOYEE_EXPENSE_CATEGORIES,
+  EMPLOYEE_EXPENSE_SELECTION,
+  EMPLOYEE_EXPENSE_STATUSES,
+  EMPLOYEE_EXPENSE_STATUS_COLORS,
+  EMPLOYEE_EXPENSE_STATUS_KEYS,
   HOST_FREE_SPOT_NOTE,
   POD_FEEDBACK_REMINDER_OPTIONS,
   allZero,
@@ -260,6 +265,14 @@ interface HostSectionsMock {
 }
 
 /** A pod's money, as the host sizing it sees it. */
+/** One employee expense claim, as both consoles read it back. */
+interface ClaimMock {
+  category: string;
+  status: string;
+  amount: number;
+  merchant: string;
+}
+
 interface SpotsMock {
   total_spots: number;
   price_per_spot: number;
@@ -1330,6 +1343,32 @@ export default defineDemos('utils', [
         'Status filter rows': podRowStatusOptions(clubAdminT).map((option) => option.label),
         'Audit entry reads': `${podAuditActionLabel(mock.audit.action, clubAdminT)} by ${podAuditSourceLabel(mock.audit.source, clubAdminT)} — AI risk ${podAuditRiskLabel(mock.audit.ai_risk, clubAdminT)}`,
         'Dashboard subtitle': clubAdminLabels(clubAdminT).dashboard.subtitle,
+      };
+    },
+  }),
+
+  defineDemo<ClaimMock>({
+    id: 'employee-expense',
+    title: 'One expense claim, read by two consoles',
+    note:
+      'Change status to REJECTED and the chip colour AND the translation key move together — the Employee console and the Finance queue read the same two maps, so neither can call it something the other does not. Set category to something absent from the list and it is a code the server would drop.',
+    mock: {
+      category: 'TRAVEL',
+      status: 'PENDING',
+      amount: 1840,
+      merchant: 'Uber India',
+    },
+    compute: (mock) => {
+      const status = mock.status as keyof typeof EMPLOYEE_EXPENSE_STATUS_COLORS;
+      const known = EMPLOYEE_EXPENSE_CATEGORIES.some((category) => category === mock.category);
+      return {
+        'Claim reads': `${mock.merchant} — ${formatMoney(mock.amount)}`,
+        'Chip colour': EMPLOYEE_EXPENSE_STATUS_COLORS[status] ?? '(not a claim status)',
+        'Copy key both consoles render': EMPLOYEE_EXPENSE_STATUS_KEYS[status] ?? '(not a claim status)',
+        'Every state a claim can be in': [...EMPLOYEE_EXPENSE_STATUSES],
+        'Category the server would keep': known ? mock.category : 'OTHER — the server drops what it does not know',
+        'Categories offered': [...EMPLOYEE_EXPENSE_CATEGORIES],
+        'Fields both queries ask for': EMPLOYEE_EXPENSE_SELECTION.trim().split(/\s+/),
       };
     },
   }),

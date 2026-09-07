@@ -10,6 +10,7 @@ import { CONTENT_REPORT_BUNDLE } from './bundles/content-report';
 import { CRM_BUNDLE } from './bundles/crm';
 import { DEVELOPERS_BUNDLE } from './bundles/developers';
 import { EARNINGS_BUNDLE } from './bundles/earnings';
+import { EMPLOYEE_EXPENSE_BUNDLE } from './bundles/employee-expense';
 import { POD_TIMELINE_BUNDLE } from './bundles/pod-timeline';
 import { FINANCE_BUNDLE } from './bundles/finance';
 import { GRIEVANCE_BUNDLE } from './bundles/grievance';
@@ -78,6 +79,7 @@ export {
   CHANGE_REQUEST_BUNDLE,
   DEVELOPERS_BUNDLE,
   EARNINGS_BUNDLE,
+  EMPLOYEE_EXPENSE_BUNDLE,
   POD_TIMELINE_BUNDLE,
   FINANCE_BUNDLE,
   GRIEVANCE_BUNDLE,
@@ -125,6 +127,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   crm: CRM_BUNDLE,
   developers: DEVELOPERS_BUNDLE,
   earnings: EARNINGS_BUNDLE,
+  employeeExpense: EMPLOYEE_EXPENSE_BUNDLE,
   podTimeline: POD_TIMELINE_BUNDLE,
   finance: FINANCE_BUNDLE,
   grievance: GRIEVANCE_BUNDLE,

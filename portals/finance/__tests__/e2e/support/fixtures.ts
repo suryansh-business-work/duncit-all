@@ -38,3 +38,20 @@ export const baseMocks = (user: Record<string, unknown> = financeUser) => ({
   SessionMe: { data: { me: user } },
   DashboardMe: { data: { me: user } },
 });
+
+/**
+ * What the Pod Profit Calculator asks for on top of the boot queries.
+ *
+ * The page saves and reloads calculations, so it reads its saved rows as soon
+ * as it mounts. Unmocked, `cy.mockGraphql` answers with "No mock registered for
+ * operation 'PodCalculators'" and the page renders that error INSTEAD of the
+ * calculator — which is why every assertion in that spec failed on content it
+ * could never have found.
+ *
+ * An empty list on purpose: these specs exercise the live finance engine, not
+ * the saved-report list, and starting from no saved rows is the state a first
+ * visit is actually in.
+ */
+export const calculatorMocks = () => ({
+  PodCalculators: { data: { podCalculators: [] } },
+});

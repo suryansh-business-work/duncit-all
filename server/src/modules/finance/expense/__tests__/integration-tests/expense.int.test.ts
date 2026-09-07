@@ -71,10 +71,18 @@ describe('expenseService integration', () => {
     expect(page2.page_size).toBe(1);
   });
 
-  it('normalizes unknown category/method and rejects bad amount/date', async () => {
+  // Categories and payment methods are configured rows now (ExpenseOption),
+  // not a compiled enum, so a key the current list does not offer is STORED
+  // rather than rewritten: retiring an option must not re-classify the expenses
+  // already filed under it. An empty key still falls back to a default.
+  it('keeps the submitted category/method and rejects bad amount/date', async () => {
     const e = await seed({ category: 'NONSENSE', payment_method: 'BITCOIN', amount: 42 });
-    expect(e.category).toBe('OTHER');
-    expect(e.payment_method).toBe('BANK_TRANSFER');
+    expect(e.category).toBe('NONSENSE');
+    expect(e.payment_method).toBe('BITCOIN');
+
+    const blank = await seed({ category: '', payment_method: '', amount: 42 });
+    expect(blank.category).toBe('MISCELLANEOUS');
+    expect(blank.payment_method).toBe('BANK_TRANSFER');
 
     await expect(seed({ amount: 0 })).rejects.toThrow(/greater than 0/i);
     await expect(seed({ date: 'not-a-date' })).rejects.toThrow(/valid expense date/i);

@@ -275,3 +275,233 @@ export const bootFixtures = {
   PublicPoliciesNav: { publicPolicies: [] },
   HomeFollowedUsers: { publicUsersByIds: [] },
 };
+
+/**
+ * "Earn with Duncit" — roles and onboarding meetings, which is everything the
+ * journey cards read (`earnBoxState`). One builder rather than a fixture per
+ * state: which card is locked is decided by these two lists alone, so a spec
+ * says what the user IS and the page follows.
+ */
+export function earnFixtures(
+  over: { roles?: string[]; meetings?: unknown[]; productsVisible?: boolean } = {},
+) {
+  const productsVisible = over.productsVisible ?? true;
+  const roles = over.roles ?? ['USER'];
+  // The roles go on EVERY query that returns `me`, not just EarnMe. Apollo
+  // normalises all of them to the same `User:u1`, so a boot query still
+  // answering `['USER']` lands after EarnMe and overwrites the roles under the
+  // page: the "Already enabled" chip and its CTA appear and then vanish
+  // mid-click. One user, one set of roles — which is what the server returns.
+  const viewer = { ...me, roles };
+  return {
+    ...bootFixtures,
+    MwebSessionMe: { me: viewer },
+    AppHeader: { ...appHeader, me: viewer },
+    PublicFeatureFlags: {
+      publicFeatureFlags: [
+        { key: 'is_product_visible', enabled: productsVisible },
+        { key: 'tour_guide', enabled: true },
+      ],
+    },
+    EarnMe: {
+      me: { user_id: viewer.user_id, roles },
+      myMeetings: over.meetings ?? [],
+    },
+  };
+}
+
+/** An onboarding meeting for one journey. `status`/`approval_status` are what
+ * move a card between "Meeting scheduled" and "Onboarding in process." */
+export function earnMeeting(over: Record<string, unknown> = {}) {
+  return {
+    id: 'mtg1',
+    request_no: 'DUN-MTG-000001',
+    kind: 'HOST',
+    status: 'SCHEDULED',
+    approval_status: 'NONE',
+    onboarded_status: null,
+    scheduled_at: future(2),
+    requested_at: past(1),
+    reschedule_count: 0,
+    ...over,
+  };
+}
+
+/** An approved, active host profile. The create-pod gate accepts EITHER the
+ * HOST role or this, so a spec can exercise the legacy host that has one and
+ * not the other. */
+export const myHost = {
+  id: 'host1',
+  status: 'APPROVED',
+  is_active: true,
+  /*
+    One id, `cat1`, has to be three things at once: the club's `category_id`,
+    this host's `sub_category_id`, and the `subCategories` row.
+
+    `filterClubs` keys a host category as `super|SUB` and then asks whether the
+    club's `super|category_id` is in that set, and the stepper looks a pod's
+    minimum pax up by the same club `category_id`. Crossed over, the club simply
+    never appears in the picker and nothing on screen says why.
+  */
+  host_categories: [
+    {
+      super_category_id: 'sc1',
+      category_id: 'cat1',
+      sub_category_id: 'cat1',
+      super_category_name: 'Play',
+      category_name: 'Music',
+      sub_category_name: 'Music',
+    },
+  ],
+};
+
+/**
+ * A venue the pod's club is matched to, with one named space.
+ *
+ * A named `capacity_items` entry rather than the whole-venue fallback, because
+ * a space's label is what the slot list is filtered by — the two have to line
+ * up (`slot.space_label === space.label`) or the calendar renders empty with
+ * nothing saying why.
+ */
+export const podVenue = {
+  id: 'venue1',
+  owner_user_id: 'venue-owner-1',
+  location_id: 'loc1',
+  venue_name: 'Indiranagar Studio',
+  venue_type: 'Studio',
+  capacity: 30,
+  capacity_items: [{ label: 'Main Hall', capacity: 24 }],
+  cover_image_url: 'https://img/venue.jpg',
+  city: 'Bengaluru',
+  locality: 'Indiranagar',
+  address_line1: '100 Feet Road',
+  state: 'Karnataka',
+  postal_code: '560038',
+  country: 'India',
+  lat: 12.97,
+  lng: 77.64,
+  owner_name: 'Venue Owner',
+  owner_phone: '9999999999',
+  owner_email: 'venue@duncit.com',
+  is_active: true,
+};
+
+/** One published slot on {@link podVenue}'s Main Hall. Picking it is what sets
+ * the pod's start and end — a physical pod never types a date. */
+export const venueSlot = {
+  id: 'slot1',
+  start_at: future(7),
+  end_at: new Date(Date.now() + 7 * DAY + 2 * 3_600_000).toISOString(),
+  whole_day: false,
+  price: 2000,
+  space_label: 'Main Hall',
+  capacity: 24,
+  status: 'AVAILABLE',
+};
+
+/**
+ * Boot fixtures for `/create-pod`.
+ *
+ * `CreatePodOptions` is one query carrying everything the stepper needs, so the
+ * whole page hangs off it — and the two things that decide what renders at all
+ * are `me.roles` and `myHost`. Both are overridable, because "no host profile"
+ * is a state this page exists to handle rather than an error.
+ */
+export function createPodFixtures(over: Record<string, unknown> = {}) {
+  /*
+    Apollo normalises every `me` in the app to the same `User:u1`, so the boot
+    queries have to agree with this page's about who the viewer is.
+
+    While they disagreed — the boot queries saying `['USER']`, this page saying
+    `['USER','HOST']` — whichever response landed LAST decided whether the
+    stepper rendered, and the suite failed roughly one run in three with the
+    host gate refusing a host. That is a fixture bug, not a flaky page: a real
+    server answers one thing about one user.
+  */
+  const podViewer = (over.me as Record<string, unknown> | undefined) ?? {
+    user_id: me.user_id,
+    roles: ['USER', 'HOST'],
+    selected_location_id: 'loc1',
+  };
+  const viewer = { ...me, ...podViewer };
+  return {
+    ...bootFixtures,
+    MwebSessionMe: { me: viewer },
+    AppHeader: { ...appHeader, me: viewer },
+    CreatePodOptions: {
+      me: podViewer,
+      clubs: [
+        {
+          ...clubs[0],
+          location_id: 'loc1',
+          locality: 'Indiranagar',
+          matched_venues_count: 1,
+          matched_venues: [{ id: 'venue1' }],
+        },
+      ],
+      locations: [{ ...locations[0], active_club_count: 1 }],
+      publicVenues: [podVenue],
+      myHost,
+      subCategories: [{ id: 'cat1', min_pax: 2 }],
+      availablePodProducts: [],
+      ...over,
+    },
+  };
+}
+
+/**
+ * Everything the stepper needs to walk all four steps and publish.
+ *
+ * The three writes are separate from the reads because a full cycle is the only
+ * thing that reaches them: the draft is saved on every step change, the content
+ * is screened before publishing, and the publish itself decides where the host
+ * lands. `venue_approval_status` is the fork — PENDING sends them to the
+ * waiting page, anything else to Host Management.
+ */
+export function createPodCycleFixtures(
+  over: { venueApproval?: string; violations?: unknown[] } = {},
+) {
+  return {
+    ...createPodFixtures(),
+    /*
+      The walk starts from a draft carrying ONE thing: a cover image.
+
+      A pod cannot be published without one — `refinePublish` runs `hasImageLine`
+      over `media_text` — and the cover field is an upload widget, not somewhere
+      a URL can be typed. So a spec that filled every visible field would still
+      be refused, silently, by a rule belonging to a step it had already left.
+      Resuming a draft is how a host who attached a cover earlier comes back to
+      finish, which is exactly the state this walks from. Everything else on all
+      four steps is typed or clicked.
+    */
+    MyPodDraftForEdit: {
+      myPodDraft: {
+        id: 'draft1',
+        step: 0,
+        // The city too: hydrating a draft REPLACES the initial values, so it
+        // skips the `selected_location_id` default a fresh form gets and step 2
+        // would refuse to close with no location on a pod the host had already
+        // placed. A real saved draft carries the city it was started in.
+        payload: JSON.stringify({
+          media_text: 'https://img/pod-cover.jpg',
+          location_id: 'loc1',
+        }),
+      },
+    },
+    CreatePodVenueSlots: { venueAvailableSlots: [venueSlot] },
+    SavePodDraft: { savePodDraft: { id: 'draft1' } },
+    ModeratePodContent: {
+      moderatePodContent: {
+        allowed: (over.violations ?? []).length === 0,
+        violations: over.violations ?? [],
+      },
+    },
+    PublishPodDraft: {
+      publishPodDraft: {
+        id: 'pod-new',
+        venue_approval_status: over.venueApproval ?? 'PENDING',
+      },
+    },
+  };
+}
+

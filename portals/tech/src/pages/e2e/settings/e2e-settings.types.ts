@@ -36,6 +36,10 @@ export const e2eSettingsSchema = (messages: E2eSettingsMessages) =>
       // back, so a field that always wrote would wipe it on every save.
       password: z.string(),
       identity_phone: z.string().trim(),
+      // No validation of its own: it is a switch, and its consequences are
+      // spelled out beside it rather than guarded here.
+      mute_communications: z.boolean(),
+      otp_bypass: z.boolean(),
       // Empty clears the channel, which is how a run goes back to being
       // recorded here and announced nowhere.
       slack_channel: z
@@ -79,6 +83,8 @@ export const toFormValues = (settings: E2eRunSettings): E2eSettingsValues => ({
   email_domain: settings.email_domain,
   password: '',
   identity_phone: settings.identity_phone,
+  mute_communications: settings.mute_communications,
+  otp_bypass: settings.otp_bypass,
   slack_channel: settings.slack_channel ?? '',
 });
 

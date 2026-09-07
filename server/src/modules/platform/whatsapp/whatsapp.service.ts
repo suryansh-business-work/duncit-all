@@ -7,6 +7,7 @@ import {
   listCampaigns,
   listTemplates,
 } from '@modules/platform/aisensy/aisensy.project';
+import { communicationsMuted, MUTED_REASON } from '@modules/platform/e2eRun/e2eRun.mute';
 import { WA_EVENT_BY_KEY, isRequiredWaCategory, type WaEvent } from './whatsapp.events';
 import {
   assetFor,
@@ -295,6 +296,12 @@ async function deliver(input: WaSendInput): Promise<WaSendOutcome> {
     logs.server.error('whatsapp', 'send', { error: new Error(`Unknown event ${input.event}`) });
     return record(null, input, destination, skip('Unknown event'));
   }
+
+  // Held for an E2E run, and asked FIRST — a muted platform should not pay for
+  // the settings read, and a run that sends nothing must not be able to send
+  // something because one scenario's switch says it may. Recorded like every
+  // other skip, so the Logs console still shows what the run would have sent.
+  if (await communicationsMuted()) return record(event, input, destination, skip(MUTED_REASON));
 
   const switches = await switchesFor(event.key);
   if (!switches.on) return record(event, input, destination, skip(switches.reason));

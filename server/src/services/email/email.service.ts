@@ -12,6 +12,7 @@ import type { EmailLogSource } from '@modules/content/emailLog/emailLog.model';
 import { mailPreferenceService } from '@modules/content/mailPreference/mailPreference.service';
 import { mailPreferenceUrl } from '@modules/content/mailPreference/mailPreference.token';
 import { commPreferenceService } from '@modules/access/commPreference/commPreference.service';
+import { communicationsMuted, MUTED_REASON } from '@modules/platform/e2eRun/e2eRun.mute';
 import { joinUrl } from '@utils/url';
 import { getMailConfigs, getUrlConfigs } from '../../config/url-configs';
 import { TEMPLATE_CATEGORIES, TEMPLATE_FOOTER_NOTES } from './template-categories';
@@ -311,6 +312,13 @@ export async function sendEmail(opts: {
   // The cheapest failures first, so a message with nobody to send to never
   // reaches a renderer or a provider — and is still on the record.
   if (!opts.to?.trim()) return notSent('No recipient address', 'FAILED');
+
+  // Held for an E2E run. Above the opt-out gate rather than below it because
+  // this decision is about the PLATFORM, not the recipient: while it is on,
+  // nothing leaves, including the required categories nobody can unsubscribe
+  // from. SKIPPED and on the record, so Emails > Logs still shows every mail
+  // the run would have sent.
+  if (await communicationsMuted()) return notSent(MUTED_REASON, 'SKIPPED');
 
   // THE opt-out gate for every templated email in the product. It sits here and
   // not at the forty call sites for the same reason the email log does: a rule

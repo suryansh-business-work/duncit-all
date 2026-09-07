@@ -9,6 +9,7 @@ import type { SlackChannel } from '../../slack/queries';
 import type { E2eRunSettings, E2eSuite } from '../queries';
 import ScheduleFields from './ScheduleFields';
 import IdentityFields from './IdentityFields';
+import OverrideFields from './OverrideFields';
 import {
   e2eSettingsSchema,
   toFormValues,
@@ -95,6 +96,15 @@ export default function E2eSettingsForm({
           errors={formState.errors}
           passwordSet={settings.password_set}
         />
+
+        <Divider />
+        <Stack spacing={0.5}>
+          <Typography variant="subtitle2">{t('tech.e2e.overridesHeading')}</Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            {t('tech.e2e.overridesHint')}
+          </Typography>
+        </Stack>
+        <OverrideFields control={control} />
 
         <Divider />
         <Stack spacing={0.5}>

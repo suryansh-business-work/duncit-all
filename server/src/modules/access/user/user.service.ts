@@ -603,6 +603,37 @@ async function syncRevokedOnboarding(userId: string, removedRoles: string[]) {
   }
 }
 
+/**
+ * Give a freshly granted onboarding role the record that role is supposed to
+ * have.
+ *
+ * Club Admin is the only one that needs it: Host, Venue Partner and E-Commerce
+ * Brand each draft their entity when somebody APPLIES, so by the time the role
+ * is granted the record already exists. A Club Admin has no application —
+ * granting the role from the Admin portal IS the appointment — so without this
+ * the person holds the role, opens the Partners console and works, while the
+ * Onboarded Club Admins table and every picker built on that record show
+ * nobody. This is the half that was missing.
+ *
+ * Best-effort and idempotent, exactly like the revoke side: a role write must
+ * not fail because a downstream record could not be drafted.
+ */
+async function syncGrantedOnboarding(userId: string, addedRoles: string[]) {
+  if (!addedRoles.includes('CLUB_ADMIN')) return;
+  try {
+    const { clubAdminProfileService } = await import(
+      '@modules/clubs/clubAdminProfile/clubAdminProfile.service'
+    );
+    await clubAdminProfileService.ensureForUser(userId);
+  } catch (err) {
+    logs.server.error('user.replaceUserRoles', 'syncGrantedOnboarding', {
+      error: err,
+      msg: 'club admin record could not be drafted',
+      userId,
+    });
+  }
+}
+
 // Replace the entire role set for a user. Authoritative writes go to
 // user_roles; the role_keys + assigned_zones cache on the user doc is updated
 // in the same transaction so JWT issuance and hot reads stay correct.
@@ -677,6 +708,9 @@ async function replaceUserRoles(
   if (removed.length) await syncRevokedOnboarding(userId, removed);
   // …and welcome freshly granted partner roles (mail + push, best-effort).
   const added = normalized.filter((r) => !oldRoles.includes(r));
+  // The record first, so the welcome mail never arrives before the console it
+  // points at has anything to show.
+  if (added.length) await syncGrantedOnboarding(userId, added);
   if (added.length) await notifyPartnerAccessGranted(userId, added);
   // Admin access is a role too, and it changes from more than one screen.
   await notifyAdminAccessChange(userId, added, removed);

@@ -32,6 +32,10 @@ export const telemetryResolvers = {
       requireRole(ctx, TELEMETRY_READ);
       return telemetryService.logsTable(args.query);
     },
+    telemetryLog: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, TELEMETRY_READ);
+      return telemetryService.telemetryLog(args.id);
+    },
     bugsTable: (_p: unknown, args: { query?: TableQueryInput | null }, ctx: GraphQLContext) => {
       requireRole(ctx, TELEMETRY_READ);
       return telemetryService.bugsTable(args.query);

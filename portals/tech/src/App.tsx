@@ -16,6 +16,7 @@ import TelemetryDashboardPage from './pages/telemetry-dashboard';
 import BugsPage from './pages/bugs-page';
 import BugDetailPage from './pages/bug-detail-page';
 import TelemetryLogsPage from './pages/telemetry-logs-page';
+import TelemetryLogDetailPage from './pages/telemetry-log-detail-page';
 import ErrorLogsPage from './pages/error-logs-page';
 import TelemetryLogsSettingsPage from './pages/telemetry-logs-settings';
 import ServerInfoPage from './pages/server/ServerInfoPage';
@@ -69,6 +70,8 @@ export default function App() {
         {/* One bug at its own address — reloadable, bookmarkable, pasteable. */}
         <Route path="/telemetry/bugs/:bugId" element={authed(<BugDetailPage />)} />
         <Route path="/telemetry/logs" element={authed(<TelemetryLogsPage />)} />
+        {/* One log at its own address — reloadable, bookmarkable, pasteable. */}
+        <Route path="/telemetry/log/:logId" element={authed(<TelemetryLogDetailPage />)} />
         <Route path="/telemetry/error-logs" element={authed(<ErrorLogsPage />)} />
         <Route path="/telemetry/logs-settings" element={authed(<TelemetryLogsSettingsPage />)} />
         {/* The old paths, kept working for bookmarks. */}

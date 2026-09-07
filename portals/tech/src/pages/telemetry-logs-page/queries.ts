@@ -65,6 +65,19 @@ export const TELEMETRY_LOGS_TABLE = gql`
   ${LOG_FIELDS}
 `;
 
+/**
+ * One log at its own address. Reads the same fragment as the table, so the
+ * page opened from a pasted link shows exactly what the row would have.
+ */
+export const TELEMETRY_LOG_BY_ID = gql`
+  query TelemetryLogById($id: ID!) {
+    telemetryLog(id: $id) {
+      ...TelemetryLogFields
+    }
+  }
+  ${LOG_FIELDS}
+`;
+
 /** One level's logs, newest first — the JSON export (server-bounded). */
 export const TELEMETRY_LOGS_EXPORT = gql`
   query TelemetryLogsExport($level: String, $limit: Int) {

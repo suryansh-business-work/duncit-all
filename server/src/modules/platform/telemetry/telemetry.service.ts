@@ -680,6 +680,18 @@ export const telemetryService = {
     return { rows: docs.map(logPub), total, page, page_size };
   },
 
+  /**
+   * One persisted log by id — what the Tech portal's log page reads.
+   *
+   * A log is read at its own address rather than in a dialog over the table,
+   * so the row has to be fetchable on its own: a pasted link arrives with an
+   * id and nothing else.
+   */
+  async telemetryLog(id: string) {
+    const doc = await TelemetryLogModel.findById(id);
+    return doc ? logPub(doc) : null;
+  },
+
   async bugsTable(input?: TableQueryInput | null) {
     const { docs, total, page, page_size } = await runTableQuery<IBug>(
       BugModel,

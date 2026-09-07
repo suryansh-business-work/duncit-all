@@ -901,7 +901,6 @@
   "portals/tech/src/pages/telemetry-dashboard/queries.ts": 3,
   "portals/tech/src/pages/telemetry-logs-page/index.tsx": 1,
   "portals/tech/src/pages/telemetry-logs-page/log-io.ts": 2,
-  "portals/tech/src/pages/telemetry-logs-page/LogDetailDialog.tsx": 1,
   "portals/tech/src/pages/telemetry-logs-page/LogImportExport.tsx": 4,
   "portals/tech/src/pages/telemetry-logs-page/LogsTable.tsx": 1,
   "portals/tech/src/pages/telemetry-logs-page/queries.ts": 4,

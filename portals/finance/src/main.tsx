@@ -5,7 +5,7 @@ import { logs } from '@duncit/logs';
 // Via @duncit/app-settings, which already re-exports the i18n package — the
 // portal gains the copy without gaining a dependency (and without the matching
 // Dockerfile COPY that a new @duncit/* dep would silently require).
-import { FINANCE_BUNDLE, flattenCatalogue } from '@duncit/app-settings';
+import { EMPLOYEE_EXPENSE_BUNDLE, FINANCE_BUNDLE, flattenCatalogue } from '@duncit/app-settings';
 import { urlConfigs } from './config/url-configs';
 import { apolloClient } from './apollo';
 import { appConfig } from './config/app-config';
@@ -25,7 +25,9 @@ mountPortal({
   // This portal's OWN namespace, layered over the shell chrome's. Shipping it
   // here is what compiles the copy into the build, so the payment screens read
   // correctly offline and before the Localization API answers (rule 38).
-  i18nFallback: flattenCatalogue(FINANCE_BUNDLE),
+  // EMPLOYEE_EXPENSE_BUNDLE is shared with the Employee console, which files
+  // the claims this portal decides on — one namespace, shipped by both ends.
+  i18nFallback: flattenCatalogue({ ...FINANCE_BUNDLE, ...EMPLOYEE_EXPENSE_BUNDLE }),
   loadUser: createSessionUserLoader(apolloClient),
   extras: <NotifyHost />,
   // Same arrangement as the other portals: useConfirm() needs this above the

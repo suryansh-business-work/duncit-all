@@ -64,6 +64,7 @@ export const appConfig = {
     },
     { label: 'Duncit Expenses', labelKey: 'shell.nav.duncitExpenses', to: '/ledger', icon: 'menuBook' },
     { label: 'Pod Expenses', labelKey: 'shell.nav.podExpenses', to: '/pod-expenses', icon: 'receipt' },
+    { label: 'Employee Expenses', labelKey: 'shell.nav.employeeExpenses', to: '/employee-expenses', icon: 'expenses' },
     {
       label: 'Duncit Coin', labelKey: 'shell.nav.duncitCoin',
       icon: 'wallet',

@@ -272,9 +272,20 @@ jobs:
           # No `--` separator: pnpm forwards it literally, which would hand
           # Cypress a bare `--` argument. `pnpm e2e --browser chrome` appends
           # cleanly (verified: argv becomes ["--browser","chrome"]).
+          #
+          # NO QUOTES around the reporter options, and this is not a style
+          # choice. `command:` is not run through a shell — the action splits
+          # the string itself and hands the pieces to the process, so a quoted
+          # argument arrives WITH its quotes still attached. Cypress then reads
+          # `"mochaFile=…"` as one opaque string instead of a key=value pair and
+          # every leg dies before a single spec runs, on
+          # `Expected reporterOptions to be a plain object`. The value has no
+          # spaces in it, so it needs no quoting. (The native-web leg below runs
+          # through `run: |`, where bash does strip them, which is why the same
+          # line is correct there and wrong here.)
           command: >-
             pnpm e2e --browser chrome --reporter junit
-            --reporter-options "mochaFile=cypress-artifacts/junit/results-[hash].xml"
+            --reporter-options mochaFile=cypress-artifacts/junit/results-[hash].xml
           start: pnpm preview
           wait-on: 'http://localhost:${{ matrix.port }}'
           wait-on-timeout: 120

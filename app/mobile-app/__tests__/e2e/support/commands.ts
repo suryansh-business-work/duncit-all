@@ -39,6 +39,18 @@ function resolve(fixtures: GqlFixtures, op: GqlBody) {
   const data = typeof fx === 'function' ? fx(op.variables ?? {}) : fx;
   // Unmocked operations resolve to empty data — the app's guards render the
   // corresponding empty state instead of crashing.
+  //
+  // But `{}` is also how a screen reading `data.thing.field` gets a TypeError,
+  // and the app catches that in an error boundary, so the whole failure shows
+  // up as "Something went wrong" with nothing naming the cause. Every unmocked
+  // operation is therefore NAMED in the command log — it is the first thing to
+  // check on a spec that renders the error card, and it is what the finance
+  // harness says out loud (its unmocked branch answers with the operation
+  // name). Logged, not thrown: three specs here rely on the empty-data
+  // behaviour for screens they are not testing.
+  if (op.operationName && fx === undefined) {
+    Cypress.log({ name: 'gql:unmocked', message: op.operationName });
+  }
   return { data: data ?? {} };
 }
 

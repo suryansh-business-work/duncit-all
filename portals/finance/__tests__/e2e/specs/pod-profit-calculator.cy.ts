@@ -1,4 +1,4 @@
-import { baseMocks } from '../support/fixtures';
+import { baseMocks, calculatorMocks } from '../support/fixtures';
 
 /**
  * Pod Profit Calculator journey (converted from the Playwright
@@ -53,7 +53,7 @@ const setNumber = (label: string, next: string) => {
 
 describe('Pod profit calculator', () => {
   beforeEach(() => {
-    cy.mockGraphql(baseMocks());
+    cy.mockGraphql({ ...baseMocks(), ...calculatorMocks() });
     cy.visitAuthed('/calculators/pod-profit');
     cy.contains('Pod Profit Calculator').should('be.visible');
   });

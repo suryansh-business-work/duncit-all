@@ -144,6 +144,20 @@ export function filledButtonUrl(url: string, param: number, value: string): stri
 export const templateRowId = (template: AisensyTemplate) =>
   `${template.name}-${template.language}`;
 
+/**
+ * The campaigns that send one template.
+ *
+ * Nothing is ever logged against a template — a send addresses a CAMPAIGN — so
+ * a template's send count is the sum of these, and clicking that count narrows
+ * the Logs to exactly this list. An orphan template has none, which is the same
+ * "nothing can go out on this" the banner above the table already says.
+ */
+export const campaignsSending = (
+  templateName: string,
+  campaigns: readonly AisensyCampaign[]
+): string[] =>
+  campaigns.filter((campaign) => campaign.template_name === templateName).map((c) => c.name);
+
 export interface ApprovedTemplateGroups {
   /** Approved templates no campaign points at. A send addresses a CAMPAIGN,
    * never a template, so these cannot go out at all until one exists — and

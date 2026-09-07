@@ -197,6 +197,18 @@ export const e2eRunTypeDefs = gql`
     password_set: Boolean!
     identity_phone: String!
     """
+    Hold every outbound email and WhatsApp message inside the platform. Each is
+    still recorded in its own log with the reason it did not go. It does NOT
+    reveal one-time codes — that is otp_bypass.
+    """
+    mute_communications: Boolean!
+    """
+    Return one-time codes in the API response instead of sending them, so a
+    suite can finish a signup or a passwordless sign-in. Expiry, attempt limit
+    and single use are unchanged. Never on for a production database.
+    """
+    otp_bypass: Boolean!
+    """
     Slack channel ID a finished run announces to. Stored on the SLACK env entry
     beside the bot token, so Environment Variables shows it too. Empty means the
     result is recorded here and announced nowhere.
@@ -355,6 +367,10 @@ export const e2eRunTypeDefs = gql`
     """
     password: String
     identity_phone: String!
+    "Hold every outbound email and WhatsApp message inside the platform."
+    mute_communications: Boolean!
+    "Return one-time codes in the API response instead of sending them."
+    otp_bypass: Boolean!
     """
     Slack channel ID finished runs announce to. Empty clears it. Written onto
     the SLACK env entry rather than this feature's own settings, so every Slack

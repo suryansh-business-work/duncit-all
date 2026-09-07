@@ -160,8 +160,19 @@ export interface PhoneOtpRequestResult {
 export const anyDelivered = (deliveries: readonly IOtpDelivery[]) =>
   deliveries.some((d) => d.status === 'SENT');
 
-/** True when nothing actually left the building, so the code must be shown. */
-const nothingDelivered = (deliveries: readonly IOtpDelivery[]) => !anyDelivered(deliveries);
+/**
+ * True when the platform DELIBERATELY did not send the code, so it must be
+ * shown instead.
+ *
+ * Every medium has to be a deliberate stub — a wired-up transport that has no
+ * provider (SMS), or the E2E bypass. It is deliberately NOT "nothing was
+ * delivered": a code that FAILED to send is a code that went nowhere, not a
+ * code the platform chose to reveal, and treating the two the same meant a
+ * mailer outage or a bad AiSensy key handed the fixed test code back for any
+ * address that asked — including a login code for somebody else's account.
+ */
+const deliberatelyStubbed = (deliveries: readonly IOtpDelivery[]) =>
+  deliveries.length > 0 && deliveries.every((d) => d.status === 'STUBBED');
 
 /**
  * The mediums that survive the recipient's own channel switches.
@@ -258,7 +269,7 @@ export const otpService = {
         deliverOtp({ medium, ...target, recipient_name, code: candidate, purpose: input.purpose })
       )
     );
-    const stubbed = nothingDelivered(deliveries);
+    const stubbed = deliberatelyStubbed(deliveries);
     const code = stubbed ? TEST_CODE : candidate;
 
     const expires_at = new Date(Date.now() + OTP_TTL_MS);

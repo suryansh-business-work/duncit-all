@@ -12,6 +12,7 @@ import AisensyTemplates from './wa-aisensy/AisensyTemplates';
 import type { CampaignRow } from './wa-aisensy/helpers';
 import { WaCampaignForm, valuesFromCampaign, type WaCampaignValues } from './wa-campaign-form';
 import { useWaCampaignActions } from './useWaCampaignActions';
+import { useLogCampaignParam } from './useLogCampaignParam';
 import {
   WA_CAMPAIGN_SETUP,
   type WaAudienceList,
@@ -57,6 +58,7 @@ export default function WhatsappCampaignsPage() {
   const refetchRef = useRef<(() => void) | null>(null);
   const tabs = useTabParam<WaTab>({ items: waTabs(t), fallback: 'dashboard' });
   const tab = tabs.value;
+  const logFilter = useLogCampaignParam();
   const [formOpen, setFormOpen] = useState(false);
   const [testOpen, setTestOpen] = useState(false);
   const [prefill, setPrefill] = useState<WaCampaignValues | null>(null);
@@ -132,9 +134,10 @@ export default function WhatsappCampaignsPage() {
           names={data?.waCampaignNames ?? []}
           onSend={startSend}
           onTest={startTest}
+          onOpenLogs={logFilter.openLogsFor}
         />
       )}
-      {tab === 'templates' && <AisensyTemplates />}
+      {tab === 'templates' && <AisensyTemplates onOpenLogs={logFilter.openLogsFor} />}
       {tab === 'automation' && <WaAutomation />}
       {tab === 'logs' && (
         <WaLogs
@@ -142,6 +145,8 @@ export default function WhatsappCampaignsPage() {
           actions={actions}
           onDuplicate={duplicate}
           refetchRef={refetchRef}
+          campaigns={logFilter.campaigns}
+          onClearCampaigns={logFilter.clear}
         />
       )}
       {tab === 'settings' && (

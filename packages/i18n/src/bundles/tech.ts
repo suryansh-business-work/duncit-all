@@ -286,6 +286,23 @@ export const TECH_BUNDLE: NestedCatalogue = {
       passwordHint: 'Leave blank to keep the saved one. It is sent to the runner and never shown here again.',
       passwordSaved: 'A password is saved',
       identityPhoneHint: 'Used where a signup asks for a number. One-time codes are stubbed.',
+      // The two switches that exist only so a suite can run against a real
+      // server. They are separate because only ONE of them reveals a secret,
+      // and a single switch would have made that impossible to say. Each
+      // warning shows only while its switch is on — see OverrideFields.
+      overridesHeading: 'While a suite is running',
+      overridesHint:
+        'Two overrides that exist for the test suite alone. Both are off by default, both apply to the whole platform while they are on, and neither belongs on a production database.',
+      muteCommunications: 'Hold all communications',
+      muteCommunicationsHint:
+        'Stops every email and WhatsApp message leaving the platform, so a nightly sweep does not mail real people or spend WhatsApp credit. Each one is still recorded in its own log with the reason it did not go, so the run can be read afterwards.',
+      muteCommunicationsWarning:
+        'Nothing is reaching anyone right now — no booking confirmations, no refund notices, no one-time codes. Turn this off when the run is done.',
+      otpBypass: 'Return one-time codes in the response',
+      otpBypassHint:
+        'A signup or a passwordless sign-in sends its code over WhatsApp or email, which no test can read. With this on the code comes back in the response instead, so a suite can finish the flow. Expiry, attempt limit and single use are unchanged.',
+      otpBypassWarning:
+        'Anyone who can reach this server can now ask for a code for ANY email or number and be handed it — which is a sign-in to that account. Only ever on a test database, and only while a suite is running.',
       colSlack: 'Slack',
       slackPosted: 'Posted',
       slackSkipped: 'Not posted',

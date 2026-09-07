@@ -81,6 +81,11 @@ export interface E2eRunSettings {
   email_domain: string;
   password_set: boolean;
   identity_phone: string;
+  /** Hold every outbound email, WhatsApp message and one-time code inside the
+   * platform while a suite runs. */
+  mute_communications: boolean;
+  /** Return one-time codes in the response instead of sending them. */
+  otp_bypass: boolean;
   slack_channel: string | null;
   slack_configured: boolean;
   login_email_preview: string;
@@ -197,6 +202,8 @@ export const E2E_RUN_SETTINGS = gql`
       email_domain
       password_set
       identity_phone
+      mute_communications
+      otp_bypass
       slack_channel
       slack_configured
       login_email_preview

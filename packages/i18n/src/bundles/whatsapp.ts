@@ -283,6 +283,17 @@ export const WHATSAPP_BUNDLE: NestedCatalogue = {
       documentNone:
         'No default set — every scenario with a document header fails until one is.',
     },
+    // How many messages a campaign or template has actually produced, on the
+    // Campaigns and Templates tabs. The attempts ride beside the sends because
+    // "0 of 40" and "0 of 0" read identically as a bare zero and are opposite
+    // problems — one is a campaign rejecting everything, the other is a
+    // campaign nothing has ever been pointed at.
+    sendCount: {
+      header: 'Sent',
+      ofAttempts: 'of {attempts}',
+      hint: '{sent} sent of {attempts} tried — open the log',
+      none: 'Nothing has gone out on this yet',
+    },
     // The ONE logs view. Campaign sends and the messages the platform sends by
     // itself are the same record asked for in the same breath — "did this go
     // out, and if not why" — so they are one table, and the columns that differ
@@ -295,6 +306,11 @@ export const WHATSAPP_BUNDLE: NestedCatalogue = {
       hint: 'Every WhatsApp send, whichever way it started — a campaign somebody sent, or a message the platform sent by itself. Open a row for who it reached and why anyone was missed.',
       empty: 'Nothing has been sent on WhatsApp yet.',
       search: 'Search a send, scenario, number or reason',
+      // Arrived here from a Sent count on the Campaigns or Templates tab. The
+      // narrowing is in the URL, so it has to be visible and undoable — a table
+      // silently showing a slice is how "nothing was sent" gets misread.
+      narrowedTo: 'Showing only what went out on {campaigns}.',
+      showEverything: 'Show everything',
       colKind: 'Kind',
       colSend: 'Send',
       colTo: 'Sent to',

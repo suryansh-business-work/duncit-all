@@ -63,6 +63,10 @@ export const waCampaignResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return waLogService.table(args.query);
     },
+    waSendCounts: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return waLogService.counts();
+    },
     waCampaign: (_p: unknown, args: { campaign_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return waCampaignService.byId(args.campaign_id);

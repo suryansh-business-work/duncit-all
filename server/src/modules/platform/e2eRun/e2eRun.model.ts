@@ -250,6 +250,31 @@ export interface IE2eRunSettings extends Document {
    */
   password: string;
   identity_phone: string;
+  /**
+   * Hold every outbound email and WhatsApp message inside the platform.
+   *
+   * A suite that signs up and signs in for real drives the same code a person
+   * does, so it fires the same welcome mail and the same booking confirmation —
+   * at a real inbox and a real handset, every night, billed per WhatsApp
+   * message. Held, each of those is recorded in its own log with the reason it
+   * did not go, so the run can still be read afterwards.
+   *
+   * It does NOT hand one-time codes back; that is {@link otp_bypass}, which is
+   * a separate switch because only one of the two is about secrecy.
+   */
+  mute_communications: boolean;
+  /**
+   * Return one-time codes in the API response instead of sending them.
+   *
+   * The only way a suite can finish a signup or a passwordless sign-in: the
+   * code otherwise leaves over WhatsApp or email, which no test can read. The
+   * challenge above it — expiry, attempt limit, single use — stays the real
+   * one; only the delivery is replaced.
+   *
+   * NEVER on for a production database. While it is on, a code asked for is a
+   * code handed straight back, for any address or number.
+   */
+  otp_bypass: boolean;
   last_run_at: Date | null;
   created_at: Date;
   updated_at: Date;
@@ -275,6 +300,12 @@ const e2eRunSettingsSchema = new Schema<IE2eRunSettings>(
     email_domain: { type: String, default: '' },
     password: { type: String, default: '' },
     identity_phone: { type: String, default: '' },
+    // Both OFF for the same reason `enabled` is: the singleton is created by
+    // the first read, and a default of true would silence every mail the
+    // platform sends — or start handing out one-time codes — the moment this
+    // deploys.
+    mute_communications: { type: Boolean, default: false },
+    otp_bypass: { type: Boolean, default: false },
     last_run_at: { type: Date, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

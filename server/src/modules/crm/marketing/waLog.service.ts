@@ -29,6 +29,7 @@ const CAMPAIGN_CONFIG: TableEntityConfig = {
   filterFields: {
     status: { type: 'enum' },
     category: { path: 'template_category', type: 'enum' },
+    campaign: { path: 'wa_campaign_name', type: 'enum' },
     created_at: { type: 'date' },
   },
   defaultSort: { created_at: -1 },
@@ -40,6 +41,11 @@ const AUTOMATIC_CONFIG: TableEntityConfig = {
   filterFields: {
     status: { type: 'enum' },
     category: { path: 'template_category', type: 'enum' },
+    // `campaign` names the AiSensy campaign on BOTH halves — stored as
+    // `wa_campaign_name` on a marketing send and as `campaign` here — so one
+    // filter narrows the whole union. It is what the Campaigns and Templates
+    // tabs hand over when a send count is clicked.
+    campaign: { type: 'enum' },
     created_at: { type: 'date' },
   },
   defaultSort: { created_at: -1 },
@@ -140,6 +146,70 @@ interface AggregateRoot {
   };
 }
 
+/**
+ * What one AiSensy campaign name has actually produced, across both records.
+ *
+ * `attempts` is carried beside `sent` because zero of forty is the answer this
+ * count exists to give: a campaign nothing was ever pointed at and a campaign
+ * that has rejected every message look identical if only the sent figure is
+ * shown, and they are opposite problems.
+ */
+export interface WaSendCount {
+  campaign: string;
+  sent: number;
+  attempts: number;
+}
+
+/** One name's running tally while the two records are merged. */
+type Tally = Pick<WaSendCount, 'sent' | 'attempts'>;
+
+/** What a `$group` on either collection hands back. Both group keys are the
+ * campaign-name column of a `String` field, and a document that never had one
+ * groups under `null`. */
+interface TallyRow {
+  _id: string | null;
+  sent?: number;
+  attempts?: number;
+}
+
+/** A marketing send is planned as a unit, so its own counters are the tally —
+ * walking its recipients again would count the same messages a second way. */
+const CAMPAIGN_TALLY: PipelineStage[] = [
+  {
+    $group: {
+      _id: '$wa_campaign_name',
+      sent: { $sum: { $ifNull: ['$sent_count', 0] } },
+      attempts: { $sum: { $ifNull: ['$recipient_count', 0] } },
+    },
+  },
+];
+
+/** One automatic row is one message, so the tally is a count of rows. */
+const AUTOMATIC_TALLY: PipelineStage[] = [
+  {
+    $group: {
+      _id: '$campaign',
+      sent: { $sum: { $cond: [{ $eq: ['$status', 'SENT'] }, 1, 0] } },
+      attempts: { $sum: 1 },
+    },
+  },
+];
+
+/** Fold one collection's groups into the shared map. A blank name belongs to no
+ * campaign — an automatic row filed under an unknown event carries none — and
+ * would otherwise collect every one of them under a single unopenable row. */
+function foldTallies(into: Map<string, Tally>, rows: readonly TallyRow[]): void {
+  for (const row of rows) {
+    const campaign = (row._id ?? '').trim();
+    if (!campaign) continue;
+    const running = into.get(campaign) ?? { sent: 0, attempts: 0 };
+    into.set(campaign, {
+      sent: running.sent + Number(row.sent ?? 0),
+      attempts: running.attempts + Number(row.attempts ?? 0),
+    });
+  }
+}
+
 export const waLogService = {
   /**
    * Every send, newest first, across both records.
@@ -191,5 +261,28 @@ export const waLogService = {
       page,
       page_size: pageSize,
     };
+  },
+
+  /**
+   * How many messages each AiSensy campaign has actually produced.
+   *
+   * The whole catalogue in one answer rather than a count per row: the console
+   * shows sixty-odd campaigns and as many templates at once, and a per-row
+   * query would be sixty round trips to say what two `$group`s say together.
+   *
+   * Keyed by CAMPAIGN NAME because that is the only name both records share and
+   * the only one AiSensy knows — a template's figure is the sum of the
+   * campaigns that send it, which the client already knows the mapping for from
+   * the live catalogue.
+   */
+  async counts(): Promise<WaSendCount[]> {
+    const [campaigns, automatic] = await Promise.all([
+      WaCampaignModel.aggregate<TallyRow>(CAMPAIGN_TALLY),
+      WaMessageLogModel.aggregate<TallyRow>(AUTOMATIC_TALLY),
+    ]);
+    const tallies = new Map<string, Tally>();
+    foldTallies(tallies, campaigns);
+    foldTallies(tallies, automatic);
+    return [...tallies].map(([campaign, tally]) => ({ campaign, ...tally }));
   },
 };

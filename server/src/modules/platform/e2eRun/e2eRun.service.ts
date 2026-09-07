@@ -29,6 +29,7 @@ import {
 } from './e2eRun.model';
 import { E2E_SUITES, normaliseSuites, suitesInput } from './e2eRun.suites';
 import { buildIdentity, type E2eIdentity } from './e2eRun.identity';
+import { forgetMuteCache } from './e2eRun.mute';
 
 /** The one workflow this module drives. */
 const WORKFLOW_FILE = 'e2e.yml';
@@ -499,6 +500,8 @@ export const e2eRunService = {
       email_domain: doc.email_domain ?? '',
       password_set: Boolean(str(doc.password)),
       identity_phone: doc.identity_phone ?? '',
+      mute_communications: Boolean(doc.mute_communications),
+      otp_bypass: Boolean(doc.otp_bypass),
       slack_channel: str(channel) || null,
       slack_configured: slackReady,
       login_email_preview: identity?.login_email ?? '',
@@ -530,6 +533,8 @@ export const e2eRunService = {
       email_prefix: str(input.email_prefix),
       email_domain: str(input.email_domain).replace(/^@/, ''),
       identity_phone: str(input.identity_phone),
+      mute_communications: Boolean(input.mute_communications),
+      otp_bypass: Boolean(input.otp_bypass),
     };
     // Absent leaves the saved password alone. The form cannot read it back, so
     // a field that always wrote would blank it every time it was opened.
@@ -543,6 +548,10 @@ export const e2eRunService = {
     // afternoon. Every later window still catches up normally.
     if (set.enabled && !previous.enabled) set.last_run_at = new Date();
     await E2eRunSettingsModel.updateOne({ key: E2E_SETTINGS_KEY }, { $set: set }, { upsert: true });
+    // The mute is read on the path of every mail and every message, so it is
+    // cached — dropping that cache here is what makes switching it take effect
+    // as the operator presses Save rather than up to ten seconds afterwards.
+    forgetMuteCache();
     // The channel is NOT part of this document. It lives on the SLACK env
     // entry beside the bot token, so every channel the platform posts to is
     // configured in one place and the Environment page can show it.

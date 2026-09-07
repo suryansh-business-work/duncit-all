@@ -2,15 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
-import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
+import { DuncitTable, clientTableFetch } from '@duncit/table';
 import { useTranslation } from '@duncit/app-settings';
-import { StatusChip } from '@duncit/ui';
 import type { AisensyTemplate, WaCampaignNameOption } from '../queries';
 import AisensySection from './AisensySection';
-import CampaignRowActions from './CampaignRowActions';
 import AisensyDetailDialog, { type AisensyFact } from './AisensyDetailDialog';
 import TemplatesWithoutCampaign from './TemplatesWithoutCampaign';
 import { CreateCampaignForm } from './create-campaign-form';
+import { campaignRowId, getCampaignColumns, type CampaignSendRow } from './campaignColumns';
+import { useWaSendCounts, withSendCounts } from './useWaSendCounts';
 import { templateFor, useAisensyCatalogue } from './useAisensyCatalogue';
 import { useAisensyDrafts } from './useAisensyDrafts';
 import {
@@ -19,26 +19,12 @@ import {
   campaignRows,
   campaignSearchText,
   paramsLabel,
-  statusKey,
   type CampaignRow,
 } from './helpers';
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 const EMPTY = '—';
-
-const getRowId = (campaign: CampaignRow) => campaign.name;
-
-/** A campaign AiSensy will accept a send for is Live — anything else is shown
- * as-is so the reason a send fails is visible before sending. */
-const renderStatus = (campaign: CampaignRow) =>
-  campaign.status ? (
-    <StatusChip
-      status={statusKey(campaign.status)}
-      label={campaign.status}
-      colorMap={AISENSY_CAMPAIGN_STATUS_COLORS}
-    />
-  ) : null;
 
 const factsFor = (campaign: CampaignRow, template: AisensyTemplate | null, t: Translate): AisensyFact[] => [
   { label: t('shell.common.type'), value: campaign.type || EMPTY },
@@ -66,34 +52,21 @@ interface Props {
   onSend: (campaign: CampaignRow) => void;
   /** Sends one test message on it, before pointing it at anybody. */
   onTest: (campaign: CampaignRow) => void;
+  /** Opens the Logs tab narrowed to these campaigns — what the Sent count does. */
+  onOpenLogs: (campaigns: readonly string[]) => void;
 }
-
-type RowActionHandlers = Pick<Props, 'onSend' | 'onTest'>;
-
-const buildColumns = (
-  { onSend, onTest }: Readonly<RowActionHandlers>,
-  t: Translate,
-): DuncitColumn<CampaignRow>[] => [
-  { field: 'name', headerName: t('marketing.common.campaign'), flex: 1, minWidth: 220 },
-  { field: 'type', headerName: t('shell.common.type'), width: 150 },
-  { field: 'status', headerName: t('shell.common.status'), width: 120, cellRenderer: renderStatus },
-  { field: 'template_name', headerName: t('marketing.whatsappCampaigns.template'), flex: 1, minWidth: 180 },
-  {
-    field: 'actions',
-    headerName: t('shell.common.actions'),
-    width: 110,
-    sortable: false,
-    cellRenderer: (campaign) => (
-      <CampaignRowActions campaign={campaign} onSend={onSend} onTest={onTest} />
-    ),
-  },
-];
 
 /** The campaigns that can be sent, and where a send begins: you send the
  * campaign you are looking at, not one picked again from a dropdown. */
-export default function AisensyCampaigns({ names, onSend, onTest }: Readonly<Props>) {
+export default function AisensyCampaigns({
+  names,
+  onSend,
+  onTest,
+  onOpenLogs,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const { configured, campaigns, templates, loading, error, refetch } = useAisensyCatalogue();
+  const counts = useWaSendCounts();
   const [openName, setOpenName] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
 
@@ -105,13 +78,19 @@ export default function AisensyCampaigns({ names, onSend, onTest }: Readonly<Pro
   // AiSensy's own list wins wherever it answered; the saved names carry the tab
   // when it did not, so a missing Project credential cannot stop a send.
   const live = configured && !error && campaigns.length > 0;
-  const rows = useMemo(() => campaignRows(campaigns, names, live), [campaigns, names, live]);
+  const rows = useMemo(
+    () => withSendCounts(campaignRows(campaigns, names, live), counts, (row) => [row.name]),
+    [campaigns, names, live, counts]
+  );
   const groups = useMemo(
     () => approvedTemplateGroups(templates, campaigns),
     [templates, campaigns]
   );
 
-  const columns = useMemo(() => buildColumns({ onSend, onTest }, t), [t, onSend, onTest]);
+  const columns = useMemo(
+    () => getCampaignColumns({ t, onSend, onTest, onOpenLogs }),
+    [t, onSend, onTest, onOpenLogs]
+  );
 
   const fetchRows = useMemo(() => clientTableFetch(rows, campaignSearchText), [rows]);
 
@@ -127,11 +106,11 @@ export default function AisensyCampaigns({ names, onSend, onTest }: Readonly<Pro
   const template = selected ? templateFor(selected.name, campaigns, templates) : null;
 
   const table = (
-    <DuncitTable<CampaignRow>
+    <DuncitTable<CampaignSendRow>
       tableId="marketing-aisensy-campaigns"
       columns={columns}
       fetchRows={fetchRows}
-      getRowId={getRowId}
+      getRowId={campaignRowId}
       onRowClick={(campaign) => setOpenName(campaign.name)}
       searchPlaceholder="Search campaign, status or template"
       emptyText={t('marketing.whatsappCampaigns.noCampaignMatchesThatSearch')}

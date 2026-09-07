@@ -63,6 +63,9 @@ export interface E2eRunRow {
   login_email: string;
   signup_email: string;
   identity_phone: string;
+  slack_channel: string | null;
+  slack_ts: string | null;
+  slack_error: string | null;
   created_at: string | null;
 }
 
@@ -78,6 +81,8 @@ export interface E2eRunSettings {
   email_domain: string;
   password_set: boolean;
   identity_phone: string;
+  slack_channel: string | null;
+  slack_configured: boolean;
   login_email_preview: string;
   signup_email_preview: string;
   last_run_at: string | null;
@@ -138,6 +143,9 @@ const RUN_FIELDS = `
   login_email
   signup_email
   identity_phone
+  slack_channel
+  slack_ts
+  slack_error
   created_at
 `;
 
@@ -189,6 +197,8 @@ export const E2E_RUN_SETTINGS = gql`
       email_domain
       password_set
       identity_phone
+      slack_channel
+      slack_configured
       login_email_preview
       signup_email_preview
       last_run_at

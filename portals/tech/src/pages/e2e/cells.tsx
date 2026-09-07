@@ -131,6 +131,25 @@ export function renderIdentity(row: E2eRunRow) {
   );
 }
 
+/**
+ * Whether Slack heard about this run. A posted result and an unposted one look
+ * identical on the row otherwise, and "nobody was told" is exactly the thing
+ * worth noticing about a red sweep.
+ */
+export const makeRenderSlack = (posted: string, skipped: string) => {
+  const renderSlack = (row: E2eRunRow) => {
+    if (row.slack_ts) {
+      return <Chip size="small" variant="outlined" color="success" label={posted} />;
+    }
+    return (
+      <Tooltip title={row.slack_error ?? ''}>
+        <Chip size="small" variant="outlined" label={skipped} />
+      </Tooltip>
+    );
+  };
+  return renderSlack;
+};
+
 export interface LinkLabels {
   run: string;
   runPending: string;

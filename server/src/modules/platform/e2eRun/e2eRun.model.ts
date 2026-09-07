@@ -110,6 +110,14 @@ export interface IE2eRun extends Document {
   /** The account the suite signs UP as. Unique to this run. */
   signup_email: string;
   identity_phone: string;
+  /**
+   * What happened to the Slack announcement. Slack is a NOTIFICATION, not the
+   * store of record — the row is. A run nobody could be told about stays
+   * visible here, with the reason it was not posted.
+   */
+  slack_channel: string | null;
+  slack_ts: string | null;
+  slack_error: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -190,6 +198,9 @@ const e2eRunSchema = new Schema<IE2eRun>(
     login_email: { type: String, default: '' },
     signup_email: { type: String, default: '' },
     identity_phone: { type: String, default: '' },
+    slack_channel: { type: String, default: null },
+    slack_ts: { type: String, default: null },
+    slack_error: { type: String, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

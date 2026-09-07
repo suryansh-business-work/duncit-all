@@ -1,7 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
+import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getUrlConfigs } from '@config/url-configs';
+import { isSlackConfigured, postMessage } from '@modules/platform/slack/slack.gateway';
+import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
+import { clip, contextBlock, escapeMrkdwn } from '@utils/slack-blocks';
 import type { AuthUser } from '@context';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { isDue, nextRunAt, parseTimeOfDay, type CronSchedule } from '@utils/cron-schedule';
@@ -107,6 +111,9 @@ const pub = (doc: IE2eRun) => ({
   login_email: doc.login_email ?? '',
   signup_email: doc.signup_email ?? '',
   identity_phone: doc.identity_phone ?? '',
+  slack_channel: doc.slack_channel ?? null,
+  slack_ts: doc.slack_ts ?? null,
+  slack_error: doc.slack_error ?? null,
   created_at: doc.created_at?.toISOString() ?? null,
 });
 
@@ -217,6 +224,173 @@ function identityFields(identity: E2eIdentity | null) {
   };
 }
 
+/* ── announcing a finished run on Slack ───────────────────────────────────── */
+
+/** Where the E2E channel is kept — beside the bot token, on the SLACK entry. */
+const CHANNEL_ENV_KEY = 'SLACK_E2E_CHANNEL';
+
+const slackEntry = () =>
+  EnvEntryModel.findOne({ category: 'SLACK', is_active: true, is_default: true });
+
+function headline(run: IE2eRun): string {
+  const { suites_failed, passed, tests } = run.totals;
+  if (run.status === 'FAILED') {
+    return `:x: E2E failed — ${suites_failed} of ${run.totals.suites} suites red (${run.run_no})`;
+  }
+  return `:white_check_mark: E2E passed — ${run.totals.suites} suites, ${passed}/${tests} tests (${run.run_no})`;
+}
+
+/** GitHub commit link derived from the run URL — both live on the same repo. */
+function commitUrl(run: IE2eRun): string {
+  const base = run.workflow_run_url.split('/actions/')[0];
+  if (!base || !run.commit_sha) return '';
+  return `${base}/commit/${run.commit_sha}`;
+}
+
+function factLines(run: IE2eRun): string[] {
+  const facts = [
+    `*Branch:* ${escapeMrkdwn(run.ref) || '—'}`,
+    `*Started by:* ${escapeMrkdwn(run.triggered_by) || '—'}`,
+  ];
+  if (run.duration_seconds != null) {
+    facts.push(`*Took:* ${Math.round(run.duration_seconds / 60)} min`);
+  }
+  if (run.totals.suites_skipped > 0) {
+    facts.push(`*Not run:* ${run.totals.suites_skipped} suites`);
+  }
+  if (run.commit_sha) {
+    const short = run.commit_sha.slice(0, 7);
+    const link = commitUrl(run);
+    const commitText = link ? `<${link}|${short}>` : short;
+    facts.push(`*Commit:* ${commitText}`);
+  }
+  return facts;
+}
+
+/**
+ * The red legs, named. This is the whole reason to post at all: a green run
+ * needs no reading, and a red one is only useful if the message says WHICH
+ * suite went red without anybody opening GitHub.
+ */
+function failuresBlock(run: IE2eRun): unknown {
+  const failed = (run.results ?? []).filter((r) => r.status === 'FAILED');
+  if (failed.length === 0) return null;
+  // Clipped per line so eight of them can never breach Slack's 3000-character
+  // section limit, which fails the whole post as invalid_blocks.
+  const lines = failed.slice(0, 8).map((r) => {
+    const why = r.error ? ` — ${escapeMrkdwn(clip(r.error, 150))}` : '';
+    return `• *${escapeMrkdwn(r.key)}*${why}`;
+  });
+  if (failed.length > 8) lines.push(`… and ${failed.length - 8} more`);
+  return { type: 'section', text: { type: 'mrkdwn', text: lines.join('\n') } };
+}
+
+function actionButtons(run: IE2eRun, techUrl: string): unknown[] {
+  const buttons: unknown[] = [];
+  if (run.workflow_run_url) {
+    buttons.push({
+      type: 'button',
+      text: { type: 'plain_text', text: 'View run' },
+      style: run.status === 'FAILED' ? 'danger' : undefined,
+      url: run.workflow_run_url,
+    });
+  }
+  if (techUrl) {
+    buttons.push({
+      type: 'button',
+      text: { type: 'plain_text', text: 'Open in Duncit' },
+      url: `${techUrl.replace(/\/$/, '')}/e2e/runs`,
+    });
+  }
+  return buttons;
+}
+
+function runBlocks(run: IE2eRun, techUrl: string): unknown[] {
+  const blocks: unknown[] = [
+    { type: 'section', text: { type: 'mrkdwn', text: `*${headline(run)}*` } },
+    { type: 'section', fields: factLines(run).map((text) => ({ type: 'mrkdwn', text })) },
+  ];
+  const failures = failuresBlock(run);
+  if (failures) blocks.push(failures);
+  if (run.status === 'FAILED' && run.error_message) {
+    blocks.push(contextBlock(`:rotating_light: ${escapeMrkdwn(clip(run.error_message, 500))}`));
+  }
+  const buttons = actionButtons(run, techUrl);
+  if (buttons.length > 0) blocks.push({ type: 'actions', elements: buttons });
+  return blocks;
+}
+
+/**
+ * Announce an already-SAVED run on the configured channel. Returns instead of
+ * throwing when unconfigured — the row is already the record, and a missing
+ * channel must never turn a reported run into a CI failure.
+ */
+async function announce(
+  run: IE2eRun
+): Promise<{ channel?: string | null; ts?: string | null; skipped?: string | null }> {
+  const channel = str(await getRuntimeEnvValue(CHANNEL_ENV_KEY));
+  if (!channel) {
+    return { skipped: 'No Slack channel is configured for e2e results' };
+  }
+  const { techUrl } = await getUrlConfigs();
+  const result = await postMessage({
+    channel,
+    // The emoji is decoration in the blocks and noise in a notification
+    // preview, which is what `text` becomes.
+    text: headline(run).replace(/:[a-z_]+:\s*/g, ''),
+    blocks: runBlocks(run, techUrl),
+  });
+  logs.server.info('e2eRun', 'announce', {
+    channel: result.channel,
+    ts: result.ts,
+    run_no: run.run_no,
+  });
+  return { channel: result.channel, ts: result.ts };
+}
+
+/**
+ * Save the channel onto the default SLACK env entry.
+ *
+ * Refuses rather than silently doing nothing when Slack is not connected: the
+ * field would appear to save and the value would go nowhere, which is worse
+ * than being told the bot token is missing.
+ */
+async function writeSlackChannel(channel: string): Promise<void> {
+  const entry = await slackEntry();
+  if (!entry) {
+    throw badInput(
+      'Connect Slack first — add a bot token in Environment Variables → Slack, and mark the entry default.'
+    );
+  }
+  await EnvEntryModel.updateOne({ _id: entry._id }, { $set: { 'config.e2e_channel': channel } });
+}
+
+/**
+ * Post a finished run and record what happened to the post.
+ *
+ * Every failure here is swallowed into `slack_error` on purpose. The row is
+ * the store of record and it is already saved; letting an unreachable Slack
+ * throw would make CI re-report a finished run as a broken one. `slack_ts` is
+ * the guard against a re-reported outcome posting a second time.
+ */
+async function announceOutcome(run: IE2eRun): Promise<void> {
+  if (run.slack_ts) return;
+  try {
+    const outcome = await announce(run);
+    run.slack_channel = outcome.channel ?? null;
+    run.slack_ts = outcome.ts ?? null;
+    run.slack_error = outcome.skipped ?? null;
+  } catch (err) {
+    run.slack_error = err instanceof Error ? err.message : String(err);
+    logs.server.error('e2eRun', 'announce', { error: err, run_no: run.run_no });
+  }
+  try {
+    await run.save();
+  } catch (err) {
+    logs.server.error('e2eRun', 'saveOutcome', { error: err, run_no: run.run_no });
+  }
+}
+
 /** Everything a scheduled or portal-started dispatch needs to decide. */
 interface DispatchOptions {
   suites: string[];
@@ -309,6 +483,10 @@ export const e2eRunService = {
     )
       .sort({ created_at: -1 })
       .lean();
+    const [channel, slackReady] = await Promise.all([
+      getRuntimeEnvValue(CHANNEL_ENV_KEY),
+      isSlackConfigured(),
+    ]);
     return {
       enabled: doc.enabled,
       frequency: doc.frequency,
@@ -321,6 +499,8 @@ export const e2eRunService = {
       email_domain: doc.email_domain ?? '',
       password_set: Boolean(str(doc.password)),
       identity_phone: doc.identity_phone ?? '',
+      slack_channel: str(channel) || null,
+      slack_configured: slackReady,
       login_email_preview: identity?.login_email ?? '',
       signup_email_preview: identity?.signup_email ?? '',
       last_run_at: doc.last_run_at?.toISOString() ?? null,
@@ -363,6 +543,10 @@ export const e2eRunService = {
     // afternoon. Every later window still catches up normally.
     if (set.enabled && !previous.enabled) set.last_run_at = new Date();
     await E2eRunSettingsModel.updateOne({ key: E2E_SETTINGS_KEY }, { $set: set }, { upsert: true });
+    // The channel is NOT part of this document. It lives on the SLACK env
+    // entry beside the bot token, so every channel the platform posts to is
+    // configured in one place and the Environment page can show it.
+    if (input.slack_channel !== undefined) await writeSlackChannel(str(input.slack_channel));
     return this.settings();
   },
 
@@ -489,6 +673,10 @@ export const e2eRunService = {
     if (str(input.commit_sha)) run.commit_sha = str(input.commit_sha);
     run.reported_by = reportedBy;
     await run.save();
+    // A run announces itself ONCE: when it is over. Every leg reports as it
+    // lands, and a channel that posted twenty times per sweep would be muted
+    // inside a week.
+    if (finished) await announceOutcome(run);
     return pub(run);
   },
 

@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Card, CardContent, Skeleton, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
 import { notify, notifyError } from '@duncit/dialogs';
+import { SLACK_CHANNELS, type SlackChannel } from '../../slack/queries';
 import {
   E2E_RUN_SETTINGS,
   E2E_SUITE_CATALOGUE,
@@ -31,6 +32,12 @@ export default function E2eSettingsPage() {
     fetchPolicy: 'cache-and-network',
   });
   const catalogue = useQuery<{ e2eSuiteCatalogue: E2eSuite[] }>(E2E_SUITE_CATALOGUE);
+  // Skipped until the settings say Slack is connected: the query answers with a
+  // Slack error rather than an empty list when there is no bot token, and a red
+  // notification about a channel picker nobody asked for is pure noise.
+  const channelsQuery = useQuery<{ slackChannels: SlackChannel[] }>(SLACK_CHANNELS, {
+    skip: !settingsQuery.data?.e2eRunSettings?.slack_configured,
+  });
   const [save, saving] = useMutation<any>(UPDATE_E2E_RUN_SETTINGS);
 
   const settings = settingsQuery.data?.e2eRunSettings;
@@ -77,6 +84,7 @@ export default function E2eSettingsPage() {
             <E2eSettingsForm
               settings={settings}
               suites={suites}
+              channels={channelsQuery.data?.slackChannels ?? []}
               busy={saving.loading}
               onSubmit={onSubmit}
             />

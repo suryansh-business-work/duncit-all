@@ -4,12 +4,16 @@ import type { E2eRunSettings } from '../queries';
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
+/** Slack channel IDs look like C0123ABCD (public) or G… (private). */
+const CHANNEL_ID_RE = /^[A-Z][A-Z\d]{4,}$/;
+
 export interface E2eSettingsMessages {
   refFormat: string;
   timeFormat: string;
   keepLastRange: string;
   identityIncomplete: string;
   domainFormat: string;
+  channelFormat: string;
 }
 
 /** A bare domain — `duncit.com`. No scheme, no path, no leading `@`. */
@@ -32,6 +36,12 @@ export const e2eSettingsSchema = (messages: E2eSettingsMessages) =>
       // back, so a field that always wrote would wipe it on every save.
       password: z.string(),
       identity_phone: z.string().trim(),
+      // Empty clears the channel, which is how a run goes back to being
+      // recorded here and announced nowhere.
+      slack_channel: z
+        .string()
+        .trim()
+        .refine((v) => v === '' || CHANNEL_ID_RE.test(v), messages.channelFormat),
     })
     .superRefine((values, ctx) => {
       const hasPrefix = values.email_prefix.length > 0;
@@ -69,6 +79,7 @@ export const toFormValues = (settings: E2eRunSettings): E2eSettingsValues => ({
   email_domain: settings.email_domain,
   password: '',
   identity_phone: settings.identity_phone,
+  slack_channel: settings.slack_channel ?? '',
 });
 
 /**

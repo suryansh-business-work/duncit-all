@@ -150,6 +150,11 @@ export const e2eRunTypeDefs = gql`
     "The account the suite signs UP as. Unique to this run."
     signup_email: String!
     identity_phone: String!
+    "Which channel this run was announced on, when it was."
+    slack_channel: String
+    slack_ts: String
+    "Why the Slack post did not happen, when it did not."
+    slack_error: String
     created_at: String
   }
 
@@ -191,6 +196,14 @@ export const e2eRunTypeDefs = gql`
     """
     password_set: Boolean!
     identity_phone: String!
+    """
+    Slack channel ID a finished run announces to. Stored on the SLACK env entry
+    beside the bot token, so Environment Variables shows it too. Empty means the
+    result is recorded here and announced nowhere.
+    """
+    slack_channel: String
+    "False when no Slack bot token is configured, which is why the picker is empty."
+    slack_configured: Boolean!
     """
     What the next run's addresses would look like, built with the current time
     so the operator can see the shape before saving. Empty until a prefix and a
@@ -342,6 +355,12 @@ export const e2eRunTypeDefs = gql`
     """
     password: String
     identity_phone: String!
+    """
+    Slack channel ID finished runs announce to. Empty clears it. Written onto
+    the SLACK env entry rather than this feature's own settings, so every Slack
+    channel the platform posts to is configured in one place.
+    """
+    slack_channel: String
   }
 
   extend type Query {

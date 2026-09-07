@@ -4,6 +4,7 @@ import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@du
 import {
   getRowId,
   makeRenderLinks,
+  makeRenderSlack,
   makeRenderStatus,
   makeRenderTriggeredBy,
   makeStatusOptions,
@@ -115,6 +116,14 @@ export default function E2eRunsTable({
         minWidth: 180,
         hide: true,
         valueGetter: (row) => row.reported_by || '—',
+      },
+      {
+        field: 'slack_ts',
+        headerName: t('tech.e2e.colSlack'),
+        width: 105,
+        sortable: false,
+        cellRenderer: makeRenderSlack(t('tech.e2e.slackPosted'), t('tech.e2e.slackSkipped')),
+        valueGetter: (row) => (row.slack_ts ? 'posted' : 'skipped'),
       },
       {
         field: 'workflow_run_url',

@@ -285,6 +285,20 @@ export const TECH_BUNDLE: NestedCatalogue = {
       passwordHint: 'Leave blank to keep the saved one. It is sent to the runner and never shown here again.',
       passwordSaved: 'A password is saved',
       identityPhoneHint: 'Used where a signup asks for a number. One-time codes are stubbed.',
+      colSlack: 'Slack',
+      slackPosted: 'Posted',
+      slackSkipped: 'Not posted',
+      slackHeading: 'Slack results',
+      slackHint:
+        'A finished run posts its result here — green or red, with the suites that failed named in the message. Progress is not posted: a channel told twenty times a sweep is a channel nobody reads.',
+      slackChannel: 'Results channel',
+      slackChannelHint:
+        'Pick a channel, or paste an ID the bot has not joined yet — the post starts working the moment it is invited. Empty means results are recorded here and announced nowhere.',
+      slackChannelUnknown:
+        'The bot cannot see a channel with this ID. Invite it to the channel, or check the ID.',
+      slackNotConfigured:
+        'Slack is not connected, so there is nothing to post to. Add a bot token in Environment Variables → Slack and mark that entry default.',
+      channelFormat: 'That is not a Slack channel ID — they look like C0123ABCD.',
       saved: 'Settings saved.',
       ciHeading: 'Can CI reach us?',
       ciLastReport: 'Last reported {when}, as {who}.',

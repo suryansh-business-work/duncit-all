@@ -1,9 +1,11 @@
 import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Divider, Stack, Typography } from '@mui/material';
+import { Alert, Divider, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
+import SlackChannelField from '../../../components/SlackChannelField';
 import SuitePicker from '../SuitePicker';
+import type { SlackChannel } from '../../slack/queries';
 import type { E2eRunSettings, E2eSuite } from '../queries';
 import ScheduleFields from './ScheduleFields';
 import IdentityFields from './IdentityFields';
@@ -16,11 +18,18 @@ import {
 interface Props {
   settings: E2eRunSettings;
   suites: E2eSuite[];
+  channels: SlackChannel[];
   busy: boolean;
   onSubmit: (values: E2eSettingsValues) => void;
 }
 
-export default function E2eSettingsForm({ settings, suites, busy, onSubmit }: Readonly<Props>) {
+export default function E2eSettingsForm({
+  settings,
+  suites,
+  channels,
+  busy,
+  onSubmit,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const { control, handleSubmit, watch, formState } = useForm<
     E2eSettingsValues,
@@ -40,6 +49,7 @@ export default function E2eSettingsForm({ settings, suites, busy, onSubmit }: Re
         keepLastRange: t('tech.e2e.keepLastRange'),
         identityIncomplete: t('tech.e2e.identityIncomplete'),
         domainFormat: t('tech.e2e.domainFormat'),
+        channelFormat: t('tech.e2e.channelFormat'),
       })
     ) as unknown as Resolver<E2eSettingsValues, any, E2eSettingsValues>,
     mode: 'all',
@@ -85,6 +95,28 @@ export default function E2eSettingsForm({ settings, suites, busy, onSubmit }: Re
           errors={formState.errors}
           passwordSet={settings.password_set}
         />
+
+        <Divider />
+        <Stack spacing={0.5}>
+          <Typography variant="subtitle2">{t('tech.e2e.slackHeading')}</Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            {t('tech.e2e.slackHint')}
+          </Typography>
+        </Stack>
+        {settings.slack_configured ? (
+          <SlackChannelField
+            control={control}
+            name="slack_channel"
+            label={t('tech.e2e.slackChannel')}
+            hint={t('tech.e2e.slackChannelHint')}
+            channels={channels}
+            unknownHint={t('tech.e2e.slackChannelUnknown')}
+          />
+        ) : (
+          <Alert severity="info" variant="outlined">
+            {t('tech.e2e.slackNotConfigured')}
+          </Alert>
+        )}
 
         <Stack direction="row" sx={{ justifyContent: 'flex-end' }}>
           <DuncitButton type="submit" variant="contained" disabled={busy}>

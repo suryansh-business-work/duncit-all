@@ -275,3 +275,124 @@ export const bootFixtures = {
   PublicPoliciesNav: { publicPolicies: [] },
   HomeFollowedUsers: { publicUsersByIds: [] },
 };
+
+/**
+ * "Earn with Duncit" — roles and onboarding meetings, which is everything the
+ * journey cards read (`earnBoxState`). One builder rather than a fixture per
+ * state: which card is locked is decided by these two lists alone, so a spec
+ * says what the user IS and the page follows.
+ */
+export function earnFixtures(
+  over: { roles?: string[]; meetings?: unknown[]; productsVisible?: boolean } = {},
+) {
+  const productsVisible = over.productsVisible ?? true;
+  const roles = over.roles ?? ['USER'];
+  // The roles go on EVERY query that returns `me`, not just EarnMe. Apollo
+  // normalises all of them to the same `User:u1`, so a boot query still
+  // answering `['USER']` lands after EarnMe and overwrites the roles under the
+  // page: the "Already enabled" chip and its CTA appear and then vanish
+  // mid-click. One user, one set of roles — which is what the server returns.
+  const viewer = { ...me, roles };
+  return {
+    ...bootFixtures,
+    MwebSessionMe: { me: viewer },
+    AppHeader: { ...appHeader, me: viewer },
+    PublicFeatureFlags: {
+      publicFeatureFlags: [
+        { key: 'is_product_visible', enabled: productsVisible },
+        { key: 'tour_guide', enabled: true },
+      ],
+    },
+    EarnMe: {
+      me: { user_id: viewer.user_id, roles },
+      myMeetings: over.meetings ?? [],
+    },
+  };
+}
+
+/** An onboarding meeting for one journey. `status`/`approval_status` are what
+ * move a card between "Meeting scheduled" and "Onboarding in process." */
+export function earnMeeting(over: Record<string, unknown> = {}) {
+  return {
+    id: 'mtg1',
+    request_no: 'DUN-MTG-000001',
+    kind: 'HOST',
+    status: 'SCHEDULED',
+    approval_status: 'NONE',
+    onboarded_status: null,
+    scheduled_at: future(2),
+    requested_at: past(1),
+    reschedule_count: 0,
+    ...over,
+  };
+}
+
+/** An approved, active host profile. The create-pod gate accepts EITHER the
+ * HOST role or this, so a spec can exercise the legacy host that has one and
+ * not the other. */
+export const myHost = {
+  id: 'host1',
+  status: 'APPROVED',
+  is_active: true,
+  host_categories: [
+    {
+      super_category_id: 'sc1',
+      category_id: 'cat1',
+      sub_category_id: 'sub1',
+      super_category_name: 'Play',
+      category_name: 'Music',
+      sub_category_name: 'Jazz',
+    },
+  ],
+};
+
+/**
+ * Boot fixtures for `/create-pod`.
+ *
+ * `CreatePodOptions` is one query carrying everything the stepper needs, so the
+ * whole page hangs off it — and the two things that decide what renders at all
+ * are `me.roles` and `myHost`. Both are overridable, because "no host profile"
+ * is a state this page exists to handle rather than an error.
+ */
+export function createPodFixtures(over: Record<string, unknown> = {}) {
+  /*
+    Apollo normalises every `me` in the app to the same `User:u1`, so the boot
+    queries have to agree with this page's about who the viewer is.
+
+    While they disagreed — the boot queries saying `['USER']`, this page saying
+    `['USER','HOST']` — whichever response landed LAST decided whether the
+    stepper rendered, and the suite failed roughly one run in three with the
+    host gate refusing a host. That is a fixture bug, not a flaky page: a real
+    server answers one thing about one user.
+  */
+  const podViewer = (over.me as Record<string, unknown> | undefined) ?? {
+    user_id: me.user_id,
+    roles: ['USER', 'HOST'],
+    selected_location_id: 'loc1',
+  };
+  const viewer = { ...me, ...podViewer };
+  return {
+    ...bootFixtures,
+    MwebSessionMe: { me: viewer },
+    AppHeader: { ...appHeader, me: viewer },
+    CreatePodOptions: {
+      me: podViewer,
+      clubs: [
+        {
+          ...clubs[0],
+          location_id: 'loc1',
+          locality: 'Indiranagar',
+          matched_venues_count: 1,
+          matched_venues: [{ id: 'venue1' }],
+        },
+      ],
+      locations: [{ ...locations[0], active_club_count: 1 }],
+      publicVenues: [],
+      myHost,
+      subCategories: [{ id: 'sub1', min_pax: 2 }],
+      availablePodProducts: [],
+      ...over,
+    },
+  };
+}
+

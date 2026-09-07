@@ -12,12 +12,23 @@ name: E2E
 #
 # Three rules this workflow exists to keep:
 #
-#  1. NOTHING here may swallow a failure. No `continue-on-error`, no `|| true`,
-#     no `--no-bail`, no `pnpm run --if-present e2e`. `--if-present` in
-#     particular looks harmless and is not: a workspace that loses its `e2e`
-#     script would silently pass. Every workspace ships one (packages and the
-#     static sites use the allowlisted no-op in scripts/e2e-no-surface.mjs), so
-#     a plain `pnpm e2e` is correct and a missing script is a hard error.
+#  1. NOTHING here may swallow a TEST failure. No `|| true`, no `--no-bail`, no
+#     `pnpm run --if-present e2e`. `--if-present` in particular looks harmless
+#     and is not: a workspace that loses its `e2e` script would silently pass.
+#     Every workspace ships one (packages and the static sites use the
+#     allowlisted no-op in scripts/e2e-no-surface.mjs), so a plain `pnpm e2e` is
+#     correct and a missing script is a hard error.
+#
+#     The steps that TALK TO THE REPORTING SERVER are the one exemption, and
+#     they carry `continue-on-error: true` for a reason worth keeping: they run
+#     no specs. `Fetch the run identity` collects optional plumbing before
+#     Cypress starts, and `Record this suite's result` writes down a verdict
+#     that has already been reached. The server they call is not under test and
+#     lives on the same VPS as the deploys, so it goes away for a few minutes
+#     fairly often — and while these were fatal, every one of those minutes
+#     turned green suites red: `e2e admin` failed on `Fetch the run identity`
+#     having never run a test. A suite's result must depend on the suite.
+#     The GATE is still hard: see `Fail the workflow when the gate did not pass`.
 #
 #  2. A suite that did NOT run must say so. Every leg reports — the ones that
 #     ran with their counts, the ones the operator filtered out as SKIPPED —
@@ -209,8 +220,17 @@ jobs:
       # because a job output is NOT masked in the job that reads it and the
       # password would end up in twenty logs. Fetched here it is masked by the
       # reporter in this job, where it is used.
+      # continue-on-error, and it is NOT the swallowed failure rule 1 forbids.
+      # That rule is about the SUITE: a workspace whose specs did not run must
+      # never look like one that passed. This step runs no specs — it fetches
+      # optional plumbing (CYPRESS_E2E_*) that no spec reads yet, from a server
+      # that is not under test. Fatal, it turned a whole green suite red every
+      # time the reporter was briefly unreachable, which on this VPS is every
+      # deploy: the leg died here, before Cypress started, and the E2E page said
+      # the suite failed.
       - name: Fetch the run identity
         id: identity
+        continue-on-error: true
         env:
           MODE: start
         run: node scripts/report-e2e-run.mjs
@@ -290,8 +310,14 @@ jobs:
           wait-on: 'http://localhost:${{ matrix.port }}'
           wait-on-timeout: 120
 
+      # Also continue-on-error, for the same reason: by the time this runs the
+      # suite has already passed or failed, and `job.status` below carries that
+      # verdict. Whether the row could be WRITTEN is a fact about the reporting
+      # server, and reporting it as a test failure is how a green suite came to
+      # be recorded as red.
       - name: Record this suite's result
         if: always()
+        continue-on-error: true
         env:
           MODE: suite
           SUITE_KEY: ${{ matrix.name }}
@@ -349,8 +375,14 @@ jobs:
 
       # No JUNIT_DIR: these workspaces run an allowlist check, not a browser, so
       # there are no tests to count and the row carries its status alone.
+      # Also continue-on-error, for the same reason: by the time this runs the
+      # suite has already passed or failed, and `job.status` below carries that
+      # verdict. Whether the row could be WRITTEN is a fact about the reporting
+      # server, and reporting it as a test failure is how a green suite came to
+      # be recorded as red.
       - name: Record this suite's result
         if: always()
+        continue-on-error: true
         env:
           MODE: suite
           SUITE_KEY: no-surface
@@ -393,8 +425,17 @@ jobs:
           cache: npm
           cache-dependency-path: app/mobile-app/package-lock.json
 
+      # continue-on-error, and it is NOT the swallowed failure rule 1 forbids.
+      # That rule is about the SUITE: a workspace whose specs did not run must
+      # never look like one that passed. This step runs no specs — it fetches
+      # optional plumbing (CYPRESS_E2E_*) that no spec reads yet, from a server
+      # that is not under test. Fatal, it turned a whole green suite red every
+      # time the reporter was briefly unreachable, which on this VPS is every
+      # deploy: the leg died here, before Cypress started, and the E2E page said
+      # the suite failed.
       - name: Fetch the run identity
         id: identity
+        continue-on-error: true
         env:
           MODE: start
         run: node scripts/report-e2e-run.mjs
@@ -458,8 +499,14 @@ jobs:
           npm run e2e -- --reporter junit \
             --reporter-options "mochaFile=cypress-artifacts/junit/results-[hash].xml"
 
+      # Also continue-on-error, for the same reason: by the time this runs the
+      # suite has already passed or failed, and `job.status` below carries that
+      # verdict. Whether the row could be WRITTEN is a fact about the reporting
+      # server, and reporting it as a test failure is how a green suite came to
+      # be recorded as red.
       - name: Record this suite's result
         if: always()
+        continue-on-error: true
         env:
           MODE: suite
           SUITE_KEY: native-web
@@ -535,14 +582,32 @@ jobs:
 
       # `always()` so the row is closed either way. A run that ends without this
       # is exactly the stuck RUNNING row the page warns about.
+      #
+      # continue-on-error for the reason given in rule 1: the verdict is already
+      # decided above, and this only writes it down. Fatal, it made the gate red
+      # on a run whose every suite passed — the server was mid-deploy and the
+      # ten minutes of retries ran out — which is the exact misreading this
+      # whole gate exists to prevent. A stuck RUNNING row is the lesser harm,
+      # and the page already treats an old one as unknown rather than live.
       - name: Record the run's outcome
         if: always()
+        id: record
+        continue-on-error: true
         env:
           MODE: finish
           RUN_STATUS: ${{ steps.verdict.outputs.outcome || 'FAILED' }}
           RUN_ERROR: ${{ steps.verdict.outputs.reason || 'The gate did not finish — see the run log.' }}
           STARTED_AT: ${{ needs.setup.outputs.started_at }}
         run: node scripts/report-e2e-run.mjs
+
+      # Not silent, just not fatal — "nobody was told" is worth seeing in the
+      # run, and worth telling apart from "a test failed".
+      - name: Note that the run could not be recorded
+        if: steps.record.outcome == 'failure'
+        run: |
+          echo "::warning::The suites ran and their verdict stands, but this run could not be" \
+               "recorded — the reporting server was unreachable. Its row on Tech > E2E Tests" \
+               "will sit RUNNING with nothing left to close it."
 
       - name: Fail the workflow when the gate did not pass
         if: steps.verdict.outputs.outcome != 'SUCCESS'

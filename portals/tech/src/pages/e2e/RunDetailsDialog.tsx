@@ -94,6 +94,14 @@ export default function RunDetailsDialog({ run, onClose }: Readonly<Props>) {
 
           <Divider />
           <Typography variant="subtitle2">{t('tech.e2e.detailSuites')}</Typography>
+          {/* Why there is nothing to watch, when there is nothing to watch. A
+              suite row simply omits its link, so without this the absence of
+              every recording in a run would have no explanation at all. */}
+          {run.video_error && (
+            <Alert severity="info" variant="outlined">
+              {t('tech.e2e.videoError', { vars: { reason: run.video_error } })}
+            </Alert>
+          )}
           <SuiteResultsList results={run.results} />
         </Stack>
       </DialogContent>

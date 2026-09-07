@@ -21,9 +21,10 @@ interface RowProps {
   statusLabel: string;
   countsLabel: string;
   jobLabel: string;
+  watchLabel: string;
 }
 
-function SuiteRow({ result, statusLabel, countsLabel, jobLabel }: Readonly<RowProps>) {
+function SuiteRow({ result, statusLabel, countsLabel, jobLabel, watchLabel }: Readonly<RowProps>) {
   return (
     <Box
       sx={{
@@ -59,6 +60,21 @@ function SuiteRow({ result, statusLabel, countsLabel, jobLabel }: Readonly<RowPr
               underline="hover"
             >
               {jobLabel}
+            </Link>
+          )}
+          {/* The recording lives in Slack, which is where it plays — this is a
+              way back to it, not a second copy of it. A leg that recorded
+              nothing, or a run that could not share what it recorded, simply
+              has no link. */}
+          {result.video_permalink && (
+            <Link
+              href={result.video_permalink}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="caption"
+              underline="hover"
+            >
+              {watchLabel}
             </Link>
           )}
         </Stack>
@@ -116,6 +132,7 @@ export default function SuiteResultsList({ results }: Readonly<Props>) {
             statusLabel={statusLabels[result.status]}
             countsLabel={result.status === 'SKIPPED' ? t('tech.e2e.suiteNotSelected') : counts}
             jobLabel={t('tech.e2e.viewJob')}
+            watchLabel={t('tech.e2e.watchRecording')}
           />
         );
       })}

@@ -480,48 +480,81 @@ export const clubAdminProfileService = {
       )
     );
 
-    const { MeetingModel } = await import('@modules/survey/meeting.model');
     let created = 0;
-
     for (const user of users as any[]) {
-      const userId = String(user._id);
-      if (existing.has(userId)) continue;
+      if (existing.has(String(user._id))) continue;
+      if (await clubAdminProfileService.ensureForUser(String(user._id))) created += 1;
+    }
 
-      // The approved CLUB_ADMIN meeting is where the taxonomy and the real
-      // joining date live; without one we fall back to the account itself.
-      const meeting = await MeetingModel.findOne({
-        user_id: user._id,
-        kind: 'CLUB_ADMIN',
-        approval_status: 'APPROVED',
-      })
-        .sort({ created_at: -1 })
-        .lean();
+    return { created, skipped: users.length - created };
+  },
 
-      const name = [user.profile?.first_name, user.profile?.last_name]
-        .filter(Boolean)
-        .join(' ')
-        .trim();
-      const phone = user.auth?.phone
-        ? `${user.auth.phone.extension ?? ''}${user.auth.phone.number ?? ''}`
-        : '';
+  /**
+   * The Club Admin record for a user, created if it is not there yet.
+   *
+   * Granting the CLUB_ADMIN role IS the appointment — there is no application
+   * to approve and nothing to wait for — so the record appears with the role
+   * rather than only for people who came through an onboarding meeting. The
+   * boot backfill and the Admin portal's Roles dialog both land here, because
+   * a record created two ways would be two records that differ.
+   *
+   * Idempotent, and silent when the record already exists: re-granting a role
+   * somebody already holds must not mint a second CADM id.
+   *
+   * @returns true when a record was created, false when one already existed.
+   */
+  async ensureForUser(userId: string): Promise<boolean> {
+    if (!Types.ObjectId.isValid(userId)) return false;
+    const existing = await ClubAdminProfileModel.exists({ user_id: new Types.ObjectId(userId) });
+    if (existing) return false;
 
+    const user = await UserModel.findById(userId)
+      .select('profile.first_name profile.last_name auth.email auth.phone created_at')
+      .lean<any>();
+    if (!user) return false;
+
+    // The approved CLUB_ADMIN meeting is where the taxonomy and the real
+    // joining date live; a directly-assigned admin has none, so the account
+    // itself is the fallback.
+    const { MeetingModel } = await import('@modules/survey/meeting.model');
+    const meeting = await MeetingModel.findOne({
+      user_id: user._id,
+      kind: 'CLUB_ADMIN',
+      approval_status: 'APPROVED',
+    })
+      .sort({ created_at: -1 })
+      .lean<any>();
+
+    const name = [user.profile?.first_name, user.profile?.last_name]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    const phone = user.auth?.phone
+      ? `${user.auth.phone.extension ?? ''}${user.auth.phone.number ?? ''}`
+      : '';
+    const when = meeting?.feedback_sent_at ?? user.created_at ?? new Date();
+
+    try {
       await ClubAdminProfileModel.create({
         user_id: user._id,
         full_name: name,
         email: user.auth?.email ?? '',
         phone,
-        super_category_id: (meeting as any)?.super_category_id ?? null,
-        category_id: (meeting as any)?.category_id ?? null,
-        sub_category_id: (meeting as any)?.sub_category_id ?? null,
-        request_no: (meeting as any)?.request_no ?? null,
+        super_category_id: meeting?.super_category_id ?? null,
+        category_id: meeting?.category_id ?? null,
+        sub_category_id: meeting?.sub_category_id ?? null,
+        request_no: meeting?.request_no ?? null,
         status: 'APPROVED',
         is_active: true,
-        approved_at: (meeting as any)?.feedback_sent_at ?? user.created_at ?? new Date(),
-        joined_at: (meeting as any)?.feedback_sent_at ?? user.created_at ?? new Date(),
+        approved_at: when,
+        joined_at: when,
       });
-      created += 1;
+      return true;
+    } catch (err) {
+      // Two grants landing together: `user_id` is unique, so the loser simply
+      // has nothing to do.
+      logs.server.warn('clubAdminProfile', 'ensureForUser', { error: err, userId });
+      return false;
     }
-
-    return { created, skipped: users.length - created };
   },
 };

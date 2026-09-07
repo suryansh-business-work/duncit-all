@@ -317,6 +317,13 @@ export const TECH_BUNDLE: NestedCatalogue = {
       slackNotConfigured:
         'Slack is not connected, so there is nothing to post to. Add a bot token in Environment Variables → Slack and mark that entry default.',
       channelFormat: 'That is not a Slack channel ID — they look like C0123ABCD.',
+      recordVideos: 'Record every suite and post the videos',
+      recordVideosHint:
+        'Each suite is recorded from its first spec to its last, joined into one video, and posted under the run’s own message in the results channel. Recordings of a run that falls off the end of “Keep last” above are deleted from Slack with it — a workspace has a storage quota, and a full one stops Slack accepting any upload at all.',
+      recordVideosNoScope:
+        'The Slack bot token cannot upload files, so nothing will be posted. Add the files:write scope at api.slack.com/apps → your app → OAuth & Permissions, reinstall the app to the workspace, and paste the new token into Environment Variables → Slack.',
+      watchRecording: 'Watch the recording',
+      videoError: 'The recordings did not reach Slack: {reason}',
       saved: 'Settings saved.',
       ciHeading: 'Can CI reach us?',
       ciLastReport: 'Last reported {when}, as {who}.',

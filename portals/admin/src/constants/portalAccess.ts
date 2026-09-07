@@ -46,6 +46,9 @@ export const PORTAL_ACCESS: PortalAccess[] = [
       { key: 'VENUE_OWNER', name: 'Venue Owner' },
       { key: 'ECOMM_MANAGER', name: 'E-commerce Manager' },
       { key: 'CLUB_ADMIN', name: 'Club Admin' },
+      // Granted straight from here, like Club Admin: there is no onboarding
+      // application behind either role, so the switch IS the appointment.
+      { key: 'REGIONAL_CLUB_ADMIN', name: 'Regional Club Admin' },
     ],
   },
   {

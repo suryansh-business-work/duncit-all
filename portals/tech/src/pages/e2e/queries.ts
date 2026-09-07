@@ -23,6 +23,14 @@ export interface E2eSuiteResult {
   duration_seconds: number | null;
   error: string;
   job_url: string;
+  /** The Slack file this leg's whole run was recorded into. Empty when nothing
+   * was recorded — every suite with no browser, and every run whose bot token
+   * has no files:write. */
+  video_file_id: string;
+  /** Where that recording sits in Slack. Empty until the finished run shares it. */
+  video_permalink: string;
+  video_seconds: number | null;
+  video_bytes: number | null;
   reported_at: string | null;
 }
 
@@ -66,6 +74,8 @@ export interface E2eRunRow {
   slack_channel: string | null;
   slack_ts: string | null;
   slack_error: string | null;
+  /** Why the recordings did not reach Slack, when the announcement itself did. */
+  video_error: string | null;
   created_at: string | null;
 }
 
@@ -86,6 +96,12 @@ export interface E2eRunSettings {
   mute_communications: boolean;
   /** Return one-time codes in the response instead of sending them. */
   otp_bypass: boolean;
+  /** Record every suite start to end and post the videos to the results channel. */
+  record_videos: boolean;
+  /** False when the bot token has no files:write, which is the one thing that
+   * stops recordings reaching Slack while the rest of the integration works.
+   * Null when Slack is not connected, or could not be asked. */
+  can_upload_videos: boolean | null;
   slack_channel: string | null;
   slack_configured: boolean;
   login_email_preview: string;
@@ -123,6 +139,10 @@ const RUN_FIELDS = `
     duration_seconds
     error
     job_url
+    video_file_id
+    video_permalink
+    video_seconds
+    video_bytes
     reported_at
   }
   totals {
@@ -151,6 +171,7 @@ const RUN_FIELDS = `
   slack_channel
   slack_ts
   slack_error
+  video_error
   created_at
 `;
 
@@ -204,6 +225,8 @@ export const E2E_RUN_SETTINGS = gql`
       identity_phone
       mute_communications
       otp_bypass
+      record_videos
+      can_upload_videos
       slack_channel
       slack_configured
       login_email_preview

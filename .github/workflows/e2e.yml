@@ -303,9 +303,17 @@ jobs:
           # spaces in it, so it needs no quoting. (The native-web leg below runs
           # through `run: |`, where bash does strip them, which is why the same
           # line is correct there and wrong here.)
+          #
+          # `video=true` turns on the per-spec recording every cypress.config.ts
+          # already has a videosFolder for. Cypress 13 dropped compression to
+          # `false` by default, which writes a raw capture — 32 is the CRF the
+          # older default used and is what keeps a ten-spec suite in single-digit
+          # megabytes rather than hundreds. The parts are joined into ONE video
+          # of the whole suite by the stitch step below.
           command: >-
             pnpm e2e --browser chrome --reporter junit
             --reporter-options mochaFile=cypress-artifacts/junit/results-[hash].xml
+            --config video=true,videoCompression=32
           start: pnpm preview
           wait-on: 'http://localhost:${{ matrix.port }}'
           wait-on-timeout: 120
@@ -326,6 +334,49 @@ jobs:
           JUNIT_DIR: ${{ matrix.dir }}/cypress-artifacts/junit
           STAGE: Running suites
         run: node scripts/report-e2e-run.mjs
+
+      # Deliberately AFTER the result is recorded. The row is the store of
+      # record and must not wait on ffmpeg, and E2E_STAGE — which names what a
+      # red leg died doing — would otherwise be overwritten by "stitching" on a
+      # suite that actually broke in Cypress.
+      #
+      # `always()`, because a FAILED suite's recording is the one worth
+      # watching. continue-on-error for the reason rule 1 gives: this runs no
+      # specs, and a video that could not be made must never turn a green suite
+      # red.
+      - name: Stitch this suite's recording
+        if: always()
+        continue-on-error: true
+        env:
+          MODE: stitch
+          SUITE_KEY: ${{ matrix.name }}
+          VIDEO_DIR: ${{ matrix.dir }}/cypress-artifacts/videos
+          OUT_DIR: e2e-videos
+        run: |
+          # ffprobe/ffmpeg join the per-spec captures without re-encoding. Not
+          # assumed present: the runner image has carried ffmpeg for years and
+          # is not contractually obliged to keep doing so, and a suite losing
+          # its recording to a changed image is a silent loss.
+          command -v ffmpeg >/dev/null || {
+            sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          }
+          node scripts/e2e-videos.mjs
+
+      # Carried out of the job rather than sent to Slack here: a recording is
+      # shared into the THREAD of the run's announcement, and that message does
+      # not exist until every leg has reported. The gate collects these and
+      # uploads them once the thread is there.
+      - name: Keep this suite's recording for the gate
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v6
+        with:
+          name: e2e-video-${{ matrix.name }}
+          path: e2e-videos
+          if-no-files-found: ignore
+          # Long enough for the gate that runs minutes later, and no longer:
+          # the copy that is kept lives in Slack.
+          retention-days: 1
 
       - name: Upload Cypress screenshots on failure
         if: failure()
@@ -497,7 +548,8 @@ jobs:
           npx --yes serve dist --single -l 2022 &
           npx --yes wait-on http://localhost:2022 --timeout 120000
           npm run e2e -- --reporter junit \
-            --reporter-options "mochaFile=cypress-artifacts/junit/results-[hash].xml"
+            --reporter-options "mochaFile=cypress-artifacts/junit/results-[hash].xml" \
+            --config video=true,videoCompression=32
 
       # Also continue-on-error, for the same reason: by the time this runs the
       # suite has already passed or failed, and `job.status` below carries that
@@ -515,6 +567,33 @@ jobs:
           JUNIT_DIR: app/mobile-app/cypress-artifacts/junit
           STAGE: Running suites
         run: node scripts/report-e2e-run.mjs
+
+      # The same two steps the browser matrix runs, for the same reasons — see
+      # the comments there. This leg is separate only because app/mobile-app is
+      # a standalone npm workspace, not because its recording is different.
+      - name: Stitch this suite's recording
+        if: always()
+        continue-on-error: true
+        env:
+          MODE: stitch
+          SUITE_KEY: native-web
+          VIDEO_DIR: app/mobile-app/cypress-artifacts/videos
+          OUT_DIR: e2e-videos
+        run: |
+          command -v ffmpeg >/dev/null || {
+            sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          }
+          node scripts/e2e-videos.mjs
+
+      - name: Keep this suite's recording for the gate
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v6
+        with:
+          name: e2e-video-native-web
+          path: e2e-videos
+          if-no-files-found: ignore
+          retention-days: 1
 
       # The browser matrix uploads its failure screenshots; this job had no
       # equivalent, so a red native leg could only be read from the log.
@@ -608,6 +687,44 @@ jobs:
           echo "::warning::The suites ran and their verdict stands, but this run could not be" \
                "recorded — the reporting server was unreachable. Its row on Tech > E2E Tests" \
                "will sit RUNNING with nothing left to close it."
+
+      # ── the recordings ──────────────────────────────────────────────────────
+      #
+      # AFTER `Record the run's outcome`, and that order is the whole design: a
+      # recording is shared with `thread_ts` and the thread is the run's own
+      # announcement, which the step above is what creates. Uploading from each
+      # leg instead would mean holding a half-finished Slack file open for the
+      # length of the sweep.
+      #
+      # Both steps are continue-on-error for the reason rule 1 gives: they run
+      # no specs. A sweep whose videos could not be posted is a sweep that
+      # passed or failed on its own merits, and the row says why they are
+      # missing.
+      - name: Collect the suites' recordings
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v6
+        with:
+          pattern: e2e-video-*
+          # Into one flat directory: every file is already named after its
+          # suite, which is the only thing the uploader reads them by.
+          merge-multiple: true
+          path: e2e-videos
+
+      - name: Post the recordings to Slack
+        if: always()
+        continue-on-error: true
+        env:
+          MODE: upload
+          VIDEO_DIR: e2e-videos
+        run: |
+          # ffprobe reads each video's length, which becomes the duration on
+          # its Slack title. The gate installs no dependencies of its own, so
+          # this is the one thing it needs that the checkout does not carry.
+          command -v ffprobe >/dev/null || {
+            sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          }
+          node scripts/e2e-videos.mjs
 
       - name: Fail the workflow when the gate did not pass
         if: steps.verdict.outputs.outcome != 'SUCCESS'

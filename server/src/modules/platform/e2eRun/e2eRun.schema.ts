@@ -78,6 +78,17 @@ export const e2eRunTypeDefs = gql`
     error: String!
     "The GitHub job this leg ran as, so a red row leads straight to its log."
     job_url: String!
+    """
+    The Slack file this leg's recording became — every spec it ran, stitched
+    into one video of the suite from start to end. Empty when nothing was
+    recorded, which is every suite with no browser and every run whose token
+    lacks 'files:write'.
+    """
+    video_file_id: String!
+    "Where that recording sits in Slack. Empty until the finished run shares it."
+    video_permalink: String!
+    video_seconds: Int
+    video_bytes: Int
     reported_at: String
   }
 
@@ -155,6 +166,12 @@ export const e2eRunTypeDefs = gql`
     slack_ts: String
     "Why the Slack post did not happen, when it did not."
     slack_error: String
+    """
+    Why the recordings did not reach Slack, when the announcement itself did.
+    A separate fact from slack_error: a message that posted with no videos
+    under it was still delivered.
+    """
+    video_error: String
     created_at: String
   }
 
@@ -208,6 +225,18 @@ export const e2eRunTypeDefs = gql`
     and single use are unchanged. Never on for a production database.
     """
     otp_bypass: Boolean!
+    """
+    Record every suite from start to end and post the videos to the results
+    channel. Off means the run still reports its counts and announces itself,
+    with nothing to watch.
+    """
+    record_videos: Boolean!
+    """
+    False when the bot token has no 'files:write' scope, which is the one thing
+    that stops recordings reaching Slack while everything else about the
+    integration works. Null when Slack is not configured at all.
+    """
+    can_upload_videos: Boolean
     """
     Slack channel ID a finished run announces to. Stored on the SLACK env entry
     beside the bot token, so Environment Variables shows it too. Empty means the
@@ -350,6 +379,48 @@ export const e2eRunTypeDefs = gql`
     commit_sha: String
   }
 
+  """
+  A pre-authorised place to put one recording's bytes.
+
+  'ok: false' is a normal answer, not an error: videos are switched off, no
+  results channel is configured, or the bot token has no 'files:write'. CI reads
+  'reason', says so in its log and moves on — a run must never go red because
+  nobody could watch it afterwards.
+  """
+  type E2eVideoUploadAuth {
+    ok: Boolean!
+    "Where to POST the bytes. Pre-authorised — it carries no bot token."
+    upload_url: String!
+    "The handle the finished run shares this file by."
+    file_id: String!
+    "Why there is no upload URL, when there is not."
+    reason: String!
+  }
+
+  input E2eVideoUploadAuthInput {
+    dispatch_id: String
+    workflow_run_id: String
+    "The matrix leg this recording is of."
+    suite: String!
+    file_name: String!
+    "Exact byte count. Slack checks it against what actually arrives."
+    length: Int!
+  }
+
+  input E2eRunVideoInput {
+    suite: String!
+    "The file_id handed back by e2eVideoUploadAuth, once its bytes are in."
+    file_id: String!
+    seconds: Int
+    bytes: Int
+  }
+
+  input AttachE2eRunVideosInput {
+    dispatch_id: String
+    workflow_run_id: String
+    videos: [E2eRunVideoInput!]!
+  }
+
   input UpdateE2eRunSettingsInput {
     enabled: Boolean!
     frequency: E2eScheduleFrequency!
@@ -371,6 +442,8 @@ export const e2eRunTypeDefs = gql`
     mute_communications: Boolean!
     "Return one-time codes in the API response instead of sending them."
     otp_bypass: Boolean!
+    "Record every suite and post the videos to the results channel."
+    record_videos: Boolean!
     """
     Slack channel ID finished runs announce to. Empty clears it. Written onto
     the SLACK env entry rather than this feature's own settings, so every Slack
@@ -416,6 +489,21 @@ export const e2eRunTypeDefs = gql`
     matrix and the final gate all write to ONE row rather than twenty.
     """
     reportE2eRun(input: ReportE2eRunInput!): E2eRun!
+    """
+    Reserve a place in Slack for one suite's recording. Tech/Super admin only.
+
+    The bytes go straight from the runner to Slack on the pre-authorised URL
+    this hands back: the bot token stays on this server, and a 30 MB video
+    never touches our disk on its way through.
+    """
+    e2eVideoUploadAuth(input: E2eVideoUploadAuthInput!): E2eVideoUploadAuth!
+    """
+    Share the uploaded recordings under the run's own Slack message, and record
+    which file each suite became. Called once, by the gate, after the run has
+    been reported and announced — that is the only moment the thread to hang
+    them under exists.
+    """
+    attachE2eRunVideos(input: AttachE2eRunVideosInput!): E2eRun!
     updateE2eRunSettings(input: UpdateE2eRunSettingsInput!): E2eRunSettings!
     "Delete a run. Tech/Super admin only."
     deleteE2eRun(id: ID!): Boolean!

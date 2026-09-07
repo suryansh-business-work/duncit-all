@@ -334,16 +334,69 @@ export const myHost = {
   id: 'host1',
   status: 'APPROVED',
   is_active: true,
+  /*
+    One id, `cat1`, has to be three things at once: the club's `category_id`,
+    this host's `sub_category_id`, and the `subCategories` row.
+
+    `filterClubs` keys a host category as `super|SUB` and then asks whether the
+    club's `super|category_id` is in that set, and the stepper looks a pod's
+    minimum pax up by the same club `category_id`. Crossed over, the club simply
+    never appears in the picker and nothing on screen says why.
+  */
   host_categories: [
     {
       super_category_id: 'sc1',
       category_id: 'cat1',
-      sub_category_id: 'sub1',
+      sub_category_id: 'cat1',
       super_category_name: 'Play',
       category_name: 'Music',
-      sub_category_name: 'Jazz',
+      sub_category_name: 'Music',
     },
   ],
+};
+
+/**
+ * A venue the pod's club is matched to, with one named space.
+ *
+ * A named `capacity_items` entry rather than the whole-venue fallback, because
+ * a space's label is what the slot list is filtered by — the two have to line
+ * up (`slot.space_label === space.label`) or the calendar renders empty with
+ * nothing saying why.
+ */
+export const podVenue = {
+  id: 'venue1',
+  owner_user_id: 'venue-owner-1',
+  location_id: 'loc1',
+  venue_name: 'Indiranagar Studio',
+  venue_type: 'Studio',
+  capacity: 30,
+  capacity_items: [{ label: 'Main Hall', capacity: 24 }],
+  cover_image_url: 'https://img/venue.jpg',
+  city: 'Bengaluru',
+  locality: 'Indiranagar',
+  address_line1: '100 Feet Road',
+  state: 'Karnataka',
+  postal_code: '560038',
+  country: 'India',
+  lat: 12.97,
+  lng: 77.64,
+  owner_name: 'Venue Owner',
+  owner_phone: '9999999999',
+  owner_email: 'venue@duncit.com',
+  is_active: true,
+};
+
+/** One published slot on {@link podVenue}'s Main Hall. Picking it is what sets
+ * the pod's start and end — a physical pod never types a date. */
+export const venueSlot = {
+  id: 'slot1',
+  start_at: future(7),
+  end_at: new Date(Date.now() + 7 * DAY + 2 * 3_600_000).toISOString(),
+  whole_day: false,
+  price: 2000,
+  space_label: 'Main Hall',
+  capacity: 24,
+  status: 'AVAILABLE',
 };
 
 /**
@@ -387,11 +440,67 @@ export function createPodFixtures(over: Record<string, unknown> = {}) {
         },
       ],
       locations: [{ ...locations[0], active_club_count: 1 }],
-      publicVenues: [],
+      publicVenues: [podVenue],
       myHost,
-      subCategories: [{ id: 'sub1', min_pax: 2 }],
+      subCategories: [{ id: 'cat1', min_pax: 2 }],
       availablePodProducts: [],
       ...over,
+    },
+  };
+}
+
+/**
+ * Everything the stepper needs to walk all four steps and publish.
+ *
+ * The three writes are separate from the reads because a full cycle is the only
+ * thing that reaches them: the draft is saved on every step change, the content
+ * is screened before publishing, and the publish itself decides where the host
+ * lands. `venue_approval_status` is the fork — PENDING sends them to the
+ * waiting page, anything else to Host Management.
+ */
+export function createPodCycleFixtures(
+  over: { venueApproval?: string; violations?: unknown[] } = {},
+) {
+  return {
+    ...createPodFixtures(),
+    /*
+      The walk starts from a draft carrying ONE thing: a cover image.
+
+      A pod cannot be published without one — `refinePublish` runs `hasImageLine`
+      over `media_text` — and the cover field is an upload widget, not somewhere
+      a URL can be typed. So a spec that filled every visible field would still
+      be refused, silently, by a rule belonging to a step it had already left.
+      Resuming a draft is how a host who attached a cover earlier comes back to
+      finish, which is exactly the state this walks from. Everything else on all
+      four steps is typed or clicked.
+    */
+    MyPodDraftForEdit: {
+      myPodDraft: {
+        id: 'draft1',
+        step: 0,
+        // The city too: hydrating a draft REPLACES the initial values, so it
+        // skips the `selected_location_id` default a fresh form gets and step 2
+        // would refuse to close with no location on a pod the host had already
+        // placed. A real saved draft carries the city it was started in.
+        payload: JSON.stringify({
+          media_text: 'https://img/pod-cover.jpg',
+          location_id: 'loc1',
+        }),
+      },
+    },
+    CreatePodVenueSlots: { venueAvailableSlots: [venueSlot] },
+    SavePodDraft: { savePodDraft: { id: 'draft1' } },
+    ModeratePodContent: {
+      moderatePodContent: {
+        allowed: (over.violations ?? []).length === 0,
+        violations: over.violations ?? [],
+      },
+    },
+    PublishPodDraft: {
+      publishPodDraft: {
+        id: 'pod-new',
+        venue_approval_status: over.venueApproval ?? 'PENDING',
+      },
     },
   };
 }

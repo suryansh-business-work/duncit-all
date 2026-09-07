@@ -31,7 +31,7 @@ const WORKFLOW_FILE = 'e2e.yml';
 
 const badInput = (msg: string) => new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
 
-const str = (v: unknown): string => String(v ?? '').trim();
+const str = (v: string | null | undefined): string => String(v ?? '').trim();
 const num = (v: unknown): number | null => {
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
@@ -331,6 +331,7 @@ export const e2eRunService = {
   },
 
   async updateSettings(input: any) {
+    const previous = await settingsDoc();
     if (!parseTimeOfDay(str(input.time_of_day))) {
       throw badInput('Time of day must be HH:mm, e.g. 03:00.');
     }
@@ -355,6 +356,12 @@ export const e2eRunService = {
     if (input.password !== undefined && input.password !== null) {
       set.password = String(input.password);
     }
+    // Turning the schedule ON starts the clock from now, rather than letting
+    // the catch-up rule fire a sweep the moment it is enabled: `last_run_at` is
+    // null on a schedule that has never run, so without this, switching it on
+    // at two in the afternoon starts a forty-minute run at two in the
+    // afternoon. Every later window still catches up normally.
+    if (set.enabled && !previous.enabled) set.last_run_at = new Date();
     await E2eRunSettingsModel.updateOne({ key: E2E_SETTINGS_KEY }, { $set: set }, { upsert: true });
     return this.settings();
   },

@@ -247,7 +247,11 @@ export interface IE2eRunSettings extends Document {
 const e2eRunSettingsSchema = new Schema<IE2eRunSettings>(
   {
     key: { type: String, required: true, unique: true },
-    enabled: { type: Boolean, default: true },
+    // OFF until an operator turns it on, the same as the nightly database
+    // backup. The singleton is created by the first read — a default of true
+    // would mean deploying this feature silently starts a forty-minute CI
+    // sweep before anyone has opened the page.
+    enabled: { type: Boolean, default: false },
     frequency: { type: String, enum: ['DAILY', 'WEEKLY'], default: 'DAILY' },
     // The quiet hour the platform's own users are asleep through, which is the
     // whole reason a nightly suite is nightly.

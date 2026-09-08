@@ -8,6 +8,7 @@ import { loadClub } from '@modules/clubs/club/club.loaders';
 import type { GraphQLContext } from '@context';
 import { requireRole, requireAuth } from '@middleware/rbac';
 import { loadUserActors } from '@modules/access/user/user.loaders';
+import { userService } from '@modules/access/user/user.service';
 import { resolvePodPlace } from './pod.place';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
@@ -166,15 +167,6 @@ export const podResolvers = {
       // Every club and every host for the whole page, in one read each. Without
       // this the Pod field resolvers below run once per row and the feed costs
       // hundreds of round trips.
-      await primePodRelations(ctx, rows);
-      return rows;
-    },
-    userJoinedPods: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
-      // The same gate posts and stories answer through: a private account's
-      // pods are for its owner and followers, and the refusal is an empty list.
-      const viewerId = ctx.user?.id ?? null;
-      if (!(await userService.canViewContent(args.user_id, viewerId))) return [];
-      const rows = await podService.listJoinedBy(args.user_id);
       await primePodRelations(ctx, rows);
       return rows;
     },

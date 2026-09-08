@@ -433,7 +433,6 @@ export const podTypeDefs = /* GraphQL */ `
     Pods tab lists. Follows the posts/stories rule for a PRIVATE account: empty
     unless the viewer is the owner or a follower.
     """
-    userJoinedPods(user_id: ID!): [Pod!]!
     """
     include_deleted also lists cancelled pods — honored for admin reviewers only.
     lifecycle narrows the page to one derived bucket; asking for CANCELLED is

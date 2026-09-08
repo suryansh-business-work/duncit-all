@@ -2,8 +2,8 @@ import { YStack } from 'tamagui';
 import type { Control } from 'react-hook-form';
 
 import { FormTextField } from '@/components/FormTextField';
+import { DobDateField } from '@/forms/account-edit/DobDateField';
 import { useTranslation } from '@/hooks/useTranslation';
-import { DobYearField } from '../DobYearField';
 import type { SignupFormValues } from '../signup.types';
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
 }
 
 /**
- * Step one — who you are: name, birth year, and a friend's code. Tamagui twin
+ * Step one — who you are: name, date of birth, and a friend's code. Tamagui twin
  * of mWeb's <WhoStep/>.
  *
  * The referral code sits here rather than at the end because this is the step
@@ -32,7 +32,7 @@ export function WhoStep({ control, minAge }: Readonly<Props>) {
         textContentType="name"
         required
       />
-      <DobYearField control={control} minAge={minAge} />
+      <DobDateField control={control} minAge={minAge} />
       <FormTextField
         control={control}
         name="referralCode"

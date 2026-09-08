@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
-import { latestEligibleBirthYear } from '@duncit/datetime';
+import { latestEligibleDob, toIsoDay } from '@duncit/datetime';
 import type { SignupStep } from '@duncit/utils';
 
 import { SignupForm } from '@/forms/signup';
 import { renderWithProviders } from '@/utils/test-utils';
 
-/** The newest year the picker offers, so the test never rots with the calendar. */
-const ELIGIBLE_YEAR = String(latestEligibleBirthYear(18));
+/** The newest birthday the picker offers, so the test never rots with the calendar. */
+const ELIGIBLE_DOB = toIsoDay(latestEligibleDob(18));
 
 /**
  * The form only ever shows one step, and the screen owns which — so the
@@ -22,9 +22,8 @@ const next = () => screen.getByTestId('signup-next');
 
 function fillWho() {
   fireEvent.changeText(screen.getByTestId('field-name'), 'Riya Sharma');
-  // The year comes from a sheet: open the trigger, then pick the option.
-  fireEvent.press(screen.getByTestId('signup-dob-year-trigger'));
-  fireEvent.press(screen.getByTestId(`signup-dob-year-option-${ELIGIBLE_YEAR}`));
+  // The date of birth is typed into the shared picker's box.
+  fireEvent.changeText(screen.getByTestId('field-dob'), ELIGIBLE_DOB);
 }
 
 function fillContact() {
@@ -54,7 +53,7 @@ describe('SignupForm — one step at a time', () => {
   it('opens on step one, showing only its own boxes', () => {
     renderWithProviders(<Harness />);
     expect(screen.getByTestId('field-name')).toBeOnTheScreen();
-    expect(screen.getByTestId('signup-dob-year-trigger')).toBeOnTheScreen();
+    expect(screen.getByTestId('field-dob')).toBeOnTheScreen();
     expect(screen.getByTestId('field-referralCode')).toBeOnTheScreen();
     // The later steps' fields are not rendered at all.
     expect(screen.queryByTestId('field-email')).toBeNull();
@@ -86,7 +85,7 @@ describe('SignupForm — one step at a time', () => {
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0][0]).toMatchObject({
       name: 'Riya Sharma',
-      dobYear: ELIGIBLE_YEAR,
+      dob: ELIGIBLE_DOB,
       email: 'riya@duncit.com',
       phoneNumber: '9845012345',
       password: 'StrongPass123',

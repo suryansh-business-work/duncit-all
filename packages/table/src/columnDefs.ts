@@ -92,6 +92,23 @@ function buildTooltipValueGetter<T>(column: DuncitColumn<T>) {
 const NEVER_EQUAL = () => false;
 
 /**
+ * Order-keeping comparator, on every column.
+ *
+ * The client-side row model re-sorts whatever it is handed the moment a column
+ * def carries a `sort`, and it sorts by the column's VALUE — the value getter's
+ * output. For a date column that is the formatted text ("8 Sep 2026"), so a
+ * page the server had already put in chronological order came back out of the
+ * grid in alphabetical-by-day order; every other column was one locale-compare
+ * away from disagreeing with Mongo the same way.
+ *
+ * Ordering belongs to `fetchRows` — the server's sort, or `clientTableFetch`'s —
+ * and the grid only ever holds one page of it. Answering "equal" for every pair
+ * keeps the fetched order (Array#sort is stable), while the header arrows still
+ * drive `onSortChanged` and the refetch that really re-orders the rows.
+ */
+const KEEP_FETCH_ORDER = () => 0;
+
+/**
  * Derives AG Grid column defs from DuncitColumn[]. Sort display is controlled: the def
  * carries the hook's current sort so header arrows always mirror the query state.
  */
@@ -111,6 +128,7 @@ export function buildColDefs<T>(
     flex: column.flex,
     minWidth: column.minWidth,
     sort: sortBy === column.field ? sortDir : null,
+    comparator: KEEP_FETCH_ORDER,
     valueGetter: buildValueGetter(column),
     cellRenderer: buildCellRenderer(column),
     equals: column.cellRenderer ? NEVER_EQUAL : undefined,

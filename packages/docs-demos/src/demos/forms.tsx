@@ -43,7 +43,7 @@ interface WithdrawMock {
 
 interface SchemaMock {
   name: string;
-  dobYear: string;
+  dob: string;
   email: string;
   password: string;
   otp: string;
@@ -118,7 +118,7 @@ export default defineDemos('forms', [
       'Blank the email and watch the FIRST message: it says the field is required, not that it is invalid. The app used to carry its own copy of this schema with no min(1) and no length cap, so the same empty box read differently on the two surfaces. Change channel to EMAIL and the phone boxes stop being asked for.',
     mock: {
       name: 'Meera Nair',
-      dobYear: '1998',
+      dob: '1998-04-23',
       email: 'meera@duncit.com',
       password: 'correct-horse',
       otp: '482913',
@@ -171,7 +171,7 @@ export default defineDemos('forms', [
         Signup: say(
           makeSignupSchema(t, 18).safeParse({
             name: mock.name,
-            dobYear: mock.dobYear,
+            dob: mock.dob,
             email: mock.email,
             phoneExtension: mock.extension,
             phoneNumber: mock.number,

@@ -225,7 +225,12 @@ export const authTypeDefs = gql`
     whatsapp_is_mobile: Boolean = true
     "From verifySignupWhatsAppOtp. Spent here, once."
     whatsapp_token: String!
-    dob: String
+    """
+    Date of birth. A Google credential carries no birthday, so the client asks
+    for it on the same step as the number — and it is as required as it is on
+    the email door, because the joining age is checked against it.
+    """
+    dob: String!
     city: String
     zone: String
     """

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { latestEligibleBirthYear } from '@duncit/datetime';
+import { latestEligibleDob, toIsoDay } from '@duncit/datetime';
 
 import { makeSignupSchema, signupDefaults } from '../src/schemas/signup';
 
@@ -8,11 +8,12 @@ const t = (key: string, options?: { vars?: Record<string, string | number> }) =>
   options?.vars ? `${key}:${JSON.stringify(options.vars)}` : key;
 
 const schema = makeSignupSchema(t, 18);
-const ELIGIBLE_YEAR = String(latestEligibleBirthYear(18));
+/** Eighteen today — the newest birthday the 18 rule still admits. */
+const ELIGIBLE_DOB = toIsoDay(latestEligibleDob(18));
 
 const valid = {
   name: 'Riya Sharma',
-  dobYear: ELIGIBLE_YEAR,
+  dob: ELIGIBLE_DOB,
   email: 'riya@duncit.com',
   phoneExtension: '+91',
   phoneNumber: '9845012345',
@@ -35,7 +36,7 @@ describe('the one signup contract', () => {
 
   it('exposes empty defaults with the market dial code', () => {
     expect(signupDefaults.name).toBe('');
-    expect(signupDefaults.dobYear).toBe('');
+    expect(signupDefaults.dob).toBe('');
     expect(signupDefaults.phoneExtension).toBe('+91');
     expect(signupDefaults.acceptedPolicyIds).toEqual([]);
   });
@@ -65,29 +66,30 @@ describe('the name rule the two surfaces used to disagree on', () => {
   });
 });
 
-describe('the birth year', () => {
+describe('the date of birth', () => {
   it('requires one', () => {
-    expect(errorsOf({ ...valid, dobYear: '' })).toContain(
-      'mweb.signup.validation.dobYearRequired',
+    expect(errorsOf({ ...valid, dob: '' })).toContain('mweb.signup.validation.dobRequired');
+  });
+
+  it('wants a real calendar day, as YYYY-MM-DD', () => {
+    expect(errorsOf({ ...valid, dob: '23/04/1998' })).toContain(
+      'mweb.signup.validation.dobInvalid',
+    );
+    expect(errorsOf({ ...valid, dob: '1998-02-30' })).toContain(
+      'mweb.signup.validation.dobInvalid',
     );
   });
 
-  it('wants four digits, from @duncit/regex', () => {
-    expect(errorsOf({ ...valid, dobYear: '90' })).toContain(
-      'mweb.signup.validation.dobYearInvalid',
-    );
-  });
-
-  it('refuses a year too recent to be old enough, and names the age', () => {
-    const tooYoung = String(Number(ELIGIBLE_YEAR) + 1);
-    expect(errorsOf({ ...valid, dobYear: tooYoung })).toContain(
+  it('refuses a day too recent to be old enough, and names the age', () => {
+    const tooYoung = toIsoDay(new Date(latestEligibleDob(18).getTime() + 86_400_000));
+    expect(errorsOf({ ...valid, dob: tooYoung })).toContain(
       'mweb.signup.validation.dobMinAge:{"years":18}',
     );
   });
 
   it('takes the minimum age it is given', () => {
     const strict = makeSignupSchema(t, 21);
-    expect(strict.safeParse({ ...valid, dobYear: ELIGIBLE_YEAR }).success).toBe(false);
+    expect(strict.safeParse({ ...valid, dob: ELIGIBLE_DOB }).success).toBe(false);
   });
 });
 
@@ -191,6 +193,6 @@ describe('the policies', () => {
 describe('the default minimum age', () => {
   it('falls back to the shared constant when none is given', () => {
     const relaxed = makeSignupSchema(t);
-    expect(relaxed.safeParse({ ...valid, dobYear: '1990' }).success).toBe(true);
+    expect(relaxed.safeParse({ ...valid, dob: '1990-04-23' }).success).toBe(true);
   });
 });

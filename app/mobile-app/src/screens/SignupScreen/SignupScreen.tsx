@@ -12,9 +12,9 @@ import { SignupForm } from '@/forms/signup';
 import { useSignupPolicies } from '@/hooks/usePolicies';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
+import { GoogleDetailsStep } from './GoogleDetailsStep';
 import { SignupStepperRail } from './SignupStepperRail';
 import { VerifyWhatsappStep } from './VerifyWhatsappStep';
-import { WhatsappNumberStep } from './WhatsappNumberStep';
 import { useSignupFlow } from './useSignupFlow';
 import { allPoliciesAccepted } from '@/utils/policy-acceptance';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -68,7 +68,7 @@ export function SignupScreen() {
       subtitle={t('mweb.signup.subtitle')}
     >
       <SignupStepperRail step={flow.step} askingNumber={flow.askingNumber} />
-      {onNumberStep ? <WhatsappNumberStep onSubmit={flow.submitNumber} /> : null}
+      {onNumberStep ? <GoogleDetailsStep onSubmit={flow.submitDetails} /> : null}
       {onVerifyStep && flow.verifying ? (
         <VerifyWhatsappStep
           extension={flow.verifying.extension}

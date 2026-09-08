@@ -3,8 +3,8 @@ import CardGiftcardOutlinedIcon from '@mui/icons-material/CardGiftcardOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
 import type { Control } from 'react-hook-form';
 import RhfTextField from '../../components/RhfTextField';
+import DobDateField from '../../../components/DobDateField';
 import { useTranslation } from '../../../i18n/useTranslation';
-import DobYearField from '../DobYearField';
 import { startIcon } from '../fieldProps';
 import type { RegisterFormValues } from '../register.types';
 
@@ -15,7 +15,7 @@ interface Props {
 }
 
 /**
- * Step one — who you are: name, birth year, and a friend's code.
+ * Step one — who you are: name, date of birth, and a friend's code.
  *
  * The referral code sits here rather than at the end because this is the step
  * a shared link lands on with the code already filled in; asking for it three
@@ -40,7 +40,7 @@ export default function WhoStep({ control, minAge }: Readonly<Props>) {
           input: startIcon(<PersonOutlineIcon fontSize="small" />),
         }}
       />
-      <DobYearField control={control} minAge={minAge} />
+      <DobDateField control={control} minAge={minAge} required />
       <RhfTextField
         control={control}
         name="referralCode"

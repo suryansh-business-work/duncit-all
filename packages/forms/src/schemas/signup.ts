@@ -17,8 +17,13 @@
  * bundled English.
  */
 import { z } from 'zod';
-import { BIRTH_YEAR, DIAL_CODE, EMAIL, PERSON_NAME, PHONE_INTL, REFERRAL_CODE } from '@duncit/regex';
-import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, isEligibleBirthYear } from '@duncit/datetime';
+import { DIAL_CODE, EMAIL, PERSON_NAME, PHONE_INTL, REFERRAL_CODE } from '@duncit/regex';
+import {
+  DEFAULT_MIN_ACCOUNT_AGE_YEARS,
+  ageInYears,
+  isEligibleDob,
+  isIsoDay,
+} from '@duncit/datetime';
 
 import type { Translate } from './translate';
 
@@ -59,15 +64,11 @@ function whatsappNumberShape(t: Translate) {
 }
 
 /**
- * The Google door's WhatsApp step: the same row, on its own.
+ * The WhatsApp row on its own — what `makeSignupSchema` spreads in as step two.
  *
- * Google proves an address and no number, so this row is asked on a step of its
- * own — before `signupWithGoogle` is called, because that mutation now needs
- * the number and the code that proved it.
- *
- * This is the ONE public spelling of the row: `makeSignupSchema` spreads its
- * `.shape` rather than calling the shape builder beside it, so there is no way
- * to change the row for one door and not the other.
+ * This is the ONE public spelling of the row: the signup schema and the Google
+ * door's step both take it from here, so there is no way to change the row for
+ * one door and not the other.
  */
 export function makeWhatsappNumberSchema(t: Translate) {
   return z.object(whatsappNumberShape(t));
@@ -79,6 +80,61 @@ export const whatsappNumberDefaults: WhatsappNumberValues = {
   phoneExtension: '+91',
   phoneNumber: '',
   whatsappIsMobile: true,
+};
+
+/**
+ * The date of birth — a full calendar day, required, and old enough.
+ *
+ * Held as 'YYYY-MM-DD', which is what both pickers emit and what the API is
+ * sent. Three rules, in the order a person meets them: an empty box is
+ * REQUIRED, a half-typed one is INVALID (a real day, on a real calendar), and
+ * a real day that is too recent names the minimum age. The server re-checks
+ * the age against the admin's setting; this is the same calendar question,
+ * asked before the request leaves.
+ *
+ * A birth YEAR was tried here and taken out again: a year cannot say whether
+ * this year's birthday has happened, so the gate had to round — and it rounded
+ * in the applicant's favour, admitting somebody born in December of the cut-off
+ * year all through it.
+ */
+function dobShape(t: Translate, minAge: number) {
+  return {
+    dob: z
+      .string()
+      .trim()
+      .min(1, t('mweb.signup.validation.dobRequired'))
+      .refine(
+        (v) => isIsoDay(v) && ageInYears(v) !== null,
+        t('mweb.signup.validation.dobInvalid'),
+      )
+      .refine(
+        (v) => isEligibleDob(v, minAge),
+        t('mweb.signup.validation.dobMinAge', { vars: { years: minAge } }),
+      ),
+  };
+}
+
+/**
+ * The Google door's own step: the WhatsApp row and the date of birth.
+ *
+ * Google proves an address and nothing else — no number to send a code to, and
+ * no birthday to gate the age on — so the two things the email form asked on
+ * its first two steps are asked here on one step of their own, before
+ * `signupWithGoogle` is called: that mutation needs the number, the code that
+ * proved it, and the date of birth, and refuses without any of them.
+ */
+export function makeGoogleSignupSchema(
+  t: Translate,
+  minAge: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
+) {
+  return z.object({ ...whatsappNumberShape(t), ...dobShape(t, minAge) });
+}
+
+export type GoogleSignupValues = z.infer<ReturnType<typeof makeGoogleSignupSchema>>;
+
+export const googleSignupDefaults: GoogleSignupValues = {
+  ...whatsappNumberDefaults,
+  dob: '',
 };
 
 export function makeSignupSchema(
@@ -100,21 +156,8 @@ export function makeSignupSchema(
         .min(2, t('mweb.signup.validation.nameMin'))
         .max(80, t('mweb.signup.validation.nameTooLong'))
         .regex(PERSON_NAME, t('mweb.signup.validation.namePattern')),
-      /*
-        A birth YEAR, not a date — the one part of a birthday people type
-        without hesitating. The shape is BIRTH_YEAR from @duncit/regex; whether
-        it is old enough is @duncit/datetime's calendar question, which the
-        server re-asks against the January 1 the year is stored as.
-      */
-      dobYear: z
-        .string()
-        .trim()
-        .min(1, t('mweb.signup.validation.dobYearRequired'))
-        .regex(BIRTH_YEAR, t('mweb.signup.validation.dobYearInvalid'))
-        .refine(
-          (v) => isEligibleBirthYear(v, minAge),
-          t('mweb.signup.validation.dobMinAge', { vars: { years: minAge } }),
-        ),
+      // The full date of birth — the same rule the Google door's step runs.
+      ...dobShape(t, minAge),
       email: z
         .string()
         .trim()
@@ -176,7 +219,7 @@ export type SignupFormValues = z.infer<ReturnType<typeof makeSignupSchema>>;
 
 export const signupDefaults: SignupFormValues = {
   name: '',
-  dobYear: '',
+  dob: '',
   email: '',
   // Same default dial as every other phone row in both apps — India is the
   // market, and the box is a searchable list for everyone else.

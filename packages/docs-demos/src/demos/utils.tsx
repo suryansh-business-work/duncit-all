@@ -83,7 +83,7 @@ import {
   signupFlowReducer,
   signupNumberOf,
   signupStepIndex,
-  type SignupNumberFields,
+  type SignupGoogleDetails,
   stepSubmitsAccount,
   PASSWORD_RECOVERY_CHANNELS,
   PASSWORD_RECOVERY_STEP_COUNT,
@@ -217,8 +217,9 @@ interface SignupStepMock {
 interface SignupFlowMock {
   /** Which door is being walked: the email form, or Google. */
   door: 'EMAIL' | 'GOOGLE';
-  /** The three number boxes both signup forms spell the same way. */
-  values: SignupNumberFields;
+  /** The number row both signup forms spell the same way, plus the date of
+   * birth the Google door's step asks beside it. */
+  values: SignupGoogleDetails;
 }
 
 interface PasswordRecoveryMock {
@@ -898,7 +899,7 @@ export default defineDemos('utils', [
         'The four steps': SIGNUP_STEPS.join(' -> '),
         // The Google door has no form to have asked these, so it asks them
         // inside VERIFY — same builder, so both doors word the box identically.
-        "Google's number half-step": labels.numberTitle,
+        "Google's own half-step": labels.detailsTitle,
         'The tick box': labels.sameAsMobile,
       };
     },
@@ -913,7 +914,12 @@ export default defineDemos('utils', [
       'number step, because its credential proves an address and nothing else.',
     mock: {
       door: 'GOOGLE',
-      values: { phoneExtension: '+91', phoneNumber: '9845012345', whatsappIsMobile: true },
+      values: {
+        phoneExtension: '+91',
+        phoneNumber: '9845012345',
+        whatsappIsMobile: true,
+        dob: '1998-04-23',
+      },
     },
     compute: (mock) => {
       // The email form's answers, as far as the machine cares about them.
@@ -931,7 +937,7 @@ export default defineDemos('utils', [
       }
       const askedForNumber = state.askingNumber;
       if (askedForNumber) {
-        state = signupFlowReducer<Form>(state, { type: 'NUMBER_GIVEN', values: mock.values });
+        state = signupFlowReducer<Form>(state, { type: 'DETAILS_GIVEN', values: mock.values });
       }
       return {
         'Opens on': opened,

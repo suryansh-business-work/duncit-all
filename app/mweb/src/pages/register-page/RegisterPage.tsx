@@ -11,8 +11,8 @@ import GoogleSignInButton from '../../components/GoogleSignInButton';
 import { GoogleSignupPolicyGate, useSignupPolicies } from '../../components/policy-acceptance';
 import { RegisterForm, registerDefaults } from '../../forms/register';
 import SignupStepperRail from './SignupStepperRail';
+import GoogleDetailsStep from './GoogleDetailsStep';
 import VerifyWhatsappStep from './VerifyWhatsappStep';
-import WhatsappNumberStep from './WhatsappNumberStep';
 import { useSignupFlow } from './useSignupFlow';
 
 /**
@@ -25,9 +25,9 @@ import { useSignupFlow } from './useSignupFlow';
  * skipped because there is no account to skip it with.
  *
  * Google is the same four steps with the first three answered for it — so it
- * lands straight on the last one, where it has to ask for the number before it
- * can ask for the code. What each door does is `useSignupFlow`'s; this file is
- * the view.
+ * lands straight on the last one, where it has to ask for the number and the
+ * date of birth (a Google credential carries neither) before it can ask for the
+ * code. What each door does is `useSignupFlow`'s; this file is the view.
  *
  * RN twin: app/mobile-app/src/screens/SignupScreen.
  */
@@ -79,7 +79,7 @@ export default function RegisterPage() {
 
           <SignupStepperRail step={flow.step} askingNumber={flow.askingNumber} />
 
-          {onNumberStep && <WhatsappNumberStep onSubmit={flow.submitNumber} />}
+          {onNumberStep && <GoogleDetailsStep onSubmit={flow.submitDetails} />}
 
           {onVerifyStep && flow.verifying && (
             <VerifyWhatsappStep

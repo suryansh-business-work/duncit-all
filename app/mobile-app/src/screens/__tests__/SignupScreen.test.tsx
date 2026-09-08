@@ -63,7 +63,7 @@ jest.mock('@/forms/signup', () => ({
         onPress={() =>
           onSubmit({
             name: 'Riya',
-            dobYear: '1995',
+            dob: '1995-04-23',
             email: 'r@b.com',
             phoneExtension: '+91',
             phoneNumber: '9845012345',

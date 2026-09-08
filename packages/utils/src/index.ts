@@ -665,6 +665,7 @@ export {
   type SignupFlowAction,
   type SignupFlowState,
   type SignupGoogleCredential,
+  type SignupGoogleDetails,
   type SignupNumber,
   type SignupNumberFields,
 } from './signup-flow';

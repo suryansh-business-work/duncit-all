@@ -166,7 +166,9 @@ export const googleSignupSchema = yup.object({
   phone_extension: yup.string().matches(extRegex, { message: 'Invalid extension' }).required(),
   whatsapp_is_mobile: yup.boolean().default(true),
   whatsapp_token: yup.string().min(10).max(200).required(),
-  dob: yup.date().max(new Date(), 'DOB must be in the past').optional(),
+  // Google proves no birthday either, so the age gate needs this told — the
+  // same rule as the email door's registerSchema.
+  dob: yup.date().max(new Date(), 'DOB must be in the past').required(),
   city: yup.string().optional(),
   zone: yup.string().optional(),
 });

@@ -1,6 +1,5 @@
 import {
   isBankAccountNumber,
-  isBirthYear,
   isEmail,
   isGstin,
   isIfsc,
@@ -19,7 +18,6 @@ interface CandidateMock {
   pincode: string;
   username: string;
   referral_code: string;
-  birth_year: string;
 }
 
 interface TypedPhoneMock {
@@ -45,7 +43,6 @@ export default defineDemos('regex', [
       pincode: '560102',
       username: 'meera.n',
       referral_code: 'DUNMEERA24',
-      birth_year: '1998',
     },
     compute: (mock) => ({
       'isPhoneNumber(phone)': isPhoneNumber(mock.phone),
@@ -53,7 +50,6 @@ export default defineDemos('regex', [
       'isPincode(pincode)': isPincode(mock.pincode),
       'isUsername(username)': isUsername(mock.username),
       'isReferralCode(referral_code)': isReferralCode(mock.referral_code),
-      'isBirthYear(birth_year)': isBirthYear(mock.birth_year),
     }),
   }),
 

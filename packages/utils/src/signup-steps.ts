@@ -45,7 +45,7 @@ export const SIGNUP_STEP_COUNT = SIGNUP_STEPS.length;
  * VERIFY holds none: the code is checked by the server, not by the form.
  */
 export const SIGNUP_STEP_FIELDS: Record<SignupStep, readonly string[]> = {
-  WHO: ['name', 'dobYear', 'referralCode'],
+  WHO: ['name', 'dob', 'referralCode'],
   CONTACT: ['phoneExtension', 'phoneNumber', 'whatsappIsMobile', 'email'],
   SECURITY: ['password', 'confirmPassword', 'acceptedPolicyIds'],
   VERIFY: [],
@@ -141,9 +141,10 @@ export interface SignupStepperLabels {
   resend: string;
   /** The code the server echoes back while no transport can carry it. */
   testCode: (code: string) => string;
-  /** The Google door's number step, which has no form behind it. */
-  numberTitle: string;
-  numberSubtitle: string;
+  /** The Google door's own step — the WhatsApp number and the date of birth,
+   * the two things a Google credential never carries. */
+  detailsTitle: string;
+  detailsSubtitle: string;
   /** The tick box that decides whether the profile phone is written at all. */
   sameAsMobile: string;
   sameAsMobileHint: string;
@@ -160,7 +161,7 @@ export interface SignupStepperLabels {
 const STEP_LABELS: Record<SignupStep, (t: SignupTranslate) => SignupStepLabels> = {
   WHO: (t) => ({
     title: t('mweb.signupSteps.whoTitle'),
-    subtitle: t('mweb.signupSteps.whoSubtitle'),
+    subtitle: t('mweb.signupSteps.whoSubtitleBirthDate'),
   }),
   CONTACT: (t) => ({
     title: t('mweb.signupSteps.contactTitle'),
@@ -195,8 +196,8 @@ export function buildSignupStepperLabels(t: SignupTranslate): SignupStepperLabel
     didntGetIt: t('mweb.signupSteps.didntGetIt'),
     resend: t('mweb.signupSteps.resend'),
     testCode: (code) => t('mweb.signupSteps.testCode', { vars: { code } }),
-    numberTitle: t('mweb.signupSteps.numberTitle'),
-    numberSubtitle: t('mweb.signupSteps.numberSubtitle'),
+    detailsTitle: t('mweb.signupSteps.detailsTitle'),
+    detailsSubtitle: t('mweb.signupSteps.detailsSubtitle'),
     sameAsMobile: t('mweb.signupSteps.sameAsMobile'),
     sameAsMobileHint: t('mweb.signupSteps.sameAsMobileHint'),
   };

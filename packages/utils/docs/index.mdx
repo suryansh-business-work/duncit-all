@@ -1661,7 +1661,7 @@ a step can only be left once its OWN boxes are right and nobody is told off abou
 screens ahead.
 
 ```ts
-SIGNUP_STEP_FIELDS.WHO;       // ['name', 'dobYear', 'referralCode']
+SIGNUP_STEP_FIELDS.WHO;       // ['name', 'dob', 'referralCode']
 SIGNUP_STEP_FIELDS.CONTACT;   // includes 'whatsappIsMobile' — the tick box is CONTACT's
 nextSignupStep('CONTACT');    // 'SECURITY'
 stepSubmitsAccount('SECURITY'); // true — the last step with boxes; VERIFY spends the answers
@@ -1672,10 +1672,10 @@ Both apps render the same four steps from `buildSignupStepperLabels`; the MUI an
 components stay separate and thin (rule 40).
 
 Google is the same four steps with the first three answered for it, so it lands straight on
-VERIFY — where it has to ask for the WhatsApp number before it can ask for the code, because
-Google hands back an account with no phone on it. `numberTitle` / `numberSubtitle` are that
-half-step's words, and `sameAsMobile` / `sameAsMobileHint` are the tick box's, rendered from
-the same builder so neither door words it differently.
+VERIFY — where it has to ask for the WhatsApp number and the date of birth before it can ask
+for the code, because a Google credential carries neither. `detailsTitle` / `detailsSubtitle`
+are that half-step's words, and `sameAsMobile` / `sameAsMobileHint` are the tick box's,
+rendered from the same builder so neither door words it differently.
 
 ### What signup is holding, and what it is doing
 
@@ -1698,11 +1698,15 @@ state.step;              // 'WHO' — holding nothing yet
 
 state = signupFlowReducer(state, { type: 'GOOGLE_ACCEPTED', credential });
 state.step;              // 'VERIFY'
-state.askingNumber;      // true — Google brought no number to send a code to
+state.askingNumber;      // true — Google brought no number to send a code to, and no birthday
 
-state = signupFlowReducer(state, { type: 'NUMBER_GIVEN', values: whatsappNumberValues });
+state = signupFlowReducer(state, {
+  type: 'DETAILS_GIVEN',
+  values: { ...whatsappNumberValues, dob: '1998-04-23' },
+});
 state.askingNumber;      // false — both doors meet at the code step now
 state.verifying;         // { extension: '+91', number: '9845012345', alsoMobile: true }
+state.googleDob;         // '1998-04-23' — what signupWithGoogle is sent, since Google never had it
 
 signupNumberOf({ phoneExtension: '+91', phoneNumber: '9845012345', whatsappIsMobile: false });
 // { extension: '+91', number: '9845012345', alsoMobile: false }

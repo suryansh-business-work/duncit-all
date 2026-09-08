@@ -102,17 +102,22 @@ describe('auth.service mutations', () => {
     expect(result).toEqual({ token: 'tok-2', surveyCompleted: true });
   });
 
-  it('signupWithGoogle sends the id_token with the accepted policies', async () => {
+  it('signupWithGoogle sends the id_token with the accepted policies and the date of birth', async () => {
     mockedRequest.mockResolvedValue({
       signupWithGoogle: { token: 'tok-3', user: { onboarding_survey_completed: false } },
     } as never);
 
-    const result = await signupWithGoogle('google-id-token', ['pol-1'], {
-      extension: '+91',
-      number: '9845012345',
-      alsoMobile: true,
-      whatsappToken: 'wa-proof-2',
-    });
+    const result = await signupWithGoogle(
+      'google-id-token',
+      ['pol-1'],
+      {
+        extension: '+91',
+        number: '9845012345',
+        alsoMobile: true,
+        whatsappToken: 'wa-proof-2',
+      },
+      '1998-04-23',
+    );
 
     expect(mockedRequest.mock.calls[0]?.[1]).toEqual({
       input: {
@@ -121,6 +126,7 @@ describe('auth.service mutations', () => {
         phone_extension: '+91',
         whatsapp_is_mobile: true,
         whatsapp_token: 'wa-proof-2',
+        dob: '1998-04-23T00:00:00.000Z',
         accepted_policy_ids: ['pol-1'],
         accepted_policy_surface: 'APP',
       },

@@ -64,7 +64,7 @@ const next = () => screen.getByTestId('signup-next');
 /** Step one, answered. */
 function fillWho() {
   fireEvent.change(field('^Name'), { target: { value: 'Riya Sharma' } });
-  fireEvent.change(field('birth year'), { target: { value: '1990' } });
+  fireEvent.change(field('date of birth'), { target: { value: '23/04/1990' } });
 }
 
 /** Step two, answered. */
@@ -93,7 +93,7 @@ describe('RegisterForm — one step at a time', () => {
   it('opens on step one, showing only its own boxes', () => {
     renderForm();
     expect(screen.getByLabelText(/^Name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/birth year/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/date of birth/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/referral code/i)).toBeInTheDocument();
     // The later steps' fields are not merely hidden — they are not rendered.
     expect(screen.queryByLabelText(/^Email/i)).not.toBeInTheDocument();
@@ -130,7 +130,7 @@ describe('RegisterForm — one step at a time', () => {
       email: 'riya@gmail.com',
       phoneNumber: '9845012345',
       password: 'password123',
-      dobYear: '1990',
+      dob: '1990-04-23',
     });
   });
 
@@ -250,13 +250,13 @@ describe('RegisterForm — errors and toggles', () => {
         whatsappIsMobile: true,
         password: 'seedpass1',
         confirmPassword: 'seedpass1',
-        dobYear: '2000',
+        dob: '2000-04-23',
         referralCode: 'DUN-A1B2C3',
         acceptedPolicyIds: [],
       },
     });
     expect(field('^Name')).toHaveValue('Seed User');
-    expect(field('birth year')).toHaveValue('2000');
+    expect(field('date of birth')).toHaveValue('23/04/2000');
     expect(field('referral code')).toHaveValue('DUN-A1B2C3');
   });
 });

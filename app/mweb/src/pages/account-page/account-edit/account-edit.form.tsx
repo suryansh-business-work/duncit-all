@@ -12,7 +12,7 @@ import {
 import RhfTextField from '../../../forms/components/RhfTextField';
 import AddressFields, { type AddressFieldNames } from '../../../forms/components/AddressFields';
 import { UsernameField } from '../username-field';
-import DobDateField from './DobDateField';
+import DobDateField from '../../../components/DobDateField';
 import LocationSelect from './LocationSelect';
 import { ContactSection } from '../contact-change';
 import { makeAccountEditSchema, type AccountEditValues } from './account-edit.types';

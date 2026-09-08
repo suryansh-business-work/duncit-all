@@ -1,7 +1,6 @@
 import { useReducer, useState, type Reducer } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
-import { birthYearToDob } from '@duncit/datetime';
 import {
   initialSignupFlowState,
   signupFlowReducer,
@@ -11,7 +10,7 @@ import {
   type SignupNumber,
   type SignupStep,
 } from '@duncit/utils';
-import type { WhatsappNumberValues } from '@duncit/forms/schemas';
+import type { GoogleSignupValues } from '@duncit/forms/schemas';
 import { ACCEPTANCE_SURFACE } from '../../components/policy-acceptance';
 import type { RegisterFormValues } from '../../forms/register';
 import { parseApiError } from '../../utils/parseApiError';
@@ -76,18 +75,18 @@ export function useSignupFlow(linkedCode: string) {
 
   /*
     Google proves an address and nothing else, so its credential is held —
-    unspent — while the number step and the code step run. There is no account
-    to back out of until both have answered, which is what the acceptance
-    dialog's Google wording promises.
+    unspent — while its own step (number and date of birth) and the code step
+    run. There is no account to back out of until both have answered, which is
+    what the acceptance dialog's Google wording promises.
   */
   const googleAccepted = (idToken: string, policyIds: string[]) => {
     setError(null);
     dispatch({ type: 'GOOGLE_ACCEPTED', credential: { idToken, policyIds } });
   };
 
-  /** The number step's answer: from here the two doors run the same code step. */
-  const submitNumber = (values: WhatsappNumberValues) =>
-    dispatch({ type: 'NUMBER_GIVEN', values });
+  /** The Google step's answer: from here the two doors run the same code step. */
+  const submitDetails = (values: GoogleSignupValues) =>
+    dispatch({ type: 'DETAILS_GIVEN', values });
 
   const createFromForm = async (values: RegisterFormValues, whatsappToken: string) => {
     const { first_name, last_name } = splitName(values.name);
@@ -103,9 +102,9 @@ export function useSignupFlow(linkedCode: string) {
           whatsapp_is_mobile: values.whatsappIsMobile,
           whatsapp_token: whatsappToken,
           password: values.password,
-          // A birth YEAR is stored as its January 1 — see `birthYearToDob`
-          // for why that is the reading the server agrees with.
-          dob: new Date(birthYearToDob(values.dobYear)).toISOString(),
+          // 'YYYY-MM-DD' parses as UTC midnight, so the day picked is the day
+          // stored whatever the device's zone.
+          dob: new Date(values.dob).toISOString(),
           ...(code ? { referral_code: code } : {}),
           accepted_policy_ids: values.acceptedPolicyIds,
           accepted_policy_surface: ACCEPTANCE_SURFACE,
@@ -118,6 +117,7 @@ export function useSignupFlow(linkedCode: string) {
   const createFromGoogle = async (
     google: SignupGoogleCredential,
     number: SignupNumber,
+    dob: string,
     whatsappToken: string,
   ) => {
     const res = await signupGoogle({
@@ -128,6 +128,8 @@ export function useSignupFlow(linkedCode: string) {
           phone_extension: number.extension,
           whatsapp_is_mobile: number.alsoMobile,
           whatsapp_token: whatsappToken,
+          // Google carried no birthday; the step beside the number asked it.
+          dob: new Date(dob).toISOString(),
           accepted_policy_ids: google.policyIds,
           accepted_policy_surface: ACCEPTANCE_SURFACE,
         },
@@ -146,8 +148,13 @@ export function useSignupFlow(linkedCode: string) {
     setError(null);
     try {
       let token: string | undefined;
-      if (flow.pendingGoogle && flow.verifying) {
-        token = await createFromGoogle(flow.pendingGoogle, flow.verifying, whatsappToken);
+      if (flow.pendingGoogle && flow.verifying && flow.googleDob !== null) {
+        token = await createFromGoogle(
+          flow.pendingGoogle,
+          flow.verifying,
+          flow.googleDob,
+          whatsappToken,
+        );
       } else if (flow.pendingForm) {
         token = await createFromForm(flow.pendingForm, whatsappToken);
       }
@@ -171,7 +178,7 @@ export function useSignupFlow(linkedCode: string) {
     pendingEmail: flow.pendingForm?.email,
     submitForm,
     googleAccepted,
-    submitNumber,
+    submitDetails,
     createAccount,
   };
 }

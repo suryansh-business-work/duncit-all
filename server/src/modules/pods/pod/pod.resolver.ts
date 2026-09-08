@@ -170,6 +170,15 @@ export const podResolvers = {
       await primePodRelations(ctx, rows);
       return rows;
     },
+    userJoinedPods: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
+      // The same gate posts and stories answer through: a private account's
+      // pods are for its owner and followers, and the refusal is an empty list.
+      const viewerId = ctx.user?.id ?? null;
+      if (!(await userService.canViewContent(args.user_id, viewerId))) return [];
+      const rows = await podService.listJoinedBy(args.user_id);
+      await primePodRelations(ctx, rows);
+      return rows;
+    },
     podsTable: async (
       _p: unknown,
       args: { query?: any; include_deleted?: boolean | null; lifecycle?: PodLifecycle | null },

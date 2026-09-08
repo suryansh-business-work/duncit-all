@@ -33,10 +33,38 @@ export function detectVariables(mjml: string): string[] {
  * instead of letting `.` stand for any character. */
 const escapeVarName = (name: string) => name.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
+/** Every `{{ name }}` the text references, translation keys included. */
+const PLACEHOLDER_RE = /{{\s*([^{}\s]+)\s*}}/g;
+
+const referencedVars = (text: string): Set<string> => {
+  const names = new Set<string>();
+  for (const match of text.matchAll(PLACEHOLDER_RE)) names.add(match[1]);
+  return names;
+};
+
+/**
+ * Substitute the variables a text actually references.
+ *
+ * `vars` carries the WHOLE translation catalogue — thousands of `t:` keys — on
+ * every send, and this used to compile a regex and walk the full document once
+ * per key, so a one-time code paid a few hundred milliseconds of CPU before a
+ * single byte reached the mail server. Scanning the text for its placeholders
+ * first turns that into one pass plus a replace per key that is really there.
+ *
+ * Substitution repeats while a value introduces a placeholder of its own — a
+ * footer note is itself written as `{{t:email.footer.account}}` — so the
+ * result no longer depends on the order the map was assembled in.
+ */
 export function applyVars(source: string, vars: Record<string, string>): string {
   let out = source;
-  for (const [k, v] of Object.entries(vars)) {
-    out = out.replace(new RegExp(String.raw`{{\s*${escapeVarName(k)}\s*}}`, 'g'), v ?? '');
+  const done = new Set<string>();
+  for (let pass = 0; pass < 4; pass += 1) {
+    const pending = [...referencedVars(out)].filter((k) => k in vars && !done.has(k));
+    if (pending.length === 0) break;
+    for (const k of pending) {
+      out = out.replace(new RegExp(String.raw`{{\s*${escapeVarName(k)}\s*}}`, 'g'), vars[k] ?? '');
+      done.add(k);
+    }
   }
   return out;
 }
@@ -58,17 +86,30 @@ export function applyVars(source: string, vars: Record<string, string>): string 
  * the next major that changes this signature fails `tsc` here instead of
  * shipping empty emails.
  */
-export async function renderMjml(
-  mjml: string,
-  vars: Record<string, string> = {}
-): Promise<{ html: string; errors: string[] }> {
-  const expanded = applyVars(mjml, vars);
+/**
+ * Compiled HTML per MJML source, keyed on the source's hash.
+ *
+ * The placeholders are left in through the compile and filled in afterwards,
+ * which is what makes the output reusable: a template's markup is the same on
+ * every send and only the values differ, so the compile — the slowest step on
+ * the way to the mail server — runs once per template edit instead of once per
+ * message. A template or fragment saved in the editor is new source, hence a
+ * new key; the map is capped so a preview loop cannot grow it without bound.
+ */
+const COMPILE_CACHE_MAX = 64;
+const compiled = new Map<string, { html: string; errors: string[] }>();
+
+async function compileMjml(source: string): Promise<{ html: string; errors: string[] }> {
+  const key = crypto.createHash('sha256').update(source).digest('hex');
+  const hit = compiled.get(key);
+  if (hit) return hit;
+  let result: { html: string; errors: string[] };
   try {
     // `soft` validation COLLECTS problems instead of throwing, so a body mjml
     // cannot build anything from does not reach the catch below — it returns
     // with no `html` at all.
-    const result = await mjml2html(expanded, { validationLevel: 'soft' });
-    const errors = (result.errors ?? []).map(
+    const out = await mjml2html(source, { validationLevel: 'soft' });
+    const errors = (out.errors ?? []).map(
       (e) => e.formattedMessage || e.message || 'Unknown MJML error'
     );
     // Nothing rendered AND nothing said why is the worst pair: the preview
@@ -76,12 +117,26 @@ export async function renderMjml(
     // the editor shows a reason and the send paths that check `errors` stop.
     // `|| ''` rather than the declared type alone — trusting that declaration
     // is what produced this bug, and `html: String!` must never receive null.
-    const html = result.html || '';
+    const html = out.html || '';
     if (!html && errors.length === 0) errors.push('MJML produced no output');
-    return { html, errors };
+    result = { html, errors };
   } catch (e: any) {
-    return { html: '', errors: [e.message || String(e)] };
+    result = { html: '', errors: [e.message || String(e)] };
   }
+  if (compiled.size >= COMPILE_CACHE_MAX) {
+    const oldest = compiled.keys().next().value;
+    if (oldest !== undefined) compiled.delete(oldest);
+  }
+  compiled.set(key, result);
+  return result;
+}
+
+export async function renderMjml(
+  mjml: string,
+  vars: Record<string, string> = {}
+): Promise<{ html: string; errors: string[] }> {
+  const { html, errors } = await compileMjml(mjml);
+  return { html: html ? applyVars(html, vars) : '', errors };
 }
 
 /**

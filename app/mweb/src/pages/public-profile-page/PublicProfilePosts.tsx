@@ -10,9 +10,9 @@ import {
   Typography,
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
-import GridOnIcon from '@mui/icons-material/GridOn';
 import PostDialog from '../profile-page/post-dialog/PostDialog';
 import PublicProfileStories, { type ProfileStory } from './PublicProfileStories';
+import { ProfilePodsPanel, ProfileTabs, useProfileTabs } from '../../components/profile-tabs';
 
 const PUBLIC_USER_POSTS = gql`
   query PublicUserPosts($id: ID!) {
@@ -41,6 +41,9 @@ interface Props {
   /** Author of the stories — names the story viewer's header. */
   name: string;
   photo?: string | null;
+  /** Whether the profile holds the HOST role — the third tab exists only then. */
+  isHost: boolean;
+  isOwner: boolean;
 }
 
 /** Posts grid + active stories on a member's public profile. When the account
@@ -51,7 +54,10 @@ export default function PublicProfilePosts({
   meId,
   name,
   photo,
+  isHost,
+  isOwner,
 }: Readonly<Props>) {
+  const tabs = useProfileTabs(isHost, isOwner);
   const { data, loading } = useQuery<any>(PUBLIC_USER_POSTS, {
     variables: { id: userId },
     skip: !canView,
@@ -143,23 +149,10 @@ export default function PublicProfilePosts({
     <Stack spacing={1.5}>
       <PublicProfileStories name={name} photo={photo} stories={stories} />
 
-      <Stack
-        direction="row"
-        spacing={0.5}
-        sx={{
-          alignItems: "center",
-          justifyContent: "center",
-          py: 1
-        }}>
-        <GridOnIcon fontSize="small" />
-        <Typography variant="caption" sx={{
-          letterSpacing: 1.5
-        }}>
-          POSTS
-        </Typography>
-      </Stack>
-
-      {grid}
+      <ProfileTabs tabs={tabs} />
+      {tabs.value === 'posts' && grid}
+      {tabs.value === 'joined' && <ProfilePodsPanel userId={userId} kind="joined" />}
+      {tabs.value === 'hosted' && isHost && <ProfilePodsPanel userId={userId} kind="hosted" />}
 
       <PostDialog
         postId={openPostId}

@@ -33,6 +33,8 @@ export type RootStackParamList = {
   Verification: undefined;
   VenueHealth: { venueId: string };
   Saved: undefined;
+  /** Your Contacts on Duncit, mWeb's /contacts. */
+  Contacts: undefined;
   PodHistory: undefined;
   PodHistoryDetails: { membershipId: string };
   /** Booking deep link from the receipt email; forwards to the pod detail. */

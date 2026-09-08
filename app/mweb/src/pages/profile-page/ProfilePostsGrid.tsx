@@ -2,7 +2,6 @@ import { Box, ImageList, ImageListItem, Stack, Typography } from '@mui/material'
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import GridOnIcon from '@mui/icons-material/GridOn';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -16,25 +15,6 @@ export default function ProfilePostsGrid({ posts, onOpenPost, onNewPost }: Reado
   const { t } = useTranslation();
   return (
     <>
-      <Stack direction="row" spacing={4} sx={{
-        justifyContent: "center"
-      }}>
-        <Stack
-          direction="row"
-          spacing={0.5}
-          sx={{
-            alignItems: "center",
-            py: 1
-          }}>
-          <GridOnIcon fontSize="small" />
-          <Typography variant="caption" sx={{
-            letterSpacing: 1.5
-          }}>
-            POSTS
-          </Typography>
-        </Stack>
-      </Stack>
-
       {posts.length === 0 ? (
         <Stack
           spacing={2}

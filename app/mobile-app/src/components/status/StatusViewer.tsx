@@ -48,6 +48,11 @@ interface StatusViewerProps {
   /** Slide to open on. A per-story rail (the club page) opens the tapped
    * story; author rails open at the start. */
   startIndex?: number;
+  /** Whose profile the header name opens. Falls back to a `user` target;
+   * absent on club, pod and ad stories, whose header names nobody's profile. */
+  authorUserId?: string;
+  /** Open the author's public profile — the viewer closes first. */
+  onOpenAuthor?: (userId: string) => void;
 }
 
 // Each slide runs 15s (images and videos alike); a video that ends sooner
@@ -66,12 +71,36 @@ function StatusHeaderText({
   name,
   subLabel,
   remaining,
-}: Readonly<{ name: string; subLabel?: string | null; remaining: string | null }>) {
+  onPress,
+}: Readonly<{
+  name: string;
+  subLabel?: string | null;
+  remaining: string | null;
+  /** When set, the name is a button that opens the author's profile. */
+  onPress?: () => void;
+}>) {
+  const { t } = useTranslation();
   return (
     <YStack flex={1}>
-      <Text color="#ffffff" fontSize={16} fontWeight="700" numberOfLines={1}>
-        {name}
-      </Text>
+      {onPress ? (
+        <Text
+          testID="status-author"
+          role="button"
+          aria-label={t('mweb.podDetails.openProfileOf', { vars: { name } })}
+          pressStyle={PRESS_STYLE.inline}
+          onPress={onPress}
+          color="#ffffff"
+          fontSize={16}
+          fontWeight="700"
+          numberOfLines={1}
+        >
+          {name}
+        </Text>
+      ) : (
+        <Text color="#ffffff" fontSize={16} fontWeight="700" numberOfLines={1}>
+          {name}
+        </Text>
+      )}
       {subLabel ? (
         <Text
           testID="status-sublabel"
@@ -223,9 +252,19 @@ export function StatusViewer({
   onToggleLike,
   onSlideSeen,
   startIndex = 0,
+  authorUserId,
+  onOpenAuthor,
 }: Readonly<StatusViewerProps>) {
   const { onPrimary } = useThemeColors();
   const { t } = useTranslation();
+  const authorId = authorUserId ?? (status?.target?.kind === 'user' ? status.target.id : undefined);
+  const openAuthor =
+    authorId && onOpenAuthor
+      ? () => {
+          onClose();
+          onOpenAuthor(authorId);
+        }
+      : undefined;
   const [index, setIndex] = useState(startIndex);
   const [progress, setProgress] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -353,6 +392,7 @@ export function StatusViewer({
                 name={status?.name ?? ''}
                 subLabel={status?.subLabel}
                 remaining={remaining}
+                onPress={openAuthor}
               />
               <StatusMuteButton
                 visible={isVideo}

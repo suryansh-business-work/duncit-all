@@ -75,6 +75,8 @@ describe('PublicProfilePosts', () => {
         canView={false}
         authorId="u1"
         authorName="Riya"
+        isHost={false}
+        isOwner={false}
       />,
     );
     expect(screen.getByTestId('public-profile-private')).toBeOnTheScreen();
@@ -82,7 +84,15 @@ describe('PublicProfilePosts', () => {
 
   it('shows the empty state with no posts', () => {
     renderWithProviders(
-      <PublicProfilePosts posts={[]} stories={[]} canView authorId="u1" authorName="Riya" />,
+      <PublicProfilePosts
+        posts={[]}
+        stories={[]}
+        canView
+        authorId="u1"
+        authorName="Riya"
+        isHost={false}
+        isOwner={false}
+      />,
     );
     expect(screen.getByTestId('public-profile-no-posts')).toBeOnTheScreen();
   });
@@ -108,6 +118,8 @@ describe('PublicProfilePosts', () => {
         canView
         authorId="u1"
         authorName="Riya"
+        isHost={false}
+        isOwner={false}
       />,
     );
     fireEvent.press(screen.getByTestId('public-profile-post-0'));

@@ -310,6 +310,13 @@ userSchema.index(
     },
   }
 );
+// A contacts sync matches thousands of numbers in one `$in` against BOTH the
+// mobile and the WhatsApp number (an account that unticked "also my mobile"
+// holds only the latter); the phone pair above already covers the first.
+userSchema.index(
+  { 'communication.whatsapp.number': 1 },
+  { partialFilterExpression: { 'communication.whatsapp.number': { $type: 'string' } } }
+);
 userSchema.index(
   { 'auth.google_id': 1 },
   {

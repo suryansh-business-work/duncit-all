@@ -63,6 +63,7 @@ import { PolicyScreen } from '@/screens/PolicyScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
 import { RegisterVenueScreen } from '@/screens/RegisterVenueScreen';
 import { SavedScreen } from '@/screens/SavedScreen';
+import { ContactsScreen } from '@/screens/ContactsScreen';
 import { SearchScreen } from '@/screens/SearchScreen';
 import { SignupScreen } from '@/screens/SignupScreen';
 import { SupportScreen } from '@/screens/SupportScreen';
@@ -175,6 +176,7 @@ export function RootNavigator() {
       <Stack.Screen name="SmsPreference" component={SmsPreferenceScreen} />
       <Stack.Screen name="VenueHealth" component={VenueHealthScreen} />
       <Stack.Screen name="Saved" component={SavedScreen} />
+      <Stack.Screen name="Contacts" component={ContactsScreen} />
       <Stack.Screen name="PodHistory" component={PodHistoryScreen} />
       <Stack.Screen name="PodHistoryDetails" component={PodHistoryDetailsScreen} />
       <Stack.Screen name="Booking" component={BookingScreen} />

@@ -6,6 +6,7 @@ import { assertSpotsWithinLimits, resolveSpotLimits, type PodSpotLimits } from '
 import { podLifecycleFilter, type PodLifecycle } from './pod.lifecycle';
 import { podRowStatusFilter, type PodRowStatus } from './pod.rowStatus';
 import { PodModel, type PodMode, type PodType } from './pod.model';
+import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { UserRoleModel } from '@modules/access/user/relations';
 import { ClubModel } from '@modules/clubs/club/club.model';
@@ -2053,6 +2054,37 @@ export const podService = {
         filter: JSON.stringify(filter ?? {}),
       });
     }
+    const slugMap = await loadClubSlugMap(docs);
+    return docs.map((d) => toPub(d, slugMap));
+  },
+
+  /**
+   * The live pods a user holds a JOINED membership on, newest first.
+   *
+   * Reads the memberships rather than `pod_attendees`: a booking is the record
+   * of joining, and the array on the pod is an audience list that backouts and
+   * spot-fills rewrite. Drafts, declined pods and pods still awaiting a venue
+   * are not something to show on a profile, so the same visibility the public
+   * feed applies holds here; soft-deleted pods drop out through the model hook.
+   */
+  async listJoinedBy(userId: string) {
+    if (!Types.ObjectId.isValid(userId)) return [];
+    const memberships = await PodMemberModel.find({
+      user_id: new Types.ObjectId(userId),
+      status: 'JOINED',
+    })
+      .select('pod_id')
+      .sort({ joined_at: -1 })
+      .limit(POD_LIST_MAX)
+      .lean();
+    if (memberships.length === 0) return [];
+    const docs = await PodModel.find({
+      _id: { $in: memberships.map((m) => m.pod_id) },
+      is_active: true,
+      venue_approval_status: { $ne: 'PENDING' },
+    })
+      .sort({ pod_date_time: -1 })
+      .lean();
     const slugMap = await loadClubSlugMap(docs);
     return docs.map((d) => toPub(d, slugMap));
   },

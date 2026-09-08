@@ -55,6 +55,9 @@ export interface HomeStatusViewerItem {
   slides?: HomeStatusViewerSlide[];
   targetUrl?: string;
   internal?: boolean;
+  /** The author's user id — tapping the header name or avatar opens /u/:id.
+   * Absent on club, pod and ad stories, whose header names nobody's profile. */
+  authorId?: string;
   /** Origin of the story — gates like (user) vs viewers/delete (mine) (Bugs 4,5,7).
    * An `ad` story carries none of those: it is sponsored media, not somebody's post. */
   kind?: 'mine' | 'user' | 'club' | 'pod' | 'ad';
@@ -219,6 +222,29 @@ export default function HomeStatusViewer({
     else window.open(item.targetUrl, '_blank', 'noreferrer');
   };
 
+  // The header sits over the tap zones, so the name is a real target; the
+  // viewer closes first or its dialog would sit over the profile it opened.
+  const openAuthor = () => {
+    if (!item.authorId) return;
+    onClose();
+    navigate(`/u/${item.authorId}`);
+  };
+  const authorProps = item.authorId
+    ? {
+        role: 'button' as const,
+        tabIndex: 0,
+        'aria-label': t('mweb.podDetails.openProfileOf', { vars: { name: item.label } }),
+        'data-testid': 'status-author',
+        onClick: openAuthor,
+        onKeyDown: (event: React.KeyboardEvent) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openAuthor();
+          }
+        },
+      }
+    : {};
+
   const toggleLike = () => {
     if (!currentId || !onToggleLike) return;
     const next = !liked;
@@ -276,7 +302,7 @@ export default function HomeStatusViewer({
         {/* Tap zones */}
         <Box onClick={goPrev} sx={{ position: 'absolute', top: 64, bottom: 120, left: 0, width: '30%', cursor: 'pointer', zIndex: 2 }} />
         <Box onClick={goNext} sx={{ position: 'absolute', top: 64, bottom: 120, right: 0, width: '40%', cursor: 'pointer', zIndex: 2 }} />
-        <Stack spacing={1.2} sx={{ position: 'absolute', top: 12, left: 12, right: 12 }}>
+        <Stack spacing={1.2} sx={{ position: 'absolute', top: 12, left: 12, right: 12, zIndex: 3 }}>
           <Stack direction="row" spacing={0.5}>
             {slides.map((slide, slideIndex) => {
               let fill = 0;
@@ -295,9 +321,10 @@ export default function HomeStatusViewer({
             <Box
               component={item.avatarUrl ? 'img' : 'div'}
               src={item.avatarUrl || undefined}
-              sx={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', bgcolor: 'primary.main' }}
+              onClick={item.authorId ? openAuthor : undefined}
+              sx={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', bgcolor: 'primary.main', cursor: item.authorId ? 'pointer' : 'default' }}
             />
-            <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Box {...authorProps} sx={{ minWidth: 0, flex: 1, cursor: item.authorId ? 'pointer' : 'default' }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
                 {item.label}
               </Typography>

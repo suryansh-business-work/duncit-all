@@ -163,8 +163,10 @@ async function deliver(
    */
   providerId?: string | null
 ): Promise<EmailDelivery & { entryId: string | null; entryName: string }> {
-  const { from } = await getMailConfigs();
-  const resolved = await resolveEmailProvider(providerId);
+  const [{ from }, resolved] = await Promise.all([
+    getMailConfigs(),
+    resolveEmailProvider(providerId),
+  ]);
   // No entry configured at all is a local machine with no mailbox. The SMTP
   // provider's json transport accepts and discards, so a signup still works
   // rather than failing because nobody set email up.
@@ -325,17 +327,20 @@ export async function sendEmail(opts: {
   // not at the forty call sites for the same reason the email log does: a rule
   // enforced in one place cannot be forgotten in the forty-first. Required
   // categories — codes, receipts, legal notices — never reach the database.
-  if (!(await mailPreferenceService.allows(opts.to, category))) {
-    return notSent(`Recipient opted out of ${category} email`, 'SKIPPED');
-  }
-
-  // The CHANNEL gate, which is a different axis from the category one above.
+  //
+  // The CHANNEL gate beside it is a different axis from the category one.
   // `authentication` is a REQUIRED category — nobody may unsubscribe from
   // their own codes — but Communication Preferences lets an account choose
   // WHICH channel carries them, and that choice is refused server-side unless
   // another reachable channel stays on (commPreference.service). Only this
-  // one category pays for the lookup.
-  if (category === 'authentication' && !(await commPreferenceService.allowsEmailOtp(opts.to))) {
+  // one category pays for the lookup. The two reads are independent, so they
+  // go out together; the category answer is still read first.
+  const [categoryAllowed, channelAllowed] = await Promise.all([
+    mailPreferenceService.allows(opts.to, category),
+    category === 'authentication' ? commPreferenceService.allowsEmailOtp(opts.to) : true,
+  ]);
+  if (!categoryAllowed) return notSent(`Recipient opted out of ${category} email`, 'SKIPPED');
+  if (!channelAllowed) {
     return notSent('Recipient receives one-time codes on another channel', 'SKIPPED');
   }
 
@@ -345,23 +350,30 @@ export async function sendEmail(opts: {
     // same new slug — and a throw here escaped the whole function, taking both
     // the log row and the "does not throw" promise below with it. A password
     // reset then failed as a GraphQL error after the OTP was already stored.
-    const template = await emailTemplateService.bySlug(opts.template);
+    //
+    // Everything the render needs that does not depend on the template is
+    // fetched alongside it: each of these is its own round trip, and a code
+    // that waited for them one after another was a code that arrived late.
+    const [template, brandLogoUrl, locale, chrome] = await Promise.all([
+      emailTemplateService.bySlug(opts.template),
+      getBrandLogoUrl(),
+      opts.locale ?? recipientLocale(opts.to),
+      chromeVars(opts.to),
+    ]);
     if (!template) return notSent(`Template "${opts.template}" does not exist`, 'FAILED');
     if (template.is_active === false) {
       return notSent(`Template "${opts.template}" is not active`, 'SKIPPED');
     }
 
-    const brandLogoUrl = await getBrandLogoUrl();
     // Localized copy arrives as `t:<key>` vars, so templates pick it up through
     // the SAME {{ }} substitution as every other variable (rule 38). Caller vars
     // stay last so an explicit value always wins.
-    const locale = opts.locale ?? (await recipientLocale(opts.to));
     const translations = await emailTranslationVars(locale);
     const vars = {
       brand_logo_url: brandLogoUrl,
       // Supplied on every send so a header/footer fragment never has to be told
       // them, and no call site has to remember to pass them.
-      ...(await chromeVars(opts.to)),
+      ...chrome,
       ...translations,
       ...opts.vars,
     };

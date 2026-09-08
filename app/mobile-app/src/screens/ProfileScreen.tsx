@@ -21,6 +21,8 @@ import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { ProfilePodsPanel } from '@/components/profile/ProfilePodsPanel';
+import { ProfileTabs, type ProfileTab } from '@/components/profile/ProfileTabs';
 
 /** Profile — identity header, links/pet panels, host/venue shortcuts and the
  * user's posts grid. RN port of mWeb's ProfilePage (core). */
@@ -46,6 +48,7 @@ export function ProfileScreen() {
   const { uploading, pickAndPost } = useProfilePostUpload();
   const isHost = me?.roles.includes('HOST') ?? false;
   const isVenue = me?.roles.includes('VENUE_OWNER') ?? false;
+  const [tab, setTab] = useState<ProfileTab>('posts');
 
   const addPost = async () => {
     await pickAndPost();
@@ -76,13 +79,18 @@ export function ProfileScreen() {
         onOpenHost={() => navigation.navigate(isHost ? 'HostManage' : 'BecomeHost')}
         onOpenVenue={() => navigation.navigate(isVenue ? 'VenueManage' : 'RegisterVenue')}
       />
-      <ProfilePostsGrid
-        posts={posts}
-        meId={me.user_id}
-        onChanged={() => fireAndForget(refetch())}
-        onAddPost={() => fireAndForget(addPost())}
-        uploading={uploading}
-      />
+      <ProfileTabs value={tab} onChange={setTab} isHost={isHost} isOwner />
+      {tab === 'posts' ? (
+        <ProfilePostsGrid
+          posts={posts}
+          meId={me.user_id}
+          onChanged={() => fireAndForget(refetch())}
+          onAddPost={() => fireAndForget(addPost())}
+          uploading={uploading}
+        />
+      ) : null}
+      {tab === 'joined' ? <ProfilePodsPanel userId={me.user_id} kind="joined" /> : null}
+      {tab === 'hosted' && isHost ? <ProfilePodsPanel userId={me.user_id} kind="hosted" /> : null}
     </ScrollView>
   ) : (
     <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>

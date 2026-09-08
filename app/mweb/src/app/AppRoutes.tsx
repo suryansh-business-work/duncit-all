@@ -103,6 +103,7 @@ const EarnPage = lazy(() => import('../pages/earn-page'));
 const TourGuidePage = lazy(() => import('../pages/tour-guide-page'));
 const ProductsManagePage = lazy(() => import('../pages/products-manage-page'));
 const SavedItemsPage = lazy(() => import('../pages/SavedItemsPage'));
+const ContactsPage = lazy(() => import('../pages/contacts-page'));
 const ClubsPage = lazy(() => import('../pages/ClubsPage'));
 const ClubStudioPage = lazy(() => import('../pages/club-studio'));
 const ClubAdminDashboardPage = lazy(() => import('../pages/club-admin-dashboard-page'));
@@ -330,6 +331,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         />
         <Route path="/search" element={withAuth(<SearchPage />)} />
         <Route path="/saved" element={withAuth(<SavedItemsPage />)} />
+        <Route path="/contacts" element={withAuth(<ContactsPage />)} />
         <Route
           path="/clubs"
           element={withAuth(

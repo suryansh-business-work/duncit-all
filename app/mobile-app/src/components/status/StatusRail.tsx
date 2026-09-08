@@ -217,6 +217,8 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
         onViewers={activeIsMine ? setViewersStoryId : undefined}
         onToggleLike={activeIsPerson ? toggleLike : undefined}
         onSlideSeen={activeIsPerson ? recordView : undefined}
+        authorUserId={activeIsMine ? mine?.authorId : undefined}
+        onOpenAuthor={(userId) => openTarget({ kind: 'user', id: userId })}
       />
       <StatusVideoPreviewSheet
         video={

@@ -518,14 +518,23 @@ async function welcomeNewAccount(created: any, origin: string) {
     first. Keyed on the account instead it is still exactly once — a user id is
     created once and never reused — and it is once per PERSON rather than once
     per handset.
+
+    Not awaited, like the mail above it: the send is an HTTP round trip to the
+    WhatsApp provider, and signup used to sit on it before answering. The
+    account already exists by now, and `whatsappService.send` records its own
+    outcome in the WhatsApp log, so nothing is lost by answering first.
   */
-  await whatsappService.send({
-    event: 'USER_WELCOME',
-    entityId: String(created._id),
-    user: created,
-    name: created.profile?.first_name,
-    params: [created.profile?.first_name],
-  });
+  whatsappService
+    .send({
+      event: 'USER_WELCOME',
+      entityId: String(created._id),
+      user: created,
+      name: created.profile?.first_name,
+      params: [created.profile?.first_name],
+    })
+    .catch((e) =>
+      logs.server.error('user.service', origin, { error: e, msg: 'WhatsApp welcome failed' })
+    );
 }
 
 /**

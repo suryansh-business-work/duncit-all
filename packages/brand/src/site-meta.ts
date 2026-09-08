@@ -51,8 +51,10 @@ export function buildSiteMetaTags(meta: SiteMetaInput): string {
   const description = escapeHtml(meta.description);
   const url = escapeHtml(meta.url);
   const image = meta.imageUrl ? escapeHtml(meta.imageUrl) : null;
-  // A page that IS the site does not want its name twice.
-  const fullTitle = meta.title === meta.siteName ? title : `${title} | ${siteName}`;
+  // A home page or a tagline already carries the brand; appending it there
+  // reads as "Duncit — Friends who match your energy | Duncit".
+  const namesItself = meta.title.toLowerCase().includes(meta.siteName.toLowerCase());
+  const fullTitle = namesItself ? title : `${title} | ${siteName}`;
 
   const tags = [
     `<title>${fullTitle}</title>`,

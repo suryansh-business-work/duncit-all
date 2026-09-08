@@ -11,7 +11,8 @@
     "astro": "astro",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "e2e": "node ../../scripts/e2e-no-surface.mjs duncit.com"
+    "e2e": "node ../../scripts/e2e-no-surface.mjs duncit.com",
+    "typecheck": "tsc --noEmit -p tsconfig.server.json"
   },
   "dependencies": {
     "@duncit/brand": "workspace:*",
@@ -27,6 +28,7 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
+    "@types/node": "^26.4.0",
     "@vitest/coverage-v8": "^4.1.11",
     "vite": "^8.2.2",
     "vitest": "^4.1.11"

@@ -21,11 +21,50 @@ import type { ShortLinkCard } from './shortLink.preview';
  * own card (still better than the home page), while a misfiled browser would
  * be shown a page instead of being taken where it asked to go.
  */
-const CRAWLER_PATTERN =
-  /facebookexternalhit|facebookcatalog|whatsapp|twitterbot|slackbot|slack-imgproxy|linkedinbot|telegrambot|discordbot|pinterest|redditbot|applebot|skypeuripreview|vkshare|embedly|quora link preview|outbrain|nuzzel|flipboard|iframely|googlebot|google-inspectiontool|bingbot|duckduckbot|yandexbot|baiduspider|mastodon|snapchat|viber|line-podcast|bitlybot|developers\.google\.com\/\+\/web\/snippet|xing-contenttabreceiver|w3c_validator|opengraph|metainspector|preview/i;
+const CRAWLER_TOKENS = [
+  'facebookexternalhit',
+  'facebookcatalog',
+  'whatsapp',
+  'twitterbot',
+  'slackbot',
+  'slack-imgproxy',
+  'linkedinbot',
+  'telegrambot',
+  'discordbot',
+  'pinterest',
+  'redditbot',
+  'applebot',
+  'skypeuripreview',
+  'vkshare',
+  'embedly',
+  'quora link preview',
+  'outbrain',
+  'nuzzel',
+  'flipboard',
+  'iframely',
+  'googlebot',
+  'google-inspectiontool',
+  'bingbot',
+  'duckduckbot',
+  'yandexbot',
+  'baiduspider',
+  'mastodon',
+  'snapchat',
+  'viber',
+  'line-podcast',
+  'bitlybot',
+  'xing-contenttabreceiver',
+  'w3c_validator',
+  'opengraph',
+  'metainspector',
+  'preview',
+];
 
-export const isLinkPreviewCrawler = (userAgent: string | undefined): boolean =>
-  !!userAgent && CRAWLER_PATTERN.test(userAgent);
+export function isLinkPreviewCrawler(userAgent: string | undefined): boolean {
+  if (!userAgent) return false;
+  const agent = userAgent.toLowerCase();
+  return CRAWLER_TOKENS.some((token) => agent.includes(token));
+}
 
 const ESCAPES: Record<string, string> = {
   '&': '&amp;',
@@ -68,7 +107,7 @@ export function renderCardHtml(input: {
     `<meta property="og:site_name" content="${escapeHtml(card.site_name)}" />`,
     `<meta property="og:title" content="${title}" />`,
     `<meta property="og:url" content="${escapeHtml(shareUrl)}" />`,
-    `<meta name="twitter:card" content="${image ? 'summary_large_image' : 'summary'}" />`,
+    `<meta name="twitter:card" content="${card.large_image ? 'summary_large_image' : 'summary'}" />`,
     `<meta name="twitter:title" content="${title}" />`,
     // The destination is the page worth indexing; this hop never is.
     `<link rel="canonical" href="${url}" />`,

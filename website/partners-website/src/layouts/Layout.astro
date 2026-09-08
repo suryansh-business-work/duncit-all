@@ -27,7 +27,7 @@ const favicon =
     <SiteMeta
       title={title}
       description={description}
-      url={`${urlConfigs.siteUrl.replace(//+$/, '')}${Astro.url.pathname}`}
+      url={`${urlConfigs.siteUrl.replace(/\/+$/, '')}${Astro.url.pathname}`}
       siteName={branding.app_name}
       imageUrl={branding.website_header_logo_url || null}
     />

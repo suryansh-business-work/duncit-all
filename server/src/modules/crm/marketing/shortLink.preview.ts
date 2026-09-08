@@ -58,6 +58,9 @@ export interface ShortLinkCard {
   title: string;
   description: string | null;
   image_url: string | null;
+  /** True when the picture belongs to the entity rather than being the brand
+   * logo standing in — only then is a wide card an improvement on a small one. */
+  large_image: boolean;
   site_name: string;
   theme_color: string;
 }
@@ -85,6 +88,7 @@ export async function cardForDestination(destination: string): Promise<ShortLink
       title: preview.title,
       description: preview.description,
       image_url: preview.image_url ?? branding.logo_url ?? null,
+      large_image: !!preview.image_url,
       site_name: branding.app_name,
       theme_color: branding.primary_color,
     };

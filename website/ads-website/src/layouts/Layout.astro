@@ -23,7 +23,7 @@ const favicon = branding.website_favicon_url || '/favicon.svg';
     <SiteMeta
       title={title}
       description={description}
-      url={`${siteConfig.siteUrl.replace(//+$/, '')}${Astro.url.pathname}`}
+      url={`${siteConfig.siteUrl.replace(/\/+$/, '')}${Astro.url.pathname}`}
       siteName={branding.app_name}
       imageUrl={branding.website_header_logo_url || null}
     />

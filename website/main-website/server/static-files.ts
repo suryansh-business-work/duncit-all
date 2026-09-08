@@ -54,7 +54,7 @@ export const acceptsGzip = (req: IncomingMessage): boolean =>
 /** The dist file behind a URL path, or null when there is none. Astro builds
  * one directory per page, so `/about` is `about/index.html`. */
 export function resolveDistFile(distDir: string, urlPath: string): string | null {
-  const relative = normalize(urlPath).replaceAll('\', '/');
+  const relative = normalize(urlPath).replaceAll('\\', '/');
   if (relative.includes('..') || relative.includes('\0')) return null;
   const root = resolve(distDir);
   const target = resolve(join(distDir, relative));

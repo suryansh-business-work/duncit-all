@@ -2787,6 +2787,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "astro", range: "^7.2.10", kind: "dependencies" },
       { name: "tailwindcss", range: "^4.3.3", kind: "dependencies" },
       { name: "@vitest/coverage-v8", range: "^4.1.11", kind: "devDependencies" },
+      { name: "vite", range: "^8.2.2", kind: "devDependencies" },
       { name: "vitest", range: "^4.1.11", kind: "devDependencies" },
     ],
   },

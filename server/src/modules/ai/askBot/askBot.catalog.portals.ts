@@ -437,6 +437,14 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
   { surface: 'employee', path: '/expenses', label: 'My Expenses',
     description: 'File what you paid out of pocket and track what Finance decided. Tiles show the total claimed, what is still awaiting review, and what was approved or rejected; tabs narrow the list to each state. A claim carries the spend date, category, amount, who was paid, how you paid, the bill number and an uploaded receipt, and can be edited or withdrawn only while it is still awaiting review.' },
 
+  // ---- Regional Club Admin (regional-club-admin) -----------------------
+  { surface: 'regional-club-admin', path: '/', label: 'Region Structure',
+    description: 'Your whole region on one pan-and-zoom canvas: Region to City to Locality to Club Admin to Host, drawn from the clubs your Club Admins run. Search the canvas by name, city or locality (matches stay lit and the rest dims), switch the tree between a horizontal and a vertical layout, zoom, fit, reset or open it full screen — the layout and the search are kept in the address bar, so a reload or a shared link lands on the same view. Click a Host box for the pods they run inside your region, or a Club Admin box for the clubs they run; a pod row opens that pod\'s full detail.' },
+  { surface: 'regional-club-admin', path: '/club-admins', label: 'Club Admins',
+    description: 'Add or remove the Club Admins in your region, and rename the region itself. The picker only offers Club Admins who are not already in another region. Clicking a row drills in: that person\'s clubs, then one club\'s pods, then one pod\'s full detail. Everything the Structure canvas draws below a Club Admin follows from the clubs they already run, so this list is the only place a region is edited.' },
+  { surface: 'regional-club-admin', path: '/profile', label: 'Profile',
+    description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Regional Club Admin console.' },
+
   // ---- Partners (partners) --------------------------------------------
   { surface: 'partners', path: '/venues/dashboard', label: 'Venue Dashboard', group: 'Venue Owner',
     description: 'Pick one venue (or all together) and read its slot-based earnings potential, capacity and pending booking-request counts, with quick jumps to Venue Management, Slot Requests and the availability calendar.' },
@@ -478,10 +486,6 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
     description: 'Browse the searchable table of clubs assigned to you and click one to open its details for editing or jump to that club\'s pods.' },
   { surface: 'partners', path: '/club-admin/monitoring', label: 'Pod Monitoring (AI)', group: 'Club Admin',
     description: 'Scan the AI risk-scored audit trail of every pod edit, status change and critical action in your clubs and open a row for the full audit detail.' },
-  { surface: 'partners', path: '/regional/structure', label: 'Region Structure', group: 'Regional Club Admin',
-    description: 'Your whole region on one pan-and-zoom canvas: Region to City to Locality to Club Admin to Host, drawn from the clubs your Club Admins run. Click a Host box to open a side drawer listing the pods they run inside your region, as a searchable, sortable table with the club, date, price, spots and whether the pod is live.' },
-  { surface: 'partners', path: '/regional/club-admins', label: 'Club Admins', group: 'Regional Club Admin',
-    description: 'Add or remove the Club Admins in your region, and rename the region itself. The picker only offers Club Admins who are not already in another region. Everything the Structure canvas draws below a Club Admin follows from the clubs they already run, so this list is the only place a region is edited.' },
   { surface: 'partners', path: '/faqs', label: 'FAQs',
     description: 'Search partner FAQs and filter them by Venue, Host or Products topic, expanding each question for its answer.' },
   { surface: 'partners', path: '/support', label: 'Support',

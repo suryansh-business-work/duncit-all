@@ -385,7 +385,21 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       },
       addAddress: 'Add address',
       addressLine2: 'Address line 2',
+      /*
+        Profile > Password. Which pair of these renders is decided by whether
+        the account HAS a password: one that signed up with Google has none, so
+        it is creating its first rather than changing one it never set.
+      */
+      password: 'Password',
       changePassword: 'Change password',
+      changePasswordHint: 'Change your password with an email verification code.',
+      createPassword: 'Create password',
+      createPasswordHint:
+        'You signed in with Google. Create a password so you can also sign in with your email.',
+      passwordCreated: 'Password created',
+      // The short labels the native row uses, where the full sentence does not fit.
+      changeAction: 'Change',
+      createAction: 'Create',
       couldNotSaveProfile: 'Could not save profile.',
       couldNotSaveProfile2: 'Could not save profile',
       couldNotSaveYourLanguage: 'Could not save your language',
@@ -409,6 +423,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       profileSettings: 'Profile Settings',
       receiverName: 'Receiver name',
       resendOtp: 'Resend OTP',
+      didntGetIt: 'Didn’t get it?',
       saveAddress: 'Save address',
       sendCode: 'Send code',
       somethingWentWrong: 'Something went wrong.',
@@ -498,6 +513,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       },
       youHaveUnsavedChangesClosingNow: 'You have unsaved changes. Closing now will lose them.',
       yourPasswordHasBeenChangedSuccessfully: 'Your password has been changed successfully.',
+      yourPasswordHasBeenCreatedSuccessfully:
+        'Your password is set. You can now sign in with your email and password too.',
       enterYourCity: 'Enter your city',
       // The heading over the three read-only contact rows in Edit profile.
       // Read-only because each of them is changed on its own, behind a
@@ -621,14 +638,13 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // sends a code to it — 'phone' would not explain why.
       whatsappLabel: 'WhatsApp number',
       whatsappHint: 'We send your booking updates and your sign-up code here.',
-      dobYearLabel: 'Birth year',
-      dobYearHint: 'You must be at least {years} years old to join.',
       referralLabel: 'Referral code (optional)',
       referralHint: 'Have a friend’s code? Both of you earn coins.',
       passwordPlaceholder: 'Create a password',
       confirmPasswordLabel: 'Confirm Password',
       confirmPasswordPlaceholder: 'Re-enter password',
-      // mWeb only — MUI X's picker carries a helper line, the native field does not.
+      // mWeb only — MUI X's picker carries a helper line under the box; the
+      // native field says it through its validation message instead.
       dobHint: 'You must be at least {years} years old',
       // Native only — its date of birth is typed as well as picked. The shape
       // comes from the admin's configured date pattern, never a literal.
@@ -652,10 +668,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         dobInvalid: 'Enter a valid date of birth',
         dobFormat: 'Use the format {format}',
         dobMinAge: 'You must be at least {years} years old to join Duncit',
-        // Signup asks for a birth YEAR, so the shape rule is about four digits
-        // rather than a date pattern. BIRTH_YEAR from @duncit/regex.
-        dobYearRequired: 'Birth year is required',
-        dobYearInvalid: 'Enter a 4-digit year',
         // Phone is required and unique. The client says what shape is expected;
         // whether the number is already on another account is the server's
         // answer, and it arrives as the form's error line.
@@ -669,7 +681,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     // buildSignupStepperLabels in @duncit/utils, so both apps read one set.
     signupSteps: {
       whoTitle: 'About you',
-      whoSubtitle: 'Your name, the year you were born, and a referral code if you have one.',
+      whoSubtitleBirthDate: 'Your name, your date of birth, and a referral code if you have one.',
       contactTitle: 'How we reach you',
       contactSubtitle: 'Your WhatsApp number and email address.',
       securityTitle: 'Your password',
@@ -689,10 +701,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       didntGetIt: 'Didn’t get it?',
       resend: 'Send again',
       testCode: 'Test code: {code}',
-      // The Google door has no form behind it, so it asks for the number on a
-      // step of its own before a code can be sent to it.
-      numberTitle: 'Your WhatsApp number',
-      numberSubtitle: 'We send your booking updates and your sign-up code here.',
+      // The Google door has no form behind it, so it asks on a step of its own
+      // for the two things a Google account never tells us: the WhatsApp number
+      // a code can be sent to, and the date of birth the joining age is checked on.
+      detailsTitle: 'A few details',
+      detailsSubtitle: 'Google doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number.',
       sameAsMobile: 'This is also my mobile number',
       sameAsMobileHint: 'Untick if your mobile number is different — we will leave the phone number on your profile blank.',
     },
@@ -3152,6 +3165,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       createANewPassword: 'Create a new password',
       currentPassword: 'Current password',
       enterYourCurrentPassword: 'Enter your current password',
+      // Step one, in the two shapes it takes. The Google-signup account has no
+      // current password to ask for, so the emailed code is the whole proof.
+      currentPasswordStepHint: 'Enter your current password and we’ll email you a one-time code.',
+      createStepHint: 'We’ll email you a one-time code to confirm it’s you, then you can set your password.',
+      otpSentToYourEmail: 'OTP sent to your email.',
       mustDifferFromCurrent: 'New password must be different from your current password',
       newPassword: 'New password',
       reEnterNewPassword: 'Re-enter new password',

@@ -9,6 +9,7 @@ import {
 } from '@services/email/email.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { logs } from '@observability/log';
+import { appDate, appFormat, appTime } from '@utils/app-time';
 
 const toPub = (i: IInterview) => ({
   id: String(i._id),
@@ -36,18 +37,9 @@ const toPub = (i: IInterview) => ({
   updated_at: i.updated_at.toISOString(),
 });
 
-const fmtSlot = (s: { start: Date | string; end: Date | string }) => {
-  const start = typeof s.start === 'string' ? new Date(s.start) : s.start;
-  const end = typeof s.end === 'string' ? new Date(s.end) : s.end;
-  const date = start.toLocaleDateString('en-IN', {
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-  const t = (d: Date) => d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-  return `${date} ${t(start)} – ${t(end)}`;
-};
+/** "Tue, 08 Sep 2026 06:30 PM – 07:00 PM", in the admin's zone and patterns. */
+const fmtSlot = (s: { start: Date | string; end: Date | string }) =>
+  `${appFormat(s.start, 'EEE')}, ${appDate(s.start)} ${appTime(s.start)} – ${appTime(s.end)}`;
 
 async function adminEmails(): Promise<string[]> {
   const admins = await UserModel.find({

@@ -10,10 +10,8 @@ import {
   type TableEntityConfig,
   type TableQueryInput,
 } from "@utils/table-query";
-import {
-  setReopenWindowZone,
-  DEFAULT_REOPEN_ZONE,
-} from "@modules/support/reopenWindow";
+import { DEFAULT_REOPEN_ZONE } from "@modules/support/reopenWindow";
+import { setAppTimeSettings } from "@utils/app-time";
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, MAX_ACCOUNT_AGE_YEARS } from "@utils/age";
 import { invalidateFeatureFlagCache } from "./featureFlag.gate";
 
@@ -679,19 +677,24 @@ export const settingsService = {
       { $set: update },
       { new: true, upsert: true },
     );
-    // Keep the reopen-window day boundaries aligned with the configured zone.
-    if (input.time_zone !== undefined) setReopenWindowZone(doc.time_zone);
+    // Every printed time, and the reopen-window day boundaries, follow the
+    // zone and patterns just saved.
+    setAppTimeSettings(doc);
     return toAppPub(doc);
   },
 
   /**
-   * Refresh process-level caches that derive from app settings (currently the
-   * support reopen-window timezone). Called once on boot after the singleton is
-   * seeded so day-boundary math matches the admin-configured zone.
+   * Refresh process-level caches that derive from app settings — the zone and
+   * patterns every printed time is read in, which the support reopen window
+   * shares. Called once on boot after the singleton is seeded.
    */
   async refreshDerivedCaches() {
     const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
-    setReopenWindowZone(doc?.time_zone ?? DEFAULT_REOPEN_ZONE);
+    setAppTimeSettings({
+      time_zone: doc?.time_zone ?? null,
+      date_format: doc?.date_format ?? null,
+      time_format: doc?.time_format ?? null,
+    });
   },
 
   async listFlags() {

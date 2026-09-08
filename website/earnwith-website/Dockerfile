@@ -23,6 +23,7 @@ COPY portals/marketing/package.json ./portals/marketing/
 COPY portals/onboarding/package.json ./portals/onboarding/
 COPY portals/hr/package.json ./portals/hr/
 COPY portals/employee/package.json ./portals/employee/
+COPY portals/regional-club-admin/package.json ./portals/regional-club-admin/
 COPY website/status-website/package.json ./website/status-website/
 COPY portals/challenge-portal/package.json ./portals/challenge-portal/
 COPY portals/developers/package.json ./portals/developers/
@@ -57,6 +58,8 @@ RUN pnpm install --frozen-lockfile
 ARG PUBLIC_GRAPHQL_URL=
 ARG PUBLIC_MWEB_URL=
 ARG PUBLIC_MAIN_SITE_URL=
+ARG PUBLIC_EARNWITH_URL=
+ENV PUBLIC_EARNWITH_URL=$PUBLIC_EARNWITH_URL
 ENV PUBLIC_GRAPHQL_URL=$PUBLIC_GRAPHQL_URL
 ENV PUBLIC_MWEB_URL=$PUBLIC_MWEB_URL
 ENV PUBLIC_MAIN_SITE_URL=$PUBLIC_MAIN_SITE_URL

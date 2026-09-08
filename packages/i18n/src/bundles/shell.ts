@@ -172,6 +172,12 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         promoTitle: 'Onboard with ease',
         promoText: 'Welcome, verify and activate new members and partners.',
       },
+      regionalClubAdmin: {
+        tagline: 'Your whole region — every city, locality, Club Admin and Host under you.',
+        promoTitle: 'Your region, on one canvas',
+        promoText:
+          'Add the Club Admins who report into you, and the cities, hosts and pods below them draw themselves.',
+      },
       products: {
         tagline: 'Manage the product catalog and roadmap.',
         promoTitle: 'Build what matters',
@@ -448,7 +454,6 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       productsReviews: 'Products Reviews',
       rateLimiting: 'Rate Limiting',
       referrals: 'Referrals',
-      regionalClubAdmin: 'Regional Club Admin',
       regionStructure: 'Region Structure',
       reminders: 'Reminders',
       reportByUser: 'Report By User',

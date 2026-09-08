@@ -10,28 +10,31 @@
  *
  * The window timezone is admin-configurable (`appSettings.time_zone`). The
  * reopen helpers stay synchronous (they run inside synchronous publish mappers)
- * by reading a module-level cached zone, refreshed from settings on boot via
- * {@link setReopenWindowZone}. Callers may also pass an explicit `tz` override.
+ * by reading the zone `@utils/app-time` caches — the same one every printed
+ * time is read in, refreshed from settings on boot and on save. Callers may
+ * also pass an explicit `tz` override.
  */
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { DEFAULT_APP_ZONE, getAppTimeZone, setAppTimeSettings } from '@utils/app-time';
 
 export const REOPEN_WINDOW_DAYS = 3;
-export const DEFAULT_REOPEN_ZONE = 'Asia/Kolkata';
+export const DEFAULT_REOPEN_ZONE = DEFAULT_APP_ZONE;
 
-let cachedZone = DEFAULT_REOPEN_ZONE;
-
-/** Refresh the cached IANA zone used for calendar-day math (called on boot). */
+/** Refresh the cached IANA zone used for calendar-day math — the app-wide one. */
 export function setReopenWindowZone(tz?: string | null): void {
-  cachedZone = (tz || '').trim() || DEFAULT_REOPEN_ZONE;
+  setAppTimeSettings({ time_zone: tz ?? null });
 }
 
 /** The IANA zone currently used for the reopen-window day boundaries. */
 export function getReopenWindowZone(): string {
-  return cachedZone;
+  return getAppTimeZone();
 }
 
 /** The instant the reopen window closes (exclusive), or null if never resolved. */
-export function reopenDeadline(resolvedAt?: Date | null, tz: string = cachedZone): Date | null {
+export function reopenDeadline(
+  resolvedAt?: Date | null,
+  tz: string = getAppTimeZone(),
+): Date | null {
   if (!resolvedAt) return null;
   // The wall-clock day of resolution in the configured zone.
   const zoned = toZonedTime(resolvedAt, tz);
@@ -46,7 +49,7 @@ export function reopenDeadline(resolvedAt?: Date | null, tz: string = cachedZone
 export function reopenExpired(
   resolvedAt?: Date | null,
   now: number = Date.now(),
-  tz: string = cachedZone
+  tz: string = getAppTimeZone()
 ): boolean {
   const deadline = reopenDeadline(resolvedAt, tz);
   return !!deadline && now >= deadline.getTime();

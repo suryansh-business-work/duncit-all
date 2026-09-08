@@ -86,12 +86,19 @@ describe('PodDetailsPage navigation', () => {
     expect(await screen.findByText('pods-list')).toBeInTheDocument();
   });
 
-  it('Edit defaults to the admin pod editor', async () => {
-    mount();
+  it('Edit opens the route the portal gave it', async () => {
+    mount({ editTo: (id) => `/pods/${id}/edit` });
     await settle();
 
     fireEvent.click(await screen.findByText('Edit pod'));
     expect(await screen.findByText('pod-editor')).toBeInTheDocument();
+  });
+
+  it('hides Edit for a console with no editor behind it', async () => {
+    mount();
+    await settle();
+
+    expect(screen.queryByText('Edit pod')).toBeNull();
   });
 
   it('takes a portal’s own Back and Edit routes', async () => {

@@ -110,7 +110,6 @@ export function CreatePodStepper({
   const [error, setError] = useState('');
   const [blocked, setBlocked] = useState<BlockedViolation[]>([]);
   const draftIdRef = useRef(initialDraftId);
-  const dupTitleRef = useRef(false);
   const isLast = step === STEP_TITLE_KEYS.length - 1;
   const hostSubmitLabel = busy ? t('mweb.createPod.creating') : t('mweb.createPod.createPod');
   let submitLabel = hostSubmitLabel;
@@ -128,15 +127,6 @@ export function CreatePodStepper({
       form.setValue('product_requests', []);
     }
   }, [showProducts]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Clear a duplicate-title error as soon as the host edits the title (DIFF-7).
-  const podTitle = form.watch('pod_title');
-  useEffect(() => {
-    if (dupTitleRef.current) {
-      form.clearErrors('pod_title');
-      dupTitleRef.current = false;
-    }
-  }, [podTitle]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // A host with a single onboarded category has it auto-selected, so they never
   // see the extra choice; multi-category hosts must pick (enforced in next()).
@@ -226,14 +216,10 @@ export function CreatePodStepper({
       }
       await publishValues(values);
     } catch (e) {
-      const message = e instanceof Error ? e.message : t('mweb.createPod.createFailed');
-      if (/already exists/i.test(message)) {
-        dupTitleRef.current = true;
-        form.setError('pod_title', { type: 'duplicate', message });
-        setStep(0);
-      } else {
-        setError(message);
-      }
+      // Two pods may share a title — the server gives the second one a link of
+      // its own — so nothing here is the title's fault any more. Whatever did
+      // fail is shown as written, not pinned to a field it may not belong to.
+      setError(e instanceof Error ? e.message : t('mweb.createPod.createFailed'));
     } finally {
       setBusy(false);
     }

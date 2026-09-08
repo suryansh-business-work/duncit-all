@@ -17,6 +17,8 @@ exports:
   - 'PolicyStrip.astro'
   - 'SocialLinks.astro'
   - 'SiteMenu.astro'
+  - 'SiteMeta.astro'
+  - 'site-meta'
 ---
 
 ## Why this exists
@@ -136,6 +138,47 @@ the header logo, then the wordmark. Defaults to `height={96}` and `lazy`.
 | `name` | `string` | `'Duncit'` |
 | `height` | `number` | `96` |
 | `href` | `string \| null` | `'/'` |
+
+### `SiteMeta.astro` and `site-meta`
+
+Every website page's link-preview card. Before this the sites shipped a `<title>` and a
+`<meta name="description">` and nothing else, so a duncit.com link posted into WhatsApp
+or Slack unfurled with no picture — and on a page whose content arrives from the API
+(a blog post, a short link) under the wrong title entirely.
+
+```astro
+---
+import SiteMeta from '@duncit/brand/SiteMeta.astro';
+import { fetchBranding } from '../lib/site-data';
+import { urlConfigs } from '../config/url-configs';
+
+const branding = await fetchBranding();
+---
+
+<SiteMeta
+  title="Careers at Duncit"
+  description="Build the friendship platform that matches people by energy."
+  url={`${urlConfigs.siteUrl}${Astro.url.pathname}`}
+  siteName={branding.app_name}
+  imageUrl={branding.website_header_logo_url || null}
+/>
+```
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `title` | `string` | — | The page's own title; ` \| <siteName>` is appended unless the title already names the site. |
+| `description` | `string` | — | One plain line. |
+| `url` | `string` | — | The page's absolute address — `og:url` and `canonical`. |
+| `siteName` | `string` | — | `og:site_name`. |
+| `imageUrl` | `string \| null` | `null` | The card picture. |
+| `largeImage` | `boolean` | `false` | True only when the picture is the page's own, not the logo standing in. |
+| `type` | `'website' \| 'article'` | `'website'` | `article` for a blog post. |
+
+The component writes the tags between `<!-- meta:start -->` and `<!-- meta:end -->`
+markers, and `site-meta` exports the same builder as a plain function
+(`buildSiteMetaTags`, `injectSiteMeta`, `META_START`, `META_END`). That is what lets the
+sites' HTML server recompose the block per request for the pages whose card is not
+knowable at build time — one builder, so a card cannot drift from the page it describes.
 
 ## The wordmark is plain CSS on purpose
 

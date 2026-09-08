@@ -6375,7 +6375,7 @@ export type GoogleSignupInput = {
   /** Which app they accepted in. Recorded on every acceptance row. */
   accepted_policy_surface?: InputMaybe<PolicyAcceptanceSurface>;
   city?: InputMaybe<Scalars['String']['input']>;
-  dob?: InputMaybe<Scalars['String']['input']>;
+  dob: Scalars['String']['input'];
   id_token: Scalars['String']['input'];
   phone_extension: Scalars['String']['input'];
   /**
@@ -21079,7 +21079,7 @@ export type RequestMeetingInput = {
 };
 
 export type RequestPasswordChangeInput = {
-  current_password: Scalars['String']['input'];
+  current_password?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type RequestWithdrawalInput = {

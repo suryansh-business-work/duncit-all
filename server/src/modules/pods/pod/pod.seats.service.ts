@@ -8,6 +8,7 @@ import { getUrlConfigs } from '@config/url-configs';
 import { logs } from '@observability/log';
 import { notifyEvent } from '@services/notify/notify.service';
 import { podImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
+import { appDate, appTime } from '@utils/app-time';
 
 /** A pod or user id, however the caller happens to be holding it. */
 type PodRef = string | Types.ObjectId;
@@ -37,13 +38,6 @@ const NEEDED_SEATS = (seats: number) => ({
 
 const fullName = (user: any) =>
   `${user?.profile?.first_name ?? ''} ${user?.profile?.last_name ?? ''}`.trim();
-
-// WhatsApp templates print the day and the clock time as two separate
-// placeholders, the same split pod.service and ticket.service make.
-const dateOnly = (value?: Date | null) =>
-  value ? new Date(value).toLocaleString('en-IN', { dateStyle: 'medium' }) : '';
-const timeOnly = (value?: Date | null) =>
-  value ? new Date(value).toLocaleString('en-IN', { timeStyle: 'short' }) : '';
 
 /**
  * Tell the host their pod just sold its last spot.
@@ -98,8 +92,8 @@ async function announcePodFilled(pod: any, gained: number): Promise<void> {
     params: [
       hostName,
       pod.pod_title,
-      dateOnly(pod.pod_date_time),
-      timeOnly(pod.pod_date_time),
+      appDate(pod.pod_date_time),
+      appTime(pod.pod_date_time),
       `${mwebUrl.replace(/\/+$/, '')}/club/${clubSlug}/pod/${pod.pod_id}`,
       // A blank value is recorded FAILED and never sent, so a club whose admin
       // seat is empty is named by the club instead.

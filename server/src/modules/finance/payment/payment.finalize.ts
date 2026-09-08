@@ -32,6 +32,7 @@ import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { generateInvoicePdf } from '@services/invoice/invoice.pdf';
 import { sendEmail } from '@services/email/email.service';
+import { appDate, appDateTime, appTime } from '@utils/app-time';
 import { bookingLinkUrl, getUrlConfigs } from '@config/url-configs';
 import { logs } from '@observability/log';
 import { notifyEvent } from '@services/notify/notify.service';
@@ -621,9 +622,7 @@ async function podReceiptMail(p: IPayment, bookingUrl: string): Promise<ReceiptM
       // cost the buyer their receipt: the checkout's own description is what
       // the pod was sold to them as.
       pod_title: pod?.pod_title ?? p.description,
-      date_label: pod?.pod_date_time
-        ? new Date(pod.pod_date_time).toLocaleString('en-IN')
-        : p.description,
+      date_label: appDateTime(pod?.pod_date_time) || p.description,
       booking_url: bookingUrl,
     },
   };
@@ -774,12 +773,6 @@ async function emailReceipt(ctx: DeferredContext): Promise<void> {
 const fullName = (user: any) =>
   `${user?.profile?.first_name ?? ''} ${user?.profile?.last_name ?? ''}`.trim();
 
-// WhatsApp templates print the day and the clock time as two placeholders.
-const dateOnly = (value?: Date | null) =>
-  value ? new Date(value).toLocaleString('en-IN', { dateStyle: 'medium' }) : '';
-const timeOnly = (value?: Date | null) =>
-  value ? new Date(value).toLocaleString('en-IN', { timeStyle: 'short' }) : '';
-
 /** The buyer's message: their pod payment did not turn into a seat. */
 async function whatsappPaymentFailed(payment: IPayment): Promise<StepOutcome> {
   if (!payment.pod_id) return { status: 'SKIPPED', detail: NO_POD_DETAIL };
@@ -814,8 +807,8 @@ async function whatsappPaymentFailed(payment: IPayment): Promise<StepOutcome> {
       name,
       pod.pod_title,
       pod.pod_title,
-      dateOnly(pod.pod_date_time),
-      timeOnly(pod.pod_date_time),
+      appDate(pod.pod_date_time),
+      appTime(pod.pod_date_time),
       `${mwebUrl.replace(/\/+$/, '')}/club/${(club as any)?.club_id ?? ''}/pod/${pod.pod_id}`,
       fullName(host) || 'A host',
       payment.payment_id,

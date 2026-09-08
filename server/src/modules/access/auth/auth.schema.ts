@@ -186,8 +186,17 @@ export const authTypeDefs = gql`
     otp: String!
   }
 
+  """
+  Step one of setting the account password.
+
+  current_password is OPTIONAL because a Google-signup account has none: there
+  is nothing to prove and nothing to change, so that account creates its first
+  password with the emailed code alone. An account that already has a password
+  must still send the right one — the server decides, because the hash is
+  select:false and only it can see whether one exists.
+  """
   input RequestPasswordChangeInput {
-    current_password: String!
+    current_password: String
   }
 
   input ChangePasswordInput {
@@ -216,7 +225,12 @@ export const authTypeDefs = gql`
     whatsapp_is_mobile: Boolean = true
     "From verifySignupWhatsAppOtp. Spent here, once."
     whatsapp_token: String!
-    dob: String
+    """
+    Date of birth. A Google credential carries no birthday, so the client asks
+    for it on the same step as the number — and it is as required as it is on
+    the email door, because the joining age is checked against it.
+    """
+    dob: String!
     city: String
     zone: String
     """
@@ -364,7 +378,7 @@ export const authTypeDefs = gql`
     requestPasswordResetOtp(email: String!): OtpRequestResult!
     "Deprecated: code + new password in one call. Use completePasswordReset."
     resetPasswordWithOtp(input: ResetPasswordInput!): Boolean!
-    "Auth-required: verify the current password and email a change-confirmation OTP."
+    "Auth-required: verify the current password (when the account has one) and email a confirmation OTP."
     requestPasswordChangeOtp(input: RequestPasswordChangeInput!): OtpRequestResult!
     "Auth-required: confirm the OTP and set the new password."
     changePasswordWithOtp(input: ChangePasswordInput!): Boolean!

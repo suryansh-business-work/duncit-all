@@ -2,6 +2,7 @@ import type { Translate } from '@/i18n/fallback';
 import { useState } from 'react';
 import { Text, YStack } from 'tamagui';
 
+import { PrimaryButton } from '@/components/PrimaryButton';
 import {
   CurrentPasswordForm,
   NewPasswordForm,
@@ -19,17 +20,74 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface ChangePasswordDialogProps {
   open: boolean;
+  /** Whether the account already HAS a password — see the section's note. */
+  hasPassword: boolean;
   onClose: () => void;
   onChanged: () => void;
+}
+
+interface RequestStepProps {
+  hasPassword: boolean;
+  loading: boolean;
+  errorMessage: string | null;
+  onSubmit: (values: CurrentPasswordValues) => Promise<void>;
+  onSendCode: () => void;
 }
 
 const errMsg = (e: unknown, t: Translate) =>
   e instanceof Error ? e.message : t('mweb.account.somethingWentWrong');
 
-/** Two-step change-password sheet (Tamagui) — RN twin of mWeb's dialog:
- * verify current password → OTP + new password. */
+/**
+ * Step one, in the two shapes it takes.
+ *
+ * An account with a password proves it here. A Google-signup account has none
+ * to prove, so the only thing left to ask for is the code itself.
+ */
+function RequestStep({
+  hasPassword,
+  loading,
+  errorMessage,
+  onSubmit,
+  onSendCode,
+}: Readonly<RequestStepProps>) {
+  const { t } = useTranslation();
+
+  if (hasPassword) {
+    return (
+      <YStack gap={12}>
+        <Text fontSize={13.5} color="$muted">
+          {t('mweb.changePassword.currentPasswordStepHint')}
+        </Text>
+        <CurrentPasswordForm loading={loading} errorMessage={errorMessage} onSubmit={onSubmit} />
+      </YStack>
+    );
+  }
+
+  return (
+    <YStack gap={12}>
+      <Text fontSize={13.5} color="$muted">
+        {t('mweb.changePassword.createStepHint')}
+      </Text>
+      {errorMessage ? (
+        <Text fontSize={14} color="$danger" testID="create-password-error">
+          {errorMessage}
+        </Text>
+      ) : null}
+      <PrimaryButton
+        testID="change-password-send-code"
+        label={t('mweb.account.sendCode')}
+        loading={loading}
+        onPress={onSendCode}
+      />
+    </YStack>
+  );
+}
+
+/** Two-step password sheet (Tamagui) — RN twin of mWeb's dialog: prove the
+ * current password (or, with none, just ask for the code) → OTP + new password. */
 export function ChangePasswordDialog({
   open,
+  hasPassword,
   onClose,
   onChanged,
 }: Readonly<ChangePasswordDialogProps>) {
@@ -49,18 +107,17 @@ export function ChangePasswordDialog({
     onClose();
   };
 
+  // An empty password means there is none to send: the server reads that as the
+  // create path rather than a wrong current password.
   const sendOtp = async (password: string) => {
     setLoading(true);
     setError(null);
     try {
-      await graphqlRequest(
-        MobileRequestPasswordChangeOtpDocument,
-        { input: { current_password: password } },
-        { auth: true },
-      );
+      const input = password ? { current_password: password } : {};
+      await graphqlRequest(MobileRequestPasswordChangeOtpDocument, { input }, { auth: true });
       setCurrentPassword(password);
       setStep(2);
-      setInfo('OTP sent to your email.');
+      setInfo(t('mweb.changePassword.otpSentToYourEmail'));
     } finally {
       setLoading(false);
     }
@@ -72,6 +129,10 @@ export function ChangePasswordDialog({
     } catch (e) {
       setError(errMsg(e, t));
     }
+  };
+
+  const handleSendCode = () => {
+    sendOtp('').catch((e) => setError(errMsg(e, t)));
   };
 
   const handleResend = () => {
@@ -100,20 +161,18 @@ export function ChangePasswordDialog({
     }
   };
 
+  const title = hasPassword ? t('mweb.account.changePassword') : t('mweb.account.createPassword');
+
   return (
-    <SecuritySheet
-      open={open}
-      title={t('mweb.account.changePassword')}
-      testID="change-password-dialog"
-      onClose={close}
-    >
+    <SecuritySheet open={open} title={title} testID="change-password-dialog" onClose={close}>
       {step === 1 ? (
-        <YStack gap={12}>
-          <Text fontSize={13.5} color="$muted">
-            Enter your current password and we’ll email you a one-time code.
-          </Text>
-          <CurrentPasswordForm loading={loading} errorMessage={error} onSubmit={handleRequest} />
-        </YStack>
+        <RequestStep
+          hasPassword={hasPassword}
+          loading={loading}
+          errorMessage={error}
+          onSubmit={handleRequest}
+          onSendCode={handleSendCode}
+        />
       ) : (
         <YStack gap={12}>
           <Text fontSize={13.5} color="$primary" testID="change-password-info">
@@ -131,7 +190,7 @@ export function ChangePasswordDialog({
             color="$primary"
             textAlign="center"
           >
-            Resend OTP
+            {t('mweb.account.resendOtp')}
           </Text>
         </YStack>
       )}

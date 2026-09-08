@@ -6,6 +6,7 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { podSeatsTaken } from '@modules/pods/pod/pod.seats';
 import type { IPodChangeOffer, IPodChangeRequest, PodChangeRole } from './podChangeRequest.model';
+import { appDate, appTime } from '@utils/app-time';
 
 /** Same shape every other pods module throws. */
 export function changeRequestFail(code: string, message: string): never {
@@ -34,13 +35,10 @@ export const contactPhone = (user: any): string =>
   String(user?.communication?.whatsapp ?? user?.auth?.phone?.number ?? '');
 
 /** Every WhatsApp template prints the date and the time as two placeholders. */
-export const waWhen = (at: Date | null | undefined) => {
-  if (!(at instanceof Date) || Number.isNaN(at.getTime())) return { date: '', time: '' };
-  return {
-    date: at.toLocaleString('en-IN', { dateStyle: 'medium' }),
-    time: at.toLocaleString('en-IN', { timeStyle: 'short' }),
-  };
-};
+export const waWhen = (at: Date | null | undefined) => ({
+  date: appDate(at),
+  time: appTime(at),
+});
 
 /** A pod that can still take a change request. Cancelled and completed pods
  * cannot: there is nothing left to hand over. */

@@ -107,7 +107,6 @@ export default function CreatePodStepper({
   const [error, setError] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<BlockedViolation[]>([]);
   const draftIdRef = useRef(initialDraftId);
-  const dupTitleRef = useRef(false);
   const isLast = step === STEP_TITLE_KEYS.length - 1;
 
   // With products gated off, drop any product values a stale draft may carry.
@@ -118,16 +117,6 @@ export default function CreatePodStepper({
       form.setValue('product_requests', []);
     }
   }, [showProducts, form]);
-
-  // A duplicate-title error is shown inline on the title field; clear it as soon
-  // as the host edits the title so the stale message can't linger (DIFF-7).
-  const podTitle = form.watch('pod_title');
-  useEffect(() => {
-    if (dupTitleRef.current) {
-      form.clearErrors('pod_title');
-      dupTitleRef.current = false;
-    }
-  }, [podTitle, form]);
 
   // A host with a single onboarded category has it auto-selected, so they never
   // see the extra choice; multi-category hosts must pick (enforced in next()).
@@ -198,15 +187,10 @@ export default function CreatePodStepper({
       const id = await persist(step);
       await onPublish(id, buildCreatePodInput(values));
     } catch (e) {
-      const message = e instanceof Error ? e.message : t('mweb.createPod.createFailed');
-      // Surface a duplicate title inline on the title field and jump back to it.
-      if (/already exists/i.test(message)) {
-        dupTitleRef.current = true;
-        form.setError('pod_title', { type: 'duplicate', message });
-        setStep(0);
-      } else {
-        setError(message);
-      }
+      // Two pods may share a title — the server gives the second one a link of
+      // its own — so nothing here is the title's fault any more. Whatever did
+      // fail is shown as written, not pinned to a field it may not belong to.
+      setError(e instanceof Error ? e.message : t('mweb.createPod.createFailed'));
     } finally {
       setBusy(false);
     }

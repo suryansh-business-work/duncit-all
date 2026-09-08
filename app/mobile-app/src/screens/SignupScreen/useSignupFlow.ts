@@ -1,5 +1,4 @@
 import { useReducer, useState, type Reducer } from 'react';
-import { birthYearToDob } from '@duncit/datetime';
 import {
   initialSignupFlowState,
   signupFlowReducer,
@@ -9,7 +8,7 @@ import {
   type SignupNumber,
   type SignupStep,
 } from '@duncit/utils';
-import type { WhatsappNumberValues } from '@duncit/forms/schemas';
+import type { GoogleSignupValues } from '@duncit/forms/schemas';
 
 import { type SignupFormValues } from '@/forms/signup';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -61,24 +60,23 @@ export function useSignupFlow() {
 
   /*
     Google proves an address and nothing else, so its credential is held —
-    unspent — while the number step and the code step run. There is no account
-    to back out of until both have answered, which is what the acceptance
-    sheet's Google wording promises.
+    unspent — while its own step (number and date of birth) and the code step
+    run. There is no account to back out of until both have answered, which is
+    what the acceptance sheet's Google wording promises.
   */
   const googleAccepted = (idToken: string, policyIds: string[]) => {
     setError(null);
     dispatch({ type: 'GOOGLE_ACCEPTED', credential: { idToken, policyIds } });
   };
 
-  /** The number step's answer: from here the two doors run the same code step. */
-  const submitNumber = (values: WhatsappNumberValues) => dispatch({ type: 'NUMBER_GIVEN', values });
+  /** The Google step's answer: from here the two doors run the same code step. */
+  const submitDetails = (values: GoogleSignupValues) => dispatch({ type: 'DETAILS_GIVEN', values });
 
   const createFromForm = (values: SignupFormValues, whatsappToken: string) =>
     register(
       {
         name: values.name,
-        // A birth YEAR is stored as its January 1 — see `birthYearToDob`.
-        dob: birthYearToDob(values.dobYear),
+        dob: values.dob,
         email: values.email,
         phoneNumber: values.phoneNumber,
         phoneExtension: values.phoneExtension,
@@ -93,14 +91,20 @@ export function useSignupFlow() {
   const createFromGoogle = (
     google: SignupGoogleCredential,
     number: SignupNumber,
+    dob: string,
     whatsappToken: string,
   ) =>
-    signupWithGoogle(google.idToken, [...google.policyIds], {
-      extension: number.extension,
-      number: number.number,
-      alsoMobile: number.alsoMobile,
-      whatsappToken,
-    });
+    signupWithGoogle(
+      google.idToken,
+      [...google.policyIds],
+      {
+        extension: number.extension,
+        number: number.number,
+        alsoMobile: number.alsoMobile,
+        whatsappToken,
+      },
+      dob,
+    );
 
   /**
    * The code answered: spend its proof on the account it was asked for, then
@@ -114,8 +118,13 @@ export function useSignupFlow() {
     setError(null);
     setCreating(true);
     try {
-      if (flow.pendingGoogle && flow.verifying) {
-        const result = await createFromGoogle(flow.pendingGoogle, flow.verifying, whatsappToken);
+      if (flow.pendingGoogle && flow.verifying && flow.googleDob !== null) {
+        const result = await createFromGoogle(
+          flow.pendingGoogle,
+          flow.verifying,
+          flow.googleDob,
+          whatsappToken,
+        );
         authenticate(result.token, result.surveyCompleted, true);
         return;
       }
@@ -144,7 +153,7 @@ export function useSignupFlow() {
     pendingEmail: flow.pendingForm?.email,
     submitForm,
     googleAccepted,
-    submitNumber,
+    submitDetails,
     createAccount,
   };
 }

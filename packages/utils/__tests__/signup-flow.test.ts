@@ -35,6 +35,7 @@ describe('what signup starts out holding', () => {
       step: 'WHO',
       askingNumber: false,
       verifying: null,
+      googleDob: null,
       pendingForm: null,
       pendingGoogle: null,
     });
@@ -86,14 +87,21 @@ describe('the Google door', () => {
     expect(state.pendingForm).toBeNull();
   });
 
-  it('meets the other door at the code step once the number is given', () => {
+  it('meets the other door at the code step once its details are given', () => {
     const asked = move(start(), { type: 'GOOGLE_ACCEPTED', credential: CREDENTIAL });
     const state = move(asked, {
-      type: 'NUMBER_GIVEN',
-      values: { phoneExtension: '+44', phoneNumber: '7700900123', whatsappIsMobile: false },
+      type: 'DETAILS_GIVEN',
+      values: {
+        phoneExtension: '+44',
+        phoneNumber: '7700900123',
+        whatsappIsMobile: false,
+        dob: '1998-04-23',
+      },
     });
 
     expect(state.askingNumber).toBe(false);
+    // Google never carried a birthday, so the step's answer is what is held.
+    expect(state.googleDob).toBe('1998-04-23');
     expect(state.verifying).toEqual({
       extension: '+44',
       number: '7700900123',

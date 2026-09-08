@@ -29,7 +29,9 @@ export interface PodDetailsViewProps {
   backTo?: string;
   backLabel?: string;
   /** Where Edit goes. Omit to hide the action entirely — a reader whose portal
-   * has no edit route should not be shown a button that goes nowhere. */
+   * has no edit route should not be shown a button that goes nowhere. The
+   * Regional Club Admin console is exactly that reader: it reads the region, it
+   * does not run the pods in it. */
   editTo?: (podId: string) => string;
   /** Where a club admin's name links to. Omit on a portal with no user pages —
    * Club Admin's own console has none, and a name that navigates nowhere reads
@@ -54,7 +56,7 @@ export default function PodDetailsPage(props: Readonly<PodDetailsViewProps>) {
 function PodDetailsView({
   backTo = '/pods',
   backLabel = 'Pods',
-  editTo = (podId: string) => `/pods/${podId}/edit`,
+  editTo,
   userTo,
   footer,
 }: Readonly<PodDetailsViewProps>) {
@@ -114,15 +116,19 @@ function PodDetailsView({
             </Stack>
             {/* Editable at every stage — a cancelled pod included, so an admin
                 can correct it (or re-route its venue slot) after the fact
-                rather than rebuilding it. */}
-            <DuncitButton
-              variant="contained"
-              startIcon={<EditIcon />}
-              onClick={() => navigate(editTo(pod.id))}
-              sx={{ flexShrink: 0 }}
-            >
-              Edit pod
-            </DuncitButton>
+                rather than rebuilding it. Absent for a console with no editor
+                behind it: a button that navigates nowhere reads as a broken
+                page rather than as a permission the reader does not have. */}
+            {editTo && (
+              <DuncitButton
+                variant="contained"
+                startIcon={<EditIcon />}
+                onClick={() => navigate(editTo(pod.id))}
+                sx={{ flexShrink: 0 }}
+              >
+                Edit pod
+              </DuncitButton>
+            )}
           </Stack>
 
           {/* Two columns that end at roughly the same line. The old layout

@@ -10,6 +10,7 @@ import { podAuditService } from '@modules/pods/podAudit/podAudit.service';
 import { changeRequestFail } from './podChangeRequest.common';
 import { notifyAttendeesOfVenueChange } from './podChangeRequest.notify';
 import type { IPodChangeOffer, IPodChangeRequest } from './podChangeRequest.model';
+import { appDateTime } from '@utils/app-time';
 
 /**
  * The write that actually swaps a partner out of a pod, once the replacement
@@ -94,10 +95,7 @@ async function replaceVenue(
     await venueSlotService.releaseSlotForPod(previousSlotId, String(pod._id));
   }
 
-  const when = slot.start_at.toLocaleString('en-IN', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
+  const when = appDateTime(slot.start_at);
   await podAuditService.record({
     pod,
     action: 'UPDATE',

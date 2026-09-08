@@ -1,4 +1,5 @@
 import { loadPdfImage, renderPdf } from '@services/pdf/document';
+import { appDate } from '@utils/app-time';
 
 export interface ProductInvoiceLine {
   name: string;
@@ -72,7 +73,7 @@ export async function generateProductInvoicePdf(d: ProductInvoiceData): Promise<
         .fillColor(MUTED)
         .fontSize(9)
         .font('Helvetica')
-        .text(`Date: ${d.invoice_date.toLocaleDateString('en-IN')}`, 360, doc.y + 4, { width: R - 360, align: 'right' })
+        .text(`Date: ${appDate(d.invoice_date)}`, 360, doc.y + 4, { width: R - 360, align: 'right' })
         .text(`Pod: ${d.pod_title}`, 360, doc.y + 2, { width: R - 360, align: 'right' });
 
       y = Math.max(doc.y, y + 64) + 14;

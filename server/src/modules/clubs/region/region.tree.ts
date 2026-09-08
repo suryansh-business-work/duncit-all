@@ -18,7 +18,7 @@ import { Types } from 'mongoose';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { LocationModel } from '@modules/platform/location/location.model';
-import { UserModel } from '@modules/access/user/user.model';
+import { loadPeople } from './region.scope';
 
 /** Every level the canvas draws. Pods are a drawer, not a node. */
 export const REGION_NODE_KINDS = ['REGION', 'CITY', 'LOCALITY', 'CLUB_ADMIN', 'HOST'] as const;
@@ -61,38 +61,51 @@ interface ClubRow {
   admin_user_ids: Types.ObjectId[];
 }
 
-/** A lean() user, as far as naming one goes. */
-interface NamedUser {
-  profile?: { first_name?: string | null; last_name?: string | null } | null;
-  auth?: { email?: string | null } | null;
+/** Push into a map of lists without rebuilding the list each time — the naive
+ * `[...(get() ?? []), x]` is quadratic, and a region's pods are the one place
+ * here with thousands of rows. */
+function pushInto<T>(map: Map<string, T[]>, key: string, value: T) {
+  const list = map.get(key);
+  if (list) list.push(value);
+  else map.set(key, [value]);
 }
 
-/** first+last name, or the email when a profile has neither. */
-function personName(user: NamedUser): string {
-  const name = [user.profile?.first_name, user.profile?.last_name].filter(Boolean).join(' ').trim();
-  return name || user.auth?.email || '';
-}
-
-async function loadPeople(ids: Types.ObjectId[]) {
-  if (ids.length === 0) return new Map<string, { name: string; email: string }>();
-  const users = await UserModel.find({ _id: { $in: ids } })
-    .select('profile.first_name profile.last_name auth.email')
-    .lean<Array<NamedUser & { _id: unknown }>>();
-  return new Map(
-    users.map((user) => [
-      String(user._id),
-      { name: personName(user), email: user.auth?.email ?? '' },
-    ])
-  );
+/** Group the clubs into city -> locality -> club admin. A club with more than
+ * one admin lands under each of them, which is what the data says: both people
+ * run it. Admins outside this region are skipped — their branch is not this
+ * manager's to see. */
+function groupClubs(clubs: ClubRow[], inRegion: ReadonlySet<string>) {
+  const tree = new Map<string, Map<string, Map<string, ClubRow[]>>>();
+  for (const club of clubs) {
+    const city = club.location_id ? String(club.location_id) : '';
+    const locality = club.locality?.trim() || '';
+    let byLocality = tree.get(city);
+    if (!byLocality) {
+      byLocality = new Map();
+      tree.set(city, byLocality);
+    }
+    let byAdmin = byLocality.get(locality);
+    if (!byAdmin) {
+      byAdmin = new Map();
+      byLocality.set(locality, byAdmin);
+    }
+    for (const adminId of club.admin_user_ids ?? []) {
+      const admin = String(adminId);
+      if (!inRegion.has(admin)) continue;
+      pushInto(byAdmin, admin, club);
+    }
+  }
+  return tree;
 }
 
 /**
- * Builds the whole tree in four reads, not one per node.
+ * Builds the whole tree in FOUR reads, not one per node.
  *
  * The naive shape — walk the clubs, then query each club's pods for its hosts —
  * is a query per club admin per locality, and a region with forty clubs then
- * opens forty round trips deep. One pod aggregation for every club in the
- * region answers the host level in a single pass.
+ * opens forty round trips deep. One pod aggregation over every club in the
+ * region answers the host level in a single pass, and the club admins and the
+ * hosts are named together in ONE user read rather than one each.
  */
 export async function buildRegionTree(
   regionName: string,
@@ -122,11 +135,10 @@ export async function buildRegionTree(
     .select('club_name location_id locality admin_user_ids')
     .lean()) as unknown as ClubRow[];
 
-  const [locations, people, hostRows] = await Promise.all([
+  const [locations, hostRows] = await Promise.all([
     LocationModel.find({ _id: { $in: clubs.map((club) => club.location_id).filter(Boolean) } })
       .select('location_name city')
       .lean(),
-    loadPeople([...clubAdminIds, ...clubs.flatMap((club) => club.admin_user_ids)]),
     // One pass over every pod in the region: which hosts run pods for which
     // club, and how many each. This is the whole HOST level.
     PodModel.aggregate([
@@ -136,43 +148,27 @@ export async function buildRegionTree(
     ]),
   ]);
 
+  // Club admins and hosts are named TOGETHER: two `$in` reads over the same
+  // collection, one after the other, is a round trip spent on nothing.
+  const people = await loadPeople([
+    ...clubAdminIds.map(String),
+    ...clubs.flatMap((club) => (club.admin_user_ids ?? []).map(String)),
+    ...hostRows.map((row) => String(row._id.host)),
+  ]);
+
   const cityName = new Map(
     locations.map((row) => [String(row._id), row.location_name || row.city || CITY_FALLBACK])
   );
-  const hostIds = hostRows.map((row) => row._id.host as Types.ObjectId);
-  const hostPeople = await loadPeople(hostIds);
   /** club id -> [{ host, pods }] */
   const hostsByClub = new Map<string, Array<{ host: string; pods: number }>>();
   for (const row of hostRows) {
-    const club = String(row._id.club);
-    const list = hostsByClub.get(club) ?? [];
-    list.push({ host: String(row._id.host), pods: row.pods });
-    hostsByClub.set(club, list);
+    pushInto(hostsByClub, String(row._id.club), {
+      host: String(row._id.host),
+      pods: row.pods as number,
+    });
   }
 
-  /**
-   * Group the clubs into city -> locality -> club admin.
-   *
-   * A club with more than one admin lands under each of them, which is what the
-   * data says: both people run it.
-   */
-  const tree = new Map<string, Map<string, Map<string, ClubRow[]>>>();
-  const inRegion = new Set(clubAdminIds.map(String));
-  for (const club of clubs) {
-    const city = club.location_id ? String(club.location_id) : '';
-    const locality = club.locality?.trim() || '';
-    const byLocality = tree.get(city) ?? new Map();
-    const byAdmin = byLocality.get(locality) ?? new Map();
-    for (const adminId of club.admin_user_ids ?? []) {
-      const admin = String(adminId);
-      // A club can be co-run by somebody outside this region; their branch is
-      // not this manager's to see.
-      if (!inRegion.has(admin)) continue;
-      byAdmin.set(admin, [...(byAdmin.get(admin) ?? []), club]);
-    }
-    byLocality.set(locality, byAdmin);
-    tree.set(city, byLocality);
-  }
+  const tree = groupClubs(clubs, new Set(clubAdminIds.map(String)));
 
   nodes.push({
     id: rootId,
@@ -234,7 +230,7 @@ export async function buildRegionTree(
         }
         for (const [host, pods] of podsByHost) {
           const hostId = `${adminId}/host:${host}`;
-          const hostPerson = hostPeople.get(host);
+          const hostPerson = people.get(host);
           nodes.push({
             id: hostId,
             kind: 'HOST',
@@ -251,13 +247,4 @@ export async function buildRegionTree(
   }
 
   return { nodes, edges };
-}
-
-/** Every club in the region — the scope the pods drawer is allowed to read. */
-export async function regionClubIds(clubAdminIds: Types.ObjectId[]): Promise<Types.ObjectId[]> {
-  if (clubAdminIds.length === 0) return [];
-  const clubs = await ClubModel.find({ admin_user_ids: { $in: clubAdminIds } })
-    .select('_id')
-    .lean();
-  return clubs.map((club) => club._id as Types.ObjectId);
 }

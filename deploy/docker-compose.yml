@@ -68,7 +68,8 @@ services:
     container_name: duncit-website
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2000:80"
+      # 8080, not 80: the site runs its non-root Node HTML server, not nginx.
+      - "127.0.0.1:2000:8080"
 
   partners-website:
     image: ${DOCKERHUB_USERNAME}/duncit-partners-website:${IMAGE_TAG:-latest}
@@ -239,6 +240,16 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:2027:80"
+
+  # regional-club-admin.duncit.com — the Regional Club Admin console. Split out
+  # of the Partners app: the role is an internal appointment, not a partner
+  # application, so it never belonged behind the partner onboarding chrome.
+  regional-club-admin:
+    image: ${DOCKERHUB_USERNAME}/duncit-regional-club-admin:${IMAGE_TAG:-latest}
+    container_name: duncit-regional-club-admin
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2029:80"
 
   # Redis — the server's GraphQL response cache (server.env: REDIS_URL=
   # redis://redis:6379). Deliberately NO host port: only containers on this

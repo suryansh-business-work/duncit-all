@@ -37,6 +37,16 @@ export interface SignupNumberFields {
   whatsappIsMobile: boolean;
 }
 
+/**
+ * What the Google door's own step answers: the number row, and the date of
+ * birth — the two things a Google credential never carries. The email form
+ * asked both on its first two steps; Google has to ask them here.
+ */
+export interface SignupGoogleDetails extends SignupNumberFields {
+  /** A 'YYYY-MM-DD' calendar day, exactly as the form field holds it. */
+  dob: string;
+}
+
 /** Google's credential and the policies ticked beside it, both unspent. */
 export interface SignupGoogleCredential {
   idToken: string;
@@ -52,10 +62,13 @@ export interface SignupGoogleCredential {
  */
 export interface SignupFlowState<TForm extends SignupNumberFields> {
   step: SignupStep;
-  /** The Google door's number step, which no form has asked for yet. */
+  /** The Google door's own step — number and date of birth — still open. */
   askingNumber: boolean;
   /** The number the code is going to, once one is settled. */
   verifying: SignupNumber | null;
+  /** The date of birth the Google door was told — the form door's sits in
+   * `pendingForm`, and a Google credential never carries one. */
+  googleDob: string | null;
   pendingForm: TForm | null;
   pendingGoogle: SignupGoogleCredential | null;
 }
@@ -66,8 +79,8 @@ export type SignupFlowAction<TForm extends SignupNumberFields> =
   | { type: 'FORM_FILLED'; values: TForm }
   /** Google came back and its policies were accepted. No account yet. */
   | { type: 'GOOGLE_ACCEPTED'; credential: SignupGoogleCredential }
-  /** The Google door's number step answered. Both doors meet here. */
-  | { type: 'NUMBER_GIVEN'; values: SignupNumberFields };
+  /** The Google door's own step answered. Both doors meet here. */
+  | { type: 'DETAILS_GIVEN'; values: SignupGoogleDetails };
 
 /** Where both doors start: the first question, holding nothing. */
 export function initialSignupFlowState<
@@ -77,6 +90,7 @@ export function initialSignupFlowState<
     step: 'WHO',
     askingNumber: false,
     verifying: null,
+    googleDob: null,
     pendingForm: null,
     pendingGoogle: null,
   };
@@ -92,10 +106,11 @@ export const signupNumberOf = (values: Readonly<SignupNumberFields>): SignupNumb
 /**
  * The only four things that move signup along.
  *
- * The email door already collected the number two steps earlier, so
- * FORM_FILLED lands straight on the code. Google arrives with a credential and
- * no form at all, so GOOGLE_ACCEPTED opens the number step first and
- * NUMBER_GIVEN closes it — from there the two doors run the same last step.
+ * The email door already collected the number and the date of birth two steps
+ * earlier, so FORM_FILLED lands straight on the code. Google arrives with a
+ * credential and no form at all, so GOOGLE_ACCEPTED opens its own step first
+ * and DETAILS_GIVEN closes it — from there the two doors run the same last
+ * step.
  */
 export function signupFlowReducer<TForm extends SignupNumberFields>(
   state: Readonly<SignupFlowState<TForm>>,
@@ -118,8 +133,13 @@ export function signupFlowReducer<TForm extends SignupNumberFields>(
         askingNumber: true,
         pendingGoogle: action.credential,
       };
-    case 'NUMBER_GIVEN':
-      return { ...state, askingNumber: false, verifying: signupNumberOf(action.values) };
+    case 'DETAILS_GIVEN':
+      return {
+        ...state,
+        askingNumber: false,
+        verifying: signupNumberOf(action.values),
+        googleDob: action.values.dob,
+      };
     default:
       return state;
   }

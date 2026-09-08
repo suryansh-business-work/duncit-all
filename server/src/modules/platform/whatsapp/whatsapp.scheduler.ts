@@ -46,6 +46,7 @@ import { notifyEach, type NotifyInput } from '@services/notify/notify.service';
 import { trimTrailingSlash } from '@utils/url';
 import { podImageAssets } from './whatsapp.assets';
 import type { StoredMedia } from '@utils/media';
+import { appDate, appTime } from '@utils/app-time';
 
 const HOUR_MS = 60 * 60_000;
 const SWEEP_INTERVAL_MS = 30 * 60_000;
@@ -148,10 +149,6 @@ async function waUsers(ids: readonly unknown[]): Promise<UsersById> {
 const nameOf = (user?: UserLike | null) =>
   `${user?.profile?.first_name ?? ''} ${user?.profile?.last_name ?? ''}`.trim() || 'there';
 
-/** Templates print the day and the clock time as two separate placeholders. */
-const dateLabel = (value: Date) => new Date(value).toLocaleString('en-IN', { dateStyle: 'medium' });
-const timeLabel = (value: Date) => new Date(value).toLocaleString('en-IN', { timeStyle: 'short' });
-
 /**
  * Whole hours from now until `when`. The reminder templates read "starts in
  * {{2}} hours", so this is a count and not a time; it never goes below 1,
@@ -201,8 +198,8 @@ function podReminders(
         name,
         hours,
         pod.pod_title,
-        dateLabel(pod.pod_date_time),
-        timeLabel(pod.pod_date_time),
+        appDate(pod.pod_date_time),
+        appTime(pod.pod_date_time),
         link,
         hostName,
       ],
@@ -275,10 +272,10 @@ async function remindHostsToComplete(now: number, cutoff: Date) {
         user: host,
         name,
         assets: podImageAssets(pod.pod_images_and_videos),
-        params: [name, pod.pod_title, dateLabel(pod.pod_date_time), timeLabel(pod.pod_date_time)],
+        params: [name, pod.pod_title, appDate(pod.pod_date_time), appTime(pod.pod_date_time)],
         vars: {
           deadline: deadline
-            ? `${dateLabel(deadline)}, ${timeLabel(deadline)}`
+            ? `${appDate(deadline)}, ${appTime(deadline)}`
             : `${timeout_hours} hours after the pod ended`,
         },
       };
@@ -324,8 +321,8 @@ async function remindVenuesOfPendingSlots(now: number, cutoff: Date) {
           name,
           hoursUntil(slot.start_at),
           pod?.pod_title ?? '',
-          dateLabel(slot.start_at),
-          timeLabel(slot.start_at),
+          appDate(slot.start_at),
+          appTime(slot.start_at),
           nameOf(pod ? users.get(firstHostId(pod)) : null),
         ],
       };
@@ -379,8 +376,8 @@ async function noticeReplacementNotFound(now: number, cutoff: Date, mwebUrl: str
           params: [
             name,
             pod.pod_title,
-            dateLabel(pod.pod_date_time),
-            timeLabel(pod.pod_date_time),
+            appDate(pod.pod_date_time),
+            appTime(pod.pod_date_time),
             podUrl(mwebUrl, pod, slugById),
           ],
         },
@@ -410,8 +407,8 @@ function feedbackAsk(
     params: [
       name,
       pod.pod_title,
-      dateLabel(pod.pod_date_time),
-      timeLabel(pod.pod_date_time),
+      appDate(pod.pod_date_time),
+      appTime(pod.pod_date_time),
       feedbackUrl(mwebUrl, pod),
     ],
   };

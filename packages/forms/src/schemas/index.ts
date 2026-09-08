@@ -83,10 +83,13 @@ export {
 } from './contact-change';
 
 export {
+  googleSignupDefaults,
+  makeGoogleSignupSchema,
   makeSignupSchema,
   makeWhatsappNumberSchema,
   signupDefaults,
   whatsappNumberDefaults,
+  type GoogleSignupValues,
   type SignupFormValues,
   type WhatsappNumberValues,
 } from './signup';

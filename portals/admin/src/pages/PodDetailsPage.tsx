@@ -11,6 +11,11 @@ const renderCouponsFooter: NonNullable<PodDetailsViewProps['footer']> = (pod) =>
  * admin's name through to theirs. */
 const userTo = (userId: string) => `/users/${userId}`;
 
+/** Admin's own pod editor. Passed explicitly rather than left to a default in
+ * the shared package: the route belongs to this portal, and a console without
+ * one must be able to render the page with no Edit button at all. */
+const editTo = (podId: string) => `/pods/${podId}/edit`;
+
 /** Admin's pod detail — the shared view at ADMIN scope (its default).
  *
  * The view lives in @duncit/pod-details so Club Admin renders exactly the same
@@ -19,5 +24,5 @@ const userTo = (userId: string) => `/users/${userId}`;
  * of ONE pod belong on that pod, so the section is injected as the footer
  * rather than widening the shared view. */
 export default function AdminPodDetailsPage() {
-  return <SharedPodDetails userTo={userTo} footer={renderCouponsFooter} />;
+  return <SharedPodDetails userTo={userTo} editTo={editTo} footer={renderCouponsFooter} />;
 }

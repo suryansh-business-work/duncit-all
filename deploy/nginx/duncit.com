@@ -676,6 +676,25 @@ server {
     }
 }
 
+server {
+    listen 80;
+    listen [::]:80;
+    server_name regional-club-admin.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2029;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
 # --- OpenWA gateway: open-wa-server.duncit.com (NestJS + WhatsApp on :2024) ---
 # The CRM "WhatsApp Lead Generator" gateway (portals/crm/open-wa-server). Serves
 # the bundled dashboard + REST API + live QR/session WebSocket. Larger body for

@@ -21,6 +21,7 @@ import { logs } from '@observability/log';
 import { sendEmail } from '@services/email/email.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { trimTrailingSlash } from '@utils/url';
+import { appDate } from '@utils/app-time';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -359,8 +360,7 @@ async function mailAdvertiser(doc: IAdRequest, template: string, subject: string
 }
 
 /** A date as the advertiser reads it, not as Mongo stores it. */
-const dayLabel = (value?: Date | null) =>
-  value ? new Date(value).toLocaleDateString('en-IN', { dateStyle: 'medium' }) : '';
+const dayLabel = (value?: Date | null) => appDate(value);
 
 export const adsService = {
   async pricing() {

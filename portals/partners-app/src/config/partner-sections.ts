@@ -13,7 +13,6 @@ import type { AppNavItem } from '@duncit/shell';
  * more than one.
  */
 export type PartnerRole =
-  | 'REGIONAL_CLUB_ADMIN'
   | 'CLUB_ADMIN'
   | 'VENUE_OWNER'
   | 'HOST'
@@ -46,23 +45,12 @@ export interface PartnerSection {
 }
 
 export const PARTNER_SECTIONS: readonly PartnerSection[] = [
-  {
-    // No `onboarding` entry, deliberately: a Regional Club Admin is an internal
-    // appointment the Admin portal grants, not a partner who applies. There is
-    // no journey to invite somebody into, so the group is simply absent until
-    // the role is held.
-    role: 'REGIONAL_CLUB_ADMIN',
-    paths: ['/regional'],
-    nav: {
-      label: 'Regional Club Admin',
-      labelKey: 'shell.nav.regionalClubAdmin',
-      icon: 'hub',
-      children: [
-        { label: 'Region Structure', labelKey: 'shell.nav.regionStructure', to: '/regional/structure', icon: 'timeline' },
-        { label: 'Club Admins', labelKey: 'shell.nav.clubAdmins', to: '/regional/club-admins', icon: 'groups' },
-      ],
-    },
-  },
+  // Regional Club Admin used to be the first section here. It is its own
+  // console now (regional-club-admin.duncit.com), because it was the one area
+  // with no onboarding journey behind it: the role is an internal appointment
+  // the Admin portal grants, not a partner application. Everything a manager
+  // does with a region — the canvas, the Club Admins, the clubs and pods below
+  // them — moved with it.
   {
     role: 'CLUB_ADMIN',
     paths: ['/club-admin'],

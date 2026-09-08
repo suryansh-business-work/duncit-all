@@ -20,12 +20,14 @@ consumers:
   - 'portals/onboarding'
   - 'portals/partners-app'
   - 'portals/products'
+  - 'portals/regional-club-admin'
   - 'portals/support'
   - 'portals/tech'
   - 'portals/website-app'
 exports:
   - 'mountPortal'
   - 'AppShell'
+  - 'PortalAppShell'
   - 'AppHeader'
   - 'AppSidebar'
   - 'HeaderSearch'
@@ -260,6 +262,17 @@ console shut for all non-super users.
 | `breadcrumbLabelMap` | `Record<string, string>` | no | `undefined` | Route-segment → label overrides. |
 | `children` | `ReactNode` | yes | — | The routed page. |
 
+### `<PortalAppShell>` — `PortalAppShellProps`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `config` | `AppShellPortalConfig` | yes | — | Pass your `appConfig` directly. |
+| `nav` | `AppNavItem[]` | yes | — | Sidebar tree. |
+| `clearToken` | `() => void` | yes | — | From `createSession`. Called on sign-out **and** on a denied session. |
+| `hasAppAccess` | `(roles?) => boolean` | yes | — | From `createSession`. The portal's own role gate. |
+| `profileTo` | `string` | no | `undefined` | Profile route; omit to hide the Profile menu item. |
+| `children` | `ReactNode` | yes | — | The routed page. |
+
 ### `<HeaderSearch>` — `HeaderSearchProps`
 
 | Prop | Type | Required | Default | Meaning |
@@ -350,12 +363,28 @@ namespace and can override a shared string without forking the shell bundle (rul
 is the nested shape, `SHELL_FALLBACK_FLAT` the dotted-key one the locale provider consumes — pass the
 flat one only when you are building the merged map yourself.
 
-## Chrome, and the adapter each portal keeps
+## Chrome: `PortalAppShell` over `AppShell`
 
-`AppShell` is the shared header + sidebar + breadcrumbs. Each portal still keeps a small local
-`components/AppShell.tsx` because the wiring — its own `session.ts`, its own `appConfig`, its own
-logout navigation — is genuinely per-portal. That adapter should stay thin; anything in it that
-isn't portal-specific belongs here instead.
+`AppShell` is the shared header + sidebar + breadcrumbs, and it takes the user, the role gate and
+the logout handler as props. **`PortalAppShell` is that wiring** — read the user from
+`@duncit/user-context`, gate it with the portal's own roles, and make sign-out drop the token,
+clear the context and land on `/login`:
+
+```tsx
+const authed = createAuthed({
+  getToken,
+  wrap: (el) => (
+    <PortalAppShell config={appConfig} nav={appConfig.nav} clearToken={clearToken} hasAppAccess={hasAppAccess} profileTo="/profile">
+      {el}
+    </PortalAppShell>
+  ),
+});
+```
+
+Every console kept a byte-identical `components/AppShell.tsx` doing exactly this — seventeen
+copies of one adapter, which is the shape rule 40 exists to stop. Reach for `<AppShell>` directly
+only where a portal genuinely needs different wiring; the older portals still do, and are worth
+migrating whenever one is touched.
 
 `deriveSearchItems` builds `HeaderSearch` entries from a nav tree — don't hand-write the item list.
 `AppIcon` resolves branding icons through the shared fallback bundle; a remote branding icon that

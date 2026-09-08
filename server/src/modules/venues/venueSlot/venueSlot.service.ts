@@ -14,6 +14,7 @@ import { notifyEach, type NotifyInput } from '@services/notify/notify.service';
 import { podImageAssets } from '@modules/platform/whatsapp/whatsapp.assets';
 import type { SendAssets } from '@modules/platform/whatsapp/whatsapp.media';
 import { getUrlConfigs } from '@config/url-configs';
+import { appDate, appDateTime, appTime } from '@utils/app-time';
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -470,10 +471,7 @@ const contactName = (u: any) =>
 
 /** Every WhatsApp template prints the date and the time as two placeholders,
  * unlike the single combined string the in-app note and the emails use. */
-const waWhen = (at: Date) => ({
-  date: at.toLocaleString('en-IN', { dateStyle: 'medium' }),
-  time: at.toLocaleString('en-IN', { timeStyle: 'short' }),
-});
+const waWhen = (at: Date) => ({ date: appDate(at), time: appTime(at) });
 
 /** Everything the decision templates fill, resolved once for all six sends. */
 interface SlotDecisionFacts {
@@ -661,7 +659,7 @@ async function notifySlotDecision(
 ) {
   try {
     const { notificationService } = await import('@modules/engagement/notification/notification.service');
-    const when = slot.start_at.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+    const when = appDateTime(slot.start_at);
     const title = approved ? 'Venue approved your slot' : 'Venue declined your slot';
     const note = reason?.trim() ? ` Reason: ${reason.trim()}` : '';
     const body = approved

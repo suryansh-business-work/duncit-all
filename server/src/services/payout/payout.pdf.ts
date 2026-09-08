@@ -1,4 +1,5 @@
 import PDFDocument from 'pdfkit';
+import { appDate } from '@utils/app-time';
 
 export type PayoutStatementType = 'HOST' | 'VENUE';
 
@@ -103,7 +104,7 @@ function drawMeta(doc: PDFKit.PDFDocument, d: PayoutStatementData, L: number, R:
     .fillColor(MUTED)
     .fontSize(9)
     .font('Helvetica')
-    .text(`Date: ${d.statement_date.toLocaleDateString('en-IN')}`, 360, doc.y + 4, { width: R - 360, align: 'right' })
+    .text(`Date: ${appDate(d.statement_date)}`, 360, doc.y + 4, { width: R - 360, align: 'right' })
     .text(`Pod: ${d.pod_title}`, 360, doc.y + 2, { width: R - 360, align: 'right' });
 }
 

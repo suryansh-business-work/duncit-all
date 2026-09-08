@@ -30,7 +30,7 @@ export default function SignupStepperRail({ step, askingNumber }: Readonly<Props
   const labels = buildSignupStepperLabels(t);
   const active = signupStepIndex(step) - 1;
   // Decided above the JSX (S3358).
-  const subtitle = askingNumber ? labels.numberSubtitle : labels.step(step).subtitle;
+  const subtitle = askingNumber ? labels.detailsSubtitle : labels.step(step).subtitle;
 
   return (
     <Stack spacing={1}>

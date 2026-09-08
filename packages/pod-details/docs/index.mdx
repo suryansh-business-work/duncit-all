@@ -8,6 +8,7 @@ coverageGate: true
 consumers:
   - 'portals/admin'
   - 'portals/partners-app'
+  - 'portals/regional-club-admin'
 exports:
   - 'PodDetailsPage'
   - 'PodDetailsScopeProvider'
@@ -18,9 +19,10 @@ exports:
 
 ## What this is
 
-One pod detail page, rendered by two portals. Admin sees every pod on the platform;
-a Club Admin sees the pods of the clubs they administer — the **same** sections, the
-same layout, the same numbers.
+One pod detail page, rendered by three portals. Admin sees every pod on the platform;
+a Club Admin sees the pods of the clubs they administer; a Regional Club Admin sees the
+pods under the Club Admins in their region — the **same** sections, the same layout,
+the same numbers.
 
 ## Scope is not cosmetic
 
@@ -29,20 +31,23 @@ same layout, the same numbers.
 ```tsx
 <PodDetailsPage />                       // ADMIN (default)
 <PodDetailsPage scope="CLUB_ADMIN" />    // club-scoped twins
+<PodDetailsPage scope="REGIONAL" />      // region-scoped twins
 ```
 
-This exists because **CLUB_ADMIN is a membership of a club, not a role on the user.**
-The admin operations are guarded by `requireRole`, which cannot express "administers
-this pod's club" — so they refuse a club admin outright. Five queries therefore have
-club-scoped twins, each gated server-side on `assertClubAdminForPod`:
+This exists because **neither of the other two audiences is a role on the user.** A
+club admin is a MEMBERSHIP of a club; a Regional Club Admin reaches a pod through a
+CHAIN of memberships — their Club Admins, the clubs those people run, the pods in
+them. The admin operations are guarded by `requireRole`, which can express neither, so
+they refuse both outright. Five queries therefore have scoped twins, each gated
+server-side (`assertClubAdminForPod`, and `assertRegionPod` for the region):
 
-| Admin | Club Admin |
-| --- | --- |
-| `adminPodAttendees` | `clubAdminPodAttendees` |
-| `podAuditLogs` | `clubAdminPodAuditLogs` |
-| `hostByUser` | `clubAdminPodHost` |
-| `paymentsTable` | `clubAdminPodPayments` |
-| `podFeedbackSummary` | `clubAdminPodFeedback` |
+| Admin | Club Admin | Regional |
+| --- | --- | --- |
+| `adminPodAttendees` | `clubAdminPodAttendees` | `regionPodAttendees` |
+| `podAuditLogs` | `clubAdminPodAuditLogs` | `regionPodAuditLogs` |
+| `hostByUser` | `clubAdminPodHost` | `regionPodHost` |
+| `paymentsTable` | `clubAdminPodPayments` | `regionPodPayments` |
+| `podFeedbackSummary` | `clubAdminPodFeedback` | `regionPodFeedback` |
 
 Every club-admin root field is **aliased to the admin field name**, so the components
 read one response shape and never branch on who is looking.
@@ -90,6 +95,21 @@ A name links through to the user's page only where such a page exists:
 
 Omitting `userTo` renders the name as text. Club Admin's console has no `/users` route,
 and a name that navigates nowhere reads as a broken page rather than a missing feature.
+
+## Edit is opt-in
+
+`editTo` has **no default**. Pass it and the page shows **Edit pod**; omit it and the
+button is absent entirely:
+
+```tsx
+<PodDetailsPage editTo={(podId) => `/pods/${podId}/edit`} />   // admin portal
+<PodDetailsPage scope="REGIONAL" />                            // reads the region, edits nothing
+```
+
+It used to default to `/pods/:id/edit` — the admin portal's own route, encoded in a
+shared package. The Regional Club Admin console has no pod editor, so that default
+rendered a button that bounced off the catch-all route: the same failure `userTo`
+already avoided one section below.
 
 ## Attendance
 

@@ -1,0 +1,15 @@
+---
+/**
+ * Every website page's card, drawn one way in one place.
+ *
+ * The markers around the block are what the sites' HTML server replaces when a
+ * page's card can only be known per request — see `injectSiteMeta`.
+ */
+import { buildSiteMetaTags, META_END, META_START, type SiteMetaInput } from './site-meta';
+
+type Props = SiteMetaInput;
+
+const block = buildSiteMetaTags(Astro.props);
+---
+
+<Fragment set:html={`${META_START}\n    ${block}\n    ${META_END}`} />

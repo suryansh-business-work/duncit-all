@@ -271,6 +271,8 @@ export async function signupWithGoogle(
   idToken: string,
   acceptedPolicyIds: string[],
   proven: ProvenNumber,
+  /** YYYY-MM-DD, asked on the same step as the number — Google carries no birthday. */
+  dob: string,
 ): Promise<AuthOutcome> {
   const data = await graphqlRequest(SignupWithGoogleDocument, {
     input: {
@@ -279,6 +281,7 @@ export async function signupWithGoogle(
       phone_extension: proven.extension.trim(),
       whatsapp_is_mobile: proven.alsoMobile,
       whatsapp_token: proven.whatsappToken,
+      dob: dobToIso(dob),
       accepted_policy_ids: acceptedPolicyIds,
       accepted_policy_surface: PolicyAcceptanceSurface.App,
     },

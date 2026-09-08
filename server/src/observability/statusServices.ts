@@ -48,6 +48,7 @@ const consoles: StatusService[] = [
   { key: 'onboarding', name: 'Onboarding', url: 'https://onboarding.duncit.com/', description: 'Onboarding & approvals' },
   { key: 'hr', name: 'HR', url: 'https://hr.duncit.com/', description: 'People & HR operations' },
   { key: 'employee', name: 'Employee', url: 'https://employee.duncit.com/', description: 'Employee self-service' },
+  { key: 'regional-club-admin', name: 'Regional Club Admin', url: 'https://regional-club-admin.duncit.com/', description: 'Region structure & Club Admins' },
 ];
 
 const platform: StatusService[] = [

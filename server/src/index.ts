@@ -40,6 +40,7 @@ import { unwrapResolverError } from '@apollo/server/errors';
 import { expressMiddleware } from '@as-integrations/express5';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { describeFetchFailure, humanFetchMessage } from '@utils/outboundFetch';
+import { duplicateKeyMessage } from '@utils/mongo-error';
 import { connectDB } from './config/db';
 import { initRedis } from './config/redis';
 import { redisResponseCachePlugin } from './config/redisResponseCache';
@@ -513,6 +514,18 @@ async function bootstrap() {
     // two words — rewrite it with the actual reason instead.
     formatError(formatted, error) {
       const unwrapped = unwrapResolverError(error);
+      // A unique index that rejects a write throws MongoDB's E11000 sentence,
+      // which names the collection, the index and the raw key. That is a note
+      // for whoever runs the database, not an answer for whoever pressed Save —
+      // and every surface reads its failures out of this one response.
+      const duplicate = duplicateKeyMessage(unwrapped);
+      if (duplicate) {
+        return {
+          ...formatted,
+          message: duplicate,
+          extensions: { ...formatted.extensions, code: 'CONFLICT' },
+        };
+      }
       const detail = describeFetchFailure(unwrapped);
       if (!detail) return formatted;
       // The reason in words for the person who pressed the button; the undici

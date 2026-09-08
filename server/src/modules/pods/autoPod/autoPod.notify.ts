@@ -6,6 +6,7 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { sendAutoPodReleasedEmail } from '@services/email/email.service';
 import { logs } from '@observability/log';
+import { appDateTime } from '@utils/app-time';
 
 /**
  * Where each role acts. These three paths are deliberately the only ones an
@@ -103,10 +104,7 @@ async function pushStakeholders(
   await Promise.all([...byLink].map(([link, ids]) => push(ids, title, body, link)));
 }
 
-const whenLabel = (value?: Date | null) =>
-  value
-    ? new Date(value).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
-    : '';
+const whenLabel = (value?: Date | null) => appDateTime(value);
 
 /** "at Play Arena on 12 Sep, 6:00 pm · in Bengaluru, Karnataka" — whatever is
  * known. A virtual offer's date is the admin's, so it is known from the start. */

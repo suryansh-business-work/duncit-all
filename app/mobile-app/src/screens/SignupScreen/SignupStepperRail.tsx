@@ -12,7 +12,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 interface Props {
   step: SignupStep;
   /**
-   * The Google door's number step, which sits inside VERIFY rather than beside
+   * The Google door's own step, which sits inside VERIFY rather than beside
    * it: Google has already answered the first three steps, so the position is
    * right and only the words need to say which half of the last one is showing.
    */
@@ -33,7 +33,7 @@ export function SignupStepperRail({ step, askingNumber }: Readonly<Props>) {
   const current = signupStepIndex(step);
   // Decided above the JSX (S3358).
   const heading = askingNumber
-    ? { title: labels.numberTitle, subtitle: labels.numberSubtitle }
+    ? { title: labels.detailsTitle, subtitle: labels.detailsSubtitle }
     : labels.step(step);
 
   return (

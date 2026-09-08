@@ -23,6 +23,7 @@ import { sendEmail } from '@services/email/email.service';
 import { bookingLinkUrl, getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { phoneKey } from '@utils/phone';
+import { appDate, appDateTime, appDateTimeLong, appTime } from '@utils/app-time';
 import { logs } from '@observability/log';
 
 const newTicketCode = () =>
@@ -320,14 +321,8 @@ const EVENT_TICKET_TABLE_CONFIG: TableEntityConfig = {
   defaultSort: { created_at: -1 },
 };
 
-const dateLabel = (iso?: string | null) =>
-  iso ? new Date(iso).toLocaleString('en-IN', { dateStyle: 'full', timeStyle: 'short' }) : 'Date pending';
-
-/** WhatsApp templates print the day and the clock time as two placeholders. */
-const dateOnly = (iso?: string | null) =>
-  iso ? new Date(iso).toLocaleString('en-IN', { dateStyle: 'medium' }) : '';
-const timeOnly = (iso?: string | null) =>
-  iso ? new Date(iso).toLocaleString('en-IN', { timeStyle: 'short' }) : '';
+/** The ticket's "WHEN" line, in the admin's zone; a pod with no time yet says so. */
+const dateLabel = (iso?: string | null) => appDateTimeLong(iso) || 'Date pending';
 
 /** Where the pod happens, as a name. A virtual pod has no venue and names its
  * meeting platform instead — same substitution the ticket email makes, and the
@@ -398,8 +393,8 @@ async function whatsappBookingConfirmed(t: ITicket, bookingUrl: string): Promise
         t.snapshot?.user_name,
         t.snapshot?.pod_title,
         t.snapshot?.pod_title,
-        dateOnly(t.snapshot?.pod_date_time),
-        timeOnly(t.snapshot?.pod_date_time),
+        appDate(t.snapshot?.pod_date_time),
+        appTime(t.snapshot?.pod_date_time),
         bookingUrl,
         pod.hostName,
       ],
@@ -532,8 +527,8 @@ export async function notifyAttendanceMarked(ticket: ITicket): Promise<void> {
         ticket.snapshot?.user_name,
         ticket.snapshot?.pod_title,
         ticket.snapshot?.pod_title,
-        dateOnly(ticket.snapshot?.pod_date_time),
-        timeOnly(ticket.snapshot?.pod_date_time),
+        appDate(ticket.snapshot?.pod_date_time),
+        appTime(ticket.snapshot?.pod_date_time),
         placeLabel(ticket),
         appUrl,
       ],
@@ -594,7 +589,7 @@ async function completeHostScan(t: ITicket, hostUserId: string, companions: unkn
     await notifyAttendanceMarked(t);
   }
 
-  const at = t.checked_in_at ? ` at ${t.checked_in_at.toLocaleString('en-IN')}` : '';
+  const at = t.checked_in_at ? ` at ${appDateTime(t.checked_in_at)}` : '';
   // A multi-seat ticket admits a group, so the host is told the number —
   // one scan, several people through the door.
   const party = seats > 1 ? ` · admits ${seats}` : '';
@@ -832,7 +827,7 @@ export const ticketService = {
     if (!t) return { ok: false, message: 'Ticket not found', ticket: null };
     if (t.status === 'CANCELLED') return { ok: false, message: 'Ticket cancelled', ticket: toPub(t) };
     if (t.status === 'CHECKED_IN') {
-      const at = t.checked_in_at ? ` at ${t.checked_in_at.toLocaleString('en-IN')}` : '';
+      const at = t.checked_in_at ? ` at ${appDateTime(t.checked_in_at)}` : '';
       return { ok: true, message: `Already checked in${at}`, ticket: toPub(t) };
     }
     return { ok: true, message: 'Valid ticket', ticket: toPub(t) };

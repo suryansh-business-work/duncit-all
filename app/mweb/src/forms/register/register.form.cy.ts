@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { latestEligibleBirthYear } from '@duncit/datetime';
+import { latestEligibleDob, toIsoDay } from '@duncit/datetime';
 import { registerSchema, registerDefaults } from './register.types';
 
-/** The newest year that still clears the default minimum age. */
-const ELIGIBLE_YEAR = String(latestEligibleBirthYear());
+/** The newest birthday that still clears the default minimum age. */
+const ELIGIBLE_DOB = toIsoDay(latestEligibleDob());
 
 const valid = {
   name: 'Jane Doe',
@@ -12,7 +12,7 @@ const valid = {
   phoneNumber: '9845012345',
   password: 'longenough',
   confirmPassword: 'longenough',
-  dobYear: ELIGIBLE_YEAR,
+  dob: ELIGIBLE_DOB,
   referralCode: '',
   acceptedPolicyIds: [],
 };
@@ -22,7 +22,7 @@ const firstError = (result: ReturnType<typeof registerSchema.safeParse>) =>
 
 describe('registerSchema', () => {
   it('exposes empty defaults', () => {
-    expect(registerDefaults.dobYear).toBe('');
+    expect(registerDefaults.dob).toBe('');
     expect(registerDefaults.name).toBe('');
   });
 
@@ -75,24 +75,24 @@ describe('registerSchema', () => {
     expect(firstError(result)).toMatch(/match/i);
   });
 
-  it('rejects an empty birth year', () => {
-    expect(firstError(registerSchema.safeParse({ ...valid, dobYear: '' }))).toMatch(
-      /birth year is required/i,
+  it('rejects an empty date of birth', () => {
+    expect(firstError(registerSchema.safeParse({ ...valid, dob: '' }))).toMatch(
+      /date of birth is required/i,
     );
   });
 
-  it('rejects a year that is not four digits — the BIRTH_YEAR shape', () => {
-    expect(firstError(registerSchema.safeParse({ ...valid, dobYear: '90' }))).toMatch(
-      /4-digit year/i,
+  it('rejects anything that is not a real YYYY-MM-DD day', () => {
+    expect(firstError(registerSchema.safeParse({ ...valid, dob: '23/04/1998' }))).toMatch(
+      /valid date of birth/i,
     );
-    expect(firstError(registerSchema.safeParse({ ...valid, dobYear: 'nineteen' }))).toMatch(
-      /4-digit year/i,
+    expect(firstError(registerSchema.safeParse({ ...valid, dob: '1998-02-30' }))).toMatch(
+      /valid date of birth/i,
     );
   });
 
-  it('rejects a birth year too recent to be old enough', () => {
-    const tooYoung = String(Number(ELIGIBLE_YEAR) + 1);
-    expect(firstError(registerSchema.safeParse({ ...valid, dobYear: tooYoung }))).toMatch(
+  it('rejects a date of birth too recent to be old enough', () => {
+    const tooYoung = toIsoDay(new Date(latestEligibleDob().getTime() + 86_400_000));
+    expect(firstError(registerSchema.safeParse({ ...valid, dob: tooYoung }))).toMatch(
       /at least/i,
     );
   });

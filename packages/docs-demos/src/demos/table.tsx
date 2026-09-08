@@ -119,7 +119,7 @@ export default defineDemos('table', [
     id: 'query',
     title: 'The table\u2019s state, as the server receives it',
     note:
-      'Every server-side table on the platform sends exactly this. Add a filter to the mock and watch both the payload and the chip label follow — the toolbar is built from the same object. The date lines below it are the other half: empty and unreadable both print the em dash, because a value getter that throws takes the page down with it.',
+      'Every server-side table on the platform sends exactly this. Add a filter to the mock and watch both the payload and the chip label follow — the toolbar is built from the same object. The date lines below it are the other half: empty and unreadable both print the em dash, because a value getter that throws takes the page down with it. Sorting is the fetch’s job alone: the grid keeps the order the rows arrive in, so a date column sorted on the server stays chronological instead of being re-sorted by its formatted text.',
     mock: {
       query: {
         search: 'badminton',

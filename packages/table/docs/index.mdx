@@ -57,7 +57,11 @@ shape (`TableQueryState`), one server contract (`TableQueryInput` via `tableQuer
 place where a pagination bug gets fixed.
 
 MUI owns the chrome — toolbar, progress bar, error `Alert`, `TablePagination`. AG Grid owns
-only the rows.
+only the rows — and not their order. Every column def carries a comparator that keeps the
+fetched order, because the grid's own client-side sort re-sorts the page by each column's value
+getter output: for a date column that is the formatted text, so a page the server had put in
+chronological order came back out alphabetical-by-day. Ordering is `fetchRows`' job alone (the
+server's sort, or `clientTableFetch`'s); a header arrow changes the query and refetches.
 
 ## Use it
 

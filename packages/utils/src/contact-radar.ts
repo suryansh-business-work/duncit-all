@@ -52,10 +52,18 @@ export interface RadarItem {
   nearby: boolean;
 }
 
-/** Ring radius as a fraction of the radar's HALF width, innermost first. */
-export const RADAR_RINGS: readonly number[] = [0.34, 0.56, 0.78, 0.96];
-/** How many faces a ring holds before the next ring takes over. */
-export const RADAR_RING_CAPACITY: readonly number[] = [5, 9, 13, 17];
+/** One ring: its radius as a fraction of the radar's HALF width, and how many
+ * faces it holds before the next ring takes over. Innermost first. */
+const RADAR_RING_LAYOUT: readonly { radius: number; capacity: number }[] = [
+  { radius: 0.34, capacity: 5 },
+  { radius: 0.56, capacity: 9 },
+  { radius: 0.78, capacity: 13 },
+  { radius: 0.96, capacity: 17 },
+];
+/** Ring radii, innermost first — what a surface draws the dashed circles from. */
+export const RADAR_RINGS: readonly number[] = RADAR_RING_LAYOUT.map((ring) => ring.radius);
+/** How many faces each ring holds. */
+export const RADAR_RING_CAPACITY: readonly number[] = RADAR_RING_LAYOUT.map((ring) => ring.capacity);
 /** Everything the radar can show at once; the list under it shows the rest. */
 export const RADAR_MAX_ITEMS = RADAR_RING_CAPACITY.reduce((sum, n) => sum + n, 0);
 
@@ -68,10 +76,10 @@ export function radarPositions(items: readonly RadarItem[]): Map<string, RadarPo
   const ordered = [...items].sort((a, b) => Number(b.nearby) - Number(a.nearby));
   const points = new Map<string, RadarPoint>();
   let start = 0;
-  RADAR_RING_CAPACITY.forEach((capacity, ring) => {
+  RADAR_RING_LAYOUT.forEach(({ capacity, radius: ringRadius }, ring) => {
     const slice = ordered.slice(start, start + capacity);
     start += capacity;
-    const radius = (RADAR_RINGS[ring] ?? 0) / 2;
+    const radius = ringRadius / 2;
     // Each ring starts a little further round than the last so faces on
     // neighbouring rings do not line up into spokes.
     const offset = ring * 0.7;

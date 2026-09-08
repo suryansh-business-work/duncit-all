@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { latestEligibleDob, toIsoDay } from '@duncit/datetime';
 
-import { makeSignupSchema, signupDefaults } from '../src/schemas/signup';
+import {
+  googleSignupDefaults,
+  makeGoogleSignupSchema,
+  makeSignupSchema,
+  signupDefaults,
+} from '../src/schemas/signup';
 
 /** Messages come back as their keys, so a rule is asserted by WHICH one fired. */
 const t = (key: string, options?: { vars?: Record<string, string | number> }) =>
@@ -90,6 +95,24 @@ describe('the date of birth', () => {
   it('takes the minimum age it is given', () => {
     const strict = makeSignupSchema(t, 21);
     expect(strict.safeParse({ ...valid, dob: ELIGIBLE_DOB }).success).toBe(false);
+  });
+});
+
+describe("the Google door's own step", () => {
+  it('asks the number row and the date of birth together, and refuses without either', () => {
+    const google = makeGoogleSignupSchema(t, 18);
+    const withNumber = { ...googleSignupDefaults, phoneNumber: '9845012345' };
+    expect(google.safeParse(withNumber).success).toBe(false);
+    expect(google.safeParse({ ...withNumber, dob: ELIGIBLE_DOB }).success).toBe(true);
+    expect(google.safeParse({ ...googleSignupDefaults, dob: ELIGIBLE_DOB }).success).toBe(false);
+  });
+
+  it('falls back to the shared minimum age when none is given', () => {
+    const relaxed = makeGoogleSignupSchema(t);
+    expect(
+      relaxed.safeParse({ ...googleSignupDefaults, phoneNumber: '9845012345', dob: '1990-04-23' })
+        .success,
+    ).toBe(true);
   });
 });
 

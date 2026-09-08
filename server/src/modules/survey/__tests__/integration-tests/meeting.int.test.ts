@@ -59,6 +59,15 @@ async function doneMeeting(kind: SurveyKind, requestedAt: string, name = 'Appy T
   return { userId: user.toString(), meetingId: m!.id };
 }
 
+/*
+  The FIRST case in this file pays for the whole file: mongoose compiles every
+  model the meeting service reaches, and one of them drags in a `user.service`
+  big enough that Babel prints a deoptimisation note about it. On a two-core CI
+  runner that alone passed jest's 5-second default, so the suite went red on a
+  clock rather than on anything it asserts. The file's own work is ~16s.
+*/
+jest.setTimeout(60_000);
+
 describe('meetingService integration', () => {
   it('raises a request, blocks a second while active, then lets staff schedule it with a link', async () => {
     const a = await meetingService.request(userId, 'VENUE', { requested_at: '2026-07-01T10:00:00.000Z', notes: 'morning', contact_phone: '9000000001' });

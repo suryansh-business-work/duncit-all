@@ -42,3 +42,63 @@ export function videoSourceUrl(url?: string | null): string {
   const separator = address.includes('?') ? '&' : '?';
   return `${address}${separator}${ORIGINAL}${hash}`;
 }
+
+/**
+ * Which addresses name a video, shared by every surface that has to decide
+ * whether a stored media URL plays or paints (rules 27/34/40).
+ *
+ * Eight copies of `/\.(mp4|mov|webm)$/i` had drifted across the create-pod
+ * forms, the club form and the portals, and every one of them answered "image"
+ * for a video the moment its URL carried a query string — which an ImageKit
+ * address does as soon as anything is appended to it, `tr=orig-true` included.
+ * A cover video typed `IMAGE` is then handed to an `<img>`, and the tile is
+ * simply blank: no error, no player, nothing to see. The container list also
+ * matches what the server already accepts on upload, so a `.m4v` or a `.mkv`
+ * can no longer be stored as a picture it will never render as.
+ */
+const VIDEO_URL_RE = /\.(mp4|mov|m4v|avi|webm|mkv|3gp|ts|flv|wmv|mpe?g)(\?|#|$)/i;
+
+/** True when the address names a video file, query string or not. */
+export function isVideoUrl(url?: string | null): boolean {
+  return VIDEO_URL_RE.test((url ?? '').trim());
+}
+
+/** The media type an uploaded URL carries when nobody said which it is. */
+export function mediaTypeForUrl(url?: string | null): 'IMAGE' | 'VIDEO' {
+  return isVideoUrl(url) ? 'VIDEO' : 'IMAGE';
+}
+
+/** A stored media row: a URL, and the type the writer recorded for it. */
+export interface StoredMedia {
+  url: string;
+  type?: string | null;
+}
+
+/**
+ * True when a stored row should render as a playable video.
+ *
+ * The recorded `type` wins — an admin who typed one is the authority — and the
+ * URL answers for the rows written before the type was recorded correctly, so
+ * the videos already sitting in the database play without a migration.
+ */
+export function isVideoMedia(media?: Readonly<StoredMedia> | null): boolean {
+  if (!media) return false;
+  if ((media.type ?? '').toUpperCase() === 'VIDEO') return true;
+  return isVideoUrl(media.url);
+}
+
+/**
+ * The first still in a media list — what a card, a rail tile or an avatar
+ * should show.
+ *
+ * A cover whose first item is a video used to be dropped straight into an
+ * `<img>`/`<Image>`, which paints nothing at all. Falling through to the next
+ * item means a video-first cover still shows the pod or club rather than a
+ * blank card; a cover that is ONLY video has no still to offer and answers
+ * undefined so the caller draws its own placeholder.
+ */
+export function coverImageUrl(
+  media?: readonly Readonly<StoredMedia>[] | null,
+): string | undefined {
+  return media?.find((item) => !!item?.url && !isVideoMedia(item))?.url;
+}

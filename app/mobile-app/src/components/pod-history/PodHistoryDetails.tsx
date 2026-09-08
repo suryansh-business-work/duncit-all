@@ -3,8 +3,7 @@ import { AppImage } from '@/components/AppImage';
 
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
-import { isPodPast } from '@duncit/utils';
-
+import { coverImageUrl, isPodPast } from '@duncit/utils';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TourAnchor } from '@/tours/TourAnchor';
@@ -113,7 +112,7 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
   const { onPrimary, primary } = useThemeColors();
   const { t } = useTranslation();
   const pod = item.pod;
-  const image = pod?.pod_images_and_videos?.[0]?.url;
+  const image = coverImageUrl(pod?.pod_images_and_videos);
   const gate = podHistoryGate(item);
   // "Visited" once the pod has happened — "Joined" is a promise about something
   // still ahead.

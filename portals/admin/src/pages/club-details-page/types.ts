@@ -1,3 +1,5 @@
+import { isVideoMedia as isVideoMediaRow } from '@duncit/utils';
+
 /** Shared shapes for the admin Club Details page (query result subset). */
 
 export interface ClubMedia {
@@ -51,5 +53,4 @@ export interface ClubPodRow {
 }
 
 /** True when a media item should render as a playable video. */
-export const isVideoMedia = (media: ClubMedia): boolean =>
-  (media.type ?? '').toUpperCase() === 'VIDEO';
+export const isVideoMedia = (media: ClubMedia): boolean => isVideoMediaRow(media);

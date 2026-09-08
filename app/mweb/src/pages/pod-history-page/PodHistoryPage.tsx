@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router';
 import { useQuery } from '@apollo/client/react';
+import { coverImageUrl } from '@duncit/utils';
 import {
   Alert,
   Avatar,
@@ -139,7 +140,7 @@ export default function PodHistoryPage() {
                   <Stack direction="row" spacing={1.5} sx={{
                     alignItems: "center"
                   }}>
-                    <Avatar src={item.pod?.pod_images_and_videos?.[0]?.url || undefined}>
+                    <Avatar src={coverImageUrl(item.pod?.pod_images_and_videos)}>
                       <HistoryIcon />
                     </Avatar>
                     <Box sx={{ flex: 1, minWidth: 0 }}>

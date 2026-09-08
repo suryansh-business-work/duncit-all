@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { DuncitIconButton } from '@duncit/buttons';
+import { videoSourceUrl } from '@duncit/utils';
 import { isVideoMedia, type ClubMedia } from './types';
 import { useTranslation } from '@duncit/shell';
 
@@ -63,7 +64,7 @@ export default function MediaLightbox({ items, index, onNavigate, onClose }: Rea
         )}
 
         {isVideoMedia(current) ? (
-          <Box component="video" src={current.url} controls autoPlay sx={{ maxWidth: '100%', maxHeight: '80vh' }} />
+          <Box component="video" src={videoSourceUrl(current.url)} controls autoPlay sx={{ maxWidth: '100%', maxHeight: '80vh' }} />
         ) : (
           <Box
             component="img"

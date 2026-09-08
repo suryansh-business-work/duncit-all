@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isMeetingPlatform } from '@duncit/utils';
+import { isMeetingPlatform, isVideoUrl } from '@duncit/utils';
 
 import { CategoryMediaType, type PodMode, type PodType } from '@/generated/graphql/graphql';
 import { fallbackT, type Translate } from '@/i18n/fallback';
@@ -39,11 +39,9 @@ const splitMediaLines = (text: string) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
-const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
-
 /** True when the media list carries at least one image URL (server mirrors this). */
 export const hasImageLine = (mediaText: string) =>
-  splitMediaLines(mediaText).some((url) => !VIDEO_URL_RE.test(url));
+  splitMediaLines(mediaText).some((url) => !isVideoUrl(url));
 
 /** Physical pods must book a venue, a space (capacity) and one of its slots. */
 function refineVenue(values: CreatePodFormValues, ctx: z.RefinementCtx, t: Translate) {
@@ -411,7 +409,7 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
       .filter(Boolean),
     pod_images_and_videos: splitMediaLines(values.media_text).map((url) => ({
       url,
-      type: VIDEO_URL_RE.test(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
+      type: isVideoUrl(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
     })),
     reel_url: values.reel_url || null,
     payment_terms: values.payment_terms || null,
@@ -483,7 +481,7 @@ export function buildModerationInput(values: CreatePodFormValues) {
       .split(/[\s,]+/)
       .map((item) => item.replace(/^#/, '').trim())
       .filter(Boolean),
-    image_urls: splitMediaLines(values.media_text).filter((url) => !VIDEO_URL_RE.test(url)),
+    image_urls: splitMediaLines(values.media_text).filter((url) => !isVideoUrl(url)),
   };
 }
 

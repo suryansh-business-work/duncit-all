@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { isVideoUrl } from '@duncit/utils';
+
 import { CategoryMediaType } from '@/generated/graphql/graphql';
 import { hasImageLine } from '@/components/create-pod/create-pod.form';
 import { formatDate, formatTime } from '@/utils/date-format';
@@ -55,8 +57,6 @@ export const podResubmitSchema = z.object({
   venue_slot_id: z.string().min(1, 'Select a time slot'),
 });
 
-const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
-
 const splitLines = (text: string) =>
   text
     .split('\n')
@@ -70,7 +70,7 @@ export function buildHostResubmitInput(values: PodResubmitValues) {
     pod_description: values.pod_description.trim(),
     pod_images_and_videos: splitLines(values.media_text).map((url) => ({
       url,
-      type: VIDEO_URL_RE.test(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
+      type: isVideoUrl(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
     })),
     venue_id: values.venue_id,
     venue_slot_id: values.venue_slot_id,

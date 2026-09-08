@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router';
 import { Avatar, Box, Card, Chip, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import GroupsIcon from '@mui/icons-material/Groups';
+import { coverImageUrl } from '@duncit/utils';
 import { clubUrl, podUrl } from '../../utils/seoUrls';
 import PodCard from './PodCard';
 
@@ -39,7 +40,7 @@ export default function ClubSection({ club, clubPods, hostNameOf, categoryLabelO
             cursor: 'pointer'
           }}>
           <Avatar
-            src={club.club_feature_images_and_videos?.[0]?.url}
+            src={coverImageUrl(club.club_feature_images_and_videos)}
             variant="rounded"
             sx={{
               width: 46,

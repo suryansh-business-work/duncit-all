@@ -646,6 +646,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/category", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/location", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/utils", range: "workspace:*", kind: "dependencies" },
       { name: "@apollo/client", range: "^4.2.12", kind: "devDependencies" },
       { name: "@duncit/app-settings", range: "workspace:*", kind: "devDependencies" },
       { name: "@hookform/resolvers", range: "^5.9.1", kind: "devDependencies" },

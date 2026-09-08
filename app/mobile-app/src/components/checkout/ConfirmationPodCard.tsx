@@ -4,6 +4,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import type { CheckoutPod } from '@/hooks/useCheckout';
+import { coverImageUrl } from '@duncit/utils';
+
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatDateTime } from '@/utils/date-format';
@@ -14,7 +16,7 @@ export function ConfirmationPodCard({ pod }: Readonly<{ pod: CheckoutPod }>) {
   const { muted, primary } = useThemeColors();
   const { t } = useTranslation();
   if (!pod) return null;
-  const image = pod.pod_images_and_videos?.find((m) => m.url)?.url;
+  const image = coverImageUrl(pod.pod_images_and_videos);
 
   return (
     <YStack

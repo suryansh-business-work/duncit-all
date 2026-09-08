@@ -2,6 +2,7 @@ import { Avatar, Box, Card, CardContent, CardMedia, Chip, Stack, Typography } fr
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { DuncitButton } from '@duncit/buttons';
+import { isVideoMedia, videoSourceUrl } from '@duncit/utils';
 
 interface ClubListCardProps {
   club: any;
@@ -11,7 +12,8 @@ interface ClubListCardProps {
 
 export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubListCardProps>) {
   const cover = club.club_feature_images_and_videos?.[0];
-  const coverMediaProps = cover?.type === 'VIDEO'
+  const coverIsVideo = isVideoMedia(cover);
+  const coverMediaProps = coverIsVideo
     ? { autoPlay: true, muted: true, loop: true, playsInline: true }
     : { alt: club.club_name };
 
@@ -33,8 +35,8 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
       <Box sx={{ p: 1 }}>
         {cover?.url ? (
           <CardMedia
-            component={cover.type === 'VIDEO' ? 'video' : 'img'}
-            src={cover.url}
+            component={coverIsVideo ? 'video' : 'img'}
+            src={coverIsVideo ? videoSourceUrl(cover.url) : cover.url}
             sx={{ height: 154, borderRadius: '16px', objectFit: 'cover' }}
             {...coverMediaProps}
           />

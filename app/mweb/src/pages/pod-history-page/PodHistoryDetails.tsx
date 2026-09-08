@@ -1,5 +1,6 @@
 import { useLazyQuery } from '@apollo/client/react';
 import {
+  coverImageUrl,
   isPodPast,
   participationInputFrom,
   podParticipationActions,
@@ -86,7 +87,7 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
   const [loadTicketPdf, ticketState] = useLazyQuery<any>(POD_HISTORY_TICKET_PDF, { fetchPolicy: 'network-only' });
   const pod = item.pod;
   const isDeleted = !!pod?.is_deleted;
-  const imageUrl = pod?.pod_images_and_videos?.[0]?.url;
+  const imageUrl = coverImageUrl(pod?.pod_images_and_videos);
   const podDetailsPath = pod?.club_slug && pod?.pod_id ? podUrl(pod.club_slug, pod.pod_id) : '';
   // The pod's own start time, which is where the server closes rejoin too — an
   // end-time window offered the button for hours after rejoin had stopped working.

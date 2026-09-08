@@ -11,7 +11,8 @@
   "dependencies": {
     "@duncit/buttons": "workspace:*",
     "@duncit/category": "workspace:*",
-    "@duncit/location": "workspace:*"
+    "@duncit/location": "workspace:*",
+    "@duncit/utils": "workspace:*"
   },
   "peerDependencies": {
     "@apollo/client": ">=3",

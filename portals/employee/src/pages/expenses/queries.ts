@@ -13,6 +13,22 @@ export const MY_EXPENSES_TABLE = gql`
   }
 `;
 
+export const MY_EXPENSE_CLAIM = gql`
+  query MyEmployeeExpense($expense_doc_id: ID!) {
+    myEmployeeExpense(expense_doc_id: $expense_doc_id) {
+      ${EMPLOYEE_EXPENSE_SELECTION}
+    }
+  }
+`;
+
+export const EXPENSE_CURRENCY = gql`
+  query ExpenseClaimCurrency {
+    publicFinanceSettings {
+      currency_symbol
+    }
+  }
+`;
+
 export const MY_EXPENSE_SUMMARY = gql`
   query MyEmployeeExpenseSummary {
     myEmployeeExpenseSummary {

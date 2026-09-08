@@ -8,6 +8,8 @@ import { PressScale } from '@/animations/PressScale';
 import { PodCard } from '@/components/home/PodCard';
 import { useClubFollow } from '@/hooks/useFollow';
 import type { SearchClubResult } from '@/hooks/useSearch';
+import { coverImageUrl } from '@duncit/utils';
+
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -28,7 +30,7 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
   const { primary, onPrimary, muted } = useThemeColors();
   const { following, busy, toggle } = useClubFollow(result.club.id, result.is_following);
   const { club, upcoming_pods: pods } = result;
-  const image = club.club_feature_images_and_videos.find((m) => !!m.url)?.url ?? null;
+  const image = coverImageUrl(club.club_feature_images_and_videos) ?? null;
   const followers = club.followers_count + ((following ? 1 : 0) - (result.is_following ? 1 : 0));
 
   let body: ReactNode = null;

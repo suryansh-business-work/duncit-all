@@ -1,5 +1,6 @@
 import { Avatar, Box, Chip, Stack, Typography } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
+import { coverImageUrl } from '@duncit/utils';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import PeopleAltIcon from '@mui/icons-material/PeopleAltOutlined';
 import PodCard from '../home-page/PodCard';
@@ -53,7 +54,7 @@ export default function SearchClubCard({
           mb: 1.25
         }}>
         <Avatar
-          src={club.club_feature_images_and_videos?.[0]?.url}
+          src={coverImageUrl(club.club_feature_images_and_videos)}
           variant="rounded"
           onClick={() => onOpenClub(club.club_id)}
           sx={{ width: 52, height: 52, bgcolor: 'primary.main', cursor: 'pointer', flex: '0 0 auto' }}

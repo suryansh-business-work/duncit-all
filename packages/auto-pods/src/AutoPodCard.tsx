@@ -17,6 +17,7 @@ import {
   autoPodMissingRoles,
   autoPodPriced,
   autoPodRoleEarnings,
+  coverImageUrl,
   type AutoPodRole,
   type AutoPodRow,
   type AutoPodLabels,
@@ -98,7 +99,7 @@ export interface AutoPodCardProps {
 }
 
 const firstImage = (row: AutoPodRow): string | null =>
-  row.pod_images_and_videos.find((m) => (m.type ?? 'IMAGE') === 'IMAGE')?.url ?? null;
+  coverImageUrl(row.pod_images_and_videos) ?? null;
 
 /**
  * One Auto Pod, as every role sees it. The card itself is role-agnostic: the

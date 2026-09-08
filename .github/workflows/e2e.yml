@@ -30,6 +30,16 @@ name: E2E
 #     having never run a test. A suite's result must depend on the suite.
 #     The GATE is still hard: see `Fail the workflow when the gate did not pass`.
 #
+#     `continue-on-error` alone is NOT enough, and run 34163360668 is why. The
+#     reporter rides out an outage for ten minutes, `no-surface` is a job whose
+#     real work takes under a minute and whose budget was ten — so when the
+#     server went away the report spent the WHOLE budget and the job was killed
+#     by `timeout-minutes`. A killed job is `cancelled`, and nothing rescues a
+#     cancelled job: the gate read `no-surface=cancelled` and failed a sweep in
+#     which every single suite had passed. So each of these steps carries its
+#     own `timeout-minutes` too. A best-effort step may not spend the budget the
+#     specs need — bound it, and let the job outlive the server.
+#
 #  2. A suite that did NOT run must say so. Every leg reports — the ones that
 #     ran with their counts, the ones the operator filtered out as SKIPPED —
 #     because "the admin suite is green" and "nobody ran the admin suite" look
@@ -122,7 +132,11 @@ jobs:
     name: Plan the run
     needs: audit
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Fifteen, not ten, because `Claim the run` below is the one report that is
+    # deliberately FATAL — without an identity there is nothing to test with —
+    # and it retries for ten. At ten the job was killed mid-retry instead, which
+    # reports `cancelled` and prints none of the reporter's diagnosis.
+    timeout-minutes: 15
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
       browser_count: ${{ steps.plan.outputs.browser_count }}
@@ -170,6 +184,11 @@ jobs:
       # a full green one.
       - name: Record the suites this run is not doing
         if: steps.plan.outputs.skipped != ''
+        # Fatal on purpose — rule 2 — but bounded, because this is a LOOP and
+        # each pass is a fresh process with its own ten-minute retry window. An
+        # outage that begins after `Claim the run` succeeded would otherwise
+        # spend ten minutes per skipped suite and take the job's budget with it.
+        timeout-minutes: 4
         env:
           MODE: suite
           SKIPPED: ${{ steps.plan.outputs.skipped }}
@@ -231,6 +250,7 @@ jobs:
       - name: Fetch the run identity
         id: identity
         continue-on-error: true
+        timeout-minutes: 4
         env:
           MODE: start
         run: node scripts/report-e2e-run.mjs
@@ -326,6 +346,7 @@ jobs:
       - name: Record this suite's result
         if: always()
         continue-on-error: true
+        timeout-minutes: 4
         env:
           MODE: suite
           SUITE_KEY: ${{ matrix.name }}
@@ -434,6 +455,7 @@ jobs:
       - name: Record this suite's result
         if: always()
         continue-on-error: true
+        timeout-minutes: 4
         env:
           MODE: suite
           SUITE_KEY: no-surface
@@ -487,6 +509,7 @@ jobs:
       - name: Fetch the run identity
         id: identity
         continue-on-error: true
+        timeout-minutes: 4
         env:
           MODE: start
         run: node scripts/report-e2e-run.mjs
@@ -559,6 +582,7 @@ jobs:
       - name: Record this suite's result
         if: always()
         continue-on-error: true
+        timeout-minutes: 4
         env:
           MODE: suite
           SUITE_KEY: native-web

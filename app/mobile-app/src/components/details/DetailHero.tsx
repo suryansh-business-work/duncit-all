@@ -6,8 +6,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Spinner, XStack, YStack } from 'tamagui';
+import { isVideoMedia } from '@duncit/utils';
 
 import { ImageViewerModal } from '@/components/ImageViewerModal';
+import { HeroVideo } from '@/components/details/HeroVideo';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -16,6 +18,14 @@ type IconName = ComponentProps<typeof MaterialIcons>['name'];
 interface Media {
   url: string;
   type: string;
+}
+
+/** A carousel slide: the media row, plus where its picture sits in the
+ * full-screen viewer (`viewerIndex`), which only counts the still images. */
+interface Slide {
+  url: string;
+  video: boolean;
+  viewerIndex: number;
 }
 
 /** A round glassy overlay button used on the hero (back + actions). */
@@ -54,6 +64,26 @@ export function HeroButton({
   );
 }
 
+/**
+ * Turn a pod's or club's cover media into carousel slides.
+ *
+ * The hero used to keep `type === 'IMAGE'` rows only, so a cover video was
+ * dropped on the floor: a pod whose media was one clip rendered the empty
+ * calendar placeholder, and mWeb — which has played them all along — showed a
+ * different pod than the app did (rule 27). Videos are slides now, and the
+ * viewer index is tracked separately because the full-screen viewer still
+ * shows pictures alone.
+ */
+export const heroSlides = (media: readonly Media[]): Slide[] => {
+  let viewerIndex = 0;
+  return media
+    .filter((m) => !!m.url)
+    .map((m) => {
+      const video = isVideoMedia(m);
+      return { url: m.url, video, viewerIndex: video ? -1 : viewerIndex++ };
+    });
+};
+
 /** Shared details hero: a horizontal media carousel with a back button and an
  * optional row of action buttons (passed as children). */
 export function DetailHero({
@@ -69,33 +99,49 @@ export function DetailHero({
 }>) {
   const { width } = useWindowDimensions();
   const { t } = useTranslation();
-  const images = media.filter((m) => m.type === 'IMAGE' && !!m.url).map((m) => m.url);
+  const slides = heroSlides(media);
+  const images = slides.filter((s) => !s.video).map((s) => s.url);
   const [index, setIndex] = useState(0);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
+  const renderSlide = ({ item, index: i }: { item: Slide; index: number }) => {
+    if (item.video) {
+      return (
+        <HeroVideo
+          testID={`detail-hero-video-${i}`}
+          url={item.url}
+          isActive={i === index}
+          width={width}
+          height={height}
+        />
+      );
+    }
+    return (
+      <XStack
+        pressStyle={PRESS_STYLE.surface}
+        testID={`detail-hero-image-${i}`}
+        role="button"
+        aria-label={t('mweb.podDetails.viewImage')}
+        onPress={() => setViewerIndex(item.viewerIndex)}
+        width={width}
+        height={height}
+      >
+        <AppImage source={{ uri: item.url }} style={{ width, height }} resizeMode="cover" />
+      </XStack>
+    );
+  };
+
   return (
     <YStack width={width} height={height} backgroundColor="$muted">
-      {images.length > 0 ? (
+      {slides.length > 0 ? (
         <FlatList
-          data={images}
+          data={slides}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
-          keyExtractor={(url, i) => `${i}-${url}`}
+          keyExtractor={(slide, i) => `${i}-${slide.url}`}
           onMomentumScrollEnd={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
-          renderItem={({ item, index: i }) => (
-            <XStack
-              pressStyle={PRESS_STYLE.surface}
-              testID={`detail-hero-image-${i}`}
-              role="button"
-              aria-label={t('mweb.podDetails.viewImage')}
-              onPress={() => setViewerIndex(i)}
-              width={width}
-              height={height}
-            >
-              <AppImage source={{ uri: item }} style={{ width, height }} resizeMode="cover" />
-            </XStack>
-          )}
+          renderItem={renderSlide}
         />
       ) : (
         <YStack flex={1} alignItems="center" justifyContent="center">
@@ -113,11 +159,11 @@ export function DetailHero({
           <XStack gap={8}>{children}</XStack>
         </XStack>
       </SafeAreaView>
-      {images.length > 1 ? (
+      {slides.length > 1 ? (
         <XStack position="absolute" bottom={12} left={0} right={0} justifyContent="center" gap={6}>
-          {images.map((url, i) => (
+          {slides.map((slide, i) => (
             <YStack
-              key={`${i}-${url}`}
+              key={`${i}-${slide.url}`}
               width={i === index ? 18 : 6}
               height={6}
               borderRadius={3}

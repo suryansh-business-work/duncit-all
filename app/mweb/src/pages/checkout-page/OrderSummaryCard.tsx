@@ -8,7 +8,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
 import VenueChargesDialog, { type VenueCharge } from './VenueChargesDialog';
 import CoinSummaryRows from './CoinSummaryRows';
-import type { CoinCheckoutSummary } from '@duncit/utils';
+import { isVideoMedia, videoSourceUrl, type CoinCheckoutSummary } from '@duncit/utils';
 import { formatDateTime } from '../../utils/dateFormat';
 
 /** One line of money taken off the bill — a coupon, redeemed coins. */
@@ -61,6 +61,7 @@ export default function OrderSummaryCard({
   const when = formatDateTime(pod?.pod_date_time);
   const fmt = (value: number) => formatMoney(breakup.currency, value);
   const media = (pod?.pod_images_and_videos ?? []).find((item: any) => item?.url);
+  const mediaIsVideo = isVideoMedia(media);
   // Pod checkout is membership only — the ticket is the whole bill. Products
   // are purchased separately through the standalone product checkout. This is
   // the price BEFORE deductions, so the rows below have something to subtract
@@ -76,7 +77,7 @@ export default function OrderSummaryCard({
     <Card sx={{ flex: 1, borderRadius: '16px', bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.82), color: 'text.primary', boxShadow: 'none', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
       <CardContent sx={{ p: 1.25 }}>
         <Box sx={{ height: 150, borderRadius: '16px', overflow: 'hidden', position: 'relative', bgcolor: 'rgba(255,255,255,0.08)' }}>
-          {media?.url && <Box component={media.type === 'VIDEO' ? 'video' : 'img'} src={media.url} autoPlay muted loop playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+          {media?.url && <Box component={mediaIsVideo ? 'video' : 'img'} src={mediaIsVideo ? videoSourceUrl(media.url) : media.url} autoPlay muted loop playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
           <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 12%, rgba(0,0,0,0.75) 100%)' }} />
           <Box sx={{ position: 'absolute', left: 12, right: 12, bottom: 12 }}>
             <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.7)', letterSpacing: 0, lineHeight: 1 }}>{t('mweb.checkout.ticket')}</Typography>

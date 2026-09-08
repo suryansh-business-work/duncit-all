@@ -3,6 +3,8 @@ import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { coverImageUrl } from '@duncit/utils';
+
 import { CategoryBreadcrumb } from '@/components/CategoryBreadcrumb';
 import type { PodDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -21,7 +23,7 @@ export function PodClubCard({
 }: Readonly<{ club: PodClub; categoryCrumbs?: readonly string[]; onOpenClub: () => void }>) {
   const { primary } = useThemeColors();
   const { t } = useTranslation();
-  const logo = club.club_feature_images_and_videos[0]?.url || '';
+  const logo = coverImageUrl(club.club_feature_images_and_videos) ?? '';
   const initial = (club.club_name[0] ?? 'C').toUpperCase();
 
   return (

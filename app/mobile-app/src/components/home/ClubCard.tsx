@@ -2,6 +2,8 @@ import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { coverImageUrl } from '@duncit/utils';
+
 import { PressScale } from '@/animations/PressScale';
 import type { HomeClub } from '@/hooks/useHomeFeed';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -9,7 +11,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 /** A full-width club row — avatar, name and description. Used by the Clubs tab. */
 export function ClubCard({ club, onPress }: Readonly<{ club: HomeClub; onPress?: () => void }>) {
   const { onPrimary, muted } = useThemeColors();
-  const image = club.club_feature_images_and_videos.find((m) => !!m.url)?.url ?? null;
+  const image = coverImageUrl(club.club_feature_images_and_videos) ?? null;
 
   return (
     <PressScale

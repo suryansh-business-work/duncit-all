@@ -1,6 +1,8 @@
 /** Pure derivations for the post-create venue-approval waiting screen — kept
  * out of the components so every branch is unit-testable. mWeb twin (rule 27). */
 
+import { coverImageUrl } from '@duncit/utils';
+
 import { fallbackT, type Translate } from '@/i18n/fallback';
 
 export interface PendingMedia {
@@ -8,10 +10,9 @@ export interface PendingMedia {
   type: string;
 }
 
-/** First image (preferred) or first media url for the pod card, else null. */
+/** The pod card's still, or null when the cover carries no image to show. */
 export function pendingPodImage(media: readonly PendingMedia[]): string | null {
-  const item = media.find((m) => m.type === 'IMAGE') ?? media[0];
-  return item?.url ?? null;
+  return coverImageUrl(media) ?? null;
 }
 
 export type ApprovalTone = 'warning' | 'success' | 'error';

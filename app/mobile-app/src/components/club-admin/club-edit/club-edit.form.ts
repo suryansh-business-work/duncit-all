@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { isVideoUrl } from '@duncit/utils';
+
 import { CategoryMediaType, type UpdateClubInput } from '@/generated/graphql/graphql';
 import type { Translate } from '@/i18n/fallback';
 
@@ -47,7 +49,6 @@ export const nextFaqId = (): string => {
   return `faq-${faqSeq}`;
 };
 
-const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
 const isLink = (value: string) => /^https?:\/\/\S+/i.test(value.trim());
 const lines = (text: string) =>
   text
@@ -119,7 +120,7 @@ export function buildClubEditInput(values: ClubEditFormValues): UpdateClubInput 
     club_description: values.club_description.trim(),
     club_feature_images_and_videos: lines(values.feature_text).map((url) => ({
       url,
-      type: VIDEO_URL_RE.test(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
+      type: isVideoUrl(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
     })),
     club_whats_app_community_link: values.community_link.trim(),
     club_whats_app_group_link: values.group_link.trim(),

@@ -1,34 +1,19 @@
-import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
-import { VideoView, useVideoPlayer } from 'expo-video';
+import { VideoView } from 'expo-video';
 import { MaterialIcons } from '@expo/vector-icons';
 import { YStack } from 'tamagui';
 
+import { useInlineVideo } from '@/hooks/useInlineVideo';
+
 /** Full-card reel playback — muted + looping. Plays only while its card is the
- * active (visible) reel and pauses otherwise. `useVideoPlayer` releases the
+ * active (visible) reel and pauses otherwise. `useInlineVideo` releases the
  * player on unmount (the reels FlatList keeps only the current card ±2 alive). */
 export function ReelVideo({
   url,
   isActive,
   testID,
 }: Readonly<{ url: string; isActive: boolean; testID: string }>) {
-  const player = useVideoPlayer(url, (p) => {
-    p.loop = true;
-    p.muted = true;
-  });
-  useEffect(() => {
-    if (!isActive) {
-      player.pause();
-      return undefined;
-    }
-    // The remote source may still be loading when the card becomes active —
-    // start now and re-assert once it reports ready (same as BrandBackdrop).
-    player.play();
-    const sub = player.addListener('statusChange', ({ status }) => {
-      if (status === 'readyToPlay') player.play();
-    });
-    return () => sub.remove();
-  }, [player, isActive]);
+  const player = useInlineVideo(url, isActive);
   return (
     <VideoView
       testID={testID}

@@ -1,6 +1,7 @@
 import EventIcon from '@mui/icons-material/Event';
 import { Box, Card, CardMedia, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import { coverImageUrl } from '@duncit/utils';
 import { formatDate } from '../../utils/dateFormat';
 
 interface Props {
@@ -12,7 +13,7 @@ interface Props {
 /** Compact fixed-width pod card used inside the horizontal Pods Schedule rails. */
 export default function ClubPodRailCard({ pod, priceFormat, onOpen }: Readonly<Props>) {
   const isFree = pod.pod_type === 'FREE';
-  const cover = pod.pod_images_and_videos?.[0]?.url;
+  const cover = coverImageUrl(pod.pod_images_and_videos);
   const dateLabel = formatDate(pod.pod_date_time).toUpperCase() || 'TBA';
 
   return (

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Box, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
 import PlayCircleIcon from '@mui/icons-material/PlayCircle';
+import { videoSourceUrl } from '@duncit/utils';
 import MediaLightbox from './MediaLightbox';
 import { isVideoMedia, type ClubMedia } from './types';
 
@@ -76,7 +77,7 @@ export default function MediaGallery({ title, icon, items, emptyText }: Readonly
                 {isVideoMedia(media) ? (
                   <Box
                     component="video"
-                    src={media.url}
+                    src={videoSourceUrl(media.url)}
                     preload="metadata"
                     muted
                     sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}

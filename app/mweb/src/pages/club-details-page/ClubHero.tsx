@@ -3,6 +3,7 @@ import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import { Box, CircularProgress, Stack } from '@mui/material';
+import { isVideoMedia } from '@duncit/utils';
 import MomentLightbox from '../../components/moments/MomentLightbox';
 import GroupsIcon from '@mui/icons-material/Groups';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -187,7 +188,7 @@ export default function ClubHero({
         slidesToScroll={1}
       >
         {media.map((m, i) =>
-          m.type === 'VIDEO' ? (
+          isVideoMedia(m) ? (
             <VideoMedia
               key={m.url}
               src={m.url}

@@ -105,6 +105,8 @@ import {
   splitPodsByPhase,
   usernameBlocksSave,
   usernameFieldState,
+  coverImageUrl,
+  isVideoMedia,
   videoSourceUrl,
   type AutoPodRow,
   type HostChartRange,
@@ -1004,6 +1006,29 @@ export default defineDemos('utils', [
         'Profile link': view.link,
       };
     },
+  }),
+  defineDemo<{ cover: { url: string; type: string }[] }>({
+    id: 'cover-media-type',
+    title: 'Which cover rows play, and which one a card shows',
+    note:
+      'The first row is a video stored as IMAGE — exactly what the old ' +
+      'extension test wrote for any address carrying a query string. It still ' +
+      'reads as a video here, so the hero plays it instead of handing it to an <img> that ' +
+      'paints nothing. Delete the .jpg row and `coverImageUrl` answers undefined: a ' +
+      'video-only cover has no still, and the card draws its own placeholder rather than a ' +
+      'blank tile.',
+    mock: {
+      cover: [
+        { url: 'https://ik.imagekit.io/esdata1/clubs/smashers-united_cfjjLNlMo.mp4?updatedAt=1788852029004', type: 'IMAGE' },
+        { url: 'https://ik.imagekit.io/esdata1/clubs/smashers-united-court_8Kd2p.jpg', type: 'IMAGE' },
+      ],
+    },
+    compute: (mock) => ({
+      ...Object.fromEntries(
+        mock.cover.map((row) => [row.url, `stored ${row.type} · plays: ${String(isVideoMedia(row))}`]),
+      ),
+      'Card thumbnail': coverImageUrl(mock.cover) ?? '(no still — placeholder)',
+    }),
   }),
   defineDemo<{ urls: string[] }>({
     id: 'video-source-url',

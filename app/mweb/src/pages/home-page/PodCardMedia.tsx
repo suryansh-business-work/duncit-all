@@ -1,5 +1,6 @@
 import { Box, CardMedia } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
+import { isVideoMedia, videoSourceUrl } from '@duncit/utils';
 
 interface Media {
   url: string;
@@ -28,11 +29,11 @@ export default function PodCardMedia({
       </Box>
     );
   }
-  if (media.type === 'VIDEO') {
+  if (isVideoMedia(media)) {
     return (
       <Box
         component="video"
-        src={media.url}
+        src={videoSourceUrl(media.url)}
         autoPlay
         muted
         loop

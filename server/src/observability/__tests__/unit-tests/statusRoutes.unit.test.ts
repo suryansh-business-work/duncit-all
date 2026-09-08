@@ -9,6 +9,14 @@ import {
   type StatusHistoryStore,
 } from '../../statusRoutes';
 import type { ProbeDay } from '../../statusAnalytics';
+import { listStatusServices } from '../../statusServices';
+
+/*
+  Read from the catalog, never written down. Both figures used to be the
+  literal 26 and broke the day an eighteenth console shipped — a summary is
+  supposed to cover EVERY monitored service, and that is the assertion.
+*/
+const MONITORED = listStatusServices().length;
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -117,7 +125,7 @@ describe('status read routes', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
 
-    expect(Object.keys(body.services)).toHaveLength(26);
+    expect(Object.keys(body.services)).toHaveLength(MONITORED);
     expect(body.global).toHaveLength(90);
 
     // admin: probe dip today, otherwise operational.
@@ -142,7 +150,7 @@ describe('status read routes', () => {
     expect(body.services.legal.uptime_90d).toBe(100);
 
     // overall roll-up.
-    expect(body.overall.total).toBe(26);
+    expect(body.overall.total).toBe(MONITORED);
     expect(body.overall.down).toBeGreaterThanOrEqual(2); // server + finance
     expect(['major_outage', 'down']).toContain(body.overall.state);
   });

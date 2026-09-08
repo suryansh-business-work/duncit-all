@@ -85,7 +85,13 @@ describe('referralService integration', () => {
     expect(all.some((row) => row.referred_user_id === friend)).toBe(true);
 
     expect((await referralService.settings()).gift_description).toBe('');
-    const updated = await referralService.updateGift('₹100 off your next pod');
+    // The gift copy moved onto `updateSettings` when the share message joined
+    // it there; the RATE it describes is never written here — that is a coin
+    // payout rule, set in one place so no screen can quote a reward the
+    // platform stopped paying.
+    const updated = await referralService.updateSettings({
+      gift_description: '₹100 off your next pod',
+    });
     expect(updated.gift_description).toBe('₹100 off your next pod');
     const mine = await referralService.myReferral(referrer);
     expect(mine.gift_description).toBe('₹100 off your next pod');

@@ -21,12 +21,25 @@ describe('getStatusServices (production)', () => {
     expect(getStatusEnvironment()).toBe('production');
   });
 
-  it('returns the three groups with the full catalog', () => {
+  /*
+    Shapes, not a headcount. This used to assert 17 consoles and broke the day
+    an eighteenth portal shipped — a suite that fails on every new console
+    teaches people to edit the number rather than read the failure. What has to
+    be true is that the three groups are there and every entry is complete
+    enough to probe.
+  */
+  it('returns the three groups, every entry probeable', () => {
     const groups = getStatusServices();
     expect(groups.map((g) => g.title)).toEqual(['Consoles', 'Platform', 'Websites']);
-    expect(groups[0].items).toHaveLength(17);
-    expect(groups[1].items).toHaveLength(4);
-    expect(groups[2].items).toHaveLength(5);
+    for (const group of groups) {
+      expect(group.items.length).toBeGreaterThan(0);
+      for (const item of group.items) {
+        expect(item.key).toMatch(/^[a-z\d-]+$/);
+        expect(item.name).not.toBe('');
+        expect(item.description).not.toBe('');
+        expect(item.url).toMatch(/^https:\/\//);
+      }
+    }
   });
 
   it('keeps production urls unchanged', () => {
@@ -71,10 +84,19 @@ describe('getStatusServices (staging)', () => {
     expect(platform?.items).toHaveLength(2);
   });
 
+  /*
+    Everything except the two with no staging deployment survives, and it is
+    the PRODUCTION catalog that says how many that is — so a new console is
+    covered here the day it is added, without anybody editing a number.
+  */
   it('keeps the remaining catalog intact', () => {
-    const groups = getStatusServices();
-    expect(groups[0].items).toHaveLength(17);
-    expect(groups[2].items).toHaveLength(5);
+    const staging = getStatusServices();
+    delete process.env.APP_ENV;
+    const production = getStatusServices();
+
+    expect(staging[0].items).toHaveLength(production[0].items.length);
+    expect(staging[2].items).toHaveLength(production[2].items.length);
+    expect(staging[1].items).toHaveLength(production[1].items.length - 2);
   });
 });
 

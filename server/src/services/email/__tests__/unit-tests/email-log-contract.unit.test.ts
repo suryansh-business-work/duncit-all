@@ -73,6 +73,14 @@ jest.mock('@modules/content/mailPreference/mailPreference.service', () => ({
     })),
   },
 }));
+// The E2E "hold all communications" switch is asked BEFORE anything is sent,
+// and it reads the database. Unmocked, that read buffers until mongoose gives
+// up and every case here timed out at the first line of sendEmail rather than
+// at anything it was written to check. Off is the normal state.
+jest.mock('@modules/platform/e2eRun/e2eRun.mute', () => ({
+  ...jest.requireActual('@modules/platform/e2eRun/e2eRun.mute'),
+  communicationsMuted: jest.fn().mockResolvedValue(false),
+}));
 jest.mock('@modules/access/commPreference/commPreference.service', () => ({
   commPreferenceService: { allowsEmailOtp: jest.fn().mockResolvedValue(true) },
 }));

@@ -60,17 +60,36 @@ describe('auth validators — the signup contract', () => {
 
   // Google proves an email address and nothing else, so this door asks for the
   // same number and the same proof as the form does.
-  it('makes the Google door ask for the number and its proof too', async () => {
+  it('makes the Google door ask for the number, its proof and a birthday', async () => {
     const value = await googleSignupSchema.validate({
       id_token: 'a'.repeat(24),
       phone_number: '9876543210',
       phone_extension: '+91',
       whatsapp_token: 'wa-proof-token-value',
+      dob: '2000-04-11',
     });
     expect(value.id_token).toHaveLength(24);
     expect(value.phone_number).toBe('9876543210');
-    // Date of birth is the one thing the Google door does not insist on.
-    expect(value.dob).toBeUndefined();
+    // A Date, not the exact instant: yup parses a bare date in the RUNNER's
+    // zone, so pinning the timestamp would pass in UTC and fail in IST.
+    expect(value.dob).toBeInstanceOf(Date);
+    expect((value.dob as Date).getFullYear()).toBe(2000);
+  });
+
+  /*
+    Google proves an email address and nothing else — not a number, and not a
+    birthday. The minimum-age gate needs one, and which door somebody came
+    through cannot decide whether the platform knows how old they are.
+  */
+  it('refuses a Google signup with no date of birth', async () => {
+    await expect(
+      googleSignupSchema.validate({
+        id_token: 'a'.repeat(24),
+        phone_number: '9876543210',
+        phone_extension: '+91',
+        whatsapp_token: 'wa-proof-token-value',
+      })
+    ).rejects.toThrow(/dob/i);
   });
 
   it('refuses a Google signup carrying only the id_token', async () => {
@@ -104,12 +123,20 @@ describe('auth validators — the signup contract', () => {
     ).rejects.toThrow();
   });
 
-  it('requestPasswordChangeSchema requires an 8+ char current_password', async () => {
+  /*
+    The current password is optional on purpose, and only here. A Google-signup
+    account has none to prove and this flow CREATES its first, so a required
+    rule would lock those accounts out of ever setting one. What is NOT optional
+    is the check itself: `requestPasswordChangeOtp` compares against the stored
+    hash whenever one exists, so an account WITH a password still cannot skip it
+    by omitting the field.
+  */
+  it('requestPasswordChangeSchema takes an 8+ char current_password, or none at all', async () => {
     await expect(
       requestPasswordChangeSchema.validate({ current_password: 'StrongPass123' }),
     ).resolves.toMatchObject({ current_password: 'StrongPass123' });
     await expect(requestPasswordChangeSchema.validate({ current_password: 'short' })).rejects.toThrow();
-    await expect(requestPasswordChangeSchema.validate({})).rejects.toThrow();
+    await expect(requestPasswordChangeSchema.validate({})).resolves.toBeTruthy();
   });
 
   it('changePasswordSchema requires a 6-digit OTP and an 8+ char new_password', async () => {

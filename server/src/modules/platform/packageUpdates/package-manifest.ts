@@ -78,6 +78,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "expo-camera", range: "~57.0.4", kind: "dependencies" },
       { name: "expo-clipboard", range: "~57.0.1", kind: "dependencies" },
       { name: "expo-constants", range: "~57.0.16", kind: "dependencies" },
+      { name: "expo-contacts", range: "~57.0.4", kind: "dependencies" },
       { name: "expo-crypto", range: "~57.0.2", kind: "dependencies" },
       { name: "expo-document-picker", range: "~57.0.1", kind: "dependencies" },
       { name: "expo-file-system", range: "~57.0.6", kind: "dependencies" },

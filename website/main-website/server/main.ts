@@ -48,10 +48,15 @@ const redirect = (res: ServerResponse, status: number, location: string): void =
  * one would see duncit.com, and every click would be recorded as having come
  * from our own site instead of from Instagram, a post or a chat.
  */
-function handleShortLink(req: IncomingMessage, res: ServerResponse, path: string): boolean {
+function handleShortLink(
+  req: IncomingMessage,
+  res: ServerResponse,
+  path: string,
+  search: string
+): boolean {
   const code = path.replace(/^\/+/, '').replace(/\/+$/, '');
   if (!SHORT_CODE_PATTERN.test(code)) return false;
-  const params = new URLSearchParams(new URL(req.url ?? '/', 'http://internal').search);
+  const params = new URLSearchParams(search);
   const referrer = req.headers.referer;
   if (referrer && !params.has('dr')) params.set('dr', referrer);
   const query = params.toString();
@@ -107,8 +112,12 @@ async function serveBlogPost(
   sendHtml(req, res, block ? injectSiteMeta(html, block) : html);
 }
 
+/** Astro builds the 404 page as a file at the root, not a directory. Serving it
+ * with a real 404 is a change from the nginx runner, which answered every
+ * unknown path with the home page at 200 — the shape the short-link hop needed
+ * back when it was a script on that page. */
 function notFound(req: IncomingMessage, res: ServerResponse): void {
-  const page = resolveDistFile(DIST_DIR, '/404');
+  const page = resolveDistFile(DIST_DIR, '/404.html');
   if (!page) {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Not found');
@@ -129,7 +138,7 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
   const url = new URL(req.url ?? '/', 'http://internal');
   const path = decodeURIComponent(url.pathname) || '/';
 
-  if (handleShortLink(req, res, path)) return;
+  if (handleShortLink(req, res, path, url.search)) return;
   if (handlePolicyAlias(res, path, url.search)) return;
 
   const filePath = resolveDistFile(DIST_DIR, path);

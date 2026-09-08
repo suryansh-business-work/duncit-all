@@ -7,6 +7,8 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { ImageViewerModal } from '@/components/ImageViewerModal';
 import { PublicProfileStories } from '@/components/public-profile/PublicProfileStories';
+import { ProfilePodsPanel } from '@/components/profile/ProfilePodsPanel';
+import { ProfileTabs, type ProfileTab } from '@/components/profile/ProfileTabs';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { PublicProfilePost, PublicProfileStory } from '@/hooks/usePublicProfile';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -21,6 +23,8 @@ export function PublicProfilePosts({
   authorId,
   authorName,
   authorPhoto,
+  isHost,
+  isOwner,
 }: Readonly<{
   posts: PublicProfilePost[];
   stories: PublicProfileStory[];
@@ -29,11 +33,15 @@ export function PublicProfilePosts({
   authorId: string;
   authorName: string;
   authorPhoto?: string | null;
+  /** Whether the profile holds the HOST role — the third tab exists only then. */
+  isHost: boolean;
+  isOwner: boolean;
 }>) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const { muted } = useThemeColors();
   const [postIndex, setPostIndex] = useState<number | null>(null);
+  const [tab, setTab] = useState<ProfileTab>('posts');
 
   if (!canView) {
     return (
@@ -67,43 +75,41 @@ export function PublicProfilePosts({
         stories={stories}
       />
 
-      <XStack alignItems="center" justifyContent="center" gap={6} paddingTop={4}>
-        <MaterialIcons name="grid-on" size={16} color={muted} />
-        <Text fontSize={12} fontWeight="600" color="$muted" letterSpacing={1.5}>
-          POSTS
-        </Text>
-      </XStack>
+      <ProfileTabs value={tab} onChange={setTab} isHost={isHost} isOwner={isOwner} />
 
-      {posts.length === 0 ? (
-        <Text
-          testID="public-profile-no-posts"
-          fontSize={13}
-          color="$muted"
-          textAlign="center"
-          paddingVertical={20}
-        >
-          No posts yet.
-        </Text>
-      ) : (
-        <XStack flexWrap="wrap" gap={4} justifyContent="flex-start">
-          {posts.map((post, index) => (
-            <XStack
-              pressStyle={PRESS_STYLE.surface}
-              key={post.id}
-              testID={`public-profile-post-${index}`}
-              role="button"
-              aria-label={t('mweb.common.openPost')}
-              onPress={() => setPostIndex(index)}
-            >
-              <AppImage
-                source={{ uri: post.image_url }}
-                style={{ width: cell, height: cell, borderRadius: 6 }}
-                resizeMode="cover"
-              />
-            </XStack>
-          ))}
-        </XStack>
-      )}
+      {tab === 'joined' ? <ProfilePodsPanel userId={authorId} kind="joined" /> : null}
+      {tab === 'hosted' && isHost ? <ProfilePodsPanel userId={authorId} kind="hosted" /> : null}
+      {tab === 'posts' &&
+        (posts.length === 0 ? (
+          <Text
+            testID="public-profile-no-posts"
+            fontSize={13}
+            color="$muted"
+            textAlign="center"
+            paddingVertical={20}
+          >
+            No posts yet.
+          </Text>
+        ) : (
+          <XStack flexWrap="wrap" gap={4} justifyContent="flex-start">
+            {posts.map((post, index) => (
+              <XStack
+                pressStyle={PRESS_STYLE.surface}
+                key={post.id}
+                testID={`public-profile-post-${index}`}
+                role="button"
+                aria-label={t('mweb.common.openPost')}
+                onPress={() => setPostIndex(index)}
+              >
+                <AppImage
+                  source={{ uri: post.image_url }}
+                  style={{ width: cell, height: cell, borderRadius: 6 }}
+                  resizeMode="cover"
+                />
+              </XStack>
+            ))}
+          </XStack>
+        ))}
 
       <ImageViewerModal images={postImages} index={postIndex} onClose={() => setPostIndex(null)} />
     </YStack>

@@ -10,6 +10,7 @@ import { HealthAdjustmentModel } from '@modules/access/accountHealth/accountHeal
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { podCancellationService } from '@modules/finance/finance/podCancellation.service';
 import * as emailService from '@services/email/email.service';
+import { notifyEach } from '@services/notify/notify.service';
 import { logs } from '@observability/log';
 
 const ownerId = new Types.ObjectId();
@@ -18,7 +19,20 @@ const hostId = new Types.ObjectId();
 const DAY = 86_400_000;
 const HOUR = 3_600_000;
 
+/*
+  The generic `pod-cancelled` mail is gone: the audience now gets
+  `user-pod-cancelled-by-host` / `-venue` / `-duncit`, which name who
+  cancelled and carry the refund figure, and they ride the same `notifyEach`
+  fan-out as the WhatsApp message — one entry per attendee, off one array.
+  Sending both would have put two cancellation emails in front of everybody.
+*/
+jest.mock('@services/notify/notify.service', () => ({
+  notifyEach: jest.fn().mockResolvedValue([]),
+  notifyEvent: jest.fn().mockResolvedValue({ wa: { ok: true }, mail: { ok: true } }),
+}));
+
 beforeEach(() => {
+  (notifyEach as jest.Mock).mockClear();
   jest.spyOn(emailService, 'sendPodCancelledEmail').mockResolvedValue(undefined as never);
   jest.spyOn(emailService, 'sendPodRefundEmail').mockResolvedValue(undefined as never);
   jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -220,13 +234,11 @@ describe('podService.venueCancelPod — cancellation', () => {
     expect(adjustments[0].remark).toContain('Kitchen fire');
 
     // Both attendees hear about the cancellation; only the payer gets a refund note.
-    expect(emailService.sendPodCancelledEmail).toHaveBeenCalledTimes(2);
+    const fanout = (notifyEach as jest.Mock).mock.calls.at(-1)![0];
+    expect(fanout).toHaveLength(2);
+    const refundVars = fanout.map((entry: any) => entry.vars.refund_amount);
+    expect(refundVars).toContain('₹300');
     expect(emailService.sendPodRefundEmail).toHaveBeenCalledTimes(1);
-    const refundLines = (emailService.sendPodCancelledEmail as jest.Mock).mock.calls.map(
-      ([arg]) => arg.refund_line
-    );
-    expect(refundLines).toContain('Your payment of ₹300 will be refunded.');
-    expect(refundLines).toContain('');
   });
 
   it('cancels a pod that has no payments at all', async () => {
@@ -352,8 +364,8 @@ describe('podService.venueCancelPod — cancellation', () => {
 
     expect(await HealthAdjustmentModel.countDocuments({ subject_id: venue._id })).toBe(1);
     expect(await PodAuditLogModel.countDocuments({ pod_id: pod._id, action: 'DELETE' })).toBe(1);
-    // The audience is emailed once, not twice.
-    expect(emailService.sendPodCancelledEmail).toHaveBeenCalledTimes(2);
+    // The audience is told once, not twice.
+    expect((notifyEach as jest.Mock).mock.calls.at(-1)![0]).toHaveLength(2);
     expect(emailService.sendPodRefundEmail).toHaveBeenCalledTimes(1);
     expect((await PaymentModel.findById(payment._id))?.status).toBe('REFUNDED');
   });
@@ -362,7 +374,8 @@ describe('podService.venueCancelPod — cancellation', () => {
 describe('refundAndNotifyCancellation — shared email failure path', () => {
   it('logs against venueCancelPod when the cancellation emails throw', async () => {
     const errorSpy = jest.spyOn(logs.server, 'error').mockImplementation(() => {});
-    jest.spyOn(emailService, 'sendPodCancelledEmail').mockImplementation(() => {
+    // The refund note is what that catch actually wraps now.
+    jest.spyOn(emailService, 'sendPodRefundEmail').mockImplementation(() => {
       throw new Error('smtp down');
     });
     const { pod } = await seedBookedPod();
@@ -380,11 +393,14 @@ describe('refundAndNotifyCancellation — shared email failure path', () => {
 
   it('logs against hostRemove when the host delete emails throw', async () => {
     const errorSpy = jest.spyOn(logs.server, 'error').mockImplementation(() => {});
-    jest.spyOn(emailService, 'sendPodCancelledEmail').mockImplementation(() => {
+    // The refund note is what that catch actually wraps now.
+    jest.spyOn(emailService, 'sendPodRefundEmail').mockImplementation(() => {
       throw new Error('smtp down');
     });
-    const attendee = await seedAttendee('attendee@example.com');
-    const pod = await seedPod({ pod_attendees: [hostId, attendee._id] });
+    // A PAYER, because that catch wraps the refund notes: a pod nobody paid
+    // for raises none, so there would be nothing there to fail.
+    const { pod } = await seedBookedPod({ pod_attendees: [hostId] });
+    await PodModel.updateOne({ _id: pod._id }, { $set: { pod_hosts_id: [hostId] } });
 
     const ok = await podService.hostRemove(String(pod._id), String(hostId), 'Event cancelled');
 

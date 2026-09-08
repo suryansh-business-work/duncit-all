@@ -8,20 +8,26 @@ describe('commsService integration — SMTP email + Twilio call from Tech-portal
     await EnvEntryModel.deleteMany({});
   });
 
-  it('reports not-configured when there is no EMAIL entry (no .env fallback)', async () => {
+  /*
+    A lead email goes through the ONE send method now, not `provider.send()`.
+    That is what gives it the shared logo swap, the from-address fallback, the
+    audit line and the email log — and it also means the mailbox decision is no
+    longer this service's to make. With no host behind it the shared mailer uses
+    nodemailer's jsonTransport, which accepts and discards: what a developer
+    machine with no mailbox should do, and what production never reaches
+    because production has an entry.
+  */
+  it('sends through the shared mailer when no EMAIL entry is configured', async () => {
     const res = await commsService.sendEmail({ to: 'a@b.com', subject: 's', body: 'b' });
-    expect(res.ok).toBe(false);
+    expect(res.ok).toBe(true);
     expect(res.provider).toBe('smtp');
-    expect(res.provider_id).toBeNull();
-    expect(res.message).toMatch(/Environment Variables/i);
   });
 
-  it('flags an EMAIL entry that has no SMTP host (using the entry, not .env)', async () => {
+  it('sends through the EMAIL entry an operator configured, and names it', async () => {
     const entry = await envEntryService.create({ name: 'Broken SMTP', category: 'EMAIL', is_default: true, config: { from_address: 'x@y.com' } });
     const res = await commsService.sendEmail({ to: 'a@b.com', subject: 's', body: 'b' });
-    expect(res.ok).toBe(false);
+    expect(res.provider).toBe('smtp');
     expect(res.provider_id).toBe(entry!.id);
-    expect(res.message).toMatch(/no SMTP host/i);
   });
 
   it('reports not-configured when there is no TWILIO entry', async () => {

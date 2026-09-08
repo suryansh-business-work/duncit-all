@@ -193,11 +193,17 @@ describe('hostRequestService — submit', () => {
     expect(out.sub_category_name).toBe('');
   });
 
-  it('skips email when the host has no email, but still notifies', async () => {
+  /*
+    The mail is raised even with no address to raise it to. `sendEmail` files
+    an empty recipient as a FAILED row against this template, so an applicant
+    nobody could reach shows up in Emails > Logs — checking here first is what
+    made that invisible.
+  */
+  it('still raises the mail for a host with no address, and notifies', async () => {
     const userId = new Types.ObjectId().toString();
     await HostModel.create({ user_id: userId, full_name: 'NoMail', email: '', status: 'APPROVED' });
     await submit(userId, {});
-    expect(mockSendEmail).not.toHaveBeenCalled();
+    expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: '' }));
     expect(mockNotify).toHaveBeenCalled();
   });
 

@@ -42,6 +42,17 @@ export interface IAppSettings extends Document {
    * `pod_complete_timeout_hours` — a nudge that lands after the deadline is a
    * notification about money the host has already lost. */
   pod_complete_reminder_hours: number;
+  /** Whether a cancellation HOLDS its refunds until the pod's own start time
+   * instead of paying them out immediately (Admin > Pods > Pod Settings).
+   *
+   * A cancellation is revocable right up to the pod's start and no further, so
+   * that instant is also the last moment a refund could still turn out to have
+   * been unnecessary. Held money is not paid out and not lost: revoking before
+   * the start cancels the refund outright, and the release sweep pays it the
+   * moment the start passes. The trade is the attendee's: a pod cancelled three
+   * weeks early leaves them waiting three weeks for their money, which is why
+   * this is off by default. */
+  pod_cancel_refund_hold: boolean;
   /** Whether the auto-cancel sweep cancels upcoming pods whose live settlement
    * would leave the host side negative — the pool after GST, platform fee and
    * the club-admin cut cannot cover the venue's booked slot price (Admin >
@@ -103,6 +114,7 @@ const appSettingsSchema = new Schema<IAppSettings>(
     attendance_otp_required: { type: Boolean, default: true },
     pod_complete_timeout_hours: { type: Number, default: 24, min: 1, max: 8760 },
     pod_complete_reminder_hours: { type: Number, default: 12, min: 1, max: 8760 },
+    pod_cancel_refund_hold: { type: Boolean, default: false },
     pod_auto_cancel_enabled: { type: Boolean, default: false },
     pod_auto_cancel_lead_hours: { type: Number, default: 24, min: 1, max: 8760 },
     auto_pod_slot_window_days: { type: Number, default: 7, min: 1, max: 60 },

@@ -7,6 +7,7 @@ import {
 } from '../../bouncer.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
+import { TicketModel } from '@modules/pods/ticket/ticket.model';
 
 const userId = new Types.ObjectId().toString();
 const podId = new Types.ObjectId().toString();
@@ -132,8 +133,26 @@ describe('bouncerService integration', () => {
       pod_title: 'Future Pod',
       pod_date_time: new Date(Date.now() + 86_400_000),
     });
-    await PodMemberModel.create({ pod_id: past, user_id: uid, status: 'JOINED' });
-    await PodMemberModel.create({ pod_id: future, user_id: uid, status: 'JOINED' });
+    /*
+      A ticket the host marked present, not merely a membership. The pop-up is
+      gated on ATTENDANCE now — "the only pods a guest can be asked about are
+      the ones they were marked present at" — so a JOINED row alone no longer
+      qualifies anybody to rate anything.
+    */
+    for (const [podId, seq] of [[past, 1], [future, 2]] as [Types.ObjectId, number][]) {
+      const membership = await PodMemberModel.create({
+        pod_id: podId,
+        user_id: uid,
+        status: 'JOINED',
+      });
+      await TicketModel.create({
+        ticket_code: `T-FEEDBACK-${seq}`,
+        membership_id: membership._id,
+        pod_id: podId,
+        user_id: uid,
+        status: 'CHECKED_IN',
+      });
+    }
 
     const pending = await bouncerService.getPendingPodFeedback(String(uid));
     expect(pending?.id).toBe(String(past));

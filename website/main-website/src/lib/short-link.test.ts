@@ -1,9 +1,37 @@
 import { describe, expect, it } from 'vitest';
-import { SHORT_CODE_PATTERN } from './short-link';
+import { SHORT_CODE_PATTERN, trimSlashes } from './short-link';
 
-/** What the inline redirect script does to location.pathname before testing. */
-const segment = (pathname: string) => pathname.replace(/^\/+/, '').replace(/\/+$/, '');
-const isCode = (pathname: string) => SHORT_CODE_PATTERN.test(segment(pathname));
+/** The REAL trim the HTML server uses, not a copy of it — a second definition
+ * here would let the two drift on exactly the input this pair exists to read. */
+const isCode = (pathname: string) => SHORT_CODE_PATTERN.test(trimSlashes(pathname));
+
+describe('trimSlashes', () => {
+  it('strips the slashes at both ends and nothing in between', () => {
+    expect(trimSlashes('/aB3xY9Zq')).toBe('aB3xY9Zq');
+    expect(trimSlashes('///aB3xY9Zq///')).toBe('aB3xY9Zq');
+    expect(trimSlashes('/blog/post/')).toBe('blog/post');
+    expect(trimSlashes('aB3xY9Zq')).toBe('aB3xY9Zq');
+  });
+
+  it('answers for a path that is nothing but slashes', () => {
+    expect(trimSlashes('/')).toBe('');
+    expect(trimSlashes('//////')).toBe('');
+    expect(trimSlashes('')).toBe('');
+  });
+
+  /*
+    The reason it is a walk and not a regex. A trailing-slash regex on this
+    input makes a backtracking engine retry the run from every position, and
+    the caller is handed the RAW request path — so an anonymous GET would pick
+    the length. One pass here, whatever arrives.
+  */
+  it('stays fast on the input a backtracking regex chokes on', () => {
+    const hostile = `${'/'.repeat(200_000)}x`;
+    const startedAt = Date.now();
+    expect(trimSlashes(hostile)).toBe('x');
+    expect(Date.now() - startedAt).toBeLessThan(1000);
+  });
+});
 
 describe('SHORT_CODE_PATTERN', () => {
   it('recognises a generated short code', () => {

@@ -9,6 +9,8 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
+import { TicketModel } from '@modules/pods/ticket/ticket.model';
 
 let seq = 0;
 
@@ -55,8 +57,18 @@ async function seedSlot(venue: { _id: Types.ObjectId; owner_user_id: Types.Objec
   });
 }
 
-async function seedPayment(podId: Types.ObjectId, total: number) {
-  return PaymentModel.create({
+/**
+ * A paid booking whose guest the host MARKED PRESENT.
+ *
+ * The waterfall settles on attendance, not on what was collected: money from a
+ * no-show is kept but never paid out. So a payment on its own is worth nothing
+ * to the engine — it needs the JOINED membership that links it, and the
+ * CHECKED_IN ticket that says somebody walked through the door. Every figure
+ * asserted below is for a pod where everyone who paid turned up, which is what
+ * makes the collected total and the settlement basis the same number.
+ */
+async function seedPayment(podId: Types.ObjectId, total: number, attended = true) {
+  const payment = await PaymentModel.create({
     payment_id: `pay-${++seq}`,
     user_id: new Types.ObjectId(),
     user_name: 'Buyer',
@@ -66,6 +78,23 @@ async function seedPayment(podId: Types.ObjectId, total: number) {
     status: 'SUCCESS',
     pod_id: podId,
   });
+  const member = await PodMemberModel.create({
+    pod_id: podId,
+    user_id: payment.user_id,
+    status: 'JOINED',
+    payment_id: payment._id,
+  });
+  if (attended) {
+    await TicketModel.create({
+      ticket_code: `T-SETTLE-${seq}`,
+      membership_id: member._id,
+      pod_id: podId,
+      user_id: payment.user_id,
+      status: 'CHECKED_IN',
+      checked_in_at: new Date(),
+    });
+  }
+  return payment;
 }
 
 describe('pod settlement (engine v2: venue slot price off the pool, host keeps the rest)', () => {
@@ -147,18 +176,25 @@ describe('pod settlement (engine v2: venue slot price off the pool, host keeps t
     expect(s.venue_commission_pct).toBe(10);
   });
 
-  it('clamps a venue bill larger than the collection to the pool (never blocks)', async () => {
+  /*
+    A venue bill larger than the pool is NOT clamped, and that is the point.
+
+    The venue is owed the price it agreed for holding the room, whatever the pod
+    took at the door — clamping it to the pool is what used to pay a venue less
+    than its own price, quietly, and settling on attendance only makes the pool
+    smaller. Unclamped, the shortfall lands where it belongs: on the host's
+    side, as a negative host amount somebody can see and ask about.
+  */
+  it('never trims a venue bill larger than the pool — the shortfall shows on the host side', async () => {
     const host = await seedHost();
     const pod = await seedPod(host._id, (await seedVenue(host._id))._id);
     await seedPayment(pod._id, 1000);
-    // The bill is evidence — offline venue costs may exceed a small pod's
-    // collection. The paise engine clamps the venue amount to the pool, so a
-    // large bill never creates money and the host side never goes negative.
+
     const s = await computePodSettlement(String(pod._id), 5000);
     expect(s.venue_bill).toBe(5000);
-    expect(s.waterfall.venue_amount).toBe(s.waterfall.pool_amount);
-    expect(s.waterfall.host_amount).toBe(0);
-    expect(s.waterfall.host_receives).toBe(0);
+    expect(s.waterfall.venue_amount).toBe(5000);
+    expect(s.waterfall.venue_amount).toBeGreaterThan(s.waterfall.pool_amount);
+    expect(s.waterfall.host_amount).toBeLessThan(0);
   });
 
   it('rejects an invalid pod id and a missing pod', async () => {
@@ -363,17 +399,31 @@ describe('completePod — the single trigger: releases auto-approve and wallets 
     ).rejects.toThrow(/already been submitted/i);
   });
 
-  it('requires party media', async () => {
+  /*
+    Completion does NOT require party media — a pod with no photos still owes
+    its host the money it took. Passing none falls back to the pod's own media
+    (what the host uploaded and what guests sent in), so the release still
+    carries whatever evidence exists. The upload requirement lives on the
+    request-host-payment path, which is a different thing being asked for.
+  */
+  it('completes without evidence, carrying the pod’s own media onto the release', async () => {
     const host = await seedHost();
     const pod = await seedPod(host._id, (await seedVenue(host._id))._id);
     await seedPayment(pod._id, 5000);
+    await PodModel.updateOne(
+      { _id: pod._id },
+      { $set: { pod_party_media: [{ url: 'https://ik.imagekit.io/duncit/party.jpg' }] } }
+    );
 
-    await expect(
-      paymentReleaseService.completePod(
-        { pod_id: String(pod._id), venue_bill_amount: 1000, evidence_media: [] },
-        { id: String(host._id), isAdmin: false }
-      )
-    ).rejects.toThrow(/party photos or videos/i);
+    const result = await paymentReleaseService.completePod(
+      { pod_id: String(pod._id), venue_bill_amount: 1000, evidence_media: [] },
+      { id: String(host._id), isAdmin: false }
+    );
+
+    const hostRelease = result.releases.find((r) => r.kind === 'HOST_PAYMENT')!;
+    expect(hostRelease.evidence_media.map((m: any) => m.url)).toEqual([
+      'https://ik.imagekit.io/duncit/party.jpg',
+    ]);
   });
 
   it('completes a venue pod with no bill document — both releases store a blank bill_url', async () => {

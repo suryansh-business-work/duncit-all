@@ -10,6 +10,7 @@ import {
 /** The drawer's Badges row arrives already translated, so the test passes the
  * label the same way the component does. */
 const BADGES_LABEL = 'Badges';
+const CONTACTS_LABEL = 'Your Contacts on Duncit';
 
 describe('profileSections', () => {
   it('exposes exactly four quick-action tiles pointing at real routes', () => {
@@ -35,10 +36,11 @@ describe('profileSections', () => {
   });
 
   it('builds the manage list (account rows only) without Pod Plans by default', () => {
-    const labels = buildManageItems(false, true, BADGES_LABEL).map((i) => i.label);
+    const labels = buildManageItems(false, true, BADGES_LABEL, CONTACTS_LABEL).map((i) => i.label);
     expect(labels).toEqual([
       'Manage Account',
       'Saved Items',
+      CONTACTS_LABEL,
       'Verification',
       'Tour Guide',
       'FAQs',
@@ -47,10 +49,11 @@ describe('profileSections', () => {
   });
 
   it('inserts Pod Plans before FAQs when the flag is on', () => {
-    const labels = buildManageItems(true, true, BADGES_LABEL).map((i) => i.label);
+    const labels = buildManageItems(true, true, BADGES_LABEL, CONTACTS_LABEL).map((i) => i.label);
     expect(labels).toEqual([
       'Manage Account',
       'Saved Items',
+      CONTACTS_LABEL,
       'Verification',
       'Tour Guide',
       'Pod Plans',
@@ -120,7 +123,7 @@ describe('profileSections', () => {
     const all = [
       ...PROFILE_GRID,
       REFERRAL_TILE,
-      ...buildManageItems(true, true, BADGES_LABEL),
+      ...buildManageItems(true, true, BADGES_LABEL, CONTACTS_LABEL),
       ...partnerTiles,
       ...SHOP_ITEMS,
     ];

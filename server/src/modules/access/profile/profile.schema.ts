@@ -96,6 +96,8 @@ export const profileTypeDefs = gql`
     inbound_request_id: ID
     "True when the viewer may see this user's posts/stories (owner, public, or follower)."
     can_view_content: Boolean!
+    "True when this account holds the HOST role, so a profile can offer a tab of the pods they host."
+    is_host: Boolean!
   }
 
   """

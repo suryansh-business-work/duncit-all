@@ -18,6 +18,7 @@ export const VENUES_EXPLORE = gql`
       venue_type
       capacity
       cover_image_url
+      gallery
       city
       locality
       pod_count

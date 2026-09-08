@@ -22,3 +22,24 @@
  * rule is deliberately stated on both sides — change one, change the other.
  */
 export const SHORT_CODE_PATTERN = /^(?=[^/]*\d)(?=[^/]*[A-Z])[A-Za-z\d]{8}$/;
+
+/**
+ * A path without its leading and trailing slashes, walked rather than matched.
+ *
+ * `replace(/\/+$/, '')` is the obvious way to write this and the wrong one for
+ * the caller that matters: the HTML server hands it the RAW request path, and
+ * on a path that is all slashes but for its last character a backtracking
+ * engine retries that run from every position — quadratic work whose length an
+ * anonymous GET chooses. Walking both ends is one pass, and gives the same
+ * answer for every input.
+ *
+ * It lives beside the pattern because the two are always used together: this
+ * is what turns a request path into the thing `SHORT_CODE_PATTERN` tests.
+ */
+export function trimSlashes(path: string): string {
+  let start = 0;
+  let end = path.length;
+  while (start < end && path[start] === '/') start += 1;
+  while (end > start && path[end - 1] === '/') end -= 1;
+  return path.slice(start, end);
+}

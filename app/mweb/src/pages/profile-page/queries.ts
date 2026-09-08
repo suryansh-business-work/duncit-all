@@ -8,6 +8,7 @@ export const ME_AND_POSTS = gql`
       first_name
       last_name
       full_name
+      roles
       email
       is_email_verified
       profile_photo

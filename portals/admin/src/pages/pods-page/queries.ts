@@ -277,17 +277,6 @@ export const DELETE = gql`
     deletePod(pod_doc_id: $id)
   }
 `;
-export const REVOKE_POD_CANCELLATION = gql`
-  mutation AdminRevokePodCancellation($id: ID!) {
-    revokePodCancellation(pod_doc_id: $id) {
-      id
-      is_active
-      is_deleted
-      deleted_at
-      venue_approval_status
-    }
-  }
-`;
 export const COMPLETE_POD_SETTLEMENT = gql`
   mutation AdminCompletePodSettlement($input: CompletePodInput!) {
     completePodSettlement(input: $input) {

@@ -1,5 +1,9 @@
 import { logs } from '@observability/log';
-import { otpCampaign, sendCampaign } from '@modules/platform/aisensy/aisensy.gateway';
+import {
+  isAisensyConfigured,
+  otpCampaign,
+  sendCampaign,
+} from '@modules/platform/aisensy/aisensy.gateway';
 import { recordManualSend, WA_OTP_EVENT_KEY } from '@modules/platform/whatsapp/whatsapp.manualLog';
 import {
   e2eOverrides,
@@ -49,6 +53,27 @@ const failed = (medium: OtpMedium, reason: string): IOtpDelivery =>
  * its own schedule and a redeploy must not be what a new version needs.
  */
 async function deliverWhatsApp(input: Readonly<OtpDeliveryInput>): Promise<IOtpDelivery> {
+  /*
+    A provider that was never configured is NOT a provider that failed.
+
+    Without this, a platform with no AiSensy key reported WhatsApp FAILED while
+    SMS reported STUBBED beside it — so `deliberatelyStubbed` was false, no test
+    code came back, and every one-time code on a fresh install was a code nobody
+    could ever type. `assertDelivered` already says a platform with no key at
+    all "is a different thing — nothing is wired yet"; this is the same
+    sentence, said at the seam where the decision actually belongs, and it makes
+    WhatsApp answer exactly as SMS already does when nothing carries it.
+
+    A key that IS present and then fails is still FAILED below, which is what
+    keeps an outage from ever becoming a bypass.
+  */
+  if (!(await isAisensyConfigured())) {
+    return {
+      medium: 'WHATSAPP',
+      status: 'STUBBED',
+      reason: 'No WhatsApp provider is configured yet — use the displayed test code',
+    };
+  }
   const campaign_name = await otpCampaign();
   const destination = destinationOf(input);
   const startedAt = Date.now();

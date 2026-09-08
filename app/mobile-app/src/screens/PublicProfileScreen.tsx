@@ -104,6 +104,8 @@ export function PublicProfileScreen() {
           authorId={user.user_id}
           authorName={user.full_name || user.username || ''}
           authorPhoto={user.profile_photo}
+          isHost={Boolean(user.is_host)}
+          isOwner={isOwner}
         />
       </ScrollView>
     );

@@ -15,6 +15,7 @@ const FIELDS = `
   attendance_otp_required
   pod_complete_timeout_hours
   pod_complete_reminder_hours
+  pod_cancel_refund_hold
   pod_auto_cancel_enabled
   pod_auto_cancel_lead_hours
   auto_pod_slot_window_days

@@ -58,16 +58,16 @@ describe('system prompts (the AI features run on the library)', () => {
     await aiPromptService.seedDefaults();
     await aiPromptService.seedDefaults();
 
-    const seeded = await aiPromptService.list({ is_system: true });
+    const seeded = await aiPromptService.list({ kind: 'CODE' });
     expect(seeded).toHaveLength(SYSTEM_PROMPTS.length);
     const scan = seeded.find((p) => p!.key === IMAGE_SCAN_KEY);
-    expect(scan!.is_system).toBe(true);
+    expect(scan!.kind).toBe('CODE');
     expect(scan!.content).toBe(SYSTEM_PROMPT_BY_KEY.get(IMAGE_SCAN_KEY)!.content);
   });
 
   it('serves the edited body to the feature and never deletes a system prompt', async () => {
     await aiPromptService.seedDefaults();
-    const scan = (await aiPromptService.list({ is_system: true })).find((p) => p!.key === IMAGE_SCAN_KEY)!;
+    const scan = (await aiPromptService.list({ kind: 'CODE' })).find((p) => p!.key === IMAGE_SCAN_KEY)!;
 
     await aiPromptService.update(scan.id, { content: 'Only flag nudity.' });
     expect(await getSystemPrompt(IMAGE_SCAN_KEY)).toBe('Only flag nudity.');
@@ -77,7 +77,7 @@ describe('system prompts (the AI features run on the library)', () => {
 
   it('keeps the catalog identity fields on edit and on re-seed', async () => {
     await aiPromptService.seedDefaults();
-    const scan = (await aiPromptService.list({ is_system: true })).find((p) => p!.key === IMAGE_SCAN_KEY)!;
+    const scan = (await aiPromptService.list({ kind: 'CODE' })).find((p) => p!.key === IMAGE_SCAN_KEY)!;
 
     const edited = await aiPromptService.update(scan.id, {
       name: 'Renamed',
@@ -93,14 +93,14 @@ describe('system prompts (the AI features run on the library)', () => {
 
   it('resets a system prompt back to its shipped default', async () => {
     await aiPromptService.seedDefaults();
-    const scan = (await aiPromptService.list({ is_system: true })).find((p) => p!.key === IMAGE_SCAN_KEY)!;
+    const scan = (await aiPromptService.list({ kind: 'CODE' })).find((p) => p!.key === IMAGE_SCAN_KEY)!;
     await aiPromptService.update(scan.id, { content: 'Broken.' });
 
     const reset = await aiPromptService.reset(scan.id);
     expect(reset!.content).toBe(SYSTEM_PROMPT_BY_KEY.get(IMAGE_SCAN_KEY)!.content);
 
     const own = await aiPromptService.create({ name: 'Mine', content: 'my own prompt body' });
-    await expect(aiPromptService.reset(own!.id)).rejects.toThrow(/only system prompts/i);
+    await expect(aiPromptService.reset(own!.id)).rejects.toThrow(/only code prompts/i);
     await expect(aiPromptService.reset(new Types.ObjectId().toString())).rejects.toThrow(/not found/i);
   });
 

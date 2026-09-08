@@ -25,6 +25,9 @@ const DEFAULT_MAX_BACKOUT_ATTEMPTS = 3;
 const DEFAULT_VENUE_CANCEL_HEALTH_PENALTY = 5;
 /** OTP verification before a by-hand attendance mark is on unless switched off. */
 const DEFAULT_ATTENDANCE_OTP_REQUIRED = true;
+/** Off: holding a refund makes the attendee wait for money that is already
+ * theirs, so the platform only does it where an operator has asked for it. */
+const DEFAULT_POD_CANCEL_REFUND_HOLD = false;
 /** Auto-cancel of finance-negative pods is opt-in — cancelling pods is the one
  * action here that cannot be undone, so it never turns itself on. */
 const DEFAULT_POD_AUTO_CANCEL_ENABLED = false;
@@ -138,6 +141,7 @@ const toAppPub = (d: any) => ({
   attendance_otp_required: d?.attendance_otp_required ?? DEFAULT_ATTENDANCE_OTP_REQUIRED,
   pod_complete_timeout_hours: cleanPodCompleteTimeoutHours(d?.pod_complete_timeout_hours),
   pod_complete_reminder_hours: cleanPodCompleteReminderHours(d?.pod_complete_reminder_hours),
+  pod_cancel_refund_hold: d?.pod_cancel_refund_hold ?? DEFAULT_POD_CANCEL_REFUND_HOLD,
   pod_auto_cancel_enabled: d?.pod_auto_cancel_enabled ?? DEFAULT_POD_AUTO_CANCEL_ENABLED,
   pod_auto_cancel_lead_hours:
     d?.pod_auto_cancel_lead_hours ?? DEFAULT_POD_AUTO_CANCEL_LEAD_HOURS,
@@ -457,6 +461,7 @@ type AppSettingsUpdateInput = {
   max_backout_attempts?: number;
   venue_cancel_health_penalty?: number;
   attendance_otp_required?: boolean;
+  pod_cancel_refund_hold?: boolean;
   pod_complete_timeout_hours?: number;
   pod_complete_reminder_hours?: number;
   pod_auto_cancel_enabled?: boolean;
@@ -479,6 +484,7 @@ const APP_SETTING_PASSTHROUGH_FIELDS = [
   "time_zone",
   "time_source",
   "attendance_otp_required",
+  "pod_cancel_refund_hold",
   "pod_auto_cancel_enabled",
 ] as const;
 
@@ -636,6 +642,14 @@ export const settingsService = {
         doc?.club_admin_change_request_health_penalty,
       ),
     };
+  },
+
+  /** Whether a cancellation holds its refunds until the pod's start (default
+   * off). Read on every cancellation and by the release sweep, so it is a
+   * single boolean rather than a bundle. */
+  async getPodCancelRefundHold(): Promise<boolean> {
+    const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
+    return doc?.pod_cancel_refund_hold ?? DEFAULT_POD_CANCEL_REFUND_HOLD;
   },
 
   /** The auto-cancel sweep's knobs: whether it acts at all (default off) and

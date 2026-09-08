@@ -7,6 +7,7 @@ import { Types } from 'mongoose';
 import { sendProductInvoicesForPod } from '../../productInvoice.service';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
+import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { sendEmail } from '@services/email/email.service';
 import { generateProductInvoicePdf } from '@services/payout/product-invoice.pdf';
@@ -44,6 +45,30 @@ async function seedProduct(overrides: Record<string, unknown>) {
   });
 }
 
+/**
+ * What was actually SOLD on the pod.
+ *
+ * An invoice is raised on sales, not on the reservation: a product the host
+ * asked for and nobody bought was released back to the brand's sellable pool
+ * at completion, so there is nothing to pay a seller for. The pod's
+ * `product_requests` say what was stocked; these order lines say what left.
+ */
+async function seedSale(
+  podId: Types.ObjectId,
+  lines: { product_id: Types.ObjectId; name: string; qty: number; unit_cost: number }[]
+) {
+  return ProductOrderModel.create({
+    order_no: `ORD-${++seq}-${Date.now().toString(36).toUpperCase()}`,
+    buyer_id: new Types.ObjectId(),
+    payment_id: new Types.ObjectId(),
+    pod_id: podId,
+    items_total: lines.reduce((sum, l) => sum + l.unit_cost * l.qty, 0),
+    total: lines.reduce((sum, l) => sum + l.unit_cost * l.qty, 0),
+    fulfilment_method: 'PICKUP',
+    line_items: lines.map((l) => ({ ...l, gross: l.unit_cost * l.qty })),
+  });
+}
+
 beforeEach(() => {
   mockSend.mockClear();
   mockPdf.mockClear();
@@ -77,6 +102,7 @@ describe('sendProductInvoicesForPod (brand → product → default commission ch
     });
 
     const pod = {
+      _id: new Types.ObjectId(),
       pod_title: 'Market Pod',
       product_requests: [
         { product_id: withBrand._id, product_name: 'A', quantity: 1, unit_cost: 100, total_cost: 100 },
@@ -84,6 +110,11 @@ describe('sendProductInvoicesForPod (brand → product → default commission ch
         { product_id: new Types.ObjectId(), product_name: 'Ghost', quantity: 1, unit_cost: 10 }, // unknown → skipped
       ],
     };
+    // Both stocked products sold one unit each; the Ghost is unknown either way.
+    await seedSale(pod._id, [
+      { product_id: withBrand._id as Types.ObjectId, name: 'A', qty: 1, unit_cost: 100 },
+      { product_id: productPct._id as Types.ObjectId, name: 'B', qty: 1, unit_cost: 100 },
+    ]);
     await sendProductInvoicesForPod(pod, financeSettings);
 
     expect(mockSend).toHaveBeenCalledTimes(1); // one seller bucket
@@ -115,8 +146,11 @@ describe('sendProductInvoicesForPod (brand → product → default commission ch
       listing_submitted_by_name: 'NoMail',
     });
 
+    const podId = new Types.ObjectId();
+    await seedSale(podId, [{ product_id: rawId, name: 'Legacy', qty: 2, unit_cost: 100 }]);
     await sendProductInvoicesForPod(
       {
+        _id: podId,
         pod_title: 'Legacy Pod',
         product_requests: [{ product_id: rawId, product_name: 'Legacy', quantity: 2, unit_cost: 100 }],
       },
@@ -133,6 +167,7 @@ describe('sendProductInvoicesForPod (brand → product → default commission ch
     );
     await sendProductInvoicesForPod(
       {
+        _id: podId,
         pod_title: 'Legacy Pod',
         product_requests: [{ product_id: rawId, product_name: 'Legacy', quantity: 2, unit_cost: 100 }],
       },
@@ -141,7 +176,7 @@ describe('sendProductInvoicesForPod (brand → product → default commission ch
     expect(mockSend).toHaveBeenCalledTimes(1);
     const pdfArgs = mockPdf.mock.calls[0][0];
     expect(pdfArgs.items[0].commission_pct).toBe(5);
-    expect(pdfArgs.items[0].gross).toBe(200); // unit_cost × quantity fallback
+    expect(pdfArgs.items[0].gross).toBe(200); // two units actually sold
     expect(pdfArgs.items[0].commission).toBe(10);
   });
 

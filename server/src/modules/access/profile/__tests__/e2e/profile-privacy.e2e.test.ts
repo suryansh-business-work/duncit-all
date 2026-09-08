@@ -35,7 +35,17 @@ const PUBLIC_PROFILE = gql`
       bio
       is_private
       is_following
+      follow_status
+      inbound_request_id
       can_view_content
+    }
+  }
+`;
+
+const ACCEPT_FOLLOW = gql`
+  mutation Accept($id: ID!) {
+    acceptFollowRequest(request_id: $id) {
+      user_id
     }
   }
 `;
@@ -115,8 +125,25 @@ describe('profile privacy + follow notification e2e', () => {
       (await alice.request<{ stories: unknown[] }>(STORIES, { id: bobId })).stories
     ).toHaveLength(0);
 
-    // Alice follows Bob.
+    /*
+      Alice ASKS to follow Bob. A private account is not followed by pressing a
+      button — the request waits for Bob, which is the whole point of the
+      setting — so nothing of his is visible in between.
+    */
     await alice.request(FOLLOW, { id: bobId });
+    const pending = await alice.request<{ publicUserProfile: any }>(PUBLIC_PROFILE, { id: bobId });
+    expect(pending.publicUserProfile.follow_status).toBe('REQUESTED');
+    expect(pending.publicUserProfile.is_following).toBe(false);
+    expect(pending.publicUserProfile.can_view_content).toBe(false);
+
+    // Bob is told about the ask, and answers it from the request his own
+    // profile view of Alice hands him.
+    const asked = await bob.request<{ myNotifications: { notification: any }[] }>(MY_NOTIFS);
+    expect(
+      asked.myNotifications.some((n) => n.notification?.title === 'Follow request')
+    ).toBe(true);
+    const inbound = await bob.request<{ publicUserProfile: any }>(PUBLIC_PROFILE, { id: aliceId });
+    await bob.request(ACCEPT_FOLLOW, { id: inbound.publicUserProfile.inbound_request_id });
 
     // Now everything is visible to Alice and Bob got a notification.
     const afterProfile = await alice.request<{ publicUserProfile: any }>(PUBLIC_PROFILE, {
@@ -130,16 +157,21 @@ describe('profile privacy + follow notification e2e', () => {
       (await alice.request<{ stories: unknown[] }>(STORIES, { id: bobId })).stories
     ).toHaveLength(1);
 
+    /*
+      What Bob was told is a REQUEST, not a new follower — the ask is the thing
+      he has to answer, and his inbox carries it so he can answer it from
+      there. One row per relationship: asking again replaces it rather than
+      stacking a second.
+    */
     const notifs = await bob.request<{ myNotifications: { notification: any }[] }>(MY_NOTIFS);
-    const follow = notifs.myNotifications.find((n) => n.notification?.title === 'New follower');
+    const follow = notifs.myNotifications.find((n) => n.notification?.title === 'Follow request');
     expect(follow?.notification.body).toContain('Alice Test');
     expect(follow?.notification.link_url).toBe(`/u/${aliceId}`);
 
-    // Following again is a no-op: no duplicate notification.
     await alice.request(FOLLOW, { id: bobId });
     const notifs2 = await bob.request<{ myNotifications: { notification: any }[] }>(MY_NOTIFS);
     const followCount = notifs2.myNotifications.filter(
-      (n) => n.notification?.title === 'New follower'
+      (n) => n.notification?.title === 'Follow request'
     ).length;
     expect(followCount).toBe(1);
   });

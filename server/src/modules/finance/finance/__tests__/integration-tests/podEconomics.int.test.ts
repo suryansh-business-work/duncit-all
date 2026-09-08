@@ -11,6 +11,8 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
+import { TicketModel } from '@modules/pods/ticket/ticket.model';
 import { makeContext } from '@test/harness';
 
 let seq = 0;
@@ -55,8 +57,16 @@ async function seedPod(hostIds: Types.ObjectId[], venueId?: Types.ObjectId, venu
   });
 }
 
+/**
+ * A paid booking whose guest the host MARKED PRESENT.
+ *
+ * The waterfall settles on attendance, not on what was collected: money from a
+ * no-show is kept but never paid out. So a payment on its own is worth nothing
+ * to the engine — it needs the JOINED membership that links it, and the
+ * CHECKED_IN ticket that says somebody walked through the door.
+ */
 async function seedPayment(podId: Types.ObjectId, total: number) {
-  return PaymentModel.create({
+  const payment = await PaymentModel.create({
     payment_id: `pepay-${++seq}`,
     user_id: new Types.ObjectId(),
     user_name: 'Buyer',
@@ -67,6 +77,21 @@ async function seedPayment(podId: Types.ObjectId, total: number) {
     status: 'SUCCESS',
     pod_id: podId,
   });
+  const member = await PodMemberModel.create({
+    pod_id: podId,
+    user_id: payment.user_id,
+    status: 'JOINED',
+    payment_id: payment._id,
+  });
+  await TicketModel.create({
+    ticket_code: `T-P-${seq}`,
+    membership_id: member._id,
+    pod_id: podId,
+    user_id: payment.user_id,
+    status: 'CHECKED_IN',
+    checked_in_at: new Date(),
+  });
+  return payment;
 }
 
 const setHostCommission = (pct: number) =>
@@ -251,8 +276,8 @@ describe('breakdownService.assertViablePodEconomics', () => {
   });
 });
 
-describe('legacy settlement — completePod keeps the clamp for shortfall pods', () => {
-  it('settles a legacy pod whose collection is below the venue price exactly as before', async () => {
+describe('shortfall pods — the venue keeps its agreed price, the host absorbs the gap', () => {
+  it('settles a pod whose collection is below the booked venue price', async () => {
     const host = await seedHost();
     const venue = await seedVenue(host._id);
     const slot = await seedSlot(venue, 5000); // booked price ≫ what the pod collected
@@ -268,19 +293,28 @@ describe('legacy settlement — completePod keeps the clamp for shortfall pods',
       { id: String(host._id), isAdmin: false }
     );
 
-    // SETTLEMENT stays clamped: the venue absorbs the whole pool, the host
-    // payout is 0 — never negative, never an error.
+    /*
+      The venue held the room at the price it agreed, so it is paid that price
+      whatever the pod took at the door: 5000 − 10% commission = 4500. Trimming
+      it to the pool is what used to pay a venue less than its own price without
+      telling anybody.
+
+      The shortfall does not vanish — it lands on the host's side, where the
+      waterfall shows it as a negative host amount. What is still never negative
+      is the RELEASE: nobody is asked to pay money back, so the host's payout
+      floors at zero.
+    */
     const hostRelease = await PaymentReleaseModel.findOne({ pod_id: pod._id, kind: 'HOST_PAYMENT' });
     expect(hostRelease!.amount_requested).toBe(0);
     const venueRelease = await PaymentReleaseModel.findOne({ pod_id: pod._id, kind: 'VENUE_BILLING' });
-    expect(venueRelease!.amount_requested).toBe(724.58); // pool 805.09 − 10%
+    expect(venueRelease!.amount_requested).toBe(4500);
 
-    // The frozen breakdown view mirrors the clamped settlement numbers.
     const view = await breakdownService.podFinanceBreakdown(String(pod._id));
     expect(view.frozen).toBe(true);
-    expect(view.waterfall.venue_amount).toBe(805.09); // clamped to the pool
-    expect(view.waterfall.host_receives).toBe(0);
-    expect(view.waterfall.venue_receives).toBe(724.58);
+    expect(view.waterfall.venue_amount).toBe(5000);
+    expect(view.waterfall.venue_receives).toBe(4500);
+    expect(view.waterfall.host_amount).toBeLessThan(0);
+    expect(view.waterfall.host_receives).toBeLessThanOrEqual(0);
   });
 });
 

@@ -163,6 +163,11 @@ describe('partnerDashboardService.ecommStats', () => {
       total_orders: 0,
       total_items_sold: 0,
       gross_revenue: 0,
+      // What the partner actually keeps, and the per-product table beneath it.
+      // Asserted whole on purpose: a tile that quietly stops being returned is
+      // a tile that quietly stops rendering.
+      net_earnings: 0,
+      product_performance: [],
     });
   });
 

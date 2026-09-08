@@ -116,10 +116,21 @@ function transporterFor(config: EmailProviderConfig): Transporter {
     .digest('hex');
   if (transporter && transporterKey === nextKey) return transporter;
   transporterKey = nextKey;
+  // A rebuilt transporter leaves the old one's pooled sockets to close.
+  transporter?.close();
   // No host configured: nodemailer's jsonTransport accepts and discards, which
   // is what a local dev environment with no mailbox should do.
+  //
+  // Pooled: without it every message opened its own connection — DNS, TCP, the
+  // TLS handshake and SMTP AUTH — before a byte of the mail went out, and a
+  // one-time code is awaited end to end, so the person asking for it sat through
+  // all of that. The pool keeps a couple of authenticated sessions open and
+  // reconnects on its own when the mail server drops an idle one.
   transporter = config.host
     ? nodemailer.createTransport({
+        pool: true,
+        maxConnections: 2,
+        maxMessages: 100,
         host: config.host,
         port: config.port,
         secure: config.port === 465 || config.secure,

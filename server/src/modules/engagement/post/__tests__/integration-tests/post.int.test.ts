@@ -76,7 +76,12 @@ describe('postService integration', () => {
     await settleNotifs();
   });
 
-  it('followingFeed: PEOPLE = followed authors (posts + live stories), CLUBS = followed club stories', async () => {
+  /*
+    The following feed is POSTS ONLY, on both tabs — a story is a 24-hour thing
+    read from the ring at the top, not an item that belongs in a scrolling
+    feed. PEOPLE also drops club-scoped content, which belongs to Clubs.
+  */
+  it('followingFeed: PEOPLE = followed authors’ own posts, CLUBS = followed clubs’ posts', async () => {
     const viewer = new Types.ObjectId();
     const followedUser = new Types.ObjectId();
     const stranger = new Types.ObjectId();
@@ -92,13 +97,16 @@ describe('postService integration', () => {
       { author_id: followedUser, image_url: img, kind: 'STORY', caption: 'dead-story', expires_at: past },
       { author_id: stranger, image_url: img, kind: 'POST', caption: 'stranger-post' },
       { author_id: followedUser, image_url: img, kind: 'STORY', caption: 'club-story', club_id: followedClub, expires_at: future },
+      { author_id: followedUser, image_url: img, kind: 'POST', caption: 'club-post', club_id: followedClub },
     ]);
 
+    // Neither the live story nor the club-scoped post reaches PEOPLE.
     const people = await postService.followingFeed(String(viewer), 'PEOPLE');
-    expect(people.map((p) => p.caption).sort()).toEqual(['keep-post', 'live-story']);
+    expect(people.map((p) => p.caption)).toEqual(['keep-post']);
 
+    // …and the club's STORY does not reach Clubs either; its post does.
     const clubs = await postService.followingFeed(String(viewer), 'CLUBS');
-    expect(clubs.map((p) => p.caption)).toEqual(['club-story']);
+    expect(clubs.map((p) => p.caption)).toEqual(['club-post']);
 
     // No follows → empty feed, no query fired against an empty $in.
     const loner = new Types.ObjectId().toString();
@@ -234,13 +242,13 @@ describe('postService integration', () => {
   });
 
   it('attaches a story to a club and lists it via clubStories (Bug 6)', async () => {
-    // Only the club's own community may post to it, so the author follows it.
+    // Only the club's ADMINS may post to it — a club story speaks for the club.
     const club = await ClubModel.create({
       club_id: `c-${Math.random().toString(36).slice(2)}`,
       club_name: 'Runners',
+      admin_user_ids: [new Types.ObjectId(author)],
     } as never);
     const clubId = String(club._id);
-    await ClubFollowerModel.create({ user_id: new Types.ObjectId(author), club_id: club._id });
     const story = await postService.create(author, {
       image_url: img,
       kind: 'STORY',
@@ -279,11 +287,14 @@ describe('postService integration', () => {
       expect(story.club_id).toBe(String(club._id));
     });
 
-    it('refuses a stranger — a club story belongs to that club community', async () => {
+    // Following is not enough: a club story speaks for the club, so only the
+    // people who answer for it may post one.
+    it('refuses a follower who is not an admin', async () => {
       const club = await makeClub();
+      await ClubFollowerModel.create({ user_id: new Types.ObjectId(author), club_id: club._id });
       await expect(
         postService.create(author, { image_url: img, kind: 'STORY', club_id: String(club._id) }),
-      ).rejects.toThrow('Follow this club');
+      ).rejects.toThrow(/only this club’s admins/i);
     });
 
     it('refuses a club that does not exist', async () => {

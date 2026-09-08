@@ -9,6 +9,7 @@ import ProfileHeader from './ProfileHeader';
 import ProfileBadgesStrip from './ProfileBadgesStrip';
 import ProfilePostsGrid from './ProfilePostsGrid';
 import UploadDialog from './UploadDialog';
+import { ProfilePodsPanel, ProfileTabs, useProfileTabs } from '../../components/profile-tabs';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -22,6 +23,8 @@ export default function ProfilePage() {
 
   const me = data?.me;
   const posts = data?.myPosts ?? [];
+  const isHost = ((me?.roles ?? []) as string[]).includes('HOST');
+  const tabs = useProfileTabs(isHost, true);
 
   const verifyEmailRequested = new URLSearchParams(location.search).has('verifyEmail');
 
@@ -70,7 +73,12 @@ export default function ProfilePage() {
           away on /badges. */}
       <ProfileBadgesStrip />
       <ProfileAccordions me={me} onSaved={() => refetch()} autoSendEmailOtp={verifyEmailRequested} />
-      <ProfilePostsGrid posts={posts} onOpenPost={setOpenPostId} onNewPost={() => setUploadOpen(true)} />
+      <ProfileTabs tabs={tabs} />
+      {tabs.value === 'posts' && (
+        <ProfilePostsGrid posts={posts} onOpenPost={setOpenPostId} onNewPost={() => setUploadOpen(true)} />
+      )}
+      {tabs.value === 'joined' && <ProfilePodsPanel userId={me.user_id} kind="joined" />}
+      {tabs.value === 'hosted' && isHost && <ProfilePodsPanel userId={me.user_id} kind="hosted" />}
 
       <PostDialog
         postId={openPostId}

@@ -204,5 +204,13 @@ const paymentSchema = new Schema<IPayment>(
 paymentSchema.index({ status: 1, created_at: -1 });
 // The reconciler's sweep: every payment stuck short of COMPLETE, newest first.
 paymentSchema.index({ finalize_state: 1, created_at: -1 });
+// The held-refund release sweep, which asks "what is due by now?" every few
+// minutes. PARTIAL on purpose: held refunds are a handful of rows out of every
+// payment ever taken, and an index over all of them to find them would be the
+// scan it is meant to replace.
+paymentSchema.index(
+  { 'metadata.refund_hold_release_at': 1 },
+  { partialFilterExpression: { 'metadata.refund_hold': true } }
+);
 
 export const PaymentModel = model<IPayment>('Payment', paymentSchema);

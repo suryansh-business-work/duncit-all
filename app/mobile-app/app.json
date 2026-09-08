@@ -2,7 +2,7 @@
   "expo": {
     "name": "Duncit",
     "slug": "duncit-mobile",
-    "version": "1.75.40",
+    "version": "1.75.58",
     "orientation": "default",
     "scheme": "duncit",
     "userInterfaceStyle": "automatic",
@@ -84,6 +84,12 @@
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "Allow Duncit to use your location."
+        }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Allow Duncit to read your contacts to find friends who are already on Duncit."
         }
       ],
       [

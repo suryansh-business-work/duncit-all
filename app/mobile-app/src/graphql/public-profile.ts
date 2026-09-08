@@ -21,6 +21,7 @@ export const MobilePublicProfileDocument = gql(`
       follows_viewer
       inbound_request_id
       can_view_content
+      is_host
     }
     me {
       user_id

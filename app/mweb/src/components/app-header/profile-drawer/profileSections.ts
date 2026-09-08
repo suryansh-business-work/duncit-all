@@ -11,6 +11,7 @@ export type ProfileIconKey =
   | 'following'
   | 'bookings'
   | 'saved'
+  | 'contacts'
   | 'verification'
   | 'support'
   | 'referral'
@@ -86,17 +87,20 @@ export const REFERRAL_TILE: ProfileTile = {
 /**
  * The "Manage Account" grouped list — the account destinations not in the grid.
  * E-commerce rows live in their own {@link SHOP_ITEMS} section. `showPodPlans`
- * gates the Pod Plans row, `showTourGuide` the Tour Guide row. `badgesLabel`
- * arrives already translated — this module holds no copy for new rows (rule 38).
+ * gates the Pod Plans row, `showTourGuide` the Tour Guide row. `badgesLabel` and
+ * `contactsLabel` arrive already translated — this module holds no copy for new
+ * rows (rule 38).
  */
 export function buildManageItems(
   showPodPlans: boolean,
   showTourGuide: boolean,
-  badgesLabel: string
+  badgesLabel: string,
+  contactsLabel: string
 ): ProfileTile[] {
   const items: ProfileTile[] = [
     { key: 'account', label: 'Manage Account', caption: '', icon: 'account', to: '/account' },
     { key: 'saved', label: 'Saved Items', caption: '', icon: 'saved', to: '/saved' },
+    { key: 'contacts', label: contactsLabel, caption: '', icon: 'contacts', to: '/contacts' },
     { key: 'verification', label: 'Verification', caption: '', icon: 'verification', to: '/verification' },
   ];
   if (showTourGuide) {

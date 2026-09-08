@@ -32,6 +32,7 @@ const PUBLIC_PROFILE = gql`
       follows_viewer
       inbound_request_id
       can_view_content
+      is_host
     }
     me {
       user_id
@@ -97,6 +98,8 @@ export default function PublicProfilePage() {
         meId={data?.me?.user_id ?? ''}
         name={u.full_name || u.username || ''}
         photo={u.profile_photo}
+        isHost={Boolean(u.is_host)}
+        isOwner={Boolean(isOwner)}
       />
     </Stack>
   );

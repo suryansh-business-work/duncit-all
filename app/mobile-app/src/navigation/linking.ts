@@ -66,6 +66,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       SmsPreference: 'account/sms-preference',
       VenueHealth: 'venues/:venueId/health',
       Saved: 'saved',
+      Contacts: 'contacts',
       PodHistory: 'pod-history',
       PodHistoryDetails: 'pod-history/:membershipId',
       // Booking deep link from the payment-receipt email — resolves the booking

@@ -74,6 +74,10 @@ function toPublicProfile(u: any, viewerId: string | null = null, rel: ViewerRela
     follows_viewer: rel.followsViewer,
     inbound_request_id: rel.inboundRequestId,
     can_view_content: canView,
+    // The HOST role is granted on approval, so it is the one fact a profile
+    // page needs to offer a "their pods" tab — the Host record itself stays
+    // behind the admin-only hostByUser.
+    is_host: (u.roles ?? []).includes('HOST'),
   };
 }
 
@@ -82,6 +86,73 @@ function toPublicProfile(u: any, viewerId: string | null = null, rel: ViewerRela
 function followStatusOf(isFollowing: boolean, requested: boolean) {
   if (isFollowing) return 'FOLLOWING';
   return requested ? 'REQUESTED' : 'NONE';
+}
+
+/**
+ * The flat shape `toPublicProfile` reads, straight off a lean user document.
+ *
+ * `userService.getById` builds the same names through `toPublic`, which also
+ * loads seven relation lists per user — the follow lists pay that per row.
+ * A list that only needs the public card (the contacts radar) reads the
+ * documents in one query and shapes them here instead.
+ */
+function flatPublicFields(doc: any) {
+  const profile = doc.profile ?? {};
+  const counters = doc.counters ?? {};
+  const metadata = doc.metadata ?? {};
+  return {
+    user_id: String(doc._id),
+    username: profile.username ?? null,
+    first_name: profile.first_name ?? null,
+    last_name: profile.last_name ?? null,
+    profile_photo: profile.profile_photo ?? null,
+    bio: profile.bio ?? null,
+    city: profile.city ?? null,
+    zone: profile.zone ?? null,
+    followers_count: counters.followers_count ?? 0,
+    following_count: counters.following_count ?? 0,
+    profile_visibility: metadata.profile_visibility ?? 'PUBLIC',
+    roles: metadata.role_keys ?? [],
+  };
+}
+
+/** The viewer's side of every edge, fetched once for a whole list. */
+async function viewerRelations(viewerId: string | null) {
+  if (!viewerId) {
+    return {
+      following: new Set<string>(),
+      requested: new Set<string>(),
+      followers: new Set<string>(),
+      inbound: new Map<string, string>(),
+    };
+  }
+  const [following, requested, followers, inbound] = await Promise.all([
+    userService.listFollowingUserIds(viewerId).then((r) => new Set(r)),
+    userService.listRequestedUserIds(viewerId).then((r) => new Set(r)),
+    userService.listFollowerUserIds(viewerId).then((r) => new Set(r)),
+    userService
+      .listPendingFollowRequests(viewerId)
+      .then((rows) => new Map(rows.map((r) => [r.requester_id, r.id]))),
+  ]);
+  return { following, requested, followers, inbound };
+}
+
+/**
+ * Public profiles for user documents already in hand — the same privacy
+ * shaping as `mapPublicProfiles`, without a per-id read. Order is preserved.
+ */
+export async function publicProfilesFromDocs(docs: readonly any[], viewerId: string | null) {
+  if (docs.length === 0) return [];
+  const rel = await viewerRelations(viewerId);
+  return docs.map((doc) => {
+    const u = flatPublicFields(doc);
+    return toPublicProfile(u, viewerId, {
+      isFollowing: rel.following.has(u.user_id),
+      hasRequested: rel.requested.has(u.user_id),
+      followsViewer: rel.followers.has(u.user_id),
+      inboundRequestId: rel.inbound.get(u.user_id) ?? null,
+    })!;
+  });
 }
 
 // Resolve a list of user ids to public profiles, tagging which ones the viewer

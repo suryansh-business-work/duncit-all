@@ -11,6 +11,8 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
+import { TicketModel } from '@modules/pods/ticket/ticket.model';
 import { PodExpenseModel } from '@modules/finance/podExpense/podExpense.model';
 import { makeContext } from '@test/harness';
 
@@ -58,8 +60,16 @@ async function seedPod(hostIds: Types.ObjectId[], venueId?: Types.ObjectId, venu
   });
 }
 
+/**
+ * A paid booking whose guest the host MARKED PRESENT.
+ *
+ * The waterfall settles on attendance, not on what was collected: money from a
+ * no-show is kept but never paid out. So a payment on its own is worth nothing
+ * to the engine — it needs the JOINED membership that links it, and the
+ * CHECKED_IN ticket that says somebody walked through the door.
+ */
 async function seedPayment(podId: Types.ObjectId, total: number, gstAmount = 0) {
-  return PaymentModel.create({
+  const payment = await PaymentModel.create({
     payment_id: `bpay-${++seq}`,
     user_id: new Types.ObjectId(),
     user_name: 'Buyer',
@@ -70,6 +80,21 @@ async function seedPayment(podId: Types.ObjectId, total: number, gstAmount = 0) 
     status: 'SUCCESS',
     pod_id: podId,
   });
+  const member = await PodMemberModel.create({
+    pod_id: podId,
+    user_id: payment.user_id,
+    status: 'JOINED',
+    payment_id: payment._id,
+  });
+  await TicketModel.create({
+    ticket_code: `T-B-${seq}`,
+    membership_id: member._id,
+    pod_id: podId,
+    user_id: payment.user_id,
+    status: 'CHECKED_IN',
+    checked_in_at: new Date(),
+  });
+  return payment;
 }
 
 /** Host + venue + a booked ₹300 slot + one ₹1000 payment — the canonical pod. */

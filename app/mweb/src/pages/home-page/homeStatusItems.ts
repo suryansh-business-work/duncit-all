@@ -145,6 +145,7 @@ function userEntry(user: any, followedPosts: any[]): HomeStatusEntry {
       })),
       targetUrl: `/u/${user.user_id}`,
       internal: true,
+      authorId: user.user_id,
     },
   };
 }
@@ -218,6 +219,7 @@ export function buildMyStatusViewer(me: any): HomeStatusViewerItem | null {
     kind: 'mine',
     label: me?.full_name || me?.first_name || 'My status',
     avatarUrl: me?.profile_photo,
+    authorId: me?.user_id,
     mediaUrl: first.image_url,
     mediaType: first.media_type,
     slides: stories.map((story, storyIndex) => ({

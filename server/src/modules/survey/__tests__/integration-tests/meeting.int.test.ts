@@ -13,9 +13,20 @@ import {
   sendMeetingCancelledEmail,
   sendMeetingRescheduledEmail,
   sendMeetingUpdatedEmail,
-  sendMeetingApprovedEmail,
-  sendMeetingRejectedEmail,
 } from '@services/email/email.service';
+import { notifyEvent } from '@services/notify/notify.service';
+
+/*
+  Three of these notifications stopped being their own sender and became one
+  `notifyEvent` call — WhatsApp and the templated mail together, addressed by
+  the same event name. That is the seam to assert on now: mocking only the
+  email module left the applicant's leg of a scheduled/approved/denied meeting
+  looking as though nothing was sent at all.
+*/
+jest.mock('@services/notify/notify.service', () => ({
+  notifyEvent: jest.fn().mockResolvedValue({ wa: { ok: true }, mail: { ok: true } }),
+  notifyEach: jest.fn().mockResolvedValue([]),
+}));
 
 jest.mock('@services/email/email.service', () => ({
   sendMeetingScheduledEmail: jest.fn().mockResolvedValue(undefined),
@@ -47,6 +58,15 @@ async function doneMeeting(kind: SurveyKind, requestedAt: string, name = 'Appy T
   await meetingService.update(m!.id, { status: 'DONE' });
   return { userId: user.toString(), meetingId: m!.id };
 }
+
+/*
+  The FIRST case in this file pays for the whole file: mongoose compiles every
+  model the meeting service reaches, and one of them drags in a `user.service`
+  big enough that Babel prints a deoptimisation note about it. On a two-core CI
+  runner that alone passed jest's 5-second default, so the suite went red on a
+  clock rather than on anything it asserts. The file's own work is ~16s.
+*/
+jest.setTimeout(60_000);
 
 describe('meetingService integration', () => {
   it('raises a request, blocks a second while active, then lets staff schedule it with a link', async () => {
@@ -95,9 +115,11 @@ describe('meetingService integration', () => {
       meeting_link: 'https://meet.example/host',
     });
 
-    expect(sendMeetingScheduledEmail).toHaveBeenCalledWith(
-      expect.objectContaining({ to: 'host@example.com', link: 'https://meet.example/host' }),
+    // The applicant's leg rides notifyEvent (WhatsApp + the templated mail).
+    expect(notifyEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'host@example.com' }),
     );
+    // Onboarding staff still get their own mail, addressed to the whole team.
     expect(sendMeetingScheduledAdminEmail).toHaveBeenCalledWith(
       expect.objectContaining({ to: 'ops@example.com' }),
     );
@@ -260,17 +282,19 @@ describe('meeting slot booking', () => {
     // Taken by someone else → rejected.
     await meetingService.request(other, 'VENUE', { requested_at: '2027-02-01T06:00:00.000Z', contact_phone: '9555555552' });
     await expect(
-      meetingService.rescheduleMyMeeting(me, 'VENUE', '2027-02-01T06:00:00.000Z'),
+      meetingService.rescheduleMyMeeting(me, 'VENUE', '2027-02-01T06:00:00.000Z', 'A supplier visit landed on the same hour'),
     ).rejects.toThrow(/already booked/i);
 
-    const moved = await meetingService.rescheduleMyMeeting(me, 'VENUE', '2027-02-01T07:00:00.000Z');
+    const moved = await meetingService.rescheduleMyMeeting(me, 'VENUE', '2027-02-01T07:00:00.000Z', 'Moving it an hour later so the manager can join');
     expect(moved!.requested_at).toBe('2027-02-01T07:00:00.000Z');
     expect(moved!.status).toBe('REQUESTED');
     expect(moved!.scheduled_at).toBeNull();
     expect(moved!.meeting_link).toBeNull();
     expect(moved!.contact_phone).toBe('9555555551');
 
-    await expect(meetingService.rescheduleMyMeeting(other, 'HOST', '2027-02-01T08:00:00.000Z')).rejects.toThrow(/not found/i);
+    await expect(
+      meetingService.rescheduleMyMeeting(other, 'HOST', '2027-02-01T08:00:00.000Z', 'Travelling that morning'),
+    ).rejects.toThrow(/not found/i);
   });
 
   it('emails the party’s rescheduled template when the applicant moves their own meeting', async () => {
@@ -296,17 +320,19 @@ describe('meeting slot booking', () => {
     const me = new Types.ObjectId().toString();
     const other = new Types.ObjectId().toString();
     await meetingService.request(me, 'ECOMM', { requested_at: '2027-03-01T05:00:00.000Z', contact_phone: '9666666661' });
-    const cancelled = await meetingService.cancelMyMeeting(me, 'ECOMM');
+    const cancelled = await meetingService.cancelMyMeeting(me, 'ECOMM', 'Our stock list is not ready yet');
     expect(cancelled!.status).toBe('CANCELLED');
     // The instant is free again for another user.
     await meetingService.request(other, 'ECOMM', { requested_at: '2027-03-01T05:00:00.000Z', contact_phone: '9666666662' });
-    await expect(meetingService.cancelMyMeeting(other, 'VENUE')).rejects.toThrow(/not found/i);
+    await expect(
+      meetingService.cancelMyMeeting(other, 'VENUE', 'No longer opening the second floor'),
+    ).rejects.toThrow(/not found/i);
   });
 
   it('re-booking after a cancel restarts the request (Earn card locks again)', async () => {
     const me = new Types.ObjectId().toString();
     const first = await meetingService.request(me, 'VENUE', { requested_at: '2027-04-01T05:00:00.000Z', contact_phone: '9777777771' });
-    await meetingService.cancelMyMeeting(me, 'VENUE');
+    await meetingService.cancelMyMeeting(me, 'VENUE', 'Renovation pushed our opening back');
 
     const again = await meetingService.request(me, 'VENUE', { requested_at: '2027-04-02T05:00:00.000Z', contact_phone: '9777777771' });
     expect(again!.status).toBe('REQUESTED');
@@ -417,7 +443,7 @@ describe('meeting slot booking', () => {
     const m = await meetingService.myMeeting(u, 'VENUE');
     await expect(meetingService.dismiss(m!.id)).rejects.toThrow(/cancelled/i);
 
-    await meetingService.cancelMyMeeting(u, 'VENUE');
+    await meetingService.cancelMyMeeting(u, 'VENUE', 'The site visit needs to wait for the lease');
     const hidden = await meetingService.dismiss(m!.id);
     expect(hidden!.dismissed).toBe(true);
 
@@ -535,7 +561,7 @@ describe('meeting notifications + cross-flow slot picker (batch)', () => {
     const u = new Types.ObjectId().toString();
     await meetingService.request(u, 'HOST', { requested_at: '2028-01-03T05:00:00.000Z', contact_phone: '9180000001' });
     await expect(
-      meetingService.rescheduleMyMeeting(u, 'HOST', '2028-01-03T05:00:00.000Z'),
+      meetingService.rescheduleMyMeeting(u, 'HOST', '2028-01-03T05:00:00.000Z', 'That slot collides with my class'),
     ).rejects.toThrow(/different time slot/i);
   });
 
@@ -570,7 +596,7 @@ describe('meeting notifications + cross-flow slot picker (batch)', () => {
 
 describe('meeting decide (onboarding self-approve)', () => {
   it('approves a DONE meeting: drafts the onboarded host, marks it approved, emails the applicant', async () => {
-    (sendMeetingApprovedEmail as jest.Mock).mockClear();
+    (notifyEvent as jest.Mock).mockClear();
     const { userId: uid, meetingId } = await doneMeeting('HOST', '2029-01-01T05:00:00.000Z', 'Drafty');
 
     // Feedback is required.
@@ -583,7 +609,9 @@ describe('meeting decide (onboarding self-approve)', () => {
     const host: any = await HostModel.findOne({ user_id: new Types.ObjectId(uid) });
     expect(host?.status).toBe('DRAFT');
     expect(host?.full_name).toBe('Drafty');
-    expect(sendMeetingApprovedEmail).toHaveBeenCalledWith(expect.objectContaining({ to: `${uid}@example.com` }));
+    // Approval reaches the applicant through notifyEvent — WhatsApp and the
+    // templated mail as one event, not a sender of its own any more.
+    expect(notifyEvent).toHaveBeenCalledWith(expect.objectContaining({ email: `${uid}@example.com` }));
 
     // A decided meeting can't be decided again.
     await expect(meetingService.decide(meetingId, 'APPROVED', 'again')).rejects.toThrow(/already/i);
@@ -731,12 +759,12 @@ describe('meeting decide (onboarding self-approve)', () => {
   });
 
   it('denies a DONE meeting: marks it denied, drafts nothing, emails the applicant, and blocks a re-decide', async () => {
-    (sendMeetingRejectedEmail as jest.Mock).mockClear();
+    (notifyEvent as jest.Mock).mockClear();
     const { userId: uid, meetingId } = await doneMeeting('HOST', '2029-05-01T05:00:00.000Z', 'Rejy');
     const denied = await meetingService.decide(meetingId, 'DENIED', 'Not a fit');
     expect(denied!.approval_status).toBe('DENIED');
     expect(await HostModel.findOne({ user_id: new Types.ObjectId(uid) })).toBeNull();
-    expect(sendMeetingRejectedEmail).toHaveBeenCalledWith(expect.objectContaining({ to: `${uid}@example.com` }));
+    expect(notifyEvent).toHaveBeenCalledWith(expect.objectContaining({ email: `${uid}@example.com` }));
     await expect(meetingService.decide(meetingId, 'APPROVED', 'reconsider')).rejects.toThrow(/already/i);
   });
 

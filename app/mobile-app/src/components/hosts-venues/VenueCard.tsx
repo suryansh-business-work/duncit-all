@@ -1,11 +1,11 @@
-import { AppImage } from '@/components/AppImage';
-
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
+import { venueImages } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { PublicVenue } from '@/hooks/useHostsVenues';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { VenueCardMedia } from './VenueCardMedia';
 
 /** Compact venue label "City · State" from the optional location fields. */
 export function venueLocation(venue: PublicVenue): string {
@@ -17,40 +17,34 @@ export interface VenueCardProps {
   onOpen: () => void;
 }
 
-/** Venue row in the discovery list — cover, name, type/capacity, location.
- * RN twin of mWeb's VenueList card. */
+/** Venue row in the discovery list — an image slider over every photo the venue
+ * has, then name, type/capacity and location. RN twin of mWeb's
+ * VenueExploreCard. */
 export function VenueCard({ venue, onOpen }: Readonly<VenueCardProps>) {
-  const { onPrimary, muted } = useThemeColors();
+  const { muted } = useThemeColors();
   const location = venueLocation(venue);
 
   return (
     <YStack
       testID={`venue-card-${venue.id}`}
-      role="button"
-      aria-label={venue.venue_name}
-      onPress={onOpen}
       borderRadius={16}
       borderWidth={1}
       borderColor="$borderColor"
       backgroundColor="$surface"
       overflow="hidden"
-      pressStyle={PRESS_STYLE.surface}
     >
-      <YStack height={120} backgroundColor="$primary" alignItems="center" justifyContent="center">
-        {venue.cover_image_url ? (
-          <AppImage
-            source={{ uri: venue.cover_image_url }}
-            style={{ width: '100%', height: '100%' }}
-            resizeMode="cover"
-          />
-        ) : (
-          <MaterialIcons name="storefront" size={34} color={onPrimary} />
-        )}
-      </YStack>
+      {/* The slider owns its own taps (the arrows must not navigate), so the
+          card is not one big pressable any more — the photo and the name block
+          each open the venue themselves. mWeb twin does the same. */}
+      <VenueCardMedia images={venueImages(venue)} venueName={venue.venue_name} onOpen={onOpen} />
       {/* The name block paints its own opaque surface and sits above the cover
           in the stacking order — a busy photo above it is what made the venue
           name hard to pick out. mWeb twin does the same. */}
       <YStack
+        role="button"
+        aria-label={venue.venue_name}
+        onPress={onOpen}
+        pressStyle={PRESS_STYLE.surface}
         padding={12}
         gap={3}
         backgroundColor="$surface"

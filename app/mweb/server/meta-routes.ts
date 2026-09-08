@@ -182,6 +182,7 @@ export const STATIC_ROUTES: StaticRoute[] = [
   { pattern: '/happening-nearby', titleKey: 'mweb.meta.happeningNearby.title' },
   { pattern: '/search', titleKey: 'mweb.meta.search.title' },
   { pattern: '/saved', titleKey: 'mweb.meta.saved.title' },
+  { pattern: '/contacts', titleKey: 'mweb.meta.contacts.title' },
   { pattern: '/clubs', titleKey: 'mweb.meta.clubs.title' },
   { pattern: '/chats', titleKey: 'mweb.meta.chats.title' },
   { pattern: '/chats/:id', titleKey: 'mweb.meta.chats.title' },

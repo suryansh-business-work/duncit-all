@@ -700,6 +700,7 @@ export {
   type VenueOwnerStatTile,
   type VenueOwnerStats,
 } from './venue-dashboard';
+export { venueImages, type VenueImageSource } from './venue-images';
 export {
   venueCancelDisabledText,
   venueCancelPenaltyHeadline,
@@ -788,3 +789,15 @@ export {
   type EmployeeExpenseStatus,
   type EmployeeExpenseTotals,
 } from './employee-expense';
+export {
+  CONTACT_KEY_MIN_DIGITS,
+  RADAR_MAX_ITEMS,
+  RADAR_RING_CAPACITY,
+  RADAR_RINGS,
+  contactEntriesFromPhoneBook,
+  radarPositions,
+  type ContactEntry,
+  type PhoneBookPerson,
+  type RadarItem,
+  type RadarPoint,
+} from './contact-radar';

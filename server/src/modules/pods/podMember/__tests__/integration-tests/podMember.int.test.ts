@@ -341,7 +341,15 @@ describe('Keep My Spot — cancel an in-process backout (Item 2)', () => {
     );
   });
 
-  it('restores a legacy in-process membership without an active request', async () => {
+  /*
+    The REQUEST is what gets kept, not the membership. After a partial release
+    the member is still JOINED and there is no BACKOUT_IN_PROCESS row to find,
+    so the membership cannot be the thing this is looked up by — which means a
+    membership stuck in that state with no request behind it has nothing to
+    cancel, and says so rather than quietly restoring a seat no request ever
+    released.
+  */
+  it('refuses an in-process membership that has no request behind it', async () => {
     const pod = await makePodDoc();
     const user = new Types.ObjectId();
     await PodMemberModel.create({
@@ -353,10 +361,13 @@ describe('Keep My Spot — cancel an in-process backout (Item 2)', () => {
       refund_status: 'NOT_ELIGIBLE',
     });
 
-    const res = await podMemberService.cancelBackout(String(pod._id), String(user));
-    expect(res.status).toBe('JOINED');
+    await expect(
+      podMemberService.cancelBackout(String(pod._id), String(user))
+    ).rejects.toThrow(/no backout in process/i);
   });
 
+  /* Only an IN_PROCESS request can be cancelled — an already-closed one is
+     left exactly as it was, events and all. */
   it('leaves a non-in-process active request untouched (defensive branch)', async () => {
     const pod = await makePodDoc();
     const user = new Types.ObjectId();
@@ -379,7 +390,9 @@ describe('Keep My Spot — cancel an in-process backout (Item 2)', () => {
     });
     await PodMemberModel.updateOne({ _id: member._id }, { $set: { active_backout_id: request._id } });
 
-    await podMemberService.cancelBackout(String(pod._id), String(user));
+    await expect(
+      podMemberService.cancelBackout(String(pod._id), String(user))
+    ).rejects.toThrow(/no backout in process/i);
     const untouched = await BackoutRequestModel.findById(request._id);
     expect(untouched!.status).toBe('CANCELLED');
     expect(untouched!.events).toHaveLength(1);
@@ -454,13 +467,19 @@ describe('spot fill — replacement books the released seat (Item 1)', () => {
     expect((await PodMemberModel.findOne({ user_id: second }))!.status).toBe('BACKED_OUT');
   });
 
-  it('skips the email when the user has no address and survives notify failures', async () => {
+  /*
+    The notice is sent even when there is no address to send it to. An empty
+    recipient is recorded as a FAILED row naming this template, and that row is
+    what tells somebody the notice went nowhere — guarding at the call site
+    made a silently-undelivered notice look like a decision not to send one.
+  */
+  it('still raises the notice for a user with no address, and survives notify failures', async () => {
     const pod = await makePodDoc({ no_of_spots: 1 });
     const noEmail = await makeUser({ auth: {}, profile: { first_name: 'Mail-less' } });
     await joinMember(pod, noEmail._id);
     await podMemberService.backout(String(pod._id), String(noEmail._id));
     await podMemberService.joinFree(String(pod._id), new Types.ObjectId().toString());
-    expect(spotFilledEmail).not.toHaveBeenCalled();
+    expect(spotFilledEmail).toHaveBeenCalledWith(expect.objectContaining({ to: '' }));
 
     // Notification failure must never fail the join (best-effort).
     const pod2 = await makePodDoc({ no_of_spots: 1 });
@@ -472,7 +491,14 @@ describe('spot fill — replacement books the released seat (Item 1)', () => {
     expect((await PodMemberModel.findOne({ user_id: u }))!.status).toBe('BACKED_OUT');
   });
 
-  it('flips the member even when the active request was already closed (defensive branch)', async () => {
+  /*
+    The sweep is driven by the REQUEST, not the membership: one booking can
+    give back some seats and keep the rest, so the membership alone cannot say
+    which release a replacement consumed. A request that is no longer
+    IN_PROCESS is therefore not a release anybody can fill — it is left alone,
+    and so is the member attached to it.
+  */
+  it('leaves a closed request and its member alone (defensive branch)', async () => {
     const pod = await makePodDoc({ no_of_spots: 1 });
     const user = new Types.ObjectId();
     await joinMember(pod, user);
@@ -482,7 +508,7 @@ describe('spot fill — replacement books the released seat (Item 1)', () => {
 
     await podMemberService.joinFree(String(pod._id), new Types.ObjectId().toString());
     const member = await PodMemberModel.findOne({ user_id: user });
-    expect(member!.status).toBe('BACKED_OUT');
+    expect(member!.status).toBe('BACKOUT_IN_PROCESS');
     const request = await BackoutRequestModel.findOne({ user_id: user });
     expect(request!.status).toBe('CANCELLED'); // terminal states never mutate
     expect(request!.replacement_user_id).toBeNull(); // ...including the replacement
@@ -520,11 +546,26 @@ describe('spot fill — replacement books the released seat (Item 1)', () => {
     const rec = await podMemberService.recordPaidJoin(ghostPod, String(u2), String(p2._id));
     expect(rec.status).toBe('JOINED');
 
-    // Fill failure is contained (best-effort). Persistent rejection: the ticket
-    // flow may also read the pod, and both catches must swallow the error.
+    /*
+      Fill failure is contained (best-effort). The stand-in has to behave like a
+      QUERY, not like a bare promise: callers chain `.session()` / `.select()`
+      before awaiting, and a plain `mockRejectedValue` both breaks that chain
+      and leaves an orphaned rejection that fails the run from outside the
+      catch it was supposed to land in.
+    */
     const u3 = new Types.ObjectId();
     const p3 = await makePayment(u3);
-    jest.spyOn(PodModel, 'findById').mockRejectedValue(new Error('db hiccup') as never);
+    const failingQuery = () => {
+      const query: any = {
+        then: (_ok: unknown, fail: (e: Error) => unknown) => fail(new Error('db hiccup')),
+        catch: (fail: (e: Error) => unknown) => fail(new Error('db hiccup')),
+      };
+      for (const method of ['session', 'select', 'lean', 'sort', 'populate']) {
+        query[method] = () => query;
+      }
+      return query;
+    };
+    jest.spyOn(PodModel, 'findById').mockImplementation(failingQuery as never);
     const rec3 = await podMemberService.recordPaidJoin(String(pod._id), String(u3), String(p3._id));
     expect(rec3.status).toBe('JOINED');
   });

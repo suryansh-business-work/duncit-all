@@ -3,6 +3,7 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import ContactPhoneIcon from '@mui/icons-material/ContactPhone';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
@@ -42,6 +43,7 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   following: <FavoriteBorderIcon />,
   bookings: <ReceiptLongIcon />,
   saved: <BookmarkBorderIcon />,
+  contacts: <ContactPhoneIcon />,
   verification: <VerifiedUserIcon />,
   support: <SupportAgentIcon />,
   referral: <CardGiftcardIcon />,

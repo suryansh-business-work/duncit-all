@@ -20,7 +20,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { injectSiteMeta } from '@duncit/brand/site-meta';
-import { SHORT_CODE_PATTERN } from '../src/lib/short-link';
+import { SHORT_CODE_PATTERN, trimSlashes } from '../src/lib/short-link';
 import { blogPostMeta } from './page-meta';
 import { acceptsGzip, resolveDistFile, sendFile } from './static-files';
 
@@ -54,13 +54,14 @@ function handleShortLink(
   path: string,
   search: string
 ): boolean {
-  const code = path.replace(/^\/+/, '').replace(/\/+$/, '');
+  const code = trimSlashes(path);
   if (!SHORT_CODE_PATTERN.test(code)) return false;
   const params = new URLSearchParams(search);
   const referrer = req.headers.referer;
   if (referrer && !params.has('dr')) params.set('dr', referrer);
   const query = params.toString();
-  redirect(res, 302, `${SERVER_URL}/r/${code}${query ? `?${query}` : ''}`);
+  const suffix = query ? `?${query}` : '';
+  redirect(res, 302, `${SERVER_URL}/r/${code}${suffix}`);
   return true;
 }
 
@@ -146,7 +147,7 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
     notFound(req, res);
     return;
   }
-  if (path.replace(/\/+$/, '') === BLOG_POST_PATH) {
+  if (`/${trimSlashes(path)}` === BLOG_POST_PATH) {
     await serveBlogPost(req, res, filePath, url.search);
     return;
   }

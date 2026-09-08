@@ -425,7 +425,15 @@ export const podTypeDefs = /* GraphQL */ `
   }
 
   extend type Query {
+    "What revoking this pod's cancellation would cost, and whether it is allowed."
+    podRevokePreview(pod_doc_id: ID!): PodRevokePreview!
     pods(filter: PodFilterInput): [Pod!]!
+    """
+    The live pods a user has JOINED, newest first — what a profile's Joined
+    Pods tab lists. Follows the posts/stories rule for a PRIVATE account: empty
+    unless the viewer is the owner or a follower.
+    """
+    userJoinedPods(user_id: ID!): [Pod!]!
     """
     include_deleted also lists cancelled pods — honored for admin reviewers only.
     lifecycle narrows the page to one derived bucket; asking for CANCELLED is
@@ -460,6 +468,54 @@ export const podTypeDefs = /* GraphQL */ `
     this one board.
     """
     podMediaBoard(pod_doc_id: ID!): PodMediaBoard!
+  }
+
+  "Whether a cancellation refund has been paid out or is still only scheduled."
+  enum PodRevokeRefundState {
+    "The money is back with the payer. Revoking does not recover it."
+    PAID
+    "Scheduled for the pod's start and not yet paid. Revoking drops it."
+    HELD
+  }
+
+  "Why a cancellation cannot be revoked."
+  enum PodRevokeBlockedReason {
+    "The pod is not cancelled — there is nothing to undo."
+    NOT_CANCELLED
+    "The pod's own date and time have passed; a cancellation is final from then on."
+    POD_DATE_PASSED
+  }
+
+  "One payer's cancellation refund, as the revoke panel lists it."
+  type PodRevokeRefund {
+    payment_id: ID!
+    user_id: ID
+    user_name: String!
+    user_email: String!
+    amount: Float!
+    currency_symbol: String!
+    state: PodRevokeRefundState!
+  }
+
+  """
+  What revoking a pod's cancellation would cost, before it is done.
+
+  A Backout's own partial refund is excluded: it would have been paid whether or
+  not the pod was cancelled, so it is not a price of undoing one.
+  """
+  type PodRevokePreview {
+    pod_id: ID!
+    pod_title: String!
+    pod_date_time: String
+    is_cancelled: Boolean!
+    can_revoke: Boolean!
+    blocked_reason: PodRevokeBlockedReason
+    refunds: [PodRevokeRefund!]!
+    "Money already paid back. Reinstating the pod does not recover it."
+    loss_total: Float!
+    "Money scheduled but not yet paid. Revoking cancels it, so it costs nothing."
+    held_total: Float!
+    currency_symbol: String!
   }
 
   extend type Mutation {

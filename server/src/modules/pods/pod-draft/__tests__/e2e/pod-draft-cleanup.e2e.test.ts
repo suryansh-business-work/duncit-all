@@ -14,13 +14,19 @@ afterAll(async () => {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** Force a draft's CREATION date without tripping mongoose auto-timestamps —
- * the sweep counts from creation, never from the last autosave. */
+/**
+ * Force a draft's CREATION date — the sweep counts from creation, never from
+ * the last autosave.
+ *
+ * Through the RAW collection, not the model. Mongoose marks the `createdAt`
+ * timestamp field immutable, so a `$set` on it through the model is stripped
+ * without an error: the drafts were never aged, the sweep correctly deleted
+ * nothing, and the suite read that as the sweep being broken.
+ */
 async function ageDraft(id: Types.ObjectId, daysAgo: number) {
-  await PodDraftModel.updateOne(
+  await PodDraftModel.collection.updateOne(
     { _id: id },
     { $set: { created_at: new Date(Date.now() - daysAgo * DAY_MS) } },
-    { timestamps: false },
   );
 }
 

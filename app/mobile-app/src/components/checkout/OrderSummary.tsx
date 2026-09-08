@@ -8,7 +8,7 @@ import { VenueChargesSheet } from '@/components/checkout/VenueChargesSheet';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CheckoutPod } from '@/hooks/useCheckout';
-import type { CoinCheckoutSummary } from '@duncit/utils';
+import { coverImageUrl, type CoinCheckoutSummary } from '@duncit/utils';
 import { CoinSummaryRows } from '@/components/checkout/CoinSummaryRows';
 import type { CheckoutBreakup } from '@/utils/checkout-math';
 import { formatMoney } from '@/utils/checkout-math';
@@ -78,7 +78,7 @@ export function OrderSummary({
   // number has to be visible here — a silent multiplier reads as a wrong price.
   const seatsText =
     seats === 1 ? t('mweb.checkout.seatsOne') : t('mweb.checkout.seatsMany', { count: seats });
-  const image = pod?.pod_images_and_videos?.find((m) => m.url)?.url;
+  const image = coverImageUrl(pod?.pod_images_and_videos);
   const fmt = (v: number) => formatMoney(breakup.currency, v);
   // The bill before deductions. With nothing applied it is the payable, so the
   // card renders exactly as it always did.

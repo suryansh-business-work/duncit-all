@@ -4,6 +4,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import type { ClubWithPods, HomeClub, HomePod } from '@/hooks/useHomeFeed';
+import { coverImageUrl } from '@duncit/utils';
+
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { Reveal } from '@/animations/Reveal';
 import { PodCard } from '@/components/home/PodCard';
@@ -34,7 +36,7 @@ export function ClubSection({
   onToggleSave,
 }: Readonly<ClubSectionProps>) {
   const { onPrimary } = useThemeColors();
-  const image = club.club_feature_images_and_videos.find((m) => !!m.url)?.url ?? null;
+  const image = coverImageUrl(club.club_feature_images_and_videos) ?? null;
 
   return (
     <YStack gap={12}>

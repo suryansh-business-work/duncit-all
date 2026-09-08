@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isVideoUrl } from '@duncit/utils';
 import type { PodFormConfig, PodFormValues } from './types';
 import type { Translate } from './i18n/useTranslation';
 
@@ -21,7 +22,7 @@ const hasImage = (value: string) =>
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean)
-    .some((url) => !/\.(mp4|mov|webm)$/i.test(url));
+    .some((url) => !isVideoUrl(url));
 
 const toNumber = (value: unknown) =>
   value === '' || value === null || value === undefined ? Number.NaN : Number(value);

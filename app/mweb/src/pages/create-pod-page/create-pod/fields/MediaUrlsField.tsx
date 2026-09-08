@@ -5,12 +5,11 @@ import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import { DuncitRoundButton } from '@duncit/buttons';
-import { coverSearchTerm, pickerBatchSize } from '@duncit/utils';
+import { coverSearchTerm, isVideoUrl, pickerBatchSize } from '@duncit/utils';
 import MediaPickerDialog from '../../../../components/MediaPickerDialog';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import { useTranslation } from '../../../../i18n/useTranslation';
 
-const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
 
 const splitLines = (text: string) =>
   text
@@ -131,7 +130,7 @@ export default function MediaUrlsField({
         <Stack direction="row" sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
           {urls.map((url) => (
             <Box key={url} sx={{ position: 'relative', width: 88, height: 88, borderRadius: '16px', overflow: 'hidden', border: 1, borderColor: 'divider', bgcolor: 'action.hover', display: 'grid', placeItems: 'center' }}>
-              {VIDEO_URL_RE.test(url) ? (
+              {isVideoUrl(url) ? (
                 <VideocamIcon color="action" />
               ) : (
                 <Box component="img" src={url} alt={t('mweb.createPod.mediaAlt')} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />

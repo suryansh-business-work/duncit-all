@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { podModerationImageUrls, type PodSpotLimits } from '@duncit/utils';
+import { isVideoUrl, podModerationImageUrls, type PodSpotLimits } from '@duncit/utils';
 
 import { CategoryMediaType } from '@/generated/graphql/graphql';
 
@@ -37,11 +37,9 @@ const splitLines = (text: string) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
-const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
-
 /** True when the media list carries at least one image URL (server mirrors this). */
 export const hasImageLine = (mediaText: string) =>
-  splitLines(mediaText).some((url) => !VIDEO_URL_RE.test(url));
+  splitLines(mediaText).some((url) => !isVideoUrl(url));
 
 export const podEditSchema = z.object({
   pod_title: z.string().trim().min(3, 'Title is too short').max(120, 'Title is too long'),
@@ -68,7 +66,7 @@ export function buildHostUpdateInput(
     pod_description: values.pod_description.trim(),
     pod_images_and_videos: splitLines(values.media_text).map((url) => ({
       url,
-      type: VIDEO_URL_RE.test(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
+      type: isVideoUrl(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
     })),
     ...(options?.includeSpots
       ? { no_of_spots: Number.parseInt(values.no_of_spots_text, 10) || 0 }

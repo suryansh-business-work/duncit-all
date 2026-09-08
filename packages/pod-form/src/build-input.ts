@@ -1,3 +1,5 @@
+import { mediaTypeForUrl } from '@duncit/utils';
+
 import {
   AUTO_POD_TYPE,
   blankAutoPodFormValues,
@@ -16,7 +18,7 @@ const lines = (text: string) =>
 
 /** Newline-separated URLs → GraphQL PodMediaInput list (image/video by extension). */
 export const linesToMedia = (text: string) =>
-  lines(text).map((url) => ({ url, type: /\.(mp4|mov|webm)$/i.test(url) ? 'VIDEO' : 'IMAGE' }));
+  lines(text).map((url) => ({ url, type: mediaTypeForUrl(url) }));
 
 /** Sum the cost of the selected product requests against the product catalogue. */
 export function getProductRequestTotal(requests: PodProductRequest[], products: any[]) {

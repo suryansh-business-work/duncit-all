@@ -49,6 +49,10 @@ exports:
   - 'nationalPhoneDigits'
   - 'isStoryLive'
   - 'videoSourceUrl'
+  - 'isVideoUrl'
+  - 'mediaTypeForUrl'
+  - 'isVideoMedia'
+  - 'coverImageUrl'
   - 'podPhase'
   - 'canCompletePod'
   - 'splitPodsByPhase'
@@ -669,6 +673,10 @@ because native's codegen refuses an interpolated one.
 | `nationalPhoneDigits` | `(raw, length = 10) => string` | — | Display-only local digits: "+91 9876543210" → "9876543210". |
 | `isStoryLive` | `(expiresAt, now = Date.now()) => boolean` | — | Client half of the 24h story expiry; `null` = permanent post. |
 | `videoSourceUrl` | `(url) => string` | — | The URL to hand a video player: our ImageKit addresses ask for the stored file, everything else is unchanged. |
+| `isVideoUrl` | `(url) => boolean` | — | Whether an address names a video file. Tolerates a query string, which the eight hand-rolled `/\.(mp4\|mov\|webm)$/` copies did not. |
+| `mediaTypeForUrl` | `(url) => 'IMAGE' \| 'VIDEO'` | — | The type a stored media row gets when the writer did not say. |
+| `isVideoMedia` | `(media) => boolean` | — | Whether a stored row plays. The recorded `type` wins; the URL answers for rows written before it was recorded correctly. |
+| `coverImageUrl` | `(media) => string \| undefined` | — | The first still in a cover list — what a card or avatar shows. `undefined` when the cover is video only, so the caller draws its placeholder. |
 
 ### Pod phase — the Home rails
 

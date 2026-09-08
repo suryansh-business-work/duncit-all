@@ -2,6 +2,7 @@ import { Box, Card, CardActionArea, CardContent, CardMedia, Chip, Stack, Typogra
 import EventIcon from '@mui/icons-material/Event';
 import PlaceIcon from '@mui/icons-material/Place';
 import SellIcon from '@mui/icons-material/Sell';
+import { isVideoMedia, videoSourceUrl } from '@duncit/utils';
 import type { SavedPod } from './queries';
 import { formatDateTime } from '../../utils/dateFormat';
 
@@ -17,6 +18,7 @@ interface Props {
 
 export default function SavedItemCard({ pod, onOpen }: Readonly<Props>) {
   const media = pod.pod_images_and_videos?.[0];
+  const isVideo = isVideoMedia(media);
   return (
     <Card variant="outlined">
       <CardActionArea onClick={() => onOpen(pod)}>
@@ -25,9 +27,9 @@ export default function SavedItemCard({ pod, onOpen }: Readonly<Props>) {
         }}>
           {media?.url ? (
             <CardMedia
-              component={media.type === 'VIDEO' ? 'video' : 'img'}
-              image={media.type === 'VIDEO' ? undefined : media.url}
-              src={media.type === 'VIDEO' ? media.url : undefined}
+              component={isVideo ? 'video' : 'img'}
+              image={isVideo ? undefined : media.url}
+              src={isVideo ? videoSourceUrl(media.url) : undefined}
               sx={{ width: 116, minHeight: 132, objectFit: 'cover' }}
             />
           ) : (

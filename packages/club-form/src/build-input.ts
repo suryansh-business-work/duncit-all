@@ -1,3 +1,5 @@
+import { mediaTypeForUrl } from '@duncit/utils';
+
 import { blankClubFormValues, type ClubFaqValue, type ClubFormConfig, type ClubFormValues } from './types';
 
 /** Newline text → trimmed non-empty lines. */
@@ -9,7 +11,7 @@ const lines = (text: string) =>
 
 /** Newline-separated URLs → GraphQL ClubMediaInput list (image/video by extension). */
 export const linesToMedia = (text: string) =>
-  lines(text).map((url) => ({ url, type: /\.(mp4|mov|webm)$/i.test(url) ? 'VIDEO' : 'IMAGE' }));
+  lines(text).map((url) => ({ url, type: mediaTypeForUrl(url) }));
 
 /** Trim + drop empty bullet entries. */
 export const cleanBullets = (items: string[]) => items.map((item) => item.trim()).filter(Boolean);

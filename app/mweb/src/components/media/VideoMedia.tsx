@@ -5,6 +5,7 @@ import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import { DuncitIconButton } from '@duncit/buttons';
+import { videoSourceUrl } from '@duncit/utils';
 
 interface Props {
   src: string;
@@ -51,7 +52,7 @@ export default function VideoMedia({
       <Box
         component="video"
         ref={ref}
-        src={src}
+        src={videoSourceUrl(src)}
         poster={poster}
         autoPlay
         muted

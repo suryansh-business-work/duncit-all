@@ -6,6 +6,7 @@ import {
   autoPodMissingRoles,
   autoPodPriced,
   autoPodRoleEarnings,
+  coverImageUrl,
   type AutoPodLabels,
   type AutoPodRole,
   type AutoPodRow,
@@ -38,7 +39,7 @@ interface Props {
 }
 
 const firstImage = (row: AutoPodRow): string | null =>
-  row.pod_images_and_videos.find((media) => (media.type ?? 'IMAGE') === 'IMAGE')?.url ?? null;
+  coverImageUrl(row.pod_images_and_videos) ?? null;
 
 /** One labelled detail line with its icon: the pinned city, the venue, the slot. */
 function DetailLine({

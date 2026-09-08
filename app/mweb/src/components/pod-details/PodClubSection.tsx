@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Avatar, Box, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import { coverImageUrl } from '@duncit/utils';
 import { useNavigate } from 'react-router';
 import MomentTile from '../moments/MomentTile';
 import MomentLightbox from '../moments/MomentLightbox';
@@ -27,7 +28,7 @@ export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<P
     );
   }
 
-  const cover = club.club_feature_images_and_videos?.[0]?.url;
+  const cover = coverImageUrl(club.club_feature_images_and_videos);
   const moments: any[] = club.club_moments ?? [];
 
   return (

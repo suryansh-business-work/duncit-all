@@ -7,6 +7,7 @@ import EventIcon from '@mui/icons-material/Event';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { DuncitIconButton } from '@duncit/buttons';
+import { isVideoMedia } from '@duncit/utils';
 import HeroOverlayActions from './HeroOverlayActions';
 import VideoMedia from '../../components/media/VideoMedia';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -132,7 +133,7 @@ export default function PodHero({
         slidesToScroll={1}
       >
         {media.map((m) =>
-          m.type === 'VIDEO' ? (
+          isVideoMedia(m) ? (
             <VideoMedia key={m.url} src={m.url} height={{ xs: 280, md: 460 }} />
           ) : (
             <Box

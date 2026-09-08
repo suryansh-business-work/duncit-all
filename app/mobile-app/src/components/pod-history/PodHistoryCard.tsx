@@ -3,6 +3,8 @@ import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { coverImageUrl } from '@duncit/utils';
+
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { PodMembership } from '@/utils/pod-history';
@@ -16,7 +18,7 @@ export function PodHistoryCard({
 }: Readonly<{ item: PodMembership; onPress: () => void }>) {
   const { muted, onPrimary } = useThemeColors();
   const { t } = useTranslation();
-  const image = item.pod?.pod_images_and_videos?.[0]?.url;
+  const image = coverImageUrl(item.pod?.pod_images_and_videos);
   const title = item.pod?.pod_title ?? t('mweb.podHistory.pod');
 
   return (

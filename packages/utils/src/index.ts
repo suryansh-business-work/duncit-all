@@ -595,7 +595,14 @@ export {
   type AppPopupSize,
   type AppPopupStorage,
 } from './app-popup';
-export { videoSourceUrl } from './media-url';
+export {
+  coverImageUrl,
+  isVideoMedia,
+  isVideoUrl,
+  mediaTypeForUrl,
+  videoSourceUrl,
+  type StoredMedia,
+} from './media-url';
 export {
   allZero,
   buildEarningsBars,

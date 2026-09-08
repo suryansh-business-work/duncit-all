@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
-import { addToSelection, coverSearchTerm, pickerBatchSize } from '@duncit/utils';
+import { addToSelection, coverSearchTerm, isVideoUrl, pickerBatchSize } from '@duncit/utils';
 
 import { AiMonitoringChip } from '@/components/ai-monitoring';
 import { FieldLabel } from '@/components/Field';
@@ -14,8 +14,6 @@ import { useUploadSettings } from '@/hooks/useUploadSettings';
 import type { Translate } from '@/i18n/fallback';
 import { CoverPickerDialog } from './cover-picker';
 import { PRESS_STYLE } from '@duncit/buttons-native';
-
-const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
 
 const splitLines = (text: string) =>
   text
@@ -125,7 +123,7 @@ export function MediaUploadField({
               alignItems="center"
               justifyContent="center"
             >
-              {VIDEO_URL_RE.test(url) ? (
+              {isVideoUrl(url) ? (
                 <MaterialIcons name="videocam" size={26} color={muted} />
               ) : (
                 <AppImage source={{ uri: url }} style={{ width: 84, height: 84 }} />

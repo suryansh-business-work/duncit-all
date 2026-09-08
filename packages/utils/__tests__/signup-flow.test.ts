@@ -35,6 +35,7 @@ describe('what signup starts out holding', () => {
       step: 'WHO',
       askingNumber: false,
       verifying: null,
+      googleDob: null,
       pendingForm: null,
       pendingGoogle: null,
     });

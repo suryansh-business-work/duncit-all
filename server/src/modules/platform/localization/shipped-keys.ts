@@ -941,6 +941,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "admin.users.googleAccount": "Google Account",
   "admin.users.notFound": "User not found.",
   "admin.users.phoneNumber": "Phone number",
+  "admin.users.phoneOtp": "Phone OTP",
   "admin.users.temporaryPassword": "Temporary password",
   "admin.users.title": "Users",
   "admin.venues.colCapacity": "Capacity",

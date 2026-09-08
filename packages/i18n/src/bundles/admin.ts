@@ -38,6 +38,7 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       colLastLogin: 'Last Login',
       google: 'Google',
       googleAccount: 'Google Account',
+      phoneOtp: 'Phone OTP',
       notFound: 'User not found.',
       temporaryPassword: 'Temporary password',
       generate: 'Generate',

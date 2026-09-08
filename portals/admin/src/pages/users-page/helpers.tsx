@@ -1,5 +1,6 @@
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import GoogleIcon from '@mui/icons-material/Google';
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 
 export const STATUS_OPTIONS = ['', 'ACTIVE', 'INACTIVE', 'SUSPENDED'];
 
@@ -53,18 +54,31 @@ export function initials(user: any) {
   return `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.trim().toUpperCase() || 'U';
 }
 
-export function loginMeta(user: any) {
+type Translate = (key: string) => string;
+
+export function loginMeta(user: any, t: Translate) {
   const provider =
     user.last_login_provider || (user.auth_providers?.includes('GOOGLE') ? 'GOOGLE' : 'EMAIL');
+  if (provider === 'GOOGLE') {
+    return {
+      provider,
+      label: t('admin.users.google'),
+      icon: <GoogleIcon fontSize="small" />,
+      color: '#4285f4',
+    };
+  }
+  if (provider === 'OTP') {
+    return {
+      provider,
+      label: t('admin.users.phoneOtp'),
+      icon: <PhoneOutlinedIcon fontSize="small" />,
+      color: '#7c3aed',
+    };
+  }
   return {
     provider,
-    label: provider === 'GOOGLE' ? 'Google' : 'Email',
-    icon:
-      provider === 'GOOGLE' ? (
-        <GoogleIcon fontSize="small" />
-      ) : (
-        <EmailOutlinedIcon fontSize="small" />
-      ),
-    color: provider === 'GOOGLE' ? '#4285f4' : '#0f766e',
+    label: t('shell.common.email'),
+    icon: <EmailOutlinedIcon fontSize="small" />,
+    color: '#0f766e',
   };
 }

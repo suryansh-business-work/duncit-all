@@ -10,6 +10,7 @@ export const userTypeDefs = gql`
   enum AuthProvider {
     EMAIL
     GOOGLE
+    OTP
   }
 
   enum ProfileVisibility {

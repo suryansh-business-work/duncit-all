@@ -1598,7 +1598,8 @@ export type AuthPayload = {
 
 export type AuthProvider =
   | 'EMAIL'
-  | 'GOOGLE';
+  | 'GOOGLE'
+  | 'OTP';
 
 export type AutoPod = {
   __typename?: 'AutoPod';

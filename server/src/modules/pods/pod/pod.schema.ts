@@ -476,6 +476,12 @@ export const podTypeDefs = /* GraphQL */ `
     "Takes one item down — your own, or any of them if you host the pod."
     removePodPartyMedia(pod_doc_id: ID!, url: String!): PodMediaBoard!
     deletePod(pod_doc_id: ID!): Boolean!
+    """
+    Undo a cancellation: the pod becomes visible again, reclaiming the venue slot
+    and the product stock the cancellation released. Refunds already paid out are
+    NOT reversed.
+    """
+    revokePodCancellation(pod_doc_id: ID!): Pod!
     incrementPodHits(pod_doc_id: ID!): Pod!
     togglePodLike(pod_doc_id: ID!): Pod!
     addPodComment(pod_doc_id: ID!, text: String!): PodComment!

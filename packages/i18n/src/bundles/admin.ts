@@ -200,6 +200,14 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
     pods: {
       empty: 'No pods yet.',
       includeCancelled: 'Include cancelled',
+      revokeCancellation: 'Revoke cancellation',
+      revokeCancellationTitle: 'Revoke this cancellation?',
+      revokeCancellationBody:
+        '"{title}" becomes visible again and takes back its venue slot and its reserved product stock.',
+      revokeCancellationCaveat:
+        'Everyone who booked keeps their seat, but the refunds already paid to them are NOT reversed and nobody is told the pod is back on — contact them yourself.',
+      revokeCancellationConfirm: 'Revoke cancellation',
+      revokeCancellationDone: 'Cancellation revoked — the pod is visible again.',
       allClubs: 'All clubs',
       draft: 'Draft',
       venueRejected: 'Venue rejected',

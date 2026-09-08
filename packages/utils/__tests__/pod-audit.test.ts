@@ -25,7 +25,7 @@ const t: ClubAdminTranslate = (key) => key;
 
 describe('the audit vocabulary', () => {
   it('lists every action, source and risk exactly once', () => {
-    expect(new Set(POD_AUDIT_ACTION_ORDER).size).toBe(8);
+    expect(new Set(POD_AUDIT_ACTION_ORDER).size).toBe(9);
     expect(new Set(POD_AUDIT_SOURCE_ORDER).size).toBe(5);
     expect(new Set(POD_AUDIT_RISK_ORDER).size).toBe(4);
   });
@@ -50,6 +50,7 @@ describe('podAuditActionLabel', () => {
     expect(podAuditActionLabel('UPDATE', t)).toBe('clubAdmin.audit.action.update');
     expect(podAuditActionLabel('RESUBMIT', t)).toBe('clubAdmin.audit.action.resubmit');
     expect(podAuditActionLabel('DELETE', t)).toBe('clubAdmin.audit.action.delete');
+    expect(podAuditActionLabel('RESTORE', t)).toBe('clubAdmin.audit.action.restore');
     expect(podAuditActionLabel('VENUE_APPROVED', t)).toBe('clubAdmin.audit.action.venueApproved');
     expect(podAuditActionLabel('VENUE_DECLINED', t)).toBe('clubAdmin.audit.action.venueDeclined');
     expect(podAuditActionLabel('COMPLETE', t)).toBe('clubAdmin.audit.action.complete');

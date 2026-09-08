@@ -11,6 +11,7 @@ consumers:
   - 'portals/regional-club-admin'
 exports:
   - 'PodDetailsPage'
+  - 'NO_POD_ACTIONS'
   - 'PodDetailsScopeProvider'
   - 'usePodDetailsScope'
   - 'SectionCard'
@@ -75,6 +76,29 @@ create/delete) and reaches into the admin coupons page. Admin injects it:
 ```tsx
 <PodDetailsPage footer={(pod) => <PodCouponsSection podId={pod.id} podTitle={pod.pod_title} />} />
 ```
+
+## Header actions are the portal's, not this package's
+
+`actions` is a **required** render prop, called with `{ id, pod_title, is_deleted }`
+and drawn beside **Edit pod**. A console with nothing to add passes the exported
+constant:
+
+```tsx
+<PodDetailsPage actions={NO_POD_ACTIONS} />                       // partners, regional, mWeb
+
+const revoke: PodDetailsActions = (pod) =>
+  pod.is_deleted ? <RevokeCancellationAction podId={pod.id} podTitle={pod.pod_title} /> : null;
+<PodDetailsPage actions={revoke} />                               // admin portal
+```
+
+**Revoking a cancellation lives in the admin portal**, not here: `revokePodCancellation`
+is gated on `ADMIN_WRITE`, so it is the only console that could fire it, and a button
+the other three render but may never press is worse than no button.
+
+Required rather than optional on purpose. An optional render prop is a branch this
+package would only ever exercise on one side, and `coverageGate: true` means the
+100% branch threshold is a real blocking check — so the "nothing here" case is a
+value a caller passes, not a default this file guesses.
 
 ## Club, and the people who run it
 

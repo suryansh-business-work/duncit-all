@@ -2,7 +2,7 @@ import { Link as RouterLink, useParams } from 'react-router';
 import { Box, Card, CardActionArea, CardContent, Stack, Typography } from '@mui/material';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { PodDetailsPage, type PodDetailsViewProps } from '@duncit/pod-details';
+import { NO_POD_ACTIONS, PodDetailsPage, type PodDetailsViewProps } from '@duncit/pod-details';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /**
@@ -54,6 +54,7 @@ export default function ClubPodDetailsPage() {
         backTo={podsPath}
         backLabel={t('clubAdmin.pods.clubPods')}
         editTo={(podId) => `${podsPath}/${podId}/edit`}
+        actions={NO_POD_ACTIONS}
         footer={renderAttendanceFooter}
       />
     </Box>

@@ -17,6 +17,7 @@ export const POD_AUDIT_ACTION_ORDER = [
   'UPDATE',
   'RESUBMIT',
   'DELETE',
+  'RESTORE',
   'VENUE_APPROVED',
   'VENUE_DECLINED',
   'COMPLETE',
@@ -65,6 +66,7 @@ export const POD_AUDIT_ACTION_COLORS: Record<PodAuditAction, StatusTone> = {
   UPDATE: 'info',
   RESUBMIT: 'info',
   DELETE: 'error',
+  RESTORE: 'success',
   VENUE_APPROVED: 'success',
   VENUE_DECLINED: 'warning',
   COMPLETE: 'default',
@@ -84,6 +86,7 @@ export function podAuditActionLabel(action: PodAuditAction, t: ClubAdminTranslat
   if (action === 'UPDATE') return t('clubAdmin.audit.action.update');
   if (action === 'RESUBMIT') return t('clubAdmin.audit.action.resubmit');
   if (action === 'DELETE') return t('clubAdmin.audit.action.delete');
+  if (action === 'RESTORE') return t('clubAdmin.audit.action.restore');
   if (action === 'VENUE_APPROVED') return t('clubAdmin.audit.action.venueApproved');
   if (action === 'VENUE_DECLINED') return t('clubAdmin.audit.action.venueDeclined');
   if (action === 'COMPLETE') return t('clubAdmin.audit.action.complete');

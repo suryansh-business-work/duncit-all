@@ -249,6 +249,15 @@ function notFound(): never {
   throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
 }
 
+/** Revoking reads the pod twice — once to check, once to claim the flip — and
+ * both misses mean the same thing to the caller: there is no cancellation here
+ * to undo (somebody else already undid it). */
+function notCancelled(): never {
+  throw new GraphQLError('This pod is not cancelled.', {
+    extensions: { code: 'BAD_USER_INPUT' },
+  });
+}
+
 const WRITABLE_POD_TYPES = new Set<PodType>(['FREE', 'PAID']);
 
 /** Creation and price-changing edits accept only FREE or PAID, and FREE is
@@ -644,6 +653,48 @@ async function softDeletePod(
     note: audit?.note,
   });
   return true;
+}
+
+/** The note a revoke records when the admin gave no reason of their own. */
+const REVOKE_CANCELLATION_NOTE = 'Cancellation revoked by Duncit';
+
+/**
+ * A revoked cancellation puts the pod back ONLINE — that is the whole point of
+ * the button. The one exception is a pod whose venue never answered: it was
+ * never live to begin with, and publishing it now would advertise a booking the
+ * venue has not agreed to.
+ */
+const isActiveAfterRevoke = (doc: any): boolean => doc.venue_approval_status !== 'PENDING';
+
+/**
+ * The venue seat a cancellation freed, taken back.
+ *
+ * The cancel ran `releaseForPod`, which put the slot back on the market — so by
+ * the time somebody revokes, another pod may be sitting in it. The claim is the
+ * SAME atomic write the original booking used (PENDING while the venue is still
+ * deciding, BOOKED once it has said yes), so a lost race throws CONFLICT here
+ * instead of quietly restoring this pod on top of another pod's seat.
+ *
+ * A venue-DECLINED pod carries no slot at all — the decline nulls it — so there
+ * is nothing to take back and nothing to fail on.
+ */
+async function reclaimSlotForRevoke(doc: any): Promise<void> {
+  if (!doc.venue_slot_id) return;
+  const slot = await VenueSlotModel.findById(doc.venue_slot_id);
+  if (!slot) {
+    throw new GraphQLError(
+      'The venue slot this pod held no longer exists. Edit the pod to pick another slot.',
+      { extensions: { code: 'CONFLICT' } }
+    );
+  }
+  const slotId = String(slot._id);
+  const venueId = String(slot.venue_id);
+  const podId = String(doc._id);
+  if (doc.venue_approval_status === 'PENDING') {
+    await venueSlotService.holdForPod(slotId, venueId, podId);
+    return;
+  }
+  await venueSlotService.bookForPod(slotId, venueId, podId);
 }
 
 /**
@@ -2599,6 +2650,69 @@ export const podService = {
     // whether or not this particular call is the one that committed the delete.
     await softDeletePod(id, audit);
     return true;
+  },
+
+  /**
+   * Undo a cancellation — the pod comes back, and comes back VISIBLE.
+   *
+   * A cancel is a soft delete plus two releases: the venue slot goes back on
+   * the market, and the pod's reserved product units return to the sellable
+   * pool. Bringing the pod back has to claim both AGAIN, and by now either can
+   * be gone — the slot to another pod, the stock to the shop — which is why
+   * this is not a `deleted_at = null` write.
+   *
+   * Order matters. The flag flips FIRST, as a conditional write, so two admins
+   * pressing Revoke at the same moment cannot both go on to reserve the same
+   * units; the loser reads "not cancelled" and stops. If a claim then fails,
+   * the pod is put straight back to cancelled at its ORIGINAL timestamp — the
+   * audit trail must not say it was cancelled later than it was.
+   *
+   * What this does NOT undo is the money. Every SUCCESS payment was refunded
+   * and every attendee was emailed and messaged that the pod was off; those are
+   * real movements, and re-charging somebody because an admin changed their
+   * mind is not a thing a button may do. The pod returns with its bookings
+   * intact and their payments refunded, and the console says exactly that
+   * before the admin presses it.
+   */
+  async revokeCancellation(id: string, actorUserId: string) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new GraphQLError('Invalid pod id', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const doc = await PodModel.findById(id).setOptions({ includeDeleted: true });
+    if (!doc) notFound();
+    const cancelledAt = doc!.deleted_at;
+    if (!cancelledAt) notCancelled();
+    // The filter names deleted_at itself, so the soft-delete pre-find hook
+    // stands down and this is the one write that can win the flip.
+    const restored = await PodModel.findOneAndUpdate(
+      { _id: doc!._id, deleted_at: { $ne: null } },
+      { $set: { deleted_at: null, is_active: isActiveAfterRevoke(doc) } },
+      { new: true }
+    ).setOptions({ includeDeleted: true });
+    if (!restored) notCancelled();
+    try {
+      await reclaimSlotForRevoke(restored);
+      await applyProductDeltas([], restored.product_requests ?? []);
+    } catch (e) {
+      // Hand back whatever was claimed before the failure. A slot still held by
+      // a pod that is cancelled again would be unbookable forever; the release
+      // is keyed on this pod, so it is a no-op when the claim never landed.
+      await venueSlotService.releaseForPod(String(restored._id));
+      await PodModel.updateOne(
+        { _id: restored._id },
+        { $set: { deleted_at: cancelledAt, is_active: false } }
+      ).setOptions({ includeDeleted: true });
+      throw e;
+    }
+    await podAuditService.record({
+      pod: restored,
+      action: 'RESTORE',
+      source: 'ADMIN',
+      actorUserId,
+      note: REVOKE_CANCELLATION_NOTE,
+    });
+    const slugMap = await loadClubSlugMap([restored]);
+    return toPub(restored, slugMap);
   },
 
   /**

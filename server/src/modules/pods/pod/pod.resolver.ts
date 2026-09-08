@@ -369,6 +369,14 @@ export const podResolvers = {
       const user = requireRole(ctx, ADMIN_WRITE);
       return podService.remove(args.pod_doc_id, { actorUserId: user.id, source: 'ADMIN' });
     },
+    revokePodCancellation: async (
+      _p: unknown,
+      args: { pod_doc_id: string },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, ADMIN_WRITE);
+      return podService.revokeCancellation(args.pod_doc_id, user.id);
+    },
     incrementPodHits: async (_p: unknown, args: { pod_doc_id: string }) =>
       podService.incrementHits(args.pod_doc_id),
     togglePodLike: async (

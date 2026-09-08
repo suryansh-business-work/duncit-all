@@ -74,6 +74,7 @@ export const PORTAL_ACCESS: PortalAccess[] = [
   { key: 'onboarding', name: 'Onboarding', url: url('onboarding'), roles: [{ key: 'ONBOARDING_MANAGER', name: 'Onboarding Manager' }] },
   { key: 'challenge', name: 'Challenges', url: url('challenge'), roles: [{ key: 'CHALLENGE_MANAGER', name: 'Challenge Manager' }] },
   { key: 'developers', name: 'Developers', url: url('developers'), roles: [{ key: 'DEVELOPERS_MANAGER', name: 'Developers Manager' }] },
+  { key: 'regional-club-admin', name: 'Regional Club Admin', url: url('regional-club-admin'), roles: [{ key: 'REGIONAL_CLUB_ADMIN', name: 'Regional Club Admin' }] },
 ];
 
 export interface RolePortalInfo {

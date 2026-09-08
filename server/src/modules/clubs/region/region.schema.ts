@@ -60,7 +60,31 @@ export const regionTypeDefs = /* GraphQL */ `
     region_name: String!
   }
 
-  "One pod in the host drawer's table."
+  """
+  One club a region's Club Admin runs — the first level of the drill-down a
+  manager opens from the Club Admins table.
+  """
+  type RegionClub {
+    id: ID!
+    "Public club handle (the slug), not the document id."
+    club_id: String!
+    club_name: String!
+    city: String!
+    locality: String!
+    "Every pod the club has ever held, cancelled ones included."
+    pod_count: Int!
+    is_active: Boolean!
+  }
+
+  "Server-side table page for the shared table engine."
+  type RegionClubPage {
+    rows: [RegionClub!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  "One pod in the host drawer's table, or in a club's."
   type RegionHostPod {
     id: ID!
     pod_id: String!
@@ -90,8 +114,45 @@ export const regionTypeDefs = /* GraphQL */ `
     myRegionMembers: [RegionMember!]!
     "Club Admins this manager could add to the region."
     regionClubAdminCandidates(search: String, limit: Int): [RegionCandidate!]!
-    "One host's pods inside this region — the side drawer's table."
+    "One host's pods inside this region — the canvas drawer's table."
     regionHostPods(host_user_id: ID!, query: TableQueryInput): RegionHostPodPage!
+    """
+    The clubs ONE of the region's Club Admins runs.
+
+    Refused for somebody who is not in the caller's region: a manager reads
+    their own patch, and a user id from elsewhere is not an entry point.
+    """
+    regionClubAdminClubs(user_id: ID!, query: TableQueryInput): RegionClubPage!
+    "Pods of ONE club in the region — the second level of the drill-down."
+    regionClubPods(club_id: ID!, query: TableQueryInput): RegionHostPodPage!
+    """
+    Attendees of one pod in the caller's region — the region twin of
+    adminPodAttendees.
+
+    Its own query rather than a role added to the admin one: a region is a
+    MEMBERSHIP chain (my Club Admins -> their clubs -> those clubs' pods), and
+    requireRole cannot express a chain. Gated on the pod belonging to the
+    region, which is what keeps a manager inside their own patch.
+    """
+    regionPodAttendees(pod_doc_id: ID!): [AdminPodAttendee!]!
+    "Full action trail of one pod in the caller's region, newest first."
+    regionPodAuditLogs(pod_doc_id: ID!): [PodAuditLog!]!
+    """
+    Payments for ONE pod in the caller's region.
+
+    Deliberately takes a pod id instead of the admin paymentsTable's free-form
+    TableQueryInput: that input can express "every payment on the platform".
+    The pod filter is applied server-side and cannot be widened by the caller.
+    """
+    regionPodPayments(pod_doc_id: ID!, query: TableQueryInput): PaymentTablePage!
+    "Rating + review summary for one pod in the caller's region."
+    regionPodFeedback(pod_doc_id: ID!, limit: Int): PodFeedbackSummary!
+    """
+    The host profile behind one of this pod's hosts. Scoped to the pod, not to
+    an arbitrary user id: a manager may read the host running a pod in their
+    region, not look up any host on the platform.
+    """
+    regionPodHost(pod_doc_id: ID!, user_id: ID!): Host
   }
 
   extend type Mutation {

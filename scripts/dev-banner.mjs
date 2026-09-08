@@ -34,6 +34,7 @@ const projects = [
   { label: 'earnwith-website',         port: 2025 },
   { label: 'challenge-portal',         port: 2026 },
   { label: 'developers-portal',        port: 2027 },
+  { label: 'regional-club-admin',      port: 2029 },
   // External: not a pnpm workspace, so `pnpm --recursive dev` doesn't start it.
   // Listed for reference; excluded from the "all ready" gate. Run via `pnpm dev:mobile`.
   { label: 'native (mobile web)',      port: 2022, external: true },

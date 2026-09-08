@@ -18,6 +18,7 @@ export { useColorMode, type AccentColors } from '@duncit/theme';
 
 // Unified chrome.
 export { AppShell, type AppShellProps, type AppShellPortalConfig } from './chrome/AppShell';
+export { PortalAppShell, type PortalAppShellProps } from './chrome/PortalAppShell';
 export { AppHeader, type AppHeaderProps } from './chrome/AppHeader';
 export { HeaderSearch, deriveSearchItems, type HeaderSearchProps } from './chrome/HeaderSearch';
 export { AppSidebar, type AppSidebarProps } from './chrome/AppSidebar';

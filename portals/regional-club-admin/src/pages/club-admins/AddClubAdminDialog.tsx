@@ -13,13 +13,13 @@ import {
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useDebouncedValue } from '@duncit/ui';
-import { useTranslation } from '@duncit/app-settings';
 import { parseApiError } from '@duncit/utils';
+import { useTranslation } from '../../i18n';
 import {
   ADD_REGION_CLUB_ADMIN,
   REGION_CLUB_ADMIN_CANDIDATES,
   type RegionCandidate,
-} from './queries';
+} from '../queries';
 
 interface Props {
   open: boolean;

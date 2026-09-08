@@ -45,6 +45,7 @@ const BROWSER_SUITES = [
   { name: 'onboarding', dir: 'portals/onboarding', port: 2016 },
   { name: 'partners-app', dir: 'portals/partners-app', port: 2005 },
   { name: 'products', dir: 'portals/products', port: 2014 },
+  { name: 'regional-club-admin', dir: 'portals/regional-club-admin', port: 2029 },
   { name: 'support', dir: 'portals/support', port: 2010 },
   { name: 'tech', dir: 'portals/tech', port: 2009 },
   { name: 'website-app', dir: 'portals/website-app', port: 2011 },

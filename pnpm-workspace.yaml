@@ -19,6 +19,7 @@ packages:
   - portals/onboarding
   - portals/hr
   - portals/employee
+  - portals/regional-club-admin
   - portals/challenge-portal
   - portals/developers
   - website/status-website

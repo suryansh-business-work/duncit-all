@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       services:
-        description: 'Comma-separated list: server,admin,mweb,website,partners-app,partners-website,ads-portal,ads-website,native,crm,finance,tech,support,website-app,legal,ai,products,marketing,challenge,developers,earnwith (or "all")'
+        description: 'Comma-separated list: server,admin,mweb,website,partners-app,partners-website,ads-portal,ads-website,native,crm,finance,tech,support,website-app,legal,ai,products,marketing,challenge,developers,earnwith,regional-club-admin (or "all")'
         required: false
         default: 'all'
 
@@ -181,6 +181,7 @@ jobs:
       status: ${{ steps.filter.outputs.status }}
       challenge: ${{ steps.filter.outputs.challenge }}
       developers: ${{ steps.filter.outputs.developers }}
+      regional_club_admin: ${{ steps.filter.outputs.regional_club_admin }}
       earnwith: ${{ steps.filter.outputs.earnwith }}
     steps:
       - uses: actions/checkout@v5
@@ -397,6 +398,15 @@ jobs:
               - '.github/workflows/deploy.yml'
             developers:
               - 'portals/developers/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'packages/**'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            regional_club_admin:
+              - 'portals/regional-club-admin/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -1348,6 +1358,41 @@ jobs:
               --cache-to   type=gha,scope=duncit-developers${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
+  build-regional-club-admin:
+    needs: changes
+    if: needs.changes.outputs.regional_club_admin == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: regional-club-admin
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push regional-club-admin
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file portals/regional-club-admin/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-regional-club-admin:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-regional-club-admin:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
+              --build-arg VITE_REQUIRED_ROLES=REGIONAL_CLUB_ADMIN \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
+              --cache-from type=gha,scope=duncit-regional-club-admin${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-regional-club-admin${{ env.SCOPE_SUFFIX }},mode=max \
+              --push .
+
   build-earnwith:
     needs: changes
     if: needs.changes.outputs.earnwith == 'true' || github.event_name == 'workflow_dispatch'
@@ -1388,8 +1433,8 @@ jobs:
   # restarts the services whose images were rebuilt.
   # -----------------------------------------------------------
   deploy:
-    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads-portal, build-ads-website, build-native, build-crm, build-open-wa, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing, build-onboarding, build-hr, build-employee, build-status, build-challenge, build-developers, build-earnwith]
-    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads-portal.result == 'success' || needs.build-ads-website.result == 'success' || needs.build-native.result == 'success' || needs.build-crm.result == 'success' || needs.build-open-wa.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success' || needs.build-onboarding.result == 'success' || needs.build-hr.result == 'success' || needs.build-employee.result == 'success' || needs.build-status.result == 'success' || needs.build-challenge.result == 'success' || needs.build-developers.result == 'success' || needs.build-earnwith.result == 'success')
+    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads-portal, build-ads-website, build-native, build-crm, build-open-wa, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing, build-onboarding, build-hr, build-employee, build-status, build-challenge, build-developers, build-regional-club-admin, build-earnwith]
+    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads-portal.result == 'success' || needs.build-ads-website.result == 'success' || needs.build-native.result == 'success' || needs.build-crm.result == 'success' || needs.build-open-wa.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success' || needs.build-onboarding.result == 'success' || needs.build-hr.result == 'success' || needs.build-employee.result == 'success' || needs.build-status.result == 'success' || needs.build-challenge.result == 'success' || needs.build-developers.result == 'success' || needs.build-regional-club-admin.result == 'success' || needs.build-earnwith.result == 'success')
     runs-on: ubuntu-latest
     env:
       # Branch-aware deploy target: the staging stack lives side-by-side with
@@ -1454,6 +1499,7 @@ jobs:
           [ "${{ needs.build-status.result }}" = "success" ] && PARTS+=("status")
           [ "${{ needs.build-challenge.result }}" = "success" ] && PARTS+=("challenge")
           [ "${{ needs.build-developers.result }}" = "success" ] && PARTS+=("developers")
+          [ "${{ needs.build-regional-club-admin.result }}" = "success" ] && PARTS+=("regional-club-admin")
           [ "${{ needs.build-earnwith.result }}" = "success" ] && PARTS+=("earnwith")
           echo "list=${PARTS[*]}" >> "$GITHUB_OUTPUT"
           echo "Restarting: ${PARTS[*]}"
@@ -1637,7 +1683,7 @@ jobs:
           # not-yet-created A record can't fail the whole (all-or-nothing) cert
           # and take HTTPS down with it.
           CERTBOT_EXTRA=""
-          for d in earnwith.duncit.com challenge.duncit.com developers.duncit.com redis.duncit.com; do
+          for d in earnwith.duncit.com challenge.duncit.com developers.duncit.com regional-club-admin.duncit.com redis.duncit.com; do
             if getent hosts "$d" >/dev/null 2>&1 || host "$d" >/dev/null 2>&1; then
               CERTBOT_EXTRA="$CERTBOT_EXTRA -d $d"
             else
@@ -1694,7 +1740,7 @@ jobs:
           # domain is DNS-gated: a missing A record just drops that one host
           # from the SAN list instead of failing the whole all-or-nothing cert.
           CERTBOT_STAGING=""
-          for d in staging.duncit.com staging.server.duncit.com staging.admin.duncit.com staging.mweb.duncit.com staging.partners.duncit.com staging.partners-app.duncit.com staging.ads.duncit.com staging.ads-portal.duncit.com staging.crm.duncit.com staging.finance.duncit.com staging.tech.duncit.com staging.support.duncit.com staging.website.duncit.com staging.legal.duncit.com staging.ai.duncit.com staging.products.duncit.com staging.marketing.duncit.com staging.onboarding.duncit.com staging.hr.duncit.com staging.employee.duncit.com staging.status.duncit.com staging.native.duncit.com staging.open-wa-server.duncit.com staging.earnwith.duncit.com staging.challenge.duncit.com staging.developers.duncit.com staging.redis.duncit.com; do
+          for d in staging.duncit.com staging.server.duncit.com staging.admin.duncit.com staging.mweb.duncit.com staging.partners.duncit.com staging.partners-app.duncit.com staging.ads.duncit.com staging.ads-portal.duncit.com staging.crm.duncit.com staging.finance.duncit.com staging.tech.duncit.com staging.support.duncit.com staging.website.duncit.com staging.legal.duncit.com staging.ai.duncit.com staging.products.duncit.com staging.marketing.duncit.com staging.onboarding.duncit.com staging.hr.duncit.com staging.employee.duncit.com staging.status.duncit.com staging.native.duncit.com staging.open-wa-server.duncit.com staging.earnwith.duncit.com staging.challenge.duncit.com staging.developers.duncit.com staging.regional-club-admin.duncit.com staging.redis.duncit.com; do
             if getent hosts "$d" >/dev/null 2>&1 || host "$d" >/dev/null 2>&1; then
               CERTBOT_STAGING="$CERTBOT_STAGING -d $d"
             else

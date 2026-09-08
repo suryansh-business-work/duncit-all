@@ -56,6 +56,7 @@ jobs:
           - { name: partners-app, dir: portals/partners-app }
           - { name: challenge-portal, dir: portals/challenge-portal }
           - { name: developers-portal, dir: portals/developers }
+          - { name: regional-club-admin, dir: portals/regional-club-admin }
 
     steps:
       - name: Checkout

@@ -18,6 +18,7 @@ export const PORTALS = [
   'onboarding',
   'hr',
   'employee',
+  'regional-club-admin',
   'ads-portal',
   'partners-app',
   'challenge-portal',

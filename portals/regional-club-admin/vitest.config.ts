@@ -1,0 +1,45 @@
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    // Vitest specs live under __tests__/unit-tests; Cypress e2e specs are
+    // discovered separately by Cypress, never by vitest.
+    include: ['__tests__/unit-tests/**/*.{test,spec}.{ts,tsx}'],
+    exclude: ['node_modules/**', 'dist/**', '__tests__/e2e/**'],
+    // This console ships no vitest suites yet — the console's own behaviour is
+    // driven end-to-end by its Cypress spec. An empty run must be a pass, not a
+    // failure that reads as "the tests broke".
+    passWithNoTests: true,
+    css: false,
+    server: { deps: { inline: [/@mui/] } },
+    coverage: {
+      provider: 'v8',
+      // Vitest writes NO coverage report when a test fails (reportOnFailure
+      // defaults to false), so one red suite would delete this workspace's lcov
+      // and SonarQube would read the silence as 0%.
+      reportOnFailure: true,
+      all: true,
+      reporter: ['text', 'text-summary', 'json-summary', 'lcov'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        // App bootstrap — mounts the portal into the DOM (window.google + live frame).
+        'src/main.tsx',
+        // Thin Apollo client factory (graphqlUrl + getToken wiring only).
+        'src/apollo.ts',
+        // Runtime URL config tied to import.meta.env.DEV — no unit-testable logic.
+        'src/config/url-configs.ts',
+        // Static per-portal config data (no business logic).
+        'src/config/app-config.ts',
+        // Ambient type-declaration + type-only files.
+        'src/**/*.d.ts',
+        'src/**/*.types.{ts,tsx}',
+        // Test files themselves.
+        'src/**/*.{cy,test,spec}.{ts,tsx}',
+      ],
+    },
+  },
+});

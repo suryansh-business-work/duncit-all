@@ -56,6 +56,7 @@ export const PORTALS: PortalEntry[] = [
   { key: 'hr', name: 'HR', descriptionKey: 'session.portals.descriptions.hr', port: 2017, subdomain: 'hr', category: 'people', image: PEXELS('3184292') },
   { key: 'employee', name: 'Employee', descriptionKey: 'session.portals.descriptions.employee', port: 2018, subdomain: 'employee', category: 'people', image: PEXELS('4974915') },
   { key: 'partners', name: 'Partners', descriptionKey: 'session.portals.descriptions.partners', port: 2005, subdomain: 'partners-app', category: 'partners', image: PEXELS('4963388') },
+  { key: 'regional-club-admin', name: 'Regional Club Admin', descriptionKey: 'session.portals.descriptions.regionalClubAdmin', port: 2029, subdomain: 'regional-club-admin', category: 'partners', image: PEXELS('1181406') },
 ];
 
 /** Resolves a portal URL: localhost:<port> in dev, https://<sub>.duncit.com in prod. */

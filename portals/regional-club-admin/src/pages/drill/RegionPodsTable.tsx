@@ -1,50 +1,56 @@
 import { useMemo } from 'react';
 import { useApolloClient } from '@apollo/client/react';
-import { Box, Drawer, Stack, Typography } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import { DuncitIconButton } from '@duncit/buttons';
+import { Stack, Typography } from '@mui/material';
+import type { DocumentNode } from 'graphql';
 import { StatusChip } from '@duncit/ui';
-import {
-  DuncitTable,
-  dateColumn,
-  useApolloTableFetch,
-  type DuncitColumn,
-} from '@duncit/table';
-import { useTranslation } from '@duncit/app-settings';
+import { DuncitTable, dateColumn, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { formatMoney } from '@duncit/utils';
-import { REGION_HOST_PODS, type RegionHostPod } from './queries';
+import { useTranslation } from '../../i18n';
+import type { RegionHostPod } from '../queries';
 
 interface Props {
-  /** The host whose pods to show; null keeps the drawer closed. */
-  host: { id: string; label: string } | null;
+  /** REGION_HOST_PODS or REGION_CLUB_PODS — the row shape is the same. */
+  document: DocumentNode;
+  /** Root field on the response, and the variable that scopes it. */
+  rootField: string;
+  variables: Record<string, string>;
+  /** Refetch key: the id the table is scoped to. */
+  scopeKey: string;
   currency: string;
-  onClose: () => void;
+  emptyText: string;
+  /** A pod row opens its full detail page. */
+  onOpenPod: (podDocId: string) => void;
 }
 
 const getRowId = (row: RegionHostPod) => row.id;
 const ACTIVE_COLORS = { ON: 'success', OFF: 'default' } as const;
 
 /**
- * One host's pods, opened by clicking their box on the canvas.
+ * The pods table, used by BOTH drill-down paths.
  *
- * A drawer rather than a sixth column of nodes: a busy host runs dozens of
- * pods, and dozens of boxes hanging off one node is a canvas nobody can read.
- * The pods are also the only level with columns worth sorting.
- *
- * The list is scoped server-side to this region's own clubs — a host runs pods
- * elsewhere too, and those are not this manager's to see.
+ * A host's pods and a club's pods are the same rows read through two
+ * server-side scopes, so they are one component with the document passed in —
+ * two copies is how the two lists end up with different columns and only one of
+ * them sortable (rule 34).
  */
-export default function HostPodsDrawer({ host, currency, onClose }: Readonly<Props>) {
+export default function RegionPodsTable({
+  document,
+  rootField,
+  variables,
+  scopeKey,
+  currency,
+  emptyText,
+  onOpenPod,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const client = useApolloClient();
-  const hostId = host?.id ?? '';
 
   const fetchRows = useApolloTableFetch<RegionHostPod>(
     client,
-    REGION_HOST_PODS,
-    'regionHostPods',
-    { extraVariables: { host_user_id: hostId } },
-    [hostId],
+    document,
+    rootField,
+    { extraVariables: variables },
+    [scopeKey],
   );
 
   const columns = useMemo<DuncitColumn<RegionHostPod>[]>(() => {
@@ -85,7 +91,7 @@ export default function HostPodsDrawer({ host, currency, onClose }: Readonly<Pro
         headerName: t('partners.regional.club'),
         minWidth: 150,
         sortable: false,
-        valueGetter: (row) => row.club_name || '—',
+        valueGetter: (row) => row.club_name,
       },
       {
         field: 'pod_amount',
@@ -113,38 +119,16 @@ export default function HostPodsDrawer({ host, currency, onClose }: Readonly<Pro
   }, [t, currency]);
 
   return (
-    <Drawer
-      anchor="right"
-      open={!!host}
-      onClose={onClose}
-      slotProps={{ paper: { sx: { width: { xs: '100%', sm: 620, lg: 780 }, p: 2.5 } } }}
-    >
-      <Stack direction="row" sx={{ alignItems: 'center', mb: 2 }}>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: 800 }}>
-            {host?.label}
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {t('partners.regional.hostPodsSubtitle')}
-          </Typography>
-        </Box>
-        <DuncitIconButton aria-label={t('shell.common.close')} onClick={onClose}>
-          <CloseIcon />
-        </DuncitIconButton>
-      </Stack>
-
-      {host && (
-        <DuncitTable<RegionHostPod>
-          tableId="regional-host-pods"
-          columns={columns}
-          fetchRows={fetchRows}
-          getRowId={getRowId}
-          emptyText={t('partners.regional.noPodsForHost')}
-          defaultSort={{ field: 'pod_date_time', dir: 'desc' }}
-          defaultPageSize={10}
-          searchPlaceholder={t('partners.regional.searchPods')}
-        />
-      )}
-    </Drawer>
+    <DuncitTable<RegionHostPod>
+      tableId={`regional-pods-${rootField}`}
+      columns={columns}
+      fetchRows={fetchRows}
+      getRowId={getRowId}
+      emptyText={emptyText}
+      defaultSort={{ field: 'pod_date_time', dir: 'desc' }}
+      defaultPageSize={10}
+      searchPlaceholder={t('partners.regional.searchPods')}
+      onRowClick={(row) => onOpenPod(row.id)}
+    />
   );
 }

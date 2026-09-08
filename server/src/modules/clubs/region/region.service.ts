@@ -4,42 +4,20 @@
  * Everything here is scoped to the CALLER's own region. The role says "you
  * manage a region", never "you may read regions" — so no query takes a region
  * id, and a second Regional Club Admin cannot reach this one's branch by
- * asking for it.
+ * asking for it. The scope chain itself lives in `region.scope`, and the
+ * drill-down (clubs, pods, one pod's detail) in `region.pod`.
  */
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { UserModel } from '@modules/access/user/user.model';
 import { userHasRole } from '@modules/access/user/effective-roles';
-import { PodModel } from '@modules/pods/pod/pod.model';
 import { ClubModel } from '@modules/clubs/club/club.model';
 import { RegionModel, type IRegion } from './region.model';
-import { buildRegionTree, regionClubIds } from './region.tree';
-import {
-  runTableQuery,
-  type TableEntityConfig,
-  type TableQueryInput,
-} from '@utils/table-query';
+import { buildRegionTree } from './region.tree';
+import { loadPeople, ownRegion, personName, type NamedUser } from './region.scope';
 
 const clean = (value: unknown, max: number) => String(value ?? '').trim().slice(0, max);
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
-
-/** The drawer's table: one host's pods inside this region. */
-const POD_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['pod_title', 'pod_id'],
-  sortFields: {
-    pod_title: 'pod_title',
-    pod_date_time: 'pod_date_time',
-    pod_amount: 'pod_amount',
-    no_of_spots: 'no_of_spots',
-    created_at: 'created_at',
-  },
-  filterFields: {
-    pod_date_time: { type: 'date' },
-    pod_mode: { type: 'enum' },
-    pod_amount: { type: 'number' },
-  },
-  defaultSort: { pod_date_time: -1 },
-};
 
 function toPub(doc: IRegion) {
   return {
@@ -53,52 +31,6 @@ function toPub(doc: IRegion) {
     created_at: doc.created_at?.toISOString?.() ?? '',
     updated_at: doc.updated_at?.toISOString?.() ?? '',
   };
-}
-
-/** A lean() user, as far as naming one goes. */
-interface NamedUser {
-  profile?: { first_name?: string | null; last_name?: string | null } | null;
-  auth?: { email?: string | null } | null;
-}
-
-/** first+last name, or the email when a profile has neither. */
-const personName = (user: NamedUser) =>
-  [user.profile?.first_name, user.profile?.last_name].filter(Boolean).join(' ').trim() ||
-  user.auth?.email ||
-  '';
-
-/**
- * The caller's region, created on first read.
- *
- * There is no onboarding application behind this role, so there is nothing to
- * approve and nothing to wait for: granting the role IS the appointment, and
- * the row appears the moment its holder opens the console. `upsert` rather
- * than find-then-create because two tabs opening together would otherwise both
- * create one, and `manager_user_id` is unique.
- */
-async function ownRegion(userId: string): Promise<IRegion> {
-  const manager = new Types.ObjectId(userId);
-  const existing = await RegionModel.findOne({ manager_user_id: manager });
-  if (existing) return existing;
-  const user = await UserModel.findById(userId)
-    .select('profile.first_name profile.last_name auth.email')
-    .lean<NamedUser | null>();
-  const name = user ? personName(user) : '';
-  const doc = new RegionModel({
-    manager_user_id: manager,
-    // Named after the person until they rename it — a blank title on a canvas
-    // reads as a rendering fault rather than as an unnamed region.
-    region_name: name ? `${name}'s Region` : 'My Region',
-  });
-  try {
-    await doc.save();
-    return doc;
-  } catch {
-    // Lost the race with another tab: whoever won has the row.
-    const won = await RegionModel.findOne({ manager_user_id: manager });
-    if (!won) throw new GraphQLError('Could not open your region', { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
-    return won;
-  }
 }
 
 export const regionService = {
@@ -175,15 +107,20 @@ export const regionService = {
     return toPub((await RegionModel.findById(region._id)) as IRegion);
   },
 
-  /** The region's Club Admins, with the clubs each one runs. */
+  /**
+   * The region's Club Admins, with the clubs each one runs.
+   *
+   * TWO reads for the whole table — the people and their clubs — and the clubs
+   * are grouped by pushing into the map rather than rebuilding each list, which
+   * is what keeps a manager with forty clubs linear instead of quadratic.
+   */
   async members(userId: string) {
     const region = await ownRegion(userId);
     const ids = region.club_admin_user_ids ?? [];
     if (ids.length === 0) return [];
-    const [users, clubs] = await Promise.all([
-      UserModel.find({ _id: { $in: ids } })
-        .select('profile.first_name profile.last_name auth.email')
-        .lean<Array<NamedUser & { _id: unknown }>>(),
+    const inRegion = new Set(ids.map(String));
+    const [people, clubs] = await Promise.all([
+      loadPeople(ids),
       ClubModel.find({ admin_user_ids: { $in: ids } })
         .select('club_name admin_user_ids')
         .lean(),
@@ -192,34 +129,45 @@ export const regionService = {
     for (const club of clubs) {
       for (const admin of club.admin_user_ids ?? []) {
         const key = String(admin);
-        clubsByAdmin.set(key, [...(clubsByAdmin.get(key) ?? []), club.club_name]);
+        // A club co-run by somebody outside this region must not put that
+        // person's name in the table — only this region's own rows are listed.
+        if (!inRegion.has(key)) continue;
+        const list = clubsByAdmin.get(key);
+        if (list) list.push(club.club_name);
+        else clubsByAdmin.set(key, [club.club_name]);
       }
     }
-    return users.map((user) => ({
-      user_id: String(user._id),
-      name: personName(user),
-      email: user.auth?.email ?? '',
-      clubs: clubsByAdmin.get(String(user._id)) ?? [],
-      club_count: (clubsByAdmin.get(String(user._id)) ?? []).length,
-    }));
+    return ids.map((id) => {
+      const key = String(id);
+      const person = people.get(key);
+      const own = clubsByAdmin.get(key) ?? [];
+      return {
+        user_id: key,
+        name: person?.name ?? '',
+        email: person?.email ?? '',
+        clubs: own,
+        club_count: own.length,
+      };
+    });
   },
 
   /**
    * Club Admins this manager could add.
    *
    * Anyone already in ANY region is left out — the picker offering somebody who
-   * cannot be added is a dead option, and the add would fail anyway.
+   * cannot be added is a dead option, and the add would fail anyway. The taken
+   * set is excluded IN the query (`$nin`) rather than over-fetching and
+   * filtering afterwards, so the limit is the number of rows the database
+   * actually returns.
    */
   async candidates(userId: string, search: string, limit: number) {
     const region = await ownRegion(userId);
-    const claimed = await RegionModel.find({}).select('club_admin_user_ids').lean();
-    const taken = new Set(
-      claimed.flatMap((row) => (row.club_admin_user_ids ?? []).map(String))
-    );
+    const taken = (await RegionModel.distinct('club_admin_user_ids')) as Types.ObjectId[];
     const term = clean(search, 80);
-    const rx = term ? new RegExp(escapeRegex(term), 'i') : null;
     const filter: Record<string, unknown> = { 'metadata.role_keys': 'CLUB_ADMIN' };
-    if (rx) {
+    if (taken.length > 0) filter._id = { $nin: taken };
+    if (term) {
+      const rx = new RegExp(escapeRegex(term), 'i');
       filter.$or = [
         { 'profile.first_name': rx },
         { 'profile.last_name': rx },
@@ -228,60 +176,13 @@ export const regionService = {
     }
     const users = await UserModel.find(filter)
       .select('profile.first_name profile.last_name auth.email')
-      .limit(limit + taken.size)
+      .limit(limit)
       .lean<Array<NamedUser & { _id: unknown }>>();
-    return users
-      .filter((user) => !taken.has(String(user._id)))
-      .slice(0, limit)
-      .map((user) => ({
-        user_id: String(user._id),
-        name: personName(user),
-        email: user.auth?.email ?? '',
-        region_name: region.region_name,
-      }));
-  },
-
-  /**
-   * One host's pods — the side drawer's table.
-   *
-   * Scoped twice: the host must be one this region can see, AND the pods are
-   * limited to the region's own clubs. A host runs pods for clubs outside this
-   * region too, and those are not this manager's to read.
-   */
-  async hostPods(userId: string, hostUserId: string, input?: TableQueryInput | null) {
-    if (!Types.ObjectId.isValid(hostUserId)) {
-      throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });
-    }
-    const region = await ownRegion(userId);
-    const clubIds = await regionClubIds(region.club_admin_user_ids ?? []);
-    if (clubIds.length === 0) {
-      return { rows: [], total: 0, page: 1, page_size: 25 };
-    }
-    const { docs, total, page, page_size } = await runTableQuery<any>(
-      PodModel,
-      { club_id: { $in: clubIds }, pod_hosts_id: new Types.ObjectId(hostUserId) },
-      input,
-      POD_TABLE_CONFIG
-    );
-    const clubs = await ClubModel.find({ _id: { $in: docs.map((pod) => pod.club_id) } })
-      .select('club_name')
-      .lean();
-    const clubName = new Map(clubs.map((club) => [String(club._id), club.club_name]));
-    return {
-      rows: docs.map((pod) => ({
-        id: String(pod._id),
-        pod_id: pod.pod_id ?? '',
-        pod_title: pod.pod_title ?? '',
-        pod_date_time: pod.pod_date_time?.toISOString?.() ?? '',
-        pod_mode: pod.pod_mode ?? '',
-        pod_amount: pod.pod_amount ?? 0,
-        no_of_spots: pod.no_of_spots ?? 0,
-        club_name: clubName.get(String(pod.club_id)) ?? '',
-        is_active: pod.is_active !== false,
-      })),
-      total,
-      page,
-      page_size,
-    };
+    return users.map((user) => ({
+      user_id: String(user._id),
+      name: personName(user),
+      email: user.auth?.email ?? '',
+      region_name: region.region_name,
+    }));
   },
 };

@@ -1,0 +1,3 @@
+
+# Cypress run artifacts (screenshots / videos / downloads) are local-only.
+cypress-artifacts/

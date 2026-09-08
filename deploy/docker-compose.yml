@@ -241,6 +241,16 @@ services:
     ports:
       - "127.0.0.1:2027:80"
 
+  # regional-club-admin.duncit.com — the Regional Club Admin console. Split out
+  # of the Partners app: the role is an internal appointment, not a partner
+  # application, so it never belonged behind the partner onboarding chrome.
+  regional-club-admin:
+    image: ${DOCKERHUB_USERNAME}/duncit-regional-club-admin:${IMAGE_TAG:-latest}
+    container_name: duncit-regional-club-admin
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2029:80"
+
   # Redis — the server's GraphQL response cache (server.env: REDIS_URL=
   # redis://redis:6379). Deliberately NO host port: only containers on this
   # network reach it; humans go through the redis-ui below. Infra service, not

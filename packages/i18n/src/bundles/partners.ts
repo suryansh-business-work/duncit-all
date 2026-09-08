@@ -12,58 +12,6 @@ import type { NestedCatalogue } from '../catalogue';
  */
 export const PARTNERS_BUNDLE: NestedCatalogue = {
   partners: {
-    // Regional Club Admin: the org canvas and the one list a region stores.
-    regional: {
-      structureTitle: 'Region Structure',
-      structureSubtitle:
-        'Your whole region on one canvas — every city, locality, Club Admin and Host under you.',
-      clubAdminsTitle: 'Club Admins',
-      clubAdminsSubtitle:
-        'The one thing a region stores. Everything the canvas draws below a Club Admin follows from the clubs they already run.',
-
-      // The five levels, in hierarchy order.
-      kindRegion: 'Region',
-      kindCity: 'City',
-      kindLocality: 'Locality',
-      kindClubAdmin: 'Club Admin',
-      kindHost: 'Host',
-
-      clickHostHint: 'Click a Host to see the pods they run in this region.',
-      emptyRegion:
-        'No Club Admins in your region yet. Add one from the Club Admins page and the canvas fills in from the clubs they run.',
-
-      // The host pods drawer.
-      hostPodsSubtitle: 'Pods this host runs inside your region.',
-      pod: 'Pod',
-      when: 'When',
-      club: 'Club',
-      price: 'Price',
-      spots: 'Spots',
-      podLive: 'Live',
-      podOff: 'Off',
-      noPodsForHost: 'This host has no pods in your region yet.',
-      searchPods: 'Search pod name or id',
-
-      // Managing the region's Club Admins.
-      regionName: 'Region name',
-      memberCount: '{count} Club Admin(s)',
-      clubAdmin: 'Club Admin',
-      clubs: 'Clubs',
-      clubCount: 'Clubs',
-      noClubsYet: 'No clubs assigned yet',
-      noMembersYet: 'No Club Admins in this region yet.',
-      searchMembers: 'Search name, email or club',
-      addClubAdmin: 'Add Club Admin',
-      add: 'Add',
-      remove: 'Remove',
-      removeFromRegion: 'Remove from region',
-      removeConfirm:
-        '{name} will leave this region. Their clubs, hosts and pods are untouched — only your view of them changes.',
-      searchClubAdmins: 'Search Club Admins',
-      candidateHint: 'Only Club Admins who are not already in a region are offered.',
-      noClubAdminsFound: 'No Club Admin matches that search.',
-    },
-
     earn: {
       title: 'Earn with Duncit',
       subtitle: 'Pick a way to start earning on Duncit.',

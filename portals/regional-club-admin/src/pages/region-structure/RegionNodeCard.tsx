@@ -1,16 +1,19 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { Box, Chip, Stack, Typography } from '@mui/material';
-import { useTranslation } from '@duncit/app-settings';
-import { NODE_HEIGHT, NODE_WIDTH } from './layout';
-import { NODE_KIND_KEYS, NODE_TONE, type RegionNodeKind } from './queries';
+import { useTranslation } from '../../i18n';
+import { NODE_HEIGHT, NODE_WIDTH, type LayoutDirection } from './layout';
+import { NODE_KIND_KEYS, NODE_TONE, type RegionNodeKind } from '../queries';
 
 export interface RegionNodeData extends Record<string, unknown> {
   kind: RegionNodeKind;
   label: string;
   sub_label: string;
   count: number;
-  /** HOST nodes open the pods drawer; every other level is read-only. */
+  /** HOST and CLUB_ADMIN boxes open the drill-down; the rest are read-only. */
   openable: boolean;
+  /** False while a search is running and this box is not one of the matches. */
+  matched: boolean;
+  direction: LayoutDirection;
 }
 
 /**
@@ -19,16 +22,19 @@ export interface RegionNodeData extends Record<string, unknown> {
  * Hoisted to module scope rather than declared inside the canvas (rule 26a):
  * React Flow keeps `nodeTypes` in a ref and remounts every node when the map's
  * identity changes, so a component defined per render would rebuild the whole
- * graph on each keystroke elsewhere on the page.
+ * graph on each keystroke of the search box.
  *
- * A HOST box is the only one that does anything when clicked, and it says so —
- * the pod count is a chip and the cursor is a pointer. Nothing else pretends
- * to be interactive.
+ * A box that DOES something when clicked says so — the cursor is a pointer and
+ * its count chip is coloured. Nothing else pretends to be interactive. While a
+ * search is running the boxes that do not match dim rather than disappear:
+ * a tree with holes punched in it is unreadable, and the branch a match sits on
+ * is most of what the manager is looking for.
  */
 export default function RegionNodeCard({ data }: NodeProps) {
   const { t } = useTranslation();
   const node = data as RegionNodeData;
   const tone = NODE_TONE[node.kind];
+  const vertical = node.direction === 'TB';
 
   return (
     <Box
@@ -42,10 +48,16 @@ export default function RegionNodeCard({ data }: NodeProps) {
         border: 2,
         borderColor: `${tone}.main`,
         cursor: node.openable ? 'pointer' : 'default',
-        boxShadow: 1,
+        boxShadow: node.matched ? 3 : 1,
+        opacity: node.matched ? 1 : 0.28,
+        transition: 'opacity 160ms ease, box-shadow 160ms ease',
       }}
     >
-      <Handle type="target" position={Position.Left} style={{ opacity: 0 }} />
+      <Handle
+        type="target"
+        position={vertical ? Position.Top : Position.Left}
+        style={{ opacity: 0 }}
+      />
       <Stack spacing={0.5}>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <Typography
@@ -68,7 +80,11 @@ export default function RegionNodeCard({ data }: NodeProps) {
           </Typography>
         )}
       </Stack>
-      <Handle type="source" position={Position.Right} style={{ opacity: 0 }} />
+      <Handle
+        type="source"
+        position={vertical ? Position.Bottom : Position.Right}
+        style={{ opacity: 0 }}
+      />
     </Box>
   );
 }

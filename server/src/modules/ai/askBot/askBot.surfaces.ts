@@ -151,6 +151,15 @@ export const SURFACES: readonly Surface[] = [
       'Where hosts, venues, e-commerce brands and club admins run their own business with Duncit.',
   },
   {
+    key: 'regional-club-admin',
+    name: 'Regional Club Admin',
+    kind: 'PORTAL',
+    host: 'regional-club-admin.duncit.com',
+    dev_port: 2029,
+    summary:
+      "A Regional Club Admin's own console: the region canvas, the Club Admins under them, and the clubs and pods below those people.",
+  },
+  {
     key: 'challenge',
     name: 'Challenges',
     kind: 'PORTAL',

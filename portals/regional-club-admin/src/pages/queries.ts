@@ -8,6 +8,23 @@ const REGION_FIELDS = `
   club_admin_count
 `;
 
+/** Every pod table in this console reads the same row — the canvas drawer's
+ * and the club drill-down's are one component, so they are one selection. */
+const POD_ROW_FIELDS = `
+  total
+  rows {
+    id
+    pod_id
+    pod_title
+    pod_date_time
+    pod_mode
+    pod_amount
+    no_of_spots
+    club_name
+    is_active
+  }
+`;
+
 export const MY_REGION_TREE = gql`
   query MyRegionTree {
     myRegion {
@@ -47,6 +64,9 @@ export const MY_REGION_MEMBERS = gql`
       clubs
       club_count
     }
+    publicFinanceSettings {
+      currency_symbol
+    }
   }
 `;
 
@@ -63,18 +83,32 @@ export const REGION_CLUB_ADMIN_CANDIDATES = gql`
 export const REGION_HOST_PODS = gql`
   query RegionHostPods($host_user_id: ID!, $query: TableQueryInput) {
     regionHostPods(host_user_id: $host_user_id, query: $query) {
+      ${POD_ROW_FIELDS}
+    }
+  }
+`;
+
+export const REGION_CLUB_ADMIN_CLUBS = gql`
+  query RegionClubAdminClubs($user_id: ID!, $query: TableQueryInput) {
+    regionClubAdminClubs(user_id: $user_id, query: $query) {
       total
       rows {
         id
-        pod_id
-        pod_title
-        pod_date_time
-        pod_mode
-        pod_amount
-        no_of_spots
+        club_id
         club_name
+        city
+        locality
+        pod_count
         is_active
       }
+    }
+  }
+`;
+
+export const REGION_CLUB_PODS = gql`
+  query RegionClubPods($club_id: ID!, $query: TableQueryInput) {
+    regionClubPods(club_id: $club_id, query: $query) {
+      ${POD_ROW_FIELDS}
     }
   }
 `;
@@ -153,6 +187,16 @@ export interface RegionHostPod {
   pod_amount: number;
   no_of_spots: number;
   club_name: string;
+  is_active: boolean;
+}
+
+export interface RegionClub {
+  id: string;
+  club_id: string;
+  club_name: string;
+  city: string;
+  locality: string;
+  pod_count: number;
   is_active: boolean;
 }
 

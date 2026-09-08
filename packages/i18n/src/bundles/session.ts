@@ -67,6 +67,7 @@ export const SESSION_BUNDLE: NestedCatalogue = {
         onboarding: 'Welcome, verify and activate new members and partners.',
         partners: 'Host and venue onboarding and management.',
         products: 'Catalog, inventory and product roadmap.',
+        regionalClubAdmin: 'Your region — its Club Admins, and everything under them.',
         support: 'Tickets, live chat and customer support.',
         tech: 'Environment, feature flags and platform config.',
         websiteApp: 'Site content, careers, newsroom and blog.',

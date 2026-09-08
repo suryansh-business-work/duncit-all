@@ -28,6 +28,14 @@ export const employeeExpenseResolvers = {
       const user = requireRole(ctx, EMPLOYEE_RW);
       return employeeExpenseService.myTable(user.id, args.query);
     },
+    myEmployeeExpense: async (
+      _p: unknown,
+      args: { expense_doc_id: string },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, EMPLOYEE_RW);
+      return employeeExpenseService.mine(args.expense_doc_id, user.id);
+    },
     myEmployeeExpenseSummary: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const user = requireRole(ctx, EMPLOYEE_RW);
       return employeeExpenseService.mySummary(user.id);

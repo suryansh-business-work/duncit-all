@@ -73,6 +73,11 @@ export const employeeExpenseTypeDefs = /* GraphQL */ `
   extend type Query {
     "The signed-in employee's own claims."
     myEmployeeExpensesTable(query: TableQueryInput): EmployeeExpenseTablePage!
+    """
+    One of the signed-in employee's own claims, so the claim page can open from
+    its own URL rather than only from the row that was clicked.
+    """
+    myEmployeeExpense(expense_doc_id: ID!): EmployeeExpense!
     "Tiles for the signed-in employee's own claims."
     myEmployeeExpenseSummary: EmployeeExpenseSummary!
     "Finance: every employee's claims, with the employee joined on."

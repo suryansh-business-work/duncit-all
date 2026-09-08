@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Divider, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -16,7 +17,6 @@ import {
 } from '@duncit/utils';
 import ExpenseKpis from './ExpenseKpis';
 import MyExpensesTable from './MyExpensesTable';
-import ExpenseClaimDialog from './ExpenseClaimDialog';
 import {
   DELETE_EXPENSE_CLAIM,
   MY_EXPENSE_SUMMARY,
@@ -38,9 +38,8 @@ interface SummaryQueryData {
  */
 export default function ExpensesPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const listRefetch = useRef<(() => void) | null>(null);
-  const [editing, setEditing] = useState<EmployeeExpenseClaim | null>(null);
-  const [formOpen, setFormOpen] = useState(false);
   const [pendingWithdraw, setPendingWithdraw] = useState<EmployeeExpenseClaim | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [remove, removeState] = useMutation(DELETE_EXPENSE_CLAIM);
@@ -72,16 +71,11 @@ export default function ExpensesPage() {
     );
   }, [refetchSummary]);
 
-  const openNew = () => {
-    setEditing(null);
-    setError(null);
-    setFormOpen(true);
-  };
-  const openEdit = useCallback((row: EmployeeExpenseClaim) => {
-    setEditing(row);
-    setError(null);
-    setFormOpen(true);
-  }, []);
+  const openNew = () => navigate('/expenses/new');
+  const openEdit = useCallback(
+    (row: EmployeeExpenseClaim) => navigate(`/expenses/${row.id}/edit`),
+    [navigate],
+  );
 
   const confirmWithdraw = async (row: EmployeeExpenseClaim) => {
     try {
@@ -133,14 +127,6 @@ export default function ExpensesPage() {
           />
         </Box>
       </Stack>
-
-      <ExpenseClaimDialog
-        open={formOpen}
-        claim={editing}
-        currency={currency}
-        onClose={() => setFormOpen(false)}
-        onSaved={afterWrite}
-      />
 
       {pendingWithdraw && (
         <ConfirmDialog

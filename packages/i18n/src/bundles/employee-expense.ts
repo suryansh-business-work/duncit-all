@@ -35,6 +35,14 @@ export const EMPLOYEE_EXPENSE_BUNDLE: NestedCatalogue = {
       approvedCount: '{count} approved',
       rejectedCount: '{count} rejected',
       lockedHint: 'A claim can only be changed while it is still awaiting review.',
+      newClaimSubtitle:
+        'Tell us what you paid for and attach the bill. Nothing is paid back until Finance reviews it.',
+      editClaimSubtitle:
+        'Change what you filed. This is only possible while the claim is still awaiting review.',
+      backToClaims: 'Back to my expenses',
+      approvalDisclaimer:
+        'Filing a claim is a request, not a payment. Every claim is subject to Finance approval — Finance checks the bill and decides, and a rejected claim comes back with a reason.',
+      claimNotFound: 'This claim could not be found. It may have been withdrawn already.',
       withdraw: 'Withdraw claim',
       withdrawTitle: 'Withdraw this claim?',
       withdrawBody:

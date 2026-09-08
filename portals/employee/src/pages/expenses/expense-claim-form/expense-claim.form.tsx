@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Stack } from '@mui/material';
@@ -18,7 +17,7 @@ export default function ExpenseClaimForm({
   onSubmit,
 }: Readonly<ExpenseClaimFormProps>) {
   const { t } = useTranslation();
-  const { control, handleSubmit, reset } = useForm<
+  const { control, handleSubmit } = useForm<
     ExpenseClaimFormValues,
     unknown,
     ExpenseClaimFormValues
@@ -30,12 +29,6 @@ export default function ExpenseClaimForm({
       ExpenseClaimFormValues
     >,
   });
-
-  // The dialog keeps ONE form mounted and swaps which claim it is editing, so
-  // the values have to follow the row rather than the mount.
-  useEffect(() => {
-    reset(toFormValues(claim));
-  }, [claim, reset]);
 
   const submitLabel = claim ? t('shell.common.save') : t('employeeExpense.mine.fileClaim');
 

@@ -249,6 +249,27 @@ export const employeeExpenseService = {
     return pageOf({ employee_id: new Types.ObjectId(employeeId) }, input);
   },
 
+  /**
+   * One of the signed-in employee's own claims, by id.
+   *
+   * The owner is part of the MATCH rather than checked after the read, so an
+   * employee asking for somebody else's claim id gets the same "not found" as
+   * asking for one that never existed.
+   */
+  async mine(id: string, employeeId: string) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new GraphQLError('Expense claim not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+    const rows: JoinedClaim[] = await EmployeeExpenseModel.aggregate([
+      { $match: { _id: new Types.ObjectId(id), employee_id: new Types.ObjectId(employeeId) } },
+      ...JOIN_STAGES,
+    ]);
+    if (rows.length === 0) {
+      throw new GraphQLError('Expense claim not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+    return toPub(rows[0]);
+  },
+
   /** Tiles for the signed-in employee's own claims. */
   mySummary(employeeId: string) {
     return summaryOf({ employee_id: new Types.ObjectId(employeeId) });

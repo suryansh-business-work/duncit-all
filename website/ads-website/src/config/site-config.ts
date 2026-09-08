@@ -24,6 +24,12 @@ const mainSiteUrl =
   import.meta.env.PUBLIC_MAIN_SITE_URL ||
   (isDevelopment ? 'http://localhost:2000' : 'https://duncit.com');
 
+// This site's OWN address. Every page's card names it as the canonical URL, so
+// a share and a search result both point at the page that was shared.
+const siteUrl =
+  import.meta.env.PUBLIC_ADS_SITE_URL ||
+  (isDevelopment ? 'http://localhost:2020' : 'https://ads.duncit.com');
+
 export interface Feature {
   icon: string;
   title: string;
@@ -42,7 +48,7 @@ export interface WhyItem {
 }
 
 /** Everything that is not copy: the environment, and where each link goes. */
-export const siteUrls = { isDevelopment, portalUrl, graphqlUrl, mainSiteUrl };
+export const siteUrls = { isDevelopment, portalUrl, graphqlUrl, mainSiteUrl, siteUrl };
 
 const build = (t: SiteTranslate) => ({
   ...siteUrls,

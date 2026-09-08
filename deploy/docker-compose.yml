@@ -68,7 +68,8 @@ services:
     container_name: duncit-website
     restart: unless-stopped
     ports:
-      - "127.0.0.1:2000:80"
+      # 8080, not 80: the site runs its non-root Node HTML server, not nginx.
+      - "127.0.0.1:2000:8080"
 
   partners-website:
     image: ${DOCKERHUB_USERNAME}/duncit-partners-website:${IMAGE_TAG:-latest}

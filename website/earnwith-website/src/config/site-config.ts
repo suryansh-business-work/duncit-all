@@ -23,6 +23,12 @@ const mainSiteUrl =
   import.meta.env.PUBLIC_MAIN_SITE_URL ||
   (isDevelopment ? 'http://localhost:2000' : 'https://duncit.com');
 
+// This site's OWN address. Every page's card names it as the canonical URL, so
+// a share and a search result both point at the page that was shared.
+const siteUrl =
+  import.meta.env.PUBLIC_EARNWITH_URL ||
+  (isDevelopment ? 'http://localhost:2025' : 'https://earnwith.duncit.com');
+
 /** Stock photography is served through Pexels' own resizer rather than at full
  * resolution — the originals are several megabytes each. */
 const photo = (id: string, width: number) =>
@@ -57,7 +63,7 @@ export interface WhyItem {
  * Layout.astro needs the API URL. A browser bundle cannot await the build-time
  * catalogue, and it has no business carrying the site's prose either.
  */
-export const siteUrls = { isDevelopment, mwebUrl, graphqlUrl, mainSiteUrl };
+export const siteUrls = { isDevelopment, mwebUrl, graphqlUrl, mainSiteUrl, siteUrl };
 
 const build = (t: SiteTranslate) => ({
   ...siteUrls,

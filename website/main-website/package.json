@@ -6,7 +6,7 @@
     "deps:check": "node ../../scripts/deps.mjs check",
     "deps:update": "node ../../scripts/deps.mjs update",
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && vite build --config vite.config.server.ts",
     "preview": "astro preview",
     "astro": "astro",
     "test": "vitest run",
@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.11",
+    "vite": "^8.2.2",
     "vitest": "^4.1.11"
   }
 }

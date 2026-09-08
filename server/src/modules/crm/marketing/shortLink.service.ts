@@ -392,6 +392,23 @@ export const shortLinkService = {
   },
 
   /**
+   * The destination WITHOUT counting a click — what a link-preview crawler is
+   * answered from. An unfurler fetches every link that passes through a chat,
+   * so counting those would report an audience that was never there.
+   */
+  async peek(code: string) {
+    const doc = await ShortLinkModel.findOne({ code, is_active: true }).lean().exec();
+    if (!doc) return null;
+    return buildDestination(doc.destination_url, {
+      code: doc.code,
+      utm_source: doc.utm_source,
+      utm_medium: doc.utm_medium,
+      utm_campaign: doc.utm_campaign,
+      share: !!doc.share_target,
+    });
+  },
+
+  /**
    * Resolve a code for the public redirect. Returns null for an unknown or
    * retired code so the caller can 404 instead of guessing a destination.
    */

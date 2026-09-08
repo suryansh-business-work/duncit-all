@@ -86,7 +86,28 @@ COPY packages/captcha ./packages/captcha
 RUN pnpm --filter duncit.com build
 
 # --- runner ---
-FROM public.ecr.aws/docker/library/nginx:alpine AS runner
-COPY --from=builder /repo/website/main-website/dist /usr/share/nginx/html
-COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+# Node, not nginx: duncit.com/<code> short links have to be answered with a
+# real redirect BEFORE any HTML is written, which is the only way a link-preview
+# crawler ever reaches the destination's card (server/main.ts). The blog post
+# page also gets its per-request meta block here. dist-server/main.mjs is a
+# self-contained bundle — no node_modules in the image — and static assets keep
+# spa.conf's exact cache behaviour, reimplemented in server/static-files.ts.
+FROM public.ecr.aws/docker/library/node:24-alpine AS runner
+WORKDIR /app
+# Re-declared so the runner resolves against the same environment the pages
+# were built for; a staging image then points at staging.
+ARG PUBLIC_GRAPHQL_URL=
+ARG PUBLIC_SERVER_URL=
+ARG PUBLIC_SITE_URL=
+ENV GRAPHQL_URL=${PUBLIC_GRAPHQL_URL}
+ENV SERVER_URL=${PUBLIC_SERVER_URL}
+ENV SITE_URL=${PUBLIC_SITE_URL}
+ENV NODE_ENV=production
+# Non-root (S6471) — which also means no port 80; compose maps the host port
+# onto 8080 instead.
+ENV PORT=8080
+COPY --from=builder /repo/website/main-website/dist ./dist
+COPY --from=builder /repo/website/main-website/dist-server ./dist-server
+USER node
+EXPOSE 8080
+CMD ["node", "dist-server/main.mjs"]

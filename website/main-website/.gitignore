@@ -36,3 +36,6 @@ coverage/
 
 # Generated
 packages/graphql-schema/src/generated/schema.json
+
+# HTML server bundle
+dist-server/

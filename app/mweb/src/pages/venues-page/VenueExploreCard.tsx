@@ -1,6 +1,7 @@
-import { Box, Card, CardActionArea, Stack, Typography } from '@mui/material';
-import StorefrontIcon from '@mui/icons-material/Storefront';
+import { Card, CardActionArea, Stack, Typography } from '@mui/material';
 import PlaceIcon from '@mui/icons-material/Place';
+import { venueImages } from '@duncit/utils';
+import VenueCardMedia from './VenueCardMedia';
 
 export interface ExploreVenue {
   id: string;
@@ -8,13 +9,15 @@ export interface ExploreVenue {
   venue_type?: string | null;
   capacity?: number | null;
   cover_image_url?: string | null;
+  gallery?: string[] | null;
   city?: string | null;
   locality?: string | null;
   pod_count?: number | null;
 }
 
-/** Venue row on the Venues discovery page — cover, name, type/capacity,
- * location and live pod count. Native twin: hosts-venues/VenueCard. */
+/** Venue row on the Venues discovery page — an image slider over every photo
+ * the venue has, then name, type/capacity, location and live pod count. Native
+ * twin: hosts-venues/VenueCard. */
 export default function VenueExploreCard({
   venue,
   onOpen,
@@ -29,32 +32,15 @@ export default function VenueExploreCard({
     .join(' · ');
   return (
     <Card variant="outlined" sx={{ borderRadius: '16px', overflow: 'hidden' }}>
+      {/* The slider owns its own taps (arrows must not navigate), so it sits
+          outside the action area rather than inside it. */}
+      <VenueCardMedia images={venueImages(venue)} venueName={venue.venue_name} onOpen={onOpen} />
+      {/* The name block paints its own opaque surface and sits above the
+          cover in the stacking order. The card's gradient let a busy photo
+          read straight through into the text, which is what made the venue
+          name hard to pick out; a flat panel and a rule under the image give
+          it a ground of its own. Native twin does the same. */}
       <CardActionArea onClick={onOpen} aria-label={venue.venue_name} data-testid={`venue-card-${venue.id}`}>
-        <Box
-          sx={{
-            height: 120,
-            bgcolor: 'primary.main',
-            display: 'grid',
-            placeItems: 'center',
-            color: 'primary.contrastText',
-          }}
-        >
-          {venue.cover_image_url ? (
-            <Box
-              component="img"
-              src={venue.cover_image_url}
-              alt={venue.venue_name}
-              sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          ) : (
-            <StorefrontIcon sx={{ fontSize: 34 }} />
-          )}
-        </Box>
-        {/* The name block paints its own opaque surface and sits above the
-            cover in the stacking order. The card's gradient let a busy photo
-            read straight through into the text, which is what made the venue
-            name hard to pick out; a flat panel and a rule under the image give
-            it a ground of its own. Native twin does the same. */}
         <Stack
           spacing={0.25}
           sx={{

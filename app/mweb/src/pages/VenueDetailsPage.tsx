@@ -16,6 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import { venueImages } from '@duncit/utils';
 import { useNavigate, useParams } from 'react-router';
 import MomentLightbox from '../components/moments/MomentLightbox';
 import VenueMapPreview from '../components/VenueMapPreview';
@@ -89,10 +90,7 @@ export default function VenueDetailsPage() {
     [data?.publicVenues, venueId],
   );
   useEntityPageMeta(venue?.venue_name);
-  const images: string[] = useMemo(() => {
-    if (!venue) return [];
-    return Array.from(new Set([venue.cover_image_url, ...(venue.gallery ?? [])].filter(Boolean)));
-  }, [venue]);
+  const images: string[] = useMemo(() => venueImages(venue), [venue]);
 
   const copyLink = async () => {
     try {

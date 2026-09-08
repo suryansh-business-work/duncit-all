@@ -14,6 +14,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { venueImages } from '@duncit/utils';
 
 function addressLine(venue: PublicVenue): string {
   return [
@@ -149,13 +150,7 @@ export function VenueDetailsScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'VenueDetails'>>();
   const venueId = route.params?.venueId ?? '';
   const { venue, isLoading, error } = useVenueDetails(venueId);
-  const gallery: string[] = venue
-    ? Array.from(
-        new Set(
-          [venue.cover_image_url, ...(venue.gallery ?? [])].filter((url): url is string => !!url),
-        ),
-      )
-    : [];
+  const gallery: string[] = venueImages(venue);
   const body =
     error || !venue ? (
       <Text testID="venue-details-missing" padding={24} color="$muted">

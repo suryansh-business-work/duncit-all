@@ -700,6 +700,7 @@ export {
   type VenueOwnerStatTile,
   type VenueOwnerStats,
 } from './venue-dashboard';
+export { venueImages, type VenueImageSource } from './venue-images';
 export {
   venueCancelDisabledText,
   venueCancelPenaltyHeadline,

@@ -221,18 +221,6 @@ describe('CreatePodStepper', () => {
     await waitFor(() => expect(screen.queryByTestId('blocked-dialog')).not.toBeInTheDocument());
   });
 
-  it('surfaces a duplicate title inline and jumps to step 1, then clears on edit', async () => {
-    const onPublish = vi.fn().mockRejectedValue(new Error('A pod with this title already exists'));
-    setup({ initialStep: 3, onPublish });
-    fireEvent.click(screen.getByRole('button', { name: 'Create Pod' }));
-    // Duplicate title jumps back to the Basics step (no error alert).
-    expect(await screen.findByText(STEP_TITLES[0])).toBeInTheDocument();
-    expect(screen.queryByText('A pod with this title already exists')).not.toBeInTheDocument();
-    // Editing the title clears the stale duplicate error state.
-    fireEvent.click(screen.getByRole('button', { name: 'edit-title' }));
-    expect(screen.getByText('BasicsStep')).toBeInTheDocument();
-  });
-
   it('shows a generic error alert when publishing fails', async () => {
     const onPublish = vi.fn().mockRejectedValue(new Error('Server exploded'));
     setup({ initialStep: 3, onPublish });

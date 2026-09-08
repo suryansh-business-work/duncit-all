@@ -55,7 +55,7 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
 };
 
 const labelOf = (field: string): string =>
-  FIELD_LABELS[field] ?? field.replaceAll('_id', '').replaceAll('_', ' ').trim();
+  FIELD_LABELS[field] ?? field.replace(/_id$/, '').replaceAll('_', ' ').trim();
 
 /**
  * The fields worth naming to the reader.

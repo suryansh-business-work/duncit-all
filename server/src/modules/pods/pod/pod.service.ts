@@ -41,6 +41,7 @@ import {
   type TableEntityConfig,
   type TableQueryInput,
 } from '@utils/table-query';
+import { duplicateKeyOn } from '@utils/mongo-error';
 import { LEGACY_POD_TYPE_MAP } from './pod-type.migration';
 import { podAuditService, snapshotPod } from '@modules/pods/podAudit/podAudit.service';
 import type { PodAuditSource } from '@modules/pods/podAudit/podAudit.model';
@@ -60,6 +61,9 @@ import { appDate, appDateTime, appTime } from '@utils/app-time';
  * Env-tunable so a spike can be absorbed without a deploy.
  */
 const POD_LIST_MAX = Number(process.env.POD_LIST_MAX_ROWS) || 1000;
+
+/** The counter a repeated title's slug carries — `-2`, `-17`. */
+const SLUG_SUFFIX_PATTERN = String.raw`(-\d+)?$`;
 
 const slugify = (s: string) =>
   s
@@ -1322,30 +1326,82 @@ async function assertPartnerVenue(input: any, userObjectId: Types.ObjectId) {
   }
 }
 
-/** The new pod's slug: an explicit `pod_id` wins over the title, and it must be
- * unique inside its club. */
-async function resolvePodSlugForCreate(input: any): Promise<string> {
+/**
+ * The next free slug under `base` inside one club.
+ *
+ * Pod TITLES are deliberately not unique — a club runs "Sunday Brunch" every
+ * week, and two hosts may pick the same words on the same day — so the slug,
+ * which IS unique per club because it addresses the pod in a URL, absorbs the
+ * collision with a counter: `sunday-brunch`, `sunday-brunch-2`, and so on.
+ *
+ * Soft-deleted pods are counted. Their rows still hold the slug in the unique
+ * index while the default read hook hides them, so a check that skipped them
+ * passed and the insert behind it did not — which is exactly how a raw E11000
+ * used to reach a host's screen.
+ *
+ * `base` comes out of `slugify`, so it is `[a-z0-9-]` and safe to put in a
+ * pattern unescaped.
+ */
+async function nextFreePodSlug(clubId: unknown, base: string): Promise<string> {
+  const siblings = await PodModel.find({
+    club_id: clubId,
+    pod_id: { $regex: `^${base}${SLUG_SUFFIX_PATTERN}` },
+  })
+    .setOptions({ includeDeleted: true })
+    .select('pod_id')
+    .lean();
+  const taken = new Set(siblings.map((doc) => doc.pod_id));
+  if (!taken.has(base)) return base;
+  // Bounded by the number of slugs already sitting on this base, so the loop
+  // always finds a gap and never runs past the pods the club actually owns.
+  for (let n = 2; n <= taken.size + 1; n += 1) {
+    const candidate = `${base}-${n}`;
+    if (!taken.has(candidate)) return candidate;
+  }
+  return `${base}-${taken.size + 1}`;
+}
+
+/** The new pod's slug: an explicit `pod_id` wins over the title, and both are
+ * made unique inside the club rather than rejected. The `base` comes back with
+ * it so a lost insert race can pick the next one again. */
+async function resolvePodSlugForCreate(input: any): Promise<{ slug: string; base: string }> {
   if (!input.club_id) {
     throw new GraphQLError('club_id is required', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
-  const baseSlug = input.pod_id?.trim()
+  const base = input.pod_id?.trim()
     ? slugify(input.pod_id.trim())
     : slugify(input.pod_title ?? '');
-  if (!baseSlug) {
+  if (!base) {
     throw new GraphQLError('Pod title is required', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
-  const dupe = await PodModel.findOne({ club_id: input.club_id, pod_id: baseSlug });
-  if (dupe) {
-    throw new GraphQLError(
-      'A pod with this title already exists in this club. Choose a different title.',
-      { extensions: { code: 'CONFLICT' } }
-    );
+  return { slug: await nextFreePodSlug(input.club_id, base), base };
+}
+
+/** How many times a create may lose the slug race before it gives up. */
+const SLUG_RACE_RETRIES = 3;
+
+/**
+ * Write the pod, letting the unique index — not a read taken a moment earlier —
+ * have the last word on the slug.
+ *
+ * Two hosts publishing the same title in the same second both compute the same
+ * next suffix, and one of the two inserts loses. The loser re-picks and tries
+ * again instead of handing its host a duplicate-key error for a title it is
+ * allowed to reuse.
+ */
+async function insertPodWithFreeSlug(payload: any, clubId: unknown, base: string) {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await PodModel.create(payload);
+    } catch (error) {
+      if (attempt >= SLUG_RACE_RETRIES || !duplicateKeyOn(error, 'pod_id')) throw error;
+      payload.pod_id = await nextFreePodSlug(clubId, base);
+    }
   }
-  return baseSlug;
 }
 
 /** A picked slot is the source of truth for the pod's window — overwrite
@@ -2019,7 +2075,7 @@ export const podService = {
     const autoPodSlot = opts?.autoPodSlot ?? null;
     // A VIRTUAL Auto Pod hands over no slot, but the pod is still its child.
     const autoPodId = opts?.autoPodId ?? autoPodSlot?.autoPodId ?? null;
-    const pod_id = await resolvePodSlugForCreate(input);
+    const { slug: pod_id, base: slugBase } = await resolvePodSlugForCreate(input);
     if (!input.pod_hosts_id?.length) {
       throw new GraphQLError('At least one host is required', {
         extensions: { code: 'BAD_USER_INPUT' },
@@ -2082,50 +2138,54 @@ export const podService = {
         )
       : [];
 
-    const doc = await PodModel.create({
-      pod_id,
-      pod_title: input.pod_title.trim(),
-      pod_hosts_id: input.pod_hosts_id,
-      co_hosts: invitedCoHosts.map((id) => ({
-        user_id: new Types.ObjectId(id),
-        status: 'PENDING',
-        invited_at: new Date(),
-        responded_at: null,
-      })),
-      location_id: venueLocation.location_id,
-      venue_id: venueLocation.venue_id,
-      venue_slot_id: slotDoc ? slotDoc._id : null,
-      club_id: input.club_id,
-      zone_name: venueLocation.zone_name,
-      pod_mode: podMode,
-      meeting_platform: meeting.platform,
-      meeting_url: meeting.url,
-      meeting_notes: meeting.notes,
-      pod_hashtag: input.pod_hashtag ?? [],
-      pod_images_and_videos: input.pod_images_and_videos ?? [],
-      reel_url: normalizeReelUrl(input.reel_url),
-      pod_hits: 0,
-      pod_attendees: attendees,
-      pod_description: input.pod_description,
-      pod_date_time: new Date(input.pod_date_time),
-      pod_end_date_time: input.pod_end_date_time ? new Date(input.pod_end_date_time) : null,
-      pod_type: input.pod_type,
-      pod_amount: input.pod_amount ?? 0,
-      pod_occurrence: input.pod_occurrence ?? 'ONE_TIME',
-      no_of_spots: input.no_of_spots ?? 0,
-      pod_info: input.pod_info ?? '',
-      what_this_pod_offers: input.what_this_pod_offers ?? [],
-      available_perks: input.available_perks ?? [],
-      payment_terms: input.payment_terms ?? null,
-      place_charges: input.place_charges ?? [],
-      products_enabled: !!input.products_enabled,
-      product_requests: productRequests,
-      product_cost_total: productRequests.reduce((sum, item) => sum + item.total_cost, 0),
-      // A pod awaiting the venue's slot approval stays offline until approved.
-      is_active: needsVenueApproval ? false : input.is_active ?? true,
-      venue_approval_status: venueApprovalForCreate(autoPodSlot, needsVenueApproval),
-      source_auto_pod_id: autoPodId ? new Types.ObjectId(autoPodId) : null,
-    });
+    const doc = await insertPodWithFreeSlug(
+      {
+        pod_id,
+        pod_title: input.pod_title.trim(),
+        pod_hosts_id: input.pod_hosts_id,
+        co_hosts: invitedCoHosts.map((id) => ({
+          user_id: new Types.ObjectId(id),
+          status: 'PENDING',
+          invited_at: new Date(),
+          responded_at: null,
+        })),
+        location_id: venueLocation.location_id,
+        venue_id: venueLocation.venue_id,
+        venue_slot_id: slotDoc ? slotDoc._id : null,
+        club_id: input.club_id,
+        zone_name: venueLocation.zone_name,
+        pod_mode: podMode,
+        meeting_platform: meeting.platform,
+        meeting_url: meeting.url,
+        meeting_notes: meeting.notes,
+        pod_hashtag: input.pod_hashtag ?? [],
+        pod_images_and_videos: input.pod_images_and_videos ?? [],
+        reel_url: normalizeReelUrl(input.reel_url),
+        pod_hits: 0,
+        pod_attendees: attendees,
+        pod_description: input.pod_description,
+        pod_date_time: new Date(input.pod_date_time),
+        pod_end_date_time: input.pod_end_date_time ? new Date(input.pod_end_date_time) : null,
+        pod_type: input.pod_type,
+        pod_amount: input.pod_amount ?? 0,
+        pod_occurrence: input.pod_occurrence ?? 'ONE_TIME',
+        no_of_spots: input.no_of_spots ?? 0,
+        pod_info: input.pod_info ?? '',
+        what_this_pod_offers: input.what_this_pod_offers ?? [],
+        available_perks: input.available_perks ?? [],
+        payment_terms: input.payment_terms ?? null,
+        place_charges: input.place_charges ?? [],
+        products_enabled: !!input.products_enabled,
+        product_requests: productRequests,
+        product_cost_total: productRequests.reduce((sum, item) => sum + item.total_cost, 0),
+        // A pod awaiting the venue's slot approval stays offline until approved.
+        is_active: needsVenueApproval ? false : input.is_active ?? true,
+        venue_approval_status: venueApprovalForCreate(autoPodSlot, needsVenueApproval),
+        source_auto_pod_id: autoPodId ? new Types.ObjectId(autoPodId) : null,
+      },
+      input.club_id,
+      slugBase
+    );
 
     await bookOrHoldSlotForPod(doc, slotDoc, needsVenueApproval, autoPodSlot);
     await podAuditService.record({

@@ -245,7 +245,7 @@ describe('Create a pod', () => {
     cy.contains('Slot Request Sent').should('be.visible');
   });
 
-  it('refuses a second pod with the same title in the same club', () => {
+  it('accepts a second pod with the same title in the same club', () => {
     seedDraftWithCover(podTitle).then((draftId) => {
       cy.visitApp(`/create-pod/${draftId}`);
     });
@@ -257,9 +257,9 @@ describe('Create a pod', () => {
     next();
     fillPricing();
     createPod();
-    // The refusal lands on the title field, back on step 1.
-    cy.contains('A pod with this title already exists in this club. Choose a different title.').should('exist');
-    onStep(0);
+    // Titles repeat freely — the slug behind the pod is what has to be unique,
+    // and the server picks the next free one rather than refusing the host.
+    cy.contains('Slot Request Sent').should('be.visible');
   });
 
   it('blocks a pod whose title carries a phone number, before anything is written', () => {

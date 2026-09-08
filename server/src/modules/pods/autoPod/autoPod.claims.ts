@@ -736,23 +736,8 @@ async function createPodFromAutoPod(doc: IAutoPod) {
     source: 'SYSTEM' as const,
     note: `Materialized from Auto Pod ${doc.auto_pod_no}`,
   };
-  const opts = place.opts;
-  try {
-    return await podService.create(input, audit, opts);
-  } catch (err) {
-    // The claiming club may already own a pod with this title. Retry once under
-    // a slug that is unique inside that club rather than failing the enrolment.
-    if (!isSlugConflict(err)) throw err;
-    return podService.create(
-      { ...input, pod_id: `${doc.pod_title}-${doc.auto_pod_no}` },
-      audit,
-      opts
-    );
-  }
-}
-
-function isSlugConflict(err: unknown): boolean {
-  const code = (err as { extensions?: { code?: string } })?.extensions?.code;
-  const message = err instanceof Error ? err.message : '';
-  return code === 'CONFLICT' && message.includes('already exists in this club');
+  // The claiming club may already own a pod with this title, which is fine:
+  // `podService.create` gives the second one a slug of its own rather than
+  // refusing the enrolment.
+  return podService.create(input, audit, place.opts);
 }

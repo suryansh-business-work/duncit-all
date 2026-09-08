@@ -24,17 +24,19 @@
  * The mail transport is stubbed here, as in the suites beside it: fire-and-forget
  * mail outlives the per-suite teardown and surfaces as a spurious rejection.
  */
-jest.mock('@services/email/email.service', () => ({
-  sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
-  sendAdminCredentialsEmail: jest.fn().mockResolvedValue(undefined),
-  sendEmailVerificationOtpEmail: jest.fn().mockResolvedValue(undefined),
-  sendPasswordResetOtpEmail: jest.fn().mockResolvedValue(undefined),
-  sendPasswordChangeOtpEmail: jest.fn().mockResolvedValue(undefined),
-  sendAccountDeletionOtpEmail: jest.fn().mockResolvedValue(undefined),
-  sendAdminAccessGrantedEmail: jest.fn().mockResolvedValue(undefined),
-  sendAdminAccessRevokedEmail: jest.fn().mockResolvedValue(undefined),
-  sendPolicyAcceptanceEmail: jest.fn().mockResolvedValue(undefined),
-}));
+jest.mock('@services/email/email.service', () => {
+  // Every sender, read off the REAL module rather than listed here. A named
+  // list goes stale the moment one is added: the missing export arrives
+  // undefined and the call site throws "is not a function", which is exactly
+  // what sendPasswordChangedEmail did to three cases below.
+  const actual = jest.requireActual('@services/email/email.service');
+  return Object.fromEntries(
+    Object.entries(actual).map(([key, value]) => [
+      key,
+      typeof value === 'function' ? jest.fn().mockResolvedValue(undefined) : value,
+    ]),
+  );
+});
 
 import bcrypt from 'bcryptjs';
 import { Types } from 'mongoose';
@@ -285,7 +287,14 @@ describe('changing a known password', () => {
     expect(sendPasswordChangeOtpEmail).toHaveBeenCalled();
   });
 
-  it('refuses an account signed in through Google, which has no password to change', async () => {
+  /*
+    An account signed in through Google has no password to PROVE, so this flow
+    creates its first one instead of refusing. There is nothing to compare
+    against and the emailed code is the whole proof — which is also why a
+    current password is optional on the schema, and why the comparison below
+    still runs for every account that does have one.
+  */
+  it('lets a Google account create its first password, with no current one to prove', async () => {
     const doc = await UserModel.create({
       profile: { first_name: 'Google' },
       auth: { email: `google-${Date.now()}@duncit.com` },
@@ -293,8 +302,16 @@ describe('changing a known password', () => {
     });
 
     await expect(
-      userService.requestPasswordChangeOtp(String(doc._id), { current_password: 'x' } as never)
-    ).rejects.toThrow('Google sign-in');
+      userService.requestPasswordChangeOtp(String(doc._id), {} as never)
+    ).resolves.toBeTruthy();
+  });
+
+  it('still refuses a wrong current password on an account that has one', async () => {
+    const { id } = await makeUser();
+
+    await expect(
+      userService.requestPasswordChangeOtp(id, { current_password: 'NotTheOne1' } as never)
+    ).rejects.toThrow(/current password is incorrect/i);
   });
 
   it('sets the new password once the code is confirmed', async () => {

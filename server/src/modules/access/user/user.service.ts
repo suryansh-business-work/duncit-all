@@ -2244,22 +2244,27 @@ export const userService = {
     return true;
   },
 
-  // Auth-required: the user knows their current password. Verify it, then email
-  // a confirmation OTP. Google-only accounts (no password) cannot use this flow.
+  // Auth-required: step one of setting the account password. An account that
+  // has a password proves it here; a Google-signup account has none to prove
+  // and is CREATING its first. Either way it ends with a confirmation OTP.
   async requestPasswordChangeOtp(user_id: string, input: RequestPasswordChangeDTO) {
     const user = await UserModel.findById(user_id).select('+auth.password');
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     const stored = (user as any).auth?.password as string | undefined;
-    if (!stored) {
-      throw new GraphQLError('This account uses Google sign-in and has no password to change.', {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
-    }
-    const ok = await bcrypt.compare(input.current_password, stored);
-    if (!ok) {
-      throw new GraphQLError('Current password is incorrect', {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
+    /*
+      A Google-signup account has no password, so this flow CREATES its first
+      one: there is nothing to compare against and the emailed code is the whole
+      proof. Only when a hash already exists does the old password have to be
+      shown — which is why the client never sends one it does not have.
+    */
+    if (stored) {
+      const supplied = input.current_password ?? '';
+      const ok = supplied ? await bcrypt.compare(supplied, stored) : false;
+      if (!ok) {
+        throw new GraphQLError('Current password is incorrect', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
+      }
     }
     const email = user.auth?.email;
     if (!email) {

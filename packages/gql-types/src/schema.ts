@@ -21079,7 +21079,7 @@ export type RequestMeetingInput = {
 };
 
 export type RequestPasswordChangeInput = {
-  current_password: Scalars['String']['input'];
+  current_password?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type RequestWithdrawalInput = {

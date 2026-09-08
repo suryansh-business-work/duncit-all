@@ -136,10 +136,14 @@ export const resetPasswordSchema = yup.object({
   new_password: yup.string().min(8).max(100).required(),
 });
 
-// Change password (user knows their current password). Step 1 verifies the
-// current password and emails an OTP; step 2 confirms the OTP + sets the new one.
+// Change password. Step 1 verifies the current password and emails an OTP;
+// step 2 confirms the OTP + sets the new one.
+//
+// current_password is optional here because a Google-signup account has no
+// password to prove — the service is the only thing that can see whether a
+// hash exists, so it decides whether one was required.
 export const requestPasswordChangeSchema = yup.object({
-  current_password: yup.string().min(8).max(100).required(),
+  current_password: yup.string().min(8).max(100).nullable(),
 });
 
 export const changePasswordSchema = yup.object({

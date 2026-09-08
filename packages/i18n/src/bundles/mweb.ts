@@ -385,7 +385,21 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       },
       addAddress: 'Add address',
       addressLine2: 'Address line 2',
+      /*
+        Profile > Password. Which pair of these renders is decided by whether
+        the account HAS a password: one that signed up with Google has none, so
+        it is creating its first rather than changing one it never set.
+      */
+      password: 'Password',
       changePassword: 'Change password',
+      changePasswordHint: 'Change your password with an email verification code.',
+      createPassword: 'Create password',
+      createPasswordHint:
+        'You signed in with Google. Create a password so you can also sign in with your email.',
+      passwordCreated: 'Password created',
+      // The short labels the native row uses, where the full sentence does not fit.
+      changeAction: 'Change',
+      createAction: 'Create',
       couldNotSaveProfile: 'Could not save profile.',
       couldNotSaveProfile2: 'Could not save profile',
       couldNotSaveYourLanguage: 'Could not save your language',
@@ -409,6 +423,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       profileSettings: 'Profile Settings',
       receiverName: 'Receiver name',
       resendOtp: 'Resend OTP',
+      didntGetIt: 'Didn’t get it?',
       saveAddress: 'Save address',
       sendCode: 'Send code',
       somethingWentWrong: 'Something went wrong.',
@@ -498,6 +513,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       },
       youHaveUnsavedChangesClosingNow: 'You have unsaved changes. Closing now will lose them.',
       yourPasswordHasBeenChangedSuccessfully: 'Your password has been changed successfully.',
+      yourPasswordHasBeenCreatedSuccessfully:
+        'Your password is set. You can now sign in with your email and password too.',
       enterYourCity: 'Enter your city',
       // The heading over the three read-only contact rows in Edit profile.
       // Read-only because each of them is changed on its own, behind a
@@ -3152,6 +3169,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       createANewPassword: 'Create a new password',
       currentPassword: 'Current password',
       enterYourCurrentPassword: 'Enter your current password',
+      // Step one, in the two shapes it takes. The Google-signup account has no
+      // current password to ask for, so the emailed code is the whole proof.
+      currentPasswordStepHint: 'Enter your current password and we’ll email you a one-time code.',
+      createStepHint: 'We’ll email you a one-time code to confirm it’s you, then you can set your password.',
+      otpSentToYourEmail: 'OTP sent to your email.',
       mustDifferFromCurrent: 'New password must be different from your current password',
       newPassword: 'New password',
       reEnterNewPassword: 'Re-enter new password',

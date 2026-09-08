@@ -32,7 +32,7 @@ function fillNewPassword() {
 describe('ChangePasswordDialog', () => {
   it('is hidden when closed', () => {
     renderWithProviders(
-      <ChangePasswordDialog open={false} onClose={jest.fn()} onChanged={jest.fn()} />,
+      <ChangePasswordDialog open={false} hasPassword onClose={jest.fn()} onChanged={jest.fn()} />,
     );
     expect(screen.queryByTestId('current-password-submit')).toBeNull();
   });
@@ -40,7 +40,9 @@ describe('ChangePasswordDialog', () => {
   it('runs the full two-step flow, resends, and changes the password', async () => {
     const onChanged = jest.fn();
     mockRequest.mockResolvedValue({ requestPasswordChangeOtp: { ok: true } });
-    renderWithProviders(<ChangePasswordDialog open onClose={jest.fn()} onChanged={onChanged} />);
+    renderWithProviders(
+      <ChangePasswordDialog open hasPassword onClose={jest.fn()} onChanged={onChanged} />,
+    );
 
     fireEvent.changeText(screen.getByTestId('field-current_password'), 'OldPass123');
     fireEvent.press(screen.getByTestId('current-password-submit'));
@@ -66,7 +68,9 @@ describe('ChangePasswordDialog', () => {
 
   it('surfaces a request error and a non-Error rejection on resend', async () => {
     mockRequest.mockRejectedValueOnce(new Error('Wrong password'));
-    renderWithProviders(<ChangePasswordDialog open onClose={jest.fn()} onChanged={jest.fn()} />);
+    renderWithProviders(
+      <ChangePasswordDialog open hasPassword onClose={jest.fn()} onChanged={jest.fn()} />,
+    );
     fireEvent.changeText(screen.getByTestId('field-current_password'), 'bad');
     fireEvent.press(screen.getByTestId('current-password-submit'));
     await waitFor(() =>
@@ -79,7 +83,9 @@ describe('ChangePasswordDialog', () => {
     mockRequest
       .mockResolvedValueOnce({ requestPasswordChangeOtp: { ok: true } })
       .mockRejectedValueOnce('nope');
-    renderWithProviders(<ChangePasswordDialog open onClose={onClose} onChanged={jest.fn()} />);
+    renderWithProviders(
+      <ChangePasswordDialog open hasPassword onClose={onClose} onChanged={jest.fn()} />,
+    );
     fireEvent.changeText(screen.getByTestId('field-current_password'), 'OldPass123');
     fireEvent.press(screen.getByTestId('current-password-submit'));
     await waitFor(() => expect(screen.getByTestId('field-otp')).toBeOnTheScreen());
@@ -96,7 +102,9 @@ describe('ChangePasswordDialog', () => {
     mockRequest
       .mockResolvedValueOnce({ requestPasswordChangeOtp: { ok: true } })
       .mockRejectedValueOnce('boom');
-    renderWithProviders(<ChangePasswordDialog open onClose={jest.fn()} onChanged={jest.fn()} />);
+    renderWithProviders(
+      <ChangePasswordDialog open hasPassword onClose={jest.fn()} onChanged={jest.fn()} />,
+    );
     fireEvent.changeText(screen.getByTestId('field-current_password'), 'OldPass123');
     fireEvent.press(screen.getByTestId('current-password-submit'));
     await waitFor(() => expect(screen.getByTestId('change-password-resend')).toBeOnTheScreen());

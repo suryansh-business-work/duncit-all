@@ -124,7 +124,7 @@ interface ColumnDeps {
 
 export function getUsersColumns({ formatDate, formatDateTime, roleOptions, t }: Readonly<ColumnDeps>): DuncitColumn<UserRow>[] {
   const renderLogin = (u: UserRow) => {
-    const meta = loginMeta(u);
+    const meta = loginMeta(u, t);
     return (
       <Stack spacing={0.25} component="span" sx={{ lineHeight: 1.2 }}>
         <Chip
@@ -187,7 +187,7 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions, t }: 
       filter: { type: 'select', options: providerOptions(t) },
       width: 170,
       cellRenderer: renderLogin,
-      valueGetter: (u) => loginMeta(u).label,
+      valueGetter: (u) => loginMeta(u, t).label,
     },
     {
       field: 'status',

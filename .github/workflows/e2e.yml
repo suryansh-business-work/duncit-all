@@ -205,7 +205,10 @@ jobs:
     # run that selected only the standalone legs has to skip this job outright.
     if: needs.setup.outputs.browser_count != '0'
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # The live leg drives a real server end to end, waits on real uploads and
+    # on the AI content screening before every publish — it needs the longer
+    # budget, and giving it to every mocked leg would only hide a hung one.
+    timeout-minutes: ${{ matrix.live && 45 || 25 }}
     strategy:
       # A red suite in one console must not hide a red suite in another — every
       # leg reports. The JOB still fails, which is what gates the workflow.
@@ -214,6 +217,11 @@ jobs:
         include: ${{ fromJSON(needs.setup.outputs.matrix) }}
     env:
       DUNCIT_GRAPHQL_URL: ${{ inputs.report_url || 'https://server.duncit.com/graphql' }}
+      # The server the LIVE leg's bundle talks to, its specs' cy.request calls
+      # use, and its purge cleans up. Always staging, whatever the run reports
+      # to: the live suite needs "Return one-time codes" on that server, which
+      # must never be on for production.
+      E2E_LIVE_GRAPHQL_URL: https://staging.server.duncit.com/graphql
       DUNCIT_RELEASE_TOKEN: >-
         ${{ contains(inputs.report_url, 'staging.') && secrets.DUNCIT_RELEASE_TOKEN_STAGING || secrets.DUNCIT_RELEASE_TOKEN }}
       DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
@@ -273,15 +281,26 @@ jobs:
       - run: echo "E2E_STAGE=Type-checking the Cypress specs" >> "$GITHUB_ENV"
       - name: Type-check Cypress specs
         working-directory: ${{ matrix.dir }}
-        run: pnpm exec tsc --noEmit -p __tests__/e2e/tsconfig.json
+        run: pnpm exec tsc --noEmit -p ${{ matrix.specs_tsconfig || '__tests__/e2e/tsconfig.json' }}
 
       - run: echo "E2E_STAGE=Building the e2e bundle" >> "$GITHUB_ENV"
       # `build:e2e` forces VITE_GRAPHQL_URL=/graphql (via .env.e2e) so the
       # bundled app talks same-origin and cy.intercept catches every GraphQL
       # call without a CORS preflight hitting the real server.
       - name: Build e2e bundle
+        if: ${{ !matrix.live }}
         working-directory: ${{ matrix.dir }}
         run: pnpm build:e2e
+
+      # The one build that talks to a real server. The URL is handed in from
+      # the job env rather than trusted from .env.e2e-live, so this build, the
+      # specs' cy.request calls and the purge below cannot disagree about it.
+      - name: Build live e2e bundle
+        if: ${{ matrix.live }}
+        working-directory: ${{ matrix.dir }}
+        env:
+          VITE_GRAPHQL_URL: ${{ env.E2E_LIVE_GRAPHQL_URL }}
+        run: pnpm ${{ matrix.build }}
 
       - run: echo "E2E_STAGE=Running Cypress" >> "$GITHUB_ENV"
       # Same runner and the same start/wait-on handshake the six consoles and
@@ -295,9 +314,9 @@ jobs:
       # and the page could never say how many tests that was.
       #
       # CYPRESS_* variables reach a spec as Cypress.env('E2E_EMAIL') and friends.
-      # No spec signs in today — every suite stubs its GraphQL — so these are
-      # the plumbing a real login/signup spec picks up, and the addresses they
-      # carry are the ones recorded against this run.
+      # The mocked suites never read them; the live mWeb leg signs in and signs
+      # up with exactly these, and the addresses they carry are the ones
+      # recorded against this run — which is how the purge finds what it made.
       - name: Run e2e suite (pnpm e2e)
         uses: cypress-io/github-action@v6
         env:
@@ -306,6 +325,7 @@ jobs:
           CYPRESS_E2E_PASSWORD: ${{ steps.identity.outputs.e2e_password }}
           CYPRESS_E2E_PHONE: ${{ steps.identity.outputs.e2e_phone }}
           CYPRESS_E2E_STAMP: ${{ steps.identity.outputs.e2e_stamp }}
+          CYPRESS_GRAPHQL_URL: ${{ env.E2E_LIVE_GRAPHQL_URL }}
         with:
           working-directory: ${{ matrix.dir }}
           install: false
@@ -331,7 +351,7 @@ jobs:
           # megabytes rather than hundreds. The parts are joined into ONE video
           # of the whole suite by the stitch step below.
           command: >-
-            pnpm e2e --browser chrome --reporter junit
+            pnpm ${{ matrix.e2e || 'e2e' }} --browser chrome --reporter junit
             --reporter-options mochaFile=cypress-artifacts/junit/results-[hash].xml
             --config video=true,videoCompression=32
           start: pnpm preview
@@ -355,6 +375,25 @@ jobs:
           JUNIT_DIR: ${{ matrix.dir }}/cypress-artifacts/junit
           STAGE: Running suites
         run: node scripts/report-e2e-run.mjs
+
+      # The live leg made real records on staging — accounts, a pod holding a
+      # venue slot, tickets, an idea — and removes them here whether the suite
+      # passed or failed, because a failed run leaves the MOST behind. It talks
+      # to the APP server, not the reporting one (a nightly run reports to
+      # production while its live suite drives staging), so it carries the
+      # staging token. continue-on-error for the reason rule 1 gives: it runs
+      # no specs, and the verdict is already recorded above.
+      - name: Purge what the live suite created
+        if: always() && matrix.live
+        continue-on-error: true
+        timeout-minutes: 5
+        env:
+          E2E_APP_GRAPHQL_URL: ${{ env.E2E_LIVE_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN_STAGING }}
+          E2E_STAMP: ${{ steps.identity.outputs.e2e_stamp }}
+          E2E_EMAIL: ${{ steps.identity.outputs.e2e_email }}
+          E2E_SIGNUP_EMAIL: ${{ steps.identity.outputs.e2e_signup_email }}
+        run: node scripts/e2e-purge.mjs
 
       # Deliberately AFTER the result is recorded. The row is the store of
       # record and must not wait on ffmpeg, and E2E_STAGE — which names what a

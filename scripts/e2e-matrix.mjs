@@ -22,7 +22,14 @@
 import fs from 'node:fs';
 import process from 'node:process';
 
-/** Every portal and app with a browser to drive, and where its preview serves. */
+/**
+ * Every portal and app with a browser to drive, and where its preview serves.
+ *
+ * A row may name its own `build` and `e2e` scripts; the workflow falls back to
+ * `build:e2e` / `e2e` when it does not. `live: true` marks the one leg that
+ * talks to a real server instead of stubbing GraphQL — the workflow points its
+ * build at the staging API and purges what the suite created afterwards.
+ */
 const BROWSER_SUITES = [
   { name: 'admin', dir: 'portals/admin', port: 2002 },
   { name: 'ads-portal', dir: 'portals/ads-portal', port: 2006 },
@@ -42,6 +49,18 @@ const BROWSER_SUITES = [
   { name: 'tech', dir: 'portals/tech', port: 2009 },
   { name: 'website-app', dir: 'portals/website-app', port: 2011 },
   { name: 'mweb', dir: 'app/mweb', port: 2003 },
+  // Same app, same port, a different build and a different spec directory:
+  // app/mweb/__tests__/e2e-live drives the real staging server. Each matrix
+  // leg is its own runner, so the port never collides with the mocked suite.
+  {
+    name: 'mweb-live',
+    dir: 'app/mweb',
+    port: 2003,
+    build: 'build:e2e:live',
+    e2e: 'e2e:live',
+    specs_tsconfig: '__tests__/e2e-live/tsconfig.json',
+    live: true,
+  },
 ];
 
 /**

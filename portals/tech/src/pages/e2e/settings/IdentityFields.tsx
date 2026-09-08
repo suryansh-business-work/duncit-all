@@ -100,6 +100,13 @@ export default function IdentityFields({ control, errors, passwordSet }: Readonl
           )}
         />
       </Stack>
+
+      {/* What the one suite that uses this identity for real needs to find on
+          staging — said here, beside the identity, because it is the page an
+          operator is on when a live run fails on its first sign-in. */}
+      <Alert severity="warning" variant="outlined">
+        <Typography variant="body2">{t('tech.e2e.liveSuiteHint')}</Typography>
+      </Alert>
     </Stack>
   );
 }

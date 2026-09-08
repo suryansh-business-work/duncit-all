@@ -92,6 +92,28 @@ export const e2eRunTypeDefs = gql`
     reported_at: String
   }
 
+  """
+  One scenario's clip — a single test, cut out of its spec's recording and
+  posted under the run's message beside the suite videos. Only the suites that
+  record where each test began and ended produce these; today that is the live
+  mWeb suite.
+  """
+  type E2eScenarioVideo {
+    "The suite the scenario ran in — one of results[].key."
+    suite: String!
+    "The spec file, relative to the suite."
+    spec: String!
+    "The test's full title, e.g. 'Sign in › wrong password is refused'."
+    title: String!
+    "Mocha's word for it: passed, failed, pending."
+    state: String!
+    file_id: String!
+    "Where the clip sits in Slack. Empty until the finished run shares it."
+    permalink: String!
+    seconds: Int
+    bytes: Int
+  }
+
   "A stage the workflow entered, stamped when it got there."
   type E2eRunStage {
     name: String!
@@ -134,6 +156,8 @@ export const e2eRunTypeDefs = gql`
     requested_suites: [String!]!
     "What each leg did, in the order the legs reported."
     results: [E2eSuiteResult!]!
+    "One clip per scenario, in the order they ran, for the suites that record them."
+    scenario_videos: [E2eScenarioVideo!]!
     totals: E2eRunTotals!
     workflow_run_id: String!
     workflow_run_url: String!
@@ -415,10 +439,55 @@ export const e2eRunTypeDefs = gql`
     bytes: Int
   }
 
+  input E2eScenarioVideoInput {
+    suite: String!
+    spec: String
+    title: String!
+    state: String
+    "The file_id handed back by e2eVideoUploadAuth, once its bytes are in."
+    file_id: String!
+    seconds: Int
+    bytes: Int
+  }
+
   input AttachE2eRunVideosInput {
     dispatch_id: String
     workflow_run_id: String
     videos: [E2eRunVideoInput!]!
+    "The scenario clips, when the run cut any. Absent means none."
+    scenarios: [E2eScenarioVideoInput!]
+  }
+
+  """
+  What the live suite left behind, and what purging it removed.
+
+  The run's identity is passed IN rather than looked up, because the server
+  holding the data is not always the server holding the run: a nightly run
+  reports to production while its live suite drives staging, and the purge
+  has to happen where the data is.
+  """
+  input PurgeE2eRunDataInput {
+    "The run's ddMMyyyyHHmm stamp — the marker every record it created carries."
+    stamp: String!
+    "The account the suite signed IN as. Its stamped records are removed, the account stays."
+    login_email: String!
+    """
+    The account the suite signed UP as. Every account whose address carries
+    this one's stamp is removed outright, with everything that points at it.
+    """
+    signup_email: String!
+  }
+
+  type E2ePurgedCollection {
+    collection: String!
+    deleted: Int!
+  }
+
+  type E2ePurgeReport {
+    "How many accounts were removed — the signup identity and any it derived."
+    accounts_deleted: Int!
+    "Per collection, how many stamped records the sign-in account left behind were removed."
+    records: [E2ePurgedCollection!]!
   }
 
   input UpdateE2eRunSettingsInput {
@@ -504,6 +573,19 @@ export const e2eRunTypeDefs = gql`
     them under exists.
     """
     attachE2eRunVideos(input: AttachE2eRunVideosInput!): E2eRun!
+    """
+    Remove everything the live suite created on THIS server. Tech/Super admin
+    only, and refused outright unless this server has 'Return one-time codes'
+    switched on — the switch that declares a database an e2e target and that
+    the settings page says must never be on for production.
+
+    Deletes every account whose email carries the run's stamp, with everything
+    that points at it (the same trace the account-deletion console walks), and
+    every record the sign-in account created with the run's marker in its
+    title or subject. Called by the live leg after Cypress, whether the suite
+    passed or failed — a failed run leaves the most data behind.
+    """
+    purgeE2eRunData(input: PurgeE2eRunDataInput!): E2ePurgeReport!
     updateE2eRunSettings(input: UpdateE2eRunSettingsInput!): E2eRunSettings!
     "Delete a run. Tech/Super admin only."
     deleteE2eRun(id: ID!): Boolean!

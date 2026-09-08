@@ -2,6 +2,7 @@ import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
 import { e2eRunService } from './e2eRun.service';
+import { purgeE2eRunData } from './e2eRun.purge';
 
 // E2E runs are a Tech-portal capability. The workflow authenticates with the
 // same TECH_MANAGER JWT the build workflows use (DUNCIT_RELEASE_TOKEN), so its
@@ -47,6 +48,10 @@ export const e2eRunResolvers = {
     attachE2eRunVideos: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, E2E_MANAGE);
       return e2eRunService.attachVideos(args.input);
+    },
+    purgeE2eRunData: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, E2E_MANAGE);
+      return purgeE2eRunData(args.input);
     },
     updateE2eRunSettings: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, E2E_MANAGE);

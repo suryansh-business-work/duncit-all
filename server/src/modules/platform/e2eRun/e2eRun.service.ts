@@ -33,6 +33,7 @@ import {
   type IE2eRun,
   type IE2eRunSettings,
   type IE2eRunStage,
+  type IE2eScenarioVideo,
   type IE2eSuiteResult,
 } from './e2eRun.model';
 import { E2E_SUITES, normaliseSuites, suitesInput } from './e2eRun.suites';
@@ -90,6 +91,17 @@ const pubSuite = (r: IE2eSuiteResult) => ({
   reported_at: r.reported_at?.toISOString() ?? null,
 });
 
+const pubScenario = (v: IE2eScenarioVideo) => ({
+  suite: v.suite,
+  spec: v.spec ?? '',
+  title: v.title,
+  state: v.state ?? '',
+  file_id: v.file_id,
+  permalink: v.permalink ?? '',
+  seconds: v.seconds ?? null,
+  bytes: v.bytes ?? null,
+});
+
 const pub = (doc: IE2eRun) => ({
   id: String(doc._id),
   run_no: doc.run_no,
@@ -100,6 +112,7 @@ const pub = (doc: IE2eRun) => ({
   commit_sha: doc.commit_sha ?? '',
   requested_suites: doc.requested_suites ?? [],
   results: (doc.results ?? []).map(pubSuite),
+  scenario_videos: (doc.scenario_videos ?? []).map(pubScenario),
   // A row written before totals existed, or one whose legs have not reported
   // yet, still has to answer with the whole shape — every field is non-null.
   totals: {
@@ -439,6 +452,12 @@ function videoTitle(result: IE2eSuiteResult): string {
   return `${result.key} — ${result.status.toLowerCase()}${clockLabel(result.video_seconds)}`;
 }
 
+/** A scenario clip's title: which suite, which test, how it ended. */
+function scenarioTitle(video: IE2eScenarioVideo): string {
+  const state = str(video.state) || 'recorded';
+  return `${video.suite} › ${video.title} — ${state}${clockLabel(video.seconds)}`;
+}
+
 /** Slice a list into runs of `size`. */
 function chunk<T>(items: T[], size: number): T[][] {
   const out: T[][] = [];
@@ -483,7 +502,39 @@ async function shareVideos(run: IE2eRun): Promise<string | null> {
       { $set: { 'results.$.video_permalink': file.permalink } }
     );
   }
+  await shareScenarioClips(run);
   return null;
+}
+
+/**
+ * The scenario clips, in the same thread, after the suite videos.
+ *
+ * Posted separately from the suite recordings so the thread reads in two
+ * parts — the suites start to end, then one clip per scenario — and so a
+ * suite that produced no clips changes nothing about how its own recording
+ * is shared. The order is the order the scenarios ran.
+ */
+async function shareScenarioClips(run: IE2eRun): Promise<void> {
+  const clips = (run.scenario_videos ?? []).filter((v) => str(v.file_id));
+  if (clips.length === 0 || !run.slack_channel || !run.slack_ts) return;
+  const shared: Array<{ id: string; permalink: string }> = [];
+  const batches = chunk(clips, SLACK_FILES_PER_MESSAGE);
+  for (const [index, batch] of batches.entries()) {
+    const files = await completeFileUpload({
+      files: batch.map((v) => ({ id: v.file_id, title: scenarioTitle(v) })),
+      channel: run.slack_channel,
+      thread_ts: run.slack_ts,
+      initial_comment:
+        index === 0 ? `Scenarios for ${run.run_no} — one clip per test, in the order they ran.` : undefined,
+    });
+    shared.push(...files.map((f) => ({ id: f.id, permalink: f.permalink })));
+  }
+  for (const file of shared) {
+    await E2eRunModel.updateOne(
+      { _id: run._id, 'scenario_videos.file_id': file.id },
+      { $set: { 'scenario_videos.$.permalink': file.permalink } }
+    );
+  }
 }
 
 /**
@@ -520,9 +571,17 @@ async function canUploadVideos(slackReady: boolean): Promise<boolean | null> {
  * Best-effort by design — a file that cannot be deleted must never keep the row
  * that points at it alive.
  */
-async function forgetVideos(runs: Array<{ results?: IE2eSuiteResult[] }>): Promise<void> {
+type RecordedRun = { results?: IE2eSuiteResult[]; scenario_videos?: IE2eScenarioVideo[] };
+
+/** The projection that finds a run's Slack files, for the two places that delete rows. */
+const VIDEO_FILE_FIELDS = { 'results.video_file_id': 1, 'scenario_videos.file_id': 1 };
+
+async function forgetVideos(runs: RecordedRun[]): Promise<void> {
   const ids = runs
-    .flatMap((run) => (run.results ?? []).map((r) => str(r.video_file_id)))
+    .flatMap((run) => [
+      ...(run.results ?? []).map((r) => str(r.video_file_id)),
+      ...(run.scenario_videos ?? []).map((v) => str(v.file_id)),
+    ])
     .filter(Boolean);
   for (const id of ids) {
     try {
@@ -597,7 +656,7 @@ async function prune(keepLast: number): Promise<void> {
   };
   // Read the doomed rows BEFORE deleting them: their recordings are held in
   // Slack, and the file ids that free that storage exist nowhere else.
-  const doomed = await E2eRunModel.find(filter, { 'results.video_file_id': 1 }).lean();
+  const doomed = await E2eRunModel.find(filter, VIDEO_FILE_FIELDS).lean();
   await E2eRunModel.deleteMany(filter);
   await forgetVideos(doomed);
 }
@@ -896,6 +955,24 @@ export const e2eRunService = {
         }
       );
     }
+    // The clips arrive once, from the gate, so the list is replaced rather than
+    // merged — there is no second reporter to lose a write to.
+    const scenarios: any[] = Array.isArray(input.scenarios) ? input.scenarios : [];
+    const clips: IE2eScenarioVideo[] = scenarios
+      .filter((v) => str(v.suite) && str(v.title) && str(v.file_id))
+      .map((v) => ({
+        suite: str(v.suite),
+        spec: str(v.spec),
+        title: str(v.title),
+        state: str(v.state),
+        file_id: str(v.file_id),
+        permalink: '',
+        seconds: num(v.seconds),
+        bytes: num(v.bytes),
+      }));
+    if (clips.length > 0) {
+      await E2eRunModel.updateOne({ _id: run._id }, { $set: { scenario_videos: clips } });
+    }
     // Re-read so the share works from what is actually stored, including the
     // legs that reported while this request was in flight.
     const fresh = (await E2eRunModel.findById(run._id)) ?? run;
@@ -911,7 +988,7 @@ export const e2eRunService = {
 
   async remove(id: string) {
     // Same order as prune: the recordings can only be found through the row.
-    const doomed = await E2eRunModel.findById(id, { 'results.video_file_id': 1 }).lean();
+    const doomed = await E2eRunModel.findById(id, VIDEO_FILE_FIELDS).lean();
     const res = await E2eRunModel.deleteOne({ _id: id });
     if (res.deletedCount > 0 && doomed) await forgetVideos([doomed]);
     return res.deletedCount > 0;

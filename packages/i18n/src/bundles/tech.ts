@@ -324,6 +324,13 @@ export const TECH_BUNDLE: NestedCatalogue = {
         'The Slack bot token cannot upload files, so nothing will be posted. Add the files:write scope at api.slack.com/apps → your app → OAuth & Permissions, reinstall the app to the workspace, and paste the new token into Environment Variables → Slack.',
       watchRecording: 'Watch the recording',
       videoError: 'The recordings did not reach Slack: {reason}',
+      // The live mWeb suite records where each test began and ended, so its
+      // run carries one clip per scenario beside the suite video.
+      detailScenarios: 'Scenario recordings · {count} clips, one per test',
+      watchClip: 'Watch this scenario',
+      scenarioPending: 'Skipped',
+      liveSuiteHint:
+        'The live mWeb suite (mweb-live) drives STAGING with this identity for real: it signs up as the signup address, signs in as the login one, and creates pods, tickets and ideas that the leg purges afterwards. On staging, the login account must exist with this password, have finished the interests survey, and be an approved host with a selected city, one active club in that city for its category, and a partner venue for that club with at least three open slots. Both switches below must be ON there before a run.',
       saved: 'Settings saved.',
       ciHeading: 'Can CI reach us?',
       ciLastReport: 'Last reported {when}, as {who}.',

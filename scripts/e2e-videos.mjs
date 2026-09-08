@@ -2,16 +2,18 @@
 /**
  * The e2e run's recordings — Cypress writes one video per SPEC, and what anyone
  * actually wants to watch is one video per SUITE, from the first spec's first
- * command to the last spec's last one.
+ * command to the last spec's last one — and, for the suites that say where each
+ * scenario began and ended, one short clip per SCENARIO as well.
  *
  * Two shapes, chosen by MODE, and they run in different jobs on purpose:
  *
  *   stitch   in each matrix leg, straight after Cypress. Joins that leg's spec
  *            videos into one MP4 named after the suite, ready to be carried out
- *            of the job as an artifact.
+ *            of the job as an artifact. Where a spec video has a `.scenarios.json`
+ *            beside it, every scenario in it is also cut into its own clip.
  *   upload   in the gate, after the run has been reported and announced. Sends
- *            every stitched video to Slack and hangs them under the run's own
- *            message.
+ *            every stitched video and every scenario clip to Slack and hangs
+ *            them under the run's own message.
  *
  * WHY THE UPLOAD IS NOT IN THE LEG. A recording is shared with `thread_ts`, and
  * the thread it belongs to is the run's announcement — which does not exist
@@ -25,13 +27,22 @@
  * PRE-AUTHORISED Slack URL, so the bot token stays on the server and the video
  * goes straight from the runner to Slack.
  *
+ * WHERE THE SCENARIO TIMES COME FROM. Cypress 13 stopped reporting where in the
+ * video each test began, so a suite that wants per-scenario clips records that
+ * itself: its Cypress config writes `<video>.scenarios.json` in `after:spec`,
+ * from marks its support file sends with `cy.task` at the start and end of
+ * every test (see app/mweb/__tests__/e2e-live/cypress.config.ts). A suite with
+ * no sidecar gets the one stitched video and nothing else — exactly what every
+ * suite got before scenarios existed.
+ *
  * Env (stitch):
  *   SUITE_KEY   the matrix leg's name — becomes the file name.
  *   VIDEO_DIR   where Cypress wrote its per-spec videos.
- *   OUT_DIR     where to write <suite>.mp4.
+ *   OUT_DIR     where to write <suite>.mp4 and scenarios/<suite>/*.mp4.
  *
  * Env (upload):
- *   VIDEO_DIR            the downloaded artifacts root, searched recursively.
+ *   VIDEO_DIR            the downloaded artifacts root. Suite videos sit at its
+ *                        top level; scenario clips under scenarios/<suite>/.
  *   DUNCIT_GRAPHQL_URL   where to record. Defaults to production.
  *   DUNCIT_RELEASE_TOKEN a SUPER_ADMIN / TECH_MANAGER JWT, OR
  *   DUNCIT_RELEASE_EMAIL + DUNCIT_RELEASE_PASSWORD
@@ -50,10 +61,20 @@ import { createCiClient, describeError, MISSING_CREDENTIALS } from './lib/ci-rep
 
 const env = (name) => (process.env[name] || '').trim();
 
+/** The sidecar a scenario-aware suite writes beside each spec video. */
+const SIDECAR_SUFFIX = '.scenarios.json';
+
+/** Where the clips of one suite land, under OUT_DIR, and are found again under VIDEO_DIR. */
+const SCENARIOS_DIR = 'scenarios';
+
+/** The list of clips a leg cut, read back by the gate. */
+const MANIFEST = 'manifest.json';
+
 /* ── finding what Cypress produced ────────────────────────────────────────── */
 
-/** Every .mp4 under a directory, or an empty list when there is no directory. */
-function videoFiles(dir) {
+/** Every file under a directory whose name ends with `suffix`, or an empty list
+ * when there is no directory. Recursive: Cypress mirrors the spec tree. */
+function filesEndingWith(dir, suffix) {
   let entries;
   try {
     entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -64,13 +85,15 @@ function videoFiles(dir) {
   for (const entry of entries) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      found.push(...videoFiles(full));
-    } else if (entry.name.toLowerCase().endsWith('.mp4')) {
+      found.push(...filesEndingWith(full, suffix));
+    } else if (entry.name.toLowerCase().endsWith(suffix)) {
       found.push(full);
     }
   }
   return found;
 }
+
+const videoFiles = (dir) => filesEndingWith(dir, '.mp4');
 
 /**
  * The parts in the order they were RECORDED, which is the order the specs ran.
@@ -87,7 +110,7 @@ function orderedParts(dir) {
     .map((part) => part.file);
 }
 
-/* ── stitch ──────────────────────────────────────────────────────────────── */
+/* ── ffmpeg ──────────────────────────────────────────────────────────────── */
 
 /**
  * Seconds of video, read out of the file itself.
@@ -110,6 +133,11 @@ function durationSeconds(file) {
   }
 }
 
+const ffmpeg = (args) =>
+  execFileSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', ...args], {
+    stdio: ['ignore', 'inherit', 'inherit'],
+  });
+
 /**
  * Join the parts without re-encoding.
  *
@@ -126,21 +154,121 @@ function concat(parts, out) {
   const list = parts.map((p) => `file '${p.replaceAll("'", String.raw`'\''`)}'`).join('\n');
   fs.writeFileSync(listFile, `${list}\n`);
   try {
-    execFileSync(
-      'ffmpeg',
-      ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', listFile,
-        '-c', 'copy', '-movflags', '+faststart', out],
-      { stdio: ['ignore', 'inherit', 'inherit'] }
-    );
+    ffmpeg(['-f', 'concat', '-safe', '0', '-i', listFile, '-c', 'copy', '-movflags', '+faststart', out]);
   } finally {
     fs.rmSync(listFile, { force: true });
   }
 }
 
+/**
+ * One scenario, cut out of its spec's video.
+ *
+ * Re-encoded rather than `-c copy`: a copy can only start on a keyframe, and
+ * at the compression Cypress records with those are seconds apart — a clip
+ * that opens a few seconds before its scenario is a clip that opens on the
+ * previous one's last screen. The clips are short and the runner is idle by
+ * now, so the seconds this costs are cheap.
+ */
+function cut(source, startSeconds, seconds, out) {
+  ffmpeg([
+    '-ss', startSeconds.toFixed(3),
+    '-i', source,
+    '-t', seconds.toFixed(3),
+    // A phone viewport is 412x915 and x264 refuses an odd dimension — the
+    // same even-rounding Cypress's own recorder applies.
+    '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2',
+    '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '30', '-pix_fmt', 'yuv420p',
+    '-an', '-movflags', '+faststart',
+    out,
+  ]);
+}
+
+/* ── stitch ──────────────────────────────────────────────────────────────── */
+
+/**
+ * Breathing room around a scenario, in seconds.
+ *
+ * The marks are taken from inside the browser and the recording starts a
+ * moment before the first of them, so the clip opens slightly early and closes
+ * slightly late — the last assertion's screen is what a viewer wants to see,
+ * and the lead-in is what tells them the clip has started.
+ */
+const LEAD_SECONDS = 1;
+const TAIL_SECONDS = 1.5;
+
+/** A file name a shell, a zip and Slack all accept, from a scenario title. */
+function slug(title) {
+  const words = title.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  return words.join('-').slice(0, 80) || 'scenario';
+}
+
+/** The sidecar beside a spec video, parsed, or null when the spec wrote none. */
+function readSidecar(file) {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+    return Array.isArray(parsed?.scenarios) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Every scenario clip of one suite, written under OUT_DIR/scenarios/<suite>/,
+ * with a manifest the gate reads them back by. Returns how many were cut.
+ *
+ * Numbered in the order they ran so the folder — and the Slack thread — reads
+ * top to bottom the way the suite did.
+ */
+function cutScenarios(suite, videoDir, outDir) {
+  const sidecars = filesEndingWith(videoDir, SIDECAR_SUFFIX)
+    .map((file) => ({ file, at: fs.statSync(file).mtimeMs }))
+    .sort((a, b) => a.at - b.at)
+    .map((entry) => entry.file);
+  if (sidecars.length === 0) return 0;
+
+  const clipDir = path.join(outDir, SCENARIOS_DIR, suite);
+  fs.mkdirSync(clipDir, { recursive: true });
+  const manifest = [];
+
+  for (const sidecarFile of sidecars) {
+    const sidecar = readSidecar(sidecarFile);
+    const source = sidecarFile.slice(0, -SIDECAR_SUFFIX.length);
+    if (!sidecar || !fs.existsSync(source)) continue;
+    for (const scenario of sidecar.scenarios) {
+      const title = String(scenario.title ?? '').trim();
+      const startMs = Number(scenario.start_ms);
+      const endMs = Number(scenario.end_ms);
+      if (!title || !Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) continue;
+      const index = manifest.length + 1;
+      const file = path.join(clipDir, `${String(index).padStart(2, '0')}-${slug(title)}.mp4`);
+      const start = Math.max(startMs / 1000 - LEAD_SECONDS, 0);
+      const seconds = endMs / 1000 - start + TAIL_SECONDS;
+      try {
+        cut(source, start, seconds, file);
+      } catch (err) {
+        console.log(`· ${suite}: could not cut "${title}" — ${describeError(err)}`);
+        continue;
+      }
+      manifest.push({
+        suite,
+        spec: String(sidecar.spec ?? ''),
+        title,
+        state: String(scenario.state ?? ''),
+        file: path.basename(file),
+        seconds: durationSeconds(file),
+      });
+    }
+  }
+
+  fs.writeFileSync(path.join(clipDir, MANIFEST), `${JSON.stringify(manifest, null, 2)}\n`);
+  return manifest.length;
+}
+
 function stitch() {
   const suite = env('SUITE_KEY');
   if (!suite) throw new Error('SUITE_KEY is required in stitch mode');
-  const parts = orderedParts(env('VIDEO_DIR') || '.');
+  const videoDir = env('VIDEO_DIR') || '.';
+  const parts = orderedParts(videoDir);
   if (parts.length === 0) {
     console.log(`· ${suite}: nothing was recorded`);
     return;
@@ -158,6 +286,9 @@ function stitch() {
   const mb = (fs.statSync(out).size / 1024 / 1024).toFixed(1);
   const from = parts.length === 1 ? '1 spec' : `${parts.length} specs`;
   console.log(`✓ ${suite}: ${from} → ${path.basename(out)} (${mb} MB, ${seconds ?? '?'}s)`);
+
+  const clips = cutScenarios(suite, videoDir, outDir);
+  if (clips > 0) console.log(`✓ ${suite}: ${clips} scenario clips → ${SCENARIOS_DIR}/${suite}/`);
 }
 
 /* ── upload ──────────────────────────────────────────────────────────────── */
@@ -210,46 +341,99 @@ async function putBytes(url, file) {
   }
 }
 
+/** The suite videos: the top level of VIDEO_DIR, one file per leg. */
+function suiteVideos(root) {
+  let entries;
+  try {
+    entries = fs.readdirSync(root, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  return entries
+    .filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith('.mp4'))
+    .map((entry) => ({ suite: path.basename(entry.name, '.mp4'), file: path.join(root, entry.name) }));
+}
+
+/** Every scenario clip a leg cut, from the manifests under VIDEO_DIR/scenarios/. */
+function scenarioClips(root) {
+  const clips = [];
+  for (const manifestFile of filesEndingWith(path.join(root, SCENARIOS_DIR), MANIFEST)) {
+    let rows;
+    try {
+      rows = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
+    } catch {
+      continue;
+    }
+    if (!Array.isArray(rows)) continue;
+    for (const row of rows) {
+      const file = path.join(path.dirname(manifestFile), String(row.file ?? ''));
+      if (fs.existsSync(file)) clips.push({ ...row, file });
+    }
+  }
+  return clips;
+}
+
+/**
+ * Reserve a place in Slack for one file and send its bytes there. Returns the
+ * file id, or null when the run is not keeping recordings — which is about
+ * the RUN, not the file, so the caller stops asking.
+ */
+async function uploadOne(token, suite, file) {
+  const bytes = fs.statSync(file).size;
+  const auth = await gql(
+    AUTH_MUTATION,
+    { input: { ...runIdentity(), suite, file_name: path.basename(file), length: bytes } },
+    token
+  );
+  const slot = auth.e2eVideoUploadAuth;
+  if (!slot.ok) {
+    console.log(`· recordings are not being kept: ${slot.reason}`);
+    return null;
+  }
+  await putBytes(slot.upload_url, file);
+  return { file_id: slot.file_id, bytes };
+}
+
 async function upload(token) {
-  const files = videoFiles(env('VIDEO_DIR') || '.');
-  if (files.length === 0) {
+  const root = env('VIDEO_DIR') || '.';
+  const suites = suiteVideos(root);
+  const clips = scenarioClips(root);
+  if (suites.length === 0 && clips.length === 0) {
     console.log('· no recordings were produced by this run');
     return;
   }
+
   const videos = [];
-  for (const file of files) {
-    const suite = path.basename(file, '.mp4');
-    const bytes = fs.statSync(file).size;
-    const auth = await gql(
-      AUTH_MUTATION,
-      { input: { ...runIdentity(), suite, file_name: path.basename(file), length: bytes } },
-      token
-    );
-    const slot = auth.e2eVideoUploadAuth;
-    // A refusal is about the RUN, not about this file — recording is off, no
-    // channel is configured, the token cannot write files — so there is nothing
-    // to gain by asking again for the other eighteen.
-    if (!slot.ok) {
-      console.log(`· recordings are not being kept: ${slot.reason}`);
-      return;
-    }
-    await putBytes(slot.upload_url, file);
-    videos.push({
-      suite,
-      file_id: slot.file_id,
-      seconds: durationSeconds(file),
-      bytes,
-    });
-    console.log(`✓ ${suite}: uploaded ${(bytes / 1024 / 1024).toFixed(1)} MB`);
+  for (const { suite, file } of suites) {
+    const sent = await uploadOne(token, suite, file);
+    if (!sent) return;
+    videos.push({ suite, file_id: sent.file_id, seconds: durationSeconds(file), bytes: sent.bytes });
+    console.log(`✓ ${suite}: uploaded ${(sent.bytes / 1024 / 1024).toFixed(1)} MB`);
   }
 
-  const data = await gql(ATTACH_MUTATION, { input: { ...runIdentity(), videos } }, token);
+  const scenarios = [];
+  for (const clip of clips) {
+    const sent = await uploadOne(token, clip.suite, clip.file);
+    if (!sent) return;
+    scenarios.push({
+      suite: clip.suite,
+      spec: clip.spec,
+      title: clip.title,
+      state: clip.state,
+      file_id: sent.file_id,
+      seconds: clip.seconds ?? durationSeconds(clip.file),
+      bytes: sent.bytes,
+    });
+  }
+  if (scenarios.length > 0) console.log(`✓ ${scenarios.length} scenario clips uploaded`);
+
+  const data = await gql(ATTACH_MUTATION, { input: { ...runIdentity(), videos, scenarios } }, token);
   const { run_no, video_error } = data.attachE2eRunVideos;
   if (video_error) {
     console.log(`⚠ ${run_no}: the recordings were uploaded but not shared — ${video_error}`);
     return;
   }
-  console.log(`✓ ${run_no}: ${videos.length} recordings posted under the run's message`);
+  console.log(`✓ ${run_no}: ${videos.length} recordings and ${scenarios.length} scenario clips posted under the run's message`);
 }
 
 /* ── entry ───────────────────────────────────────────────────────────────── */

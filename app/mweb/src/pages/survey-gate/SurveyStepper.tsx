@@ -99,7 +99,7 @@ export default function SurveyStepper({
       }}>
         <DuncitButton disabled={step === 0 || submitting} onClick={() => setStep((s) => Math.max(0, s - 1))}>Back</DuncitButton>
         {isLast ? (
-          <DuncitButton variant="contained" onClick={submit} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>{submitting ? 'Submitting…' : submitLabel}</DuncitButton>
+          <DuncitButton variant="contained" onClick={submit} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>{submitting ? 'Submitting…' : submitLabelText}</DuncitButton>
         ) : (
           <DuncitButton variant="contained" onClick={next} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>Next</DuncitButton>
         )}

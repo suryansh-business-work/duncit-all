@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
+import ScenarioClipsList from './ScenarioClipsList';
 import SuiteResultsList from './SuiteResultsList';
 import { durationLabel, testsLabel, type E2eRunRow } from './queries';
 
@@ -103,6 +104,7 @@ export default function RunDetailsDialog({ run, onClose }: Readonly<Props>) {
             </Alert>
           )}
           <SuiteResultsList results={run.results} />
+          <ScenarioClipsList clips={run.scenario_videos} />
         </Stack>
       </DialogContent>
       <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end', p: 2 }}>

@@ -50,6 +50,10 @@ export const E2E_SUITES: readonly E2eSuiteDefinition[] = [
   portal('tech', 'Tech'),
   portal('website-app', 'Website'),
   { key: 'mweb', label: 'mWeb', group: 'APP' },
+  // The one suite that talks to a REAL server: it signs in and signs up as the
+  // run's identity, creates pods, tickets and ideas on staging, and the leg
+  // purges everything it made afterwards (purgeE2eRunData).
+  { key: 'mweb-live', label: 'mWeb (live flows on staging)', group: 'APP' },
   { key: 'native-web', label: 'Native app (web)', group: 'APP' },
   {
     key: 'no-surface',

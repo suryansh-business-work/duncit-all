@@ -34,6 +34,19 @@ export interface E2eSuiteResult {
   reported_at: string | null;
 }
 
+/** One scenario's clip — a single test, cut from its spec's recording. */
+export interface E2eScenarioVideo {
+  suite: string;
+  spec: string;
+  title: string;
+  /** Mocha's word for it: passed, failed, pending. */
+  state: string;
+  file_id: string;
+  permalink: string;
+  seconds: number | null;
+  bytes: number | null;
+}
+
 export interface E2eRunStage {
   name: string;
   at: string;
@@ -60,6 +73,8 @@ export interface E2eRunRow {
   commit_sha: string;
   requested_suites: string[];
   results: E2eSuiteResult[];
+  /** One clip per scenario, for the suites that record them; empty otherwise. */
+  scenario_videos: E2eScenarioVideo[];
   totals: E2eRunTotals;
   workflow_run_url: string;
   duration_seconds: number | null;
@@ -144,6 +159,16 @@ const RUN_FIELDS = `
     video_seconds
     video_bytes
     reported_at
+  }
+  scenario_videos {
+    suite
+    spec
+    title
+    state
+    file_id
+    permalink
+    seconds
+    bytes
   }
   totals {
     suites

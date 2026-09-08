@@ -60,6 +60,32 @@ export interface IE2eSuiteResult {
   reported_at: Date;
 }
 
+/**
+ * One scenario's clip — a single `it()` cut out of its spec's recording.
+ *
+ * Only the suites that record where each test began and ended produce these
+ * (the live mWeb suite does; see scripts/e2e-videos.mjs). They sit beside the
+ * suite videos rather than inside `results`, because a scenario belongs to a
+ * suite but is reported by the GATE, after every leg has finished — and the
+ * per-leg `$pull`/`$push` in applySuiteResult would otherwise have to carry
+ * an unbounded list across every re-report.
+ */
+export interface IE2eScenarioVideo {
+  /** The suite the scenario ran in — a `results[].key`. */
+  suite: string;
+  /** The spec file, relative to the suite. */
+  spec: string;
+  /** The test's full title, e.g. `Sign in › wrong password is refused`. */
+  title: string;
+  /** Mocha's word for it: `passed`, `failed`, `pending`. */
+  state: string;
+  /** The Slack file, kept for the same reason as the suite video's: deletion. */
+  file_id: string;
+  permalink: string;
+  seconds: number | null;
+  bytes: number | null;
+}
+
 /** A stage the workflow entered, stamped when it got there. */
 export interface IE2eRunStage {
   name: string;
@@ -95,6 +121,8 @@ export interface IE2eRun extends Document {
    */
   requested_suites: string[];
   results: IE2eSuiteResult[];
+  /** One clip per scenario, for the suites that record scenario boundaries. */
+  scenario_videos: IE2eScenarioVideo[];
   totals: IE2eRunTotals;
   workflow_run_id: string;
   workflow_run_url: string;
@@ -169,6 +197,20 @@ const suiteResultSchema = new Schema<IE2eSuiteResult>(
   { _id: false }
 );
 
+const scenarioVideoSchema = new Schema<IE2eScenarioVideo>(
+  {
+    suite: { type: String, required: true, trim: true },
+    spec: { type: String, default: '' },
+    title: { type: String, required: true, trim: true },
+    state: { type: String, default: '' },
+    file_id: { type: String, required: true },
+    permalink: { type: String, default: '' },
+    seconds: { type: Number, default: null },
+    bytes: { type: Number, default: null },
+  },
+  { _id: false }
+);
+
 const stageSchema = new Schema<IE2eRunStage>(
   {
     name: { type: String, required: true, trim: true },
@@ -211,6 +253,7 @@ const e2eRunSchema = new Schema<IE2eRun>(
     commit_sha: { type: String, default: '' },
     requested_suites: { type: [String], default: [] },
     results: { type: [suiteResultSchema], default: [] },
+    scenario_videos: { type: [scenarioVideoSchema], default: [] },
     totals: { type: totalsSchema, default: () => ({}) },
     workflow_run_id: { type: String, default: '' },
     workflow_run_url: { type: String, default: '' },

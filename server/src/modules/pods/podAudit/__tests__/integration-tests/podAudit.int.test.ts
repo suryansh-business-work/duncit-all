@@ -179,7 +179,13 @@ describe('reviewLogWithAi()', () => {
 
   it('keeps the heuristic on HTTP failure, bad JSON and thrown errors', async () => {
     mockEnv.mockImplementation(async (key: string) => (key === 'OPENAI_API_KEY' ? 'sk-test' : ''));
-    jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce({ ok: false } as never);
+    // A refusal is READ before it is reported — the client asks a failed
+    // response for its body so the reason reaches the usage log. A stand-in of
+    // `{ ok: false }` has no `text()`, so it threw where OpenAI would merely
+    // have refused, and the heuristic this case is about was never reached.
+    jest
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce({ ok: false, status: 503, text: async () => 'upstream down' } as never);
     const log = await seedLog();
     await reviewLogWithAi(log);
     expect((await PodAuditLogModel.findById(log._id))!.ai_risk).toBe('HIGH');

@@ -107,8 +107,26 @@ describe('hostService integration', () => {
     const again = await hostService.addCategoryFromRequest(u, mapping);
     expect(again.host_categories).toHaveLength(1);
 
-    // A different request_no adds a second mapping.
-    const second = await hostService.addCategoryFromRequest(u, { ...mapping, request_no: 'HOSTREQ-000002' });
+    /*
+      Nor does a SECOND request for a category they already hold. Identity is
+      the Super/Category/Sub triple as well as the request_no — a host holds a
+      category once, however many routes said so — and the entry that stays is
+      the first one, whose request_no records how they actually earned it.
+    */
+    const reapproved = await hostService.addCategoryFromRequest(u, {
+      ...mapping,
+      request_no: 'HOSTREQ-000002',
+    });
+    expect(reapproved.host_categories).toHaveLength(1);
+    expect(reapproved.host_categories[0].request_no).toBe('HOSTREQ-000001');
+
+    // A different category does add a second mapping.
+    const second = await hostService.addCategoryFromRequest(u, {
+      ...mapping,
+      sub_category_id: new Types.ObjectId(),
+      sub_category_name: 'Table Tennis',
+      request_no: 'HOSTREQ-000003',
+    });
     expect(second.host_categories).toHaveLength(2);
   });
 

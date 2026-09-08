@@ -7,6 +7,8 @@ import { ApiKeyModel } from '@modules/platform/apiKey/apiKey.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
+import { seedRateLimitDefaults } from '@modules/platform/rateLimit/rateLimit.seed';
+import { invalidateRateLimitCache } from '@modules/platform/rateLimit/rateLimit.enforcer';
 
 const app = express();
 app.use('/api/v1', buildVenueApiRouter());
@@ -242,13 +244,23 @@ describe('public venue API router', () => {
     expect(res.body).toEqual({ error: 'not_found' });
   });
 
+  /*
+    The 120-per-minute ceiling is no longer written in this middleware — it is
+    the shipped "Public API keys" rule in Tech > Rate Limiting, keyed on
+    API_KEY. That rule is created at BOOT, which an integration suite does not
+    run, so with an empty collection the limiter has nothing to apply and every
+    request is allowed. Seeding the defaults is what puts the limit back under
+    the test, and it is the real rule rather than a fixture invented here.
+  */
   it('rate-limits a key after 120 requests in the window', async () => {
+    await seedRateLimitDefaults();
+    invalidateRateLimitCache();
     await seedVenue();
     const key = await seedKey('Hammer');
     for (let i = 0; i < 120; i += 1) {
       await request(app).get('/api/v1/venues').set('x-api-key', key).expect(200);
     }
     const limited = await request(app).get('/api/v1/venues').set('x-api-key', key).expect(429);
-    expect(limited.body).toEqual({ error: 'rate_limited' });
+    expect(limited.body.error).toBe('rate_limited');
   }, 60_000);
 });

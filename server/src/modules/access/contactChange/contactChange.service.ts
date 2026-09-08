@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { UserModel } from '@modules/access/user/user.model';
+import { numberHeldElsewhere } from '@modules/access/user/number-owner';
 import { userAuditService } from '@modules/access/userAudit/userAudit.service';
 import {
   EMAIL_OTP_MINUTES,
@@ -58,22 +59,35 @@ const loadUser = async (user_id: string) => {
   return user;
 };
 
+/** What each number is called when somebody else already holds it. */
+const TAKEN_MESSAGE: Record<ContactPhoneField, string> = {
+  PHONE: 'That phone number is already registered to another account',
+  WHATSAPP: 'That WhatsApp number is already linked to another account',
+};
+
 /**
- * Refuse a contact number that already signs another account in.
+ * Refuse a number that already reaches another account.
  *
- * Only the CONTACT number carries this rule: `auth.phone` is a credential and
- * its unique index would refuse the write anyway, so saying so plainly beats
- * an E11000. Two people may legitimately share one WhatsApp number — a couple,
- * a family handset — and it opens no session, so it is not checked.
+ * BOTH numbers carry this rule, and each is checked against BOTH fields. A
+ * WhatsApp number is not merely a way to message somebody: it signs them in —
+ * `accountFor` resolves an account from either field, which is what lets the
+ * password-by-phone, Continue-with-OTP and recovery doors work on a number
+ * that was only ever given as a WhatsApp one. Sharing it would leave those
+ * three doors picking between two accounts, so it is refused here, before a
+ * code is sent to a number the caller may not hold.
+ *
+ * `auth.phone` has a unique index that would refuse its half anyway — saying so
+ * plainly beats an E11000 — and the WhatsApp side has no index at all, so this
+ * check is the only thing standing there.
  */
-async function assertPhoneFree(user_id: string, extension: string, number: string) {
-  const taken = await UserModel.exists({
-    _id: { $ne: new Types.ObjectId(user_id) },
-    'auth.phone.number': number,
-    'auth.phone.extension': extension,
-  });
-  if (taken) {
-    throw conflict('That phone number is already registered to another account');
+async function assertNumberFree(
+  user_id: string,
+  field: ContactPhoneField,
+  extension: string,
+  number: string
+) {
+  if (await numberHeldElsewhere(extension, number, user_id)) {
+    throw conflict(TAKEN_MESSAGE[field]);
   }
 }
 
@@ -125,9 +139,7 @@ export const contactChangeService = {
     const spec = PHONE_FIELDS[field];
     const phone = normalizePhone(extension, number);
     const user = await loadUser(user_id);
-    if (field === 'PHONE') {
-      await assertPhoneFree(user_id, phone.phone_extension, phone.phone_number);
-    }
+    await assertNumberFree(user_id, field, phone.phone_extension, phone.phone_number);
     return otpService.request({
       purpose: spec.purpose,
       // The medium is an argument, never a second code path (rule 41). Both are
@@ -152,9 +164,9 @@ export const contactChangeService = {
   ) {
     const spec = PHONE_FIELDS[field];
     const phone = normalizePhone(extension, number);
-    if (field === 'PHONE') {
-      await assertPhoneFree(user_id, phone.phone_extension, phone.phone_number);
-    }
+    // Re-checked after the code as well as before it: the number may have been
+    // claimed by somebody else while this code was in flight.
+    await assertNumberFree(user_id, field, phone.phone_extension, phone.phone_number);
     const challenge = await otpService.verifyLatest(spec.purpose, phone, otp);
     // Bound to the account that asked. Without this, one person's verified code
     // for a number could be replayed by another session to claim that number.
@@ -176,9 +188,7 @@ export const contactChangeService = {
       (e: any) => {
         // The unique phone index is the final authority, and it can still fire
         // between the check above and this write.
-        if (e?.code === 11000) {
-          throw conflict('That phone number is already registered to another account');
-        }
+        if (e?.code === 11000) throw conflict(TAKEN_MESSAGE[field]);
         throw e;
       }
     );

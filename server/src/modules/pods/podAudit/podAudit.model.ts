@@ -11,6 +11,8 @@ export type PodAuditAction =
   | 'UPDATE'
   | 'RESUBMIT'
   | 'DELETE'
+  /** An admin revoked a cancellation and put the pod back on the platform. */
+  | 'RESTORE'
   | 'VENUE_APPROVED'
   | 'VENUE_DECLINED'
   | 'COMPLETE'
@@ -22,6 +24,7 @@ export const POD_AUDIT_ACTIONS: PodAuditAction[] = [
   'UPDATE',
   'RESUBMIT',
   'DELETE',
+  'RESTORE',
   'VENUE_APPROVED',
   'VENUE_DECLINED',
   'COMPLETE',

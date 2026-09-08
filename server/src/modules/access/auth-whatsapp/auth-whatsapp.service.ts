@@ -16,6 +16,7 @@
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { UserModel } from '@modules/access/user/user.model';
+import { numberHeldElsewhere } from '@modules/access/user/number-owner';
 import { isAisensyConfigured } from '@modules/platform/aisensy/aisensy.gateway';
 import type { IOtpChallenge, IOtpDelivery } from '@modules/platform/otp/otp.model';
 import {
@@ -28,22 +29,16 @@ import {
 const PURPOSE = 'WHATSAPP_SIGNUP' as const;
 
 /**
- * The account already holding this number, if it is not the caller's own.
+ * Whether this number already reaches an account.
  *
- * A number identifies an account at three doors (password login by phone,
- * Continue with OTP, and recovery), and `accountFor` matches it in EITHER
- * field — so one number on two accounts leaves those doors picking between
- * them. Checked at both moments a number can arrive: before a code is sent,
- * and again before the account it belongs to is created.
+ * The rule itself — both fields a number can live in, and why — lives in
+ * `numberHeldElsewhere`, which the profile's contact edits read too (rule 34).
+ * Nothing is excluded here because there is no account yet. Checked at both
+ * moments a number can arrive: before a code is sent, and again before the
+ * account it belongs to is created.
  */
-async function numberRegistered(extension: string, number: string) {
-  return UserModel.findOne({
-    $or: [
-      { 'auth.phone.number': number, 'auth.phone.extension': extension },
-      { 'communication.whatsapp.number': number, 'communication.whatsapp.extension': extension },
-    ],
-  }).lean();
-}
+const numberRegistered = (extension: string, number: string) =>
+  numberHeldElsewhere(extension, number);
 
 function numberTakenError(): GraphQLError {
   return new GraphQLError(

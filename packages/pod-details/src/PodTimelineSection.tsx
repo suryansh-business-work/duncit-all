@@ -15,6 +15,7 @@ const ACTION_COLORS: StatusColorMap = {
   UPDATE: 'info',
   RESUBMIT: 'info',
   DELETE: 'error',
+  RESTORE: 'success',
   VENUE_APPROVED: 'success',
   VENUE_DECLINED: 'warning',
   COMPLETE: 'primary',

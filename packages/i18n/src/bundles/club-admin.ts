@@ -35,6 +35,7 @@ export const CLUB_ADMIN_BUNDLE: NestedCatalogue = {
         update: 'Edited',
         resubmit: 'Resubmitted',
         delete: 'Deleted',
+        restore: 'Cancellation Revoked',
         venueApproved: 'Venue Approved',
         venueDeclined: 'Venue Rejected',
         complete: 'Completed',

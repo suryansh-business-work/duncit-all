@@ -12,7 +12,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
-import PodDetailsPage, { type PodDetailsViewProps } from '../src/PodDetailsPage';
+import PodDetailsPage, {
+  NO_POD_ACTIONS,
+  type PodDetailsViewProps,
+} from '../src/PodDetailsPage';
 import { POD_ATTENDEES_ADMIN, POD_DETAIL } from '../src/queries';
 import { POD_ID, settle, testTheme } from './harness';
 
@@ -66,7 +69,7 @@ const mount = (props: PodDetailsViewProps = {}, mocks: MockedResponse[] = [podMo
       <ThemeProvider theme={testTheme}>
         <MemoryRouter initialEntries={[`/pods/${POD_ID}`]}>
           <Routes>
-            <Route path="/pods/:id" element={<PodDetailsPage {...props} />} />
+            <Route path="/pods/:id" element={<PodDetailsPage actions={NO_POD_ACTIONS} {...props} />} />
             <Route path="/pods" element={<div>pods-list</div>} />
             <Route path="/pods/:id/edit" element={<div>pod-editor</div>} />
             <Route path="/club/pods" element={<div>club-pods-list</div>} />

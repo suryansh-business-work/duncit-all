@@ -22,6 +22,24 @@ import PodFeedbackSection from './PodFeedbackSection';
 /** One gap for the whole page, so nothing is 2 here and 3 there. */
 const GAP = 2.5;
 
+/** The pod as a header action needs it: which pod, what it is called, and
+ * whether it is currently cancelled. */
+export interface PodDetailsActionPod {
+  id: string;
+  pod_title: string;
+  is_deleted: boolean;
+}
+
+/** An extra action rendered beside Edit, decided by the portal that mounts the
+ * page rather than by this package: only the admin console may revoke a
+ * cancellation, and only it knows the mutation. */
+export type PodDetailsActions = (pod: PodDetailsActionPod) => ReactNode;
+
+/** What a console with no action of its own passes. Required rather than
+ * optional on purpose: an optional render prop is a branch this package would
+ * never exercise on both sides, and the shared-package coverage gate counts it. */
+export const NO_POD_ACTIONS: PodDetailsActions = () => null;
+
 export interface PodDetailsViewProps {
   /** Who is reading — picks the admin or the club-scoped query set. */
   scope?: PodDetailsScope;
@@ -37,6 +55,9 @@ export interface PodDetailsViewProps {
    * Club Admin's own console has none, and a name that navigates nowhere reads
    * as a broken page rather than as a missing feature. */
   userTo?: (userId: string) => string;
+  /** Rendered in the header, beside Edit. The admin portal puts Revoke
+   * cancellation here; every other console passes NO_POD_ACTIONS. */
+  actions: PodDetailsActions;
   /** Rendered under the tables. The admin portal puts its coupons section here;
    * it stays out of this package because coupon management is platform-wide
    * (ADMIN_RW create/delete) and reaches into the admin coupons page. */
@@ -56,6 +77,7 @@ export default function PodDetailsPage(props: Readonly<PodDetailsViewProps>) {
 function PodDetailsView({
   backTo = '/pods',
   backLabel = 'Pods',
+  actions,
   editTo,
   userTo,
   footer,
@@ -88,7 +110,7 @@ function PodDetailsView({
     >
       {() => (
         <Stack spacing={GAP}>
-          {/* Title, state and the one action, as a single block — the chips
+          {/* Title, state and the actions, as a single block — the chips
               belong to the heading, not to a separate band under it. */}
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
@@ -114,21 +136,30 @@ function PodDetailsView({
               </Stack>
               <PodStatusChips pod={pod} />
             </Stack>
-            {/* Editable at every stage — a cancelled pod included, so an admin
-                can correct it (or re-route its venue slot) after the fact
-                rather than rebuilding it. Absent for a console with no editor
-                behind it: a button that navigates nowhere reads as a broken
-                page rather than as a permission the reader does not have. */}
-            {editTo && (
-              <DuncitButton
-                variant="contained"
-                startIcon={<EditIcon />}
-                onClick={() => navigate(editTo(pod.id))}
-                sx={{ flexShrink: 0 }}
-              >
-                Edit pod
-              </DuncitButton>
-            )}
+            {/* The portal's own action first (admin puts Revoke cancellation
+                here), then Edit — editable at every stage, a cancelled pod
+                included, so an admin can correct it (or re-route its venue
+                slot) after the fact rather than rebuilding it. Edit is absent
+                for a console with no editor behind it: a button that navigates
+                nowhere reads as a broken page rather than as a permission the
+                reader does not have. */}
+            <Stack
+              direction="row"
+              spacing={1.5}
+              useFlexGap
+              sx={{ flexShrink: 0, flexWrap: 'wrap', alignItems: 'center' }}
+            >
+              {actions(pod)}
+              {editTo && (
+                <DuncitButton
+                  variant="contained"
+                  startIcon={<EditIcon />}
+                  onClick={() => navigate(editTo(pod.id))}
+                >
+                  Edit pod
+                </DuncitButton>
+              )}
+            </Stack>
           </Stack>
 
           {/* Two columns that end at roughly the same line. The old layout

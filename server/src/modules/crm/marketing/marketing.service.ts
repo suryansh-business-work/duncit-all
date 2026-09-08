@@ -22,6 +22,7 @@ import { getMailConfigs, getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { instrumentCampaignHtml } from './tracking.service';
 import { logs } from '@observability/log';
+import { appDateTime } from '@utils/app-time';
 
 const MAX_TIMER_DELAY = 2_147_483_647;
 const timers = new Map<string, NodeJS.Timeout>();
@@ -112,7 +113,7 @@ async function podCards() {
         description: stripText(pod.pod_description),
         image_url: pod.pod_images_and_videos?.find((m: any) => m.type === 'IMAGE')?.url ?? null,
         cta_url: clubSlug ? await mwebUrl(`/club/${clubSlug}/pod/${pod.pod_id}`) : null,
-        meta: pod.pod_date_time ? new Date(pod.pod_date_time).toLocaleString('en-IN') : null,
+        meta: appDateTime(pod.pod_date_time) || null,
       };
     })
   );

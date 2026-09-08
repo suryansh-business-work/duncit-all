@@ -1,6 +1,7 @@
 import PDFDocument from 'pdfkit';
 import fs from 'node:fs';
 import path from 'node:path';
+import { appDate } from '@utils/app-time';
 
 export interface InvoiceLineItem {
   description: string;
@@ -175,7 +176,7 @@ export function drawInvoice(
     .fillColor(MUTED)
     .fontSize(9)
     .font('Helvetica')
-    .text(`Date: ${data.invoice_date.toLocaleDateString('en-IN')}`, 360, doc.y + 4, { width: R - 360, align: 'right' })
+    .text(`Date: ${appDate(data.invoice_date)}`, 360, doc.y + 4, { width: R - 360, align: 'right' })
     .text(`Payment ID: ${data.payment_id}`, 360, doc.y + 2, { width: R - 360, align: 'right' });
 
   // ---- Bill To card (name · GSTIN · contact + billing email · address) ----

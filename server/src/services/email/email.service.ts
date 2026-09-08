@@ -24,6 +24,7 @@ import {
   type EmailDelivery,
   type EmailProviderConfig,
 } from './email.provider';
+import { appDateTime } from '@utils/app-time';
 
 /**
  * No mailbox at all — a local machine, or a fresh install before anyone has
@@ -828,7 +829,7 @@ export async function sendPasswordChangedEmail(email: string, firstName: string)
       vars: {
         name: firstName || 'there',
         email,
-        when: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
+        when: appDateTime(new Date()),
         security_url: joinUrl(appUrl, '/profile'),
       },
     });

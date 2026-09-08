@@ -4,6 +4,7 @@ import { sendEmail } from '@services/email/email.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { UserModel } from './user.model';
 import { joinUrl } from '@utils/url';
+import { appDateTime } from '@utils/app-time';
 
 /**
  * "A new sign-in to your account" — the notice, and the rule for when it is one.
@@ -139,7 +140,7 @@ export async function noteSignIn(
       category: 'authentication',
       vars: {
         name: user.profile?.first_name ?? 'there',
-        when: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
+        when: appDateTime(new Date()),
         device: deviceLabel(context.userAgent),
         place: context.place?.trim() || 'Unknown location',
         security_url: joinUrl(appUrl, '/profile'),

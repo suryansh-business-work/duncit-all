@@ -47,6 +47,7 @@ import type { PodAuditSource } from '@modules/pods/podAudit/podAudit.model';
 import { notifySocialActivity } from '@modules/engagement/notification/social-notify';
 import { logs } from '@observability/log';
 import { notifyEach, notifyEvent } from '@services/notify/notify.service';
+import { appDate, appDateTime, appTime } from '@utils/app-time';
 
 /**
  * Ceiling on the unpaginated `pods` read.
@@ -538,17 +539,12 @@ export async function findHostedPod(id: string, userId: string) {
   return doc!;
 }
 
-const podWhenLabel = (doc: any) =>
-  doc.pod_date_time
-    ? new Date(doc.pod_date_time).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
-    : '—';
+const podWhenLabel = (doc: any) => appDateTime(doc.pod_date_time) || '—';
 
 // WhatsApp templates print the date and the time as two separate placeholders,
 // so the combined label above cannot serve them.
-const podDateLabel = (doc: any) =>
-  doc.pod_date_time ? new Date(doc.pod_date_time).toLocaleString('en-IN', { dateStyle: 'medium' }) : '';
-const podTimeLabel = (doc: any) =>
-  doc.pod_date_time ? new Date(doc.pod_date_time).toLocaleString('en-IN', { timeStyle: 'short' }) : '';
+const podDateLabel = (doc: any) => appDate(doc.pod_date_time);
+const podTimeLabel = (doc: any) => appTime(doc.pod_date_time);
 
 /** Attendee users (excluding the acting host) with an email on file. */
 async function podAudience(doc: any, excludeUserId: string) {
@@ -953,10 +949,7 @@ async function notifyVenueSlotRequested(pod: any, slot: any) {
     const { notificationService } = await import(
       '@modules/engagement/notification/notification.service'
     );
-    const when = new Date(slot.start_at).toLocaleString('en-IN', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    });
+    const when = appDateTime(slot.start_at);
     await notificationService.create({
       title: 'New slot booking request',
       body: `"${pod.pod_title}" requested your venue slot on ${when}. Review it in the Partners portal.`,
@@ -1000,10 +993,7 @@ async function emailVenueSlotRequested(pod: any, slot: any) {
     const hostName =
       `${(host as any)?.profile?.first_name ?? ''} ${(host as any)?.profile?.last_name ?? ''}`.trim() ||
       'A host';
-    const when = new Date(slot.start_at).toLocaleString('en-IN', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    });
+    const when = appDateTime(slot.start_at);
     const { partnersUrl } = await getUrlConfigs();
     // The two CTAs open the same decision page with the intent pre-selected.
     // The page is auth-gated, so a mail scanner following the link cannot
@@ -1030,8 +1020,8 @@ async function emailVenueSlotRequested(pod: any, slot: any) {
       params: [
         ownerName,
         pod.pod_title,
-        new Date(slot.start_at).toLocaleString('en-IN', { dateStyle: 'medium' }),
-        new Date(slot.start_at).toLocaleString('en-IN', { timeStyle: 'short' }),
+        appDate(slot.start_at),
+        appTime(slot.start_at),
         hostName,
         reviewUrl,
       ],

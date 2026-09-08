@@ -16,6 +16,7 @@ import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { sendGiftCardReceivedEmail } from '@services/email/email.service';
 import { emailTranslationVars, recipientLocale } from '@services/email/email-i18n';
 import { getUrlConfigs } from '@config/url-configs';
+import { appDate } from '@utils/app-time';
 
 /** Mongo's duplicate-key error — a unique index rejecting a repeat. */
 const DUPLICATE_KEY = 11000;
@@ -353,7 +354,7 @@ export const giftcardService = {
       code: card.code,
       message_line: card.message ? `“${card.message}”` : '',
       redeem_url: `${urlConfigs.appUrl}/gift-card/${card.code}`,
-      expires_on: card.expires_at.toLocaleDateString('en-IN'),
+      expires_on: appDate(card.expires_at),
     });
     return { to, cardId: String(card._id) };
   },

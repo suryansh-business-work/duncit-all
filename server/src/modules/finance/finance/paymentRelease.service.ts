@@ -16,6 +16,7 @@ import {
 } from './settlement.service';
 import { generatePayoutPdf } from '@services/payout/payout.pdf';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { appDate, appTime } from '@utils/app-time';
 
 const releaseId = () => `rel_${Date.now().toString(36)}${crypto.randomBytes(4).toString('hex')}`;
 
@@ -349,9 +350,8 @@ async function beneficiaryUser(doc: IPaymentRelease) {
  * ask for the pod's time, so the two shapes are built apart.
  */
 async function payoutWaParams(doc: IPaymentRelease, payout: number, pod: any): Promise<string[]> {
-  const when = pod?.pod_date_time ? new Date(pod.pod_date_time) : null;
-  const date = when ? when.toLocaleString('en-IN', { dateStyle: 'medium' }) : '';
-  const time = when ? when.toLocaleString('en-IN', { timeStyle: 'short' }) : '';
+  const date = appDate(pod?.pod_date_time);
+  const time = appTime(pod?.pod_date_time);
   // No currency symbol: every payout template prints the rupee sign itself.
   const amount = payout.toFixed(2);
   if (doc.kind === 'CLUB_ADMIN') {

@@ -7,6 +7,7 @@ import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { generateProductInvoicePdf, type ProductInvoiceLine } from '@services/payout/product-invoice.pdf';
 import { nextInvoiceNumber } from './finance.model';
 import { logs } from '@observability/log';
+import { appDate } from '@utils/app-time';
 
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
 const clampPct = (n: number) => Math.min(100, Math.max(0, Number(n) || 0));
@@ -166,7 +167,7 @@ async function sendSellerInvoice(sellerId: string, bucket: SellerBucket, pod: an
       name,
       bucket.lines.map((line) => line.name).join(', '),
       invoice_no,
-      invoice_date.toLocaleString('en-IN', { dateStyle: 'medium' }),
+      appDate(invoice_date),
       // The money template prints the rupee sign itself.
       net_total.toFixed(2),
     ],

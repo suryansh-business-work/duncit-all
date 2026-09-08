@@ -34,6 +34,7 @@ import {
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { userContactNumber } from '@utils/contact';
 import { logs } from '@observability/log';
+import { appDate, appTime } from '@utils/app-time';
 
 // Legacy display constant kept for schema compatibility (refund_threshold_pct).
 const REFUND_THRESHOLD_PCT = 80;
@@ -50,12 +51,6 @@ export const BOOKING_FORBIDDEN_MESSAGE = 'You are not authorized to view this bo
 const newToken = () => `ref_${crypto.randomBytes(8).toString('hex')}`;
 
 const iso = (v?: Date | null) => (v instanceof Date ? v.toISOString() : null);
-
-/** WhatsApp templates print the day and the clock time as two placeholders. */
-const dateOnly = (v?: Date | string | null) =>
-  v ? new Date(v).toLocaleString('en-IN', { dateStyle: 'medium' }) : '';
-const timeOnly = (v?: Date | string | null) =>
-  v ? new Date(v).toLocaleString('en-IN', { timeStyle: 'short' }) : '';
 
 /** The pod's own start time has passed — nothing about the seat can change now. */
 const podHasHappened = (pod: { pod_date_time?: Date | null }) =>
@@ -327,8 +322,8 @@ async function notifySpotFilled(pod: any, member: IPodMember, request: IBackoutR
       params: [
         fullName(user) || 'there',
         pod.pod_title,
-        dateOnly(pod.pod_date_time),
-        timeOnly(pod.pod_date_time),
+        appDate(pod.pod_date_time),
+        appTime(pod.pod_date_time),
         // Bare — the template prints the rupee sign itself.
         request?.refund_amount,
         bookingLinkUrl(appUrl, String(member._id)),

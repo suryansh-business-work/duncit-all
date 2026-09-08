@@ -1,5 +1,6 @@
 import { loadPdfImage, pdfCurrency, renderPdf } from '@services/pdf/document';
 import type { PodCalculatorLine, PodCalculatorTotals } from '@modules/finance/podCalculator/podCalculator.totals';
+import { appDateTime } from '@utils/app-time';
 
 export interface PodCalculatorReportData {
   name: string;
@@ -95,7 +96,7 @@ function drawMeta(doc: PDFKit.PDFDocument, d: PodCalculatorReportData, R: number
   doc
     .fillColor(MUTED)
     .fontSize(9)
-    .text(`Generated: ${d.generated_at.toLocaleString('en-IN')}`, 360, y + 2, { width: R - 360, align: 'right' });
+    .text(`Generated: ${appDateTime(d.generated_at)}`, 360, y + 2, { width: R - 360, align: 'right' });
 }
 
 /** One right-aligned money cell, using the column's own width. */

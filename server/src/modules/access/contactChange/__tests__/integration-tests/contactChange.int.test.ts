@@ -1,21 +1,3 @@
-/*
-  No transport is wired in a test run, and the two mediums a contact-change code
-  is offered on disagree about what that means: SMS reports STUBBED (no provider
-  exists), while WhatsApp tries AiSensy and reports FAILED. `otpService` only
-  hands the fixed test code back when EVERY delivery was stubbed, so the mixed
-  pair leaves the code unreadable and the flow untestable. Stubbing the one seam
-  a code leaves through makes both agree — the challenge above it (expiry, the
-  attempt limit, single use) is still the real one.
-*/
-jest.mock('@modules/platform/otp/otp.delivery', () => ({
-  ...jest.requireActual('@modules/platform/otp/otp.delivery'),
-  deliverOtp: jest.fn(async ({ medium }: { medium: string }) => ({
-    medium,
-    status: 'STUBBED',
-    reason: 'No transport is wired in tests',
-  })),
-}));
-
 // The email transport, stubbed the way every other suite here stubs it: read
 // off the real module so a sender added later cannot arrive undefined.
 jest.mock('@services/email/email.service', () => {

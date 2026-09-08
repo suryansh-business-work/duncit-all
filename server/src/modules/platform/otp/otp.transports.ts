@@ -11,9 +11,12 @@ import type { OtpMedium } from './otp.model';
  * from closing a cycle.
  *
  * This is a statement about what is WIRED, not about what is configured. EMAIL
- * and WHATSAPP both have a provider behind them; a deployment that has not
- * pasted its AiSensy key yet gets a FAILED delivery and the reason, which is
- * the honest answer — not "this medium does not exist".
+ * and WHATSAPP both have a provider behind them, so neither is refused here.
+ * Whether that provider has actually been given its key is a different question
+ * and belongs at the seam: a deployment that has not pasted its AiSensy key yet
+ * gets a STUBBED delivery from `deliverOtp` — nothing is wired for it yet, the
+ * same answer SMS gets — while a key that IS present and then fails is FAILED,
+ * which is what keeps an outage from ever becoming a bypass.
  */
 const TRANSPORTS: Record<OtpMedium, boolean> = {
   SMS: false,

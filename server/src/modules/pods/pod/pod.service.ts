@@ -43,6 +43,12 @@ import {
 } from '@utils/table-query';
 import { duplicateKeyOn } from '@utils/mongo-error';
 import { LEGACY_POD_TYPE_MAP } from './pod-type.migration';
+import {
+  cancelHeldRefundsForPod,
+  holdRefundForPayment,
+  isRevokeWindowOpen,
+  refundHoldReleaseAt,
+} from './pod.refundHold';
 import { podAuditService, snapshotPod } from '@modules/pods/podAudit/podAudit.service';
 import type { PodAuditSource } from '@modules/pods/podAudit/podAudit.model';
 import { notifySocialActivity } from '@modules/engagement/notification/social-notify';
@@ -256,6 +262,25 @@ function notCancelled(): never {
   throw new GraphQLError('This pod is not cancelled.', {
     extensions: { code: 'BAD_USER_INPUT' },
   });
+}
+
+/** Why the console must grey the Revoke button, or null when it must not.
+ * The same two tests `revokeCancellation` throws on, answered without throwing
+ * so a panel can explain itself before the admin clicks. */
+function revokeBlockedReason(pod: any): 'NOT_CANCELLED' | 'POD_DATE_PASSED' | null {
+  if (!pod.deleted_at) return 'NOT_CANCELLED';
+  return isRevokeWindowOpen(pod) ? null : 'POD_DATE_PASSED';
+}
+
+/** A pod cannot be brought back once its own start has gone by: nobody can
+ * attend a session that has already begun, and reinstating it would put a pod
+ * on the platform that is live or over with an empty door. The console greys
+ * its button on the same test — this is the one that actually decides. */
+function revokeWindowClosed(): never {
+  throw new GraphQLError(
+    'This pod already started — a cancellation can only be revoked before the pod date and time.',
+    { extensions: { code: 'BAD_USER_INPUT' } }
+  );
 }
 
 const WRITABLE_POD_TYPES = new Set<PodType>(['FREE', 'PAID']);
@@ -698,6 +723,56 @@ async function reclaimSlotForRevoke(doc: any): Promise<void> {
 }
 
 /**
+ * Take ownership of one payment's cancellation refund — paid now, or held.
+ *
+ * Both branches are the SAME conditional write, keyed on the payment still
+ * being an unclaimed SUCCESS: a human cancel racing the auto-cancel sweep may
+ * already have refunded this payment at ITS figure, and a plain save() from a
+ * stale snapshot would overwrite it. False means the other cancel owns this
+ * payment — it quotes and emails it, not this one.
+ */
+async function claimCancellationRefund(input: {
+  payment: any;
+  refund: number;
+  alreadyRefunded: number;
+  reason: string;
+  initiatedBy: PodCancelInitiator;
+  actorUserId: string;
+  holdUntil: Date | null;
+}): Promise<boolean> {
+  const { payment, refund, alreadyRefunded, reason, initiatedBy, actorUserId } = input;
+  if (input.holdUntil) {
+    return holdRefundForPayment({
+      paymentId: payment._id,
+      amount: refund,
+      reason,
+      releaseAt: input.holdUntil,
+      initiatedBy,
+      initiatorId: actorUserId,
+    });
+  }
+  const flipped = await PaymentModel.findOneAndUpdate(
+    { _id: payment._id, status: 'SUCCESS' },
+    {
+      $set: {
+        status: 'REFUNDED',
+        'metadata.refunded_amount': round2(alreadyRefunded + refund),
+        // THIS cancellation's own share, kept apart from the running
+        // refunded_amount because that total may already carry a Backout's
+        // partial refund — and the revoke console quotes the cancellation's
+        // figure as the loss, not the booking's whole refund history.
+        'metadata.cancel_refund_amount': refund,
+        'metadata.refund_reason': reason,
+        'metadata.refunded_at': new Date().toISOString(),
+        'metadata.refund_initiated_by': initiatedBy,
+        'metadata.refund_initiator_id': actorUserId,
+      },
+    }
+  );
+  return Boolean(flipped);
+}
+
+/**
  * The money-and-mail half of a pod cancellation, shared by the host delete and
  * the venue-owner cancel flows: refund every SUCCESS payment, snapshot the
  * audience, commit the soft delete, then best-effort email a cancellation note
@@ -709,6 +784,11 @@ async function reclaimSlotForRevoke(doc: any): Promise<void> {
  * cancellation policy: each payment returns that share of its refundable
  * remainder, the withheld rest staying with the platform to cover the venue's
  * cancellation charge. Every human-initiated path keeps the full-refund default.
+ *
+ * Whether the refund is PAID or merely SCHEDULED is not this function's
+ * decision — `refundHoldReleaseAt` answers it from one admin setting, for every
+ * cancellation path at once, so no caller can hold on one route and pay on
+ * another. The count returned is payments ACTIONED either way.
  */
 async function refundAndNotifyCancellation(
   doc: any,
@@ -725,9 +805,12 @@ async function refundAndNotifyCancellation(
   const pct = Math.min(100, Math.max(0, Number(refundPct) || 0));
 
   const payments = await PaymentModel.find({ pod_id: doc._id, status: 'SUCCESS' });
+  // Null pays now; a Date holds every refund until the pod's start, which is
+  // also the last moment the cancellation could still be revoked.
+  const holdUntil = await refundHoldReleaseAt(doc);
   // Keyed by payer and SUMMED: one person can hold several payments for a pod
-  // (a second seat, a re-try), every one of them is flipped to REFUNDED here,
-  // and keeping only the last document quoted them a fraction of their refund.
+  // (a second seat, a re-try), every one of them is actioned here, and keeping
+  // only the last document quoted them a fraction of their refund.
   const refundedByUser = new Map<string, { total: number; currency_symbol: string }>();
   const paymentRefunds = new Map<string, number>();
   for (const payment of payments) {
@@ -742,24 +825,16 @@ async function refundAndNotifyCancellation(
     const products = Number(meta.product_cost_total) || 0;
     const ticketRefundable = Math.max(0, (payment.total ?? 0) - products - alreadyRefunded);
     const refund = round2(products + (ticketRefundable * pct) / 100);
-    // CONDITIONAL flip, keyed on the payment still being SUCCESS: a human cancel
-    // racing the sweep may already have refunded this payment at ITS figure, and
-    // a plain save() from this stale snapshot would overwrite it. null means the
-    // other cancel owns this payment — it quotes and emails it, not this one.
-    const flipped = await PaymentModel.findOneAndUpdate(
-      { _id: payment._id, status: 'SUCCESS' },
-      {
-        $set: {
-          status: 'REFUNDED',
-          'metadata.refunded_amount': round2(alreadyRefunded + refund),
-          'metadata.refund_reason': reason,
-          'metadata.refunded_at': new Date().toISOString(),
-          'metadata.refund_initiated_by': initiatedBy,
-          'metadata.refund_initiator_id': actorUserId,
-        },
-      }
-    );
-    if (!flipped) continue;
+    const claimed = await claimCancellationRefund({
+      payment,
+      refund,
+      alreadyRefunded,
+      reason,
+      initiatedBy,
+      actorUserId,
+      holdUntil,
+    });
+    if (!claimed) continue;
     paymentRefunds.set(String(payment._id), refund);
     const payerId = String(payment.user_id);
     const soFar = refundedByUser.get(payerId);
@@ -831,9 +906,15 @@ async function refundAndNotifyCancellation(
   // audience, but naming who cancelled, the refund and how long it takes, off
   // the array the WhatsApp message was already built from. Sending both would
   // put two cancellation emails in front of every attendee.
+  //
+  // A HELD refund sends nothing here. "Your refund has been initiated" would be
+  // untrue — no money has moved and, if the cancellation is revoked, none will.
+  // The release sweep sends each note at the moment it becomes true. The
+  // cancellation message above still quotes the figure, so the attendee is told
+  // what is coming; only the claim that it is on its way waits.
   try {
     await Promise.allSettled(
-      payments
+      (holdUntil ? [] : payments)
         // A payer whose policy share came to nothing gets no "refund initiated"
         // note — the cancellation email still reaches them, quoting a dash.
         .filter((payment) => (paymentRefunds.get(String(payment._id)) ?? 0) > 0)
@@ -2674,6 +2755,66 @@ export const podService = {
    * intact and their payments refunded, and the console says exactly that
    * before the admin presses it.
    */
+  /**
+   * What revoking this pod's cancellation would cost, before anybody presses
+   * anything: whether it is even allowed, who was refunded, and how much of
+   * that money is gone for good.
+   *
+   * The two refund states are the whole point of the panel. A PAID row is a
+   * LOSS — that money is back with the attendee and reinstating the pod does
+   * not bring it back; the console totals those. A HELD row cost nothing yet
+   * and the revoke drops it, which is exactly what the hold setting buys.
+   *
+   * A Backout's partial refund is deliberately NOT counted: it would have been
+   * paid whether or not the pod was cancelled, so charging it to this decision
+   * would overstate the price of undoing one. `cancel_refund_amount` is the
+   * cancellation's own share, which is why it is stored separately.
+   */
+  async revokePreview(id: string) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new GraphQLError('Invalid pod id', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const doc = await PodModel.findById(id).setOptions({ includeDeleted: true });
+    if (!doc) notFound();
+    const pod = doc!;
+    const payments = await PaymentModel.find({
+      pod_id: pod._id,
+      $or: [{ 'metadata.cancel_refund_amount': { $gt: 0 } }, { 'metadata.refund_hold': true }],
+    }).lean();
+
+    const refunds = payments.map((payment: any) => {
+      const meta = payment.metadata ?? {};
+      const held = meta.refund_hold === true;
+      // Rows written before this pod carried a per-cancellation figure fall back
+      // to the booking's running refund total — the only number they have.
+      const paid = Number(meta.cancel_refund_amount ?? meta.refunded_amount ?? 0);
+      return {
+        payment_id: String(payment._id),
+        user_id: payment.user_id ? String(payment.user_id) : null,
+        user_name: payment.user_name ?? '',
+        user_email: payment.user_email ?? '',
+        amount: round2(held ? Number(meta.refund_hold_amount ?? 0) : paid),
+        currency_symbol: payment.currency_symbol ?? '',
+        state: held ? 'HELD' : 'PAID',
+      };
+    });
+    const totalOf = (state: string) =>
+      round2(refunds.filter((r) => r.state === state).reduce((sum, r) => sum + r.amount, 0));
+
+    return {
+      pod_id: String(pod._id),
+      pod_title: pod.pod_title,
+      pod_date_time: pod.pod_date_time?.toISOString?.() ?? null,
+      is_cancelled: Boolean(pod.deleted_at),
+      can_revoke: Boolean(pod.deleted_at) && isRevokeWindowOpen(pod),
+      blocked_reason: revokeBlockedReason(pod),
+      refunds,
+      loss_total: totalOf('PAID'),
+      held_total: totalOf('HELD'),
+      currency_symbol: refunds.find((r) => r.currency_symbol)?.currency_symbol ?? '₹',
+    };
+  },
+
   async revokeCancellation(id: string, actorUserId: string) {
     if (!Types.ObjectId.isValid(id)) {
       throw new GraphQLError('Invalid pod id', { extensions: { code: 'BAD_USER_INPUT' } });
@@ -2682,6 +2823,7 @@ export const podService = {
     if (!doc) notFound();
     const cancelledAt = doc!.deleted_at;
     if (!cancelledAt) notCancelled();
+    if (!isRevokeWindowOpen(doc!)) revokeWindowClosed();
     // The filter names deleted_at itself, so the soft-delete pre-find hook
     // stands down and this is the one write that can win the flip.
     const restored = await PodModel.findOneAndUpdate(
@@ -2704,6 +2846,11 @@ export const podService = {
       ).setOptions({ includeDeleted: true });
       throw e;
     }
+    // The money that was never sent: a refund the cancellation only SCHEDULED
+    // is dropped outright, so a revoke inside the window costs nothing. Refunds
+    // that were actually paid out stay paid — the console names them as the
+    // loss before the admin presses the button.
+    await cancelHeldRefundsForPod(restored._id);
     await podAuditService.record({
       pod: restored,
       action: 'RESTORE',

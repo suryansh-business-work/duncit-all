@@ -204,6 +204,16 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       revokeCancellationTitle: 'Revoke this cancellation?',
       revokeCancellationBody:
         '"{title}" becomes visible again and takes back its venue slot and its reserved product stock.',
+      revokeCancel: 'Keep it cancelled',
+      revokeBlockedPast:
+        'This pod started on {when}. A cancellation can only be revoked before the pod date and time.',
+      revokeBlockedNotCancelled: 'This pod is not cancelled — there is nothing to revoke.',
+      revokeRefundsHeading: 'Cancellation refunds',
+      revokeNoRefunds: 'Nobody was refunded for this pod, so revoking costs nothing.',
+      revokeRefundPaid: 'Paid back',
+      revokeRefundHeld: 'Scheduled',
+      revokeLossTotal: 'Loss — already paid back, not recoverable',
+      revokeHeldTotal: 'Scheduled — revoking cancels this, at no cost',
       revokeCancellationCaveat:
         'Everyone who booked keeps their seat, but the refunds already paid to them are NOT reversed and nobody is told the pod is back on — contact them yourself.',
       revokeCancellationConfirm: 'Revoke cancellation',
@@ -388,6 +398,13 @@ changeRequests: {
         "When on, a host marking an attendee present by hand must first verify that attendee's name and phone number with a one-time code. Scanning a ticket is proof on its own and is never gated by this, and a Club Admin's override never asks for a code either.",
       otpOn: 'On — the host verifies the attendee’s number before the Mark Attendance button unlocks.',
       otpOff: 'Off — the host can mark an attendee present without verifying their number.',
+      refundHoldTitle: 'Hold cancellation refunds until the pod starts',
+      refundHoldDesc:
+        "A cancellation can be revoked right up to the pod's date and time, and no further. Holding the refunds until that same moment means a cancellation undone in time costs nothing — and one that stands pays out the instant it becomes final.",
+      refundHoldOn:
+        "On — a cancellation schedules its refunds for the pod's start. Revoking before then cancels them; attendees wait until then for their money.",
+      refundHoldOff:
+        'Off — a cancellation refunds every attendee immediately. Revoking afterwards cannot recover that money.',
       autoCancelTitle: 'Auto-Cancel Finance-Negative Pods',
       autoCancelDesc:
         "When on, a sweep checks every pod inside the lead window before its start: if ticket collections cannot cover the venue's booked slot price (the host side would settle negative), the pod is cancelled automatically, attendees are refunded under that venue's cancellation policy, and the host and attendees are emailed. Venues whose policy is reschedule-only are never auto-cancelled.",

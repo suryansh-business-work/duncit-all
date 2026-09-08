@@ -147,6 +147,10 @@ export const podResolvers = {
     },
   },
   Query: {
+    podRevokePreview: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_WRITE);
+      return podService.revokePreview(args.pod_doc_id);
+    },
     podDashboard: (_p: unknown, args: { days?: number | null }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_WRITE);
       return podDashboardService.load(args.days ?? 30);
@@ -162,6 +166,15 @@ export const podResolvers = {
       // Every club and every host for the whole page, in one read each. Without
       // this the Pod field resolvers below run once per row and the feed costs
       // hundreds of round trips.
+      await primePodRelations(ctx, rows);
+      return rows;
+    },
+    userJoinedPods: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
+      // The same gate posts and stories answer through: a private account's
+      // pods are for its owner and followers, and the refusal is an empty list.
+      const viewerId = ctx.user?.id ?? null;
+      if (!(await userService.canViewContent(args.user_id, viewerId))) return [];
+      const rows = await podService.listJoinedBy(args.user_id);
       await primePodRelations(ctx, rows);
       return rows;
     },

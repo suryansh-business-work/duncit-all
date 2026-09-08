@@ -88,6 +88,15 @@ export default function PodLifecycleSettings({
         onSave={(next) => onSave({ pod_complete_reminder_hours: next })}
       />
       <ToggleSettingCard
+        title={t('admin.podSettings.refundHoldTitle')}
+        description={t('admin.podSettings.refundHoldDesc')}
+        onHint={t('admin.podSettings.refundHoldOn')}
+        offHint={t('admin.podSettings.refundHoldOff')}
+        loading={loading}
+        value={settings?.pod_cancel_refund_hold ?? null}
+        onSave={(next) => onSave({ pod_cancel_refund_hold: next })}
+      />
+      <ToggleSettingCard
         title={t('admin.podSettings.autoCancelTitle')}
         description={t('admin.podSettings.autoCancelDesc')}
         onHint={t('admin.podSettings.autoCancelOn')}

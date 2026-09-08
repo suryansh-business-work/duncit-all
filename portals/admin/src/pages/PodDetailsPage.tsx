@@ -4,7 +4,7 @@ import {
   type PodDetailsViewProps,
 } from '@duncit/pod-details';
 import PodCouponsSection from './pod-coupons/PodCouponsSection';
-import RevokeCancellationAction from './pods-page/RevokeCancellationAction';
+import RevokeCancellationAction from './pods-page/revoke-cancellation';
 
 /** The footer the shared view calls with the pod it loaded — hoisted to module
  * scope so React keeps one component identity across renders (S6478). */

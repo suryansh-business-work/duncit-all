@@ -94,6 +94,7 @@ export function VenueCardMedia({ images, venueName, onOpen }: Readonly<Props>) {
   const multiple = images.length > 1;
   return (
     <YStack
+      testID="venue-card-media"
       aspectRatio={RATIO}
       maxHeight={MAX_HEIGHT}
       backgroundColor="#000000"
@@ -101,6 +102,7 @@ export function VenueCardMedia({ images, venueName, onOpen }: Readonly<Props>) {
     >
       {width > 0 ? (
         <FlatList
+          testID="venue-card-slider"
           ref={listRef}
           data={images}
           horizontal

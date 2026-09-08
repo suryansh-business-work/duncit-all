@@ -20,7 +20,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import { injectSiteMeta } from '@duncit/brand/site-meta';
-import { SHORT_CODE_PATTERN } from '../src/lib/short-link';
+import { SHORT_CODE_PATTERN, trimSlashes } from '../src/lib/short-link';
 import { blogPostMeta } from './page-meta';
 import { acceptsGzip, resolveDistFile, sendFile } from './static-files';
 
@@ -42,24 +42,6 @@ const redirect = (res: ServerResponse, status: number, location: string): void =
 };
 
 /**
- * The path without its leading and trailing slashes, walked rather than matched.
- *
- * `replace(/\/+$/, '')` is the obvious way to write this and the wrong one HERE:
- * the argument is the raw request path, and on a path that is all slashes but
- * for its last character a backtracking engine retries the run from every
- * position — quadratic work an anonymous request chooses the length of. Every
- * other trim in this file reads a configured URL and is fine; these two are the
- * ones a stranger can hand a value to.
- */
-function trimSlashes(path: string): string {
-  let start = 0;
-  let end = path.length;
-  while (start < end && path[start] === '/') start += 1;
-  while (end > start && path[end - 1] === '/') end -= 1;
-  return path.slice(start, end);
-}
-
-/**
  * A short code, handed to the API resolver as a redirect.
  *
  * The visitor's ORIGINAL referrer rides along as `dr`: after this hop the next
@@ -78,7 +60,8 @@ function handleShortLink(
   const referrer = req.headers.referer;
   if (referrer && !params.has('dr')) params.set('dr', referrer);
   const query = params.toString();
-  redirect(res, 302, `${SERVER_URL}/r/${code}${query ? `?${query}` : ''}`);
+  const suffix = query ? `?${query}` : '';
+  redirect(res, 302, `${SERVER_URL}/r/${code}${suffix}`);
   return true;
 }
 

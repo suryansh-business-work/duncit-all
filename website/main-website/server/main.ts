@@ -42,6 +42,24 @@ const redirect = (res: ServerResponse, status: number, location: string): void =
 };
 
 /**
+ * The path without its leading and trailing slashes, walked rather than matched.
+ *
+ * `replace(/\/+$/, '')` is the obvious way to write this and the wrong one HERE:
+ * the argument is the raw request path, and on a path that is all slashes but
+ * for its last character a backtracking engine retries the run from every
+ * position — quadratic work an anonymous request chooses the length of. Every
+ * other trim in this file reads a configured URL and is fine; these two are the
+ * ones a stranger can hand a value to.
+ */
+function trimSlashes(path: string): string {
+  let start = 0;
+  let end = path.length;
+  while (start < end && path[start] === '/') start += 1;
+  while (end > start && path[end - 1] === '/') end -= 1;
+  return path.slice(start, end);
+}
+
+/**
  * A short code, handed to the API resolver as a redirect.
  *
  * The visitor's ORIGINAL referrer rides along as `dr`: after this hop the next
@@ -54,7 +72,7 @@ function handleShortLink(
   path: string,
   search: string
 ): boolean {
-  const code = path.replace(/^\/+/, '').replace(/\/+$/, '');
+  const code = trimSlashes(path);
   if (!SHORT_CODE_PATTERN.test(code)) return false;
   const params = new URLSearchParams(search);
   const referrer = req.headers.referer;
@@ -146,7 +164,7 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
     notFound(req, res);
     return;
   }
-  if (path.replace(/\/+$/, '') === BLOG_POST_PATH) {
+  if (`/${trimSlashes(path)}` === BLOG_POST_PATH) {
     await serveBlogPost(req, res, filePath, url.search);
     return;
   }

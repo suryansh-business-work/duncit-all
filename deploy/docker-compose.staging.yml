@@ -49,7 +49,9 @@ services:
       interval: 30s
       timeout: 5s
       retries: 5
-      start_period: 25s
+      # A cold boot (connect, ~40 seeds, schema build) takes ~170s before /health
+      # answers; the old 25s let five failed checks mark a healthy boot unhealthy.
+      start_period: 180s
 
   admin:
     image: ${DOCKERHUB_USERNAME}/duncit-admin:${IMAGE_TAG:-staging}

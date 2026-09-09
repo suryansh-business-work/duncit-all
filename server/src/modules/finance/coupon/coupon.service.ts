@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types, type ClientSession } from 'mongoose';
 import { CouponModel, type ICoupon } from './coupon.model';
-import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { PaymentModel, type IPayment } from '@modules/finance/payment/payment.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
@@ -52,6 +52,53 @@ const COUPON_TABLE_CONFIG: TableEntityConfig = {
   },
   defaultSort: { created_at: -1 },
 };
+
+/**
+ * A redemption is a payment that carried the code and reached a paid state.
+ * REFUNDED belongs beside SUCCESS: the money came back, but the code was spent
+ * — `used_count` still counts it — and dropping it would leave the history
+ * table short of the counter printed above it.
+ */
+const REDEEMED_STATUSES = ['SUCCESS', 'REFUNDED'];
+
+/** Allowlists for the redemption table (DUNCIT TABLE CONTRACT v1). */
+const REDEMPTION_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['user_name', 'user_email', 'payment_id', 'invoice_no', 'description'],
+  sortFields: {
+    user_name: 'user_name',
+    description: 'description',
+    total: 'total',
+    coupon_discount: 'coupon_discount',
+    status: 'status',
+    paid_at: 'paid_at',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    status: { type: 'enum' },
+    total: { type: 'number' },
+    coupon_discount: { type: 'number' },
+    paid_at: { type: 'date' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
+
+const toRedemption = (p: IPayment) => ({
+  id: String(p._id),
+  payment_id: p.payment_id,
+  invoice_no: p.invoice_no,
+  user_id: p.user_id ? String(p.user_id) : null,
+  user_name: p.user_name,
+  user_email: p.user_email,
+  user_phone: p.user_phone,
+  pod_id: p.pod_id ? String(p.pod_id) : null,
+  description: p.description ?? '',
+  total: p.total,
+  coupon_discount: p.coupon_discount ?? 0,
+  status: p.status,
+  paid_at: iso(p.paid_at),
+  created_at: p.created_at.toISOString(),
+});
 
 function buildDoc(input: any) {
   return {
@@ -141,6 +188,12 @@ async function evaluate(
   };
 }
 
+async function mustFind(id: string) {
+  const doc = await CouponModel.findById(id);
+  if (!doc) throw new GraphQLError('Coupon not found', { extensions: { code: 'NOT_FOUND' } });
+  return doc;
+}
+
 export const couponService = {
   toPub,
   evaluate,
@@ -185,6 +238,53 @@ export const couponService = {
   async getById(id: string) {
     const d = await CouponModel.findById(id);
     return d ? toPub(d) : null;
+  },
+
+  /** The figures a coupon's detail page states above its redemption table.
+   * `used_count` is the coupon's own counter — the finalizer owns it — while
+   * the money and the buyers are derived from the payments that spent it. */
+  async stats(id: string) {
+    const coupon = await mustFind(id);
+    const [fs, agg] = await Promise.all([
+      getFinanceSettings(),
+      PaymentModel.aggregate([
+        { $match: { coupon_code: coupon.code, status: { $in: REDEEMED_STATUSES } } },
+        {
+          $group: {
+            _id: null,
+            total_discount: { $sum: '$coupon_discount' },
+            order_value: { $sum: '$total' },
+            users: { $addToSet: '$user_id' },
+            last_redeemed_at: { $max: '$created_at' },
+          },
+        },
+      ]),
+    ]);
+    const row = agg[0];
+    return {
+      used_count: coupon.used_count,
+      unique_users: row?.users?.length ?? 0,
+      total_discount: round2(row?.total_discount ?? 0),
+      order_value: round2(row?.order_value ?? 0),
+      remaining_uses:
+        coupon.max_uses == null ? null : Math.max(0, coupon.max_uses - coupon.used_count),
+      last_redeemed_at: iso(row?.last_redeemed_at ?? null),
+      currency_symbol: fs.currency_symbol,
+    };
+  },
+
+  /** Server-side table page of the payments that spent this coupon. The code —
+   * not the id — is what a payment records, so the coupon is read first. */
+  async redemptionsTable(id: string, input?: TableQueryInput | null) {
+    const coupon = await mustFind(id);
+    const base = { coupon_code: coupon.code, status: { $in: REDEEMED_STATUSES } };
+    const { docs, total, page, page_size } = await runTableQuery<IPayment>(
+      PaymentModel,
+      base,
+      input,
+      REDEMPTION_TABLE_CONFIG
+    );
+    return { rows: docs.map(toRedemption), total, page, page_size };
   },
 
   async listForPod(podId: string) {

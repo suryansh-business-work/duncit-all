@@ -20,6 +20,9 @@ interface Props {
   toolbarActions?: ReactNode;
   onEdit: (c: CouponRow) => void;
   onDelete: (c: CouponRow) => void;
+  /** Opens the coupon's detail page. Omitted where there is none to open —
+   * Admin renders this table inside a pod, which has no coupons route. */
+  onRowClick?: (c: CouponRow) => void;
 }
 
 const scopeOptions = (t: Translate) => [
@@ -84,6 +87,7 @@ export default function CouponsTable({
   toolbarActions,
   onEdit,
   onDelete,
+  onRowClick,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<CouponRow>[]>(() => {
@@ -150,6 +154,7 @@ export default function CouponsTable({
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder={t('shell.coupons.search')}
       refetchRef={refetchRef}
+      onRowClick={onRowClick}
     />
   );
 }

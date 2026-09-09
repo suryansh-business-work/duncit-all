@@ -7,10 +7,18 @@
 export { default as CouponsPage } from './CouponsPage';
 export { default as CouponsTable } from './CouponsTable';
 export { default as CouponFormDialog } from './CouponFormDialog';
+export { default as CouponDetailPage } from './detail/CouponDetailPage';
+// The detail page's facts panel on its own: the only piece of it that mounts
+// without Apollo and a router, which is what the docs demo mounts.
+export { default as CouponFacts } from './detail/CouponFacts';
+export { getRedemptionColumns } from './detail/redemptionColumns';
 
 export {
+  COUPON,
   COUPON_FIELDS,
   COUPON_PODS,
+  COUPON_REDEMPTIONS_TABLE,
+  COUPON_STATS,
   COUPONS,
   COUPONS_FOR_POD,
   COUPONS_FOR_POD_TABLE,
@@ -19,7 +27,7 @@ export {
   DELETE_COUPON,
   UPDATE_COUPON,
 } from './queries';
-export type { CouponPodOption, CouponRow } from './queries';
+export type { CouponPodOption, CouponRedemptionRow, CouponRow, CouponStats } from './queries';
 
 export { buildCouponFormSchema, couponFormDefaults, toCouponInput } from './coupon';
 export type { CouponFormValues, CouponTranslate } from './coupon';

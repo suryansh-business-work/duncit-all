@@ -1,6 +1,6 @@
 ---
 name: '@duncit/coupons'
-summary: 'The coupons console — server-paged table, create/edit dialog and Zod form schema — shared by the Marketing portal page and the per-pod offer codes section in Admin.'
+summary: 'The coupons console — server-paged table, detail page, create/edit dialog and Zod form schema — shared by the Marketing portal page and the per-pod offer codes section in Admin.'
 category: 'domain'
 zeroDeps: false
 frameworkFree: false
@@ -10,6 +10,7 @@ consumers:
   - 'portals/admin'
 exports:
   - 'CouponsPage'
+  - 'CouponDetailPage'
   - 'CouponsTable'
   - 'CouponFormDialog'
   - 'buildCouponFormSchema'
@@ -17,6 +18,9 @@ exports:
   - 'toCouponInput'
   - 'COUPONS_TABLE'
   - 'COUPONS_FOR_POD_TABLE'
+  - 'COUPON'
+  - 'COUPON_STATS'
+  - 'COUPON_REDEMPTIONS_TABLE'
   - 'COUPON_PODS'
   - 'CREATE_COUPON'
   - 'UPDATE_COUPON'
@@ -39,12 +43,36 @@ answers to what a code means, which is exactly what rule 40 exists to stop.
 import { CouponsPage } from '@duncit/coupons';
 
 <Route path="/coupons" element={authed(<CouponsPage />)} />;
+<Route path="/coupons/:couponId" element={authed(<CouponDetailPage />)} />;
 ```
 
 `CouponsPage` is self-contained: it fetches its own rows (`couponsTable`), its
 own pod options (`COUPON_PODS` — deliberately slim, an id and a title, so a
 portal with no pods page can still scope a code to a pod), and owns the create /
-edit / delete flow through `@duncit/dialogs`.
+edit / delete flow through `@duncit/dialogs`. A row opens
+`/coupons/:couponId`, so the two routes ship together.
+
+## The detail page
+
+`CouponDetailPage` answers the question the list cannot: what has this code
+actually done. It states the discount, how many redemptions are left against
+the cap, how many distinct members used it and how many rupees it has taken
+off orders — then lists the payments behind those figures.
+
+Its three reads are `COUPON` (the record), `COUPON_STATS` (the figures, which
+are aggregated over payments rather than stored on the coupon) and
+`COUPON_REDEMPTIONS_TABLE` (the history, server-paged like every other Duncit
+table). Edit and delete are on the page itself, reusing the same
+`CouponFormDialog` the list opens.
+
+A **redemption** is a payment that carried the code and reached a paid state.
+`REFUNDED` is listed beside `SUCCESS` deliberately: the money went back, but
+the code was spent and `used_count` still counts it, so hiding refunds would
+leave the table short of the counter printed directly above it.
+
+`CouponsTable`'s `onRowClick` is optional for the same reason the table is
+shared at all — Admin renders it inside a pod, where there is no coupons route
+to open, so it simply does not pass one.
 
 ## The per-pod section
 

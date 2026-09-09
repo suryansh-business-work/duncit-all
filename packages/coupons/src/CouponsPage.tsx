@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -25,6 +26,7 @@ export default function CouponsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<CouponRow | null>(null);
   const confirm = useConfirm();
+  const navigate = useNavigate();
 
   const pods = useMemo<CouponPodOption[]>(
     () => (podsData?.pods ?? []).map((p: any) => ({ id: p.id, title: p.pod_title })),
@@ -32,6 +34,8 @@ export default function CouponsPage() {
   );
 
   const fetchRows = useApolloTableFetch<CouponRow>(client, COUPONS_TABLE, 'couponsTable');
+
+  const openDetail = useCallback((c: CouponRow) => navigate(`/coupons/${c.id}`), [navigate]);
 
   const openCreate = () => {
     setEditing(null);
@@ -82,6 +86,7 @@ export default function CouponsPage() {
         }
         onEdit={openEdit}
         onDelete={onDelete}
+        onRowClick={openDetail}
       />
 
       <CouponFormDialog

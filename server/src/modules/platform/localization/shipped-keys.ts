@@ -2466,6 +2466,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "finance.backoutRefund.refundStatus": "Refund status",
   "finance.backoutRefund.replacement": "Replacement",
   "finance.backoutRefund.replacementConfirmed": "Replacement Confirmed?",
+  "finance.backoutRefund.seatsReleased": "No of Seats Released",
   "finance.backoutRefund.spots": "Spots",
   "finance.backoutRefund.userId": "User ID",
   "finance.calculators.acrossAllPods": "Across all pods",

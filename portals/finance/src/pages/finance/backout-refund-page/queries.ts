@@ -88,6 +88,8 @@ export const BACKOUT_REFUND_DETAIL = gql`
       status
       backout_status
       attempt_no
+      seats
+      seats_before
       backout_attempts_used
       max_backout_attempts
       replacement_confirmed
@@ -294,6 +296,9 @@ export interface BackoutRefundDetailPod {
  */
 export interface BackoutRefundDetail extends Omit<BackoutRefundRequest, 'pod'> {
   user_phone: string | null;
+  /** Seats this request released, out of the seats the booking held before it. */
+  seats: number;
+  seats_before: number;
   replacement_user_id: string | null;
   replacement_user_name: string | null;
   replacement_user_email: string | null;

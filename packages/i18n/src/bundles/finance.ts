@@ -327,6 +327,7 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       refundStatus: 'Refund status',
       replacement: 'Replacement',
       replacementConfirmed: 'Replacement Confirmed?',
+      seatsReleased: 'No of Seats Released',
       spots: 'Spots',
       userId: 'User ID',
       noBackoutRefundRequestsYet: 'No backout refund requests yet.',

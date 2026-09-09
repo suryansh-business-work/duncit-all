@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   POD_LIVE_TAIL_MS,
   canCompletePod,
+  canScanPodTickets,
   podPhase,
   splitPodsByPhase,
   type PodPhaseFields,
@@ -73,6 +74,25 @@ describe('splitPodsByPhase', () => {
   it('reads the clock when no `now` is passed', () => {
     const future = new Date(Date.now() + HOUR).toISOString();
     expect(splitPodsByPhase([{ pod_date_time: future }]).upcoming).toHaveLength(1);
+  });
+});
+
+describe('canScanPodTickets', () => {
+  // The exact mirror of Complete: the scanner is for a door that is still open,
+  // so it is offered right up to the end of the pod and not a minute after.
+  it('offers the scanner before the pod starts and while it runs', () => {
+    expect(canScanPodTickets({ pod_date_time: at(2 * HOUR) }, NOW)).toBe(true);
+    expect(canScanPodTickets({ pod_date_time: at(-HOUR), pod_end_date_time: at(HOUR) }, NOW)).toBe(true);
+  });
+
+  it('closes the scanner once the pod is over', () => {
+    expect(canScanPodTickets({ pod_date_time: at(-5 * HOUR), pod_end_date_time: at(-4 * HOUR) }, NOW)).toBe(
+      false,
+    );
+  });
+
+  it('reads the clock when no `now` is passed', () => {
+    expect(canScanPodTickets({ pod_date_time: new Date(Date.now() + HOUR).toISOString() })).toBe(true);
   });
 });
 

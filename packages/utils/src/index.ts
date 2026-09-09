@@ -246,6 +246,7 @@ export {
 export {
   POD_LIVE_TAIL_MS,
   canCompletePod,
+  canScanPodTickets,
   podPhase,
   splitPodsByPhase,
   type PodPhase,

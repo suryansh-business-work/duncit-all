@@ -108,6 +108,8 @@ export interface HostPodActionLabels {
   /** The pod-row menu and the dialogs it opens. */
   menuTooltip: string;
   scanTickets: string;
+  /** Under the scan row once the pod is over and the row has gone inert. */
+  scanClosed: string;
   completePod: string;
   editPod: string;
   cancelPod: string;
@@ -258,6 +260,7 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     spotsIncreaseOnly: t('mweb.hostPodEdit.spotsIncreaseOnly'),
     menuTooltip: t('mweb.hostPodActions.menuTooltip'),
     scanTickets: t('mweb.hostPodActions.scanTickets'),
+    scanClosed: t('mweb.hostPodActions.scanClosed'),
     completePod: t('mweb.hostPodActions.completePod'),
     editPod: t('mweb.hostPodActions.editPod'),
     cancelPod: t('mweb.hostPodActions.cancelPod'),
@@ -376,6 +379,7 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     spotsIncreaseOnly: t('shell.hostPodEdit.spotsIncreaseOnly'),
     menuTooltip: t('shell.hostPodActions.menuTooltip'),
     scanTickets: t('shell.hostPodActions.scanTickets'),
+    scanClosed: t('shell.hostPodActions.scanClosed'),
     completePod: t('shell.hostPodActions.completePod'),
     editPod: t('shell.hostPodActions.editPod'),
     cancelPod: t('shell.hostPodActions.cancelPod'),

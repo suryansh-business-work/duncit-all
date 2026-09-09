@@ -88,3 +88,21 @@ export function splitPodsByPhase<T extends PodPhaseFields>(
 export function canCompletePod(pod: PodPhaseFields, now: number = Date.now()): boolean {
   return podPhase(pod.pod_date_time, pod.pod_end_date_time, now) === 'PREVIOUS';
 }
+
+/**
+ * Whether the host may still scan tickets at this pod's door — FALSE once it
+ * is over.
+ *
+ * The exact mirror of `canCompletePod`: a scanner is what you hold at a door
+ * that is still open, so it is offered right up to the end of the pod and not
+ * a minute after. Past that the pod is settled from its roster instead — Host
+ * Studio keeps the row visible but inert, so a host who reaches for it is told
+ * why rather than left looking for a vanished action.
+ *
+ * Marking someone present by hand is NOT closed by this: rule 41 keeps that
+ * open until the pod is completed, cancelled or its completion window expires,
+ * and the server is the one that says so. This is the affordance only.
+ */
+export function canScanPodTickets(pod: PodPhaseFields, now: number = Date.now()): boolean {
+  return podPhase(pod.pod_date_time, pod.pod_end_date_time, now) !== 'PREVIOUS';
+}

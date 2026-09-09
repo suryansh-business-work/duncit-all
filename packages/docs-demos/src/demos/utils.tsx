@@ -53,6 +53,7 @@ import {
   hostRangeMeta,
   buildPodFeedbackInput,
   canCompletePod,
+  canScanPodTickets,
   canFollowBack,
   attendanceRowState,
   canScanTickets,
@@ -690,7 +691,9 @@ export default defineDemos('utils', [
       "Move `now` past a pod's end and watch it cross from Ongoing to Previous. " +
       'DUN-POD-5502 has no end set, so it rides the 4h tail instead. That same crossing is ' +
       "what puts Host Studio's Complete Pod action on a pod: it is offered on a PREVIOUS " +
-      'pod only, never while the door is still open.',
+      'pod only, never while the door is still open. Scanning tickets is the exact mirror — ' +
+      'the same crossing greys that row out, because a scanner belongs at a door that is ' +
+      'still open.',
     mock: {
       now: '2026-08-25T19:30:00.000Z',
       pods: [
@@ -730,7 +733,7 @@ export default defineDemos('utils', [
             pod.pod_id,
             `${podPhase(pod.pod_date_time, pod.pod_end_date_time, now)}   ·   Complete Pod ${
               canCompletePod(pod, now) ? 'offered' : 'hidden'
-            }`,
+            }   ·   Scan tickets ${canScanPodTickets(pod, now) ? 'live' : 'closed'}`,
           ])
         ),
         'Home rails': counts,

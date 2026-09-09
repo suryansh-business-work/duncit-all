@@ -6,7 +6,7 @@ import HostPodActionsItems, { type HostPodMenuItemsProps } from './HostPodAction
 import { useHostPodActionsConfig } from './HostPodActionsProvider';
 
 interface Props
-  extends Omit<HostPodMenuItemsProps, 'showAttendeeActions' | 'canComplete' | 'pick'> {
+  extends Omit<HostPodMenuItemsProps, 'showAttendeeActions' | 'canComplete' | 'canScan' | 'pick'> {
   podTitle: string;
   /** Set on a completed/cancelled pod — the whole menu is then read-only. */
   disabled?: boolean;
@@ -22,6 +22,12 @@ interface Props
    * ongoing pod would freeze the answer while the door is still open.
    */
   canComplete?: boolean;
+  /**
+   * The pod has not ended yet. Scanning a ticket is what happens AT a door, so
+   * the row goes inert the moment the pod is over — the host settles it from
+   * the roster after that, not from a scanner.
+   */
+  canScan?: boolean;
 }
 
 /**
@@ -37,6 +43,7 @@ export default function HostPodActionsMenu({
   disabled = false,
   venueRejected = false,
   canComplete = false,
+  canScan = true,
   ...items
 }: Readonly<Props>) {
   const { labels } = useHostPodActionsConfig();
@@ -73,6 +80,7 @@ export default function HostPodActionsMenu({
           // The actions that only make sense for a pod that actually gets to run.
           showAttendeeActions={!venueRejected}
           canComplete={canComplete}
+          canScan={canScan}
           pick={pick}
         />
       </Menu>

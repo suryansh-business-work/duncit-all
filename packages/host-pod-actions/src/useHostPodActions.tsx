@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { canCompletePod } from '@duncit/utils';
+import { canCompletePod, canScanPodTickets } from '@duncit/utils';
 import PodCancelDialog from './PodCancelDialog';
 import PodCompleteDialog from './pod-complete/PodCompleteDialog';
 import PodEditDialog from './PodEditDialog';
@@ -20,6 +20,11 @@ export interface HostPodMenuHandlers {
    * False on an upcoming or ongoing pod, and the menu then has no Complete row.
    */
   canComplete: boolean;
+  /**
+   * The pod has not ended yet, so its door is still open. False on a past pod,
+   * where the scan row is shown greyed rather than removed.
+   */
+  canScan: boolean;
   onScan: () => void;
   onComplete: () => void;
   onEdit: () => void;
@@ -73,6 +78,7 @@ export function useHostPodActions(onChanged: () => void): HostPodActions {
     podTitle: pod.pod_title,
     venueRejected: isVenueRejected(pod.venue_approval_status),
     canComplete: canCompletePod(pod),
+    canScan: canScanPodTickets(pod),
     onScan: () => setScanPod({ id: pod.id, pod_title: pod.pod_title }),
     onComplete: () =>
       setCompletePod({ id: pod.id, pod_title: pod.pod_title, venue_id: pod.venue_id }),

@@ -1,4 +1,4 @@
-import { YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
 import { ActionRow } from '@/components/host-manage/ActionRow';
 import { PodLinkRow } from '@/components/host-manage/PodLinkRow';
@@ -22,6 +22,12 @@ interface Props {
    * ongoing pod would freeze the answer while the door is still open.
    */
   canComplete: boolean;
+  /**
+   * The pod has not ended yet, so its door is still open to a scanner. Once it
+   * is over the row stays but goes inert, with a line under it saying why —
+   * the same thing mWeb's menu does with a disabled item (rule 27).
+   */
+  canScan: boolean;
   onClose: () => void;
   onScan: () => void;
   onSeeAttendance: () => void;
@@ -52,6 +58,7 @@ export function PodActionsSheet({
   podTitle,
   venueRejected,
   canComplete,
+  canScan,
   onClose,
   onScan,
   onSeeAttendance,
@@ -87,13 +94,21 @@ export function PodActionsSheet({
     >
       <YStack gap={10}>
         {showAttendeeActions ? (
-          <ActionRow
-            testID="pod-action-scan"
-            icon="qr-code-scanner"
-            label={t('mweb.hostManage.scanAttendeeEventTickets')}
-            tint={primary}
-            onPress={onScan}
-          />
+          <YStack gap={4}>
+            <ActionRow
+              testID="pod-action-scan"
+              icon="qr-code-scanner"
+              label={t('mweb.hostManage.scanAttendeeEventTickets')}
+              tint={primary}
+              disabled={!canScan}
+              onPress={onScan}
+            />
+            {canScan ? null : (
+              <Text testID="pod-action-scan-why" fontSize={11.5} color="$muted">
+                {t('mweb.hostPodActions.scanClosed')}
+              </Text>
+            )}
+          </YStack>
         ) : null}
         {showAttendeeActions ? (
           <ActionRow

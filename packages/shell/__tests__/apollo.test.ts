@@ -61,6 +61,7 @@ vi.mock('@duncit/user-core', () => ({
 
 import { resolveNoRedisFlag } from '@duncit/user-core';
 import { apolloErrorLink, createApolloClient } from '../src/lib/apollo';
+import { trackingFetch } from '../src/lib/request-progress';
 
 describe('apolloErrorLink', () => {
   it('rewrites transport-failure messages to the friendly one', () => {
@@ -82,7 +83,8 @@ describe('createApolloClient', () => {
     expect(apolloErrorLink).toBeTruthy();
     const client = createApolloClient({ graphqlUrl: 'https://api.test/graphql', getToken: () => 'tok' });
     expect(client).toEqual({ __client: true });
-    expect(cap.httpArgs).toEqual({ uri: 'https://api.test/graphql' });
+    // The counted fetch behind the console-wide loading bar rides on the HTTP link.
+    expect(cap.httpArgs).toEqual({ uri: 'https://api.test/graphql', fetch: trackingFetch });
     expect(cap.fromArg).toEqual([{ __err: true }, { __retry: true }, { __auth: true }, { __http: true }]);
     expect(cap.cacheArgs).toEqual({ typePolicies: { User: { keyFields: ['user_id'] } } });
   });

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 
 /** What a click handler really returns — `void` in MUI's types, a promise in practice. */
 type ClickHandler = (event: MouseEvent<never>) => unknown;
@@ -49,21 +49,26 @@ export function useAsyncClick(
     };
   }, []);
 
-  const run = useCallback(
-    (event: MouseEvent<never>) => {
-      const result = onClick?.(event);
-      if (!isThenable(result)) return;
-      setBusy(true);
-      const settle = () => {
-        if (mounted.current) setBusy(false);
-      };
-      result.then(settle, settle);
-    },
+  // No handler, no wrapper: the button keeps `onClick` undefined exactly as it
+  // was given, so a wrapper that exists only when a handler does never has to
+  // guard against the handler being absent.
+  const run = useMemo(
+    () =>
+      onClick &&
+      ((event: MouseEvent<never>) => {
+        const result = onClick(event);
+        if (!isThenable(result)) return;
+        setBusy(true);
+        const settle = () => {
+          if (mounted.current) setBusy(false);
+        };
+        result.then(settle, settle);
+      }),
     [onClick],
   );
 
   return {
-    onClick: onClick ? run : undefined,
+    onClick: run,
     // `undefined`, never `false`: MUI renders a permanent loading wrapper span
     // as soon as the prop is a boolean, so a resting button keeps exactly the
     // markup it has today.

@@ -211,6 +211,33 @@ describe('ChatComposer', () => {
     expect(box.value.startsWith('@Vikram N')).toBe(true);
   });
 
+  it('moves the caret behind the mention on the next frame, and only while the box is still there', async () => {
+    // The caret move waits for the next frame; hold that frame so the test
+    // decides when it fires — once with the box mounted, once after it is gone.
+    let frame: FrameRequestCallback | null = null;
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      frame = cb;
+      return 1;
+    });
+    try {
+      const { box, container, unmount } = composer();
+      fireEvent.change(box, { target: { value: '@Vik' } });
+      await settle();
+      fireEvent.mouseDown(container.querySelector('.MuiListItemButton-root') as HTMLElement);
+      await settle();
+      expect(frame).not.toBeNull();
+
+      act(() => (frame as FrameRequestCallback | null)?.(0));
+      expect(document.activeElement).toBe(box);
+      expect(box.selectionStart).toBe(box.value.length);
+
+      unmount();
+      expect(() => (frame as FrameRequestCallback | null)?.(0)).not.toThrow();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('lets Enter pick the highlighted suggestion instead of sending it', async () => {
     const { box, spies } = composer();
 

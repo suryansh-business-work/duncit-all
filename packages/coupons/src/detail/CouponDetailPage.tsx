@@ -68,20 +68,21 @@ export default function CouponDetailPage() {
 
   const row = coupon.data?.coupon;
 
-  const onDelete = async () => {
-    if (!row) return;
+  // The coupon is passed in rather than read off `row`: the button only exists
+  // once there is one, so a guard here would be a branch nothing can take.
+  const runDelete = async (c: CouponRow) => {
     const ok = await confirm({
       title: t('shell.coupons.deleteTitle'),
-      message: t('shell.coupons.deleteMessage', { vars: { code: row.code } }),
+      message: t('shell.coupons.deleteMessage', { vars: { code: c.code } }),
     });
     if (!ok) return;
-    try {
-      await deleteCoupon({ variables: { id: row.id } });
-      notifySuccess(t('shell.coupons.deleted'));
-      goBack();
-    } catch (e) {
-      notifyError(parseApiError(e, t('shell.coupons.deleteFailed')));
-    }
+    await deleteCoupon({ variables: { id: c.id } });
+    notifySuccess(t('shell.coupons.deleted'));
+    goBack();
+  };
+
+  const onDelete = (c: CouponRow) => {
+    runDelete(c).catch((e) => notifyError(parseApiError(e, t('shell.coupons.deleteFailed'))));
   };
 
   // A deleted coupon is answered before any error is: `coupon` resolves to
@@ -130,9 +131,7 @@ export default function CouponDetailPage() {
                 variant="outlined"
                 color="error"
                 startIcon={<DeleteOutlineIcon />}
-                onClick={() => {
-                  onDelete().catch(() => undefined);
-                }}
+                onClick={() => onDelete(row)}
               >
                 {t('shell.common.delete')}
               </DuncitButton>

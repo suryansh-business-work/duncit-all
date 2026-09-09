@@ -654,7 +654,7 @@ export const WA_EVENTS: readonly WaEvent[] = [
     audience: 'USER',
     category: 'marketing',
     fires: 'A member invites a phone contact who is not on Duncit yet',
-    params: ['Recipient name', 'Inviter name', 'Coins', 'Invite Link'],
+    params: ['Recipient name', 'Inviter name', 'Coins', 'Referral code', 'Invite Link'],
   },
   {
     key: 'SUPPORT_TICKET_CREATED',

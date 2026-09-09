@@ -117,11 +117,17 @@ async function inviteContext(userId: string) {
   // Never blank: AiSensy renders a missing value as the literal `{{2}}` and
   // bills for the message, so the send is refused before it gets there.
   const inviter = `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim() || 'A friend';
-  const base = urls.mwebUrl.replace(/\/+$/, '');
+  // `\/$` rather than `\/+$`: one anchored optional character cannot backtrack,
+  // and a configured base URL carries at most one trailing slash anyway.
+  const base = urls.mwebUrl.replace(/\/$/, '');
   return {
     inviter,
     dial,
     coins: referral.coins_per_referral,
+    // Both, on purpose: the link is what actually converts (the code is already
+    // in it), and the code is what somebody types when the link is buried under
+    // a forwarded chat or they install the app from the store instead.
+    code: referral.code,
     link: `${base}/register?ref=${encodeURIComponent(referral.code)}`,
   };
 }
@@ -163,6 +169,7 @@ async function inviteContacts(userId: string, phoneKeys: readonly string[]): Pro
         row.contact_label || FALLBACK_LABEL,
         context.inviter,
         context.coins,
+        context.code,
         context.link,
       ],
     }))

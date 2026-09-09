@@ -11,6 +11,14 @@ export const PUBLIC_FEATURE_FLAGS = gql`
   }
 `;
 
+/**
+ * The flag behind the language switcher — mWeb's account page, the native
+ * account screen, every portal's profile page and the taskbar clock tray.
+ * Seeded OFF. It hides the control only: a locale the user already saved keeps
+ * applying, so the flag never strands anyone in a language they did not pick.
+ */
+export const LANGUAGE_PREFERENCE_FLAG = 'language_preference';
+
 interface PublicFlag {
   key: string;
   enabled: boolean;

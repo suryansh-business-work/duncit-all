@@ -446,6 +446,16 @@ const DEFAULT_FLAGS: {
       "Show the blocking App Update screen in the Android and iOS apps when the installed build is behind the latest published version. Turn off and an outdated build keeps working — nobody is forced to update.",
     enabled: true,
   },
+  {
+    // Seeded OFF: the switcher stays hidden until an operator turns it on. A
+    // saved locale still applies everywhere (emails, the catalogue swap) — the
+    // flag hides the control, it does not undo the choice.
+    key: "language_preference",
+    name: "Language Preference",
+    description:
+      "Show the Language preference (the language switcher) on the mobile app and mobile web account page, and on every portal's profile page and taskbar clock tray.",
+    enabled: false,
+  },
 ];
 
 type AppSettingsUpdateInput = {

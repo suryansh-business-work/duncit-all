@@ -9,7 +9,6 @@ import type { SurveyKind } from './survey.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { aiValidateMeetingReason } from '@modules/moderation/moderation.ai';
 import { notifyEvent } from '@services/notify/notify.service';
-import { getUrlConfigs } from '../../config/url-configs';
 import {
   sendMeetingCancelledEmail,
   sendMeetingScheduledAdminEmail,
@@ -218,17 +217,24 @@ const MEETING_KIND_LABELS: Record<string, string> = { VENUE: 'Venue', HOST: 'Hos
 interface MeetingWaEvents {
   booked: string;
   interview: string;
-  approved: string;
   rejected: string;
 }
 
-/** The four WhatsApp scenarios each partner kind owns. Keyed by the meeting's
- * own `kind` so a fifth partner type is one row here, not four more branches. */
+/**
+ * The WhatsApp scenarios each partner kind owns HERE. Keyed by the meeting's
+ * own `kind` so a fifth partner type is one row here, not four more branches.
+ *
+ * `<PARTY>_ONBOARDING_APPROVED` is deliberately absent: a cleared interview
+ * only DRAFTS the host/venue/brand/club-admin record (see `draftFromMeeting`),
+ * and the applicant is not onboarded until staff approve that record under
+ * Review on the Onboarded page. Telling them "approved 🎉" here said it a
+ * review too early, and said it a second time when Review approved. The
+ * approval message now belongs to each entity service's `approve()`.
+ */
 const MEETING_WA_EVENTS: Record<string, MeetingWaEvents> = {
   HOST: {
     booked: 'HOST_ONBOARDING_BOOKED',
     interview: 'HOST_ONBOARDING_INTERVIEW',
-    approved: 'HOST_ONBOARDING_APPROVED',
     // The template is approved, but its campaign `host_onboarding_rejection` was
     // never created at AiSensy — the funnel logs the outcome against that name,
     // which is exactly the gap the WhatsApp console is built to surface.
@@ -237,19 +243,16 @@ const MEETING_WA_EVENTS: Record<string, MeetingWaEvents> = {
   VENUE: {
     booked: 'VENUE_ONBOARDING_BOOKED',
     interview: 'VENUE_ONBOARDING_INTERVIEW',
-    approved: 'VENUE_ONBOARDING_APPROVED',
     rejected: 'VENUE_ONBOARDING_REJECTED',
   },
   ECOMM: {
     booked: 'ECOMM_ONBOARDING_BOOKED',
     interview: 'ECOMM_ONBOARDING_INTERVIEW',
-    approved: 'ECOMM_ONBOARDING_APPROVED',
     rejected: 'ECOMM_ONBOARDING_REJECTED',
   },
   CLUB_ADMIN: {
     booked: 'CLUB_ADMIN_ONBOARDING_BOOKED',
     interview: 'CLUB_ADMIN_ONBOARDING_INTERVIEW',
-    approved: 'CLUB_ADMIN_ONBOARDING_APPROVED',
     rejected: 'CLUB_ADMIN_ONBOARDING_REJECTED',
   },
 };
@@ -257,13 +260,15 @@ const MEETING_WA_EVENTS: Record<string, MeetingWaEvents> = {
 /** Host is the fallback kind, the same default MEETING_KIND_LABELS carries. */
 const waEventsFor = (kind: string): MeetingWaEvents => MEETING_WA_EVENTS[kind] ?? MEETING_WA_EVENTS.HOST;
 
-type MeetingEvent = 'scheduled' | 'rescheduled' | 'updated' | 'approved' | 'rejected';
+type MeetingEvent = 'scheduled' | 'rescheduled' | 'updated' | 'cleared' | 'rejected';
 
 const MEETING_EVENT_INAPP: Record<MeetingEvent, (kind: string, slot: string) => { title: string; body: string }> = {
   scheduled: (kind, slot) => ({ title: 'Onboarding meeting scheduled', body: `Your ${kind} onboarding meeting is scheduled for ${slot}.` }),
   rescheduled: (kind, slot) => ({ title: 'Onboarding meeting rescheduled', body: `Your ${kind} onboarding meeting was moved to ${slot}.` }),
   updated: (kind) => ({ title: 'Onboarding meeting updated', body: `The details of your ${kind} onboarding meeting were updated.` }),
-  approved: (kind) => ({ title: 'Onboarding approved 🎉', body: `Your ${kind} onboarding has been approved — open the app to get started.` }),
+  // Not "approved": the interview is cleared and the record is drafted, and the
+  // approval itself is the Review step on the Onboarded page.
+  cleared: (kind) => ({ title: 'Onboarding interview cleared', body: `Your ${kind} interview went well — our team is reviewing your application now.` }),
   rejected: (kind) => ({ title: 'Onboarding update', body: `There's an update on your ${kind} onboarding request.` }),
 };
 
@@ -344,14 +349,11 @@ async function notifyMeetingEvent(doc: any, event: MeetingEvent) {
     });
   } else if (event === 'updated') {
     await sendMeetingUpdatedEmail({ to, name, kind: kindLabel, slot, link, notes });
-  } else if (event === 'approved') {
-    // The template's second value is the partner-portal login address, which is
-    // the same address this email is going to.
-    const { partnersUrl } = await getUrlConfigs();
-    await notify(waEvents.approved, [name, to], { portal_url: partnersUrl });
-  } else {
+  } else if (event === 'rejected') {
     await notify(waEvents.rejected, [name, doc.feedback ?? '']);
   }
+  // `cleared` is in-app only, sent above: the applicant is told their interview
+  // went well, and the "you are approved" message waits for Review.
 }
 
 export interface MeetingFilter {
@@ -981,9 +983,12 @@ export const meetingService = {
 
   /** Onboarding staff approve or deny a DONE meeting themselves — no admin
    * round-trip. Approval drafts the onboarded host/venue/seller (or grants the
-   * club-admin role) and both decisions record the interviewer's feedback and
-   * notify the applicant (in-app + email). Only a DONE meeting that has not yet
-   * been decided can be decided; a DENIED meeting re-opens when the user re-applies. */
+   * club-admin role) and tells the applicant, in-app, that their interview is
+   * cleared and under review; the "you are approved" email/WhatsApp belongs to
+   * the Review step on the Onboarded page, not here. A denial still carries the
+   * interviewer's feedback on every channel. Only a DONE meeting that has not
+   * yet been decided can be decided; a DENIED meeting re-opens when the user
+   * re-applies. */
   async decide(id: string, decision: 'APPROVED' | 'DENIED', feedback: string) {
     if (!feedback?.trim()) {
       throw new GraphQLError('Add your feedback before deciding', { extensions: { code: 'BAD_USER_INPUT' } });
@@ -1020,7 +1025,7 @@ export const meetingService = {
       }
     }
     try {
-      await notifyMeetingEvent(doc, decision === 'APPROVED' ? 'approved' : 'rejected');
+      await notifyMeetingEvent(doc, decision === 'APPROVED' ? 'cleared' : 'rejected');
     } catch (err) {
       logs.server.error('meeting.decide', 'decide', { error: err, msg: 'notify failed', meetingId: id, decision });
     }

@@ -27,7 +27,8 @@ import {
   VENUE_SECURITY,
   VENUE_TYPES,
 } from './venue.constants';
-import { notifyEvent } from '@services/notify/notify.service';
+import { notifyEach } from '@services/notify/notify.service';
+import { getUrlConfigs } from '@config/url-configs';
 
 const fail = (code: string, message: string): never => {
   throw new GraphQLError(message, { extensions: { code } });
@@ -827,13 +828,32 @@ export const venueService = {
     await v.save();
     await assignApprovedVenueRole(v.owner_user_id);
     if (!wasApproved) {
-      await notifyEvent({
-        event: 'VENUE_NEW_REQUESTED',
-        user: await waRecipient(v.owner_user_id),
-        name: v.owner_name,
-        params: [v.owner_name, v.venue_name, v.venue_category?.sub_category_name],
-        email: v.owner_email ?? '',
-      });
+      // THIS is where the venue is onboarded — the interview only drafted the
+      // record — so `venue-onboarding-approved` goes out here rather than on the
+      // meeting decision. Sequential (notifyEach) because both messages reach
+      // the same person and AiSensy rate-limits the campaign API.
+      const { partnersUrl } = await getUrlConfigs();
+      const recipient = await waRecipient(v.owner_user_id);
+      const email = v.owner_email ?? '';
+      await notifyEach([
+        {
+          event: 'VENUE_ONBOARDING_APPROVED',
+          user: recipient,
+          name: v.owner_name,
+          // The template's second value is the partner-portal login address,
+          // which is the same address this email is going to.
+          params: [v.owner_name, email],
+          email,
+          vars: { portal_url: partnersUrl },
+        },
+        {
+          event: 'VENUE_NEW_REQUESTED',
+          user: recipient,
+          name: v.owner_name,
+          params: [v.owner_name, v.venue_name, v.venue_category?.sub_category_name],
+          email,
+        },
+      ]);
     }
     return toPub(v);
   },

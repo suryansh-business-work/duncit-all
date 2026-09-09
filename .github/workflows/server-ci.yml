@@ -98,6 +98,13 @@ jobs:
         working-directory: server
         run: pnpm exec tsc --noEmit -p tsconfig.json
 
+      # Builds the executable schema exactly as the server does at boot, so a
+      # duplicated or dangling field fails here instead of crash-looping the
+      # deployed container (what took production down on 2026-09-08).
+      - name: Schema gate
+        working-directory: server
+        run: pnpm run check:schema
+
       # Runs the package's lint script when one is defined (no-op otherwise),
       # so wiring ESLint later needs no workflow change.
       - name: Lint

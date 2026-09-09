@@ -45,6 +45,8 @@ const breakdown = (over: Record<string, unknown> = {}) => ({
   frozen: false,
   bookings_count: 4,
   collected_total: 1000,
+  refunded_total: 0,
+  refunded_count: 0,
   currency_symbol: '₹',
   has_venue: true,
   completed_at: null,
@@ -100,6 +102,32 @@ describe('PodFinanceSection', () => {
     for (const label of ['Live', 'Pending approval', 'Settled']) {
       expect(screen.queryByText(label)).not.toBeInTheDocument();
     }
+  });
+
+  /**
+   * A cancelled pod refunds every booking, which flips those payments off
+   * SUCCESS — so its collected total is genuinely zero. Stating what went back
+   * is what stops that zero reading as missing money.
+   */
+  it('accounts for the money a cancelled pod handed back', async () => {
+    mountSection(<PodFinanceSection podId={POD_ID} />, [
+      financeMock(breakdown({ bookings_count: 0, collected_total: 0, refunded_total: 594, refunded_count: 6 })),
+    ]);
+    await settle();
+
+    expect(screen.getByText('Refunded to buyers')).toBeInTheDocument();
+    expect(screen.getByText('₹594.00')).toBeInTheDocument();
+    expect(screen.getByText('Bookings refunded')).toBeInTheDocument();
+    expect(screen.getByText('6')).toBeInTheDocument();
+  });
+
+  // Nothing went back, so the pod says nothing about refunds.
+  it('keeps the refund lines off a pod that refunded nothing', async () => {
+    mountSection(<PodFinanceSection podId={POD_ID} />, [financeMock(breakdown())]);
+    await settle();
+
+    expect(screen.queryByText('Refunded to buyers')).not.toBeInTheDocument();
+    expect(screen.queryByText('Bookings refunded')).not.toBeInTheDocument();
   });
 
   it('says when nothing has been settled yet', async () => {

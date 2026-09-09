@@ -4,8 +4,10 @@ import { TopProgressBar } from '../src/loader';
 
 describe('TopProgressBar', () => {
   beforeEach(() => {
-    // Only the bar's own timers, so nothing else in the worker sees a fake clock.
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    // The bar's own timers AND the clock it measures its linger with — a real
+    // Date.now() on a slow runner shortens the linger under the 150ms advanced
+    // below. Nothing else in the worker sees a fake clock.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
   });
   afterEach(() => {
     vi.useRealTimers();

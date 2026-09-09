@@ -14,9 +14,9 @@ function holdFetch() {
 
 describe('GlobalProgress', () => {
   beforeEach(() => {
-    // Only the bar's own timers: faking requestAnimationFrame as well would
-    // reach into suites that share this worker.
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    // The bar's own timers and the clock its linger is measured with; faking
+    // requestAnimationFrame as well would reach into suites sharing this worker.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
   });
   afterEach(() => {
     cleanup();

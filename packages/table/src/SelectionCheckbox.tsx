@@ -56,8 +56,14 @@ export function SelectionCheckbox({ node, api }: Readonly<CustomCellRendererProp
   const apply = (event: ChangeEvent<HTMLInputElement>) => {
     const next = event.target.checked;
     const here = node.rowIndex;
-    const anchor = here === null ? undefined : rangeAnchor.get(api);
-    if (isShiftClick(event) && anchor !== undefined && here !== null) {
+    // A row with no index cannot anchor a range and cannot sit inside one, so
+    // it is only ever its own plain tick.
+    if (here === null) {
+      node.setSelected(next);
+      return;
+    }
+    const anchor = rangeAnchor.get(api);
+    if (isShiftClick(event) && anchor !== undefined) {
       const low = Math.min(anchor, here);
       const high = Math.max(anchor, here);
       api.forEachNode((row) => {
@@ -67,7 +73,7 @@ export function SelectionCheckbox({ node, api }: Readonly<CustomCellRendererProp
     } else {
       node.setSelected(next);
     }
-    if (here !== null) rangeAnchor.set(api, here);
+    rangeAnchor.set(api, here);
   };
 
   return (

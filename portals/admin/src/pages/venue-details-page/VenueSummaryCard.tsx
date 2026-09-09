@@ -27,7 +27,8 @@ export default function VenueSummaryCard({ venue }: Readonly<{ venue: AdminVenue
   const { t } = useTranslation();
   const place = locationLine(venue);
   const category = categoryPath(venue.venue_category);
-  const hasPin = typeof venue.lat === 'number' && typeof venue.lng === 'number';
+  const { lat, lng } = venue;
+  const pin = typeof lat === 'number' && typeof lng === 'number' ? mapsHref(lat, lng) : null;
 
   return (
     <Card>
@@ -68,9 +69,9 @@ export default function VenueSummaryCard({ venue }: Readonly<{ venue: AdminVenue
               {category}
             </Typography>
 
-            {hasPin && (
+            {pin && (
               <Link
-                href={mapsHref(venue.lat as number, venue.lng as number)}
+                href={pin}
                 target="_blank"
                 rel="noreferrer"
                 variant="caption"

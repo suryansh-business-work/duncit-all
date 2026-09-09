@@ -8,6 +8,19 @@ import SectionCard from './SectionCard';
 import { weeklyOffNames } from './venue-values';
 import type { VenueSettings } from './queries';
 
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+/** Auto-extend reads as off, on with a horizon, or on with a stop date. */
+function autoExtendLabel(auto: VenueSettings['auto_extend'], t: Translate) {
+  if (!auto?.enabled) return t('admin.venueDetails.autoExtendOff');
+  if (auto.until) {
+    return t('admin.venueDetails.autoExtendUntil', {
+      vars: { days: auto.horizon_days, until: formatDate(auto.until) },
+    });
+  }
+  return t('admin.venueDetails.autoExtendOn', { vars: { days: auto.horizon_days } });
+}
+
 /** When the venue is open — hours, the days it is closed, the dates it is
  * closed, and whether slots keep publishing themselves. */
 export default function VenueHoursCard({ settings }: Readonly<{ settings: VenueSettings }>) {
@@ -17,14 +30,7 @@ export default function VenueHoursCard({ settings }: Readonly<{ settings: VenueS
   const offNames = weeklyOffNames(settings.weekly_off_days ?? [], weekdayLabels(t).full);
   const holidays = (settings.holidays ?? []).map((h) => formatDate(h));
 
-  let autoExtendValue = t('admin.venueDetails.autoExtendOff');
-  if (auto?.enabled && auto.until) {
-    autoExtendValue = t('admin.venueDetails.autoExtendUntil', {
-      vars: { days: auto.horizon_days, until: formatDate(auto.until) },
-    });
-  } else if (auto?.enabled) {
-    autoExtendValue = t('admin.venueDetails.autoExtendOn', { vars: { days: auto.horizon_days } });
-  }
+  const autoExtendValue = autoExtendLabel(auto, t);
 
   return (
     <SectionCard icon={<ScheduleIcon color="primary" />} title={t('admin.venueDetails.operatingHours')}>

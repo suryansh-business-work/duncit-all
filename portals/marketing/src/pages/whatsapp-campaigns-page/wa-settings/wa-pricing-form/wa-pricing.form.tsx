@@ -115,7 +115,7 @@ export default function WaPricingForm({
             type="submit"
             variant="contained"
             startIcon={<SaveIcon />}
-            disabled={busy || !formState.isValid}
+            loading={busy} disabled={!formState.isValid}
           >
             {busy ? 'Saving…' : 'Save rates'}
           </DuncitButton>

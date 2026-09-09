@@ -94,7 +94,7 @@ export default function EcommLeadForm({ config, initialValues, submitting, submi
                 {t('shell.common.cancel')}
               </DuncitButton>
             )}
-            <DuncitButton type="submit" variant="contained" disabled={submitting || (submitCount > 0 && !isValid)}>
+            <DuncitButton type="submit" variant="contained" loading={submitting} disabled={(submitCount > 0 && !isValid)}>
               {submitting ? 'Saving…' : submitLabelText}
             </DuncitButton>
           </Stack>

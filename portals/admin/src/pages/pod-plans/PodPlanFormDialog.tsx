@@ -125,7 +125,7 @@ export default function PodPlanFormDialog({ open, editing, loading, onClose, onS
         </DialogContent>
         <DialogActions>
           <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
-          <DuncitButton type="submit" variant="contained" disabled={loading}>
+          <DuncitButton type="submit" variant="contained" loading={loading}>
             {editing ? 'Save changes' : 'Create plan'}
           </DuncitButton>
         </DialogActions>

@@ -128,7 +128,7 @@ export default function RateLimitRuleFormBody({
         type="submit"
         variant="contained"
         startIcon={<SaveIcon />}
-        disabled={saving}
+        loading={saving}
         sx={{ alignSelf: 'flex-start' }}
       >
         {t('shell.common.save')}

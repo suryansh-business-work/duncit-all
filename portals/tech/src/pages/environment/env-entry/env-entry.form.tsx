@@ -169,7 +169,7 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
           ) : <span />}
           <Stack direction="row" spacing={1}>
             <DuncitButton onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</DuncitButton>
-            <DuncitButton type="submit" variant="contained" disabled={busy}>{busy ? 'Saving…' : 'Save'}</DuncitButton>
+            <DuncitButton type="submit" variant="contained" loading={busy}>{busy ? 'Saving…' : 'Save'}</DuncitButton>
           </Stack>
         </DialogActions>
       </form>

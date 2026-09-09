@@ -18,6 +18,17 @@ export const UI_BUNDLE: NestedCatalogue = {
     queryGuard: {
       notFound: 'Not found.',
     },
+    /**
+     * The one spinner's words.
+     *
+     * Every portal and mWeb render `Loader` for a page still fetching, a
+     * section refreshing in place, and the thin bar the shell shows while a
+     * request is out — so what a screen reader announces is one row here
+     * rather than one per surface (rule 40).
+     */
+    loader: {
+      loading: 'Loading…',
+    },
     /** The language switcher in mWeb's account page and the portal profile menu. */
     language: {
       label: 'Language',

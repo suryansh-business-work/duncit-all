@@ -1,6 +1,7 @@
 import Button, { type ButtonProps } from '@mui/material/Button';
 import { styled } from '@mui/material/styles';
 import { pressFor, restStatesCss } from './state-css';
+import { useAsyncClick } from './useAsyncClick';
 
 /**
  * Every button in mWeb and the portals.
@@ -34,9 +35,21 @@ const Styled = styled(Button, { name: 'DuncitButton' })(({ theme }) => ({
 }));
 
 /**
+ * The waiting state MUI leaves to the app.
+ *
+ * `loading` passed by the call site still wins; what this adds is the far more
+ * common case where nobody passed one — an `onClick` that returns a promise
+ * spins the button until that promise settles. See `useAsyncClick`.
+ */
+function AsyncButton({ onClick, loading, ...rest }: Readonly<ButtonProps>) {
+  const asyncClick = useAsyncClick(onClick, loading);
+  return <Styled {...rest} onClick={asyncClick.onClick} loading={asyncClick.loading} />;
+}
+
+/**
  * `styled()` returns a plain component and drops MUI's `OverridableComponent`
  * typing, which is what makes `<Button component={RouterLink} to="…">` legal.
- * 72 call sites rely on it, so the styled result is handed back under the type
- * it actually satisfies rather than making those sites cast instead.
+ * 72 call sites rely on it, so the result is handed back under the type it
+ * actually satisfies rather than making those sites cast instead.
  */
-export const DuncitButton = Styled as typeof Button;
+export const DuncitButton = AsyncButton as unknown as typeof Button;

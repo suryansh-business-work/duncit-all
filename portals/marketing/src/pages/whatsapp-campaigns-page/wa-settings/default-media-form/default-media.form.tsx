@@ -108,7 +108,7 @@ export default function DefaultMediaForm({
               {t('marketingWhatsapp.defaultMedia.clear')}
             </DuncitButton>
           )}
-          <DuncitButton type="submit" variant="contained" disabled={busy || !dirty || !url || !isValid}>
+          <DuncitButton type="submit" variant="contained" loading={busy} disabled={!dirty || !url || !isValid}>
             {t('marketingWhatsapp.defaultMedia.save')}
           </DuncitButton>
         </Stack>

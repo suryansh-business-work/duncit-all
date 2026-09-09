@@ -139,7 +139,7 @@ function VenueCancelPodBody({ row, onClose, onCancelled }: Readonly<BodyProps>) 
           form={FORM_ID}
           variant="contained"
           color="error"
-          disabled={state.loading}
+          loading={state.loading}
           sx={{ borderRadius: 999, fontWeight: 900 }}
         >
           {state.loading ? 'Cancelling…' : 'Cancel this pod'}

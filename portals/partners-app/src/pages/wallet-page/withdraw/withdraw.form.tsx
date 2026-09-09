@@ -114,7 +114,7 @@ export default function WithdrawForm({ open, maxAmount, minAmount, currency, onC
           type="submit"
           form="withdraw-form"
           variant="contained"
-          disabled={state.loading}
+          loading={state.loading}
           sx={{ borderRadius: 999, fontWeight: 900 }}
         >
           {state.loading

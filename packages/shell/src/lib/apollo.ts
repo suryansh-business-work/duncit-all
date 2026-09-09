@@ -16,6 +16,7 @@ import {
   resolveNoRedisFlag,
   type ClientSurface,
 } from '@duncit/user-core';
+import { trackingFetch } from './request-progress';
 
 const NETWORK_FAILURE_PATTERN = /failed to fetch|network request failed|load failed/i;
 const FRIENDLY_NETWORK_MESSAGE = 'Unable to connect to server. Please check your internet connection and try again.';
@@ -66,7 +67,10 @@ export interface CreateApolloClientOptions {
 export function createApolloClient(options: Readonly<CreateApolloClientOptions>): ApolloClient {
   const { graphqlUrl, getToken, typePolicies, includeDuid = true, surface = 'PORTAL', app } = options;
 
-  const httpLink = new HttpLink({ uri: graphqlUrl });
+  // `trackingFetch` is plain `fetch` with a counter around it — what feeds the
+  // console-wide loading bar (`GlobalProgress`). Wired here so every portal
+  // gets it from the one client factory rather than 17 opt-ins.
+  const httpLink = new HttpLink({ uri: graphqlUrl, fetch: trackingFetch });
 
   const authLink = setContext((_op, { headers }) => {
     const token = getToken();

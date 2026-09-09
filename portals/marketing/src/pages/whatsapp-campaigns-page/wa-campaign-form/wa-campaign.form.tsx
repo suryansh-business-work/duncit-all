@@ -174,7 +174,7 @@ export default function WaCampaignForm({
           <DuncitButton type="button" onClick={onClose} disabled={busy}>
             Cancel
           </DuncitButton>
-          <DuncitButton type="submit" variant="contained" disabled={busy || !isValid || reach === 0}>
+          <DuncitButton type="submit" variant="contained" loading={busy} disabled={!isValid || reach === 0}>
             {submitLabel}
           </DuncitButton>
         </DialogActions>

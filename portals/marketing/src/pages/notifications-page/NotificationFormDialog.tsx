@@ -245,7 +245,7 @@ export default function NotificationFormDialog({
         </DialogContent>
         <DialogActions>
           <DuncitButton type="button" onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</DuncitButton>
-          <DuncitButton type="submit" variant="contained" disabled={busy}>{busy ? 'Sending…' : 'Send Now'}</DuncitButton>
+          <DuncitButton type="submit" variant="contained" loading={busy}>{busy ? 'Sending…' : 'Send Now'}</DuncitButton>
         </DialogActions>
       </form>
     </Dialog>

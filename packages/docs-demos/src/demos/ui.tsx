@@ -3,13 +3,18 @@ import PaymentsIcon from '@mui/icons-material/Payments';
 import StorageIcon from '@mui/icons-material/Storage';
 import { Paper, Stack } from '@mui/material';
 import { useEffect, useState } from 'react';
+import { DuncitButton } from '@duncit/buttons';
 import {
   ChipList,
   InfoRow,
+  Loader,
+  LoadingOverlay,
   PageHeader,
   SpotsStepper,
   StatCard,
   StatusChip,
+  TopProgressBar,
+  type LoaderVariant,
   type SpotsStepperLabels,
 } from '@duncit/ui';
 import { formatMoney } from '@duncit/utils';
@@ -71,6 +76,52 @@ function SpotsDemo({ mock }: Readonly<{ mock: SpotsMock }>) {
       slidable={mock.venue_capacity > min}
       boundsHint={boundsHint}
     />
+  );
+}
+
+interface LoaderMock {
+  variant: LoaderVariant;
+  serverMs: number;
+  rows: string[];
+}
+
+/**
+ * The wait every console page has: a list that is already on screen, refreshing.
+ * Hoisted for the same reason as `SpotsDemo`.
+ */
+function LoaderDemo({ mock }: Readonly<{ mock: LoaderMock }>) {
+  const [busy, setBusy] = useState(false);
+  const refresh = () =>
+    new Promise<void>((resolve) => {
+      setBusy(true);
+      setTimeout(() => {
+        setBusy(false);
+        resolve();
+      }, mock.serverMs);
+    });
+  const rows = (
+    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+      <Stack spacing={1}>
+        {mock.rows.map((row) => (
+          <InfoRow key={row} variant="split" label={row} value="APPROVED" />
+        ))}
+      </Stack>
+    </Paper>
+  );
+  return (
+    <Stack spacing={2}>
+      <TopProgressBar busy={busy} />
+      <DuncitButton variant="contained" onClick={refresh}>
+        Refresh venues
+      </DuncitButton>
+      {mock.variant === 'overlay' ? (
+        <LoadingOverlay open={busy} showLabel label="Refreshing venues…">
+          {rows}
+        </LoadingOverlay>
+      ) : (
+        <>{busy ? <Loader variant={mock.variant} showLabel /> : rows}</>
+      )}
+    </Stack>
   );
 }
 
@@ -158,5 +209,14 @@ export default defineDemos('ui', [
       'Drop venue_capacity to the floor and the slider becomes a plain stepper — there is nothing left to choose. Raise seats_taken past no_of_spots and the thumb cannot go back below the seats already sold.',
     mock: { no_of_spots: 12, min_pax: 4, venue_capacity: 30, seats_taken: 9 },
     render: (mock) => <SpotsDemo mock={mock} />,
+  }),
+
+  defineDemo<LoaderMock>({
+    id: 'loader',
+    title: 'Loader — the four shapes a wait actually takes',
+    note:
+      'Press Refresh venues. The overlay keeps the rows readable underneath, which is what makes a refetch feel like a refresh rather than a reload — swap `variant` to block and watch the same wait blank the panel instead. `serverMs` is the round trip; under about 180ms the top bar never appears at all, because a bar that flashes reads as a glitch rather than as progress.',
+    mock: { variant: 'overlay', serverMs: 1400, rows: ['Play Arena, HSR Layout', 'Smashtress, Raj Nagar Extension', 'The Turf Club, Indiranagar'] },
+    render: (mock) => <LoaderDemo mock={mock} />,
   }),
 ]);

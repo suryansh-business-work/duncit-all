@@ -120,7 +120,7 @@ export default function CompanionsForm({
         <Alert severity="warning">{labels.companionsIncomplete}</Alert>
       )}
 
-      <DuncitButton type="submit" variant="contained" disabled={busy || duplicates.size > 0}>
+      <DuncitButton type="submit" variant="contained" loading={busy} disabled={duplicates.size > 0}>
         {labels.companionsSubmit}
       </DuncitButton>
     </Stack>

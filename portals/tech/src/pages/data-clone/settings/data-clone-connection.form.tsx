@@ -121,7 +121,7 @@ export default function DataCloneConnectionForm({ connection, busy, onSubmit }: 
         <Stack direction="row" sx={{
           justifyContent: "flex-end"
         }}>
-          <DuncitButton type="submit" variant="contained" disabled={busy}>
+          <DuncitButton type="submit" variant="contained" loading={busy}>
             {busy ? t('tech.dataClone.connecting') : t('tech.dataClone.connect')}
           </DuncitButton>
         </Stack>

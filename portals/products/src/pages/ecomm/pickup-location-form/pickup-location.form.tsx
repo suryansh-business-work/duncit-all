@@ -134,7 +134,7 @@ export default function PickupLocationForm({
           <DuncitButton onClick={onClose} disabled={saving}>
             Cancel
           </DuncitButton>
-          <DuncitButton type="submit" variant="contained" disabled={saving}>
+          <DuncitButton type="submit" variant="contained" loading={saving}>
             {saving ? 'Saving…' : 'Save location'}
           </DuncitButton>
         </DialogActions>

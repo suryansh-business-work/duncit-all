@@ -123,7 +123,7 @@ export default function CompletePodDialog({
                 <SettlementPreview podId={pod.id} venueBillAmount={venueBillAmount} hostUserId={selectedHostId} />
               )}
               <RhfTextField control={control} name="notes" label={t('admin.contact.notes')} multiline minRows={2} />
-              <DuncitButton type="submit" variant="contained" disabled={busy}>
+              <DuncitButton type="submit" variant="contained" loading={busy}>
                 {busy ? 'Completing…' : 'Complete pod'}
               </DuncitButton>
             </Stack>

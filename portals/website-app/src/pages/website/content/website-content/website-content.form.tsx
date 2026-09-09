@@ -101,7 +101,7 @@ export default function WebsiteContentForm({ type, item, submitting, errorMessag
         <DuncitButton onClick={onCancel} disabled={submitting}>
           Cancel
         </DuncitButton>
-        <DuncitButton type="submit" variant="contained" disabled={submitting}>
+        <DuncitButton type="submit" variant="contained" loading={submitting}>
           {submitting ? 'Saving…' : 'Save'}
         </DuncitButton>
       </DialogActions>

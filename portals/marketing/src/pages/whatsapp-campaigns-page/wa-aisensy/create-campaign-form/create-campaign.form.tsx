@@ -115,7 +115,7 @@ export default function CreateCampaignForm({
           <DuncitButton type="button" onClick={onClose} disabled={busy}>
             {t('marketingWhatsapp.cancel')}
           </DuncitButton>
-          <DuncitButton type="submit" variant="contained" disabled={busy || !isValid}>
+          <DuncitButton type="submit" variant="contained" loading={busy} disabled={!isValid}>
             {busy ? t('marketingWhatsapp.submitting') : t('marketingWhatsapp.submitCampaign')}
           </DuncitButton>
         </DialogActions>

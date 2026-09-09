@@ -22,6 +22,7 @@ export {
   type DuncitRoundButtonProps,
   type RoundButtonTone,
 } from './DuncitRoundButton';
+export { useAsyncClick, type AsyncClickState } from './useAsyncClick';
 export { withPress } from './components';
 export {
   pressCss,

@@ -55,7 +55,7 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
             variant="contained"
             size="small"
             startIcon={<SaveIcon />}
-            disabled={busy || !formState.isDirty || !formState.isValid}
+            loading={busy} disabled={!formState.isDirty || !formState.isValid}
           >
             {busy ? 'Saving…' : 'Save Changes'}
           </DuncitButton>

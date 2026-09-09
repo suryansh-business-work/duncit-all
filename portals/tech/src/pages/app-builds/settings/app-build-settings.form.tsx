@@ -64,7 +64,7 @@ export default function AppBuildSettingsForm({
         <Stack direction="row" sx={{
           justifyContent: "flex-end"
         }}>
-          <DuncitButton type="submit" variant="contained" disabled={busy}>
+          <DuncitButton type="submit" variant="contained" loading={busy}>
             {busy ? t('tech.appBuilds.saving') : t('tech.appBuilds.save')}
           </DuncitButton>
         </Stack>

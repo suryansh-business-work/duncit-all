@@ -16,6 +16,7 @@ exports:
   - 'DuncitButton'
   - 'DuncitIconButton'
   - 'DuncitRoundButton'
+  - 'useAsyncClick'
   - 'withPress'
   - 'pressCss'
   - 'focusRingCss'
@@ -59,6 +60,34 @@ import { DuncitButton } from '@duncit/buttons';
   View pod
 </DuncitButton>;
 ```
+
+#### The waiting state, without a prop
+
+Passing `loading` still wins. What the components add is the far more common
+case where nobody passed one: **an `onClick` that returns a promise spins the
+button until that promise settles**, and blocks a second press meanwhile.
+
+```tsx
+// No `loading` prop anywhere — `approve` is async, so the button already knows.
+<DuncitButton variant="contained" onClick={approve}>
+  Approve venue
+</DuncitButton>;
+```
+
+Every portal action is a GraphQL round trip, and the button for one looked
+identical before and during — so the honest signal that a click had landed was
+the row changing a second later, and the natural response to no signal is to
+click again. Threading a `loading` prop through ~800 call sites would have
+missed some; reading the answer off the handler misses none.
+
+A handler that returns nothing behaves exactly as it did, so this is additive.
+Failure is deliberately not the button's business: `useAsyncClick` ends the
+spinner on both outcomes and leaves the promise's own result to the caller,
+where the notify and form-error handling already lives.
+
+The hook is exported for a pressable this package does not own — the same
+contract, `useAsyncClick(onClick, loading)` returning the `{ onClick, loading }`
+pair to spread.
 
 Each variant answers to a different intent, because a filled button, an outlined
 one and a text one cannot press the same way:

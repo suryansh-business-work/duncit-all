@@ -168,7 +168,7 @@ export default function BenefitFormDialog({
         </DialogContent>
         <DialogActions>
           <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
-          <DuncitButton type="submit" variant="contained" disabled={loading || plans.length === 0}>
+          <DuncitButton type="submit" variant="contained" loading={loading} disabled={plans.length === 0}>
             {editing ? 'Save changes' : 'Create row'}
           </DuncitButton>
         </DialogActions>

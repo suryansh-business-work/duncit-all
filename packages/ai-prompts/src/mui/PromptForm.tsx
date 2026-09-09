@@ -152,7 +152,7 @@ export function PromptForm({
               {copy.cancel}
             </DuncitButton>
           )}
-          <DuncitButton type="submit" variant="contained" disabled={submitting || !formState.isValid}>
+          <DuncitButton type="submit" variant="contained" loading={submitting} disabled={!formState.isValid}>
             {submitting ? copy.saving : (submitLabel ?? copy.saveChanges)}
           </DuncitButton>
         </Stack>

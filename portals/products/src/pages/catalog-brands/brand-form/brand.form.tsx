@@ -166,7 +166,7 @@ export default function BrandForm({ initialValues, saving, onSubmit }: Readonly<
             </Box>
           </Stack>
         ))}
-        <DuncitButton type="submit" variant="contained" disabled={saving} sx={{ alignSelf: 'flex-start' }}>
+        <DuncitButton type="submit" variant="contained" loading={saving} sx={{ alignSelf: 'flex-start' }}>
           {saving ? 'Saving…' : 'Save brand details'}
         </DuncitButton>
       </Stack>

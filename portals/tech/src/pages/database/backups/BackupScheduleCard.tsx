@@ -114,7 +114,7 @@ export default function BackupScheduleCard({ settings, saving, error, onSave }: 
             type="submit"
             variant="contained"
             startIcon={<SaveIcon />}
-            disabled={!isDirty || saving}
+            loading={saving} disabled={!isDirty}
             sx={{ ml: 'auto' }}
           >
             {saving ? t('tech.dbBackup.saving') : t('tech.dbBackup.save')}

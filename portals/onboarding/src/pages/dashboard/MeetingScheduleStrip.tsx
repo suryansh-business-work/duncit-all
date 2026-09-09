@@ -1,6 +1,6 @@
 import { Box, Card, CardActionArea, CardContent, Stack, Typography } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
-import { MEETING_KINDS, type MeetingCounts, type MeetingKind } from './onboardingStats';
+import type { MeetingCounts, MeetingKind } from './onboardingStats';
 
 const KIND_LABEL: Record<MeetingKind, string> = {
   VENUE: 'Venue',
@@ -8,22 +8,28 @@ const KIND_LABEL: Record<MeetingKind, string> = {
   ECOMM: 'E-Commerce Brand',
 };
 
-// Venue / Host / E-Commerce Brand meeting counts. Each card opens that kind's Meeting
-// Schedule filtered to the pending "Requested" requests (the parent supplies
-// the navigation). A CSS grid keeps the cards flush-left with the headings.
+// Meeting counts per kind. Each card opens that kind's Meeting Schedule
+// filtered to the pending "Requested" requests — the parent supplies the
+// navigation, and the kinds to draw, since e-commerce sits behind a system
+// flag. A CSS grid keeps the cards flush-left with the headings.
 export default function MeetingScheduleStrip({
   counts,
+  kinds,
   onOpen,
-}: Readonly<{ counts: MeetingCounts; onOpen: (kind: MeetingKind) => void }>) {
+}: Readonly<{
+  counts: MeetingCounts;
+  kinds: MeetingKind[];
+  onOpen: (kind: MeetingKind) => void;
+}>) {
   return (
     <Box
       sx={{
         display: 'grid',
         gap: 2,
-        gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+        gridTemplateColumns: { xs: '1fr', sm: `repeat(${kinds.length}, 1fr)` },
       }}
     >
-      {MEETING_KINDS.map((kind) => (
+      {kinds.map((kind) => (
         <Card key={kind} variant="outlined" sx={{ height: '100%' }}>
           <CardActionArea onClick={() => onOpen(kind)} sx={{ height: '100%' }}>
             <CardContent>

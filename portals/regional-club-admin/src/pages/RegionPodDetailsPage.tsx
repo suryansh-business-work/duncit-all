@@ -1,4 +1,4 @@
-import { NO_POD_ACTIONS, PodDetailsPage } from '@duncit/pod-details';
+import { NO_POD_ACTIONS, NO_POD_BANNER, PodDetailsPage } from '@duncit/pod-details';
 import { useTranslation } from '../i18n';
 
 /**
@@ -23,6 +23,7 @@ export default function RegionPodDetailsPage() {
       backTo="/club-admins"
       backLabel={t('partners.regional.backToClubAdmins')}
       actions={NO_POD_ACTIONS}
+      banner={NO_POD_BANNER}
     />
   );
 }

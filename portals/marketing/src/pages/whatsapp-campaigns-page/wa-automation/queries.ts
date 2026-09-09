@@ -24,6 +24,10 @@ export interface WaScenario {
   override_media_filename: string;
   /** Whether the template's header is media every send must carry an asset for. */
   needs_media: boolean;
+  /** For a scenario shipped with a drafted template and no campaign: TEMPLATE
+   * (submit the draft to Meta) or CAMPAIGN (bind the approved template). '' when
+   * there is nothing to press. */
+  provision_step: 'TEMPLATE' | 'CAMPAIGN' | '';
   /** Why it cannot send right now; '' when it can. Composed by the server. */
   blocker: string;
 }
@@ -73,6 +77,7 @@ const SCENARIO_BOARD_FIELDS = `
     override_media_url
     override_media_filename
     needs_media
+    provision_step
     blocker
   }
 `;
@@ -108,6 +113,16 @@ export const SET_WHATSAPP_SCENARIO_ENABLED = gql`
 export const RECONCILE_WHATSAPP_SCENARIOS = gql`
   mutation ReconcileWhatsappScenarios {
     reconcileWhatsappScenarios {
+      ${SCENARIO_BOARD_FIELDS}
+    }
+  }
+`;
+
+/** Create at AiSensy what a drafted scenario is missing — the row's
+ * `provision_step` says whether that is the template or the campaign. */
+export const PROVISION_WHATSAPP_SCENARIO = gql`
+  mutation ProvisionWhatsappScenario($event_key: String!) {
+    provisionWhatsappScenario(event_key: $event_key) {
       ${SCENARIO_BOARD_FIELDS}
     }
   }

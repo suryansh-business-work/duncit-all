@@ -2,6 +2,8 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
 import {
+  createCampaign,
+  createTemplate,
   isProjectApiConfigured,
   listCampaigns,
   listTemplates,
@@ -10,6 +12,7 @@ import {
   type AisensyTemplate,
 } from '@modules/platform/aisensy/aisensy.project';
 import { WA_EVENTS, isRequiredWaCategory } from './whatsapp.events';
+import { WA_TEMPLATE_DRAFTS } from './whatsapp.drafts';
 import {
   defaultFor,
   defaultKindFor,
@@ -130,6 +133,25 @@ function blockerFor(
   return `Template needs a header ${kind.toLowerCase()} — set the default under Settings, or set media on this row`;
 }
 
+/**
+ * Which provisioning step the board may offer for a scenario that has a draft
+ * and no campaign: submit the TEMPLATE, or — once Meta has approved it — bind
+ * the CAMPAIGN. Empty for every other row, including a submitted template
+ * still waiting on Meta (nothing to press; the blocker says so).
+ */
+export type WaProvisionStep = 'TEMPLATE' | 'CAMPAIGN' | '';
+
+function provisionStepFor(
+  eventKey: string,
+  campaign: AisensyCampaign | undefined,
+  template: AisensyTemplate | undefined,
+  catalogueOk: boolean
+): WaProvisionStep {
+  if (!catalogueOk || campaign || !WA_TEMPLATE_DRAFTS[eventKey]) return '';
+  if (!template) return 'TEMPLATE';
+  return template.status === 'APPROVED' ? 'CAMPAIGN' : '';
+}
+
 /** The live catalogue, or empty when AiSensy cannot be read. Never throws: a
  * refused Project API must still let the console render the registry and say
  * so, rather than showing an error page with no information in it. */
@@ -184,6 +206,14 @@ export const whatsappAdminService = {
       const campaign = live.campaigns.get(event.campaign);
       const template = campaign ? live.templates.get(campaign.template_name) : undefined;
       const setting = byKey.get(event.key);
+      // A drafted scenario's template carries the campaign's name, which is how
+      // a row with no campaign yet still knows whether its template is in.
+      const provisionStep = provisionStepFor(
+        event.key,
+        campaign,
+        template ?? live.templates.get(event.campaign),
+        live.ok
+      );
       // The row's own cached kind stands in when AiSensy cannot be read — the
       // send path writes it there the moment AiSensy rejects a send for a
       // missing header. Without it a console that lost the Project API reports
@@ -210,6 +240,7 @@ export const whatsappAdminService = {
         override_media_url: setting?.override_media_url ?? '',
         override_media_filename: setting?.override_media_filename ?? '',
         needs_media: template?.needs_media ?? needsMedia(headerFormat),
+        provision_step: provisionStep,
         blocker: live.ok
           ? blockerFor(
               event.campaign,
@@ -287,6 +318,65 @@ export const whatsappAdminService = {
       },
       { upsert: true }
     );
+    return this.scenarios();
+  },
+
+  /**
+   * Create what AiSensy is missing for a drafted scenario — the template, or
+   * the campaign once Meta has approved it. Two presses, days apart, because
+   * approval is Meta's and asynchronous; `provision_step` on the row says which
+   * press is next. Nothing is stored here: AiSensy stays the system of record.
+   */
+  async provision(eventKey: string, actor?: string | null) {
+    const event = WA_EVENTS.find((row) => row.key === eventKey);
+    const draft = WA_TEMPLATE_DRAFTS[eventKey];
+    if (!event || !draft) {
+      throw new GraphQLError('This scenario has no template draft to provision', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
+    const live = await catalogue();
+    if (!live.ok) {
+      throw new GraphQLError(live.error, { extensions: { code: 'BAD_REQUEST' } });
+    }
+    if (live.campaigns.has(event.campaign)) {
+      throw new GraphQLError(`Campaign "${event.campaign}" already exists at AiSensy`, {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
+    const template = live.templates.get(event.campaign);
+    if (!template) {
+      const submitted = await createTemplate({
+        name: event.campaign,
+        category: draft.category,
+        language: draft.language,
+        type: 'TEXT',
+        body: draft.body,
+        sample: draft.sample,
+      });
+      logs.server.info('whatsapp', 'provision', {
+        event_key: eventKey,
+        template: submitted.name,
+        status: submitted.status,
+        actor: actor ?? '',
+        msg: 'template submitted to AiSensy',
+      });
+      return this.scenarios();
+    }
+    if (template.status !== 'APPROVED') {
+      throw new GraphQLError(
+        `Template "${event.campaign}" is ${template.status} — Meta has not approved it yet`,
+        { extensions: { code: 'BAD_REQUEST' } }
+      );
+    }
+    const bound = await createCampaign(template.name, event.campaign);
+    logs.server.info('whatsapp', 'provision', {
+      event_key: eventKey,
+      campaign: bound.name,
+      status: bound.status,
+      actor: actor ?? '',
+      msg: 'campaign created at AiSensy',
+    });
     return this.scenarios();
   },
 

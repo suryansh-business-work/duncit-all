@@ -21,6 +21,7 @@ export const typeValue = (p: PodRow) => `${modeLabel(p)} · ${p.pod_type.replace
 export const statusValue = (p: PodRow) => {
   if (p.is_deleted) return 'Cancelled';
   if (p.completed_at) return 'Completed';
+  if (p.cancellation_risk?.at_risk) return 'Cancellation risk';
   if (p.venue_approval_status === 'PENDING') return 'Awaiting venue';
   if (p.venue_approval_status === 'DECLINED') return 'Venue rejected';
   return p.is_active ? 'Active' : 'Draft';

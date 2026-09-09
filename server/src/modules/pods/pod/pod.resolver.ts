@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { podService, mapPodToPublic, loadPodClubSlugMap } from './pod.service';
+import { podCancellationRisk } from './pod.cancellationRisk';
 import type { PodLifecycle } from './pod.lifecycle';
 import { podDashboardService } from './pod.dashboard';
 import { coHostService } from './coHost.service';
@@ -49,6 +50,23 @@ async function canViewMeeting(parent: any, ctx: GraphQLContext) {
 export const podResolvers = {
   Pod: {
     pod_mode: (parent: any): string => parent.pod_mode ?? 'PHYSICAL',
+    /**
+     * The stored risk flag, for admins only. Mapped here rather than in the
+     * public mapper because the pod type is served to every audience — a
+     * member's feed must not carry "this pod is about to be cancelled".
+     */
+    cancellation_risk: (parent: any, _a: unknown, ctx: GraphQLContext) => {
+      const flag = parent?.cancellation_risk;
+      if (!flag?.at_risk || !isAdminCtx(ctx)) return null;
+      return {
+        at_risk: true,
+        evaluated_at: flag.evaluated_at?.toISOString?.() ?? String(flag.evaluated_at ?? ''),
+        shortfall: flag.shortfall ?? 0,
+        spots_needed: flag.spots_needed ?? null,
+        alerted_at: flag.alerted_at?.toISOString?.() ?? null,
+        alert_count: flag.alert_count ?? 0,
+      };
+    },
     /**
      * Resolved from the SAME roster the settlement is computed from, so a pod's
      * detail view and the payout can never quote different attendance. Live,
@@ -151,6 +169,10 @@ export const podResolvers = {
     podRevokePreview: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_WRITE);
       return podService.revokePreview(args.pod_doc_id);
+    },
+    podCancellationRisk: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_WRITE);
+      return podCancellationRisk(args.pod_doc_id);
     },
     podDashboard: (_p: unknown, args: { days?: number | null }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_WRITE);

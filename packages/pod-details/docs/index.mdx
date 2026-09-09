@@ -12,6 +12,8 @@ consumers:
 exports:
   - 'PodDetailsPage'
   - 'NO_POD_ACTIONS'
+  - 'NO_POD_BANNER'
+  - 'usePodDetailsTranslation'
   - 'PodDetailsScopeProvider'
   - 'usePodDetailsScope'
   - 'SectionCard'
@@ -90,6 +92,22 @@ const revoke: PodDetailsActions = (pod) =>
   pod.is_deleted ? <RevokeCancellationAction podId={pod.id} podTitle={pod.pod_title} /> : null;
 <PodDetailsPage actions={revoke} />                               // admin portal
 ```
+
+## The banner is the portal's too
+
+`banner` is the second **required** render prop, called with the same `{ id, pod_title,
+is_deleted }` and drawn under the header, above the two columns — the first thing a reader
+sees after the title. Admin puts its cancellation-risk report there (the auto-cancel
+sweep's verdict, the money, the seats and what closes the gap); every other console passes
+`NO_POD_BANNER`:
+
+```tsx
+<PodDetailsPage actions={NO_POD_ACTIONS} banner={NO_POD_BANNER} />          // partners, regional, mWeb
+<PodDetailsPage banner={(pod) => <PodCancellationRiskSection podId={pod.id} />} />  // admin
+```
+
+A portal drawing a money waterfall inside its banner can borrow this panel's translator,
+`usePodDetailsTranslation()`, which resolves `ui.waterfall.*` beside the panel's own copy.
 
 **Revoking a cancellation lives in the admin portal**, not here: `revokePodCancellation`
 is gated on `ADMIN_WRITE`, so it is the only console that could fire it, and a button

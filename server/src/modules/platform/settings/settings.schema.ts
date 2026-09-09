@@ -44,6 +44,10 @@ export const settingsTypeDefs = gql`
     pod_auto_cancel_enabled: Boolean!
     "How many hours before a pod's start the auto-cancel finance check runs."
     pod_auto_cancel_lead_hours: Int!
+    "How many hours before a pod's start it is watched for cancellation risk: inside this window a finance-negative pod is flagged and its host and club admins are alerted."
+    pod_cancel_risk_window_hours: Int!
+    "How often, in hours, the host and club admins of an at-risk pod are re-alerted while the risk stands."
+    pod_cancel_risk_alert_hours: Int!
     "How many days ahead a venue is shown its free slots when accepting an Auto Pod."
     auto_pod_slot_window_days: Int!
     "How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires."
@@ -122,6 +126,10 @@ export const settingsTypeDefs = gql`
     pod_auto_cancel_enabled: Boolean
     "How many hours before a pod's start the auto-cancel finance check runs (1-8760)."
     pod_auto_cancel_lead_hours: Int
+    "How many hours before a pod's start it is watched for cancellation risk (1-8760)."
+    pod_cancel_risk_window_hours: Int
+    "How often, in hours, the host and club admins of an at-risk pod are re-alerted (1-168)."
+    pod_cancel_risk_alert_hours: Int
     "How many days ahead a venue is shown its free slots when accepting an Auto Pod (1-60)."
     auto_pod_slot_window_days: Int
     "How many hours an Auto Pod waits for a venue before it leaves venues' lists and expires (1-720)."

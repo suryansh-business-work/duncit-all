@@ -116,6 +116,30 @@ export default function PodLifecycleSettings({
         value={settings?.pod_auto_cancel_lead_hours ?? null}
         onSave={(next) => onSave({ pod_auto_cancel_lead_hours: next })}
       />
+      <NumberSettingCard
+        title={t('admin.podSettings.riskWindowTitle')}
+        description={t('admin.podSettings.riskWindowDesc')}
+        label={t('admin.podSettings.riskWindowLabel')}
+        helperText={t('admin.podSettings.riskWindowMin')}
+        invalidText={t('admin.podSettings.riskWindowInvalid')}
+        min={1}
+        max={8760}
+        loading={loading}
+        value={settings?.pod_cancel_risk_window_hours ?? null}
+        onSave={(next) => onSave({ pod_cancel_risk_window_hours: next })}
+      />
+      <NumberSettingCard
+        title={t('admin.podSettings.riskAlertTitle')}
+        description={t('admin.podSettings.riskAlertDesc')}
+        label={t('admin.podSettings.riskAlertLabel')}
+        helperText={t('admin.podSettings.riskAlertMin')}
+        invalidText={t('admin.podSettings.riskAlertInvalid')}
+        min={1}
+        max={168}
+        loading={loading}
+        value={settings?.pod_cancel_risk_alert_hours ?? null}
+        onSave={(next) => onSave({ pod_cancel_risk_alert_hours: next })}
+      />
     </Stack>
   );
 }

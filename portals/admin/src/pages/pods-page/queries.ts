@@ -83,6 +83,8 @@ export interface PodRow {
   is_deleted?: boolean | null;
   venue_approval_status?: string | null;
   venue_slot_id?: string | null;
+  /** The auto-cancel sweep's standing verdict; null is "no risk". Tints the row red. */
+  cancellation_risk?: { at_risk: boolean; shortfall: number; spots_needed?: number | null } | null;
 }
 
 /** Same selection as PODS rows (+ created_at for the table's Created filter),
@@ -98,6 +100,7 @@ const POD_ROW_FIELDS = gql`
     venue_slot_id
     venue_approval_status
     is_deleted
+    cancellation_risk { at_risk shortfall spots_needed }
     club_id
     pod_mode
     meeting_platform

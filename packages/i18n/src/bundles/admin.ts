@@ -221,6 +221,9 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       allClubs: 'All clubs',
       draft: 'Draft',
       venueRejected: 'Venue rejected',
+      cancellationRisk: 'Cancellation risk',
+      cancellationRiskHint:
+        'Bookings cannot cover the venue cost — short by {symbol}{shortfall}. The pod is cancelled automatically at the lead window unless this is fixed.',
       colCover: 'Cover',
       colClub: 'Club',
       colVenue: 'Venue',
@@ -237,6 +240,37 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       place: 'Place',
       offerCodes: 'Offer codes',
       deleteCoupon: 'Delete coupon',
+    },
+
+    /** The cancellation-risk report on the admin pod detail page. */
+    podRisk: {
+      title: 'Cancellation risk',
+      loadFailed: 'The cancellation-risk check could not be run for this pod.',
+      lead:
+        'This pod will be cancelled automatically on {cancelAt} unless its bookings cover the venue cost by then. Everyone who booked would be refunded under the venue’s cancellation policy.',
+      hoursLeft: '{hours} hours until it starts · the auto-cancel check runs {lead} hours before.',
+      financeTitle: 'Finance — why it is negative',
+      financeIntro:
+        'The money collected so far, after GST, the platform fee and the club-admin cut, does not reach the venue’s booked slot price. The host side settles below zero.',
+      shortfall: 'Short by',
+      attendeesTitle: 'Attendees — what would close the gap',
+      bookedSeats: 'Seats booked',
+      unlimitedSpots: 'unlimited',
+      seatsAvailable: 'Seats still open',
+      ticketPrice: 'Ticket price per spot',
+      spotsNeeded: 'Bookings needed',
+      spotsNeededCount: '{count} more at the current price',
+      cannotCover: 'More than the pod can hold at this price',
+      freePod: 'A free pod earns nothing per seat, so bookings alone cannot cover it',
+      fixTitle: 'How to fix it',
+      fixShare: 'Share the pod link and fill {count} more spots before the deadline.',
+      fixSlot: 'Move the pod to a cheaper venue slot, or lower the venue price with the venue.',
+      fixPrice: 'Raise the ticket price so fewer bookings cover the cost.',
+      fixCancel: 'Cancel it now yourself — attendees get the best refund the venue’s policy allows today.',
+      alertsTitle: 'Alerts',
+      alertsNone: 'The host and club admins have not been alerted yet; the next sweep sends the first alert.',
+      alertsSent: '{count} alert round(s) sent over email and WhatsApp to the host and every club admin. Last: {last}. Next: {next}.',
+      alertsEvery: 'Alerts repeat every {hours} hours while the risk stands (Admin > Pods > Pod Settings).',
     },
 
     podsDashboard: {
@@ -416,6 +450,18 @@ changeRequests: {
       autoCancelLeadLabel: 'Lead Window (Hours)',
       autoCancelLeadMin: 'Minimum 1 hour. Default 24.',
       autoCancelLeadInvalid: 'Enter a whole number of 1 or more.',
+      riskWindowTitle: 'Cancellation Risk Window (Hours)',
+      riskWindowDesc:
+        "How many hours before a pod's start it is watched for cancellation risk. Inside this window a pod whose bookings cannot cover the venue's booked slot price is flagged red in the pods table, explained on its detail page, and its host and club admins are alerted. Keep it wider than the lead window above — the lead window is when the sweep cancels, this is when people still have time to fix it. Only runs while auto-cancel is on.",
+      riskWindowLabel: 'Risk Window (Hours)',
+      riskWindowMin: 'Between 1 and 8760 hours. Default 72.',
+      riskWindowInvalid: 'Enter a whole number between 1 and 8760.',
+      riskAlertTitle: 'Cancellation Risk Alerts (Every N Hours)',
+      riskAlertDesc:
+        'How often the host and the club admins of an at-risk pod are re-alerted over email and WhatsApp while the risk stands. Each alert names the shortfall, the bookings that would close it and the moment the pod is cancelled automatically.',
+      riskAlertLabel: 'Alert Every (Hours)',
+      riskAlertMin: 'Between 1 and 168 hours. Default 4.',
+      riskAlertInvalid: 'Enter a whole number between 1 and 168.',
       completeTimeoutTitle: 'Complete Pod Timeout (Hours)',
       completeTimeoutDesc:
         'How long after a pod ENDS its host may still complete it. Inside the window the host can scan tickets and mark attendance as usual; once it passes, attendance marking is disabled for the host and the pod settles with no host earnings — the venue, the club admin and product sellers are still paid. A Club Admin can always record attendance afterwards.',

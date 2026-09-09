@@ -62,6 +62,15 @@ export interface IAppSettings extends Document {
    * (Admin > Pods > Pod Settings). Pods starting inside this window are the
    * ones the sweep evaluates. */
   pod_auto_cancel_lead_hours: number;
+  /** How many hours before a pod's start it is watched for cancellation risk
+   * (Admin > Pods > Pod Settings). A pod inside this window whose live
+   * settlement is negative is flagged red in Admin, and its host and club
+   * admins are alerted. Wider than the lead window on purpose: the lead window
+   * is when the sweep CANCELS, this is when people still have time to fix it. */
+  pod_cancel_risk_window_hours: number;
+  /** How often, in hours, the host and club admins of an at-risk pod are
+   * re-alerted over email and WhatsApp while the risk stands. */
+  pod_cancel_risk_alert_hours: number;
   /** How many days ahead a venue is shown its free slots when accepting an
    * Auto Pod (Admin > Pods > Pod Settings > Auto Pods). Kept short on purpose:
    * the host and the club admin still need time to enrol before the date. */
@@ -117,6 +126,8 @@ const appSettingsSchema = new Schema<IAppSettings>(
     pod_cancel_refund_hold: { type: Boolean, default: false },
     pod_auto_cancel_enabled: { type: Boolean, default: false },
     pod_auto_cancel_lead_hours: { type: Number, default: 24, min: 1, max: 8760 },
+    pod_cancel_risk_window_hours: { type: Number, default: 72, min: 1, max: 8760 },
+    pod_cancel_risk_alert_hours: { type: Number, default: 4, min: 1, max: 168 },
     auto_pod_slot_window_days: { type: Number, default: 7, min: 1, max: 60 },
     auto_pod_venue_expiry_hours: { type: Number, default: 24, min: 1, max: 720 },
     auto_pod_assignment_expiry_hours: { type: Number, default: 72, min: 1, max: 720 },

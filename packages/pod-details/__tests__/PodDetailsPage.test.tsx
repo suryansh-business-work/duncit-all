@@ -19,6 +19,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import PodDetailsPage, {
   NO_POD_ACTIONS,
+  NO_POD_BANNER,
   type PodDetailsViewProps,
 } from '../src/PodDetailsPage';
 import { POD_DETAIL } from '../src/queries';
@@ -92,7 +93,7 @@ const mount = (props: PodDetailsViewProps = {}, mocks: MockedResponse[] = [podMo
       <ThemeProvider theme={testTheme}>
       <MemoryRouter initialEntries={[`/pods/${POD_ID}`]}>
         <Routes>
-          <Route path="/pods/:id" element={<PodDetailsPage actions={NO_POD_ACTIONS} {...props} />} />
+          <Route path="/pods/:id" element={<PodDetailsPage actions={NO_POD_ACTIONS} banner={NO_POD_BANNER} {...props} />} />
           <Route path="/pods" element={<div>pods-list</div>} />
           <Route path="/pods/:id/edit" element={<div>pod-editor</div>} />
         </Routes>

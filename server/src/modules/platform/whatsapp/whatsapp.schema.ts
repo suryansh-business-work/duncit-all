@@ -44,6 +44,8 @@ export const waAutomationTypeDefs = gql`
     override_media_filename: String!
     "Whether the template's header is an image, video or document every send must carry."
     needs_media: Boolean!
+    "For a scenario shipped with a template draft and no campaign yet: TEMPLATE (submit the draft to Meta) or CAMPAIGN (bind the approved template). Empty when there is nothing to press."
+    provision_step: String!
     "Why this cannot send right now. Empty when it can."
     blocker: String!
   }
@@ -186,6 +188,8 @@ export const waAutomationTypeDefs = gql`
     setWhatsappScenarioEnabled(event_key: String!, enabled: Boolean!): WaScenarioBoard!
     "Re-read AiSensy and cache each template's category, which sets the rate."
     reconcileWhatsappScenarios: WaScenarioBoard!
+    "Create at AiSensy what a drafted scenario is missing: its template, or — once Meta approved it — its campaign. The row's provision_step says which."
+    provisionWhatsappScenario(event_key: String!): WaScenarioBoard!
     "Set the admin's own header asset for one scenario. An empty url clears it. Reconcile never overwrites it."
     setWhatsappScenarioMedia(event_key: String!, url: String!, filename: String): WaScenarioBoard!
     "Set one of the platform default header assets — what a media-header scenario sends when neither it nor its campaign carries one. An empty url clears it."

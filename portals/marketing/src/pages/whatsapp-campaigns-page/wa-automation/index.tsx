@@ -39,6 +39,7 @@ export default function WaAutomation() {
     savingMedia,
     toggle,
     saveMedia,
+    provision,
     runReconcile,
   } = useWhatsappBoard();
   const [mediaFor, setMediaFor] = useState<WaScenario | null>(null);
@@ -66,9 +67,10 @@ export default function WaAutomation() {
         busyKey,
         onToggle: toggle,
         onSetMedia: setMediaFor,
+        onProvision: provision,
         defaults,
       }),
-    [t, busyKey, toggle, defaults]
+    [t, busyKey, toggle, provision, defaults]
   );
   const fetchRows = useMemo(() => clientTableFetch(rows, scenarioSearchText), [rows]);
 

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { formatDate, formatDateTime, formatTime } from '@duncit/datetime';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import DayDrawer from '../src/DayDrawer';
@@ -196,6 +196,12 @@ describe('DayDrawer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
     const confirmButton = within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' });
     fireEvent.click(confirmButton); // real delete: clears confirmDeleteId
+    // The confirm handler is async, so the button spins until it settles and
+    // swallows a click meanwhile; let it rest, while the closing dialog still
+    // holds the node, before the stale press.
+    await act(async () => {
+      await Promise.resolve();
+    });
     fireEvent.click(confirmButton); // stale click on the still-transitioning node: guarded no-op
     await waitFor(() => expect(onDelete).toHaveBeenCalledTimes(1));
   });

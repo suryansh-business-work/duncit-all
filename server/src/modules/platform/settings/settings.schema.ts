@@ -40,8 +40,6 @@ export const settingsTypeDefs = gql`
     pod_complete_reminder_hours: Int!
     "Whether a cancellation holds its refunds until the pod's start time instead of paying them out at once. Revoking before the start cancels a held refund; the release sweep pays it once the start passes."
     pod_cancel_refund_hold: Boolean!
-    "Whether a cancellation holds its refunds until the pod's start time instead of paying them out at once. Revoking before the start cancels a held refund; the release sweep pays it once the start passes."
-    pod_cancel_refund_hold: Boolean
     "Whether the sweep auto-cancels an upcoming pod whose finances are negative, refunding attendees under the venue's cancellation policy."
     pod_auto_cancel_enabled: Boolean!
     "How many hours before a pod's start the auto-cancel finance check runs."
@@ -118,6 +116,8 @@ export const settingsTypeDefs = gql`
     pod_complete_timeout_hours: Int
     "How many hours after a pod ends the host is reminded to complete it (1-8760)."
     pod_complete_reminder_hours: Int
+    "Whether a cancellation holds its refunds until the pod's start time instead of paying them out at once."
+    pod_cancel_refund_hold: Boolean
     "Whether the sweep auto-cancels an upcoming pod whose finances are negative, refunding attendees under the venue's cancellation policy."
     pod_auto_cancel_enabled: Boolean
     "How many hours before a pod's start the auto-cancel finance check runs (1-8760)."

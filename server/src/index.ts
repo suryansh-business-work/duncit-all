@@ -759,5 +759,8 @@ async function bootstrap() {
 
 bootstrap().catch((err) => {
   logs.server.error('bootstrap', 'main', { error: err, msg: 'Fatal bootstrap error' });
+  // Also to stderr: the structured logger ships to SigNoz only, so a server
+  // that dies at boot would otherwise leave nothing in `docker logs`.
+  console.error('Fatal bootstrap error', err);
   process.exit(1);
 });

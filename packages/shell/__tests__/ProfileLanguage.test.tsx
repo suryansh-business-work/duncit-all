@@ -9,7 +9,14 @@ vi.mock('@apollo/client/react', () => ({
   useMutation: vi.fn(),
 }));
 
-const ENGLISH = { code: 'en-IN', label: 'English', english_label: 'English' };
+const featureFlag = vi.hoisted(() => ({ enabled: true }));
+// Only the flag read is stubbed; the constant and everything else stay real.
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
+  useFeatureFlag: () => featureFlag.enabled,
+}));
+
+const ENGLISH ={ code: 'en-IN', label: 'English', english_label: 'English' };
 const HINDI = { code: 'hi-IN', label: 'हिन्दी', english_label: 'Hindi' };
 
 const i18n = vi.hoisted(() => ({
@@ -37,6 +44,7 @@ import { ProfileLanguage } from '../src/chrome/ProfileLanguage';
 const mockMutation = vi.mocked(useMutation);
 
 beforeEach(() => {
+  featureFlag.enabled = true;
   i18n.locale = 'en-IN';
   i18n.locales = [ENGLISH, HINDI];
   i18n.setLocale = vi.fn();
@@ -54,6 +62,14 @@ const pickHindi = async () => {
 describe('ProfileLanguage', () => {
   it('renders nothing until the platform has two active locales', () => {
     i18n.locales = [ENGLISH];
+    mockMutation.mockReturnValue([vi.fn(), { loading: false }] as never);
+
+    const { container } = render(<ProfileLanguage />);
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('renders nothing while the language_preference flag is off, even with two locales', () => {
+    featureFlag.enabled = false;
     mockMutation.mockReturnValue([vi.fn(), { loading: false }] as never);
 
     const { container } = render(<ProfileLanguage />);

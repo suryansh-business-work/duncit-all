@@ -31,7 +31,14 @@ vi.mock('../src/i18n/useLocalePreference', () => ({
   useLocalePreference: () => localeState,
 }));
 
-const deviceZone = vi.hoisted(() => ({ value: 'Not/ARealZone' as string }));
+const featureFlag = vi.hoisted(() => ({ enabled: true }));
+// Only the flag read is stubbed; the constant and everything else stay real.
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
+  useFeatureFlag: () => featureFlag.enabled,
+}));
+
+const deviceZone =vi.hoisted(() => ({ value: 'Not/ARealZone' as string }));
 vi.mock('../src/workspace/clock', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../src/workspace/clock')>()),
   deviceTimeZone: () => deviceZone.value,
@@ -132,5 +139,19 @@ describe('ClockTray', () => {
     localeState.error = 'Could not save your language';
     const failed = render(<ClockTray full="28 Aug 2026, 12:00" zone="UTC" />);
     expect(failed.container.textContent).toContain('Could not save your language');
+  });
+
+  it('hides the language row, divider and all, while the language_preference flag is off', () => {
+    featureFlag.enabled = false;
+    workspaceState.value = null;
+    try {
+      const { container } = render(<ClockTray full="28 Aug 2026, 12:00" zone="UTC" />);
+
+      // Only the zone picker is left: no Language select, and no divider above it.
+      expect(container.querySelectorAll('[role="combobox"]')).toHaveLength(1);
+      expect(container.querySelector('hr')).toBeNull();
+    } finally {
+      featureFlag.enabled = true;
+    }
   });
 });

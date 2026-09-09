@@ -12,6 +12,29 @@ import { logs } from '../observability/log';
 
 let client: Redis | null = null;
 let connected = false;
+/** When the current outage began (0 = not in one). Drives the recovery log. */
+let downSince = 0;
+/** One sustained-outage error per outage, never one per reconnect attempt. */
+let outageReported = false;
+
+/**
+ * Failed reconnects before an outage is reported as an error.
+ *
+ * With the backoff below that is a little over a minute — long enough that a
+ * container restart passes in silence, short enough that a cache which is off
+ * for an afternoon does not.
+ */
+const OUTAGE_ATTEMPTS = 12;
+
+function reportOutage(times: number): void {
+  if (times < OUTAGE_ATTEMPTS || outageReported) return;
+  outageReported = true;
+  logs.server.error('redis', 'connection', {
+    msg: 'Redis unreachable — the response cache is off until it returns',
+    attempts: times,
+    downSeconds: downSince > 0 ? Math.round((Date.now() - downSince) / 1000) : 0,
+  });
+}
 
 export function initRedis(): void {
   const url = process.env.REDIS_URL;
@@ -21,17 +44,36 @@ export function initRedis(): void {
     // flight, never queue work against a dead connection.
     maxRetriesPerRequest: 1,
     enableOfflineQueue: false,
-    retryStrategy: (times) => Math.min(times * 500, 10_000),
+    retryStrategy: (times) => {
+      reportOutage(times);
+      return Math.min(times * 500, 10_000);
+    },
   });
   client.on('ready', () => {
+    const downMs = downSince > 0 ? Date.now() - downSince : 0;
     connected = true;
-    logs.server.info('redis', 'connection', { msg: 'Redis connected' });
+    downSince = 0;
+    outageReported = false;
+    if (downMs > 0) {
+      // The other half of the outage: without it, a blip that healed in 300ms
+      // and a cache that never came back read identically in the log store.
+      logs.server.info('redis', 'connection', { msg: 'Redis reconnected', downMs });
+    } else {
+      logs.server.info('redis', 'connection', { msg: 'Redis connected' });
+    }
   });
   client.on('error', (err) => {
     // Log the edge only — ioredis emits 'error' on every failed reconnect
-    // attempt, and a Redis outage must not flood the log store.
+    // attempt, and a Redis outage must not flood the log store. This is a warn,
+    // not an error: the cache degrading for the moments a restarted container
+    // takes to come back harms nobody, and an error here opens a bug in the
+    // Tech console blaming whichever request happened to be in flight.
+    // `reportOutage` above is what raises the error, once, when it is real.
     if (connected) {
-      logs.server.error('redis', 'connection', { error: err, msg: 'Redis connection lost' });
+      logs.server.warn('redis', 'connection', { error: err, msg: 'Redis connection lost' });
+    }
+    if (downSince === 0) {
+      downSince = Date.now();
     }
     connected = false;
   });

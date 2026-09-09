@@ -20,6 +20,7 @@ import { startRateLimitFlush } from '@modules/platform/rateLimit/rateLimit.enfor
 import { rateLimitMiddleware, rateLimitPlugin } from '@modules/platform/rateLimit/rateLimit.guard';
 import { startMailAutomationScheduler } from '@modules/platform/mailAutomation/mailAutomation.poller';
 import { startPaymentReconciler } from '@modules/finance/payment/payment.reconciler';
+import { whatsappAdminService } from '@modules/platform/whatsapp/whatsapp.admin';
 import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.scheduler';
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
 import { startE2eRunScheduler } from '@modules/platform/e2eRun/e2eRun.scheduler';
@@ -175,6 +176,12 @@ async function bootstrap() {
   await safeSeed('settingsCaches', () => settingsService.refreshDerivedCaches());
   // Telemetry: seed the singleton, prime the log-funnel runtime flags, then wire
   // the DB-persist handler so selected-level logs start recording.
+  // The WhatsApp/email sweeps read their cutoff off the global row's
+  // `enabled_at`; a database switched on before that field existed has none.
+  await safeSeed('waEnabledAt', async () => {
+    const { pinned } = await whatsappAdminService.seedGlobalEnabledAt();
+    if (pinned > 0) logs.server.info('bootstrap', 'waEnabledAt', { pinned });
+  });
   await safeSeed('telemetry', () => telemetryService.seedDefaults());
   telemetryService.enableIngestion();
   // Rate limiting: the master switch, the shipped rules and the catalogue of

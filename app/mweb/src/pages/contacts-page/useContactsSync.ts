@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { contactEntriesFromPhoneBook } from '@duncit/utils';
+import { logs } from '@duncit/logs';
 import { SYNC_CONTACTS } from './queries';
 
 /** Why a sync did not happen — mapped to copy by the page, never shown raw. */
@@ -50,10 +51,16 @@ export function useContactsSync(onSynced: () => Promise<unknown>) {
         picked.map((contact) => ({ name: contact.name?.[0] ?? '', phones: contact.tel ?? [] }))
       );
       await syncContacts({ variables: { entries } });
-      await onSynced();
+      // The sync is the write; refreshing the page is a read of what it wrote.
+      // A read that fails is not a sync that failed — it is logged, and the
+      // phone book stays synced rather than being reported as lost.
+      await onSynced().catch((error) => logs.mWeb.error('useContactsSync', 'refresh', { error }));
     } catch (error) {
       const name = (error as { name?: string } | null)?.name;
-      setFailure(name === 'SecurityError' || name === 'NotAllowedError' ? 'DENIED' : 'FAILED');
+      const denied = name === 'SecurityError' || name === 'NotAllowedError';
+      // A refusal is the person answering the picker, not a fault to log.
+      if (!denied) logs.mWeb.error('useContactsSync', 'request', { error });
+      setFailure(denied ? 'DENIED' : 'FAILED');
     }
   }, [onSynced, syncContacts]);
 

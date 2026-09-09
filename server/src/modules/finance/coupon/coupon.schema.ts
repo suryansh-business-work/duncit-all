@@ -49,6 +49,47 @@ export const couponTypeDefs = /* GraphQL */ `
     amount: Float!
   }
 
+  "What a coupon has actually done — the figures a detail page states above its redemption table."
+  type CouponStats {
+    "The coupon's own counter, incremented by the checkout finalizer."
+    used_count: Int!
+    "Distinct buyers behind those redemptions."
+    unique_users: Int!
+    "Rupees taken off orders by this code."
+    total_discount: Float!
+    "What those discounted orders were actually charged."
+    order_value: Float!
+    "Null when the coupon has no usage cap."
+    remaining_uses: Int
+    last_redeemed_at: String
+    currency_symbol: String!
+  }
+
+  "One payment that consumed the coupon."
+  type CouponRedemption {
+    id: ID!
+    payment_id: String!
+    invoice_no: String
+    user_id: ID
+    user_name: String!
+    user_email: String!
+    user_phone: String
+    pod_id: ID
+    description: String!
+    total: Float!
+    coupon_discount: Float!
+    status: String!
+    paid_at: String
+    created_at: String!
+  }
+
+  type CouponRedemptionTablePage {
+    rows: [CouponRedemption!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input CouponFilterInput {
     scope: CouponScope
     pod_id: ID
@@ -88,6 +129,10 @@ export const couponTypeDefs = /* GraphQL */ `
     coupons(filter: CouponFilterInput): [Coupon!]!
     couponsTable(query: TableQueryInput): CouponTablePage!
     coupon(id: ID!): Coupon
+    "Redemption figures for one coupon's detail page."
+    couponStats(id: ID!): CouponStats!
+    "The payments that consumed one coupon — the detail page's history table."
+    couponRedemptionsTable(id: ID!, query: TableQueryInput): CouponRedemptionTablePage!
     couponsForPod(pod_id: ID!): [Coupon!]!
     "Table sibling of couponsForPod — this pod's coupons plus every GLOBAL coupon."
     couponsForPodTable(pod_id: ID!, query: TableQueryInput): CouponTablePage!

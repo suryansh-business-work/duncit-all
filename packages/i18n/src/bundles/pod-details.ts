@@ -40,6 +40,10 @@ export const POD_DETAILS_BUNDLE: NestedCatalogue = {
       noSettlement: 'No settlement recorded for this pod yet.',
       bookings: 'Bookings',
       collectedTotal: 'Collected total',
+      // Shown only when money actually went back. A cancelled pod refunds every
+      // booking, which is why its collected total reads zero.
+      refunded: 'Refunded to buyers',
+      refundedBookings: 'Bookings refunded',
       finance: 'Finance',
       frozenSnapshot: 'Frozen snapshot',
       live: 'Live',

@@ -98,3 +98,19 @@ export async function resolvePodPlace(parent: any, carrier: any): Promise<PodPla
   parent.__podPlace = zoneName ? { label: zoneName, detail: '' } : { label: null, detail: null };
   return parent.__podPlace;
 }
+
+/**
+ * Where a pod happens as ONE line, for a message with room for a place and not
+ * an address: the venue's name, or a virtual pod's meeting platform.
+ *
+ * It reads the same `resolvePodPlace` every surface does rather than joining
+ * venue fields again — the pod booking receipt shipped a literal
+ * `{{venue_line}}` precisely because it had no venue of its own to send. A pod
+ * whose venue is gone still has to say something: a blank here would print the
+ * label with nothing after it.
+ */
+export async function podPlaceLine(pod: any): Promise<string> {
+  const place = await resolvePodPlace(pod, {});
+  const line = (pod.pod_mode ?? 'PHYSICAL') === 'VIRTUAL' ? place.detail : place.label;
+  return line?.trim() || '—';
+}

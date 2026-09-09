@@ -312,6 +312,8 @@ export const POD_FINANCE_BREAKDOWN = gql`
       frozen
       bookings_count
       collected_total
+      refunded_total
+      refunded_count
       currency_symbol
       has_venue
       completed_at

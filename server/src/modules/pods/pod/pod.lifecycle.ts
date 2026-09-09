@@ -52,6 +52,29 @@ export function podLifecycleFilter(bucket: PodLifecycle, now: Date): Record<stri
 }
 
 /**
+ * Pods whose END falls inside a window — the QUERY twin of {@link podLiveEnd}.
+ *
+ * A sweep that has to find "pods that finished about N hours ago" cannot state
+ * the fallback as `{ pod_end_date_time: null, pod_date_time: window }`: that
+ * treats an end-less pod as finishing when it STARTS, while every other reader
+ * of the same pod — `podLiveEnd`, `attendanceLock`, the deadline the
+ * complete-pod reminder prints — treats it as finishing POD_LIVE_TAIL_MS later.
+ * The two disagreed by four hours, so the nudge and the four feedback asks went
+ * out while a pod with no recorded end was arguably still running, quoting a
+ * deadline computed off the other end.
+ *
+ * `pod_date_time` rides along as a plain range because the pod's end is never
+ * before its start, so it narrows the scan the `$expr` would otherwise do
+ * without changing which rows match.
+ */
+export function liveEndWithin(range: { $gte: Date; $lte: Date }) {
+  return {
+    pod_date_time: { $lte: range.$lte },
+    $expr: { $and: [{ $gte: [LIVE_END, range.$gte] }, { $lte: [LIVE_END, range.$lte] }] },
+  };
+}
+
+/**
  * When a pod is OVER, for a document already in memory.
  *
  * The in-memory twin of the `LIVE_END` expression above — same rule, same

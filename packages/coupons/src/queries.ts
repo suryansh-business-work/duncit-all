@@ -33,6 +33,55 @@ export const COUPONS = gql`
   ${COUPON_FIELDS}
 `;
 
+export const COUPON = gql`
+  query Coupon($id: ID!) {
+    coupon(id: $id) {
+      ...CouponFields
+    }
+  }
+  ${COUPON_FIELDS}
+`;
+
+/** The detail page's headline figures. Money comes from the payments that spent
+ * the code, so it is a query of its own rather than a field on Coupon. */
+export const COUPON_STATS = gql`
+  query CouponStats($id: ID!) {
+    couponStats(id: $id) {
+      used_count
+      unique_users
+      total_discount
+      order_value
+      remaining_uses
+      last_redeemed_at
+      currency_symbol
+    }
+  }
+`;
+
+export const COUPON_REDEMPTIONS_TABLE = gql`
+  query CouponRedemptionsTable($id: ID!, $query: TableQueryInput) {
+    couponRedemptionsTable(id: $id, query: $query) {
+      total
+      rows {
+        id
+        payment_id
+        invoice_no
+        user_id
+        user_name
+        user_email
+        user_phone
+        pod_id
+        description
+        total
+        coupon_discount
+        status
+        paid_at
+        created_at
+      }
+    }
+  }
+`;
+
 export const COUPONS_FOR_POD = gql`
   query CouponsForPod($pod_id: ID!) {
     couponsForPod(pod_id: $pod_id) {
@@ -102,6 +151,33 @@ export const DELETE_COUPON = gql`
     deleteCoupon(id: $id)
   }
 `;
+
+export interface CouponStats {
+  used_count: number;
+  unique_users: number;
+  total_discount: number;
+  order_value: number;
+  remaining_uses: number | null;
+  last_redeemed_at: string | null;
+  currency_symbol: string;
+}
+
+export interface CouponRedemptionRow {
+  id: string;
+  payment_id: string;
+  invoice_no: string | null;
+  user_id: string | null;
+  user_name: string;
+  user_email: string;
+  user_phone: string | null;
+  pod_id: string | null;
+  description: string;
+  total: number;
+  coupon_discount: number;
+  status: string;
+  paid_at: string | null;
+  created_at: string;
+}
 
 export interface CouponPodOption {
   id: string;

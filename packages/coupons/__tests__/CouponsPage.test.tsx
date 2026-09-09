@@ -7,6 +7,7 @@
  * refetch after every write, and the copy each outcome notifies with.
  */
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { MemoryRouter, Route, Routes, useParams } from 'react-router';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -74,6 +75,7 @@ vi.mock('@duncit/table', () => ({
         {props.toolbarActions}
         <button onClick={() => actions?.onEdit(h.row)}>edit-row</button>
         <button onClick={() => actions?.onDelete(h.row)}>delete-row</button>
+        <button onClick={() => props.onRowClick(h.row)}>open-row</button>
       </div>
     );
   },
@@ -93,9 +95,20 @@ const settle = async () => {
   });
 };
 
+/** Stands in for the detail page the list navigates to, naming the id it got. */
+function DetailStub() {
+  const { couponId } = useParams();
+  return <div>detail of {couponId}</div>;
+}
+
 const mount = () => render(
   <ThemeProvider theme={testTheme}>
-    <CouponsPage />
+    <MemoryRouter initialEntries={['/coupons']}>
+      <Routes>
+        <Route path="/coupons" element={<CouponsPage />} />
+        <Route path="/coupons/:couponId" element={<DetailStub />} />
+      </Routes>
+    </MemoryRouter>
   </ThemeProvider>
 );
 
@@ -114,6 +127,16 @@ describe('CouponsPage', () => {
     expect(screen.getByText('Coupons')).toBeInTheDocument();
     expect(screen.getByText(/Global discount codes/)).toBeInTheDocument();
     expect(screen.getByTestId('table')).toBeInTheDocument();
+  });
+
+  it('opens the clicked coupon on its own detail route', async () => {
+    mount();
+
+    fireEvent.click(screen.getByRole('button', { name: 'open-row' }));
+    await settle();
+
+    expect(screen.getByText('detail of c-1')).toBeInTheDocument();
+    expect(screen.queryByTestId('table')).toBeNull();
   });
 
   it('renders before the pod catalogue has arrived', async () => {

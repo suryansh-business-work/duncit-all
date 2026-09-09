@@ -20,6 +20,7 @@ import { getFinanceSettings, nextInvoiceNumber } from '@modules/finance/finance/
 import { coinService } from '@modules/finance/coin/coin.service';
 import { couponService } from '@modules/finance/coupon/coupon.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { podPlaceLine } from '@modules/pods/pod/pod.place';
 import { claimSeats } from '@modules/pods/pod/pod.seats.service';
 import { normalizeSeats } from '@modules/pods/pod/pod.seats';
 import { PodMemberModel, type IPodMember } from '@modules/pods/podMember/podMember.model';
@@ -607,10 +608,12 @@ interface ReceiptMail {
 }
 
 /**
- * A pod: which pod, and when its members have to turn up.
+ * A pod: which pod, where, and when its members have to turn up.
  *
- * The venue and the ticket code are deliberately absent — the ticket email
- * carries both, and this is the money's record, not a second ticket.
+ * The ticket code is deliberately absent — the ticket email carries it, and
+ * this is the money's record, not a second ticket. The venue is NOT: the
+ * template has always had a `Venue` row, so a receipt sent without the value
+ * printed the placeholder itself.
  */
 async function podReceiptMail(p: IPayment, bookingUrl: string): Promise<ReceiptMail> {
   const pod = p.pod_id ? await PodModel.findById(p.pod_id) : null;
@@ -623,6 +626,7 @@ async function podReceiptMail(p: IPayment, bookingUrl: string): Promise<ReceiptM
       // the pod was sold to them as.
       pod_title: pod?.pod_title ?? p.description,
       date_label: appDateTime(pod?.pod_date_time) || p.description,
+      venue_line: pod ? await podPlaceLine(pod) : '—',
       booking_url: bookingUrl,
     },
   };

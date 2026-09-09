@@ -6,11 +6,11 @@ import { logs } from '@duncit/logs';
 import { SyncContactsDocument } from '@/graphql/contacts';
 import { graphqlRequest } from '@/services/graphql.client';
 
-/** Why a sync did not happen — mapped to copy by the screen, never shown raw. */
+/** Why a sync did not happen â mapped to copy by the screen, never shown raw. */
 export type ContactsSyncFailure = 'DENIED' | 'FAILED';
 
-/** The two fields a sync reads. Everything else in a phone book — addresses,
- * birthdays, notes — is none of Duncit's business and is never asked for. */
+/** The two fields a sync reads. Everything else in a phone book â addresses,
+ * birthdays, notes â is none of Duncit's business and is never asked for. */
 const READ_FIELDS = [ContactField.FULL_NAME, ContactField.PHONES] as const;
 
 /**
@@ -22,7 +22,7 @@ const READ_FIELDS = [ContactField.FULL_NAME, ContactField.PHONES] as const;
  * "Your contacts could not be synced" on every device.
  *
  * Numbers are reduced to their comparable key on the device
- * (`contactEntriesFromPhoneBook`) so the phone book itself never travels — the
+ * (`contactEntriesFromPhoneBook`) so the phone book itself never travels â the
  * server keeps only the accounts the keys matched, plus the unmatched keys the
  * invite list is built from. Twin of mWeb's `useContactsSync` (rule 27), which
  * reads through the browser's picker instead.
@@ -48,7 +48,12 @@ export function useContactsSync(onSynced: () => Promise<unknown>) {
         })),
       );
       await graphqlRequest(SyncContactsDocument, { entries }, { auth: true });
-      await onSynced();
+      // The sync is the write; refreshing the screen is a read of what it
+      // wrote. A read that fails is not a sync that failed — it is logged, and
+      // the phone book stays synced rather than being reported as lost.
+      await onSynced().catch((error) =>
+        logs.mobileApp.error('useContactsSync', 'refresh', { error }),
+      );
     } catch (error) {
       logs.mobileApp.error('useContactsSync', 'request', { error });
       setFailure('FAILED');

@@ -30,6 +30,7 @@ import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { loadPodClubSlugMap } from '@modules/pods/pod/pod.service';
+import { liveEndWithin } from '@modules/pods/pod/pod.lifecycle';
 import { BackoutRequestModel } from '@modules/pods/podMember/backoutRequest.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
@@ -52,10 +53,17 @@ const HOUR_MS = 60 * 60_000;
 const SWEEP_INTERVAL_MS = 30 * 60_000;
 const FIRST_SWEEP_DELAY_MS = 90_000;
 
-/** How far ahead of a pod its attendees are reminded. */
-const POD_REMINDER_LEAD_MS = 24 * HOUR_MS;
-/** How close to the pod an unanswered slot request gets chased. */
-const SLOT_REMINDER_LEAD_MS = 48 * HOUR_MS;
+/**
+ * Every window these sweeps fire on, read from Admin > Pods > Pod Settings.
+ *
+ * They used to be constants here — 24 hours ahead of a pod, 48 ahead of a slot
+ * request, feedback the moment a pod ended — while the shipped email copy told
+ * the admin "the reminder window is set in Admin > Pods". It was not, and there
+ * was no setting to find. ONE read per tick, because a tick uses all of them
+ * and the complete-pod nudge has to quote the same deadline `attendanceLock`
+ * enforces.
+ */
+type SweepClocks = Awaited<ReturnType<typeof settingsService.getReminderSweepSettings>>;
 
 /**
  * How wide each sweep's window is. Three ticks, so a tick that dies on a
@@ -112,10 +120,14 @@ type UsersById = Map<string, UserLike>;
  */
 async function sweepCutoff(): Promise<Date | null> {
   const global = await WaEventSettingModel.findOne({ event_key: WA_GLOBAL_KEY })
-    .select('enabled updated_at')
+    .select('enabled enabled_at updated_at')
     .lean();
   if (!global?.enabled) return null;
-  return global.updated_at;
+  // `updated_at` only until the boot backfill has pinned `enabled_at` — see the
+  // field's note. Every OTHER write to this row (the platform default header
+  // assets) moves `updated_at`, and a cutoff that moves with them lands after
+  // the window of every past-anchored sweep, which is silence.
+  return global.enabled_at ?? global.updated_at;
 }
 
 /**
@@ -212,10 +224,15 @@ function podReminders(
  * else and there is no host-side reminder template, so excluding them would
  * mean the one person who has to turn up gets no reminder at all.
  */
-async function remindAttendees(now: number, cutoff: Date, mwebUrl: string) {
+async function remindAttendees(
+  now: number,
+  cutoff: Date,
+  mwebUrl: string,
+  clocks: SweepClocks
+) {
   const pods = await PodModel.find({
     is_active: true,
-    pod_date_time: crossing(now + POD_REMINDER_LEAD_MS, cutoff),
+    pod_date_time: crossing(now + clocks.pod_reminder_lead_hours * HOUR_MS, cutoff),
   })
     .select('pod_id pod_title pod_date_time pod_attendees pod_hosts_id club_id pod_images_and_videos')
     .lean<SweptPod[]>();
@@ -247,15 +264,16 @@ async function remindAttendees(now: number, cutoff: Date, mwebUrl: string) {
  * template has four placeholders and adding a fifth would break the campaign,
  * so the message that CAN carry it does.
  */
-async function remindHostsToComplete(now: number, cutoff: Date) {
-  const { reminder_hours, timeout_hours } = await settingsService.getPodCompletionSettings();
-  // The same "end, or the start plus the tail" fallback podLiveEnd applies, as
-  // a query: a pod with no end recorded is treated as ending when it starts.
-  const window = crossing(now - reminder_hours * HOUR_MS, cutoff);
+async function remindHostsToComplete(now: number, cutoff: Date, clocks: SweepClocks) {
+  const { complete_reminder_hours: reminderHours, complete_timeout_hours: timeoutHours } = clocks;
+  // `liveEndWithin`, not a hand-written $or: the fallback for a pod with no
+  // recorded end has to be the one podLiveEnd applies, or the nudge fires on a
+  // different end from the deadline it prints a dozen lines below.
+  const window = crossing(now - reminderHours * HOUR_MS, cutoff);
   const pods = await PodModel.find({
     is_active: true,
     completed_at: null,
-    $or: [{ pod_end_date_time: window }, { pod_end_date_time: null, pod_date_time: window }],
+    ...liveEndWithin(window),
   })
     .select('pod_id pod_title pod_date_time pod_end_date_time pod_hosts_id pod_images_and_videos')
     .lean<SweptPod[]>();
@@ -265,7 +283,7 @@ async function remindHostsToComplete(now: number, cutoff: Date) {
     pods.map((pod) => {
       const host = users.get(firstHostId(pod));
       const name = nameOf(host);
-      const deadline = podCompleteDeadline(pod, timeout_hours);
+      const deadline = podCompleteDeadline(pod, timeoutHours);
       return {
         event: 'HOST_COMPLETE_POD_REMINDER',
         entityId: String(pod._id),
@@ -276,7 +294,7 @@ async function remindHostsToComplete(now: number, cutoff: Date) {
         vars: {
           deadline: deadline
             ? `${appDate(deadline)}, ${appTime(deadline)}`
-            : `${timeout_hours} hours after the pod ended`,
+            : `${timeoutHours} hours after the pod ended`,
         },
       };
     })
@@ -292,11 +310,11 @@ async function remindHostsToComplete(now: number, cutoff: Date) {
  * template says "The request pod scheduled for {{2}} hours from now", so what
  * makes it urgent is the date the host asked for arriving.
  */
-async function remindVenuesOfPendingSlots(now: number, cutoff: Date) {
+async function remindVenuesOfPendingSlots(now: number, cutoff: Date, clocks: SweepClocks) {
   const slots = await VenueSlotModel.find({
     status: 'PENDING',
     decision: 'NONE',
-    start_at: crossing(now + SLOT_REMINDER_LEAD_MS, cutoff),
+    start_at: crossing(now + clocks.venue_slot_reminder_lead_hours * HOUR_MS, cutoff),
   })
     .select('start_at owner_user_id booked_by_pod_id')
     .lean<SweptSlot[]>();
@@ -415,20 +433,23 @@ function feedbackAsk(
 }
 
 /**
- * Pods that have just ended.
+ * Pods that ended `delayHours` ago (Admin > Pods > Pod Settings).
  *
  * NOT anchored on `completed_at`: completion is host-initiated and optional —
  * which is the entire reason HOST_COMPLETE_POD_REMINDER exists — so hanging
  * feedback off it means the guests of every pod a host never got round to
- * completing are never asked. A pod with no end time recorded is treated as
- * ending when it starts; the create-pod form has required an end for long
- * enough that only pods far behind the cutoff can be in that state.
+ * completing are never asked.
+ *
+ * "Ended" is `liveEndWithin`, which is `podLiveEnd` as a query: a pod with no
+ * end recorded ends POD_LIVE_TAIL_MS after it starts. This used to read the
+ * start itself, so those pods were asked how it went four hours early — while
+ * the same pod's attendance window still counted them as running.
  */
-async function endedPods(now: number, cutoff: Date): Promise<SweptPod[]> {
-  const ended = crossing(now, cutoff);
+async function endedPods(now: number, cutoff: Date, delayHours: number): Promise<SweptPod[]> {
+  const ended = crossing(now - delayHours * HOUR_MS, cutoff);
   return PodModel.find({
     is_active: true,
-    $or: [{ pod_end_date_time: ended }, { pod_end_date_time: null, pod_date_time: ended }],
+    ...liveEndWithin(ended),
   })
     .select('pod_id pod_title pod_date_time pod_attendees pod_hosts_id club_id venue_id pod_images_and_videos')
     .lean<SweptPod[]>();
@@ -495,8 +516,13 @@ async function askClubAdminsForFeedback(pods: SweptPod[], mwebUrl: string) {
   );
 }
 
-async function requestPodFeedback(now: number, cutoff: Date, mwebUrl: string) {
-  const pods = await endedPods(now, cutoff);
+async function requestPodFeedback(
+  now: number,
+  cutoff: Date,
+  mwebUrl: string,
+  clocks: SweepClocks
+) {
+  const pods = await endedPods(now, cutoff, clocks.pod_feedback_delay_hours);
   if (pods.length === 0) return;
   await askAttendeesForFeedback(pods, mwebUrl);
   await askHostsForFeedback(pods, mwebUrl);
@@ -511,12 +537,15 @@ export async function runWhatsappSweeps(): Promise<void> {
   const cutoff = await sweepCutoff();
   if (!cutoff) return;
   const now = Date.now();
-  const { mwebUrl } = await getUrlConfigs();
-  await remindAttendees(now, cutoff, mwebUrl);
-  await remindHostsToComplete(now, cutoff);
-  await remindVenuesOfPendingSlots(now, cutoff);
+  const [{ mwebUrl }, clocks] = await Promise.all([
+    getUrlConfigs(),
+    settingsService.getReminderSweepSettings(),
+  ]);
+  await remindAttendees(now, cutoff, mwebUrl, clocks);
+  await remindHostsToComplete(now, cutoff, clocks);
+  await remindVenuesOfPendingSlots(now, cutoff, clocks);
   await noticeReplacementNotFound(now, cutoff, mwebUrl);
-  await requestPodFeedback(now, cutoff, mwebUrl);
+  await requestPodFeedback(now, cutoff, mwebUrl, clocks);
 }
 
 /**

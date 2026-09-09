@@ -595,7 +595,7 @@ describe('meeting notifications + cross-flow slot picker (batch)', () => {
 });
 
 describe('meeting decide (onboarding self-approve)', () => {
-  it('approves a DONE meeting: drafts the onboarded host, marks it approved, emails the applicant', async () => {
+  it('approves a DONE meeting: drafts the onboarded host, marks it approved, and does NOT send the approval mail yet', async () => {
     (notifyEvent as jest.Mock).mockClear();
     const { userId: uid, meetingId } = await doneMeeting('HOST', '2029-01-01T05:00:00.000Z', 'Drafty');
 
@@ -609,9 +609,13 @@ describe('meeting decide (onboarding self-approve)', () => {
     const host: any = await HostModel.findOne({ user_id: new Types.ObjectId(uid) });
     expect(host?.status).toBe('DRAFT');
     expect(host?.full_name).toBe('Drafty');
-    // Approval reaches the applicant through notifyEvent — WhatsApp and the
-    // templated mail as one event, not a sender of its own any more.
-    expect(notifyEvent).toHaveBeenCalledWith(expect.objectContaining({ email: `${uid}@example.com` }));
+    // A cleared interview only DRAFTS the host. "Your application is approved"
+    // belongs to the Review step on the Onboarded page (hostService.approve),
+    // so it must NOT go out here — sending it from both places congratulated
+    // the applicant a review early and mailed hosts twice.
+    expect(notifyEvent).not.toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'HOST_ONBOARDING_APPROVED' }),
+    );
 
     // A decided meeting can't be decided again.
     await expect(meetingService.decide(meetingId, 'APPROVED', 'again')).rejects.toThrow(/already/i);

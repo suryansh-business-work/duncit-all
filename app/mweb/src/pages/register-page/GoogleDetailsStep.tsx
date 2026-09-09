@@ -3,14 +3,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { DuncitButton } from '@duncit/buttons';
-import { buildSignupStepperLabels } from '@duncit/utils';
+import { buildSignupStepperLabels, signupContactsBlockContinue } from '@duncit/utils';
 import {
   googleSignupDefaults,
   makeGoogleSignupSchema,
+  WHATSAPP_NUMBER_NAMES,
   type GoogleSignupValues,
 } from '@duncit/forms/schemas';
 import DobDateField from '../../components/DobDateField';
 import WhatsappNumberFields from '../../forms/register/WhatsappNumberFields';
+import { useSignupPhoneCheck } from '../../forms/register/useSignupContactCheck';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useMinSignupAge } from '../../utils/dateFormat';
 
@@ -51,11 +53,17 @@ export default function GoogleDetailsStep({ onSubmit }: Readonly<Props>) {
 
   const submit = handleSubmit((values) => onSubmit(values));
 
+  // The number asks the server as it is typed — a taken one is a correction
+  // here, not a refusal after a code has gone out — and Send code waits on it.
+  const phoneStatus = useSignupPhoneCheck(control, WHATSAPP_NUMBER_NAMES);
+  const blocked = signupContactsBlockContinue([phoneStatus]);
+
   return (
     <form
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
+        if (blocked) return;
         submit().catch(() => undefined);
       }}
     >
@@ -65,18 +73,15 @@ export default function GoogleDetailsStep({ onSubmit }: Readonly<Props>) {
         </Typography>
         <WhatsappNumberFields
           control={control}
-          names={{
-            extension: 'phoneExtension',
-            number: 'phoneNumber',
-            sameAsMobile: 'whatsappIsMobile',
-          }}
+          names={WHATSAPP_NUMBER_NAMES}
+          phoneStatus={phoneStatus}
         />
         <DobDateField control={control} minAge={minAge} required />
         <DuncitButton
           type="submit"
           variant="contained"
           fullWidth
-          disabled={!isValid}
+          disabled={!isValid || blocked}
           endIcon={<ArrowForwardIcon />}
           data-testid="signup-number-continue"
         >

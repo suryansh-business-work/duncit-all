@@ -709,6 +709,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       detailsSubtitle: 'Google doesn’t share your WhatsApp number or your date of birth, so tell us here. Your sign-up code goes to that number.',
       sameAsMobile: 'This is also my mobile number',
       sameAsMobileHint: 'Untick if your mobile number is different — we will leave the phone number on your profile blank.',
+      // The contact step asks the server about the email and the number as
+      // they are typed, so a taken one is a correction beside its box rather
+      // than a refusal on the code step after a code has already gone out.
+      checkingAvailability: 'Checking availability…',
+      emailTaken: 'This email is already registered. Log in instead, or use a different email.',
+      phoneTaken: 'This number is already registered. Log in instead, or use a different number.',
     },
     forgotPassword: {
       title: 'Forgot',

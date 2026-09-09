@@ -12,9 +12,11 @@ import {
   firstStepWithError,
   nextSignupStep,
   previousSignupStep,
+  signupContactsBlockContinue,
   stepSubmitsAccount,
   type SignupStep,
 } from '@duncit/utils';
+import { WHATSAPP_NUMBER_NAMES } from '@duncit/forms/schemas';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useMinSignupAge } from '../../utils/dateFormat';
 import { useSignupPolicies } from '../../components/policy-acceptance';
@@ -22,6 +24,7 @@ import ContactStep from './steps/ContactStep';
 import SecurityStep from './steps/SecurityStep';
 import WhoStep from './steps/WhoStep';
 import { makeRegisterSchema, registerDefaults, type RegisterFormValues } from './register.types';
+import { useSignupEmailCheck, useSignupPhoneCheck } from './useSignupContactCheck';
 
 interface Props {
   /** Which of the first three steps is showing. VERIFY is the page's, not the
@@ -78,6 +81,16 @@ export default function RegisterForm({
     mode: 'onTouched',
   });
 
+  /*
+    The contact step's boxes ask the server as they are typed, and Continue
+    waits on the answer: a taken email or number is a correction on THIS step,
+    never a refusal on the code step. Both checks run here, above the step, so
+    the statuses flow down as props and nothing has to be lifted back up.
+  */
+  const emailStatus = useSignupEmailCheck(control, 'email');
+  const phoneStatus = useSignupPhoneCheck(control, WHATSAPP_NUMBER_NAMES);
+  const blocked = step === 'CONTACT' && signupContactsBlockContinue([emailStatus, phoneStatus]);
+
   const submit = handleSubmit(async (values) => {
     setSubmitError(null);
     try {
@@ -128,14 +141,18 @@ export default function RegisterForm({
       noValidate
       onSubmit={(event) => {
         // Enter inside a box means "next step", never "submit the account" —
-        // the account is created by the third step's button alone.
+        // the account is created by the third step's button alone. It also
+        // reaches here past a disabled button, so the contact gate is here too.
         event.preventDefault();
+        if (blocked) return;
         advance().catch(() => undefined);
       }}
     >
       <Stack spacing={1.5}>
         {step === 'WHO' && <WhoStep control={control} minAge={minAge} />}
-        {step === 'CONTACT' && <ContactStep control={control} />}
+        {step === 'CONTACT' && (
+          <ContactStep control={control} emailStatus={emailStatus} phoneStatus={phoneStatus} />
+        )}
         {step === 'SECURITY' && (
           <SecurityStep
             control={control}
@@ -167,6 +184,7 @@ export default function RegisterForm({
             type="submit"
             variant="contained"
             fullWidth
+            disabled={blocked}
             endIcon={<ArrowForwardIcon />}
             data-testid="signup-next"
           >

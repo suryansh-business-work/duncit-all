@@ -22,6 +22,7 @@ import type { IOtpChallenge, IOtpDelivery } from '@modules/platform/otp/otp.mode
 import {
   anyDelivered,
   deliberatelyStubbed,
+  normalizeEmail,
   normalizePhone,
   otpService,
 } from '@modules/platform/otp/otp.service';
@@ -86,7 +87,41 @@ async function assertDelivered(deliveries: readonly IOtpDelivery[], number: stri
   );
 }
 
+/** What the contact step asks about — either half may be left out. */
+export interface SignupContactInput {
+  email?: string | null;
+  phone_extension?: string | null;
+  phone_number?: string | null;
+}
+
 export const whatsappAuthService = {
+  /**
+   * Step two, as it is typed: is this email or this number still free?
+   *
+   * Public and read-only. These are the SAME two lookups `requestSignupOtp`
+   * refuses on, asked from the contact step so a taken address or number is a
+   * correction beside the box that asked for it rather than a dead end after a
+   * code has gone out. It is a hint, not the gate: both refusals below still
+   * run, because two people can be typing the same contact at once.
+   *
+   * Each half is null when it was not asked about. A malformed value is
+   * refused by the normalisers rather than reported as free.
+   */
+  async contactAvailability(input: SignupContactInput) {
+    const rawEmail = String(input.email ?? '').trim();
+    let email_available: boolean | null = null;
+    if (rawEmail) {
+      const mailbox = normalizeEmail(rawEmail);
+      email_available = !(await UserModel.exists({ 'auth.email': mailbox }));
+    }
+    let phone_available: boolean | null = null;
+    if (String(input.phone_number ?? '').trim()) {
+      const target = normalizePhone(input.phone_extension, input.phone_number);
+      phone_available = !(await numberRegistered(target.phone_extension, target.phone_number));
+    }
+    return { email_available, phone_available };
+  },
+
   /**
    * Step one: send the code to a number nobody has signed up with yet.
    *

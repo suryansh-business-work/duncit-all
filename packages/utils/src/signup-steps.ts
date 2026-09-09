@@ -19,6 +19,8 @@
  * zero-dependency package cannot import.
  */
 
+import type { SignupContactCopy } from './signup-contact';
+
 /**
  * The four steps, in order.
  *
@@ -148,6 +150,10 @@ export interface SignupStepperLabels {
   /** The tick box that decides whether the profile phone is written at all. */
   sameAsMobile: string;
   sameAsMobileHint: string;
+  /** The contact step's as-you-type checks, per box: its own hint, the line
+   * while the answer is in flight, and the refusal under a box the server
+   * says is already somebody's. */
+  contactCopy: { email: SignupContactCopy; phone: SignupContactCopy };
 }
 
 /*
@@ -200,5 +206,17 @@ export function buildSignupStepperLabels(t: SignupTranslate): SignupStepperLabel
     detailsSubtitle: t('mweb.signupSteps.detailsSubtitle'),
     sameAsMobile: t('mweb.signupSteps.sameAsMobile'),
     sameAsMobileHint: t('mweb.signupSteps.sameAsMobileHint'),
+    contactCopy: {
+      email: {
+        hint: '',
+        checking: t('mweb.signupSteps.checkingAvailability'),
+        taken: t('mweb.signupSteps.emailTaken'),
+      },
+      phone: {
+        hint: t('mweb.signup.whatsappHint'),
+        checking: t('mweb.signupSteps.checkingAvailability'),
+        taken: t('mweb.signupSteps.phoneTaken'),
+      },
+    },
   };
 }

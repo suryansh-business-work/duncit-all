@@ -147,6 +147,17 @@ exports:
   - 'initialSignupFlowState'
   - 'signupFlowReducer'
   - 'signupNumberOf'
+  - 'AVAILABILITY_CHECK_DEBOUNCE_MS'
+  - 'idleAvailabilityCheck'
+  - 'scheduleAvailabilityCheck'
+  - 'IDLE_SIGNUP_CONTACT_CHECK'
+  - 'signupContactStatus'
+  - 'signupContactBlocksContinue'
+  - 'signupContactsBlockContinue'
+  - 'signupEmailCandidate'
+  - 'signupPhoneCandidate'
+  - 'scheduleSignupContactCheck'
+  - 'signupContactLines'
   - 'USERNAME_PATTERN'
   - 'normalizeUsername'
   - 'usernameStatus'
@@ -1738,6 +1749,54 @@ signupNumberOf({ phoneExtension: '+91', phoneNumber: '9845012345', whatsappIsMob
 
 The email door skips the number step entirely: `FORM_FILLED` sets `verifying` from the answers
 it already carries, because that form asked for the number two steps earlier.
+
+### The contact step, checked as it is typed
+
+"Email already in use" used to be discovered on the LAST step: the code request was the first
+time the email and the number were looked up, so a taken one was a refusal two screens after
+the box that asked for it — with a code already on its way. Both boxes ask the server as they
+are typed now, and the step cannot be left while one of them is somebody's.
+
+The round trip is `scheduleAvailabilityCheck`, which the @handle field shares: the 400ms
+debounce, the cleanup that drops a reply for a value no longer in the box, and a failed ask
+reported as `failed` rather than as an answer. `scheduleSignupContactCheck` is that trip typed
+to a yes/no, and `signupContactStatus` is what the answer means:
+
+```ts
+signupContactStatus(null, IDLE_SIGNUP_CONTACT_CHECK);                                   // 'IDLE'
+signupContactStatus('riya@duncit.com', { checking: true, answer: null, failed: false }); // 'CHECKING'
+signupContactStatus('riya@duncit.com', { checking: false, answer: false, failed: false }); // 'TAKEN'
+signupContactStatus('riya@duncit.com', { checking: false, answer: null, failed: true });  // 'UNKNOWN'
+
+signupContactsBlockContinue(['AVAILABLE', 'CHECKING']); // true — the answer is still in flight
+signupContactsBlockContinue(['AVAILABLE', 'UNKNOWN']);  // false — a hint that could not be fetched never blocks signup
+```
+
+`UNKNOWN` deliberately does not block: the person is one step from a code request that checks
+the same thing, and an outage of this query must not become an outage of signup. The shapes are
+handed in rather than restated, because they are `EMAIL`, `DIAL_CODE` and `PHONE_INTL` from
+`@duncit/regex` — the very patterns the signup schema runs, so a box only asks about what the
+form would accept:
+
+```ts
+signupEmailCandidate(' Riya@Duncit.com ', EMAIL);                         // 'riya@duncit.com'
+signupEmailCandidate('riya@', EMAIL);                                      // null — still being typed
+signupPhoneCandidate('+91', '9845012345', { extension: DIAL_CODE, number: PHONE_INTL });
+// '+91 9845012345'
+
+signupContactLines('TAKEN', { hint, checking, taken });    // { hint, error: taken }
+signupContactLines('CHECKING', { hint, checking, taken }); // { hint: checking }
+```
+
+On both surfaces the FORM runs the two checks — its `useSignupEmailCheck` /
+`useSignupPhoneCheck` watch the boxes and own the round trip, because a package the native app
+consumes cannot import React — gates Continue (and the Google door's Send code) on
+`signupContactsBlockContinue`, and passes each status down as a prop. The step and the
+WhatsApp row only render `signupContactLines` under the box — the refusal on the error line,
+the "checking" line in place of the hint — from copy prebuilt as
+`buildSignupStepperLabels(t).contactCopy.email` / `.phone`, so neither surface spells a key.
+`requestSignupWhatsAppOtp` and `register` still refuse a taken contact: this is the correction
+beside the box, not the gate.
 
 ### The follow button, and the follow rows in the inbox
 

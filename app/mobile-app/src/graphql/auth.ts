@@ -154,6 +154,20 @@ export const RequestSignupWhatsAppOtpDocument = gql(`
   }
 `);
 
+/**
+ * Signup step two, as it is typed: is this email / this number still free?
+ * Fired from a debounced box, so the selection is deliberately the two
+ * booleans — a keystroke must not drag anything else with it.
+ */
+export const SignupContactAvailabilityDocument = gql(`
+  query MobileSignupContactAvailability($email: String, $ext: String, $num: String) {
+    signupContactAvailability(email: $email, phone_extension: $ext, phone_number: $num) {
+      email_available
+      phone_available
+    }
+  }
+`);
+
 export const VerifySignupWhatsAppOtpDocument = gql(`
   mutation MobileVerifySignupWhatsAppOtp($ext: String!, $num: String!, $otp: String!) {
     verifySignupWhatsAppOtp(phone_extension: $ext, phone_number: $num, otp: $otp) {

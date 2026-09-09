@@ -19,6 +19,8 @@
  * sync.
  */
 
+import { scheduleAvailabilityCheck } from './availability-check';
+
 /** 3–30 chars: lowercase letters, digits, single hyphens, alphanumeric ends. */
 export const USERNAME_PATTERN = /^(?=.{3,30}$)[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -154,9 +156,8 @@ export function usernameFieldState(
   };
 }
 
-/** Long enough that typing a whole handle costs one request, short enough that
- * the answer arrives before the reader's finger leaves the key. */
-export const USERNAME_CHECK_DEBOUNCE_MS = 400;
+/** The debounce is the shared round trip's — see `scheduleAvailabilityCheck`. */
+export { AVAILABILITY_CHECK_DEBOUNCE_MS as USERNAME_CHECK_DEBOUNCE_MS } from './availability-check';
 
 /** What the field knows about the value currently in it. */
 export interface UsernameCheckState {
@@ -213,35 +214,21 @@ export interface UsernameCheckOptions {
  */
 export function scheduleUsernameCheck(options: Readonly<UsernameCheckOptions>): () => void {
   const candidate = normalizeUsername(options.value);
-  if (!candidate || candidate === options.current || !USERNAME_PATTERN.test(candidate)) {
-    options.onState(IDLE_USERNAME_CHECK);
-    return () => undefined;
-  }
-
-  let live = true;
-  options.onState({ checking: true, available: null, reason: null });
-  const timer = setTimeout(() => {
-    options.ask(candidate).then(
-      (answer) => {
-        if (!live) return;
-        options.onState({
-          checking: false,
-          available: answer.available,
-          reason: answer.reason ?? null,
-        });
-      },
-      (error) => {
-        if (!live) return;
-        options.onError(error, candidate);
-        options.onState(IDLE_USERNAME_CHECK);
-      },
-    );
-  }, USERNAME_CHECK_DEBOUNCE_MS);
-
-  return () => {
-    live = false;
-    clearTimeout(timer);
-  };
+  const askable =
+    !!candidate && candidate !== options.current && USERNAME_PATTERN.test(candidate);
+  // The trip itself is shared with signup's contact boxes; a failed ask maps
+  // back onto IDLE here, which `usernameStatus` reads as still checking.
+  return scheduleAvailabilityCheck<UsernameCheckAnswer>({
+    candidate: askable ? candidate : null,
+    ask: options.ask,
+    onState: (state) =>
+      options.onState({
+        checking: state.checking,
+        available: state.answer?.available ?? null,
+        reason: state.answer?.reason ?? null,
+      }),
+    onError: options.onError,
+  });
 }
 
 export type UsernameTranslate = (

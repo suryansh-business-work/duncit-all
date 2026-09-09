@@ -83,6 +83,18 @@ export const whatsappNumberDefaults: WhatsappNumberValues = {
 };
 
 /**
+ * Where the three boxes live in either form that renders the row — the signup
+ * form and the Google door's step spell them identically, because both take
+ * the row from `whatsappNumberShape`. Written once here so the four places that
+ * mount the row cannot name a box differently (rule 40).
+ */
+export const WHATSAPP_NUMBER_NAMES = {
+  extension: 'phoneExtension',
+  number: 'phoneNumber',
+  sameAsMobile: 'whatsappIsMobile',
+} as const;
+
+/**
  * The date of birth — a full calendar day, required, and old enough.
  *
  * Held as 'YYYY-MM-DD', which is what both pickers emit and what the API is

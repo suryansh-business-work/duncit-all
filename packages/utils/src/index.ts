@@ -671,6 +671,29 @@ export {
   type SignupNumberFields,
 } from './signup-flow';
 export {
+  AVAILABILITY_CHECK_DEBOUNCE_MS,
+  idleAvailabilityCheck,
+  scheduleAvailabilityCheck,
+  type AvailabilityCheckOptions,
+  type AvailabilityCheckState,
+} from './availability-check';
+export {
+  IDLE_SIGNUP_CONTACT_CHECK,
+  scheduleSignupContactCheck,
+  signupContactBlocksContinue,
+  signupContactLines,
+  signupContactStatus,
+  signupContactsBlockContinue,
+  signupEmailCandidate,
+  signupPhoneCandidate,
+  type SignupContactCheckOptions,
+  type SignupContactCheckState,
+  type SignupContactCopy,
+  type SignupContactLines,
+  type SignupContactStatus,
+  type SignupPhoneShapes,
+} from './signup-contact';
+export {
   VENUE_APPLICATION_STATUSES,
   canSwitchVenues,
   defaultVenueId,

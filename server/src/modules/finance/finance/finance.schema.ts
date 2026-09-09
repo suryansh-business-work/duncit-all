@@ -275,6 +275,14 @@ export const financeTypeDefs = /* GraphQL */ `
     coins_redeemed_total: Float!
     "Coins this pod's bookings paid back to buyers as reward."
     coins_earned_total: Float!
+    """
+    Money handed back to buyers on this pod. A cancelled pod refunds every
+    booking, so collected_total is 0 for it — this is what explains that zero
+    rather than leaving it looking like missing money.
+    """
+    refunded_total: Float!
+    "How many of this pod's bookings got money back."
+    refunded_count: Int!
     currency_symbol: String!
     has_venue: Boolean!
     completed_at: String

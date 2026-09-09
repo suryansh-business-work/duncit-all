@@ -88,6 +88,18 @@ export default function PodFinanceSection({ podId }: Readonly<{ podId: string }>
             label={t('podDetailsPanel.podFinanceSection.collectedTotal')}
             value={`${breakdown.currency_symbol}${breakdown.collected_total.toFixed(2)}`}
           />
+          {breakdown.refunded_total > 0 && (
+            <>
+              <SummaryRow
+                label={t('podDetailsPanel.podFinanceSection.refunded')}
+                value={`${breakdown.currency_symbol}${breakdown.refunded_total.toFixed(2)}`}
+              />
+              <SummaryRow
+                label={t('podDetailsPanel.podFinanceSection.refundedBookings')}
+                value={breakdown.refunded_count}
+              />
+            </>
+          )}
           <Divider />
           <FinanceWaterfallList symbol={breakdown.currency_symbol} lines={lines} />
           <Typography variant="caption" sx={{

@@ -117,6 +117,10 @@ export interface PodFinanceBreakdownView {
   coins_redeemed_total: number;
   /** Coins those bookings paid back to buyers as reward. */
   coins_earned_total: number;
+  /** Money handed back to buyers on this pod, across every booking. */
+  refunded_total: number;
+  /** How many bookings got money back. */
+  refunded_count: number;
   currency_symbol: string;
   has_venue: boolean;
   completed_at: string | null;
@@ -253,9 +257,13 @@ export const breakdownService = {
     if (!Types.ObjectId.isValid(podDocId)) {
       throw new GraphQLError('Invalid pod', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    const pod = await PodModel.findById(podDocId).select(
-      'pod_title pod_hosts_id venue_id venue_slot_id completed_at'
-    );
+    // Cancelled pods are soft-deleted and every pod read strips them, so the
+    // breakdown answered "Pod not found" for exactly the pod whose money most
+    // needs explaining — seats were sold and then refunded. Opt in, like the
+    // admin pod page itself does with include_deleted.
+    const pod = await PodModel.findById(podDocId)
+      .select('pod_title pod_hosts_id venue_id venue_slot_id completed_at')
+      .setOptions({ includeDeleted: true });
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
 
     const fs = await getFinanceSettings();
@@ -270,6 +278,22 @@ export const breakdownService = {
           _id: null,
           redeemed: { $sum: { $ifNull: ['$coins_redeemed', 0] } },
           earned: { $sum: { $ifNull: ['$coins_earned', 0] } },
+        },
+      },
+    ]);
+
+    // Money handed back. A cancelled pod refunds every booking, which flips
+    // it off SUCCESS — so `collected` is 0 and, unexplained, the card reads
+    // "₹0 collected" on a pod whose page says six people were in it. Keyed on
+    // the refunded amount rather than on status, so a Backout's PARTIAL refund
+    // against a still-SUCCESS booking is counted too.
+    const [refundTotals] = await PaymentModel.aggregate<{ total: number; count: number }>([
+      { $match: { pod_id: pod._id, 'metadata.refunded_amount': { $gt: 0 } } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: { $ifNull: ['$metadata.refunded_amount', 0] } },
+          count: { $sum: 1 },
         },
       },
     ]);
@@ -311,6 +335,8 @@ export const breakdownService = {
       pod_title: pod.pod_title,
       coins_redeemed_total: coinTotals?.redeemed ?? 0,
       coins_earned_total: coinTotals?.earned ?? 0,
+      refunded_total: round2(refundTotals?.total ?? 0),
+      refunded_count: refundTotals?.count ?? 0,
       settlement_status: settlementStatus,
       frozen,
       bookings_count: bookings,
@@ -326,7 +352,9 @@ export const breakdownService = {
    * (admins are checked by the resolver before calling). */
   async canViewPodBreakdown(podDocId: string, userId: string): Promise<boolean> {
     if (!Types.ObjectId.isValid(podDocId)) return false;
-    const pod = await PodModel.findById(podDocId).select('pod_hosts_id venue_id');
+    const pod = await PodModel.findById(podDocId)
+      .select('pod_hosts_id venue_id')
+      .setOptions({ includeDeleted: true });
     if (!pod) return false;
     if (pod.pod_hosts_id.some((id) => String(id) === userId)) return true;
     if (!pod.venue_id) return false;

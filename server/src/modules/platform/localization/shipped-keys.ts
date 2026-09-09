@@ -7584,6 +7584,8 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "podDetailsPanel.podFinanceSection.live": "Live",
   "podDetailsPanel.podFinanceSection.noSettlement": "No settlement recorded for this pod yet.",
   "podDetailsPanel.podFinanceSection.pendingApproval": "Pending approval",
+  "podDetailsPanel.podFinanceSection.refunded": "Refunded to buyers",
+  "podDetailsPanel.podFinanceSection.refundedBookings": "Bookings refunded",
   "podDetailsPanel.podFinanceSection.settled": "Settled",
   "podDetailsPanel.podHostsCard.hosts": "Hosts",
   "podDetailsPanel.podHostsCard.primary": "Primary",

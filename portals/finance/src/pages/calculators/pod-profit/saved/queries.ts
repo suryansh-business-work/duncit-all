@@ -19,6 +19,12 @@ const CALCULATOR_FIELDS = `
     host_commission_percent
     venue_commission_percent
     club_admin_percent
+    expenses {
+      expense_key
+      label
+      amount
+      borne_by
+    }
   }
 `;
 

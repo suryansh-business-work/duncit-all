@@ -9,6 +9,7 @@ import { notifyError, notifySuccess, useConfirm } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
 import MultiPodAccordion from './MultiPodAccordion';
 import TotalsCard from '../saved/TotalsCard';
+import ComparisonChartsPanel from '../charts/ComparisonChartsPanel';
 import ReportActions from '../saved/ReportActions';
 import { useMultiPodEditor } from './useMultiPodEditor';
 import { DELETE_POD_CALCULATOR, UPDATE_POD_CALCULATOR } from '../saved/queries';
@@ -161,6 +162,10 @@ export default function MultiPodEditor({ saved, onClose, onSaved }: Readonly<Pro
       </Box>
 
       <TotalsCard totals={editor.totals} />
+
+      {editor.rows.length > 0 && (
+        <ComparisonChartsPanel rows={editor.rows} totals={editor.totals} />
+      )}
     </Stack>
   );
 }

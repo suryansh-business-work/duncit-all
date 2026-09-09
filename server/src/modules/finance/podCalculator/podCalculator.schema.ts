@@ -5,6 +5,14 @@
  * lives here and both shapes interpolate it. Two hand-kept copies drift, and
  * the failure is silent: the client keeps sending a field the type no longer
  * returns, or reads one the input never accepted.
+ *
+ * It stops at the expense list, which is the one field whose TYPE differs
+ * between the two shapes — an output type cannot appear in an input. That line
+ * is written out beside each shape instead of parameterising this block:
+ * `scripts/verify-gql-schema.mjs` reads these files as TEXT and resolves only a
+ * bare ${CONSTANT}, so turning this into a function call made it SKIP the whole
+ * block, and every podCalculator field silently vanished from the schema every
+ * client document is validated against.
  */
 const POD_FIELDS = `
     pod_key: String!
@@ -21,9 +29,30 @@ const POD_FIELDS = `
     club_admin_percent: Float!
 `;
 
+/** Shared by the expense type and its input, for the same reason. */
+const EXPENSE_FIELDS = `
+    expense_key: String!
+    label: String!
+    "Cost for ONE pod. The pod_count projection multiplies it."
+    amount: Float!
+    "DUNCIT, HOST or VENUE — anything else is stored as DUNCIT."
+    borne_by: String!
+`;
+
 export const podCalculatorTypeDefs = /* GraphQL */ `
+  """
+  One cost line against a pod.
+
+  It is not a share of the collection: the side named in borne_by pays it out of
+  what it was already paid, so every payout above stays put and only that side's
+  net is smaller.
+  """
+  type PodCalculatorExpense {${EXPENSE_FIELDS}  }
+
   "One pod inside a saved calculation — the Pod Profit Calculator's inputs, named identically."
-  type PodCalculatorPod {${POD_FIELDS}  }
+  type PodCalculatorPod {${POD_FIELDS}    "Costs against ONE pod, each charged to the side that carries it."
+    expenses: [PodCalculatorExpense!]!
+  }
 
   """
   A saved calculation in the Finance portal's Pod Profit Calculator.
@@ -46,7 +75,11 @@ export const podCalculatorTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
-  input PodCalculatorPodInput {${POD_FIELDS}  }
+  input PodCalculatorExpenseInput {${EXPENSE_FIELDS}  }
+
+  input PodCalculatorPodInput {${POD_FIELDS}    "Costs against ONE pod, each charged to the side that carries it."
+    expenses: [PodCalculatorExpenseInput!]!
+  }
 
   input SavePodCalculatorInput {
     name: String!

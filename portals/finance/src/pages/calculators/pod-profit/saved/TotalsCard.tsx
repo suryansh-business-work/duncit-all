@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import FunctionsIcon from '@mui/icons-material/Functions';
 import { useTranslation } from '@duncit/app-settings';
 import { formatRupees } from '../types';
@@ -63,6 +63,40 @@ export default function TotalsCard({ totals }: Readonly<{ totals: PodTotals }>) 
             size="lg"
           />
         </Stack>
+
+        {/* Only once something has actually been spent: a row of zeroes would
+            imply a cost was recorded and came to nothing. */}
+        {totals.expense_total > 0 && (
+          <>
+            <Divider sx={{ my: 2 }} />
+            <Stack direction="row" spacing={3} useFlexGap sx={{ flexWrap: 'wrap' }}>
+              <PodStat
+                label={t('finance.calculators.totalExpenses')}
+                value={formatRupees(totals.expense_total)}
+                tone="warning"
+                size="lg"
+              />
+              <PodStat
+                label={t('finance.calculators.duncitNet')}
+                value={formatRupees(totals.duncit_net)}
+                tone={totals.duncit_net < 0 ? 'warning' : 'primary'}
+                size="lg"
+              />
+              <PodStat
+                label={t('finance.calculators.venueNet')}
+                value={formatRupees(totals.venue_net)}
+                tone={totals.venue_net < 0 ? 'warning' : 'success'}
+                size="lg"
+              />
+              <PodStat
+                label={t('finance.calculators.hostNet')}
+                value={formatRupees(totals.host_net)}
+                tone={totals.host_net < 0 ? 'warning' : 'success'}
+                size="lg"
+              />
+            </Stack>
+          </>
+        )}
       </CardContent>
     </Card>
   );

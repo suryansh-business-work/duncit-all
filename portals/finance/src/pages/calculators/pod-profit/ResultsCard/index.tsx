@@ -3,6 +3,8 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { formatRupees, type PodProfitResults } from '../types';
 import { useTranslation } from '@duncit/app-settings';
 import { Row, SectionLabel, type Emphasis } from './Row';
+import CostsSection from './CostsSection';
+import ProjectedSection from './ProjectedSection';
 
 interface Props {
   results: PodProfitResults;
@@ -127,41 +129,16 @@ export default function ResultsCard({ results }: Readonly<Props>) {
           detail={t('finance.calculators.remainingPoolDetail')}
         />
 
-        {projected && (
-          <>
-            <Divider sx={{ my: 1 }} />
-            <SectionLabel text={t('finance.calculators.acrossAllPods')} />
-            <Row
-              label={t('finance.calculators.totalNumberOfPods')}
-              value={String(scaled.pod_count)}
-              detail={t('finance.calculators.everyFigureBelowTimesCount')}
-            />
-            <Row
-              label={t('finance.calculators.totalCollection')}
-              value={formatRupees(scaled.collection_total)}
-            />
-            <Row
-              label={t('finance.calculators.duncitRevenue')}
-              value={formatRupees(scaled.duncit_revenue_total)}
-              emphasis="primary"
-            />
-            <Row
-              label={t('finance.calculators.venueReceives')}
-              value={formatRupees(scaled.venue_receives)}
-              emphasis="success"
-            />
-            <Row
-              label={t('finance.calculators.hostReceives')}
-              value={formatRupees(scaled.host_receives)}
-              emphasis={hostEmphasis}
-            />
-            <Row
-              label={t('finance.calculators.gst')}
-              value={formatRupees(scaled.gst_amount)}
-              emphasis="warning"
-            />
-          </>
-        )}
+        {projected && <ProjectedSection scaled={scaled} hostEmphasis={hostEmphasis} />}
+
+        <CostsSection
+          expenses={results.expenses}
+          expenseTotal={results.expense_total}
+          venueNet={results.venue_net}
+          hostNet={results.host_net}
+          duncitNet={results.duncit_net}
+          withIntro
+        />
 
         <Divider sx={{ my: 1 }} />
         <Row label={t('finance.calculators.reconcilesToCollection')} value={formatRupees(results.reconciled_total)} />

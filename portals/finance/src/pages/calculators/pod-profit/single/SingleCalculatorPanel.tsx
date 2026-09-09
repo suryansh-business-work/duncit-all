@@ -9,7 +9,9 @@ import { notifyError, notifySuccess, useConfirm } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/app-settings';
 import PodInputsCard from '../PodInputsCard';
 import VenueHostCard from '../VenueHostCard';
+import ExpensesCard from '../ExpensesCard';
 import ResultsCard from '../ResultsCard';
+import PodChartsPanel from '../charts/PodChartsPanel';
 import ReportActions from '../saved/ReportActions';
 import { calculatePodProfit } from '../calculate';
 import { CREATE_POD_CALCULATOR, DELETE_POD_CALCULATOR, UPDATE_POD_CALCULATOR } from '../saved/queries';
@@ -131,11 +133,18 @@ export default function SingleCalculatorPanel({ saved, onOpen, onSaved }: Readon
         <Stack spacing={2} sx={{ flex: 1, minWidth: 0, width: '100%' }}>
           <PodInputsCard inputs={calc.inputs} onChange={calc.setInput} />
           <VenueHostCard inputs={calc.inputs} onChange={calc.setInput} />
+          <ExpensesCard
+            expenses={calc.inputs.expenses}
+            totals={results.expenses}
+            onChange={calc.setInput}
+          />
         </Stack>
         <Box sx={{ width: { xs: '100%', lg: 360 }, flexShrink: 0 }}>
           <ResultsCard results={results} />
         </Box>
       </Stack>
+
+      <PodChartsPanel results={results} />
     </Stack>
   );
 }

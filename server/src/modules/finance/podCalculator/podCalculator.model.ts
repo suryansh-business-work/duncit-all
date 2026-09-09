@@ -23,6 +23,25 @@ export type PodCalculatorKind = (typeof POD_CALCULATOR_KINDS)[number];
  * whose fields are all non-null, and a document written before a field existed
  * would otherwise resolve null and take the whole query down with it.
  */
+/**
+ * Who pays for an expense out of their own money.
+ *
+ * An expense is not a share of the collection — it is a cost the side carrying
+ * it pays from what it was already paid — so the waterfall never moves and the
+ * reconciliation still holds. It only decides whose NET is smaller.
+ */
+export const EXPENSE_BEARERS = ['DUNCIT', 'HOST', 'VENUE'] as const;
+export type ExpenseBearer = (typeof EXPENSE_BEARERS)[number];
+
+/** One cost line against a pod. `amount` is per pod, like `venue_amount`. */
+export interface IPodCalculatorExpense {
+  /** Stable per-row key, minted by the client so React keys survive a save. */
+  expense_key: string;
+  label: string;
+  amount: number;
+  borne_by: ExpenseBearer;
+}
+
 export interface IPodCalculatorPod {
   /** Stable per-row key, minted by the client so React keys survive a save. */
   pod_key: string;
@@ -37,6 +56,8 @@ export interface IPodCalculatorPod {
   host_commission_percent: number;
   venue_commission_percent: number;
   club_admin_percent: number;
+  /** Costs against ONE pod, each charged to the side that carries it. */
+  expenses: IPodCalculatorExpense[];
 }
 
 export interface IPodCalculator extends Document {
@@ -48,6 +69,16 @@ export interface IPodCalculator extends Document {
   created_at: Date;
   updated_at: Date;
 }
+
+const expenseSchema = new Schema<IPodCalculatorExpense>(
+  {
+    expense_key: { type: String, required: true },
+    label: { type: String, default: '', trim: true, maxlength: 120 },
+    amount: { type: Number, default: 0, min: 0 },
+    borne_by: { type: String, enum: EXPENSE_BEARERS, default: 'DUNCIT' },
+  },
+  { _id: false }
+);
 
 const podSchema = new Schema<IPodCalculatorPod>(
   {
@@ -62,6 +93,7 @@ const podSchema = new Schema<IPodCalculatorPod>(
     host_commission_percent: { type: Number, default: 0, min: 0, max: 100 },
     venue_commission_percent: { type: Number, default: 0, min: 0, max: 100 },
     club_admin_percent: { type: Number, default: 0, min: 0, max: 100 },
+    expenses: { type: [expenseSchema], default: [] },
   },
   { _id: false }
 );

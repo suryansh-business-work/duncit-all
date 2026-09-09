@@ -5,8 +5,11 @@ import { generatePodCalculatorPdf } from '@services/calculator/pod-calculator.pd
 import { sendEmail } from '@services/email/email.service';
 import {
   PodCalculatorModel,
+  EXPENSE_BEARERS,
   POD_CALCULATOR_KINDS,
+  type ExpenseBearer,
   type IPodCalculator,
+  type IPodCalculatorExpense,
   type IPodCalculatorPod,
   type PodCalculatorKind,
 } from './podCalculator.model';
@@ -27,7 +30,18 @@ const EMAIL = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
 /** A projection multiplier, not a booking — bounded so the report stays sane. */
 const MAX_POD_COUNT = 1000;
 
+/** Ceiling on ONE pod's cost lines, for the same reason MAX_PODS exists. */
+const MAX_EXPENSES = 30;
+
 const KIND_SET = new Set<string>(POD_CALCULATOR_KINDS);
+const BEARER_SET = new Set<string>(EXPENSE_BEARERS);
+
+interface ExpenseInput {
+  expense_key?: string | null;
+  label?: string | null;
+  amount?: number | null;
+  borne_by?: string | null;
+}
 
 interface PodInput {
   pod_key?: string | null;
@@ -41,6 +55,7 @@ interface PodInput {
   host_commission_percent?: number | null;
   venue_commission_percent?: number | null;
   club_admin_percent?: number | null;
+  expenses?: ExpenseInput[] | null;
 }
 
 export interface SavePodCalculatorInput {
@@ -57,6 +72,15 @@ const percent = (value: number | null | undefined) =>
   Math.min(100, Math.max(0, Math.round((Number(value) || 0) * 100) / 100));
 const count = (value: number | null | undefined) => Math.max(0, Math.round(Number(value) || 0));
 
+function expensePub(expense: IPodCalculatorExpense) {
+  return {
+    expense_key: expense.expense_key,
+    label: expense.label ?? '',
+    amount: expense.amount ?? 0,
+    borne_by: expense.borne_by ?? 'DUNCIT',
+  };
+}
+
 function podPub(pod: IPodCalculatorPod) {
   return {
     pod_key: pod.pod_key,
@@ -70,6 +94,9 @@ function podPub(pod: IPodCalculatorPod) {
     host_commission_percent: pod.host_commission_percent ?? 0,
     venue_commission_percent: pod.venue_commission_percent ?? 0,
     club_admin_percent: pod.club_admin_percent ?? 0,
+    // A pod saved before expenses existed has no array at all, and the field is
+    // non-null in the schema — the whole query would fail on the null.
+    expenses: (pod.expenses ?? []).map(expensePub),
   };
 }
 
@@ -91,6 +118,20 @@ function toPub(doc: IPodCalculator) {
  * percentage over 100 or a negative ticket would print a nonsense payout on
  * every screen and every PDF that later opens the calculation.
  */
+/** The same re-derivation for the cost lines, including the bearer: an unknown
+ * one becomes DUNCIT rather than being dropped, so a mistyped value shows up on
+ * screen in the wrong column instead of quietly leaving money out of the total. */
+function sanitiseExpenses(expenses: ExpenseInput[] | null | undefined): IPodCalculatorExpense[] {
+  return (expenses ?? []).slice(0, MAX_EXPENSES).map((expense, index) => ({
+    expense_key: text(expense.expense_key, 64) || `expense-${index + 1}`,
+    label: text(expense.label, 120),
+    amount: money(expense.amount),
+    borne_by: (BEARER_SET.has(String(expense.borne_by))
+      ? expense.borne_by
+      : 'DUNCIT') as ExpenseBearer,
+  }));
+}
+
 function sanitisePods(pods: PodInput[] | null | undefined): IPodCalculatorPod[] {
   return (pods ?? []).slice(0, MAX_PODS).map((pod, index) => ({
     pod_key: text(pod.pod_key, 64) || `pod-${index + 1}`,
@@ -104,6 +145,7 @@ function sanitisePods(pods: PodInput[] | null | undefined): IPodCalculatorPod[] 
     host_commission_percent: percent(pod.host_commission_percent),
     venue_commission_percent: percent(pod.venue_commission_percent),
     club_admin_percent: percent(pod.club_admin_percent),
+    expenses: sanitiseExpenses(pod.expenses),
   }));
 }
 

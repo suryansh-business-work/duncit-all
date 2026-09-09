@@ -6,6 +6,7 @@ import {
   type DuncitColumn,
   type TableFetch,
   type TableFilterValue,
+  type TableQuerySnapshot,
 } from '@duncit/table';
 import { ENV_COLOR, envOptions, UserCell } from '../../components/telemetry-identity';
 import { type TelemetryLevel, type TelemetryLogRow } from './queries';
@@ -54,6 +55,16 @@ interface Props {
   fetchRows: TableFetch<TelemetryLogRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
   onOpen: (row: TelemetryLogRow) => void;
+  /** DuncitTable's checkbox column, for the bulk delete above the table. */
+  selection: {
+    onChange: (rows: TelemetryLogRow[]) => void;
+    clearRef: MutableRefObject<(() => void) | null>;
+  };
+  /**
+   * Reports the query behind the rows — WITH the pinned level filter, which is
+   * why a delete from the error tab can never reach an info log.
+   */
+  onQueryChange: (snapshot: TableQuerySnapshot) => void;
   toolbarActions?: ReactNode;
 }
 
@@ -70,6 +81,8 @@ export default function LogsTable({
   fetchRows,
   refetchRef,
   onOpen,
+  selection,
+  onQueryChange,
   toolbarActions,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -191,6 +204,8 @@ export default function LogsTable({
       refetchRef={refetchRef}
       onRowClick={onOpen}
       externalFilters={levelFilter}
+      selection={selection}
+      onQueryChange={onQueryChange}
       toolbarActions={toolbarActions}
     />
   );

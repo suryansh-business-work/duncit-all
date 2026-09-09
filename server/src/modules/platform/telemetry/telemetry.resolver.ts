@@ -1,4 +1,9 @@
-import { telemetryService } from './telemetry.service';
+import {
+  telemetryDeleteIsUnscoped,
+  telemetryService,
+  type TelemetryDeleteScope,
+  type TelemetryDeleteTarget,
+} from './telemetry.service';
 import type { TableQueryInput } from '@utils/table-query';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
@@ -8,9 +13,9 @@ const TELEMETRY_READ = ['SUPER_ADMIN', 'TECH_MANAGER'];
 const TELEMETRY_WRITE = ['SUPER_ADMIN', 'TECH_MANAGER'];
 
 /**
- * Emptying the whole bug history is not a scoped mistake — nothing restores it.
- * That is narrower than "can triage bugs", so it is held by the one account
- * that answers for the platform (mirrors deleteAllEmailLogs).
+ * Emptying a whole telemetry collection is not a scoped mistake — nothing
+ * restores it. That is narrower than "can triage bugs", so it is held by the
+ * one account that answers for the platform (mirrors deleteAllEmailLogs).
  */
 const DELETE_ALL_ROLES = ['SUPER_ADMIN'];
 
@@ -64,6 +69,14 @@ export const telemetryResolvers = {
       requireRole(ctx, TELEMETRY_READ);
       return telemetryService.logsExport(args.level, args.limit);
     },
+    telemetryDeleteCount: (
+      _p: unknown,
+      args: { target: TelemetryDeleteTarget; scope: TelemetryDeleteScope },
+      ctx: GraphQLContext,
+    ) => {
+      requireRole(ctx, TELEMETRY_READ);
+      return telemetryService.telemetryDeleteCount(args.target, args.scope);
+    },
   },
   Mutation: {
     updateTelemetrySettings: (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
@@ -84,9 +97,22 @@ export const telemetryResolvers = {
       const actor = requireRole(ctx, TELEMETRY_WRITE);
       return telemetryService.deleteBugs(args.ids, actor);
     },
-    deleteAllBugs: (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
-      const actor = requireRole(ctx, DELETE_ALL_ROLES);
-      return telemetryService.deleteAllBugs(actor);
+    /**
+     * The role a delete needs is decided by WHAT IT COVERS, not by which button
+     * sent it: anything narrowed — ticked rows, a filtered view, a date window —
+     * is triage, and only a scope that narrows nothing is the unrecoverable act
+     * DELETE_ALL_ROLES guards. The predicate comes from the same function that
+     * builds the filter, so the gate and the delete can never read the scope
+     * differently.
+     */
+    deleteTelemetryRecords: (
+      _p: unknown,
+      args: { target: TelemetryDeleteTarget; scope: TelemetryDeleteScope },
+      ctx: GraphQLContext,
+    ) => {
+      const actor = requireRole(ctx, TELEMETRY_WRITE);
+      if (telemetryDeleteIsUnscoped(args.target, args.scope)) requireRole(ctx, DELETE_ALL_ROLES);
+      return telemetryService.deleteTelemetryRecords(args.target, args.scope, actor);
     },
     importBugs: (
       _p: unknown,
@@ -107,7 +133,7 @@ export const telemetryResolvers = {
     /**
      * Rotating the feed key is not a scoped mistake either: every copied URL
      * — a monitor, a script, somebody's bookmark — dies the moment it lands.
-     * Same reasoning as deleteAllBugs, so the same single account holds it.
+     * Same reasoning as an unscoped delete, so the same single account holds it.
      */
     rotateTelemetryApiKey: (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
       const actor = requireRole(ctx, DELETE_ALL_ROLES);

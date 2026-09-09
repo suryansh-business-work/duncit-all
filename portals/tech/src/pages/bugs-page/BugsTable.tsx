@@ -2,7 +2,12 @@ import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Chip, Stack, Tooltip, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import {
+  DuncitTable,
+  type DuncitColumn,
+  type TableFetch,
+  type TableQuerySnapshot,
+} from '@duncit/table';
 import { UserCell } from '../../components/telemetry-identity';
 import { STATUS_OPTIONS, affectedSummary, statusColor, type BugRow } from './queries';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
@@ -56,6 +61,8 @@ interface Props {
     onChange: (rows: BugRow[]) => void;
     clearRef: MutableRefObject<(() => void) | null>;
   };
+  /** Reports the query behind the rows, so a bulk delete can name that set. */
+  onQueryChange: (snapshot: TableQuerySnapshot) => void;
   toolbarActions?: ReactNode;
 }
 
@@ -65,6 +72,7 @@ export default function BugsTable({
   onOpen,
   onDelete,
   selection,
+  onQueryChange,
   toolbarActions,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -152,6 +160,7 @@ export default function BugsTable({
       refetchRef={refetchRef}
       onRowClick={onOpen}
       selection={selection}
+      onQueryChange={onQueryChange}
       toolbarActions={toolbarActions}
     />
   );

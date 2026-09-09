@@ -31,6 +31,7 @@ export type {
   TableFilterOp,
   TableFilterValue,
   TablePage,
+  TableQuerySnapshot,
   TableQueryState,
   TableSortDir,
 } from './types';

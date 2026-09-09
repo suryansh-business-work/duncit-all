@@ -285,6 +285,40 @@ export const telemetryTypeDefs = gql`
     updated: Int!
   }
 
+  "Which telemetry collection a bulk delete acts on."
+  enum TelemetryDeleteTarget {
+    LOGS
+    BUGS
+  }
+
+  """
+  What one bulk delete covers. The three ways an operator actually clears
+  telemetry — the rows they ticked, everything a filtered view is showing, or
+  everything older than a date — expressed as one shape so all three are
+  answered by the same engine.
+
+  A scope that narrows NOTHING empties the whole collection, and is held by a
+  stricter role than a filtered one.
+  """
+  input TelemetryDeleteScope {
+    """
+    Explicit rows. When this list is present it IS the scope: a set ticked on
+    screen is not narrowed further by the view it was ticked in, and an EMPTY
+    list deletes nothing rather than falling through to everything.
+    """
+    ids: [ID!]
+    """
+    The table's own query — the same input its rows were read with, so a
+    filtered delete and the page on screen can never describe different sets.
+    Paging and sorting inside it are ignored; a delete has no page.
+    """
+    query: TableQueryInput
+    "Inclusive lower bound on the row's date (logs: created_at, bugs: last_seen_at)."
+    from: String
+    "Exclusive upper bound — everything before this instant."
+    to: String
+  }
+
   extend type Query {
     telemetrySettings: TelemetrySettings!
     telemetryDashboard(range_days: Int): TelemetryDashboard!
@@ -303,6 +337,11 @@ export const telemetryTypeDefs = gql`
     complete would time out instead of producing anything.
     """
     telemetryLogsExport(level: String, limit: Int): [TelemetryLog!]!
+    """
+    How many rows a bulk delete would take, so the dialog can state the number
+    before the button instead of after it.
+    """
+    telemetryDeleteCount(target: TelemetryDeleteTarget!, scope: TelemetryDeleteScope!): Int!
   }
 
   extend type Mutation {
@@ -311,10 +350,13 @@ export const telemetryTypeDefs = gql`
     "Delete the given bugs. Returns how many actually went."
     deleteBugs(ids: [ID!]!): Int!
     """
-    Delete every bug ever rolled up — the whole collection, not a filtered view.
-    Deleting a filtered set is what deleteBugs is for.
+    Delete telemetry rows by ticked ids, by a table's own filters, or by a date
+    window. Returns how many actually went.
+
+    A scope that narrows nothing empties the collection and needs SUPER_ADMIN;
+    anything narrower is a TECH_MANAGER's to run.
     """
-    deleteAllBugs: Int!
+    deleteTelemetryRecords(target: TelemetryDeleteTarget!, scope: TelemetryDeleteScope!): Int!
     "Upsert bugs from an export file, matched on fingerprint."
     importBugs(bugs: [BugImportInput!]!): BugImportResult!
     "Load logs from an export file, matched on the id each row carries."

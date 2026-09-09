@@ -1,6 +1,11 @@
-import { useMemo, type MutableRefObject } from 'react';
+import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Chip, Typography } from '@mui/material';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import {
+  DuncitTable,
+  type DuncitColumn,
+  type TableFetch,
+  type TableQuerySnapshot,
+} from '@duncit/table';
 import { ENV_COLOR, envOptions, UserCell } from '../../components/telemetry-identity';
 import { ERROR_MODULE_FILTER, parseIssueData, type ErrorLogRow } from './queries';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';
@@ -47,9 +52,27 @@ interface Props {
   fetchRows: TableFetch<ErrorLogRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
   onOpen: (row: ErrorLogRow) => void;
+  /** DuncitTable's checkbox column, for the bulk delete above the table. */
+  selection: {
+    onChange: (rows: ErrorLogRow[]) => void;
+    clearRef: MutableRefObject<(() => void) | null>;
+  };
+  /**
+   * Reports the query behind the rows — WITH the pinned error-module marker, so
+   * a delete from this page can never reach a log the module never wrote.
+   */
+  onQueryChange: (snapshot: TableQuerySnapshot) => void;
+  toolbarActions?: ReactNode;
 }
 
-export default function ErrorLogsTable({ fetchRows, refetchRef, onOpen }: Readonly<Props>) {
+export default function ErrorLogsTable({
+  fetchRows,
+  refetchRef,
+  onOpen,
+  selection,
+  onQueryChange,
+  toolbarActions,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<ErrorLogRow>[]>(
     () => [
@@ -116,6 +139,9 @@ export default function ErrorLogsTable({ fetchRows, refetchRef, onOpen }: Readon
       refetchRef={refetchRef}
       onRowClick={onOpen}
       externalFilters={ERROR_MODULE_FILTER}
+      selection={selection}
+      onQueryChange={onQueryChange}
+      toolbarActions={toolbarActions}
     />
   );
 }

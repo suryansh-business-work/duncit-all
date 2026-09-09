@@ -33,7 +33,13 @@ import { useTranslation } from './i18n';
 import { SelectionCheckbox, SelectionHeaderCheckbox } from './SelectionCheckbox';
 import { buildAgTheme } from './theme';
 import { DuncitTableToolbar } from './toolbar/DuncitTableToolbar';
-import type { DuncitColumn, TableFetch, TableFilterValue, TableSortDir } from './types';
+import type {
+  DuncitColumn,
+  TableFetch,
+  TableFilterValue,
+  TableQuerySnapshot,
+  TableSortDir,
+} from './types';
 import { useTablePrefs } from './useTablePrefs';
 import { useTableQuery } from './useTableQuery';
 
@@ -182,6 +188,20 @@ interface DuncitTableProps<T> {
   // Opt in to a checkbox column. Absent means no selection config reaches the grid at
   // all, which is what every table that never asked for it keeps getting.
   selection?: DuncitTableSelection<T>;
+  /**
+   * The query the grid is showing, and how many rows match it server-side.
+   * Fires whenever either changes.
+   *
+   * Selection can only ever hand back rows the grid HAS (see the note on
+   * handleSelectionChanged). An action that has to cover the rest — "delete
+   * every row matching this view", which reaches pages nobody has loaded — can
+   * only name that set by the query behind it, and can only say how big it is
+   * from the server's own count. This is that pair.
+   *
+   * Pass a stable callback (useCallback): a fresh identity each render would
+   * fire the effect below on every render.
+   */
+  onQueryChange?: (snapshot: TableQuerySnapshot) => void;
 }
 
 /** Server-driven table: MUI chrome (toolbar/progress/error/pagination), AG Grid rows only. */
@@ -202,6 +222,7 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
     updateRowRef,
     externalFilters,
     selection,
+    onQueryChange,
   } = props;
   const { t } = useTranslation();
   const table = useTableQuery({
@@ -254,6 +275,14 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
       updateRowRef.current = null;
     };
   }, [updateRowRef, updateRow]);
+
+  // The applied query, not `table.query`: a page that pins its own filters (a
+  // level tab, an error-module marker) must hand out a scope that carries them,
+  // or an action on "everything matching this view" would reach past the view.
+  const { appliedQuery, total } = table;
+  useEffect(() => {
+    onQueryChange?.({ query: appliedQuery, total });
+  }, [onQueryChange, appliedQuery, total]);
 
   /*
    * Date cells read the admin's pattern inside their value getter, and the

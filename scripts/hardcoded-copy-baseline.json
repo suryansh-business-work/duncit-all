@@ -837,7 +837,6 @@
   "portals/tech/src/pages/app-builds/queries.ts": 1,
   "portals/tech/src/pages/AuthenticationPage.tsx": 1,
   "portals/tech/src/pages/bug-detail-page/index.tsx": 1,
-  "portals/tech/src/pages/bugs-page/BugBulkBar.tsx": 2,
   "portals/tech/src/pages/bugs-page/BugDetailBody.tsx": 2,
   "portals/tech/src/pages/bugs-page/BugImportExport.tsx": 1,
   "portals/tech/src/pages/bugs-page/BugOccurrences.tsx": 1,

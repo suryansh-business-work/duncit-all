@@ -1043,6 +1043,54 @@ export const TECH_BUNDLE: NestedCatalogue = {
       signedOut: 'Signed out',
       staging: 'Staging',
     },
+    telemetryDelete: {
+      openButton: 'Delete rows…',
+      titleLogs: 'Delete telemetry logs',
+      titleBugs: 'Delete bugs',
+      scopeFiltered:
+        'This view is filtered, so a delete here reaches only the rows it is showing — on every page, not just this one.',
+      scopeEverything:
+        'Nothing is narrowing this view, so the range is the entire collection.',
+      windowLabel: 'Narrow by date',
+      windowHint:
+        'Leave a side empty for no bound: a To date on its own deletes everything before it, a From date on its own everything after it.',
+      from: 'From',
+      to: 'To',
+      presetOlder7: 'Older than 7 days',
+      presetOlder30: 'Older than 30 days',
+      presetOlder90: 'Older than 90 days',
+      presetNoLimit: 'No date limit',
+      counting: 'Counting the rows in range…',
+      countFailed: 'The rows in range could not be counted, so nothing is deleted from here yet.',
+      // Count-driven copy, as sibling .one / .other rows: a staff console that
+      // says "Deleted 1 rows" reads like a bug in the thing that just deleted
+      // something permanently.
+      willDelete: {
+        one: '{count} row is in range and will be deleted permanently.',
+        other: '{count} rows are in range and will be deleted permanently.',
+      },
+      willDeleteNone: 'Nothing is in range — there is nothing here to delete.',
+      rangeInverted: 'From is after To, so nothing falls between them.',
+      everythingWarning:
+        'This empties the collection: no filter and no date is narrowing it, and there is no undo.',
+      everythingRoleNote:
+        'A delete this wide is a Super Admin’s to run. Narrow it with a filter, a search or a date first.',
+      deleteAction: { one: 'Delete {count} row', other: 'Delete {count} rows' },
+      deleted: { one: 'Deleted {count} row', other: 'Deleted {count} rows' },
+      selectedOnThisPage: '{count} selected on this page',
+      selectAllMatching: 'Select all {count} matching this view',
+      allMatchingSelected: 'All {count} rows matching this view are selected',
+      confirmSelectedTitle: 'Delete the selected rows?',
+      confirmSelectedBody: {
+        one: 'The row ticked on this page will be deleted permanently. Nothing else is touched.',
+        other:
+          'The {count} rows ticked on this page will be deleted permanently. Nothing else is touched.',
+      },
+      confirmAllTitle: 'Delete every row matching this view?',
+      confirmAllBody:
+        'All {count} rows matching the current search and filters will be deleted permanently — including the ones on pages nobody has opened. There is no undo.',
+      rangeHintShift: 'Tip: hold Shift while ticking to take everything between two rows.',
+    },
     telemetryLogs: {
       event: 'Event',
       locale: 'Locale',

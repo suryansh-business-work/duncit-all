@@ -32,6 +32,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       saved: 'Saved',
       deleted: 'Deleted',
       close: 'Close',
+      clear: 'Clear',
       view: 'View',
       edit: 'Edit',
       copy: 'Copy',

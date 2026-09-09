@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Chip, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import {
@@ -10,6 +10,7 @@ import {
   formatDateCell,
   tableQueryToGql,
   type DuncitColumn,
+  type TableQuerySnapshot,
   type TableQueryState,
 } from '@duncit/table';
 import { defineDemo, defineDemos } from '../types';
@@ -114,6 +115,76 @@ function RowUpdateDemo({ rows, update }: Readonly<{ rows: MeetingRowMock[]; upda
   );
 }
 
+interface ScopeRowMock {
+  id: string;
+  pod: string;
+  city: string;
+}
+
+interface ScopeMock {
+  rows: ScopeRowMock[];
+}
+
+const scopeRowId = (row: ScopeRowMock) => row.id;
+
+const SCOPE_COLUMNS: DuncitColumn<ScopeRowMock>[] = [
+  { field: 'id', headerName: 'Pod', width: 150 },
+  { field: 'pod', headerName: 'Title', flex: 1, minWidth: 180 },
+  { field: 'city', headerName: 'City', width: 130 },
+];
+
+/**
+ * The two halves of a bulk action, side by side.
+ *
+ * `selection` reports what is TICKED — this page only, however many pages the
+ * query matches. `onQueryChange` reports the query and the server's total, which
+ * is the only way to name the rows the grid has never loaded. A destructive
+ * action picks one: ids when rows were ticked, the query when the operator asked
+ * for everything matching.
+ *
+ * Search or page through it and watch the two disagree — that disagreement is
+ * the entire reason the second prop exists.
+ */
+function BulkScopeDemo({ rows }: Readonly<{ rows: ScopeRowMock[] }>) {
+  const [ticked, setTicked] = useState<ScopeRowMock[]>([]);
+  const [view, setView] = useState<TableQuerySnapshot | null>(null);
+  const clearRef = useRef<(() => void) | null>(null);
+  const fetchRows = useMemo(
+    () => clientTableFetch(rows, (row) => `${row.pod} ${row.city} ${row.id}`),
+    [rows],
+  );
+  const selection = useMemo(() => ({ onChange: setTicked, clearRef }), []);
+  const onQueryChange = useCallback((snapshot: TableQuerySnapshot) => setView(snapshot), []);
+  const total = view?.total ?? 0;
+
+  return (
+    <Stack spacing={1.5}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+        <Chip size="small" label={`Ticked on this page: ${ticked.length}`} />
+        <Chip size="small" color="primary" label={`Matching this view: ${total}`} />
+        <DuncitButton size="small" onClick={() => clearRef.current?.()}>
+          Clear ticks
+        </DuncitButton>
+      </Stack>
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+        {ticked.length > 0
+          ? `Scope: { ids: [${ticked.map((row) => row.id).join(', ')}] }`
+          : `Scope: { query: ${JSON.stringify(view ? tableQueryToGql(view.query).query.filters : [])}, search: ${JSON.stringify(view?.query.search ?? '')} } — ${total} rows`}
+      </Typography>
+      <DuncitTable<ScopeRowMock>
+        tableId="docs-demo-bulk-scope"
+        columns={SCOPE_COLUMNS}
+        fetchRows={fetchRows}
+        getRowId={scopeRowId}
+        defaultPageSize={10}
+        selection={selection}
+        onQueryChange={onQueryChange}
+        emptyText="No pods"
+      />
+    </Stack>
+  );
+}
+
 export default defineDemos('table', [
   defineDemo<QueryMock>({
     id: 'query',
@@ -168,6 +239,30 @@ export default defineDemos('table', [
       update: { id: 'm1', request_no: 'DUN-MTG-4821', applicant: 'Asha Nair', status: 'DONE' },
     },
     render: (mock) => <RowUpdateDemo rows={mock.rows} update={mock.update} />,
+  }),
+
+  defineDemo<ScopeMock>({
+    id: 'bulk-scope',
+    title: 'Ticked rows, and the rows nobody has loaded',
+    note:
+      'Twelve pods at ten a page. Tick a couple and the scope is their ids; clear the ticks and it becomes the query plus the server’s total, which covers page two as well. Shift-click a second checkbox to take everything between it and the last one you ticked. Type in the search box and watch the total move while the ticks stay where they were — that gap is why a bulk delete has to choose between the two rather than pretend selection covers both.',
+    mock: {
+      rows: [
+        { id: 'DUN-POD-4821', pod: 'Sunday Badminton Doubles', city: 'Bengaluru' },
+        { id: 'DUN-POD-4822', pod: 'Evening Football 5s', city: 'Bengaluru' },
+        { id: 'DUN-POD-4823', pod: 'Badminton Beginners', city: 'Bengaluru' },
+        { id: 'DUN-POD-4824', pod: 'Morning Cricket Nets', city: 'Hyderabad' },
+        { id: 'DUN-POD-4825', pod: 'Box Cricket Doubles', city: 'Hyderabad' },
+        { id: 'DUN-POD-4826', pod: 'Table Tennis Ladder', city: 'Pune' },
+        { id: 'DUN-POD-4827', pod: 'Sunrise Yoga', city: 'Pune' },
+        { id: 'DUN-POD-4828', pod: 'Terrace Chess Club', city: 'Mumbai' },
+        { id: 'DUN-POD-4829', pod: 'Weekend Trek: Rajmachi', city: 'Mumbai' },
+        { id: 'DUN-POD-4830', pod: 'Board Game Night', city: 'Delhi' },
+        { id: 'DUN-POD-4831', pod: 'Pickleball Rally', city: 'Delhi' },
+        { id: 'DUN-POD-4832', pod: 'Sunday Badminton Singles', city: 'Chennai' },
+      ],
+    },
+    render: (mock) => <BulkScopeDemo rows={mock.rows} />,
   }),
 
   defineDemo<RowsMock>({

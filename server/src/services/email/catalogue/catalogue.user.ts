@@ -185,10 +185,11 @@ export const USER_EMAILS: readonly EmailDef[] = [
   defineEmail({
     slug: 'user-pod-feedback',
     name: 'Pod Feedback Request',
-    description: 'The member, after a pod they attended finishes. Asks for a rating.',
+    description:
+      'The member, after a pod they attended finishes. Asks for a rating. Not tied to the host completing the pod — a host who never gets round to it would otherwise mean nobody is ever asked.',
     audience: 'USER',
     category: 'marketing',
-    fires: 'A pod the member attended is completed',
+    fires: 'A pod the member attended has ended (the delay is set in Admin > Pods)',
     waEvent: 'USER_POD_FEEDBACK',
     subject: 'How was {{pod}}?',
     footerNote: FOOTER.podJoined,

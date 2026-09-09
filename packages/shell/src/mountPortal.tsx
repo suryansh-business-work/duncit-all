@@ -152,7 +152,13 @@ export function mountPortal(opts: MountPortalOptions): void {
             <UserProvider isAuthed={isAuthed} loadUser={loadUser} storageKey={userStorageKey ?? `${config.key}_user`}>
               <DuncitThemeProvider accent={config.accent} storageKey={config.colorModeKey} extend={themeExtend}>
                 <AppLocaleProvider fallback={fallback}>
-                  <DuncitLocalizationProvider>{withGoogle}</DuncitLocalizationProvider>
+                  {/* `timeZoneAware`, as mWeb and native already mount it: without
+                      it every portal renders dates in the VIEWER'S BROWSER zone
+                      while the server, mWeb and the app all render them in the
+                      admin's configured `time_zone` — so a pod read off Admin
+                      disagreed with the WhatsApp message and the email the
+                      server sent about the same pod (rule 11). */}
+                  <DuncitLocalizationProvider timeZoneAware>{withGoogle}</DuncitLocalizationProvider>
                 </AppLocaleProvider>
               </DuncitThemeProvider>
             </UserProvider>

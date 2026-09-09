@@ -380,13 +380,46 @@ export const whatsappAdminService = {
     return this.scenarios();
   },
 
-  /** Flip one scenario, or the global switch when `event_key` is `__global__`. */
-  async setEnabled(eventKey: string, enabled: boolean, actor?: string | null) {
-    await WaEventSettingModel.updateOne(
-      { event_key: eventKey },
-      { $set: { enabled, updated_by: actorId(actor) } },
-      { upsert: true }
+  /**
+   * Pin the cutoff of a database that switched WhatsApp on before there was a
+   * field to record it in.
+   *
+   * Those rows carry a live `enabled` and no `enabled_at`, so the sweeps would
+   * keep falling back to `updated_at` — the value whose drift is the whole
+   * reason the field exists. Copying it across once freezes it: from here the
+   * cutoff only ever moves when somebody actually flips the switch.
+   *
+   * Idempotent, and a no-op on a fresh database (there is no row yet) and on
+   * one that has been switched on since (the field is already set).
+   */
+  async seedGlobalEnabledAt() {
+    const result = await WaEventSettingModel.updateMany(
+      { event_key: WA_GLOBAL_KEY, enabled: true, enabled_at: null },
+      [{ $set: { enabled_at: '$updated_at' } }],
+      // The value being copied IS `updated_at`, so this write must not be the
+      // one that moves it.
+      { timestamps: false }
     );
+    return { pinned: result.modifiedCount };
+  },
+
+  /**
+   * Flip one scenario, or the global switch when `event_key` is `__global__`.
+   *
+   * Turning the GLOBAL switch on stamps `enabled_at`, which is the sweeps'
+   * cutoff — see the field's own note for why that is not `updated_at`. Only
+   * the off -> on transition stamps it, so re-saving "on" cannot move the
+   * cutoff and skip a reminder that was already due.
+   */
+  async setEnabled(eventKey: string, enabled: boolean, actor?: string | null) {
+    const set: Record<string, unknown> = { enabled, updated_by: actorId(actor) };
+    if (eventKey === WA_GLOBAL_KEY && enabled) {
+      const current = await WaEventSettingModel.findOne({ event_key: WA_GLOBAL_KEY })
+        .select('enabled enabled_at')
+        .lean();
+      if (!current?.enabled || !current.enabled_at) set.enabled_at = new Date();
+    }
+    await WaEventSettingModel.updateOne({ event_key: eventKey }, { $set: set }, { upsert: true });
     return this.scenarios();
   },
 

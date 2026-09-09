@@ -59,10 +59,10 @@ const podFeedback = (input: {
   defineEmail({
     slug: input.slug,
     name: input.name,
-    description: `The ${input.who}, after a pod finishes. Asks how it went.`,
+    description: `The ${input.who}, after a pod finishes. Asks how it went. Anchored on the pod ENDING, not on the host completing it.`,
     audience: input.audience,
     category: 'marketing',
-    fires: `A pod the ${input.who} was part of is completed`,
+    fires: `A pod the ${input.who} was part of has ended (the delay is set in Admin > Pods)`,
     waEvent: input.waEvent,
     subject: 'How did {{pod}} go?',
     footerNote: input.footer,

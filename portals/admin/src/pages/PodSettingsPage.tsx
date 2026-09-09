@@ -4,6 +4,7 @@ import { Box, Divider, Snackbar, Stack, Typography } from '@mui/material';
 import { PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 import PodLifecycleSettings from './pod-settings/PodLifecycleSettings';
+import PodReminderSettings from './pod-settings/PodReminderSettings';
 import AutoPodSettings from './pod-settings/AutoPodSettings';
 import RequestChangeSettings from './pod-settings/RequestChangeSettings';
 import { POD_SETTINGS, UPDATE_POD_SETTINGS } from './pod-settings/queries';
@@ -12,9 +13,10 @@ import { POD_SETTINGS, UPDATE_POD_SETTINGS } from './pod-settings/queries';
  * Admin > Pods > Pod Settings — the platform defaults every pod is created
  * and run under.
  *
- * Three groups, each its own file: the pod's own lifecycle (drafts, backouts,
+ * Four groups, each its own file: the pod's own lifecycle (drafts, backouts,
  * venue cancellations, attendance verification, the auto-cancel sweep), the
- * Auto Pods windows, and the Request Change deductions. The page itself is the
+ * windows the reminder sweeps fire on, the Auto Pods windows, and the Request
+ * Change deductions. The page itself is the
  * query, the save and the order they appear in — anything more and it passes
  * the 200-line ceiling (rule 9), which is exactly what happened before.
  *
@@ -51,6 +53,8 @@ export default function PodSettingsPage() {
       </Box>
 
       <PodLifecycleSettings {...section} />
+      <Divider />
+      <PodReminderSettings {...section} />
       <Divider />
       <AutoPodSettings {...section} />
       <Divider />

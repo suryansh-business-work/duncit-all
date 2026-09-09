@@ -16,6 +16,24 @@ export interface IWaEventSetting {
   event_key: string;
   enabled: boolean;
   /**
+   * When the GLOBAL switch was last turned ON — the sweeps' cutoff, and null on
+   * every scenario row.
+   *
+   * The cutoff used to be this row's `updated_at`, which is the same value
+   * only for as long as the switch is the only thing on the row. It is not: the
+   * platform default header assets live here too, and saving one under
+   * Marketing > WhatsApp > Settings moved the cutoff to that moment — which
+   * silently blacked out every sweep anchored on a PAST edge (the complete-pod
+   * nudge, all four feedback asks) for hours, because their window ends before
+   * a cutoff of "now" begins.
+   *
+   * Stamped only by `setEnabled`, and only on the off -> on transition, so the
+   * documented behaviour survives: pausing the product and resuming it moves
+   * the cutoff forward, and the pause is a gap rather than a backlog that fires
+   * the moment the switch returns.
+   */
+  enabled_at: Date | null;
+  /**
    * Meta's category for the campaign's template, refreshed by the console's
    * reconcile. Cached here because it decides the per-message RATE, and reading
    * it from AiSensy on every send would put a network call in front of every
@@ -111,6 +129,7 @@ const waEventSettingSchema = new Schema<IWaEventSetting>(
   {
     event_key: { type: String, required: true, unique: true, trim: true },
     enabled: { type: Boolean, default: true },
+    enabled_at: { type: Date, default: null },
     template_category: { type: String, default: '' },
     media_url: { type: String, default: '' },
     media_filename: { type: String, default: '' },

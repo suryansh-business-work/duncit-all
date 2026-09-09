@@ -60,7 +60,16 @@ function proven(candidate: string, fallback: string, tryZone: string, tryPattern
   }
 }
 
-/** Refresh the cached settings — on boot, and whenever an admin saves them. */
+/**
+ * Refresh the cached settings — on boot, and whenever an admin saves them.
+ *
+ * It says what it settled on, at info, both times. Every date this process
+ * prints for a person is read in these three values and nothing else, so when a
+ * booking email or a WhatsApp reminder quotes the wrong hour there are exactly
+ * two candidates: the instant stored on the document, or this. Without the line
+ * the second one can only be ruled out by reading the database by hand — which
+ * is how a container running on UTC went unnoticed through forty call sites.
+ */
 export function setAppTimeSettings(input: AppTimeSettings | null | undefined): void {
   if (input?.time_zone !== undefined) {
     const next = (input.time_zone ?? '').trim() || DEFAULT_APP_ZONE;
@@ -74,6 +83,15 @@ export function setAppTimeSettings(input: AppTimeSettings | null | undefined): v
     const next = (input.time_format ?? '').trim() || DEFAULT_TIME_FORMAT;
     timeFormat = proven(next, DEFAULT_TIME_FORMAT, zone, next);
   }
+  logs.server.info('app-time', 'setAppTimeSettings', {
+    zone,
+    dateFormat,
+    timeFormat,
+    // The same instant in both clocks: a line that reads "13:30Z -> 07:00 PM"
+    // needs no second thought, and one that reads "13:30Z -> 01:30 PM" names
+    // the bug on sight.
+    sample: `${new Date().toISOString()} -> ${appDateTime(new Date())}`,
+  });
 }
 
 /** The IANA zone every printed time is read in. */

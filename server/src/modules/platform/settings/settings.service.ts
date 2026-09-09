@@ -47,6 +47,18 @@ const DEFAULT_POD_COMPLETE_TIMEOUT_HOURS = 24;
 /** Hours after a pod ends when the host is reminded to complete it — half the
  * default window, so the nudge lands with time left to act on it. */
 const DEFAULT_POD_COMPLETE_REMINDER_HOURS = 12;
+/** Hours before a pod starts when its attendees are reminded. A day: long
+ * enough to rearrange an evening around, close enough that the pod is still
+ * what the reminder is about. */
+const DEFAULT_POD_REMINDER_LEAD_HOURS = 24;
+/** Hours before the requested slot when a venue sitting on an unanswered
+ * request is chased — two days, so the host still has time to find another
+ * venue if the answer is no. */
+const DEFAULT_VENUE_SLOT_REMINDER_LEAD_HOURS = 48;
+/** Hours after a pod ends before everyone who was there is asked how it went.
+ * An hour, so the ask lands after people have left rather than while the last
+ * game is still on. */
+const DEFAULT_POD_FEEDBACK_DELAY_HOURS = 1;
 /** Days of free slots a venue is offered when accepting an Auto Pod — short,
  * because the host and the club admin still need time to enrol before the date. */
 const DEFAULT_AUTO_POD_SLOT_WINDOW_DAYS = 7;
@@ -93,6 +105,22 @@ const cleanPodCompleteTimeoutHours = (value: unknown) =>
 /** When the complete-pod reminder goes out, clamped to 1 hour – 1 year. */
 const cleanPodCompleteReminderHours = (value: unknown) =>
   Math.min(8760, Math.max(1, Math.floor(Number(value)) || DEFAULT_POD_COMPLETE_REMINDER_HOURS));
+
+/** Pod reminder lead, clamped to 1 hour – 1 year. */
+const cleanPodReminderLeadHours = (value: unknown) =>
+  Math.min(8760, Math.max(1, Math.floor(Number(value)) || DEFAULT_POD_REMINDER_LEAD_HOURS));
+
+/** Venue slot-request chase lead, clamped to 1 hour – 1 year. */
+const cleanVenueSlotReminderLeadHours = (value: unknown) =>
+  Math.min(8760, Math.max(1, Math.floor(Number(value)) || DEFAULT_VENUE_SLOT_REMINDER_LEAD_HOURS));
+
+/** Feedback delay, clamped to 0 hours – 1 year. 0 is a legal value here (ask
+ * the moment the pod ends), so this cannot use the `|| DEFAULT` idiom above —
+ * that would silently turn a saved 0 back into 1. */
+const cleanPodFeedbackDelayHours = (value: unknown) => {
+  const n = Math.floor(Number(value));
+  return Number.isFinite(n) ? Math.min(8760, Math.max(0, n)) : DEFAULT_POD_FEEDBACK_DELAY_HOURS;
+};
 
 /** Auto Pod slot window, clamped to 1 – 60 days. */
 const cleanAutoPodSlotWindowDays = (value: unknown) =>
@@ -151,6 +179,11 @@ const toAppPub = (d: any) => ({
   attendance_otp_required: d?.attendance_otp_required ?? DEFAULT_ATTENDANCE_OTP_REQUIRED,
   pod_complete_timeout_hours: cleanPodCompleteTimeoutHours(d?.pod_complete_timeout_hours),
   pod_complete_reminder_hours: cleanPodCompleteReminderHours(d?.pod_complete_reminder_hours),
+  pod_reminder_lead_hours: cleanPodReminderLeadHours(d?.pod_reminder_lead_hours),
+  venue_slot_reminder_lead_hours: cleanVenueSlotReminderLeadHours(
+    d?.venue_slot_reminder_lead_hours,
+  ),
+  pod_feedback_delay_hours: cleanPodFeedbackDelayHours(d?.pod_feedback_delay_hours),
   pod_cancel_refund_hold: d?.pod_cancel_refund_hold ?? DEFAULT_POD_CANCEL_REFUND_HOLD,
   pod_auto_cancel_enabled: d?.pod_auto_cancel_enabled ?? DEFAULT_POD_AUTO_CANCEL_ENABLED,
   pod_auto_cancel_lead_hours:
@@ -486,6 +519,9 @@ type AppSettingsUpdateInput = {
   pod_cancel_refund_hold?: boolean;
   pod_complete_timeout_hours?: number;
   pod_complete_reminder_hours?: number;
+  pod_reminder_lead_hours?: number;
+  venue_slot_reminder_lead_hours?: number;
+  pod_feedback_delay_hours?: number;
   pod_auto_cancel_enabled?: boolean;
   pod_auto_cancel_lead_hours?: number;
   pod_cancel_risk_window_hours?: number;
@@ -545,6 +581,14 @@ const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
     update.pod_complete_reminder_hours = cleanPodCompleteReminderHours(
       input.pod_complete_reminder_hours,
     );
+  if (input.pod_reminder_lead_hours !== undefined)
+    update.pod_reminder_lead_hours = cleanPodReminderLeadHours(input.pod_reminder_lead_hours);
+  if (input.venue_slot_reminder_lead_hours !== undefined)
+    update.venue_slot_reminder_lead_hours = cleanVenueSlotReminderLeadHours(
+      input.venue_slot_reminder_lead_hours,
+    );
+  if (input.pod_feedback_delay_hours !== undefined)
+    update.pod_feedback_delay_hours = cleanPodFeedbackDelayHours(input.pod_feedback_delay_hours);
   if (input.pod_auto_cancel_lead_hours !== undefined)
     update.pod_auto_cancel_lead_hours = cleanPodAutoCancelLeadHours(
       input.pod_auto_cancel_lead_hours,
@@ -630,6 +674,35 @@ export const settingsService = {
     return {
       timeout_hours: cleanPodCompleteTimeoutHours(doc?.pod_complete_timeout_hours),
       reminder_hours: cleanPodCompleteReminderHours(doc?.pod_complete_reminder_hours),
+    };
+  },
+
+  /**
+   * Every clock the WhatsApp/email reminder sweeps run on, in ONE read.
+   *
+   * The sweeps fire five scenarios off four settings, and they used to hold
+   * three of them as constants in the scheduler while the shipped email copy
+   * told the admin the window was theirs to set. Returned together because a
+   * single tick needs all of them, and because the complete-pod nudge has to
+   * quote the same deadline `attendanceLock` enforces — two reads are two
+   * chances for them to disagree.
+   */
+  async getReminderSweepSettings(): Promise<{
+    pod_reminder_lead_hours: number;
+    venue_slot_reminder_lead_hours: number;
+    pod_feedback_delay_hours: number;
+    complete_reminder_hours: number;
+    complete_timeout_hours: number;
+  }> {
+    const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
+    return {
+      pod_reminder_lead_hours: cleanPodReminderLeadHours(doc?.pod_reminder_lead_hours),
+      venue_slot_reminder_lead_hours: cleanVenueSlotReminderLeadHours(
+        doc?.venue_slot_reminder_lead_hours,
+      ),
+      pod_feedback_delay_hours: cleanPodFeedbackDelayHours(doc?.pod_feedback_delay_hours),
+      complete_reminder_hours: cleanPodCompleteReminderHours(doc?.pod_complete_reminder_hours),
+      complete_timeout_hours: cleanPodCompleteTimeoutHours(doc?.pod_complete_timeout_hours),
     };
   },
 

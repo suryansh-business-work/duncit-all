@@ -42,6 +42,19 @@ export interface IAppSettings extends Document {
    * `pod_complete_timeout_hours` — a nudge that lands after the deadline is a
    * notification about money the host has already lost. */
   pod_complete_reminder_hours: number;
+  /** How many hours BEFORE a pod starts its attendees are reminded over email
+   * and WhatsApp (Admin > Pods > Pod Settings). The sweep looks for pods
+   * crossing this mark, so raising it moves every future reminder earlier. */
+  pod_reminder_lead_hours: number;
+  /** How many hours before the requested slot a venue still sitting on an
+   * unanswered pod slot request is chased (Admin > Pods > Pod Settings). Wider
+   * than the pod reminder on purpose: the venue's answer is what decides
+   * whether the pod happens at all. */
+  venue_slot_reminder_lead_hours: number;
+  /** How many hours after a pod ENDS everyone who was there — guests, host,
+   * venue and club admins — is asked how it went (Admin > Pods > Pod
+   * Settings). 0 asks the moment it ends. */
+  pod_feedback_delay_hours: number;
   /** Whether a cancellation HOLDS its refunds until the pod's own start time
    * instead of paying them out immediately (Admin > Pods > Pod Settings).
    *
@@ -123,6 +136,9 @@ const appSettingsSchema = new Schema<IAppSettings>(
     attendance_otp_required: { type: Boolean, default: true },
     pod_complete_timeout_hours: { type: Number, default: 24, min: 1, max: 8760 },
     pod_complete_reminder_hours: { type: Number, default: 12, min: 1, max: 8760 },
+    pod_reminder_lead_hours: { type: Number, default: 24, min: 1, max: 8760 },
+    venue_slot_reminder_lead_hours: { type: Number, default: 48, min: 1, max: 8760 },
+    pod_feedback_delay_hours: { type: Number, default: 1, min: 0, max: 8760 },
     pod_cancel_refund_hold: { type: Boolean, default: false },
     pod_auto_cancel_enabled: { type: Boolean, default: false },
     pod_auto_cancel_lead_hours: { type: Number, default: 24, min: 1, max: 8760 },

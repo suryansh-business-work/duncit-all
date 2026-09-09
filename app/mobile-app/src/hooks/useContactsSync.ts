@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
-import * as Contacts from 'expo-contacts';
+import { Contact, ContactField, requestPermissionsAsync } from 'expo-contacts';
 import { contactEntriesFromPhoneBook } from '@duncit/utils';
+import { logs } from '@duncit/logs';
 
 import { SyncContactsDocument } from '@/graphql/contacts';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -8,13 +9,23 @@ import { graphqlRequest } from '@/services/graphql.client';
 /** Why a sync did not happen — mapped to copy by the screen, never shown raw. */
 export type ContactsSyncFailure = 'DENIED' | 'FAILED';
 
+/** The two fields a sync reads. Everything else in a phone book — addresses,
+ * birthdays, notes — is none of Duncit's business and is never asked for. */
+const READ_FIELDS = [ContactField.FULL_NAME, ContactField.PHONES] as const;
+
 /**
  * Ask for the contacts permission, read the phone book and sync it.
  *
+ * Reads through expo-contacts' CLASS-BASED API (`Contact.getAllDetails`). The
+ * legacy `getContactsAsync` is still exported from the package root in SDK 57
+ * but THROWS at runtime, which is what turned an allowed permission into
+ * "Your contacts could not be synced" on every device.
+ *
  * Numbers are reduced to their comparable key on the device
  * (`contactEntriesFromPhoneBook`) so the phone book itself never travels — the
- * server keeps only the accounts the keys matched. Twin of mWeb's
- * `useContactsSync` (rule 27), which reads through the browser's picker instead.
+ * server keeps only the accounts the keys matched, plus the unmatched keys the
+ * invite list is built from. Twin of mWeb's `useContactsSync` (rule 27), which
+ * reads through the browser's picker instead.
  */
 export function useContactsSync(onSynced: () => Promise<unknown>) {
   const [busy, setBusy] = useState(false);
@@ -24,23 +35,22 @@ export function useContactsSync(onSynced: () => Promise<unknown>) {
     setFailure(null);
     setBusy(true);
     try {
-      const permission = await Contacts.requestPermissionsAsync();
-      if (permission.status !== 'granted') {
+      const permission = await requestPermissionsAsync();
+      if (!permission.granted) {
         setFailure('DENIED');
         return;
       }
-      const { data } = await Contacts.getContactsAsync({
-        fields: [Contacts.Fields.Name, Contacts.Fields.PhoneNumbers],
-      });
+      const people = await Contact.getAllDetails(READ_FIELDS);
       const entries = contactEntriesFromPhoneBook(
-        data.map((contact) => ({
-          name: contact.name ?? '',
-          phones: (contact.phoneNumbers ?? []).map((phone) => phone.number),
+        people.map((person) => ({
+          name: person.fullName ?? '',
+          phones: person.phones.map((phone) => phone.number ?? ''),
         })),
       );
       await graphqlRequest(SyncContactsDocument, { entries }, { auth: true });
       await onSynced();
-    } catch {
+    } catch (error) {
+      logs.mobileApp.error('useContactsSync', 'request', { error });
       setFailure('FAILED');
     } finally {
       setBusy(false);

@@ -228,6 +228,11 @@ exports:
   - 'RADAR_RING_CAPACITY'
   - 'RADAR_MAX_ITEMS'
   - 'CONTACT_KEY_MIN_DIGITS'
+  - 'pendingInviteKeys'
+  - 'toggleInviteKey'
+  - 'inviteOutcomeKey'
+  - 'invitableName'
+  - 'isInvited'
   - 'isVerifiablePhoneShape'
   - 'OTP_PHONE_MIN_DIGITS'
   - 'locationMismatch'
@@ -845,6 +850,9 @@ inside the pod window (`joinPodMeeting`, recorded as method `VIRTUAL_JOIN`).
 | `phoneKey` | `(...parts) => string` | Digits only, last ten past ten — so `+91 98765 43210`, `919876543210` and `9876543210` compare equal. |
 | `contactEntriesFromPhoneBook` | `(people: PhoneBookPerson[]) => ContactEntry[]` | The phone book as `syncContacts` entries — one per distinct `phoneKey`, first name seen kept, numbers under `CONTACT_KEY_MIN_DIGITS` digits dropped. |
 | `radarPositions` | `(items: RadarItem[]) => Map<id, RadarPoint>` | Concentric-ring layout for Your Contacts on Duncit: nearby people on the inner rings (`RADAR_RINGS`, `RADAR_RING_CAPACITY`), `x`/`y` as fractions of the radar width; past `RADAR_MAX_ITEMS` a person is listed, not plotted. |
+| `pendingInviteKeys` / `isInvited` / `invitableName` | `(rows) => string[]` / `(row) => boolean` / `(row) => string` | The invite half of the same page: who is still to be asked (what "Invite all" sends), whether one number has already been texted, and what a row is called when the phone book saved no name. |
+| `toggleInviteKey` | `(selected, key) => string[]` | One key in or out of the tick-box selection, as a NEW array — a mutated one is the reference React skips re-rendering. |
+| `inviteOutcomeKey` | `(result) => string` | Which sentence a press earns: sent, failed, or held back. Both surfaces read the copy key from here so they cannot disagree about which it was.
 | `isVerifiablePhoneShape` / `OTP_PHONE_MIN_DIGITS` | `(value) => boolean` / `10` | Long enough to be worth a WhatsApp code. `isOtpPhoneShape` still accepts six digits — that is what the record stores, not what a code should be spent on. |
 | `needsOtp` | `(board) => boolean` | HOST viewer AND `otp_required`. The Club Admin is never *required* to send a code — their board offers it as one of two doors. |
 | `canScanTickets` | `(board) => boolean` | HOST viewer AND `can_mark` AND not `VIRTUAL`. False hides the scan CTA. |

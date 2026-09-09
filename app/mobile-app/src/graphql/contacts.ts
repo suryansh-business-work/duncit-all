@@ -36,6 +36,7 @@ export const MyContactsSyncDocument = gql(`
       synced_at
       submitted
       matched
+      invitable
     }
     me {
       user_id
@@ -52,7 +53,32 @@ export const SyncContactsDocument = gql(`
       submitted
       matched
       new_matches
+      invitable
       synced_at
+    }
+  }
+`);
+
+/** The phone-book numbers that reached nobody — who an invite is for. */
+export const ContactsToInviteDocument = gql(`
+  query MobileContactsToInvite($search: String) {
+    contactsToInvite(search: $search) {
+      phone_key
+      contact_label
+      invited_at
+    }
+  }
+`);
+
+/** Text an invite to one contact, to the ticked ones, or to everyone still
+ * waiting — an empty list means everyone. */
+export const InviteContactsDocument = gql(`
+  mutation MobileInviteContacts($phone_keys: [String!]) {
+    inviteContacts(phone_keys: $phone_keys) {
+      requested
+      sent
+      skipped
+      failed
     }
   }
 `);

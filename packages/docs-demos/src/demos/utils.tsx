@@ -13,6 +13,11 @@ import {
   allZero,
   buildOrderTimeline,
   fulfilmentFlow,
+  invitableName,
+  inviteOutcomeKey,
+  isInvited,
+  pendingInviteKeys,
+  toggleInviteKey,
   fulfilmentLabel,
   isTerminalFulfilment,
   statusLabel,
@@ -55,6 +60,7 @@ import {
   commChannelSummary,
   commRowState,
   contactDetailsComplete,
+  contactEntriesFromPhoneBook,
   contactDraftFrom,
   contactDraftIsUnchanged,
   contactDraftValue,
@@ -269,6 +275,14 @@ interface HostSectionsMock {
 
 /** A pod's money, as the host sizing it sees it. */
 /** One employee expense claim, as both consoles read it back. */
+interface ContactInviteMock {
+  phone_book: { name: string; phones: string[] }[];
+  already_invited: string[];
+  ticked: string[];
+  sent: number;
+  failed: number;
+}
+
 interface ClaimMock {
   category: string;
   status: string;
@@ -1374,6 +1388,40 @@ export default defineDemos('utils', [
         'Status filter rows': podRowStatusOptions(clubAdminT).map((option) => option.label),
         'Audit entry reads': `${podAuditActionLabel(mock.audit.action, clubAdminT)} by ${podAuditSourceLabel(mock.audit.source, clubAdminT)} — AI risk ${podAuditRiskLabel(mock.audit.ai_risk, clubAdminT)}`,
         'Dashboard subtitle': clubAdminLabels(clubAdminT).dashboard.subtitle,
+      };
+    },
+  }),
+
+  defineDemo<ContactInviteMock>({
+    id: 'contact-invite',
+    title: 'Your Contacts on Duncit — the invite half',
+    note:
+      'The phone book is reduced to comparable keys ON THE DEVICE, so the numbers themselves never travel. Move a number into already_invited and it drops out of what "Invite all" sends — one invite per number, for good. Set sent to 0 and the outcome key flips to the failed or held-back sentence, which is why both surfaces read it from here.',
+    mock: {
+      phone_book: [
+        { name: 'Ritu Malhotra', phones: ['+91 98765 43210'] },
+        { name: 'Karan Bhatia', phones: ['09876543211', '9876543211'] },
+        { name: '', phones: ['98765 43212'] },
+      ],
+      already_invited: ['9876543211'],
+      ticked: ['9876543210'],
+      sent: 2,
+      failed: 0,
+    },
+    compute: (mock) => {
+      const entries = contactEntriesFromPhoneBook(mock.phone_book);
+      const rows = entries.map((entry) => ({
+        phone_key: entry.phone_key,
+        contact_label: entry.label,
+        invited_at: mock.already_invited.includes(entry.phone_key) ? '2026-09-01T10:00:00Z' : null,
+      }));
+      const [firstKey = ''] = rows.map((row) => row.phone_key);
+      return {
+        'What leaves the device': entries.map((entry) => `${entry.phone_key} (${entry.label || 'no name'})`),
+        'Rows read as': rows.map((row) => `${invitableName(row)} — ${isInvited(row) ? 'invited' : 'waiting'}`),
+        'Invite all sends': pendingInviteKeys(rows),
+        'Ticking the first row again': toggleInviteKey(mock.ticked, firstKey),
+        'Sentence the press earns': inviteOutcomeKey({ sent: mock.sent, failed: mock.failed }),
       };
     },
   }),

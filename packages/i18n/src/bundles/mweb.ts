@@ -3702,6 +3702,28 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       noMatchesForSearch: 'No contacts match your search.',
       noneNearby: 'None of your contacts are in your city yet.',
       savedAs: 'Saved as {label}',
+      // The third tab: the phone-book numbers that reached nobody, and the
+      // three ways to ask them — one row, the ticked ones, everyone waiting.
+      filterInvite: 'Invite',
+      toInvite: {
+        one: '{count} contact is not on Duncit yet.',
+        other: '{count} contacts are not on Duncit yet.',
+      },
+      inviteBody:
+        'These contacts are not on Duncit yet. Invite them on WhatsApp — when they join with your link you both earn Duncit Coins.',
+      notOnDuncitYet: 'Not on Duncit yet',
+      invite: 'Invite',
+      invited: 'Invited',
+      selectFor: 'Select {name}',
+      inviteSelected: 'Invite selected ({count})',
+      inviteAll: 'Invite all ({count})',
+      invitesSent: {
+        one: '{count} invite sent on WhatsApp.',
+        other: '{count} invites sent on WhatsApp.',
+      },
+      invitesSkipped: 'Nobody was invited — they have all been invited already, or invites are switched off.',
+      invitesFailed: 'Those invites could not be sent. Please try again.',
+      everyoneIsHere: 'Everyone in your contacts is already on Duncit.',
       clear: 'Remove synced contacts',
       clearConfirmTitle: 'Remove synced contacts?',
       clearConfirmBody:

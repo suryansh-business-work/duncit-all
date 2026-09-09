@@ -640,6 +640,14 @@ export const WA_EVENTS: readonly WaEvent[] = [
     params: ['Recipient name', 'Pod', 'Date', 'Time', 'Club', 'Club Studio Link'],
   },
   {
+    key: 'USER_CONTACT_INVITE',
+    campaign: 'contact_invite',
+    audience: 'USER',
+    category: 'marketing',
+    fires: 'A member invites a phone contact who is not on Duncit yet',
+    params: ['Recipient name', 'Inviter name', 'Coins', 'Invite Link'],
+  },
+  {
     key: 'SUPPORT_TICKET_CREATED',
     campaign: 'support_ticket_created',
     audience: 'SUPPORT',

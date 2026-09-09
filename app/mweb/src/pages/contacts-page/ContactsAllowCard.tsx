@@ -51,6 +51,15 @@ export default function ContactsAllowCard({ status, supported, busy, failure, on
           <Typography variant="body2" data-testid="contacts-sync-summary">
             {summary}
           </Typography>
+          {status && status.invitable > 0 && (
+            <Typography
+              variant="body2"
+              data-testid="contacts-invite-summary"
+              sx={{ color: 'text.secondary' }}
+            >
+              {t('mweb.contacts.toInvite', { count: status.invitable })}
+            </Typography>
+          )}
           {supported ? (
             <DuncitButton
               variant="contained"

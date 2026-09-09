@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { ContactMatchModel, ContactSyncModel } from './contacts.model';
+import { ContactInviteModel, ContactMatchModel, ContactSyncModel } from './contacts.model';
+import { keysOfUser, recordInvitable } from './contacts.invite';
 import { UserModel } from '@modules/access/user/user.model';
 import { publicProfilesFromDocs } from '@modules/access/profile/profile.resolver';
 import { phoneKey } from '@utils/phone';
@@ -128,16 +129,22 @@ export const contactsService = {
       contact_id: { $nin: hits.map((hit) => hit._id) },
     });
 
+    // Everyone the phone book reached who is NOT here — the invite list. Fed
+    // the same keyed book the matcher read, so the two halves cannot disagree.
+    const matchedKeys = new Set(hits.flatMap(keysOfUser));
+    const invitable = await recordInvitable(owner, keyed, matchedKeys);
+
     const synced_at = new Date();
     await ContactSyncModel.updateOne(
       { owner_id: owner },
-      { $set: { synced_at, submitted: keys.length, matched: hits.length } },
+      { $set: { synced_at, submitted: keys.length, matched: hits.length, invitable } },
       { upsert: true }
     );
     return {
       submitted: keys.length,
       matched: hits.length,
       new_matches: hits.filter((hit) => !previous.has(String(hit._id))).length,
+      invitable,
       synced_at: synced_at.toISOString(),
     };
   },
@@ -183,6 +190,7 @@ export const contactsService = {
       synced_at: row.synced_at.toISOString(),
       submitted: row.submitted ?? 0,
       matched: row.matched ?? 0,
+      invitable: row.invitable ?? 0,
     };
   },
 
@@ -190,6 +198,7 @@ export const contactsService = {
     const owner = new Types.ObjectId(userId);
     await Promise.all([
       ContactMatchModel.deleteMany({ owner_id: owner }),
+      ContactInviteModel.deleteMany({ owner_id: owner }),
       ContactSyncModel.deleteOne({ owner_id: owner }),
     ]);
     return true;

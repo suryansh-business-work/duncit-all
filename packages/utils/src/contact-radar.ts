@@ -94,3 +94,52 @@ export function radarPositions(items: readonly RadarItem[]): Map<string, RadarPo
   });
   return points;
 }
+
+/** One phone-book number that reached nobody, as `contactsToInvite` returns it. */
+export interface InvitableContact {
+  phone_key: string;
+  contact_label: string;
+  /** When an invite last went to it; null while none has. */
+  invited_at?: string | null;
+}
+
+/** Whether this number has already been texted an invite. One invite per
+ * number per inviter is the server's rule, so an invited row never sends again. */
+export const isInvited = (row: InvitableContact): boolean => Boolean(row.invited_at);
+
+/** What a row is called: the phone-book name, or the number when it has none. */
+export const invitableName = (row: InvitableContact): string =>
+  row.contact_label.trim() || row.phone_key;
+
+/** The keys still waiting — what "Invite all" sends and what a header counts. */
+export const pendingInviteKeys = (rows: readonly InvitableContact[]): string[] =>
+  rows.filter((row) => !isInvited(row)).map((row) => row.phone_key);
+
+/**
+ * One key in or out of the selection.
+ *
+ * Returned as a new array rather than mutated: both surfaces hold the selection
+ * in state, and a mutated array is the same reference React skips re-rendering.
+ */
+export function toggleInviteKey(selected: readonly string[], key: string): string[] {
+  return selected.includes(key) ? selected.filter((item) => item !== key) : [...selected, key];
+}
+
+/** What one press of Invite / Invite all reported back. */
+export interface InviteOutcome {
+  sent: number;
+  failed: number;
+}
+
+/**
+ * Which sentence an invite press earns — the copy key, not the copy.
+ *
+ * Nothing sent is not the same as nothing happening: the platform holds invites
+ * back (WhatsApp switched off, everyone already invited) as readily as AiSensy
+ * refuses them, and a silent button reads as a broken one. Both surfaces pick
+ * their line through here so they can never disagree about which it was.
+ */
+export function inviteOutcomeKey(result: InviteOutcome): string {
+  if (result.sent > 0) return 'mweb.contacts.invitesSent';
+  return result.failed > 0 ? 'mweb.contacts.invitesFailed' : 'mweb.contacts.invitesSkipped';
+}

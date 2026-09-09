@@ -3,7 +3,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { DuncitTabs, type DuncitTabsState } from '@duncit/tabs';
 import { useTranslation } from '../../i18n/useTranslation';
 
-export type ContactsScope = 'all' | 'nearby';
+export type ContactsScope = 'all' | 'nearby' | 'invite';
 
 interface Props {
   tabs: DuncitTabsState<ContactsScope>;
@@ -11,9 +11,9 @@ interface Props {
   onSearch: (value: string) => void;
 }
 
-/** The two filters the radar and the list share: everyone or only the people
- * in the viewer's city, and a name / @handle search. Twin of native
- * `ContactsFilters` (rule 27). */
+/** The three lists this page holds: everyone matched, only the matches in the
+ * viewer's city, and the contacts who are not here yet. Plus the search the
+ * three share. Twin of native `ContactsFilters` (rule 27). */
 export default function ContactsToolbar({ tabs, search, onSearch }: Readonly<Props>) {
   const { t } = useTranslation();
   return (

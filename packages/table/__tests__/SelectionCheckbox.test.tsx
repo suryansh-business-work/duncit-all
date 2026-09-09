@@ -71,6 +71,57 @@ describe('SelectionCheckbox', () => {
     unmount();
     expect(node.removeEventListener).toHaveBeenCalledWith('rowSelected', listeners.rowSelected);
   });
+
+  // The file-manager gesture: a plain tick sets the anchor, shift-click sweeps
+  // the SAME value over every placed row between the anchor and here.
+  it('shift-click applies the tick to every row between the anchor and here', () => {
+    const rows = [0, 1, 2, 3, 4].map((rowIndex) => ({ rowIndex, setSelected: vi.fn() }));
+    // A node the grid has not placed yet sits outside every range.
+    const unplaced = { rowIndex: null, setSelected: vi.fn() };
+    const api = {
+      forEachNode: (cb: (row: { rowIndex: number | null; setSelected: (v: boolean) => void }) => void) => {
+        [...rows, unplaced].forEach(cb);
+      },
+    };
+    const first = { ...makeNode(false).node, rowIndex: 1 };
+    const { unmount } = render(
+      <SelectionCheckbox {...({ node: first, api } as unknown as CustomCellRendererProps)} />,
+    );
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select row' }));
+    expect(first.setSelected).toHaveBeenCalledWith(true);
+    unmount();
+
+    const third = { ...makeNode(false).node, rowIndex: 3 };
+    render(<SelectionCheckbox {...({ node: third, api } as unknown as CustomCellRendererProps)} />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select row' }), { shiftKey: true });
+    expect(rows[1].setSelected).toHaveBeenCalledWith(true);
+    expect(rows[2].setSelected).toHaveBeenCalledWith(true);
+    expect(rows[3].setSelected).toHaveBeenCalledWith(true);
+    expect(rows[0].setSelected).not.toHaveBeenCalled();
+    expect(rows[4].setSelected).not.toHaveBeenCalled();
+    expect(unplaced.setSelected).not.toHaveBeenCalled();
+    // The range path spoke for this row; the single path did not run as well.
+    expect(third.setSelected).not.toHaveBeenCalled();
+  });
+
+  it('shift-click with no anchor yet, or on a row the grid has not placed, ticks just this row', () => {
+    const api = { forEachNode: vi.fn() };
+    const unplaced = { ...makeNode(false).node, rowIndex: null };
+    const { unmount } = render(
+      <SelectionCheckbox {...({ node: unplaced, api } as unknown as CustomCellRendererProps)} />,
+    );
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select row' }), { shiftKey: true });
+    expect(unplaced.setSelected).toHaveBeenCalledWith(true);
+    expect(api.forEachNode).not.toHaveBeenCalled();
+    unmount();
+
+    // Placed, shift held, but this api has never seen a plain tick: no anchor.
+    const placed = { ...makeNode(false).node, rowIndex: 2 };
+    render(<SelectionCheckbox {...({ node: placed, api } as unknown as CustomCellRendererProps)} />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select row' }), { shiftKey: true });
+    expect(placed.setSelected).toHaveBeenCalledWith(true);
+    expect(api.forEachNode).not.toHaveBeenCalled();
+  });
 });
 
 describe('SelectionHeaderCheckbox', () => {

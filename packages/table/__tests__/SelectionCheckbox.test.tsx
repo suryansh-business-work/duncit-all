@@ -12,6 +12,9 @@ type Listener = () => void;
 function makeNode(selected: boolean | undefined) {
   const listeners: Record<string, Listener> = {};
   const node = {
+    // Placed, like every row the real grid hands a renderer: a tick on it
+    // becomes the range anchor, which is keyed on the grid api.
+    rowIndex: 0,
     isSelected: vi.fn(() => selected),
     setSelected: vi.fn(),
     addEventListener: vi.fn((name: string, cb: Listener) => {
@@ -41,7 +44,10 @@ function makeApi(total: number, selected: number, destroyed = false) {
 }
 
 function renderRow(node: unknown) {
-  return render(<SelectionCheckbox {...({ node } as unknown as CustomCellRendererProps)} />);
+  // Every render gets its own api: the range anchor is kept per grid, so a
+  // tick in one case must not become the anchor of the next.
+  const api = { forEachNode: vi.fn() };
+  return render(<SelectionCheckbox {...({ node, api } as unknown as CustomCellRendererProps)} />);
 }
 
 function renderHeader(api: unknown) {

@@ -15,6 +15,7 @@ import CategoriesPage from './pages/CategoriesPage';
 import LocationsPage from './pages/LocationsPage';
 import ClubsPage from './pages/ClubsPage';
 import VenuesPage from './pages/VenuesPage';
+import VenueDetailsPage from './pages/VenueDetailsPage';
 import PartnersPage from './pages/PartnersPage';
 import ClubDetailsPage from './pages/ClubDetailsPage';
 import ClubEditorPage from './pages/clubs-page/club-editor-page';
@@ -76,6 +77,7 @@ export default function App() {
                 <Route path="/locations" element={<LocationsPage />} />
                 <Route path="/clubs" element={<ClubsPage />} />
                 <Route path="/venues" element={<VenuesPage />} />
+                <Route path="/venues/:venueId" element={<VenueDetailsPage />} />
                 <Route path="/partners" element={<PartnersPage />} />
                 {/* Static before dynamic so /clubs/new is never read as a club
                     id — React Router ranks it first either way, and the order

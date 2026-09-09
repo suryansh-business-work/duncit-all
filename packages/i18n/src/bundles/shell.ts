@@ -35,6 +35,8 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       view: 'View',
       edit: 'Edit',
       copy: 'Copy',
+      yes: 'Yes',
+      no: 'No',
 
       // Column headings a console repeats table after table. Only the ones
       // that carry no context of their own live here — anything that names

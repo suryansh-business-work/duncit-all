@@ -213,4 +213,14 @@ paymentSchema.index(
   { partialFilterExpression: { 'metadata.refund_hold': true } }
 );
 
+// Finance > User Refund Logs, which lists every payment carrying a refund stamp
+// newest-refund-first. PARTIAL for the same reason as the hold sweep above: the
+// refunded are a slice of every payment ever taken, and the page's own filter
+// carries this exact predicate, so the planner can sort straight off the index
+// instead of scanning the collection.
+paymentSchema.index(
+  { 'metadata.refunded_at': -1 },
+  { partialFilterExpression: { 'metadata.refunded_at': { $exists: true } } }
+);
+
 export const PaymentModel = model<IPayment>('Payment', paymentSchema);

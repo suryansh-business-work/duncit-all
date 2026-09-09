@@ -1034,6 +1034,103 @@ changeRequests: {
       colCapacity: 'Capacity',
       colLocation: 'Location',
       colOwner: 'Owner',
+      openRow: 'Open venue details',
+    },
+
+    // The read-only venue record behind a row of the Venues table. Approvals
+    // and edits stay in the Onboarding portal, so every string here labels
+    // something rather than asking for it. The booking rules, weekday names
+    // and cancellation bands are NOT repeated — they are rendered from
+    // availability.* and venueSettings.*, which the shell fallback already
+    // ships (rule 40).
+    venueDetails: {
+      eyebrow: 'Venue',
+      untitled: 'Untitled venue',
+      notFound: 'Venue not found.',
+      backAria: 'Back to venues',
+      readOnly: 'Read-only — approvals and edits are managed in the Onboarding portal.',
+
+      tabOverview: 'Overview',
+      tabPods: 'Pods',
+      tabOperations: 'Operations',
+      tabDocuments: 'Documents',
+
+      capacityChip: 'Seats {count}',
+      locationUnset: 'Location not set',
+      openInMaps: 'Open in Maps',
+      statPods: 'Pods',
+      statCapacity: 'Capacity',
+      statShare: 'Venue share',
+      statCommission: 'Commission',
+
+      about: 'About',
+      noDescription: 'No description added yet.',
+      category: 'Category',
+      spaces: 'Spaces',
+      noSpaces: 'No named spaces — the venue is booked as a whole.',
+      amenities: 'Amenities',
+      facilities: 'Facilities',
+      security: 'Security',
+      tags: 'Tags',
+      gallery: 'Gallery',
+      noGallery: 'No gallery images.',
+
+      location: 'Location',
+      address: 'Address',
+      postalCode: 'PIN code',
+      coordinates: 'Coordinates',
+
+      owner: 'Owner',
+      ownerName: 'Name',
+      ownerEmail: 'Email',
+      ownerPhone: 'Phone',
+      ownerDob: 'Date of birth',
+      ownerAddress: 'Address',
+      gstin: 'GSTIN',
+      pan: 'PAN',
+      payout: 'Payout account',
+      accountHolder: 'Account holder',
+      accountNumber: 'Account number',
+      ifsc: 'IFSC',
+      upiId: 'UPI ID',
+      noPayout: 'No payout account on file.',
+
+      record: 'Record',
+      venueNo: 'Venue ID',
+      submittedAt: 'Submitted',
+      approvedAt: 'Approved',
+      rejectedAt: 'Rejected',
+      createdAt: 'Created',
+      updatedAt: 'Last updated',
+      reviewerNotes: 'Reviewer notes',
+      noNotes: 'No reviewer notes.',
+      commercials: 'Commercials',
+
+      operatingHours: 'Operating hours',
+      hoursRange: '{open} – {close}',
+      weeklyOff: 'Weekly off',
+      noWeeklyOff: 'Open every day',
+      holidays: 'Holidays',
+      noHolidays: 'No holidays set.',
+      autoExtend: 'Auto-extend availability',
+      autoExtendOn: 'On — {days} days ahead',
+      autoExtendUntil: 'On — {days} days ahead, until {until}',
+      autoExtendOff: 'Off',
+      tierPercent: 'Within {hours}h — {value}% of the slot price',
+      tierAmount: 'Within {hours}h — {value}',
+
+      noDocuments: 'No documents uploaded.',
+      uploadedOn: 'Uploaded {date}',
+
+      podsTitle: 'Pods at this venue',
+      podsSubtitle:
+        'Every pod hosted here, live and past. The venue cannot be deleted while pods are attached.',
+      podsEmpty: 'No pods at this venue yet.',
+      colPod: 'Pod',
+      colWhen: 'When',
+      colHosts: 'Hosts',
+      colApproval: 'Venue approval',
+      colSpots: 'Spots',
     },
 
     captcha: {

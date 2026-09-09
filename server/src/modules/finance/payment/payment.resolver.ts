@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { paymentService } from './payment.service';
 import { paymentDetailService } from './payment.detail.service';
+import { paymentRefundService } from './payment.refund.service';
 import { assertCheckoutEligible } from './checkout-eligibility';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import type { GraphQLContext } from '@context';
@@ -50,6 +51,10 @@ export const paymentResolvers = {
     paymentsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_READ);
       return paymentService.table(args.query);
+    },
+    userRefundsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_READ);
+      return paymentRefundService.table(args.query);
     },
     payment: (_p: unknown, args: { payment_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_READ);

@@ -1787,7 +1787,7 @@ jobs:
               # status from `set -e`, so this gate stayed green while the server was
               # crash-looping behind a 502. On failure, say why before retrying:
               # exit code / OOM flag / restart count of both server containers, the
-              # last log lines of this stack's server, and host memory + disk.
+              # last log lines of the deploying stack, and host memory + disk.
               if ! curl -fsS http://127.0.0.1:$((2001+O))/health; then
                 echo
                 echo "::warning::server health probe failed on port $((2001+O)) — container state and last log lines follow"

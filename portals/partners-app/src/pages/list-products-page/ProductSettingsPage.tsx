@@ -149,7 +149,7 @@ export default function ProductSettingsPage() {
                   />
                 )}
               />
-              <DuncitButton type="submit" variant="contained" disabled={saving} sx={{ alignSelf: 'flex-start' }}>
+              <DuncitButton type="submit" variant="contained" loading={saving} sx={{ alignSelf: 'flex-start' }}>
                 {saving ? 'Saving...' : 'Save settings'}
               </DuncitButton>
             </Stack>

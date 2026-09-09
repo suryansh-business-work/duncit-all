@@ -15,14 +15,17 @@ import { parseApiError } from '../../utils/parseApiError';
 import { CANCEL_FOLLOW_REQUEST, FOLLOW_USER, UNFOLLOW_USER } from '../hosts-venues-page/queries';
 import ContactsAllowCard from './ContactsAllowCard';
 import ContactsBody from './ContactsBody';
+import ContactsInviteList from './ContactsInviteList';
 import ContactsRadar from './ContactsRadar';
 import ContactsToolbar, { type ContactsScope } from './ContactsToolbar';
 import { CLEAR_MY_CONTACTS, CONTACTS_ON_DUNCIT, MY_CONTACTS_SYNC, type ContactRow } from './queries';
+import { useContactsInvite } from './useContactsInvite';
 import { useContactsSync } from './useContactsSync';
 
 const scopeTabs = (t: Translate): DuncitTabItem<ContactsScope>[] => [
   { value: 'all', label: t('mweb.contacts.filterAll') },
   { value: 'nearby', label: t('mweb.contacts.filterNearby') },
+  { value: 'invite', label: t('mweb.contacts.filterInvite') },
 ];
 
 /** Your Contacts on Duncit — twin of native `ContactsScreen` (rule 27). */
@@ -43,9 +46,16 @@ export default function ContactsPage() {
   });
   const rows: ContactRow[] = list.data?.contactsOnDuncit ?? [];
 
+  const inviting = tabs.value === 'invite';
+  const invites = useContactsInvite(debouncedSearch, inviting);
+  // A resync changes both halves at once — who is here now, and who is left to
+  // ask. The invite list is only refetched while it is on screen; Apollo runs a
+  // refetch even on a skipped query, and nobody needs a phone book they are not
+  // looking at.
+  const refetchInvites = inviting ? invites.refetch : null;
   const refreshAll = useCallback(
-    () => Promise.all([syncQuery.refetch(), list.refetch()]),
-    [syncQuery, list]
+    () => Promise.all([syncQuery.refetch(), list.refetch(), refetchInvites?.()]),
+    [syncQuery, list, refetchInvites]
   );
   const sync = useContactsSync(refreshAll);
 
@@ -103,25 +113,45 @@ export default function ContactsPage() {
 
       <ContactsToolbar tabs={tabs} search={search} onSearch={setSearch} />
 
-      {rows.length > 0 && me && (
-        <ContactsRadar
-          contacts={rows}
-          me={{ name: me.full_name || me.first_name || '', photo: me.profile_photo }}
-          onOpen={openProfile}
+      {inviting ? (
+        <ContactsInviteList
+          loading={invites.loading}
+          hasData={invites.hasData}
+          error={invites.error}
+          synced={Boolean(status)}
+          searching={Boolean(debouncedSearch)}
+          rows={invites.rows}
+          selected={invites.selected}
+          busyKey={invites.busyKey}
+          bulkBusy={invites.bulkBusy}
+          onToggleSelect={invites.toggleSelect}
+          onInviteRow={invites.inviteRow}
+          onInviteSelected={invites.inviteSelected}
+          onInviteAll={invites.inviteAll}
         />
-      )}
+      ) : (
+        <>
+          {rows.length > 0 && me && (
+            <ContactsRadar
+              contacts={rows}
+              me={{ name: me.full_name || me.first_name || '', photo: me.profile_photo }}
+              onOpen={openProfile}
+            />
+          )}
 
-      <ContactsBody
-        loading={list.loading}
-        hasData={Boolean(list.data)}
-        error={list.error?.message}
-        synced={Boolean(status)}
-        scope={tabs.value}
-        searching={Boolean(debouncedSearch)}
-        rows={rows}
-        onToggleFollow={toggleFollow}
-        onOpen={openProfile}
-      />
+          <ContactsBody
+            loading={list.loading}
+            hasData={Boolean(list.data)}
+            error={list.error?.message}
+            synced={Boolean(status)}
+            scope={tabs.value}
+            searching={Boolean(debouncedSearch)}
+            rows={rows}
+            onToggleFollow={toggleFollow}
+            onOpen={openProfile}
+          />
+        </>
+      )}
 
       {status && (
         <DuncitButton

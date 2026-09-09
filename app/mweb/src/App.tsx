@@ -16,6 +16,7 @@ import PodFeedbackPrompt from './components/pod-feedback';
 import AppPopupDialog from './components/app-popup';
 import DeletionNoticeDialog from './components/DeletionNoticeDialog';
 import AppRoutes from './app/AppRoutes';
+import { AppLocationProvider } from './app/AppLocationContext';
 import { APP_SHELL_MAX_WIDTH } from './app/appLayout';
 import { useActivePing } from './app/useActivePing';
 import { useClickstreamTracking } from './app/useClickstreamTracking';
@@ -139,7 +140,9 @@ export default function App() {
           }}
         >
           <ErrorBoundary>
-            <AppRoutes superCategory={superCategory} locationId={locationId} zoneName={zoneName} />
+            <AppLocationProvider locationId={locationId} zoneName={zoneName}>
+              <AppRoutes superCategory={superCategory} locationId={locationId} zoneName={zoneName} />
+            </AppLocationProvider>
           </ErrorBoundary>
           {/* The wrapper above is a flex item with a pinned height, so its
               padding-bottom only shrinks the box a full-height page (chat) is

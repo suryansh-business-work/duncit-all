@@ -23,6 +23,9 @@ export type MeetingKind = 'VENUE' | 'HOST' | 'ECOMM';
 
 export const MEETING_KINDS: MeetingKind[] = ['VENUE', 'HOST', 'ECOMM'];
 
+/** Meeting kinds shown while the e-commerce feature is switched off. */
+export const MEETING_KINDS_WITHOUT_ECOMM: MeetingKind[] = ['VENUE', 'HOST'];
+
 export interface MeetingItem {
   kind?: string | null;
 }
@@ -74,29 +77,45 @@ export function countByKind(meetings: MeetingItem[]): MeetingCounts {
 const sumCounts = (counts: StatusCounts): number =>
   ONBOARDING_STATUSES.reduce((acc, key) => acc + counts[key], 0);
 
-/** Header KPIs: totals (hosts, venues, brands, surveys) plus pending review + approved. */
+/**
+ * Header KPIs: totals (hosts, venues, brands, surveys) plus pending review +
+ * approved. `brandCounts` is null while e-commerce is switched off — the brands
+ * total is then left out entirely and no brand ever counts toward the
+ * cross-entity tallies.
+ */
 export function buildKpis(
   hostCounts: StatusCounts,
   venueCounts: StatusCounts,
-  brandCounts: StatusCounts,
+  brandCounts: StatusCounts | null,
   surveyCount: number,
 ): DashboardKpi[] {
-  return [
+  const brands = brandCounts ?? emptyCounts();
+  const kpis: DashboardKpi[] = [
     { label: 'Total hosts', value: sumCounts(hostCounts), tone: 'default', to: '/hosts' },
     { label: 'Total venues', value: sumCounts(venueCounts), tone: 'default', to: '/venues' },
-    { label: 'Total brands', value: sumCounts(brandCounts), tone: 'default', to: '/ecomm-brands' },
+  ];
+  if (brandCounts) {
+    kpis.push({
+      label: 'Total brands',
+      value: sumCounts(brandCounts),
+      tone: 'default',
+      to: '/ecomm-brands',
+    });
+  }
+  kpis.push(
     { label: 'Total surveys', value: surveyCount, tone: 'default', to: '/surveys' },
     {
       label: 'Pending review',
-      value: hostCounts.SUBMITTED + venueCounts.SUBMITTED + brandCounts.SUBMITTED,
+      value: hostCounts.SUBMITTED + venueCounts.SUBMITTED + brands.SUBMITTED,
       tone: 'warning',
     },
     {
       label: 'Approved',
-      value: hostCounts.APPROVED + venueCounts.APPROVED + brandCounts.APPROVED,
+      value: hostCounts.APPROVED + venueCounts.APPROVED + brands.APPROVED,
       tone: 'success',
     },
-  ];
+  );
+  return kpis;
 }
 
 const monthKey = (date: Date): string => `${date.getFullYear()}-${date.getMonth()}`;

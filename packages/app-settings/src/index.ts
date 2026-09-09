@@ -4,6 +4,7 @@ export type { DuncitLocalizationProviderProps } from './DuncitLocalizationProvid
 export { PUBLIC_APP_SETTINGS, useDateFormat } from './useDateFormat';
 export type { DateInput, UseDateFormatOptions } from './useDateFormat';
 export {
+  LANGUAGE_PREFERENCE_FLAG,
   PUBLIC_FEATURE_FLAGS,
   useFeatureFlag,
   useFeatureFlagState,

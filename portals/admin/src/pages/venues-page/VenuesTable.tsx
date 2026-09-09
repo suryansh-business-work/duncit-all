@@ -1,4 +1,5 @@
-import { useMemo, type MutableRefObject } from 'react';
+import { useCallback, useMemo, type MutableRefObject } from 'react';
+import { useNavigate } from 'react-router';
 import { Chip, Typography } from '@mui/material';
 import {
   DuncitTable,
@@ -86,6 +87,10 @@ export default function VenuesTable({
   superCategoryId: string;
 }>) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  // The row opens the venue's read-only record. It is the only action on this
+  // page, so there is no actions column competing with it.
+  const openVenue = useCallback((v: VenueRow) => navigate(`/venues/${v.id}`), [navigate]);
   const columns = useMemo<DuncitColumn<VenueRow>[]>(
     () => [
       { field: 'venue_name', headerName: t('admin.venues.colVenue'), flex: 1, minWidth: 180, cellRenderer: renderVenue, valueGetter: (v) => v.venue_name },
@@ -120,6 +125,7 @@ export default function VenuesTable({
       searchPlaceholder="Search name, type, city or owner"
       externalFilters={externalFilters}
       refetchRef={refetchRef}
+      onRowClick={openVenue}
     />
   );
 }

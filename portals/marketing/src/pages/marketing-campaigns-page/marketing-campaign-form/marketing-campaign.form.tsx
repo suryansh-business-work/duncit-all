@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Grid, MenuItem, Stack } from '@mui/material';
+import { Alert, Grid, MenuItem } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
+import { FormActionsRow } from '@duncit/ui';
 import DateTimeField from '../../../components/DateTimeField';
 import { peopleCount } from '../../../lib/reach';
 import CampaignMjmlEditor from './CampaignMjmlEditor';
@@ -157,20 +157,13 @@ export default function MarketingCampaignForm({
         <Grid size={12}>
           <CampaignVariables variables={variables} unknown={unknownVariables} />
         </Grid>
-        {errorMessage && (
-          <Grid size={12}>
-            <Alert severity="error">{errorMessage}</Alert>
-          </Grid>
-        )}
-        <Grid size={12}>
-          <Stack direction="row" sx={{
-            justifyContent: "flex-end"
-          }}>
-            <DuncitButton type="submit" variant="contained" startIcon={<SendIcon />} disabled={busy || previewLoading || !formState.isValid}>
-              {scheduledAt ? 'Schedule Campaign' : 'Send Now'}
-            </DuncitButton>
-          </Stack>
-        </Grid>
+        <FormActionsRow
+          errorMessage={errorMessage}
+          busy={busy}
+          disabled={previewLoading || !formState.isValid}
+          startIcon={<SendIcon />}
+          submitLabel={scheduledAt ? 'Schedule Campaign' : 'Send Now'}
+        />
       </Grid>
     </form>
   );

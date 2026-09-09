@@ -161,7 +161,7 @@ export default function WaTestForm({
           <DuncitButton type="button" onClick={onClose} disabled={busy}>
             Cancel
           </DuncitButton>
-          <DuncitButton type="submit" variant="contained" disabled={busy || !isValid}>
+          <DuncitButton type="submit" variant="contained" loading={busy} disabled={!isValid}>
             {busy ? 'Sending…' : 'Send test'}
           </DuncitButton>
         </DialogActions>

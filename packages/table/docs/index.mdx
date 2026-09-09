@@ -41,6 +41,7 @@ exports:
   - 'EM_DASH'
   - 'DuncitColumn'
   - 'TableFetch'
+  - 'TableQuerySnapshot'
   - 'TableQueryState'
   - 'TablePage'
 ---
@@ -317,12 +318,14 @@ await fetchRows(payoutQuery);
 | `updateRowRef` | `MutableRefObject<((row: T) => void) \| null>` | no | — | Filled with a "replace this one row" fn — see [Updating one row](#updating-one-row-instead-of-the-page). |
 | `externalFilters` | `ReadonlyArray<TableFilterValue>` | no | — | Page-driven filters (tab/URL/select). Compared by value, reset to page 1, **no chip**. |
 | `selection` | `{ onChange: (rows: T[]) => void; clearRef?: MutableRefObject<(() => void) \| null> }` | no | — | Opt in to a checkbox column. Absent means no selection config reaches AG Grid at all. `onChange` gets the rows ticked **right now** (and `[]` when a page change wipes them); `clearRef` is filled with a fn that unticks the grid. See [Selection is per page, and it is a mirror](#selection-is-per-page-and-it-is-a-mirror). |
+| `onQueryChange` | `(snapshot: TableQuerySnapshot) => void` | no | — | Fires whenever the applied query or the server's total changes. The only way to name the rows selection cannot reach. Pass a `useCallback`. See [Acting on rows the grid does not have](#acting-on-rows-the-grid-does-not-have). |
 
 ### Data types
 
 | Type | Shape | Notes |
 | --- | --- | --- |
 | `TableQueryState` | `{ search: string; page: number; pageSize: number; sortBy: string \| null; sortDir: TableSortDir; filters: TableFilterValue[] }` | `page` is **1-based**; `search` is already debounced (400 ms) by the time `fetchRows` sees it. |
+| `TableQuerySnapshot` | `{ query: TableQueryState; total: number }` | What `onQueryChange` hands back: the query the table last FETCHED with (external filters included) and the server's row count for it. |
 | `TableFilterValue` | `{ field: string; op: TableFilterOp; value?: string; values?: string[] }` | `values` carries `in` lists and `between` pairs; everything is stringified (ISO for dates). |
 | `TableFilterOp` | `'eq' \| 'ne' \| 'in' \| 'contains' \| 'gte' \| 'lte' \| 'between' \| 'is_true' \| 'is_false'` | — |
 | `TablePage<T>` | `{ rows: T[]; total: number }` | `total` drives `TablePagination`, so it must be the unpaged count. |
@@ -439,6 +442,47 @@ reset. Like `refetchRef` it is nulled on unmount.
 The header checkbox is **not** "select all". AG Grid's client-side row model only holds the
 rows the server returned for the current page, so it ticks that page. Label it accordingly
 on screen.
+
+**Shift-click ticks a range.** A plain click ticks its row and becomes the anchor; holding
+Shift applies that same new value to every row between the anchor and the one clicked, so
+taking 40 of 100 rows is two clicks rather than forty. The anchor lives per grid in a
+`WeakMap`, not in React state — a cell renderer is unmounted and rebuilt as rows repaint, so
+an anchor held inside one would be gone before the second click of the range arrived. The
+anchor moves on a range too; leaving it pinned would make a second Shift-click re-sweep from
+the original row and untick what the first one just took.
+
+## Acting on rows the grid does not have
+
+`selection` can only ever hand back rows the grid HAS — one page. "Delete every row matching
+this view" covers pages nobody has opened, and the only honest way to name that set is the
+query behind it. `onQueryChange` is that pair: the applied query, and the server's count for
+it.
+
+```tsx
+const [view, setView] = useState<TableQuerySnapshot | null>(null);
+const onQueryChange = useCallback((snapshot: TableQuerySnapshot) => setView(snapshot), []);
+
+<DuncitTable<LogRow> … onQueryChange={onQueryChange} />;
+
+// "Select all 1,284 matching" acts on the QUERY, never on ids:
+await deleteRows({ variables: { scope: { query: tableQueryToGql(view.query).query } } });
+```
+
+It hands back the **applied** query — the user's search and filters PLUS the page's pinned
+`externalFilters` — because a per-level table that handed out its bare `query` would give the
+caller a scope covering every level. Strip `page` and `sortBy` before sending it: a set has
+no page and no order, and a scope that still carried `page: 3` reads as though it meant one.
+
+It is `null` until the first fetch answers, and a destructive action must stay disabled until
+then — an empty query reads as "everything".
+
+What it CANNOT see is `ApolloTableFetchOptions.extraFilters`, which the fetch bridge pins
+after the table has handed over its query. That is by design for a scope the user must never
+alter — and exactly wrong for a scope an action is about to act on. A table whose rows are
+narrowed by `extraFilters` must not hand this snapshot to a bulk action: pin that scope with
+`externalFilters` instead, so it rides along.
+
+Pass a stable callback. A fresh identity each render fires the effect behind it every render.
 
 The checkbox is **MUI's**, in a column this package prepends (`col-id="duncit-select"`), and
 AG Grid's own checkboxes are switched off (`checkboxes: false, headerCheckbox: false`). Two

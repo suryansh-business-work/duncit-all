@@ -250,10 +250,11 @@ export default function VenueReviewDialog({
               variant="outlined"
               size="small"
               onClick={saveDeductions}
-              disabled={savingDeductions || !valid(commission) || unchanged}
+              loading={savingDeductions}
+              disabled={!valid(commission) || unchanged}
               sx={{ mt: 1.5 }}
             >
-              {savingDeductions ? 'Saving…' : 'Save deductions'}
+              Save deductions
             </DuncitButton>
           </Paper>
         </Stack>

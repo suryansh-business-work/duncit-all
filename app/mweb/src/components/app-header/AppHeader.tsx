@@ -3,7 +3,13 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
 import { useUserData } from '@duncit/user-context';
 import { Alert, AppBar, Box, Chip, Stack, Toolbar } from '@mui/material';
-import { HEADER_DATA, OPEN_LOCATION_PICKER_EVENT, SET_MY_SELECTED_LOCATION } from './queries';
+import {
+  APPLY_LOCATION_EVENT,
+  HEADER_DATA,
+  OPEN_LOCATION_PICKER_EVENT,
+  SET_MY_SELECTED_LOCATION,
+  type ApplyLocationDetail,
+} from './queries';
 import HeaderGreeting from './HeaderGreeting';
 import HeaderLocationRow from './HeaderLocationRow';
 import HeaderQuickActions from './HeaderQuickActions';
@@ -110,6 +116,20 @@ export default function AppHeader({
     globalThis.addEventListener(OPEN_LOCATION_PICKER_EVENT, openLocationPicker);
     return () => globalThis.removeEventListener(OPEN_LOCATION_PICKER_EVENT, openLocationPicker);
   }, [openLocationPicker]);
+
+  // Apply a city + area another screen chose outright — the "Switch to …"
+  // button on a pod, club or venue reached from a link into another city. It
+  // lands exactly where a pick in the dialog would: state, then persisted.
+  useEffect(() => {
+    const applyLocation = (event: Event) => {
+      const { locationId, zoneName } = (event as CustomEvent<ApplyLocationDetail>).detail;
+      onLocationChange(locationId);
+      onZoneChange(zoneName);
+      persistLocation(locationId);
+    };
+    globalThis.addEventListener(APPLY_LOCATION_EVENT, applyLocation);
+    return () => globalThis.removeEventListener(APPLY_LOCATION_EVENT, applyLocation);
+  }, [onLocationChange, onZoneChange, persistLocation]);
 
   const logout = () => {
     ctxLogout();

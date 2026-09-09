@@ -181,7 +181,7 @@ export default function AiMonitoringForm({
         <Stack direction="row" sx={{
           justifyContent: "flex-end"
         }}>
-          <DuncitButton type="submit" variant="contained" disabled={submitting || !formState.isValid}>
+          <DuncitButton type="submit" variant="contained" loading={submitting} disabled={!formState.isValid}>
             {submitting ? t('shell.common.saving') : t('ai.settings.submit')}
           </DuncitButton>
         </Stack>

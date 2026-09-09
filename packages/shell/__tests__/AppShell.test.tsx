@@ -86,7 +86,9 @@ describe('AppShell', () => {
         </MemoryRouter>
       </DuncitThemeProvider>,
     );
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    // The boot wait is the shared page Loader: a live status region naming the
+    // wait, with the spinner itself hidden from the accessibility tree.
+    expect(screen.getByRole('status', { name: 'Loading…' })).toBeInTheDocument();
     expect(screen.queryByText('page-content')).not.toBeInTheDocument();
   });
 

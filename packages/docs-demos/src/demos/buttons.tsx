@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -47,6 +48,17 @@ export default defineDemos('buttons', [
         'Dropping the opacity of a filled button over a light page makes it LIGHTER, which reads as the button going away rather than going down. It darkens its own fill instead — and so does its Tamagui twin in the app.',
     }),
   }),
+  defineDemo<AsyncMock>({
+    id: 'async-click',
+    title: 'A press that waits, showing that it is waiting',
+    note: "Press Approve. Nothing here passes a `loading` prop — the button reads the answer off the handler it was already given: an `onClick` that returns a promise is an action still running. Raise `serverMs` to the two seconds a slow settlement really takes and press twice: the second press cannot land, which is the whole point. Flip `fails` — the spinner ends either way, because a button that only clears on success eventually sticks forever.",
+    mock: {
+      label: 'Approve DUN-POD-4821',
+      serverMs: 1200,
+      fails: false,
+    },
+    render: (mock) => <AsyncStage mock={mock} />,
+  }),
   defineDemo<RoundMock>({
     id: 'round-close',
     title: 'The close button that stays a circle',
@@ -64,6 +76,47 @@ interface RoundMock {
   label: string;
   tone: RoundButtonTone;
   thumbnail: number;
+}
+
+interface AsyncMock {
+  label: string;
+  serverMs: number;
+  fails: boolean;
+}
+
+/** Stands in for the mutation — the demo has no server to be slow for it. */
+const settleIn = (ms: number, fails: boolean) =>
+  new Promise<void>((resolve, reject) => {
+    setTimeout(() => (fails ? reject(new Error('Approval failed')) : resolve()), ms);
+  });
+
+/** Hoisted for the same reason as `ButtonStage`. */
+function AsyncStage({ mock }: Readonly<{ mock: AsyncMock }>) {
+  const [outcome, setOutcome] = useState('Not pressed yet.');
+  const approve = async () => {
+    setOutcome('Approving…');
+    try {
+      await settleIn(mock.serverMs, mock.fails);
+      setOutcome('Approved. The spinner ended when the promise resolved.');
+    } catch {
+      setOutcome('Failed — and the spinner ended all the same.');
+    }
+  };
+  return (
+    <Stack spacing={2}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+        <DuncitButton variant="contained" color="success" onClick={approve}>
+          {mock.label}
+        </DuncitButton>
+        <DuncitIconButton aria-label="Delete, slowly" onClick={approve}>
+          <DeleteIcon fontSize="inherit" />
+        </DuncitIconButton>
+      </Stack>
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+        {outcome}
+      </Typography>
+    </Stack>
+  );
 }
 
 /** Hoisted for the same reason as `ButtonStage`. */

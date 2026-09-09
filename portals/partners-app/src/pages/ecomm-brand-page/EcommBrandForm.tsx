@@ -240,7 +240,7 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
           <Stack direction="row" spacing={1.5} sx={{
             justifyContent: "flex-end"
           }}>
-            <DuncitButton type="submit" variant="outlined" disabled={busy}>{t('partners.ecommBrandPage.saveDraft')}</DuncitButton>
+            <DuncitButton type="submit" variant="outlined" loading={busy}>{t('partners.ecommBrandPage.saveDraft')}</DuncitButton>
             <DuncitButton type="button" variant="contained" endIcon={<SendIcon />} disabled={busy} onClick={handleSubmit(onSubmitForReview)}>
               Submit for review
             </DuncitButton>

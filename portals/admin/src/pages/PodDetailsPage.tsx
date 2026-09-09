@@ -1,10 +1,19 @@
 import {
   PodDetailsPage as SharedPodDetails,
   type PodDetailsActions,
+  type PodDetailsBanner,
   type PodDetailsViewProps,
 } from '@duncit/pod-details';
 import PodCouponsSection from './pod-coupons/PodCouponsSection';
+import PodCancellationRiskSection from './pod-details/PodCancellationRiskSection';
 import RevokeCancellationAction from './pods-page/revoke-cancellation';
+
+/** The cancellation-risk report, above everything else on the page — it
+ * renders nothing for a pod that is not at risk. Admin is the one console the
+ * `podCancellationRisk` query answers, so the section lives here. */
+const renderRiskBanner: PodDetailsBanner = (pod) => (
+  <PodCancellationRiskSection podId={pod.id} cancelled={pod.is_deleted} />
+);
 
 /** The footer the shared view calls with the pod it loaded — hoisted to module
  * scope so React keeps one component identity across renders (S6478). */
@@ -40,6 +49,7 @@ export default function AdminPodDetailsPage() {
       userTo={userTo}
       editTo={editTo}
       actions={renderPodActions}
+      banner={renderRiskBanner}
       footer={renderCouponsFooter}
     />
   );

@@ -153,7 +153,7 @@ export default function E2eSettingsForm({
         )}
 
         <Stack direction="row" sx={{ justifyContent: 'flex-end' }}>
-          <DuncitButton type="submit" variant="contained" disabled={busy}>
+          <DuncitButton type="submit" variant="contained" loading={busy}>
             {busy ? t('shell.common.saving') : t('shell.common.save')}
           </DuncitButton>
         </Stack>

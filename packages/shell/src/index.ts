@@ -32,6 +32,10 @@ export {
   type Crumb,
 } from '@duncit/breadcrumb';
 export { AppIcon } from './chrome/AppIcon';
+// The console-wide request bar. `mountPortal` already mounts it; exported for
+// the surfaces that build their own root, and for the tests.
+export { GlobalProgress } from './chrome/GlobalProgress';
+export { getInFlightRequests, subscribeRequests, trackingFetch } from './lib/request-progress';
 // The apps drawer behind the header's nine dots, and the file manager it opens.
 export { AppsDrawer, useShellTools, type ShellTool } from './chrome/AppsDrawer';
 export { FileManagerDialog } from './file-manager';

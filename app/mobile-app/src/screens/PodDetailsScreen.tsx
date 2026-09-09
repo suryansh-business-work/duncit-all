@@ -20,6 +20,7 @@ import { PodShop } from '@/components/details/PodShop';
 import { PodSocialBar } from '@/components/details/PodSocialBar';
 import { BackoutConfirmDialog } from '@/components/pod-history/BackoutConfirmDialog';
 import { KeepSpotDialog } from '@/components/pod-history/KeepSpotDialog';
+import { LocationMismatchDialog } from '@/components/LocationMismatchDialog';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import {
@@ -30,6 +31,7 @@ import {
   type PodMembershipState,
 } from '@/hooks/useDetails';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+import { useLocationMismatch } from '@/hooks/useLocationMismatch';
 import { useMeasuredHeight } from '@/hooks/useMeasuredHeight';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePublicFinance } from '@/hooks/usePublicFinance';
@@ -326,6 +328,11 @@ export function PodDetailsScreen() {
     savedInitially,
   );
   const actions = usePodDetailActions(pod, refetch);
+  // A virtual pod is joined from anywhere, so its listing city is not a place
+  // the viewer has to be in. Mirrors mWeb.
+  const locationPrompt = useLocationMismatch(
+    pod && pod.pod_mode !== 'VIRTUAL' ? { id: pod.location_id, zone: pod.zone_name } : null,
+  );
   const { selectedProducts, selectedProductTotal, setSelectedProducts, setVariantQuantity } =
     usePodProductSelection(podId, pod);
   const showProducts = useFeatureFlag('is_product_visible');
@@ -506,6 +513,7 @@ export function PodDetailsScreen() {
               useExploreStore.getState().bumpComment(pod.id, delta);
             }}
           />
+          <LocationMismatchDialog kind="POD" {...locationPrompt} />
           <PodBackoutDialogs
             actions={actions}
             membershipState={membershipState}

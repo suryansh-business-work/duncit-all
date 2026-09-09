@@ -53,7 +53,7 @@ export default function CampaignNameForm({ busy, onSubmit }: Readonly<Props>) {
         <Stack direction="row" sx={{
           justifyContent: "flex-end"
         }}>
-          <DuncitButton type="submit" startIcon={<AddIcon />} variant="outlined" disabled={busy || !isValid}>
+          <DuncitButton type="submit" startIcon={<AddIcon />} variant="outlined" loading={busy} disabled={!isValid}>
             Add
           </DuncitButton>
         </Stack>

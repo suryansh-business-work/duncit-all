@@ -273,6 +273,26 @@ export const CATALOGUE_FALLBACK: Record<string, string> = {
   'email.hostCompletePodReminder.body':
     'The pod below has finished but is not marked complete, and nobody is paid until it is. Completing it also locks the attendance, so check the roster first. Miss the deadline and you can no longer mark attendance for this pod, and your share of it is nil.',
   'email.hostCompletePodReminder.deadline': 'Complete it before',
+  'email.hostPodCancellationRisk.title': 'Your pod is at risk of being cancelled',
+  'email.hostPodCancellationRisk.body':
+    'The bookings on the pod below do not yet cover the venue’s booked slot price. If that is still true when the auto-cancel deadline arrives, the pod is cancelled automatically and everyone who booked is refunded. The figures are below, and so is what closes the gap.',
+  'email.clubAdminPodCancellationRisk.title': 'A pod in your club is at risk of being cancelled',
+  'email.clubAdminPodCancellationRisk.body':
+    'The bookings on the pod below do not yet cover the venue’s booked slot price. If that is still true when the auto-cancel deadline arrives, the pod is cancelled automatically and everyone who booked is refunded. The host has been told too; the figures and what closes the gap are below.',
+  // Shared by both cancellation-risk emails, and the "bookings needed" phrase
+  // is also what the WhatsApp message carries — it is resolved per recipient.
+  'email.podCancellationRisk.collected': 'Collected so far',
+  'email.podCancellationRisk.venueCost': 'Venue cost',
+  'email.podCancellationRisk.shortfall': 'Short by',
+  'email.podCancellationRisk.bookingsNeeded': 'Bookings needed',
+  'email.podCancellationRisk.cancelDeadline': 'Cancelled automatically on',
+  'email.podCancellationRisk.bookingsNeededCount': '{{count}} more bookings at the current ticket price',
+  'email.podCancellationRisk.cannotCover':
+    'More than the pod can hold — change the venue slot or the ticket price',
+  'email.podCancellationRisk.howToFixHost':
+    'To fix it: share the pod link and fill the spots before the deadline, or ask your Club Admin to move the pod to a cheaper slot or change the ticket price. You will be alerted again while the pod stays at risk.',
+  'email.podCancellationRisk.howToFixClubAdmin':
+    'To fix it: help the host fill the spots before the deadline, move the pod to a cheaper venue slot, or change the ticket price. You will be alerted again while the pod stays at risk.',
   'email.hostPodFeedback.title': 'How did your pod go?',
   'email.hostPodFeedback.body':
     'You ran the pod below. Tell us how the venue, the turnout and the day itself went — it is what decides where we book you next.',

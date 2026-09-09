@@ -172,6 +172,9 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
     deleted_at: d.deleted_at?.toISOString?.() ?? null,
     venue_approval_status: d.venue_approval_status ?? 'NONE',
     auto_pod_id: d.source_auto_pod_id ? String(d.source_auto_pod_id) : null,
+    // Carried raw for the admin-gated `Pod.cancellation_risk` field resolver,
+    // which is what decides whether a viewer may read it.
+    cancellation_risk: d.cancellation_risk ?? null,
     liked_user_ids: (d.liked_user_ids ?? []).map(String),
     like_count: (d.liked_user_ids ?? []).length,
     comment_count: (d.comments ?? []).length,

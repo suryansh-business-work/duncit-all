@@ -8,6 +8,7 @@ import {
   NamedStatusCell,
   ScenarioCell,
   ValuesCell,
+  type ProvisionLabels,
 } from './scenarioCells';
 import {
   CAMPAIGN_STATUS_COLORS,
@@ -25,6 +26,8 @@ interface ColumnDeps {
   onToggle: (eventKey: string, enabled: boolean) => void;
   /** Opens the header-asset dialog for one row. */
   onSetMedia: (row: WaScenario) => void;
+  /** Creates the drafted template, or its campaign, at AiSensy for one row. */
+  onProvision: (row: WaScenario) => void;
   /** The platform default header asset, off the board. */
   defaults: WaDefaultUrls;
 }
@@ -40,11 +43,22 @@ export function getScenarioColumns({
   busyKey,
   onToggle,
   onSetMedia,
+  onProvision,
   defaults,
 }: Readonly<ColumnDeps>): DuncitColumn<WaScenario>[] {
   const firesLabel = t('adminWhatsapp.firesLabel');
   const paramsLabel = t('adminWhatsapp.paramsLabel');
   const readyLabel = t('adminWhatsapp.blockerNone');
+  const provisionLabels: ProvisionLabels = {
+    TEMPLATE: {
+      label: t('adminWhatsapp.provisionTemplate'),
+      hint: t('adminWhatsapp.provisionTemplateHint'),
+    },
+    CAMPAIGN: {
+      label: t('adminWhatsapp.provisionCampaign'),
+      hint: t('adminWhatsapp.provisionCampaignHint'),
+    },
+  };
   const lockedTitle = t('adminWhatsapp.cannotDisable');
   const lockedHint = t('adminWhatsapp.cannotDisableHint');
   const mediaStateLabels: Record<MediaState, string> = {
@@ -144,7 +158,15 @@ export function getScenarioColumns({
       headerName: t('adminWhatsapp.colBlocker'),
       flex: 1.2,
       minWidth: 240,
-      cellRenderer: (row) => <BlockerCell row={row} readyLabel={readyLabel} />,
+      cellRenderer: (row) => (
+        <BlockerCell
+          row={row}
+          readyLabel={readyLabel}
+          busy={busyKey === row.event_key}
+          provisionLabels={provisionLabels}
+          onProvision={onProvision}
+        />
+      ),
       valueGetter: (row) => row.blocker || readyLabel,
     },
     {

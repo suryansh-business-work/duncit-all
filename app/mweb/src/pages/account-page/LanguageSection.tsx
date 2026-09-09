@@ -11,7 +11,8 @@ import {
   Typography,
 } from '@mui/material';
 import { LanguageSelect } from '@duncit/ui';
-import { useTranslation } from '@duncit/app-settings';
+import { LANGUAGE_PREFERENCE_FLAG, useTranslation } from '@duncit/app-settings';
+import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 
 const SET_MY_LOCALE = gql`
   mutation SetMyLocale($locale: String!) {
@@ -25,15 +26,17 @@ const SET_MY_LOCALE = gql`
 /**
  * Language preference. Switching re-renders mWeb immediately (the provider
  * swaps catalogues) and persists to the user's profile, so the choice follows
- * them to the native app and every portal.
+ * them to the native app and every portal. Hidden while the language_preference
+ * flag is off.
  */
 export default function LanguageSection() {
   const { t, locale, locales, setLocale } = useTranslation();
   const [save, { loading: saving }] = useMutation<any>(SET_MY_LOCALE);
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const enabled = useFeatureFlag(LANGUAGE_PREFERENCE_FLAG);
 
-  if (locales.length < 2) return null;
+  if (!enabled || locales.length < 2) return null;
 
   const change = async (code: string) => {
     // Switch the UI first: the language must change even if the write fails,

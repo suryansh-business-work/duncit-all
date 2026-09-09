@@ -52,6 +52,14 @@ export const waAutomationResolvers = {
       const user = requireRole(ctx, ADMIN_ROLES);
       return whatsappAdminService.reconcile(user.id);
     },
+    provisionWhatsappScenario: (
+      _p: unknown,
+      args: { event_key: string },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, ADMIN_ROLES);
+      return whatsappAdminService.provision(args.event_key, user.id);
+    },
     setWhatsappScenarioMedia: (
       _p: unknown,
       args: { event_key: string; url: string; filename?: string | null },

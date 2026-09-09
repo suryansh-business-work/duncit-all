@@ -1,5 +1,5 @@
 import { useParams } from 'react-router';
-import { NO_POD_ACTIONS, PodDetailsPage, type PodDetailsViewProps } from '@duncit/pod-details';
+import { NO_POD_ACTIONS, NO_POD_BANNER, PodDetailsPage, type PodDetailsViewProps } from '@duncit/pod-details';
 import ClubAdminAttendanceSection from '../../components/ClubAdminAttendanceSection';
 
 // Below the attendee table, because it is the ACTION on the people that
@@ -33,6 +33,7 @@ export default function ClubAdminPodDetailsPage() {
       backLabel="Club pods"
       editTo={(podId) => `${clubPods}/pods/${podId}/edit`}
       actions={NO_POD_ACTIONS}
+      banner={NO_POD_BANNER}
       footer={renderAttendanceFooter}
     />
   );

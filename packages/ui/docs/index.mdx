@@ -35,6 +35,10 @@ exports:
   - 'BackHeader'
   - 'BackButton'
   - 'QueryGuard'
+  - 'Loader'
+  - 'LoadingOverlay'
+  - 'TopProgressBar'
+  - 'FormActionsRow'
   - 'useDebouncedValue'
   - 'mergeSx'
   - 'ModerationBlockedDialog'
@@ -48,6 +52,7 @@ exports:
   - 'StatusColorMap'
   - 'StatCardLayout'
   - 'InfoRowVariant'
+  - 'LoaderVariant'
 ---
 
 import Preview from '@docs/components/Preview.astro';
@@ -339,9 +344,60 @@ been deleted or moved server-side is still reachable instead of rendering a blan
 | `notFound` | `boolean` | no | `false` | Query finished, entity missing. |
 | `notFoundText` | `ReactNode` | no | `'Not found.'` | Not-found copy (localize it, rule 38). |
 | `notFoundSeverity` | `'info' \| 'warning'` | no | `'info'` | Not-found `Alert` severity. |
-| `spinnerSize` | `number` | no | MUI default (40) | `CircularProgress` size. |
+| `spinnerSize` | `number` | no | `40` | Spinner diameter; forwarded to `Loader`. |
 | `spinnerSx` | `SxProps<Theme>` | no | `{ py: 6 }` | Spinner wrapper style. |
+| `loadingLabel` | `string` | no | `'Loading…'` | What is loading, announced to screen readers. |
 | `children` | `ReactNode \| (() => ReactNode)` | no | — | Pass a **function** whenever the content dereferences the entity. |
+
+### `Loader` — the one spinner
+
+Every surface used to hand-roll the same three lines, which is why some waits
+showed a spinner, some showed nothing, and no two were the same size. The
+wrapper is a live `status` region carrying the label, so a wait is audible where
+the spinner is the only thing on screen.
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `variant` | `'block' \| 'page' \| 'inline' \| 'overlay'` | no | `'block'` | `block` = a section with nothing to draw yet; `page` = the whole viewport (boot); `inline` = beside a control; `overlay` = content refreshing under a scrim. |
+| `size` | `number` | no | 40 / 44 / 16 / 32 per variant | Spinner diameter. |
+| `label` | `string` | no | `'Loading…'` | What is being waited on. Localize it (rule 38). |
+| `showLabel` | `boolean` | no | `false` | `inline`/`overlay`: draw the label beside the spinner. |
+| `sx` | `SxProps<Theme>` | no | — | Merged over the variant's layout. |
+
+`LoadingOverlay` wraps both halves — `open`, `children`, plus every `Loader`
+prop — because the scrim is absolute and its parent has to be positioned, which
+is the line every call site forgot.
+
+### `TopProgressBar` — the console-wide answer to "did that do anything?"
+
+A three-pixel indeterminate bar across the top of the viewport, above dialogs
+because most actions are pressed inside one. The portals mount it once via
+`@duncit/shell`'s `GlobalProgress`, wired to the Apollo transport's in-flight
+count — nothing else has to opt in.
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `busy` | `boolean` | yes | — | True while anything is in flight. |
+| `label` | `string` | no | `'Loading…'` | Screen-reader name. |
+| `sx` | `SxProps<Theme>` | no | — | Style override. |
+
+It appears only after 180ms and then stays 400ms: below that a cached answer
+flashes a bar, and a page firing several queries strobes.
+
+### `FormActionsRow`
+
+The last two rows of a `<Grid container>` form — the submit failure, then the
+right-aligned actions. Five forms carried it verbatim, which is how they came to
+disagree about whether a submit in flight shows anything at all.
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `submitLabel` | `ReactNode` | yes | — | Submit label; hidden behind the spinner while `busy`. |
+| `busy` | `boolean` | no | `false` | Submission in flight — spins the button and blocks a second press. |
+| `disabled` | `boolean` | no | `false` | Not submittable yet: invalid, unchanged, a preview still resolving. |
+| `errorMessage` | `string \| null` | no | — | Last failure; the alert is dropped when empty. |
+| `startIcon` | `ReactNode` | no | — | Icon on the submit button. |
+| `secondaryAction` | `ReactNode` | no | — | Drawn left of submit — a Cancel button, typically. |
 
 ### `LanguageSelect`, `ModerationBlockedDialog` and the two helpers
 

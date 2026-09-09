@@ -25,6 +25,8 @@ import { useFeatureFlag } from '../hooks/useFeatureFlag';
 import { useStudioMode } from '../StudioModeContext';
 import { STUDIO_HOME_PATH } from '../studio-mode';
 import ConfettiOverlay from '../components/ConfettiOverlay';
+import LocationMismatchDialog from '../components/LocationMismatchDialog';
+import { useLocationMismatch } from '../hooks/useLocationMismatch';
 import { useStatusUpload } from '../components/status-upload/StatusUploadProvider';
 import {
   JOIN_POD_MEETING,
@@ -96,6 +98,11 @@ export default function PodDetailsPage() {
   );
   const pod = data?.pod ?? null;
   useEntityPageMeta(pod?.pod_title);
+  // A virtual pod is joined from anywhere, so its listing city is not a place
+  // the viewer has to be in.
+  const locationPrompt = useLocationMismatch(
+    pod && pod.pod_mode !== 'VIRTUAL' ? { id: pod.location_id, zone: pod.zone_name } : null,
+  );
   const productSelection = usePodProductSelection(id, pod);
   const savedIds: string[] = data?.me?.saved_pod_ids ?? [];
   const saved = pod ? savedIds.includes(pod.id) : false;
@@ -308,6 +315,7 @@ export default function PodDetailsPage() {
         open={actions.confettiOpen}
         onClose={() => actions.setConfettiOpen(false)}
       />
+      <LocationMismatchDialog kind="POD" {...locationPrompt} />
     </Stack>
   );
 }

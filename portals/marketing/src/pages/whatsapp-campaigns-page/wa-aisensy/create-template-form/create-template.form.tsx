@@ -72,7 +72,7 @@ export default function CreateTemplateForm({ open, busy, onClose, onSubmit }: Re
           <DuncitButton type="button" onClick={onClose} disabled={busy}>
             {t('marketingWhatsapp.cancel')}
           </DuncitButton>
-          <DuncitButton type="submit" variant="contained" disabled={busy || !isValid}>
+          <DuncitButton type="submit" variant="contained" loading={busy} disabled={!isValid}>
             {busy ? t('marketingWhatsapp.submitting') : t('marketingWhatsapp.submitTemplate')}
           </DuncitButton>
         </DialogActions>

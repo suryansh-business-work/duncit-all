@@ -13,6 +13,8 @@ import { DetailSkeleton } from '@/components/Skeleton';
 import { useBottomInset } from '@/hooks/useBottomNavSpace';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useClubDetails, useResolvedClubId } from '@/hooks/useDetails';
+import { useLocationMismatch } from '@/hooks/useLocationMismatch';
+import { LocationMismatchDialog } from '@/components/LocationMismatchDialog';
 import { useClubFollow } from '@/hooks/useFollow';
 import { shareUrl } from '@/services/share-link';
 import type { RootStackParamList } from '@/navigation/types';
@@ -38,6 +40,9 @@ export function ClubDetailsScreen() {
     toggle: toggleFollow,
   } = useClubFollow(clubId, followingInitially);
   const { openPod } = useDetailNav();
+  const locationPrompt = useLocationMismatch(
+    club ? { id: club.location_id, zone: club.locality } : null,
+  );
   // Nothing floats over this scroll (the follow CTA sits inline in the body), so
   // the last row only has to clear the Android navigation bar the edge-to-edge
   // window paints over the app — plus the page's own bottom breathing room.
@@ -97,6 +102,7 @@ export function ClubDetailsScreen() {
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         {isLoading && !club ? <DetailSkeleton testID="club-details-loading" /> : content}
       </SafeAreaView>
+      <LocationMismatchDialog kind="CLUB" {...locationPrompt} />
     </YStack>
   );
 }

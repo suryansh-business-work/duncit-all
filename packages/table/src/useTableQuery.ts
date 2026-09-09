@@ -23,6 +23,16 @@ export interface UseTableQueryResult<T> {
   loading: boolean;
   error: string | null;
   query: TableQueryState;
+  /**
+   * What the last fetch actually asked for: {@link UseTableQueryResult.query}
+   * plus the pinned external filters.
+   *
+   * `query` stays external-free so the toolbar only chips the user's own
+   * filters — but anything acting on the SET rather than on the loaded rows
+   * needs the pinned ones too, or a per-level table would hand out a scope
+   * covering every level.
+   */
+  appliedQuery: TableQueryState;
   searchInput: string;
   setSearchInput: (value: string) => void;
   setPage: (page: number) => void;
@@ -194,6 +204,7 @@ export function useTableQuery<T>(options: UseTableQueryOptions<T>): UseTableQuer
     loading,
     error,
     query,
+    appliedQuery: fetchQuery,
     searchInput,
     setSearchInput,
     setPage,

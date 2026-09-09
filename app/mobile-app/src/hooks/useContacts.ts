@@ -11,7 +11,7 @@ export type ContactsViewer = NonNullable<SyncData['me']>;
 
 const DEBOUNCE_MS = 350;
 
-export type ContactsScope = 'all' | 'nearby';
+export type ContactsScope = 'all' | 'nearby' | 'invite';
 
 /**
  * The viewer's matched contacts, filtered by the server: a debounced name

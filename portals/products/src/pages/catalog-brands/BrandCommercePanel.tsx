@@ -93,7 +93,7 @@ export default function BrandCommercePanel({ brand, onChanged }: Readonly<Props>
                 sx={{ maxWidth: 220 }}
                 hint="Duncit's cut on this brand's product sales. 0 inherits the per-product rate."
               />
-              <DuncitButton type="submit" variant="outlined" disabled={commissionState.loading}>
+              <DuncitButton type="submit" variant="outlined" loading={commissionState.loading}>
                 {commissionState.loading ? 'Saving…' : 'Save commission'}
               </DuncitButton>
             </Stack>

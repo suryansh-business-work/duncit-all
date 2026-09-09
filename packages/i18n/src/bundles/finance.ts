@@ -206,6 +206,27 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       billingAddress: 'Address',
       gatewayReference: 'Gateway reference',
     },
+    /**
+     * Finance > User Refund Logs — every refund already paid back to a buyer.
+     * The columns it shares with Payment Logs read from finance.payment.col*
+     * rather than being restated here, so the two tables can never label the
+     * same figure differently; only the refund-specific copy lives below.
+     */
+    refundLogs: {
+      title: 'User Refund Logs',
+      subtitle: 'Every refund paid back to a buyer — from the admin console, a cancelled pod, or a Backout whose spot was filled.',
+      empty: 'No refunds have been processed yet.',
+      search: 'Search txn id, invoice, name or email',
+      colRefundedAt: 'Refunded on',
+      colRefundAmount: 'Refund amount',
+      colReason: 'Reason',
+      colInitiatedBy: 'Initiated by',
+      colKind: 'Kind',
+      kindFull: 'Full',
+      kindPartial: 'Part',
+      kindPartialHint: 'Only some of the seats came back — the buyer is still attending on the rest, so the payment stays successful.',
+      initiatedByConsole: 'Finance console',
+    },
     // Finance > Gift Cards — the dashboard, the card book and the ledger.
     /**
      * Withdrawal Payments, which is now two screens: the pod list and one pod's
@@ -327,6 +348,7 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       refundStatus: 'Refund status',
       replacement: 'Replacement',
       replacementConfirmed: 'Replacement Confirmed?',
+      seatsReleased: 'No of Seats Released',
       spots: 'Spots',
       userId: 'User ID',
       noBackoutRefundRequestsYet: 'No backout refund requests yet.',

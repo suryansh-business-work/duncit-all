@@ -32,9 +32,12 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       saved: 'Saved',
       deleted: 'Deleted',
       close: 'Close',
+      clear: 'Clear',
       view: 'View',
       edit: 'Edit',
       copy: 'Copy',
+      yes: 'Yes',
+      no: 'No',
 
       // Column headings a console repeats table after table. Only the ones
       // that carry no context of their own live here — anything that names
@@ -491,6 +494,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       userBackoutRefunds: 'User Backout Refunds',
       userLeads: 'User Leads',
       userManagement: 'User Management',
+      userRefundLogs: 'User Refund Logs',
       venueCancel: 'Venue Cancel',
       venueInvoice: 'Venue Invoice',
       venueLeads: 'Venue Leads',
@@ -1161,6 +1165,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       menuTooltip: 'Pod actions',
       menuAria: 'Actions for {title}',
       scanTickets: 'Scan attendee event tickets',
+      scanClosed: 'This pod has ended — tickets can no longer be scanned.',
       completePod: 'Complete pod',
       editPod: 'Edit pod',
       cancelPod: 'Cancel pod',

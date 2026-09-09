@@ -151,12 +151,6 @@ export const DELETE_BUGS = gql`
   }
 `;
 
-export const DELETE_ALL_BUGS = gql`
-  mutation DeleteAllBugs {
-    deleteAllBugs
-  }
-`;
-
 export const IMPORT_BUGS = gql`
   mutation ImportBugs($bugs: [BugImportInput!]!) {
     importBugs(bugs: $bugs) {

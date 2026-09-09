@@ -27,6 +27,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as ts from 'typescript';
 import { WA_EVENTS, type WaEvent } from '@modules/platform/whatsapp/whatsapp.events';
+import { WA_TEMPLATE_DRAFTS, draftParamCount } from '@modules/platform/whatsapp/whatsapp.drafts';
 import { EMAIL_BY_WA_EVENT } from '@services/email/catalogue';
 
 const REPO = path.resolve(__dirname, '..', '..');
@@ -336,9 +337,31 @@ function checkEmailLeg(): void {
 
 // --- report -----------------------------------------------------------------
 
+// --- 5. template drafts -----------------------------------------------------
+
+/** A draft is the body `provision` submits verbatim, so its `{{n}}` count is
+ * the arity every send will be held to — it has to equal the registry's. */
+function checkDrafts(): void {
+  for (const [key, draft] of Object.entries(WA_TEMPLATE_DRAFTS)) {
+    const event = serverByKey.get(key);
+    if (!event) {
+      fail(`draft ${key} has no registry scenario`);
+      continue;
+    }
+    const inBody = draftParamCount(draft.body);
+    if (inBody !== event.params.length) {
+      fail(`draft ${key}: body has ${inBody} placeholder(s), the registry declares ${event.params.length}`);
+    }
+    if (draftParamCount(draft.sample) !== 0) {
+      fail(`draft ${key}: the sample still contains a {{n}} placeholder`);
+    }
+  }
+}
+
 checkMirror();
 checkReachable(checkSendSites());
 checkEmailLeg();
+checkDrafts();
 
 const campaigns = new Set(WA_EVENTS.map((event) => event.campaign));
 console.log(

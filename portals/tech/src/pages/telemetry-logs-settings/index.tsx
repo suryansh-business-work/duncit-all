@@ -168,7 +168,7 @@ export default function TelemetryLogsSettingsPage() {
             type="submit"
             variant="contained"
             startIcon={<SaveIcon />}
-            disabled={isSubmitting || !isDirty}
+            loading={isSubmitting} disabled={!isDirty}
           >
             {isSubmitting ? 'Saving…' : 'Save'}
           </DuncitButton>

@@ -29,6 +29,22 @@ export interface TableQueryState {
   filters: TableFilterValue[];
 }
 
+/**
+ * What the table is showing right now: the query it last FETCHED with — the
+ * user's search and filters plus the page's pinned external ones — and how many
+ * rows the server said match it.
+ *
+ * It exists for actions that have to act on a set nobody can tick. "Delete every
+ * row matching this view" covers rows on pages the grid has never loaded, so the
+ * only honest way to name that set is the query that produced it. Paging and
+ * sorting ride along because the shape is one type; an action on the whole set
+ * ignores them.
+ */
+export interface TableQuerySnapshot {
+  query: TableQueryState;
+  total: number;
+}
+
 export interface TablePage<T> {
   rows: T[];
   total: number;

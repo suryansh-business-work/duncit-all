@@ -227,6 +227,49 @@ export const paymentTypeDefs = /* GraphQL */ `
     page_size: Int!
   }
 
+  """
+  One refund that has already been paid back to a buyer.
+
+  Refunds have no collection of their own — each is recorded on the payment it
+  reverses, by any of four flows (admin refund, pod cancellation, released
+  cancellation hold, filled Backout). A payment merely HOLDING a refund has not
+  paid anything back, so it is not one of these rows.
+  """
+  type UserRefund {
+    id: ID!
+    payment_id: String!
+    invoice_no: String
+    user_name: String!
+    user_email: String!
+    description: String!
+    subtotal: Float!
+    platform_fee_amount: Float!
+    gst_amount: Float!
+    "What the buyer was originally charged."
+    total: Float!
+    currency_symbol: String!
+    status: String!
+    gateway: String!
+    "Money returned across every release on this booking. Falls back to the total for an admin refund, which returns the whole payment without writing a figure."
+    refund_amount: Float!
+    refund_reason: String
+    "Who set the refund off — a pod-cancel initiator or SYSTEM. Null for an admin refund from the console."
+    refund_initiated_by: String
+    refunded_at: String
+    paid_at: String
+    created_at: String!
+    "True when only part of the booking came back — the buyer kept the rest of their seats, so the payment is still SUCCESS."
+    partial: Boolean!
+  }
+
+  "Server-side table page for the shared table engine (userRefundsTable)."
+  type UserRefundTablePage {
+    rows: [UserRefund!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   "Filter-wide KPI totals for the Payment Logs cards (SUCCESS payments only, no row cap)."
   type PaymentTotals {
     count: Int!
@@ -477,6 +520,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     "Aggregated totals over EVERY payment matching the filter (no row cap), SUCCESS only."
     paymentTotals(filter: PaymentFilterInput): PaymentTotals!
     paymentsTable(query: TableQueryInput): PaymentTablePage!
+    "Every refund already paid back to a buyer, from all four refund flows."
+    userRefundsTable(query: TableQueryInput): UserRefundTablePage!
     payment(payment_doc_id: ID!): Payment
     "Full audit of one payment: what it charged, what it created, and what failed."
     paymentDetail(payment_doc_id: ID!): PaymentDetail!

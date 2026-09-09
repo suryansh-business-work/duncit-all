@@ -58,6 +58,11 @@ export function ContactsAllowCard({ status, busy, failure, onAllow }: Readonly<P
       <Text testID="contacts-sync-summary" fontSize={13} color="$color">
         {summary}
       </Text>
+      {status && status.invitable > 0 ? (
+        <Text testID="contacts-invite-summary" fontSize={13} color="$muted">
+          {t('mweb.contacts.toInvite', { count: status.invitable })}
+        </Text>
+      ) : null}
       <XStack>
         <DuncitButton
           testID="contacts-allow-button"

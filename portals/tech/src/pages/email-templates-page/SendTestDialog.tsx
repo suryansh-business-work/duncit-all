@@ -165,7 +165,7 @@ export default function SendTestDialog({
           <DuncitButton
             type="submit"
             variant="contained"
-            disabled={!template || loading || !to || !!formState.errors.to}
+            loading={loading} disabled={!template || !to || !!formState.errors.to}
             startIcon={loading ? <CircularProgress size={16} /> : undefined}
           >
             {loading ? 'Sending…' : 'Send'}

@@ -106,7 +106,7 @@ export default function RunTestsDialog({ open, onClose, onQueued }: Readonly<Pro
           type="submit"
           form={RUN_TESTS_FORM_ID}
           variant="contained"
-          disabled={busy || !ready}
+          loading={busy} disabled={!ready}
         >
           {busy ? t('tech.e2e.triggering') : t('tech.e2e.triggerAction')}
         </DuncitButton>

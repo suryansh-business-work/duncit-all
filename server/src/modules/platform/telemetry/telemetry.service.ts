@@ -3,7 +3,13 @@ import { Types, isValidObjectId } from 'mongoose';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { telemetryRuntime } from '@observability/telemetryRuntime';
-import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import {
+  buildTableFilter,
+  combineFilters,
+  runTableQuery,
+  type TableEntityConfig,
+  type TableQueryInput,
+} from '@utils/table-query';
 import {
   BUG_USER_SAMPLE,
   BugModel,
@@ -274,6 +280,141 @@ const BUG_TABLE_CONFIG: TableEntityConfig = {
   },
   defaultSort: { last_seen_at: -1 },
 };
+
+/* ------------------------- bulk delete engine -------------------------- */
+
+/**
+ * One delete engine for both telemetry collections.
+ *
+ * Logs and bugs are cleared for the same three reasons — a set someone ticked,
+ * everything a filtered view is showing, everything older than a date — and a
+ * second implementation of that would be a second place for "what exactly did
+ * that button just delete" to be answered differently. The scope is expressed
+ * in the SAME `TableQueryInput` the tables read with, so a filtered delete and
+ * the rows on screen can never describe different sets.
+ */
+export type TelemetryDeleteTarget = 'LOGS' | 'BUGS';
+
+export interface TelemetryDeleteScope {
+  /**
+   * Explicit rows. When the array is present it IS the scope — a set ticked on
+   * screen is not narrowed further by the view it was ticked in, and an EMPTY
+   * array deletes nothing rather than falling through to "everything".
+   */
+  ids?: string[] | null;
+  /** The table's own query, so a filtered delete matches what the page shows. */
+  query?: TableQueryInput | null;
+  /** Inclusive lower bound on the row's date. */
+  from?: string | null;
+  /** Exclusive upper bound — "everything before this instant". */
+  to?: string | null;
+}
+
+/** The date each collection ages on — the same field its retention sweep uses. */
+const DELETE_DATE_FIELD: Record<TelemetryDeleteTarget, string> = {
+  LOGS: 'created_at',
+  BUGS: 'last_seen_at',
+};
+
+const DELETE_TABLE_CONFIG: Record<TelemetryDeleteTarget, TableEntityConfig> = {
+  LOGS: LOG_TABLE_CONFIG,
+  BUGS: BUG_TABLE_CONFIG,
+};
+
+/** The two model methods a delete needs — mirrors `TableQueryModel` upstream. */
+interface DeletableModel {
+  countDocuments: (filter: Record<string, unknown>) => Promise<number>;
+  deleteMany: (filter: Record<string, unknown>) => Promise<{ deletedCount?: number }>;
+}
+
+const DELETE_MODEL: Record<TelemetryDeleteTarget, DeletableModel> = {
+  LOGS: TelemetryLogModel,
+  BUGS: BugModel,
+};
+
+/**
+ * A bound that will not parse is REFUSED, never dropped.
+ *
+ * Every other value in this file's filters degrades to "no filter" when it is
+ * unreadable, which is the safe direction for a query and the catastrophic one
+ * for a delete: dropping `to` turns "everything before March" into everything.
+ */
+function parseDeleteBound(raw: string | null | undefined, label: string): Date | undefined {
+  if (!raw) return undefined;
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime()))
+    throw new GraphQLError(`The ${label} date could not be read`, {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  return parsed;
+}
+
+interface ResolvedDeleteScope {
+  filter: Record<string, unknown>;
+  /** False only when nothing narrows the delete — i.e. the whole collection. */
+  narrowed: boolean;
+}
+
+function resolveDeleteScope(
+  target: TelemetryDeleteTarget,
+  scope: TelemetryDeleteScope,
+): ResolvedDeleteScope {
+  if (scope.ids) {
+    const valid = scope.ids.filter((id) => isValidObjectId(id));
+    return { filter: { _id: { $in: valid.map((id) => new Types.ObjectId(id)) } }, narrowed: true };
+  }
+  // Named `bounds` rather than `window`: this file runs in Node, and a local
+  // shadowing a browser global is a needless double-take for the next reader.
+  const bounds: Record<string, unknown> = {};
+  const from = parseDeleteBound(scope.from, 'from');
+  const until = parseDeleteBound(scope.to, 'to');
+  if (from) bounds.$gte = from;
+  if (until) bounds.$lt = until;
+  const dated = Object.keys(bounds).length > 0 ? { [DELETE_DATE_FIELD[target]]: bounds } : {};
+  const built = buildTableFilter(scope.query, DELETE_TABLE_CONFIG[target]);
+  const narrowed = Object.keys(dated).length > 0 || Object.keys(built).length > 0;
+  return { filter: combineFilters(dated, built), narrowed };
+}
+
+/**
+ * Whether a scope would empty the whole collection — the resolver's role gate.
+ *
+ * Exported rather than inferred at the call site because the answer has to come
+ * from the same function that builds the filter: a predicate that reasoned about
+ * the input separately would eventually disagree with what actually gets deleted.
+ */
+export function telemetryDeleteIsUnscoped(
+  target: TelemetryDeleteTarget,
+  scope: TelemetryDeleteScope,
+): boolean {
+  return !resolveDeleteScope(target, scope).narrowed;
+}
+
+/** How many rows the same scope would take — the dialog's count before the act. */
+async function countTelemetryDeletable(
+  target: TelemetryDeleteTarget,
+  scope: TelemetryDeleteScope,
+): Promise<number> {
+  const { filter } = resolveDeleteScope(target, scope);
+  return DELETE_MODEL[target].countDocuments(filter);
+}
+
+async function runTelemetryDelete(
+  target: TelemetryDeleteTarget,
+  scope: TelemetryDeleteScope,
+  actor: { id: string },
+): Promise<number> {
+  const { filter, narrowed } = resolveDeleteScope(target, scope);
+  // Written BEFORE the delete and at `warn`, which the telemetry runtime
+  // persists — so the record of who cleared what outlives the rows it is about.
+  logs.server.warn('telemetry', 'telemetryDelete', {
+    userId: actor.id,
+    target,
+    scope: narrowed ? 'filtered' : 'everything',
+  });
+  const res = await DELETE_MODEL[target].deleteMany(filter);
+  return res.deletedCount ?? 0;
+}
 
 /* --------------------------- bug aggregation --------------------------- */
 
@@ -861,23 +1002,38 @@ export const telemetryService = {
     return docs.map(bugPub);
   },
 
+  /**
+   * The row-level delete, kept as its own entry point because the bug table's
+   * per-row bin is a different gesture from a bulk clear — but it goes through
+   * the same engine, so there is still only one thing that removes a bug.
+   */
   async deleteBugs(ids: string[], actor: { id: string }): Promise<number> {
-    if (ids.length === 0) return 0;
-    const valid = ids.filter((id) => isValidObjectId(id));
-    logs.server.warn('telemetry', 'bugsDeleteMany', { userId: actor.id, requested: valid.length });
-    const res = await BugModel.deleteMany({ _id: { $in: valid } });
-    return res.deletedCount ?? 0;
+    return runTelemetryDelete('BUGS', { ids }, actor);
   },
 
   /**
-   * Clear every bug. The warning is written before the delete and at `warn`,
-   * which the telemetry runtime persists — so the record of who emptied the
-   * collection lands in TelemetryLog and outlives the rows it is about.
+   * How many rows a delete would take, so the dialog can say the number before
+   * the button rather than after it. Same scope resolution as the delete
+   * itself — a preview computed any other way would eventually lie.
    */
-  async deleteAllBugs(actor: { id: string }): Promise<number> {
-    logs.server.warn('telemetry', 'bugsDeleteAll', { userId: actor.id });
-    const res = await BugModel.deleteMany({});
-    return res.deletedCount ?? 0;
+  async telemetryDeleteCount(
+    target: TelemetryDeleteTarget,
+    scope: TelemetryDeleteScope,
+  ): Promise<number> {
+    return countTelemetryDeletable(target, scope);
+  },
+
+  /**
+   * Delete by ticked rows, by the filters a table is showing, or by a date
+   * window — the three ways an operator actually clears telemetry, answered by
+   * one engine so all three record what went and why.
+   */
+  async deleteTelemetryRecords(
+    target: TelemetryDeleteTarget,
+    scope: TelemetryDeleteScope,
+    actor: { id: string },
+  ): Promise<number> {
+    return runTelemetryDelete(target, scope, actor);
   },
 
   /** Upsert bugs from an export file, matched on fingerprint (existing rows overwritten). */

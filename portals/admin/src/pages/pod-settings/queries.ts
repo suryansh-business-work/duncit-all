@@ -18,6 +18,8 @@ const FIELDS = `
   pod_cancel_refund_hold
   pod_auto_cancel_enabled
   pod_auto_cancel_lead_hours
+  pod_cancel_risk_window_hours
+  pod_cancel_risk_alert_hours
   auto_pod_slot_window_days
   auto_pod_venue_expiry_hours
   auto_pod_assignment_expiry_hours

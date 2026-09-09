@@ -25,6 +25,7 @@ import { configureLogs, httpTransport } from '@duncit/logs';
 import { getOrCreateDuid } from '@duncit/user-core';
 import { captureShortLinkAttribution, installAttributionLinkDecorator } from '@duncit/utils';
 import { PortalBranding } from './PortalBranding';
+import { GlobalProgress } from './chrome/GlobalProgress';
 import { loadGoogleClientId } from './lib/google-client-id';
 import { ShellRuntimeProvider } from './lib/runtime';
 import { socketOrigin } from './lib/socket-origin';
@@ -126,6 +127,10 @@ export function mountPortal(opts: MountPortalOptions): void {
         {children}
       </LocalizedPortalModeGate>
       <PortalBranding />
+      {/* Above the gate, not inside it: the login screen and the boot sequence
+          make requests of their own, and those are exactly the waits a first-time
+          visitor has no other signal for. */}
+      <GlobalProgress />
       {extras}
     </>
   );

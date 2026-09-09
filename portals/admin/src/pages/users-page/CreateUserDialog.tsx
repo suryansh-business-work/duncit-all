@@ -159,7 +159,7 @@ export default function CreateUserDialog({
         </DialogContent>
         <DialogActions>
           <DuncitButton type="button" onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</DuncitButton>
-          <DuncitButton type="submit" variant="contained" disabled={busy}>{busy ? 'Creating…' : t('admin.users.create')}</DuncitButton>
+          <DuncitButton type="submit" variant="contained" loading={busy}>{busy ? 'Creating…' : t('admin.users.create')}</DuncitButton>
         </DialogActions>
       </form>
     </Dialog>

@@ -82,6 +82,25 @@ describe('HostPodActionsMenu rows', () => {
     expect(itemNames().some((name) => name.includes(labels.completePod))).toBe(false);
   });
 
+  // The scanner is for a door that is still open: on a pod that is over the
+  // row stays, greyed, and says why, rather than vanishing.
+  it('keeps the scan row but closes it once the pod is over', async () => {
+    await open({ canScan: false });
+    const scanRow = [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
+      (item) => item.textContent?.includes(labels.scanTickets),
+    ) as HTMLElement;
+    expect(scanRow).toHaveAttribute('aria-disabled', 'true');
+    expect(scanRow.textContent).toContain(labels.scanClosed);
+
+    cleanup();
+    await open({ canScan: true });
+    const openRow = [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
+      (item) => item.textContent?.includes(labels.scanTickets),
+    ) as HTMLElement;
+    expect(openRow).not.toHaveAttribute('aria-disabled', 'true');
+    expect(openRow.textContent).not.toContain(labels.scanClosed);
+  });
+
   // No attendees to scan, no page worth sending — the venue refused the slot.
   it('drops every attendee-facing row on a venue-rejected pod', async () => {
     await open({ venueRejected: true, canComplete: true, onSeeAttendance: vi.fn() });

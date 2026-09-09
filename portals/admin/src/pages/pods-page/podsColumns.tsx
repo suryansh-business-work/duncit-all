@@ -76,6 +76,10 @@ const renderHits = (p: PodRow) => (
 const renderStatus = (p: PodRow, t: PodsColumnDeps['t']) => {
   if (p.is_deleted) return <Chip size="small" label={t('admin.eventTickets.cancelled')} color="error" />;
   if (p.completed_at) return <Chip size="small" label={t('admin.podsDashboard.completed')} color="info" />;
+  // The row is already tinted red; the chip is what names the reason.
+  if (p.cancellation_risk?.at_risk) {
+    return <Chip size="small" label={t('admin.pods.cancellationRisk')} color="error" variant="filled" />;
+  }
   if (p.venue_approval_status === 'PENDING') {
     return <Chip size="small" label={t('admin.podsDashboard.awaitingVenue')} color="warning" />;
   }

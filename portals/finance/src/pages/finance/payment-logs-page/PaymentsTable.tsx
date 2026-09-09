@@ -1,5 +1,5 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { CircularProgress, Stack, Tooltip, Typography } from '@mui/material';
+import { CircularProgress, Stack, Tooltip } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import UndoIcon from '@mui/icons-material/Undo';
 import { DuncitIconButton } from '@duncit/buttons';
@@ -7,6 +7,7 @@ import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { useTranslation, type Translator } from '@duncit/app-settings';
 import { StatusChip } from '@duncit/ui';
 import { STATUS_COLORS, fmt } from './helpers';
+import { renderPaymentCustomer, renderPaymentIds } from './cells';
 import type { PaymentRow } from './queries';
 
 /** The filter's options carry translated labels but untranslated values — the
@@ -22,42 +23,8 @@ const getPaymentRowId = (p: PaymentRow) => p.id;
 
 const whenValue = (p: PaymentRow) => new Date(p.created_at).toLocaleString('en-IN');
 
-const renderCustomer = (p: PaymentRow) => (
-  <Stack component="span" sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" component="span" sx={{
-      fontWeight: 600
-    }}>
-      {p.user_name}
-    </Typography>
-    <Typography variant="caption" component="span" sx={{
-      color: "text.secondary"
-    }}>
-      {p.user_email}
-    </Typography>
-  </Stack>
-);
-
 const renderStatus = (p: PaymentRow) => (
   <StatusChip status={p.status} colorMap={STATUS_COLORS} />
-);
-
-const renderIds = (p: PaymentRow) => (
-  <Stack component="span" sx={{ lineHeight: 1.2 }}>
-    <Typography variant="caption" component="span" sx={{ fontFamily: 'monospace' }}>
-      {p.payment_id}
-    </Typography>
-    {p.invoice_no && (
-      <Typography
-        variant="caption"
-        component="span"
-        sx={{
-          color: "text.secondary",
-          fontFamily: 'monospace'
-        }}>
-        {p.invoice_no}
-      </Typography>
-    )}
-  </Stack>
 );
 
 interface Props {
@@ -121,7 +88,7 @@ export default function PaymentsTable({
         headerName: t('finance.payment.colCustomer'),
         flex: 1,
         minWidth: 170,
-        cellRenderer: renderCustomer,
+        cellRenderer: renderPaymentCustomer,
         valueGetter: (p) => p.user_name,
       },
       { field: 'description', headerName: t('finance.payment.colDescription'), minWidth: 160 },
@@ -163,7 +130,7 @@ export default function PaymentsTable({
         field: 'payment_id',
         headerName: t('finance.payment.colIds'),
         minWidth: 190,
-        cellRenderer: renderIds,
+        cellRenderer: renderPaymentIds,
         valueGetter: (p) => [p.payment_id, p.invoice_no].filter(Boolean).join(' '),
       },
       {

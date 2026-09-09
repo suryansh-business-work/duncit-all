@@ -42,6 +42,7 @@ export const appConfig = {
         { label: 'Host Cancel', labelKey: 'shell.nav.hostCancel', to: '/cancellations/host', icon: 'receipt' },
       ],
     },
+    { label: 'User Refund Logs', labelKey: 'shell.nav.userRefundLogs', to: '/user-refund-logs', icon: 'quote' },
     { label: 'Payment Logs', labelKey: 'shell.nav.paymentLogs', to: '/payment-logs', icon: 'receipt' },
     { label: 'Payment Release', labelKey: 'shell.nav.paymentRelease', to: '/payment-release', icon: 'payments' },
     {

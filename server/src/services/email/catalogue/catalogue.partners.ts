@@ -100,6 +100,44 @@ const PUBLISHED_ROWS = [
   { labelKey: FIELD.clubAdmin, valueVar: 'club_admin' },
 ] as const;
 
+/**
+ * `['Recipient name','Pod','Date','Time','Shortfall','Bookings needed','Cancel deadline']`
+ * — the cancellation-risk alert's WhatsApp order, minus the link, which sits
+ * at a different position for the host (8th) and the club admin (9th, after
+ * `Host`). Both audiences read the same numbers; only who they are addressed
+ * to, and where the button goes, differ.
+ */
+const RISK_VARS: readonly EmailVar[] = [
+  v('name', 'The recipient’s first name.', 'Meera'),
+  v('pod', 'The pod’s title.', 'Sunday Badminton Doubles'),
+  v('date', 'The pod’s date, already formatted.', '24 Aug 2026'),
+  v('time', 'The start time, already formatted.', '7:00 AM'),
+  v('shortfall', 'How far short of the venue cost the bookings are, with currency.', '₹1200'),
+  v('bookings_needed', 'Bookings at the current ticket price that would close the gap, as a sentence.', '3 more bookings'),
+  v('cancel_deadline', 'When the sweep cancels the pod if it is still short, already formatted.', '23 Aug 2026, 07:00 AM'),
+];
+
+/** Email-only: the figures behind the shortfall, which a WhatsApp template has
+ * no room for. */
+const RISK_DETAIL_VARS: readonly EmailVar[] = [
+  v('venue', 'The venue the pod is booked at.', 'Sector 62 Sports Arena'),
+  v('collected', 'Ticket money collected so far, with currency.', '₹2400'),
+  v('venue_cost', 'The venue’s booked slot price, with currency.', '₹4000'),
+  v('spots', 'Seats booked out of the pod’s capacity.', '6 / 10'),
+];
+
+const RISK_ROWS = [
+  { labelKey: FIELD.date, valueVar: 'date' },
+  { labelKey: FIELD.time, valueVar: 'time' },
+  { labelKey: FIELD.venue, valueVar: 'venue' },
+  { labelKey: 'email.podCancellationRisk.collected', valueVar: 'collected' },
+  { labelKey: 'email.podCancellationRisk.venueCost', valueVar: 'venue_cost' },
+  { labelKey: 'email.podCancellationRisk.shortfall', valueVar: 'shortfall' },
+  { labelKey: FIELD.spots, valueVar: 'spots' },
+  { labelKey: 'email.podCancellationRisk.bookingsNeeded', valueVar: 'bookings_needed' },
+  { labelKey: 'email.podCancellationRisk.cancelDeadline', valueVar: 'cancel_deadline' },
+] as const;
+
 export const HOST_EMAILS: readonly EmailDef[] = [
   defineEmail({
     slug: 'host-slot-approved',
@@ -352,6 +390,35 @@ export const HOST_EMAILS: readonly EmailDef[] = [
       ],
       ctaKey: CTA.completePod,
       ctaVar: 'app_url',
+    },
+  }),
+
+  defineEmail({
+    slug: 'host-pod-cancellation-risk',
+    name: 'Host: Pod Cancellation Risk',
+    description:
+      'The host, while an upcoming pod cannot cover its venue cost. Repeats every Pod Settings alert interval until the pod is healthy, starts, or is auto-cancelled.',
+    audience: 'HOST',
+    category: 'billing',
+    fires: 'An upcoming pod cannot cover its venue cost and will be auto-cancelled',
+    waEvent: 'HOST_POD_CANCELLATION_RISK',
+    subject: '{{pod}} is at risk of being cancelled',
+    footerNote: FOOTER.podHosted,
+    vars: [
+      ...RISK_VARS,
+      v('pod_url', 'The pod’s public page, for the host to share.', 'https://mweb.duncit.com/club/noida-badminton/pod/DUN-POD-4821'),
+      ...RISK_DETAIL_VARS,
+    ],
+    body: {
+      copyKey: 'email.hostPodCancellationRisk',
+      nameVar: 'name',
+      tone: STOPPED,
+      calloutLabelKey: LABEL.pod,
+      calloutVar: 'pod',
+      rows: RISK_ROWS,
+      ctaKey: CTA.viewPod,
+      ctaVar: 'pod_url',
+      helpKey: 'email.podCancellationRisk.howToFixHost',
     },
   }),
 
@@ -858,4 +925,34 @@ export const CLUB_ADMIN_EMAILS: readonly EmailDef[] = [
     footer: FOOTER.clubAdmin,
   }),
 
+  defineEmail({
+    slug: 'club-admin-pod-cancellation-risk',
+    name: 'Club Admin: Pod Cancellation Risk',
+    description:
+      'Every admin of the club, while one of its upcoming pods cannot cover its venue cost. Repeats every Pod Settings alert interval, beside the host’s own alert.',
+    audience: 'CLUB_ADMIN',
+    category: 'billing',
+    fires: 'A pod in the club cannot cover its venue cost and will be auto-cancelled',
+    waEvent: 'CLUB_ADMIN_POD_CANCELLATION_RISK',
+    subject: '{{pod}} is at risk of being cancelled',
+    footerNote: FOOTER.podClub,
+    vars: [
+      ...RISK_VARS.slice(0, 4),
+      v('host', 'The host running it.', 'Meera Nair'),
+      ...RISK_VARS.slice(4),
+      v('pod_url', 'The pod in the Partners console, where the slot and price can be changed.', 'https://partners-app.duncit.com/club-admin/clubs/66f1/pods/66f2'),
+      ...RISK_DETAIL_VARS,
+    ],
+    body: {
+      copyKey: 'email.clubAdminPodCancellationRisk',
+      nameVar: 'name',
+      tone: STOPPED,
+      calloutLabelKey: LABEL.pod,
+      calloutVar: 'pod',
+      rows: [...RISK_ROWS.slice(0, 2), { labelKey: FIELD.host, valueVar: 'host' }, ...RISK_ROWS.slice(2)],
+      ctaKey: CTA.viewPod,
+      ctaVar: 'pod_url',
+      helpKey: 'email.podCancellationRisk.howToFixClubAdmin',
+    },
+  }),
 ];

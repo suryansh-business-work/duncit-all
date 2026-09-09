@@ -14,16 +14,27 @@ import { useTranslation } from '@duncit/app-settings';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
+type TrendField = Exclude<keyof MonthBucket, 'label'>;
+
+/** The bars, in draw order. `labelKey` is the localization key for the legend. */
+const SERIES: { field: TrendField; labelKey: string; color: string }[] = [
+  { field: 'hosts', labelKey: 'onboarding.common.hosts', color: '#6366f1' },
+  { field: 'venues', labelKey: 'shell.nav.venues', color: '#0f766e' },
+  { field: 'brands', labelKey: 'shell.nav.brands', color: '#d97706' },
+  { field: 'club_admins', labelKey: 'onboarding.dashboard.clubAdmins', color: '#9333ea' },
+];
+
 interface Props {
   buckets: MonthBucket[];
+  /** E-commerce is behind a system flag; with it off the brand bar is dropped. */
+  showBrands: boolean;
 }
 
-export default function OnboardingTrendChart({ buckets }: Readonly<Props>) {
+export default function OnboardingTrendChart({ buckets, showBrands }: Readonly<Props>) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const hasData = buckets.some(
-    (bucket) => bucket.hosts > 0 || bucket.venues > 0 || bucket.brands > 0 || bucket.club_admins > 0,
-  );
+  const series = showBrands ? SERIES : SERIES.filter((entry) => entry.field !== 'brands');
+  const hasData = buckets.some((bucket) => series.some((entry) => bucket[entry.field] > 0));
 
   if (!hasData) {
     return (
@@ -35,36 +46,13 @@ export default function OnboardingTrendChart({ buckets }: Readonly<Props>) {
 
   const data = {
     labels: buckets.map((bucket) => bucket.label),
-    datasets: [
-      {
-        label: t('onboarding.common.hosts'),
-        data: buckets.map((bucket) => bucket.hosts),
-        backgroundColor: '#6366f1',
-        borderRadius: 6,
-        maxBarThickness: 22,
-      },
-      {
-        label: t('shell.nav.venues'),
-        data: buckets.map((bucket) => bucket.venues),
-        backgroundColor: '#0f766e',
-        borderRadius: 6,
-        maxBarThickness: 22,
-      },
-      {
-        label: t('shell.nav.brands'),
-        data: buckets.map((bucket) => bucket.brands),
-        backgroundColor: '#d97706',
-        borderRadius: 6,
-        maxBarThickness: 22,
-      },
-      {
-        label: t('onboarding.dashboard.clubAdmins'),
-        data: buckets.map((bucket) => bucket.club_admins),
-        backgroundColor: '#9333ea',
-        borderRadius: 6,
-        maxBarThickness: 22,
-      },
-    ],
+    datasets: series.map((entry) => ({
+      label: t(entry.labelKey),
+      data: buckets.map((bucket) => bucket[entry.field]),
+      backgroundColor: entry.color,
+      borderRadius: 6,
+      maxBarThickness: 22,
+    })),
   };
 
   const options = {

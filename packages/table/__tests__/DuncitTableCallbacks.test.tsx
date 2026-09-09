@@ -202,6 +202,22 @@ describe('DuncitTable getRowStyle bridge', () => {
 });
 
 describe('DuncitTable CSV export', () => {
+  it('hands out the applied query and the server total once the page has loaded', async () => {
+    const fetchRows = makeFetch();
+    const onQueryChange = vi.fn();
+    render(
+      <DuncitTable<Person>
+        tableId="scope"
+        columns={columns}
+        fetchRows={fetchRows}
+        getRowId={(row) => row.id}
+        onQueryChange={onQueryChange}
+      />,
+    );
+    await waitFor(() => expect(fetchRows).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(onQueryChange).toHaveBeenCalledWith({ query: expect.any(Object), total: 1 }));
+  });
+
   it('the Export CSV toolbar button exports with the tableId filename', async () => {
     const { fireEvent } = await import('@testing-library/react');
     render(

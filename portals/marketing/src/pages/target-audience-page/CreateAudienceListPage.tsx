@@ -140,7 +140,7 @@ export default function CreateAudienceListPage() {
               form={AUDIENCE_LIST_FORM_ID}
               variant="contained"
               startIcon={<SaveIcon />}
-              disabled={saving}
+              loading={saving}
             >
               {saving ? 'Saving…' : 'Save list'}
             </DuncitButton>

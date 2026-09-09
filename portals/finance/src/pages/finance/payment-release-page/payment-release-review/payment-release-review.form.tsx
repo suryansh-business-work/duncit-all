@@ -139,7 +139,7 @@ export default function PaymentReleaseReviewForm({ request, busy, errorMessage, 
         </DialogContent>
         <DialogActions>
           <DuncitButton onClick={onClose} disabled={busy}>{t('shell.common.cancel')}</DuncitButton>
-          <DuncitButton type="submit" variant="contained" disabled={busy}>{busy ? 'Saving...' : 'Submit Review'}</DuncitButton>
+          <DuncitButton type="submit" variant="contained" loading={busy}>{busy ? 'Saving...' : 'Submit Review'}</DuncitButton>
         </DialogActions>
       </form>
     </Dialog>

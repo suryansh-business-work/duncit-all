@@ -193,7 +193,7 @@ export default function PodContentFormDialog({
         </DialogContent>
         <DialogActions>
           <DuncitButton onClick={onClose}>{t('shell.common.cancel')}</DuncitButton>
-          <DuncitButton type="submit" variant="contained" disabled={busy}>
+          <DuncitButton type="submit" variant="contained" loading={busy}>
             {busy ? t('shell.common.saving') : t('shell.common.save')}
           </DuncitButton>
         </DialogActions>

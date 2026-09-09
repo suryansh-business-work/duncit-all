@@ -107,7 +107,7 @@ export default function HostEditDialog({ host, onClose, onSaved }: Readonly<Prop
             <DuncitButton
               type="submit"
               variant="contained"
-              disabled={state.loading}
+              loading={state.loading}
               startIcon={state.loading ? <CircularProgress size={14} /> : undefined}
             >
               Save

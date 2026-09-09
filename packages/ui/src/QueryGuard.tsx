@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import { Alert, CircularProgress, Stack } from '@mui/material';
+import { Alert } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 import { parseApiError } from '@duncit/utils';
 import { useTranslation } from './i18n/useTranslation';
-import { mergeSx } from './mergeSx';
+import { Loader } from './loader';
 
 export interface QueryGuardProps {
   /** Pass `loading && !entity` to keep showing stale data while refetching. */
@@ -18,10 +18,12 @@ export interface QueryGuardProps {
   notFoundText?: ReactNode;
   /** Default 'info' (crm convention); admin/onboarding pass 'warning'. */
   notFoundSeverity?: 'info' | 'warning';
-  /** CircularProgress size (default MUI 40). */
+  /** Spinner diameter (default 40). */
   spinnerSize?: number;
   /** Spinner wrapper sx; default `{ py: 6 }`. */
   spinnerSx?: SxProps<Theme>;
+  /** What is loading, for the screen reader. Defaults to the shared `Loading…`. */
+  loadingLabel?: string;
   /** Content once loading/error/not-found have all passed. A function defers evaluation. */
   children?: ReactNode | (() => ReactNode);
 }
@@ -39,18 +41,12 @@ export function QueryGuard({
   notFoundSeverity = 'info',
   spinnerSize,
   spinnerSx,
+  loadingLabel,
   children,
 }: Readonly<QueryGuardProps>) {
   const { t } = useTranslation();
   if (loading) {
-    return (
-      <Stack
-        sx={mergeSx({
-          alignItems: "center"
-        }, mergeSx({ py: 6 }, spinnerSx))}>
-        <CircularProgress size={spinnerSize} />
-      </Stack>
-    );
+    return <Loader size={spinnerSize} label={loadingLabel} sx={spinnerSx} />;
   }
   if (error) {
     return <Alert severity="error">{errorText ?? parseApiError(error)}</Alert>;

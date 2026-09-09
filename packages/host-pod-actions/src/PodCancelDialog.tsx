@@ -186,7 +186,7 @@ export default function PodCancelDialog({
           form="pod-cancel-form"
           color="error"
           variant="contained"
-          disabled={removeState.loading || impactQ.loading}
+          loading={removeState.loading || impactQ.loading}
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {removeState.loading ? labels.cancelling : confirmLabel}

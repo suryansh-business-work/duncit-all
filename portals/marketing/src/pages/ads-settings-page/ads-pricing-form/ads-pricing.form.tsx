@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Grid, MenuItem, Paper, Stack, TextField, Typography } from '@mui/material';
+import { Grid, MenuItem, Paper, Stack, TextField, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
-import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
+import { FormActionsRow } from '@duncit/ui';
 import { AD_POSITIONS, formatAdMoney, type AdPosition } from '../../../lib/ad-positions';
 import PlacementCopyFields from './PlacementCopyFields';
 import {
@@ -171,25 +171,13 @@ export default function AdsPricingForm({
         <Grid size={12}>
           <AdsPricingExample values={values} />
         </Grid>
-        {errorMessage && (
-          <Grid size={12}>
-            <Alert severity="error">{errorMessage}</Alert>
-          </Grid>
-        )}
-        <Grid size={12}>
-          <Stack direction="row" sx={{
-            justifyContent: "flex-end"
-          }}>
-            <DuncitButton
-              type="submit"
-              variant="contained"
-              startIcon={<SaveIcon />}
-              disabled={busy || !formState.isValid}
-            >
-              {busy ? 'Saving…' : 'Save Pricing'}
-            </DuncitButton>
-          </Stack>
-        </Grid>
+        <FormActionsRow
+          errorMessage={errorMessage}
+          busy={busy}
+          disabled={!formState.isValid}
+          startIcon={<SaveIcon />}
+          submitLabel={t('marketing.adsSettings.savePricing')}
+        />
       </Grid>
     </form>
   );

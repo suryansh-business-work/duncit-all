@@ -4,10 +4,12 @@ import { useTranslation } from '@duncit/app-settings';
 import { notify } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import {
+  PROVISION_WHATSAPP_SCENARIO,
   RECONCILE_WHATSAPP_SCENARIOS,
   SET_WHATSAPP_SCENARIO_ENABLED,
   SET_WHATSAPP_SCENARIO_MEDIA,
   WHATSAPP_SCENARIOS,
+  type WaScenario,
   type WaScenarioBoard,
 } from './queries';
 
@@ -34,6 +36,7 @@ export function useWhatsappBoard() {
   const [setEnabled] = useMutation<any>(SET_WHATSAPP_SCENARIO_ENABLED);
   const [reconcile] = useMutation<any>(RECONCILE_WHATSAPP_SCENARIOS);
   const [setMedia] = useMutation<any>(SET_WHATSAPP_SCENARIO_MEDIA);
+  const [provisionScenario] = useMutation<any>(PROVISION_WHATSAPP_SCENARIO);
   const [savingMedia, setSavingMedia] = useState(false);
 
   const board = written ?? data?.whatsappScenarios ?? null;
@@ -73,6 +76,29 @@ export function useWhatsappBoard() {
     [setMedia, t]
   );
 
+  /** The template or the campaign, whichever the row says is next. The row's
+   * switch goes inert meanwhile, exactly as for a toggle. */
+  const provision = useCallback(
+    async (row: WaScenario) => {
+      setBusyKey(row.event_key);
+      try {
+        const result = await provisionScenario({ variables: { event_key: row.event_key } });
+        setWritten(result.data?.provisionWhatsappScenario ?? null);
+        notify(
+          row.provision_step === 'CAMPAIGN'
+            ? t('adminWhatsapp.provisionCampaignDone')
+            : t('adminWhatsapp.provisionTemplateDone'),
+          'success'
+        );
+      } catch (err) {
+        notify(parseApiError(err, t('adminWhatsapp.provisionFailed')), 'error');
+      } finally {
+        setBusyKey(null);
+      }
+    },
+    [provisionScenario, t]
+  );
+
   const runReconcile = useCallback(async () => {
     setReconciling(true);
     try {
@@ -95,6 +121,7 @@ export function useWhatsappBoard() {
     savingMedia,
     toggle,
     saveMedia,
+    provision,
     runReconcile,
   };
 }

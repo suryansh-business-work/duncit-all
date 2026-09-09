@@ -13,6 +13,7 @@ export interface ContactsSyncStatus {
   synced_at: string;
   submitted: number;
   matched: number;
+  invitable: number;
 }
 
 export const CONTACTS_ON_DUNCIT = gql`
@@ -41,6 +42,7 @@ export const MY_CONTACTS_SYNC = gql`
       synced_at
       submitted
       matched
+      invitable
     }
     me {
       user_id
@@ -56,6 +58,7 @@ export const SYNC_CONTACTS = gql`
     syncContacts(entries: $entries) {
       submitted
       matched
+      invitable
       new_matches
       synced_at
     }
@@ -65,5 +68,34 @@ export const SYNC_CONTACTS = gql`
 export const CLEAR_MY_CONTACTS = gql`
   mutation ClearMyContacts {
     clearMyContacts
+  }
+`;
+
+/** One contact who is not on Duncit yet. Twin of native
+ * `ContactsToInviteDocument` (rule 27). */
+export interface InviteRow {
+  phone_key: string;
+  contact_label: string;
+  invited_at: string | null;
+}
+
+export const CONTACTS_TO_INVITE = gql`
+  query ContactsToInvite($search: String) {
+    contactsToInvite(search: $search) {
+      phone_key
+      contact_label
+      invited_at
+    }
+  }
+`;
+
+export const INVITE_CONTACTS = gql`
+  mutation InviteContacts($phone_keys: [String!]) {
+    inviteContacts(phone_keys: $phone_keys) {
+      requested
+      sent
+      skipped
+      failed
+    }
   }
 `;

@@ -27,6 +27,7 @@ export const MobilePublicVenuesDocument = gql(`
     publicVenues {
       id
       owner_user_id
+      location_id
       venue_name
       venue_type
       capacity

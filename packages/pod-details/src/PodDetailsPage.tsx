@@ -40,6 +40,14 @@ export type PodDetailsActions = (pod: PodDetailsActionPod) => ReactNode;
  * never exercise on both sides, and the shared-package coverage gate counts it. */
 export const NO_POD_ACTIONS: PodDetailsActions = () => null;
 
+/** A block drawn under the header and above the columns — the first thing a
+ * reader sees after the title. The admin portal puts the cancellation-risk
+ * report here; every other console passes NO_POD_BANNER. Required for the
+ * same reason `actions` is. */
+export type PodDetailsBanner = (pod: PodDetailsActionPod) => ReactNode;
+
+export const NO_POD_BANNER: PodDetailsBanner = () => null;
+
 export interface PodDetailsViewProps {
   /** Who is reading — picks the admin or the club-scoped query set. */
   scope?: PodDetailsScope;
@@ -58,6 +66,9 @@ export interface PodDetailsViewProps {
   /** Rendered in the header, beside Edit. The admin portal puts Revoke
    * cancellation here; every other console passes NO_POD_ACTIONS. */
   actions: PodDetailsActions;
+  /** Rendered under the header, above everything else. The admin portal puts
+   * the cancellation-risk report here; every other console passes NO_POD_BANNER. */
+  banner: PodDetailsBanner;
   /** Rendered under the tables. The admin portal puts its coupons section here;
    * it stays out of this package because coupon management is platform-wide
    * (ADMIN_RW create/delete) and reaches into the admin coupons page. */
@@ -78,6 +89,7 @@ function PodDetailsView({
   backTo = '/pods',
   backLabel = 'Pods',
   actions,
+  banner,
   editTo,
   userTo,
   footer,
@@ -161,6 +173,10 @@ function PodDetailsView({
               )}
             </Stack>
           </Stack>
+
+          {/* The portal's own block, above the columns: what a reader must
+              see before anything else about this pod. */}
+          {banner(pod)}
 
           {/* Two columns that end at roughly the same line. The old layout
               paired each tall card with a short one, which is what left the

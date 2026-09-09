@@ -42,7 +42,7 @@ export default function PodExpenseForm({
           <DuncitButton onClick={onCancel} disabled={busy}>
             {t('shell.common.cancel')}
           </DuncitButton>
-          <DuncitButton type="submit" variant="contained" disabled={busy}>
+          <DuncitButton type="submit" variant="contained" loading={busy}>
             {busy ? t('shell.common.saving') : submitLabel}
           </DuncitButton>
         </Stack>

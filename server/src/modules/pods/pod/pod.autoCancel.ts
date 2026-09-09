@@ -23,14 +23,9 @@
 import { PodModel } from './pod.model';
 import { podService } from './pod.service';
 import { podLifecycleFilter } from './pod.lifecycle';
+import { podFinanceNow, runPodCancellationRiskSweep } from './pod.cancellationRisk';
 import { VenueModel, type IVenueCancellationPolicy } from '@modules/venues/venue/venue.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
-import {
-  collectedForPod,
-  resolveEffectiveRates,
-  venueAmountForPod,
-  waterfallForAmount,
-} from '@modules/finance/finance/settlement.service';
 import { logs } from '@observability/log';
 
 const SWEEP_INTERVAL_MS = 10 * 60_000; // every 10 minutes
@@ -76,32 +71,13 @@ export function autoCancelRefundPct(
   return Math.max(0, 100 - chargePct);
 }
 
-/** The live host side for the pod as of now — negative means completing the pod
- * would settle the host at ₹0 with Duncit eating the venue-price shortfall.
- * The exact number breakdownService.podFinanceBreakdown shows Finance. */
-async function liveHostSide(
-  pod: any
-): Promise<{ negative: boolean; collected: number; venueAmount: number }> {
-  const venueAmount = await venueAmountForPod(pod, 0);
-  // No committed venue cost, no way for the pool to fall short of it.
-  if (venueAmount <= 0) return { negative: false, collected: 0, venueAmount };
-  const [collected, rates] = await Promise.all([
-    collectedForPod(pod._id),
-    resolveEffectiveRates({
-      hostUserId: pod.pod_hosts_id?.[0] ?? null,
-      venueId: pod.venue_id ?? null,
-    }),
-  ]);
-  const waterfall = waterfallForAmount(collected, venueAmount, rates, {
-    clampVenueToPool: false,
-  });
-  return { negative: waterfall.host_receives < 0, collected, venueAmount };
-}
-
 /** Evaluate one candidate pod; cancel it when it is loss-making. Returns true
- * when this call committed a cancellation. */
+ * when this call committed a cancellation. The live host side comes from
+ * `podFinanceNow` — the one waterfall the risk flag, the risk alerts and the
+ * Finance breakdown all read, so the sweep can never cancel a pod the admin
+ * page called healthy. */
 async function cancelIfNegative(pod: any, now: number): Promise<boolean> {
-  const { negative, collected, venueAmount } = await liveHostSide(pod);
+  const { negative, collected, venueAmount } = await podFinanceNow(pod);
   if (!negative) return false;
 
   const venue: any = pod.venue_id
@@ -180,8 +156,28 @@ export async function runPodAutoCancelSweep(): Promise<number> {
   return cancelled;
 }
 
-/** Start the auto-cancel loop (first sweep ~1.5 min after boot). Returns a stop
- * function. No-ops under NODE_ENV=test. */
+/**
+ * Cancel first, then flag and alert: a pod the cancel half just removed must
+ * not be alerted about a minute later, and the risk half's clear-down sees it
+ * gone. Each half logs its own failure and the other still runs — the alerts
+ * are the half a host can act on, and a refund fan-out that failed is no
+ * reason to leave them in the dark.
+ */
+async function runBothSweeps(): Promise<void> {
+  try {
+    await runPodAutoCancelSweep();
+  } catch (error) {
+    logs.server.error('pod-auto-cancel', 'sweep', { error, msg: 'sweep failed' });
+  }
+  try {
+    await runPodCancellationRiskSweep();
+  } catch (error) {
+    logs.server.error('pod-cancel-risk', 'sweep', { error, msg: 'risk sweep failed' });
+  }
+}
+
+/** Start the auto-cancel + cancellation-risk loop (first sweep ~1.5 min after
+ * boot). Returns a stop function. No-ops under NODE_ENV=test. */
 export function startPodAutoCancelScheduler(): () => void {
   if (process.env.NODE_ENV === 'test') return () => undefined;
   // Refund + notification fan-out is slow, sequential I/O — never let a long
@@ -190,13 +186,9 @@ export function startPodAutoCancelScheduler(): () => void {
   const sweep = () => {
     if (sweeping) return;
     sweeping = true;
-    runPodAutoCancelSweep()
-      .catch((error) => {
-        logs.server.error('pod-auto-cancel', 'sweep', { error, msg: 'sweep failed' });
-      })
-      .finally(() => {
-        sweeping = false;
-      });
+    runBothSweeps().finally(() => {
+      sweeping = false;
+    });
   };
   const first = setTimeout(sweep, FIRST_SWEEP_DELAY_MS);
   const interval = setInterval(sweep, SWEEP_INTERVAL_MS);

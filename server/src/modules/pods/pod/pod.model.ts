@@ -62,6 +62,30 @@ export interface IPodComment {
   created_at: Date;
 }
 
+/**
+ * What the risk sweep last found for an upcoming pod inside the risk window.
+ *
+ * Only what a LIST needs is stored — the flag, the rupee gap and the bookings
+ * that would close it — so the admin table can tint a row without running the
+ * settlement waterfall per row. The pod detail page recomputes the full picture
+ * live through `podCancellationRisk`. The alert stamps live beside the verdict
+ * because they are meaningless without it: a pod that turns healthy loses the
+ * whole record, and a later relapse starts its alerts from one again.
+ */
+export interface IPodCancellationRisk {
+  at_risk: boolean;
+  evaluated_at: Date;
+  /** Rupees short of covering the venue's booked slot price, as of evaluation. */
+  shortfall: number;
+  /** Bookings at the current ticket price that would close the gap; null when
+   * bookings alone cannot (a free pod, or more bookings than the pod holds). */
+  spots_needed: number | null;
+  /** When the host and club admins were last alerted; null until the first. */
+  alerted_at?: Date | null;
+  /** How many alert rounds have gone out for this risk episode. */
+  alert_count: number;
+}
+
 export type CoHostStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED';
 
 /**
@@ -134,6 +158,14 @@ export interface IPod extends Document {
   liked_user_ids: Types.ObjectId[];
   comments: IPodComment[];
   completed_at?: Date | null;
+  /**
+   * The auto-cancel sweep's verdict on an UPCOMING pod inside the risk window
+   * (Admin > Pods > Pod Settings): whether its live settlement is negative, and
+   * the alert bookkeeping. Written only by `pod.cancellationRisk.ts`, cleared
+   * the moment the pod is healthy again or leaves the window, so a read never
+   * has to ask "is this stale" — an absent field IS "no risk".
+   */
+  cancellation_risk?: IPodCancellationRisk | null;
   is_active: boolean;
   venue_approval_status: PodVenueApproval;
   /** The Auto Pod offer this pod materialized from (null for ordinary pods). */
@@ -196,6 +228,18 @@ const commentSchema = new Schema<IPodComment>(
     created_at: { type: Date, default: () => new Date() },
   },
   { _id: true }
+);
+
+const cancellationRiskSchema = new Schema<IPodCancellationRisk>(
+  {
+    at_risk: { type: Boolean, required: true },
+    evaluated_at: { type: Date, required: true },
+    shortfall: { type: Number, default: 0, min: 0 },
+    spots_needed: { type: Number, default: null },
+    alerted_at: { type: Date, default: null },
+    alert_count: { type: Number, default: 0, min: 0 },
+  },
+  { _id: false }
 );
 
 const coHostSchema = new Schema<IPodCoHost>(
@@ -261,6 +305,7 @@ const podSchema = new Schema<IPod>(
     liked_user_ids: [{ type: Schema.Types.ObjectId, ref: 'User', default: [] }],
     comments: { type: [commentSchema], default: [] },
     completed_at: { type: Date, default: null, index: true },
+    cancellation_risk: { type: cancellationRiskSchema, default: null },
     is_active: { type: Boolean, default: true },
     deleted_at: { type: Date, default: null, index: true },
     venue_approval_status: {

@@ -987,6 +987,24 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       free: 'Free',
       paid: 'Paid',
     },
+    // The dialog that opens over a pod, club or venue reached from a link whose
+    // city is not the one the viewer is browsing. Both surfaces render the same
+    // sentences (rule 27); {current} and {target} are the two places as their
+    // header names them ('Mumbai · Bandra'), the buttons carry the city alone.
+    locationMismatch: {
+      title: 'This link is for a different location',
+      introPod:
+        'The pod you are opening is in {target}, but your Duncit location is currently set to {current}.',
+      introClub:
+        'The club you are opening is in {target}, but your Duncit location is currently set to {current}.',
+      introVenue:
+        'The venue you are opening is in {target}, but your Duncit location is currently set to {current}.',
+      currentLocation: 'Your current location',
+      linkLocation: 'Location of this link',
+      hint: 'Switch to {target} to browse the pods, clubs and venues there. You can change your location again at any time from the header.',
+      switchButton: 'Switch to {target}',
+      keepButton: 'Continue in {current}',
+    },
     // The pod page: hero, overview, schedule, the accordion stack, the booking
     // bar in every state it has, the backout/keep-spot dialogs and the comments
     // sheet. mWeb and the native app render the SAME journey (rule 27), so a key
@@ -2466,6 +2484,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       menuTooltip: 'Pod actions',
       menuAria: 'Actions for {title}',
       scanTickets: 'Scan attendee event tickets',
+      scanClosed: 'This pod has ended — tickets can no longer be scanned.',
       completePod: 'Complete pod',
       editPod: 'Edit pod',
       cancelPod: 'Cancel pod',
@@ -3684,6 +3703,28 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       noMatchesForSearch: 'No contacts match your search.',
       noneNearby: 'None of your contacts are in your city yet.',
       savedAs: 'Saved as {label}',
+      // The third tab: the phone-book numbers that reached nobody, and the
+      // three ways to ask them — one row, the ticked ones, everyone waiting.
+      filterInvite: 'Invite',
+      toInvite: {
+        one: '{count} contact is not on Duncit yet.',
+        other: '{count} contacts are not on Duncit yet.',
+      },
+      inviteBody:
+        'These contacts are not on Duncit yet. Invite them on WhatsApp — when they join with your link you both earn Duncit Coins.',
+      notOnDuncitYet: 'Not on Duncit yet',
+      invite: 'Invite',
+      invited: 'Invited',
+      selectFor: 'Select {name}',
+      inviteSelected: 'Invite selected ({count})',
+      inviteAll: 'Invite all ({count})',
+      invitesSent: {
+        one: '{count} invite sent on WhatsApp.',
+        other: '{count} invites sent on WhatsApp.',
+      },
+      invitesSkipped: 'Nobody was invited — they have all been invited already, or invites are switched off.',
+      invitesFailed: 'Those invites could not be sent. Please try again.',
+      everyoneIsHere: 'Everyone in your contacts is already on Duncit.',
       clear: 'Remove synced contacts',
       clearConfirmTitle: 'Remove synced contacts?',
       clearConfirmBody:

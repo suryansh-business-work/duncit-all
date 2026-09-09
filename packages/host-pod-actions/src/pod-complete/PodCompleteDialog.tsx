@@ -162,7 +162,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
           type="submit"
           form="pod-complete-form"
           variant="contained"
-          disabled={completeState.loading}
+          loading={completeState.loading}
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {completeState.loading ? labels.completing : labels.completePod}

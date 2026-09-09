@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { LanguageSelect } from '@duncit/ui';
+import { LANGUAGE_PREFERENCE_FLAG, useFeatureFlag } from '@duncit/app-settings';
 import { useTranslation } from '../i18n/useTranslation';
 import { useLocalePreference } from '../i18n/useLocalePreference';
 import { describeZone, deviceTimeZone, zoneChoices, type ZoneChoice } from './clock';
@@ -44,6 +45,7 @@ export function ClockTray({ full, zone: active }: Readonly<ClockTrayProps>) {
   const zone = workspace?.clockZone ?? WORKSPACE_ZONE;
   const seconds = workspace?.clockSeconds ?? false;
   const locale = useLocalePreference();
+  const showLanguage = useFeatureFlag(LANGUAGE_PREFERENCE_FLAG);
 
   const device = deviceTimeZone();
   const described = useMemo(() => {
@@ -106,21 +108,25 @@ export function ClockTray({ full, zone: active }: Readonly<ClockTrayProps>) {
         label={t('shell.taskbar.showSeconds')}
       />
 
-      <Divider />
-
-      {/* `showSingle`, unlike everywhere else this switcher appears: the tray is
-          where a console's language LIVES, the way a desktop's clock tray is,
-          and a platform that currently ships one language would otherwise open
-          it to a divider with nothing under it. */}
-      <LanguageSelect
-        showSingle
-        value={locale.locale}
-        options={locale.locales}
-        onChange={locale.change}
-        label={t('mweb.common.language')}
-      />
-      {locale.saved && <Alert severity="success">{t('mweb.common.languageSaved')}</Alert>}
-      {locale.error && <Alert severity="error">{locale.error}</Alert>}
+      {/* The language row hides with the language_preference flag, divider and
+          all. `showSingle`, unlike everywhere else this switcher appears: the
+          tray is where a console's language LIVES, the way a desktop's clock
+          tray is, and a platform that currently ships one language would
+          otherwise open it to a divider with nothing under it. */}
+      {showLanguage && (
+        <>
+          <Divider />
+          <LanguageSelect
+            showSingle
+            value={locale.locale}
+            options={locale.locales}
+            onChange={locale.change}
+            label={t('mweb.common.language')}
+          />
+          {locale.saved && <Alert severity="success">{t('mweb.common.languageSaved')}</Alert>}
+          {locale.error && <Alert severity="error">{locale.error}</Alert>}
+        </>
+      )}
     </Stack>
   );
 }

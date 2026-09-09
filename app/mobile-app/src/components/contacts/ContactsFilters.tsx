@@ -6,7 +6,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
-const SCOPES: ContactsScope[] = ['all', 'nearby'];
+const SCOPES: ContactsScope[] = ['all', 'nearby', 'invite'];
 
 interface Props {
   scope: ContactsScope;
@@ -15,15 +15,16 @@ interface Props {
   onSearch: (value: string) => void;
 }
 
-/** The two filters the radar and the list share: everyone or only the people
- * in the viewer's city, and a name / @handle search. Twin of mWeb's
- * `ContactsToolbar` (rule 27). */
+/** The three lists this screen holds: everyone matched, only the matches in
+ * the viewer's city, and the contacts who are not here yet — plus the search
+ * the three share. Twin of mWeb's `ContactsToolbar` (rule 27). */
 export function ContactsFilters({ scope, onScope, search, onSearch }: Readonly<Props>) {
   const { t } = useTranslation();
   const { muted } = useThemeColors();
   const labels: Record<ContactsScope, string> = {
     all: t('mweb.contacts.filterAll'),
     nearby: t('mweb.contacts.filterNearby'),
+    invite: t('mweb.contacts.filterInvite'),
   };
   return (
     <YStack gap={10} paddingHorizontal={16}>

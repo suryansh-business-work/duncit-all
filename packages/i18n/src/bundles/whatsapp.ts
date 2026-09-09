@@ -151,6 +151,16 @@ export const WHATSAPP_BUNDLE: NestedCatalogue = {
       'Only a document shows its file name to the recipient. Leave it blank for an image or video.',
     mediaSaved: 'Header asset saved.',
     mediaSaveFailed: 'Could not save the header asset.',
+    // Provisioning: a scenario the code shipped with a drafted template and no
+    // campaign. Two presses, days apart, because Meta approves asynchronously.
+    provisionTemplate: 'Create template',
+    provisionTemplateHint:
+      'Submits the wording the code ships for this scenario to Meta for approval. Come back once it is APPROVED to create the campaign.',
+    provisionCampaign: 'Create campaign',
+    provisionCampaignHint: 'Binds the approved template to the campaign name the code sends to.',
+    provisionTemplateDone: 'Template submitted to Meta — the row updates once it is approved.',
+    provisionCampaignDone: 'Campaign created. The scenario can send now.',
+    provisionFailed: 'Could not create it at AiSensy.',
     // The message log tab.
     logsSearch: 'Search scenario, campaign, number or reason',
     logsEmpty: 'No WhatsApp message has been attempted yet.',

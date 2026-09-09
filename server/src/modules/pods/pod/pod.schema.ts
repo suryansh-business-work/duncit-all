@@ -223,6 +223,13 @@ export const podTypeDefs = /* GraphQL */ `
     venue_approval_status: PodVenueApproval!
     "The Auto Pod offer this pod materialized from — null for ordinary pods."
     auto_pod_id: ID
+    """
+    The cancellation-risk sweep's last verdict on this pod, while it stands.
+    Null is "no risk": the field is cleared the moment the pod is healthy,
+    starts, is cancelled, or leaves the risk window. Admin only — every other
+    audience reads null.
+    """
+    cancellation_risk: PodCancellationRiskFlag
     host_names: [String!]!
     "Invited co-hosts (view-only). Empty unless the pod's sub-category allows co-hosting."
     co_hosts: [PodCoHost!]!
@@ -232,6 +239,80 @@ export const podTypeDefs = /* GraphQL */ `
     completed_at: String
     created_at: String!
     updated_at: String!
+  }
+
+  "What the risk sweep stored on the pod — enough to tint a table row."
+  type PodCancellationRiskFlag {
+    at_risk: Boolean!
+    evaluated_at: String!
+    "Rupees short of covering the venue's booked slot price, as of evaluation."
+    shortfall: Float!
+    "Bookings at the current ticket price that would close the gap; null when bookings alone cannot."
+    spots_needed: Int
+    "When the host and club admins were last alerted; null until the first round."
+    alerted_at: String
+    alert_count: Int!
+  }
+
+  """
+  Why a pod is, or is not, at risk of auto-cancellation. Only AT_RISK tints a
+  row; the others say which gate stopped the check, so a page can explain a
+  blank rather than show a green tick over a pod nobody is watching.
+  """
+  enum PodCancellationRiskState {
+    AT_RISK
+    HEALTHY
+    "Admin > Pods > Pod Settings has auto-cancel switched off."
+    AUTO_CANCEL_OFF
+    "No booked venue slot price — nothing for the bookings to fall short of."
+    NO_VENUE_COST
+    "Cancelled, completed, not yet live, or already started."
+    NOT_UPCOMING
+    "Starts later than the risk window looks ahead."
+    OUTSIDE_WINDOW
+  }
+
+  "The seats side of the risk: how full the pod is and what would close the gap."
+  type PodCancellationRiskAttendees {
+    booked_seats: Int!
+    "0 means unlimited."
+    total_spots: Int!
+    seats_available: Int!
+    "The GST-inclusive ticket price per spot."
+    ticket_price: Float!
+    "Bookings at that price that would lift the host side back to zero; null when bookings alone cannot (a free pod, or more seats than the pod has left)."
+    spots_needed: Int
+  }
+
+  """
+  The live cancellation-risk picture for one pod, computed now from the same
+  waterfall the auto-cancel sweep decides on. Admin only.
+  """
+  type PodCancellationRisk {
+    pod_id: ID!
+    state: PodCancellationRiskState!
+    at_risk: Boolean!
+    hours_until_start: Float!
+    "The auto-cancel lead window (hours before start) from Pod Settings."
+    lead_hours: Int!
+    "The risk window (hours before start) from Pod Settings."
+    window_hours: Int!
+    "Hours between repeat alerts to the host and club admins, from Pod Settings."
+    alert_hours: Int!
+    "The moment the sweep cancels this pod if it is still negative — the start minus the lead window. Null unless at risk."
+    cancel_at: String
+    currency_symbol: String!
+    collected_total: Float!
+    "The venue's booked slot price the pool has to cover."
+    venue_amount: Float!
+    "How far below zero the host side sits — what the bookings must still raise."
+    shortfall: Float!
+    "The unclamped settlement waterfall on today's collections; all zeros for the states that never ran one."
+    waterfall: PodFinanceWaterfall!
+    attendees: PodCancellationRiskAttendees!
+    alerted_at: String
+    alert_count: Int!
+    next_alert_at: String
   }
 
   type PodComment {
@@ -427,6 +508,8 @@ export const podTypeDefs = /* GraphQL */ `
   extend type Query {
     "What revoking this pod's cancellation would cost, and whether it is allowed."
     podRevokePreview(pod_doc_id: ID!): PodRevokePreview!
+    "The live cancellation-risk picture for one pod — the admin detail page's risk section."
+    podCancellationRisk(pod_doc_id: ID!): PodCancellationRisk!
     pods(filter: PodFilterInput): [Pod!]!
     """
     The live pods a user has JOINED, newest first — what a profile's Joined

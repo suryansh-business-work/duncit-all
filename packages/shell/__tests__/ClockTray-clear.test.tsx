@@ -47,6 +47,12 @@ vi.mock('../src/i18n/useLocalePreference', () => ({
   }),
 }));
 
+// The language row is flag-gated; only the flag read is stubbed here.
+vi.mock('@duncit/app-settings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/app-settings')>()),
+  useFeatureFlag: () => true,
+}));
+
 describe('ClockTray zone clearing', () => {
   it('falls back to following the workspace when the picker calls back with nothing chosen', () => {
     const setClockZone = vi.fn();

@@ -43,7 +43,7 @@ export default function StepActions({
         {isLast ? (
           <>
             <AiMonitoringChip />
-            <DuncitButton type="submit" variant="contained" disabled={loading}>
+            <DuncitButton type="submit" variant="contained" loading={loading}>
               {submitLabel}
             </DuncitButton>
           </>

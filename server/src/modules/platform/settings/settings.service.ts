@@ -33,6 +33,12 @@ const DEFAULT_POD_CANCEL_REFUND_HOLD = false;
 const DEFAULT_POD_AUTO_CANCEL_ENABLED = false;
 /** Hours before a pod's start when the auto-cancel finance check runs. */
 const DEFAULT_POD_AUTO_CANCEL_LEAD_HOURS = 24;
+/** Hours before a pod's start it is watched for cancellation risk — three
+ * days, so a host hears about a shortfall while there is still time to sell
+ * the spots, not the morning the sweep cancels it. */
+const DEFAULT_POD_CANCEL_RISK_WINDOW_HOURS = 72;
+/** Hours between repeat risk alerts to the host and club admins. */
+const DEFAULT_POD_CANCEL_RISK_ALERT_HOURS = 4;
 /** Hours after a pod ends within which its host must complete it. A day: long
  * enough that a pod finishing late at night is still settleable the next
  * evening, short enough that the payout is priced while the host still
@@ -75,6 +81,10 @@ const cleanVenueCancelHealthPenalty = (value: unknown) => {
 /** Auto-cancel lead window, clamped to 1 hour – 1 year. */
 const cleanPodAutoCancelLeadHours = (value: unknown) =>
   Math.min(8760, Math.max(1, Math.floor(Number(value)) || DEFAULT_POD_AUTO_CANCEL_LEAD_HOURS));
+const cleanPodCancelRiskWindowHours = (value: unknown) =>
+  Math.min(8760, Math.max(1, Math.floor(Number(value)) || DEFAULT_POD_CANCEL_RISK_WINDOW_HOURS));
+const cleanPodCancelRiskAlertHours = (value: unknown) =>
+  Math.min(168, Math.max(1, Math.floor(Number(value)) || DEFAULT_POD_CANCEL_RISK_ALERT_HOURS));
 
 /** Host's window to complete a pod, clamped to 1 hour – 1 year. */
 const cleanPodCompleteTimeoutHours = (value: unknown) =>
@@ -145,6 +155,8 @@ const toAppPub = (d: any) => ({
   pod_auto_cancel_enabled: d?.pod_auto_cancel_enabled ?? DEFAULT_POD_AUTO_CANCEL_ENABLED,
   pod_auto_cancel_lead_hours:
     d?.pod_auto_cancel_lead_hours ?? DEFAULT_POD_AUTO_CANCEL_LEAD_HOURS,
+  pod_cancel_risk_window_hours: cleanPodCancelRiskWindowHours(d?.pod_cancel_risk_window_hours),
+  pod_cancel_risk_alert_hours: cleanPodCancelRiskAlertHours(d?.pod_cancel_risk_alert_hours),
   auto_pod_slot_window_days: cleanAutoPodSlotWindowDays(d?.auto_pod_slot_window_days),
   auto_pod_venue_expiry_hours: cleanAutoPodVenueExpiryHours(d?.auto_pod_venue_expiry_hours),
   auto_pod_assignment_expiry_hours: cleanAutoPodAssignmentExpiryHours(
@@ -446,6 +458,16 @@ const DEFAULT_FLAGS: {
       "Show the blocking App Update screen in the Android and iOS apps when the installed build is behind the latest published version. Turn off and an outdated build keeps working — nobody is forced to update.",
     enabled: true,
   },
+  {
+    // Seeded OFF: the switcher stays hidden until an operator turns it on. A
+    // saved locale still applies everywhere (emails, the catalogue swap) — the
+    // flag hides the control, it does not undo the choice.
+    key: "language_preference",
+    name: "Language Preference",
+    description:
+      "Show the Language preference (the language switcher) on the mobile app and mobile web account page, and on every portal's profile page and taskbar clock tray.",
+    enabled: false,
+  },
 ];
 
 type AppSettingsUpdateInput = {
@@ -466,6 +488,8 @@ type AppSettingsUpdateInput = {
   pod_complete_reminder_hours?: number;
   pod_auto_cancel_enabled?: boolean;
   pod_auto_cancel_lead_hours?: number;
+  pod_cancel_risk_window_hours?: number;
+  pod_cancel_risk_alert_hours?: number;
   auto_pod_slot_window_days?: number;
   auto_pod_venue_expiry_hours?: number;
   auto_pod_assignment_expiry_hours?: number;
@@ -524,6 +548,14 @@ const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
   if (input.pod_auto_cancel_lead_hours !== undefined)
     update.pod_auto_cancel_lead_hours = cleanPodAutoCancelLeadHours(
       input.pod_auto_cancel_lead_hours,
+    );
+  if (input.pod_cancel_risk_window_hours !== undefined)
+    update.pod_cancel_risk_window_hours = cleanPodCancelRiskWindowHours(
+      input.pod_cancel_risk_window_hours,
+    );
+  if (input.pod_cancel_risk_alert_hours !== undefined)
+    update.pod_cancel_risk_alert_hours = cleanPodCancelRiskAlertHours(
+      input.pod_cancel_risk_alert_hours,
     );
   if (input.auto_pod_slot_window_days !== undefined)
     update.auto_pod_slot_window_days = cleanAutoPodSlotWindowDays(input.auto_pod_slot_window_days);
@@ -652,13 +684,23 @@ export const settingsService = {
     return doc?.pod_cancel_refund_hold ?? DEFAULT_POD_CANCEL_REFUND_HOLD;
   },
 
-  /** The auto-cancel sweep's knobs: whether it acts at all (default off) and
-   * how many hours before a pod's start the finance check runs (default 24). */
-  async getPodAutoCancelSettings(): Promise<{ enabled: boolean; lead_hours: number }> {
+  /** The auto-cancel sweep's knobs: whether it acts at all (default off), how
+   * many hours before a pod's start the finance check runs (default 24), how
+   * far ahead a pod is watched for the risk of it (default 72) and how often
+   * its host and club admins are re-alerted while at risk (default 4). Read
+   * as one bundle because the risk sweep and the cancel sweep are one loop. */
+  async getPodAutoCancelSettings(): Promise<{
+    enabled: boolean;
+    lead_hours: number;
+    risk_window_hours: number;
+    risk_alert_hours: number;
+  }> {
     const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
     return {
       enabled: doc?.pod_auto_cancel_enabled ?? DEFAULT_POD_AUTO_CANCEL_ENABLED,
       lead_hours: cleanPodAutoCancelLeadHours(doc?.pod_auto_cancel_lead_hours),
+      risk_window_hours: cleanPodCancelRiskWindowHours(doc?.pod_cancel_risk_window_hours),
+      risk_alert_hours: cleanPodCancelRiskAlertHours(doc?.pod_cancel_risk_alert_hours),
     };
   },
 

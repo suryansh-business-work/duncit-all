@@ -246,6 +246,7 @@ export {
 export {
   POD_LIVE_TAIL_MS,
   canCompletePod,
+  canScanPodTickets,
   podPhase,
   splitPodsByPhase,
   type PodPhase,
@@ -795,9 +796,23 @@ export {
   RADAR_RING_CAPACITY,
   RADAR_RINGS,
   contactEntriesFromPhoneBook,
+  invitableName,
+  inviteOutcomeKey,
+  isInvited,
+  pendingInviteKeys,
   radarPositions,
+  toggleInviteKey,
   type ContactEntry,
+  type InvitableContact,
+  type InviteBulkPress,
+  type InviteOutcome,
   type PhoneBookPerson,
   type RadarItem,
   type RadarPoint,
 } from './contact-radar';
+export {
+  locationLabel,
+  locationMismatch,
+  type LocationMismatch,
+  type LocationPick,
+} from './location-mismatch';

@@ -160,7 +160,7 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
           type="submit"
           form="pod-resubmit-form"
           variant="contained"
-          disabled={busy}
+          loading={busy}
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {busy ? labels.resubmitting : labels.resubmitCta}

@@ -22,6 +22,7 @@ exports:
   - 'PUBLIC_FEATURE_FLAGS'
   - 'useProductVisibility'
   - 'PRODUCT_VISIBILITY_FLAG'
+  - 'LANGUAGE_PREFERENCE_FLAG'
   - 'LocaleProvider'
   - 'AppLocaleProvider'
   - 'useTranslation'
@@ -224,6 +225,17 @@ function RequireProducts({ children }: Readonly<{ children: JSX.Element }>) {
 
 `PRODUCT_VISIBILITY_FLAG` is the key itself (`'is_product_visible'`), for a caller that
 already has the whole flag map from `useFeatureFlags()`.
+
+`LANGUAGE_PREFERENCE_FLAG` (`'language_preference'`) is the key behind the language
+switcher: mWeb's account page, the native account screen, every portal's profile page and
+the taskbar clock tray read it through `useFeatureFlag` and render nothing while it is off.
+It is seeded OFF and hides the control only — a locale the account already saved keeps
+applying.
+
+```tsx
+const enabled = useFeatureFlag(LANGUAGE_PREFERENCE_FLAG);
+if (!enabled || locales.length < 2) return null;
+```
 
 ### `useTranslation`
 

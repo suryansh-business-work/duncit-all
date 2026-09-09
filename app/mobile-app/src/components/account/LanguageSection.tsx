@@ -4,25 +4,30 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { SetMyLocaleDocument } from '@/graphql/localization';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useLocaleStore } from '@/stores/locale.store';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
+/** Mirrors LANGUAGE_PREFERENCE_FLAG in @duncit/app-settings, which native cannot import. */
+const LANGUAGE_PREFERENCE_FLAG = 'language_preference';
+
 /**
  * Language preference. Switching re-renders the app immediately and persists to
  * the user's profile, so the choice follows them to mWeb and the portals.
- * Hidden when the platform offers fewer than two languages. Tamagui twin of
- * mWeb's LanguageSection.
+ * Hidden while the language_preference flag is off or the platform offers fewer
+ * than two languages. Tamagui twin of mWeb's LanguageSection.
  */
 export function LanguageSection() {
   const { t, locale, setLocale } = useTranslation();
   const locales = useLocaleStore((s) => s.locales);
   const { primary, muted } = useThemeColors();
   const [saving, setSaving] = useState(false);
+  const enabled = useFeatureFlag(LANGUAGE_PREFERENCE_FLAG);
 
-  if (locales.length < 2) return null;
+  if (!enabled || locales.length < 2) return null;
 
   const pick = async (code: string) => {
     if (code === locale || saving) return;

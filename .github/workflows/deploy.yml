@@ -1783,7 +1783,23 @@ jobs:
               set -e
               O=${{ env.PORT_OFFSET }}
               docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "NAMES|${{ env.CONTAINER_PREFIX }}"
-              curl -fsS http://127.0.0.1:$((2001+O))/health && echo
+              # A failed probe must FAIL this attempt. `curl … && echo` hid the exit
+              # status from `set -e`, so this gate stayed green while the server was
+              # crash-looping behind a 502. On failure, say why before retrying:
+              # exit code / OOM flag / restart count of both server containers, the
+              # last log lines of the deploying stack, and host memory + disk.
+              if ! curl -fsS http://127.0.0.1:$((2001+O))/health; then
+                echo
+                echo "::warning::server health probe failed on port $((2001+O)) — container state and last log lines follow"
+                for c in duncit-server duncit-staging-server; do
+                  docker inspect --format "$c: {{.State.Status}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}} restarts={{.RestartCount}} started={{.State.StartedAt}} finished={{.State.FinishedAt}}" "$c" 2>/dev/null || true
+                done
+                docker logs --tail 80 ${{ env.CONTAINER_PREFIX }}server 2>&1 | tail -80 || true
+                free -m || true
+                df -h / || true
+                exit 1
+              fi
+              echo
               # open-wa is optional/stateful — never block the gate on it.
               curl -fsSI http://127.0.0.1:$((2024+O))/ | head -1 || true
               for p in 2000 2002 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 2020 2022 2025 2026 2027; do

@@ -41,6 +41,9 @@ export default function BackoutRefundInfoCards({ request, sym }: Readonly<Props>
   const image = pod?.pod_images_and_videos?.find((m) => m.type === 'IMAGE')?.url;
   const hosts = pod?.host_names?.length ? pod.host_names.join(', ') : '—';
   const replacementConfirmed = request.replacement_confirmed ? 'Yes' : 'No';
+  // Seats this request gave back, out of the seats the booking held before it —
+  // a partial backout releases fewer than it held (2 / 3).
+  const seatsReleased = `${request.seats} / ${request.seats_before}`;
 
   return (
     <Stack
@@ -84,6 +87,7 @@ export default function BackoutRefundInfoCards({ request, sym }: Readonly<Props>
         }}>
           Backout attempts this member has used for this pod (max set in Admin › Pod Settings).
         </Typography>
+        <InfoRow variant="split" label={t('finance.backoutRefund.seatsReleased')} value={seatsReleased} />
       </InfoCard>
 
       <InfoCard title={t('finance.backoutRefund.replacementConfirmed')}>

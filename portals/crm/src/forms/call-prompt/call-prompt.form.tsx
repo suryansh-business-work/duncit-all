@@ -116,7 +116,7 @@ export default function CallPromptForm({ defaultValues, submitting, submitLabel,
               {t('shell.common.cancel')}
             </DuncitButton>
           )}
-          <DuncitButton type="submit" variant="contained" disabled={submitting || !isValid}>
+          <DuncitButton type="submit" variant="contained" loading={submitting} disabled={!isValid}>
             {submitting ? 'Saving…' : submitLabelText}
           </DuncitButton>
         </Stack>

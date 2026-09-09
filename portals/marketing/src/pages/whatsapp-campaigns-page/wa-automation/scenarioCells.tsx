@@ -1,4 +1,5 @@
 import { Box, Stack, Switch, Tooltip, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import { EM_DASH } from '@duncit/table';
 import type { WaCategoryCopy } from '@duncit/app-settings';
@@ -116,13 +117,32 @@ export function ValuesCell({ row, paramsLabel }: Readonly<ValuesCellProps>) {
   );
 }
 
+/** The button's caption and tooltip for each provisioning step. */
+export interface ProvisionLabels {
+  TEMPLATE: { label: string; hint: string };
+  CAMPAIGN: { label: string; hint: string };
+}
+
 interface BlockerCellProps {
   row: WaScenario;
   readyLabel: string;
+  busy: boolean;
+  provisionLabels: ProvisionLabels;
+  onProvision: (row: WaScenario) => void;
 }
 
-/** The whole point of the table: why this cannot send, in the server's words. */
-export function BlockerCell({ row, readyLabel }: Readonly<BlockerCellProps>) {
+/**
+ * The whole point of the table: why this cannot send, in the server's words —
+ * and, for a scenario the code shipped with a drafted template, the one press
+ * that creates what is missing at AiSensy.
+ */
+export function BlockerCell({
+  row,
+  readyLabel,
+  busy,
+  provisionLabels,
+  onProvision,
+}: Readonly<BlockerCellProps>) {
   if (!row.blocker) {
     return (
       <Typography variant="caption" sx={{
@@ -132,13 +152,30 @@ export function BlockerCell({ row, readyLabel }: Readonly<BlockerCellProps>) {
       </Typography>
     );
   }
+  const step = row.provision_step ? provisionLabels[row.provision_step] : null;
   return (
-    <StatusChip
-      status="BLOCKED"
-      label={row.blocker}
-      colorMap={BLOCKER_COLORS}
-      sx={{ height: 'auto', py: 0.5, '& .MuiChip-label': { whiteSpace: 'normal' } }}
-    />
+    <Stack spacing={0.75} sx={{ alignItems: 'flex-start', py: 0.5 }}>
+      <StatusChip
+        status="BLOCKED"
+        label={row.blocker}
+        colorMap={BLOCKER_COLORS}
+        sx={{ height: 'auto', py: 0.5, '& .MuiChip-label': { whiteSpace: 'normal' } }}
+      />
+      {step && (
+        <Tooltip title={step.hint}>
+          <span>
+            <DuncitButton
+              size="small"
+              variant="outlined"
+              disabled={busy}
+              onClick={() => onProvision(row)}
+            >
+              {step.label}
+            </DuncitButton>
+          </span>
+        </Tooltip>
+      )}
+    </Stack>
   );
 }
 

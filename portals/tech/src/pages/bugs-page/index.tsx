@@ -1,51 +1,47 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { useApolloClient } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { useUserData } from '@duncit/user-context';
 import { SUPER_ROLE } from '../../lib/session';
+import {
+  TelemetryBulkBar,
+  TelemetryDeleteButton,
+  useTelemetryTableSelection,
+} from '../../components/telemetry-delete';
 import { BUGS_TABLE, type BugRow } from './queries';
 import BugsTable from './BugsTable';
-import BugBulkBar, { BugDeleteAllButton, useDeleteSingleBug } from './BugBulkBar';
+import { useDeleteSingleBug } from './useDeleteSingleBug';
 import BugImportExport from './BugImportExport';
+
+const bugId = (bug: BugRow) => bug.id;
 
 export default function BugsPage() {
   const client = useApolloClient();
   const navigate = useNavigate();
-  const refetchRef = useRef<(() => void) | null>(null);
-  const clearSelectionRef = useRef<(() => void) | null>(null);
-  const [ticked, setTicked] = useState<BugRow[]>([]);
   const { user } = useUserData();
+  const bulk = useTelemetryTableSelection<BugRow>(bugId);
 
   const fetchRows = useApolloTableFetch<BugRow>(client, BUGS_TABLE, 'bugsTable');
-
-  // A fresh object each render would make the grid reconfigure selection mid-tick.
-  const selection = useMemo(() => ({ onChange: setTicked, clearRef: clearSelectionRef }), []);
-  // Clearing goes through the grid; it echoes the empty selection back to `ticked`.
-  const clearSelection = useCallback(() => clearSelectionRef.current?.(), []);
-
-  const afterDelete = useCallback(() => {
-    clearSelectionRef.current?.();
-    refetchRef.current?.();
-  }, []);
-  const refetch = useCallback(() => refetchRef.current?.(), []);
-
-  const deleteOne = useDeleteSingleBug(afterDelete);
+  const deleteOne = useDeleteSingleBug(bulk.afterDelete);
 
   // Triage happens at the bug's own address, not in a dialog over the table —
   // so it survives a reload and can be pasted to whoever has to fix it.
   const openBug = useCallback((bug: BugRow) => navigate(`/telemetry/bugs/${bug.id}`), [navigate]);
 
-  // deleteAllBugs is SUPER_ADMIN-only on the server, so the button is not shown
-  // to an account whose click could only end in Access Denied.
+  // An unscoped delete is SUPER_ADMIN-only on the server, so the dialog says so
+  // rather than letting a click end in Access Denied.
   const isSuperAdmin = user?.roles?.includes(SUPER_ROLE) ?? false;
   const toolbarActions = (
-    <Stack direction="row" spacing={0.5} sx={{
-      alignItems: "center"
-    }}>
-      <BugImportExport onImported={refetch} />
-      {isSuperAdmin ? <BugDeleteAllButton onDeleted={afterDelete} /> : null}
+    <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+      <BugImportExport onImported={bulk.refetch} />
+      <TelemetryDeleteButton
+        target="BUGS"
+        view={bulk.view}
+        canDeleteEverything={isSuperAdmin}
+        onDeleted={bulk.afterDelete}
+      />
     </Stack>
   );
 
@@ -61,14 +57,21 @@ export default function BugsPage() {
         </Typography>
       </Box>
 
-      <BugBulkBar selected={ticked} onClear={clearSelection} onDeleted={afterDelete} />
+      <TelemetryBulkBar
+        target="BUGS"
+        selectedIds={bulk.selectedIds}
+        view={bulk.view}
+        onClear={bulk.clear}
+        onDeleted={bulk.afterDelete}
+      />
 
       <BugsTable
         fetchRows={fetchRows}
-        refetchRef={refetchRef}
+        refetchRef={bulk.refetchRef}
         onOpen={openBug}
         onDelete={deleteOne}
-        selection={selection}
+        selection={bulk.selection}
+        onQueryChange={bulk.onQueryChange}
         toolbarActions={toolbarActions}
       />
     </Stack>

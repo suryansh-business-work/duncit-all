@@ -24,6 +24,11 @@ export interface HostPodMenuItemsProps {
   /** Hides everything that only makes sense for a pod that gets to run. */
   showAttendeeActions: boolean;
   canComplete: boolean;
+  /**
+   * The pod has not ended yet, so its door is still open to a scanner. False on
+   * a past pod: the row stays, greyed, saying why.
+   */
+  canScan: boolean;
   /** Closes the menu, then runs the action. */
   pick: (action: () => void) => () => void;
   onScan: () => void;
@@ -50,6 +55,7 @@ export interface HostPodMenuItemsProps {
 export default function HostPodActionsItems({
   showAttendeeActions,
   canComplete,
+  canScan,
   pick,
   onScan,
   onComplete,
@@ -72,11 +78,14 @@ export default function HostPodActionsItems({
   return (
     <>
       {showAttendeeActions && (
-        <MenuItem onClick={pick(onScan)}>
+        <MenuItem disabled={!canScan} onClick={pick(onScan)}>
           <ListItemIcon>
-            <QrCodeScannerIcon fontSize="small" color="primary" />
+            <QrCodeScannerIcon fontSize="small" color={canScan ? 'primary' : 'disabled'} />
           </ListItemIcon>
-          <ListItemText primary={labels.scanTickets} />
+          <ListItemText
+            primary={labels.scanTickets}
+            secondary={canScan ? undefined : labels.scanClosed}
+          />
         </MenuItem>
       )}
       {showAttendeeActions && onSeeAttendance && (

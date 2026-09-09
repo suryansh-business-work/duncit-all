@@ -68,7 +68,7 @@ export default function SupportForm({ initialValues, loading, errorMessage, onSu
       <RhfTextField control={control} name="subject" label={t('partners.forms.subject')} required />
       <RhfTextField control={control} name="message" label={t('partners.forms.message')} required multiline minRows={4} hint="At least 10 characters" />
       {(errorMessage ?? rootError) && <Alert severity="error">{errorMessage ?? rootError}</Alert>}
-      <DuncitButton type="submit" variant="contained" size="large" disabled={loading || isSubmitting}>{loading || isSubmitting ? 'Sending...' : 'Send to support'}</DuncitButton>
+      <DuncitButton type="submit" variant="contained" size="large" loading={loading || isSubmitting}>{loading || isSubmitting ? 'Sending...' : 'Send to support'}</DuncitButton>
     </Stack>
   );
 }

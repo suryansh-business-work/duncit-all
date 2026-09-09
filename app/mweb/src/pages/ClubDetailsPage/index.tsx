@@ -25,6 +25,8 @@ import { categoryPath } from '../../utils/category-match';
 import { shareUrl } from '../../lib/share-link';
 import useSavedClub from './useSavedClub';
 import { useTranslation } from '../../i18n/useTranslation';
+import { useLocationMismatch } from '../../hooks/useLocationMismatch';
+import LocationMismatchDialog from '../../components/LocationMismatchDialog';
 
 export default function ClubDetailsPage() {
   const { t } = useTranslation();
@@ -42,6 +44,9 @@ export default function ClubDetailsPage() {
   useEntityPageMeta(club?.club_name);
   const clubId: string = club?.id ?? '';
   const { saved, saving: savingClub, toggleSaved } = useSavedClub(clubId);
+  const locationPrompt = useLocationMismatch(
+    club ? { id: club.location_id, zone: club.locality } : null,
+  );
 
   const { data, loading, error } = useQuery<any>(CLUB_DETAILS_RELATED, {
     variables: { id: clubId },
@@ -141,6 +146,7 @@ export default function ClubDetailsPage() {
         onToggleSave={toggleSaved}
         onShare={shareClub}
       />
+      <LocationMismatchDialog kind="CLUB" {...locationPrompt} />
       <ClubSummaryHeader
         club={club}
         featureUrl={featureMedia[0]?.url}

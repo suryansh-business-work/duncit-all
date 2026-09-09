@@ -157,7 +157,7 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
           type="submit"
           form="pod-edit-form"
           variant="contained"
-          disabled={busy}
+          loading={busy}
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {busy ? labels.saving : labels.saveChanges}

@@ -5,7 +5,12 @@ import {
   RADAR_RING_CAPACITY,
   RADAR_RINGS,
   contactEntriesFromPhoneBook,
+  invitableName,
+  inviteOutcomeKey,
+  isInvited,
+  pendingInviteKeys,
   radarPositions,
+  toggleInviteKey,
 } from '../src/contact-radar';
 
 describe('contactEntriesFromPhoneBook', () => {
@@ -67,5 +72,48 @@ describe('radarPositions', () => {
 
   it('returns nothing for nobody', () => {
     expect(radarPositions([]).size).toBe(0);
+  });
+});
+
+describe('the invite list', () => {
+  const waiting = { phone_key: '9876543210', contact_label: 'Ritu Malhotra', invited_at: null };
+  const asked = {
+    phone_key: '9876543211',
+    contact_label: 'Karan Bhatia',
+    invited_at: '2026-09-01T10:00:00Z',
+  };
+
+  it('knows who has already been texted', () => {
+    expect(isInvited(waiting)).toBe(false);
+    expect(isInvited(asked)).toBe(true);
+    // The field is optional on the type — a row that never carried it is waiting.
+    expect(isInvited({ phone_key: '9876543212', contact_label: 'Dev' })).toBe(false);
+  });
+
+  it('falls back to the number when the phone book saved no name', () => {
+    expect(invitableName(waiting)).toBe('Ritu Malhotra');
+    expect(invitableName({ phone_key: '9876543212', contact_label: '   ' })).toBe('9876543212');
+  });
+
+  it('sends only the ones still waiting when Invite all is pressed', () => {
+    expect(pendingInviteKeys([waiting, asked])).toEqual(['9876543210']);
+    expect(pendingInviteKeys([asked])).toEqual([]);
+  });
+
+  it('ticks a key in and out as a NEW array', () => {
+    const empty: string[] = [];
+    const one = toggleInviteKey(empty, '9876543210');
+    expect(one).toEqual(['9876543210']);
+    expect(one).not.toBe(empty);
+    expect(toggleInviteKey(one, '9876543211')).toEqual(['9876543210', '9876543211']);
+    expect(toggleInviteKey(one, '9876543210')).toEqual([]);
+  });
+
+  it('names the sentence a press earned, and never confuses held-back with failed', () => {
+    expect(inviteOutcomeKey({ sent: 2, failed: 0 })).toBe('mweb.contacts.invitesSent');
+    expect(inviteOutcomeKey({ sent: 0, failed: 3 })).toBe('mweb.contacts.invitesFailed');
+    expect(inviteOutcomeKey({ sent: 0, failed: 0 })).toBe('mweb.contacts.invitesSkipped');
+    // One that went and one that did not is still a send, not a failure.
+    expect(inviteOutcomeKey({ sent: 1, failed: 1 })).toBe('mweb.contacts.invitesSent');
   });
 });

@@ -37,6 +37,7 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
     },
     adsSettings: {
       failedToUpdateAdPricing: 'Failed to update ad pricing',
+      savePricing: 'Save Pricing',
       maximumCampaignDays: 'Maximum campaign days',
       maximumDaysCannotBeShorterThan: 'Maximum days cannot be shorter than minimum days',
       minimumCampaignDays: 'Minimum campaign days',
@@ -189,6 +190,7 @@ export const MARKETING_BUNDLE: NestedCatalogue = {
       browser: 'Browser',
       cameFrom: 'Came from',
       clicks: 'Clicks',
+      createLink: 'Create link',
       createdFor: 'Created for',
       deleteLink: 'Delete link',
       deleteThisShortLink: 'Delete this short link?',

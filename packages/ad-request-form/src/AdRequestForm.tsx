@@ -1,11 +1,11 @@
 import { useEffect, useMemo } from 'react';
 import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Box, Grid, MenuItem, Slider, Stack, TextField, Typography } from '@mui/material';
+import { Box, Grid, MenuItem, Slider, TextField, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { DuncitButton } from '@duncit/buttons';
 import { RhfTextField } from '@duncit/forms';
+import { FormActionsRow } from '@duncit/ui';
 import { adMediaTypeOptions, adPositionOptions } from './ad-options';
 import AdMediaField from './AdMediaField';
 import { useTranslation, type Translate } from './i18n/useTranslation';
@@ -237,20 +237,13 @@ export default function AdRequestForm({
             hint={t('adRequest.form.targetAudienceHint')}
           />
         </Grid>
-        {errorMessage && (
-          <Grid size={12}>
-            <Alert severity="error">{errorMessage}</Alert>
-          </Grid>
-        )}
-        <Grid size={12}>
-          <Stack direction="row" sx={{
-            justifyContent: "flex-end"
-          }}>
-            <DuncitButton type="submit" variant="contained" startIcon={<SendIcon />} disabled={busy || !formState.isValid}>
-              {submitLabel ?? t('adRequest.form.submit')}
-            </DuncitButton>
-          </Stack>
-        </Grid>
+        <FormActionsRow
+          errorMessage={errorMessage}
+          busy={busy}
+          disabled={!formState.isValid}
+          startIcon={<SendIcon />}
+          submitLabel={submitLabel ?? t('adRequest.form.submit')}
+        />
       </Grid>
     </form>
   );

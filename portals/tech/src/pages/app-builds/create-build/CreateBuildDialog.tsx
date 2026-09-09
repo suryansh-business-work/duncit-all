@@ -108,7 +108,7 @@ export default function CreateBuildDialog({ open, platform, onClose, onQueued }:
           type="submit"
           form={CREATE_BUILD_FORM_ID}
           variant="contained"
-          disabled={busy || !config?.configured}
+          loading={busy} disabled={!config?.configured}
         >
           {busy ? t('tech.appBuilds.triggering') : t('tech.appBuilds.triggerAction')}
         </DuncitButton>

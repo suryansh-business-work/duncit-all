@@ -90,7 +90,7 @@ export default function GrievanceOfficerForm({
               <DuncitButton
                 type="submit"
                 variant="contained"
-                disabled={saving || !formState.isDirty}
+                loading={saving} disabled={!formState.isDirty}
               >
                 Save
               </DuncitButton>

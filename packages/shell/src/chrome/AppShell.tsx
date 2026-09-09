@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
-import { Box, CircularProgress } from '@mui/material';
+import { Box } from '@mui/material';
+import { Loader } from '@duncit/ui';
 import { AppBreadcrumbs, BreadcrumbProvider } from '@duncit/breadcrumb';
 import { useTranslation } from '../i18n/useTranslation';
 import { localizeNav, localizeSearchItems } from '../i18n/localize-nav';
@@ -108,11 +109,7 @@ export function AppShell({
   }, [user, hasAccess, navigate, onDenied]);
 
   if (loading && !user) {
-    return (
-      <Box sx={{ display: 'grid', placeItems: 'center', minHeight: '100dvh' }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <Loader variant="page" />;
   }
 
   return (

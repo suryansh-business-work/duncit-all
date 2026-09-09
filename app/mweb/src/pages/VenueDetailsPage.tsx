@@ -23,6 +23,8 @@ import VenueMapPreview from '../components/VenueMapPreview';
 import { useTranslation } from '../i18n/useTranslation';
 import VenueImagesGrid from './venues-page/VenueImagesGrid';
 import VenuePodsSection from './venues-page/VenuePodsSection';
+import LocationMismatchDialog from '../components/LocationMismatchDialog';
+import { useLocationMismatch } from '../hooks/useLocationMismatch';
 
 const PUBLIC_VENUES = gql`
   query PublicVenueDetails {
@@ -32,6 +34,7 @@ const PUBLIC_VENUES = gql`
       venue_type
       capacity
       description
+      location_id
       amenities
       facilities
       security
@@ -91,6 +94,9 @@ export default function VenueDetailsPage() {
   );
   useEntityPageMeta(venue?.venue_name);
   const images: string[] = useMemo(() => venueImages(venue), [venue]);
+  const locationPrompt = useLocationMismatch(
+    venue ? { id: venue.location_id, zone: venue.locality } : null,
+  );
 
   const copyLink = async () => {
     try {
@@ -209,6 +215,7 @@ export default function VenueDetailsPage() {
         onIndexChange={setZoomIndex}
       />
 
+      <LocationMismatchDialog kind="VENUE" {...locationPrompt} />
       <Snackbar open={!!snack} autoHideDuration={2200} message={snack} onClose={() => setSnack('')} />
     </Stack>
   );

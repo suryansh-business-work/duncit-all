@@ -230,6 +230,10 @@ exports:
   - 'CONTACT_KEY_MIN_DIGITS'
   - 'isVerifiablePhoneShape'
   - 'OTP_PHONE_MIN_DIGITS'
+  - 'locationMismatch'
+  - 'locationLabel'
+  - 'LocationMismatch'
+  - 'LocationPick'
   - 'namedCompanionEntries'
   - 'needsOtp'
   - 'canScanTickets'
@@ -1929,3 +1933,41 @@ sees them.
 
 It is deliberately **data only**: no formatter, no component. The two consoles are MUI twins
 of one screen, and rule 40's twin clause applies — they share the shape, never the UI.
+
+## A link into another city
+
+`location-mismatch.ts` is the question both apps ask before they open a pod, club or venue
+that arrived as a shared link: is this thing somewhere other than where the viewer is
+browsing? A viewer set to Mumbai who opens a Bengaluru pod used to land on it with a Mumbai
+header, a Mumbai feed behind the Back button and nothing on the page saying so. Now a dialog
+names both places and offers to switch.
+
+```ts
+locationMismatch(
+  { id: '66f1…2a70', city: 'Mumbai', zone: 'Bandra' }, // the header's selection
+  { id: '66f1…2a6e', city: 'Bengaluru', zone: 'Indiranagar' }, // pod.location_id + pod.zone_name
+);
+// {
+//   current: 'Mumbai · Bandra', currentCity: 'Mumbai',
+//   target: 'Bengaluru · Indiranagar', targetCity: 'Bengaluru',
+//   targetId: '66f1…2a6e', targetZone: 'Indiranagar',
+// }
+
+locationMismatch({ id: 'x', city: 'Pune' }, { id: 'x', city: 'Pune', zone: 'Baner' }); // null — same city
+locationMismatch({ id: '', city: '' }, { id: 'y', city: 'Pune' }); // null — header not hydrated yet
+locationLabel('Bengaluru', 'Indiranagar'); // 'Bengaluru · Indiranagar'
+```
+
+It compares **cities**, never areas: two localities of one city share a feed, so a link into
+the next zone is not a change of place. It answers `null` whenever either side is unknown —
+the selection has not hydrated, the entity carries no `location_id`, or the id cannot be
+named — because a dialog that opens over a half-loaded page, or reads "Switch to ", is worse
+than none.
+
+The `*City` fields exist for the two buttons ("Switch to Bengaluru", "Continue in Mumbai"),
+which would otherwise carry the full `City · Area` label and wrap. `targetId` + `targetZone`
+are what the switch selects, so the header lands on the pod's own area, not just its city.
+
+The MUI dialog is mWeb's `LocationMismatchDialog`; the Tamagui one is the native app's. Each
+surface's `useLocationMismatch` hook resolves the two ids to names against its own location
+list and hands this result to its dialog — rule 40's twin clause: one rule, two views.

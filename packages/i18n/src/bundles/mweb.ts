@@ -987,6 +987,24 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       free: 'Free',
       paid: 'Paid',
     },
+    // The dialog that opens over a pod, club or venue reached from a link whose
+    // city is not the one the viewer is browsing. Both surfaces render the same
+    // sentences (rule 27); {current} and {target} are the two places as their
+    // header names them ('Mumbai · Bandra'), the buttons carry the city alone.
+    locationMismatch: {
+      title: 'This link is for a different location',
+      introPod:
+        'The pod you are opening is in {target}, but your Duncit location is currently set to {current}.',
+      introClub:
+        'The club you are opening is in {target}, but your Duncit location is currently set to {current}.',
+      introVenue:
+        'The venue you are opening is in {target}, but your Duncit location is currently set to {current}.',
+      currentLocation: 'Your current location',
+      linkLocation: 'Location of this link',
+      hint: 'Switch to {target} to browse the pods, clubs and venues there. You can change your location again at any time from the header.',
+      switchButton: 'Switch to {target}',
+      keepButton: 'Continue in {current}',
+    },
     // The pod page: hero, overview, schedule, the accordion stack, the booking
     // bar in every state it has, the backout/keep-spot dialogs and the comments
     // sheet. mWeb and the native app render the SAME journey (rule 27), so a key

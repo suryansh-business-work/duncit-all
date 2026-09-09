@@ -130,6 +130,17 @@ export const HOME_REFRESH_EVENT = 'duncit:home-refresh';
  * (e.g. the Clubs page "change your location" link). */
 export const OPEN_LOCATION_PICKER_EVENT = 'duncit:open-location-picker';
 
+/** Dispatched on `window` to make a specific city + area the header's
+ * selection without opening the picker — the "Switch to Bengaluru" button on
+ * a pod, club or venue reached from a link into another city. The header
+ * applies AND persists it, exactly as a pick in the dialog would. */
+export const APPLY_LOCATION_EVENT = 'duncit:apply-location';
+
+export interface ApplyLocationDetail {
+  locationId: string;
+  zoneName: string;
+}
+
 export const formatRelative = (iso: string) => {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);

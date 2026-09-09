@@ -10,6 +10,8 @@ import { StackScreen } from '@/components/StackScreen';
 import { VenueImagesGrid } from '@/components/details/VenueImagesGrid';
 import { VenuePodsSection } from '@/components/details/VenuePodsSection';
 import { useVenueDetails, type PublicVenue } from '@/hooks/useHostsVenues';
+import { useLocationMismatch } from '@/hooks/useLocationMismatch';
+import { LocationMismatchDialog } from '@/components/LocationMismatchDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
@@ -150,6 +152,9 @@ export function VenueDetailsScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'VenueDetails'>>();
   const venueId = route.params?.venueId ?? '';
   const { venue, isLoading, error } = useVenueDetails(venueId);
+  const locationPrompt = useLocationMismatch(
+    venue ? { id: venue.location_id, zone: venue.locality } : null,
+  );
   const gallery: string[] = venueImages(venue);
   const body =
     error || !venue ? (
@@ -169,6 +174,7 @@ export function VenueDetailsScreen() {
       ) : (
         body
       )}
+      <LocationMismatchDialog kind="VENUE" {...locationPrompt} />
     </StackScreen>
   );
 }

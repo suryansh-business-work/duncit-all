@@ -6,6 +6,8 @@ export const CLUB_BY_SLUG = gql`
       id
       club_id
       club_name
+      location_id
+      locality
       club_description
       club_feature_images_and_videos {
         url

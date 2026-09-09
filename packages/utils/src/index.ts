@@ -801,3 +801,9 @@ export {
   type RadarItem,
   type RadarPoint,
 } from './contact-radar';
+export {
+  locationLabel,
+  locationMismatch,
+  type LocationMismatch,
+  type LocationPick,
+} from './location-mismatch';

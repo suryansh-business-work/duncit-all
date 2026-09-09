@@ -125,7 +125,9 @@ export default function ContactsPage() {
           busyKey={invites.busyKey}
           bulkBusy={invites.bulkBusy}
           onToggleSelect={invites.toggleSelect}
-          onInvite={invites.invite}
+          onInviteRow={invites.inviteRow}
+          onInviteSelected={invites.inviteSelected}
+          onInviteAll={invites.inviteAll}
         />
       ) : (
         <>

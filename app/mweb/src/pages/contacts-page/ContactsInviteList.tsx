@@ -1,6 +1,10 @@
 import { Alert, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { pendingInviteKeys, type InvitableContact } from '@duncit/utils';
+import {
+  pendingInviteKeys,
+  type InvitableContact,
+  type InviteBulkPress,
+} from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import InviteRow from './InviteRow';
 
@@ -13,9 +17,11 @@ interface Props {
   rows: InvitableContact[];
   selected: string[];
   busyKey: string | null;
-  bulkBusy: boolean;
+  bulkBusy: InviteBulkPress | null;
   onToggleSelect: (key: string) => void;
-  onInvite: (keys: string[]) => void;
+  onInviteRow: (key: string) => void;
+  onInviteSelected: () => void;
+  onInviteAll: () => void;
 }
 
 /** The people from the phone book who are not here yet, with the three ways to
@@ -32,7 +38,9 @@ export default function ContactsInviteList({
   busyKey,
   bulkBusy,
   onToggleSelect,
-  onInvite,
+  onInviteRow,
+  onInviteSelected,
+  onInviteAll,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   if (loading && !hasData) {
@@ -70,8 +78,8 @@ export default function ContactsInviteList({
           variant="outlined"
           size="small"
           disabled={selected.length === 0}
-          loading={bulkBusy && selected.length > 0}
-          onClick={() => onInvite(selected)}
+          loading={bulkBusy === 'SELECTED'}
+          onClick={onInviteSelected}
           data-testid="contacts-invite-selected"
         >
           {t('mweb.contacts.inviteSelected', { vars: { count: selected.length } })}
@@ -80,8 +88,8 @@ export default function ContactsInviteList({
           variant="contained"
           size="small"
           disabled={pending.length === 0}
-          loading={bulkBusy && selected.length === 0}
-          onClick={() => onInvite([])}
+          loading={bulkBusy === 'ALL'}
+          onClick={onInviteAll}
           data-testid="contacts-invite-all"
         >
           {t('mweb.contacts.inviteAll', { vars: { count: pending.length } })}
@@ -95,7 +103,7 @@ export default function ContactsInviteList({
           selected={selected.includes(row.phone_key)}
           busy={busyKey === row.phone_key}
           onToggleSelect={onToggleSelect}
-          onInvite={(key) => onInvite([key])}
+          onInvite={onInviteRow}
         />
       ))}
     </Stack>

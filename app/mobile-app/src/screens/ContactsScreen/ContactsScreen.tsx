@@ -100,7 +100,9 @@ export function ContactsScreen() {
             busyKey={invites.busyKey}
             bulkBusy={invites.bulkBusy}
             onToggleSelect={invites.toggleSelect}
-            onInvite={(keys) => fireAndForget(invites.invite(keys))}
+            onInviteRow={(key) => fireAndForget(invites.inviteRow(key))}
+            onInviteSelected={() => fireAndForget(invites.inviteSelected())}
+            onInviteAll={() => fireAndForget(invites.inviteAll())}
           />
         ) : (
           <>

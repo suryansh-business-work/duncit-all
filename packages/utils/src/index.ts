@@ -803,6 +803,7 @@ export {
   toggleInviteKey,
   type ContactEntry,
   type InvitableContact,
+  type InviteBulkPress,
   type InviteOutcome,
   type PhoneBookPerson,
   type RadarItem,

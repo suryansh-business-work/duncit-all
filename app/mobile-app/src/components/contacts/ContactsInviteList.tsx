@@ -3,6 +3,7 @@ import {
   inviteOutcomeKey,
   pendingInviteKeys,
   type InvitableContact,
+  type InviteBulkPress,
   type InviteOutcome,
 } from '@duncit/utils';
 
@@ -22,9 +23,11 @@ interface Props {
   /** What the last press did — the app has no toast, so it is said in place. */
   result: (InviteOutcome & { skipped: number }) | null;
   busyKey: string | null;
-  bulkBusy: boolean;
+  bulkBusy: InviteBulkPress | null;
   onToggleSelect: (key: string) => void;
-  onInvite: (keys: string[]) => void;
+  onInviteRow: (key: string) => void;
+  onInviteSelected: () => void;
+  onInviteAll: () => void;
 }
 
 /** The people from the phone book who are not here yet, with the three ways to
@@ -41,7 +44,9 @@ export function ContactsInviteList({
   busyKey,
   bulkBusy,
   onToggleSelect,
-  onInvite,
+  onInviteRow,
+  onInviteSelected,
+  onInviteAll,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   if (isLoading && rows.length === 0) return <ListSkeleton testID="contacts-invite-loading" />;
@@ -83,8 +88,8 @@ export function ContactsInviteList({
           variant="outline"
           size="sm"
           disabled={selected.length === 0}
-          loading={bulkBusy && selected.length > 0}
-          onPress={() => onInvite(selected)}
+          loading={bulkBusy === 'SELECTED'}
+          onPress={onInviteSelected}
         />
         <DuncitButton
           testID="contacts-invite-all"
@@ -92,8 +97,8 @@ export function ContactsInviteList({
           variant="solid"
           size="sm"
           disabled={pending.length === 0}
-          loading={bulkBusy && selected.length === 0}
-          onPress={() => onInvite([])}
+          loading={bulkBusy === 'ALL'}
+          onPress={onInviteAll}
         />
       </XStack>
       {result ? (
@@ -112,7 +117,7 @@ export function ContactsInviteList({
           selected={selected.includes(row.phone_key)}
           busy={busyKey === row.phone_key}
           onToggleSelect={onToggleSelect}
-          onInvite={(key) => onInvite([key])}
+          onInvite={onInviteRow}
         />
       ))}
     </YStack>

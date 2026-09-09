@@ -125,6 +125,15 @@ export function toggleInviteKey(selected: readonly string[], key: string): strin
   return selected.includes(key) ? selected.filter((item) => item !== key) : [...selected, key];
 }
 
+/**
+ * Which bulk button is mid-flight, or null.
+ *
+ * Named rather than inferred from the key list: "Invite all" pressed while rows
+ * happen to be ticked sends the same empty list it always does, and a spinner
+ * that reads the selection to decide would put itself on the other button.
+ */
+export type InviteBulkPress = 'SELECTED' | 'ALL';
+
 /** What one press of Invite / Invite all reported back. */
 export interface InviteOutcome {
   sent: number;

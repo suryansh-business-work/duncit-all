@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { toggleInviteKey, type InvitableContact } from '@duncit/utils';
+import { toggleInviteKey, type InvitableContact, type InviteBulkPress } from '@duncit/utils';
 
 import { ContactsToInviteDocument, InviteContactsDocument } from '@/graphql/contacts';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -14,23 +14,31 @@ interface InviteResult {
   failed: number;
 }
 
+/** Which control is mid-flight: one row's button, or one of the two bulk ones. */
+interface Busy {
+  key: string | null;
+  bulk: InviteBulkPress | null;
+}
+
+const IDLE: Busy = { key: null, bulk: null };
+
 /**
  * The invite tab's state: who is still to be asked, which of them are ticked,
- * and the one call that texts a row, the ticked ones or everyone waiting.
+ * and the three presses that text them — one row, the ticked ones, or everyone
+ * still waiting.
  *
- * An empty key list means "everyone still waiting" — the same contract the
- * mutation states, so the button does not have to enumerate a phone book to
- * press it. Request sequencing drops a stale answer when the search changes
- * mid-flight, exactly as `useContactsOnDuncit` does. Twin of mWeb's
- * `useContactsInvite` (rule 27).
+ * Each press says which control it came from rather than letting the spinner
+ * infer it from the key list: "Invite all" sends an empty list whatever is
+ * ticked, which is the same contract the mutation states. Request sequencing
+ * drops a stale answer when the search changes mid-flight, exactly as
+ * `useContactsOnDuncit` does. Twin of mWeb's `useContactsInvite` (rule 27).
  */
 export function useContactsInvite(search: string, active: boolean) {
   const [rows, setRows] = useState<InvitableContact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
   const [selected, setSelected] = useState<string[]>([]);
-  const [busyKey, setBusyKey] = useState<string | null>(null);
-  const [bulkBusy, setBulkBusy] = useState(false);
+  const [busy, setBusy] = useState<Busy>(IDLE);
   const [result, setResult] = useState<InviteResult | null>(null);
   const seq = useRef(0);
   const trimmed = search.trim();
@@ -68,12 +76,9 @@ export function useContactsInvite(search: string, active: boolean) {
     [],
   );
 
-  const invite = useCallback(
-    async (keys: string[]) => {
-      // A one-key press is a row's own button; everything else is a bulk press.
-      const single = keys.length === 1 ? (keys[0] ?? null) : null;
-      setBusyKey(single);
-      setBulkBusy(single === null);
+  const run = useCallback(
+    async (keys: string[], pressed: Busy) => {
+      setBusy(pressed);
       setResult(null);
       try {
         const data = await graphqlRequest(
@@ -88,23 +93,33 @@ export function useContactsInvite(search: string, active: boolean) {
       } catch (err) {
         setError(err);
       } finally {
-        setBusyKey(null);
-        setBulkBusy(false);
+        setBusy(IDLE);
       }
     },
     [load],
   );
+
+  const inviteRow = useCallback((key: string) => run([key], { key, bulk: null }), [run]);
+  const inviteSelected = useCallback(
+    () => run(selected, { key: null, bulk: 'SELECTED' }),
+    [run, selected],
+  );
+  // An empty list is the mutation's word for "everyone still waiting" — the
+  // screen never has to enumerate a phone book to press this.
+  const inviteAll = useCallback(() => run([], { key: null, bulk: 'ALL' }), [run]);
 
   return {
     rows,
     isLoading,
     error,
     selected,
-    busyKey,
-    bulkBusy,
+    busyKey: busy.key,
+    bulkBusy: busy.bulk,
     result,
     toggleSelect,
-    invite,
+    inviteRow,
+    inviteSelected,
+    inviteAll,
     refetch: load,
   };
 }

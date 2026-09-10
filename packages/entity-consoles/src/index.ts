@@ -29,6 +29,19 @@ export type {
 // ---- the venues console (from the ADMIN portal) --------------------------
 export { default as VenuesPage } from './venues/list/VenuesPage';
 export { default as VenueDetailsPage } from './venues/detail/VenueDetailsPage';
+export { default as VenueEditorPage } from './venues/editor';
+// The record <-> form mapping, so a caller (and the docs demo) can see exactly
+// what one Save sends to each of the four venue mutations.
+export {
+  blankVenueValues,
+  makeVenueFormSchema,
+  valuesToSettingsInput,
+  valuesToStep1,
+  valuesToStep2,
+  valuesToStep3,
+  venueToValues,
+  type VenueFormValues,
+} from './venues/editor';
 
 // ---- the clubs console (from the ADMIN portal) ---------------------------
 export { default as ClubsPage } from './clubs/list/ClubsPage';
@@ -58,6 +71,12 @@ export { default as SuperCategoryFilter } from './shared/SuperCategoryFilter';
 export { default as MediaGallery } from './shared/MediaGallery';
 export { default as MediaLightbox } from './shared/MediaLightbox';
 export { default as AiFillButton } from './shared/AiFillButton';
+export { default as useMediaPicker } from './shared/useMediaPicker';
+
+// ---- the change log every console's detail page shows -------------------
+export { default as ChangeLogsSection } from './shared/change-logs';
+export type { ChangeLogsSectionProps } from './shared/change-logs';
+export type { EntityAuditType, EntityChangeLogRow } from './shared/change-logs/queries';
 export * from './shared/aiFillSanitize';
 
 // The two seams that used to reach into admin's own config.

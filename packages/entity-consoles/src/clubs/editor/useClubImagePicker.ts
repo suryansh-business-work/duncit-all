@@ -1,24 +1,10 @@
-import { useRef, useState } from 'react';
+import useMediaPicker from '../../shared/useMediaPicker';
 
-/** Bridges the URL-callback media picker to the club form's promise picker.
- * The folder travels with the request, so club moments never land in /clubs. */
+/**
+ * The club form's media picker — the shared bridge, rooted at `/clubs` so a
+ * club's images land beside each other. The bridge itself is shared with every
+ * other console editor (rule 34).
+ */
 export default function useClubImagePicker() {
-  const [open, setOpen] = useState(false);
-  const [folder, setFolder] = useState('/clubs');
-  const resolveRef = useRef<((url: string | null) => void) | null>(null);
-
-  const pickImage = (nextFolder = '/clubs') =>
-    new Promise<string | null>((resolve) => {
-      resolveRef.current = resolve;
-      setFolder(nextFolder);
-      setOpen(true);
-    });
-
-  const settle = (url: string | null) => {
-    resolveRef.current?.(url);
-    resolveRef.current = null;
-    setOpen(false);
-  };
-
-  return { open, folder, pickImage, settle };
+  return useMediaPicker('/clubs');
 }

@@ -9,14 +9,10 @@
  * do NOT: they are not fields of the profile and have their own admin views.
  */
 
-export interface TrackedUserField {
-  /** Document dot-path on the user document. */
-  path: string;
-  /** What the admin table calls it. */
-  label: string;
-  /** Array order carries meaning (so re-ordering is a real change). */
-  ordered?: boolean;
-}
+import type { DiffField } from '@utils/doc-diff';
+
+/** One watched field of the user document — the shared watched-field shape. */
+export type TrackedUserField = DiffField;
 
 export const TRACKED_USER_FIELDS: readonly TrackedUserField[] = [
   // Identity
@@ -79,59 +75,10 @@ export const TRACKED_USER_FIELDS: readonly TrackedUserField[] = [
   { path: 'finance.host_commission_pct', label: 'Host Commission %' },
 ];
 
-/** Walk a dot-path on a user document (hydrated or lean). */
-export function readPath(doc: unknown, path: string): unknown {
-  return path
-    .split('.')
-    .reduce<unknown>(
-      (acc, key) => (acc == null ? undefined : (acc as Record<string, unknown>)[key]),
-      doc
-    );
-}
-
-/** The stored shapes that are not plain scalars: an ObjectId, a profile link. */
-interface ValueShape {
-  label?: unknown;
-  url?: unknown;
-  toHexString?: () => string;
-}
-
-/** True for the values that are safe to hand straight to `String()`. */
-function isScalar(value: unknown): value is string | number | boolean | bigint {
-  const kind = typeof value;
-  return kind === 'string' || kind === 'number' || kind === 'boolean' || kind === 'bigint';
-}
-
-/** One value as text. A profile link reads as its label + url, an id as hex. */
-function itemText(item: unknown): string {
-  if (isScalar(item)) return String(item);
-  if (item instanceof Date) return item.toISOString();
-  if (item === null || typeof item !== 'object') return '';
-  const shape = item as ValueShape;
-  if (typeof shape.toHexString === 'function') return shape.toHexString();
-  if (typeof shape.url === 'string') {
-    const label = typeof shape.label === 'string' ? shape.label : '';
-    return `${label} (${shape.url})`;
-  }
-  // Anything else object-shaped would render as [object Object] (S6551).
-  return JSON.stringify(item);
-}
-
 /**
- * A field value as the single string the log stores and the table renders.
- *
- * Unordered arrays (roles, zones) are sorted first: the same set arriving in a
- * different order is not a change, and reporting it as one would fill the
- * trail with edits nobody made.
+ * Reading and rendering a value is not user-specific — the entity change log
+ * (venues, hosts, clubs, club admins, regions) renders its columns the same
+ * way — so both trails share one implementation in `@utils/doc-diff` and this
+ * module re-exports it for the callers that already knew it by this name.
  */
-export function valueText(value: unknown, field: TrackedUserField): string {
-  if (value === null || value === undefined || value === '') return '';
-  if (Array.isArray(value)) {
-    // `items` is already a fresh array off `.map`, so sorting it in place
-    // mutates nothing the caller can see.
-    const items: string[] = value.map(itemText).filter(Boolean);
-    if (!field.ordered) items.sort((a, b) => a.localeCompare(b));
-    return items.join(', ');
-  }
-  return itemText(value);
-}
+export { readPath, valueText } from '@utils/doc-diff';

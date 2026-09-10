@@ -2,6 +2,7 @@ import { Route } from 'react-router';
 import {
   mountDirectoryPortal,
   VenueDetailsPage,
+  VenueEditorPage,
   VenuesPage,
   VENUES_SPEC,
 } from '@duncit/entity-consoles';
@@ -11,8 +12,9 @@ import { appConfig } from './config/app-config';
 /**
  * The venues console — admin's Venues section, on its own subdomain.
  *
- * The list and detail are the ones admin rendered; admin no longer carries
- * them, so there is one implementation and one place it lives.
+ * The list, the record and the editor are all here: a venue is registered,
+ * corrected and re-configured from one place, and every field that moves is
+ * appended to the record's change log.
  */
 mountDirectoryPortal({
   appConfig,
@@ -25,8 +27,11 @@ mountDirectoryPortal({
     nav: [{ label: 'Venues', labelKey: 'shell.nav.venues', to: '/venues', icon: 'storefront' }],
     routes: (authed) => (
       <>
+        {/* Static before dynamic so /venues/new is never read as a venue id. */}
+        <Route path="/venues/new" element={authed(<VenueEditorPage />)} />
         <Route path="/venues" element={authed(<VenuesPage />)} />
         <Route path="/venues/:venueId" element={authed(<VenueDetailsPage />)} />
+        <Route path="/venues/:venueId/edit" element={authed(<VenueEditorPage />)} />
       </>
     ),
   },

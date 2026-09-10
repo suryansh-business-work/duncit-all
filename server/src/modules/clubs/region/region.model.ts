@@ -1,5 +1,6 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
+import { attachEntityAudit } from '@modules/platform/entityAudit/entityAudit.attach';
 
 /**
  * A Regional Club Admin's patch: the Club Admins who report into them.
@@ -54,5 +55,9 @@ regionSchema.pre('save', async function assignRegionNo(next) {
   }
   next();
 });
+
+// Every write through mongoose is diffed and appended to the entity change
+// log (rule: the trail is captured at the model, never per service).
+attachEntityAudit(regionSchema, 'REGION');
 
 export const RegionModel = model<IRegion>('Region', regionSchema);

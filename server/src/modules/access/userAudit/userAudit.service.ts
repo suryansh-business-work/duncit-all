@@ -4,17 +4,18 @@ import { requestIdentity } from '@observability/requestIdentity';
 import { UserModel } from '@modules/access/user/user.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
-  TRACKED_USER_FIELDS,
-  readPath,
-  valueText,
-  type TrackedUserField,
-} from './userAudit.fields';
+  diffSnapshots,
+  snapshotDoc,
+  type DocSnapshot,
+  type FieldChange,
+} from '@utils/doc-diff';
+import { auditActorName, sourceFromDeclared } from '@utils/audit-actor';
+import { TRACKED_USER_FIELDS } from './userAudit.fields';
 import {
   UserChangeLogModel,
   type IUserChangeLog,
   type UserChangeAction,
   type UserChangeActorType,
-  type UserChangeSource,
 } from './userAudit.model';
 
 /**
@@ -32,81 +33,26 @@ import {
  */
 
 /** A path -> rendered value snapshot of the tracked fields of a user doc. */
-export type UserSnapshot = Record<string, string>;
+export type UserSnapshot = DocSnapshot;
+export type UserFieldChange = FieldChange;
 
-export interface UserFieldChange {
-  field: string;
-  field_label: string;
-  old_value: string;
-  new_value: string;
-}
-
-export function snapshotUser(doc: unknown): UserSnapshot {
-  const snap: UserSnapshot = {};
-  for (const field of TRACKED_USER_FIELDS) {
-    snap[field.path] = valueText(readPath(doc, field.path), field);
-  }
-  return snap;
-}
+export const snapshotUser = (doc: unknown): UserSnapshot => snapshotDoc(doc, TRACKED_USER_FIELDS);
 
 /** Field-level diff of two snapshots — empty when nothing tracked moved. */
-export function diffUserSnapshots(before: UserSnapshot, after: UserSnapshot): UserFieldChange[] {
-  const changes: UserFieldChange[] = [];
-  for (const field of TRACKED_USER_FIELDS) {
-    const oldValue = before[field.path] ?? '';
-    const newValue = after[field.path] ?? '';
-    if (oldValue !== newValue) {
-      changes.push(toChange(field, oldValue, newValue));
-    }
-  }
-  return changes;
-}
-
-const toChange = (field: TrackedUserField, oldValue: string, newValue: string): UserFieldChange => ({
-  field: field.path,
-  field_label: field.label,
-  old_value: oldValue,
-  new_value: newValue,
-});
+export const diffUserSnapshots = (before: UserSnapshot, after: UserSnapshot): UserFieldChange[] =>
+  diffSnapshots(before, after, TRACKED_USER_FIELDS);
 
 /**
- * Which surface the change came from.
- *
- * Read from the header the caller declared, never guessed: a value that is not
- * one of the four Duncit clients is SERVER, because that is honestly what an
- * unattributed write is.
+ * Which surface the change came from, and who the actor is relative to the
+ * account — read from the request in flight by the shared audit attribution
+ * helpers, so both change logs stamp a row the same way.
  */
-export function sourceFromDeclared(declared?: string | null): UserChangeSource {
-  switch (declared) {
-    case 'NATIVE':
-      return 'NATIVE';
-    case 'MWEB':
-      return 'MWEB';
-    case 'ADMIN_PORTAL':
-      return 'ADMIN_PORTAL';
-    case 'PORTAL':
-      return 'PORTAL';
-    default:
-      return 'SERVER';
-  }
-}
+export { sourceFromDeclared };
 
 /** Editing your own account is USER, editing someone else's is ADMIN. */
 export function actorTypeFor(actorId: string | null, subjectId: string): UserChangeActorType {
   if (!actorId) return 'SYSTEM';
   return actorId === subjectId ? 'USER' : 'ADMIN';
-}
-
-/** The actor's display name, denormalized so the row survives their deletion. */
-async function actorName(actorId: string | null): Promise<string> {
-  if (!actorId || !Types.ObjectId.isValid(actorId)) return '';
-  const actor = await UserModel.findById(actorId)
-    .select('profile.first_name profile.last_name auth.email')
-    .lean();
-  if (!actor) return '';
-  const profile = (actor as { profile?: { first_name?: string; last_name?: string } }).profile;
-  const name = `${profile?.first_name ?? ''} ${profile?.last_name ?? ''}`.trim();
-  return name || (actor as { auth?: { email?: string } }).auth?.email || '';
 }
 
 const toPub = (doc: IUserChangeLog) => ({
@@ -173,7 +119,7 @@ export const userAuditService = {
         action: input.action ?? 'UPDATE',
         actor_type: actorTypeFor(actorId, input.userId),
         actor_user_id: actorId && Types.ObjectId.isValid(actorId) ? new Types.ObjectId(actorId) : null,
-        actor_name: await actorName(actorId),
+        actor_name: await auditActorName(actorId),
         source: sourceFromDeclared(identity?.surface),
       };
       await UserChangeLogModel.insertMany(changes.map((change) => ({ ...change, ...stamp })));

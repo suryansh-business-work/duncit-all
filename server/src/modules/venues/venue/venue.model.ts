@@ -5,6 +5,7 @@ import {
   type IBankAccountVerification,
 } from '@modules/finance/finance/bankAccount';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
+import { attachEntityAudit } from '@modules/platform/entityAudit/entityAudit.attach';
 
 export type VenueStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
@@ -338,5 +339,9 @@ const venueSchema = new Schema<IVenue>(
 venueSchema.pre('save', async function assignVenueNo(this: IVenue) {
   if (this.isNew && !this.venue_no) this.venue_no = await nextEntityNo('VEN', 'venue');
 });
+
+// Every write through mongoose is diffed and appended to the entity change
+// log (rule: the trail is captured at the model, never per service).
+attachEntityAudit(venueSchema, 'VENUE');
 
 export const VenueModel = model<IVenue>('Venue', venueSchema);

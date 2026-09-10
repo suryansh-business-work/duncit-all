@@ -23,3 +23,14 @@ export const POSTAL_CODE_PATTERN = /^[\dA-Za-z -]{3,12}$/;
  * refuses valid CDN links.
  */
 export const PUBLIC_URL_PATTERN = /^https?:\/\/\S+$/i;
+
+/**
+ * How a partner is paid out — the three the server's `BankAccountVerification`
+ * accepts, plus '' for a payout not set up yet.
+ *
+ * Here rather than in each form because a form that offers a fourth value gets
+ * silently normalized back to '' by the server, which reads as "the admin's
+ * edit did not save" (rule 2: no business data typed into a client).
+ */
+export const BANK_PAYOUT_METHODS = ['UPI', 'IMPS', 'NEFT'] as const;
+export type BankPayoutMethod = (typeof BANK_PAYOUT_METHODS)[number];

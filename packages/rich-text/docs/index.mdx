@@ -107,17 +107,20 @@ exactly as it was rather than writing a `src` nobody can fetch into saved HTML.
 />
 ```
 
-- The upload goes through `useImagekitBase64Upload` from `@duncit/media-picker` — the same
-  mutation every other picker in the product uses, so signing, folder handling and the size
-  limit are not re-implemented here.
+- The upload goes through `useImagekitDirectUpload` from `@duncit/media-picker` — an existing
+  ImageKit path, so ticket handling, folder handling and the size limit are not re-implemented
+  here. **Not** the base64 sibling: this one streams the bytes over XHR, which is the only way
+  to get real progress, and base64 costs a third more than the file, so a photo straight off a
+  phone can miss the API body limit for no reason.
 - `imageFolder` defaults to `/rich-text`, which keeps document images clear of the venue, club
   and pod media the other pickers write. Pass a folder of your own when a surface wants its
   pictures grouped.
 - A `LinearProgress` bar sits across the bottom of the toolbar while the upload runs. It is
-  **determinate** while the browser reads the file (a real percentage) and switches to
-  **indeterminate** once the bytes are with ImageKit, because nothing after that point reports
-  progress and a bar parked at 55% would be inventing it. The button is disabled and renamed
-  to _Uploading picture…_ for the duration, so one pick cannot start two uploads.
+  **determinate** while the bytes go up, because XHR reports those honestly, and switches to
+  **indeterminate** at 100%: the server still has its own hop to ImageKit and nothing reports
+  that, so the bar stops showing a number rather than sitting at 100% pretending to be
+  finished. The button is disabled and renamed to _Uploading picture…_ for the duration, so
+  one pick cannot start two uploads.
 - `allowBase64` is off. Every picture is stored as an ImageKit URL; a data: URI would put a
   megabyte of image inside the HTML column and nothing could cache it.
 - `inline: false` makes an image its own block, so it can be selected and deleted with the
@@ -152,7 +155,7 @@ constrain it.
 
 Tiptap extensions are runtime dependencies owned here, not repeated by consumers, as is
 `@duncit/media-picker` — the picture upload calls its existing hook rather than repeating the
-ImageKit mutation for a fourth time. MUI,
+ImageKit upload for a fourth time. MUI,
 Apollo, GraphQL and React are peers so portal providers and themes are never duplicated.
 Localization comes from the existing `@duncit/app-settings` runtime and `shell.richText.*`
 fallback entries.

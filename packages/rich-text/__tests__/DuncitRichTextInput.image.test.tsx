@@ -13,7 +13,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const { uploadMock } = vi.hoisted(() => ({ uploadMock: vi.fn() }));
 
 vi.mock('@duncit/media-picker', () => ({
-  useImagekitBase64Upload: () => ({ upload: uploadMock, uploading: false }),
+  useImagekitDirectUpload: () => ({ upload: uploadMock, uploading: false }),
 }));
 
 import { DuncitRichTextInput } from '../src/DuncitRichTextInput';
@@ -43,7 +43,7 @@ beforeEach(() => {
 
 describe('DuncitRichTextInput · pictures', () => {
   it('uploads to the folder the caller named and reports the picture through onChange', async () => {
-    uploadMock.mockResolvedValue({ url: 'https://ik.imagekit.io/duncit/pods/court.png' });
+    uploadMock.mockResolvedValue('https://ik.imagekit.io/duncit/pods/court.png');
     const onChange = vi.fn();
     const host = await mount(
       <DuncitRichTextInput value={AUTHORED} onChange={onChange} imageFolder="/pods" />,
@@ -51,18 +51,18 @@ describe('DuncitRichTextInput · pictures', () => {
 
     await pick(host);
 
-    expect(uploadMock.mock.calls[0][1]).toMatchObject({ folder: '/pods' });
+    expect(uploadMock.mock.calls[0][1]).toBe('/pods');
     expect(onChange.mock.lastCall?.[0]).toContain('src="https://ik.imagekit.io/duncit/pods/court.png"');
     expect(alertText(host)).toBeUndefined();
   });
 
   it('defaults to the /rich-text folder, so document images stay clear of venue media', async () => {
-    uploadMock.mockResolvedValue({ url: 'https://ik.imagekit.io/duncit/rich-text/court.png' });
+    uploadMock.mockResolvedValue('https://ik.imagekit.io/duncit/rich-text/court.png');
     const host = await mount(<DuncitRichTextInput value={AUTHORED} onChange={vi.fn()} />);
 
     await pick(host);
 
-    expect(uploadMock.mock.calls[0][1]).toMatchObject({ folder: '/rich-text' });
+    expect(uploadMock.mock.calls[0][1]).toBe('/rich-text');
   });
 
   it('says the picture failed, in the slot the AI error uses, and stores nothing', async () => {

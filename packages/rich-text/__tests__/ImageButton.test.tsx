@@ -3,9 +3,9 @@
  *
  * What matters is the ORDER: the upload finishes before anything is inserted, so
  * a failed upload leaves the document untouched rather than leaving an
- * unreachable src in saved HTML. The progress bar is asserted on its variant,
- * because a determinate bar parked at 55% while the server works would be
- * inventing progress it cannot see.
+ * unreachable src in saved HTML. The progress bar is asserted on its variant as
+ * well as its value, because a determinate bar parked at 100% while the server
+ * still has work to do would be inventing progress it cannot see.
  */
 import { Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -16,7 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const { uploadMock } = vi.hoisted(() => ({ uploadMock: vi.fn() }));
 
 vi.mock('@duncit/media-picker', () => ({
-  useImagekitBase64Upload: () => ({ upload: uploadMock, uploading: false }),
+  useImagekitDirectUpload: () => ({ upload: uploadMock, uploading: false }),
 }));
 
 import { ImageButton } from '../src/ImageButton';
@@ -66,10 +66,10 @@ const bar = () => document.body.querySelector('[role="progressbar"]');
 function deferredUpload() {
   let settle: (() => void) | undefined;
   let report: ((pct: number) => void) | undefined;
-  uploadMock.mockImplementation((_file: File, options: { onProgress?: (pct: number) => void }) => {
-    report = options.onProgress;
+  uploadMock.mockImplementation((_file: File, _folder: string, onProgress?: (pct: number) => void) => {
+    report = onProgress;
     return new Promise((resolve) => {
-      settle = () => resolve({ url: 'https://ik.imagekit.io/d/a.png' });
+      settle = () => resolve('https://ik.imagekit.io/d/a.png');
     });
   });
   return {
@@ -95,7 +95,7 @@ beforeEach(() => {
 
 describe('ImageButton', () => {
   it('uploads the chosen file to the given folder and inserts the returned URL', async () => {
-    uploadMock.mockResolvedValue({ url: 'https://ik.imagekit.io/duncit/rich-text/court.png' });
+    uploadMock.mockResolvedValue('https://ik.imagekit.io/duncit/rich-text/court.png');
     const editor = editorWith();
     const { ui, onError } = render(editor);
     const host = await mount(ui);
@@ -105,7 +105,7 @@ describe('ImageButton', () => {
     await flush();
 
     expect(uploadMock).toHaveBeenCalledTimes(1);
-    expect(uploadMock.mock.calls[0][1]).toMatchObject({ folder: '/rich-text' });
+    expect(uploadMock.mock.calls[0][1]).toBe('/rich-text');
     expect(editor.getHTML()).toContain('src="https://ik.imagekit.io/duncit/rich-text/court.png"');
     // The file name becomes the alt text, so the picture is not silently
     // unlabelled for a screen reader.
@@ -141,7 +141,7 @@ describe('ImageButton', () => {
   });
 
   it('clears the input so the SAME file can be picked twice', async () => {
-    uploadMock.mockResolvedValue({ url: 'https://ik.imagekit.io/d/a.png' });
+    uploadMock.mockResolvedValue('https://ik.imagekit.io/d/a.png');
     const editor = editorWith();
     const host = await mount(render(editor).ui);
 
@@ -153,9 +153,7 @@ describe('ImageButton', () => {
     expect(input.value).toBe('');
   });
 
-  it('shows a determinate bar while the file is read, then an indeterminate one', async () => {
-    // The read is the only part with a real number behind it; the ImageKit round
-    // trip that follows has none, so the bar stops claiming to know.
+  it('tracks real byte progress, then stops claiming to know once all bytes are sent', async () => {
     const upload = deferredUpload();
     const editor = editorWith();
     const host = await mount(render(editor).ui);
@@ -165,12 +163,18 @@ describe('ImageButton', () => {
       input.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
-    // 0% — reading has only just started.
+    // 0% — nothing has left the browser yet.
     // No jest-dom in this package (the harness says why), so the DOM is read directly.
     expect(bar()?.getAttribute('aria-valuenow')).toBe('0');
 
-    await upload.progress(55);
-    // At 55 the file is read and the server has it: no number to show any more.
+    // XHR reports the bytes honestly, so the bar follows them.
+    await upload.progress(40);
+    expect(bar()?.getAttribute('aria-valuenow')).toBe('40');
+
+    // At 100 the bytes are all sent but the server's own hop to ImageKit has not
+    // happened yet, and nothing reports that — so the bar stops showing a number
+    // rather than sitting at 100% pretending to be done.
+    await upload.progress(100);
     expect(bar()?.className).toContain('indeterminate');
 
     await upload.finish();

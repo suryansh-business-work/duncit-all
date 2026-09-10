@@ -2069,6 +2069,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       timeHeading: 'TIME',
       hourAria: 'Hour {hour}',
       minuteAria: 'Minute {minute}',
+      // The two halves of a 12-hour clock. Shown only when the admin's time
+      // pattern counts hours 1–12; a 24-hour pattern hides the pair.
+      am: 'AM',
+      pm: 'PM',
       // Step 4 — Pricing & Publish.
       podTypeFree: 'Free',
       podTypePaid: 'Paid',

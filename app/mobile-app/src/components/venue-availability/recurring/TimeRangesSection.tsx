@@ -3,6 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { DuncitButton } from '@/components/DuncitButton';
 import { FieldLabel } from '@/components/Field';
 import { RowIconButton } from '@/components/host-manage/ActionRow';
+import { useDateFormat } from '@/hooks/useDateFormat';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TimePickerField } from '../TimePickerField';
@@ -24,6 +25,9 @@ export function TimeRangesSection({
   bufferMinutes,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  // The hint quotes the venue's stored 'HH:mm' hours; they are read on the
+  // admin's clock so they cannot disagree with the pickers right above them.
+  const fmt = useDateFormat();
   const { muted } = useThemeColors();
   const setRow = (id: string, p: Partial<TimeRangeRow>) =>
     onChange(timeSlots.map((row) => (row.id === id ? { ...row, ...p } : row)));
@@ -83,7 +87,7 @@ export function TimeRangesSection({
       </XStack>
       <Text fontSize={11.5} color="$muted">
         {t('availability.recurring.venueHours', {
-          vars: { open: openHours.open, close: openHours.close },
+          vars: { open: fmt.formatClock(openHours.open), close: fmt.formatClock(openHours.close) },
         })}{' '}
         {gapHint}
       </Text>

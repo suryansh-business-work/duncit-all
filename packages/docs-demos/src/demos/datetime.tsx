@@ -1,9 +1,15 @@
 import {
+  createDateFormatter,
   formatDate,
   formatDateTime,
   formatDay,
   formatTime,
+  hourChips,
+  meridiemOf,
   setAmbientDateSettings,
+  twelveHourLabel,
+  usesTwelveHourClock,
+  withMeridiem,
 } from '@duncit/datetime';
 import { defineDemo, defineDemos } from '../types';
 
@@ -46,6 +52,40 @@ export default defineDemos('datetime', [
         'formatDay(day)': formatDay(mock.day),
         'Why formatDay is separate':
           'A stored calendar day is not an instant — putting it through a time zone moves a pod to the day before.',
+      };
+    },
+  }),
+  defineDemo<ClockMock>({
+    id: 'hour-cycle',
+    title: 'The clock a native picker draws',
+    note:
+      "Set timeFormat to 'HH:mm' and the strip becomes 00…23 with no AM/PM row; set it back to 'hh:mm a' and hour 15 is written 3 in the PM half. The stored hour never changes — only what it is called.",
+    mock: {
+      dateFormat: 'dd MMM yyyy',
+      timeFormat: 'hh:mm a',
+      timeZone: 'Asia/Kolkata',
+      timeZoneAware: true,
+      instant: '2026-09-14T18:30:00.000Z',
+      day: '2026-09-14',
+    },
+    compute: (mock) => {
+      const twelveHour = usesTwelveHourClock(mock.timeFormat);
+      const half = meridiemOf(15);
+      return {
+        'usesTwelveHourClock(timeFormat)': twelveHour,
+        'hour strip': hourChips(twelveHour, half)
+          .map((chip) => chip.label)
+          .join('  '),
+        'meridiemOf(15)': half,
+        'twelveHourLabel(15)': twelveHourLabel(15),
+        'withMeridiem(15, AM)': withMeridiem(15, 'AM'),
+        'formatClock("09:00") — venue opening hour': createDateFormatter({
+          timeFormat: mock.timeFormat,
+          timeZone: mock.timeZone,
+          timeZoneAware: mock.timeZoneAware,
+        }).formatClock('09:00'),
+        'Why formatClock is separate':
+          "A venue opens at nine on the venue's own clock. Reading that through a time zone would move it for anyone standing elsewhere.",
       };
     },
   }),

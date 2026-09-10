@@ -766,6 +766,13 @@ changeRequests: {
       timePattern: 'Time pattern (date-fns)',
       datePatternHint: 'e.g. dd MMM yyyy, dd/MM/yyyy, yyyy-MM-dd',
       timePatternHint: 'e.g. hh:mm a, HH:mm, HH:mm:ss',
+      // The time pattern also decides which CLOCK every picker offers, which is
+      // not obvious from a date-fns pattern — so the panel says which one is
+      // live, and names the screen operators ask about most.
+      clockCycle12:
+        'Clock: 12-hour with AM/PM. Every time picker follows it, including the time slots on a venue’s Availability Calendar.',
+      clockCycle24:
+        'Clock: 24-hour, 00–23. Every time picker follows it, including the time slots on a venue’s Availability Calendar.',
       minAge: 'Minimum age (years)',
       minAgeTitle: 'Minimum age to use the app',
       adminsOnly: 'Shown to admins only.',

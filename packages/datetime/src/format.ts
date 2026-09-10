@@ -2,7 +2,13 @@ import { format as fmtFn, parseISO } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 
 import { createClock, type Clock, type ClockInput } from './clock';
-import { formatIsoDay, parseInPattern, patternPlaceholder, toIsoDay } from './day-input';
+import {
+  formatClockTime,
+  formatIsoDay,
+  parseInPattern,
+  patternPlaceholder,
+  toIsoDay,
+} from './day-input';
 
 /**
  * Admin-configurable display formatting (project rule 11): every rendered date
@@ -92,6 +98,12 @@ export interface DateFormatter {
    * and reading it through a zone moves it a day for anyone behind UTC.
    */
   formatDay: (value: string) => string;
+  /**
+   * Render a stored 'HH:mm' wall-clock time in the configured time pattern.
+   * The time-only twin of `formatDay`: a venue's opening hour belongs to the
+   * venue's own clock, so it never passes through a zone.
+   */
+  formatClock: (value: string) => string;
 }
 
 const DAY_MS = 86_400_000;
@@ -157,5 +169,6 @@ export function createDateFormatter(settings: Readonly<DateFormatterSettings> = 
     parseDateTime: (text) => parseInPattern(text, dateTimeInput),
     toIsoDay,
     formatDay: (value) => formatIsoDay(value, dateFormat),
+    formatClock: (value) => formatClockTime(value, timeFormat),
   };
 }

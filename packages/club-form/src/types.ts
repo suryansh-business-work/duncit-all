@@ -34,6 +34,8 @@ export interface ClubFormValues {
   /** Club moments — one URL per line. */
   moments_text: string;
   community_link: string;
+  /** The announcements-only channel. A club may run one, both or neither. */
+  announcement_link: string;
   group_link: string;
   who_we_are: string[];
   what_we_do: string[];
@@ -41,6 +43,13 @@ export interface ClubFormValues {
   values: string[];
   faqs: ClubFaqValue[];
   admin_user_ids: string[];
+  /**
+   * Hosts linked to this club by an admin.
+   *
+   * When empty the club page falls back to the hosts of the club’s pods, so an
+   * empty list is a real choice rather than a missing value.
+   */
+  host_ids: string[];
   is_verified: boolean;
   is_active: boolean;
 }
@@ -85,6 +94,7 @@ export const blankClubFormValues: ClubFormValues = {
   feature_text: '',
   moments_text: '',
   community_link: '',
+  announcement_link: '',
   group_link: '',
   who_we_are: [],
   what_we_do: [],
@@ -92,6 +102,7 @@ export const blankClubFormValues: ClubFormValues = {
   values: [],
   faqs: [],
   admin_user_ids: [],
+  host_ids: [],
   is_verified: false,
   is_active: true,
 };
@@ -106,6 +117,7 @@ export const SECTION_OF: Record<string, string> = {
   location_id: 'basic',
   feature_text: 'media',
   community_link: 'links',
+  announcement_link: 'links',
   group_link: 'links',
   who_we_are: 'content',
   what_we_do: 'content',

@@ -93,6 +93,9 @@ export function makeClubSchema(config: ClubFormConfig) {
       feature_text: z.string().default(''),
       moments_text: z.string().default(''),
       community_link: z.string().default(''),
+      // Optional: not every club runs an announcements-only channel, and the
+      // two required links above already give members a way in.
+      announcement_link: z.string().default(''),
       group_link: z.string().default(''),
       who_we_are: z.array(z.string()).default([]),
       what_we_do: z.array(z.string()).default([]),
@@ -100,6 +103,7 @@ export function makeClubSchema(config: ClubFormConfig) {
       values: z.array(z.string()).default([]),
       faqs: z.array(faqSchema).default([]),
       admin_user_ids: z.array(z.string()).default([]),
+      host_ids: z.array(z.string()).default([]),
       is_verified: z.boolean().default(false),
       is_active: z.boolean().default(true),
     })

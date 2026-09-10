@@ -65,3 +65,22 @@ export const CLUB_ADMIN_CANDIDATES = gql`
     }
   }
 `;
+
+/**
+ * Hosts that can be linked to a club.
+ *
+ * `publicHosts` rather than the admin `hostsTable`: this picker renders inside
+ * the CLUBS console, whose access role is `ALL_CLUBS_ACCESS` and therefore
+ * cannot read the hosts directory. What a link needs is a name and an account
+ * id, which is exactly what the redacted public list answers with — it is
+ * APPROVED + active only, which is also the only kind of host worth linking.
+ */
+export const LINKABLE_HOSTS = gql`
+  query LinkableHostsForClub {
+    publicHosts {
+      id
+      user_id
+      full_name
+    }
+  }
+`;

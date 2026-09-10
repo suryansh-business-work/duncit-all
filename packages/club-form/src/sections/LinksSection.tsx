@@ -102,6 +102,12 @@ export default function LinksSection() {
         required
         hint="Group chat link — shown on the club page (mWeb + app)."
       />
+      <RhfTextField
+        control={control}
+        name="announcement_link"
+        label={t('clubForm.linksSection.whatsappAnnouncementLink')}
+        hint={t('clubForm.linksSection.whatsappAnnouncementHint')}
+      />
     </Stack>
   );
 }

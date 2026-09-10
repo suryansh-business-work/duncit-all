@@ -1,6 +1,9 @@
-import { requireRole } from '@middleware/rbac';
+import { GraphQLError } from 'graphql';
+import { Types } from 'mongoose';
+import { hasRole, requireRole } from '@middleware/rbac';
 import type { GraphQLContext } from '@context';
 import type { TableQueryInput } from '@utils/table-query';
+import { RegionModel } from '@modules/clubs/region/region.model';
 import { entityAuditService } from './entityAudit.service';
 import type { EntityAuditType } from './entityAudit.model';
 
@@ -20,6 +23,27 @@ const AUDIT_ROLES: Record<EntityAuditType, string[]> = {
   REGION: [...PLATFORM_ADMINS, 'ALL_CLUB_ADMINS_ACCESS', 'REGIONAL_CLUB_ADMIN'],
 };
 
+/**
+ * A REGIONAL_CLUB_ADMIN may read their OWN region's history and no other.
+ *
+ * Every other entity here is read by staff whose job is the whole directory, so
+ * the role IS the scope. A Regional Club Admin is not staff: they hold one
+ * region, the console they open is that region, and the role alone would have let
+ * them read any region's trail by changing the id in the URL. Anybody who also
+ * holds a directory role is unaffected — this only narrows the regional role.
+ */
+async function assertRegionScope(entityId: string, ctx: GraphQLContext): Promise<void> {
+  const roles = [...PLATFORM_ADMINS, 'ALL_CLUB_ADMINS_ACCESS'];
+  if (ctx.user && hasRole(ctx.user, roles)) return;
+  if (!Types.ObjectId.isValid(entityId)) {
+    throw new GraphQLError('Region not found', { extensions: { code: 'NOT_FOUND' } });
+  }
+  const region = await RegionModel.findById(entityId).select('manager_user_id').lean();
+  if (!region || String(region.manager_user_id) !== ctx.user?.id) {
+    throw new GraphQLError('That is not your region', { extensions: { code: 'FORBIDDEN' } });
+  }
+}
+
 export const entityAuditResolvers = {
   Query: {
     entityChangeLogsTable: async (
@@ -28,6 +52,7 @@ export const entityAuditResolvers = {
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, AUDIT_ROLES[args.entity_type]);
+      if (args.entity_type === 'REGION') await assertRegionScope(args.entity_id, ctx);
       return entityAuditService.table(args.entity_type, args.entity_id, args.query);
     },
 
@@ -36,7 +61,13 @@ export const entityAuditResolvers = {
       args: { entity_type: EntityAuditType; query?: TableQueryInput | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, AUDIT_ROLES[args.entity_type]);
+      // The console-wide feed spans every record of the entity, so the regional
+      // role cannot have it at all — there is no "own region" to narrow it to.
+      const roles =
+        args.entity_type === 'REGION'
+          ? [...PLATFORM_ADMINS, 'ALL_CLUB_ADMINS_ACCESS']
+          : AUDIT_ROLES[args.entity_type];
+      requireRole(ctx, roles);
       return entityAuditService.tableForType(args.entity_type, args.query);
     },
   },

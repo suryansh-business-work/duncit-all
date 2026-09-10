@@ -5,6 +5,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { useClubFormData } from '../context';
 import { CLUB_ADMIN_CANDIDATES } from '../queries';
+import LinkedHostsField from './LinkedHostsField';
 import type { ClubFormValues } from '../types';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -187,6 +188,8 @@ export default function AdminsSection() {
           />
         )}
       />
+
+      <LinkedHostsField />
     </Stack>
   );
 }

@@ -83,6 +83,68 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'If it is still short by 23 Aug 2026, 07:00 AM it will be cancelled automatically and everyone refunded. ' +
       'Help the host fill it, or change the venue slot or the ticket price: https://partners-app.duncit.com/club-admin/clubs/66f1/pods/66f2 — Team Duncit',
   },
+  /*
+   * The four onboarding rejections.
+   *
+   * One per partner kind because the applicant applied as one of them, and the
+   * sentence that follows the reason differs: a venue re-lists, a brand
+   * re-applies with its catalogue. Both ways out of an application now send
+   * these — the Reject on the meeting schedule and the Deny after the interview
+   * are the same news to the applicant, so they carry the same campaign.
+   *
+   * `venue_rejected_onboarding` is already LIVE at AiSensy, so its draft is
+   * inert (the board offers nothing for a row that has a campaign). The other
+   * three have never been created: `host_onboarding_rejection` is the gap the
+   * registry has carried a note about, and its two siblings the same.
+   */
+  HOST_ONBOARDING_REJECTED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, thank you for applying to host pods on Duncit. We are not able to take your application forward right now. ' +
+      'Reason: {{2}}. ' +
+      'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
+    sample:
+      'Hi Meera, thank you for applying to host pods on Duncit. We are not able to take your application forward right now. ' +
+      'Reason: The pod plan shared in the interview did not cover safety and group size. ' +
+      'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
+  },
+  VENUE_ONBOARDING_REJECTED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, thank you for your interest in listing your venue on Duncit. We are not able to take your application forward right now. ' +
+      'Reason: {{2}}. ' +
+      'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
+    sample:
+      'Hi Prakhar, thank you for your interest in listing your venue on Duncit. We are not able to take your application forward right now. ' +
+      'Reason: The venue photos and safety certificates were incomplete. ' +
+      'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
+  },
+  ECOMM_ONBOARDING_REJECTED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, thank you for applying to sell your brand on Duncit. We are not able to take your application forward right now. ' +
+      'Reason: {{2}}. ' +
+      'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
+    sample:
+      'Hi Rohit, thank you for applying to sell your brand on Duncit. We are not able to take your application forward right now. ' +
+      'Reason: The catalogue shared did not match the categories Duncit sells today. ' +
+      'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
+  },
+  CLUB_ADMIN_ONBOARDING_REJECTED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, thank you for applying to run a club on Duncit. We are not able to take your application forward right now. ' +
+      'Reason: {{2}}. ' +
+      'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
+    sample:
+      'Hi Ritu, thank you for applying to run a club on Duncit. We are not able to take your application forward right now. ' +
+      'Reason: The interview did not cover how the club would be run week to week. ' +
+      'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
+  },
 };
 
 /** Highest `{{n}}` in a body — what the registry's param count has to equal. */

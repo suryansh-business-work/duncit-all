@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { MockedProvider } from '@apollo/client/testing/react';
 import type { PreviewSummary } from '@duncit/slots';
 import BasicSection from '../src/recurring/BasicSection';
 import ConflictModeSection from '../src/recurring/ConflictModeSection';
@@ -29,6 +31,19 @@ vi.mock('@mui/x-date-pickers/TimePicker', () => ({
     />
   ),
 }));
+
+/**
+ * The time section quotes the venue's hours through `useDateFormat`, which
+ * reads `publicAppSettings` — so anything rendering it needs a client, even
+ * though the section itself asks the server for nothing. With no settings
+ * loaded it formats on the documented fallback, which is the 12-hour clock.
+ */
+const renderSection = (ui: ReactNode) =>
+  render(
+    <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={[]}>
+      {ui}
+    </MockedProvider>,
+  );
 
 describe('DayOfWeekPicker', () => {
   it('applies presets and toggles individual days', () => {
@@ -145,11 +160,13 @@ describe('TimeSlotsSection', () => {
   it('labels a single range plainly and refuses to remove the last one', () => {
     const onChange = vi.fn();
     const rows = [newTimeSlot('13:00', '14:00')];
-    render(<TimeSlotsSection timeSlots={rows} onChange={onChange} openHours={hours} bufferMinutes={0} />);
+    renderSection(<TimeSlotsSection timeSlots={rows} onChange={onChange} openHours={hours} bufferMinutes={0} />);
     expect(screen.getByLabelText('Start')).toBeInTheDocument();
     expect(screen.getByLabelText('End')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Remove time slot 1' })).toBeDisabled();
-    expect(screen.getByText('Venue hours 09:00–23:00. Slots must not overlap.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Venue hours 09:00 AM–11:00 PM. Slots must not overlap.'),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Add time slot' }));
     expect(onChange).toHaveBeenCalledTimes(1);
@@ -162,10 +179,12 @@ describe('TimeSlotsSection', () => {
   it('numbers the starts, removes a row, and states the venue buffer', () => {
     const onChange = vi.fn();
     const rows = [newTimeSlot('13:00', '14:00'), newTimeSlot('15:00', '16:00')];
-    render(<TimeSlotsSection timeSlots={rows} onChange={onChange} openHours={hours} bufferMinutes={15} />);
+    renderSection(<TimeSlotsSection timeSlots={rows} onChange={onChange} openHours={hours} bufferMinutes={15} />);
     expect(screen.getByLabelText('Start #1')).toBeInTheDocument();
     expect(screen.getByLabelText('Start #2')).toBeInTheDocument();
-    expect(screen.getByText('Venue hours 09:00–23:00. Keep a 15-min gap between slots.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Venue hours 09:00 AM–11:00 PM. Keep a 15-min gap between slots.'),
+    ).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Start #2'), { target: { value: '2000-01-01T15:15' } });
     expect(onChange.mock.calls[0][0][1].start).toEqual(new Date('2000-01-01T15:15'));
@@ -195,7 +214,7 @@ describe('BasicSection', () => {
 
   it('patches the dates, weekdays, whole-day switch, spaces and conflict mode', () => {
     const patch = vi.fn();
-    render(<BasicSection form={initialRecurringForm(spaces)} patch={patch} settings={settings} />);
+    renderSection(<BasicSection form={initialRecurringForm(spaces)} patch={patch} settings={settings} />);
     expect(screen.getByText('Time slots')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Start date'), { target: { value: '2030-01-20T00:00:00' } });

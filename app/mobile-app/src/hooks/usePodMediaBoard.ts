@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import {
   AddPodPartyMediaDocument,
@@ -6,7 +6,7 @@ import {
   RemovePodPartyMediaDocument,
 } from '@/graphql/pod-media';
 import { graphqlRequest } from '@/services/graphql.client';
-import { useRefreshRegistration } from '@/components/PullToRefresh';
+import { useReloadableQuery } from '@/hooks/useReloadableQuery';
 
 /** In what capacity this account is looking at a pod's media. */
 export type PodMediaViewer = 'HOST' | 'GUEST' | 'NONE';
@@ -43,7 +43,6 @@ export interface PodMediaBoard {
  */
 export function usePodMediaBoard(podId: string) {
   const [board, setBoard] = useState<PodMediaBoard | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -53,23 +52,10 @@ export function usePodMediaBoard(podId: string) {
     setError('');
   }, [podId]);
 
-  const refetch = useCallback(() => {
-    load().catch((e: unknown) => setError((e as Error)?.message ?? ''));
-  }, [load]);
-
-  useEffect(() => {
-    if (!podId) return;
-    let active = true;
-    setIsLoading(true);
-    load()
-      .catch((e: unknown) => active && setError((e as Error)?.message ?? ''))
-      .finally(() => active && setIsLoading(false));
-    return () => {
-      active = false;
-    };
-  }, [podId, load]);
-
-  useRefreshRegistration(refetch);
+  const { isLoading, refetch } = useReloadableQuery(load, {
+    enabled: Boolean(podId),
+    onError: (e) => setError((e as Error)?.message ?? ''),
+  });
 
   const add = useCallback(
     async (urls: string[]) => {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { PodIdeaStatus } from '@/generated/graphql/graphql';
@@ -13,7 +13,7 @@ import {
   TogglePodIdeaLikeDocument,
 } from '@/graphql/pod-ideas';
 import { graphqlRequest } from '@/services/graphql.client';
-import { useRefreshRegistration } from '@/components/PullToRefresh';
+import { useReloadableQuery } from '@/hooks/useReloadableQuery';
 
 type PodIdeasData = ResultOf<typeof PodIdeasDocument>;
 export type PodIdea = PodIdeasData['podIdeas'][number];
@@ -40,7 +40,6 @@ export type PodIdeaComment = PodIdeaDetail['comments'][number];
  */
 export function usePodIdeas(search: string) {
   const [data, setData] = useState<PodIdeasData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
 
   const trimmed = search.trim();
@@ -53,18 +52,7 @@ export function usePodIdeas(search: string) {
     setData(result);
   }, [trimmed]);
 
-  useEffect(() => {
-    let active = true;
-    setIsLoading(true);
-    load()
-      .catch((err) => active && setError(err))
-      .finally(() => active && setIsLoading(false));
-    return () => {
-      active = false;
-    };
-  }, [load]);
-
-  useRefreshRegistration(load);
+  const { isLoading } = useReloadableQuery(load, { onError: setError });
 
   const create = async (input: NewPodIdeaInput) => {
     await graphqlRequest(
@@ -122,25 +110,13 @@ export function usePodIdeas(search: string) {
  */
 export function usePodIdeaDetails(id: string, onChanged: () => void) {
   const [idea, setIdea] = useState<PodIdeaDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   const load = useCallback(async () => {
     const result = await graphqlRequest(PodIdeaDetailsDocument, { id }, { auth: true });
     setIdea(result.podIdea ?? null);
   }, [id]);
 
-  useEffect(() => {
-    let active = true;
-    setIsLoading(true);
-    load()
-      .catch(() => undefined)
-      .finally(() => active && setIsLoading(false));
-    return () => {
-      active = false;
-    };
-  }, [load]);
-
-  useRefreshRegistration(load);
+  const { isLoading } = useReloadableQuery(load);
 
   const runAndReload = useCallback(
     async (run: () => Promise<unknown>) => {

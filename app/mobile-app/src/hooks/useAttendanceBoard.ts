@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { needsOtp, type PodAttendanceBoard, type PodAttendanceRow } from '@duncit/utils';
 
 import { HostMarkAttendanceDocument, PodAttendanceBoardDocument } from '@/graphql/attendance';
 import { graphqlRequest } from '@/services/graphql.client';
-import { useRefreshRegistration } from '@/components/PullToRefresh';
+import { useReloadableQuery } from '@/hooks/useReloadableQuery';
 
 /**
  * The attendance roster, as state.
@@ -16,7 +16,6 @@ import { useRefreshRegistration } from '@/components/PullToRefresh';
  */
 export function useAttendanceBoard(podId: string) {
   const [board, setBoard] = useState<PodAttendanceBoard | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState('');
   const [otpRow, setOtpRow] = useState<PodAttendanceRow | null>(null);
@@ -31,23 +30,10 @@ export function useAttendanceBoard(podId: string) {
     setError('');
   }, [podId]);
 
-  const refetch = useCallback(() => {
-    load().catch((e: unknown) => setError((e as Error)?.message ?? ''));
-  }, [load]);
-
-  useEffect(() => {
-    if (!podId) return;
-    let active = true;
-    setIsLoading(true);
-    load()
-      .catch((e: unknown) => active && setError((e as Error)?.message ?? ''))
-      .finally(() => active && setIsLoading(false));
-    return () => {
-      active = false;
-    };
-  }, [podId, load]);
-
-  useRefreshRegistration(refetch);
+  const { isLoading, refetch } = useReloadableQuery(load, {
+    enabled: Boolean(podId),
+    onError: (e) => setError((e as Error)?.message ?? ''),
+  });
 
   /** The one write path, so both entry points report the same way. */
   const mark = useCallback(

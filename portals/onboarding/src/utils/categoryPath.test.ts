@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { categoryPath } from '@duncit/entity-consoles';
+import { categoryPath } from './categoryPath';
 
 describe('categoryPath', () => {
   it('joins the three levels with the › separator', () => {

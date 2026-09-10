@@ -1,51 +1,33 @@
-import { useMemo, type MutableRefObject } from 'react';
-import EditIcon from '@mui/icons-material/Edit';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import RateReviewIcon from '@mui/icons-material/RateReview';
-import EventNoteIcon from '@mui/icons-material/EventNote';
-import { Link as RouterLink } from 'react-router';
-import { Chip, Link, Tooltip, Typography } from '@mui/material';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
-import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
-import { commissionLabel } from '../../shared/commissionLabel';
-import LifecycleActions from '../../shared/LifecycleActions';
+import { useCallback, useMemo, type MutableRefObject } from 'react';
+import { useNavigate } from 'react-router';
+import { Chip, Typography } from '@mui/material';
+import {
+  DuncitTable,
+  type DuncitColumn,
+  type TableFetch,
+  type TableFilterValue,
+} from '@duncit/table';
 import { STATUS_OPTIONS, type VenueRow } from './queries';
-import { useTranslation } from '@duncit/app-settings';
-
-type Translate = ReturnType<typeof useTranslation>['t'];
-
-interface Props {
-  fetchRows: TableFetch<VenueRow>;
-  refetchRef: MutableRefObject<(() => void) | null>;
-  onEdit: (venue: VenueRow) => void;
-  onReview: (venue: VenueRow) => void;
-  canHardDelete: boolean;
-  onToggleActive: (venue: VenueRow) => void;
-  onDelete: (venue: VenueRow) => void;
-}
+import { formatDate } from '@duncit/app-settings';
+import { useTranslation } from '@duncit/shell';
 
 const getVenueRowId = (v: VenueRow) => v.id;
 
 const renderVenue = (v: VenueRow) => (
   <>
-    <Link
-      component={RouterLink}
-      to={`/venues/${v.id}`}
-      underline="hover"
-      variant="body2"
-      color="inherit"
-      sx={{
-        fontWeight: 700
-      }}
-    >
+    <Typography variant="body2" sx={{
+      fontWeight: 700
+    }}>
       {v.venue_name}
-    </Link>
+    </Typography>
     <Typography
       variant="caption"
       sx={{
         color: "text.secondary",
         display: "block"
-      }}>{v.venue_type}</Typography>
+      }}>
+      {v.venue_type || '—'}
+    </Typography>
   </>
 );
 
@@ -60,20 +42,6 @@ const categoryValue = (v: VenueRow) =>
     .filter(Boolean)
     .join(' > ') || '—';
 
-const renderCategory = (v: VenueRow) => <Typography variant="body2">{categoryValue(v)}</Typography>;
-
-const renderLocation = (v: VenueRow) => (
-  <>
-    <Typography variant="body2">{locationValue(v)}</Typography>
-    <Typography
-      variant="caption"
-      sx={{
-        color: "text.secondary",
-        display: "block"
-      }}>{v.postal_code || '—'}</Typography>
-  </>
-);
-
 const renderOwner = (v: VenueRow) => (
   <>
     <Typography variant="body2">{v.owner_name || '—'}</Typography>
@@ -82,105 +50,82 @@ const renderOwner = (v: VenueRow) => (
       sx={{
         color: "text.secondary",
         display: "block"
-      }}>{v.owner_phone || v.owner_email || '—'}</Typography>
+      }}>
+      {v.owner_phone || v.owner_email || '—'}
+    </Typography>
   </>
 );
 
 const renderStatus = (v: VenueRow) => <Chip size="small" label={v.status} />;
 
-// Active only reflects a live, Approved venue — Draft/Submitted/Rejected all
-// read as Inactive regardless of the is_active flag.
-const isActiveVenue = (v: VenueRow) => v.status === 'APPROVED' && v.is_active !== false;
-const activeValue = (v: VenueRow) => (isActiveVenue(v) ? 'Active' : 'Inactive');
+type Translate = ReturnType<typeof useTranslation>['t'];
 
-const renderActive = (v: VenueRow) => (
-  <Chip size="small" variant="outlined" color={isActiveVenue(v) ? 'success' : 'default'} label={activeValue(v)} />
+const activeValue = (v: VenueRow, t: Translate) =>
+  v.is_active === false ? t('admin.profile.inactive') : t('admin.profile.active');
+
+const renderActive = (v: VenueRow, t: Translate) => (
+  <Chip
+    size="small"
+    variant="outlined"
+    color={v.is_active === false ? 'default' : 'success'}
+    label={activeValue(v, t)}
+  />
 );
 
-const renderPods = (v: VenueRow, t: Translate) => (
-  <Tooltip title={t('onboarding.venues.viewPodsHostedAtThisVenue')}>
-    <DuncitButton
-      size="small"
-      variant="outlined"
-      color="inherit"
-      startIcon={<EventNoteIcon fontSize="small" />}
-      component={RouterLink}
-      to={`/venues/${v.id}?selectedtab=pods`}
-    >
-      {v.pod_count ?? 0}
-    </DuncitButton>
-  </Tooltip>
-);
+const createdValue = (v: VenueRow) =>
+  v.created_at ? formatDate(v.created_at) : '—';
 
-const renderCommission = (v: VenueRow) => (
-  <Chip size="small" variant="outlined" label={commissionLabel(v.venue_commission_pct)} />
-);
-
+/** Read-only admin venues list — approvals/edits stay in the Onboarding portal. */
 export default function VenuesTable({
   fetchRows,
   refetchRef,
-  onEdit,
-  onReview,
-  canHardDelete,
-  onToggleActive,
-  onDelete,
-}: Readonly<Props>) {
+  superCategoryId,
+}: Readonly<{
+  fetchRows: TableFetch<VenueRow>;
+  refetchRef: MutableRefObject<(() => void) | null>;
+  /** Toolbar's Super Category filter; '' means every super category. */
+  superCategoryId: string;
+}>) {
   const { t } = useTranslation();
-  const columns = useMemo<DuncitColumn<VenueRow>[]>(() => {
-    const renderActions = (v: VenueRow) => (
-      <>
-        <Tooltip title={t('onboarding.common.venueDetails')}>
-          <DuncitIconButton size="small" component={RouterLink} to={`/venues/${v.id}`}>
-            <VisibilityIcon fontSize="small" />
-          </DuncitIconButton>
-        </Tooltip>
-        <Tooltip title={t('shell.common.edit')}>
-          <DuncitIconButton size="small" onClick={() => onEdit(v)}>
-            <EditIcon fontSize="small" />
-          </DuncitIconButton>
-        </Tooltip>
-        <Tooltip title={t('onboarding.common.review')}>
-          <DuncitIconButton size="small" onClick={() => onReview(v)}>
-            <RateReviewIcon fontSize="small" />
-          </DuncitIconButton>
-        </Tooltip>
-        <LifecycleActions
-          active={v.is_active !== false}
-          onToggleActive={() => onToggleActive(v)}
-          canHardDelete={canHardDelete}
-          onDelete={() => onDelete(v)}
-        />
-      </>
-    );
-    return [
-      { field: 'venue_no', headerName: t('onboarding.venues.venueId'), width: 130, sortable: false, valueGetter: (v) => v.venue_no || '—' },
-      { field: 'venue_name', headerName: t('onboarding.common.venue'), flex: 1, minWidth: 180, cellRenderer: renderVenue, valueGetter: (v) => v.venue_name },
-      { field: 'locality', headerName: t('onboarding.venues.location'), minWidth: 160, filter: { type: 'text' }, cellRenderer: renderLocation, valueGetter: locationValue },
-      { field: 'city', headerName: t('onboarding.common.city'), hide: true, minWidth: 130, filter: { type: 'text' } },
-      { field: 'venue_type', headerName: t('shell.common.type'), hide: true, minWidth: 130, filter: { type: 'text' } },
-      { field: 'venue_category', headerName: t('onboarding.common.category'), minWidth: 200, sortable: false, cellRenderer: renderCategory, valueGetter: categoryValue },
-      { field: 'owner_name', headerName: t('onboarding.common.owner'), minWidth: 150, cellRenderer: renderOwner, valueGetter: (v) => v.owner_name || '—' },
-      { field: 'capacity', headerName: t('onboarding.common.capacity'), width: 105, filter: { type: 'number' } },
+  const navigate = useNavigate();
+  // The row opens the venue's read-only record. It is the only action on this
+  // page, so there is no actions column competing with it.
+  const openVenue = useCallback((v: VenueRow) => navigate(`/venues/${v.id}`), [navigate]);
+  const columns = useMemo<DuncitColumn<VenueRow>[]>(
+    () => [
+      { field: 'venue_name', headerName: t('admin.venues.colVenue'), flex: 1, minWidth: 180, cellRenderer: renderVenue, valueGetter: (v) => v.venue_name },
+      { field: 'venue_category', headerName: t('admin.clubs.colCategory'), minWidth: 200, sortable: false, valueGetter: categoryValue },
+      { field: 'locality', headerName: t('admin.venues.colLocation'), minWidth: 160, filter: { type: 'text' }, valueGetter: locationValue },
+      { field: 'owner_name', headerName: t('admin.venues.colOwner'), minWidth: 150, cellRenderer: renderOwner, valueGetter: (v) => v.owner_name || '—' },
+      { field: 'capacity', headerName: t('admin.venues.colCapacity'), width: 105, filter: { type: 'number' } },
       { field: 'status', headerName: t('shell.common.status'), width: 125, filter: { type: 'select', options: STATUS_OPTIONS }, cellRenderer: renderStatus, valueGetter: (v) => v.status },
-      { field: 'is_active', headerName: t('onboarding.common.active'), width: 110, filter: { type: 'boolean' }, cellRenderer: renderActive, valueGetter: activeValue },
-      { field: 'pod_count', headerName: t('shell.nav.pods'), sortable: false, width: 100, cellRenderer: (v: VenueRow) => renderPods(v, t), valueGetter: (v) => v.pod_count ?? 0 },
-      { field: 'venue_commission_pct', headerName: t('onboarding.common.commission'), width: 130, cellRenderer: renderCommission, valueGetter: (v) => commissionLabel(v.venue_commission_pct) },
-      dateColumn<VenueRow>({ field: 'submitted_at', headerName: t('onboarding.common.submitted'), hide: false, width: 125 }),
-      { field: 'created_at', headerName: t('shell.common.created'), hide: true, width: 125, filter: { type: 'date' } },
-      { field: 'actions', headerName: t('shell.common.actions'), sortable: false, width: 190, cellRenderer: renderActions },
-    ];
-  }, [onEdit, onReview, canHardDelete, onToggleActive, onDelete]);
+      { field: 'is_active', headerName: t('admin.profile.active'), width: 110, filter: { type: 'boolean' }, cellRenderer: (row: VenueRow) => renderActive(row, t), valueGetter: (row: VenueRow) => activeValue(row, t) },
+      { field: 'pod_count', headerName: t('admin.clubs.pods'), sortable: false, width: 90, valueGetter: (v) => v.pod_count ?? 0 },
+      { field: 'created_at', headerName: t('shell.common.created'), width: 125, filter: { type: 'date' }, valueGetter: createdValue },
+    ],
+    [t],
+  );
+
+  // Pinned page filter rather than a column one: it belongs to the header, so
+  // it never shows as a removable chip and a change resets to page 1.
+  const externalFilters = useMemo<TableFilterValue[]>(
+    () =>
+      superCategoryId ? [{ field: 'super_category_id', op: 'eq', value: superCategoryId }] : [],
+    [superCategoryId],
+  );
 
   return (
     <DuncitTable<VenueRow>
-      tableId="onboarding-venues"
+      tableId="admin-venues"
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getVenueRowId}
-      emptyText={t('onboarding.venues.noVenuesFound')}
+      emptyText={t('admin.venues.empty')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search name, type, city or owner"
+      externalFilters={externalFilters}
       refetchRef={refetchRef}
+      onRowClick={openVenue}
     />
   );
 }

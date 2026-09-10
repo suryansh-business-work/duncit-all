@@ -3,7 +3,6 @@ import { Route } from 'react-router';
 import { screen, fireEvent } from '@testing-library/react';
 import AppShell from '../AppShell';
 import { getToken, setToken, clearToken } from '../../lib/session';
-import { AUTO_PODS_PATH } from '../../config/app-config';
 import { renderWithProviders } from '../../__tests__/testkit';
 
 const userMock = vi.hoisted(() => ({
@@ -80,22 +79,6 @@ describe('AppShell adapter', () => {
     expect(screen.getByTestId('has-access')).toHaveTextContent('undefined');
     expect(screen.getByTestId('has-user')).toHaveTextContent('false');
     expect(screen.getByTestId('loading')).toHaveTextContent('true');
-  });
-
-  it('drops Auto Pods from the nav tree and the search index while the flag is off', () => {
-    flagMock.autoPods = false;
-    renderShell();
-    expect(screen.getByTestId('nav-paths')).not.toHaveTextContent(AUTO_PODS_PATH);
-    expect(screen.getByTestId('search-paths')).not.toHaveTextContent(AUTO_PODS_PATH);
-    // A sibling under the same "Pods" group survives the recursive filter.
-    expect(screen.getByTestId('nav-paths')).toHaveTextContent('/pods');
-  });
-
-  it('keeps Auto Pods in the nav tree and the search index once the flag is on', () => {
-    flagMock.autoPods = true;
-    renderShell();
-    expect(screen.getByTestId('nav-paths')).toHaveTextContent(AUTO_PODS_PATH);
-    expect(screen.getByTestId('search-paths')).toHaveTextContent(AUTO_PODS_PATH);
   });
 
   it('logs out: clears the token, calls context logout and routes to /login', () => {

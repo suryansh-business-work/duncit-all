@@ -1,20 +1,17 @@
+import { Route } from 'react-router';
 import {
-  mountDirectoryPortal,
   ClubDetailsPage,
+  ClubEditorPage,
   ClubsPage,
+  mountDirectoryPortal,
   CLUBS_SPEC,
 } from '@duncit/entity-consoles';
 import { logs } from '@duncit/logs';
 import { appConfig } from './config/app-config';
 
 /**
- * The clubs console.
- *
- * Everything a directory portal does — Apollo, session, chrome, login, routes,
- * the brief dashboard and the copy namespace — comes from
- * @duncit/entity-consoles, so what lives here is this console's identity and
- * nothing else (rule 40). The list and detail screens are the SAME ones the
- * admin portal renders: one implementation, two mounts.
+ * The clubs console — admin's Clubs section and its editor, on its own
+ * subdomain. Admin no longer carries them.
  */
 mountDirectoryPortal({
   appConfig,
@@ -24,10 +21,15 @@ mountDirectoryPortal({
   logsPortal: logs.portal.clubs,
   console: {
     listPath: '/clubs',
-    detailParam: 'id',
-    List: ClubsPage,
-    Detail: ClubDetailsPage,
-    navLabelKey: 'shell.nav.clubs',
-    navIcon: 'community',
+    nav: [{ label: 'Clubs', labelKey: 'shell.nav.clubs', to: '/clubs', icon: 'community' }],
+    routes: (authed) => (
+      <>
+        {/* Static before dynamic so /clubs/new is never read as a club id. */}
+        <Route path="/clubs/new" element={authed(<ClubEditorPage />)} />
+        <Route path="/clubs" element={authed(<ClubsPage />)} />
+        <Route path="/clubs/:id" element={authed(<ClubDetailsPage />)} />
+        <Route path="/clubs/:id/edit" element={authed(<ClubEditorPage />)} />
+      </>
+    ),
   },
 });

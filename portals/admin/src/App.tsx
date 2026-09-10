@@ -13,32 +13,15 @@ import PortalAppSettingsPage from './pages/portal-app-settings';
 import RolesPage from './pages/RolesPage';
 import CategoriesPage from './pages/CategoriesPage';
 import LocationsPage from './pages/LocationsPage';
-import VenuesPage from './pages/VenuesPage';
-import VenueDetailsPage from './pages/VenueDetailsPage';
 import PartnersPage from './pages/PartnersPage';
-import { ClubDetailsPage, ClubsPage } from '@duncit/entity-consoles';
-import ClubEditorPage from './pages/clubs-page/club-editor-page';
-import PodsPage from './pages/PodsPage';
-import PodEditorPage from './pages/pods-page/pod-editor-page';
-import AutoPodsPage from './pages/auto-pods-page';
-import AutoPodEditorPage from './pages/auto-pods-page/editor';
-import AutoPodDetailsPage from './pages/auto-pods-page/details';
-import PodDetailsPage from './pages/PodDetailsPage';
-import PodSettingsPage from './pages/PodSettingsPage';
 import PortalsUploadSettingPage from './pages/upload-settings/PortalsUploadSettingPage';
 import MobileUploadSettingPage from './pages/upload-settings/MobileUploadSettingPage';
 import MwebUploadSettingPage from './pages/upload-settings/MwebUploadSettingPage';
-import PodMonitoringPage from './pages/pod-monitoring/PodMonitoringPage';
-import PodsDashboardPage from './pages/pods-dashboard/PodsDashboardPage';
-import PodChangeRequestsPage from './pages/pod-change-requests/PodChangeRequestsPage';
-import EventTicketsPage from './pages/EventTicketsPage';
 import BrandingPage from './pages/BrandingPage';
 import LocalesPage from './pages/localization-page/LocalesPage';
 import TranslationsPage from './pages/localization-page/TranslationsPage';
-import PodIdeasPage from './pages/PodIdeasPage';
 import BadgesPage from './pages/BadgesPage';
 import SomethingForYouPage from './pages/something-for-you/SomethingForYouPage';
-import PodPlansPage from './pages/PodPlansPage';
 import { MembershipPlansPage, MembershipSubscribersPage } from './pages/membership';
 import ApprovalsPage from './pages/approvals-page';
 import PortalAccessPage from './pages/portal-access-page';
@@ -74,39 +57,9 @@ export default function App() {
                 <Route path="/users/:user_id" element={<UserDetailsPage />} />
                 <Route path="/categories" element={<CategoriesPage />} />
                 <Route path="/locations" element={<LocationsPage />} />
-                <Route path="/clubs" element={<ClubsPage />} />
-                <Route path="/venues" element={<VenuesPage />} />
-                <Route path="/venues/:venueId" element={<VenueDetailsPage />} />
                 <Route path="/partners" element={<PartnersPage />} />
-                {/* Static before dynamic so /clubs/new is never read as a club
-                    id — React Router ranks it first either way, and the order
-                    says so out loud. */}
-                <Route path="/clubs/new" element={<ClubEditorPage />} />
-                <Route path="/clubs/:id" element={<ClubDetailsPage />} />
-                <Route path="/clubs/:id/edit" element={<ClubEditorPage />} />
-                <Route path="/pods" element={<PodsPage />} />
-                {/* Static before dynamic so /pods/dashboard is never read as a
-                    pod id — React Router ranks it first either way, and the
-                    order says so out loud. */}
-                <Route path="/pods/dashboard" element={<PodsDashboardPage />} />
-                <Route path="/pods/change-requests" element={<PodChangeRequestsPage />} />
-                <Route path="/pods/new" element={<PodEditorPage />} />
-                <Route path="/pods/:id" element={<PodDetailsPage />} />
-                <Route path="/pods/:id/edit" element={<PodEditorPage />} />
-                <Route path="/auto-pods" element={<AutoPodsRoute page={<AutoPodsPage />} />} />
-                <Route path="/auto-pods/new" element={<AutoPodsRoute page={<AutoPodEditorPage />} />} />
-                <Route path="/auto-pods/:id" element={<AutoPodsRoute page={<AutoPodDetailsPage />} />} />
-                <Route
-                  path="/auto-pods/:id/edit"
-                  element={<AutoPodsRoute page={<AutoPodEditorPage />} />}
-                />
-                <Route path="/pod-settings" element={<PodSettingsPage />} />
-                <Route path="/pod-monitoring" element={<PodMonitoringPage />} />
-                <Route path="/event-tickets" element={<EventTicketsPage />} />
-                <Route path="/pod-ideas" element={<PodIdeasPage />} />
                 <Route path="/badges" element={<BadgesPage />} />
                 <Route path="/something-for-you" element={<SomethingForYouPage />} />
-                <Route path="/pod-plans" element={<PodPlansPage />} />
                 <Route path="/membership/plans" element={<MembershipPlansPage />} />
                 <Route path="/membership/subscribers" element={<MembershipSubscribersPage />} />
                 <Route path="/approvals" element={<ApprovalsPage />} />

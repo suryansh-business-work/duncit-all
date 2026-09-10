@@ -1,10 +1,31 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  // The same dedupe every portal's vite config carries. Without it a second
+  // copy of react / app-settings loads under test, the translator resolves
+  // against a context nothing populated, and every `t()` renders empty — which
+  // reads as "the label is missing" rather than "there are two Reacts".
+  resolve: {
+    dedupe: [
+      'react',
+      'react-dom',
+      'react-router',
+      '@emotion/react',
+      '@emotion/styled',
+      '@mui/material',
+      '@mui/system',
+      '@duncit/app-settings',
+      '@duncit/i18n',
+    ],
+  },
   test: {
     environment: 'jsdom',
     globals: false,
-    include: ['__tests__/**/*.test.{ts,tsx}'],
+    // Two homes on purpose: the consoles that MOVED here keep their tests
+    // co-located beside the code (so a test's `../Subject` import still
+    // resolves and no relative depth had to be rewritten), while the package's
+    // own suites live under __tests__/.
+    include: ['__tests__/**/*.test.{ts,tsx}', 'src/**/__tests__/**/*.test.{ts,tsx}'],
     /**
      * Three suites arrived BROKEN with the clubs console.
      *

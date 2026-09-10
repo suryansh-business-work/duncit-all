@@ -14,6 +14,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import PodInputsCard from '../PodInputsCard';
 import VenueHostCard from '../VenueHostCard';
+import ExpensesCard from '../ExpensesCard';
 import ResultsCard from '../ResultsCard';
 import { formatRupees, type PodProfitInputs } from '../types';
 import PodStat from '../saved/PodStat';
@@ -109,6 +110,11 @@ export default function MultiPodAccordion({
             <Stack spacing={2} sx={{ flex: 1, minWidth: 0, width: '100%' }}>
               <PodInputsCard inputs={row.inputs} onChange={onInputChange} />
               <VenueHostCard inputs={row.inputs} onChange={onInputChange} />
+              <ExpensesCard
+                expenses={row.inputs.expenses}
+                totals={row.results.expenses}
+                onChange={onInputChange}
+              />
             </Stack>
             <Box sx={{ width: { xs: '100%', lg: 360 }, flexShrink: 0 }}>
               <ResultsCard results={row.results} />

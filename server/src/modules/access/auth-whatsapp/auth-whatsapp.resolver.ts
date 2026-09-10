@@ -1,4 +1,4 @@
-import { whatsappAuthService } from './auth-whatsapp.service';
+import { whatsappAuthService, type SignupContactInput } from './auth-whatsapp.service';
 
 interface OtpArgs {
   phone_extension: string;
@@ -8,6 +8,10 @@ interface OtpArgs {
 }
 
 export const whatsappResolvers = {
+  Query: {
+    signupContactAvailability: (_p: unknown, args: SignupContactInput) =>
+      whatsappAuthService.contactAvailability(args),
+  },
   Mutation: {
     requestSignupWhatsAppOtp: (_p: unknown, args: Omit<OtpArgs, 'otp'>) =>
       whatsappAuthService.requestSignupOtp(args.phone_extension, args.phone_number, args.email),

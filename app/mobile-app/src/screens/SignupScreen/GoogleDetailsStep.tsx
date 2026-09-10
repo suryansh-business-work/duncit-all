@@ -1,10 +1,11 @@
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, YStack } from 'tamagui';
-import { buildSignupStepperLabels } from '@duncit/utils';
+import { buildSignupStepperLabels, signupContactsBlockContinue } from '@duncit/utils';
 import {
   googleSignupDefaults,
   makeGoogleSignupSchema,
+  WHATSAPP_NUMBER_NAMES,
   type GoogleSignupValues,
 } from '@duncit/forms/schemas';
 
@@ -12,6 +13,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { DobDateField } from '@/forms/account-edit/DobDateField';
 import { WhatsappNumberFields } from '@/forms/signup';
 import { useAppSettings } from '@/hooks/useAppSettings';
+import { useSignupPhoneCheck } from '@/hooks/useSignupContactCheck';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
@@ -50,6 +52,11 @@ export function GoogleDetailsStep({ onSubmit }: Readonly<Props>) {
 
   const submit = handleSubmit((values) => onSubmit(values));
 
+  // The number asks the server as it is typed — a taken one is a correction
+  // here, not a refusal after a code has gone out — and Send code waits on it.
+  const phoneStatus = useSignupPhoneCheck(control, WHATSAPP_NUMBER_NAMES);
+  const blocked = signupContactsBlockContinue([phoneStatus]);
+
   return (
     <YStack gap={16}>
       <Text fontSize={13} color="$muted">
@@ -57,18 +64,16 @@ export function GoogleDetailsStep({ onSubmit }: Readonly<Props>) {
       </Text>
       <WhatsappNumberFields
         control={control}
-        names={{
-          extension: 'phoneExtension',
-          number: 'phoneNumber',
-          sameAsMobile: 'whatsappIsMobile',
-        }}
+        names={WHATSAPP_NUMBER_NAMES}
+        phoneStatus={phoneStatus}
       />
       <DobDateField control={control} minAge={minSignupAge} />
       <PrimaryButton
         testID="signup-number-continue"
         label={labels.sendCode}
-        disabled={!isValid}
+        disabled={!isValid || blocked}
         onPress={() => {
+          if (blocked) return;
           submit().catch(() => undefined);
         }}
       />

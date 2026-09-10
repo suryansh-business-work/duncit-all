@@ -1,3 +1,30 @@
+/**
+ * Who pays for an expense out of their own money.
+ *
+ * An expense is NOT a redistribution of the collection — it is a cost the side
+ * that carries it pays from what it was already paid. So the waterfall above it
+ * never moves, and `reconciled_total` still adds back to the collection; the
+ * expense only decides whose NET is smaller. Defaults to DUNCIT, matching
+ * Finance > Pod Expenses, which records Duncit's per-pod spend.
+ */
+export const EXPENSE_BEARERS = ['DUNCIT', 'HOST', 'VENUE'] as const;
+export type ExpenseBearer = (typeof EXPENSE_BEARERS)[number];
+
+/** One cost line against a pod. Amounts are per pod, like `venue_amount`. */
+export interface PodExpense {
+  /** Stable per-row key, minted by the client so React keys survive a save. */
+  expense_key: string;
+  label: string;
+  /** Cost for ONE pod (₹). The projection multiplies it by `pod_count`. */
+  amount: number;
+  borne_by: ExpenseBearer;
+}
+
+/** Per-side expense totals — the same shape the results and charts both read. */
+export type ExpenseTotals = Record<ExpenseBearer, number>;
+
+export const EMPTY_EXPENSE_TOTALS: ExpenseTotals = { DUNCIT: 0, HOST: 0, VENUE: 0 };
+
 export interface PodProfitInputs {
   /** Ticket price paid per spot, GST-inclusive (₹). */
   pod_amount: number;
@@ -29,6 +56,14 @@ export interface PodProfitInputs {
   /** Club-admin cut % off the pool (after GST + platform fee, before the
    * venue/host split). Becomes Duncit revenue — mirrors breakdown.math.ts. */
   club_admin_percent: number;
+  /**
+   * Costs against ONE pod, each charged to the side that carries it.
+   *
+   * An array rather than three totals because the reader needs to see WHAT the
+   * money went on — a single "host expenses: ₹3,100" answers nothing when the
+   * question is which line to cut.
+   */
+  expenses: PodExpense[];
 }
 
 /** One pod's figures times `pod_count` — what the headers and totals add up. */
@@ -39,6 +74,13 @@ export interface PodProfitScaled {
   venue_receives: number;
   host_receives: number;
   duncit_revenue_total: number;
+  /** Every expense line across all the pods, by who carries it. */
+  expenses: ExpenseTotals;
+  expense_total: number;
+  /** What each side keeps once its own expenses are paid. */
+  venue_net: number;
+  host_net: number;
+  duncit_net: number;
 }
 
 export interface PodProfitResults {
@@ -66,8 +108,22 @@ export interface PodProfitResults {
   duncit_revenue_total: number;
   /** host_receives / collection_total as a %, 0 when the collection is 0. */
   host_earn_percent: number;
-  /** gst + host_receives + venue_receives + duncit — reconciles to collection_total. */
+  /** gst + host_receives + venue_receives + duncit — reconciles to collection_total.
+   * Expenses are deliberately NOT in here: they are each side's own cost, not a
+   * share of the collection, so the identity has to hold with or without them. */
   reconciled_total: number;
+  /** One pod's expense lines added up per side. */
+  expenses: ExpenseTotals;
+  /** Every expense line on one pod, whoever carries it. */
+  expense_total: number;
+  /** venue_receives − the venue's own expenses. */
+  venue_net: number;
+  /** host_receives − the host's own expenses. */
+  host_net: number;
+  /** duncit_revenue_total − Duncit's own expenses. */
+  duncit_net: number;
+  /** host_net / collection_total as a %, 0 when the collection is 0. */
+  host_net_percent: number;
   /** The same figures across `pod_count` identical pods. */
   scaled: PodProfitScaled;
 }
@@ -82,7 +138,19 @@ export const DEFAULT_INPUTS: PodProfitInputs = {
   host_commission_percent: 10,
   venue_commission_percent: 10,
   club_admin_percent: 0,
+  // Shared by every pod that starts from the defaults, so it must only ever be
+  // REPLACED (`[...expenses, next]`), never pushed into. Every edit path below
+  // builds a new array, which is what keeps that safe.
+  expenses: [],
 };
+
+/** A fresh expense row, charged to Duncit until the reader says otherwise. */
+export const newExpense = (): PodExpense => ({
+  expense_key: globalThis.crypto.randomUUID(),
+  label: '',
+  amount: 0,
+  borne_by: 'DUNCIT',
+});
 
 export const formatRupees = (value: number): string =>
   new Intl.NumberFormat('en-IN', {

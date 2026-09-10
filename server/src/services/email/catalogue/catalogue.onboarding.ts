@@ -192,7 +192,7 @@ const STEPS: readonly Step[] = [
     rows: [{ labelKey: FIELD.email, valueVar: 'email' }],
     ctaKey: CTA.openPartners,
     ctaVar: 'portal_url',
-    fires: 'The application is approved after the interview',
+    fires: 'Staff approve the drafted record under Review on its Onboarded page — not when the interview is marked approved',
     calloutLabelKey: LABEL.application,
     calloutVar: 'email',
   },

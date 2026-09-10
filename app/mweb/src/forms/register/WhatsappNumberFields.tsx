@@ -1,6 +1,10 @@
 import type { Control, FieldValues, Path } from 'react-hook-form';
 import { Stack } from '@mui/material';
-import { buildSignupStepperLabels } from '@duncit/utils';
+import {
+  buildSignupStepperLabels,
+  signupContactLines,
+  type SignupContactStatus,
+} from '@duncit/utils';
 import CountryCodeField from '../components/CountryCodeField';
 import RhfCheckbox from '../components/RhfCheckbox';
 import RhfTextField from '../components/RhfTextField';
@@ -22,6 +26,12 @@ export interface WhatsappNumberNames<T extends FieldValues> {
 interface Props<T extends FieldValues> {
   control: Control<T>;
   names: WhatsappNumberNames<T>;
+  /**
+   * Whether the server says this number is free, as it is typed — decided by
+   * the form that mounts the row (`useSignupPhoneCheck`), which also gates its
+   * Continue on it. The row only writes the answer under the box.
+   */
+  phoneStatus: SignupContactStatus;
 }
 
 const numberInput = { inputMode: 'numeric' as const, maxLength: 15 };
@@ -41,9 +51,13 @@ const numberInput = { inputMode: 'numeric' as const, maxLength: 15 };
 export default function WhatsappNumberFields<T extends FieldValues>({
   control,
   names,
+  phoneStatus,
 }: Readonly<Props<T>>) {
   const { t } = useTranslation();
   const labels = buildSignupStepperLabels(t);
+  // "Already registered" is a correction beside this box rather than a refusal
+  // on the code step — where it used to arrive with a code already on its way.
+  const lines = signupContactLines(phoneStatus, labels.contactCopy.phone);
 
   return (
     <Stack spacing={0.5}>
@@ -54,7 +68,8 @@ export default function WhatsappNumberFields<T extends FieldValues>({
           name={names.number}
           label={t('mweb.signup.whatsappLabel')}
           required
-          hint={t('mweb.signup.whatsappHint')}
+          hint={lines.hint}
+          errorText={lines.error}
           placeholder={t('mweb.signup.phonePlaceholder')}
           autoComplete="tel-national"
           size="small"

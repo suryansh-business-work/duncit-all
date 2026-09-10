@@ -3,7 +3,12 @@ import {
   payableSpots,
   type PodFinanceBreakdown,
 } from '@modules/finance/finance/breakdown.math';
-import type { IPodCalculatorPod } from './podCalculator.model';
+import type { ExpenseBearer, IPodCalculatorPod } from './podCalculator.model';
+
+/** Per-side expense totals — the shape the report's costs block reads. */
+export type ExpenseTotals = Record<ExpenseBearer, number>;
+
+const EMPTY_EXPENSES: ExpenseTotals = { DUNCIT: 0, HOST: 0, VENUE: 0 };
 
 /** One pod's waterfall, plus what it comes to across `pod_count` of them. */
 export interface PodCalculatorLine {
@@ -18,6 +23,13 @@ export interface PodCalculatorLine {
   venue_receives: number;
   host_receives: number;
   duncit_revenue_total: number;
+  /** This line's cost lines x pod_count, by the side that carries them. */
+  expenses: ExpenseTotals;
+  expense_total: number;
+  /** What each side keeps once its own costs are paid. */
+  venue_net: number;
+  host_net: number;
+  duncit_net: number;
 }
 
 export interface PodCalculatorTotals {
@@ -27,6 +39,11 @@ export interface PodCalculatorTotals {
   venue_receives: number;
   host_receives: number;
   duncit_revenue_total: number;
+  expenses: ExpenseTotals;
+  expense_total: number;
+  venue_net: number;
+  host_net: number;
+  duncit_net: number;
 }
 
 const rupees = (paise: number, count: number) => Math.round(paise * count) / 100;
@@ -58,6 +75,16 @@ export function lineFor(pod: IPodCalculatorPod): PodCalculatorLine {
     { clampVenueToPool: false }
   );
   const count = Math.max(0, Math.round(pod.pod_count ?? 1));
+  // Expenses sit OUTSIDE the engine's waterfall on purpose: each side pays its
+  // own out of what it was already paid, so the breakdown above is untouched
+  // and only the nets below differ. Summed in paise, then scaled once.
+  const expPaise: Record<ExpenseBearer, number> = { DUNCIT: 0, HOST: 0, VENUE: 0 };
+  for (const expense of pod.expenses ?? []) {
+    const bearer: ExpenseBearer =
+      expPaise[expense.borne_by] === undefined ? 'DUNCIT' : expense.borne_by;
+    expPaise[bearer] += Math.round(Math.max(0, expense.amount ?? 0) * 100);
+  }
+  const expTotalPaise = expPaise.DUNCIT + expPaise.HOST + expPaise.VENUE;
   return {
     name: pod.name ?? '',
     pod_count: count,
@@ -68,6 +95,15 @@ export function lineFor(pod: IPodCalculatorPod): PodCalculatorLine {
     venue_receives: rupees(perPod.venue_receives_paise, count),
     host_receives: rupees(perPod.host_receives_paise, count),
     duncit_revenue_total: rupees(perPod.duncit_revenue_paise, count),
+    expenses: {
+      DUNCIT: rupees(expPaise.DUNCIT, count),
+      HOST: rupees(expPaise.HOST, count),
+      VENUE: rupees(expPaise.VENUE, count),
+    },
+    expense_total: rupees(expTotalPaise, count),
+    venue_net: rupees(perPod.venue_receives_paise - expPaise.VENUE, count),
+    host_net: rupees(perPod.host_receives_paise - expPaise.HOST, count),
+    duncit_net: rupees(perPod.duncit_revenue_paise - expPaise.DUNCIT, count),
   };
 }
 
@@ -81,7 +117,28 @@ export function totalsOf(lines: readonly PodCalculatorLine[]): PodCalculatorTota
       venue_receives: add(acc.venue_receives, line.venue_receives),
       host_receives: add(acc.host_receives, line.host_receives),
       duncit_revenue_total: add(acc.duncit_revenue_total, line.duncit_revenue_total),
+      expenses: {
+        DUNCIT: add(acc.expenses.DUNCIT, line.expenses.DUNCIT),
+        HOST: add(acc.expenses.HOST, line.expenses.HOST),
+        VENUE: add(acc.expenses.VENUE, line.expenses.VENUE),
+      },
+      expense_total: add(acc.expense_total, line.expense_total),
+      venue_net: add(acc.venue_net, line.venue_net),
+      host_net: add(acc.host_net, line.host_net),
+      duncit_net: add(acc.duncit_net, line.duncit_net),
     }),
-    { pods: 0, collection_total: 0, gst_amount: 0, venue_receives: 0, host_receives: 0, duncit_revenue_total: 0 }
+    {
+      pods: 0,
+      collection_total: 0,
+      gst_amount: 0,
+      venue_receives: 0,
+      host_receives: 0,
+      duncit_revenue_total: 0,
+      expenses: EMPTY_EXPENSES,
+      expense_total: 0,
+      venue_net: 0,
+      host_net: 0,
+      duncit_net: 0,
+    }
   );
 }

@@ -8,6 +8,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import { ClubAdminProfileModel, type IClubAdminProfile } from './clubAdminProfile.model';
 import { notifyEvent } from '@services/notify/notify.service';
+import { getUrlConfigs } from '@config/url-configs';
 
 const notFound = () =>
   new GraphQLError('Club Admin not found', { extensions: { code: 'NOT_FOUND' } });
@@ -198,12 +199,34 @@ export const clubAdminProfileService = {
   async approve(id: string, notes?: string | null) {
     const doc = await ClubAdminProfileModel.findById(id);
     if (!doc) throw notFound();
+    // Re-approving an approved club admin is how an admin edits the reviewer
+    // note, so it stays allowed — but the welcome only goes out on the
+    // transition. It carries no entity, so nothing downstream can spot the
+    // duplicate.
+    const wasApproved = doc.status === 'APPROVED';
     doc.status = 'APPROVED';
     doc.is_active = true;
     doc.approved_at = new Date();
     doc.joined_at ??= doc.approved_at;
     if (notes !== undefined && notes !== null) doc.reviewer_notes = notes;
     await doc.save();
+    if (!wasApproved) {
+      // THIS is where the club admin is onboarded — the interview only drafted
+      // the record — so `club-admin-onboarding-approved` goes out here rather
+      // than on the meeting decision.
+      const { partnersUrl } = await getUrlConfigs();
+      const email = doc.email ?? '';
+      await notifyEvent({
+        event: 'CLUB_ADMIN_ONBOARDING_APPROVED',
+        user: await waRecipient(doc.user_id),
+        name: doc.full_name,
+        // The template's second value is the partner-portal login address,
+        // which is the same address this email is going to.
+        params: [doc.full_name, email],
+        email,
+        vars: { portal_url: partnersUrl },
+      });
+    }
     return one(doc);
   },
 

@@ -89,6 +89,7 @@ export {
   makeWhatsappNumberSchema,
   signupDefaults,
   whatsappNumberDefaults,
+  WHATSAPP_NUMBER_NAMES,
   type GoogleSignupValues,
   type SignupFormValues,
   type WhatsappNumberValues,

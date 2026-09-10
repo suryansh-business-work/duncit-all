@@ -34,6 +34,12 @@ export interface FormTextFieldProps<T extends FieldValues> extends PassthroughPr
   required?: boolean;
   /** Muted helper text shown below the field when there is no error (mirrors MUI helperText). */
   hint?: string;
+  /**
+   * An error the FORM does not know about — a server answer such as "already
+   * registered" from a debounced check. Rendered exactly like a Zod message,
+   * beneath a validation error when both exist (mirrors mWeb's RhfTextField).
+   */
+  errorText?: string;
   /** Trailing control rendered on the label line, right-aligned. */
   labelAction?: ReactNode;
   /**
@@ -60,6 +66,7 @@ export function FormTextField<T extends FieldValues>({
   label,
   required,
   hint,
+  errorText,
   labelAction,
   digitsOnly,
   secureTextEntry,
@@ -70,7 +77,8 @@ export function FormTextField<T extends FieldValues>({
   const { muted } = useThemeColors();
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
-  const hasError = !!fieldState.error;
+  const errorMessage = fieldState.error?.message ?? errorText;
+  const hasError = !!errorMessage;
   const isSecure = !!secureTextEntry;
   const masked = isSecure && !visible;
   // Tamagui's WEB <Input> destructures `secureTextEntry` away with the rest of
@@ -86,7 +94,7 @@ export function FormTextField<T extends FieldValues>({
     <Field
       label={label}
       required={required}
-      error={hasError ? fieldState.error?.message : undefined}
+      error={errorMessage}
       hint={hint}
       labelAction={labelAction}
       testID={name}

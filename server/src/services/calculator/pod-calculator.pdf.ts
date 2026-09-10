@@ -173,6 +173,63 @@ function drawTotals(
 
 
 /**
+ * The costs each side carries, and what that leaves them.
+ *
+ * A block rather than three more table columns: the money columns already run
+ * to the right margin on a 595pt page, and a clipped number is a wrong number.
+ * Drawn only when something was actually spent, so a calculation with no
+ * expenses reads exactly as it did before the feature existed.
+ */
+function drawCosts(
+  doc: PDFKit.PDFDocument,
+  t: PodCalculatorTotals,
+  R: number,
+  y: number,
+  fmt: (n: number) => string
+): number {
+  if (t.expense_total <= 0) return y;
+
+  const rows: readonly (readonly [string, number, number])[] = [
+    ['Duncit', t.expenses.DUNCIT, t.duncit_net],
+    ['Host', t.expenses.HOST, t.host_net],
+    ['Venue', t.expenses.VENUE, t.venue_net],
+  ];
+  const half = (R - L) / 2;
+  let top = y + 18;
+
+  doc.fillColor(ACCENT).fontSize(8.5).font('Helvetica-Bold').text('COSTS & NET', L, top);
+  top += 14;
+  doc.fillColor(MUTED).fontSize(7).font('Helvetica-Bold');
+  doc.text('BORNE BY', L + PAD, top, { width: half - PAD, lineBreak: false });
+  doc.text('EXPENSES', L + half, top, { width: half / 2 - PAD, align: 'right', lineBreak: false });
+  doc.text('NET', L + half + half / 2, top, { width: half / 2 - PAD, align: 'right', lineBreak: false });
+  top += 12;
+
+  for (const [label, spend, net] of rows) {
+    doc.fillColor(INK).fontSize(8).font('Helvetica');
+    doc.text(label, L + PAD, top, { width: half - PAD, lineBreak: false });
+    doc.text(fmt(spend), L + half, top, { width: half / 2 - PAD, align: 'right', lineBreak: false });
+    doc.font('Helvetica-Bold');
+    doc.text(fmt(net), L + half + half / 2, top, {
+      width: half / 2 - PAD,
+      align: 'right',
+      lineBreak: false,
+    });
+    top += 14;
+    doc.moveTo(L, top - 3).lineTo(R, top - 3).strokeColor(LINE).lineWidth(0.5).stroke();
+  }
+
+  doc.fillColor(ACCENT).fontSize(8).font('Helvetica-Bold');
+  doc.text('TOTAL EXPENSES', L + PAD, top + 3, { width: half - PAD, lineBreak: false });
+  doc.text(fmt(t.expense_total), L + half, top + 3, {
+    width: half / 2 - PAD,
+    align: 'right',
+    lineBreak: false,
+  });
+  return top + 16;
+}
+
+/**
  * The standing disclaimer.
  *
  * Fixed rather than read from the invoice footer setting: this is an estimate,
@@ -221,6 +278,13 @@ export async function generatePodCalculatorPdf(d: PodCalculatorReportData): Prom
       y = drawLine(doc, lay, line, R, y, fmt);
     }
 
-    drawFooter(doc, R, drawTotals(doc, lay, d.totals, R, y + 6, fmt));
+    let costsTop = drawTotals(doc, lay, d.totals, R, y + 6, fmt);
+    // The costs block is ~90pt tall; start it on a fresh page rather than let
+    // it run off the bottom of a long comparison.
+    if (d.totals.expense_total > 0 && costsTop > doc.page.height - 140) {
+      doc.addPage();
+      costsTop = 48;
+    }
+    drawFooter(doc, R, drawCosts(doc, d.totals, R, costsTop, fmt));
   });
 }

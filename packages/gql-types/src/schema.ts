@@ -17846,6 +17846,13 @@ export type Query = {
   shortLinkStats: ShortLinkStats;
   shortLinksTable: ShortLinkTablePage;
   /**
+   * Signup step two, as it is typed: is this email / this WhatsApp number free
+   * to join with? Public, because there is no account yet. A hint for the form,
+   * not the gate — requestSignupWhatsAppOtp and register refuse a taken contact
+   * again, because two people can be typing the same one at once.
+   */
+  signupContactAvailability: SignupContactAvailability;
+  /**
    * The policies a new account must accept, in display order.
    *
    * PUBLIC and unauthenticated — the signup form is not signed in. Depends on no
@@ -20054,6 +20061,13 @@ export type QueryShortLinksTableArgs = {
 };
 
 
+export type QuerySignupContactAvailabilityArgs = {
+  email?: InputMaybe<Scalars['String']['input']>;
+  phone_extension?: InputMaybe<Scalars['String']['input']>;
+  phone_number?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QuerySlackChannelHistoryArgs = {
   channel: Scalars['ID']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -21664,6 +21678,21 @@ export type SignatureMethod =
 export type SigningStatus =
   | 'SIGNED'
   | 'UNSIGNED';
+
+/**
+ * Whether an email address or a WhatsApp number is still free to join with.
+ *
+ * Answered while the contact step is being typed, so a taken address or number
+ * is a correction beside the box that asked for it rather than a refusal on
+ * the code step. Each half is null when that contact was not asked about.
+ */
+export type SignupContactAvailability = {
+  __typename?: 'SignupContactAvailability';
+  /** Null when no email was passed. */
+  email_available?: Maybe<Scalars['Boolean']['output']>;
+  /** Null when no number was passed. */
+  phone_available?: Maybe<Scalars['Boolean']['output']>;
+};
 
 /** A proven WhatsApp number, on its way to the signup door that spends it. */
 export type SignupWhatsAppProof = {

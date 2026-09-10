@@ -12,6 +12,12 @@ export interface RhfTextFieldProps<T extends FieldValues> extends Omit<TextField
   /** Helper text shown when the field has no validation error. */
   hint?: string;
   /**
+   * An error the FORM does not know about — a server answer such as "already
+   * registered" from a debounced check. Rendered exactly like a Zod message,
+   * beneath a validation error when both exist.
+   */
+  errorText?: string;
+  /**
    * Keep only digits in what the field stores.
    *
    * `inputMode` is a request, not a rule — a desktop keyboard, a paste and an
@@ -33,6 +39,7 @@ export default function RhfTextField<T extends FieldValues>({
   control,
   name,
   hint,
+  errorText,
   digitsOnly,
   ...rest
 }: Readonly<RhfTextFieldProps<T>>) {
@@ -49,8 +56,8 @@ export default function RhfTextField<T extends FieldValues>({
           }
           value={field.value ?? ''}
           fullWidth={rest.fullWidth ?? true}
-          error={!!fieldState.error}
-          helperText={fieldState.error?.message ?? hint ?? ' '}
+          error={!!fieldState.error || !!errorText}
+          helperText={fieldState.error?.message ?? errorText ?? hint ?? ' '}
         />
       )}
     />

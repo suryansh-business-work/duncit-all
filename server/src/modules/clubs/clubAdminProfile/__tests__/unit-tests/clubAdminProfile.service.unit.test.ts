@@ -38,6 +38,13 @@ jest.mock('@modules/platform/whatsapp/whatsapp.service', () => ({
 // notifyEvent reaches for the database and the suite dies on a timeout
 // rather than an assertion.
 jest.mock('@services/notify/notify.service', () => ({ notifyEvent: jest.fn() }));
+// Approval now sends the onboarding-approved message, whose CTA is the partner
+// portal's address. `getUrlConfigs` resolves the SMTP_* keys through EnvEntry,
+// so left unmocked it reaches for a database this suite does not have and dies
+// on a buffer timeout rather than an assertion — the same trap as notifyEvent.
+jest.mock('@config/url-configs', () => ({
+  getUrlConfigs: jest.fn().mockResolvedValue({ partnersUrl: 'https://partners-app.duncit.com' }),
+}));
 jest.mock('@modules/venues/entityIdCounter', () => ({ nextEntityNo: jest.fn() }));
 jest.mock('@utils/table-query', () => {
   const actual = jest.requireActual('@utils/table-query');

@@ -8,14 +8,17 @@ import {
   firstStepWithError,
   nextSignupStep,
   previousSignupStep,
+  signupContactsBlockContinue,
   stepSubmitsAccount,
   type SignupStep,
 } from '@duncit/utils';
+import { WHATSAPP_NUMBER_NAMES } from '@duncit/forms/schemas';
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useAppSettings } from '@/hooks/useAppSettings';
 import { useSignupPolicies } from '@/hooks/usePolicies';
+import { useSignupEmailCheck, useSignupPhoneCheck } from '@/hooks/useSignupContactCheck';
 import { useTranslation } from '@/hooks/useTranslation';
 import { allPoliciesAccepted } from '@/utils/policy-acceptance';
 import { formResolver } from '../../utils/form-resolver';
@@ -70,6 +73,16 @@ export function SignupForm({
     mode: 'onBlur',
   });
 
+  /*
+    The contact step's boxes ask the server as they are typed, and Continue
+    waits on the answer: a taken email or number is a correction on THIS step,
+    never a refusal on the code step. Both checks run here, above the step, so
+    the statuses flow down as props and nothing has to be lifted back up.
+  */
+  const emailStatus = useSignupEmailCheck(control, 'email');
+  const phoneStatus = useSignupPhoneCheck(control, WHATSAPP_NUMBER_NAMES);
+  const blocked = step === 'CONTACT' && signupContactsBlockContinue([emailStatus, phoneStatus]);
+
   // The gate stays shut until the server has said what must be accepted: an
   // empty list is vacuously accepted, which is only true once it has answered.
   const policiesAccepted = loaded && allPoliciesAccepted(policies, watch('acceptedPolicyIds'));
@@ -116,7 +129,9 @@ export function SignupForm({
   return (
     <YStack gap={16}>
       {step === 'WHO' ? <WhoStep control={control} minAge={minSignupAge} /> : null}
-      {step === 'CONTACT' ? <ContactStep control={control} /> : null}
+      {step === 'CONTACT' ? (
+        <ContactStep control={control} emailStatus={emailStatus} phoneStatus={phoneStatus} />
+      ) : null}
       {step === 'SECURITY' ? (
         <SecurityStep control={control} policiesAccepted={policiesAccepted} />
       ) : null}
@@ -147,7 +162,7 @@ export function SignupForm({
           <PrimaryButton
             testID="signup-next"
             label={nextLabel}
-            disabled={creating && !policiesAccepted}
+            disabled={blocked || (creating && !policiesAccepted)}
             onPress={() => {
               advance().catch(() => undefined);
             }}

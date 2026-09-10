@@ -19,6 +19,34 @@ export const whatsappTypeDefs = gql`
     whatsapp_token: String!
   }
 
+  """
+  Whether an email address or a WhatsApp number is still free to join with.
+
+  Answered while the contact step is being typed, so a taken address or number
+  is a correction beside the box that asked for it rather than a refusal on
+  the code step. Each half is null when that contact was not asked about.
+  """
+  type SignupContactAvailability {
+    "Null when no email was passed."
+    email_available: Boolean
+    "Null when no number was passed."
+    phone_available: Boolean
+  }
+
+  extend type Query {
+    """
+    Signup step two, as it is typed: is this email / this WhatsApp number free
+    to join with? Public, because there is no account yet. A hint for the form,
+    not the gate — requestSignupWhatsAppOtp and register refuse a taken contact
+    again, because two people can be typing the same one at once.
+    """
+    signupContactAvailability(
+      email: String
+      phone_extension: String
+      phone_number: String
+    ): SignupContactAvailability!
+  }
+
   extend type Mutation {
     """
     Signup step one: send a code to the WhatsApp number joining Duncit.

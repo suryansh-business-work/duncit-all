@@ -9,7 +9,8 @@ import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/br
 import { sendEmail } from '@services/email/email.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
 import { logs } from '@observability/log';
-import { notifyEvent } from '@services/notify/notify.service';
+import { notifyEach } from '@services/notify/notify.service';
+import { getUrlConfigs } from '@config/url-configs';
 
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
@@ -311,14 +312,33 @@ export const ecommBrandService = {
     );
     await brandPickupLocationService.registerBrandWarehouses(String(brand._id));
     if (!wasApproved) {
+      // THIS is where the brand is onboarded — the interview only drafted the
+      // record — so `ecomm-onboarding-approved` goes out here rather than on the
+      // meeting decision. Sequential (notifyEach) because both messages reach
+      // the same person and AiSensy rate-limits the campaign API.
       const categories = (brand.product_categories ?? []).join(', ');
-      await notifyEvent({
-        event: 'ECOMM_BRAND_ADDED',
-        user: await waRecipient(brand.owner_user_id),
-        name: brand.contact_person,
-        params: [brand.contact_person, brand.brand_name, categories],
-        email: brand.contact_email ?? '',
-      });
+      const { partnersUrl } = await getUrlConfigs();
+      const recipient = await waRecipient(brand.owner_user_id);
+      const email = brand.contact_email ?? '';
+      await notifyEach([
+        {
+          event: 'ECOMM_ONBOARDING_APPROVED',
+          user: recipient,
+          name: brand.contact_person,
+          // The template's second value is the partner-portal login address,
+          // which is the same address this email is going to.
+          params: [brand.contact_person, email],
+          email,
+          vars: { portal_url: partnersUrl },
+        },
+        {
+          event: 'ECOMM_BRAND_ADDED',
+          user: recipient,
+          name: brand.contact_person,
+          params: [brand.contact_person, brand.brand_name, categories],
+          email,
+        },
+      ]);
     }
     return toPub(brand);
   },

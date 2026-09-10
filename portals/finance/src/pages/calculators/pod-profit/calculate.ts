@@ -1,11 +1,43 @@
 import { payableSpots } from '@duncit/utils';
-import type { PodProfitInputs, PodProfitResults, PodProfitScaled } from './types';
+import {
+  type ExpenseBearer,
+  type ExpenseTotals,
+  type PodExpense,
+  type PodProfitInputs,
+  type PodProfitResults,
+  type PodProfitScaled,
+} from './types';
 
 const toPaise = (rupees: number) => Math.round(Math.max(0, rupees) * 100);
 const toRupees = (paise: number) => paise / 100;
 const clampPercent = (value: number) => Math.min(Math.max(value, 0), 100);
 /** Paise x count, back to rupees — the projection never re-rounds a rupee value. */
 const scaleRupees = (paise: number, count: number) => Math.round(paise * count) / 100;
+
+/** Per-side expense totals in PAISE, so the subtraction below stays exact. */
+function expensePaise(expenses: readonly PodExpense[] | undefined): Record<ExpenseBearer, number> {
+  const totals: Record<ExpenseBearer, number> = { DUNCIT: 0, HOST: 0, VENUE: 0 };
+  for (const expense of expenses ?? []) {
+    // An unknown bearer falls to Duncit rather than being dropped: a cost that
+    // silently vanishes from the total is worse than one filed in the wrong
+    // column, and the reader can see and move it.
+    const bearer: ExpenseBearer = totals[expense.borne_by] === undefined ? 'DUNCIT' : expense.borne_by;
+    totals[bearer] += toPaise(expense.amount);
+  }
+  return totals;
+}
+
+const rupeeTotals = (paise: Record<ExpenseBearer, number>): ExpenseTotals => ({
+  DUNCIT: toRupees(paise.DUNCIT),
+  HOST: toRupees(paise.HOST),
+  VENUE: toRupees(paise.VENUE),
+});
+
+const scaledTotals = (paise: Record<ExpenseBearer, number>, count: number): ExpenseTotals => ({
+  DUNCIT: scaleRupees(paise.DUNCIT, count),
+  HOST: scaleRupees(paise.HOST, count),
+  VENUE: scaleRupees(paise.VENUE, count),
+});
 
 /**
  * Calculator math — a faithful mirror of the server finance engine
@@ -69,6 +101,16 @@ export function calculatePodProfit(inputs: PodProfitInputs): PodProfitResults {
   const duncitRevenue = fee + hostCommission + venueCommission + clubAdmin;
   const hostEarn = amount === 0 ? 0 : Math.round((hostReceives / amount) * 10000) / 100;
 
+  // Expenses sit OUTSIDE the waterfall: each side pays its own out of what it
+  // was already paid, so nothing above this line moves and `reconciled_total`
+  // still adds back to the collection. All they change is whose net is smaller.
+  const exp = expensePaise(inputs.expenses);
+  const expTotal = exp.DUNCIT + exp.HOST + exp.VENUE;
+  const venueNet = venueReceives - exp.VENUE;
+  const hostNet = hostReceives - exp.HOST;
+  const duncitNet = duncitRevenue - exp.DUNCIT;
+  const hostNetPct = amount === 0 ? 0 : Math.round((hostNet / amount) * 10000) / 100;
+
   return {
     total_spots: totalSpots,
     payable_spots: spots,
@@ -87,6 +129,12 @@ export function calculatePodProfit(inputs: PodProfitInputs): PodProfitResults {
     duncit_revenue_total: toRupees(duncitRevenue),
     host_earn_percent: hostEarn,
     reconciled_total: toRupees(gst + hostReceives + venueReceives + duncitRevenue),
+    expenses: rupeeTotals(exp),
+    expense_total: toRupees(expTotal),
+    venue_net: toRupees(venueNet),
+    host_net: toRupees(hostNet),
+    duncit_net: toRupees(duncitNet),
+    host_net_percent: hostNetPct,
     scaled: {
       pod_count: podCount,
       collection_total: scaleRupees(amount, podCount),
@@ -94,6 +142,11 @@ export function calculatePodProfit(inputs: PodProfitInputs): PodProfitResults {
       venue_receives: scaleRupees(venueReceives, podCount),
       host_receives: scaleRupees(hostReceives, podCount),
       duncit_revenue_total: scaleRupees(duncitRevenue, podCount),
+      expenses: scaledTotals(exp, podCount),
+      expense_total: scaleRupees(expTotal, podCount),
+      venue_net: scaleRupees(venueNet, podCount),
+      host_net: scaleRupees(hostNet, podCount),
+      duncit_net: scaleRupees(duncitNet, podCount),
     } satisfies PodProfitScaled,
   };
 }

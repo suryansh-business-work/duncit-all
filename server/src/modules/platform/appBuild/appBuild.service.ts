@@ -21,7 +21,9 @@ import {
   type IAppBuild,
   type IAppBuildArtifact,
   type IAppBuildStage,
+  type PlayStoreTrack,
 } from './appBuild.model';
+import { playStoreSettings, pushBuildToPlayStore } from './playRelease.service';
 import {
   dispatchWorkflow,
   githubRepoConfig,
@@ -180,6 +182,15 @@ const pub = (doc: IAppBuild) => ({
   submit_to_play_store: doc.submit_to_play_store ?? false,
   stage: doc.stage ?? '',
   stages: (doc.stages ?? []).map((s) => ({ name: s.name, at: s.at?.toISOString() ?? '' })),
+  play_releases: (doc.play_releases ?? []).map((r) => ({
+    track: r.track,
+    status: r.status,
+    version_code: r.version_code ?? '',
+    error: r.error ?? '',
+    by: r.by ?? '',
+    started_at: r.started_at?.toISOString() ?? '',
+    finished_at: r.finished_at?.toISOString() ?? null,
+  })),
   slack_channel: doc.slack_channel,
   slack_ts: doc.slack_ts,
   slack_error: doc.slack_error,
@@ -733,12 +744,20 @@ export const appBuildService = {
     const latest = await AppBuildModel.findOne({}, { created_at: 1, reported_by: 1 })
       .sort({ created_at: -1 })
       .lean();
+    const play = await playStoreSettings();
     return {
       android_channel: optionalStr(await getRuntimeEnvValue('SLACK_ANDROID_BUILDS_CHANNEL')) || null,
       ios_channel: optionalStr(await getRuntimeEnvValue('SLACK_IOS_BUILDS_CHANNEL')) || null,
       last_reported_at: latest?.created_at?.toISOString() ?? null,
       last_reported_by: optionalStr(latest?.reported_by) || null,
+      play_store_configured: play.configured,
+      play_package_name: play.packageName,
     };
+  },
+
+  /** Release a stored AAB to a Play track; the row carries the outcome. */
+  async pushToPlayStore(id: string, track: PlayStoreTrack, user: AuthUser) {
+    return pub(await pushBuildToPlayStore(id, track, user.email ?? user.id));
   },
 
   /**

@@ -24,6 +24,8 @@ const WHAT_IT_DOES: Record<string, string> = {
     'Sends a REAL WhatsApp template message through this campaign. AiSensy keys can make no other call, so this is the only way to prove one works.',
   GITHUB:
     'Reads the repository back with this token to prove it is reachable. It cannot prove the token may START a workflow — the only test for that is pressing Create build.',
+  GOOGLE_PLAY:
+    'Signs in as the service account and opens a release edit on the app, then discards it. Nothing is published — it proves the key works AND that the account was invited on the app in Play Console.',
 };
 
 /** Only AiSensy needs somewhere to send to. */

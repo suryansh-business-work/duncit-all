@@ -35,6 +35,7 @@ function Panel({ entry }: Readonly<{ entry: EnvEntry }>) {
     case 'RAZORPAY':
     case 'AISENSY':
     case 'GITHUB':
+    case 'GOOGLE_PLAY':
       return <ConnectionTestPanel entry={entry} />;
     default:
       return null;

@@ -6,6 +6,13 @@ import {
 } from '@modules/platform/aisensy/aisensy.gateway';
 import { describeFetchError } from '@modules/platform/aisensy/aisensy.transport';
 import { missingBotScopes } from '@modules/platform/slack/slack.gateway';
+import {
+  discardEdit,
+  openEdit,
+  parseServiceAccount,
+  playAccessToken,
+  type PlayServiceAccount,
+} from '@modules/platform/appBuild/googlePlay.gateway';
 
 /**
  * "Does this credential actually work?" for the providers where the answer
@@ -377,6 +384,49 @@ export async function githubConnection(str: EnvConfigReader): Promise<EnvConnect
   return { ok: true, message: `Connected to ${String(res.data.full_name ?? slug)}`, details };
 }
 
+// --- Google Play ------------------------------------------------------------
+
+/**
+ * Sign in as the service account, then open (and at once discard) a release
+ * edit on the app. Opening an edit is the cheapest call that fails for the
+ * mistake people actually make: a key that is perfectly valid for a service
+ * account nobody has invited on the app in Play Console. Nothing is changed —
+ * an edit does nothing until it is committed, and this one never is.
+ */
+export async function googlePlayConnection(str: EnvConfigReader): Promise<EnvConnectionResult> {
+  const packageName = str('package_name');
+  if (!str('service_account_json') || !packageName) {
+    return { ok: false, message: 'Service account key and package name are both required', details: [] };
+  }
+  let account: PlayServiceAccount;
+  try {
+    account = parseServiceAccount(str('service_account_json'));
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : String(err), details: [] };
+  }
+  try {
+    const token = await playAccessToken(account);
+    const editId = await openEdit(token, packageName);
+    await discardEdit(token, packageName, editId);
+  } catch (err) {
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : String(err),
+      details: [
+        `Signed in as ${account.client_email}. If Google answered 403 or 404, invite that address on the app in Play Console → Users and permissions, with release rights.`,
+      ],
+    };
+  }
+  return {
+    ok: true,
+    message: `Connected to ${packageName}`,
+    details: [
+      `Signed in as ${account.client_email}.`,
+      'The account can open a release edit on this app, which is what pushing a build needs.',
+    ],
+  };
+}
+
 // --- Dispatch ---------------------------------------------------------------
 
 /**
@@ -390,6 +440,7 @@ const CONNECTION_CHECKS = {
   RAZORPAY: razorpayConnection,
   AISENSY: aisensyConnection,
   GITHUB: githubConnection,
+  GOOGLE_PLAY: googlePlayConnection,
 } as const;
 
 export type ConnectionTestable = keyof typeof CONNECTION_CHECKS;

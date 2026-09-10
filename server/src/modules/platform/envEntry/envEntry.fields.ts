@@ -155,6 +155,19 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'owner', label: 'Repository Owner', hint: 'The user or org, e.g. suryansh-business-work' },
     { name: 'repo', label: 'Repository Name', hint: 'e.g. duncit-all' },
   ],
+  // Releases a stored AAB from Tech → App Builds to a Play track. The service
+  // account is created in Google Cloud and then INVITED on the app in Play
+  // Console (Users and permissions) with release rights — the key alone is
+  // not enough, and the connection test says which half is missing.
+  GOOGLE_PLAY: [
+    {
+      name: 'service_account_json',
+      label: 'Service Account Key (JSON)',
+      secret: true,
+      hint: 'Paste the whole JSON key file of a service account granted release access on the app in Play Console',
+    },
+    { name: 'package_name', label: 'Package Name', hint: 'The app id on Google Play, e.g. com.duncit.mobile' },
+  ],
 };
 
 /** Where an operator obtains each category's credentials (shown in the Add dialog). */
@@ -174,6 +187,7 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   AISENSY: 'https://app.aisensy.com/',
   TURN: 'https://github.com/coturn/coturn',
   GITHUB: 'https://github.com/settings/personal-access-tokens',
+  GOOGLE_PLAY: 'https://play.google.com/console/developers',
 };
 
 const secretSet = new Set<string>();
@@ -241,6 +255,8 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   GITHUB_TOKEN: { category: 'GITHUB', field: 'token' },
   GITHUB_OWNER: { category: 'GITHUB', field: 'owner' },
   GITHUB_REPO: { category: 'GITHUB', field: 'repo' },
+  GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: { category: 'GOOGLE_PLAY', field: 'service_account_json' },
+  GOOGLE_PLAY_PACKAGE_NAME: { category: 'GOOGLE_PLAY', field: 'package_name' },
 };
 
 export function maskSecret(value: string) {

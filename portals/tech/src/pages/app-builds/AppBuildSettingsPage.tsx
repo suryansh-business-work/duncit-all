@@ -4,7 +4,12 @@ import { Alert, Box, Card, CardContent, Skeleton, Stack, Typography } from '@mui
 import { useTranslation } from '@duncit/shell';
 import { notify, notifyError } from '@duncit/dialogs';
 import { SLACK_CHANNELS, SLACK_CONFIGURED, type SlackChannel } from '../slack/queries';
-import { AppBuildSettingsForm, CiCredentialsCard, type AppBuildSettingsValues } from './settings';
+import {
+  AppBuildSettingsForm,
+  CiCredentialsCard,
+  PlayStoreCard,
+  type AppBuildSettingsValues,
+} from './settings';
 import { APP_BUILD_SETTINGS, UPDATE_APP_BUILD_SETTINGS, type AppBuildSettings } from './queries';
 
 /**
@@ -73,6 +78,7 @@ export default function AppBuildSettingsPage() {
         </CardContent>
       </Card>
       {settings && <CiCredentialsCard settings={settings} />}
+      {settings && <PlayStoreCard settings={settings} />}
     </Box>
   );
 }

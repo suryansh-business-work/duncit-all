@@ -15,6 +15,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/shell';
 import BuildFacts from './BuildFacts';
 import BuildProgress from './BuildProgress';
+import PlayReleases from './PlayReleases';
 import { type AppBuildArtifact, type AppBuildRow } from './queries';
 
 interface Props {
@@ -118,6 +119,12 @@ export default function BuildDetailsDialog({ build, onClose }: Readonly<Props>) 
                 <ArtifactRow key={a.kind} artifact={a} missingLabel={t('tech.appBuilds.noArtifact')} />
               ))}
             </Stack>
+          </>
+        )}
+        {build.platform === 'ANDROID' && (
+          <>
+            <Divider sx={{ my: 2 }} />
+            <PlayReleases build={build} />
           </>
         )}
         <Divider sx={{ my: 2 }} />

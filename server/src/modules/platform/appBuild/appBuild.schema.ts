@@ -54,6 +54,43 @@ export const appBuildTypeDefs = gql`
     author: String!
   }
 
+  "The Google Play tracks a stored AAB can be released to from the portal."
+  enum PlayStoreTrack {
+    "Only the testers listed on the app's internal testing track can install it."
+    INTERNAL
+    "Rolled out to every user on Google Play."
+    PRODUCTION
+  }
+
+  """
+  PUSHING while the server is uploading and committing with Google — that takes
+  longer than a request should, so the mutation answers at once and the row
+  reports the outcome. Then RELEASED or FAILED.
+  """
+  enum PlayReleaseStatus {
+    PUSHING
+    RELEASED
+    FAILED
+  }
+
+  """
+  One push of a build's AAB to Google Play. A build keeps every push it has had,
+  oldest first: a failed one followed by a good one is two facts, and internal
+  testing followed by production is two releases.
+  """
+  type AppBuildPlayRelease {
+    track: PlayStoreTrack!
+    status: PlayReleaseStatus!
+    "The version code Google filed the bundle under. Empty until it answered."
+    version_code: String!
+    "Why it FAILED. Empty otherwise."
+    error: String!
+    "Who pressed the button."
+    by: String!
+    started_at: String!
+    finished_at: String
+  }
+
   """
   What one build produced. Android emits two — an APK to sideload and an AAB to
   upload to Play — and they are ONE build, so they share a row rather than
@@ -158,6 +195,8 @@ export const appBuildTypeDefs = gql`
     stage: String!
     "Every stage this run has entered, in order."
     stages: [AppBuildStage!]!
+    "Every push of this build's AAB to Google Play, oldest first."
+    play_releases: [AppBuildPlayRelease!]!
     slack_channel: String
     slack_ts: String
     "Why the Slack post did not happen, when it did not."
@@ -198,6 +237,14 @@ export const appBuildTypeDefs = gql`
     last_reported_at: String
     "Which account the last report authenticated as."
     last_reported_by: String
+    """
+    Whether a Google Play service account and package name are configured
+    (Environment Variables → Google Play). The push buttons stay visible without
+    it, and the reason is what they say when pressed.
+    """
+    play_store_configured: Boolean!
+    "The package name releases go to. Empty when not configured."
+    play_package_name: String!
   }
 
   """
@@ -394,5 +441,16 @@ export const appBuildTypeDefs = gql`
     error: the row must always be removable.
     """
     deleteAppBuild(id: ID!): Boolean!
+    """
+    Release a build's stored AAB to a Google Play track. Tech/Super admin only.
+
+    Any Android production build with a stored AAB qualifies, not only the
+    newest: Google itself refuses a version code lower than what the track
+    already has, and that refusal is reported on the row rather than second-
+    guessed here. Answers as soon as the push is recorded as PUSHING — the
+    upload and the commit happen in the background and the row says how it
+    ended.
+    """
+    pushAppBuildToPlayStore(id: ID!, track: PlayStoreTrack!): AppBuild!
   }
 `;

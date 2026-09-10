@@ -386,6 +386,10 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
     [emptyText, t],
   );
   const gridOpacity = table.loading ? LOADING_DIM_OPACITY : 1;
+  // Dead as well as dimmed. The rows on screen still belong to the query being
+  // replaced, so a header sort or a row click on them would act on a view that is
+  // already gone — the same reason the toolbar and the pager switch off below.
+  const gridPointerEvents = table.loading ? 'none' : undefined;
 
   return (
     <>
@@ -407,6 +411,7 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
           toggleDensity={prefs.toggleDensity}
           onExportCsv={handleExportCsv}
           onRefresh={refetch}
+          loading={table.loading}
         />
       </Box>
       {/* Always rendered so the grid never jumps; visibility flips with loading. */}
@@ -424,7 +429,13 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
           {table.error}
         </Alert>
       ) : (
-        <Box sx={{ opacity: gridOpacity, transition: (theme) => theme.transitions.create('opacity') }}>
+        <Box
+          sx={{
+            opacity: gridOpacity,
+            pointerEvents: gridPointerEvents,
+            transition: (theme) => theme.transitions.create('opacity'),
+          }}
+        >
           <AgGridReact<T>
             ref={gridRef}
             theme={agTheme}
@@ -447,6 +458,7 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
       )}
       <TablePagination
         component="div"
+        disabled={table.loading}
         count={table.total}
         page={table.query.page - 1}
         onPageChange={(_event, nextPage) => table.setPage(nextPage + 1)}

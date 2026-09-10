@@ -64,6 +64,22 @@ getter output: for a date column that is the formatted text, so a page the serve
 chronological order came back out alphabetical-by-day. Ordering is `fetchRows`' job alone (the
 server's sort, or `clientTableFetch`'s); a header arrow changes the query and refetches.
 
+### While a fetch is in flight, the table is read-only
+
+The progress bar is not the only thing that says "loading". Every control the table owns goes
+`disabled` for the length of the fetch — the search box and its clear button, the Filters
+button and the filter chips, columns, density, CSV, refresh, the pager — and the grid itself
+stops taking clicks, so a header sort or a row click cannot land on rows that belong to the
+query being replaced. `toolbarActions` goes with them: the page's own "+ Create" sits inside a
+`disabled` fieldset, which switches off every control in it and takes them out of the tab order
+without the page passing anything down.
+
+Two things this deliberately does NOT do. The error `Alert`'s Retry stays live, because a
+failed fetch is not an in-flight one. And the search box gets its caret back the moment the
+rows land: disabling an input blurs it and the browser never returns the focus, and the fetch
+starts precisely when the reader pauses mid-word, so without that the rest of the word would go
+nowhere.
+
 ## Use it
 
 From `portals/finance/src/pages/finance/backout-refund-page/BackoutRefundTable.tsx`:

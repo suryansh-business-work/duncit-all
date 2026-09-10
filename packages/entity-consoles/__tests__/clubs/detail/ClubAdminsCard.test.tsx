@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import ClubAdminsCard from '../ClubAdminsCard';
-import type { ClubActor } from '../types';
+import ClubAdminsCard from '../../../src/clubs/detail/ClubAdminsCard';
+import type { ClubActor } from '../../../src/clubs/detail/types';
 
 describe('ClubAdminsCard', () => {
   it('shows the empty state and a zero count when there are no admins', () => {

@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import type { DuncitColumn } from '@duncit/table';
-import ClubsTable from '../ClubsTable';
-import type { ClubRow } from '../queries';
+import ClubsTable from '../../../src/clubs/list/ClubsTable';
+import type { ClubRow } from '../../../src/clubs/list/queries';
 
 const captured = vi.hoisted(() => ({ props: null as Record<string, unknown> | null }));
 

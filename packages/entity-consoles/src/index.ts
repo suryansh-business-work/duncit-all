@@ -92,3 +92,21 @@ export * from './hosts/form/schema';
 export { categoryPath } from './shared/categoryPath';
 export { SurveyAnswers, USER_SURVEY_RESPONSES } from './shared/survey-answers';
 export type { SurveyKind, UserSurveyResponse } from './shared/survey-answers';
+
+// ---- the clubs console ---------------------------------------------------
+// Moved out of the ADMIN portal (the other three came from onboarding), so
+// admin renders these from here now. Its club EDITOR stayed behind: it drives
+// the AI-fill mutation, and pods uses the same button, so pulling it in would
+// have made this package the home of admin's AI plumbing.
+export { default as ClubsPage } from './clubs/list/ClubsPage';
+export { default as ClubDetailsPage } from './clubs/detail/ClubDetailsPage';
+export { default as SuperCategoryFilter } from './shared/SuperCategoryFilter';
+export { default as MediaGallery } from './shared/MediaGallery';
+export { default as MediaLightbox } from './shared/MediaLightbox';
+// Admin's club editor stayed behind but reads the console's documents. Aliased
+// because `CREATE`/`UPDATE` are far too generic for a shared barrel.
+export {
+  CLUB_FOR_EDIT,
+  CREATE as CREATE_CLUB,
+  UPDATE as UPDATE_CLUB,
+} from './clubs/list/queries';

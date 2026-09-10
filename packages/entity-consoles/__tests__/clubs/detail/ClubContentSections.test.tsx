@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import ClubContentSections from '../ClubContentSections';
-import type { ClubDetail } from '../types';
+import ClubContentSections from '../../../src/clubs/detail/ClubContentSections';
+import type { ClubDetail } from '../../../src/clubs/detail/types';
 
 const baseClub: ClubDetail = {
   id: 'c1',

@@ -3,7 +3,7 @@ import { Box, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/m
 import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 import { videoSourceUrl } from '@duncit/utils';
 import MediaLightbox from './MediaLightbox';
-import { isVideoMedia, type ClubMedia } from './types';
+import { isVideoMedia, type ClubMedia } from '../clubs/detail/types';
 
 interface Props {
   title: string;

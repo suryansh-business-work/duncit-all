@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isVideoMedia } from '../types';
+import { isVideoMedia } from '../../../src/clubs/detail/types';
 
 describe('isVideoMedia', () => {
   it('is true for a VIDEO type, case-insensitively', () => {

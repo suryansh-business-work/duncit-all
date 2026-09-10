@@ -12,7 +12,7 @@ import ClubOverviewCard from './ClubOverviewCard';
 import ClubContentSections from './ClubContentSections';
 import ClubPodsCard from './ClubPodsCard';
 import ClubAdminsCard from './ClubAdminsCard';
-import MediaGallery from './MediaGallery';
+import MediaGallery from '../../shared/MediaGallery';
 import type { ClubDetail, ClubPodRow } from './types';
 import { useTranslation } from '@duncit/shell';
 

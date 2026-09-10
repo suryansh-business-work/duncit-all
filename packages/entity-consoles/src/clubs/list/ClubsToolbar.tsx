@@ -1,6 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
-import SuperCategoryFilter from '../../components/SuperCategoryFilter';
+import SuperCategoryFilter from '../../shared/SuperCategoryFilter';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {

@@ -3122,6 +3122,9 @@ importers:
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
+      '@duncit/entity-consoles':
+        specifier: workspace:*
+        version: link:../../packages/entity-consoles
       '@duncit/fallback-icons':
         specifier: workspace:*
         version: link:../../packages/fallback-icons

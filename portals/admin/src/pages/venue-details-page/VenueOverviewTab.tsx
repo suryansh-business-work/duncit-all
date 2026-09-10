@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Box, Stack } from '@mui/material';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import { useTranslation } from '@duncit/shell';
-import MediaGallery from '../club-details-page/MediaGallery';
+import { MediaGallery } from '@duncit/entity-consoles';
 import VenueAboutCard from './VenueAboutCard';
 import VenueLocationCard from './VenueLocationCard';
 import VenueOwnerCard from './VenueOwnerCard';

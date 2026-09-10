@@ -3,7 +3,7 @@ import { useApolloClient } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import { useApolloTableFetch } from '@duncit/table';
-import SuperCategoryFilter from '../../components/SuperCategoryFilter';
+import { SuperCategoryFilter } from '@duncit/entity-consoles';
 import { VENUES_TABLE, type VenueRow } from './queries';
 import VenuesTable from './VenuesTable';
 import { useTranslation } from '@duncit/shell';

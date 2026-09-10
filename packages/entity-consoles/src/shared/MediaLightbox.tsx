@@ -5,7 +5,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { DuncitIconButton } from '@duncit/buttons';
 import { videoSourceUrl } from '@duncit/utils';
-import { isVideoMedia, type ClubMedia } from './types';
+import { isVideoMedia, type ClubMedia } from '../clubs/detail/types';
 import { useTranslation } from '@duncit/shell';
 
 interface Props {

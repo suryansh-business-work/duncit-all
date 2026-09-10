@@ -6,7 +6,11 @@ import type { MockedResponse } from '@apollo/client/testing';
 import { GraphQLError } from 'graphql';
 import { blankClubFormValues, buildClubInput, clubToFormValues, type ClubFormValues } from '@duncit/club-form';
 import { renderWithProviders } from '../../../../__tests__/testkit';
-import { CLUB_FOR_EDIT, CREATE, UPDATE } from '../../queries';
+import {
+  CLUB_FOR_EDIT,
+  CREATE_CLUB as CREATE,
+  UPDATE_CLUB as UPDATE,
+} from '@duncit/entity-consoles';
 import AdminClubEditorPage from '../index';
 
 interface FakeEditorPageProps {

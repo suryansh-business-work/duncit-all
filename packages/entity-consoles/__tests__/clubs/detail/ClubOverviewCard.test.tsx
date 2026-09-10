@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import ClubOverviewCard from '../ClubOverviewCard';
-import type { ClubDetail } from '../types';
+import ClubOverviewCard from '../../../src/clubs/detail/ClubOverviewCard';
+import type { ClubDetail } from '../../../src/clubs/detail/types';
 
 const baseClub: ClubDetail = {
   id: 'c1',

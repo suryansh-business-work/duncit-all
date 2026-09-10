@@ -4,9 +4,9 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { Route, useParams } from 'react-router';
 import type { MockedResponse } from '@apollo/client/testing';
 import { GraphQLError } from 'graphql';
-import { renderWithProviders } from '../../../__tests__/testkit';
-import { CATEGORIES, DELETE, type ClubRow } from '../queries';
-import ClubsPage from '../ClubsPage';
+import { renderWithProviders } from '../../testkit';
+import { CATEGORIES, DELETE, type ClubRow } from '../../../src/clubs/list/queries';
+import ClubsPage from '../../../src/clubs/list/ClubsPage';
 
 const refetchSpy = vi.hoisted(() => vi.fn());
 

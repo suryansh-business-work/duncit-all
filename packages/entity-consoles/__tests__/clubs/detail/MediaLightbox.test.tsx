@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import MediaLightbox from '../MediaLightbox';
-import type { ClubMedia } from '../types';
+import MediaLightbox from '../../../src/shared/MediaLightbox';
+import type { ClubMedia } from '../../../src/clubs/detail/types';
 
 const items: ClubMedia[] = [
   { url: 'https://cdn.test/1.jpg', type: 'IMAGE' },

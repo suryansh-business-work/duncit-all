@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router';
-import ClubPodsCard from '../ClubPodsCard';
-import type { ClubPodRow } from '../types';
+import ClubPodsCard from '../../../src/clubs/detail/ClubPodsCard';
+import type { ClubPodRow } from '../../../src/clubs/detail/types';
 
 const makePod = (over: Partial<ClubPodRow> = {}): ClubPodRow => ({
   id: 'pod1',

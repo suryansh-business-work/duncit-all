@@ -82,18 +82,35 @@ describe('HostPodActionsMenu rows', () => {
     expect(itemNames().some((name) => name.includes(labels.completePod))).toBe(false);
   });
 
-  // The scanner is for a door that is still open: on a pod that is over the
-  // row stays, greyed, and says why, rather than vanishing.
+  // The scanner is for a door that is still open, and Edit / Request Change
+  // Host / Cancel all rewrite a plan a past pod no longer has. A pod that is
+  // over closes BOTH gates, so the fixture sets both: the rows stay, greyed,
+  // and say why, rather than vanishing.
   it('keeps the scan row but closes it once the pod is over', async () => {
-    await open({ canScan: false });
-    const scanRow = [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
-      (item) => item.textContent?.includes(labels.scanTickets),
-    ) as HTMLElement;
+    const requestChange = 'Request Change Host';
+    await open({
+      canScan: false,
+      canAmend: false,
+      onRequestChange: vi.fn(),
+      requestChangeLabel: requestChange,
+    });
+    const rowFor = (text: string) =>
+      [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((item) =>
+        item.textContent?.includes(text),
+      ) as HTMLElement;
+    const scanRow = rowFor(labels.scanTickets);
     expect(scanRow).toHaveAttribute('aria-disabled', 'true');
     expect(scanRow.textContent).toContain(labels.scanClosed);
 
+    // The three that rewrite a plan: all closed, each saying why.
+    for (const text of [labels.editPod, requestChange, labels.cancelPod]) {
+      const row = rowFor(text);
+      expect(row).toHaveAttribute('aria-disabled', 'true');
+      expect(row.textContent).toContain(labels.amendClosed);
+    }
+
     cleanup();
-    await open({ canScan: true });
+    await open({ canScan: true, canAmend: true, onRequestChange: vi.fn(), requestChangeLabel: requestChange });
     const openRow = [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
       (item) => item.textContent?.includes(labels.scanTickets),
     ) as HTMLElement;

@@ -124,4 +124,5 @@ export const SECTION_OF: Record<string, string> = {
   perks: 'content',
   values: 'content',
   admin_user_ids: 'admins',
+  host_ids: 'hosts',
 };

@@ -26,7 +26,9 @@ const hostLabel = (host: HostOption) => host.full_name || host.user_id;
 export default function LinkedHostsField() {
   const { t } = useTranslation();
   const { control, setValue } = useFormContext<ClubFormValues>();
-  const hostIds = useWatch({ control, name: 'host_ids' }) ?? [];
+  // No `?? []`: `host_ids` is required on ClubFormValues and `blankClubFormValues`
+  // seeds it, so a fallback here would be a branch nothing can reach.
+  const hostIds = useWatch({ control, name: 'host_ids' });
 
   const { data, loading } = useQuery<{ publicHosts: HostOption[] }>(LINKABLE_HOSTS, {
     fetchPolicy: 'cache-and-network',

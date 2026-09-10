@@ -18,6 +18,7 @@ import MediaSection from './sections/MediaSection';
 import LinksSection from './sections/LinksSection';
 import ContentSection from './sections/ContentSection';
 import AdminsSection from './sections/AdminsSection';
+import LinkedHostsField from './sections/LinkedHostsField';
 import { SECTION_OF, type ClubFormValues } from './types';
 import { useTranslation } from './i18n/useTranslation';
 import type { Translate } from './i18n/useTranslation';
@@ -35,7 +36,17 @@ function buildSections(showAdmins: boolean, t: Translate): SectionDef[] {
     { id: 'links', label: t('clubForm.clubSections.venuesAndCommunityLinks'), render: () => <LinksSection /> },
     { id: 'content', label: t('clubForm.clubSections.pageContentWhoWeArePerks'), render: () => <ContentSection /> },
   ];
-  if (showAdmins) list.push({ id: 'admins', label: t('clubForm.common.clubAdmin'), render: () => <AdminsSection /> });
+  if (showAdmins) {
+    list.push({ id: 'admins', label: t('clubForm.common.clubAdmin'), render: () => <AdminsSection /> });
+    // Its own section rather than a second field inside the admins one: it asks a
+    // different question ("which hosts belong to this club"), and folding it in
+    // gave that section a second Apollo query.
+    list.push({
+      id: 'hosts',
+      label: t('clubForm.linkedHosts.title'),
+      render: () => <LinkedHostsField />,
+    });
+  }
   return list;
 }
 

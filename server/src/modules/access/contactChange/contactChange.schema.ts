@@ -10,11 +10,14 @@ export const contactChangeTypeDefs = /* GraphQL */ `
   # Changing the email address, contact number or WhatsApp number of the
   # account that is signed in.
   #
-  # Every one of them is gated by a one-time code sent to the NEW value,
-  # because that is the only thing a code can actually prove: that the person
-  # typing it can receive mail at the address, or messages at the number, they
-  # are asking us to start using. Proving the OLD one proves nothing about the
-  # new one.
+  # The address and the WhatsApp number are gated by a one-time code sent to the
+  # NEW value, because that is the only thing a code can actually prove: that
+  # the person typing it can receive mail at the address, or messages at the
+  # number, they are asking us to start using. Proving the OLD one proves
+  # nothing about the new one.
+  #
+  # The contact number is saved without one — setContactPhoneNumber below — and
+  # is therefore stored unverified.
   #
   # This is deliberately the only way these three fields move from mWeb and the
   # native app — updateMyProfile refuses to move them. An admin editing
@@ -47,6 +50,16 @@ export const contactChangeTypeDefs = /* GraphQL */ `
       phone_number: String!
       otp: String!
     ): User!
+
+    """
+    Store this account's contact number, with no code behind it.
+
+    Saved as typed and stored UNVERIFIED — nothing has answered on the number,
+    so is_phone_verified keeps saying so. It is still refused when the number
+    already belongs to another account: a number is how somebody signs in, so
+    two accounts may not share one.
+    """
+    setContactPhoneNumber(phone_extension: String!, phone_number: String!): User!
 
     """
     Email a one-time code to an address this account wants to start using.

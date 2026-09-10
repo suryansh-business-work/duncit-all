@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import {
+  contactChangeNeedsOtp,
   isPhoneChannel,
   type ContactChangeLabels,
   type ContactChannel,
@@ -18,7 +19,8 @@ interface Props {
   labels: ContactChangeLabels;
   defaultValues: ContactDraft;
   busy: boolean;
-  onSend: (draft: ContactDraft) => void;
+  /** May be async: the contact number is stored by this very submit. */
+  onSend: (draft: ContactDraft) => void | Promise<void>;
 }
 
 const numericInput = { inputMode: 'numeric' as const, maxLength: 15 };
@@ -26,9 +28,11 @@ const numericInput = { inputMode: 'numeric' as const, maxLength: 15 };
 /**
  * Step one: the new address or number.
  *
- * A real form (rule 10) rather than a bare box, because this is the value a
- * code is about to be sent to — a typo caught here costs nothing, and one
- * caught after the send costs the person a wait and a wasted code.
+ * A real form (rule 10) rather than a bare box: on the two channels that send
+ * a code, a typo caught here costs nothing and one caught after the send costs
+ * the person a wait and a wasted code — and on the contact number, which is
+ * stored the moment this button is pressed, this form is the only thing
+ * between a mistyped digit and the account.
  */
 export default function ContactValueStep({
   channel,
@@ -50,6 +54,10 @@ export default function ContactValueStep({
   });
 
   const submit = handleSubmit(onSend);
+  // The contact number is stored straight, so its button may not promise a code.
+  const needsCode = contactChangeNeedsOtp(channel);
+  const idleLabel = needsCode ? labels.sendCode : labels.saveNumber;
+  const busyLabel = needsCode ? labels.sending : labels.savingNumber;
 
   return (
     <form noValidate onSubmit={submit}>
@@ -79,7 +87,7 @@ export default function ContactValueStep({
           />
         )}
         <DuncitButton type="submit" variant="contained" disabled={busy || !isValid}>
-          {busy ? labels.sending : labels.sendCode}
+          {busy ? busyLabel : idleLabel}
         </DuncitButton>
       </Stack>
     </form>

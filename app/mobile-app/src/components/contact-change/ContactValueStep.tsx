@@ -2,6 +2,7 @@ import { formResolver } from '../../utils/form-resolver';
 import { useForm } from 'react-hook-form';
 import { Text, XStack, YStack } from 'tamagui';
 import {
+  contactChangeNeedsOtp,
   isPhoneChannel,
   type ContactChangeLabels,
   type ContactChannel,
@@ -22,16 +23,19 @@ interface Props {
   labels: ContactChangeLabels;
   defaultValues: ContactDraft;
   busy: boolean;
-  onSend: (draft: ContactDraft) => void;
+  /** May be async: the contact number is stored by this very submit. */
+  onSend: (draft: ContactDraft) => void | Promise<void>;
 }
 
 /**
  * Step one: the new address or number. Tamagui twin of mWeb's
  * <ContactValueStep/>.
  *
- * A real form (rule 10) rather than a bare box, because this is the value a
- * code is about to be sent to — a typo caught here costs nothing, and one
- * caught after the send costs the person a wait and a wasted code.
+ * A real form (rule 10) rather than a bare box: on the two channels that send
+ * a code, a typo caught here costs nothing and one caught after the send costs
+ * the person a wait and a wasted code — and on the contact number, which is
+ * stored the moment this button is pressed, this form is the only thing
+ * between a mistyped digit and the account.
  */
 export function ContactValueStep({
   channel,
@@ -53,6 +57,10 @@ export function ContactValueStep({
   });
 
   const submit = handleSubmit(onSend);
+  // The contact number is stored straight, so its button may not promise a code.
+  const needsCode = contactChangeNeedsOtp(channel);
+  const idleLabel = needsCode ? labels.sendCode : labels.saveNumber;
+  const busyLabel = needsCode ? labels.sending : labels.savingNumber;
 
   return (
     <YStack gap={12}>
@@ -91,7 +99,7 @@ export function ContactValueStep({
       )}
       <PrimaryButton
         testID="contact-change-send"
-        label={busy ? labels.sending : labels.sendCode}
+        label={busy ? busyLabel : idleLabel}
         loading={busy}
         disabled={busy || !isValid}
         onPress={submit}

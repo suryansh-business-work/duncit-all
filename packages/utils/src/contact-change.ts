@@ -24,6 +24,23 @@ export type ContactPhoneField = 'PHONE' | 'WHATSAPP';
 export const isPhoneChannel = (channel: ContactChannel): channel is ContactPhoneField =>
   channel !== 'EMAIL';
 
+/**
+ * Whether changing this detail still has to be proved by a one-time code.
+ *
+ * The contact number is saved as typed — it is the detail people correct most
+ * often, and a code on every correction turned a one-line fix into a wait. The
+ * address and the WhatsApp number keep theirs: both are delivery channels whose
+ * whole worth is that a message actually arrives, and a typo in either goes
+ * unnoticed until something silently fails to reach anybody.
+ *
+ * Stated once here because mWeb and native both read it (rule 40): the two
+ * screens must not disagree about whether a number is proved before it is
+ * stored, and the server agrees from its own side —
+ * `setContactPhoneNumber` takes no code, the other two refuse without one.
+ */
+export const contactChangeNeedsOtp = (channel: ContactChannel): boolean =>
+  channel !== 'PHONE';
+
 /** Where the dialog is: typing the new value, or typing the code sent to it. */
 export type ContactChangeStep = 'ENTER' | 'CODE';
 
@@ -119,6 +136,57 @@ export function contactDraftIsUnchanged(
   return draft.number.trim() === number.trim() && draft.extension.trim() === extension.trim();
 }
 
+/**
+ * The account's contacts with one channel's stored value folded in.
+ *
+ * The dialog closes onto the rows it just changed, and a row still showing the
+ * old number while the refetch is in flight reads as a change that failed — so
+ * both surfaces fold the value in locally as well. Which field a channel lands
+ * in is stated here rather than in each of them, because a fold that put a
+ * WhatsApp number in the phone row would be invisible until the refetch
+ * corrected it.
+ */
+export function applyContactDraft(
+  snapshot: Readonly<ContactSnapshot>,
+  channel: ContactChannel,
+  draft: Readonly<ContactDraft>,
+): ContactSnapshot {
+  if (channel === 'EMAIL') {
+    return { ...snapshot, email: contactDraftValue(draft, channel) };
+  }
+  if (channel === 'PHONE') {
+    return { ...snapshot, phone_extension: draft.extension, phone_number: draft.number };
+  }
+  return { ...snapshot, whatsapp_extension: draft.extension, whatsapp_number: draft.number };
+}
+
+/**
+ * What submitting the new value should do.
+ *
+ * The dialog and its native twin ask this rather than each deciding for
+ * themselves, because the answer is three rules at once — is this a change at
+ * all, does this channel have to be proved, and is there a second step to walk
+ * to — and three rules written twice is three chances for the two screens to
+ * disagree about whether a number was stored (rule 40).
+ */
+export type ContactSubmitAction = 'UNCHANGED' | 'SEND_CODE' | 'SAVE';
+
+/**
+ * UNCHANGED when the draft matches what the account already holds — a code
+ * costs the person a wait, and a save that writes the same digits back is
+ * nothing but a closed dialog that looks like it did something.
+ * SEND_CODE for the address and the WhatsApp number, SAVE for the contact
+ * number, which is stored on this very submit.
+ */
+export function contactSubmitAction(
+  snapshot: Readonly<ContactSnapshot>,
+  channel: ContactChannel,
+  draft: Readonly<ContactDraft>,
+): ContactSubmitAction {
+  if (contactDraftIsUnchanged(snapshot, channel, draft)) return 'UNCHANGED';
+  return contactChangeNeedsOtp(channel) ? 'SEND_CODE' : 'SAVE';
+}
+
 /** The translator each surface hands in — same shape as the attendance copy. */
 export type ContactTranslate = (
   key: string,
@@ -143,9 +211,12 @@ export interface ContactChangeLabels {
   /** The button beside each row. */
   changeAction: string;
   addAction: string;
-  /** Step one. */
+  /** Step one, when a code follows. */
   sendCode: string;
   sending: string;
+  /** Step one, when the value is stored straight away — the contact number. */
+  saveNumber: string;
+  savingNumber: string;
   /** Step two. */
   codeLabel: string;
   codeSentTo: (destination: string) => string;
@@ -159,7 +230,10 @@ export interface ContactChangeLabels {
   unchanged: string;
   /** The code the server echoes back while no transport is wired. */
   testCode: (code: string) => string;
-  /** The line explaining why any of this asks for a code at all. */
+  /**
+   * Why a code is asked for — rendered only under the channels that ask for
+   * one, so the contact number's box does not explain a step it does not have.
+   */
   whyOtp: string;
   /** Shown under the rows while any of the three is still missing. */
   allRequired: string;
@@ -190,7 +264,7 @@ const CHANNEL_LABELS: Record<
     fieldLabel: t('mweb.contactChange.phoneField'),
     emptyValue: t('mweb.contactChange.phoneEmpty'),
     changeTitle: t('mweb.contactChange.phoneTitle'),
-    changeHint: t('mweb.contactChange.phoneHint'),
+    changeHint: t('mweb.contactChange.phoneDirectHint'),
   }),
   WHATSAPP: (t) => ({
     name: t('mweb.contactChange.whatsappName'),
@@ -209,6 +283,8 @@ export function buildContactChangeLabels(t: ContactTranslate): ContactChangeLabe
     addAction: t('mweb.contactChange.add'),
     sendCode: t('mweb.contactChange.sendCode'),
     sending: t('mweb.contactChange.sending'),
+    saveNumber: t('mweb.contactChange.saveNumber'),
+    savingNumber: t('mweb.contactChange.savingNumber'),
     codeLabel: t('mweb.contactChange.codeLabel'),
     codeSentTo: (destination) =>
       t('mweb.contactChange.codeSentTo', { vars: { destination } }),

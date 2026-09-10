@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Text, YStack } from 'tamagui';
 import {
   buildContactChangeLabels,
+  contactChangeNeedsOtp,
   contactDraftFrom,
-  contactDraftIsUnchanged,
+  contactSubmitAction,
   type ContactChannel,
   type ContactDraft,
   type ContactSnapshot,
@@ -26,13 +27,14 @@ interface Props {
 }
 
 /**
- * Changing one contact detail, proved by a code sent to the new value.
- * Tamagui twin of mWeb's <ChangeContactDialog/>.
+ * Changing one contact detail. Tamagui twin of mWeb's <ChangeContactDialog/>.
  *
- * One sheet for all three channels rather than three: the two steps, the
- * refusals and the wording are identical, and only the box in step one differs
- * — which is a prop, not a screen. The logic both surfaces drive lives in
- * @duncit/utils (rule 40).
+ * One sheet for all three channels rather than three: the refusals and the
+ * wording are identical, and only the box in step one differs — which is a
+ * prop, not a screen. The address and the WhatsApp number are proved by a code
+ * sent to the new value; the contact number is stored the moment step one is
+ * submitted, so for it there is no second step and nothing to explain about a
+ * code. The logic both surfaces drive lives in @duncit/utils (rule 40).
  */
 export function ChangeContactSheet({ channel, snapshot, onClose, onSaved }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -59,14 +61,24 @@ export function ChangeContactSheet({ channel, snapshot, onClose, onSaved }: Read
 
   const copy = labels.channel(active);
   const { state } = change;
+  const needsCode = contactChangeNeedsOtp(active);
 
-  const handleSend = (next: ContactDraft) => {
-    if (contactDraftIsUnchanged(snapshot, active, next)) {
+  const handleSend = async (next: ContactDraft) => {
+    const action = contactSubmitAction(snapshot, active, next);
+    if (action === 'UNCHANGED') {
       change.setError(labels.unchanged);
       return;
     }
     setDraft(next);
-    change.sendCode(next);
+    if (action === 'SEND_CODE') {
+      change.sendCode(next);
+      return;
+    }
+    // Closed here, not from the hook: only this sheet holds what was stored.
+    if (await change.saveWithoutCode(next)) {
+      onSaved(active, next);
+      onClose();
+    }
   };
 
   return (
@@ -104,9 +116,11 @@ export function ChangeContactSheet({ channel, snapshot, onClose, onSaved }: Read
             onEditValue={change.editValue}
           />
         )}
-        <Text fontSize={12} color="$muted">
-          {labels.whyOtp}
-        </Text>
+        {needsCode ? (
+          <Text fontSize={12} color="$muted">
+            {labels.whyOtp}
+          </Text>
+        ) : null}
       </YStack>
     </DuncitDialog>
   );

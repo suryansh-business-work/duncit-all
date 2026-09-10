@@ -1227,10 +1227,12 @@ function assignMappedFields(
  * Refuse a self-service profile save that would move a contact detail.
  *
  * Phone and WhatsApp change from mWeb and the native app ONLY through
- * `contactChangeService`, behind a one-time code sent to the new number. This
- * guard is what makes that true rather than merely customary: the edit-profile
- * screen's own save mutation would otherwise be a way straight past the code,
- * and a gate with a door beside it is not a gate.
+ * `contactChangeService`. This guard is what makes that true rather than merely
+ * customary: WhatsApp is behind a one-time code sent to the new number, and the
+ * edit-profile screen's own save mutation would otherwise be a way straight
+ * past it. The contact number needs no code any more, but it still belongs to
+ * that service — the one place that refuses a number already reaching another
+ * account — so this guard keeps holding both.
  *
  * An unchanged value passes silently, because a client sends the whole form on
  * every save — including the app versions already on people's phones, which
@@ -1253,7 +1255,7 @@ async function assertContactsUnchanged(user_id: string, input: UpdateMyProfileDT
     incoming !== undefined && incoming.trim() !== (stored ?? '').trim();
 
   if (moved(incomingPhone, (current as any)?.auth?.phone?.number)) {
-    throw new GraphQLError('Verify your new phone number to change it.', {
+    throw new GraphQLError('Change your phone number from Contact details.', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }

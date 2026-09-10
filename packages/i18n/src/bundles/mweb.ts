@@ -3581,7 +3581,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       phoneField: 'New phone number',
       phoneEmpty: 'No phone number yet',
       phoneTitle: 'Change phone number',
-      phoneHint: 'We will send a 6-digit code to the new number to confirm it is yours.',
+      phoneDirectHint:
+        'This is the number Duncit will reach you on. It is saved as soon as you enter it.',
       whatsappName: 'WhatsApp number',
       whatsappField: 'New WhatsApp number',
       whatsappEmpty: 'No WhatsApp number yet',
@@ -3591,6 +3592,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       add: 'Add',
       sendCode: 'Send code',
       sending: 'Sending…',
+      // The contact number is stored straight, so its button says what it does.
+      saveNumber: 'Save number',
+      savingNumber: 'Saving…',
       codeLabel: '6-digit code',
       codeSentTo: 'We sent a code to {destination}.',
       verifyAndSave: 'Verify and save',

@@ -438,11 +438,14 @@ export {
 } from './comm-preference';
 export {
   CONTACT_CHANNELS,
+  applyContactDraft,
   buildContactChangeLabels,
+  contactChangeNeedsOtp,
   contactDetailsComplete,
   contactDraftFrom,
   contactDraftIsUnchanged,
   contactDraftValue,
+  contactSubmitAction,
   currentContactValue,
   emptyContactDraft,
   formatPhoneLine,
@@ -454,6 +457,7 @@ export {
   type ContactDraft,
   type ContactPhoneField,
   type ContactSnapshot,
+  type ContactSubmitAction,
   type ContactTranslate,
 } from './contact-change';
 export {

@@ -13,6 +13,7 @@ import {
   MobileConfirmEmailChangeDocument,
   MobileRequestContactPhoneChangeOtpDocument,
   MobileRequestEmailChangeOtpDocument,
+  MobileSetContactPhoneNumberDocument,
 } from '@/graphql/account';
 import { ContactPhoneField } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -103,6 +104,24 @@ export function useContactChange(channel: ContactChannel, onSaved: () => void) {
     [channel],
   );
 
+  /** The contact number's whole flow: stored on submit, no code. Answers
+   * whether it landed, because only the sheet holds the draft it stored. */
+  const saveWithoutCode = useCallback(async (draft: ContactDraft) => {
+    setState((p) => ({ ...p, sending: true, error: null }));
+    try {
+      await graphqlRequest(
+        MobileSetContactPhoneNumberDocument,
+        { ext: draft.extension, num: draft.number },
+        { auth: true },
+      );
+      setState(INITIAL);
+      return true;
+    } catch (e) {
+      setState((p) => ({ ...p, sending: false, error: parseApiError(e) }));
+      return false;
+    }
+  }, []);
+
   const verify = useCallback(
     async (draft: ContactDraft, otp: string) => {
       setState((p) => ({ ...p, verifying: true, error: null }));
@@ -129,5 +148,5 @@ export function useContactChange(channel: ContactChannel, onSaved: () => void) {
     [channel, onSaved],
   );
 
-  return { state, sendCode, verify, editValue, reset, setError };
+  return { state, sendCode, saveWithoutCode, verify, editValue, reset, setError };
 }

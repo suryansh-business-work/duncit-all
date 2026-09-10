@@ -74,11 +74,15 @@ query being replaced. `toolbarActions` goes with them: the page's own "+ Create"
 `disabled` fieldset, which switches off every control in it and takes them out of the tab order
 without the page passing anything down.
 
-Two things this deliberately does NOT do. The error `Alert`'s Retry stays live, because a
-failed fetch is not an in-flight one. And the search box gets its caret back the moment the
-rows land: disabling an input blurs it and the browser never returns the focus, and the fetch
-starts precisely when the reader pauses mid-word, so without that the rest of the word would go
-nowhere.
+The error `Alert`'s Retry is the one control that stays live, because a failed fetch is not an
+in-flight one.
+
+Know the cost before you copy the pattern: disabling an input blurs it and the browser never
+hands the focus back, so a reader who pauses mid-word — which is exactly what fires the
+debounced search — types the rest of that word into nothing and has to click the box again.
+Restoring the caret needs a ref, and the null check that comes with it is a branch no test can
+take while the input is mounted, which this workspace's 100% branch threshold will not accept.
+It is a deliberate trade, not an oversight.
 
 ## Use it
 

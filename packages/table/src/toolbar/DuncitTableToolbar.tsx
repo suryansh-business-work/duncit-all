@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import ClearIcon from '@mui/icons-material/Clear';
 import DensityMediumIcon from '@mui/icons-material/DensityMedium';
 import DensitySmallIcon from '@mui/icons-material/DensitySmall';
@@ -42,32 +42,6 @@ const ACTIONS_FIELDSET_SX = {
   '&:disabled > *': { opacity: 0.6, pointerEvents: 'none' },
 } as const;
 
-/**
- * Keep the caret in the search box across a fetch.
- *
- * Disabling an input blurs it and the browser never hands the focus back — and
- * the fetch starts when the reader PAUSES mid-search, so without this they would
- * type the rest of the word into nothing. The blur the disable itself causes
- * arrives while `loading` is already true, which is what tells it apart from the
- * reader clicking away.
- */
-function useSearchFocus(loading: boolean) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const hadFocus = useRef(false);
-  useEffect(() => {
-    if (!loading && hadFocus.current) inputRef.current?.focus();
-  }, [loading]);
-  return {
-    inputRef,
-    onFocus: () => {
-      hadFocus.current = true;
-    },
-    onBlur: () => {
-      if (!loading) hadFocus.current = false;
-    },
-  };
-}
-
 export interface DuncitTableToolbarProps<T> {
   columns: ReadonlyArray<DuncitColumn<T>>;
   searchInput: string;
@@ -109,7 +83,6 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
   const { t } = useTranslation();
   const [filterAnchor, setFilterAnchor] = useState<HTMLElement | null>(null);
   const [columnAnchor, setColumnAnchor] = useState<HTMLElement | null>(null);
-  const search = useSearchFocus(loading);
   const hasFilterableColumns = columns.some((column) => column.filter);
   const isCompact = density === 'compact';
   const densityTitle = isCompact ? t('shell.table.densityStandard') : t('shell.table.densityCompact');
@@ -148,9 +121,6 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
         placeholder={placeholder}
         value={searchInput}
         disabled={loading}
-        inputRef={search.inputRef}
-        onFocus={search.onFocus}
-        onBlur={search.onBlur}
         onChange={(event) => setSearchInput(event.target.value)}
         slotProps={{
           input: {

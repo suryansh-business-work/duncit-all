@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRoute, type RouteProp } from '@react-navigation/native';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 
 import { GiftCardRedeemPanel, type GiftCardByCode } from '@/components/gift-cards';
 import { StackScreen } from '@/components/StackScreen';
@@ -10,6 +10,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** The claim page a shared /gift-card/CODE link opens — the card, who sent it,
  * their message, and the same redeem panel the Redeem screen uses. RN twin of
@@ -63,11 +64,11 @@ export function GiftCardClaimScreen() {
 
   return (
     <StackScreen title={t('mweb.giftCards.title')} testID="gift-card-claim-screen">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={16} padding={16} paddingBottom={48}>
           {body}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

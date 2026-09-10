@@ -76,12 +76,36 @@ export interface IVenueCancellationTier {
   value: number;
 }
 
+/** Six hours before the pod starts — the auto-cancel window every venue carries
+ * until the Onboarding review gives it its own. Read by the sweep too, so a
+ * venue created before the field existed uses the same number as a new one. */
+export const DEFAULT_CANCELLATION_TRIGGER_HOURS = 6;
+
+/** One band of the venue's auto-cancellation refund ladder: a pod cancelled
+ * with MORE than `hours_before` hours still to run refunds `refund_pct` of the
+ * attendee's ticket money. The WIDEST matching band wins, so more notice can
+ * never refund less; a cancellation later than every band refunds nothing. */
+export interface IVenueCancellationRefundTier {
+  hours_before: number;
+  refund_pct: number;
+}
+
 /** What the venue owner charges for a late cancellation — or whether they take
  * one at all. `reschedule_only` turns cancelling off entirely, which is why it
- * makes the bands moot rather than being one more band. */
+ * makes the bands moot rather than being one more band.
+ *
+ * `trigger_hours` + `refund_tiers` are this venue's side of the finance-negative
+ * auto-cancel (Onboarding → Onboarded Venues → Review): how long before a pod
+ * starts the sweep may still cancel a loss-making pod here, and what its
+ * attendees get back. Per-venue on purpose — a venue that bills its slot on the
+ * day cannot be held to the lead time of one that does not. */
 export interface IVenueCancellationPolicy {
   reschedule_only: boolean;
   tiers: IVenueCancellationTier[];
+  /** Hours before a pod starts within which a pod at this venue is auto-cancelled
+   * while its finance stays negative against the venue's potential earnings. */
+  trigger_hours: number;
+  refund_tiers: IVenueCancellationRefundTier[];
 }
 
 /** Operating hours, weekly-off, holidays + booking rules. Drives the Recurring
@@ -218,10 +242,21 @@ const venueCancellationTierSchema = new Schema<IVenueCancellationTier>(
   { _id: false }
 );
 
+const venueCancellationRefundTierSchema = new Schema<IVenueCancellationRefundTier>(
+  {
+    hours_before: { type: Number, required: true, min: 0, max: 8760 },
+    refund_pct: { type: Number, required: true, min: 0, max: 100 },
+  },
+  { _id: false }
+);
+
 const venueCancellationSchema = new Schema<IVenueCancellationPolicy>(
   {
     reschedule_only: { type: Boolean, default: false },
     tiers: { type: [venueCancellationTierSchema], default: [] },
+    // Six hours: the default the Onboarding review seeds every venue with.
+    trigger_hours: { type: Number, default: 6, min: 0, max: 8760 },
+    refund_tiers: { type: [venueCancellationRefundTierSchema], default: [] },
   },
   { _id: false }
 );

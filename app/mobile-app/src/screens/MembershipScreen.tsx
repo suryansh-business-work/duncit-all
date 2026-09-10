@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { StackScreen } from '@/components/StackScreen';
@@ -12,6 +12,7 @@ import { MobileMembershipPricingDocument } from '@/graphql/membership';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useMe } from '@/hooks/useMe';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 type PricingData = ResultOf<typeof MobileMembershipPricingDocument>['membershipPricing'];
 
@@ -75,7 +76,7 @@ export function MembershipScreen() {
 
   return (
     <StackScreen title={t('mweb.membership.title')} testID="membership-screen">
-      <ScrollView flex={1} showsVerticalScrollIndicator={false}>
+      <RefreshScrollView flex={1} showsVerticalScrollIndicator={false}>
         <YStack gap={14} paddingVertical={12}>
           <YStack paddingHorizontal={16} gap={6}>
             <XStack alignItems="center" gap={8} flexWrap="wrap">
@@ -106,7 +107,7 @@ export function MembershipScreen() {
 
           <MembershipNotifyCard email={me?.me?.email ?? ''} subscribed={!!pricing?.is_subscribed} />
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

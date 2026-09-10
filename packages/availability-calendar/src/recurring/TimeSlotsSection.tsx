@@ -4,7 +4,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
-import { useTranslation } from '@duncit/app-settings';
+import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { newTimeSlot, type TimeSlotRow } from './useRecurringDialog';
 
 interface Props {
@@ -18,6 +18,9 @@ interface Props {
  * keep the venue's buffer gap (the generator validates; the hint states it). */
 export default function TimeSlotsSection({ timeSlots, onChange, openHours, bufferMinutes }: Readonly<Props>) {
   const { t } = useTranslation();
+  // The hint quotes the venue's stored 'HH:mm' hours; they are read on the
+  // admin's clock so they cannot disagree with the pickers right above them.
+  const fmt = useDateFormat();
   const setRow = (id: string, p: Partial<TimeSlotRow>) =>
     onChange(timeSlots.map((r) => (r.id === id ? { ...r, ...p } : r)));
   const addRow = () => onChange([...timeSlots, newTimeSlot('15:00', '16:00')]);
@@ -69,7 +72,7 @@ export default function TimeSlotsSection({ timeSlots, onChange, openHours, buffe
       <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', mt: 0.5 }}>
         <InfoOutlinedIcon fontSize="inherit" color="action" />
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          {t('availability.recurring.venueHours', { vars: { open: openHours.open, close: openHours.close } })}{' '}
+          {t('availability.recurring.venueHours', { vars: { open: fmt.formatClock(openHours.open), close: fmt.formatClock(openHours.close) } })}{' '}
           {gapHint}
         </Typography>
       </Stack>

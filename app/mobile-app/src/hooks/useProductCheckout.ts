@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import {
@@ -28,6 +28,7 @@ import {
   type CouponPreview,
 } from '@/hooks/checkoutRequests';
 import { buildProductCheckoutInput, type PickedContact } from '@/utils/product-checkout-input';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type ProductPayment = ResultOf<
   typeof MobileDummyProductCheckoutDocument
@@ -57,6 +58,9 @@ export function useProductCheckout() {
   const [isLoading, setIsLoading] = useState(true);
   const { verifyRazorpay, confirmingMessage } = useRazorpayVerification();
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let active = true;
     Promise.all([
@@ -75,7 +79,9 @@ export function useProductCheckout() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [attempt]);
+
+  useRefreshRegistration(refetch);
 
   const initialValues = useMemo(() => buildCheckoutInitialValues(me), [me]);
 

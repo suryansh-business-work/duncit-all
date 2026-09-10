@@ -17,6 +17,10 @@ interface PhoneArgs {
  *
  * An admin changing another person's contact details uses `updateUser`, which
  * is gated on an admin role instead and needs no code.
+ *
+ * `setContactPhoneNumber` needs no code either, but it is still bound to the
+ * session for the same reason as the rest: it writes the caller's own number
+ * and there is no argument here that could aim it at anybody else's account.
  */
 export const contactChangeResolvers = {
   Mutation: {
@@ -51,6 +55,20 @@ export const contactChangeResolvers = {
       // shape every other profile mutation hands back — and so the account's
       // OTHER open surfaces learn the number moved rather than showing the old
       // one until they are reloaded.
+      return userService.publishMe(auth.id);
+    },
+
+    setContactPhoneNumber: async (
+      _p: unknown,
+      args: { phone_extension: string; phone_number: string },
+      ctx: GraphQLContext
+    ) => {
+      const auth = requireAuth(ctx);
+      await contactChangeService.setPhoneNumber(
+        auth.id,
+        args.phone_extension,
+        args.phone_number
+      );
       return userService.publishMe(auth.id);
     },
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
   MyMeetingDocument,
@@ -7,6 +7,7 @@ import {
   type SurveyKind,
 } from '@/graphql/onboarding-survey';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /**
  * Loads the signed-in user's onboarding meeting for a kind — scheduled time and
@@ -15,6 +16,9 @@ import { graphqlRequest } from '@/services/graphql.client';
 export function useMyMeeting(kind: SurveyKind) {
   const [meeting, setMeeting] = useState<MyMeeting | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
     let active = true;
@@ -29,7 +33,9 @@ export function useMyMeeting(kind: SurveyKind) {
     return () => {
       active = false;
     };
-  }, [kind]);
+  }, [kind, attempt]);
+
+  useRefreshRegistration(refetch);
 
   return { meeting, isLoading };
 }

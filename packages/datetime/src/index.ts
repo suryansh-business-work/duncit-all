@@ -35,6 +35,7 @@ export {
   type AmbientDateSettings,
 } from './ambient';
 export {
+  formatClockTime,
   formatIsoDay,
   isIsoDay,
   parseInPattern,
@@ -44,6 +45,15 @@ export {
   patternPlaceholder,
   toIsoDay,
 } from './day-input';
+export {
+  MERIDIEMS,
+  hourChips,
+  meridiemOf,
+  twelveHourLabel,
+  withMeridiem,
+  type HourChip,
+  type Meridiem,
+} from './hour-cycle';
 export {
   formatTokens,
   isPickerSafeFormat,

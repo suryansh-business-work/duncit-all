@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { CartPodGroup } from '@/components/cart/CartPodGroup';
 import { TabScreen } from '@/components/TabScreen';
@@ -12,6 +12,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { cartLineKey, groupLinesByPod, selectCartTotal, useCartStore } from '@/stores/cart.store';
 import type { RootStackParamList } from '@/navigation/types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** The cart — every product added from any Pod Shop, grouped by pod for
  * display, paid together as ONE product payment (delivery is still quoted per
@@ -122,12 +123,12 @@ export function CartScreen() {
       {/* A tab, not a pushed screen, so there is no back-bar to carry the title
           and no safe-area strip below — mWeb's CartPage puts its heading in the
           page for the same reason, and the bar has to be cleared here. */}
-      <ScrollView flex={1} contentContainerStyle={{ paddingBottom: bottomSpace }}>
+      <RefreshScrollView flex={1} contentContainerStyle={{ paddingBottom: bottomSpace }}>
         <Text paddingHorizontal={16} paddingTop={12} fontSize={20} fontWeight="700" color="$color">
           {t('mweb.cart.title')}
         </Text>
         {body}
-      </ScrollView>
+      </RefreshScrollView>
     </TabScreen>
   );
 }

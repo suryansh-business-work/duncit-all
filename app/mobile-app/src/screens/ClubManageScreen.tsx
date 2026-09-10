@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { ClubQuickActions } from '@/components/club-admin/clubs/ClubQuickActions';
@@ -11,6 +11,7 @@ import { ClubStudioChangeRequests } from '@/components/change-requests/ClubStudi
 import { useClubAdminClubs } from '@/hooks/useClubAdminClubs';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { MenuRoute, RootStackParamList } from '@/navigation/types';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Club Studio — the in-app home for a Club Admin, the twin of mWeb's
@@ -34,7 +35,7 @@ export function ClubManageScreen() {
 
   return (
     <StackScreen header title={t('mweb.studioPods.clubStudio')} testID="club-manage-screen">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={14} padding={16} paddingBottom={48}>
           <ClubQuickActions onNavigate={navigate} />
           <YourClubsSection
@@ -45,7 +46,7 @@ export function ClubManageScreen() {
           <ClubStudioChangeRequests state={podsState} />
           <StudioChangeRequests role="CLUB_ADMIN" />
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

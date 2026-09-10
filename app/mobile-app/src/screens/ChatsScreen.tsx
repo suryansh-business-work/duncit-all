@@ -22,7 +22,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 export function ChatsScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { rooms, isLoading, refetch } = useChatRooms();
+  const { rooms, isLoading } = useChatRooms();
   const { selectedSuperId } = useSuperCategories();
   const { muted } = useThemeColors();
   const [query, setQuery] = useState('');
@@ -80,7 +80,6 @@ export function ChatsScreen() {
         isLoading={isLoading}
         isEmpty={filtered.length === 0}
         emptyText={emptyText}
-        onRefresh={refetch}
         data={filtered}
         keyExtractor={(room) => room.id}
         renderItem={(room) => (

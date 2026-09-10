@@ -4,6 +4,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 import { ChatParticipantsDocument, PodMessagesDocument } from '@/graphql/chat';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useChatStore } from '@/stores/chat.store';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type ChatMessage = ResultOf<typeof PodMessagesDocument>['podMessages'][number];
 type ChatParticipantsData = ResultOf<typeof ChatParticipantsDocument>;
@@ -24,6 +25,8 @@ export function useChatRooms() {
 
   const refetch = useCallback(() => fetch(true), [fetch]);
 
+  useRefreshRegistration(refetch);
+
   return {
     rooms: data?.myChatRooms ?? [],
     isLoading,
@@ -37,6 +40,9 @@ export function useChatParticipants(podId: string) {
   const [data, setData] = useState<ChatParticipantsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let active = true;
     setIsLoading(true);
@@ -47,7 +53,9 @@ export function useChatParticipants(podId: string) {
     return () => {
       active = false;
     };
-  }, [podId]);
+  }, [podId, attempt]);
+
+  useRefreshRegistration(refetch);
 
   const people = data?.chatParticipants;
   return {

@@ -31,16 +31,17 @@ interface PolicyEntry {
 
 interface PolicyState {
   bySlug: Record<string, PolicyEntry>;
-  fetch: (slug: string) => Promise<void>;
+  /** `force` re-reads a cached policy — what a pull-to-refresh asks for. */
+  fetch: (slug: string, force?: boolean) => Promise<void>;
 }
 
 /** Per-slug policy cache — backs the policy reader screen. */
 export const usePolicyStore = create<PolicyState>((set, get) => ({
   bySlug: {},
-  fetch: async (slug) => {
+  fetch: async (slug, force = false) => {
     if (!slug) return;
     const entry = get().bySlug[slug];
-    if (entry?.isLoading || entry?.data) return;
+    if (entry?.isLoading || (entry?.data && !force)) return;
     set((s) => ({ bySlug: { ...s.bySlug, [slug]: { isLoading: true } } }));
     try {
       const data = await graphqlRequest(MobilePolicyBySlugDocument, { slug });

@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 import {
   buildCommPreferenceLabels,
   commChannelSummary,
@@ -16,6 +16,7 @@ import { StackScreen } from '@/components/StackScreen';
 import { useCommPreference } from '@/hooks/useCommPreference';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Channel → the icon it is recognised by. */
 const CHANNEL_ICONS: Record<CommChannel, keyof typeof MaterialIcons.glyphMap> = {
@@ -57,7 +58,7 @@ export function CommPreferenceScreen() {
       </Text>
     </YStack>
   ) : (
-    <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }}>
+    <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }}>
       <Text fontSize={12.5} color="$muted">
         {labels.blurb}
       </Text>
@@ -78,7 +79,7 @@ export function CommPreferenceScreen() {
           />
         );
       })}
-    </ScrollView>
+    </RefreshScrollView>
   );
 
   return (

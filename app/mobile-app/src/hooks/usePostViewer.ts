@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import {
@@ -9,6 +9,7 @@ import {
   TogglePostLikeDocument,
 } from '@/graphql/posts';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useReloadableQuery } from '@/hooks/useReloadableQuery';
 
 type PostDetailsData = ResultOf<typeof PostDetailsDocument>;
 export type PostDetail = NonNullable<PostDetailsData['post']>;
@@ -21,23 +22,13 @@ export type PostComment = PostDetail['comments'][number];
  */
 export function usePostViewer(id: string) {
   const [post, setPost] = useState<PostDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   const load = useCallback(async () => {
     const data = await graphqlRequest(PostDetailsDocument, { id }, { auth: true });
     setPost(data.post ?? null);
   }, [id]);
 
-  useEffect(() => {
-    let active = true;
-    setIsLoading(true);
-    load()
-      .catch(() => undefined)
-      .finally(() => active && setIsLoading(false));
-    return () => {
-      active = false;
-    };
-  }, [load]);
+  const { isLoading } = useReloadableQuery(load);
 
   const runAndReload = useCallback(
     async (run: () => Promise<unknown>) => {

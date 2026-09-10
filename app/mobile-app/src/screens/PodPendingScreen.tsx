@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
-import { RefreshControl } from 'react-native';
 import { useRoute, type RouteProp } from '@react-navigation/native';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 
 import {
   ClubAdminCard,
@@ -12,10 +11,10 @@ import {
 } from '@/components/pod-pending';
 import { StackScreen } from '@/components/StackScreen';
 import { usePodPendingView } from '@/hooks/usePodPendingView';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Waiting screen a host lands on after creating a pod whose venue slot request
  * is PENDING — banner + pod summary + venue contact + club-admin help cards.
@@ -29,7 +28,6 @@ export function PodPendingScreen() {
   const podId = route.params?.podId ?? '';
   const { view, isLoading, isRefreshing, error, refetch } = usePodPendingView(podId);
   const { t } = useTranslation();
-  const { primary, surface } = useThemeColors();
 
   // The screen owns its own errors (they land in `error`), so a rejection here
   // would only be the request already reported on screen.
@@ -52,18 +50,9 @@ export function PodPendingScreen() {
     );
   } else {
     body = (
-      <ScrollView
+      <RefreshScrollView
         flex={1}
         contentContainerStyle={{ padding: 16, paddingBottom: 32, gap: 14 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={refresh}
-            tintColor={primary}
-            colors={[primary]}
-            progressBackgroundColor={surface}
-          />
-        }
       >
         <PendingBanner status={view.pod.venue_approval_status} />
         <PodPendingSummaryCard view={view} />
@@ -71,7 +60,7 @@ export function PodPendingScreen() {
           <VenuePendingCard venue={view.venue} status={view.pod.venue_approval_status} />
         ) : null}
         {view.club_admin ? <ClubAdminCard admin={view.club_admin} /> : null}
-      </ScrollView>
+      </RefreshScrollView>
     );
   }
 

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useRoute, type RouteProp } from '@react-navigation/native';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 
 import { HealthBreakdown, HealthMeter } from '@/components/health';
 import { StackScreen } from '@/components/StackScreen';
@@ -8,6 +8,7 @@ import { useVenueHealth } from '@/hooks/useHealth';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Venue Health detail for an owned venue — meter + breakdown + admin remarks.
  * RN twin of mWeb's VenueHealthPage. */
@@ -32,7 +33,7 @@ export function VenueHealthScreen() {
     );
   } else if (health) {
     body = (
-      <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 20 }}>
+      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 20 }}>
         <YStack alignItems="center">
           <HealthMeter
             score={health.total_score}
@@ -41,7 +42,7 @@ export function VenueHealthScreen() {
           />
         </YStack>
         <HealthBreakdown score={health} />
-      </ScrollView>
+      </RefreshScrollView>
     );
   } else {
     body = (

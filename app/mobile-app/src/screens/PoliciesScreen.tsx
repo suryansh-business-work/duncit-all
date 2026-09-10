@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack } from 'tamagui';
+import { Text, XStack } from 'tamagui';
 
 import { ListSkeleton } from '@/components/Skeleton';
 import { StackScreen } from '@/components/StackScreen';
@@ -10,6 +10,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Policies — the list of policy documents; tapping opens the reader. */
 export function PoliciesScreen() {
@@ -24,7 +25,7 @@ export function PoliciesScreen() {
       {isLoading && policies.length === 0 ? (
         <ListSkeleton testID="policies-loading" count={5} />
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 24 }}>
+        <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 24 }}>
           {policies.length === 0 ? (
             <Text testID="policies-empty" textAlign="center" color="$muted" paddingVertical={40}>
               No policies available.
@@ -54,7 +55,7 @@ export function PoliciesScreen() {
               </XStack>
             ))
           )}
-        </ScrollView>
+        </RefreshScrollView>
       )}
     </StackScreen>
   );

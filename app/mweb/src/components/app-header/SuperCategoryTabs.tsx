@@ -20,7 +20,7 @@ interface Props {
 export default function SuperCategoryTabs({ loading, superCats, value, onChange }: Readonly<Props>) {
   const { pathname } = useLocation();
   const { t } = useTranslation();
-  const canFilter = ['/', '/explore', '/clubs', '/chats', '/follow'].includes(pathname);
+  const canFilter = ['/', '/explore', '/clubs', '/chats', '/follow', '/venues'].includes(pathname);
 
   if (!canFilter) return null;
 

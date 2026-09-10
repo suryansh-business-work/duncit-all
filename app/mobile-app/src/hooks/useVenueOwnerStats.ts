@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { emptyVenueOwnerStats, type VenueOwnerStats } from '@duncit/utils';
 
 import { VenueOwnerStatsDocument } from '@/graphql/venue-pods';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /**
  * The owner's slot figures for the venue the studio is looking at — the RN
@@ -12,6 +13,9 @@ import { graphqlRequest } from '@/services/graphql.client';
 export function useVenueOwnerStats(venueId: string | null) {
   const [stats, setStats] = useState<VenueOwnerStats>(emptyVenueOwnerStats);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
     if (!venueId) return undefined;
@@ -24,7 +28,9 @@ export function useVenueOwnerStats(venueId: string | null) {
     return () => {
       active = false;
     };
-  }, [venueId]);
+  }, [venueId, attempt]);
+
+  useRefreshRegistration(refetch);
 
   return { stats, isLoading };
 }

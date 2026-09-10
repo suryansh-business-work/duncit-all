@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, Switch } from 'react-native';
+import { Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -28,6 +28,7 @@ import { SidebarRefreshBar } from './SidebarRefreshBar';
 import { SidebarSkeleton } from './SidebarSkeleton';
 import { SidebarUserContent } from './SidebarUserContent';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Body of the account menu screen (/menu) — the RN twin of mWeb's <MenuPanel/>.
@@ -139,7 +140,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
 
         <SidebarRefreshBar active={refreshing} />
 
-        <ScrollView
+        <RefreshScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingVertical: 4 }}
         >
@@ -229,7 +230,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
               navigation.navigate('Policy', { slug });
             }}
           />
-        </ScrollView>
+        </RefreshScrollView>
 
         <SidebarFooter
           onLogout={() => {

@@ -117,12 +117,15 @@ exports:
   - 'followOutcomeLabelKey'
   - 'CONTACT_CHANNELS'
   - 'isPhoneChannel'
+  - 'contactChangeNeedsOtp'
   - 'formatPhoneLine'
   - 'currentContactValue'
   - 'contactDetailsComplete'
   - 'contactDraftFrom'
   - 'contactDraftValue'
   - 'contactDraftIsUnchanged'
+  - 'contactSubmitAction'
+  - 'applyContactDraft'
   - 'emptyContactDraft'
   - 'buildContactChangeLabels'
   - 'PASSWORD_RECOVERY_CHANNELS'
@@ -1612,7 +1615,7 @@ contactDraftFrom(account, 'PHONE');       // { email: '', extension: '+91', numb
 ```
 
 All three are REQUIRED. Nothing about them rides the edit-profile Save — each is its own
-proved write — so a missing one cannot be caught by a Zod rule over a field the form does
+write — so a missing one cannot be caught by a Zod rule over a field the form does
 not have. `contactDetailsComplete` is what holds the button instead, and it is one function
 rather than one per surface so mWeb and native cannot disagree about whether a profile is
 reachable:
@@ -1621,6 +1624,22 @@ reachable:
 contactDetailsComplete(account);                              // false — no WhatsApp number
 contactDetailsComplete({ ...account, whatsapp_number: '9845012345' }); // true
 ```
+
+`contactChangeNeedsOtp` is which of the three still has to be PROVED before it is stored.
+The contact number is not: it is the detail people correct most often, and a code on every
+correction turned a one-line fix into a wait, so it is saved as typed and stored unverified.
+The address and the WhatsApp number keep theirs — both are delivery channels whose whole
+worth is that a message arrives, and a typo in either goes unnoticed until something
+silently fails to reach anybody:
+
+```ts
+contactChangeNeedsOtp('PHONE');    // false — one step, stored on submit
+contactChangeNeedsOtp('EMAIL');    // true  — a code goes to the new address
+contactChangeNeedsOtp('WHATSAPP'); // true  — a code goes to the new number
+```
+
+The server agrees from its own side: `setContactPhoneNumber` takes no code, and the other
+two refuse without one.
 
 `contactDraftIsUnchanged` is the refusal that runs BEFORE a code is sent. A code costs the
 person an SMS and a wait, so a draft matching what the account already holds is turned back
@@ -1635,6 +1654,22 @@ contactDraftIsUnchanged(account, 'PHONE', { email: '', extension: '+1', number: 
 
 contactDraftValue({ email: 'Ravi@Duncit.com', extension: '', number: '' }, 'EMAIL');
 // 'ravi@duncit.com' — what the server is asked to store
+```
+
+`contactSubmitAction` is the one answer both dialogs act on, and `applyContactDraft` is what
+they fold into the rows afterwards — the dialog closes onto those rows, and one still showing
+the old number while the refetch is in flight reads as a change that failed:
+
+```ts
+contactSubmitAction(account, 'PHONE', { email: '', extension: '+91', number: '9845012345' });
+// 'UNCHANGED' — same number, nothing to do
+contactSubmitAction(account, 'PHONE', { email: '', extension: '+91', number: '9845099999' });
+// 'SAVE' — stored on this submit
+contactSubmitAction(account, 'EMAIL', { email: 'ravi@duncit.in', extension: '', number: '' });
+// 'SEND_CODE' — a code goes to the new address first
+
+applyContactDraft(account, 'PHONE', { email: '', extension: '+91', number: '9845099999' });
+// { …account, phone_extension: '+91', phone_number: '9845099999' }
 ```
 
 Nothing here validates a SHAPE. Each surface's dialog is a real form (rule 10), and the

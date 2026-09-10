@@ -105,15 +105,25 @@ export default function PoliciesPage() {
       content: form.content,
       is_active: form.is_active,
       sort_order: Number(form.sort_order) || 0,
-      notify_accepted_users: form.notify_accepted_users,
-      notify_summary: form.notify_summary.trim(),
     };
     try {
       if (isNew) {
         await createMut({ variables: { input } });
         notifySuccess(t('legal.policies.created'));
       } else {
-        await updateMut({ variables: { id: editing!.id, input } });
+        // The notify pair belongs to UpdatePolicyInput alone: nobody can have
+        // accepted a policy that is still being created, so CreatePolicyInput
+        // does not define the fields and sending them there fails validation.
+        await updateMut({
+          variables: {
+            id: editing!.id,
+            input: {
+              ...input,
+              notify_accepted_users: form.notify_accepted_users,
+              notify_summary: form.notify_summary.trim(),
+            },
+          },
+        });
         notifySuccess(t('legal.policies.updated'));
       }
       setEditing(null);

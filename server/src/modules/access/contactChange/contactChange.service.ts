@@ -115,12 +115,53 @@ async function assertEmailResendAllowed(user_id: string) {
 }
 
 /**
+ * Store a number on the account, and log the change like every other edit.
+ *
+ * Both doors onto a number land here — the code-proved one and the contact
+ * number's direct save — so what a number change actually WRITES is stated
+ * once (rule 34). The verification stamp is the whole difference between them:
+ * a code came back and proved the number, or nothing did and the account holds
+ * a number nobody has answered on yet.
+ */
+async function applyNumber(
+  user_id: string,
+  field: ContactPhoneField,
+  phone: { phone_extension: string; phone_number: string },
+  verified_at: Date | null
+) {
+  const spec = PHONE_FIELDS[field];
+  const set: Record<string, unknown> = {
+    [spec.numberPath]: phone.phone_number,
+    [spec.extensionPath]: phone.phone_extension,
+  };
+  if (field === 'PHONE') set['auth.phone.is_verified'] = verified_at !== null;
+  else set['communication.whatsapp.verified_at'] = verified_at;
+
+  const before = await UserModel.findById(user_id).lean();
+  const after = await UserModel.findByIdAndUpdate(user_id, { $set: set }, { new: true }).catch(
+    (e: any) => {
+      // The unique phone index is the final authority, and it can still fire
+      // between the free-number check above and this write.
+      if (e?.code === 11000) throw conflict(TAKEN_MESSAGE[field]);
+      throw e;
+    }
+  );
+  if (!after) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+  await userAuditService.record({ userId: user_id, before, after });
+  return after;
+}
+
+/**
  * Changing the address or numbers Duncit reaches somebody on.
  *
- * Every change here is proved by a one-time code sent to the NEW value. That
- * direction is the whole point: a code sent to the address being replaced only
- * shows the person still holds the old one, which they are about to give up
- * anyway, and says nothing about whether the new one is theirs or a typo.
+ * The email address and the WhatsApp number are proved by a one-time code sent
+ * to the NEW value. That direction is the whole point: a code sent to the value
+ * being replaced only shows the person still holds the old one, which they are
+ * about to give up anyway, and says nothing about whether the new one is theirs
+ * or a typo.
+ *
+ * The contact number is the exception: it is saved as typed, and stored
+ * unverified. `setPhoneNumber` says why.
  *
  * The codes themselves are not implemented here. Phone codes are issued and
  * checked by the shared `otpService`, which owns expiry, the attempt limit and
@@ -175,26 +216,27 @@ export const contactChangeService = {
       match: (c) => String((c.context as any)?.user_id ?? '') === String(user_id),
     });
 
-    const set: Record<string, unknown> = {
-      [spec.numberPath]: phone.phone_number,
-      [spec.extensionPath]: phone.phone_extension,
-    };
     // The code that just landed proved this number, so it is stored verified.
-    if (field === 'PHONE') set['auth.phone.is_verified'] = true;
-    else set['communication.whatsapp.verified_at'] = new Date();
+    return applyNumber(user_id, field, phone, new Date());
+  },
 
-    const before = await UserModel.findById(user_id).lean();
-    const after = await UserModel.findByIdAndUpdate(user_id, { $set: set }, { new: true }).catch(
-      (e: any) => {
-        // The unique phone index is the final authority, and it can still fire
-        // between the check above and this write.
-        if (e?.code === 11000) throw conflict(TAKEN_MESSAGE[field]);
-        throw e;
-      }
-    );
-    if (!after) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
-    await userAuditService.record({ userId: user_id, before, after });
-    return after;
+  /**
+   * Store the contact number as typed, with no code behind it.
+   *
+   * The contact number is the detail people correct most often — a digit
+   * mistyped at signup, a number that moved networks — and a code step on
+   * every correction was turning a one-line fix into a wait. It is therefore
+   * saved straight, and saved UNVERIFIED: nothing has answered on it, and
+   * `auth.phone.is_verified` is the flag that has to keep saying so.
+   *
+   * The one rule that does NOT relax is whose number it is. A number already
+   * reaching another account is still refused, because a number is how
+   * somebody signs in and two accounts may not share one.
+   */
+  async setPhoneNumber(user_id: string, extension: string, number: string) {
+    const phone = normalizePhone(extension, number);
+    await assertNumberFree(user_id, 'PHONE', phone.phone_extension, phone.phone_number);
+    return applyNumber(user_id, 'PHONE', phone, null);
   },
 
   /** Email a code to the address this account wants to start using. */

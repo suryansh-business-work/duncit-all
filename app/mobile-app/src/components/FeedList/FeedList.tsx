@@ -1,11 +1,11 @@
 import type { ReactElement } from 'react';
-import { FlatList, RefreshControl } from 'react-native';
+import { FlatList } from 'react-native';
 import { Text } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
 import { ListSkeleton } from '@/components/Skeleton';
+import { useScreenRefreshControl } from '@/components/PullToRefresh';
 import { useBottomNavSpace } from '@/hooks/useBottomNavSpace';
-import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface FeedListProps<T> {
   isLoading: boolean;
@@ -14,50 +14,32 @@ interface FeedListProps<T> {
   /** Custom empty state (overrides emptyText) — e.g. an empty state with a CTA. */
   emptyComponent?: ReactElement;
   testID: string;
-  onRefresh?: () => void;
-  /** Drives the pull-to-refresh spinner. Defaults to the list's own loading
-   * flag once there is data on screen, which is exactly a refresh. */
-  refreshing?: boolean;
   data: readonly T[];
   keyExtractor: (item: T) => string;
   renderItem: (item: T, index: number) => ReactElement;
 }
 
 /** Vertical feed scaffold shared by the tab screens: a skeleton while the first
- * load is in flight, an empty message, or a virtualized list with pull-to-refresh
- * and room for the floating bottom nav. Backed by FlatList so only the visible
- * rows (plus a small buffer) are mounted, instead of the whole list at once. */
+ * load is in flight, an empty message, or a virtualized list carrying the
+ * screen's pull-to-refresh and room for the floating bottom nav. Backed by
+ * FlatList so only the visible rows (plus a small buffer) are mounted, instead
+ * of the whole list at once. */
 export function FeedList<T>({
   isLoading,
   isEmpty,
   emptyText,
   emptyComponent,
   testID,
-  onRefresh,
-  refreshing,
   data,
   keyExtractor,
   renderItem,
 }: Readonly<FeedListProps<T>>) {
-  const { primary, surface } = useThemeColors();
   const bottomSpace = useBottomNavSpace();
+  const refreshControl = useScreenRefreshControl();
 
   if (isLoading && isEmpty) {
     return <ListSkeleton testID={`${testID}-loading`} />;
   }
-
-  // Without a truthful `refreshing` the spinner never appears, so a pull reads
-  // as "nothing happened" even while the refetch is in flight.
-  const isRefreshing = refreshing ?? (isLoading && !isEmpty);
-  const refreshControl = onRefresh ? (
-    <RefreshControl
-      refreshing={isRefreshing}
-      onRefresh={onRefresh}
-      tintColor={primary}
-      colors={[primary]}
-      progressBackgroundColor={surface}
-    />
-  ) : undefined;
 
   return (
     <FlatList

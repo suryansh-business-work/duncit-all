@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { PodShopSlider } from '@/components/shop/PodShopSlider';
@@ -18,6 +18,7 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 export type ShopProduct = ResultOf<typeof ShopProductsDocument>['availablePodProducts'][number];
 
@@ -148,12 +149,12 @@ export function ShopScreen() {
   // same header cart every other screen shows.
   return (
     <StackScreen title={t('mweb.shop.title')} testID="shop-screen">
-      <ScrollView flex={1}>
+      <RefreshScrollView flex={1}>
         <PodShopSlider />
         <ShopFilterBar filters={filters} sortOptions={SORT_OPTIONS} muted={muted} />
         {body}
         <TrustBar tint={primary} />
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

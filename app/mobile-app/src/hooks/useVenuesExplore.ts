@@ -1,26 +1,26 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { MobileVenuesDocument } from '@/graphql/hosts-venues';
-import { CategoriesDocument, type CategoriesResult } from '@/graphql/onboarding-survey';
 import { useLocationStore } from '@/stores/location.store';
 import { graphqlRequest } from '@/services/graphql.client';
-import { fireAndForget } from '@/utils/fire-and-forget';
+import { useSuperCategories } from '@/hooks/useSuperCategories';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type ExploreVenue = ResultOf<typeof MobileVenuesDocument>['publicVenues'][number];
-export type VenueCategoryOption = CategoriesResult['categories'][number];
 
 const SEARCH_DEBOUNCE_MS = 400;
 
 /** Venues discovery data: venues in the user's selected location, refetched
- * server-side on a debounced search + a Super-category chip filter. */
+ * server-side on a debounced search and on the header's Super-category tiles —
+ * the same app-wide filter Home, Explore, Clubs and Chats read, so the tiles
+ * above the list are never a control that does nothing. */
 export function useVenuesExplore() {
   const locationId = useLocationStore((s) => s.selectedId);
   const cityLabel = useLocationStore((s) => s.cityLabel);
+  const { selectedSuperId } = useSuperCategories();
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
-  const [superCategoryId, setSuperCategoryId] = useState('');
-  const [categories, setCategories] = useState<VenueCategoryOption[]>([]);
   const [venues, setVenues] = useState<ExploreVenue[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
@@ -32,24 +32,8 @@ export function useVenuesExplore() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Super-category chips (shared taxonomy) — loaded once.
-  useEffect(() => {
-    let active = true;
-    fireAndForget(
-      graphqlRequest<CategoriesResult, { level: string; parent_id: string | null }>(
-        CategoriesDocument,
-        { level: 'SUPER', parent_id: null },
-        { auth: true },
-      )
-        .then((r) => {
-          if (active) setCategories((r.categories ?? []).filter((c) => c.is_active !== false));
-        })
-        .catch(() => undefined),
-    );
-    return () => {
-      active = false;
-    };
-  }, []);
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
     let active = true;
@@ -59,7 +43,7 @@ export function useVenuesExplore() {
       {
         location_id: locationId || null,
         search: search || null,
-        super_category_id: superCategoryId || null,
+        super_category_id: selectedSuperId,
         category_id: null,
         sub_category_id: null,
       },
@@ -75,16 +59,15 @@ export function useVenuesExplore() {
     return () => {
       active = false;
     };
-  }, [locationId, search, superCategoryId]);
+  }, [locationId, search, selectedSuperId, attempt]);
+
+  useRefreshRegistration(refetch);
 
   return {
     venues,
-    categories,
     cityLabel,
     searchInput,
     setSearchInput,
-    superCategoryId,
-    setSuperCategoryId,
     isLoading,
     error,
   };

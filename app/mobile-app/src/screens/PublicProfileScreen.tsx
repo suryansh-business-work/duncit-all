@@ -1,6 +1,6 @@
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -15,6 +15,7 @@ import { usePublicProfile } from '@/hooks/usePublicProfile';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Owner-only shortcut into the account editor. */
 function EditProfileButton({ onPress }: Readonly<{ onPress: () => void }>) {
@@ -82,7 +83,7 @@ export function PublicProfileScreen() {
     );
   } else if (user) {
     body = (
-      <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 16 }}>
+      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 16 }}>
         <PublicProfileHeader user={user} />
         {isOwner ? null : (
           <ProfileFollowActions
@@ -107,7 +108,7 @@ export function PublicProfileScreen() {
           isHost={Boolean(user.is_host)}
           isOwner={isOwner}
         />
-      </ScrollView>
+      </RefreshScrollView>
     );
   } else {
     body = (

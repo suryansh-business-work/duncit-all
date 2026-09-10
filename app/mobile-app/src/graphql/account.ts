@@ -174,6 +174,23 @@ export const MobileConfirmContactPhoneChangeDocument = gql(`
   }
 `);
 
+/**
+ * The contact number, stored with no code behind it.
+ *
+ * Twin of mWeb's SET_CONTACT_PHONE_NUMBER. `is_phone_verified` comes back false:
+ * nothing answered on the number, and the screen must not claim otherwise.
+ */
+export const MobileSetContactPhoneNumberDocument = gql(`
+  mutation MobileSetContactPhoneNumber($ext: String!, $num: String!) {
+    setContactPhoneNumber(phone_extension: $ext, phone_number: $num) {
+      user_id
+      phone_number
+      phone_extension
+      is_phone_verified
+    }
+  }
+`);
+
 /** Step 1 of an email change — email a code to the NEW address. */
 export const MobileRequestEmailChangeOtpDocument = gql(`
   mutation MobileRequestEmailChangeOtp($email: String!) {

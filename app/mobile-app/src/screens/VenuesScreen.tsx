@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Input, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Input, Spinner, Text, YStack } from 'tamagui';
 
 import { TabScreen } from '@/components/TabScreen';
 import { AdCard } from '@/components/ads/AdCard';
@@ -8,80 +8,25 @@ import { interleaveAds, isAdEntry } from '@/components/ads/interleaveAds';
 import { VenueCard, VenuesLocationBar } from '@/components/hosts-venues';
 import { useActiveAds } from '@/hooks/useActiveAds';
 import { useBottomNavSpace } from '@/hooks/useBottomNavSpace';
-import { useThemeColors } from '@/hooks/useThemeColors';
-import { useVenuesExplore, type VenueCategoryOption } from '@/hooks/useVenuesExplore';
+import { useVenuesExplore } from '@/hooks/useVenuesExplore';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
-
-/** Horizontal Super-category chip rail — "All" clears the filter. */
-function CategoryChips({
-  categories,
-  selectedId,
-  primary,
-  onSelect,
-}: Readonly<{
-  categories: VenueCategoryOption[];
-  selectedId: string;
-  primary: string;
-  onSelect: (id: string) => void;
-}>) {
-  if (categories.length === 0) return null;
-  const chips = [{ id: '', name: 'All' }, ...categories];
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-      <XStack gap={8} paddingVertical={2}>
-        {chips.map((c) => {
-          const selected = selectedId === c.id;
-          return (
-            <YStack
-              pressStyle={PRESS_STYLE.control}
-              key={c.id || 'all'}
-              testID={`venues-cat-${c.id || 'all'}`}
-              role="button"
-              onPress={() => onSelect(c.id)}
-              paddingHorizontal={12}
-              paddingVertical={7}
-              borderRadius={999}
-              borderWidth={1}
-              borderColor={selected ? primary : '$borderColor'}
-              backgroundColor={selected ? primary : 'transparent'}
-            >
-              <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
-                {c.name}
-              </Text>
-            </YStack>
-          );
-        })}
-      </XStack>
-    </ScrollView>
-  );
-}
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Venues discovery — venues in the selected location with a server-side
- * debounced search + Super-category filter. mWeb twin: /venues (VenuesPage). */
+ * debounced search, filtered by the header's Super-category tiles (the app-wide
+ * filter every other tab reads). mWeb twin: /venues (VenuesPage). */
 export function VenuesScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { primary } = useThemeColors();
-  const {
-    venues,
-    categories,
-    cityLabel,
-    searchInput,
-    setSearchInput,
-    superCategoryId,
-    setSuperCategoryId,
-    isLoading,
-    error,
-  } = useVenuesExplore();
+  const { venues, cityLabel, searchInput, setSearchInput, isLoading, error } = useVenuesExplore();
   // A sponsored banner every 4 venues (server returns [] when none are booked).
   const { ads } = useActiveAds('VENUE_LIST');
   const bottomSpace = useBottomNavSpace();
 
   return (
     <TabScreen testID="venues-screen">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <RefreshScrollView showsVerticalScrollIndicator={false}>
         {/* A tab, not a pushed screen, since the bar carries Venues now — so the
             last venue has to clear the floating bar itself. */}
         <YStack gap={12} padding={16} paddingBottom={bottomSpace}>
@@ -94,12 +39,6 @@ export function VenuesScreen() {
             value={searchInput}
             onChangeText={setSearchInput}
             backgroundColor="$surface"
-          />
-          <CategoryChips
-            categories={categories}
-            selectedId={superCategoryId}
-            primary={primary}
-            onSelect={setSuperCategoryId}
           />
           {isLoading ? <Spinner testID="venues-loading" color="$primary" /> : null}
           {!isLoading && error ? (
@@ -126,7 +65,7 @@ export function VenuesScreen() {
             );
           })}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </TabScreen>
   );
 }

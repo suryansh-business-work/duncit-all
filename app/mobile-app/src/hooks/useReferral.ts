@@ -3,6 +3,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { ApplyReferralCodeDocument, MyReferralDocument } from '@/graphql/referral';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type MyReferral = ResultOf<typeof MyReferralDocument>['myReferral'];
 
@@ -27,6 +28,8 @@ export function useReferral() {
       active = false;
     };
   }, [refetch]);
+
+  useRefreshRegistration(refetch);
 
   const applyCode = async (code: string) => {
     setApplyBusy(true);

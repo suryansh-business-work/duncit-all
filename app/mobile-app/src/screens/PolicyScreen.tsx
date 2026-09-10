@@ -1,4 +1,3 @@
-import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -14,6 +13,7 @@ import { toErrorMessage } from '@/utils/errors';
 import { stripHtml } from '@/utils/html';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Reader for a single public policy, opened from the sidebar's Policies group. */
 export function PolicyScreen() {
@@ -31,11 +31,11 @@ export function PolicyScreen() {
       {toErrorMessage(error)}
     </Text>
   ) : (
-    <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}>
+    <RefreshScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}>
       <Text fontSize={15} lineHeight={24} color="$color">
         {stripHtml(policy?.content) || 'This policy has no content yet.'}
       </Text>
-    </ScrollView>
+    </RefreshScrollView>
   );
 
   return (

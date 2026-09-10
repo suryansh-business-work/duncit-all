@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { HostDashboardDocument, HostDashboardPodsDocument } from '@/graphql/studio-dashboard';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 type DashboardData = ResultOf<typeof HostDashboardDocument>;
 export type HostWallet = DashboardData['myWallet'];
@@ -27,6 +28,9 @@ export function useHostDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let active = true;
     graphqlRequest(HostDashboardDocument, undefined, { auth: true })
@@ -50,7 +54,9 @@ export function useHostDashboard() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [attempt]);
+
+  useRefreshRegistration(refetch);
 
   const now = Date.now();
   const stats: HostDashboardStats = {

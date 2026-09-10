@@ -3,6 +3,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { MyHostPayoutsDocument } from '@/graphql/settlement';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 type Data = ResultOf<typeof MyHostPayoutsDocument>;
 export type HostPayout = Data['myHostPayouts'][number];
@@ -37,6 +38,8 @@ export function useHostPayouts() {
       active = false;
     };
   }, [load]);
+
+  useRefreshRegistration(load);
 
   return { payouts, symbol, isLoading, error, refetch: load };
 }

@@ -177,6 +177,20 @@ export const venueResolvers = {
       requireRole(ctx, [...ADMIN_REVIEW, 'FINANCE_MANAGER']);
       return venueService.setDeductions(args.venue_doc_id, args.venue_share_pct, args.venue_commission_pct);
     },
+    setVenueCancellationTrigger: async (
+      _p: unknown,
+      args: { venue_doc_id: string; trigger_hours: number; refund_tiers: unknown[] },
+      ctx: GraphQLContext
+    ) => {
+      // Same gate as the deductions above it: it sits in the same review panel
+      // and, like them, decides what money leaves Duncit.
+      requireRole(ctx, [...ADMIN_REVIEW, 'FINANCE_MANAGER']);
+      return venueService.setCancellationTrigger(
+        args.venue_doc_id,
+        args.trigger_hours,
+        args.refund_tiers
+      );
+    },
     updateVenueSettings: async (
       _p: unknown,
       args: { venue_doc_id: string; input: any },

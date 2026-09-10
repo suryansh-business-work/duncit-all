@@ -27,6 +27,7 @@ export { Loader, LoadingOverlay, TopProgressBar } from './loader';
 export type { LoaderProps, LoaderVariant, LoadingOverlayProps, TopProgressBarProps } from './loader';
 export { useDebouncedValue } from './useDebouncedValue';
 export { mergeSx } from './mergeSx';
+export { RICH_TEXT_BODY_SX } from './richTextBodySx';
 export { ModerationBlockedDialog } from './ModerationBlockedDialog';
 export type { BlockedViolation, ModerationBlockedDialogProps } from './ModerationBlockedDialog';
 export { PodParticipationTimeline } from './PodParticipationTimeline';

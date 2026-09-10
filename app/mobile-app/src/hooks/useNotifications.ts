@@ -10,6 +10,7 @@ import {
 import { graphqlRequest } from '@/services/graphql.client';
 import { displayLocalNotification } from '@/services/local-notifications';
 import { useNotificationPrefsStore } from '@/stores/notification-prefs.store';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type NotificationsData = ResultOf<typeof MobileNotificationsDocument>;
 export type UserNotification = NotificationsData['myNotifications'][number];
@@ -59,6 +60,8 @@ export function useNotifications() {
       active = false;
     };
   }, [refetch]);
+
+  useRefreshRegistration(refetch);
 
   // Lightweight real-time refresh (BUG-A): poll on an interval and refetch when
   // the app returns to the foreground, so a newly-arrived notification updates

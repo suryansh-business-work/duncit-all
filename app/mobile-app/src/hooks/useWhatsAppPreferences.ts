@@ -8,6 +8,7 @@ import {
   MobileWhatsappPreferenceDocument,
 } from '@/graphql/whatsapp-preference';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type WhatsAppPreference = ResultOf<
   typeof MobileWhatsappPreferenceDocument
@@ -34,6 +35,9 @@ export function useWhatsAppPreferences() {
   const [saved, setSaved] = useState(false);
   const [busyCategory, setBusyCategory] = useState<string | null>(null);
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let active = true;
     graphqlRequest(MobileWhatsappPreferenceDocument, undefined, { auth: true })
@@ -43,7 +47,9 @@ export function useWhatsAppPreferences() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [attempt]);
+
+  useRefreshRegistration(refetch);
 
   /**
    * One save. The failure is a flag rather than the thrown message, matching

@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Text, XStack } from 'tamagui';
+import { Text, XStack } from 'tamagui';
 import { followActionFor, readFollowStatus } from '@duncit/utils';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -28,6 +28,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { runUserFollowAction } from '@/services/follow-user';
 import { graphqlRequest } from '@/services/graphql.client';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Your Contacts on Duncit — RN twin of mWeb's ContactsPage (rule 27). */
 export function ContactsScreen() {
@@ -74,7 +75,7 @@ export function ContactsScreen() {
 
   return (
     <StackScreen title={t('mweb.contacts.title')} testID="contacts-screen">
-      <ScrollView
+      <RefreshScrollView
         flex={1}
         contentContainerStyle={{ paddingVertical: 16, gap: 16, paddingBottom: 32 }}
       >
@@ -133,7 +134,7 @@ export function ContactsScreen() {
             />
           </XStack>
         ) : null}
-      </ScrollView>
+      </RefreshScrollView>
       <ConfirmDialog
         open={clearOpen}
         title={t('mweb.contacts.clearConfirmTitle')}

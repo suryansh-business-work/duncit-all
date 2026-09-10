@@ -3,7 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { semantic } from '@duncit/auth-tokens';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { DetailSkeleton } from '@/components/Skeleton';
@@ -15,6 +15,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { Translate } from '@/i18n/fallback';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 type QuickRoute = 'CreatePod' | 'HostManage' | 'Verification' | 'Wallet';
@@ -110,7 +111,7 @@ export function HostDashboardScreen() {
 
   return (
     <StackScreen header title={t('mweb.hostDashboard.dashboard')} testID="host-dashboard-screen">
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40 }}>
         <YStack
           padding={18}
           borderRadius={20}
@@ -189,7 +190,7 @@ export function HostDashboardScreen() {
             <MaterialIcons name="chevron-right" size={22} color={muted} />
           </XStack>
         ) : null}
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

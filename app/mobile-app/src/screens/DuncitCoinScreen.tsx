@@ -1,10 +1,11 @@
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { CoinBalanceCard, CoinHistoryList } from '@/components/duncit-coin';
 import { useCoinLedger } from '@/hooks/useCoins';
 import { usePublicFinance } from '@/hooks/usePublicFinance';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Duncit Coin — the consumer's loyalty balance and its full ledger. Coins are
  * earned on every successful payment and spent at checkout. RN twin of mWeb's
@@ -17,7 +18,7 @@ export function DuncitCoinScreen() {
 
   return (
     <StackScreen title={t('mweb.coin.title')} testID="duncit-coin-screen">
-      <ScrollView flex={1} showsVerticalScrollIndicator={false}>
+      <RefreshScrollView flex={1} showsVerticalScrollIndicator={false}>
         <YStack gap={16} padding={16} paddingBottom={48}>
           {error ? (
             <Text testID="coin-error" fontSize={13} color="$danger">
@@ -35,7 +36,7 @@ export function DuncitCoinScreen() {
             <CoinHistoryList transactions={transactions} />
           )}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

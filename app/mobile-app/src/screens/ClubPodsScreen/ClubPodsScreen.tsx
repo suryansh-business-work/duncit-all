@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 import { podRowStatusOptions, type PodRowStatusFilter } from '@duncit/utils';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -17,6 +17,7 @@ import { useDateFormat } from '@/hooks/useDateFormat';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { Translate } from '@/i18n/fallback';
 import type { RootStackParamList } from '@/navigation/types';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** The confirmation line: a delete just done, else what the editor did. */
 function noticeText(kind: string | undefined, deleted: boolean, t: Translate): string | null {
@@ -60,7 +61,7 @@ export function ClubPodsScreen() {
 
   return (
     <StackScreen title={t('mweb.meta.clubPods.title')} testID="club-pods-screen">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={14} padding={16} paddingBottom={48}>
           <PageHeading
             title={t('clubAdmin.pods.clubPods')}
@@ -115,7 +116,7 @@ export function ClubPodsScreen() {
             />
           ) : null}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
       {sheets.sheets}
     </StackScreen>
   );

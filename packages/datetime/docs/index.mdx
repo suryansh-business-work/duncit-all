@@ -10,6 +10,13 @@ consumers:
   - 'packages/app-settings'
 exports:
   - 'createDateFormatter'
+  - 'formatClockTime'
+  - 'usesTwelveHourClock'
+  - 'hourChips'
+  - 'meridiemOf'
+  - 'withMeridiem'
+  - 'twelveHourLabel'
+  - 'MERIDIEMS'
   - 'createClock'
   - 'resolveNow'
   - 'stampServerTime'
@@ -213,6 +220,25 @@ FALLBACK_TIME_FORMAT                              // 'hh:mm a'
 FALLBACK_TIME_ZONE                                // 'Asia/Kolkata'
 ```
 
+### Hour cycle
+
+A native picker draws its own hour strip, so — unlike MUI X, which is handed `ampm` and
+redraws its clock face — it has to be told which hours to offer and what to write on them.
+These say it once, for every such picker.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `usesTwelveHourClock` | `(timeFormat: string | null | undefined) => boolean` | True when the admin's pattern counts hours `h`/`hh`. |
+| `hourChips` | `(twelveHour: boolean, meridiem?: Meridiem) => HourChip[]` | 24 chips labelled `00`…`23`, or the twelve of one half labelled `12, 1 … 11`. |
+| `meridiemOf` | `(hour: number) => Meridiem` | Which half a 0–23 hour falls in. |
+| `withMeridiem` | `(hour: number, meridiem: Meridiem) => number` | The same clock number in the other half — 09 ⇄ 21. |
+| `twelveHourLabel` | `(hour: number) => string` | How a 0–23 hour is written on a 12-hour face; midnight and noon are both `12`. |
+| `MERIDIEMS` | `readonly ['AM', 'PM']` | The halves, in the order a picker offers them. |
+
+`HourChip` is `{ hour: number; label: string }`. The **hour is always 0–23** — only the label
+and the AM/PM row change with the setting, so a draft, a validator or an `'HH:mm'` on the wire
+never learns which clock the admin picked.
+
 ### Occasions
 
 ```ts
@@ -275,8 +301,14 @@ setting can never render a 1970 date.
 | `clock` | `ClockInput` | `{ source: 'BROWSER' }` | Drives `now`, `dayLabel` and occasion matching. |
 
 `DateFormatter` members: `formatDate`, `formatTime`, `formatDateTime`, `dayLabel`, `dayKey`,
-`formatPattern(input, pattern)`, `now()`, plus the resolved `dateFormat` / `timeFormat` /
-`timeZone` / `clock`. Every formatter takes `string | number | Date | null | undefined`.
+`formatPattern(input, pattern)`, `formatDay(isoDay)`, `formatClock(hhmm)`, `now()`, plus the
+resolved `dateFormat` / `timeFormat` / `timeZone` / `clock`. Every formatter takes
+`string | number | Date | null | undefined`.
+
+`formatDay` and `formatClock` are the two that never convert zones. A calendar day and a wall-
+clock time are POSITIONS, not instants: a venue that opens at `09:00` opens at nine on the
+venue's own clock, and reading that through the admin's zone would move it for anyone standing
+elsewhere.
 
 ### Occasions
 
@@ -316,6 +348,8 @@ that need a clean slate call `resetServerTimeStamp()`.
 | Today / Yesterday / date | `dayLabel` |
 | Grouping key, `yyyy-MM-dd` | `dayKey` |
 | A genuine one-off pattern | `formatPattern(input, pattern)` |
+| A stored `yyyy-MM-dd` calendar day | `formatDay` |
+| A stored `HH:mm` wall-clock time | `formatClock` |
 
 Every one of them returns `''` for empty or invalid input rather than throwing — parsing and
 formatting both sit inside the guard, so a hostile date string, an unknown IANA zone or a bad

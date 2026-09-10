@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRoute, type RouteProp } from '@react-navigation/native';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 import {
   buildPodFeedbackInput,
   canSubmitPodFeedback,
@@ -16,6 +16,7 @@ import { useBouncer, type PodFeedbackForm } from '@/hooks/useBouncer';
 import { useGoBack } from '@/hooks/useGoBack';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * The pod rating form as its own screen, behind the link a host shares with
@@ -126,9 +127,9 @@ export function PodFeedbackScreen() {
 
   return (
     <StackScreen title={t('mweb.podFeedback.pageTitle')} testID="pod-feedback-screen">
-      <ScrollView flex={1} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
         <YStack gap={12}>{body}</YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

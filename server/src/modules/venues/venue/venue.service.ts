@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
 import {
+  DEFAULT_CANCELLATION_TRIGGER_HOURS,
   VenueModel,
   type IVenue,
   type IVenueAutoExtend,
@@ -65,6 +66,14 @@ const toAutoExtendPub = (a?: Partial<IVenueAutoExtend> | null) => ({
   until: a?.until ?? '',
 });
 
+/** The refund ladder, widest window first: the widest band the notice still
+ * clears is the one that pays, so reading down the list is reading the refund
+ * falling away as the start time gets closer. */
+const toRefundTiersPub = (tiers?: IVenueCancellationPolicy['refund_tiers'] | null) =>
+  [...(tiers ?? [])]
+    .map((tier) => ({ hours_before: tier.hours_before, refund_pct: tier.refund_pct }))
+    .sort((a, b) => b.hours_before - a.hours_before);
+
 /** The venue's cancellation bands, widest window first — the order the owner
  * reads them in: the tightest band that still covers the cancellation wins. */
 const toCancellationPub = (c?: Partial<IVenueCancellationPolicy> | null) => ({
@@ -76,6 +85,8 @@ const toCancellationPub = (c?: Partial<IVenueCancellationPolicy> | null) => ({
       value: tier.value,
     }))
     .sort((a, b) => b.hours_before - a.hours_before),
+  trigger_hours: c?.trigger_hours ?? DEFAULT_CANCELLATION_TRIGGER_HOURS,
+  refund_tiers: toRefundTiersPub(c?.refund_tiers),
 });
 
 const toSettingsPub = (s?: IVenueSettings | null) => ({
@@ -155,9 +166,45 @@ function normalizeHolidaysInput(input: unknown) {
   return [...new Set(hs)].sort((a, b) => a.localeCompare(b));
 }
 
+/**
+ * The refund ladder as the server will hold it: whole-hour windows, percents
+ * inside 0-100, widest window first.
+ *
+ * Two bands sharing a window is refused for the same reason the charge bands
+ * refuse it — the reader cannot tell which one pays, and the later one would
+ * silently win. Exported so the Onboarding setter and a full settings save
+ * validate the ladder identically.
+ */
+export function normalizeRefundTiers(raw: unknown[]): IVenueCancellationPolicy['refund_tiers'] {
+  const tiers = raw.map((entry) => {
+    const tier = entry as { hours_before: unknown; refund_pct: unknown };
+    const pct = Number(tier.refund_pct);
+    if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+      fail('BAD_USER_INPUT', 'refund percent must be between 0 and 100');
+    }
+    return {
+      hours_before: clampInt(tier.hours_before, 0, 8760, 0),
+      refund_pct: pct,
+    };
+  });
+  const windows = new Set(tiers.map((tier) => tier.hours_before));
+  if (windows.size !== tiers.length) {
+    fail('BAD_USER_INPUT', 'each refund band needs its own "hours before" window');
+  }
+  // A statement, not an expression (S4043) — ES2022 has no `toSorted` here.
+  tiers.sort((a, b) => b.hours_before - a.hours_before);
+  return tiers;
+}
+
 function normalizeCancellationInput(base: ReturnType<typeof toCancellationPub>, input: any) {
   const next = { ...base };
   if (input.reschedule_only !== undefined) next.reschedule_only = Boolean(input.reschedule_only);
+  if (input.trigger_hours !== undefined) {
+    next.trigger_hours = clampInt(input.trigger_hours, 0, 8760, base.trigger_hours);
+  }
+  if (input.refund_tiers !== undefined) {
+    next.refund_tiers = normalizeRefundTiers(input.refund_tiers as unknown[]);
+  }
   if (input.tiers !== undefined) {
     const tiers = (input.tiers as unknown[]).map((raw) => {
       const tier = raw as { hours_before: unknown; charge_type: unknown; value: unknown };
@@ -948,6 +995,36 @@ export const venueService = {
       { new: true }
     );
     if (!v) throw new GraphQLError('Venue not found', { extensions: { code: 'NOT_FOUND' } });
+    return toPub(v);
+  },
+
+  /**
+   * The Onboarding reviewer sets this venue's auto-cancel window and the refund
+   * every enrolled attendee gets when it fires.
+   *
+   * Written with two dotted `$set`s rather than a whole-policy save: the venue
+   * owner edits `reschedule_only` and the charge bands from the Partners console
+   * on the same subdocument, and replacing `settings.cancellation` here would
+   * quietly drop whatever they had last saved.
+   */
+  async setCancellationTrigger(venueId: string, triggerHours: number, refundTiers: unknown[]) {
+    if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue id');
+    const hours = Number(triggerHours);
+    if (!Number.isInteger(hours) || hours < 0 || hours > 8760) {
+      fail('BAD_USER_INPUT', 'Cancellation trigger must be a whole number of hours between 0 and 8760');
+    }
+    const tiers = normalizeRefundTiers(refundTiers ?? []);
+    const v = await VenueModel.findByIdAndUpdate(
+      venueId,
+      {
+        $set: {
+          'settings.cancellation.trigger_hours': hours,
+          'settings.cancellation.refund_tiers': tiers,
+        },
+      },
+      { new: true }
+    );
+    if (!v) return fail('NOT_FOUND', 'Venue not found');
     return toPub(v);
   },
 

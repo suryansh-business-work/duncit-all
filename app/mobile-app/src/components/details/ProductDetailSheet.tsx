@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { ResultOf } from '@graphql-typed-document-node/core';
@@ -25,6 +25,7 @@ import { toErrorMessage } from '@/utils/errors';
 import { selectionKey } from '@/utils/product-selection';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView, useRefreshRegistration } from '@/components/PullToRefresh';
 
 type Product = NonNullable<
   ResultOf<typeof PublicInventoryProductDocument>['publicInventoryProduct']
@@ -250,7 +251,7 @@ function ProductBody({
   const specs = productSpecs(selectedVariant ? { ...product, ...selectedVariant } : product);
 
   return (
-    <ScrollView paddingHorizontal={16}>
+    <RefreshScrollView paddingHorizontal={16}>
       <YStack gap={12} paddingBottom={12}>
         {images.length > 0 ? <ImageStrip images={images} onZoom={onZoom} /> : null}
         <Text testID="product-detail-name" fontSize={18} fontWeight="700" color="$color">
@@ -293,7 +294,7 @@ function ProductBody({
         />
         <ProductReviews productId={product.id} />
       </YStack>
-    </ScrollView>
+    </RefreshScrollView>
   );
 }
 
@@ -316,6 +317,8 @@ export function ProductDetailSheet({
   const [zoomIndex, setZoomIndex] = useState<number | null>(null);
   const [brandOpen, setBrandOpen] = useState<string | null>(null);
   const [variantId, setVariantId] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
     if (!productId) return;
@@ -343,7 +346,9 @@ export function ProductDetailSheet({
     return () => {
       active = false;
     };
-  }, [productId]);
+  }, [productId, attempt]);
+
+  useRefreshRegistration(refetch);
 
   const pickVariant = (id: string) => {
     setVariantId(id);

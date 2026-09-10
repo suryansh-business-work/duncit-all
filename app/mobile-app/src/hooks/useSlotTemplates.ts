@@ -8,6 +8,7 @@ import {
   MySlotTemplatesDocument,
 } from '@/graphql/venue-availability';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type SlotTemplate = ResultOf<typeof MySlotTemplatesDocument>['mySlotTemplates'][number];
 export type SlotTemplateInput = VariablesOf<typeof CreateSlotTemplateDocument>['input'];
@@ -23,6 +24,8 @@ export function useSlotTemplates(venueId: string | null) {
   const [attempt, setAttempt] = useState(0);
 
   const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
+  useRefreshRegistration(refetch);
 
   useEffect(() => {
     if (!venueId) return undefined;

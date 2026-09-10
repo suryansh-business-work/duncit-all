@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 import { clubAdminRangeFrom, emptyClubAdminDashboard, type ClubAdminRange } from '@duncit/utils';
 
 import { ClubAdminDashboardDocument } from '@/graphql/club-admin';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 import { appNow } from '@/utils/app-formatter';
 
 export type ClubAdminDashboardData = ResultOf<
@@ -20,6 +21,7 @@ export function useClubAdminDashboard(range: ClubAdminRange) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
     let active = true;
@@ -38,5 +40,7 @@ export function useClubAdminDashboard(range: ClubAdminRange) {
     };
   }, [range, attempt]);
 
-  return { data, isLoading, hasError, refetch: () => setAttempt((value) => value + 1) };
+  useRefreshRegistration(refetch);
+
+  return { data, isLoading, hasError, refetch };
 }

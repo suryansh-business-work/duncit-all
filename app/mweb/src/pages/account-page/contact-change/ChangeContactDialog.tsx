@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Alert, Dialog, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import {
   buildContactChangeLabels,
+  contactChangeNeedsOtp,
   contactDraftFrom,
-  contactDraftIsUnchanged,
+  contactSubmitAction,
   type ContactChannel,
   type ContactDraft,
   type ContactSnapshot,
@@ -24,12 +25,15 @@ interface Props {
 }
 
 /**
- * Changing one contact detail, proved by a code sent to the new value.
+ * Changing one contact detail.
  *
- * One dialog for all three channels rather than three: the two steps, the
- * refusals and the wording are identical, and only the box in step one differs
- * — which is a prop, not a screen. Its Tamagui twin is the native app's
- * <ChangeContactSheet/>; the logic both drive lives in @duncit/utils (rule 40).
+ * One dialog for all three channels rather than three: the refusals and the
+ * wording are identical, and only the box in step one differs — which is a
+ * prop, not a screen. The address and the WhatsApp number are proved by a code
+ * sent to the new value; the contact number is stored the moment step one is
+ * submitted, so for it there is no second step and nothing to explain about a
+ * code. Its Tamagui twin is the native app's <ChangeContactSheet/>; the logic
+ * both drive lives in @duncit/utils (rule 40).
  */
 export default function ChangeContactDialog({
   channel,
@@ -61,14 +65,24 @@ export default function ChangeContactDialog({
 
   const copy = labels.channel(active);
   const { state } = change;
+  const needsCode = contactChangeNeedsOtp(active);
 
-  const handleSend = (next: ContactDraft) => {
-    if (contactDraftIsUnchanged(snapshot, active, next)) {
+  const handleSend = async (next: ContactDraft) => {
+    const action = contactSubmitAction(snapshot, active, next);
+    if (action === 'UNCHANGED') {
       change.setError(labels.unchanged);
       return;
     }
     setDraft(next);
-    change.sendCode(next);
+    if (action === 'SEND_CODE') {
+      change.sendCode(next);
+      return;
+    }
+    // Closed here, not from the hook: only this dialog holds what was stored.
+    if (await change.saveWithoutCode(next)) {
+      onSaved(active, next);
+      onClose();
+    }
   };
 
   return (
@@ -98,9 +112,11 @@ export default function ChangeContactDialog({
               onEditValue={change.editValue}
             />
           )}
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            {labels.whyOtp}
-          </Typography>
+          {needsCode && (
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              {labels.whyOtp}
+            </Typography>
+          )}
         </Stack>
       </DialogContent>
     </Dialog>

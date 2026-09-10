@@ -14,6 +14,7 @@ import { UploadImageDocument } from '@/graphql/status';
 import { VerificationType } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type Verification = ResultOf<typeof MyVerificationsDocument>['myVerifications'][number];
 
@@ -66,6 +67,8 @@ export function useVerifications() {
       active = false;
     };
   }, [load]);
+
+  useRefreshRegistration(load);
 
   const pickImage = useCallback(async (): Promise<PickedDoc | null> => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();

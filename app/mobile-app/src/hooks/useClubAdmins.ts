@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { ClubAdminsDocument } from '@/graphql/host-manage';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 type ClubAdminsResult = NonNullable<ResultOf<typeof ClubAdminsDocument>['club']>;
 export type ClubAdmin = ClubAdminsResult['club_admins'][number];
@@ -14,6 +15,9 @@ export function useClubAdmins(clubId: string | null) {
   const [admins, setAdmins] = useState<ClubAdmin[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
     // A closed sheet keeps what it had so it can fade out on the content the
@@ -31,7 +35,9 @@ export function useClubAdmins(clubId: string | null) {
     return () => {
       active = false;
     };
-  }, [clubId]);
+  }, [clubId, attempt]);
+
+  useRefreshRegistration(refetch);
 
   return { admins, isLoading, hasError };
 }

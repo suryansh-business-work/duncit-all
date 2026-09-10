@@ -4,6 +4,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 import { FollowingPeopleDocument } from '@/graphql/following';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useFollowingStore, type FollowingData } from '@/stores/following.store';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type FollowedPerson = ResultOf<typeof FollowingPeopleDocument>['publicUsersByIds'][number];
 export type FollowedClub = NonNullable<FollowingData['clubs']>[number];
@@ -53,6 +54,8 @@ export function useFollowing() {
   // that refetches then loops. See the ~35,000-request incident in useSupport.
 
   const refetch = useCallback(() => fetch(true), [fetch]);
+
+  useRefreshRegistration(refetch);
 
   return {
     people,

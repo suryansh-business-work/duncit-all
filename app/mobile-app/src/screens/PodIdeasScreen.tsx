@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Share } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Input, ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Input, Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import {
@@ -23,6 +23,7 @@ import { shareUrl } from '@/services/share-link';
 import { POD_WEB_BASE } from '@/utils/pod-format';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Pod Ideas board — searchable community ideas with submit, like, share and a
  * comment thread. RN port of mWeb's PodIdeasPage. */
@@ -141,7 +142,7 @@ export function PodIdeasScreen() {
         />
       </XStack>
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 12, paddingBottom: 32 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, paddingTop: 12, paddingBottom: 32 }}>
         {/* The two filter groups and the list are one stack with a real gap:
             as siblings they sat flush, which is why the chips ran straight into
             "Your submissions" with no breathing room. */}
@@ -168,7 +169,7 @@ export function PodIdeasScreen() {
           onShare={onShareIdea}
           onDelete={setConfirmDeleteId}
         />
-      </ScrollView>
+      </RefreshScrollView>
 
       <IdeaComposerSheet
         open={composerOpen}

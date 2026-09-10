@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 
 import { HealthBreakdown, HealthMeter } from '@/components/health';
 import { StackScreen } from '@/components/StackScreen';
 import { useAccountHealth } from '@/hooks/useHealth';
 import { toErrorMessage } from '@/utils/errors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Account Health detail — meter + score breakdown + admin remarks.
  * RN twin of mWeb's AccountHealthPage. */
@@ -28,7 +29,7 @@ export function AccountHealthScreen() {
     );
   } else if (health) {
     body = (
-      <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 20 }}>
+      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 20 }}>
         <YStack alignItems="center">
           <HealthMeter
             score={health.total_score}
@@ -37,7 +38,7 @@ export function AccountHealthScreen() {
           />
         </YStack>
         <HealthBreakdown score={health} />
-      </ScrollView>
+      </RefreshScrollView>
     );
   } else {
     body = (

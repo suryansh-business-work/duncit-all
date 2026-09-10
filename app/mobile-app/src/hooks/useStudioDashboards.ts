@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 import { pickVenue } from '@duncit/utils';
 
@@ -8,6 +8,7 @@ import {
   VenuePodsDocument,
 } from '@/graphql/studio-dashboard';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type DashboardVenue = ResultOf<typeof VenueDashboardDocument>['myVenues'][number];
 export type DashboardProduct = ResultOf<
@@ -29,6 +30,9 @@ export function useVenueDashboard() {
   const [podDates, setPodDates] = useState<(string | null)[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let active = true;
     graphqlRequest(VenueDashboardDocument, undefined, { auth: true })
@@ -38,7 +42,9 @@ export function useVenueDashboard() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [attempt]);
+
+  useRefreshRegistration(refetch);
 
   const venue = pickVenue(venues, selectedId);
   const venueId = venue?.id ?? null;
@@ -63,6 +69,9 @@ export function useEcommDashboard(enabled = true) {
   const [products, setProducts] = useState<DashboardProduct[]>([]);
   const [isLoading, setIsLoading] = useState(enabled);
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     if (!enabled) return undefined;
     let active = true;
@@ -73,7 +82,9 @@ export function useEcommDashboard(enabled = true) {
     return () => {
       active = false;
     };
-  }, [enabled]);
+  }, [enabled, attempt]);
+
+  useRefreshRegistration(refetch);
 
   return { products, isLoading };
 }

@@ -13,6 +13,7 @@ import {
   CONFIRM_PHONE_CHANGE,
   REQUEST_EMAIL_CHANGE_OTP,
   REQUEST_PHONE_CHANGE_OTP,
+  SET_CONTACT_PHONE_NUMBER,
 } from './queries';
 
 /** What the dialog needs to render, however the change is going. */
@@ -50,6 +51,7 @@ export function useContactChange(channel: ContactChannel, onSaved: () => void) {
   const [confirmPhone] = useMutation<any>(CONFIRM_PHONE_CHANGE);
   const [requestEmail] = useMutation<any>(REQUEST_EMAIL_CHANGE_OTP);
   const [confirmEmail] = useMutation<any>(CONFIRM_EMAIL_CHANGE);
+  const [setPhone] = useMutation<any>(SET_CONTACT_PHONE_NUMBER);
 
   const reset = useCallback(() => setState(INITIAL), []);
 
@@ -95,6 +97,23 @@ export function useContactChange(channel: ContactChannel, onSaved: () => void) {
     [channel, requestEmail, requestPhone],
   );
 
+  /** The contact number's whole flow: stored on submit, no code. Answers
+   * whether it landed, because only the dialog holds the draft it stored. */
+  const saveWithoutCode = useCallback(
+    async (draft: ContactDraft) => {
+      setState((p) => ({ ...p, sending: true, error: null }));
+      try {
+        await setPhone({ variables: { ext: draft.extension, num: draft.number } });
+        setState(INITIAL);
+        return true;
+      } catch (e) {
+        setState((p) => ({ ...p, sending: false, error: parseApiError(e) }));
+        return false;
+      }
+    },
+    [setPhone],
+  );
+
   const verify = useCallback(
     async (draft: ContactDraft, otp: string) => {
       setState((p) => ({ ...p, verifying: true, error: null }));
@@ -117,5 +136,5 @@ export function useContactChange(channel: ContactChannel, onSaved: () => void) {
     [channel, confirmEmail, confirmPhone, onSaved],
   );
 
-  return { state, sendCode, verify, editValue, reset, setError };
+  return { state, sendCode, saveWithoutCode, verify, editValue, reset, setError };
 }

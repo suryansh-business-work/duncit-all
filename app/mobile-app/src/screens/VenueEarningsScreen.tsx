@@ -1,11 +1,12 @@
 import { neutral, semantic } from '@duncit/auth-tokens';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { EarningsSummaryTiles } from '@/components/earnings/EarningsSummaryTiles';
 import { useVenueEarnings, type VenuePayout } from '@/hooks/useVenueEarnings';
 import { formatDate } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 const STATUS_BG: Record<string, string> = {
   PENDING: semantic.warning,
@@ -88,7 +89,7 @@ export function VenueEarningsScreen() {
 
   return (
     <StackScreen header title={t('mweb.venueEarnings.earnings')} testID="venue-earnings-screen">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={16} padding={16} paddingBottom={48}>
           {isLoading ? <Spinner testID="venue-earnings-loading" color="$primary" /> : null}
           {summary ? <EarningsSummaryTiles summary={summary} /> : null}
@@ -104,7 +105,7 @@ export function VenueEarningsScreen() {
             <PayoutCard key={payout.id} payout={payout} symbol={symbol} />
           ))}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

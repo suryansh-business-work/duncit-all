@@ -3,6 +3,7 @@ import { toggleInviteKey, type InvitableContact, type InviteBulkPress } from '@d
 
 import { ContactsToInviteDocument, InviteContactsDocument } from '@/graphql/contacts';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 const DEBOUNCE_MS = 350;
 
@@ -70,6 +71,8 @@ export function useContactsInvite(search: string, active: boolean) {
     }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [active, load]);
+
+  useRefreshRegistration(load);
 
   const toggleSelect = useCallback(
     (key: string) => setSelected((current) => toggleInviteKey(current, key)),

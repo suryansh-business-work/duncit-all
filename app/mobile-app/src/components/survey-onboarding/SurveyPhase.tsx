@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { ScrollView } from 'react-native';
 import { Button, Input, Text, TextArea, XStack, YStack } from 'tamagui';
 
 import { useBottomInset } from '@/hooks/useBottomNavSpace';
@@ -7,6 +6,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ActiveSurvey, SurveyQuestion } from '@/graphql/onboarding-survey';
 import type { Answer } from './useOnboardingFlow';
 import { splitSections } from './surveySections';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 interface Props {
   survey: ActiveSurvey;
@@ -70,7 +70,7 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
   if (!active) return null;
 
   return (
-    <ScrollView
+    <RefreshScrollView
       contentContainerStyle={{ padding: 16, paddingBottom: bottomInset + 16, gap: 16 }}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="interactive"
@@ -178,6 +178,6 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
           {primaryLabel}
         </Button>
       </XStack>
-    </ScrollView>
+    </RefreshScrollView>
   );
 }

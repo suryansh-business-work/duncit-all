@@ -91,12 +91,24 @@ export const venueTypeDefs = /* GraphQL */ `
     value: Float!
   }
 
+  "One refund band of the venue's auto-cancellation ladder — a pod cancelled with MORE than hours_before hours still to run refunds this share of the ticket money."
+  type VenueCancellationRefundTier {
+    "Notice, in hours, this band needs. The widest matching band wins, so more notice never refunds less."
+    hours_before: Int!
+    "Share of the attendee's ticket money returned (0-100)."
+    refund_pct: Float!
+  }
+
   "What a venue owner charges for a late cancellation, or whether they take one at all."
   type VenueCancellationPolicy {
     "Bookings may only be rescheduled, never cancelled. The bands do not apply while this is on."
     reschedule_only: Boolean!
     "Ordered widest window first."
     tiers: [VenueCancellationTier!]!
+    "Hours before a pod starts within which a pod at this venue is auto-cancelled while its finance stays negative against the venue's potential earnings. Defaults to 6."
+    trigger_hours: Int!
+    "The refund every enrolled attendee gets when that auto-cancel fires, widest window first. Empty refunds in full."
+    refund_tiers: [VenueCancellationRefundTier!]!
   }
 
   type VenueSettings {
@@ -137,9 +149,16 @@ export const venueTypeDefs = /* GraphQL */ `
     value: Float!
   }
 
+  input VenueCancellationRefundTierInput {
+    hours_before: Int!
+    refund_pct: Float!
+  }
+
   input VenueCancellationPolicyInput {
     reschedule_only: Boolean
     tiers: [VenueCancellationTierInput!]
+    trigger_hours: Int
+    refund_tiers: [VenueCancellationRefundTierInput!]
   }
 
   input VenueSettingsInput {
@@ -389,6 +408,8 @@ export const venueTypeDefs = /* GraphQL */ `
     ): Venue!
     setVenueActive(venue_doc_id: ID!, active: Boolean!): Venue!
     setVenueDeductions(venue_doc_id: ID!, venue_share_pct: Float!, venue_commission_pct: Float!): Venue!
+    "Onboarding review: how long before a pod starts a finance-negative pod at this venue is auto-cancelled, and what its attendees are refunded."
+    setVenueCancellationTrigger(venue_doc_id: ID!, trigger_hours: Int!, refund_tiers: [VenueCancellationRefundTierInput!]!): Venue!
     "Owner (or admin) updates operating hours, weekly-off, holidays + booking rules."
     updateVenueSettings(venue_doc_id: ID!, input: VenueSettingsInput!): Venue!
     "Venue owner cancels an UPCOMING pod booked at their venue: refunds every successful attendee payment, emails the audience and deducts the Account Health penalty configured in Admin > Pods > Pod Settings."

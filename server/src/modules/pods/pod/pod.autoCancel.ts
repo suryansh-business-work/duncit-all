@@ -1,19 +1,25 @@
 /**
  * Auto-cancellation of finance-negative pods (Admin > Pods > Pod Settings).
  *
- * Inside the admin-configured lead window before a pod starts, the sweep runs
- * the same unclamped settlement waterfall the live Finance breakdown shows: if
- * the pool after GST, the platform fee and the club-admin cut cannot cover the
- * venue's booked slot price (`host_receives < 0`), completing the pod would
- * settle the host at ₹0 and leave Duncit eating the shortfall — so the pod is
- * cancelled while the venue's cancellation policy still gives attendees the
- * best refund it ever will.
+ * Inside the lead window before a pod starts, the sweep runs the same unclamped
+ * settlement waterfall the live Finance breakdown shows: if the pool after GST,
+ * the platform fee and the club-admin cut cannot cover the venue's booked slot
+ * price (`host_receives < 0`), completing the pod would settle the host at ₹0
+ * and leave Duncit eating the shortfall — so the pod is cancelled while the
+ * venue's refund ladder still gives attendees the best refund it ever will.
  *
- * The refund percentage comes from THAT venue's policy bands, not a global
- * constant: the tightest band covering "now" is the charge withheld, no
- * covering band means a full refund, and a `reschedule_only` venue is skipped
- * entirely — the platform does not force a cancellation on a venue that has
- * taken cancelling off the table; that pod is left for an operator to resolve.
+ * That window is per-venue: `settings.cancellation.trigger_hours` (Onboarding >
+ * Onboarded Venues > Review, default 6) is how close to the start a pod at THAT
+ * venue may still be cancelled. A pod with no venue behind it — a virtual pod —
+ * falls to the platform-wide lead hours in Admin > Pods > Pod Settings, which is
+ * also the switch that turns the whole sweep on.
+ *
+ * The refund percentage comes from THAT venue's refund ladder, not a global
+ * constant: the widest band the remaining notice still clears is what attendees
+ * get back, a ladder with no matching band refunds nothing, an empty ladder
+ * refunds in full, and a `reschedule_only` venue is skipped entirely — the
+ * platform does not force a cancellation on a venue that has taken cancelling
+ * off the table; that pod is left for an operator to resolve.
  *
  * The cancellation itself goes through `podService.systemCancelPod`, whose
  * inner soft-delete is a CAS on `deleted_at: null` — a duplicate sweep, or a
@@ -24,7 +30,11 @@ import { PodModel } from './pod.model';
 import { podService } from './pod.service';
 import { podLifecycleFilter } from './pod.lifecycle';
 import { podFinanceNow, runPodCancellationRiskSweep } from './pod.cancellationRisk';
-import { VenueModel, type IVenueCancellationPolicy } from '@modules/venues/venue/venue.model';
+import {
+  DEFAULT_CANCELLATION_TRIGGER_HOURS,
+  VenueModel,
+  type IVenueCancellationPolicy,
+} from '@modules/venues/venue/venue.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { logs } from '@observability/log';
 
@@ -39,36 +49,37 @@ const AUTO_CANCEL_REASON =
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
 
 /**
- * The refund share the venue's policy leaves the attendees, for a cancellation
- * `hoursUntilStart` before the slot. `value` is the charge the venue KEEPS —
- * PERCENT is a share of the booked slot price (`venueAmount`), AMOUNT a flat
- * sum; either way it is a venue-level charge, so it is spread across the pod's
- * collected ticket money as an effective percent. A cancellation no band covers
- * (or an empty policy) refunds in full. Returns null when the venue is
+ * The share of their ticket money the venue's refund ladder leaves the
+ * attendees, for a cancellation `hoursUntilStart` before the pod starts.
+ *
+ * A band pays when the notice CLEARS it, and the widest band it clears is the
+ * one that pays — so more notice can never buy a worse refund. A ladder no band
+ * matches refunds nothing (the operator wrote a floor and this is under it),
+ * while a venue with no ladder at all refunds in full, which is what every
+ * venue does until Onboarding sets one. Returns null when the venue is
  * reschedule_only — cancellation is off the table there.
  */
 export function autoCancelRefundPct(
   policy: IVenueCancellationPolicy | null | undefined,
-  hoursUntilStart: number,
-  collected: number,
-  venueAmount: number
+  hoursUntilStart: number
 ): number | null {
   if (policy?.reschedule_only) return null;
-  const covering = (policy?.tiers ?? []).filter((t) => hoursUntilStart <= t.hours_before);
-  if (covering.length === 0) return 100;
-  // Tightest covering band wins (tiers are stored widest-first).
-  const band = covering.reduce(
-    (a, b) => (b.hours_before < a.hours_before ? b : a),
-    covering[0]
-  );
-  let charge: number;
-  if (band.charge_type === 'AMOUNT') {
-    charge = Math.max(0, band.value);
-  } else {
-    charge = (Math.min(100, Math.max(0, band.value)) / 100) * venueAmount;
-  }
-  const chargePct = collected > 0 ? Math.min(100, (charge / collected) * 100) : 0;
-  return Math.max(0, 100 - chargePct);
+  const tiers = policy?.refund_tiers ?? [];
+  if (tiers.length === 0) return 100;
+  const cleared = tiers.filter((tier) => hoursUntilStart > tier.hours_before);
+  if (cleared.length === 0) return 0;
+  // Widest cleared band wins (tiers are stored widest-first).
+  const band = cleared.reduce((a, b) => (b.hours_before > a.hours_before ? b : a), cleared[0]);
+  return Math.min(100, Math.max(0, Number(band.refund_pct) || 0));
+}
+
+/** How close to the start a pod at this venue may still be auto-cancelled.
+ * Venues onboarded before the field existed hold no number of their own and
+ * answer to the same 6 hours a new venue is created with, so the window never
+ * silently differs between two venues an operator never edited. */
+export function venueTriggerHours(policy: IVenueCancellationPolicy | null | undefined): number {
+  const hours = Number(policy?.trigger_hours);
+  return Number.isFinite(hours) ? hours : DEFAULT_CANCELLATION_TRIGGER_HOURS;
 }
 
 /** Evaluate one candidate pod; cancel it when it is loss-making. Returns true
@@ -76,20 +87,26 @@ export function autoCancelRefundPct(
  * `podFinanceNow` — the one waterfall the risk flag, the risk alerts and the
  * Finance breakdown all read, so the sweep can never cancel a pod the admin
  * page called healthy. */
-async function cancelIfNegative(pod: any, now: number): Promise<boolean> {
-  const { negative, collected, venueAmount } = await podFinanceNow(pod);
-  if (!negative) return false;
-
+async function cancelIfNegative(pod: any, now: number, platformLeadHours: number): Promise<boolean> {
   const venue: any = pod.venue_id
     ? await VenueModel.findById(pod.venue_id).select('settings.cancellation').lean()
     : null;
   const hoursUntilStart = (new Date(pod.pod_date_time).getTime() - now) / HOUR_MS;
-  const refundPct = autoCancelRefundPct(
-    venue?.settings?.cancellation,
-    hoursUntilStart,
-    collected,
-    venueAmount
-  );
+  // The venue's own trigger, not the query window: the sweep reads out to the
+  // widest trigger any venue holds, so a pod whose venue triggers later is seen
+  // — and left alone — until its own window opens. It still has that long to
+  // sell the seats that would make it whole.
+  //
+  // Checked BEFORE the waterfall on purpose: a lean read of one subdocument is
+  // far cheaper than pricing a pod, and most pods in the read window are not in
+  // their own yet.
+  const triggerHours = venue ? venueTriggerHours(venue.settings?.cancellation) : platformLeadHours;
+  if (hoursUntilStart > triggerHours) return false;
+
+  const { negative } = await podFinanceNow(pod);
+  if (!negative) return false;
+
+  const refundPct = autoCancelRefundPct(venue?.settings?.cancellation, hoursUntilStart);
   if (refundPct === null) {
     logs.server.warn('pod-auto-cancel', 'cancelIfNegative', {
       pod_id: String(pod._id),
@@ -115,6 +132,19 @@ async function cancelIfNegative(pod: any, now: number): Promise<boolean> {
   return true;
 }
 
+/** The widest auto-cancel window any venue holds. The read window has to reach
+ * it or a venue whose trigger is longer than the platform lead hours would
+ * never have its pods looked at at all. One grouped read per sweep. */
+async function widestVenueTriggerHours(): Promise<number> {
+  const [row] = await VenueModel.aggregate<{ max: number }>([
+    { $group: { _id: null, max: { $max: '$settings.cancellation.trigger_hours' } } },
+  ]);
+  const max = Number(row?.max);
+  // No venue carries the field yet (or there are no venues): every one of them
+  // answers to the same default, so that is how far out to read.
+  return Number.isFinite(max) ? Math.max(max, DEFAULT_CANCELLATION_TRIGGER_HOURS) : DEFAULT_CANCELLATION_TRIGGER_HOURS;
+}
+
 /**
  * One sweep: evaluate every live pod starting inside the lead window and cancel
  * the loss-making ones. Exported so it can be run on demand. Returns how many
@@ -125,6 +155,10 @@ export async function runPodAutoCancelSweep(): Promise<number> {
   if (!settings.enabled) return 0;
 
   const now = Date.now();
+  // Read out to whichever is further: the platform lead hours (which is what a
+  // venue-less pod answers to) or the widest venue trigger. Each pod is then
+  // gated on its OWN window inside cancelIfNegative.
+  const windowHours = Math.max(settings.lead_hours, await widestVenueTriggerHours());
   // Soonest first, and the WHOLE window: a healthy pod stays a candidate until
   // it starts, so a capped unsorted read would re-check the same head every
   // tick and never reach a loss-making pod behind it. Overlap between ticks is
@@ -134,7 +168,7 @@ export async function runPodAutoCancelSweep(): Promise<number> {
     is_active: true,
     pod_date_time: {
       $gt: new Date(now),
-      $lte: new Date(now + settings.lead_hours * HOUR_MS),
+      $lte: new Date(now + windowHours * HOUR_MS),
     },
   })
     .sort({ pod_date_time: 1 })
@@ -143,7 +177,7 @@ export async function runPodAutoCancelSweep(): Promise<number> {
   let cancelled = 0;
   for await (const pod of cursor) {
     try {
-      if (await cancelIfNegative(pod, now)) cancelled += 1;
+      if (await cancelIfNegative(pod, now, settings.lead_hours)) cancelled += 1;
     } catch (error) {
       // One pod's failure never aborts the sweep — the next tick retries it.
       logs.server.error('pod-auto-cancel', 'cancelIfNegative', {

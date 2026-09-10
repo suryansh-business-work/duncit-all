@@ -152,3 +152,25 @@ export function parseLocalDateTimeInput(value: string): Date | null {
   );
   return Number.isNaN(date.getTime()) ? null : date;
 }
+
+const CLOCK_TIME = /^(\d{1,2}):(\d{2})$/;
+
+/**
+ * Render a bare 'HH:mm' wall-clock time in `pattern`, with NO zone conversion.
+ *
+ * The time-only twin of `formatIsoDay`. A venue's opening hour is a position on
+ * a clock, not an instant: building a Date for it and reading that back through
+ * the admin's zone would move it for every viewer standing somewhere else.
+ */
+export function formatClockTime(value: string, pattern: string): string {
+  const parts = CLOCK_TIME.exec(value ?? '');
+  if (!parts) return '';
+  const hours = Number(parts[1]);
+  const minutes = Number(parts[2]);
+  if (hours > 23 || minutes > 59) return '';
+  try {
+    return fmtFn(new Date(2000, 0, 1, hours, minutes), pattern);
+  } catch {
+    return '';
+  }
+}

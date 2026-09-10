@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Spinner, Text, YStack } from 'tamagui';
 
@@ -13,6 +12,7 @@ import { useSurveyData, useSurveyTree } from '@/hooks/useSurvey';
 import { useAuthStore } from '@/stores/auth.store';
 import { useSurveyStore } from '@/stores/survey.store';
 import { toErrorMessage } from '@/utils/errors';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 export function SurveyScreen() {
   const { data, isLoading, error } = useSurveyData();
@@ -82,7 +82,7 @@ export function SurveyScreen() {
           <SurveyProgress value={progress} />
         </YStack>
 
-        <ScrollView
+        <RefreshScrollView
           testID="survey-screen"
           contentContainerStyle={{
             paddingHorizontal: 20,
@@ -113,7 +113,7 @@ export function SurveyScreen() {
               {opError}
             </Text>
           ) : null}
-        </ScrollView>
+        </RefreshScrollView>
       </SafeAreaView>
 
       <SurveyFooter

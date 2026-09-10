@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 
 import { useSuperCategoryStore } from '@/stores/super-category.store';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /** Loads the super categories and exposes the selected slug + its id (for
  * filtering the feeds by the club's `super_category_id`). */
@@ -14,6 +15,8 @@ export function useSuperCategories() {
   useEffect(() => {
     fetch();
   }, [fetch]);
+
+  useRefreshRegistration(() => fetch(true));
 
   const superCats = useMemo(() => data?.categories ?? [], [data?.categories]);
 

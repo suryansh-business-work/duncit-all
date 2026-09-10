@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Input, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import {
   PodHistoryCard,
@@ -22,6 +22,7 @@ import {
 } from '@/utils/pod-history';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Pod History — the pods the user has joined, with a search box over the list
  * and a top-right Filter (Super → Category) and Sort (date / price). RN twin of
@@ -84,7 +85,7 @@ export function PodHistoryScreen() {
     );
   } else if (hasHistory) {
     body = (
-      <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 10 }}>
+      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 10 }}>
         <YStack gap={2} marginBottom={4}>
           <Text fontSize={20} fontWeight="700" color="$color">
             {t('mweb.podHistory.joinedPods')}
@@ -137,7 +138,7 @@ export function PodHistoryScreen() {
             />
           ))
         )}
-      </ScrollView>
+      </RefreshScrollView>
     );
   } else {
     body = (

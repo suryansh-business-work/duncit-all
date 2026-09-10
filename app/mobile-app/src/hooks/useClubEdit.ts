@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import type { UpdateClubInput } from '@/generated/graphql/graphql';
 import { ClubAdminClubDocument, ClubAdminUpdateClubDocument } from '@/graphql/club-admin';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type EditableClub = NonNullable<ResultOf<typeof ClubAdminClubDocument>['club']>;
 
@@ -17,6 +18,7 @@ export function useClubEdit(clubId: string) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
     let active = true;
@@ -39,12 +41,14 @@ export function useClubEdit(clubId: string) {
     );
   };
 
+  useRefreshRegistration(refetch);
+
   return {
     club,
     isLoading,
     hasError,
     notFound: !isLoading && !hasError && !club,
-    refetch: () => setAttempt((value) => value + 1),
+    refetch,
     save,
   };
 }

@@ -3,7 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Text, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
 import { EarnBox } from '@/components/earn/EarnBox';
 import { EarnMeetingActions } from '@/components/earn/EarnMeetingActions';
@@ -23,6 +23,7 @@ import {
   type EarnMeeting,
 } from '@duncit/onboarding';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 // Journeys, copy and the locked/unlocked rules are shared with mWeb and the
 // partner portal so the three cannot drift (they already had — this screen's
@@ -71,7 +72,7 @@ export function EarnScreen() {
 
   return (
     <StackScreen title={t('mweb.earn.earnWithDuncit')} testID="earn-screen">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={14} padding={16} paddingBottom={40}>
           <Text fontSize={13} color="$muted">
             Pick a way to start earning on Duncit.
@@ -106,7 +107,7 @@ export function EarnScreen() {
             );
           })}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

@@ -183,7 +183,12 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/account" element={withAuth(<AccountPage />)} />
         <Route path="/club/:clubSlug" element={withAuth(<ClubDetailsPage />)} />
         <Route path="/venue/:venueId" element={<VenueDetailsPage />} />
-        <Route path="/venues" element={withAuth(<VenuesPage locationId={locationId} />)} />
+        <Route
+          path="/venues"
+          element={withAuth(
+            <VenuesPage locationId={locationId} superCategorySlug={superCategory} />
+          )}
+        />
         <Route path="/club/:clubSlug/pod/:podSlug" element={withAuth(<PodDetailsPage />)} />
         {/* The rating link a host shares with their guests. Auth-gated like
             every other page, so an unread link parks in `?redirect` and opens

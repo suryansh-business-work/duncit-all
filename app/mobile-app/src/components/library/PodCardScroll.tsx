@@ -1,9 +1,10 @@
 import { useWindowDimensions } from 'react-native';
-import { ScrollView, Text } from 'tamagui';
+import { Text } from 'tamagui';
 
 import { PodCard } from '@/components/home/PodCard';
 import { ListSkeleton } from '@/components/Skeleton';
 import type { SavedPod } from '@/hooks/useSavedPods';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 interface PodCardScrollProps {
   pods: SavedPod[];
@@ -30,7 +31,7 @@ export function PodCardScroll({
   }
 
   return (
-    <ScrollView
+    <RefreshScrollView
       flex={1}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 24 }}
@@ -50,6 +51,6 @@ export function PodCardScroll({
           <PodCard key={pod.id} pod={pod} width={cardWidth} onPress={() => onOpen(pod)} />
         ))
       )}
-    </ScrollView>
+    </RefreshScrollView>
   );
 }

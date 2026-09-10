@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import { autoPodActionable, autoPodWithdrawable, type AutoPodRow } from '@duncit/utils';
 
 import { StackScreen } from '@/components/StackScreen';
@@ -12,6 +12,7 @@ import {
 } from '@/components/auto-pods';
 import { useAutoPodScreen } from '@/hooks/useAutoPodScreen';
 import { useLocations } from '@/hooks/useLocations';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Club Admin > Auto Pods — offers in the categories this admin's clubs carry,
@@ -63,7 +64,7 @@ export function ClubAutoPodsScreen() {
 
   return (
     <StackScreen title={labels.clubTitle} testID="club-auto-pods-screen">
-      <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
         <YStack gap={14}>
           <AutoPodLocationRow labels={labels} />
           <AutoPodQueue
@@ -79,7 +80,7 @@ export function ClubAutoPodsScreen() {
             renderMineAction={renderMineAction}
           />
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
 
       <AutoPodWithdrawSheet
         row={withdrawing}

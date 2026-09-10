@@ -3,7 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ResultOf } from '@graphql-typed-document-node/core';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import {
   CheckoutSuccess,
@@ -39,6 +39,7 @@ import { toErrorMessage } from '@/utils/errors';
 import { mapLinesToItems, productSubtotal, toPickedContact } from '@/utils/product-checkout-input';
 import type { RootStackParamList } from '@/navigation/types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 type CheckoutAddress = ResultOf<typeof MyAddressesDocument>['myAddresses'][number];
 
@@ -256,7 +257,7 @@ export function ProductCheckoutScreen() {
   let body: ReactNode;
   if (payment) {
     body = (
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16 }}>
         <CheckoutSuccess
           payment={payment}
           onDownloadInvoice={() => downloadInvoice(payment.id, payment.invoice_no ?? 'invoice')}
@@ -264,7 +265,7 @@ export function ProductCheckoutScreen() {
           onProfile={() => navigation.navigate('OrdersHistory')}
           profileLabel={t('mweb.checkout.myOrders')}
         />
-      </ScrollView>
+      </RefreshScrollView>
     );
   } else if (lines.length === 0) {
     body = <EmptyProductCart onCart={() => navigation.navigate('Home', { screen: 'Cart' })} />;
@@ -276,7 +277,7 @@ export function ProductCheckoutScreen() {
     );
   } else if (breakup) {
     body = (
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
         <SavedAddressPicker onPick={setPickedAddress} />
         <ProductOrderSummary
           lines={lines}
@@ -322,7 +323,7 @@ export function ProductCheckoutScreen() {
           onPincodeChange={setDeliveryPincode}
           onSubmit={submit}
         />
-      </ScrollView>
+      </RefreshScrollView>
     );
   } else {
     body = (

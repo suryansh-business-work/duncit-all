@@ -17,6 +17,7 @@ import {
 } from '@/graphql/pod-history';
 import { graphqlRequest } from '@/services/graphql.client';
 import { dedupeByPod, type PodHistoryCategory, type PodMembership } from '@/utils/pod-history';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /**
  * Pod memberships for the history list + details — RN port of mWeb's
@@ -42,6 +43,8 @@ export function usePodHistory() {
       active = false;
     };
   }, [refetch]);
+
+  useRefreshRegistration(refetch);
 
   return { items, uniqueItems: dedupeByPod(items), isLoading, error, refetch };
 }

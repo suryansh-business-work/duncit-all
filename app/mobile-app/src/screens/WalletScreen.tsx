@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { neutral, semantic } from '@duncit/auth-tokens';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { WithdrawCta } from '@/components/wallet/WithdrawCta';
@@ -8,6 +8,7 @@ import { WithdrawDialog } from '@/components/wallet/WithdrawDialog';
 import { useWallet, type WalletTxn, type Withdrawal } from '@/hooks/useWallet';
 import { formatDate } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 const PAYOUT_LABEL: Record<string, string> = {
   IMMEDIATE: 'Paid immediately after approval',
@@ -87,7 +88,7 @@ export function WalletScreen() {
 
   return (
     <StackScreen header title={t('mweb.common.wallet')} testID="wallet-screen">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={16} padding={16} paddingBottom={48}>
           {isLoading && !wallet ? <Spinner testID="wallet-loading" color="$primary" /> : null}
 
@@ -138,7 +139,7 @@ export function WalletScreen() {
             <TxnRow key={t.id} txn={t} symbol={symbol} />
           ))}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
 
       <WithdrawDialog
         open={open}

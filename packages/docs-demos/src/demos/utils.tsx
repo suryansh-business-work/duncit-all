@@ -60,6 +60,7 @@ import {
   canSubmitPodFeedback,
   commChannelSummary,
   commRowState,
+  contactChangeNeedsOtp,
   contactDetailsComplete,
   contactEntriesFromPhoneBook,
   contactDraftFrom,
@@ -850,9 +851,11 @@ export default defineDemos('utils', [
     id: 'contact-change',
     title: 'Changing a contact detail, and the code it costs',
     note:
-      'Edit `draftNumber` to a number the account does not have and `Sends a code` flips to ' +
-      'true. Change only `draftExtension` — same digits, different country — and it still ' +
-      'sends, because +1 9845012345 is not the same number as +91 9845012345. Blank the ' +
+      'Edit `draftNumber` to a number the account does not have and `Is a change` flips to ' +
+      'true. Change only `draftExtension` — same digits, different country — and it is still ' +
+      'a change, because +1 9845012345 is not the same number as +91 9845012345. Move ' +
+      '`channel` to EMAIL and `Sends a code` flips to true: the contact number is stored as ' +
+      'typed, the other two are proved first. Blank the ' +
       "account's whatsapp_number and its row falls back to the empty line rather than " +
       'showing a lone +91 — and `Edit profile can save` flips to false, because all three ' +
       'contact details are required before the profile form will save.',
@@ -886,7 +889,8 @@ export default defineDemos('utils', [
         'WhatsApp row': currentContactValue(account, 'WHATSAPP') || nothingYet,
         'Dialog opens on': JSON.stringify(contactDraftFrom(account, mock.channel)),
         'Value stored': contactDraftValue(draft, mock.channel),
-        'Sends a code': String(!contactDraftIsUnchanged(account, mock.channel, draft)),
+        'Is a change': String(!contactDraftIsUnchanged(account, mock.channel, draft)),
+        'Sends a code': String(contactChangeNeedsOtp(mock.channel)),
         'Edit profile can save': String(contactDetailsComplete(account)),
       };
     },

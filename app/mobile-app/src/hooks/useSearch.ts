@@ -7,6 +7,7 @@ import {
   SearchSuggestionsDocument,
 } from '@/graphql/search';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type SearchClubResult = ResultOf<
   typeof SearchDiscoveryDocument
@@ -73,6 +74,8 @@ export function useSearchDiscovery(query: string, categoryId: string) {
 
   const refetch = useCallback(() => setReloadKey((key) => key + 1), []);
 
+  useRefreshRegistration(refetch);
+
   return { happening: state.happening, moreClubs: state.moreClubs, loading, active, refetch };
 }
 
@@ -112,6 +115,9 @@ interface ClubCategoryRef {
 export function useSearchCategories() {
   const [all, setAll] = useState<SearchCategory[]>([]);
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let alive = true;
     graphqlRequest(SearchCategoriesDocument, {}, { auth: true })
@@ -124,7 +130,9 @@ export function useSearchCategories() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [attempt]);
+
+  useRefreshRegistration(refetch);
 
   const categories = useMemo(() => {
     const categoryLevel = all.filter((category) => category.level === 'CATEGORY');

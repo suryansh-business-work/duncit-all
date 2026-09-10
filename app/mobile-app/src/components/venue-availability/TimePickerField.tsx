@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { YStack } from 'tamagui';
-import { hhmmToDate, parseHHMM } from '@duncit/slots';
+import { parseHHMM } from '@duncit/slots';
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
@@ -48,7 +48,7 @@ export function TimePickerField({ label, value, onChange, testID }: Readonly<Pro
       <PickerTrigger
         testID={testID}
         label={label}
-        shown={value ? fmt.formatTime(hhmmToDate(value)) : '—'}
+        shown={value ? fmt.formatClock(value) : '—'}
         hasValue={!!value}
         icon="schedule"
         onPress={openSheet}

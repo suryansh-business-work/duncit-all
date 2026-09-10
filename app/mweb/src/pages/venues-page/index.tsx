@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
-import { Box, Chip, CircularProgress, Stack, TextField, Typography } from '@mui/material';
+import { Box, CircularProgress, Stack, TextField, Typography } from '@mui/material';
 import VenueExploreCard, { type ExploreVenue } from './VenueExploreCard';
 import VenuesLocationBar from './VenuesLocationBar';
 import AdCard from '../../components/ads/AdCard';
@@ -26,12 +26,14 @@ export const VENUES_EXPLORE = gql`
   }
 `;
 
+/** Resolves the header tile's slug to the id `publicVenues` filters on. Same
+ * root field the header already fetched, so cache-first answers it without a
+ * second network call. */
 const SUPER_CATEGORIES = gql`
   query VenuesSuperCategories {
-    categories(filter: { level: SUPER, parent_id: null }) {
+    superCategories: categories(filter: { level: SUPER }) {
       id
-      name
-      is_active
+      slug
     }
   }
 `;
@@ -52,17 +54,18 @@ const SEARCH_DEBOUNCE_MS = 400;
 
 interface Props {
   locationId: string;
+  superCategorySlug?: string;
 }
 
 /** Venues discovery — venues in the selected location with a server-side
- * debounced search + Super-category filter, and a location bar that opens the
- * header's picker to change city. Native twin: VenuesScreen. */
-export default function VenuesPage({ locationId }: Readonly<Props>) {
+ * debounced search, filtered by the header's Super-category tiles, and a
+ * location bar that opens the header's picker to change city. Native twin:
+ * VenuesScreen. */
+export default function VenuesPage({ locationId, superCategorySlug }: Readonly<Props>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
-  const [superCategoryId, setSuperCategoryId] = useState('');
 
   // Debounce typing → one server search per pause.
   useEffect(() => {
@@ -71,14 +74,19 @@ export default function VenuesPage({ locationId }: Readonly<Props>) {
   }, [searchInput]);
 
   const { data: catData } = useQuery<any>(SUPER_CATEGORIES, { fetchPolicy: 'cache-first' });
-  const categories = (catData?.categories ?? []).filter(
-    (c: { is_active?: boolean | null }) => c.is_active !== false,
+  const superCategoryId = useMemo(
+    () =>
+      superCategorySlug
+        ? ((catData?.superCategories ?? []).find((c: any) => c.slug === superCategorySlug)?.id ??
+          null)
+        : null,
+    [catData, superCategorySlug]
   );
   const { data, loading, error } = useQuery<any>(VENUES_EXPLORE, {
     variables: {
       location_id: locationId || null,
       search: search || null,
-      super_category_id: superCategoryId || null,
+      super_category_id: superCategoryId,
     },
     fetchPolicy: 'cache-and-network',
   });
@@ -108,21 +116,6 @@ export default function VenuesPage({ locationId }: Readonly<Props>) {
           htmlInput: { 'aria-label': 'Search venues' }
         }}
       />
-      {categories.length > 0 && (
-        <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 0.5 }}>
-          {[{ id: '', name: 'All' }, ...categories].map((c: { id: string; name: string }) => (
-            <Chip
-              key={c.id || 'all'}
-              label={c.name}
-              onClick={() => setSuperCategoryId(c.id)}
-              color={superCategoryId === c.id ? 'primary' : 'default'}
-              variant={superCategoryId === c.id ? 'filled' : 'outlined'}
-              size="small"
-              sx={{ fontWeight: 700, flexShrink: 0 }}
-            />
-          ))}
-        </Stack>
-      )}
       {loading && !data && (
         <Box sx={{ display: 'grid', placeItems: 'center', py: 3 }}>
           <CircularProgress size={22} />

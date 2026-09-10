@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { HostInsightsDocument } from '@/graphql/studio-dashboard';
 import { graphqlRequest } from '@/services/graphql.client';
 import type { StatusCounts } from '@duncit/utils';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 const ALL_TIME_FROM = '1970-01-01T00:00:00.000Z';
 const EMPTY_COUNTS: StatusCounts = { upcoming: 0, ongoing: 0, completed: 0, cancelled: 0 };
@@ -26,6 +27,9 @@ export function useHostInsights(): HostInsightsResult {
   const [isLoading, setIsLoading] = useState(true);
   const now = useMemo(() => new Date().toISOString(), []);
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let active = true;
     graphqlRequest(
@@ -41,7 +45,9 @@ export function useHostInsights(): HostInsightsResult {
     return () => {
       active = false;
     };
-  }, [now]);
+  }, [now, attempt]);
+
+  useRefreshRegistration(refetch);
 
   return {
     totalPods: data?.partnerDashboard?.host?.number_of_pods ?? 0,

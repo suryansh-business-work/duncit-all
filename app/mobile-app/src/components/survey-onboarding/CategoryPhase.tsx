@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { ScrollView } from 'react-native';
 import { Button, Text, XStack, YStack } from 'tamagui';
 
 import { useBottomInset } from '@/hooks/useBottomNavSpace';
@@ -7,6 +6,7 @@ import { useCategoryLevel } from '@/hooks/useCategoryLevel';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { type CategoryOption } from '@/graphql/onboarding-survey';
 import type { CategoryLabels, Scope } from './useOnboardingFlow';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 const EMPTY_SCOPE: Scope = { super_category_id: '', category_id: '', sub_category_id: '' };
 
@@ -108,7 +108,9 @@ export function CategoryPhase({
 
   const message = validationError || error;
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: bottomInset + 16, gap: 16 }}>
+    <RefreshScrollView
+      contentContainerStyle={{ padding: 16, paddingBottom: bottomInset + 16, gap: 16 }}
+    >
       {group('Super Category *', 'super_category_id', supers)}
       {group('Category *', 'category_id', cats)}
       {group('Sub-Category *', 'sub_category_id', subs)}
@@ -127,6 +129,6 @@ export function CategoryPhase({
       >
         {busy ? 'Loading…' : 'Continue'}
       </Button>
-    </ScrollView>
+    </RefreshScrollView>
   );
 }

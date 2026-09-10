@@ -20,7 +20,7 @@ import { useSuperCategories } from '@/hooks/useSuperCategories';
  * search + category filter. Selecting a Country > City > Area location re-scopes
  * the list to that locality; an empty locality shows a Reset-Location prompt. */
 export function ClubsScreen() {
-  const { clubs, categories, isLoading, refetch } = useHomeData();
+  const { clubs, categories, isLoading } = useHomeData();
   const { selectedId: selectedLocationId, zoneName } = useLocations();
   const { selectedSuperId } = useSuperCategories();
   const { openClub } = useDetailNav();
@@ -62,7 +62,6 @@ export function ClubsScreen() {
         isEmpty={filtered.length === 0}
         emptyText={emptyText}
         emptyComponent={locationEmpty ? <ClubsLocationEmpty /> : undefined}
-        onRefresh={refetch}
         data={feed}
         keyExtractor={(entry) => (isAdEntry(entry) ? entry.key : entry.item.id)}
         renderItem={(entry, index) => (

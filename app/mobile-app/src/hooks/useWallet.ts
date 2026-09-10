@@ -3,6 +3,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { MyWalletDocument } from '@/graphql/wallet';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 type Data = ResultOf<typeof MyWalletDocument>;
 export type WalletInfo = Data['myWallet'];
@@ -33,6 +34,8 @@ export function useWallet() {
       active = false;
     };
   }, [load]);
+
+  useRefreshRegistration(load);
 
   return { wallet, transactions, withdrawals, isLoading, refetch: load };
 }

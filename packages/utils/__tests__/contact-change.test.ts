@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   CONTACT_CHANNELS,
+  applyContactDraft,
   buildContactChangeLabels,
+  contactChangeNeedsOtp,
   contactDetailsComplete,
   contactDraftFrom,
   contactDraftIsUnchanged,
   contactDraftValue,
+  contactSubmitAction,
   currentContactValue,
   emptyContactDraft,
   formatPhoneLine,
@@ -237,6 +240,14 @@ describe('buildContactChangeLabels', () => {
       PHONE: 'phone',
       WHATSAPP: 'whatsapp',
     };
+    // The hint does not follow the prefix: a phone number is saved as typed,
+    // with no code to wait for, so it cannot borrow the wording of the two
+    // channels that do ask for one.
+    const hintKey: Record<ContactChannel, string> = {
+      EMAIL: 'emailHint',
+      PHONE: 'phoneDirectHint',
+      WHATSAPP: 'whatsappHint',
+    };
 
     for (const channel of CONTACT_CHANNELS) {
       expect(built.channel(channel)).toEqual({
@@ -244,7 +255,7 @@ describe('buildContactChangeLabels', () => {
         fieldLabel: `t:mweb.contactChange.${prefix[channel]}Field`,
         emptyValue: `t:mweb.contactChange.${prefix[channel]}Empty`,
         changeTitle: `t:mweb.contactChange.${prefix[channel]}Title`,
-        changeHint: `t:mweb.contactChange.${prefix[channel]}Hint`,
+        changeHint: `t:mweb.contactChange.${hintKey[channel]}`,
       });
     }
   });
@@ -272,5 +283,116 @@ describe('buildContactChangeLabels', () => {
     buildContactChangeLabels(t);
 
     expect(calls.every((call) => call.vars === undefined)).toBe(true);
+  });
+});
+
+describe('contactChangeNeedsOtp', () => {
+  it('proves the two delivery channels, whose whole worth is that a message arrives', () => {
+    expect(contactChangeNeedsOtp('EMAIL')).toBe(true);
+    expect(contactChangeNeedsOtp('WHATSAPP')).toBe(true);
+  });
+
+  it('does not stand between a person and correcting their own contact number', () => {
+    expect(contactChangeNeedsOtp('PHONE')).toBe(false);
+  });
+});
+
+describe('applyContactDraft', () => {
+  it('folds an email in already normalised, so the row matches what was stored', () => {
+    expect(applyContactDraft(snapshot, 'EMAIL', {
+      email: '  Asha@Duncit.com ',
+      extension: '+91',
+      number: '',
+    })).toEqual({ ...snapshot, email: 'asha@duncit.com' });
+  });
+
+  it('lands each number in its OWN pair of columns', () => {
+    const draft = { email: '', extension: '+44', number: '7700900123' };
+
+    expect(applyContactDraft(snapshot, 'PHONE', draft)).toEqual({
+      ...snapshot,
+      phone_extension: '+44',
+      phone_number: '7700900123',
+    });
+    expect(applyContactDraft(snapshot, 'WHATSAPP', draft)).toEqual({
+      ...snapshot,
+      whatsapp_extension: '+44',
+      whatsapp_number: '7700900123',
+    });
+  });
+
+  it('leaves the channels it was not asked about alone', () => {
+    const folded = applyContactDraft(snapshot, 'PHONE', {
+      email: '',
+      extension: '+44',
+      number: '7700900123',
+    });
+
+    expect(folded.email).toBe(snapshot.email);
+    expect(folded.whatsapp_number).toBe(snapshot.whatsapp_number);
+  });
+
+  it('does not mutate the snapshot it was handed', () => {
+    applyContactDraft(snapshot, 'PHONE', { email: '', extension: '+44', number: '7700900123' });
+
+    expect(snapshot.phone_number).toBe('9876543210');
+  });
+});
+
+describe('contactSubmitAction', () => {
+  it('does nothing for a draft that matches what the account already holds', () => {
+    expect(
+      contactSubmitAction(snapshot, 'EMAIL', {
+        email: 'ravi@duncit.com',
+        extension: '+91',
+        number: '',
+      }),
+    ).toBe('UNCHANGED');
+    expect(
+      contactSubmitAction(snapshot, 'PHONE', {
+        email: '',
+        extension: '+91',
+        number: '9876543210',
+      }),
+    ).toBe('UNCHANGED');
+  });
+
+  it('sends a code for the address and the WhatsApp number', () => {
+    expect(
+      contactSubmitAction(snapshot, 'EMAIL', {
+        email: 'asha@duncit.com',
+        extension: '+91',
+        number: '',
+      }),
+    ).toBe('SEND_CODE');
+    expect(
+      contactSubmitAction(snapshot, 'WHATSAPP', {
+        email: '',
+        extension: '+44',
+        number: '7700900123',
+      }),
+    ).toBe('SEND_CODE');
+  });
+
+  it('saves the contact number on this very submit, with no second step', () => {
+    expect(
+      contactSubmitAction(snapshot, 'PHONE', {
+        email: '',
+        extension: '+44',
+        number: '7700900123',
+      }),
+    ).toBe('SAVE');
+  });
+
+  it('answers UNCHANGED before it asks whether the channel needs proving', () => {
+    // The order matters: a WhatsApp draft that changes nothing must not cost
+    // the person a code.
+    expect(
+      contactSubmitAction(snapshot, 'WHATSAPP', {
+        email: '',
+        extension: '+1',
+        number: '4155551234',
+      }),
+    ).toBe('UNCHANGED');
   });
 });

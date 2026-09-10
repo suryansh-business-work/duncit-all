@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Input, ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Input, Text, XStack, YStack } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
 import { Accordion } from '@/components/details/Accordion';
@@ -9,6 +9,7 @@ import { StackScreen } from '@/components/StackScreen';
 import { useFaqs, type FaqGroup } from '@/hooks/useLibrary';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Keeps only the groups (and their questions) whose question or answer text
  * matches the query — mirrors mWeb's FAQ search. */
@@ -91,7 +92,9 @@ export function FaqsScreen() {
           </Text>
         </YStack>
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 12, paddingBottom: 24 }}>
+        <RefreshScrollView
+          contentContainerStyle={{ padding: 16, paddingTop: 12, paddingBottom: 24 }}
+        >
           {filteredGroups.map((group, groupIndex) => (
             <Reveal key={group.super_category?.id ?? 'general'} index={groupIndex}>
               <YStack gap={6} marginBottom={14}>
@@ -115,7 +118,7 @@ export function FaqsScreen() {
               </YStack>
             </Reveal>
           ))}
-        </ScrollView>
+        </RefreshScrollView>
       )}
     </StackScreen>
   );

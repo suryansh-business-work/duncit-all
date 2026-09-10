@@ -5,6 +5,7 @@ import { followActionFor, readFollowStatus } from '@duncit/utils';
 import { FollowersOfDocument, FollowingOfDocument } from '@/graphql/following';
 import { runUserFollowAction } from '@/services/follow-user';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type FollowListPerson = ResultOf<typeof FollowersOfDocument>['followersOf'][number];
 export type FollowTab = 'followers' | 'following';
@@ -43,6 +44,8 @@ export function useFollowList(userId: string, tab: FollowTab) {
   useEffect(() => {
     load();
   }, [load]);
+
+  useRefreshRegistration(load);
 
   const toggle = useCallback(async (target: FollowListPerson) => {
     setBusyId(target.user_id);

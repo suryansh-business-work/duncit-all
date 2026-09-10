@@ -1,4 +1,4 @@
-import { ScrollView, Text } from 'tamagui';
+import { Text } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { DetailSkeleton } from '@/components/Skeleton';
@@ -8,6 +8,7 @@ import { AddressCard } from './AddressCard';
 import { EmailCard } from './EmailCard';
 import { IdentityCard } from './IdentityCard';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Verification — three types (Identity / Address / Email). Identity is a
  * document upload, Address a structured form, Email a terminal app chip. RN twin
@@ -66,12 +67,12 @@ export function VerificationScreen() {
 
   return (
     <StackScreen header title={t('verification.title')} testID="verification-screen">
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }}>
         <Text fontSize={13} color="$muted">
           {t('verification.subtitle')}
         </Text>
         {items.map(renderCard)}
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Share } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { referralLink, renderReferralMessage } from '@duncit/utils';
@@ -14,6 +14,7 @@ import { useShareUrl } from '@/hooks/useShareUrl';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRelative } from '@/utils/date-format';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 type ReferredEntry = MyReferral['referred'][number];
 
@@ -227,7 +228,7 @@ export function ReferralScreen() {
           <Spinner testID="referral-loading" color="$primary" />
         </YStack>
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <RefreshScrollView showsVerticalScrollIndicator={false}>
           <YStack gap={14} padding={16} paddingBottom={48}>
             {referral ? (
               <CodeCard
@@ -264,7 +265,7 @@ export function ReferralScreen() {
               ))
             )}
           </YStack>
-        </ScrollView>
+        </RefreshScrollView>
       )}
     </StackScreen>
   );

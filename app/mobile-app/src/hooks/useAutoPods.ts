@@ -14,6 +14,7 @@ import {
 } from '@/graphql/auto-pods';
 import type { MobileVenueAutoPodsQuery } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /**
  * A queue row plus the category the club picker filters on. `AutoPodRow` is the
@@ -149,6 +150,8 @@ export function useAutoPods(role: AutoPodRole, scope: AutoPodQueueScope = {}) {
       active = false;
     };
   }, [load]);
+
+  useRefreshRegistration(refetch);
 
   return { rows, isLoading, hasError, refetch };
 }

@@ -3,6 +3,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { ClubStoriesDocument } from '@/graphql/status';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type ClubStory = ResultOf<typeof ClubStoriesDocument>['clubStories'][number];
 
@@ -32,6 +33,8 @@ export function useClubStories(clubId: string) {
     const timer = globalThis.setInterval(run, POLL_MS);
     return () => globalThis.clearInterval(timer);
   }, [refetch]);
+
+  useRefreshRegistration(refetch);
 
   return { stories, isLoading, refetch };
 }

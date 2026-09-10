@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { MobileActiveSupportPodsDocument } from '@/graphql/bouncer';
 import { graphqlRequest } from '@/services/graphql.client';
 import { filterSupportPods, type SupportPodOption } from '@/utils/support-pods';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /** Loads every pod the user has joined and tracks the selected one —
  * RN port of mWeb's usePodPicker. */
@@ -10,6 +11,9 @@ export function useSupportPods() {
   const [options, setOptions] = useState<SupportPodOption[]>([]);
   const [selectedId, setSelectedId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
     let active = true;
@@ -25,7 +29,9 @@ export function useSupportPods() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [attempt]);
+
+  useRefreshRegistration(refetch);
 
   const selected = options.find((o) => o.podDocId === selectedId) ?? null;
   return { options, selected, selectedId, setSelectedId, isLoading };

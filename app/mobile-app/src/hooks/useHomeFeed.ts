@@ -13,6 +13,7 @@ import {
   matchesPrice,
   type HomeFilters,
 } from '@/utils/home-filters';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type HomeCategory = HomeFeed['categories'][number];
 export type HomeClub = HomeFeed['clubs'][number];
@@ -245,6 +246,8 @@ export function useHomeData() {
 
   const refetch = useCallback(() => fetch(true), [fetch]);
 
+  useRefreshRegistration(refetch);
+
   return {
     isLoading,
     hasData: !!data,
@@ -287,6 +290,8 @@ export function useHomeFeed(
 
   // Stable, for the same reason `useSupport.reload` is — see the note above.
   const refetch = useCallback(() => fetch(true), [fetch]);
+
+  useRefreshRegistration(refetch);
 
   return { isLoading, error, hasData: !!data, refetch, ...derived };
 }

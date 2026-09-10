@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { MobileUserHostedPodsDocument, MobileUserJoinedPodsDocument } from '@/graphql/profile-pods';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type ProfilePodsKind = 'joined' | 'hosted';
 export type ProfilePod = ResultOf<typeof MobileUserJoinedPodsDocument>['userJoinedPods'][number];
@@ -15,6 +16,9 @@ export function useProfilePods(userId: string, kind: ProfilePodsKind) {
   const [pods, setPods] = useState<ProfilePod[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
+
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
     let active = true;
@@ -38,7 +42,9 @@ export function useProfilePods(userId: string, kind: ProfilePodsKind) {
     return () => {
       active = false;
     };
-  }, [userId, kind]);
+  }, [userId, kind, attempt]);
+
+  useRefreshRegistration(refetch);
 
   return { pods, isLoading, error };
 }

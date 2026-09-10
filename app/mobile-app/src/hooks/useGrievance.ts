@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { GrievanceDraft, PublicGrievanceOfficer, SubmittedGrievance } from '@duncit/utils';
 
 import { GrievanceOfficerDocument, SubmitGrievanceDocument } from '@/graphql/grievance';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /**
  * Raise a grievance.
@@ -23,6 +24,9 @@ export async function submitGrievance(values: GrievanceDraft): Promise<Submitted
 export function useGrievanceOfficer(): PublicGrievanceOfficer | undefined {
   const [officer, setOfficer] = useState<PublicGrievanceOfficer | undefined>(undefined);
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let alive = true;
     graphqlRequest<{ grievanceOfficer: PublicGrievanceOfficer }>(GrievanceOfficerDocument)
@@ -34,7 +38,9 @@ export function useGrievanceOfficer(): PublicGrievanceOfficer | undefined {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [attempt]);
+
+  useRefreshRegistration(refetch);
 
   return officer;
 }

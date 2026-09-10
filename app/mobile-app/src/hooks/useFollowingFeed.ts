@@ -6,6 +6,7 @@ import { TogglePostLikeDocument } from '@/graphql/posts';
 import { FollowingFeedSource } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type FeedPost = ResultOf<typeof FollowingFeedDocument>['followingFeed'][number];
 export type FeedSource = 'PEOPLE' | 'CLUBS';
@@ -46,6 +47,8 @@ export function useFollowingFeed(source: FeedSource) {
     // fetch never rejects (errors are captured into state), so no catch needed.
     fireAndForget(fetch());
   }, [fetch]);
+
+  useRefreshRegistration(fetch);
 
   const applyLike = (id: string, liked: boolean, count: number) => {
     setPosts((prev) =>

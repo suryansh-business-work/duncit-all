@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Stack, Typography } from '@mui/material';
 import {
+  applyContactDraft,
   buildContactChangeLabels,
   contactDetailsComplete,
   type ContactChannel,
@@ -44,22 +45,7 @@ export default function ContactSection({ snapshot, onChanged }: Readonly<Props>)
         channel={channel}
         snapshot={snapshot}
         onClose={() => setChannel(null)}
-        onSaved={(saved, draft) => {
-          // The proved value is folded in locally as well as refetched: the
-          // dialog closes onto these rows, and a row still showing the old
-          // number while the query is in flight reads as a failed change.
-          const next: ContactSnapshot = { ...snapshot };
-          if (saved === 'EMAIL') next.email = draft.email.trim().toLowerCase();
-          if (saved === 'PHONE') {
-            next.phone_extension = draft.extension;
-            next.phone_number = draft.number;
-          }
-          if (saved === 'WHATSAPP') {
-            next.whatsapp_extension = draft.extension;
-            next.whatsapp_number = draft.number;
-          }
-          onChanged(saved, next);
-        }}
+        onSaved={(saved, draft) => onChanged(saved, applyContactDraft(snapshot, saved, draft))}
       />
     </Stack>
   );

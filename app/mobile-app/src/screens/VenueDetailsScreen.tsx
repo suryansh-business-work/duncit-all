@@ -3,7 +3,7 @@ import { AppImage } from '@/components/AppImage';
 
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { ImageViewerModal } from '@/components/ImageViewerModal';
 import { StackScreen } from '@/components/StackScreen';
@@ -17,6 +17,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 import { venueImages } from '@duncit/utils';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 function addressLine(venue: PublicVenue): string {
   return [
@@ -76,7 +77,7 @@ function VenueDetailsContent({
   const { t } = useTranslation();
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   return (
-    <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 32 }}>
+    <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 32 }}>
       <YStack
         height={200}
         borderRadius={16}
@@ -142,7 +143,7 @@ function VenueDetailsContent({
       <VenueImagesGrid images={gallery} onOpen={setViewerIndex} />
 
       <ImageViewerModal images={gallery} index={viewerIndex} onClose={() => setViewerIndex(null)} />
-    </ScrollView>
+    </RefreshScrollView>
   );
 }
 

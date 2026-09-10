@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 import { isTourCompleted, toursForRoles, type TourDefinition } from '@duncit/tours';
 
 import { StackScreen } from '@/components/StackScreen';
@@ -12,6 +12,7 @@ import type { TabParamList } from '@/navigation/tabs';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Tour Guide centre — every guided walkthrough, restartable at any time. The
@@ -43,7 +44,7 @@ export function TourGuideScreen() {
 
   return (
     <StackScreen title={t('mweb.tourGuide.tourGuide')} testID="tour-guide-screen">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={12} padding={16} paddingBottom={40}>
           <Text fontSize={13} color="$muted">
             {t('mweb.tourGuide.intro')}
@@ -94,7 +95,7 @@ export function TourGuideScreen() {
             );
           })}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

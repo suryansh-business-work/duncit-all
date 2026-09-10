@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { isStoryLive } from '@duncit/utils';
 
 import { useStatusStore, type StatusFeed } from '@/stores/status.store';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type StatusPost = StatusFeed['stories'][number];
 
@@ -116,6 +117,8 @@ export function useStatus() {
 
   // Stable, for the same reason `useSupport.reload` is — see the note there.
   const refetch = useCallback(() => fetch(true), [fetch]);
+
+  useRefreshRegistration(refetch);
 
   return { statuses, clubStories, mine, isLoading, refetch };
 }

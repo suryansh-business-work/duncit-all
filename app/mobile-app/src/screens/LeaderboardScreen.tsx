@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import type { LeaderboardCategory, LeaderboardPeriodKey } from '@duncit/utils';
@@ -22,6 +22,7 @@ import {
 } from '@/graphql/leaderboard';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 type BoardData = ResultOf<typeof MobileLeaderboardBoardDocument>['leaderboard'];
 type ConfigData = ResultOf<typeof MobileLeaderboardConfigDocument>['leaderboardConfig'];
@@ -111,7 +112,7 @@ export function LeaderboardScreen() {
 
   return (
     <StackScreen title={t('mweb.leaderboard.title')} testID="leaderboard-screen">
-      <ScrollView flex={1} showsVerticalScrollIndicator={false}>
+      <RefreshScrollView flex={1} showsVerticalScrollIndicator={false}>
         <YStack gap={14} paddingVertical={12}>
           <LeaderboardCategoryTabs value={category} onChange={setCategory} />
           <LeaderboardYourPoints board={board} isLoading={isLoading} />
@@ -119,7 +120,7 @@ export function LeaderboardScreen() {
           {boardBody}
           {configBody}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

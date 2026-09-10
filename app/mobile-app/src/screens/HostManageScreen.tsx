@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { StackScreen } from '@/components/StackScreen';
@@ -20,6 +20,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Hosts Management — start a new pod and resume/delete in-progress drafts. */
 export function HostManageScreen() {
@@ -47,7 +48,7 @@ export function HostManageScreen() {
 
   return (
     <StackScreen header title={t('mweb.hostManage.hostsManagement')} testID="host-manage-screen">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={16} padding={16} paddingBottom={48}>
           <PrimaryButton
             testID="host-manage-create"
@@ -95,7 +96,7 @@ export function HostManageScreen() {
             onDelete={setTarget}
           />
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
       {target ? (
         <DraftDeleteConfirm
           open

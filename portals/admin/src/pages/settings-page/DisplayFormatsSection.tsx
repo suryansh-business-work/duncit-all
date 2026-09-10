@@ -14,7 +14,11 @@ import {
 import SaveIcon from '@mui/icons-material/Save';
 import { DuncitButton } from '@duncit/buttons';
 import { format } from 'date-fns';
-import { PUBLIC_APP_SETTINGS, unsupportedPickerTokens } from '@duncit/app-settings';
+import {
+  PUBLIC_APP_SETTINGS,
+  unsupportedPickerTokens,
+  usesTwelveHourClock,
+} from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 
 const APP_SETTINGS_FORMATS = gql`
@@ -87,6 +91,12 @@ export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
   const badDateTokens = unsupportedPickerTokens(dateFmt);
   const badTimeTokens = unsupportedPickerTokens(timeFmt);
   const unusable = badDateTokens.length > 0 || badTimeTokens.length > 0;
+
+  // A date-fns pattern does not say out loud whether pickers will count 1–12 or
+  // 0–23, and that is what an operator is actually choosing here.
+  const clockHint = usesTwelveHourClock(timeFmt)
+    ? t('admin.settings.clockCycle12')
+    : t('admin.settings.clockCycle24');
 
   const dirty =
     !!data?.appSettings &&
@@ -190,6 +200,7 @@ export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
             />
           </Stack>
           <Alert severity="info">Preview: <strong>{preview}</strong></Alert>
+          <Alert severity="info">{clockHint}</Alert>
           {unusable && (
             <Alert severity="warning">
               The date and time pickers cannot edit{' '}

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { COIN_GOLD } from '@/constants/coin-gold';
 import { useCoinBalanceStore, useCoinLedgerStore } from '@/stores/coin.store';
 import { useThemeStore } from '@/stores/theme.store';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /** The readable gold for the active scheme — RN twin of mWeb's `coinGold(mode)`. */
 export function useCoinGold(): string {
@@ -23,6 +24,8 @@ export function useCoinBalance() {
     refetch();
   }, [refetch]);
 
+  useRefreshRegistration(refetch);
+
   return { balance: data?.myCoinBalance ?? null, isLoading };
 }
 
@@ -36,6 +39,8 @@ export function useCoinLedger() {
   useEffect(() => {
     refetch();
   }, [refetch]);
+
+  useRefreshRegistration(refetch);
 
   return {
     balance: data?.myCoinBalance ?? null,

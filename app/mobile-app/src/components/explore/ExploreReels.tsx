@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   FlatList,
-  RefreshControl,
   useWindowDimensions,
   type LayoutChangeEvent,
   type ViewToken,
@@ -14,6 +13,7 @@ import { interleaveAds, isAdEntry } from '@/components/ads/interleaveAds';
 import { useActiveAds } from '@/hooks/useActiveAds';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useExplore } from '@/hooks/useExplore';
+import { useAppRefreshControl, useScreenRefresh } from '@/components/PullToRefresh';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { likersWithViewer } from '@/utils/explore-likers';
 import type { ExplorePod } from '@/stores/explore.store';
@@ -30,8 +30,8 @@ export function ExploreReels() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [commentsPod, setCommentsPod] = useState<ExplorePod | null>(null);
   const [likersPod, setLikersPod] = useState<ExplorePod | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const { primary, surface, onPrimary } = useThemeColors();
+  const { onPrimary } = useThemeColors();
+  const screen = useScreenRefresh();
   const { openPod: navOpenPod, openClub: navOpenClub } = useDetailNav();
   const {
     pods,
@@ -47,7 +47,6 @@ export function ExploreReels() {
     bumpComment,
     toggleSave,
     toggleLike,
-    refetch,
   } = useExplore();
   // Sponsored reels woven into the feed — one full-screen ad every 5 pods.
   const { ads } = useActiveAds('EXPLORE_SCROLL');
@@ -64,15 +63,19 @@ export function ExploreReels() {
   // its parent club's slug, so opening the club needs no clubsById lookup.
   const openPod = (pod: ExplorePod) => navOpenPod(pod.club_slug, pod.pod_id);
   const openClub = (pod: ExplorePod) => navOpenClub(pod.club_slug);
-  // Pull-to-refresh: reload the feed without duplicate entries (item 12).
-  const onRefresh = async () => {
-    setRefreshing(true);
-    try {
-      await refetch();
-    } finally {
-      setRefreshing(false);
-    }
-  };
+  // Pull-to-refresh is the screen's: useExplore registers its own reload, so
+  // the gesture reloads the reels (and the ads woven through them) without a
+  // second copy of the wiring here.
+  const refreshControl = useAppRefreshControl({
+    refreshing: screen?.refreshing ?? false,
+    onRefresh: screen?.refresh ?? (() => undefined),
+    // Reels sit on full-screen media, so the bare iOS spinner keeps the
+    // overlay's white — `onPrimary` is that white as a token, identical in
+    // both themes. Android draws a puck instead, which takes the theme surface
+    // with the brand arrow so it stays legible either way.
+    tintColor: onPrimary,
+    testID: 'explore-refresh',
+  });
 
   let reelsBody: ReactNode = null;
   if (height > 0) {
@@ -104,20 +107,7 @@ export function ExploreReels() {
           maxToRenderPerBatch={2}
           onViewableItemsChanged={onViewableItemsChanged}
           viewabilityConfig={viewabilityConfig}
-          refreshControl={
-            // Reels sit on full-screen media, so the bare iOS spinner keeps the
-            // overlay's white — `onPrimary` is that white as a token, identical
-            // in both themes. Android draws a puck instead, which takes the
-            // theme surface with the brand arrow so it stays legible either way.
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={onPrimary}
-              colors={[primary]}
-              progressBackgroundColor={surface}
-              testID="explore-refresh"
-            />
-          }
+          refreshControl={refreshControl}
           renderItem={({ item: entry, index }) => {
             if (isAdEntry(entry)) {
               return (

@@ -3,6 +3,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { ProfileDocument } from '@/graphql/profile';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type ProfileData = ResultOf<typeof ProfileDocument>;
 export type ProfileMe = NonNullable<ProfileData['me']>;
@@ -28,6 +29,8 @@ export function useProfile() {
       active = false;
     };
   }, [refetch]);
+
+  useRefreshRegistration(refetch);
 
   return { me: data?.me ?? null, posts: data?.myPosts ?? [], isLoading, error, refetch };
 }

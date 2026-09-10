@@ -1423,6 +1423,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/gql-types", range: "workspace:*", kind: "dependencies" },
       { name: "@tiptap/extension-link", range: "3.30.6", kind: "dependencies" },
       { name: "@tiptap/extension-placeholder", range: "3.30.6", kind: "dependencies" },
+      { name: "@tiptap/extension-table", range: "3.30.6", kind: "dependencies" },
       { name: "@tiptap/extension-underline", range: "3.30.6", kind: "dependencies" },
       { name: "@tiptap/pm", range: "3.30.6", kind: "dependencies" },
       { name: "@tiptap/react", range: "3.30.6", kind: "dependencies" },

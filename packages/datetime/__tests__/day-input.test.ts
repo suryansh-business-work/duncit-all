@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  formatClockTime,
   formatIsoDay,
   isIsoDay,
   parseInPattern,
@@ -165,5 +166,49 @@ describe('parseLocalDateTimeInput', () => {
 
   it.each(['2026-08-30', '2026-08-30T09:05:00', '', 'nonsense'])('returns null for %j', (value) => {
     expect(parseLocalDateTimeInput(value)).toBeNull();
+  });
+});
+
+describe('formatClockTime', () => {
+  it('writes a bare wall-clock time in the pattern asked for', () => {
+    expect(formatClockTime('09:05', 'HH:mm')).toBe('09:05');
+    expect(formatClockTime('09:05', 'hh:mm a')).toBe('09:05 AM');
+    expect(formatClockTime('13:05', 'hh:mm a')).toBe('01:05 PM');
+  });
+
+  it('accepts a single-digit hour, which is how a picker may hand it over', () => {
+    expect(formatClockTime('9:05', 'HH:mm')).toBe('09:05');
+  });
+
+  it('never converts zones — a venue’s opening hour is a position, not an instant', () => {
+    // Whoever is reading it, and wherever they stand, 09:00 stays 09:00.
+    expect(formatClockTime('09:00', 'HH:mm')).toBe('09:00');
+    expect(formatClockTime('00:00', 'HH:mm')).toBe('00:00');
+    expect(formatClockTime('23:59', 'HH:mm')).toBe('23:59');
+  });
+
+  it.each(['nonsense', '', '9:5', '09:00:00', '0905', '09.05'])(
+    'renders nothing for %j, which is not a wall clock',
+    (value) => {
+      expect(formatClockTime(value, 'HH:mm')).toBe('');
+    },
+  );
+
+  it('renders nothing when handed no value at all', () => {
+    // The signature says string, but a nullable column reaches it as null —
+    // which is what the `?? ''` inside is for.
+    expect(formatClockTime(undefined as unknown as string, 'HH:mm')).toBe('');
+  });
+
+  it.each(['24:00', '99:00'])('renders nothing for %j, an hour off the clock', (value) => {
+    expect(formatClockTime(value, 'HH:mm')).toBe('');
+  });
+
+  it('renders nothing for a minute off the clock', () => {
+    expect(formatClockTime('09:60', 'HH:mm')).toBe('');
+  });
+
+  it('renders nothing rather than throwing on a pattern date-fns rejects', () => {
+    expect(formatClockTime('09:05', 'YYYY')).toBe('');
   });
 });

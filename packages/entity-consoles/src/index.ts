@@ -72,3 +72,23 @@ export {
 // as-is to keep this a relocation rather than a rewrite.
 export * from './shared/validation/bankAccount';
 export * from './shared/validation/rules';
+
+// ---- the club-admins console --------------------------------------------
+export { default as ClubAdminsPage } from './club-admins/ClubAdminsPage';
+export { default as ClubAdminDetailsPage } from './club-admins/ClubAdminDetailsPage';
+
+// ---- the hosts console ---------------------------------------------------
+export { default as HostsPage } from './hosts/list/HostsPage';
+export { default as HostDetailsPage } from './hosts/detail/HostDetailsPage';
+export { default as HostAccordionForm } from './hosts/form/HostAccordionForm';
+// The host form's schema and types — onboarding's create-host route builds on
+// them, and so does the review dialog.
+export * from './hosts/form/schema';
+
+// ---- more shared internals ----------------------------------------------
+// `categoryPath` and the survey answers viewer are each used by three or more
+// screens (hosts, club admins, and onboarding's meetings), which is what makes
+// them shared rather than one console's helper (rule 40).
+export { categoryPath } from './shared/categoryPath';
+export { SurveyAnswers, USER_SURVEY_RESPONSES } from './shared/survey-answers';
+export type { SurveyKind, UserSurveyResponse } from './shared/survey-answers';

@@ -11,7 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
-import { SurveyAnswers } from '../../components/survey-answers';
+import { SurveyAnswers } from '@duncit/entity-consoles';
 import { DECIDE_MEETING, type MeetingDecision, type OnboardingMeeting } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 

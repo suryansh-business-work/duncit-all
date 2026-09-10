@@ -40,10 +40,13 @@
     "@duncit/ui": "workspace:*",
     "@duncit/user-context": "workspace:*",
     "@duncit/utils": "workspace:*",
+    "@hookform/resolvers": "^5.9.1",
     "@mui/x-date-pickers": "^9.12.0",
     "date-fns": "^4.4.0",
+    "react-hook-form": "^7.87.0",
     "react-router": "^8.3.1",
-    "yup": "^1.7.1"
+    "yup": "^1.7.1",
+    "zod": "^4.5.4"
   },
   "peerDependencies": {
     "@apollo/client": ">=3",
@@ -53,6 +56,7 @@
     "graphql": ">=16",
     "react": ">=18",
     "react-dom": ">=18",
+    "react-hook-form": ">=7",
     "react-router": ">=8"
   },
   "devDependencies": {

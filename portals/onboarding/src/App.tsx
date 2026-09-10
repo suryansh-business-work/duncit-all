@@ -4,13 +4,12 @@ import { ProfilePage, createAuthed } from '@duncit/shell';
 import { useProductVisibility } from '@duncit/app-settings';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
-import HostsPage from './pages/hosts-page/HostsPage';
-import HostDetailsPage from './pages/host-details-page/HostDetailsPage';
+import { HostDetailsPage, HostsPage } from '@duncit/entity-consoles';
 import HostRequestsPage from './pages/host-requests/HostRequestsPage';
 import { VenuesPage } from '@duncit/entity-consoles';
 import { VenueDetailsPage } from '@duncit/entity-consoles';
 import EcommBrandsPage from './pages/ecomm-brands-page/EcommBrandsPage';
-import ClubAdminsPage from './pages/club-admins-page/ClubAdminsPage';
+import { ClubAdminDetailsPage, ClubAdminsPage } from '@duncit/entity-consoles';
 import SurveyBuilderPage from './pages/surveys/SurveyBuilderPage';
 import SurveysHubPage from './pages/surveys/SurveysHubPage';
 import SurveysListPage from './pages/surveys/SurveysListPage';
@@ -50,6 +49,7 @@ export default function App() {
       <Route path="/venues/:venueId" element={authed(<VenueDetailsPage />)} />
       <Route path="/ecomm-brands" element={authed(<RequireEcomm><EcommBrandsPage /></RequireEcomm>)} />
       <Route path="/club-admins" element={authed(<ClubAdminsPage />)} />
+      <Route path="/club-admins/:clubAdminId" element={authed(<ClubAdminDetailsPage />)} />
       <Route path="/surveys" element={authed(<SurveysHubPage />)} />
       <Route path="/surveys/kind/:kind" element={authed(<SurveysListPage />)} />
       <Route path="/surveys/new" element={authed(<SurveyBuilderPage />)} />

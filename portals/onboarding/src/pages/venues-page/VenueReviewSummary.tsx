@@ -1,4 +1,5 @@
 import { Box, Chip, Link, Paper, Stack, Typography } from '@mui/material';
+import { useTranslation } from '@duncit/app-settings';
 
 export interface VenueReviewSummaryProps {
   active: any;
@@ -10,6 +11,7 @@ export interface VenueReviewSummaryProps {
  * hoisted out of the dialog so that file stays a list of panels (rule 9).
  */
 export default function VenueReviewSummary({ active }: Readonly<VenueReviewSummaryProps>) {
+  const { t } = useTranslation();
   const documents = active?.documents ?? [];
   const capacityItems = active?.capacity_items ?? [];
   const locationLine =
@@ -35,7 +37,7 @@ export default function VenueReviewSummary({ active }: Readonly<VenueReviewSumma
         </Stack>
         {categoryPath && (
           <Typography variant="body2" sx={{ mb: 0.5 }}>
-            Hosts in: <strong>{categoryPath}</strong>
+            {t('onboarding.venues.hostsIn')} <strong>{categoryPath}</strong>
           </Typography>
         )}
         {capacityItems.length > 0 && (

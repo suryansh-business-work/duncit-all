@@ -61,7 +61,7 @@ export default function VenueDeductionsPanel({
   return (
     <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
       <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-        Venue deductions
+        {t('onboarding.venues.venueDeductions')}
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
         The commission Duncit takes from the venue payout (after GST). Defaults to the{' '}

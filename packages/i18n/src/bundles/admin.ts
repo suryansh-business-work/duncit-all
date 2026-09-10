@@ -441,12 +441,12 @@ changeRequests: {
         'Off — a cancellation refunds every attendee immediately. Revoking afterwards cannot recover that money.',
       autoCancelTitle: 'Auto-Cancel Finance-Negative Pods',
       autoCancelDesc:
-        "When on, a sweep checks every pod inside the lead window before its start: if ticket collections cannot cover the venue's booked slot price (the host side would settle negative), the pod is cancelled automatically, attendees are refunded under that venue's cancellation policy, and the host and attendees are emailed. Venues whose policy is reschedule-only are never auto-cancelled.",
-      autoCancelOn: 'On — loss-making pods inside the lead window are cancelled and refunded automatically.',
+        "When on, a sweep checks every pod inside its venue's cancellation trigger before the start: if ticket collections cannot cover the venue's booked slot price (the host side would settle negative), the pod is cancelled automatically, everyone enrolled is refunded under that venue's refund bands and told over WhatsApp and email, and the host is emailed. Each venue's trigger and bands are set in Onboarding → Onboarded Venues → Review. Venues whose policy is reschedule-only are never auto-cancelled.",
+      autoCancelOn: 'On — loss-making pods inside their venue’s cancellation trigger are cancelled and refunded automatically.',
       autoCancelOff: 'Off — no pod is ever cancelled automatically; Finance reviews loss-making pods by hand.',
       autoCancelLeadTitle: 'Auto-Cancel Lead Window (Hours)',
       autoCancelLeadDesc:
-        "How many hours before a pod's start the finance check runs. Cancelling at this point should sit outside the venue's cancellation bands, so attendees get the fullest refund the venue's policy allows.",
+        "How many hours before its start a pod with NO venue behind it — a virtual pod — has its finance checked. A pod booked at a venue answers to that venue's own cancellation trigger instead, set in Onboarding → Onboarded Venues → Review.",
       autoCancelLeadLabel: 'Lead Window (Hours)',
       autoCancelLeadMin: 'Minimum 1 hour. Default 24.',
       autoCancelLeadInvalid: 'Enter a whole number of 1 or more.',

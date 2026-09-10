@@ -11,10 +11,12 @@ import {
   DELETE_VENUE,
   REJECT,
   SET_VENUE_ACTIVE,
+  SET_VENUE_CANCELLATION_TRIGGER,
   SET_VENUE_DEDUCTIONS,
   VENUES_TABLE,
   type VenueRow,
 } from './queries';
+import type { VenueCancellationTrigger } from './cancellation-trigger';
 import VenueEditDialog from './VenueEditDialog';
 import VenueReviewDialog from './VenueReviewDialog';
 import VenuesTable from './VenuesTable';
@@ -28,6 +30,9 @@ export default function VenuesPage() {
   const [approve] = useMutation<any>(APPROVE);
   const [reject] = useMutation<any>(REJECT);
   const [setVenueDeductions, { loading: savingDeductions }] = useMutation<any>(SET_VENUE_DEDUCTIONS);
+  const [setCancellationTrigger, { loading: savingCancellationTrigger }] = useMutation<any>(
+    SET_VENUE_CANCELLATION_TRIGGER
+  );
   const { data: defaultsData } = useQuery<any>(DEFAULT_VENUE_COMMISSION, { fetchPolicy: 'cache-first' });
   const defaultCommissionPct: number | undefined = defaultsData?.defaultVenueCommissionPct;
   const lifecycle = useEntityLifecycle(SET_VENUE_ACTIVE, DELETE_VENUE, refresh);
@@ -67,6 +72,21 @@ export default function VenuesPage() {
     });
     setActive((current: any) =>
       current ? { ...current, venue_share_pct: sharePct, venue_commission_pct: commissionPct } : current
+    );
+    refresh();
+  };
+  /** Merged back onto the open venue rather than refetched into it: the dialog
+   * re-seeds its fields from `active`, so the saved trigger has to be what it
+   * reads next — the same reason the deductions above are merged. */
+  const doSaveCancellationTrigger = async (trigger: VenueCancellationTrigger) => {
+    await setCancellationTrigger({ variables: { id: active.id, ...trigger } });
+    setActive((current: any) =>
+      current
+        ? {
+            ...current,
+            settings: { ...current.settings, cancellation: { ...current.settings?.cancellation, ...trigger } },
+          }
+        : current
     );
     refresh();
   };
@@ -133,6 +153,8 @@ export default function VenuesPage() {
         onReject={doReject}
         onSaveDeductions={doSaveDeductions}
         savingDeductions={savingDeductions}
+        onSaveCancellationTrigger={doSaveCancellationTrigger}
+        savingCancellationTrigger={savingCancellationTrigger}
         defaultCommissionPct={defaultCommissionPct}
       />
 

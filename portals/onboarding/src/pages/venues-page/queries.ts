@@ -165,6 +165,15 @@ const VENUE_ROW_FIELDS = gql`
       type
       url
     }
+    settings {
+      cancellation {
+        trigger_hours
+        refund_tiers {
+          hours_before
+          refund_pct
+        }
+      }
+    }
   }
 `;
 
@@ -231,6 +240,33 @@ export const SET_VENUE_DEDUCTIONS = gql`
       id
       venue_share_pct
       venue_commission_pct
+    }
+  }
+`;
+
+/** The review's cancellation-trigger panel. Answers with the stored trigger so
+ * the dialog re-seeds from what the server actually kept. */
+export const SET_VENUE_CANCELLATION_TRIGGER = gql`
+  mutation SetVenueCancellationTrigger(
+    $id: ID!
+    $trigger_hours: Int!
+    $refund_tiers: [VenueCancellationRefundTierInput!]!
+  ) {
+    setVenueCancellationTrigger(
+      venue_doc_id: $id
+      trigger_hours: $trigger_hours
+      refund_tiers: $refund_tiers
+    ) {
+      id
+      settings {
+        cancellation {
+          trigger_hours
+          refund_tiers {
+            hours_before
+            refund_pct
+          }
+        }
+      }
     }
   }
 `;

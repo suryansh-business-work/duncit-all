@@ -64,6 +64,8 @@ For saved content:
 - **Tables**: one toolbar button opens insert (3x3 with a header row), add/delete row,
   add/delete column, toggle header row, merge or split cells and delete table. Every entry
   except insert is disabled unless the caret is inside a table.
+- **Pictures**: one toolbar button opens the file dialog, uploads to ImageKit and inserts the
+  returned URL. See [Pictures](#pictures).
 - The toolbar wraps instead of overflowing on mobile.
 - Placeholder and editor text use theme colours, including dark mode.
 - Empty Tiptap HTML (`<p></p>`) is normalized to `''`.
@@ -91,6 +93,43 @@ partners-app — style it with `RICH_TEXT_BODY_SX` from `@duncit/ui`, which carr
 borders and header shading. A browser gives a bare `<table>` no borders at all, so a saved
 table rendered without that block reads as prose and looks like a table that never saved.
 
+## Pictures
+
+The picture button uploads first and inserts second, so a failed upload leaves the document
+exactly as it was rather than writing a `src` nobody can fetch into saved HTML.
+
+```tsx
+// Pictures from this surface land in ImageKit's /support-replies folder.
+<DuncitRichTextInput
+  value={bodyHtml}
+  onChange={setBodyHtml}
+  imageFolder="/support-replies"
+/>
+```
+
+- The upload goes through `useImagekitBase64Upload` from `@duncit/media-picker` — the same
+  mutation every other picker in the product uses, so signing, folder handling and the size
+  limit are not re-implemented here.
+- `imageFolder` defaults to `/rich-text`, which keeps document images clear of the venue, club
+  and pod media the other pickers write. Pass a folder of your own when a surface wants its
+  pictures grouped.
+- A `LinearProgress` bar sits across the bottom of the toolbar while the upload runs. It is
+  **determinate** while the browser reads the file (a real percentage) and switches to
+  **indeterminate** once the bytes are with ImageKit, because nothing after that point reports
+  progress and a bar parked at 55% would be inventing it. The button is disabled and renamed
+  to _Uploading picture…_ for the duration, so one pick cannot start two uploads.
+- `allowBase64` is off. Every picture is stored as an ImageKit URL; a data: URI would put a
+  megabyte of image inside the HTML column and nothing could cache it.
+- `inline: false` makes an image its own block, so it can be selected and deleted with the
+  caret instead of behaving like one enormous character inside a paragraph. ProseMirror rings
+  the selected image, which is what makes Delete feel aimed.
+- A failed upload reports through the SAME error slot as the AI action, so the caller still
+  needs no error state of its own.
+
+Read-only surfaces printing this HTML without the editor get the image sizing from
+`RICH_TEXT_BODY_SX` in `@duncit/ui` — a 4000px phone photo overflows a page that does not
+constrain it.
+
 ## API
 
 | Prop          | Type                   | Default            | Meaning                                |
@@ -105,12 +144,15 @@ table rendered without that block reads as prose and looks like a table that nev
 | `readOnly`    | `boolean`              | `false`            | Content-only rendering.                |
 | `bare`        | `boolean`              | `false`            | Removes outer border/background.       |
 | `aiContext`   | `string`               | omitted            | Short task context for the AI rewrite. |
+| `imageFolder` | `string`               | `'/rich-text'`     | ImageKit folder for inserted pictures. |
 
 `htmlToText(html)` extracts the plain-text companion used by search, previews and API payloads.
 
 ## Dependencies and GraphQL
 
-Tiptap extensions are runtime dependencies owned here, not repeated by consumers. MUI,
+Tiptap extensions are runtime dependencies owned here, not repeated by consumers, as is
+`@duncit/media-picker` — the picture upload calls its existing hook rather than repeating the
+ImageKit mutation for a fourth time. MUI,
 Apollo, GraphQL and React are peers so portal providers and themes are never duplicated.
 Localization comes from the existing `@duncit/app-settings` runtime and `shell.richText.*`
 fallback entries.
@@ -121,6 +163,11 @@ Prompt Library. Operators can therefore tune the rewrite without redeploying a p
 
 ## Coverage gate
 
-`vitest.config.ts` declares the required 100/100/100/100 package threshold. Test creation and
-execution are temporarily paused by the repository development instruction; the gate remains
-declared so it cannot be forgotten when tests resume.
+`vitest.config.ts` declares the required 100/100/100/100 package threshold, and the suites meet
+it — 79 tests over ten files, run against a real headless tiptap editor rather than a mocked
+one, so a command that stops working fails here rather than in a portal.
+
+The picture suites are worth knowing about before you change that button: `ImageButton.test.tsx`
+holds the upload open with a deferred promise it settles by hand, because an upload mocked to
+resolve on a timer settles inside the `act()` that dispatches the change event — the in-flight
+bar and the disabled button are gone before any assertion can see them.

@@ -829,6 +829,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       tableToggleHeaderRow: 'Toggle header row',
       tableMergeOrSplit: 'Merge or split cells',
       tableDelete: 'Delete table',
+      // Pictures. Uploaded to ImageKit before anything is inserted, so the bar
+      // is the wait — nothing appears in the document until there is a real URL.
+      image: 'Insert picture',
+      imageUploading: 'Uploading picture…',
+      imageFailed: 'That picture could not be uploaded. Please try again.',
       linkTitle: 'Add a link',
       linkLabel: 'Link URL',
       linkHint: 'Use a complete http, https, mailto or tel URL.',

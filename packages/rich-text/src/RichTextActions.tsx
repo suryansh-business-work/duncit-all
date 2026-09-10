@@ -6,12 +6,23 @@ import { useTranslation } from '@duncit/app-settings';
 interface Props {
   disabled: boolean;
   error: boolean;
+  /** An image upload failed. Shares the one error slot with the AI error. */
+  imageError?: boolean;
   loading: boolean;
   onImprove: () => void;
 }
 
-export function RichTextActions({ disabled, error, loading, onImprove }: Readonly<Props>) {
+export function RichTextActions({
+  disabled,
+  error,
+  imageError = false,
+  loading,
+  onImprove,
+}: Readonly<Props>) {
   const { t } = useTranslation();
+  // One slot, so the newer failure wins rather than stacking two alerts in a bar
+  // that is 40px tall.
+  const message = imageError ? 'shell.richText.imageFailed' : 'shell.richText.improveError';
   return (
     <Box
       sx={{
@@ -25,9 +36,9 @@ export function RichTextActions({ disabled, error, loading, onImprove }: Readonl
         p: 1,
       }}
     >
-      {error ? (
+      {error || imageError ? (
         <Alert severity="error" sx={{ flex: 1, py: 0 }}>
-          {t('shell.richText.improveError')}
+          {t(message)}
         </Alert>
       ) : (
         <Box />

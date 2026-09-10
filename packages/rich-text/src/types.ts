@@ -16,4 +16,10 @@ export interface DuncitRichTextInputProps {
   bare?: boolean;
   /** Short task context sent with the current HTML when AI improves it. */
   aiContext?: string;
+  /**
+   * ImageKit folder for pictures inserted from the toolbar. Defaults to
+   * `/rich-text`, which keeps document images clear of the venue/club/pod media
+   * the other pickers write.
+   */
+  imageFolder?: string;
 }

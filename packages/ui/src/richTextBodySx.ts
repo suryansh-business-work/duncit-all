@@ -15,7 +15,10 @@ import type { SxProps, Theme } from '@mui/material/styles';
  * render this HTML but must not pull tiptap into their bundles to do it.
  */
 export const RICH_TEXT_BODY_SX: SxProps<Theme> = {
-  '& img': { maxWidth: '100%', height: 'auto', borderRadius: 1 },
+  // The editor inserts a picture as its OWN block, so the saved HTML has an
+  // `<img>` as a direct child of the document rather than inside a paragraph.
+  // Left inline it would sit on a text baseline with no space around it.
+  '& img': { borderRadius: 1, display: 'block', height: 'auto', maxWidth: '100%', my: 2 },
   '& a': { color: 'primary.main' },
   '& h1, & h2, & h3': { mt: 3, mb: 1.5, fontWeight: 700 },
   '& p': { mb: 1.25, lineHeight: 1.7 },

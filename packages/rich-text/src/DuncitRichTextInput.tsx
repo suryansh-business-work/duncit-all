@@ -5,6 +5,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { TableKit } from '@tiptap/extension-table';
+import Image from '@tiptap/extension-image';
 import { useTranslation } from '@duncit/app-settings';
 import { normalizedEditorHtml } from './html';
 import {
@@ -15,6 +16,14 @@ import {
 import { RichTextActions } from './RichTextActions';
 import { RichTextToolbar } from './RichTextToolbar';
 import type { DuncitRichTextInputProps, RichTextChangeHandler } from './types';
+
+/**
+ * Where a picture dropped into rich text lands when the surface names no folder.
+ *
+ * One folder of its own rather than the ImageKit root: it keeps document images
+ * clear of the venue/club/pod media every other picker writes.
+ */
+const DEFAULT_IMAGE_FOLDER = '/rich-text';
 
 function emitValue(editor: Editor, onChange: RichTextChangeHandler): void {
   onChange(normalizedEditorHtml(editor.getHTML()), editor.getText().trim());
@@ -31,10 +40,12 @@ export function DuncitRichTextInput({
   readOnly = false,
   bare = false,
   aiContext,
+  imageFolder = DEFAULT_IMAGE_FOLDER,
 }: Readonly<DuncitRichTextInputProps>) {
   const { t } = useTranslation();
   const resolvedPlaceholder = placeholder ?? t('shell.richText.placeholder');
   const [aiError, setAiError] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const [improve, { loading }] = useMutation<ImproveRichTextData, ImproveRichTextVariables>(
     IMPROVE_RICH_TEXT,
   );
@@ -60,6 +71,12 @@ export function DuncitRichTextInput({
       // Column resizing is on for an editable editor only: the resize handles
       // are drag targets, and a read-only document should not offer them.
       TableKit.configure({ table: { resizable: !readOnly } }),
+      // Pictures. `inline: false` keeps an image its own block, which is what
+      // makes it selectable and deletable with a caret rather than behaving like
+      // an enormous character inside a paragraph. `allowBase64` stays OFF: every
+      // picture is uploaded to ImageKit and stored as a URL, so a data: URI in
+      // the saved HTML would be a megabyte of document nobody can cache.
+      Image.configure({ inline: false, allowBase64: false }),
       Placeholder.configure({ placeholder: resolvedPlaceholder }),
     ],
     [readOnly, resolvedPlaceholder],
@@ -199,16 +216,39 @@ export function DuncitRichTextInput({
           top: 0,
           width: 2,
         },
+        // A phone photo is 4000px wide, so it is told to behave rather than
+        // being trusted to.
+        '& .ProseMirror img': {
+          borderRadius: 4,
+          display: 'block',
+          height: 'auto',
+          margin: theme.spacing(1, 0),
+          maxWidth: '100%',
+        },
+        // ProseMirror rings the selected node. Without this an image the caret is
+        // on looks identical to one it is not, and Delete feels like it misfired.
+        '& .ProseMirror img.ProseMirror-selectednode': {
+          outline: `2px solid ${theme.palette.primary.main}`,
+          outlineOffset: 2,
+        },
         '& .ProseMirror > :first-of-type': { marginTop: 0 },
         '& .ProseMirror > :last-of-type': { marginBottom: 0 },
       })}
     >
-      {editable ? <RichTextToolbar compact={compact} editor={editor} /> : null}
+      {editable ? (
+        <RichTextToolbar
+          compact={compact}
+          editor={editor}
+          imageFolder={imageFolder}
+          onImageError={setImageError}
+        />
+      ) : null}
       <EditorContent editor={editor} />
       {editable ? (
         <RichTextActions
           disabled={!editor.getText().trim()}
           error={aiError}
+          imageError={imageError}
           loading={loading}
           onImprove={() => {
             improveContent().catch(() => setAiError(true));

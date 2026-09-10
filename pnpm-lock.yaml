@@ -2492,6 +2492,12 @@ importers:
       '@duncit/gql-types':
         specifier: workspace:*
         version: link:../gql-types
+      '@duncit/media-picker':
+        specifier: workspace:*
+        version: link:../media-picker
+      '@tiptap/extension-image':
+        specifier: 3.30.6
+        version: 3.30.6(@tiptap/core@3.30.6(@tiptap/pm@3.30.6))
       '@tiptap/extension-link':
         specifier: 3.30.6
         version: 3.30.6(@tiptap/core@3.30.6(@tiptap/pm@3.30.6))(@tiptap/pm@3.30.6)
@@ -10344,6 +10350,11 @@ packages:
     peerDependencies:
       '@tiptap/core': 3.30.6
       '@tiptap/pm': 3.30.6
+
+  '@tiptap/extension-image@3.30.6':
+    resolution: {integrity: sha512-Y4oWgODXa+Jd/JiWWCxnr7v+1qtK1CzgliLHTk0x/H6RTuzduvL5/zTt0P4+inh7s/vQewliDyg/iagj+gBpXg==}
+    peerDependencies:
+      '@tiptap/core': 3.30.6
 
   '@tiptap/extension-italic@3.30.6':
     resolution: {integrity: sha512-vbltMPEePHWsGhvPH01yfT9GNJNMs2oUwPhqC0z/Brychu/oFe+0FR4RKFBVXnZg8oRfGQEOJ6OjD9jKDAZ0zQ==}
@@ -20211,6 +20222,10 @@ snapshots:
     dependencies:
       '@tiptap/core': 3.30.6(@tiptap/pm@3.30.6)
       '@tiptap/pm': 3.30.6
+
+  '@tiptap/extension-image@3.30.6(@tiptap/core@3.30.6(@tiptap/pm@3.30.6))':
+    dependencies:
+      '@tiptap/core': 3.30.6(@tiptap/pm@3.30.6)
 
   '@tiptap/extension-italic@3.30.6(@tiptap/core@3.30.6(@tiptap/pm@3.30.6))':
     dependencies:

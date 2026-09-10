@@ -104,6 +104,8 @@ import {
   orderedAspects,
   participationInputFrom,
   payableSpots,
+  payingSeats,
+  podSeatsTaken,
   podParticipationActions,
   podPhase,
   podRefundState,
@@ -385,6 +387,13 @@ const { t: clubAdminT } = createTranslator({
   fallback: flattenCatalogue(CLUB_ADMIN_BUNDLE),
 });
 
+interface SeatsSoldMock {
+  pod_attendees: string[];
+  pod_hosts_id: string[];
+  seats_taken: number;
+  price_per_seat: number;
+}
+
 export default defineDemos('utils', [
   defineDemo<SpotsMock>({
     id: 'host-free-spot',
@@ -402,6 +411,28 @@ export default defineDemos('utils', [
         'The rule, in words': HOST_FREE_SPOT_NOTE,
       };
     },
+  }),
+
+  defineDemo<SeatsSoldMock>({
+    id: 'seats-not-people',
+    title: 'Ten seats sold to three people',
+    note:
+      'seats_taken is the server’s attendees + extra_seats. Set it to 3 — the length of pod_attendees, which is what every table used to count — and watch both the occupancy and the revenue collapse to a third of the truth: one buyer who took seven seats appears in that list exactly once.',
+    mock: {
+      pod_attendees: ['host-1', 'u-prakhar', 'u-sangini'],
+      pod_hosts_id: ['host-1'],
+      seats_taken: 10,
+      price_per_seat: 500,
+    },
+    compute: (mock) => ({
+      'podSeatsTaken(pod)': podSeatsTaken(mock),
+      'Bookings (pod_attendees.length)': mock.pod_attendees.length,
+      'payingSeats(pod, hosts)': payingSeats(mock, mock.pod_hosts_id),
+      'Pod collected': formatMoney(payingSeats(mock, mock.pod_hosts_id) * mock.price_per_seat),
+      'If bookings were billed instead': formatMoney(
+        (mock.pod_attendees.length - mock.pod_hosts_id.length) * mock.price_per_seat,
+      ),
+    }),
   }),
 
   defineDemo<BookingMock>({

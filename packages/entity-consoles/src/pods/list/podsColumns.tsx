@@ -1,6 +1,6 @@
 import { Avatar, Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { AttendanceChip } from '@duncit/ui';
+import { AttendanceChip, PodSeatsCell } from '@duncit/ui';
 import type { DuncitColumn } from '@duncit/table';
 import PodActionButtons from './PodActionButtons';
 import AiMonitorPill from '../monitoring/AiMonitorPill';
@@ -75,29 +75,10 @@ const renderHits = (p: PodRow) => (
   </Stack>
 );
 
-/**
- * Seats first, bookings under them.
- *
- * The two numbers differ the moment somebody buys more than one ticket, and
- * an admin needs both: the seat count says whether the pod is full, the
- * booking count says how many people that is. Reading one without the other
- * is what made a sold-out pod look like it had two attendees.
- */
-const renderSpots = (p: PodRow, t: Translate) => {
-  const { seats, people, extraSeats } = podSpotCounts(p);
-  const hintKey = extraSeats > 0 ? 'admin.pods.spotsHintMulti' : 'admin.pods.spotsHint';
-  return (
-    <Tooltip title={t(hintKey, { vars: { seats, people, extra: extraSeats } })}>
-      <Box sx={{ lineHeight: 1.2 }}>
-        <Typography variant="body2" component="div" sx={{ fontWeight: 600 }}>
-          {spotsValue(p)}
-        </Typography>
-        <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
-          {t('admin.pods.spotsBookings', { count: people })}
-        </Typography>
-      </Box>
-    </Tooltip>
-  );
+/** Both counts, from the one component admin and Partners share (rule 40). */
+const renderSpots = (p: PodRow) => {
+  const { seats, people, total } = podSpotCounts(p);
+  return <PodSeatsCell seats={seats} bookings={people} total={total} />;
 };
 
 const renderStatus = (p: PodRow, t: PodsColumnDeps['t']) => {
@@ -207,7 +188,7 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
       field: 'no_of_spots',
       headerName: t('admin.pods.colSpots'),
       width: 120,
-      cellRenderer: (p: PodRow) => renderSpots(p, t),
+      cellRenderer: renderSpots,
       valueGetter: spotsValue,
     },
     {

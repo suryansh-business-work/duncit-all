@@ -1,7 +1,8 @@
 import { useApolloClient } from '@apollo/client/react';
 import { Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
-import { formatINR, payingAttendees } from '@duncit/utils';
+import { PodSeatsCell } from '@duncit/ui';
+import { formatINR, payingSeats, podSeatsTaken } from '@duncit/utils';
 import { MY_HOST_PODS_TABLE, type PartnerPodRow } from '../pods-page/queries';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
@@ -26,9 +27,15 @@ const renderStatus = (pod: PartnerPodRow) => (
   <Chip size="small" label={podStatusLabel(pod)} color={podStatusColor(pod)} />
 );
 
-// Hosts sit in pod_attendees but never pay — drop them before earning math.
+// Priced per SEAT, so the multiplier is seats — a buyer who took seven paid
+// seven tickets. Hosts sit in pod_attendees but never pay, so their free seat
+// is dropped first.
 const earningValue = (pod: PartnerPodRow) =>
-  formatINR(Number(pod.pod_amount ?? 0) * payingAttendees(pod.pod_attendees, pod.pod_hosts_id));
+  formatINR(Number(pod.pod_amount ?? 0) * payingSeats(pod, pod.pod_hosts_id));
+
+const renderAttendees = (pod: PartnerPodRow) => (
+  <PodSeatsCell seats={podSeatsTaken(pod)} bookings={pod.pod_attendees?.length ?? 0} />
+);
 
 type Translate = ReturnType<typeof useTranslation>['t'];
 
@@ -51,8 +58,9 @@ const columns = (t: Translate): DuncitColumn<PartnerPodRow>[] =>[
     field: 'attendees',
     headerName: t('partners.common.attendees'),
     sortable: false,
-    width: 110,
-    valueGetter: (pod) => pod.pod_attendees?.length ?? 0,
+    width: 120,
+    cellRenderer: renderAttendees,
+    valueGetter: podSeatsTaken,
   },
   { field: 'earning', headerName: t('partners.becomeHostPage.podEarning'), sortable: false, width: 130, valueGetter: earningValue },
   {

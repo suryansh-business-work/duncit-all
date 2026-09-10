@@ -1,9 +1,9 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Box, Chip, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
-import { AttendanceChip } from '@duncit/ui';
+import { AttendanceChip, PodSeatsCell } from '@duncit/ui';
 import { formatDate, formatDateTime } from '@duncit/app-settings';
-import { POD_ROW_STATUS_COLORS, podRowStatus, podRowStatusLabel } from '@duncit/utils';
+import { POD_ROW_STATUS_COLORS, podRowStatus, podRowStatusLabel, podSeatsTaken } from '@duncit/utils';
 import { useTranslation } from '../i18n';
 
 /** Minimal row shape shared by the partner + club-admin pods tables. */
@@ -16,6 +16,10 @@ export interface PodRowBase {
   pod_date_time?: string | null;
   pod_amount?: number | null;
   pod_attendees?: string[] | null;
+  /** Seats held — attendees plus every extra seat a multi-seat booking bought. */
+  seats_taken?: number | null;
+  /** Declared capacity, when the query selected it. 0/absent = uncapped. */
+  no_of_spots?: number | null;
   /** Seats scanned in at the door — what a completed pod settles on. */
   attendance?: { attended_seats: number; booked_seats: number; recorded: boolean } | null;
   is_active: boolean;
@@ -50,7 +54,23 @@ const renderAttendance = (pod: PodRowBase) => <AttendanceChip attendance={pod.at
 const dateValue = (pod: PodRowBase) =>
   formatDateTime(pod.pod_date_time) || 'Not scheduled';
 
-const attendeesValue = (pod: PodRowBase) => pod.pod_attendees?.length ?? 0;
+/**
+ * Seats, not bookings.
+ *
+ * A booking for seven writes ONE id into `pod_attendees`, so counting that
+ * list told a host with a full pod that two people were coming. The cell shows
+ * the seat count with the bookings behind it — the same component admin’s
+ * Pods table renders, so the two portals cannot disagree about one pod.
+ */
+const attendeesValue = (pod: PodRowBase) => podSeatsTaken(pod);
+
+const renderAttendees = (pod: PodRowBase) => (
+  <PodSeatsCell
+    seats={podSeatsTaken(pod)}
+    bookings={pod.pod_attendees?.length ?? 0}
+    total={pod.no_of_spots}
+  />
+);
 
 const getPodRowId = (pod: PodRowBase) => pod.id;
 
@@ -111,7 +131,14 @@ export default function PodsTable<T extends PodRowBase>({
         minWidth: 175,
         valueGetter: dateValue,
       },
-      { field: 'attendees', headerName: t('partners.common.attendees'), sortable: false, width: 110, valueGetter: attendeesValue },
+      {
+        field: 'attendees',
+        headerName: t('partners.common.attendees'),
+        sortable: false,
+        width: 120,
+        cellRenderer: renderAttendees,
+        valueGetter: attendeesValue,
+      },
       {
         // Booked seats alone no longer explain a completed pod's payout — it is
         // settled on the seats scanned at the door, so both are shown.

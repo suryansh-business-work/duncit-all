@@ -135,6 +135,31 @@ export function podSeatsTaken(pod: PodSeatCounts | null | undefined): number {
 }
 
 /**
+ * Seats that PAID — the money head count.
+ *
+ * `payingAttendees` above counts PEOPLE, and one person can hold several
+ * seats: the buyer appears in `pod_attendees` once and the rest of their party
+ * rides in `extra_seats`. Every rupee on a pod is priced per seat, so a person
+ * count standing next to a seat-priced total can never reconcile — a pod that
+ * sold 29 seats to 10 buyers reported ten tickets of revenue.
+ *
+ * The host sits in `pod_attendees` and never pays, so their one seat is
+ * dropped, exactly as `payingAttendees` drops them.
+ *
+ * Mirrors `payingSeats` in server/src/modules/finance/finance/breakdown.math.ts,
+ * which reads `extra_seats` directly; the client reads the `seats_taken` the
+ * server already resolved from it.
+ */
+export function payingSeats(
+  pod: PodSeatCounts | null | undefined,
+  hostIds: readonly string[] | null | undefined,
+): number {
+  const attendees = pod?.pod_attendees ?? [];
+  const hostSeats = attendees.length - payingAttendees(attendees.map(String), hostIds);
+  return Math.max(podSeatsTaken(pod) - hostSeats, 0);
+}
+
+/**
  * Seats still bookable. `no_of_spots` of 0 means unlimited, which has no
  * meaningful "left" — callers show nothing there rather than a zero.
  */

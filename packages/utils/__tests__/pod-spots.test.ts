@@ -5,6 +5,7 @@ import {
   attendeeSeatCount,
   payableSpots,
   payingAttendees,
+  payingSeats,
   podSeatsTaken,
   podSpotsLeft,
   spotsBounds,
@@ -258,5 +259,42 @@ describe('attendeeSeatCount', () => {
     expect(attendeeSeatCount([])).toBe(0);
     expect(attendeeSeatCount(null)).toBe(0);
     expect(attendeeSeatCount(undefined)).toBe(0);
+  });
+});
+
+describe('payingSeats', () => {
+  // The bug this exists for: a pod that sold 29 seats to 10 buyers billed ten
+  // tickets, because the money math counted people while the price is per seat.
+  it('bills every seat a booking holds, not the buyer who holds them', () => {
+    const pod = { pod_attendees: ['host-1', 'guest-1', 'guest-2'], seats_taken: 10 };
+    expect(payingSeats(pod, ['host-1'])).toBe(9);
+  });
+
+  it('drops the host’s free seat, exactly as payingAttendees does', () => {
+    const pod = { pod_attendees: ['host-1', 'guest-1'], seats_taken: 2 };
+    expect(payingSeats(pod, ['host-1'])).toBe(1);
+    expect(payingSeats(pod, [])).toBe(2);
+    expect(payingSeats(pod, null)).toBe(2);
+  });
+
+  it('drops one seat per host on a co-hosted pod', () => {
+    const pod = { pod_attendees: ['host-1', 'host-2', 'guest-1'], seats_taken: 7 };
+    expect(payingSeats(pod, ['host-1', 'host-2'])).toBe(5);
+  });
+
+  it('falls back to the attendee list when seats_taken was not selected', () => {
+    expect(payingSeats({ pod_attendees: ['host-1', 'guest-1', 'guest-2'] }, ['host-1'])).toBe(2);
+  });
+
+  it('is zero for a pod with nobody on it, or no pod at all', () => {
+    expect(payingSeats({ pod_attendees: [] }, ['host-1'])).toBe(0);
+    expect(payingSeats({}, ['host-1'])).toBe(0);
+    expect(payingSeats(null, ['host-1'])).toBe(0);
+    expect(payingSeats(undefined, null)).toBe(0);
+  });
+
+  it('never goes negative when a host holds a seat the count has not caught up with', () => {
+    const pod = { pod_attendees: ['host-1', 'host-2'], seats_taken: 1 };
+    expect(payingSeats(pod, ['host-1', 'host-2'])).toBe(0);
   });
 });

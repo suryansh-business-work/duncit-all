@@ -228,6 +228,7 @@ export {
   attendeeSeatCount,
   payableSpots,
   payingAttendees,
+  payingSeats,
   podSeatsTaken,
   podSpotsLeft,
   spotsBounds,

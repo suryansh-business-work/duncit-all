@@ -65,6 +65,7 @@ exports:
   - 'filterProductsForClub'
   - 'payableSpots'
   - 'payingAttendees'
+  - 'payingSeats'
   - 'HOST_FREE_SPOT_NOTE'
   - 'PodSpotLimits'
   - 'buildEarningsStatement'
@@ -659,6 +660,7 @@ clampPayable(359.1 - 358)           // 1.1  — not 1.0999999999999773
 | --- | --- | --- |
 | `payableSpots` | `(totalSpots: number) => number` | `total − 1`; never negative. |
 | `payingAttendees` | `(attendeeIds, hostIds) => number` | Attendees minus hosts; both args accept `null`/`undefined`. |
+| `payingSeats` | `(pod, hostIds) => number` | The same, in SEATS — `podSeatsTaken` minus one seat per host present. This is the money head count: every rupee on a pod is priced per seat. |
 | `attendeeSeatCount` | `(people: { seats?: number }[]) => number` | Seats a rendered attendee list holds — a booking for three is one row, so counting rows under-reports it. `seats` absent or `0` counts as one. |
 | `HOST_FREE_SPOT_NOTE` | `string` | Copy to render beside any spots-driven figure. |
 | `PodSpotLimits` | `type` | The range a pod that already EXISTS may be resized within, as the server's `podSpotLimits` answers it: `current`, `min`, `max`, `seats_taken`, `venue_capacity`, `min_pax`, `slidable`, `can_decrease`. |
@@ -1249,6 +1251,12 @@ the finance calculator and the real settlement disagree by exactly one ticket.
 
 `payingAttendees(attendeeIds, hostIds)` is the head-count equivalent — hosts are written into
 `pod_attendees` at creation, so counting the array raw over-states income by one ticket per host.
+
+`payingSeats(pod, hostIds)` is the one to bill against. `payingAttendees` counts PEOPLE, and a
+buyer who takes seven seats appears in `pod_attendees` exactly once — a pod that sold 29 seats to
+10 buyers reported ten tickets of revenue. It mirrors `payingSeats` in the server’s
+`breakdown.math.ts`, which reads `extra_seats` directly where the client reads the `seats_taken`
+the server already resolved from it.
 
 `HOST_FREE_SPOT_NOTE` is the copy that must sit next to any spots-driven figure.
 

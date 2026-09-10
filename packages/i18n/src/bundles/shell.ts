@@ -424,6 +424,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       hostLeads: 'Host Leads',
       hostListOrSell: 'Host, list or sell',
       hostMeetings: 'Host Meetings',
+      hosts: 'Hosts',
       info: 'Info',
       invoices: 'Invoices',
       ios: 'iOS',

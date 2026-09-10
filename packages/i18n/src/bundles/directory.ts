@@ -264,5 +264,91 @@ export const DIRECTORY_BUNDLE: NestedCatalogue = {
       errPan: 'PAN looks like ABCDE1234F',
       errNoId: 'The venue was not saved — no id came back.',
     },
+    // The hosts console — its list, its record and `/hosts/new` + `/hosts/:id/edit`.
+    // Generic messages and the payout block are borrowed from `venueEditor.*`
+    // rather than restated: a host and a venue store the same payout
+    // subdocument, and "X is required" is one sentence (rule 34).
+    hostEditor: {
+      addHost: 'Add host',
+      editHost: 'Edit host',
+      newTitle: 'New host',
+      editTitle: 'Edit host',
+      eyebrow: 'Host',
+      eyebrowNew: 'Hosts · Add',
+      eyebrowEdit: 'Hosts · Edit',
+      save: 'Save host',
+      saved: 'Host saved',
+      created: 'Host created',
+      notFound: 'Host not found.',
+      unnamed: 'Unnamed host',
+      listEmpty: 'No hosts yet.',
+      searchPlaceholder: 'Search name, email, phone or host ID',
+      tabOverview: 'Overview',
+      tabPods: 'Pods',
+
+      colHost: 'Host',
+      colContact: 'Contact',
+      colCategories: 'Runs',
+      colStatus: 'Status',
+      colLive: 'Live',
+      colCommission: 'Commission',
+      colApplied: 'Applied',
+      colMode: 'Mode',
+      colSeats: 'Booked',
+      live: 'Live',
+      paused: 'Paused',
+      hostId: 'Host ID',
+      approvedAt: 'Approved',
+      commissionDefault: 'Platform default',
+      reviewerNotes: 'Reviewer notes',
+
+      identity: 'Who they are',
+      account: 'Duncit account',
+      accountHint:
+        'Picking an account fills the details below from it. One host record per login.',
+      accountLocked:
+        'The account cannot be changed here — a host record is one per login, so pointing it at another account would be a different record.',
+      fullName: 'Full name',
+      email: 'Email',
+      phone: 'Phone',
+      dob: 'Date of birth',
+      address: 'Address',
+      tags: 'Tags',
+
+      verification: 'Verification',
+      aadhaar: 'Aadhaar number',
+      aadhaarHint: '12 digits, no spaces.',
+      pan: 'PAN number',
+      passportPhoto: 'Passport photo',
+      policeVerification: 'Police verification',
+      openDocument: 'Open',
+
+      categories: 'What they run',
+      categoriesHint:
+        'Saving replaces the whole set, so removing a row here is how a category is taken away. Each row needs all three levels — the server refuses a partial one.',
+      addCategory: 'Add a category',
+      removeCategory: 'Remove this category',
+      noCategories: 'No categories yet — this host cannot be assigned a pod until they have one.',
+
+      statusAndMoney: 'Status and money',
+      statusDraft: 'Draft',
+      statusSubmitted: 'Awaiting review',
+      statusApproved: 'Approved',
+      statusRejected: 'Rejected',
+      commissionHint: "What Duncit takes from this host's payout. 0 uses the platform default.",
+      isActive: 'Live and able to run pods',
+      deactivateWarning:
+        'Saving with this off pauses the host and notifies them. Pods they already run are not cancelled.',
+
+      podsTitle: 'Pods they run',
+      podsSubtitle:
+        'Every pod this account hosts. A pod names its hosts by account, which is why pausing the host record does not take these with it.',
+      podsEmpty: 'This host has not run a pod yet.',
+
+      errPickAccount: 'Pick the Duncit account this host record belongs to',
+      errAadhaar: 'Aadhaar must be 12 digits',
+      errCategoryTriple: 'Pick all three levels, or remove the row',
+      errNoId: 'The host was not saved — no id came back.',
+    },
   },
 };

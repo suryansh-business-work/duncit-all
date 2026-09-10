@@ -1,10 +1,11 @@
-import { Divider, Grid, MenuItem, Stack, Typography } from '@mui/material';
+import { Divider, Grid, Stack, Typography } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
-import { BANK_PAYOUT_METHODS, RhfTextField } from '@duncit/forms';
+import { RhfTextField } from '@duncit/forms';
 import { useTranslation } from '@duncit/shell';
 import type { Control, UseFormSetValue } from 'react-hook-form';
 import SectionCard from '../../detail/SectionCard';
-import OwnerPicker from '../fields/OwnerPicker';
+import AccountPicker from '../../../shared/AccountPicker';
+import PayoutFields from '../../../shared/PayoutFields';
 import RhfDateField from '../fields/RhfDateField';
 import type { VenueFormValues } from '../types';
 
@@ -35,7 +36,17 @@ export default function OwnerSection({
             {t('directory.venueEditor.ownerLocked')}
           </Typography>
         ) : (
-          <OwnerPicker control={control} setValue={setValue} />
+          <AccountPicker
+            control={control}
+            name="owner_user_id"
+            label={t('directory.venueEditor.ownerAccount')}
+            hint={t('directory.venueEditor.ownerAccountHint')}
+            onPicked={(account) => {
+              setValue('owner_name', account.full_name ?? '', { shouldValidate: true });
+              setValue('owner_email', account.email ?? '', { shouldValidate: true });
+              setValue('owner_phone', account.phone_number ?? '', { shouldValidate: true });
+            }}
+          />
         )}
 
         <Grid container spacing={1.5}>
@@ -88,56 +99,7 @@ export default function OwnerSection({
         <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
           {t('directory.venueEditor.payout')}
         </Typography>
-        <Grid container spacing={1.5}>
-          <Grid size={{ xs: 12, md: 3 }}>
-            <RhfTextField
-              control={control}
-              name="bank_account.payout_method"
-              label={t('directory.venueEditor.payoutMethod')}
-              size="small"
-              select
-            >
-              <MenuItem value="">{t('directory.venueEditor.payoutNone')}</MenuItem>
-              {BANK_PAYOUT_METHODS.map((method) => (
-                <MenuItem key={method} value={method}>
-                  {method}
-                </MenuItem>
-              ))}
-            </RhfTextField>
-          </Grid>
-          <Grid size={{ xs: 12, md: 3 }}>
-            <RhfTextField
-              control={control}
-              name="bank_account.account_holder_name"
-              label={t('directory.venueEditor.accountHolder')}
-              size="small"
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 2 }}>
-            <RhfTextField
-              control={control}
-              name="bank_account.account_number"
-              label={t('directory.venueEditor.accountNumber')}
-              size="small"
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 2 }}>
-            <RhfTextField
-              control={control}
-              name="bank_account.ifsc_code"
-              label={t('directory.venueEditor.ifsc')}
-              size="small"
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 2 }}>
-            <RhfTextField
-              control={control}
-              name="bank_account.upi_id"
-              label={t('directory.venueEditor.upi')}
-              size="small"
-            />
-          </Grid>
-        </Grid>
+        <PayoutFields control={control} prefix="bank_account" />
       </Stack>
     </SectionCard>
   );

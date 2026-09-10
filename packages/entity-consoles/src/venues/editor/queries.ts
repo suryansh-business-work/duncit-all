@@ -23,21 +23,6 @@ export const VENUE_REGISTRATION_CONFIG = gql`
   }
 `;
 
-/** Owner search for a new venue — server-side, so it scales past a page. */
-export const OWNER_CANDIDATES = gql`
-  query VenueOwnerCandidates($query: TableQueryInput) {
-    usersTable(query: $query) {
-      total
-      rows {
-        user_id
-        full_name
-        email
-        phone_number
-      }
-    }
-  }
-`;
-
 export const ADMIN_CREATE_VENUE = gql`
   mutation VenueEditorCreate(
     $owner_user_id: ID!
@@ -123,9 +108,3 @@ export interface VenueRegistrationConfig {
   security: string[];
 }
 
-export interface OwnerCandidate {
-  user_id: string;
-  full_name?: string | null;
-  email?: string | null;
-  phone_number?: string | null;
-}

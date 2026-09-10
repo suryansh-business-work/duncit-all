@@ -26,6 +26,15 @@ exports:
   - 'VenueEditorPage'
   - 'ChangeLogsSection'
   - 'useMediaPicker'
+  - 'HostsPage'
+  - 'HostDetailsPage'
+  - 'HostEditorPage'
+  - 'EditorPageShell'
+  - 'StatusFields'
+  - 'PayoutFields'
+  - 'AccountPicker'
+  - 'EntityPodsTab'
+  - 'lifecycleOptions'
 ---
 
 ## What this is
@@ -152,3 +161,43 @@ The trail is captured on the MODEL, not in the services: every write through
 mongoose is diffed against what was stored a moment earlier, so a field that
 moves through a path nobody thought about is still recorded, with who moved it
 and which surface they were on.
+
+## The hosts console, and what it shares with the venues one
+
+`hosts.duncit.com` is the same three screens over `hostsTable` /
+`host(host_doc_id:)`: the list, the record (identity, verification, categories,
+payout, the pods they run) and the editor at `/hosts/new` + `/hosts/:hostId/edit`.
+
+```tsx
+import { HostDetailsPage, HostEditorPage, HostsPage } from '@duncit/entity-consoles';
+
+<Route path="/hosts/new" element={authed(<HostEditorPage />)} />
+<Route path="/hosts" element={authed(<HostsPage />)} />
+<Route path="/hosts/:hostId" element={authed(<HostDetailsPage />)} />
+<Route path="/hosts/:hostId/edit" element={authed(<HostEditorPage />)} />
+```
+
+Two things about a host save are worth knowing before touching it:
+
+- **The commission is not on the host record.** It lives on the host's USER
+  account, so it is written with `setHostDeductions(user_id:)` rather than
+  through `adminUpdateHost`.
+- **Categories are a REPLACE, not a merge.** `adminUpdateHost(categories:)`
+  swaps the whole set, which is why removing a row in the editor is how a
+  category is taken away — and why a row with an incomplete Super→Category→Sub
+  triple is dropped from the payload rather than sent. The server rejects a
+  partial triple outright, and one abandoned row must not fail the whole save.
+
+**What the two editors share, and what they do not.** The frame is one component:
+`EditorPageShell` owns the form, the back arrow, Save (in the header AND at the
+foot, because these pages are tall), the save error and the media dialog. So does
+everything both records genuinely have in common — `StatusFields` for the
+four-state lifecycle plus the live switch (whose warning exists because both
+`setVenueActive` and `setHostActive` notify the partner), `PayoutFields` for the
+`BankAccountVerification` block they literally share, `AccountPicker` for
+"which account is this", and `EntityPodsTab` for a record's pods (`venue_id` and
+`host_user_id` are both allowlisted `podsTable` filters).
+
+What is NOT shared is the sections. A venue has eight and a host has four, and
+they are about different things — pushing them behind one configurable component
+would be the abstraction rule 40 warns about rather than the reuse it asks for.

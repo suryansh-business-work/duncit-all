@@ -43,6 +43,21 @@ export {
   type VenueFormValues,
 } from './venues/editor';
 
+// ---- the hosts console ---------------------------------------------------
+export { default as HostsPage } from './hosts/list/HostsPage';
+export { default as HostDetailsPage } from './hosts/detail/HostDetailsPage';
+export { default as HostEditorPage } from './hosts/editor';
+export {
+  blankHostValues,
+  hostToValues,
+  makeHostFormSchema,
+  valuesToHostCategories,
+  valuesToHostStep1,
+  valuesToHostStep2,
+  valuesToHostStep3,
+  type HostFormValues,
+} from './hosts/editor';
+
 // ---- the clubs console (from the ADMIN portal) ---------------------------
 export { default as ClubsPage } from './clubs/list/ClubsPage';
 export { default as ClubDetailsPage } from './clubs/detail/ClubDetailsPage';
@@ -69,6 +84,12 @@ export { default as PodPlansPage } from './pods/plans/PodPlansPage';
 // All from the admin portal, and each used by more than one console here.
 export { default as SuperCategoryFilter } from './shared/SuperCategoryFilter';
 export { default as MediaGallery } from './shared/MediaGallery';
+export { default as EntityPodsTab } from './shared/EntityPodsTab';
+export { default as AccountPicker } from './shared/AccountPicker';
+export { default as PayoutFields } from './shared/PayoutFields';
+export { default as EditorPageShell } from './shared/EditorPageShell';
+export { default as StatusFields } from './shared/StatusFields';
+export { lifecycleOptions } from './shared/lifecycleOptions';
 export { default as MediaLightbox } from './shared/MediaLightbox';
 export { default as AiFillButton } from './shared/AiFillButton';
 export { default as useMediaPicker } from './shared/useMediaPicker';

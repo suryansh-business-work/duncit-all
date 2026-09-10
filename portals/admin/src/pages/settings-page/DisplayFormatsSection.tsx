@@ -16,6 +16,8 @@ import { DuncitButton } from '@duncit/buttons';
 import { format } from 'date-fns';
 import {
   PUBLIC_APP_SETTINGS,
+  keyboardPattern,
+  patternPlaceholder,
   unsupportedPickerTokens,
   usesTwelveHourClock,
 } from '@duncit/app-settings';
@@ -91,6 +93,13 @@ export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
   const badDateTokens = unsupportedPickerTokens(dateFmt);
   const badTimeTokens = unsupportedPickerTokens(timeFmt);
   const unusable = badDateTokens.length > 0 || badTimeTokens.length > 0;
+
+  // What a date box asks for is the same pattern with the month in digits and
+  // the weekday dropped — nobody types "Tue" or spells "September" into a
+  // field. Shown here so the difference is chosen, not discovered at signup.
+  const typedHint = t('admin.settings.typedPreview', {
+    vars: { format: patternPlaceholder(keyboardPattern(dateFmt)) },
+  });
 
   // A date-fns pattern does not say out loud whether pickers will count 1–12 or
   // 0–23, and that is what an operator is actually choosing here.
@@ -200,6 +209,7 @@ export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
             />
           </Stack>
           <Alert severity="info">Preview: <strong>{preview}</strong></Alert>
+          <Alert severity="info">{typedHint}</Alert>
           <Alert severity="info">{clockHint}</Alert>
           {unusable && (
             <Alert severity="warning">

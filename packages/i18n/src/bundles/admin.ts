@@ -773,6 +773,11 @@ changeRequests: {
         'Clock: 12-hour with AM/PM. Every time picker follows it, including the time slots on a venue’s Availability Calendar.',
       clockCycle24:
         'Clock: 24-hour, 00–23. Every time picker follows it, including the time slots on a venue’s Availability Calendar.',
+      // A pattern is displayed as written and typed in digits, so the panel
+      // shows both — an operator picking 'dd MMM yyyy' is otherwise told the
+      // app will ask a member to spell "Sep" into the signup box.
+      typedPreview:
+        'Typed as {format}. Every date box — signup, profile, create-a-pod — takes the month in digits and no weekday, so the pattern above is what a date is SHOWN as, not what anyone has to spell.',
       minAge: 'Minimum age (years)',
       minAgeTitle: 'Minimum age to use the app',
       adminsOnly: 'Shown to admins only.',

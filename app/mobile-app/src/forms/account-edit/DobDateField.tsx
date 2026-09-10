@@ -35,7 +35,8 @@ interface DobDateFieldProps<T extends FieldValues> {
  * calendar stops at the minimum joining age and the range is capped at ~120
  * years.
  *
- * What is TYPED and shown is the admin's configured date pattern (rule 11),
+ * What is TYPED and shown is the typeable form of the admin's configured date
+ * pattern (rule 11) — its order and separators, with the month in digits —
  * matching the MUI X field mWeb renders for the same question; what is STORED
  * stays 'YYYY-MM-DD', which is what the schema and the API speak. The box used
  * to demand YYYY-MM-DD from the member while mWeb asked the same person for
@@ -57,11 +58,11 @@ export function DobDateField<T extends FieldValues>({
   const closeSheet = () => setOpen(false);
 
   const stored = typeof field.value === 'string' ? field.value : '';
-  /* A complete birthday is held as 'YYYY-MM-DD' and read back in the admin's
-     pattern; anything else is half-typed text, echoed exactly as entered so
-     backspacing works. Both render identically once a date is complete, so
+  /* A complete birthday is held as 'YYYY-MM-DD' and read back in the pattern
+     the box is typed in; anything else is half-typed text, echoed exactly as
+     entered so backspacing works. Both render identically once a date is complete, so
      there is no flicker as the value converts. */
-  const value = isIsoDay(stored) ? fmt.formatDay(stored) : stored;
+  const value = isIsoDay(stored) ? fmt.formatDayInput(stored) : stored;
   /* Signup validates on blur, which left a TYPED birthday silent until focus
      moved on, while one picked from the sheet flagged straight away — closing
      the sheet blurs the input. A complete date is checked the moment it is

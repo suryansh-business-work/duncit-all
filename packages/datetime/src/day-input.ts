@@ -174,3 +174,54 @@ export function formatClockTime(value: string, pattern: string): string {
     return '';
   }
 }
+
+/**
+ * A letter month reads beautifully and types terribly. The MUI X field splits
+ * `dd MMM yyyy` into sections and labels the month one `MMMM` — which is what
+ * the signup date-of-birth box showed a member as "DD MMMM YYYY" — and then
+ * asks them to spell "Sep"; the native box asks for the same thing with no
+ * sections to help. So a pattern is DISPLAYED as the admin wrote it and TYPED
+ * as digits.
+ */
+const KEYBOARD_TOKEN: Record<string, string> = {
+  MMM: 'MM',
+  MMMM: 'MM',
+  MMMMM: 'MM',
+  LLL: 'MM',
+  LLLL: 'MM',
+  LLLLL: 'MM',
+};
+
+/** Weekday tokens — decoration on a displayed date, unanswerable in an input. */
+const WEEKDAY_TOKEN = /^[Eeic]+$/;
+
+/** Punctuation a dropped weekday leaves stranded at the front of a pattern. */
+const STRANDED_LEAD = /^[\s,./-]+/;
+
+/**
+ * The admin's display pattern as the one a person TYPES: month names become
+ * `MM` and the weekday is dropped, everything else — order, separators, the
+ * year's width — is left exactly as configured, so what is typed still reads
+ * the way the rest of the app reads (rule 11).
+ *
+ * `EEE, dd MMM yyyy` → `dd MM yyyy`.
+ */
+export function keyboardPattern(pattern: string): string {
+  let out = '';
+  let cursor = 0;
+  for (const match of pattern.matchAll(TOKEN_SCAN)) {
+    const index = match.index ?? 0;
+    const literal = pattern.slice(cursor, index);
+    cursor = index + match[0].length;
+    // A quoted run is literal text, kept with whatever preceded it.
+    if (match[2] === undefined) {
+      out += literal + match[0];
+      continue;
+    }
+    // Dropping the weekday drops the separator it came with, so `dd MMM yyyy,
+    // EEE` does not keep a trailing comma.
+    if (WEEKDAY_TOKEN.test(match[0])) continue;
+    out += literal + (KEYBOARD_TOKEN[match[0]] ?? match[0]);
+  }
+  return (out + pattern.slice(cursor)).replace(STRANDED_LEAD, '').trim();
+}

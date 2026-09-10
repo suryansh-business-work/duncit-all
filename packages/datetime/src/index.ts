@@ -38,6 +38,7 @@ export {
   formatClockTime,
   formatIsoDay,
   isIsoDay,
+  keyboardPattern,
   parseInPattern,
   parseIsoDay,
   parseLocalDateTimeInput,

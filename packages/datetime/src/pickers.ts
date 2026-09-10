@@ -1,3 +1,4 @@
+import { keyboardPattern } from './day-input';
 import { FALLBACK_DATE_FORMAT, FALLBACK_TIME_FORMAT } from './format';
 
 /**
@@ -83,6 +84,14 @@ export function usesTwelveHourClock(timeFormat: string | null | undefined): bool
  * that hardcodes `ampm` must not be able to opt out of the admin's choice.
  * Calendar-header keys (`month`, `year`, `monthAndYear`) are deliberately left
  * alone: they label a month picker, not a date.
+ *
+ * The `keyboard*` keys are the exception, and the reason `keyboardPattern`
+ * exists: they are the ones a FIELD is typed in (`resolveDateFormat` falls back
+ * to `keyboardDate` for a y/M/d picker), so they take the typeable form of the
+ * admin's pattern. On the default `dd MMM yyyy` the letter month made MUI label
+ * the section "MMMM", which is what the signup date-of-birth box asked a member
+ * for — while the toolbar, the calendar and every displayed date keep the
+ * pattern exactly as the admin wrote it.
  */
 export interface PickerFormats {
   keyboardDate: string;
@@ -109,9 +118,11 @@ export function muiDateFormats(
 ): PickerFormats {
   const date = pickerSafe(dateFormat, FALLBACK_DATE_FORMAT);
   const time = pickerSafe(timeFormat, FALLBACK_TIME_FORMAT);
-  const dateTime = `${date} ${time}`;
+  const typedDate = keyboardPattern(date);
+  const typedDateTime = `${typedDate} ${time}`;
+  const displayDateTime = `${date} ${time}`;
   return {
-    keyboardDate: date,
+    keyboardDate: typedDate,
     fullDate: date,
     fullDateWithWeekday: date,
     normalDate: date,
@@ -120,11 +131,11 @@ export function muiDateFormats(
     fullTime: time,
     fullTime12h: time,
     fullTime24h: time,
-    keyboardDateTime: dateTime,
-    keyboardDateTime12h: dateTime,
-    keyboardDateTime24h: dateTime,
-    fullDateTime: dateTime,
-    fullDateTime12h: dateTime,
-    fullDateTime24h: dateTime,
+    keyboardDateTime: typedDateTime,
+    keyboardDateTime12h: typedDateTime,
+    keyboardDateTime24h: typedDateTime,
+    fullDateTime: displayDateTime,
+    fullDateTime12h: displayDateTime,
+    fullDateTime24h: displayDateTime,
   };
 }

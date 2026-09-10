@@ -5,7 +5,9 @@ import {
   formatDay,
   formatTime,
   hourChips,
+  keyboardPattern,
   meridiemOf,
+  patternPlaceholder,
   setAmbientDateSettings,
   twelveHourLabel,
   usesTwelveHourClock,
@@ -29,7 +31,7 @@ export default defineDemos('datetime', [
     id: 'ambient',
     title: 'One admin setting, every date on the platform',
     note:
-      "Change dateFormat to 'yyyy-MM-dd' or timeZone to 'America/New_York' — every line below moves, because no surface formats a date of its own.",
+      "Change dateFormat to 'yyyy-MM-dd' or timeZone to 'America/New_York' — every line below moves, because no surface formats a date of its own. Try 'EEE, dd MMM yyyy' too: what is DISPLAYED keeps the weekday and the month name, what is TYPED drops both.",
     mock: {
       dateFormat: 'dd MMM yyyy',
       timeFormat: 'hh:mm a',
@@ -52,6 +54,13 @@ export default defineDemos('datetime', [
         'formatDay(day)': formatDay(mock.day),
         'Why formatDay is separate':
           'A stored calendar day is not an instant — putting it through a time zone moves a pod to the day before.',
+        'keyboardPattern(dateFormat) — what a date BOX asks for': keyboardPattern(
+          mock.dateFormat,
+        ),
+        'the signup box placeholder': patternPlaceholder(keyboardPattern(mock.dateFormat)),
+        'Why the box differs': mock.dateFormat.includes('MMM')
+          ? 'A month NAME is read, never typed: MUI labels that section "MMMM" and the member is asked to spell it. Displayed as written, typed in digits.'
+          : 'This pattern is already typeable, so the box asks for it unchanged.',
       };
     },
   }),

@@ -1,7 +1,6 @@
 import { mountPortal } from '@duncit/shell';
 import { flattenCatalogue, STATUS_BUNDLE, TECH_BUNDLE } from '@duncit/app-settings';
 import { createSessionUserLoader } from '@duncit/user-context';
-import { ConfirmProvider } from '@duncit/dialogs';
 import { logs } from '@duncit/logs';
 import { urlConfigs } from './config/url-configs';
 import { apolloClient } from './apollo';
@@ -27,6 +26,5 @@ mountPortal({
   // both is what keeps the dropdown and the chip from drifting apart.
   i18nFallback: { ...flattenCatalogue(TECH_BUNDLE), ...flattenCatalogue(STATUS_BUNDLE) },
   loadUser: createSessionUserLoader(apolloClient),
-  wrap: (node) => <ConfirmProvider>{node}</ConfirmProvider>,
   children: <App />,
 });

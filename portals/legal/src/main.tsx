@@ -1,6 +1,5 @@
 import { mountPortal } from '@duncit/shell';
 import { createSessionUserLoader } from '@duncit/user-context';
-import { NotifyHost } from '@duncit/dialogs';
 import { CONTENT_REPORT_BUNDLE,
   LEGAL_BUNDLE, flattenCatalogue, POLICY_ACCEPTANCE_BUNDLE } from '@duncit/app-settings';
 import { logs } from '@duncit/logs';
@@ -26,6 +25,5 @@ mountPortal({
   // and another in the audit table is exactly what an auditor cannot have.
   i18nFallback: flattenCatalogue({ ...POLICY_ACCEPTANCE_BUNDLE, ...CONTENT_REPORT_BUNDLE, ...LEGAL_BUNDLE }),
   loadUser: createSessionUserLoader(apolloClient),
-  extras: <NotifyHost />,
   children: <App />,
 });

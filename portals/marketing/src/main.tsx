@@ -1,6 +1,5 @@
 import { mountPortal } from '@duncit/shell';
 import { createSessionUserLoader } from '@duncit/user-context';
-import { ConfirmProvider } from '@duncit/dialogs';
 import {
   flattenCatalogue,
   MAIL_PREFERENCE_BUNDLE,
@@ -37,6 +36,5 @@ mountPortal({
     ...flattenCatalogue(WHATSAPP_BUNDLE),
   },
   loadUser: createSessionUserLoader(apolloClient),
-  wrap: (node) => <ConfirmProvider>{node}</ConfirmProvider>,
   children: <App />,
 });

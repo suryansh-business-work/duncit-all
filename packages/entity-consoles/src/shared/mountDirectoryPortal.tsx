@@ -9,7 +9,6 @@ import {
   type AppNavItem,
 } from '@duncit/shell';
 import { createSessionUserLoader } from '@duncit/user-context';
-import { NotifyHost } from '@duncit/dialogs';
 import { DIRECTORY_BUNDLE, flattenCatalogue } from '@duncit/app-settings';
 import EntityDashboard from './EntityDashboard';
 import type { DirectorySpec } from './types';
@@ -161,7 +160,6 @@ export function mountDirectoryPortal(options: Readonly<MountDirectoryPortalOptio
     // copies of "Awaiting review" drifting apart (rule 34).
     i18nFallback: flattenCatalogue(DIRECTORY_BUNDLE),
     loadUser: createSessionUserLoader(apolloClient),
-    extras: <NotifyHost />,
     children: <App />,
   });
 }

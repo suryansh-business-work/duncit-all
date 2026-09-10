@@ -1,6 +1,5 @@
 import { mountPortal } from '@duncit/shell';
 import { flattenCatalogue, ONBOARDING_BUNDLE } from '@duncit/app-settings';
-import { NotifyHost } from '@duncit/dialogs';
 import { createSessionUserLoader } from '@duncit/user-context';
 import { logs } from '@duncit/logs';
 import { urlConfigs } from './config/url-configs';
@@ -24,6 +23,5 @@ mountPortal({
   // read correctly offline and before the Localization API answers.
   i18nFallback: flattenCatalogue(ONBOARDING_BUNDLE),
   loadUser: createSessionUserLoader(apolloClient),
-  extras: <NotifyHost />,
   children: <App />,
 });

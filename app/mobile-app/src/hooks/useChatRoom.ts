@@ -12,6 +12,7 @@ import { usePodSocket } from '@/hooks/usePodSocket';
 import type { ChatMessage } from '@/hooks/useChat';
 import { toErrorMessage } from '@/utils/errors';
 import { isPodActive } from '@/utils/pod-format';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export interface ChatImageAsset {
   base64?: string | null;
@@ -34,6 +35,9 @@ export function useChatRoom(podId: string) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let active = true;
     setIsLoading(true);
@@ -48,7 +52,9 @@ export function useChatRoom(podId: string) {
     return () => {
       active = false;
     };
-  }, [podId]);
+  }, [podId, attempt]);
+
+  useRefreshRegistration(refetch);
 
   const appendMessage = useCallback((msg: ChatMessage) => {
     setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));

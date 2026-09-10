@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { venueSubLabel } from '@duncit/utils';
 
 import { SimpleBarChart, buildMonthlyCounts } from '@/components/SimpleBarChart';
@@ -18,6 +18,7 @@ import { useVenueDashboard } from '@/hooks/useStudioDashboards';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useVenueOwnerStats } from '@/hooks/useVenueOwnerStats';
 import type { MenuRoute, RootStackParamList } from '@/navigation/types';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Venue studio dashboard — venues, capacity, status, the slot-earnings strip,
@@ -41,7 +42,7 @@ export function VenueManageScreen() {
 
   return (
     <StackScreen header title={t('mweb.venueManage.venueStudio')} testID="venue-manage-screen">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={14} padding={16} paddingBottom={48}>
           {isLoading ? <Spinner testID="venue-dashboard-loading" color="$primary" /> : null}
           <VenueSwitcher venues={venues} venueId={venueId} onSelect={selectVenue} />
@@ -112,7 +113,7 @@ export function VenueManageScreen() {
             </XStack>
           ) : null}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

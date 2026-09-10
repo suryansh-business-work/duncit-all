@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 
 import {
   CheckoutSuccess,
@@ -37,6 +37,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import type { Translator } from '@duncit/i18n';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 type CouponState = { ok?: boolean; code?: string | null; discount_amount?: number } | null;
 
@@ -241,7 +242,7 @@ export function CheckoutScreen() {
     );
   } else if (breakup) {
     checkoutBody = payment ? (
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16 }}>
         <CheckoutSuccess
           payment={payment}
           pod={pod}
@@ -250,9 +251,9 @@ export function CheckoutScreen() {
           onHome={() => navigation.navigate('Home')}
           onProfile={() => navigation.navigate('PodHistory')}
         />
-      </ScrollView>
+      </RefreshScrollView>
     ) : (
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
         <OrderSummary
           pod={pod}
           breakup={payBreakup ?? breakup}
@@ -296,7 +297,7 @@ export function CheckoutScreen() {
           })}
           onSubmit={submit}
         />
-      </ScrollView>
+      </RefreshScrollView>
     );
   } else {
     checkoutBody = (

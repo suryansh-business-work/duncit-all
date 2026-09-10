@@ -8,6 +8,7 @@ import {
   type ExplorePod,
   type LikeState,
 } from '@/stores/explore.store';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /** Loads the Explore reels feed and exposes the per-pod saved/like state with
  * the optimistic overrides already merged. */
@@ -69,6 +70,8 @@ export function useExplore() {
   // that refetches then loops. See the ~35,000-request incident in useSupport.
 
   const refetch = useCallback(() => fetch(true), [fetch]);
+
+  useRefreshRegistration(refetch);
 
   return {
     pods,

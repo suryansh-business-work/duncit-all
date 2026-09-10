@@ -18,6 +18,7 @@ import {
   readFollowStatus,
   type FollowStatus,
 } from '@duncit/utils';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 type ProfileData = ResultOf<typeof MobilePublicProfileDocument>;
 export type PublicProfileUser = NonNullable<ProfileData['publicUserProfile']>;
@@ -82,6 +83,9 @@ export function usePublicProfile(userId: string) {
       active = false;
     };
   }, [userId, loadProfile, loadPosts]);
+
+  useRefreshRegistration(loadProfile);
+  useRefreshRegistration(loadPosts);
 
   // Follow / Requested / Following — optimistic, reverts on failure.
   //

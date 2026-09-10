@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Spinner, YStack } from 'tamagui';
+import { Spinner, YStack } from 'tamagui';
 import {
   DEFAULT_CLUB_ADMIN_RANGE,
   clubAdminRangeLabels,
@@ -20,6 +20,7 @@ import { ChipSelectField } from '@/components/create-pod';
 import { useClubAdminDashboard } from '@/hooks/useClubAdminDashboard';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Club Admin Dashboard — the twin of mWeb's /clubs/dashboard (rule 27): the
@@ -39,7 +40,7 @@ export function ClubAdminDashboardScreen() {
 
   return (
     <StackScreen header title={t('mweb.meta.clubDashboard.title')} testID="club-dashboard-screen">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={14} padding={16} paddingBottom={48}>
           <PageHeading
             eyebrow={t('clubAdmin.dashboard.eyebrow')}
@@ -64,7 +65,7 @@ export function ClubAdminDashboardScreen() {
           />
           <CategoryTiles categories={data.categories} />
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

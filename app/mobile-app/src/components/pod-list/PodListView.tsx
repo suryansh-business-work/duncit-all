@@ -13,6 +13,7 @@ import {
 } from '@duncit/virtual-scroll';
 
 import { AdCard } from '@/components/ads/AdCard';
+import { useScreenRefreshControl } from '@/components/PullToRefresh';
 import { PodCard } from '@/components/home/PodCard';
 import { PodListSearchRow } from '@/components/pod-list/PodListSearchRow';
 import type { ActiveAd } from '@/hooks/useActiveAds';
@@ -71,6 +72,7 @@ export function PodListView({
   const { width } = useWindowDimensions();
   const { openPod } = useDetailNav();
   const { t } = useTranslation();
+  const refreshControl = useScreenRefreshControl();
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(
@@ -167,6 +169,7 @@ export function PodListView({
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
+        refreshControl={refreshControl}
       />
     );
   }

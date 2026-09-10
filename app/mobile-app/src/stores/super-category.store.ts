@@ -13,7 +13,8 @@ interface SuperCategoryState {
   error?: unknown;
   /** '' = All (no super-category filter). */
   selectedSlug: string;
-  fetch: () => Promise<void>;
+  /** `force` re-reads a cached list — what a pull-to-refresh asks for. */
+  fetch: (force?: boolean) => Promise<void>;
   select: (slug: string) => void;
 }
 
@@ -22,8 +23,8 @@ export const useSuperCategoryStore = create<SuperCategoryState>((set, get) => ({
   isLoading: false,
   selectedSlug: '',
   select: (slug) => set({ selectedSlug: slug }),
-  fetch: async () => {
-    if (get().isLoading || get().data) return;
+  fetch: async (force = false) => {
+    if (get().isLoading || (get().data && !force)) return;
     set({ isLoading: true, error: undefined });
     try {
       const data = await graphqlRequest(SuperCategoriesDocument, undefined, { auth: true });

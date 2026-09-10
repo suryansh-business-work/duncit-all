@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { PodProductOrderItem } from '@/components/pod-history';
@@ -10,6 +10,7 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { toErrorMessage } from '@/utils/errors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 type OrderRow = ResultOf<typeof MyProductOrdersDocument>['myProductOrders'][number];
 
@@ -78,7 +79,7 @@ export function OrdersHistoryScreen() {
 
   return (
     <StackScreen title={t('mweb.ordersHistory.myProductOrders')} testID="orders-history-screen">
-      <ScrollView flex={1}>{body}</ScrollView>
+      <RefreshScrollView flex={1}>{body}</RefreshScrollView>
     </StackScreen>
   );
 }

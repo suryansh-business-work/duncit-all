@@ -8,6 +8,7 @@ import {
   MobileMyGiftCardsDocument,
 } from '@/graphql/gift-cards';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type GiftCardSettings = ResultOf<
   typeof MobileGiftCardSettingsDocument
@@ -80,6 +81,8 @@ export function useGiftCards() {
       setCardsLoading(false);
     }
   }, []);
+
+  useRefreshRegistration(refreshCards);
 
   return {
     settings,

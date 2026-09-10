@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import { autoPodActionable, autoPodWithdrawable, type AutoPodRow } from '@duncit/utils';
 
 import { StackScreen } from '@/components/StackScreen';
@@ -16,6 +16,7 @@ import {
 import { useAutoPodEarnings } from '@/hooks/useAutoPodEarnings';
 import { useAutoPodScreen } from '@/hooks/useAutoPodScreen';
 import { useLocations } from '@/hooks/useLocations';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Host Studio > Auto Pods — offers in the host's approved sub-categories,
@@ -66,7 +67,7 @@ export function HostAutoPodsScreen() {
 
   return (
     <StackScreen title={labels.hostTitle} testID="host-auto-pods-screen">
-      <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
         <YStack gap={14}>
           <AutoPodLocationRow labels={labels} />
           <AutoPodCategoryChips value={subCategoryId} onChange={setSubCategoryId} labels={labels} />
@@ -85,7 +86,7 @@ export function HostAutoPodsScreen() {
             earnings={earnings.values}
           />
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
 
       <HostEarningsSheet
         row={earnings.row}

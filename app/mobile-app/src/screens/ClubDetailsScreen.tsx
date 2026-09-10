@@ -2,7 +2,7 @@ import { Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
 import { useGoBack } from '@/hooks/useGoBack';
@@ -20,6 +20,7 @@ import { shareUrl } from '@/services/share-link';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 const DEEP_LINK_BASE = 'https://duncit.com/club';
 
@@ -56,7 +57,7 @@ export function ClubDetailsScreen() {
   };
 
   const content = club ? (
-    <ScrollView flex={1} contentContainerStyle={{ paddingBottom: bottomInset + 16 }}>
+    <RefreshScrollView flex={1} contentContainerStyle={{ paddingBottom: bottomInset + 16 }}>
       <DetailHero media={club.club_feature_images_and_videos} onBack={goBack}>
         <HeroButton testID="hb-share" icon="share" onPress={handleShare} />
       </DetailHero>
@@ -75,7 +76,7 @@ export function ClubDetailsScreen() {
           onOpenVenue={(venueId) => navigation.navigate('VenueDetails', { venueId })}
         />
       </Reveal>
-    </ScrollView>
+    </RefreshScrollView>
   ) : (
     <YStack flex={1} alignItems="center" justifyContent="center" gap={12} padding={24}>
       <Text color="$muted" testID="club-details-error">

@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { MySavedPodsDocument } from '@/graphql/saved';
 import { graphqlRequest } from '@/services/graphql.client';
 import type { SavedSort } from '@/utils/saved-filter';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type SavedPod = ResultOf<typeof MySavedPodsDocument>['mySavedPods'][number];
 
@@ -27,6 +28,9 @@ export function useSavedPods({ search, categoryId, sort }: SavedPodsArgs) {
   const seq = useRef(0);
   const trimmed = search.trim();
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     const requestId = ++seq.current;
     setIsLoading(true);
@@ -49,7 +53,9 @@ export function useSavedPods({ search, categoryId, sort }: SavedPodsArgs) {
         });
     }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [trimmed, categoryId, sort]);
+  }, [trimmed, categoryId, sort, attempt]);
+
+  useRefreshRegistration(refetch);
 
   return { pods, isLoading, error };
 }

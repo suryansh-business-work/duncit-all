@@ -7,6 +7,7 @@ import {
   VenueSlotRequestsDocument,
 } from '@/graphql/venue-slot-requests';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 type Data = ResultOf<typeof VenueSlotRequestsDocument>;
 export type SlotRequestRow = Data['venueSlotRequests'][number];
@@ -50,6 +51,8 @@ export function useVenueSlotRequests() {
       active = false;
     };
   }, [load]);
+
+  useRefreshRegistration(load);
 
   const decide = useCallback(
     async (run: Promise<unknown>, done: string) => {

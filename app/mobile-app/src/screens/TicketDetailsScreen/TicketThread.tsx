@@ -4,13 +4,14 @@ import {
   type NativeSyntheticEvent,
   ScrollView as RNScrollView,
 } from 'react-native';
-import { ScrollView, Text, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
 import {
   TicketMessageBubble,
   type TicketThreadMessage,
 } from '@/components/support/TicketMessageBubble';
 import { dayLabel, showDaySeparator } from '@/utils/support-chat';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 interface Props {
   messages: TicketThreadMessage[];
@@ -27,7 +28,7 @@ export const TicketThread = forwardRef<RNScrollView, Props>(function TicketThrea
   ref,
 ) {
   return (
-    <ScrollView
+    <RefreshScrollView
       ref={ref}
       flex={1}
       onScroll={onScroll}
@@ -51,6 +52,6 @@ export const TicketThread = forwardRef<RNScrollView, Props>(function TicketThrea
           <TicketMessageBubble message={m} timeZone={timeZone} agentLastReadAt={agentLastReadAt} />
         </YStack>
       ))}
-    </ScrollView>
+    </RefreshScrollView>
   );
 });

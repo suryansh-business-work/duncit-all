@@ -9,6 +9,7 @@ import {
   TogglePostLikeDocument,
 } from '@/graphql/posts';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 type PostDetailsData = ResultOf<typeof PostDetailsDocument>;
 export type PostDetail = NonNullable<PostDetailsData['post']>;
@@ -38,6 +39,8 @@ export function usePostViewer(id: string) {
       active = false;
     };
   }, [load]);
+
+  useRefreshRegistration(load);
 
   const runAndReload = useCallback(
     async (run: () => Promise<unknown>) => {

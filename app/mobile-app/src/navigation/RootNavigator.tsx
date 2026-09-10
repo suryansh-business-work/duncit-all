@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { MainTabs } from '@/navigation/MainTabs';
@@ -98,6 +98,7 @@ import { ClubPodEditorScreen } from '@/screens/ClubPodEditorScreen';
 import { ClubEditScreen } from '@/screens/ClubEditScreen';
 import { ProductsManageScreen } from '@/screens/ProductsManageScreen';
 import { withProductGate } from '@/navigation/withProductGate';
+import { ScreenRefreshProvider } from '@/components/PullToRefresh';
 import { useAuthStore } from '@/stores/auth.store';
 import { reportJourneyStep } from '@/services/short-link-attribution';
 import { consumePendingBooking } from './pendingBooking';
@@ -105,6 +106,14 @@ import { navigationRef } from './navigationRef';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+/** Every route is wrapped in its own pull-to-refresh scope. Doing it here
+ * rather than in each screen is what makes the gesture universal: a screen
+ * added tomorrow gets it without knowing the feature exists. Module scope, so
+ * the identity is stable and no screen ever remounts because of it. */
+const screenLayout = ({ children }: Readonly<{ children: ReactNode }>) => (
+  <ScreenRefreshProvider>{children}</ScreenRefreshProvider>
+);
 
 /**
  * Single stack gated by the auth store — the React Navigation replacement for
@@ -277,6 +286,7 @@ export function RootNavigator() {
 
   return (
     <Stack.Navigator
+      screenLayout={screenLayout}
       screenOptions={{
         headerShown: false,
         // Transitions disabled: animating a whole screen (with its full-bleed

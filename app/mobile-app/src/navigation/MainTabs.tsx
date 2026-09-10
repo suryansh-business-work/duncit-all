@@ -1,6 +1,8 @@
+import type { ReactNode } from 'react';
 import { createBottomTabNavigator, type BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
 import { BottomNav } from '@/components/BottomNav';
+import { ScreenRefreshProvider } from '@/components/PullToRefresh';
 import { DeletionNoticeDialog } from '@/components/account/DeletionNoticeDialog';
 import { PodFeedbackPrompt } from '@/components/support/PodFeedbackPrompt';
 import { usePushNotificationDeepLink } from '@/hooks/usePushNotificationDeepLink';
@@ -16,6 +18,13 @@ const Tab = createBottomTabNavigator<TabParamList>();
 
 const renderTabBar = (props: BottomTabBarProps) => <BottomNav {...props} />;
 
+/** Each tab is its own pull-to-refresh scope, exactly like a pushed screen —
+ * the tabs stay mounted behind one another, so a shared scope would refetch
+ * four tabs on every pull. */
+const screenLayout = ({ children }: Readonly<{ children: ReactNode }>) => (
+  <ScreenRefreshProvider>{children}</ScreenRefreshProvider>
+);
+
 export function MainTabs() {
   usePushNotificationDeepLink();
   // With products off there is nothing to buy, so the cart is not an empty page
@@ -26,6 +35,7 @@ export function MainTabs() {
     <>
       <Tab.Navigator
         screenOptions={{ headerShown: false, animation: 'none' }}
+        screenLayout={screenLayout}
         tabBar={renderTabBar}
       >
         <Tab.Screen name="HomeTab" component={HomeScreen} />

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { GiftCardBuySection, MyGiftCardsList } from '@/components/gift-cards';
 import { StackScreen } from '@/components/StackScreen';
@@ -11,6 +11,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import type { GiftCardSelection } from '@/utils/gift-cards';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 type TabKey = 'buy' | 'cards';
 
@@ -89,7 +90,7 @@ export function GiftCardsScreen() {
 
   return (
     <StackScreen title={t('mweb.giftCards.title')} testID="gift-cards-screen">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={16} padding={16} paddingBottom={48}>
           <XStack gap={8}>
             {tabs.map(({ key, label }) => {
@@ -118,7 +119,7 @@ export function GiftCardsScreen() {
           </XStack>
           {body}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

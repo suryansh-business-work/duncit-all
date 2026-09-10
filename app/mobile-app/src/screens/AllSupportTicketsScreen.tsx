@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { ListSkeleton } from '@/components/Skeleton';
 import { StackScreen } from '@/components/StackScreen';
@@ -8,6 +8,7 @@ import { useUnifiedTickets, type UnifiedTicket } from '@/hooks/useUnifiedTickets
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 const SOURCE_LABEL: Record<string, string> = {
   TICKET: 'Support Ticket',
@@ -96,12 +97,12 @@ export function AllSupportTicketsScreen() {
 
   return (
     <StackScreen title={t('mweb.common.allSupportTickets')} testID="all-support-tickets-screen">
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 24 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 24 }}>
         <Text testID="all-tickets-subtitle" fontSize={13} color="$muted">
           Every request you have raised, in one list
         </Text>
         {body}
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { HostCard, VenueCard } from '@/components/hosts-venues';
 import { MeetingStatusCard } from '@/components/hosts-venues/MeetingStatusCard';
@@ -12,6 +12,7 @@ import { toErrorMessage } from '@/utils/errors';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 type Tab = 'HOSTS' | 'VENUES';
 
@@ -76,11 +77,11 @@ export function HostsVenuesScreen() {
     );
   } else {
     hostsVenuesBody = (
-      <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 10 }}>
+      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 10 }}>
         <MeetingStatusCard kind="HOST" />
         <MeetingStatusCard kind="VENUE" />
         {tabContent}
-      </ScrollView>
+      </RefreshScrollView>
     );
   }
 

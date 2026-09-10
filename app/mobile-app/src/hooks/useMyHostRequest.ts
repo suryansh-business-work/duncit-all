@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { MyHostRequestDocument, type MyHostRequest } from '@/graphql/host-request';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /**
  * Loads the signed-in host's latest ACTIVE (REQUESTED|ACKNOWLEDGED) host request,
@@ -23,6 +24,8 @@ export function useMyHostRequest() {
   useEffect(() => {
     refetch();
   }, [refetch]);
+
+  useRefreshRegistration(refetch);
 
   return { request, isLoading, refetch };
 }

@@ -1,6 +1,6 @@
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { LoadErrorNotice } from '@/components/club-admin/LoadErrorNotice';
@@ -9,6 +9,7 @@ import { CreatePodStepper, type ClubAdminStepperMode } from '@/components/create
 import { useClubAdminPodEditor } from '@/hooks/useClubAdminPodEditor';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 type EditorRoute = RouteProp<RootStackParamList, 'ClubPodEditor' | 'ClubPodEdit'>;
 
@@ -70,7 +71,7 @@ export function ClubPodEditorScreen() {
         </Text>
       ) : null}
       {club && options && mode ? (
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <RefreshScrollView showsVerticalScrollIndicator={false}>
           <YStack paddingHorizontal={16} paddingTop={12}>
             <PageHeading
               eyebrow={t('clubAdmin.editor.eyebrow', { vars: { club: club.club_name } })}
@@ -94,7 +95,7 @@ export function ClubPodEditorScreen() {
             onPublish={noPublish}
             clubAdmin={mode}
           />
-        </ScrollView>
+        </RefreshScrollView>
       ) : null}
     </StackScreen>
   );

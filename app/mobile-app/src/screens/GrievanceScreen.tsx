@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Button, ScrollView, Text, YStack } from 'tamagui';
+import { Button, Text, YStack } from 'tamagui';
 import { grievanceSupportTicketOptions, type SubmittedGrievance } from '@duncit/utils';
 
 import { StackScreen } from '@/components/StackScreen';
@@ -10,6 +10,7 @@ import type { GrievanceValues } from '@/components/support/grievance/grievance.t
 import { submitGrievance, useGrievanceOfficer } from '@/hooks/useGrievance';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useUnifiedTickets } from '@/hooks/useUnifiedTickets';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Raise a grievance — the RN twin of mWeb's /support/grievance page.
@@ -51,7 +52,7 @@ export function GrievanceScreen() {
 
   return (
     <StackScreen title={t('grievance.title')} testID="grievance-screen">
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 24 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 24 }}>
         <Text fontSize={13} color="$muted">
           {t('grievance.subtitle')}
         </Text>
@@ -94,7 +95,7 @@ export function GrievanceScreen() {
           </>
         )}
         <GrievanceOfficerCard officer={officer} />
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

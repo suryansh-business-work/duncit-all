@@ -11,6 +11,7 @@ import { MobileSetUsernameDocument } from '@/graphql/username';
 import { ProfileVisibility } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useMeStore } from '@/stores/me.store';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type AccountData = ResultOf<typeof MobileAccountDocument>;
 export type AccountMe = NonNullable<AccountData['me']>;
@@ -46,6 +47,8 @@ export function useAccount() {
       active = false;
     };
   }, [load]);
+
+  useRefreshRegistration(load);
 
   const refresh = useCallback(async () => {
     await load();

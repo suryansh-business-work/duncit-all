@@ -1,6 +1,6 @@
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
 import { CreatePodStepper } from '@/components/create-pod';
@@ -12,6 +12,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useHomeStore } from '@/stores/home.store';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Host-only Create Pod screen — reached from the Home "+" button or by resuming
  * a draft from Host Management. The draft autosaves; finishing the last step
@@ -61,7 +62,7 @@ export function CreatePodScreen() {
         </YStack>
       ) : null}
       {!isLoading && isHost ? (
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <RefreshScrollView showsVerticalScrollIndicator={false}>
           <Reveal>
             <CreatePodStepper
               initialValues={initialValues}
@@ -90,7 +91,7 @@ export function CreatePodScreen() {
               }}
             />
           </Reveal>
-        </ScrollView>
+        </RefreshScrollView>
       ) : null}
     </StackScreen>
   );

@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { ScrollView, Text, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { FeedbackForm } from '@/components/support/FeedbackForm';
 import { submitAppFeedback } from '@/hooks/useFeedback';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Report a Problem — a quick feedback note that reaches the team on Slack. RN
@@ -34,7 +35,7 @@ export function FeedbackScreen() {
 
   return (
     <StackScreen title={t('mweb.common.reportAProblem')} testID="feedback-screen">
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 24 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 24 }}>
         <Text fontSize={13} color="$muted">
           Send feedback or report an issue — it reaches our team instantly
         </Text>
@@ -58,7 +59,7 @@ export function FeedbackScreen() {
         ) : (
           <FeedbackForm submitting={submitting} errorMessage={error} onSubmit={onSubmit} />
         )}
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { graphqlRequest } from '@/services/graphql.client';
 import {
@@ -7,6 +7,7 @@ import {
   type CategoryLevel,
   type CategoryOption,
 } from '@/graphql/onboarding-survey';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /**
  * Active categories for one taxonomy level under a parent, sorted for display
@@ -15,6 +16,9 @@ import {
  */
 export function useCategoryLevel(level: CategoryLevel, parentId: string, enabled: boolean) {
   const [options, setOptions] = useState<CategoryOption[]>([]);
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     if (!enabled) {
       setOptions([]);
@@ -40,6 +44,8 @@ export function useCategoryLevel(level: CategoryLevel, parentId: string, enabled
     return () => {
       alive = false;
     };
-  }, [level, parentId, enabled]);
+  }, [level, parentId, enabled, attempt]);
+
+  useRefreshRegistration(refetch);
   return options;
 }

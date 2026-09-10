@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { VenueSwitcher } from '@/components/studio';
@@ -14,6 +14,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useVenuesWithSettings } from '@/hooks/useVenuesWithSettings';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Venue settings — the Tamagui twin of mWeb's /venues/settings (rule 27): the
@@ -58,7 +59,7 @@ export function VenueSettingsScreen() {
 
   return (
     <StackScreen title={t('mweb.venueSettingsPage.title')} testID="venue-settings-screen">
-      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <RefreshScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <YStack gap={14} padding={16} paddingBottom={48}>
           {isLoading ? <Spinner testID="venue-settings-loading" color="$primary" /> : null}
           <VenueSwitcher venues={venues} venueId={venueId} onSelect={selectVenue} />
@@ -89,7 +90,7 @@ export function VenueSettingsScreen() {
             />
           ) : null}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

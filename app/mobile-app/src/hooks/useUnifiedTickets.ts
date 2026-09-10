@@ -17,6 +17,7 @@ import { TranscriptFormat } from '@/generated/graphql/graphql';
 import { config } from '@/constants/config';
 import { getAuthToken } from '@/services/auth-token';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type UnifiedTicket = ResultOf<
   typeof UnifiedSupportTicketsDocument
@@ -29,6 +30,9 @@ export function useUnifiedTickets() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let active = true;
     graphqlRequest(UnifiedSupportTicketsDocument, undefined, { auth: true })
@@ -38,7 +42,9 @@ export function useUnifiedTickets() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [attempt]);
+
+  useRefreshRegistration(refetch);
 
   return { rows, isLoading, error };
 }
@@ -73,6 +79,8 @@ export function useTicketDetails(ticketId: string) {
       active = false;
     };
   }, [reload, markRead]);
+
+  useRefreshRegistration(reload);
 
   // Live ticket updates (B12): refresh the thread + read ticks without a manual
   // refetch, and mark a freshly-arrived agent reply read while it is on screen.

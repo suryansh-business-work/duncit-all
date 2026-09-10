@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FEEDBACK_CATEGORIES } from '@duncit/slack';
 
 import { ReportProblemConfigDocument } from '@/graphql/feedback';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export interface ReportProblemCategoryOption {
   key: string;
@@ -41,6 +42,9 @@ export function useReportProblemConfig() {
   const [config, setConfig] = useState<ReportProblemFormConfig>(FALLBACK);
   const [loading, setLoading] = useState(true);
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let cancelled = false;
     graphqlRequest(ReportProblemConfigDocument, undefined, { auth: true })
@@ -67,7 +71,9 @@ export function useReportProblemConfig() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [attempt]);
+
+  useRefreshRegistration(refetch);
 
   return { config, loading };
 }

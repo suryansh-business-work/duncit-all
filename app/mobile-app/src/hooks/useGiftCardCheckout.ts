@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { MobileCheckoutMeDocument, MobilePublicFinanceDocument } from '@/graphql/checkout';
@@ -18,6 +18,7 @@ import {
 } from '@/hooks/useCheckout';
 import { downloadPaymentInvoice, maybeSaveMainAddress } from '@/hooks/checkoutRequests';
 import type { GiftCardSelection } from '@/utils/gift-cards';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type GiftCardPayment = ResultOf<
   typeof MobileDummyGiftCardCheckoutDocument
@@ -40,6 +41,9 @@ export function useGiftCardCheckout(selection: GiftCardSelection) {
   const [isLoading, setIsLoading] = useState(true);
   const { verifyRazorpay, confirmingMessage } = useRazorpayVerification();
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let active = true;
     Promise.all([
@@ -55,7 +59,9 @@ export function useGiftCardCheckout(selection: GiftCardSelection) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [attempt]);
+
+  useRefreshRegistration(refetch);
 
   const initialValues = useMemo(() => buildCheckoutInitialValues(me), [me]);
 

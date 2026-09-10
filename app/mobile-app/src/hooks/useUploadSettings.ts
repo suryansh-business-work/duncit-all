@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { logs } from '@duncit/logs';
 
 import { UploadSettingsDocument } from '@/graphql/status';
 import { UploadSurface } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export interface UploadCropPreset {
   key: string;
@@ -31,6 +32,9 @@ export interface MobileUploadSettings {
 export function useUploadSettings(): MobileUploadSettings | null {
   const [settings, setSettings] = useState<MobileUploadSettings | null>(null);
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let active = true;
     graphqlRequest(UploadSettingsDocument, { surface: UploadSurface.Mobile }, { auth: true })
@@ -52,7 +56,9 @@ export function useUploadSettings(): MobileUploadSettings | null {
     return () => {
       active = false;
     };
-  }, []);
+  }, [attempt]);
+
+  useRefreshRegistration(refetch);
 
   return settings;
 }

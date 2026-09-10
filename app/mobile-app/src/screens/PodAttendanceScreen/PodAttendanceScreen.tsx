@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import type { RouteProp } from '@react-navigation/native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Text, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 import {
   canScanTickets,
   earningsBodyFor,
@@ -28,6 +28,7 @@ import { useAttendanceBoard } from '@/hooks/useAttendanceBoard';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Host Studio > Your Pods > ⋮ > See Marked Attendance.
@@ -137,7 +138,9 @@ export function PodAttendanceScreen() {
 
   return (
     <StackScreen title={labels.pageTitle} testID="pod-attendance-screen">
-      <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>{body()}</ScrollView>
+      <RefreshScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
+        {body()}
+      </RefreshScrollView>
 
       <AttendanceOtpSheet
         podId={podId}

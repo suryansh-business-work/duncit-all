@@ -13,6 +13,7 @@ import { useVenuesExplore, type VenueCategoryOption } from '@/hooks/useVenuesExp
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Horizontal Super-category chip rail — "All" clears the filter. */
 function CategoryChips({
@@ -81,7 +82,7 @@ export function VenuesScreen() {
 
   return (
     <TabScreen testID="venues-screen">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <RefreshScrollView showsVerticalScrollIndicator={false}>
         {/* A tab, not a pushed screen, since the bar carries Venues now — so the
             last venue has to clear the floating bar itself. */}
         <YStack gap={12} padding={16} paddingBottom={bottomSpace}>
@@ -126,7 +127,7 @@ export function VenuesScreen() {
             );
           })}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </TabScreen>
   );
 }

@@ -4,6 +4,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 import { HostPodsDocument } from '@/graphql/host-manage';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useMe } from '@/hooks/useMe';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type HostPod = ResultOf<typeof HostPodsDocument>['myHostPods'][number];
 
@@ -33,6 +34,8 @@ export function useHostPods() {
       active = false;
     };
   }, [userId, load]);
+
+  useRefreshRegistration(load);
 
   return { pods, isLoading, refetch: load };
 }

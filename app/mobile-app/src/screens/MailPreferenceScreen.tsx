@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, Text, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
 import { AuthMessagesCard } from '@/components/comm-preference';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -8,6 +8,7 @@ import { StackScreen } from '@/components/StackScreen';
 import { MailPreferenceBulkButton, MailPreferenceSection } from '@/components/mail-preference';
 import { useMailPreferences } from '@/hooks/useMailPreferences';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Mail Preference — RN twin of mWeb's MailPreferencePage (rule 27): every kind
@@ -62,7 +63,7 @@ export function MailPreferenceScreen() {
       </Text>
     </YStack>
   ) : (
-    <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
+    <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
       <Text fontSize={12.5} color="$muted">
         {t('mailPreference.subtitle', { vars: { email: preference.email } })}
       </Text>
@@ -95,7 +96,7 @@ export function MailPreferenceScreen() {
         busyCategory={state.busyCategory}
         onChange={state.setCategory}
       />
-    </ScrollView>
+    </RefreshScrollView>
   );
 
   return (

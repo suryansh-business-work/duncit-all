@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { FaqsDocument, FaqsSearchDocument } from '@/graphql/library';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type FaqGroup = ResultOf<typeof FaqsDocument>['publicFaqGroups'][number];
 export type FaqItem = FaqGroup['faqs'][number];
@@ -13,6 +14,9 @@ export function useFaqs() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let active = true;
     graphqlRequest(FaqsDocument, undefined, { auth: true })
@@ -22,7 +26,9 @@ export function useFaqs() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [attempt]);
+
+  useRefreshRegistration(refetch);
 
   return { groups, isLoading, error };
 }

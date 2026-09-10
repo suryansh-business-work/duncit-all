@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Spinner, Text, TextArea, XStack, YStack } from 'tamagui';
+import { Spinner, Text, TextArea, XStack, YStack } from 'tamagui';
 import { semantic } from '@duncit/auth-tokens';
 
 import { Field } from '@/components/Field';
@@ -11,6 +11,7 @@ import { useSupportPods } from '@/hooks/useSupportPods';
 import { toErrorMessage } from '@/utils/errors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Danger SOS button with a busy spinner; disabled until a pod is selected. */
 function SosSendButton({
@@ -87,7 +88,7 @@ export function SosScreen() {
 
   return (
     <StackScreen title="SOS" testID="sos-screen">
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
         <Text testID="sos-subtitle" fontSize={13} color="$muted">
           Emergency help at your live pod
         </Text>
@@ -156,7 +157,7 @@ export function SosScreen() {
             <SosSendButton disabled={!selected || busy} busy={busy} onSend={() => void send()} />
           </>
         )}
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Text, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
 import { AuthMessagesCard } from '@/components/comm-preference';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -15,6 +15,7 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWhatsAppPreferences } from '@/hooks/useWhatsAppPreferences';
 import type { RootStackParamList } from '@/navigation/types';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * WhatsApp Preference — RN twin of mWeb's WhatsAppPreferencePage (rule 27):
@@ -63,7 +64,7 @@ export function WhatsAppPreferenceScreen() {
       </Text>
     </YStack>
   ) : (
-    <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
+    <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
       <Text fontSize={12.5} color="$muted">
         {t('whatsappPreference.subtitle', { vars: { destination: preference.destination } })}
       </Text>
@@ -100,7 +101,7 @@ export function WhatsAppPreferenceScreen() {
         busyCategory={state.busyCategory}
         onChange={state.setCategory}
       />
-    </ScrollView>
+    </RefreshScrollView>
   );
 
   return (

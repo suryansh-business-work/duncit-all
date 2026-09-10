@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 import {
   classifyConfirmedPayment,
@@ -25,6 +25,7 @@ import {
   maybeSaveMainAddress,
   previewCouponRequest,
 } from '@/hooks/checkoutRequests';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type { CouponPreview } from '@/hooks/checkoutRequests';
 
@@ -189,6 +190,9 @@ export function useCheckout(podId: string, seats = 1) {
   const [isLoading, setIsLoading] = useState(true);
   const { verifyRazorpay, confirmingMessage } = useRazorpayVerification();
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let active = true;
     Promise.all([
@@ -212,7 +216,9 @@ export function useCheckout(podId: string, seats = 1) {
     return () => {
       active = false;
     };
-  }, [podId]);
+  }, [podId, attempt]);
+
+  useRefreshRegistration(refetch);
 
   const initialValues = useMemo(() => buildCheckoutInitialValues(me), [me]);
 

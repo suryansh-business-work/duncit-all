@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 import type { PodAuditLog } from '@duncit/utils';
 
 import { LabeledInput } from '@/components/LabeledInput';
@@ -14,6 +14,7 @@ import { useClubAdminAuditLogs } from '@/hooks/useClubAdminAuditLogs';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Pod Monitoring (AI) — the twin of mWeb's /clubs/monitoring (rule 27): every
@@ -34,7 +35,7 @@ export function ClubPodMonitoringScreen() {
 
   return (
     <StackScreen header title={t('mweb.meta.clubMonitoring.title')} testID="club-monitoring-screen">
-      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <RefreshScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <YStack gap={14} padding={16} paddingBottom={48}>
           <PageHeading
             title={t('clubAdmin.monitoring.title')}
@@ -73,7 +74,7 @@ export function ClubPodMonitoringScreen() {
             />
           ) : null}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
       <AuditLogSheet
         log={open}
         when={open ? formatDateTime(open.created_at) : ''}

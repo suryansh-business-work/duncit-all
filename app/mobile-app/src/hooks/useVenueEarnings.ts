@@ -3,6 +3,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { VenueEarningsDocument } from '@/graphql/studio-dashboard';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 type Data = ResultOf<typeof VenueEarningsDocument>;
 export type VenueEarningsSummary = Data['myVenueEarningsSummary'];
@@ -30,6 +31,8 @@ export function useVenueEarnings() {
       active = false;
     };
   }, [load]);
+
+  useRefreshRegistration(load);
 
   return { summary, payouts, isLoading, refetch: load };
 }

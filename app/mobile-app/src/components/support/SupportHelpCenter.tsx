@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Text, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
 import { Skeleton } from '@/components/Skeleton';
 import { useFaqs, type FaqItem } from '@/hooks/useLibrary';
@@ -13,6 +13,7 @@ import { StartConversation } from './StartConversation';
 import { SupportMoreWays } from './SupportMoreWays';
 import { SupportTopics } from './SupportTopics';
 import type { SupportSection } from './supportSections';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 const TOP_FAQ_COUNT = 6;
 
@@ -40,7 +41,7 @@ export function SupportHelpCenter() {
 
   return (
     <>
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 28 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 28 }}>
         <YStack gap={4}>
           <Text testID="support-hero-title" fontSize={22} fontWeight="700" color="$color">
             Have a burning question?
@@ -74,7 +75,7 @@ export function SupportHelpCenter() {
 
         <StartConversation onPress={startChat} />
         <SupportMoreWays onNavigate={openMoreWay} />
-      </ScrollView>
+      </RefreshScrollView>
 
       <FaqAnswerModal
         faq={selected}

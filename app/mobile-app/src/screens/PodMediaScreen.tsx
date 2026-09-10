@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { RouteProp } from '@react-navigation/native';
 import { useRoute } from '@react-navigation/native';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 import { mwebPodMediaLabels } from '@duncit/utils';
 
 import { LoadingIndicator } from '@/components/LoadingIndicator';
@@ -13,6 +13,7 @@ import { PillButton } from '@/components/attendance/AttendanceOtpControls';
 import { usePodMediaBoard } from '@/hooks/usePodMediaBoard';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 const splitLines = (text: string) =>
   text
@@ -138,7 +139,9 @@ export function PodMediaScreen() {
 
   return (
     <StackScreen title={labels.pageTitle} testID="pod-media-screen">
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>{body()}</ScrollView>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        {body()}
+      </RefreshScrollView>
     </StackScreen>
   );
 }

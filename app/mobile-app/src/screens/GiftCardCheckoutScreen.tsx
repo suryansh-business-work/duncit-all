@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { ProcessingOverlay, RazorpayWebView } from '@/components/checkout';
 import { GiftCardPurchaseSuccess, GiftCardVisual } from '@/components/gift-cards';
@@ -18,6 +18,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { formatMoney } from '@/utils/checkout-math';
 import { toErrorMessage } from '@/utils/errors';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 function SummaryRow({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
@@ -112,7 +113,7 @@ export function GiftCardCheckoutScreen() {
   let body: ReactNode;
   if (payment) {
     body = (
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16 }}>
         <GiftCardPurchaseSuccess
           payment={payment}
           recipientEmail={selection.recipient_email}
@@ -120,7 +121,7 @@ export function GiftCardCheckoutScreen() {
           onHome={() => navigation.navigate('Home')}
           onMyCards={() => navigation.navigate('GiftCards')}
         />
-      </ScrollView>
+      </RefreshScrollView>
     );
   } else if (isLoading && !finance) {
     body = (
@@ -130,7 +131,7 @@ export function GiftCardCheckoutScreen() {
     );
   } else {
     body = (
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
         <GiftCardVisual
           theme={selection}
           imageUrl={selection.scope_image_url}
@@ -165,7 +166,7 @@ export function GiftCardCheckoutScreen() {
           payLabel={t('mweb.giftCards.payCta', { vars: { amount: amountLabel } })}
           onSubmit={submit}
         />
-      </ScrollView>
+      </RefreshScrollView>
     );
   }
 

@@ -1,13 +1,14 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Chat with Us — a single entry point into the real-time agent chat. The ticket
@@ -21,7 +22,7 @@ export function ChatWithUsScreen() {
 
   return (
     <StackScreen title={t('mweb.common.chatWithUs')} testID="chat-with-us-screen">
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 24 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 24 }}>
         <Text testID="chat-inbox-subtitle" fontSize={13} color="$muted">
           Real-time chat with our support team
         </Text>
@@ -59,7 +60,7 @@ export function ChatWithUsScreen() {
           </YStack>
           <MaterialIcons name="chevron-right" size={22} color={ink} />
         </XStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

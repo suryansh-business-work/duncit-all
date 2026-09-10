@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import type { AutoPodVenueSpace } from '@duncit/utils';
 
 import { MyVenuesForAutoPodDocument } from '@/graphql/auto-pods';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /** One of the owner's venues, as the queue and the accept sheet need it. */
 export interface AutoPodVenueOption {
@@ -41,6 +42,9 @@ export function useAutoPodVenues() {
   const [venues, setVenues] = useState<AutoPodVenueOption[]>([]);
   const [loaded, setLoaded] = useState(false);
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let active = true;
     graphqlRequest(MyVenuesForAutoPodDocument, undefined, { auth: true })
@@ -75,7 +79,9 @@ export function useAutoPodVenues() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [attempt]);
+
+  useRefreshRegistration(refetch);
 
   return { venues, loaded };
 }

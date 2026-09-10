@@ -90,7 +90,6 @@ export function FollowingScreen() {
         isLoading={feed.isLoading}
         isEmpty={feed.posts.length === 0}
         emptyText={emptyText(t)[tab]}
-        onRefresh={() => fireAndForget(feed.refetch())}
         data={feed.posts}
         keyExtractor={(post) => post.id}
         renderItem={(post) => (

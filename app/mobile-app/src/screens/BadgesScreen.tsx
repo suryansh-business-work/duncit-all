@@ -1,10 +1,11 @@
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 
 import { sortBadgeProgress } from '@duncit/utils';
 import { StackScreen } from '@/components/StackScreen';
 import { BadgeProgressCard } from '@/components/badges';
 import { useBadges } from '@/hooks/useBadges';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * The Badges section — every badge Duncit publishes, each stating the goal it
@@ -52,7 +53,7 @@ export function BadgesScreen() {
 
   return (
     <StackScreen title={t('mweb.badges.title')} testID="badges-screen">
-      <ScrollView flex={1} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
         <YStack gap={12}>
           <YStack gap={4}>
             <Text fontSize={13} color="$muted">
@@ -66,7 +67,7 @@ export function BadgesScreen() {
           </YStack>
           {body}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

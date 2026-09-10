@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 import { readVenueSettings } from '@duncit/slots';
 
 import { StackScreen } from '@/components/StackScreen';
@@ -23,6 +23,7 @@ import { useOwnerVenueSlots } from '@/hooks/useOwnerVenueSlots';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useVenuesWithSettings } from '@/hooks/useVenuesWithSettings';
 import { appNow } from '@/utils/app-formatter';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Venue availability — the Tamagui twin of mWeb's /venues/availability, which
@@ -95,7 +96,7 @@ export function VenueAvailabilityScreen() {
 
   return (
     <StackScreen title={t('mweb.venueAvailabilityPage.title')} testID="venue-availability-screen">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={14} padding={16} paddingBottom={48}>
           {isLoading ? <Spinner testID="venue-availability-loading" color="$primary" /> : null}
           <VenueSwitcher venues={venues} venueId={venueId} onSelect={selectVenue} />
@@ -142,7 +143,7 @@ export function VenueAvailabilityScreen() {
             />
           ) : null}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
 
       {venue && editableId ? (
         <>

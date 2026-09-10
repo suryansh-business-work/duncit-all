@@ -1,7 +1,7 @@
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { TicketForm } from '@/components/support/TicketForm';
@@ -11,6 +11,7 @@ import { useMeStore } from '@/stores/me.store';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Create Support Tickets — opens straight onto the form (mWeb parity), with the
@@ -28,7 +29,7 @@ export function SupportTicketsScreen() {
 
   return (
     <StackScreen title={t('mweb.common.createSupportTickets')} testID="support-tickets-screen">
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 24 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 24 }}>
         <Text testID="tickets-subtitle" fontSize={13} color="$muted">
           Raise an issue with our team
         </Text>
@@ -107,7 +108,7 @@ export function SupportTicketsScreen() {
         />
 
         <MyTicketsList />
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

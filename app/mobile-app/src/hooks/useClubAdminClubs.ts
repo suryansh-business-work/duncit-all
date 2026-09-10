@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { MyAdminClubsTableDocument } from '@/graphql/club-admin';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type AdminClubRow = ResultOf<
   typeof MyAdminClubsTableDocument
@@ -24,6 +25,7 @@ export function useClubAdminClubs(): AdminClubsState {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
     let active = true;
@@ -42,5 +44,7 @@ export function useClubAdminClubs(): AdminClubsState {
     };
   }, [attempt]);
 
-  return { clubs, isLoading, hasError, refetch: () => setAttempt((value) => value + 1) };
+  useRefreshRegistration(refetch);
+
+  return { clubs, isLoading, hasError, refetch };
 }

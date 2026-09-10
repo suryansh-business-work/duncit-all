@@ -3,7 +3,7 @@ import type { TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Input, ScrollView, XStack, YStack } from 'tamagui';
+import { Input, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { CategoryActions } from '@/components/search/CategoryActions';
@@ -15,6 +15,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import type { SearchSort } from '@/utils/search-sort';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Home > Search — live suggestions, category quick-actions, club-grouped results
  * (Happening This Week / More Clubs), sort & filter and discovery-oriented empty
@@ -93,7 +94,7 @@ export function SearchScreen() {
 
       <SearchSuggestions suggestions={showSuggest ? suggestions : []} onPick={pickSuggestion} />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack padding={16} gap={16} paddingBottom={40}>
           {active ? (
             <SearchResults
@@ -116,7 +117,7 @@ export function SearchScreen() {
             <CategoryActions categories={categories} onSelect={pickCategory} />
           )}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

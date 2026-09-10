@@ -6,6 +6,7 @@ import {
   RemovePodPartyMediaDocument,
 } from '@/graphql/pod-media';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /** In what capacity this account is looking at a pod's media. */
 export type PodMediaViewer = 'HOST' | 'GUEST' | 'NONE';
@@ -67,6 +68,8 @@ export function usePodMediaBoard(podId: string) {
       active = false;
     };
   }, [podId, load]);
+
+  useRefreshRegistration(refetch);
 
   const add = useCallback(
     async (urls: string[]) => {

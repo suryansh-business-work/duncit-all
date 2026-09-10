@@ -1,4 +1,4 @@
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { SimpleBarChart } from '@/components/SimpleBarChart';
 import { StackScreen } from '@/components/StackScreen';
@@ -6,6 +6,7 @@ import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useEcommDashboard } from '@/hooks/useStudioDashboards';
 import { StatTile } from '@/components/studio';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** ecomm studio dashboard — catalogue stats + stock-by-product chart (B3-1). */
 export function ProductsManageScreen() {
@@ -43,7 +44,7 @@ export function ProductsManageScreen() {
       title={t('mweb.productsManage.ecommStudio')}
       testID="products-manage-screen"
     >
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={14} padding={16} paddingBottom={48}>
           {isLoading ? <Spinner testID="ecomm-dashboard-loading" color="$primary" /> : null}
           <XStack gap={10}>
@@ -74,7 +75,7 @@ export function ProductsManageScreen() {
             )}
           </YStack>
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

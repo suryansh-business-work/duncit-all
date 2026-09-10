@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, TextArea, XStack, YStack } from 'tamagui';
+import { Text, TextArea, XStack, YStack } from 'tamagui';
 
 import { Field } from '@/components/Field';
 import { StackScreen } from '@/components/StackScreen';
@@ -12,6 +12,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { toErrorMessage } from '@/utils/errors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 type SupportTarget = { phone: string; available: boolean } | null;
 
@@ -104,7 +105,7 @@ export function CallbackScreen() {
 
   return (
     <StackScreen title={t('mweb.common.callbackRequest')} testID="callback-screen">
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
         <Text testID="callback-subtitle" fontSize={13} color="$muted">
           Call us or get a callback
         </Text>
@@ -177,7 +178,7 @@ export function CallbackScreen() {
         </YStack>
 
         <CallbackHistory refreshKey={historyKey} />
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

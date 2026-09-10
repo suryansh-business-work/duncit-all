@@ -1,4 +1,3 @@
-import { ScrollView } from 'react-native';
 import { Button, Input, Spinner, Text, TextArea, XStack, YStack } from 'tamagui';
 
 import { useBottomInset } from '@/hooks/useBottomNavSpace';
@@ -8,6 +7,7 @@ import { SlotPicker } from './SlotPicker';
 import type { Answer } from './useOnboardingFlow';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 interface Props {
   survey: ActiveSurvey | null;
@@ -68,7 +68,7 @@ export function MeetingPhase({
     .filter((x) => x.text.trim() !== '');
 
   return (
-    <ScrollView
+    <RefreshScrollView
       contentContainerStyle={{ padding: 16, paddingBottom: bottomInset + 16, gap: 16 }}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="interactive"
@@ -194,6 +194,6 @@ export function MeetingPhase({
       >
         {busy ? 'Booking…' : 'Book this slot'}
       </Button>
-    </ScrollView>
+    </RefreshScrollView>
   );
 }

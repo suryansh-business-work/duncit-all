@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 import { StackScreen } from '@/components/StackScreen';
@@ -17,6 +17,7 @@ import { useClubEdit } from '@/hooks/useClubEdit';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Edit Club Details — the twin of mWeb's /clubs/:clubId/edit (rule 27): the
@@ -50,7 +51,7 @@ export function ClubEditScreen() {
 
   return (
     <StackScreen title={t('mweb.meta.clubEdit.title')} testID="club-edit-screen">
-      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <RefreshScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <YStack gap={14} padding={16} paddingBottom={48}>
           <PageHeading
             eyebrow={t('clubAdmin.editClub.eyebrow')}
@@ -90,7 +91,7 @@ export function ClubEditScreen() {
             />
           ) : null}
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

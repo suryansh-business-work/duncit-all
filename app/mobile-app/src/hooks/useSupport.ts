@@ -3,6 +3,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { CreateTicketDocument, MyTicketsDocument } from '@/graphql/support';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type Ticket = ResultOf<typeof MyTicketsDocument>['myTickets'][number];
 
@@ -35,6 +36,8 @@ export function useTickets() {
    * loading the filters.
    */
   const reload = useCallback(() => setReloadKey((k) => k + 1), []);
+
+  useRefreshRegistration(reload);
 
   return { tickets, isLoading, error, reload };
 }

@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Linking } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 import { isBackoutMaxed } from '@duncit/utils';
 
 import { PodHistoryDetails, PodHistoryDialogs } from '@/components/pod-history';
@@ -22,6 +22,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { podHistoryGate, refundLabel } from '@/utils/pod-history';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 const GENERAL_TERMS_URL = 'https://duncit.com/terms';
 
@@ -126,7 +127,7 @@ export function PodHistoryDetailsScreen() {
     );
   } else if (selected) {
     body = (
-      <ScrollView flex={1} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
         <PodHistoryDetails
           item={selected}
           backoutMaxed={backoutMaxed}
@@ -162,7 +163,7 @@ export function PodHistoryDetailsScreen() {
           onBackoutTerms={() => navigation.navigate('Policy', { slug: 'backout-terms' })}
           onGeneralTerms={() => Linking.openURL(GENERAL_TERMS_URL)}
         />
-      </ScrollView>
+      </RefreshScrollView>
     );
   } else {
     body = (

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import { autoPodActionable, autoPodWithdrawable, type AutoPodRow } from '@duncit/utils';
 
 import { StackScreen } from '@/components/StackScreen';
@@ -20,6 +20,7 @@ import { useAutoPodScreen } from '@/hooks/useAutoPodScreen';
 import type { AutoPodVenueOption } from '@/hooks/useAutoPodVenues';
 import { useLocations } from '@/hooks/useLocations';
 import type { RootStackParamList } from '@/navigation/types';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Venue Studio > Auto Pods — the offers a venue may take.
@@ -72,7 +73,7 @@ export function VenueAutoPodsScreen() {
 
   return (
     <StackScreen title={labels.venueTitle} testID="venue-auto-pods-screen">
-      <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
         <YStack gap={14}>
           <AutoPodVenueRow value={venue} onChange={setVenue} labels={labels} />
           <AutoPodLocationRow labels={labels} />
@@ -91,7 +92,7 @@ export function VenueAutoPodsScreen() {
             earnings={earnings.values}
           />
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
 
       <VenueEarningsSheet
         open={earnings.row !== null}

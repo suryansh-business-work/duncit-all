@@ -1,11 +1,12 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import type { PostComment, PostDetail } from '@/hooks/usePostViewer';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRelative } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 interface Props {
   post: PostDetail;
@@ -75,7 +76,7 @@ export function PostViewerBody({ post, meId, onToggleLike, onDeleteComment }: Re
   const { muted, danger } = useThemeColors();
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16 }}>
+    <RefreshScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16 }}>
       {post.caption ? (
         <Text fontSize={14} color="$color" paddingVertical={8}>
           {post.caption}
@@ -126,6 +127,6 @@ export function PostViewerBody({ post, meId, onToggleLike, onDeleteComment }: Re
           />
         ))
       )}
-    </ScrollView>
+    </RefreshScrollView>
   );
 }

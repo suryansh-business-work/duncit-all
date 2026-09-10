@@ -1,17 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { RefreshControl, type ScrollView as RNScrollView } from 'react-native';
+import type { ScrollView as RNScrollView } from 'react-native';
 import * as Linking from 'expo-linking';
 import type { SomethingForYouTarget } from '@duncit/utils';
 
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import type { RootStackParamList } from '@/navigation/types';
 
 import { Reveal } from '@/animations/Reveal';
 import { HomeSkeleton } from '@/components/Skeleton';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 import { useBottomNavSpace } from '@/hooks/useBottomNavSpace';
 import { useBranding } from '@/hooks/useBranding';
@@ -20,7 +21,6 @@ import { useHomeFeed } from '@/hooks/useHomeFeed';
 import { TourAnchor } from '@/tours/TourAnchor';
 import { useHomeStore } from '@/stores/home.store';
 import { useMe } from '@/hooks/useMe';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { ClubRecommendationRow } from '@/components/home/ClubRecommendationRow';
 import { ClubSection } from '@/components/home/ClubSection';
@@ -61,7 +61,6 @@ export function HomeFeed() {
     previousPods,
     totalPods,
     categoryLabelOf,
-    refetch,
   } = useHomeFeed(selectedCategoryId, filters, showAllVibes);
   const filterCount = activeFilterCount(filters, selectedCategoryId);
   // A chip/filter narrows the rails; the full-list screens are unfiltered, so
@@ -72,7 +71,6 @@ export function HomeFeed() {
   const bottomSpace = useBottomNavSpace();
   const { data: meData } = useMe();
   const saved = useSavedPodHearts();
-  const { primary, surface } = useThemeColors();
   const { openPod, openClub, openPreviousPods, openHappeningNearby } = useDetailNav();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -111,24 +109,10 @@ export function HomeFeed() {
 
   return (
     <YStack flex={1}>
-      <ScrollView
-        ref={scrollRef}
-        flex={1}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          // `tintColor` only colours the iOS spinner; Android draws a puck and
-          // reads `colors` + `progressBackgroundColor`. Left at their defaults
-          // that is a dark arrow on a white disc — all but invisible on the
-          // dark theme, so a pull read as "nothing happened".
-          <RefreshControl
-            refreshing={isLoading && hasData}
-            onRefresh={refetch}
-            tintColor={primary}
-            colors={[primary]}
-            progressBackgroundColor={surface}
-          />
-        }
-      >
+      {/* No refreshControl of its own: the home tab's pull is the shared one,
+          so it reloads the stories, the ads and the bell alongside the feed
+          rather than the feed alone. */}
+      <RefreshScrollView ref={scrollRef} flex={1} showsVerticalScrollIndicator={false}>
         <YStack gap={26} paddingTop={16} paddingBottom={bottomSpace} testID="home-feed">
           <Reveal index={0}>
             <StatusRail userName={userName} userPhoto={userPhoto} />
@@ -237,7 +221,7 @@ export function HomeFeed() {
             </Reveal>
           </YStack>
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
       {isHost ? (
         <CreatePodFab bottom={bottomSpace + 8} onPress={() => navigation.navigate('CreatePod')} />
       ) : null}

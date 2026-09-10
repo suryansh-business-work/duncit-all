@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import type { AdPosition } from '@/generated/graphql/graphql';
 import { ActiveAdsDocument } from '@/graphql/ads';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /** One live ad as served to the apps (the public projection, never internals). */
 export type ActiveAd = ResultOf<typeof ActiveAdsDocument>['activeAds'][number];
@@ -20,6 +21,9 @@ export function useActiveAds(position: AdPositionValue): { ads: ActiveAd[]; load
   const [ads, setAds] = useState<ActiveAd[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let active = true;
     graphqlRequest(ActiveAdsDocument, { position: position as AdPosition })
@@ -33,7 +37,9 @@ export function useActiveAds(position: AdPositionValue): { ads: ActiveAd[]; load
     return () => {
       active = false;
     };
-  }, [position]);
+  }, [position, attempt]);
+
+  useRefreshRegistration(refetch);
 
   return { ads, loading };
 }

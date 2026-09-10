@@ -9,6 +9,7 @@ import {
 } from '@/graphql/comm-preference';
 import { CommChannel as GqlCommChannel } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type CommPreference = ResultOf<
   typeof MobileCommPreferenceDocument
@@ -38,6 +39,9 @@ export function useCommPreference() {
   const [saved, setSaved] = useState(false);
   const [busyChannel, setBusyChannel] = useState<CommChannel | null>(null);
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let active = true;
     graphqlRequest(MobileCommPreferenceDocument, undefined, { auth: true })
@@ -47,7 +51,9 @@ export function useCommPreference() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [attempt]);
+
+  useRefreshRegistration(refetch);
 
   const setOtpChannel = useCallback(
     async (channel: CommChannel, enabled: boolean) => {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Input, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { Field } from '@/components/Field';
 import {
@@ -15,6 +15,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Redeem a gift card — code entry, the looked-up card, and the conversion of
  * its full value into Duncit Coins. RN twin of mWeb's /gift-cards/redeem
@@ -52,7 +53,7 @@ export function GiftCardRedeemScreen() {
 
   return (
     <StackScreen title={t('mweb.giftCards.redeemTitle')} testID="gift-card-redeem-screen">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={16} padding={16} paddingBottom={48}>
           <Text fontSize={13} color="$muted">
             {t('mweb.giftCards.redeemSubtitle')}
@@ -107,7 +108,7 @@ export function GiftCardRedeemScreen() {
           {card ? <GiftCardRedeemPanel card={card} currency={currency} /> : null}
           <GiftCardHowItWorks />
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

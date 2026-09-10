@@ -3,7 +3,7 @@ import { Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 import { backoutAttemptsLeft as attemptsLeftFor } from '@duncit/utils';
 
 import { Reveal } from '@/animations/Reveal';
@@ -47,6 +47,7 @@ import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { podShareMessage } from '@/utils/pod-format';
 import type { RootStackParamList } from '@/navigation/types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Booking, backout and share actions for the loaded pod — the state the
  * booking bar and its dialogs share. RN twin of mWeb's usePodDetailActions. */
@@ -360,7 +361,7 @@ export function PodDetailsScreen() {
     podBody = <DetailSkeleton testID="pod-details-loading" />;
   } else if (pod) {
     podBody = (
-      <ScrollView flex={1} contentContainerStyle={{ paddingBottom: bookingBarHeight + 16 }}>
+      <RefreshScrollView flex={1} contentContainerStyle={{ paddingBottom: bookingBarHeight + 16 }}>
         <DetailHero media={pod.pod_images_and_videos} onBack={goBack}>
           <HeroButton
             testID="pod-save"
@@ -435,7 +436,7 @@ export function PodDetailsScreen() {
             {t('mweb.podDetails.contactSupport')}
           </Text>
         </XStack>
-      </ScrollView>
+      </RefreshScrollView>
     );
   } else {
     podBody = (

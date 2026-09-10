@@ -24,6 +24,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 type EmojiTarget = { type: 'compose' } | { type: 'react'; id: string } | null;
 
@@ -151,7 +152,7 @@ export function ChatRoomScreen() {
           {isLoading && messages.length === 0 ? (
             <ListSkeleton testID="chat-room-loading" count={5} />
           ) : (
-            <ScrollView
+            <RefreshScrollView
               ref={listRef}
               style={{ flex: 1 }}
               contentContainerStyle={{ paddingVertical: 12, gap: 8 }}
@@ -175,7 +176,7 @@ export function ChatRoomScreen() {
                   />
                 ))
               )}
-            </ScrollView>
+            </RefreshScrollView>
           )}
 
           {emojiFor ? <EmojiBar onSelect={handleSelectEmoji} /> : null}

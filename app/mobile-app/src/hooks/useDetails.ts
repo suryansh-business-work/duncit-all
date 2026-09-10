@@ -17,6 +17,7 @@ import {
 import { TogglePodLikeDocument, ToggleSavedPodDocument } from '@/graphql/explore';
 import { graphqlRequest } from '@/services/graphql.client';
 import { categoryPath } from '@/utils/category-match';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type PodComment = ResultOf<typeof PodCommentsDocument>['podComments'][number];
 type PodDetailsResult = ResultOf<typeof PodDetailsDocument>;
@@ -174,6 +175,8 @@ export function usePodDetails(podId: string) {
     };
   }, [podId, load]);
 
+  useRefreshRegistration(load);
+
   return {
     pod,
     venue,
@@ -200,6 +203,9 @@ export function useClubDetails(clubId: string) {
   const [members, setMembers] = useState<PodPerson[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
+
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
     // Opened from a /club/:clubSlug link, this screen renders once before
@@ -230,7 +236,9 @@ export function useClubDetails(clubId: string) {
     return () => {
       active = false;
     };
-  }, [clubId]);
+  }, [clubId, attempt]);
+
+  useRefreshRegistration(refetch);
 
   const followingInitially = (data?.me?.following_club_ids ?? []).includes(clubId);
   const followingUserIds: string[] = data?.me?.following_user_ids ?? [];
@@ -313,6 +321,9 @@ export function usePodComments(podId: string, open: boolean) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     if (!open) return;
     let active = true;
@@ -325,7 +336,9 @@ export function usePodComments(podId: string, open: boolean) {
     return () => {
       active = false;
     };
-  }, [podId, open]);
+  }, [podId, open, attempt]);
+
+  useRefreshRegistration(refetch);
 
   const add = async (text: string) => {
     const created = await graphqlRequest(

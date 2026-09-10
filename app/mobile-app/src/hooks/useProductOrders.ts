@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { MyProductOrdersForPodDocument } from '@/graphql/product-orders';
 import { graphqlRequest } from '@/services/graphql.client';
 import type { ProductOrder } from '@/utils/product-orders';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /** The signed-in buyer's product orders for a pod. Skips fetching when no pod id
  * is provided. RN twin of mWeb's PodProductOrdersCard useQuery. */
@@ -10,6 +11,9 @@ export function useProductOrders(podId?: string) {
   const [orders, setOrders] = useState<ProductOrder[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<unknown>();
+
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
     if (!podId) {
@@ -32,7 +36,9 @@ export function useProductOrders(podId?: string) {
     return () => {
       active = false;
     };
-  }, [podId]);
+  }, [podId, attempt]);
+
+  useRefreshRegistration(refetch);
 
   return { orders, isLoading, error };
 }

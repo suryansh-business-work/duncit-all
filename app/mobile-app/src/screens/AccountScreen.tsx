@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Text, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
 import {
   AccountHealthCard,
@@ -23,6 +23,7 @@ import { ProfileVisibility } from '@/generated/graphql/graphql';
 import type { RootStackParamList } from '@/navigation/types';
 import { formatDate } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Profile Settings — RN twin of mWeb's AccountPage: identity header with photo/
  * edit/logout, contact + location info, account health, and host/venue shortcuts. */
@@ -42,7 +43,10 @@ export function AccountScreen() {
         </Text>
       </YStack>
     ) : (
-      <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
+      <RefreshScrollView
+        flex={1}
+        contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}
+      >
         <YStack
           borderRadius={18}
           borderWidth={1}
@@ -104,7 +108,7 @@ export function AccountScreen() {
         <CommPreferenceEntryCard onPress={() => navigation.navigate('CommPreference')} />
         <ConnectedAccountsSection />
         <SecuritySection />
-      </ScrollView>
+      </RefreshScrollView>
     );
 
   return (

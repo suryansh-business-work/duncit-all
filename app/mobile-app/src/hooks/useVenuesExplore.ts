@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { MobileVenuesDocument } from '@/graphql/hosts-venues';
@@ -6,6 +6,7 @@ import { CategoriesDocument, type CategoriesResult } from '@/graphql/onboarding-
 import { useLocationStore } from '@/stores/location.store';
 import { graphqlRequest } from '@/services/graphql.client';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type ExploreVenue = ResultOf<typeof MobileVenuesDocument>['publicVenues'][number];
 export type VenueCategoryOption = CategoriesResult['categories'][number];
@@ -51,6 +52,9 @@ export function useVenuesExplore() {
     };
   }, []);
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let active = true;
     setIsLoading(true);
@@ -75,7 +79,9 @@ export function useVenuesExplore() {
     return () => {
       active = false;
     };
-  }, [locationId, search, superCategoryId]);
+  }, [locationId, search, superCategoryId, attempt]);
+
+  useRefreshRegistration(refetch);
 
   return {
     venues,

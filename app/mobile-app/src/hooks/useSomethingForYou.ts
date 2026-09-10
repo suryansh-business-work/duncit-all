@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { PublicSomethingForYouDocument } from '@/graphql/somethingForYou';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /** One card, exactly as the server serves it to both apps. */
 export type SomethingForYouCard = ResultOf<
@@ -19,6 +20,9 @@ export type SomethingForYouCard = ResultOf<
 export function useSomethingForYou(): SomethingForYouCard[] {
   const [items, setItems] = useState<SomethingForYouCard[]>([]);
 
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
   useEffect(() => {
     let active = true;
     graphqlRequest(PublicSomethingForYouDocument, {})
@@ -29,7 +33,9 @@ export function useSomethingForYou(): SomethingForYouCard[] {
     return () => {
       active = false;
     };
-  }, []);
+  }, [attempt]);
+
+  useRefreshRegistration(refetch);
 
   return items;
 }

@@ -13,6 +13,7 @@ import {
   TogglePodIdeaLikeDocument,
 } from '@/graphql/pod-ideas';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 type PodIdeasData = ResultOf<typeof PodIdeasDocument>;
 export type PodIdea = PodIdeasData['podIdeas'][number];
@@ -62,6 +63,8 @@ export function usePodIdeas(search: string) {
       active = false;
     };
   }, [load]);
+
+  useRefreshRegistration(load);
 
   const create = async (input: NewPodIdeaInput) => {
     await graphqlRequest(
@@ -136,6 +139,8 @@ export function usePodIdeaDetails(id: string, onChanged: () => void) {
       active = false;
     };
   }, [load]);
+
+  useRefreshRegistration(load);
 
   const runAndReload = useCallback(
     async (run: () => Promise<unknown>) => {

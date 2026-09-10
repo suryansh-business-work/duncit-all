@@ -9,6 +9,7 @@ import {
   WithdrawPodChangeDocument,
 } from '@/graphql/pod-change-requests';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /**
  * Request Change, on a phone — the RN twin of `ChangeRequestBoard` and
@@ -86,6 +87,8 @@ export function usePodChangeRequests() {
       active = false;
     };
   }, [load]);
+
+  useRefreshRegistration(load);
 
   /** One write path, so no caller decides for itself what to do on failure. */
   const run = useCallback(

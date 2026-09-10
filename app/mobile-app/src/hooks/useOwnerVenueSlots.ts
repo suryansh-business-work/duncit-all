@@ -9,6 +9,7 @@ import {
   VenueSlotsDocument,
 } from '@/graphql/venue-availability';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type VenueSlot = ResultOf<typeof VenueSlotsDocument>['venueSlots'][number];
 
@@ -42,6 +43,8 @@ export function useOwnerVenueSlots(venueId: string | null, range: SlotRange) {
   const [attempt, setAttempt] = useState(0);
 
   const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
+  useRefreshRegistration(refetch);
 
   useEffect(() => {
     if (!venueId) {

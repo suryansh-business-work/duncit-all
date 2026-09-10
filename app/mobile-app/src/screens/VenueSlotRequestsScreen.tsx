@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, ScrollView, Spinner, Text, XStack } from 'tamagui';
+import { Button, Spinner, Text, XStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { SlotRequestCard } from '@/components/venue-slot-requests/SlotRequestCard';
@@ -11,6 +11,7 @@ import {
 } from '@/hooks/useVenueSlotRequests';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Slot Requests — the RN twin of mWeb's venue-slot-requests-page.
@@ -51,7 +52,7 @@ export function VenueSlotRequestsScreen() {
       title={t('mweb.venueSlotRequests.slotRequests')}
       testID="venue-slot-requests-screen"
     >
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
         <Text fontSize={12.5} color="$muted">
           {t('mweb.venueSlotRequests.intro')}
         </Text>
@@ -107,7 +108,7 @@ export function VenueSlotRequestsScreen() {
             onDecline={openDecline}
           />
         ))}
-      </ScrollView>
+      </RefreshScrollView>
 
       <SlotRequestDecisionSheets
         approving={approving}

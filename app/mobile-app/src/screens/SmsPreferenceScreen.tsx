@@ -1,4 +1,4 @@
-import { ScrollView, Text, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 import { findCommChannel } from '@duncit/utils';
 
 import { AuthMessagesCard } from '@/components/comm-preference';
@@ -6,6 +6,7 @@ import { DetailSkeleton } from '@/components/Skeleton';
 import { StackScreen } from '@/components/StackScreen';
 import { useCommPreference } from '@/hooks/useCommPreference';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * SMS Preference — RN twin of mWeb's SmsPreferencePage (rule 27), and Mail
@@ -36,7 +37,7 @@ export function SmsPreferenceScreen() {
       </Text>
     </YStack>
   ) : (
-    <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
+    <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
       <Text fontSize={12.5} color="$muted">
         {subtitle}
       </Text>
@@ -46,7 +47,7 @@ export function SmsPreferenceScreen() {
       <Text fontSize={12.5} color="$muted">
         {t('mweb.smsPreference.authOnly')}
       </Text>
-    </ScrollView>
+    </RefreshScrollView>
   );
 
   return (

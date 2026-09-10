@@ -5,6 +5,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 import { MobileAccountHealthDocument } from '@/graphql/account';
 import { MobileVenueHealthDocument } from '@/graphql/health';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type AccountHealthScore = ResultOf<typeof MobileAccountHealthDocument>['myAccountHealth'];
 export type VenueHealthScore = NonNullable<
@@ -36,6 +37,8 @@ export function useAccountHealth() {
     return unsubscribe;
   }, [navigation, load]);
 
+  useRefreshRegistration(load);
+
   return { health, isLoading, error };
 }
 
@@ -65,6 +68,8 @@ export function useVenueHealth(venueId: string) {
     });
     return unsubscribe;
   }, [navigation, load]);
+
+  useRefreshRegistration(load);
 
   return { health, isLoading, error };
 }

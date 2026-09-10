@@ -3,6 +3,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { HostPodPendingViewDocument } from '@/graphql/pod-pending';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type PodPendingView = ResultOf<typeof HostPodPendingViewDocument>['hostPodPendingView'];
 
@@ -57,6 +58,8 @@ export function usePodPendingView(podId: string) {
     await load(podId);
     if (active.current) setIsRefreshing(false);
   }, [load, podId]);
+
+  useRefreshRegistration(refetch);
 
   return { view, isLoading, isRefreshing, error, refetch };
 }

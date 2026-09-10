@@ -5,6 +5,7 @@ import { pickVenue } from '@duncit/utils';
 import { MyVenuesWithSettingsDocument } from '@/graphql/venue-availability';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type SettingsVenue = ResultOf<typeof MyVenuesWithSettingsDocument>['myVenues'][number];
 
@@ -29,6 +30,8 @@ export function useVenuesWithSettings() {
   const [attempt, setAttempt] = useState(0);
 
   const refetch = useCallback(() => setAttempt((value) => value + 1), []);
+
+  useRefreshRegistration(refetch);
 
   useEffect(() => {
     let active = true;

@@ -4,11 +4,12 @@ import {
   type NativeSyntheticEvent,
   ScrollView as RNScrollView,
 } from 'react-native';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 
 import { SupportChatBubble } from '@/components/support-chat/SupportChatBubble';
 import type { SupportChatMessage, SupportChatSession } from '@/hooks/useSupportChat';
 import { dayLabel, showDaySeparator } from '@/utils/support-chat';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 interface Props {
   isLoading: boolean;
@@ -57,7 +58,7 @@ export const ChatBody = forwardRef<RNScrollView, Props>(function ChatBody(
   const typingLine = aiThinking ? 'Duncit Assistant is typing…' : typing;
 
   return (
-    <ScrollView
+    <RefreshScrollView
       ref={ref}
       flex={1}
       onScroll={onScroll}
@@ -103,6 +104,6 @@ export const ChatBody = forwardRef<RNScrollView, Props>(function ChatBody(
           {typingLine}
         </Text>
       ) : null}
-    </ScrollView>
+    </RefreshScrollView>
   );
 });

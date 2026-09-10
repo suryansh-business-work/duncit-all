@@ -5,6 +5,7 @@ import { followActionFor, followStatusFrom } from '@duncit/utils';
 import { MobilePublicHostsDocument, MobilePublicVenuesDocument } from '@/graphql/hosts-venues';
 import { runUserFollowAction } from '@/services/follow-user';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 type HostsData = ResultOf<typeof MobilePublicHostsDocument>;
 type VenuesData = ResultOf<typeof MobilePublicVenuesDocument>;
@@ -39,6 +40,8 @@ export function useHostsVenues() {
       active = false;
     };
   }, [loadHosts]);
+
+  useRefreshRegistration(loadHosts);
 
   const meId = hostsData?.me?.user_id ?? null;
   const followingIds = useMemo(

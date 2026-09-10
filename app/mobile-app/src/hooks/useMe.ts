@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 
 import { useMeStore } from '@/stores/me.store';
 import { useRolesStore } from '@/stores/roles.store';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /** Current signed-in user for the account drawer (auth required). */
 export function useMe() {
@@ -9,10 +10,13 @@ export function useMe() {
   const isLoading = useMeStore((s) => s.isLoading);
   const error = useMeStore((s) => s.error);
   const fetch = useMeStore((s) => s.fetch);
+  const refetch = useMeStore((s) => s.refetch);
 
   useEffect(() => {
     fetch();
   }, [fetch]);
+
+  useRefreshRegistration(refetch);
 
   return { data, isLoading, error };
 }

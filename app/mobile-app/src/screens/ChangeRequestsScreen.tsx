@@ -1,8 +1,9 @@
-import { ScrollView, Text, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { ChangeRequestBoard } from '@/components/change-requests/ChangeRequestBoard';
 import { useTranslation } from '@/hooks/useTranslation';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Change Requests — the RN twin of mWeb's /change-requests page (rule 27).
@@ -18,14 +19,14 @@ export function ChangeRequestsScreen() {
 
   return (
     <StackScreen title={t('changeRequest.sectionTitle')} testID="change-requests-screen">
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
         <YStack gap={14}>
           <Text fontSize={12.5} color="$muted">
             {t('changeRequest.sectionSubtitle')}
           </Text>
           <ChangeRequestBoard />
         </YStack>
-      </ScrollView>
+      </RefreshScrollView>
     </StackScreen>
   );
 }

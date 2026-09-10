@@ -3,6 +3,7 @@ import { needsOtp, type PodAttendanceBoard, type PodAttendanceRow } from '@dunci
 
 import { HostMarkAttendanceDocument, PodAttendanceBoardDocument } from '@/graphql/attendance';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 /**
  * The attendance roster, as state.
@@ -45,6 +46,8 @@ export function useAttendanceBoard(podId: string) {
       active = false;
     };
   }, [podId, load]);
+
+  useRefreshRegistration(refetch);
 
   /** The one write path, so both entry points report the same way. */
   const mark = useCallback(

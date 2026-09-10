@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { BookingDetailDocument } from '@/graphql/booking';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type BookingDetail = ResultOf<typeof BookingDetailDocument>['bookingDetail'];
 
@@ -12,6 +13,9 @@ export function useBookingDetail(bookingId: string) {
   const [booking, setBooking] = useState<BookingDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
+
+  const [attempt, setAttempt] = useState(0);
+  const refetch = useCallback(() => setAttempt((value) => value + 1), []);
 
   useEffect(() => {
     let active = true;
@@ -29,7 +33,9 @@ export function useBookingDetail(bookingId: string) {
     return () => {
       active = false;
     };
-  }, [bookingId]);
+  }, [bookingId, attempt]);
+
+  useRefreshRegistration(refetch);
 
   return { booking, isLoading, error };
 }

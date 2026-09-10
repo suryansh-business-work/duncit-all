@@ -4,7 +4,7 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
 import { EmailVerificationSection } from '@/components/account';
@@ -23,6 +23,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 import { ProfilePodsPanel } from '@/components/profile/ProfilePodsPanel';
 import { ProfileTabs, type ProfileTab } from '@/components/profile/ProfileTabs';
+import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /** Profile — identity header, links/pet panels, host/venue shortcuts and the
  * user's posts grid. RN port of mWeb's ProfilePage (core). */
@@ -56,7 +57,7 @@ export function ProfileScreen() {
   };
 
   const body = me ? (
-    <ScrollView ref={scrollRef} flex={1} contentContainerStyle={{ paddingBottom: 24 }}>
+    <RefreshScrollView ref={scrollRef} flex={1} contentContainerStyle={{ paddingBottom: 24 }}>
       <ProfileHeader me={me} onChanged={() => fireAndForget(refetch())} />
       {/* Directly under the followers / following row in the header — the
           badges the member has actually earned, with the full catalogue one
@@ -91,7 +92,7 @@ export function ProfileScreen() {
       ) : null}
       {tab === 'joined' ? <ProfilePodsPanel userId={me.user_id} kind="joined" /> : null}
       {tab === 'hosted' && isHost ? <ProfilePodsPanel userId={me.user_id} kind="hosted" /> : null}
-    </ScrollView>
+    </RefreshScrollView>
   ) : (
     <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
       <Text testID="profile-error" color="$muted">

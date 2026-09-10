@@ -108,8 +108,10 @@ describe('createDateFormatter · typed input and calendar days', () => {
 
   it('offers typing hints derived from the same patterns', () => {
     const f = createDateFormatter({ dateFormat: 'dd MMM yyyy', timeFormat: 'hh:mm a' });
-    expect(f.datePlaceholder).toBe('DD MMM YYYY');
-    expect(f.dateTimePlaceholder).toBe('DD MMM YYYY hh:mm AM');
+    // The hint describes what is TYPED, so the letter month is asked for in
+    // digits — the displayed date keeps 'MMM'.
+    expect(f.datePlaceholder).toBe('DD MM YYYY');
+    expect(f.dateTimePlaceholder).toBe('DD MM YYYY hh:mm AM');
   });
 
   it('renders a stored calendar day without a zone conversion, even zone-aware', () => {
@@ -121,6 +123,9 @@ describe('createDateFormatter · typed input and calendar days', () => {
     // A birthday is a calendar position — the configured zone must not move it.
     expect(f.formatDay('2000-01-05')).toBe('05 Jan 2000');
     expect(f.formatDay('not-a-day')).toBe('');
+    // The input twin renders what its own box will read back, digits and all.
+    expect(f.formatDayInput('2000-01-05')).toBe('05 01 2000');
+    expect(f.dateInputFormat).toBe('dd MM yyyy');
   });
 
   it('reads back a picked Date as its LOCAL calendar day', () => {

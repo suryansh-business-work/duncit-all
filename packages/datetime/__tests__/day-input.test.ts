@@ -4,6 +4,7 @@ import {
   formatClockTime,
   formatIsoDay,
   isIsoDay,
+  keyboardPattern,
   parseInPattern,
   parseIsoDay,
   parseLocalDateTimeInput,
@@ -210,5 +211,31 @@ describe('formatClockTime', () => {
 
   it('renders nothing rather than throwing on a pattern date-fns rejects', () => {
     expect(formatClockTime('09:05', 'YYYY')).toBe('');
+  });
+});
+
+describe('keyboardPattern', () => {
+  it('asks for the month in digits, so nobody spells "Sep" into a date box', () => {
+    expect(keyboardPattern('dd MMM yyyy')).toBe('dd MM yyyy');
+    expect(keyboardPattern('dd MMMM yyyy')).toBe('dd MM yyyy');
+  });
+
+  it('keeps the order, separators and year width the admin configured', () => {
+    expect(keyboardPattern('MMM/dd/yy')).toBe('MM/dd/yy');
+    expect(keyboardPattern('yyyy-MM-dd')).toBe('yyyy-MM-dd');
+  });
+
+  it('drops the weekday along with the separator it came with', () => {
+    expect(keyboardPattern('EEE, dd MMM yyyy')).toBe('dd MM yyyy');
+    expect(keyboardPattern('dd MMM yyyy, EEE')).toBe('dd MM yyyy');
+  });
+
+  it('keeps a quoted run as the literal text it is, not as tokens to translate', () => {
+    // The quoted 'of' carries an M that is text, not a month.
+    expect(keyboardPattern("dd 'of' MMM yyyy")).toBe("dd 'of' MM yyyy");
+  });
+
+  it('leaves a standalone month token alone when it is already digits', () => {
+    expect(keyboardPattern('dd/MM/yyyy')).toBe('dd/MM/yyyy');
   });
 });

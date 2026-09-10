@@ -210,7 +210,9 @@ export function keyboardPattern(pattern: string): string {
   let out = '';
   let cursor = 0;
   for (const match of pattern.matchAll(TOKEN_SCAN)) {
-    const index = match.index ?? 0;
+    // `matchAll` sets `index` on every match it yields, so there is nothing to
+    // fall back to here.
+    const { index } = match;
     const literal = pattern.slice(cursor, index);
     cursor = index + match[0].length;
     // A quoted run is literal text, kept with whatever preceded it.

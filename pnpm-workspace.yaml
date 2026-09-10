@@ -78,6 +78,7 @@ minimumReleaseAgeExclude:
   - '@tiptap/extension-paragraph@3.30.6'
   - '@tiptap/extension-placeholder@3.30.6'
   - '@tiptap/extension-strike@3.30.6'
+  - '@tiptap/extension-table@3.30.6'
   - '@tiptap/extension-text@3.30.6'
   - '@tiptap/extension-underline@3.30.6'
   - '@tiptap/extensions@3.30.6'

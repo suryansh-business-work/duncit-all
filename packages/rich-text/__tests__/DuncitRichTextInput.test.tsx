@@ -32,6 +32,24 @@ describe('DuncitRichTextInput', () => {
     expect(host.textContent).toContain('Doubles at Court 2.');
   });
 
+  // The table nodes have to be registered on THIS component, not just
+  // available in the dependency: tiptap drops a node its schema does not know,
+  // so a stored table would load back as a run of text and the next save would
+  // write the flattened version over the real one.
+  it('loads a stored table back as a table, in both modes', async () => {
+    const value =
+      '<table><tbody><tr><th>Pod</th><th>Spots</th></tr><tr><td>DUN-POD-4821</td><td>8</td></tr></tbody></table>';
+
+    for (const readOnly of [false, true]) {
+      const host = await mount(editor({ value, readOnly }).ui);
+
+      expect(host.querySelectorAll('table')).toHaveLength(1);
+      expect(host.querySelectorAll('th')).toHaveLength(2);
+      expect(host.querySelectorAll('td')).toHaveLength(2);
+      expect(host.textContent).toContain('DUN-POD-4821');
+    }
+  });
+
   it('renders an empty editor for an empty value', async () => {
     const host = await mount(editor({ value: '' }).ui);
 

@@ -16,6 +16,7 @@ import { Box, Divider } from '@mui/material';
 import type { Editor } from '@tiptap/react';
 import { useTranslation } from '@duncit/app-settings';
 import { LinkDialog } from './LinkDialog';
+import { TableMenu } from './TableMenu';
 import { ToolbarButton } from './ToolbarButton';
 
 /**

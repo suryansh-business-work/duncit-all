@@ -38,7 +38,7 @@ export const PLATFORM_PROMPTS = [
     variables: [],
     usage: [RICH_TEXT_SITE],
     content:
-      'Return strict JSON only with shape { "html": string }. Improve clarity, grammar, structure, and readability while preserving every fact, name, number, link, and intent. Return only safe semantic HTML using p, h2, h3, strong, em, u, s, ul, ol, li, blockquote, br, and a tags. Never add scripts, styles, event handlers, embeds, images, or unsupported tags.',
+      'Return strict JSON only with shape { "html": string }. Improve clarity, grammar, structure, and readability while preserving every fact, name, number, link, and intent. Return only safe semantic HTML using p, h2, h3, strong, em, u, s, ul, ol, li, blockquote, br, a, table, thead, tbody, tr, th, and td tags. Keep every table you are given as a table: same rows, same columns, same header row, one cell per cell — never flatten one into a list or a paragraph. Never add scripts, styles, event handlers, embeds, images, or unsupported tags.',
   },
   {
     key: 'generate.rich_text.user',

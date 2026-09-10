@@ -1,6 +1,7 @@
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Skeleton, Stack, Typography } from '@mui/material';
+import { RICH_TEXT_BODY_SX, mergeSx } from '@duncit/ui';
 import 'react-quill/dist/quill.snow.css';
 import PolicyPdfButton from './PolicyPdfButton';
 import { formatDate } from '../utils/dateFormat';
@@ -84,30 +85,10 @@ export default function PolicyRenderer({ slug, hideTitle, hideUpdated }: Readonl
       {!hideTitle && <PolicyPdfButton slug={slug} />}
       <Box
         className="ql-snow"
-        sx={{
-          // Render the HTML produced by Quill with its native styles for
-          // headings, lists, blockquotes, code blocks, alignment etc.
-          '& .ql-editor': { padding: 0 },
-          '& img': { maxWidth: '100%', height: 'auto', borderRadius: 1 },
-          '& a': { color: 'primary.main' },
-          '& h1, & h2, & h3': { mt: 3, mb: 1.5, fontWeight: 700 },
-          '& p': { mb: 1.25, lineHeight: 1.7 },
-          '& ul, & ol': { pl: 3, mb: 1.5 },
-          '& blockquote': {
-            borderLeft: 4,
-            borderColor: 'divider',
-            pl: 2,
-            color: 'text.secondary',
-            my: 2,
-          },
-          '& pre': {
-            bgcolor: 'action.hover',
-            p: 2,
-            borderRadius: 1,
-            overflowX: 'auto',
-            fontFamily: 'monospace',
-          },
-        }}
+        // Quill's own stylesheet supplies alignment and indent classes; the
+        // shared block styles the elements themselves — including tables, which
+        // neither Quill nor the browser gives a border.
+        sx={mergeSx(RICH_TEXT_BODY_SX, { '& .ql-editor': { padding: 0 } })}
       >
         <Box className="ql-editor" dangerouslySetInnerHTML={{ __html: policy.content || '' }} />
       </Box>

@@ -4,6 +4,7 @@ import { Box } from '@mui/material';
 import Placeholder from '@tiptap/extension-placeholder';
 import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { TableKit } from '@tiptap/extension-table';
 import { useTranslation } from '@duncit/app-settings';
 import { normalizedEditorHtml } from './html';
 import {
@@ -52,6 +53,13 @@ export function DuncitRichTextInput({
           HTMLAttributes: { rel: 'noreferrer', target: '_blank' },
         },
       }),
+      // TableKit registers all four table nodes at once (table, row, header,
+      // cell). StarterKit does NOT bundle them, so unlike Link and Underline
+      // above there is no double-registration to avoid here.
+      //
+      // Column resizing is on for an editable editor only: the resize handles
+      // are drag targets, and a read-only document should not offer them.
+      TableKit.configure({ table: { resizable: !readOnly } }),
       Placeholder.configure({ placeholder: resolvedPlaceholder }),
     ],
     [readOnly, resolvedPlaceholder],
@@ -144,6 +152,53 @@ export function DuncitRichTextInput({
           paddingLeft: 1.25,
         },
         '& .ProseMirror ul, & .ProseMirror ol': { paddingLeft: 3 },
+        // A table is the one block that can outgrow the editor, so it scrolls
+        // inside its own box rather than making the whole page scroll sideways.
+        '& .ProseMirror .tableWrapper': { overflowX: 'auto', maxWidth: '100%', my: 1 },
+        '& .ProseMirror table': {
+          borderCollapse: 'collapse',
+          margin: 0,
+          tableLayout: 'fixed',
+          width: '100%',
+        },
+        '& .ProseMirror th, & .ProseMirror td': {
+          border: 1,
+          borderColor: 'divider',
+          padding: theme.spacing(0.75, 1),
+          position: 'relative',
+          verticalAlign: 'top',
+          minWidth: 48,
+        },
+        '& .ProseMirror th': {
+          bgcolor: 'action.hover',
+          fontWeight: 700,
+          textAlign: 'left',
+        },
+        // Cell content is a paragraph like any other block, so without this a
+        // one-line cell carries a paragraph's bottom margin.
+        '& .ProseMirror th > p, & .ProseMirror td > p': { m: 0 },
+        // ProseMirror marks the cells covered by a selection; without this the
+        // multi-cell selection a merge acts on is invisible.
+        '& .ProseMirror .selectedCell::after': {
+          background: theme.palette.action.selected,
+          bottom: 0,
+          content: '""',
+          left: 0,
+          pointerEvents: 'none',
+          position: 'absolute',
+          right: 0,
+          top: 0,
+          zIndex: 2,
+        },
+        '& .ProseMirror .column-resize-handle': {
+          backgroundColor: theme.palette.primary.main,
+          bottom: -2,
+          pointerEvents: 'none',
+          position: 'absolute',
+          right: -1,
+          top: 0,
+          width: 2,
+        },
         '& .ProseMirror > :first-of-type': { marginTop: 0 },
         '& .ProseMirror > :last-of-type': { marginBottom: 0 },
       })}

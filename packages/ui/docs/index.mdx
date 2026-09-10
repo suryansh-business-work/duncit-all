@@ -41,6 +41,7 @@ exports:
   - 'FormActionsRow'
   - 'useDebouncedValue'
   - 'mergeSx'
+  - 'RICH_TEXT_BODY_SX'
   - 'ModerationBlockedDialog'
   - 'LanguageSelect'
   - 'PodParticipationTimeline'
@@ -408,6 +409,7 @@ disagree about whether a submit in flight shows anything at all.
 | `useDebouncedValue` | `<T>(value: T, delayMs = 300) => T` | Standalone filter inputs only — `DuncitTable` already debounces its own search. |
 | `usageColor` | `(percent: number) => 'success' \| 'warning' \| 'error'` | `error` ≥ 90, `warning` ≥ 75, else `success`. |
 | `mergeSx` | `(defaults: SxProps<Theme>, override?: SxProps<Theme>) => SxProps<Theme>` | Returns `defaults` untouched when `override` is falsy. |
+| `RICH_TEXT_BODY_SX` | `SxProps<Theme>` | How authored rich-text HTML looks when printed read-only. See below. |
 
 ## `StatusChip` — the default map has already drifted
 
@@ -467,6 +469,29 @@ one property without losing the component's built-in styles.
 If you add a component to this package, route its `sx` prop through `mergeSx` too. Spreading
 (`{ ...defaults, ...sx }`) silently drops the defaults whenever a caller passes an array or a
 callback `sx`, which MUI fully supports.
+
+## `RICH_TEXT_BODY_SX` — the reader's half of the rich-text editor
+
+`@duncit/rich-text` styles what an author sees. This is what a **reader** sees: the same
+element styling for HTML rendered outside the editor, through `dangerouslySetInnerHTML` on the
+policy pages in mWeb and partners-app.
+
+```tsx
+import { RICH_TEXT_BODY_SX, mergeSx } from '@duncit/ui';
+
+<Box
+  sx={mergeSx(RICH_TEXT_BODY_SX, { '& h1, & h2, & h3': { fontWeight: 900 } })}
+  dangerouslySetInnerHTML={{ __html: policy.content }}
+/>;
+```
+
+It lives here rather than in `@duncit/rich-text` because mWeb and partners-app render this HTML
+without ever mounting the editor, and must not pull tiptap into their bundles to style it.
+
+Keep it in step with the editor: tables are the reason it exists as a shared export. A browser
+gives a bare `<table>` no borders at all, so a table authored in Legal and read on a policy
+page reads as prose — indistinguishable from a table that never saved — unless this block is
+applied.
 
 ## Peer dependencies, including the router
 

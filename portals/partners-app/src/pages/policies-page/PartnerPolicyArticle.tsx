@@ -3,6 +3,7 @@ import { Alert, Box, CircularProgress, Skeleton, Stack, Typography } from '@mui/
 import { POLICY_BY_SLUG } from './queries';
 import { formatDate } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
+import { RICH_TEXT_BODY_SX, mergeSx } from '@duncit/ui';
 
 export default function PartnerPolicyArticle({ slug }: Readonly<{ slug: string }>) {
   const { t } = useTranslation();
@@ -23,15 +24,8 @@ export default function PartnerPolicyArticle({ slug }: Readonly<{ slug: string }
         }}>{policy.title}</Typography>
       <Box
         className="ql-editor"
-        sx={{
-          '& img': { maxWidth: '100%', height: 'auto', borderRadius: 1 },
-          '& a': { color: 'primary.main' },
-          '& h1, & h2, & h3': { mt: 3, mb: 1.5, fontWeight: 900 },
-          '& p': { mb: 1.25, lineHeight: 1.7 },
-          '& ul, & ol': { pl: 3, mb: 1.5 },
-          '& blockquote': { borderLeft: 4, borderColor: 'divider', pl: 2, color: 'text.secondary', my: 2 },
-          '& pre': { bgcolor: 'action.hover', p: 2, borderRadius: 1, overflowX: 'auto', fontFamily: 'monospace' },
-        }}
+        // This portal sets its headings heavier than the shared default.
+        sx={mergeSx(RICH_TEXT_BODY_SX, { '& h1, & h2, & h3': { mt: 3, mb: 1.5, fontWeight: 900 } })}
         dangerouslySetInnerHTML={{ __html: policy.content || '' }}
       />
       <Typography

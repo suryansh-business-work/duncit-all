@@ -695,6 +695,109 @@ server {
     }
 }
 
+# --- Venues console: venues.duncit.com (SPA on :2030) ---
+# Every venue on Duncit. 25m body: the detail page uploads venue photos.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name venues.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2030;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
+# --- Clubs console: clubs.duncit.com (SPA on :2031) ---
+# Every club on Duncit. 25m body: the detail page uploads club media.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name clubs.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2031;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
+# --- Club Admins console: club-admins.duncit.com (SPA on :2032) ---
+server {
+    listen 80;
+    listen [::]:80;
+    server_name club-admins.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2032;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
+# --- Hosts console: hosts.duncit.com (SPA on :2033) ---
+# 25m body: the detail page uploads a host's identity documents.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name hosts.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2033;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
+# --- Pods console: pods.duncit.com (SPA on :2034) ---
+server {
+    listen 80;
+    listen [::]:80;
+    server_name pods.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2034;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
 # --- OpenWA gateway: open-wa-server.duncit.com (NestJS + WhatsApp on :2024) ---
 # The CRM "WhatsApp Lead Generator" gateway (portals/crm/open-wa-server). Serves
 # the bundled dashboard + REST API + live QR/session WebSocket. Larger body for

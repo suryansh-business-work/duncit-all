@@ -617,6 +617,107 @@ server {
     }
 }
 
+# --- Staging venues console: staging.venues.duncit.com (SPA on :2130) ---
+# Production port + 100, as every staging service is.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name staging.venues.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2130;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
+# --- Staging clubs console: staging.clubs.duncit.com (SPA on :2131) ---
+server {
+    listen 80;
+    listen [::]:80;
+    server_name staging.clubs.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2131;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
+# --- Staging club-admins console: staging.club-admins.duncit.com (SPA on :2132) ---
+server {
+    listen 80;
+    listen [::]:80;
+    server_name staging.club-admins.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2132;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
+# --- Staging hosts console: staging.hosts.duncit.com (SPA on :2133) ---
+server {
+    listen 80;
+    listen [::]:80;
+    server_name staging.hosts.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2133;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
+# --- Pods console: staging.pods.duncit.com (SPA on :2134) ---
+server {
+    listen 80;
+    listen [::]:80;
+    server_name staging.pods.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2134;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
 # --- OpenWA gateway: staging.open-wa-server.duncit.com (NestJS on :2124) ------
 # Staging twin of the CRM WhatsApp gateway. Larger body for media; long read
 # timeout so the QR/session stream stays open.

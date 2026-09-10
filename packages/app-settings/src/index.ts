@@ -82,6 +82,7 @@ export {
   CRM_BUNDLE,
   CHANGE_REQUEST_BUNDLE,
   DEVELOPERS_BUNDLE,
+  DIRECTORY_BUNDLE,
   allFallbackEntries,
   createTranslator,
   COMMON_REGION_LOCALES,

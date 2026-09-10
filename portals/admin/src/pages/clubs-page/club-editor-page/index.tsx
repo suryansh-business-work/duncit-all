@@ -16,7 +16,11 @@ import { QueryGuard } from '@duncit/ui';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
 import AiFillButton from '../../../components/AiFillButton';
 import { applyAiFillToClubForm } from '../clubFormAi';
-import { CLUB_FOR_EDIT, CREATE, UPDATE } from '../queries';
+import {
+  CLUB_FOR_EDIT,
+  CREATE_CLUB as CREATE,
+  UPDATE_CLUB as UPDATE,
+} from '@duncit/entity-consoles';
 import useClubImagePicker from './useClubImagePicker';
 import { useTranslation } from '@duncit/shell';
 

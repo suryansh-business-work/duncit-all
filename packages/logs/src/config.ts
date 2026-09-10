@@ -23,6 +23,12 @@ export const PORTALS = [
   'partners-app',
   'challenge-portal',
   'developers-portal',
+  // The four directory consoles.
+  'venues',
+  'clubs',
+  'club-admins',
+  'hosts',
+  'pods',
 ] as const;
 export type PortalKey = (typeof PORTALS)[number];
 

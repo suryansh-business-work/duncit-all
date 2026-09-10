@@ -1,0 +1,86 @@
+# --- builder ---
+FROM public.ecr.aws/docker/library/node:24-alpine AS builder
+WORKDIR /repo
+
+ARG VITE_GRAPHQL_URL
+ARG VITE_REQUIRED_ROLES
+ARG VITE_GOOGLE_CLIENT_ID
+ENV VITE_GRAPHQL_URL=${VITE_GRAPHQL_URL}
+ENV VITE_REQUIRED_ROLES=${VITE_REQUIRED_ROLES}
+ENV VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+COPY server/package.json ./server/
+COPY app/mweb/package.json ./app/mweb/
+COPY portals/admin/package.json ./portals/admin/
+COPY website/main-website/package.json ./website/main-website/
+COPY portals/partners-app/package.json ./portals/partners-app/
+COPY website/partners-website/package.json ./website/partners-website/
+COPY portals/ads-portal/package.json ./portals/ads-portal/
+COPY website/ads-website/package.json ./website/ads-website/
+COPY portals/crm/package.json ./portals/crm/
+COPY portals/finance/package.json ./portals/finance/
+COPY portals/tech/package.json ./portals/tech/
+COPY portals/support/package.json ./portals/support/
+COPY portals/website-app/package.json ./portals/website-app/
+COPY portals/club-admins/package.json ./portals/club-admins/
+COPY portals/ai/package.json ./portals/ai/
+COPY portals/products/package.json ./portals/products/
+COPY portals/marketing/package.json ./portals/marketing/
+COPY portals/onboarding/package.json ./portals/onboarding/
+COPY portals/hr/package.json ./portals/hr/
+COPY portals/employee/package.json ./portals/employee/
+COPY portals/regional-club-admin/package.json ./portals/regional-club-admin/
+COPY portals/venues/package.json ./portals/venues/
+COPY portals/clubs/package.json ./portals/clubs/
+COPY portals/club-admins/package.json ./portals/club-admins/
+COPY portals/hosts/package.json ./portals/hosts/
+COPY portals/pods/package.json ./portals/pods/
+COPY website/status-website/package.json ./website/status-website/
+COPY portals/challenge-portal/package.json ./portals/challenge-portal/
+COPY portals/developers/package.json ./portals/developers/
+COPY website/earnwith-website/package.json ./website/earnwith-website/
+COPY packages/user-context/package.json ./packages/user-context/
+COPY packages/logs/package.json ./packages/logs/
+COPY packages/shell/package.json ./packages/shell/
+COPY packages/fallback-icons/package.json ./packages/fallback-icons/
+COPY packages/app-settings/package.json ./packages/app-settings/
+COPY packages/datetime/package.json ./packages/datetime/
+COPY packages/i18n/package.json ./packages/i18n/
+COPY packages/geo/package.json ./packages/geo/
+COPY packages/breadcrumb/package.json ./packages/breadcrumb/
+COPY packages/theme/package.json ./packages/theme/
+COPY packages/user-core/package.json ./packages/user-core/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/ai-monitoring/package.json ./packages/ai-monitoring/
+COPY packages/media-picker/package.json ./packages/media-picker/
+COPY packages/rich-text/package.json ./packages/rich-text/
+COPY packages/tabs/package.json ./packages/tabs/
+COPY packages/dashboard/package.json ./packages/dashboard/
+COPY packages/ui/package.json ./packages/ui/
+COPY packages/table/package.json ./packages/table/
+COPY packages/dialogs/package.json ./packages/dialogs/
+COPY packages/captcha/package.json ./packages/captcha/
+COPY packages/brand/package.json ./packages/brand/
+COPY packages/communication/package.json ./packages/communication/
+# @duncit/forms peers on react-hook-form + MUI. Without its package.json in the
+# install stage pnpm never links them, and `tsc -b` fails inside the image on a
+# build that passes locally — the one failure mode local work cannot show you.
+COPY packages/forms/package.json ./packages/forms/
+COPY packages/buttons-native/package.json ./packages/buttons-native/
+COPY packages/buttons/package.json ./packages/buttons/
+COPY packages/verification/package.json ./packages/verification/
+COPY packages/entity-consoles/package.json ./packages/entity-consoles/
+
+RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
+RUN pnpm install --frozen-lockfile
+
+COPY packages ./packages
+COPY portals/club-admins ./portals/club-admins
+RUN pnpm --filter club-admins build
+
+# --- runner ---
+FROM public.ecr.aws/docker/library/nginx:alpine AS runner
+COPY --from=builder /repo/portals/club-admins/dist /usr/share/nginx/html
+COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80

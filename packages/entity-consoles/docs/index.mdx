@@ -1,0 +1,107 @@
+---
+name: '@duncit/entity-consoles'
+summary: 'The four directory consoles — venues, clubs, club admins, hosts. One brief-then-list-then-detail scaffold over four entities, so a column added once shows up everywhere.'
+category: 'ui'
+zeroDeps: false
+frameworkFree: false
+coverageGate: false
+consumers:
+  - 'portals/venues'
+  - 'portals/clubs'
+  - 'portals/club-admins'
+  - 'portals/hosts'
+exports:
+  - 'EntityDashboard'
+  - 'DIRECTORY_SPECS'
+  - 'VENUES_SPEC'
+  - 'CLUBS_SPEC'
+  - 'CLUB_ADMINS_SPEC'
+  - 'HOSTS_SPEC'
+  - 'VENUE_COUNTS'
+  - 'CLUB_COUNTS'
+  - 'CLUB_ADMIN_COUNTS'
+  - 'HOST_COUNTS'
+---
+
+## What this is
+
+Duncit keeps a directory of four things: every **venue**, every **club**, every
+**club admin**, every **host**. Each one has a dedicated console at its own
+subdomain — `venues.duncit.com`, `clubs.duncit.com`, `club-admins.duncit.com`,
+`hosts.duncit.com` — gated on its own access role (`ALL_VENUES_ACCESS` and
+siblings), granted from Admin → Users.
+
+All four are the **same screen over a different entity**: a brief of how many
+there are and where they stand, then a list, then a row's full detail. That is
+why they share a spec instead of being four near-identical consoles. A fifth
+entity is one more spec, not one more console.
+
+## Why one package and not four
+
+Four packages would have meant four sets of coverage thresholds, four
+`docs/index.mdx`, four demo files and four `COPY` lines in every Dockerfile that
+consumes them — for code whose shared part *is* the scaffold. Rule 40 says
+extending beats creating; this is that applied to the consoles themselves.
+
+## The counts are one round trip
+
+A dashboard's numbers come from a **single** document with every tile's count
+aliased beside the others:
+
+```graphql
+query VenueDirectoryCounts {
+  total: venuesTable(query: { page_size: 1 }) { total }
+  approved: venuesTable(query: { page_size: 1, filters: [{ field: "status", op: eq, value: "APPROVED" }] }) { total }
+  pending: venuesTable(query: { page_size: 1, filters: [{ field: "status", op: eq, value: "SUBMITTED" }] }) { total }
+  declined: venuesTable(query: { page_size: 1, filters: [{ field: "status", op: eq, value: "REJECTED" }] }) { total }
+}
+```
+
+Four separate queries would let four tiles report four different moments — a
+venue approved between request two and three gets counted as both pending and
+approved, and the tiles stop adding up to the total.
+
+`page_size: 1` because only `total` is read. Asking for a page of rows to throw
+them away is the same query at twenty times the cost.
+
+**Every filter field must be on that entity's server-side `filterFields`
+allowlist.** A field that is not on it does not come back empty — the table
+engine rejects the query and the whole dashboard errors. Clubs are the entity to
+watch: they have no `status` field at all, so their tiles read `is_active` and
+`is_verified`.
+
+## Mounting a console
+
+```tsx
+import { EntityDashboard, VENUES_SPEC } from '@duncit/entity-consoles';
+
+export default function DashboardPage() {
+  return <EntityDashboard spec={VENUES_SPEC} />;
+}
+```
+
+Pass `listPath` once the list route exists, and every tile becomes a way into
+the list already filtered to what it counted:
+
+```tsx
+<EntityDashboard spec={VENUES_SPEC} listPath="/venues" />
+```
+
+Without `listPath` the tiles render as plain figures. That is deliberate: a tile
+that navigates nowhere is worse than a tile that simply reports its number.
+
+## Copy lives in one namespace
+
+`directory.common.*` is what every console says (`Total`, `Awaiting review`,
+`Declined`); `directory.<entity>.*` is only what is genuinely specific. Four
+namespaces would be four copies of "Awaiting review" drifting apart one console
+at a time. The bundle is `DIRECTORY_BUNDLE` in `@duncit/i18n`, and each portal
+layers it over the shell's with `i18nFallback`.
+
+## Coverage
+
+`coverageGate: false`, and the vitest thresholds start at the floor. This is a
+**ratchet, not a target**: the consoles landed during the repo-wide test pause,
+so the numbers are raised as suites arrive and never lowered. The Shared
+packages gate enforces whatever is written in the config, so a threshold above
+the real coverage reds the build for everyone.

@@ -250,6 +250,43 @@ services:
     ports:
       - "127.0.0.1:2129:80"
 
+  # The four directory consoles — production port + 100, as every staging
+  # service is.
+  venues:
+    image: ${DOCKERHUB_USERNAME}/duncit-venues:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-venues
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2130:80"
+
+  clubs:
+    image: ${DOCKERHUB_USERNAME}/duncit-clubs:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-clubs
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2131:80"
+
+  club-admins:
+    image: ${DOCKERHUB_USERNAME}/duncit-club-admins:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-club-admins
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2132:80"
+
+  hosts:
+    image: ${DOCKERHUB_USERNAME}/duncit-hosts:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-hosts
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2133:80"
+
+  pods:
+    image: ${DOCKERHUB_USERNAME}/duncit-pods:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-pods
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2134:80"
+
   # Staging Redis — same shape as production's, isolated on the staging
   # network with its own data dir, so a staging cache flush never touches
   # production's cache (and vice versa).

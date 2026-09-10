@@ -160,6 +160,51 @@ export const SURFACES: readonly Surface[] = [
       "A Regional Club Admin's own console: the region canvas, the Club Admins under them, and the clubs and pods below those people.",
   },
   {
+    key: 'venues',
+    name: 'Venues',
+    kind: 'PORTAL',
+    host: 'venues.duncit.com',
+    dev_port: 2030,
+    summary:
+      'Every venue on Duncit, from an application awaiting review to a live space taking bookings — one list, and a full detail page behind each row.',
+  },
+  {
+    key: 'clubs',
+    name: 'Clubs',
+    kind: 'PORTAL',
+    host: 'clubs.duncit.com',
+    dev_port: 2031,
+    summary:
+      'Every club on Duncit: its admins, its pods, its media and its content, with a full detail page behind each row.',
+  },
+  {
+    key: 'club-admins',
+    name: 'Club Admins',
+    kind: 'PORTAL',
+    host: 'club-admins.duncit.com',
+    dev_port: 2032,
+    summary:
+      'Every club admin on Duncit, their commission, the clubs they run, and a full detail page behind each row.',
+  },
+  {
+    key: 'pods',
+    name: 'Pods',
+    kind: 'PORTAL',
+    host: 'pods.duncit.com',
+    dev_port: 2034,
+    summary:
+      'Every pod on Duncit, counted by where it is in its life — upcoming, running now, or already settled.',
+  },
+  {
+    key: 'hosts',
+    name: 'Hosts',
+    kind: 'PORTAL',
+    host: 'hosts.duncit.com',
+    dev_port: 2033,
+    summary:
+      'Every host on Duncit, from an application awaiting review to a host running pods — their categories, commission and pods, with a full detail page behind each row.',
+  },
+  {
     key: 'challenge',
     name: 'Challenges',
     kind: 'PORTAL',

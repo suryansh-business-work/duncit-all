@@ -181,6 +181,36 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         promoText:
           'Add the Club Admins who report into you, and the cities, hosts and pods below them draw themselves.',
       },
+      venues: {
+        tagline: 'Every venue on Duncit, in one place.',
+        promoTitle: 'Every venue, one list',
+        promoText:
+          'An application waiting on a review and a live space taking bookings are the same venue at two points in its life — so they sit in the same list.',
+      },
+      clubs: {
+        tagline: 'Every club on Duncit, in one place.',
+        promoTitle: 'Every club, one list',
+        promoText:
+          'A club, the admins who run it, the pods that belong to it and the content it publishes — behind one row.',
+      },
+      clubAdmins: {
+        tagline: 'Every club admin on Duncit, in one place.',
+        promoTitle: 'Every club admin, one list',
+        promoText:
+          'Who runs which clubs, what commission they are on, and where their record stands — behind one row.',
+      },
+      pods: {
+        tagline: 'Every pod on Duncit, in one place.',
+        promoTitle: 'Every pod, one list',
+        promoText:
+          'Upcoming, running right now, and already settled — counted by where each pod sits in its life rather than by a status column.',
+      },
+      hosts: {
+        tagline: 'Every host on Duncit, in one place.',
+        promoTitle: 'Every host, one list',
+        promoText:
+          'An application waiting on a review and a host already running pods are the same person at two points in their life — so they sit in the same list.',
+      },
       products: {
         tagline: 'Manage the product catalog and roadmap.',
         promoTitle: 'Build what matters',

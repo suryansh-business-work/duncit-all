@@ -187,6 +187,15 @@ export const SURFACES: readonly Surface[] = [
       'Every club admin on Duncit, their commission, the clubs they run, and a full detail page behind each row.',
   },
   {
+    key: 'pods',
+    name: 'Pods',
+    kind: 'PORTAL',
+    host: 'pods.duncit.com',
+    dev_port: 2034,
+    summary:
+      'Every pod on Duncit, counted by where it is in its life — upcoming, running now, or already settled.',
+  },
+  {
     key: 'hosts',
     name: 'Hosts',
     kind: 'PORTAL',

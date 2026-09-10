@@ -280,6 +280,13 @@ services:
     ports:
       - "127.0.0.1:2133:80"
 
+  pods:
+    image: ${DOCKERHUB_USERNAME}/duncit-pods:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-pods
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2134:80"
+
   # Staging Redis — same shape as production's, isolated on the staging
   # network with its own data dir, so a staging cache flush never touches
   # production's cache (and vice versa).

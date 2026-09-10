@@ -8,13 +8,14 @@ export const PORTAL_ROLE_REQUIREMENTS: Record<string, readonly string[]> = {
   ads: ['ADS_MANAGER'],
   ai: ['AI_MANAGER'],
   challenge: ['CHALLENGE_MANAGER'],
-  // The four directory consoles. An Onboarding Manager opens the venue and
+  // The directory consoles. An Onboarding Manager opens the venue and
   // host ones too: reviewing an application and managing the venue it becomes
   // are the same screen now (one console, union of both), so gating them apart
   // would hand onboarding staff a console that refuses the half they own.
   clubs: ['ALL_CLUBS_ACCESS'],
   'club-admins': ['ALL_CLUB_ADMINS_ACCESS'],
   hosts: ['ALL_HOSTS_ACCESS', 'ONBOARDING_MANAGER'],
+  pods: ['ALL_PODS_ACCESS'],
   venues: ['ALL_VENUES_ACCESS', 'ONBOARDING_MANAGER'],
   crm: ['CRM_MANAGER'],
   developers: ['DEVELOPERS_MANAGER'],

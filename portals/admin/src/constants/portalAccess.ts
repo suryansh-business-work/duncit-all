@@ -79,6 +79,7 @@ export const PORTAL_ACCESS: PortalAccess[] = [
   { key: 'clubs', name: 'Clubs', url: url('clubs'), roles: [{ key: 'ALL_CLUBS_ACCESS', name: 'All Clubs Access' }] },
   { key: 'club-admins', name: 'Club Admins', url: url('club-admins'), roles: [{ key: 'ALL_CLUB_ADMINS_ACCESS', name: 'All Club Admins Access' }] },
   { key: 'hosts', name: 'Hosts', url: url('hosts'), roles: [{ key: 'ALL_HOSTS_ACCESS', name: 'All Hosts Access' }] },
+  { key: 'pods', name: 'Pods', url: url('pods'), roles: [{ key: 'ALL_PODS_ACCESS', name: 'All Pods Access' }] },
 ];
 
 export interface RolePortalInfo {

@@ -57,13 +57,15 @@ export const PORTALS: PortalEntry[] = [
   { key: 'employee', name: 'Employee', descriptionKey: 'session.portals.descriptions.employee', port: 2018, subdomain: 'employee', category: 'people', image: PEXELS('4974915') },
   { key: 'partners', name: 'Partners', descriptionKey: 'session.portals.descriptions.partners', port: 2005, subdomain: 'partners-app', category: 'partners', image: PEXELS('4963388') },
   { key: 'regional-club-admin', name: 'Regional Club Admin', descriptionKey: 'session.portals.descriptions.regionalClubAdmin', port: 2029, subdomain: 'regional-club-admin', category: 'partners', image: PEXELS('1181406') },
-  // The four directory consoles. Filed under `partners` rather than a new
-  // category: venues, clubs, club admins and hosts ARE the partner network,
-  // and a category of its own would be one chip holding four tiles.
+  // The directory consoles. The partner-network four are filed under
+  // `partners` rather than a new category, because venues, clubs, club admins
+  // and hosts ARE that network. Pods sit under `operations`: a pod is the
+  // thing the business runs, not a party it contracts with.
   { key: 'venues', name: 'Venues', descriptionKey: 'session.portals.descriptions.venues', port: 2030, subdomain: 'venues', category: 'partners', image: PEXELS('260922') },
   { key: 'clubs', name: 'Clubs', descriptionKey: 'session.portals.descriptions.clubs', port: 2031, subdomain: 'clubs', category: 'partners', image: PEXELS('3184398') },
   { key: 'club-admins', name: 'Club Admins', descriptionKey: 'session.portals.descriptions.clubAdmins', port: 2032, subdomain: 'club-admins', category: 'partners', image: PEXELS('3182812') },
   { key: 'hosts', name: 'Hosts', descriptionKey: 'session.portals.descriptions.hosts', port: 2033, subdomain: 'hosts', category: 'partners', image: PEXELS('1181395') },
+  { key: 'pods', name: 'Pods', descriptionKey: 'session.portals.descriptions.pods', port: 2034, subdomain: 'pods', category: 'operations', image: PEXELS('1153213') },
 ];
 
 /** Resolves a portal URL: localhost:<port> in dev, https://<sub>.duncit.com in prod. */

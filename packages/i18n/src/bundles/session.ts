@@ -72,6 +72,7 @@ export const SESSION_BUNDLE: NestedCatalogue = {
         clubs: 'Every club on Duncit — its admins, its pods and its content.',
         clubAdmins: 'Every club admin on Duncit, and the clubs they run.',
         hosts: 'Every host on Duncit, from a new application to a host running pods.',
+        pods: 'Every pod on Duncit — upcoming, running, and already settled.',
         support: 'Tickets, live chat and customer support.',
         tech: 'Environment, feature flags and platform config.',
         websiteApp: 'Site content, careers, newsroom and blog.',

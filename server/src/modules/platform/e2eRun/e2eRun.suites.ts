@@ -42,6 +42,7 @@ export const E2E_SUITES: readonly E2eSuiteDefinition[] = [
   portal('developers', 'Developers'),
   portal('employee', 'Employee'),
   portal('hosts', 'Hosts'),
+  portal('pods', 'Pods'),
   portal('regional-club-admin', 'Regional Club Admin'),
   portal('venues', 'Venues'),
   portal('finance', 'Finance'),

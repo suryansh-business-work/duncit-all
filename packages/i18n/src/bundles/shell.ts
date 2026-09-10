@@ -199,6 +199,12 @@ export const SHELL_BUNDLE: NestedCatalogue = {
         promoText:
           'Who runs which clubs, what commission they are on, and where their record stands — behind one row.',
       },
+      pods: {
+        tagline: 'Every pod on Duncit, in one place.',
+        promoTitle: 'Every pod, one list',
+        promoText:
+          'Upcoming, running right now, and already settled — counted by where each pod sits in its life rather than by a status column.',
+      },
       hosts: {
         tagline: 'Every host on Duncit, in one place.',
         promoTitle: 'Every host, one list',

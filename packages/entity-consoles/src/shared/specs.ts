@@ -1,13 +1,13 @@
-import { CLUB_ADMIN_COUNTS, CLUB_COUNTS, HOST_COUNTS, VENUE_COUNTS } from './counts';
+import { CLUB_ADMIN_COUNTS, CLUB_COUNTS, HOST_COUNTS, POD_COUNTS, VENUE_COUNTS } from './counts';
 import type { DirectorySpec, DirectoryTile } from './types';
 
 /**
- * The four specs, written as data.
+ * The specs, written as data.
  *
- * Three of the four entities share a lifecycle — drafted, submitted, approved
+ * Three of the entities share an application lifecycle — drafted, submitted, approved
  * or declined — so their tiles are the same four tiles, built once by
- * `lifecycleTiles`. Clubs are the exception and say so in their own spec rather
- * than forcing a status field the club table does not have.
+ * `lifecycleTiles`. Clubs and pods are the exceptions and say so in their own
+ * specs rather than forcing a status field their tables do not have.
  */
 
 /**
@@ -72,10 +72,27 @@ export const HOSTS_SPEC: DirectorySpec = {
   countsDocument: HOST_COUNTS,
 };
 
+export const PODS_SPEC: DirectorySpec = {
+  entity: 'pods',
+  titleKey: 'directory.pods.title',
+  subtitleKey: 'directory.pods.subtitle',
+  dashboardTitleKey: 'directory.pods.dashboardTitle',
+  // Lifecycle, not status: a pod moves through its life by the clock and by
+  // being settled, so "running now" is the tile somebody actually wants.
+  tiles: [
+    { key: 'total', labelKey: 'directory.common.total', tone: 'primary', listQuery: null },
+    { key: 'upcoming', labelKey: 'directory.common.upcoming', tone: 'primary', listQuery: 'lifecycle=UPCOMING' },
+    { key: 'ongoing', labelKey: 'directory.common.ongoing', tone: 'success', listQuery: 'lifecycle=ONGOING' },
+    { key: 'completed', labelKey: 'directory.common.completed', tone: 'warning', listQuery: 'lifecycle=COMPLETED' },
+  ],
+  countsDocument: POD_COUNTS,
+};
+
 /** Every spec, keyed by entity — how a portal looks up the one it mounts. */
 export const DIRECTORY_SPECS = {
   venues: VENUES_SPEC,
   clubs: CLUBS_SPEC,
   clubAdmins: CLUB_ADMINS_SPEC,
   hosts: HOSTS_SPEC,
+  pods: PODS_SPEC,
 } as const;

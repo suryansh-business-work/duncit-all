@@ -22,6 +22,9 @@ export const DIRECTORY_BUNDLE: NestedCatalogue = {
       awaitingReview: 'Awaiting review',
       declined: 'Declined',
       verified: 'Verified',
+      upcoming: 'Upcoming',
+      ongoing: 'Running now',
+      completed: 'Completed',
       // Every tile is a way in, so the hint says so rather than restating the
       // number the tile already shows.
       openList: 'Open the list',
@@ -59,6 +62,11 @@ export const DIRECTORY_BUNDLE: NestedCatalogue = {
       requestNo: 'Meeting request',
       joinedAt: 'Joined',
       reviewerNotes: 'Reviewer notes',
+    },
+    pods: {
+      title: 'Pods',
+      subtitle: 'Every pod on Duncit — upcoming, running, and the ones already settled.',
+      dashboardTitle: 'Pods at a glance',
     },
     hosts: {
       title: 'Hosts',

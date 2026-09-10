@@ -35,6 +35,7 @@ export const PORTAL_REGISTRY: PortalRegistryEntry[] = [
   { key: 'clubs', name: 'Clubs', kind: 'PORTAL', url: 'https://clubs.duncit.com/' },
   { key: 'club-admins', name: 'Club Admins', kind: 'PORTAL', url: 'https://club-admins.duncit.com/' },
   { key: 'hosts', name: 'Hosts', kind: 'PORTAL', url: 'https://hosts.duncit.com/' },
+  { key: 'pods', name: 'Pods', kind: 'PORTAL', url: 'https://pods.duncit.com/' },
   { key: 'challenge', name: 'Challenges', kind: 'PORTAL', url: 'https://challenge.duncit.com/' },
   { key: 'developers', name: 'Developers', kind: 'PORTAL', url: 'https://developers.duncit.com/' },
   { key: 'mweb', name: 'mWeb (Member App)', kind: 'APP', url: 'https://mweb.duncit.com/' },

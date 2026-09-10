@@ -475,6 +475,12 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
   { surface: 'club-admins', path: '/profile', label: 'Profile',
     description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Club Admins console.' },
 
+  // ---- Pods (pods) -----------------------------------------------------
+  { surface: 'pods', path: '/', label: 'Dashboard',
+    description: 'A brief on every pod on Duncit, counted by where it sits in its life rather than by a status column: how many there are in total, how many are still upcoming, how many are running right now, and how many are already settled.' },
+  { surface: 'pods', path: '/profile', label: 'Profile',
+    description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Pods console.' },
+
   // ---- Hosts (hosts) ---------------------------------------------------
   { surface: 'hosts', path: '/', label: 'Dashboard',
     description: 'A brief on every host on Duncit: how many there are, how many are approved, how many are awaiting review and how many were declined. Each tile opens the list already filtered to what it counted.' },

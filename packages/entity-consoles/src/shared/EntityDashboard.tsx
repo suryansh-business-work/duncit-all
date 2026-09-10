@@ -3,6 +3,7 @@ import { Alert, Stack } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import PersonIcon from '@mui/icons-material/Person';
+import EventNoteIcon from '@mui/icons-material/EventNote';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import { useTranslation } from '@duncit/app-settings';
 import { PageHeader, StatCard } from '@duncit/ui';
@@ -18,6 +19,7 @@ const ENTITY_ICON: Record<DirectoryEntity, React.ReactNode> = {
   clubs: <GroupsIcon />,
   clubAdmins: <SupervisorAccountIcon />,
   hosts: <PersonIcon />,
+  pods: <EventNoteIcon />,
 };
 
 /**
@@ -87,7 +89,7 @@ export interface EntityDashboardProps {
  * A directory console's brief: how many of this entity there are, and where
  * they stand.
  *
- * ONE component for all four consoles. The numbers come from the spec's single
+ * ONE component for every console. The numbers come from the spec's single
  * aliased counts document, so every tile on screen counted the same moment,
  * and a tile is a way into the list already filtered to what it counted —
  * which is the only reason a number on a dashboard is worth showing.

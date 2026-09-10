@@ -25,7 +25,7 @@ export const ROLES = [
   'ONBOARDING_MANAGER',
   'CHALLENGE_MANAGER',
   'DEVELOPERS_MANAGER',
-  // The four directory consoles. Named for what they open rather than for a
+  // The directory consoles. Named for what they open rather than for a
   // job title, because that is what they grant: every venue, every club, every
   // club admin, every host — regardless of which city or club the holder sits
   // in. A CITY_ADMIN sees their own city; these see the lot.
@@ -33,6 +33,7 @@ export const ROLES = [
   'ALL_CLUBS_ACCESS',
   'ALL_CLUB_ADMINS_ACCESS',
   'ALL_HOSTS_ACCESS',
+  'ALL_PODS_ACCESS',
 ] as const;
 
 export type UserRole = (typeof ROLES)[number];
@@ -81,6 +82,7 @@ export const ROLE_CATALOG: RoleDefinition[] = [
   { key: 'ALL_CLUBS_ACCESS', name: 'All Clubs Access', description: 'Every club on Duncit — clubs.duncit.com.' },
   { key: 'ALL_CLUB_ADMINS_ACCESS', name: 'All Club Admins Access', description: 'Every club admin on Duncit — club-admins.duncit.com.' },
   { key: 'ALL_HOSTS_ACCESS', name: 'All Hosts Access', description: 'Every host on Duncit — hosts.duncit.com.' },
+  { key: 'ALL_PODS_ACCESS', name: 'All Pods Access', description: 'Every pod on Duncit — pods.duncit.com.' },
 ];
 
 // The portal login gate (PORTAL_ROLE_REQUIREMENTS / PORTAL_GATE_EXEMPT_KEYS /

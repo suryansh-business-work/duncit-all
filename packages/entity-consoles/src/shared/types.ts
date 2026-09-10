@@ -1,14 +1,14 @@
 import type { DocumentNode } from 'graphql';
 
 /**
- * The four things Duncit keeps a directory of.
+ * The things Duncit keeps a directory of.
  *
- * They are one screen over four entities — a brief of how many there are and
+ * They are one screen over several entities — a brief of how many there are and
  * where they stand, then a list, then a row's full detail — which is why they
- * share a spec rather than four near-identical consoles (rule 34). A fifth
- * entity is one more spec, not one more console.
+ * share a spec rather than one near-identical console each (rule 34). Pods
+ * were the fifth and cost one spec, which is the whole point.
  */
-export type DirectoryEntity = 'venues' | 'clubs' | 'clubAdmins' | 'hosts';
+export type DirectoryEntity = 'venues' | 'clubs' | 'clubAdmins' | 'hosts' | 'pods';
 
 /** Tone for a tile's icon and value. Maps onto the MUI palette. */
 export type DirectoryTone = 'primary' | 'success' | 'warning' | 'error';

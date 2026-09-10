@@ -285,6 +285,13 @@ services:
     ports:
       - "127.0.0.1:2033:80"
 
+  pods:
+    image: ${DOCKERHUB_USERNAME}/duncit-pods:${IMAGE_TAG:-latest}
+    container_name: duncit-pods
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2034:80"
+
   # Redis — the server's GraphQL response cache (server.env: REDIS_URL=
   # redis://redis:6379). Deliberately NO host port: only containers on this
   # network reach it; humans go through the redis-ui below. Infra service, not

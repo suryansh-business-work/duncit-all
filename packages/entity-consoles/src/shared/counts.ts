@@ -109,3 +109,29 @@ export const HOST_COUNTS = gql`
     }
   }
 `;
+
+/**
+ * Pods, counted by lifecycle.
+ *
+ * `podsTable` takes `lifecycle` as its own argument rather than a filter,
+ * because where a pod sits in its life is derived from its date and its
+ * completion — not a column you can match on. That is also why these tiles are
+ * more useful than an is_active split: "running now" is the question somebody
+ * opens this console to answer.
+ */
+export const POD_COUNTS = gql`
+  query PodDirectoryCounts {
+    total: podsTable(query: { page_size: 1 }) {
+      total
+    }
+    upcoming: podsTable(query: { page_size: 1 }, lifecycle: UPCOMING) {
+      total
+    }
+    ongoing: podsTable(query: { page_size: 1 }, lifecycle: ONGOING) {
+      total
+    }
+    completed: podsTable(query: { page_size: 1 }, lifecycle: COMPLETED) {
+      total
+    }
+  }
+`;

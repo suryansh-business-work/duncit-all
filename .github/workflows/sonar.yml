@@ -135,7 +135,7 @@ jobs:
           # Everything else, grouped. Listed explicitly (not "./portals/**")
           # so a big portal is never accidentally run twice or squeezed in here.
           - { name: packages, filters: './packages/**' }
-          - { name: small-portals, filters: './portals/support ./portals/ads-portal ./portals/ai ./portals/challenge-portal ./portals/developers ./portals/employee ./portals/hr ./portals/legal ./portals/website-app ./portals/regional-club-admin ./portals/venues ./portals/clubs ./portals/club-admins ./portals/hosts' }
+          - { name: small-portals, filters: './portals/support ./portals/ads-portal ./portals/ai ./portals/challenge-portal ./portals/developers ./portals/employee ./portals/hr ./portals/legal ./portals/website-app ./portals/regional-club-admin ./portals/venues ./portals/clubs ./portals/club-admins ./portals/hosts ./portals/pods' }
           - { name: websites, filters: './website/**' }
     steps:
       - uses: actions/checkout@v5

@@ -8,9 +8,10 @@ export {
   CLUB_ADMINS_SPEC,
   DIRECTORY_SPECS,
   HOSTS_SPEC,
+  PODS_SPEC,
   VENUES_SPEC,
 } from './shared/specs';
-export { CLUB_ADMIN_COUNTS, CLUB_COUNTS, HOST_COUNTS, VENUE_COUNTS } from './shared/counts';
+export { CLUB_ADMIN_COUNTS, CLUB_COUNTS, HOST_COUNTS, POD_COUNTS, VENUE_COUNTS } from './shared/counts';
 export type {
   DirectoryCounts,
   DirectoryEntity,

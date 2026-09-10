@@ -50,6 +50,7 @@ const BROWSER_SUITES = [
   { name: 'clubs', dir: 'portals/clubs', port: 2031 },
   { name: 'club-admins', dir: 'portals/club-admins', port: 2032 },
   { name: 'hosts', dir: 'portals/hosts', port: 2033 },
+  { name: 'pods', dir: 'portals/pods', port: 2034 },
   { name: 'support', dir: 'portals/support', port: 2010 },
   { name: 'tech', dir: 'portals/tech', port: 2009 },
   { name: 'website-app', dir: 'portals/website-app', port: 2011 },

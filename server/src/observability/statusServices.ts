@@ -53,6 +53,7 @@ const consoles: StatusService[] = [
   { key: 'clubs', name: 'Clubs', url: 'https://clubs.duncit.com/', description: 'Every club on Duncit' },
   { key: 'club-admins', name: 'Club Admins', url: 'https://club-admins.duncit.com/', description: 'Every club admin on Duncit' },
   { key: 'hosts', name: 'Hosts', url: 'https://hosts.duncit.com/', description: 'Every host on Duncit' },
+  { key: 'pods', name: 'Pods', url: 'https://pods.duncit.com/', description: 'Every pod on Duncit' },
 ];
 
 const platform: StatusService[] = [

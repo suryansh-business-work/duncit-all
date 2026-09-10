@@ -38,6 +38,7 @@ const projects = [
   { label: 'venues',                   port: 2030 },
   { label: 'clubs',                    port: 2031 },
   { label: 'club-admins',              port: 2032 },
+  { label: 'pods',                     port: 2034 },
   { label: 'hosts',                    port: 2033 },
   // External: not a pnpm workspace, so `pnpm --recursive dev` doesn't start it.
   // Listed for reference; excluded from the "all ready" gate. Run via `pnpm dev:mobile`.

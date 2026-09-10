@@ -28,6 +28,7 @@ export const PORTALS = [
   'clubs',
   'club-admins',
   'hosts',
+  'pods',
 ] as const;
 export type PortalKey = (typeof PORTALS)[number];
 

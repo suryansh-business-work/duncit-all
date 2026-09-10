@@ -1022,6 +1022,27 @@ function registerDuplicateError(e: any): GraphQLError {
   return new GraphQLError('Account already exists', { extensions: { code: 'CONFLICT' } });
 }
 
+/**
+ * The refusal a Google credential Duncit has never seen gets — and the offer
+ * that goes with it.
+ *
+ * Written once because it is thrown from three places that MUST stay
+ * word-for-word identical: an unknown Google account, a sealed one, and a
+ * sealed one reached through the link door. Told apart by so much as their
+ * wording, they would be a way to ask whether a given address holds an account.
+ *
+ * The verified address travels in the extensions for the same reason it does on
+ * EMAIL_LOGIN_REQUIRED: the caller supplied the token it came out of, so it
+ * discloses nothing they did not already hold — and it lets the client's invite
+ * name the account it is offering to create rather than talk about it in the
+ * abstract.
+ */
+function googleAccountNotFound(email: string): GraphQLError {
+  return new GraphQLError('User is not in our system. Please sign up first.', {
+    extensions: { code: 'GOOGLE_ACCOUNT_NOT_FOUND', email },
+  });
+}
+
 /** Map an error raised by the signupWithGoogle transaction onto the error to rethrow. */
 function googleSignupError(e: any): any {
   if (e instanceof GraphQLError) return e;
@@ -1637,9 +1658,7 @@ export const userService = {
           extensions: { code: 'EMAIL_LOGIN_REQUIRED', email },
         });
       }
-      throw new GraphQLError('User is not in our system. Please sign up first.', {
-        extensions: { code: 'GOOGLE_ACCOUNT_NOT_FOUND' },
-      });
+      throw googleAccountNotFound(email);
     }
     /*
       A sealed account answers as if it had never existed here.
@@ -1649,9 +1668,7 @@ export const userService = {
       Duncit does not know gets is the one that reveals nothing.
     */
     if (isAccountLocked(String(user._id))) {
-      throw new GraphQLError('User is not in our system. Please sign up first.', {
-        extensions: { code: 'GOOGLE_ACCOUNT_NOT_FOUND' },
-      });
+      throw googleAccountNotFound(email);
     }
     if ((user as any).metadata?.status !== 'ACTIVE') {
       throw new GraphQLError('Account is not active', { extensions: { code: 'FORBIDDEN' } });
@@ -1699,9 +1716,7 @@ export const userService = {
     // loginWithGoogle — and because linking would otherwise mint a session for
     // an account that is on its way out.
     if (!user || isAccountLocked(String(user._id))) {
-      throw new GraphQLError('User is not in our system. Please sign up first.', {
-        extensions: { code: 'GOOGLE_ACCOUNT_NOT_FOUND' },
-      });
+      throw googleAccountNotFound(email);
     }
     if ((user as any).metadata?.status !== 'ACTIVE') {
       throw new GraphQLError('Account is not active', { extensions: { code: 'FORBIDDEN' } });

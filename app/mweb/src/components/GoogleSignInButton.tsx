@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { GoogleLogin } from '@react-oauth/google';
@@ -18,28 +17,22 @@ interface Props {
  * switches between the light and dark Google themes to match MUI's color
  * mode, and falls back to a plain MUI tile if no `VITE_GOOGLE_CLIENT_ID`
  * is configured so dev environments fail loud, not silent.
+ *
+ * No width is passed to `GoogleLogin`: the button sizes to its own label so
+ * it can sit beside other controls in a row and wrap instead of overflowing.
  */
 export default function GoogleSignInButton({ onCredential, loading, text = 'signin_with' }: Readonly<Props>) {
   const clientId = getGoogleClientId();
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
-  const [width, setWidth] = useState<number>(320);
-
-  useEffect(() => {
-    const compute = () => {
-      const el = document.getElementById('google-signin-host');
-      if (el) setWidth(Math.min(Math.max(el.clientWidth, 240), 400));
-    };
-    compute();
-    window.addEventListener('resize', compute);
-    return () => window.removeEventListener('resize', compute);
-  }, []);
 
   if (!clientId || clientId === 'your_client_id_here') {
     return (
       <Box
         sx={{
-          height: 44,
+          minHeight: 44,
+          px: 1.5,
+          py: 1,
           border: 1,
           borderColor: 'divider',
           borderRadius: 1,
@@ -61,7 +54,7 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
   }
 
   return (
-    <Stack id="google-signin-host" sx={{ width: '100%', alignItems: 'center', position: 'relative', minHeight: 44 }}>
+    <Stack sx={{ maxWidth: '100%', alignItems: 'center', position: 'relative', minHeight: 44 }}>
       <GoogleLogin
         onSuccess={(response) => {
           if (response.credential) onCredential(response.credential);
@@ -73,7 +66,6 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
         shape="rectangular"
         size="large"
         logo_alignment="left"
-        width={width}
       />
       {loading && (
         <Box

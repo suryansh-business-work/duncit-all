@@ -144,6 +144,10 @@ import {
   type VenuePodRow,
   POD_ROW_STATUS_COLORS,
   canOpenPodAttendance,
+  claimGoogleSignupHandoff,
+  createGoogleSignupClaims,
+  openGoogleSignup,
+  readGoogleSignupHandoff,
   clubAdminGroupHeadings,
   clubAdminKpiGroups,
   clubAdminKpiLabels,
@@ -292,6 +296,17 @@ interface ClaimMock {
   status: string;
   amount: number;
   merchant: string;
+}
+
+interface GoogleInviteMock {
+  /** What Google hands back. Truncated here; the real one is a long JWT. */
+  idToken: string;
+  /** The address Google verified, echoed by the server on the refusal. */
+  email: string;
+  /** How many times the person pressed — the button, then the invite. */
+  taps: number;
+  /** Somebody else signing in afterwards. Blank for nobody. */
+  secondCredential: string;
 }
 
 interface SpotsMock {
@@ -1460,6 +1475,44 @@ export default defineDemos('utils', [
         'Invite all sends': pendingInviteKeys(rows),
         'Ticking the first row again': toggleInviteKey(mock.ticked, firstKey),
         'Sentence the press earns': inviteOutcomeKey({ sent: mock.sent, failed: mock.failed }),
+      };
+    },
+  }),
+
+  defineDemo<GoogleInviteMock>({
+    id: 'google-signup-handoff',
+    title: 'One Google credential, however many times it is pressed',
+    note:
+      'Raise taps: the invite never doubles and the credential is claimed exactly once, whatever the number. Put a different value in secondCredential and it claims freshly — that is somebody else signing in, not a replay. Blank the email and the handoff still reads; blank the credential and it reads as null, which is signup opened normally.',
+    mock: {
+      idToken: 'ya29.a0AfB_riya-koramangala',
+      email: 'riya@duncit.com',
+      taps: 3,
+      secondCredential: '',
+    },
+    compute: (mock) => {
+      // The login screen, pressed `taps` times with the same credential.
+      let invite = openGoogleSignup(null, mock.idToken, mock.email);
+      const first = invite;
+      for (let press = 1; press < mock.taps; press += 1) {
+        invite = openGoogleSignup(invite, mock.idToken, mock.email);
+      }
+      // The signup screen, re-reading the same carried state `taps` times.
+      const claims = createGoogleSignupClaims();
+      const carried = readGoogleSignupHandoff(invite);
+      const reads = Array.from({ length: mock.taps }, () =>
+        claimGoogleSignupHandoff(claims, carried) ? 'spent here' : 'already claimed',
+      );
+      const other = mock.secondCredential
+        ? claimGoogleSignupHandoff(claims, { idToken: mock.secondCredential, email: mock.email })
+        : null;
+      return {
+        [`Invites open after ${mock.taps} taps`]: invite === first ? '1 — the same one' : '2 or more',
+        'Account it offers to make': carried?.email || '(no address — the server echoes one)',
+        [`Claims across ${mock.taps} reads`]: reads,
+        'Accounts this can create': reads.filter((read) => read === 'spent here').length,
+        'A different credential after it': other ? 'claims freshly' : '(none supplied)',
+        'Malformed carried state': readGoogleSignupHandoff({ idToken: '  ' }) ?? 'null — signup opens normally',
       };
     },
   }),

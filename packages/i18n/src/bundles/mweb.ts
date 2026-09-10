@@ -605,11 +605,18 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       googleSignIn: 'Sign in with Google',
       newHere: 'New here?',
       createOne: 'Create one',
-      // mWeb only: the web Google flow can come back with an account state the
-      // native flow never reaches, and says so in a dialog.
-      googleNotFoundTitle: 'Google account not found',
-      googleNotFoundBody: 'User is not in our system. Please sign up first.',
-      googleNotFoundAction: 'Sign up',
+      // Google knows them, Duncit does not. An invitation rather than a
+      // refusal: the credential they just signed in with is carried straight
+      // into signup, so "yes" continues instead of starting over. Both
+      // surfaces show it — the copy names what is still missing, because a
+      // Google credential carries neither a number nor a birthday.
+      googleNotFoundTitle: 'No Duncit account yet',
+      googleNotFoundBody:
+        'We could not find a Duncit account for {email}. Would you like to create one?',
+      googleNotFoundDetail:
+        'We will carry this Google sign-in into the next steps — you only need to add your WhatsApp number and date of birth. Nothing is created until you finish.',
+      googleNotFoundAction: 'Create my account',
+      googleNotFoundDismiss: 'Not now',
       // The consent step. An email/password account whose address matches a
       // verified Google account is offered the link rather than turned away —
       // granting it is the user's decision, so it is asked for in plain words.

@@ -103,7 +103,7 @@ export default function ConnectedAccountsSection() {
             connected={!!google}
             busy={loading || connecting || disconnecting}
             disconnectLabel={t('mweb.account.connected.disconnect')}
-            onDisconnect={canDisconnect ? () => setConfirmOpen(true) : undefined}
+            onDisconnect={google && canDisconnect ? () => setConfirmOpen(true) : undefined}
             hint={google && !canDisconnect ? t('mweb.account.connected.onlyMethodHint') : undefined}
             connectControl={
               google ? undefined : (

@@ -85,6 +85,10 @@ exports:
   - 'mwebPodMediaLabels'
   - 'shellPodMediaLabels'
   - 'buildPodMediaLabels'
+  - 'openGoogleSignup'
+  - 'createGoogleSignupClaims'
+  - 'readGoogleSignupHandoff'
+  - 'claimGoogleSignupHandoff'
   - 'REFERRAL_PARAM'
   - 'referralLink'
   - 'readReferralCode'
@@ -1277,6 +1281,39 @@ takes a cut from each side of the split — `host_commission_*` off the host's r
 `venue_commission_*` off the venue's slot price — and only the first is money leaving the
 host's collection. Reading one label off the other's amount is exactly the bug this grouping
 now prevents.
+
+## Google signed you in, Duncit has never met you
+
+`loginWithGoogle` answers `GOOGLE_ACCOUNT_NOT_FOUND` for a verified Google account no Duncit
+account is linked to. Both apps now treat that as an invitation rather than a refusal, and
+these three carry the credential from the invite into signup — so "yes" continues on the
+Google door instead of dropping the person on a signup screen to press the same Google button
+a second time.
+
+The whole reason they live here is that the credential must be spent **at most once**, and
+every way of hitting the flow twice has to collapse to one signup:
+
+| Way in twice | What stops it |
+| --- | --- |
+| A second tap while the exchange is still in the air | `openGoogleSignup(current, idToken, email)` returns the invite already open for that same token — referentially equal, so no second invite and no swapped credential |
+| The invite pressed twice | The screen clears the invite before navigating, so the second press has nothing to send |
+| Signup remounted, reloaded, or reached again via Back | `claimGoogleSignupHandoff` answers once per credential and `null` after that, so re-reading the same router state or navigation param is a no-op |
+| Two `signupWithGoogle` calls reaching the server anyway | The unique partial index on `auth.google_id`, inside the mutation's transaction — the last line, not the first |
+
+```ts
+// The login screen holds it, idempotently in the token.
+setInvite((current) => openGoogleSignup(current, idToken, verifiedEmail))
+
+// The signup screen claims it, once.
+const CLAIMS = createGoogleSignupClaims() // module scope: it must outlive the mount
+const carried = readGoogleSignupHandoff(location.state?.googleSignup)
+const claimed = claimGoogleSignupHandoff(CLAIMS, carried) // null on every call after the first
+```
+
+`readGoogleSignupHandoff` is deliberately strict about shape: router state survives a reload
+and a navigation param survives a remount, so it is reading something possibly stale. Anything
+that is not a complete, non-blank pair reads as `null` — signup opened normally, which is the
+safe reading of a malformed one.
 
 ## The referral link and its message
 

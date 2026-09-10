@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react';
+import type { ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import {
   createAuthed,
@@ -6,6 +6,7 @@ import {
   mountPortal,
   ProfilePage,
   type AppConfig,
+  type AppNavItem,
 } from '@duncit/shell';
 import { createSessionUserLoader } from '@duncit/user-context';
 import { NotifyHost } from '@duncit/dialogs';
@@ -48,18 +49,35 @@ export interface MountDirectoryPortalOptions {
   console?: DirectoryConsole;
 }
 
-/** One entity's list and detail screens, and where they live. */
+/**
+ * One console's own screens.
+ *
+ * Deliberately routes-and-nav rather than "a list and a detail": the pods
+ * console is nine sub-pages (dashboard, all pods, auto pods, change requests,
+ * ideas, plans, event tickets, settings, monitoring) plus an editor, and the
+ * clubs console has an editor beside its list. A fixed list/detail shape could
+ * only have expressed the simplest two.
+ *
+ * The shell still owns /login, /profile and the brief dashboard at /.
+ */
 export interface DirectoryConsole {
-  /** Route the list lives at, e.g. `/venues`. */
-  listPath: string;
-  /** Param name the detail route binds, matching what the detail page reads. */
-  detailParam: string;
-  List: ComponentType;
-  Detail: ComponentType;
-  /** Catalogue key for the list's sidebar entry. */
-  navLabelKey: string;
-  /** Shell icon name for that entry. */
-  navIcon: string;
+  /**
+   * The console's `<Route>` elements.
+   *
+   * A builder rather than a value, because every one of them has to be wrapped
+   * in this portal's auth guard — and that guard is built HERE, from this
+   * portal's own session. Handing it in means a console cannot accidentally
+   * ship an unguarded route.
+   */
+  routes: (authed: ReturnType<typeof createAuthed>) => ReactNode;
+  /** Sidebar entries appended after Dashboard. */
+  nav?: AppNavItem[];
+  /**
+   * Where the dashboard tiles link, e.g. `/venues`. Omitted while a console
+   * ships its brief ahead of its screens — the tiles then report their numbers
+   * without pretending to be a way in.
+   */
+  listPath?: string;
 }
 
 /**
@@ -102,19 +120,8 @@ export function mountDirectoryPortal(options: Readonly<MountDirectoryPortalOptio
   // shipping its dashboard first never shows a nav item that goes nowhere.
   // It has to be on the config the runtime is built FROM — the chrome reads
   // `config.nav`, so augmenting it afterwards would change nothing.
-  const config: AppConfig = consoleScreens
-    ? {
-        ...appConfig,
-        nav: [
-          ...appConfig.nav,
-          {
-            label: appConfig.name,
-            labelKey: consoleScreens.navLabelKey,
-            to: consoleScreens.listPath,
-            icon: consoleScreens.navIcon,
-          },
-        ],
-      }
+  const config: AppConfig = consoleScreens?.nav?.length
+    ? { ...appConfig, nav: [...appConfig.nav, ...consoleScreens.nav] }
     : appConfig;
 
   const runtime = createPortalRuntime(config, urls.graphqlUrl);
@@ -125,24 +132,6 @@ export function mountDirectoryPortal(options: Readonly<MountDirectoryPortalOptio
     wrap: (el) => <AppShell>{el}</AppShell>,
   });
 
-  // The list and its detail page, when this entity has them yet. Built here so
-  // the dashboard's tiles and the routes cannot disagree about where the list
-  // lives — one `listPath` feeds both.
-  const consoleRoutes = consoleScreens
-    ? [
-        <Route
-          key="list"
-          path={consoleScreens.listPath}
-          element={authed(<consoleScreens.List />)}
-        />,
-        <Route
-          key="detail"
-          path={`${consoleScreens.listPath}/:${consoleScreens.detailParam}`}
-          element={authed(<consoleScreens.Detail />)}
-        />,
-      ]
-    : [];
-
   const App = () => (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
@@ -150,7 +139,7 @@ export function mountDirectoryPortal(options: Readonly<MountDirectoryPortalOptio
         path="/"
         element={authed(<EntityDashboard spec={spec} listPath={consoleScreens?.listPath} />)}
       />
-      {consoleRoutes}
+      {consoleScreens?.routes(authed)}
       <Route path="/profile" element={authed(<ProfilePage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

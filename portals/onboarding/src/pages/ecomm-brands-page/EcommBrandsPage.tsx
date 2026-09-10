@@ -3,8 +3,8 @@ import { useApolloClient, useMutation, useQuery } from '@apollo/client/react';
 import { Box, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
-import { HardDeleteDialog } from '@duncit/entity-consoles';
-import { useEntityLifecycle } from '@duncit/entity-consoles';
+import HardDeleteDialog from '../../components/HardDeleteDialog';
+import { useEntityLifecycle } from '../../components/useEntityLifecycle';
 import {
   APPROVE_BRAND,
   DEFAULT_PRODUCT_COMMISSION,

@@ -2,7 +2,7 @@ import { Box, Divider, Drawer, Link, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
-import { SurveyAnswers } from '@duncit/entity-consoles';
+import { SurveyAnswers } from '../../components/survey-answers';
 import { meetingStatusLabel } from './statusLabel';
 import type { OnboardingMeeting, SurveyKind } from './queries';
 import { formatDateTime, useTranslation } from '@duncit/app-settings';

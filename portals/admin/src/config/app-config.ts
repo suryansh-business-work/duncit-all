@@ -15,7 +15,6 @@ import { parseEnvRoles, type AppConfig } from '@duncit/shell';
  * off, and the route redirects — one path, named once, so the three cannot
  * disagree.
  */
-export const AUTO_PODS_PATH = '/auto-pods';
 
 export const appConfig = {
   key: 'admin',
@@ -50,24 +49,7 @@ export const appConfig = {
         { label: 'Roles', labelKey: 'shell.nav.roles', to: '/rbac/roles', icon: 'shield' },
       ],
     },
-    { label: 'Clubs', labelKey: 'shell.nav.clubs', to: '/clubs', icon: 'community' },
-    { label: 'Venues', labelKey: 'shell.nav.venues', to: '/venues', icon: 'storefront' },
     { label: 'Partners', labelKey: 'shell.nav.partners', to: '/partners', icon: 'handshake' },
-    {
-      label: 'Pods', labelKey: 'shell.nav.pods',
-      icon: 'calendar',
-      children: [
-        { label: 'Dashboard', labelKey: 'shell.nav.dashboard', to: '/pods/dashboard', icon: 'insights' },
-        { label: 'All Pods', labelKey: 'shell.nav.allPods', to: '/pods', icon: 'calendar' },
-        { label: 'Auto Pods', labelKey: 'shell.nav.autoPods', to: AUTO_PODS_PATH, icon: 'handshake' },
-        { label: 'Change Requests', labelKey: 'changeRequest.sectionTitle', to: '/pods/change-requests', icon: 'rule' },
-        { label: 'Pod Ideas', labelKey: 'shell.nav.podIdeas', to: '/pod-ideas', icon: 'insights' },
-        { label: 'Pod Plans', labelKey: 'shell.nav.podPlans', to: '/pod-plans', icon: 'description' },
-        { label: 'Event Tickets', labelKey: 'shell.nav.eventTickets', to: '/event-tickets', icon: 'ticket' },
-        { label: 'Pod Settings', labelKey: 'shell.nav.podSettings', to: '/pod-settings', icon: 'tune' },
-        { label: 'Pod Monitoring (AI)', labelKey: 'shell.nav.podMonitoringAi', to: '/pod-monitoring', icon: 'insights' },
-      ],
-    },
     {
       label: 'Membership', labelKey: 'shell.nav.membership',
       icon: 'ticket',
@@ -130,28 +112,7 @@ export const appConfig = {
       keywords: ['members', 'customers', 'user', 'roles'],
     },
     { label: 'Roles', labelKey: 'shell.nav.roles', to: '/rbac/roles', section: 'User Management', sectionKey: 'shell.nav.userManagement', keywords: ['rbac', 'permissions', 'access'] },
-    { label: 'Clubs', labelKey: 'shell.nav.clubs', to: '/clubs', section: 'Clubs', sectionKey: 'shell.nav.clubs', keywords: ['community', 'communities'] },
-    { label: 'Venues', labelKey: 'shell.nav.venues', to: '/venues', section: 'Venues', sectionKey: 'shell.nav.venues', keywords: ['spaces', 'places', 'turf'] },
     { label: 'Partners', labelKey: 'shell.nav.partners', to: '/partners', section: 'Partners', sectionKey: 'shell.nav.partners', keywords: ['host', 'venue partner', 'seller', 'club admin'] },
-    {
-      label: 'Pods Dashboard', labelKey: 'shell.nav.podsDashboard',
-      to: '/pods/dashboard',
-      section: 'Pods', sectionKey: 'shell.nav.pods',
-      keywords: ['stats', 'overview', 'ratings', 'occupancy', 'revenue'],
-    },
-    { label: 'All Pods', labelKey: 'shell.nav.allPods', to: '/pods', section: 'Pods', sectionKey: 'shell.nav.pods', keywords: ['events', 'sessions'] },
-    {
-      label: 'Auto Pods', labelKey: 'shell.nav.autoPods',
-      to: AUTO_PODS_PATH,
-      section: 'Pods', sectionKey: 'shell.nav.pods',
-      keywords: ['auto', 'enrol', 'enroll', 'marketplace', 'venue', 'host', 'club admin', 'offer'],
-    },
-    { label: 'Pod Ideas', labelKey: 'shell.nav.podIdeas', to: '/pod-ideas', section: 'Pods', sectionKey: 'shell.nav.pods' },
-    { label: 'Pod Plans', labelKey: 'shell.nav.podPlans', to: '/pod-plans', section: 'Pods', sectionKey: 'shell.nav.pods' },
-    { label: 'Event Tickets', labelKey: 'shell.nav.eventTickets', to: '/event-tickets', section: 'Pods', sectionKey: 'shell.nav.pods', keywords: ['qr', 'check-in'] },
-    { label: 'Pod Settings', labelKey: 'shell.nav.podSettings', to: '/pod-settings', section: 'Pods', sectionKey: 'shell.nav.pods', keywords: ['draft', 'retention', 'config'] },
-    { label: 'Change Requests', labelKey: 'changeRequest.sectionTitle', to: '/pods/change-requests', section: 'Pods', sectionKey: 'shell.nav.pods', keywords: ['change', 'replace', 'venue', 'host', 'club admin', 'swap'] },
-    { label: 'Pod Monitoring (AI)', labelKey: 'shell.nav.podMonitoringAi', to: '/pod-monitoring', section: 'Pods', sectionKey: 'shell.nav.pods', keywords: ['audit', 'ai', 'activity', 'risk', 'log'] },
     {
       label: 'Plans', labelKey: 'shell.nav.plans',
       to: '/membership/plans',

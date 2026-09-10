@@ -29,7 +29,6 @@
     "@duncit/category": "workspace:*",
     "@duncit/dashboard": "workspace:*",
     "@duncit/dialogs": "workspace:*",
-    "@duncit/entity-consoles": "workspace:*",
     "@duncit/location": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/media-picker": "workspace:*",

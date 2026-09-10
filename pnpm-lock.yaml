@@ -1610,9 +1610,15 @@ importers:
 
   packages/entity-consoles:
     dependencies:
+      '@duncit/ai-monitoring':
+        specifier: workspace:*
+        version: link:../ai-monitoring
       '@duncit/app-settings':
         specifier: workspace:*
         version: link:../app-settings
+      '@duncit/auto-pods':
+        specifier: workspace:*
+        version: link:../auto-pods
       '@duncit/availability-calendar':
         specifier: workspace:*
         version: link:../availability-calendar
@@ -1622,6 +1628,18 @@ importers:
       '@duncit/category':
         specifier: workspace:*
         version: link:../category
+      '@duncit/club-form':
+        specifier: workspace:*
+        version: link:../club-form
+      '@duncit/coupons':
+        specifier: workspace:*
+        version: link:../coupons
+      '@duncit/dashboard':
+        specifier: workspace:*
+        version: link:../dashboard
+      '@duncit/datetime':
+        specifier: workspace:*
+        version: link:../datetime
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../dialogs
@@ -1637,9 +1655,27 @@ importers:
       '@duncit/media-picker':
         specifier: workspace:*
         version: link:../media-picker
+      '@duncit/pod-change-requests':
+        specifier: workspace:*
+        version: link:../pod-change-requests
+      '@duncit/pod-details':
+        specifier: workspace:*
+        version: link:../pod-details
+      '@duncit/pod-form':
+        specifier: workspace:*
+        version: link:../pod-form
+      '@duncit/pod-product-picker':
+        specifier: workspace:*
+        version: link:../pod-product-picker
+      '@duncit/portal-pod-form':
+        specifier: workspace:*
+        version: link:../portal-pod-form
       '@duncit/shell':
         specifier: workspace:*
         version: link:../shell
+      '@duncit/slots':
+        specifier: workspace:*
+        version: link:../slots
       '@duncit/table':
         specifier: workspace:*
         version: link:../table
@@ -1661,9 +1697,15 @@ importers:
       '@mui/x-date-pickers':
         specifier: ^9.12.0
         version: 9.12.0(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@mui/material@9.4.0(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@mui/system@9.4.0(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.8)(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(date-fns@4.4.0)(dayjs@1.11.21)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      chart.js:
+        specifier: ^4.5.1
+        version: 4.5.1
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
+      react-chartjs-2:
+        specifier: ^5.3.1
+        version: 5.3.1(chart.js@4.5.1)(react@19.2.8)
       react-hook-form:
         specifier: ^7.87.0
         version: 7.87.0(react@19.2.8)
@@ -3122,9 +3164,6 @@ importers:
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
-      '@duncit/entity-consoles':
-        specifier: workspace:*
-        version: link:../../packages/entity-consoles
       '@duncit/fallback-icons':
         specifier: workspace:*
         version: link:../../packages/fallback-icons
@@ -5191,9 +5230,6 @@ importers:
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
-      '@duncit/entity-consoles':
-        specifier: workspace:*
-        version: link:../../packages/entity-consoles
       '@duncit/location':
         specifier: workspace:*
         version: link:../../packages/location

@@ -1,20 +1,15 @@
-import {
-  mountDirectoryPortal,
-  HostDetailsPage,
-  HostsPage,
-  HOSTS_SPEC,
-} from '@duncit/entity-consoles';
+import { mountDirectoryPortal, HOSTS_SPEC } from '@duncit/entity-consoles';
 import { logs } from '@duncit/logs';
 import { appConfig } from './config/app-config';
 
 /**
  * The hosts console.
  *
- * Everything a directory portal does — Apollo, session, chrome, login, routes,
- * the brief dashboard and the copy namespace — comes from
- * @duncit/entity-consoles, so what lives here is this console's identity and
- * nothing else (rule 40). The list and detail screens are the SAME ones the
- * onboarding portal renders: one implementation, two mounts.
+ * Ships its brief first, with no `console`. Admin has no hosts section to
+ * lift — this one is built new against the server's own `hostsTable`
+ * rather than taken from another portal, so the list and detail land in their
+ * own change. Until then the tiles report their numbers instead of linking
+ * nowhere.
  */
 mountDirectoryPortal({
   appConfig,
@@ -22,12 +17,4 @@ mountDirectoryPortal({
   devPort: 2033,
   subdomain: 'hosts',
   logsPortal: logs.portal['hosts'],
-  console: {
-    listPath: '/hosts',
-    detailParam: 'hostId',
-    List: HostsPage,
-    Detail: HostDetailsPage,
-    navLabelKey: 'shell.nav.hosts',
-    navIcon: 'community',
-  },
 });

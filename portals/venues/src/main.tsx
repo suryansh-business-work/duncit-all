@@ -1,3 +1,4 @@
+import { Route } from 'react-router';
 import {
   mountDirectoryPortal,
   VenueDetailsPage,
@@ -8,13 +9,10 @@ import { logs } from '@duncit/logs';
 import { appConfig } from './config/app-config';
 
 /**
- * The venues console.
+ * The venues console — admin's Venues section, on its own subdomain.
  *
- * Everything a directory portal does — Apollo, session, chrome, login, routes,
- * the brief dashboard and the copy namespace — comes from
- * @duncit/entity-consoles, so what lives here is this console's identity and
- * nothing else (rule 40). The list and detail screens are the SAME ones the
- * onboarding portal renders: one implementation, three mounts.
+ * The list and detail are the ones admin rendered; admin no longer carries
+ * them, so there is one implementation and one place it lives.
  */
 mountDirectoryPortal({
   appConfig,
@@ -24,11 +22,12 @@ mountDirectoryPortal({
   logsPortal: logs.portal.venues,
   console: {
     listPath: '/venues',
-    // What VenueDetailsPage reads out of the URL.
-    detailParam: 'venueId',
-    List: VenuesPage,
-    Detail: VenueDetailsPage,
-    navLabelKey: 'shell.nav.venues',
-    navIcon: 'storefront',
+    nav: [{ label: 'Venues', labelKey: 'shell.nav.venues', to: '/venues', icon: 'storefront' }],
+    routes: (authed) => (
+      <>
+        <Route path="/venues" element={authed(<VenuesPage />)} />
+        <Route path="/venues/:venueId" element={authed(<VenueDetailsPage />)} />
+      </>
+    ),
   },
 });

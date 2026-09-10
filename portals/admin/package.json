@@ -33,7 +33,6 @@
     "@duncit/dashboard": "workspace:*",
     "@duncit/datetime": "workspace:*",
     "@duncit/dialogs": "workspace:*",
-    "@duncit/entity-consoles": "workspace:*",
     "@duncit/fallback-icons": "workspace:*",
     "@duncit/forms": "workspace:*",
     "@duncit/logs": "workspace:*",

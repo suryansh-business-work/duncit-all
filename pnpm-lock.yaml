@@ -1643,9 +1643,6 @@ importers:
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../dialogs
-      '@duncit/entity-consoles':
-        specifier: workspace:*
-        version: 'link:'
       '@duncit/forms':
         specifier: workspace:*
         version: link:../forms
@@ -3167,9 +3164,6 @@ importers:
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
-      '@duncit/entity-consoles':
-        specifier: workspace:*
-        version: link:../../packages/entity-consoles
       '@duncit/fallback-icons':
         specifier: workspace:*
         version: link:../../packages/fallback-icons

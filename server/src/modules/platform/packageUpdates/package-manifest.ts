@@ -1785,7 +1785,6 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/dashboard", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/datetime", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
-      { name: "@duncit/entity-consoles", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/fallback-icons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/forms", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/logs", range: "workspace:*", kind: "dependencies" },

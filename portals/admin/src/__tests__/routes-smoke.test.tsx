@@ -65,16 +65,13 @@ vi.mock('../components/AppShell', () => ({
  * 'ownerDocument')" on mount no matter what size or data it is handed. That is
  * the same class of gap the ResizeObserver/IntersectionObserver shims above
  * exist for; jsdom just has no workaround for this one. Both dashboard widgets
- * built on it are stubbed to a plain placeholder so /dashboard, /pods/dashboard
- * and anything that can navigate into them — the Hub tile included — still
- * mount and stay pressable.
+ * built on it is stubbed to a plain placeholder so /dashboard and anything that
+ * can navigate into it — the Hub tile included — still mounts and stays
+ * pressable. (The pods dashboard's chart went to pods.duncit.com with the rest
+ * of the Pods group.)
  */
 vi.mock('../pages/dashboard/CountsBySuperCategoryGrid', () => ({
   default: () => <div data-testid="counts-chart-stub" />,
-}));
-
-vi.mock('../pages/pods-dashboard/PodTrendChart', () => ({
-  default: () => <div data-testid="pod-trend-chart-stub" />,
 }));
 
 import App from '../App';
@@ -88,26 +85,9 @@ const ROUTES = [
   '/users/smoke-id',
   '/categories',
   '/locations',
-  '/clubs',
-  '/venues',
   '/partners',
-  '/clubs/new',
-  '/clubs/smoke-id',
-  '/clubs/smoke-id/edit',
-  '/pods',
-  '/pods/dashboard',
-  '/pods/new',
-  '/pods/smoke-id',
-  '/pods/smoke-id/edit',
-  '/auto-pods',
-  '/pod-settings',
-  '/pods/change-requests',
-  '/pod-monitoring',
-  '/event-tickets',
-  '/pod-ideas',
   '/badges',
   '/something-for-you',
-  '/pod-plans',
   '/membership/plans',
   '/membership/subscribers',
   '/approvals',

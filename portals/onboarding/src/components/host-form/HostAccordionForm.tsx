@@ -14,7 +14,7 @@ import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { DuncitButton } from '@duncit/buttons';
 import { useFormContext, useWatch } from 'react-hook-form';
-import DateField from '../DateField';
+import { DateField } from '@duncit/entity-consoles';
 import HostBankAccountSection from './HostBankAccountSection';
 import HostIdentitySection from './HostIdentitySection';
 import HostVerificationSection from './HostVerificationSection';

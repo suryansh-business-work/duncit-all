@@ -3,8 +3,8 @@ import { useNavigate, useParams } from 'react-router';
 import { Chip, Divider, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { BackHeader, QueryGuard } from '@duncit/ui';
-import PodsTable from '../../components/pods-table/PodsTable';
-import { PODS_TABLE, type PodRow } from '../../components/pods-table/queries';
+import { PodsTable } from '@duncit/entity-consoles';
+import { PODS_TABLE, type PodRow } from '@duncit/entity-consoles';
 import { useDateFormat, useTranslation } from '@duncit/app-settings';
 import { HOST_DETAILS } from '../hosts-page/queries';
 

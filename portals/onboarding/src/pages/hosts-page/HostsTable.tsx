@@ -8,8 +8,8 @@ import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { nationalPhoneDigits } from '@duncit/utils';
 import { categoryPath } from '../../utils/categoryPath';
-import { commissionLabel } from '../../utils/commissionLabel';
-import LifecycleActions from '../../components/LifecycleActions';
+import { commissionLabel } from '@duncit/entity-consoles';
+import { LifecycleActions } from '@duncit/entity-consoles';
 import { STATUS_OPTIONS, type HostCategoryRow, type HostRow } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 

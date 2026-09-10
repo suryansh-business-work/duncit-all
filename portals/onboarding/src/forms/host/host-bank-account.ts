@@ -3,7 +3,7 @@ import {
   BANK_PAYOUT_METHODS,
   blankBankAccountValues,
   type BankAccountValues,
-} from '../validation/bankAccount';
+} from '@duncit/entity-consoles';
 
 const IFSC_PATTERN = /^[A-Z]{4}0[A-Z0-9]{6}$/;
 const UPI_PATTERN = /^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9.-]{2,64}$/;

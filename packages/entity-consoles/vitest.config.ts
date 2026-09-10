@@ -5,6 +5,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: false,
     include: ['__tests__/**/*.test.{ts,tsx}'],
+    setupFiles: ['./__tests__/setup.ts'],
     coverage: {
       provider: 'v8',
       // Vitest writes NO coverage report when a test fails (reportOnFailure
@@ -17,11 +18,17 @@ export default defineConfig({
       include: ['src/**'],
       // Pure re-export barrel and the gql document strings — nothing executable.
       exclude: ['src/index.ts', 'src/**/*.d.ts', 'src/**/counts.ts'],
-      // RATCHET, not a target. The consoles land here during the repo-wide test
-      // pause, so this starts at the floor and is raised as suites arrive —
-      // never lowered. The Shared packages gate enforces whatever is written
-      // here, so a number above the real coverage reds the build for everyone.
-      thresholds: { statements: 0, branches: 0, functions: 0, lines: 0 },
+      // RATCHET, not a target — raise as suites arrive, never lower.
+      //
+      // These are the venues console's OWN suites, which moved in with it from
+      // the onboarding portal (45 tests across 10 files). Statements sit low
+      // because the console's 3,771 lines include screens whose tests did not
+      // exist there either; branches and functions are high because what IS
+      // covered — the forms, the validation, the tables — is covered well.
+      //
+      // The Shared packages gate enforces whatever is written here, so a number
+      // above the real coverage reds the build for everyone.
+      thresholds: { statements: 23, branches: 87, functions: 72, lines: 23 },
     },
   },
 });

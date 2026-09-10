@@ -1,6 +1,6 @@
 import { TextField } from '@mui/material';
 import { useFormContext, useWatch } from 'react-hook-form';
-import MediaPickerField from '../MediaPickerField';
+import { MediaPickerField } from '@duncit/entity-consoles';
 import { useHostFieldProps } from './useHostFieldProps';
 import type { HostCreateValues, HostEditValues } from '../../forms/host.form';
 import { useTranslation } from '@duncit/app-settings';

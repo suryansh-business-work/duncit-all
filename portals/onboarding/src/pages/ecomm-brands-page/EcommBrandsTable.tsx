@@ -4,8 +4,8 @@ import RateReviewIcon from '@mui/icons-material/RateReview';
 import { Avatar, Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import { DuncitIconButton } from '@duncit/buttons';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
-import { commissionLabel } from '../../utils/commissionLabel';
-import LifecycleActions from '../../components/LifecycleActions';
+import { commissionLabel } from '@duncit/entity-consoles';
+import { LifecycleActions } from '@duncit/entity-consoles';
 import { STATUS_OPTIONS, type EcommBrandRow } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 

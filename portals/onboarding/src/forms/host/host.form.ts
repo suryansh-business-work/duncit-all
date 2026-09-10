@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { nationalPhoneDigits } from '@duncit/utils';
-import { AADHAR_PATTERN, PAN_PATTERN, PERSON_NAME_PATTERN } from '../validation/rules';
-import { blankBankAccountValues, normalizeBankAccountValues } from '../validation/bankAccount';
-import type { BankAccountValues } from '../validation/bankAccount';
+import { AADHAR_PATTERN, PAN_PATTERN, PERSON_NAME_PATTERN } from '@duncit/entity-consoles';
+import { blankBankAccountValues, normalizeBankAccountValues } from '@duncit/entity-consoles';
+import type { BankAccountValues } from '@duncit/entity-consoles';
 import { castHostBankAccount, hostBankAccountSchema } from './host-bank-account';
 import { HOST_DOB_RANGE_ERROR, isValidHostDob } from '../../utils/hostDob';
 

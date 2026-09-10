@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { castHostBankAccount, hostBankAccountSchema } from './host-bank-account';
-import { blankBankAccountValues } from '../validation/bankAccount';
+import { blankBankAccountValues } from '@duncit/entity-consoles';
 
 const base = blankBankAccountValues();
 

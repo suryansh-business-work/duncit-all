@@ -1,3 +1,4 @@
+// ---- the directory portal ------------------------------------------------
 export { mountDirectoryPortal } from './shared/mountDirectoryPortal';
 export type { MountDirectoryPortalOptions } from './shared/mountDirectoryPortal';
 export { default as EntityDashboard } from './shared/EntityDashboard';
@@ -9,12 +10,7 @@ export {
   HOSTS_SPEC,
   VENUES_SPEC,
 } from './shared/specs';
-export {
-  CLUB_ADMIN_COUNTS,
-  CLUB_COUNTS,
-  HOST_COUNTS,
-  VENUE_COUNTS,
-} from './shared/counts';
+export { CLUB_ADMIN_COUNTS, CLUB_COUNTS, HOST_COUNTS, VENUE_COUNTS } from './shared/counts';
 export type {
   DirectoryCounts,
   DirectoryEntity,
@@ -22,3 +18,57 @@ export type {
   DirectoryTile,
   DirectoryTone,
 } from './shared/types';
+
+// ---- the venues console --------------------------------------------------
+// Both screens are rendered by the venues portal, by admin and by onboarding.
+export { default as VenuesPage } from './venues/list/VenuesPage';
+export { default as VenuesTable } from './venues/list/VenuesTable';
+export { default as VenueCard } from './venues/list/VenueCard';
+export { default as VenueEditDialog } from './venues/list/VenueEditDialog';
+export { default as VenueReviewDialog } from './venues/list/VenueReviewDialog';
+export {
+  APPROVE as APPROVE_VENUE,
+  DELETE_VENUE,
+  REJECT as REJECT_VENUE,
+  SET_VENUE_ACTIVE,
+  SET_VENUE_DEDUCTIONS,
+  STATUSES as VENUE_STATUSES,
+  STATUS_OPTIONS as VENUE_STATUS_OPTIONS,
+  UPDATE_VENUE,
+  VENUES,
+  VENUES_TABLE,
+  type VenueRow,
+} from './venues/list/queries';
+
+export { default as VenueDetailsPage } from './venues/detail/VenueDetailsPage';
+export { default as VenueOverviewCard } from './venues/detail/VenueOverviewCard';
+
+export { default as VenueAccordionForm } from './venues/create/VenueAccordionForm';
+
+// ---- shared console internals -------------------------------------------
+// Used by all four consoles AND by the onboarding portal's own screens, which
+// is exactly why they live here rather than in one portal's components folder
+// (rule 40 — anything used in more than two places is shared).
+export { default as LifecycleActions } from './shared/LifecycleActions';
+export { default as HardDeleteDialog } from './shared/HardDeleteDialog';
+export { useEntityLifecycle } from './shared/useEntityLifecycle';
+export { commissionLabel } from './shared/commissionLabel';
+export { default as DateField } from './shared/DateField';
+export { default as MediaPickerField } from './shared/MediaPickerField';
+export { default as MediaListField } from './shared/MediaListField';
+export { default as MediaPickerDialog } from './shared/MediaPickerDialog';
+export { default as BankAccountVerificationSection } from './shared/BankAccountVerificationSection';
+export { default as HealthScoreCard } from './shared/health/HealthScoreCard';
+export { default as PodsTable } from './shared/pods-table/PodsTable';
+export {
+  PODS_TABLE,
+  type PodApprovalStatus,
+  type PodMode,
+  type PodRow,
+} from './shared/pods-table/queries';
+
+// Form validation the host and brand forms share with the venue one. The regex
+// patterns overlap @duncit/regex and should consolidate there — they moved
+// as-is to keep this a relocation rather than a rewrite.
+export * from './shared/validation/bankAccount';
+export * from './shared/validation/rules';

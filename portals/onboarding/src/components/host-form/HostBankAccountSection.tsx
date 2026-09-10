@@ -1,8 +1,8 @@
 import { useFormContext, useFormState, useWatch } from 'react-hook-form';
-import BankAccountVerificationSection from '../BankAccountVerificationSection';
-import { blankBankAccountValues } from '../../forms/validation/bankAccount';
+import { BankAccountVerificationSection } from '@duncit/entity-consoles';
+import { blankBankAccountValues } from '@duncit/entity-consoles';
 import type { HostCreateValues, HostEditValues } from '../../forms/host.form';
-import type { BankAccountValues } from '../../forms/validation/bankAccount';
+import type { BankAccountValues } from '@duncit/entity-consoles';
 
 type Values = HostCreateValues & Partial<HostEditValues>;
 

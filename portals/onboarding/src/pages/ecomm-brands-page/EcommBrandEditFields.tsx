@@ -1,7 +1,7 @@
 import { Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
-import MediaPickerField from '../../components/MediaPickerField';
+import { MediaPickerField } from '@duncit/entity-consoles';
 import { DOC_TYPES } from './queries';
 import { useTranslation } from '@duncit/app-settings';
 

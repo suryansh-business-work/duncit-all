@@ -481,6 +481,7 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/datetime", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/dialogs", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/slots", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/ui", range: "workspace:*", kind: "dependencies" },
       { name: "@apollo/client", range: "^4.2.12", kind: "devDependencies" },
       { name: "@mui/icons-material", range: "^9.4.0", kind: "devDependencies" },
       { name: "@mui/material", range: "^9.4.0", kind: "devDependencies" },

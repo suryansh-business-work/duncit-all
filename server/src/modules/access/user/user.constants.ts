@@ -25,6 +25,14 @@ export const ROLES = [
   'ONBOARDING_MANAGER',
   'CHALLENGE_MANAGER',
   'DEVELOPERS_MANAGER',
+  // The four directory consoles. Named for what they open rather than for a
+  // job title, because that is what they grant: every venue, every club, every
+  // club admin, every host — regardless of which city or club the holder sits
+  // in. A CITY_ADMIN sees their own city; these see the lot.
+  'ALL_VENUES_ACCESS',
+  'ALL_CLUBS_ACCESS',
+  'ALL_CLUB_ADMINS_ACCESS',
+  'ALL_HOSTS_ACCESS',
 ] as const;
 
 export type UserRole = (typeof ROLES)[number];
@@ -69,6 +77,10 @@ export const ROLE_CATALOG: RoleDefinition[] = [
   { key: 'ONBOARDING_MANAGER', name: 'Onboarding Manager', description: 'Partner/host onboarding console.' },
   { key: 'CHALLENGE_MANAGER', name: 'Challenge Manager', description: 'Challenges console — challenge.duncit.com.' },
   { key: 'DEVELOPERS_MANAGER', name: 'Developers Manager', description: 'Developer platform — API keys for the public venue API.' },
+  { key: 'ALL_VENUES_ACCESS', name: 'All Venues Access', description: 'Every venue on Duncit — venues.duncit.com.' },
+  { key: 'ALL_CLUBS_ACCESS', name: 'All Clubs Access', description: 'Every club on Duncit — clubs.duncit.com.' },
+  { key: 'ALL_CLUB_ADMINS_ACCESS', name: 'All Club Admins Access', description: 'Every club admin on Duncit — club-admins.duncit.com.' },
+  { key: 'ALL_HOSTS_ACCESS', name: 'All Hosts Access', description: 'Every host on Duncit — hosts.duncit.com.' },
 ];
 
 // The portal login gate (PORTAL_ROLE_REQUIREMENTS / PORTAL_GATE_EXEMPT_KEYS /

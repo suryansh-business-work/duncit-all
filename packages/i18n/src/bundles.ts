@@ -30,6 +30,7 @@ import { LOCATION_BUNDLE } from './bundles/location';
 import { MWEB_BUNDLE } from './bundles/mweb';
 import { PARTNERS_BUNDLE } from './bundles/partners';
 import { REGIONAL_BUNDLE } from './bundles/regional';
+import { DIRECTORY_BUNDLE } from './bundles/directory';
 import { POD_PRODUCT_BUNDLE } from './bundles/pod-product';
 import { POLICY_ACCEPTANCE_BUNDLE } from './bundles/policy-acceptance';
 import { PRODUCTS_BUNDLE } from './bundles/products';
@@ -91,6 +92,7 @@ export {
   MWEB_BUNDLE,
   PARTNERS_BUNDLE,
   REGIONAL_BUNDLE,
+  DIRECTORY_BUNDLE,
   POD_PRODUCT_BUNDLE,
   POLICY_ACCEPTANCE_BUNDLE,
   PRODUCTS_BUNDLE,
@@ -149,6 +151,7 @@ export const SURFACE_BUNDLES: Record<string, NestedCatalogue> = {
   mweb: MWEB_BUNDLE,
   partners: PARTNERS_BUNDLE,
   regional: REGIONAL_BUNDLE,
+  directory: DIRECTORY_BUNDLE,
   podProduct: POD_PRODUCT_BUNDLE,
   policyAcceptance: POLICY_ACCEPTANCE_BUNDLE,
   products: PRODUCTS_BUNDLE,

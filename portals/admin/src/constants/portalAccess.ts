@@ -75,6 +75,10 @@ export const PORTAL_ACCESS: PortalAccess[] = [
   { key: 'challenge', name: 'Challenges', url: url('challenge'), roles: [{ key: 'CHALLENGE_MANAGER', name: 'Challenge Manager' }] },
   { key: 'developers', name: 'Developers', url: url('developers'), roles: [{ key: 'DEVELOPERS_MANAGER', name: 'Developers Manager' }] },
   { key: 'regional-club-admin', name: 'Regional Club Admin', url: url('regional-club-admin'), roles: [{ key: 'REGIONAL_CLUB_ADMIN', name: 'Regional Club Admin' }] },
+  { key: 'venues', name: 'Venues', url: url('venues'), roles: [{ key: 'ALL_VENUES_ACCESS', name: 'All Venues Access' }] },
+  { key: 'clubs', name: 'Clubs', url: url('clubs'), roles: [{ key: 'ALL_CLUBS_ACCESS', name: 'All Clubs Access' }] },
+  { key: 'club-admins', name: 'Club Admins', url: url('club-admins'), roles: [{ key: 'ALL_CLUB_ADMINS_ACCESS', name: 'All Club Admins Access' }] },
+  { key: 'hosts', name: 'Hosts', url: url('hosts'), roles: [{ key: 'ALL_HOSTS_ACCESS', name: 'All Hosts Access' }] },
 ];
 
 export interface RolePortalInfo {

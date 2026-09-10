@@ -253,6 +253,38 @@ services:
     ports:
       - "127.0.0.1:2029:80"
 
+  # The four directory consoles. Each is the whole of one entity — every venue,
+  # every club, every club admin, every host — rendered from ONE shared console
+  # package that admin and onboarding mount too, so a column added here shows
+  # up everywhere rather than in a third copy (rule 34).
+  venues:
+    image: ${DOCKERHUB_USERNAME}/duncit-venues:${IMAGE_TAG:-latest}
+    container_name: duncit-venues
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2030:80"
+
+  clubs:
+    image: ${DOCKERHUB_USERNAME}/duncit-clubs:${IMAGE_TAG:-latest}
+    container_name: duncit-clubs
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2031:80"
+
+  club-admins:
+    image: ${DOCKERHUB_USERNAME}/duncit-club-admins:${IMAGE_TAG:-latest}
+    container_name: duncit-club-admins
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2032:80"
+
+  hosts:
+    image: ${DOCKERHUB_USERNAME}/duncit-hosts:${IMAGE_TAG:-latest}
+    container_name: duncit-hosts
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2033:80"
+
   # Redis — the server's GraphQL response cache (server.env: REDIS_URL=
   # redis://redis:6379). Deliberately NO host port: only containers on this
   # network reach it; humans go through the redis-ui below. Infra service, not

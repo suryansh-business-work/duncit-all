@@ -29,6 +29,10 @@ COPY portals/onboarding/package.json ./portals/onboarding/
 COPY portals/hr/package.json ./portals/hr/
 COPY portals/employee/package.json ./portals/employee/
 COPY portals/regional-club-admin/package.json ./portals/regional-club-admin/
+COPY portals/venues/package.json ./portals/venues/
+COPY portals/clubs/package.json ./portals/clubs/
+COPY portals/club-admins/package.json ./portals/club-admins/
+COPY portals/hosts/package.json ./portals/hosts/
 COPY website/status-website/package.json ./website/status-website/
 COPY portals/challenge-portal/package.json ./portals/challenge-portal/
 COPY portals/developers/package.json ./portals/developers/
@@ -86,6 +90,7 @@ COPY packages/user-context/package.json ./packages/user-context/
 COPY packages/user-core/package.json ./packages/user-core/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/verification/package.json ./packages/verification/
+COPY packages/entity-consoles/package.json ./packages/entity-consoles/
 COPY packages/virtual-scroll/package.json ./packages/virtual-scroll/
 COPY packages/buttons-native/package.json ./packages/buttons-native/
 COPY packages/buttons/package.json ./packages/buttons/

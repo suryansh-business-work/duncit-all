@@ -445,6 +445,46 @@ export const PORTAL_PAGES: readonly NavigationPage[] = [
   { surface: 'regional-club-admin', path: '/profile', label: 'Profile',
     description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Regional Club Admin console.' },
 
+  // ---- Venues (venues) -------------------------------------------------
+  { surface: 'venues', path: '/', label: 'Dashboard',
+    description: 'A brief on every venue Duncit works with: how many there are, how many are live, how many are still waiting on a review, and how many were declined. Each tile opens the list already filtered to what it counted.' },
+  { surface: 'venues', path: '/venues', label: 'Venues',
+    description: 'Every venue on Duncit in one table — an application still awaiting review and a live space taking bookings sit in the same list, because they are the same venue at two points in its life. Search by name, owner or city, filter by status, and click any row to open that venue in full. Reviewing an application (approve or decline, with the commission that applies) happens on the detail page, and is offered only to someone whose role allows it.' },
+  { surface: 'venues', path: '/venues/:id', label: 'Venue detail',
+    description: 'One venue in full: owner and contact details, address and city, category, capacity and rules, its photos, the slots it has published, the pods that have run there, its commission, and its onboarding history. Approve or decline a pending application from here, or deactivate a live venue.' },
+  { surface: 'venues', path: '/profile', label: 'Profile',
+    description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Venues console.' },
+
+  // ---- Clubs (clubs) ---------------------------------------------------
+  { surface: 'clubs', path: '/', label: 'Dashboard',
+    description: 'A brief on every club on Duncit: how many there are, how many are active, how many have an admin assigned and how many are still without one. Each tile opens the list already filtered to what it counted.' },
+  { surface: 'clubs', path: '/clubs', label: 'Clubs',
+    description: 'Every club on Duncit in one table. Search by name or city, filter by status, and click any row to open that club in full — its admins, its pods, its media and its content.' },
+  { surface: 'clubs', path: '/clubs/:id', label: 'Club detail',
+    description: 'One club in full: its overview and category, the club admins who run it, the pods that belong to it, its photo gallery with a lightbox, and its content sections. Edit the club or change who administers it from here.' },
+  { surface: 'clubs', path: '/profile', label: 'Profile',
+    description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Clubs console.' },
+
+  // ---- Club Admins (club-admins) ---------------------------------------
+  { surface: 'club-admins', path: '/', label: 'Dashboard',
+    description: 'A brief on every club admin on Duncit: how many there are, how many are active, how many are awaiting review and how many were declined. Each tile opens the list already filtered to what it counted.' },
+  { surface: 'club-admins', path: '/club-admins', label: 'Club Admins',
+    description: 'Every club admin on Duncit in one table. Search by name, email or phone, filter by status, and click any row to open that person in full — the clubs they run and the commission they are on.' },
+  { surface: 'club-admins', path: '/club-admins/:id', label: 'Club admin detail',
+    description: 'One club admin in full: their contact details, category, the clubs assigned to them, their commission percentage, and their onboarding history. Approve or decline a pending record, set their commission, or deactivate them from here.' },
+  { surface: 'club-admins', path: '/profile', label: 'Profile',
+    description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Club Admins console.' },
+
+  // ---- Hosts (hosts) ---------------------------------------------------
+  { surface: 'hosts', path: '/', label: 'Dashboard',
+    description: 'A brief on every host on Duncit: how many there are, how many are approved, how many are awaiting review and how many were declined. Each tile opens the list already filtered to what it counted.' },
+  { surface: 'hosts', path: '/hosts', label: 'Hosts',
+    description: 'Every host on Duncit in one table — an application still awaiting review and a host already running pods sit in the same list. Search by name, email or phone, filter by status, and click any row to open that host in full. Reviewing an application (approve or decline, with the categories and commission that apply) happens on the detail page, and is offered only to someone whose role allows it.' },
+  { surface: 'hosts', path: '/hosts/:id', label: 'Host detail',
+    description: 'One host in full: their contact details, the Super to Category to Sub they may create pods in, their commission, the pods they have run, their uploaded documents and their onboarding history. Approve or decline a pending application from here, or deactivate an approved host.' },
+  { surface: 'hosts', path: '/profile', label: 'Profile',
+    description: 'Edit your first and last name, view your email, linked Google account and access-role chips, change your display language, and sign out of the Hosts console.' },
+
   // ---- Partners (partners) --------------------------------------------
   { surface: 'partners', path: '/venues/dashboard', label: 'Venue Dashboard', group: 'Venue Owner',
     description: 'Pick one venue (or all together) and read its slot-based earnings potential, capacity and pending booking-request counts, with quick jumps to Venue Management, Slot Requests and the availability calendar.' },

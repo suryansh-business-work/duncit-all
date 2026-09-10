@@ -57,6 +57,10 @@ jobs:
           - { name: challenge-portal, dir: portals/challenge-portal }
           - { name: developers-portal, dir: portals/developers }
           - { name: regional-club-admin, dir: portals/regional-club-admin }
+          - { name: venues, dir: portals/venues }
+          - { name: clubs, dir: portals/clubs }
+          - { name: club-admins, dir: portals/club-admins }
+          - { name: hosts, dir: portals/hosts }
 
     steps:
       - name: Checkout

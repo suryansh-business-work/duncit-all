@@ -22,6 +22,11 @@ packages:
   - portals/regional-club-admin
   - portals/challenge-portal
   - portals/developers
+  # The four directory consoles.
+  - portals/venues
+  - portals/clubs
+  - portals/club-admins
+  - portals/hosts
   - website/status-website
   - website/earnwith-website
   - docs-site

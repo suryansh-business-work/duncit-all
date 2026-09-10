@@ -4,12 +4,14 @@ import { AttendanceChip } from '@duncit/ui';
 import type { DuncitColumn } from '@duncit/table';
 import PodActionButtons from './PodActionButtons';
 import AiMonitorPill from '../monitoring/AiMonitorPill';
+import type { Translate } from '@duncit/shell';
 import type { PodRow } from './queries';
 import {
   POD_MODE_OPTIONS,
   POD_TYPE_OPTIONS,
   dateValue,
   modeLabel,
+  podSpotCounts,
   productLines,
   productsValue,
   spotsValue,
@@ -73,6 +75,31 @@ const renderHits = (p: PodRow) => (
   </Stack>
 );
 
+/**
+ * Seats first, bookings under them.
+ *
+ * The two numbers differ the moment somebody buys more than one ticket, and
+ * an admin needs both: the seat count says whether the pod is full, the
+ * booking count says how many people that is. Reading one without the other
+ * is what made a sold-out pod look like it had two attendees.
+ */
+const renderSpots = (p: PodRow, t: Translate) => {
+  const { seats, people, extraSeats } = podSpotCounts(p);
+  const hintKey = extraSeats > 0 ? 'admin.pods.spotsHintMulti' : 'admin.pods.spotsHint';
+  return (
+    <Tooltip title={t(hintKey, { vars: { seats, people, extra: extraSeats } })}>
+      <Box sx={{ lineHeight: 1.2 }}>
+        <Typography variant="body2" component="div" sx={{ fontWeight: 600 }}>
+          {spotsValue(p)}
+        </Typography>
+        <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
+          {t('admin.pods.spotsBookings', { count: people })}
+        </Typography>
+      </Box>
+    </Tooltip>
+  );
+};
+
 const renderStatus = (p: PodRow, t: PodsColumnDeps['t']) => {
   if (p.is_deleted) return <Chip size="small" label={t('admin.eventTickets.cancelled')} color="error" />;
   if (p.completed_at) return <Chip size="small" label={t('admin.podsDashboard.completed')} color="info" />;
@@ -107,7 +134,7 @@ const renderProducts = (p: PodRow) => {
 export interface PodsColumnDeps {
   /** Column headings and the status chips are copy — the page hands its
    *  translator down rather than a column module reaching for a hook. */
-  t: (key: string) => string;
+  t: Translate;
   showProducts: boolean;
   clubName: (id: string) => string;
   venueName: (id: string) => string;
@@ -176,7 +203,13 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
       width: 110,
       valueGetter: (p) => (p.pod_amount > 0 ? `₹${p.pod_amount}` : 'Free'),
     },
-    { field: 'no_of_spots', headerName: t('admin.pods.colSpots'), width: 100, valueGetter: spotsValue },
+    {
+      field: 'no_of_spots',
+      headerName: t('admin.pods.colSpots'),
+      width: 120,
+      cellRenderer: (p: PodRow) => renderSpots(p, t),
+      valueGetter: spotsValue,
+    },
     {
       // What a completed pod is settled on — booked seats alone no longer
       // explain the payout, so the scanned count sits beside them.

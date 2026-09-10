@@ -231,6 +231,12 @@ export const ADMIN_BUNDLE: NestedCatalogue = {
       colPodType: 'Pod Type',
       colAmount: 'Amount',
       colSpots: 'Spots',
+      // A booking for seven seats is ONE id in pod_attendees, so the column
+      // reports the seats held and the bookings behind them together.
+      spotsBookings: { one: '{count} booking', other: '{count} bookings' },
+      spotsHint: '{seats} seats held by {people} bookings — one seat each.',
+      spotsHintMulti:
+        '{seats} seats held by {people} bookings — {extra} of them are extra seats bought on a single booking.',
       colAttendance: 'Attendance',
       colProducts: 'Products',
       colHits: 'Hits',

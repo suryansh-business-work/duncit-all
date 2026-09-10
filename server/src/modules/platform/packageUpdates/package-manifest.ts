@@ -1422,6 +1422,8 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "@duncit/app-settings", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/buttons", range: "workspace:*", kind: "dependencies" },
       { name: "@duncit/gql-types", range: "workspace:*", kind: "dependencies" },
+      { name: "@duncit/media-picker", range: "workspace:*", kind: "dependencies" },
+      { name: "@tiptap/extension-image", range: "3.30.6", kind: "dependencies" },
       { name: "@tiptap/extension-link", range: "3.30.6", kind: "dependencies" },
       { name: "@tiptap/extension-placeholder", range: "3.30.6", kind: "dependencies" },
       { name: "@tiptap/extension-table", range: "3.30.6", kind: "dependencies" },

@@ -18,12 +18,7 @@ import App from './App';
 const loadUser = createSessionUserLoader(apolloClient, { query: ADMIN_ME });
 
 mountPortal({
-  config: {
-    key: appConfig.key,
-    name: appConfig.name,
-    tokenKey: appConfig.tokenKey,
-    colorModeKey: appConfig.colorModeKey,
-  },
+  config: appConfig,
   apolloClient,
   graphqlUrl: urlConfigs.graphqlUrl,
   logsPortal: logs.portal.admin,

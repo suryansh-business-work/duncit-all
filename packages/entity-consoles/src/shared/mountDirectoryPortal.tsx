@@ -145,13 +145,7 @@ export function mountDirectoryPortal(options: Readonly<MountDirectoryPortalOptio
   );
 
   mountPortal({
-    config: {
-      key: config.key,
-      name: config.name,
-      tokenKey: config.tokenKey,
-      colorModeKey: config.colorModeKey,
-      accent: config.accent,
-    },
+    config,
     apolloClient,
     graphqlUrl: urls.graphqlUrl,
     logsPortal,

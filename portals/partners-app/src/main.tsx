@@ -10,13 +10,7 @@ import App from './App';
 import 'react-datepicker/dist/react-datepicker.css';
 
 mountPortal({
-  config: {
-    key: appConfig.key,
-    name: appConfig.name,
-    tokenKey: appConfig.tokenKey,
-    colorModeKey: appConfig.colorModeKey,
-    accent: PARTNERS_ACCENT,
-  },
+  config: { ...appConfig, accent: PARTNERS_ACCENT },
   apolloClient,
   graphqlUrl: urlConfigs.graphqlUrl,
   logsPortal: logs.portal['partners-app'],

@@ -10,13 +10,7 @@ import App from './App';
 const loadUser = createSessionUserLoader(apolloClient);
 
 mountPortal({
-  config: {
-    key: appConfig.key,
-    name: appConfig.name,
-    tokenKey: appConfig.tokenKey,
-    colorModeKey: appConfig.colorModeKey,
-    accent: appConfig.accent,
-  },
+  config: appConfig,
   apolloClient,
   graphqlUrl: urlConfigs.graphqlUrl,
   logsPortal: logs.portal.support,

@@ -128,3 +128,26 @@ describe('createDateFormatter · typed input and calendar days', () => {
     expect(f.toIsoDay(new Date(2000, 0, 5, 23, 59))).toBe('2000-01-05');
   });
 });
+
+describe('formatClock', () => {
+  it('renders a stored wall-clock time in the admin’s time pattern', () => {
+    expect(createDateFormatter({ timeFormat: 'hh:mm a' }).formatClock('13:05')).toBe('01:05 PM');
+    expect(createDateFormatter({ timeFormat: 'HH:mm' }).formatClock('13:05')).toBe('13:05');
+  });
+
+  it('does NOT move the time into the configured zone, unlike formatTime', () => {
+    // A venue's 09:00 opening is a position on a clock. formatTime would read
+    // an instant through Asia/Kolkata; this must not.
+    const f = createDateFormatter({
+      timeFormat: 'HH:mm',
+      timeZone: 'Asia/Kolkata',
+      timeZoneAware: true,
+    });
+
+    expect(f.formatClock('09:00')).toBe('09:00');
+  });
+
+  it('renders nothing for a value that is not a wall clock', () => {
+    expect(createDateFormatter().formatClock('nonsense')).toBe('');
+  });
+});

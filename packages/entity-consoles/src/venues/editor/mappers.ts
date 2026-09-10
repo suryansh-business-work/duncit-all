@@ -7,94 +7,102 @@ import { blankVenueValues, type VenueFormValues } from './types';
  * Kept apart from the page so both are testable without React, and so the
  * mapping is one place: a field added to the record is added here once and the
  * form, the save and the reset all learn about it together.
+ *
+ * There are DELIBERATELY few `??` fallbacks. Every field the query selects is
+ * `String!` / `[X!]!` / `Float!` except the eleven listed below, so a fallback on
+ * any of the others is a branch nothing can reach — dead code that reads as
+ * caution. The nullable ones, which DO get a fallback:
+ *   venue_no · location_id · lat · lng · owner_dob · the three category ids ·
+ *   bank_account.payout_method · settings.auto_extend.template_id · the review
+ *   timestamps.
+ * The `||` on the operating hours is different and stays: an empty stored string
+ * is a real value there, and it should open on the same default a new venue gets.
  */
-
-/** The stored record as form values. */
 export function venueToValues(venue: AdminVenueDetail): VenueFormValues {
-  const settings = venue.settings;
+  const { settings } = venue;
   return {
     id: venue.id,
     owner_user_id: venue.owner_user_id,
 
-    venue_name: venue.venue_name ?? '',
-    venue_type: venue.venue_type ?? '',
-    capacity: venue.capacity ?? 1,
-    capacity_items: (venue.capacity_items ?? []).map((item) => ({
+    venue_name: venue.venue_name,
+    venue_type: venue.venue_type,
+    capacity: venue.capacity,
+    capacity_items: venue.capacity_items.map((item) => ({
       label: item.label,
       capacity: item.capacity,
     })),
     category: {
-      super_id: venue.venue_category?.super_category_id ?? '',
-      super_name: venue.venue_category?.super_category_name ?? '',
-      category_id: venue.venue_category?.category_id ?? '',
-      category_name: venue.venue_category?.category_name ?? '',
-      sub_id: venue.venue_category?.sub_category_id ?? '',
-      sub_name: venue.venue_category?.sub_category_name ?? '',
+      super_id: venue.venue_category.super_category_id ?? '',
+      super_name: venue.venue_category.super_category_name,
+      category_id: venue.venue_category.category_id ?? '',
+      category_name: venue.venue_category.category_name,
+      sub_id: venue.venue_category.sub_category_id ?? '',
+      sub_name: venue.venue_category.sub_category_name,
     },
-    description: venue.description ?? '',
-    amenities: venue.amenities ?? [],
-    facilities: venue.facilities ?? [],
-    security: venue.security ?? [],
-    tags: venue.tags ?? [],
+    description: venue.description,
+    amenities: venue.amenities,
+    facilities: venue.facilities,
+    security: venue.security,
+    tags: venue.tags,
 
-    cover_image_url: venue.cover_image_url ?? '',
-    gallery: venue.gallery ?? [],
+    cover_image_url: venue.cover_image_url,
+    gallery: venue.gallery,
 
     location: {
       location_id: venue.location_id ?? '',
-      country: venue.country ?? '',
-      country_code: venue.country_code ?? '',
-      state: venue.state ?? '',
-      state_code: venue.state_code ?? '',
-      city: venue.city ?? '',
-      locality: venue.locality ?? '',
-      pincode: venue.postal_code ?? '',
+      country: venue.country,
+      country_code: venue.country_code,
+      state: venue.state,
+      state_code: venue.state_code,
+      city: venue.city,
+      locality: venue.locality,
+      pincode: venue.postal_code,
     },
-    address_line1: venue.address_line1 ?? '',
-    address_line2: venue.address_line2 ?? '',
+    address_line1: venue.address_line1,
+    address_line2: venue.address_line2,
 
-    documents: (venue.documents ?? []).map((doc) => ({ type: doc.type, url: doc.url })),
-    gstin: venue.gstin ?? '',
-    pan: venue.pan ?? '',
+    documents: venue.documents.map((doc) => ({ type: doc.type, url: doc.url })),
+    gstin: venue.gstin,
+    pan: venue.pan,
 
-    owner_name: venue.owner_name ?? '',
-    owner_email: venue.owner_email ?? '',
-    owner_phone: venue.owner_phone ?? '',
+    owner_name: venue.owner_name,
+    owner_email: venue.owner_email,
+    owner_phone: venue.owner_phone,
     owner_dob: venue.owner_dob ?? '',
-    owner_address: venue.owner_address ?? '',
+    owner_address: venue.owner_address,
     bank_account: {
-      payout_method: venue.bank_account?.payout_method ?? '',
-      account_holder_name: venue.bank_account?.account_holder_name ?? '',
-      account_number: venue.bank_account?.account_number ?? '',
-      ifsc_code: venue.bank_account?.ifsc_code ?? '',
-      upi_id: venue.bank_account?.upi_id ?? '',
+      payout_method: venue.bank_account.payout_method ?? '',
+      account_holder_name: venue.bank_account.account_holder_name,
+      account_number: venue.bank_account.account_number,
+      ifsc_code: venue.bank_account.ifsc_code,
+      upi_id: venue.bank_account.upi_id,
     },
 
-    venue_share_pct: venue.venue_share_pct ?? 0,
-    venue_commission_pct: venue.venue_commission_pct ?? 0,
+    venue_share_pct: venue.venue_share_pct,
+    venue_commission_pct: venue.venue_commission_pct,
 
     status: venue.status,
     is_active: venue.is_active,
 
     settings: {
-      open: settings?.operating_hours?.open || blankVenueValues.settings.open,
-      close: settings?.operating_hours?.close || blankVenueValues.settings.close,
-      weekly_off_days: settings?.weekly_off_days ?? [],
-      holidays: settings?.holidays ?? [],
-      rules: { ...blankVenueValues.settings.rules, ...(settings?.rules ?? {}) },
-      auto_extend_enabled: settings?.auto_extend?.enabled ?? false,
-      auto_extend_horizon_days:
-        settings?.auto_extend?.horizon_days ?? blankVenueValues.settings.auto_extend_horizon_days,
-      auto_extend_until: settings?.auto_extend?.until ?? '',
-      reschedule_only: settings?.cancellation?.reschedule_only ?? false,
-      charge_tiers: (settings?.cancellation?.tiers ?? []).map((tier) => ({
+      // A venue stored before the window existed carries '', and it should open
+      // on the same hours a venue registered today gets.
+      open: settings.operating_hours.open || blankVenueValues.settings.open,
+      close: settings.operating_hours.close || blankVenueValues.settings.close,
+      weekly_off_days: settings.weekly_off_days,
+      holidays: settings.holidays,
+      rules: { ...blankVenueValues.settings.rules, ...settings.rules },
+      auto_extend_enabled: settings.auto_extend.enabled,
+      auto_extend_horizon_days: settings.auto_extend.horizon_days,
+      auto_extend_until: settings.auto_extend.until,
+      reschedule_only: settings.cancellation.reschedule_only,
+      charge_tiers: settings.cancellation.tiers.map((tier) => ({
         hours_before: tier.hours_before,
         charge_type: tier.charge_type,
         value: tier.value,
       })),
-      trigger_hours:
-        settings?.cancellation?.trigger_hours ?? blankVenueValues.settings.trigger_hours,
-      refund_tiers: (settings?.cancellation?.refund_tiers ?? []).map((tier) => ({
+      trigger_hours: settings.cancellation.trigger_hours,
+      refund_tiers: settings.cancellation.refund_tiers.map((tier) => ({
         hours_before: tier.hours_before,
         refund_pct: tier.refund_pct,
       })),

@@ -24,17 +24,23 @@ const bankSchema = z.object({
 /**
  * One Super → Category → Sub the host may run.
  *
- * All three ids are required together because the server takes the triple: a
- * row with only a Super picked is rejected there, so it is refused here where
- * the person can still see which row it was.
+ * A partial row is ALLOWED here, and that is deliberate. The server stores
+ * partial triples — a host seeded from a meeting approved before the sub level
+ * was captured has a Super and a Category and no Sub — so requiring all three
+ * made an existing record unsaveable: Save blocked on a row the admin never
+ * touched, pointing at a picker they would have to guess at.
+ *
+ * `valuesToHostCategories` drops an incomplete row from the payload instead,
+ * because the server refuses a partial triple, and the section says so above the
+ * list rather than letting it be a silent drop.
  */
-const categorySchema = (t: Translate) =>
+const categorySchema = () =>
   z.object({
-    super_id: z.string().trim().min(1, t('directory.hostEditor.errCategoryTriple')),
+    super_id: z.string().trim().default(''),
     super_name: z.string().default(''),
-    category_id: z.string().trim().min(1, t('directory.hostEditor.errCategoryTriple')),
+    category_id: z.string().trim().default(''),
     category_name: z.string().default(''),
-    sub_id: z.string().trim().min(1, t('directory.hostEditor.errCategoryTriple')),
+    sub_id: z.string().trim().default(''),
     sub_name: z.string().default(''),
   });
 
@@ -75,7 +81,7 @@ export function makeHostFormSchema(t: Translate) {
 
     bank_account: bankSchema,
     tags: z.array(z.string().trim().max(40)).default([]),
-    categories: z.array(categorySchema(t)).default([]),
+    categories: z.array(categorySchema()).default([]),
 
     status: z.enum(['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED']),
     is_active: z.boolean(),

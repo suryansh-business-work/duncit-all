@@ -2535,7 +2535,7 @@ export const SHIPPED_CLIENT_KEYS: Record<string, string> = {
   "directory.hostEditor.address": "Address",
   "directory.hostEditor.approvedAt": "Approved",
   "directory.hostEditor.categories": "What they run",
-  "directory.hostEditor.categoriesHint": "Saving replaces the whole set, so removing a row here is how a category is taken away. Each row needs all three levels — the server refuses a partial one.",
+  "directory.hostEditor.categoriesHint": "Saving replaces the whole set, so removing a row here is how a category is taken away. A row missing any of its three levels is not saved — finish it or remove it.",
   "directory.hostEditor.colApplied": "Applied",
   "directory.hostEditor.colCategories": "Runs",
   "directory.hostEditor.colCommission": "Commission",

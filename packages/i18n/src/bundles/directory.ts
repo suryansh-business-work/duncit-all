@@ -330,7 +330,7 @@ export const DIRECTORY_BUNDLE: NestedCatalogue = {
 
       categories: 'What they run',
       categoriesHint:
-        'Saving replaces the whole set, so removing a row here is how a category is taken away. Each row needs all three levels — the server refuses a partial one.',
+        'Saving replaces the whole set, so removing a row here is how a category is taken away. A row missing any of its three levels is not saved — finish it or remove it.',
       addCategory: 'Add a category',
       removeCategory: 'Remove this category',
       noCategories: 'No categories yet — this host cannot be assigned a pod until they have one.',

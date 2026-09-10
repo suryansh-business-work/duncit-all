@@ -29,6 +29,10 @@ export function useContactsOnDuncit(search: string, scope: ContactsScope) {
 
   const load = useCallback(async () => {
     const requestId = ++seq.current;
+    // Set here as well as in the effect below: `load` IS the refetch a follow
+    // and a resync call, and a re-read nothing reports is a list that silently
+    // goes stale for a round trip. The effect's own call is idempotent.
+    setIsLoading(true);
     try {
       const data = await graphqlRequest(
         ContactsOnDuncitDocument,

@@ -50,6 +50,7 @@
     "@duncit/buttons": "workspace:*",
     "@duncit/datetime": "workspace:*",
     "@duncit/dialogs": "workspace:*",
-    "@duncit/slots": "workspace:*"
+    "@duncit/slots": "workspace:*",
+    "@duncit/ui": "workspace:*"
   }
 }

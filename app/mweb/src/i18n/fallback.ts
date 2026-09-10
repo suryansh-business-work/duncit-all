@@ -11,6 +11,7 @@ import {
   POD_PRODUCT_BUNDLE,
   POLICY_ACCEPTANCE_BUNDLE,
   SESSION_BUNDLE,
+  UI_BUNDLE,
   WHATSAPP_BUNDLE,
   WITHDRAW_BUNDLE,
   AVAILABILITY_BUNDLE,
@@ -53,6 +54,10 @@ export const MWEB_FALLBACK: NestedCatalogue = {
   ...POD_PRODUCT_BUNDLE,
   ...POLICY_ACCEPTANCE_BUNDLE,
   ...SESSION_BUNDLE,
+  // @duncit/ui's own words — the one spinner's label among them. mWeb mounts
+  // those components too, so without this every wait announced itself to a
+  // screen reader as the raw key `ui.loader.loading` (rule 38).
+  ...UI_BUNDLE,
   ...WHATSAPP_BUNDLE,
   ...WITHDRAW_BUNDLE,
   // The venue availability calendar and the venue settings form render here

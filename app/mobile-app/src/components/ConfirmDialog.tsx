@@ -1,4 +1,4 @@
-import { Text, XStack } from 'tamagui';
+import { Spinner, Text, XStack } from 'tamagui';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -12,6 +12,10 @@ interface Props {
   confirmLabel?: string;
   cancelLabel?: string;
   destructive?: boolean;
+  /** The confirmed action is still with the server: Confirm spins, and neither
+   *  button nor the backdrop can dismiss the dialog until it answers. Twin of
+   *  mWeb's ConfirmDialog `busy` (rule 27). */
+  busy?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
   testID?: string;
@@ -31,6 +35,7 @@ export function ConfirmDialog({
   confirmLabel,
   cancelLabel,
   destructive = false,
+  busy = false,
   onConfirm,
   onCancel,
   testID = 'confirm-dialog',
@@ -48,7 +53,8 @@ export function ConfirmDialog({
         testID={`${testID}-cancel`}
         role="button"
         aria-label={cancelLabelText}
-        onPress={onCancel}
+        aria-disabled={busy}
+        onPress={busy ? undefined : onCancel}
         flex={1}
         height={46}
         alignItems="center"
@@ -56,6 +62,7 @@ export function ConfirmDialog({
         borderRadius={12}
         borderWidth={1}
         borderColor="$borderColor"
+        opacity={busy ? 0.6 : 1}
         pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="600" color="$color">
@@ -66,15 +73,19 @@ export function ConfirmDialog({
         testID={`${testID}-confirm`}
         role="button"
         aria-label={confirmLabelText}
-        onPress={onConfirm}
+        aria-disabled={busy}
+        onPress={busy ? undefined : onConfirm}
         flex={1}
         height={46}
+        gap={8}
         alignItems="center"
         justifyContent="center"
         borderRadius={12}
         backgroundColor={destructive ? '$danger' : '$primary'}
+        opacity={busy ? 0.7 : 1}
         pressStyle={PRESS_STYLE.control}
       >
+        {busy ? <Spinner size="small" color={onPrimary} /> : null}
         <Text fontSize={14} fontWeight="700" color={onPrimary}>
           {confirmLabelText}
         </Text>
@@ -86,6 +97,9 @@ export function ConfirmDialog({
     <DuncitDialog
       open={open}
       onClose={onCancel}
+      // A confirmed action already in flight must not be dismissed out from
+      // under itself — the dialog is what says it is still running.
+      dismissOnBackdrop={!busy}
       testID={testID}
       variant="center"
       title={title}

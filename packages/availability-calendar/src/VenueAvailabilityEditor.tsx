@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Alert, Card, CardContent, CircularProgress, Stack } from '@mui/material';
+import { Alert, Card, CardContent } from '@mui/material';
 import { addDays, format, startOfDay } from 'date-fns';
+import { Loader, LoadingOverlay } from '@duncit/ui';
 import { MAX_FUTURE_DAYS, readVenueSettings, slotCoversDay } from '@duncit/slots';
 import AvailabilityCalendar from './AvailabilityCalendar';
 import CalendarLegend from './CalendarLegend';
@@ -73,7 +74,7 @@ export default function VenueAvailabilityEditor({ venue, onVenueChanged }: Reado
   );
 
   const range = useMemo(() => viewRange(view, anchor), [view, anchor]);
-  const { slots, pending, error, refetch, create, toggleBlock, remove } = useVenueSlots(venue.id, range);
+  const { slots, pending, refreshing, error, refetch, create, toggleBlock, remove } = useVenueSlots(venue.id, range);
 
   // Main slot availability is bookable only within the next 60 days — later days
   // are non-selectable in the calendar (server + DayDrawer are the backstop),
@@ -111,19 +112,19 @@ export default function VenueAvailabilityEditor({ venue, onVenueChanged }: Reado
             </Alert>
           )}
           {pending ? (
-            <Stack sx={{ alignItems: 'center', py: 4 }}>
-              <CircularProgress size={24} />
-            </Stack>
+            <Loader size={24} sx={{ py: 4 }} />
           ) : (
-            <AvailabilityCalendar
-              month={anchor}
-              view={view}
-              slots={slots}
-              selectedDate={selectedDate}
-              onSelect={setSelectedDate}
-              holidays={venueHolidays}
-              maxDate={maxSelectableDate}
-            />
+            <LoadingOverlay open={refreshing} size={24}>
+              <AvailabilityCalendar
+                month={anchor}
+                view={view}
+                slots={slots}
+                selectedDate={selectedDate}
+                onSelect={setSelectedDate}
+                holidays={venueHolidays}
+                maxDate={maxSelectableDate}
+              />
+            </LoadingOverlay>
           )}
 
           <CalendarLegend />

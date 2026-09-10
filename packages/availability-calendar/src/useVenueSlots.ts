@@ -11,6 +11,11 @@ export function useVenueSlots(venueId: string, range: { from: Date; to: Date }) 
   const { data, loading, error, refetch } = useQuery<{ venueSlots: VenueSlotRow[] }>(VENUE_SLOTS, {
     variables: { venue_id: venueId, from: range.from.toISOString(), to: range.to.toISOString() },
     fetchPolicy: 'cache-and-network',
+    // Stated rather than inherited: `refetch` is what every write below ends
+    // with, and only this option makes that round trip observable as `loading`.
+    // Apollo 4 defaults it to true, but the package's peer range starts at 3,
+    // where the default is false — and there the refresh would show nothing.
+    notifyOnNetworkStatusChange: true,
   });
 
   const [createSlots] = useMutation<{ createVenueSlots: { id: string }[] }>(CREATE_VENUE_SLOTS);
@@ -40,6 +45,13 @@ export function useVenueSlots(venueId: string, range: { from: Date; to: Date }) 
     slots: data?.venueSlots ?? [],
     /** True until the first answer — the calendar shows a spinner, not an empty month. */
     pending: loading && !data,
+    /**
+     * A re-read of a month that is already drawn — which is how every write
+     * above ends. The counts on the grid are stale for exactly that round trip,
+     * so the calendar dims rather than disappears: blocking a slot should read
+     * as the grid catching up, not as the page reloading under the owner.
+     */
+    refreshing: loading && !!data,
     error,
     refetch,
     create,

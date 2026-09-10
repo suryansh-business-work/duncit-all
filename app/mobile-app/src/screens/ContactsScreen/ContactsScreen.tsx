@@ -38,6 +38,7 @@ export function ContactsScreen() {
   const [search, setSearch] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [clearOpen, setClearOpen] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   const { status, viewer, refetch: refetchStatus } = useContactsSyncStatus();
   const list = useContactsOnDuncit(search, scope);
@@ -65,9 +66,19 @@ export function ContactsScreen() {
     }
   };
 
+  // The dialog stays up, with Confirm spinning, until the server has actually
+  // dropped the phone book — then it closes and the list re-reads behind it,
+  // which is the order mWeb's ContactsPage uses (rule 27).
   const clear = async () => {
-    setClearOpen(false);
-    await graphqlRequest(ClearMyContactsDocument, undefined, { auth: true }).catch(() => undefined);
+    setClearing(true);
+    try {
+      await graphqlRequest(ClearMyContactsDocument, undefined, { auth: true }).catch(
+        () => undefined,
+      );
+    } finally {
+      setClearing(false);
+      setClearOpen(false);
+    }
     await refreshAll();
   };
 
@@ -141,6 +152,7 @@ export function ContactsScreen() {
         message={t('mweb.contacts.clearConfirmBody')}
         confirmLabel={t('mweb.contacts.clear')}
         destructive
+        busy={clearing}
         onConfirm={() => fireAndForget(clear())}
         onCancel={() => setClearOpen(false)}
         testID="contacts-clear-dialog"

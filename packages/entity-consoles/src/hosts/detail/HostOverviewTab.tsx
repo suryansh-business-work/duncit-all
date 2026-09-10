@@ -6,6 +6,7 @@ import FactCheckIcon from '@mui/icons-material/FactCheck';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
 import SectionCard from '../../venues/detail/SectionCard';
+import Fact from '../../shared/Fact';
 import type { HostDetail } from '../queries';
 
 /**
@@ -16,17 +17,6 @@ import type { HostDetail } from '../queries';
  * the same order, so moving between the two pages does not need re-orienting.
  */
 const EMPTY = '—';
-
-function Fact({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <Stack spacing={0.25}>
-      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-        {label}
-      </Typography>
-      <Typography variant="body2">{value || EMPTY}</Typography>
-    </Stack>
-  );
-}
 
 function DocLink({ label, url }: Readonly<{ label: string; url: string }>) {
   const { t } = useTranslation();

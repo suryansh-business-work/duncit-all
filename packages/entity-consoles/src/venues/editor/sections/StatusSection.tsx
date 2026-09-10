@@ -18,7 +18,8 @@ import type { VenueFormValues } from '../types';
  */
 export default function StatusSection({
   control,
-}: Readonly<{ control: Control<VenueFormValues> }>) {
+  canGovern,
+}: Readonly<{ control: Control<VenueFormValues>; canGovern: boolean }>) {
   const { t } = useTranslation();
 
   return (
@@ -34,6 +35,8 @@ export default function StatusSection({
         options={lifecycleOptions(t)}
         activeLabel={t('directory.venueEditor.isActive')}
         deactivateWarning={t('directory.venueEditor.deactivateWarning')}
+        canGovern={canGovern}
+        governedByNote={t('directory.venueEditor.governedBy')}
         extraFields={
           <>
             <Grid size={{ xs: 6, md: 4 }}>
@@ -43,6 +46,7 @@ export default function StatusSection({
                 label={t('directory.venueEditor.sharePct')}
                 size="small"
                 type="number"
+                disabled={!canGovern}
                 hint={t('directory.venueEditor.sharePctHint')}
               />
             </Grid>
@@ -53,6 +57,7 @@ export default function StatusSection({
                 label={t('directory.venueEditor.commissionPct')}
                 size="small"
                 type="number"
+                disabled={!canGovern}
                 hint={t('directory.venueEditor.commissionPctHint')}
               />
             </Grid>

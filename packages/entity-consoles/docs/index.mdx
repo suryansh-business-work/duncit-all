@@ -35,6 +35,12 @@ exports:
   - 'AccountPicker'
   - 'EntityPodsTab'
   - 'lifecycleOptions'
+  - 'ClubAdminsPage'
+  - 'ClubAdminDetailsPage'
+  - 'ClubAdminEditorPage'
+  - 'ConsoleListPage'
+  - 'useConsoleAccess'
+  - 'Fact'
 ---
 
 ## What this is
@@ -201,3 +207,62 @@ four-state lifecycle plus the live switch (whose warning exists because both
 What is NOT shared is the sections. A venue has eight and a host has four, and
 they are about different things — pushing them behind one configurable component
 would be the abstraction rule 40 warns about rather than the reuse it asks for.
+
+## Who can edit, and who can approve
+
+The five `ALL_*_ACCESS` roles used to gate the portal LOGIN and nothing else:
+every query behind these consoles still asked for SUPER_ADMIN / CITY_ADMIN /
+ZONAL_ADMIN (or ONBOARDING_MANAGER), so somebody granted `venues.duncit.com`
+signed in and saw an empty screen. Fine while the consoles were read-only; not
+fine once the record is edited here.
+
+There are now three levels, defined once in
+`server/src/modules/portals/console-access.ts`:
+
+| Level | Who | What |
+| --- | --- | --- |
+| READ | platform admins, onboarding, **the console role** | the list, the record, its change log |
+| EDIT | same | the record's own details — name, address, photos, documents, contact, operating hours, categories, which clubs an admin runs |
+| GOVERN | platform admins, onboarding — **NOT the console role** | approve and reject, the commission and share percentages, the live on/off switch, and appointing a Club Admin |
+
+`useConsoleAccess()` is the client half. It does not decide anything — the server
+enforces the split, including refusing a `status` argument on `adminUpdateVenue`
+/ `adminUpdateHost` from a caller who cannot govern — it exists so the screen
+does not OFFER a control that would be refused:
+
+```tsx
+import { useConsoleAccess } from '@duncit/entity-consoles';
+
+const { canGovern } = useConsoleAccess();
+// StatusFields shows the values either way; canGovern decides whether they move.
+<StatusFields canGovern={canGovern} governedByNote={t('directory.venueEditor.governedBy')} … />
+```
+
+The editor hooks use the same flag to SKIP the governance writes rather than
+send-and-fail: a console-role editor saving a venue sends `adminUpdateVenue`
+(without a status) and `updateVenueSettings`, and never `setVenueDeductions` or
+`setVenueActive`.
+
+## The club-admins console
+
+`club-admins.duncit.com` reads `clubAdminProfilesTable`, and its editor is the
+short one — three sections rather than eight — because a Club Admin record IS
+short: who they are, the clubs they run, and the decision.
+
+Three things about it are not obvious from the schema:
+
+- **"Add" is an APPOINTMENT.** There was no create mutation, because the record
+  is minted as a side effect of granting the CLUB_ADMIN role (`ensureForUser`).
+  `adminCreateClubAdminProfile(user_id:, input:)` now does that properly: it
+  grants the role — which mints the record — then writes the details and returns
+  it. Inserting a row without the role would give somebody a record in every
+  table and picker while they cannot open the Partners console.
+- **The status is not a field.** APPROVED and REJECTED are two mutations that
+  write the decision, its timestamp and the reason, so the editor calls
+  `approveClubAdminProfile` / `rejectClubAdminProfile` and only when the value
+  actually MOVED — re-sending the status somebody already holds would re-approve
+  them and re-send their email.
+- **The clubs are not on this record.** `Club.admin_user_ids` has always been
+  that answer, so the form holds the set it is about to assign and the save
+  writes it through `assignClubAdminClubs`. Assigning is an EDIT, not
+  governance — it is which clubs somebody runs, not whether they may run any.

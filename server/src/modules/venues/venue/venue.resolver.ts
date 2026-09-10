@@ -9,9 +9,20 @@ import { MeetingModel } from '@modules/survey/meeting.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import type { GraphQLContext } from '@context';
 import { hasRole, requireRole } from '@middleware/rbac';
+import {
+  consoleEditors,
+  consoleGovernors,
+  consoleReaders,
+} from '@modules/portals/console-access';
 
-// Onboarding console (Onboarded Venues) reviews and configures venues too.
-const ADMIN_REVIEW = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'ONBOARDING_MANAGER'];
+/**
+ * Reading and editing a venue's own details also belongs to whoever was granted
+ * the venues console (`ALL_VENUES_ACCESS`); approving one, setting its
+ * percentages and flipping it dark do NOT — see `console-access.ts`.
+ */
+const VENUE_READ = consoleReaders('VENUE');
+const VENUE_EDIT = consoleEditors('VENUE');
+const VENUE_GOVERN = consoleGovernors('VENUE');
 // Permanent hard-delete is a developer-only action (mirrors the API-key gate).
 const DEVELOPER_DELETE = ['SUPER_ADMIN', 'DEVELOPERS_MANAGER'];
 
@@ -69,15 +80,15 @@ export const venueResolvers = {
       venuePodsService.summaryForOwner(uid(ctx), args.venue_id),
     venueRegistrationConfig: async () => venueService.registrationConfig(),
     venues: async (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, VENUE_READ);
       return venueService.list({ status: args.status });
     },
     venuesTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, VENUE_READ);
       return venueService.table(args.query);
     },
     venue: async (_p: unknown, args: { venue_doc_id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, VENUE_READ);
       return venueService.getById(args.venue_doc_id);
     },
     publicVenues: async (
@@ -122,7 +133,7 @@ export const venueResolvers = {
       args: { venue_doc_id: string; notes?: string; tags?: string[] },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, VENUE_GOVERN);
       return venueService.approve(args.venue_doc_id, args.notes, args.tags);
     },
     rejectVenue: async (
@@ -130,7 +141,7 @@ export const venueResolvers = {
       args: { venue_doc_id: string; notes: string },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, VENUE_GOVERN);
       return venueService.reject(args.venue_doc_id, args.notes);
     },
     adminCreateVenue: async (
@@ -138,7 +149,7 @@ export const venueResolvers = {
       args: { owner_user_id: string; step1: any; step2: any; step3: any; submit?: boolean },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, VENUE_EDIT);
       return venueService.adminCreate({
         ownerUserId: args.owner_user_id,
         step1: args.step1,
@@ -152,7 +163,14 @@ export const venueResolvers = {
       args: { venue_doc_id: string; step1: any; step2: any; step3: any; status?: string },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, VENUE_EDIT);
+      // The status is an APPROVAL, not a detail: a console-role editor may fix a
+      // venue's address but may not decide that it is live.
+      if (args.status && !(ctx.user && hasRole(ctx.user, VENUE_GOVERN))) {
+        throw new GraphQLError('You cannot change a venue review status', {
+          extensions: { code: 'FORBIDDEN' },
+        });
+      }
       return venueService.adminUpdate(args.venue_doc_id, {
         step1: args.step1,
         step2: args.step2,
@@ -165,7 +183,7 @@ export const venueResolvers = {
       args: { venue_doc_id: string; active: boolean },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, VENUE_GOVERN);
       return venueService.setActive(args.venue_doc_id, args.active);
     },
     setVenueDeductions: async (
@@ -174,7 +192,7 @@ export const venueResolvers = {
       ctx: GraphQLContext
     ) => {
       // Finance manages deduction overrides too (Finance portal → overrides).
-      requireRole(ctx, [...ADMIN_REVIEW, 'FINANCE_MANAGER']);
+      requireRole(ctx, [...VENUE_GOVERN, 'FINANCE_MANAGER']);
       return venueService.setDeductions(args.venue_doc_id, args.venue_share_pct, args.venue_commission_pct);
     },
     setVenueCancellationTrigger: async (
@@ -184,7 +202,7 @@ export const venueResolvers = {
     ) => {
       // Same gate as the deductions above it: it sits in the same review panel
       // and, like them, decides what money leaves Duncit.
-      requireRole(ctx, [...ADMIN_REVIEW, 'FINANCE_MANAGER']);
+      requireRole(ctx, [...VENUE_GOVERN, 'FINANCE_MANAGER']);
       return venueService.setCancellationTrigger(
         args.venue_doc_id,
         args.trigger_hours,
@@ -197,7 +215,7 @@ export const venueResolvers = {
       ctx: GraphQLContext
     ) => {
       const userId = uid(ctx);
-      const isAdmin = !!ctx.user && hasRole(ctx.user, ADMIN_REVIEW);
+      const isAdmin = !!ctx.user && hasRole(ctx.user, VENUE_EDIT);
       return venueService.updateSettings(userId, isAdmin, args.venue_doc_id, args.input);
     },
     // Partner-facing like the other myVenue* entries: ownership of the venue the

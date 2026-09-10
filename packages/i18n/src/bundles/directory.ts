@@ -263,6 +263,11 @@ export const DIRECTORY_BUNDLE: NestedCatalogue = {
       errGstin: 'GSTIN looks like 22ABCDE1234F1Z5',
       errPan: 'PAN looks like ABCDE1234F',
       errNoId: 'The venue was not saved — no id came back.',
+      // Shown to a viewer holding only the console's access role. The values are
+      // still visible — knowing a venue's commission is part of reading the
+      // record — but the controls are theirs to read, not to move.
+      governedBy:
+        'Approvals, the percentages and the live switch are set by platform admins and the onboarding desk. Everything else on this page is yours to edit.',
     },
     // The hosts console — its list, its record and `/hosts/new` + `/hosts/:id/edit`.
     // Generic messages and the payout block are borrowed from `venueEditor.*`
@@ -349,6 +354,45 @@ export const DIRECTORY_BUNDLE: NestedCatalogue = {
       errAadhaar: 'Aadhaar must be 12 digits',
       errCategoryTriple: 'Pick all three levels, or remove the row',
       errNoId: 'The host was not saved — no id came back.',
+    },
+    // The club-admins console's editor. Its record shares most of its shape with
+    // a host's, so the labels it can reuse it reuses (rule 34) and only what is
+    // genuinely a Club Admin's own is here.
+    clubAdminEditor: {
+      addClubAdmin: 'Appoint a club admin',
+      editClubAdmin: 'Edit club admin',
+      newTitle: 'Appoint a club admin',
+      editTitle: 'Edit club admin',
+      eyebrowNew: 'Club Admins · Appoint',
+      eyebrowEdit: 'Club Admins · Edit',
+      save: 'Save club admin',
+      saved: 'Club admin saved',
+      created: 'Club admin appointed',
+      listEmpty: 'No club admins yet.',
+      searchPlaceholder: 'Search name, email, phone or club admin ID',
+      colAdmin: 'Club admin',
+
+      accountHint:
+        'Appointing grants this account the CLUB_ADMIN role — that IS the appointment — and fills the details below from it.',
+      accountLocked:
+        'The account cannot be changed here — one person is one club admin record, so pointing it at another account would be a different record.',
+      categoryHint: 'What they were onboarded for. It decides which clubs they can be given.',
+
+      assignHint:
+        'Saving replaces the whole set. Other admins of these clubs are untouched.',
+      assignAfterCreate:
+        'Clubs can be assigned once the record exists — save this page first, then reopen it.',
+      outsideCategory: 'Outside their category — assigned anyway',
+
+      statusDraft: 'Drafted, not reviewed',
+      isActive: 'Live and able to run their clubs',
+      commissionHint: "What Duncit takes from this admin's payout. 0 uses the platform default.",
+      deactivateWarning:
+        'Saving with this off suspends the club admin and notifies them. The clubs they run are not reassigned.',
+      rejectedFromConsole: 'Rejected from the Club Admins console.',
+
+      errPickAccount: 'Pick the Duncit account to appoint',
+      errNoId: 'The club admin was not saved — no id came back.',
     },
   },
 };

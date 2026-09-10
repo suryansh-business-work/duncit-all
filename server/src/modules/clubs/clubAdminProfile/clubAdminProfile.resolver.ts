@@ -1,5 +1,10 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
+import {
+  consoleEditors,
+  consoleGovernors,
+  consoleReaders,
+} from '@modules/portals/console-access';
 import { clubAdminProfileService } from './clubAdminProfile.service';
 import type { TableQueryInput } from '@utils/table-query';
 import { GraphQLError } from 'graphql';
@@ -11,8 +16,16 @@ function uid(ctx: GraphQLContext) {
   return ctx.user.id;
 }
 
-/** The same reviewers who decide on brands, hosts and venues decide on these. */
-const REVIEW_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'ONBOARDING_MANAGER'];
+/**
+ * Reading a Club Admin's record and editing its own details also belongs to
+ * whoever was granted the club-admins console (`ALL_CLUB_ADMINS_ACCESS`).
+ * Appointing one, approving or rejecting, the commission and the live switch
+ * stay with the platform admins and the onboarding desk — appointing in
+ * particular, because it grants a role — see `console-access.ts`.
+ */
+const CA_READ = consoleReaders('CLUB_ADMIN');
+const CA_EDIT = consoleEditors('CLUB_ADMIN');
+const CA_GOVERN = consoleGovernors('CLUB_ADMIN');
 /** Permanent hard-delete is a developer-only action, as it is for the others. */
 const DEVELOPER_DELETE = ['SUPER_ADMIN', 'DEVELOPERS_MANAGER'];
 
@@ -23,11 +36,11 @@ export const clubAdminProfileResolvers = {
       args: { query?: TableQueryInput | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, REVIEW_ROLES);
+      requireRole(ctx, CA_READ);
       return clubAdminProfileService.table(args.query);
     },
     clubAdminProfile: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, REVIEW_ROLES);
+      requireRole(ctx, CA_READ);
       return clubAdminProfileService.byId(args.id);
     },
     clubAdminMatchingClubs: (
@@ -35,7 +48,7 @@ export const clubAdminProfileResolvers = {
       args: { id: string; search?: string | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, REVIEW_ROLES);
+      requireRole(ctx, CA_READ);
       return clubAdminProfileService.matchingClubs(args.id, args.search);
     },
     // The club form is an admin surface, so it reads the same roles the rest of
@@ -50,18 +63,28 @@ export const clubAdminProfileResolvers = {
       },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, REVIEW_ROLES);
+      requireRole(ctx, CA_READ);
       return clubAdminProfileService.candidatesForClub(args);
     },
   },
 
   Mutation: {
+    adminCreateClubAdminProfile: (
+      _p: unknown,
+      args: { user_id: string; input: Record<string, any> },
+      ctx: GraphQLContext
+    ) => {
+      // Appointing grants the CLUB_ADMIN role, so it is governance and not an
+      // edit: a console-role editor may correct a Club Admin, not create one.
+      requireRole(ctx, CA_GOVERN);
+      return clubAdminProfileService.adminCreate(args.user_id, args.input);
+    },
     updateClubAdminProfile: (
       _p: unknown,
       args: { id: string; input: Record<string, any> },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, REVIEW_ROLES);
+      requireRole(ctx, CA_EDIT);
       return clubAdminProfileService.update(args.id, args.input);
     },
     approveClubAdminProfile: (
@@ -69,7 +92,7 @@ export const clubAdminProfileResolvers = {
       args: { id: string; notes?: string | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, REVIEW_ROLES);
+      requireRole(ctx, CA_GOVERN);
       return clubAdminProfileService.approve(args.id, args.notes);
     },
     rejectClubAdminProfile: (
@@ -77,7 +100,7 @@ export const clubAdminProfileResolvers = {
       args: { id: string; notes: string },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, REVIEW_ROLES);
+      requireRole(ctx, CA_GOVERN);
       return clubAdminProfileService.reject(args.id, args.notes);
     },
     setClubAdminCommission: (
@@ -85,7 +108,7 @@ export const clubAdminProfileResolvers = {
       args: { id: string; commission_pct?: number | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, REVIEW_ROLES);
+      requireRole(ctx, CA_GOVERN);
       return clubAdminProfileService.setCommission(args.id, args.commission_pct ?? null);
     },
     setClubAdminProfileActive: (
@@ -93,7 +116,7 @@ export const clubAdminProfileResolvers = {
       args: { id: string; is_active: boolean },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, REVIEW_ROLES);
+      requireRole(ctx, CA_GOVERN);
       return clubAdminProfileService.setActive(args.id, args.is_active);
     },
     assignClubAdminClubs: (
@@ -101,7 +124,7 @@ export const clubAdminProfileResolvers = {
       args: { id: string; club_ids: string[] },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, REVIEW_ROLES);
+      requireRole(ctx, CA_EDIT);
       return clubAdminProfileService.assignClubs(args.id, args.club_ids);
     },
     deleteClubAdminProfile: async (

@@ -63,6 +63,18 @@ export { default as ClubsPage } from './clubs/list/ClubsPage';
 export { default as ClubDetailsPage } from './clubs/detail/ClubDetailsPage';
 export { default as ClubEditorPage } from './clubs/editor';
 
+// ---- the club admins console --------------------------------------------
+export { default as ClubAdminsPage } from './club-admins/list/ClubAdminsPage';
+export { default as ClubAdminDetailsPage } from './club-admins/detail/ClubAdminDetailsPage';
+export { default as ClubAdminEditorPage } from './club-admins/editor';
+export {
+  blankClubAdminValues,
+  clubAdminToValues,
+  makeClubAdminFormSchema,
+  valuesToClubAdminInput,
+  type ClubAdminFormValues,
+} from './club-admins/editor';
+
 // ---- the pods console (from the ADMIN portal) ----------------------------
 // Admin's whole Pods group: the list with its editor and detail, plus each of
 // the nine sub-pages the sidebar listed under it.
@@ -85,11 +97,14 @@ export { default as PodPlansPage } from './pods/plans/PodPlansPage';
 export { default as SuperCategoryFilter } from './shared/SuperCategoryFilter';
 export { default as MediaGallery } from './shared/MediaGallery';
 export { default as EntityPodsTab } from './shared/EntityPodsTab';
+export { default as ConsoleListPage } from './shared/ConsoleListPage';
 export { default as AccountPicker } from './shared/AccountPicker';
 export { default as PayoutFields } from './shared/PayoutFields';
 export { default as EditorPageShell } from './shared/EditorPageShell';
 export { default as StatusFields } from './shared/StatusFields';
 export { lifecycleOptions } from './shared/lifecycleOptions';
+export { useConsoleAccess } from './shared/useConsoleAccess';
+export type { ConsoleAccess } from './shared/useConsoleAccess';
 export { default as MediaLightbox } from './shared/MediaLightbox';
 export { default as AiFillButton } from './shared/AiFillButton';
 export { default as useMediaPicker } from './shared/useMediaPicker';

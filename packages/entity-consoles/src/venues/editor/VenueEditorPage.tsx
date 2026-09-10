@@ -27,7 +27,7 @@ export default function VenueEditorPage() {
   const { venueId = '' } = useParams<{ venueId: string }>();
   const picker = useMediaPicker('/venues');
   const editor = useVenueEditor(venueId);
-  const { form, config, venue, isEdit, busy, saveError, submit } = editor;
+  const { form, config, venue, isEdit, canGovern, busy, saveError, submit } = editor;
 
   const backTo = isEdit && venueId ? `/venues/${venueId}` : '/venues';
   const title = isEdit
@@ -65,7 +65,7 @@ export default function VenueEditorPage() {
           <OwnerSection control={form.control} setValue={form.setValue} isEdit={isEdit} />
           <OperationsSection control={form.control} />
           <CancellationSection control={form.control} />
-          <StatusSection control={form.control} />
+          <StatusSection control={form.control} canGovern={canGovern} />
         </EditorPageShell>
       )}
     </QueryGuard>

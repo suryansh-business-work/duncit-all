@@ -5,6 +5,7 @@ import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
+import { useConsoleAccess } from '../../shared/useConsoleAccess';
 import { VENUE_DETAIL, type AdminVenueDetail } from '../detail/queries';
 import {
   ADMIN_CREATE_VENUE,
@@ -46,6 +47,7 @@ const EMPTY_CONFIG: VenueRegistrationConfig = {
 
 export function useVenueEditor(venueId: string) {
   const { t } = useTranslation();
+  const { canGovern } = useConsoleAccess();
   const navigate = useNavigate();
   const isEdit = !!venueId;
   const [busy, setBusy] = useState(false);
@@ -91,12 +93,20 @@ export function useVenueEditor(venueId: string) {
   const [setDeductions] = useMutation(SET_VENUE_DEDUCTIONS);
   const [setActive] = useMutation(SET_VENUE_ACTIVE);
 
-  /** The three writes every save runs, once the venue has an id. */
+  /**
+   * The writes that follow the record itself.
+   *
+   * The settings are DETAILS, so everyone who can edit sends them. The
+   * percentages and the live switch are GOVERNANCE: a viewer holding only the
+   * console's access role would be refused by the server, so the request is not
+   * made rather than made and failed (see `useConsoleAccess`).
+   */
   const applyRest = useCallback(
     async (id: string, values: VenueFormValues, wasActive: boolean) => {
       await updateSettings({
         variables: { venue_doc_id: id, input: valuesToSettingsInput(values) },
       });
+      if (!canGovern) return;
       await setDeductions({
         variables: {
           venue_doc_id: id,
@@ -108,7 +118,7 @@ export function useVenueEditor(venueId: string) {
         await setActive({ variables: { venue_doc_id: id, active: values.is_active } });
       }
     },
-    [setActive, setDeductions, updateSettings],
+    [canGovern, setActive, setDeductions, updateSettings],
   );
 
   const submit = useCallback(
@@ -124,14 +134,20 @@ export function useVenueEditor(venueId: string) {
         let id = values.id;
         if (isEdit) {
           await updateVenue({
-            variables: { venue_doc_id: id, ...payload, status: values.status },
+            variables: {
+              venue_doc_id: id,
+              ...payload,
+              // Omitted rather than sent unchanged: the server refuses a status
+              // from a caller who cannot govern, even one that did not move.
+              status: canGovern ? values.status : undefined,
+            },
           });
         } else {
           const created = await createVenue({
             variables: {
               owner_user_id: values.owner_user_id,
               ...payload,
-              submit: values.status !== 'DRAFT',
+              submit: canGovern && values.status !== 'DRAFT',
             },
           });
           id = (created.data as { adminCreateVenue?: { id: string } } | null)?.adminCreateVenue?.id ?? '';
@@ -150,7 +166,7 @@ export function useVenueEditor(venueId: string) {
         setBusy(false);
       }
     },
-    [applyRest, createVenue, isEdit, navigate, t, updateVenue, venue?.is_active],
+    [applyRest, canGovern, createVenue, isEdit, navigate, t, updateVenue, venue?.is_active],
   );
 
   return {
@@ -158,6 +174,7 @@ export function useVenueEditor(venueId: string) {
     config,
     venue,
     isEdit,
+    canGovern,
     busy,
     saveError,
     loading: venueQuery.loading && !venue,

@@ -25,6 +25,14 @@ export interface StatusFieldsProps<T extends FieldValues> {
   deactivateWarning: string;
   /** Entity-specific fields shown beside the status (shares, commission). */
   extraFields?: ReactNode;
+  /**
+   * False for a viewer holding only the console's access role: the values are
+   * still shown, because knowing a venue's commission is part of reading the
+   * record, but they cannot be moved from here.
+   */
+  canGovern: boolean;
+  /** Says who can change them, so a disabled row is not a dead end. */
+  governedByNote: string;
 }
 
 export default function StatusFields<T extends FieldValues>({
@@ -36,12 +44,26 @@ export default function StatusFields<T extends FieldValues>({
   activeLabel,
   deactivateWarning,
   extraFields,
+  canGovern,
+  governedByNote,
 }: Readonly<StatusFieldsProps<T>>) {
   return (
     <Stack spacing={1.5}>
+      {!canGovern && (
+        <Alert severity="info" variant="outlined">
+          {governedByNote}
+        </Alert>
+      )}
       <Grid container spacing={1.5}>
         <Grid size={{ xs: 12, md: 4 }}>
-          <RhfTextField control={control} name={statusName} label={statusLabel} size="small" select>
+          <RhfTextField
+            control={control}
+            name={statusName}
+            label={statusLabel}
+            size="small"
+            select
+            disabled={!canGovern}
+          >
             {options.map((option) => (
               <MenuItem key={option.value} value={option.value}>
                 {option.label}
@@ -58,10 +80,12 @@ export default function StatusFields<T extends FieldValues>({
         render={({ field }) => (
           <Stack spacing={0.5}>
             <FormControlLabel
-              control={<Switch checked={!!field.value} onChange={field.onChange} />}
+              control={
+                <Switch checked={!!field.value} onChange={field.onChange} disabled={!canGovern} />
+              }
               label={activeLabel}
             />
-            {!field.value && (
+            {!field.value && canGovern && (
               <Alert severity="warning" variant="outlined">
                 {deactivateWarning}
               </Alert>

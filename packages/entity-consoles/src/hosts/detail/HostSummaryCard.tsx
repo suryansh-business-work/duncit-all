@@ -1,6 +1,7 @@
-import { Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
+import { Card, CardContent, Chip, Divider, Stack } from '@mui/material';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
+import Fact from '../../shared/Fact';
 import type { HostDetail, HostStatus } from '../queries';
 
 /**
@@ -13,21 +14,6 @@ const STATUS_COLORS: Record<HostStatus, 'default' | 'warning' | 'success' | 'err
   APPROVED: 'success',
   REJECTED: 'error',
 };
-
-const EMPTY = '—';
-
-function Fact({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <Stack spacing={0.25}>
-      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-        {label}
-      </Typography>
-      <Typography variant="body2" sx={{ fontWeight: 700 }}>
-        {value || EMPTY}
-      </Typography>
-    </Stack>
-  );
-}
 
 export default function HostSummaryCard({ host }: Readonly<{ host: HostDetail }>) {
   const { t } = useTranslation();
@@ -64,10 +50,10 @@ export default function HostSummaryCard({ host }: Readonly<{ host: HostDetail }>
                 }
               />
             </Stack>
-            <Fact label={t('directory.hostEditor.hostId')} value={host.host_no ?? ''} />
+            <Fact strong label={t('directory.hostEditor.hostId')} value={host.host_no ?? ''} />
           </Stack>
-          <Fact label={t('directory.hostEditor.colContact')} value={host.email} />
-          <Fact label={t('directory.venueEditor.ownerPhone')} value={host.phone} />
+          <Fact strong label={t('directory.hostEditor.colContact')} value={host.email} />
+          <Fact strong label={t('directory.venueEditor.ownerPhone')} value={host.phone} />
           <Fact
             label={t('directory.hostEditor.colCommission')}
             value={

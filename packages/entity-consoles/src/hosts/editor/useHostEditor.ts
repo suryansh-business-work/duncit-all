@@ -5,6 +5,7 @@ import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
+import { useConsoleAccess } from '../../shared/useConsoleAccess';
 import {
   ADMIN_CREATE_HOST,
   ADMIN_UPDATE_HOST,
@@ -33,6 +34,7 @@ import { blankHostValues, type HostFormValues } from './types';
  */
 export function useHostEditor(hostId: string) {
   const { t } = useTranslation();
+  const { canGovern } = useConsoleAccess();
   const navigate = useNavigate();
   const isEdit = !!hostId;
   const [busy, setBusy] = useState(false);
@@ -76,32 +78,48 @@ export function useHostEditor(hostId: string) {
         let id = values.id;
         if (isEdit) {
           await updateHost({
-            variables: { host_doc_id: id, ...payload, status: values.status, categories },
+            variables: {
+              host_doc_id: id,
+              ...payload,
+              // Omitted rather than sent: the server refuses a status from a
+              // caller who cannot govern, even one that did not move.
+              status: canGovern ? values.status : undefined,
+              categories,
+            },
           });
         } else {
           const created = await createHost({
             variables: {
               target_user_id: values.user_id,
               ...payload,
-              submit: values.status !== 'DRAFT',
+              submit: canGovern && values.status !== 'DRAFT',
             },
           });
           id =
             (created.data as { adminCreateHost?: { id: string } } | null)?.adminCreateHost?.id ?? '';
           if (id && categories.length > 0) {
             await updateHost({
-              variables: { host_doc_id: id, ...payload, status: values.status, categories },
+              variables: {
+                host_doc_id: id,
+                ...payload,
+                status: canGovern ? values.status : undefined,
+                categories,
+              },
             });
           }
         }
         if (!id) throw new Error(t('directory.hostEditor.errNoId'));
-        await setDeductions({
-          variables: { user_id: values.user_id, host_commission_pct: values.host_commission_pct },
-        });
-        // setHostActive is the one write that notifies, so it only runs on a
-        // switch that actually moved. A new host record is created active.
-        if (values.is_active !== (host?.is_active ?? true)) {
-          await setActive({ variables: { host_doc_id: id, active: values.is_active } });
+        // The commission and the live switch are GOVERNANCE: a console-role
+        // editor would be refused, so the request is never made.
+        if (canGovern) {
+          await setDeductions({
+            variables: { user_id: values.user_id, host_commission_pct: values.host_commission_pct },
+          });
+          // setHostActive is the write that notifies, so it only runs on a
+          // switch that actually moved. A new host record is created active.
+          if (values.is_active !== (host?.is_active ?? true)) {
+            await setActive({ variables: { host_doc_id: id, active: values.is_active } });
+          }
         }
         notifySuccess(isEdit ? t('directory.hostEditor.saved') : t('directory.hostEditor.created'));
         navigate(`/hosts/${id}`);
@@ -111,13 +129,24 @@ export function useHostEditor(hostId: string) {
         setBusy(false);
       }
     },
-    [createHost, host?.is_active, isEdit, navigate, setActive, setDeductions, t, updateHost],
+    [
+      canGovern,
+      createHost,
+      host?.is_active,
+      isEdit,
+      navigate,
+      setActive,
+      setDeductions,
+      t,
+      updateHost,
+    ],
   );
 
   return {
     form,
     host,
     isEdit,
+    canGovern,
     busy,
     saveError,
     loading: hostQuery.loading && !host,

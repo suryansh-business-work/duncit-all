@@ -19,7 +19,8 @@ import type { HostFormValues } from '../types';
  */
 export default function StatusSection({
   control,
-}: Readonly<{ control: Control<HostFormValues> }>) {
+  canGovern,
+}: Readonly<{ control: Control<HostFormValues>; canGovern: boolean }>) {
   const { t } = useTranslation();
 
   return (
@@ -36,6 +37,8 @@ export default function StatusSection({
           options={lifecycleOptions(t)}
           activeLabel={t('directory.hostEditor.isActive')}
           deactivateWarning={t('directory.hostEditor.deactivateWarning')}
+          canGovern={canGovern}
+          governedByNote={t('directory.venueEditor.governedBy')}
           extraFields={
             <Grid size={{ xs: 12, md: 4 }}>
               <RhfTextField
@@ -44,6 +47,7 @@ export default function StatusSection({
                 label={t('directory.hostEditor.colCommission')}
                 size="small"
                 type="number"
+                disabled={!canGovern}
                 hint={t('directory.hostEditor.commissionHint')}
               />
             </Grid>

@@ -22,7 +22,7 @@ export default function HostEditorPage() {
   const { hostId = '' } = useParams<{ hostId: string }>();
   const picker = useMediaPicker('/hosts');
   const editor = useHostEditor(hostId);
-  const { form, host, isEdit, busy, saveError, submit } = editor;
+  const { form, host, isEdit, canGovern, busy, saveError, submit } = editor;
 
   const backTo = isEdit && hostId ? `/hosts/${hostId}` : '/hosts';
   const title = isEdit
@@ -56,7 +56,7 @@ export default function HostEditorPage() {
           <IdentitySection control={form.control} setValue={form.setValue} isEdit={isEdit} />
           <VerificationSection control={form.control} onPick={picker.pickImage} />
           <CategoriesSection control={form.control} />
-          <StatusSection control={form.control} />
+          <StatusSection control={form.control} canGovern={canGovern} />
         </EditorPageShell>
       )}
     </QueryGuard>

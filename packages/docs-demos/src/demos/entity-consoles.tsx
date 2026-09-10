@@ -4,6 +4,7 @@ import { defineDemo, defineDemos } from '../types';
 // each one and the demo that runs on it live beside this file rather than in it.
 import { venueEditorMappingDemo } from './entity-consoles-venue';
 import { hostEditorMappingDemo } from './entity-consoles-host';
+import { clubAdminEditorMappingDemo } from './entity-consoles-club-admin';
 
 /** Which console to inspect, and the route its list would live at. */
 interface SpecMock {
@@ -77,4 +78,5 @@ export default defineDemos('entity-consoles', [
 
   venueEditorMappingDemo,
   hostEditorMappingDemo,
+  clubAdminEditorMappingDemo,
 ]);

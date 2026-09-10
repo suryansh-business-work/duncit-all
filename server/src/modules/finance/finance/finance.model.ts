@@ -180,7 +180,7 @@ const financeSettingsSchema = new Schema<IFinanceSettings>(
     default_venue_share_pct: { type: Number, default: 90, min: 0, max: 100 },
     default_venue_commission_pct: { type: Number, default: 10, min: 0, max: 100 },
     default_product_commission_pct: { type: Number, default: 5, min: 0, max: 100 },
-    default_club_admin_pct: { type: Number, default: 0, min: 0, max: 10 },
+    default_club_admin_pct: { type: Number, default: 3, min: 0, max: 10 },
     default_backout_deduction_pct: { type: Number, default: 0, min: 0, max: 100 },
     venue_payout_mode: { type: String, enum: ['IMMEDIATE', 'WEEKLY', 'MONTH_END'], default: 'IMMEDIATE' },
     host_payout_mode: { type: String, enum: ['IMMEDIATE', 'WEEKLY', 'MONTH_END'], default: 'IMMEDIATE' },

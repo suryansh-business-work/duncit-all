@@ -15,12 +15,15 @@ import PodChartsPanel from '../charts/PodChartsPanel';
 import ReportActions from '../saved/ReportActions';
 import { calculatePodProfit } from '../calculate';
 import { CREATE_POD_CALCULATOR, DELETE_POD_CALCULATOR, UPDATE_POD_CALCULATOR } from '../saved/queries';
+import type { PodProfitInputs } from '../types';
 import type { SavedPodCalculator } from '../saved/types';
 import { useSingleCalculator } from './useSingleCalculator';
 
 interface Props {
   /** The saved calculation loaded into the calculator, or null for a scratch pad. */
   saved: SavedPodCalculator | null;
+  /** Finance > Default Deductions, as a fresh calculation's starting inputs. */
+  defaults: PodProfitInputs;
   onOpen: (id: string | null) => void;
   onSaved: () => void;
 }
@@ -33,10 +36,15 @@ interface Props {
  * front. Naming it and pressing Save creates a row in the table below; opening
  * a row loads it back here.
  */
-export default function SingleCalculatorPanel({ saved, onOpen, onSaved }: Readonly<Props>) {
+export default function SingleCalculatorPanel({
+  saved,
+  defaults,
+  onOpen,
+  onSaved,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const confirm = useConfirm();
-  const calc = useSingleCalculator(saved, t('finance.common.pod'));
+  const calc = useSingleCalculator(saved, t('finance.common.pod'), defaults);
   const results = calculatePodProfit(calc.inputs);
 
   const [create, createState] = useMutation<any>(CREATE_POD_CALCULATOR);

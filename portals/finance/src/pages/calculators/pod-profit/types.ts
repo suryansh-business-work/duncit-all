@@ -128,6 +128,12 @@ export interface PodProfitResults {
   scaled: PodProfitScaled;
 }
 
+/**
+ * What a calculation starts on when Finance > Default Deductions cannot be
+ * read. Every rate here mirrors the server's shipped default, and
+ * `useCalculatorDefaults` overwrites all of them with the configured figures
+ * on every normal render — this is the offline shape, not the source of truth.
+ */
 export const DEFAULT_INPUTS: PodProfitInputs = {
   pod_amount: 1000,
   no_of_spots: 30,
@@ -137,7 +143,7 @@ export const DEFAULT_INPUTS: PodProfitInputs = {
   venue_amount: 400,
   host_commission_percent: 10,
   venue_commission_percent: 10,
-  club_admin_percent: 0,
+  club_admin_percent: 3,
   // Shared by every pod that starts from the defaults, so it must only ever be
   // REPLACED (`[...expenses, next]`), never pushed into. Every edit path below
   // builds a new array, which is what keeps that safe.

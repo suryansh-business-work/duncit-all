@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { DEFAULT_INPUTS, type PodProfitInputs } from '../types';
+import type { PodProfitInputs } from '../types';
 import {
   entriesOfSaved,
   inputsOf,
@@ -23,7 +23,8 @@ export interface SingleCalculator {
 }
 
 /** The scratch calculator, before anything has been saved. */
-const blankEntry = (podLabel: string): PodEntry => newEntry(podLabel, 1, DEFAULT_INPUTS);
+const blankEntry = (podLabel: string, defaults: PodProfitInputs): PodEntry =>
+  newEntry(podLabel, 1, defaults);
 
 /**
  * The single-pod tab's calculator.
@@ -35,14 +36,22 @@ const blankEntry = (podLabel: string): PodEntry => newEntry(podLabel, 1, DEFAULT
  * `saved` is null while the calculator is a scratch pad. The component keys
  * this hook on the open row's id, so loading a different one remounts rather
  * than syncing props into state.
+ *
+ * `defaults` are Finance > Default Deductions, already resolved by the tab: a
+ * scratch pad opens on the rates settlement actually uses rather than on a
+ * second copy of them kept here.
  */
 export function useSingleCalculator(
   saved: SavedPodCalculator | null,
-  podLabel: string
+  podLabel: string,
+  defaults: PodProfitInputs
 ): SingleCalculator {
   const seed = useMemo<PodEntry>(
-    () => (saved ? (entriesOfSaved(saved)[0] ?? blankEntry(podLabel)) : blankEntry(podLabel)),
-    [saved, podLabel]
+    () =>
+      saved
+        ? (entriesOfSaved(saved)[0] ?? blankEntry(podLabel, defaults))
+        : blankEntry(podLabel, defaults),
+    [saved, podLabel, defaults]
   );
 
   const [name, setName] = useState(saved?.name ?? '');
@@ -56,7 +65,7 @@ export function useSingleCalculator(
     []
   );
 
-  const reset = useCallback(() => setInputs(DEFAULT_INPUTS), []);
+  const reset = useCallback(() => setInputs(defaults), [defaults]);
 
   const entries = useMemo<PodEntry[]>(
     () => [{ pod_key: podKey, name: name.trim() || podLabel, inputs }],

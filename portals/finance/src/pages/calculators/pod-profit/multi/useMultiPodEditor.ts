@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { DEFAULT_INPUTS, type PodProfitInputs } from '../types';
+import type { PodProfitInputs } from '../types';
 import {
   entriesOfSaved,
   newEntry,
@@ -41,9 +41,14 @@ export interface MultiPodEditor {
  * that can disagree (rule 34).
  *
  * `podLabel` is the reader's word for "Pod" — the hook names a new row
- * "Pod 3" without owning a translator of its own.
+ * "Pod 3" without owning a translator of its own. `defaults` are Finance >
+ * Default Deductions, for the first pod added back to an emptied comparison.
  */
-export function useMultiPodEditor(saved: SavedPodCalculator, podLabel: string): MultiPodEditor {
+export function useMultiPodEditor(
+  saved: SavedPodCalculator,
+  podLabel: string,
+  defaults: PodProfitInputs
+): MultiPodEditor {
   const [name, setName] = useState(saved.name);
   const [entries, setEntries] = useState<PodEntry[]>(() => entriesOfSaved(saved));
   const [expandedKeys, setExpandedKeys] = useState<ReadonlySet<string>>(
@@ -58,10 +63,10 @@ export function useMultiPodEditor(saved: SavedPodCalculator, podLabel: string): 
     // Minted OUTSIDE both updaters: a setState updater must be pure, and under
     // StrictMode's double invoke one that called newEntry() would mint two
     // ids and leave the discarded one expanded forever.
-    const entry = newEntry(podLabel, entries.length + 1, entries.at(-1)?.inputs ?? DEFAULT_INPUTS);
+    const entry = newEntry(podLabel, entries.length + 1, entries.at(-1)?.inputs ?? defaults);
     setEntries((prev) => [...prev, entry]);
     setExpandedKeys((keys) => new Set(keys).add(entry.pod_key));
-  }, [entries, podLabel]);
+  }, [entries, podLabel, defaults]);
 
   const removePod = useCallback((podKey: string) => {
     setEntries((prev) => prev.filter((entry) => entry.pod_key !== podKey));

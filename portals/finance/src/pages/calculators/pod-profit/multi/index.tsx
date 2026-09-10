@@ -8,6 +8,7 @@ import MultiPodEditor from './MultiPodEditor';
 import SavedCalculatorsTable from '../saved/SavedCalculatorsTable';
 import { CREATE_POD_CALCULATOR, POD_CALCULATORS } from '../saved/queries';
 import { useOpenParam } from '../saved/useOpenParam';
+import { useCalculatorDefaults } from '../useCalculatorDefaults';
 import { newEntry, podPayload, type SavedPodCalculator } from '../saved/types';
 
 /** Which comparison is open. Its own query key, so it survives a reload and a
@@ -25,6 +26,8 @@ const OPEN_PARAM = 'calculator';
 export default function MultiPodCalculator() {
   const { t } = useTranslation();
   const [openId, setOpen] = useOpenParam(OPEN_PARAM);
+
+  const defaults = useCalculatorDefaults();
 
   const { data, loading, error, refetch } = useQuery<any>(POD_CALCULATORS, {
     variables: { kind: 'MULTI' },
@@ -44,7 +47,7 @@ export default function MultiPodCalculator() {
           kind: 'MULTI',
           // One pod to start from, so the editor opens on something to edit
           // rather than an empty list.
-          pods: podPayload([newEntry(t('finance.common.pod'), 1)]),
+          pods: podPayload([newEntry(t('finance.common.pod'), 1, defaults.inputs)]),
         },
       },
     })
@@ -60,7 +63,7 @@ export default function MultiPodCalculator() {
 
   if (error) return <Alert severity="error">{error.message}</Alert>;
 
-  if (loading && !data) {
+  if ((loading && !data) || defaults.loading) {
     return (
       <Stack spacing={1}>
         <Skeleton variant="rounded" height={44} />
@@ -77,6 +80,7 @@ export default function MultiPodCalculator() {
       <MultiPodEditor
         key={open.id}
         saved={open}
+        defaults={defaults.inputs}
         onClose={() => setOpen(null)}
         onSaved={() => {
           refetch().catch(() => undefined);

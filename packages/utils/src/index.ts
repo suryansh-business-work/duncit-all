@@ -245,6 +245,7 @@ export {
 } from './pod-draft';
 export {
   POD_LIVE_TAIL_MS,
+  canAmendPod,
   canCompletePod,
   canScanPodTickets,
   podPhase,

@@ -1237,6 +1237,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       menuTooltip: 'Pod actions',
       menuAria: 'Actions for {title}',
       scanTickets: 'Scan attendee event tickets',
+      amendClosed: 'This pod has ended — it can no longer be edited, re-hosted or cancelled.',
       scanClosed: 'This pod has ended — tickets can no longer be scanned.',
       completePod: 'Complete pod',
       editPod: 'Edit pod',

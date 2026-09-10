@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { canCompletePod, canScanPodTickets } from '@duncit/utils';
+import { canAmendPod, canCompletePod, canScanPodTickets } from '@duncit/utils';
 import PodCancelDialog from './PodCancelDialog';
 import PodCompleteDialog from './pod-complete/PodCompleteDialog';
 import PodEditDialog from './PodEditDialog';
@@ -25,6 +25,12 @@ export interface HostPodMenuHandlers {
    * where the scan row is shown greyed rather than removed.
    */
   canScan: boolean;
+  /**
+   * The pod has not ended yet, so its plan can still change. False on a past
+   * pod, where Edit, Request Change Host and Cancel are shown greyed rather
+   * than removed.
+   */
+  canAmend: boolean;
   onScan: () => void;
   onComplete: () => void;
   onEdit: () => void;
@@ -79,6 +85,7 @@ export function useHostPodActions(onChanged: () => void): HostPodActions {
     venueRejected: isVenueRejected(pod.venue_approval_status),
     canComplete: canCompletePod(pod),
     canScan: canScanPodTickets(pod),
+    canAmend: canAmendPod(pod),
     onScan: () => setScanPod({ id: pod.id, pod_title: pod.pod_title }),
     onComplete: () =>
       setCompletePod({ id: pod.id, pod_title: pod.pod_title, venue_id: pod.venue_id }),

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Duncit",
     "slug": "duncit-mobile",
-    "version": "1.79.19",
+    "version": "1.79.20",
     "orientation": "default",
     "scheme": "duncit",
     "userInterfaceStyle": "automatic",

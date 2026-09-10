@@ -106,3 +106,21 @@ export function canCompletePod(pod: PodPhaseFields, now: number = Date.now()): b
 export function canScanPodTickets(pod: PodPhaseFields, now: number = Date.now()): boolean {
   return podPhase(pod.pod_date_time, pod.pod_end_date_time, now) !== 'PREVIOUS';
 }
+
+/**
+ * Whether the host may still change this pod's PLAN — FALSE once it is over.
+ *
+ * Editing it, asking for a different host and cancelling it are all ways of
+ * changing something that has not happened yet. On a pod that already ran they
+ * are not just useless, they are wrong: an edit would rewrite the description
+ * of an event people already attended, a change of host would re-assign one
+ * who has already hosted, and cancelling would refund seats that were used.
+ * Settling a past pod is `canCompletePod`'s job, not any of these.
+ *
+ * Deliberately a separate predicate from `canScanPodTickets` even though the
+ * two agree today: the door closing and the plan freezing are different rules
+ * about the same instant, and one is free to move without the other.
+ */
+export function canAmendPod(pod: PodPhaseFields, now: number = Date.now()): boolean {
+  return podPhase(pod.pod_date_time, pod.pod_end_date_time, now) !== 'PREVIOUS';
+}

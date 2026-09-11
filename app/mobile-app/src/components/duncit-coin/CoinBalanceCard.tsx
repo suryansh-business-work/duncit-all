@@ -3,22 +3,43 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { COIN_GOLD_TINT } from '@/constants/coin-gold';
 import { useCoinGold } from '@/hooks/useCoins';
+import { useDateFormat } from '@/hooks/useDateFormat';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { CoinBalance } from '@/stores/coin.store';
+import type { CoinLedgerBalance } from '@/stores/coin.store';
 
 interface Props {
-  balance: CoinBalance | null;
+  balance: CoinLedgerBalance | null;
   currencySymbol: string;
 }
 
-/** The gold hero card: current balance, lifetime earned and the live rate — RN
- * twin of mWeb's duncit-coin-page/CoinBalanceCard. */
+/** The soonest batch of coins to lapse, stated under the balance it will leave.
+ * The icon carries the warning tint; the words stay body-coloured for contrast. */
+function CoinExpiryNote({ coins, at }: Readonly<{ coins: number; at: string }>) {
+  const { t } = useTranslation();
+  const { formatDate } = useDateFormat();
+  const { warning } = useThemeColors();
+  return (
+    <XStack testID="coin-next-expiry" alignItems="center" gap={4} marginTop={4}>
+      <MaterialIcons name="hourglass-bottom" size={14} color={warning} />
+      <Text fontSize={11.5} fontWeight="600" color="$color">
+        {t('mweb.coin.nextExpiry', { vars: { coins, date: formatDate(at) } })}
+      </Text>
+    </XStack>
+  );
+}
+
+/** The gold hero card: current balance, the next coins to expire, lifetime
+ * earned and the live rate — RN twin of mWeb's duncit-coin-page/CoinBalanceCard. */
 export function CoinBalanceCard({ balance, currencySymbol }: Readonly<Props>) {
   const { t } = useTranslation();
   const gold = useCoinGold();
   // Finance can switch the feedback reward off, and a line reading "You earn 0
   // Duncit Coins" promises nothing — so the rate decides whether it is stated.
   const feedbackCoins = balance?.pod_feedback_coins ?? 0;
+  // The same rule for expiry: nothing due to lapse means nothing to say.
+  const expiringCoins = balance?.expiring_coins ?? 0;
+  const nextExpiryAt = balance?.next_expiry_at;
 
   return (
     <YStack
@@ -47,6 +68,9 @@ export function CoinBalanceCard({ balance, currencySymbol }: Readonly<Props>) {
           <Text testID="coin-balance-value" fontSize={30} fontWeight="700" color={gold}>
             {balance?.balance ?? 0}
           </Text>
+          {expiringCoins > 0 && nextExpiryAt ? (
+            <CoinExpiryNote coins={expiringCoins} at={nextExpiryAt} />
+          ) : null}
         </YStack>
       </XStack>
       <XStack alignItems="center" justifyContent="space-between" marginTop={16}>

@@ -48,6 +48,7 @@ const sourceOptions = (t: Translate) => [
   { value: 'POD_FEEDBACK', label: t('finance.duncitCoin.podFeedback') },
   { value: 'ADMIN_GRANT', label: t('finance.duncitCoin.adminGrant') },
   { value: 'ADMIN_DEDUCT', label: t('finance.duncitCoin.adminDeduction') },
+  { value: 'COIN_EXPIRY', label: t('finance.duncitCoin.expired') },
 ];
 
 const sourceLabel = (t: Translate) =>

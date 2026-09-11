@@ -542,10 +542,23 @@ export const FINANCE_BUNDLE: NestedCatalogue = {
       backoutRefund: 'Backout refund',
       balanceAfter: 'Balance After',
       chooseTheAccountThisAppliesTo: 'Choose the account this applies to.',
+      // Coin expiry — how long a granted coin stays spendable. The date is
+      // stamped on each grant when it is made, so the caption says a change
+      // never shortens coins somebody already holds.
+      coinExpiry: 'Coin expiry',
+      coinExpiryCaption:
+        'A grant stays spendable until the end of its last day, and its date is fixed the moment it is granted — changing this never shortens coins somebody already holds. Gift-card coins never expire.',
+      coinExpiryHelper: 'Days a granted coin stays spendable. 0 means coins never expire.',
+      coinExpiryMax: 'Keep the expiry at or under {max} days.',
+      coinExpiryRequired: 'Enter how many days a granted coin lasts.',
+      coinExpiryTitle: 'When coins expire',
+      coinExpiryWhole: 'Whole days only — digits, no decimals or symbols.',
       coins: 'Coins',
       coinsPerReferral: 'Coins per referral',
+      days: 'days',
       deductCoins: 'Deduct coins',
       earned: 'Earned',
+      expired: 'Expired',
       giftCard: 'Gift card',
       grantCoins: 'Grant coins',
       orderTotal: 'Order Total',

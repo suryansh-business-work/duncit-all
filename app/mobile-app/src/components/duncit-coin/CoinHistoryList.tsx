@@ -1,4 +1,5 @@
 import { Separator, Text, XStack, YStack } from 'tamagui';
+import { coinLedgerLabelKey } from '@duncit/utils';
 
 import { useCoinGold } from '@/hooks/useCoins';
 import { useDateFormat } from '@/hooks/useDateFormat';
@@ -6,12 +7,13 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { CoinTransaction } from '@/stores/coin.store';
 
 /** One ledger row. A CREDIT reads "+N" in gold, a DEBIT "−N" in the body colour
- * — the sign is what distinguishes them, so it is never colour alone. */
+ * — the sign is what distinguishes them, so it is never colour alone. A grant
+ * that expires says how long it lasts on a line of its own. */
 function CoinRow({ txn, gold }: Readonly<{ txn: CoinTransaction; gold: string }>) {
   const { t } = useTranslation();
-  const { formatDateTime } = useDateFormat();
+  const { formatDate, formatDateTime } = useDateFormat();
   const credit = txn.type === 'CREDIT';
-  const label = credit ? t('mweb.coin.earned') : t('mweb.coin.redeemed');
+  const label = t(coinLedgerLabelKey(txn));
   const sign = credit ? '+' : '−';
   const amountColor = credit ? gold : '$color';
 
@@ -24,6 +26,11 @@ function CoinRow({ txn, gold }: Readonly<{ txn: CoinTransaction; gold: string }>
         <Text fontSize={11.5} color="$muted">
           {label} · {formatDateTime(txn.created_at)}
         </Text>
+        {txn.expires_at ? (
+          <Text testID={`coin-row-valid-${txn.id}`} fontSize={11.5} fontWeight="600" color="$muted">
+            {t('mweb.coin.validTill', { vars: { date: formatDate(txn.expires_at) } })}
+          </Text>
+        ) : null}
       </YStack>
       <Text fontSize={13.5} fontWeight="700" color={amountColor}>
         {sign}

@@ -24,7 +24,8 @@ const cleanPct = (value: unknown, fallback: number): number => {
   return Math.min(100, Math.max(0, Math.round(n)));
 };
 
-const cleanCoins = (value: unknown, fallback: number): number => {
+/** A whole, non-negative count — coins, or days. 0 is meaningful in both. */
+const cleanWhole = (value: unknown, fallback: number): number => {
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
   return Math.max(0, Math.floor(n));
@@ -35,6 +36,7 @@ const settingsPub = (doc: ICoinSettings) => ({
   shop_earn_pct: doc.shop_earn_pct,
   coins_per_referral: doc.coins_per_referral,
   pod_feedback_coins: doc.pod_feedback_coins,
+  coin_expiry_days: doc.coin_expiry_days,
   updated_at: doc.updated_at?.toISOString?.() ?? '',
 });
 
@@ -79,11 +81,17 @@ export const coinSettingsService = {
     return (await this.get()).pod_feedback_coins;
   },
 
+  /** Days a new grant stays spendable. 0 means granted coins never expire. */
+  async expiryDays(): Promise<number> {
+    return (await this.get()).coin_expiry_days;
+  },
+
   async update(input: {
     pod_join_earn_pct?: number | null;
     shop_earn_pct?: number | null;
     coins_per_referral?: number | null;
     pod_feedback_coins?: number | null;
+    coin_expiry_days?: number | null;
   }) {
     const doc = await this.get();
     if (input.pod_join_earn_pct != null) {
@@ -93,10 +101,13 @@ export const coinSettingsService = {
       doc.shop_earn_pct = cleanPct(input.shop_earn_pct, doc.shop_earn_pct);
     }
     if (input.coins_per_referral != null) {
-      doc.coins_per_referral = cleanCoins(input.coins_per_referral, doc.coins_per_referral);
+      doc.coins_per_referral = cleanWhole(input.coins_per_referral, doc.coins_per_referral);
     }
     if (input.pod_feedback_coins != null) {
-      doc.pod_feedback_coins = cleanCoins(input.pod_feedback_coins, doc.pod_feedback_coins);
+      doc.pod_feedback_coins = cleanWhole(input.pod_feedback_coins, doc.pod_feedback_coins);
+    }
+    if (input.coin_expiry_days != null) {
+      doc.coin_expiry_days = cleanWhole(input.coin_expiry_days, doc.coin_expiry_days);
     }
     await doc.save();
     return settingsPub(doc);
@@ -125,7 +136,7 @@ export const coinSettingsService = {
     // One legacy rate covered every payment, so both new rates start from it —
     // the split is a capability, not a change in what anyone is paid today.
     const legacyPct = cleanPct(app?.coin_earn_pct, 10);
-    const legacyCoins = cleanCoins(referral?.coins_per_referral, 50);
+    const legacyCoins = cleanWhole(referral?.coins_per_referral, 50);
 
     await CoinSettingsModel.create({
       ...SINGLETON,

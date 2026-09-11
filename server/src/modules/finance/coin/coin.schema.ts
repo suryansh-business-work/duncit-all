@@ -13,6 +13,13 @@ export const coinTypeDefs = /* GraphQL */ `
     switched off, and the Duncit Coin page says nothing about it.
     """
     pod_feedback_coins: Int!
+    """
+    Coins in the soonest batch due to expire — every unspent grant that lapses
+    at next_expiry_at. 0 when nothing the account holds is set to expire.
+    """
+    expiring_coins: Float!
+    "When those coins lapse (ISO; the end of that day in the app time zone). Null when nothing is set to expire."
+    next_expiry_at: String
   }
 
   """
@@ -28,6 +35,11 @@ export const coinTypeDefs = /* GraphQL */ `
     coins_per_referral: Int!
     "Flat coins paid for feedback on an attended pod (0 turns it off)."
     pod_feedback_coins: Int!
+    """
+    Days a granted coin stays spendable (0 means granted coins never expire).
+    Read at the moment of each grant, so a change never moves coins already given.
+    """
+    coin_expiry_days: Int!
     updated_at: String!
   }
 
@@ -37,6 +49,7 @@ export const coinTypeDefs = /* GraphQL */ `
     shop_earn_pct: Int
     coins_per_referral: Int
     pod_feedback_coins: Int
+    coin_expiry_days: Int
   }
 
   "What one manual adjustment left behind, so the console can confirm it landed."
@@ -62,6 +75,11 @@ export const coinTypeDefs = /* GraphQL */ `
     earn_pct: Float!
     "Order total the grant was computed from."
     spend_amount: Float!
+    """
+    When the unspent part of this grant lapses (ISO). Null on debits, on
+    gift-card coins and on coins that never expire.
+    """
+    expires_at: String
     created_at: String!
   }
 
@@ -179,7 +197,7 @@ export const coinTypeDefs = /* GraphQL */ `
   }
 
   extend type Mutation {
-    "Finance: set what a pod join, a shop order, a referral and a pod rating each pay."
+    "Finance: set what a pod join, a shop order, a referral and a pod rating each pay, and how long a grant lasts."
     updateCoinSettings(input: CoinSettingsInput!): CoinSettings!
     """
     Finance: hand one named account coins, or take them back.

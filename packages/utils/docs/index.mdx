@@ -328,6 +328,7 @@ exports:
   - 'EMPLOYEE_EXPENSE_STATUS_COLORS'
   - 'EMPLOYEE_EXPENSE_STATUS_KEYS'
   - 'EMPLOYEE_EXPENSE_SELECTION'
+  - 'coinLedgerLabelKey'
 ---
 
 ## Why this exists
@@ -677,6 +678,22 @@ applyBillDiscounts(399, [{ key: 'coupon', label: 'WELCOME', amount: 500 }])
 
 maxRedeemableCoins(500, 359.1)      // 358 — 359 would leave ₹0.10, under the ₹1 gateway minimum
 clampPayable(359.1 - 358)           // 1.1  — not 1.0999999999999773
+```
+
+### Coin ledger rows — `coin-ledger`
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `coinLedgerLabelKey` | `(row: { type: string; source: string }) => CoinLedgerLabelKey` | The localization key a Duncit Coin transaction row is named by. |
+
+A CREDIT is always earned, but a DEBIT is either coins the member spent or coins that lapsed
+unspent (`COIN_EXPIRY`, written by the server's expiry sweep). Both the mWeb page and the native
+screen name the row through this, so an expiry never reads as "Redeemed" on one of them:
+
+```ts
+coinLedgerLabelKey({ type: 'CREDIT', source: 'POD_FEEDBACK' })   // 'mweb.coin.earned'
+coinLedgerLabelKey({ type: 'DEBIT', source: 'PAYMENT_REDEEM' })  // 'mweb.coin.redeemed'
+coinLedgerLabelKey({ type: 'DEBIT', source: 'COIN_EXPIRY' })     // 'mweb.coin.expired'
 ```
 
 ### Pod economics

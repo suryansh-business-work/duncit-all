@@ -3294,8 +3294,15 @@ export type CoinBalance = {
   balance: Scalars['Float']['output'];
   /** Percent of a pod join currently granted back as coins. */
   earn_pct: Scalars['Float']['output'];
+  /**
+   * Coins in the soonest batch due to expire — every unspent grant that lapses
+   * at next_expiry_at. 0 when nothing the account holds is set to expire.
+   */
+  expiring_coins: Scalars['Float']['output'];
   /** Every coin ever earned, so the total survives future spending. */
   lifetime_earned: Scalars['Float']['output'];
+  /** When those coins lapse (ISO; the end of that day in the app time zone). Null when nothing is set to expire. */
+  next_expiry_at?: Maybe<Scalars['String']['output']>;
   /**
    * Flat coins currently paid for rating an attended pod. 0 means the reward is
    * switched off, and the Duncit Coin page says nothing about it.
@@ -3320,6 +3327,11 @@ export type CoinMonthBucket = {
  */
 export type CoinSettings = {
   __typename?: 'CoinSettings';
+  /**
+   * Days a granted coin stays spendable (0 means granted coins never expire).
+   * Read at the moment of each grant, so a change never moves coins already given.
+   */
+  coin_expiry_days: Scalars['Int']['output'];
   /** Flat coins paid to EACH side of a referral — the referrer and the new member. */
   coins_per_referral: Scalars['Int']['output'];
   /** Flat coins paid for feedback on an attended pod (0 turns it off). */
@@ -3333,6 +3345,7 @@ export type CoinSettings = {
 
 /** Every field is optional; an omitted one is left alone. */
 export type CoinSettingsInput = {
+  coin_expiry_days?: InputMaybe<Scalars['Int']['input']>;
   coins_per_referral?: InputMaybe<Scalars['Int']['input']>;
   pod_feedback_coins?: InputMaybe<Scalars['Int']['input']>;
   pod_join_earn_pct?: InputMaybe<Scalars['Int']['input']>;
@@ -3347,6 +3360,11 @@ export type CoinTransaction = {
   created_at: Scalars['String']['output'];
   /** Rate in effect when these coins were granted. */
   earn_pct: Scalars['Float']['output'];
+  /**
+   * When the unspent part of this grant lapses (ISO). Null on debits, on
+   * gift-card coins and on coins that never expire.
+   */
+  expires_at?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   /** Payment this reward was earned on. */
   payment_id?: Maybe<Scalars['String']['output']>;
@@ -9720,7 +9738,7 @@ export type Mutation = {
   updateChallenge: Challenge;
   updateClub: Club;
   updateClubAdminProfile: ClubAdminProfile;
-  /** Finance: set what a pod join, a shop order, a referral and a pod rating each pay. */
+  /** Finance: set what a pod join, a shop order, a referral and a pod rating each pay, and how long a grant lasts. */
   updateCoinSettings: CoinSettings;
   updateCommsProvider: CommsProvider;
   updateContactStatus: ContactSubmission;

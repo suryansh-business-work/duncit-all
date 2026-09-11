@@ -5,11 +5,20 @@
 # runs `certbot --nginx --cert-name duncit.com` which patches each server block
 # below with its 443 listener + HTTP->HTTPS redirect in place. Do not add the
 # Certbot-managed `listen 443 ssl` lines here — they are generated on the host.
+#
+# `http2 on;` sits in every block. Since nginx 1.25.1 it is a directive of
+# its own rather than a `listen` flag, so the 443 listener certbot adds to
+# the block speaks HTTP/2 and the apps' parallel GraphQL calls share one
+# connection instead of queueing behind the browser's six-per-host HTTP/1.1
+# limit. A plain port-80 block with it still answers HTTP/1.x (checked on the
+# host's nginx 1.26.3), so certbot's HTTP-01 challenge and the redirect keep
+# working. It is per server, so the other sites on this box are untouched.
 
 
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name duncit.com www.duncit.com;
     client_max_body_size 25m;
 
@@ -40,6 +49,7 @@ map $http_origin $cors_allow_credentials {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name server.duncit.com;
 
     client_max_body_size 25m;
@@ -172,6 +182,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name admin.duncit.com;
     client_max_body_size 25m;
 
@@ -191,6 +202,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name mweb.duncit.com;
     client_max_body_size 25m;
 
@@ -210,6 +222,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name partners.duncit.com;
     client_max_body_size 25m;
 
@@ -229,6 +242,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name partners-app.duncit.com;
     client_max_body_size 25m;
 
@@ -248,6 +262,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name ads.duncit.com;
     client_max_body_size 25m;
 
@@ -267,6 +282,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name ads-portal.duncit.com;
     client_max_body_size 25m;
 
@@ -286,6 +302,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name crm.duncit.com;
     client_max_body_size 25m;
 
@@ -305,6 +322,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name finance.duncit.com;
     client_max_body_size 25m;
 
@@ -324,6 +342,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name tech.duncit.com;
     client_max_body_size 25m;
 
@@ -343,6 +362,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name support.duncit.com;
     client_max_body_size 25m;
 
@@ -362,6 +382,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name website.duncit.com;
     client_max_body_size 25m;
 
@@ -381,6 +402,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name legal.duncit.com;
     client_max_body_size 25m;
 
@@ -400,6 +422,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name ai.duncit.com;
     client_max_body_size 25m;
 
@@ -419,6 +442,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name products.duncit.com;
     client_max_body_size 25m;
 
@@ -438,6 +462,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name marketing.duncit.com;
     client_max_body_size 25m;
 
@@ -457,6 +482,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name onboarding.duncit.com;
     client_max_body_size 25m;
 
@@ -476,6 +502,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name hr.duncit.com;
     client_max_body_size 25m;
 
@@ -495,6 +522,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name employee.duncit.com;
     client_max_body_size 25m;
 
@@ -514,6 +542,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name status.duncit.com;
     client_max_body_size 25m;
 
@@ -537,6 +566,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name signoz.duncit.com;
     client_max_body_size 50m;
 
@@ -576,6 +606,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name native.duncit.com;
     client_max_body_size 25m;
 
@@ -598,6 +629,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name sonarqube.duncit.com;
     client_max_body_size 100m;
 
@@ -620,6 +652,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name earnwith.duncit.com;
     client_max_body_size 25m;
 
@@ -640,6 +673,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name challenge.duncit.com;
     client_max_body_size 25m;
 
@@ -660,6 +694,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name developers.duncit.com;
     client_max_body_size 25m;
 
@@ -679,6 +714,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name regional-club-admin.duncit.com;
     client_max_body_size 25m;
 
@@ -700,6 +736,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name venues.duncit.com;
     client_max_body_size 25m;
 
@@ -721,6 +758,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name clubs.duncit.com;
     client_max_body_size 25m;
 
@@ -741,6 +779,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name club-admins.duncit.com;
     client_max_body_size 25m;
 
@@ -762,6 +801,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name hosts.duncit.com;
     client_max_body_size 25m;
 
@@ -782,6 +822,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name pods.duncit.com;
     client_max_body_size 25m;
 
@@ -805,6 +846,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name open-wa-server.duncit.com;
     client_max_body_size 50m;
 
@@ -831,6 +873,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name redis.duncit.com;
     client_max_body_size 5m;
 

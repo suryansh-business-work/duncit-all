@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { splitPodsByPhase } from '@duncit/utils';
-import { HEADER_DATA, HOME_REFRESH_EVENT } from '../../components/app-header/queries';
+import { HEADER_ME, HEADER_STATIC, HOME_REFRESH_EVENT } from '../../components/app-header/queries';
 import { useFollowedClubs } from '../../hooks/useFollowedClubs';
 import { HOME_STATIC, HOME_LIVE, FOLLOWED_USERS, PriceFilter, DateFilter, SortBy } from './queries';
 
@@ -94,15 +94,19 @@ export function useHomeData({
   dateFilter,
   sortBy,
 }: UseHomeDataParams) {
-  const header = useQuery<any>(HEADER_DATA, { fetchPolicy: 'cache-first' });
-  const headerData = header.data;
+  const headerStatic = useQuery<any>(HEADER_STATIC, { fetchPolicy: 'cache-first' });
+  const headerMe = useQuery<any>(HEADER_ME, { fetchPolicy: 'cache-first' });
+  const headerData = useMemo(
+    () => ({ ...headerStatic.data, ...headerMe.data }),
+    [headerStatic.data, headerMe.data],
+  );
   // The header picks the city on its first answer, and that pick re-keys the
   // whole page (App.tsx). Asking before it ran the live feed once with NO
   // location — every active pod in every city, the heaviest read there is — only
   // for the remount to throw the answer away and ask again. Wait for the pick,
   // unless the header answered with no city to pick or failed outright.
   const awaitingPlace =
-    !locationId && !header.error && (headerData?.locations?.length ?? 1) > 0;
+    !locationId && !headerStatic.error && (headerStatic.data?.locations?.length ?? 1) > 0;
 
   // The catalogue half: cacheable server-side, and unaffected by the location
   // filters, so it is fetched once and reused as the user moves around.

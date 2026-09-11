@@ -5,7 +5,7 @@ import { Avatar, Box, Chip, Paper, Stack, Typography } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
-import { HEADER_DATA } from '../../components/app-header/queries';
+import { HEADER_ME } from '../../components/app-header/queries';
 import SupportForm, { type SupportFormValues } from '../../forms/support.form';
 import SupportShell from './SupportShell';
 import MyTicketsList from '../support-tickets/MyTicketsList';
@@ -18,7 +18,7 @@ export default function SupportTicketsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const { data: headerData } = useQuery<any>(HEADER_DATA, { fetchPolicy: 'cache-first' });
+  const { data: headerData } = useQuery<any>(HEADER_ME, { fetchPolicy: 'cache-first' });
   const me = headerData?.me;
 
   const initialValues = {

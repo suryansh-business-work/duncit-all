@@ -1,6 +1,6 @@
 import { useQuery } from '@apollo/client/react';
 import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
-import { HEADER_DATA } from '../../components/app-header/queries';
+import { HEADER_ME } from '../../components/app-header/queries';
 import { PUBLIC_FINANCE } from '../checkout-page/queries';
 import { useTranslation } from '../../i18n/useTranslation';
 import MyCardTile from './MyCardTile';
@@ -15,7 +15,7 @@ export default function MyCardsTab() {
   });
   const { data: financeData } = useQuery<any>(PUBLIC_FINANCE);
   // Already cached by the header — the share message needs the holder's name.
-  const { data: headerData } = useQuery<any>(HEADER_DATA, { fetchPolicy: 'cache-first' });
+  const { data: headerData } = useQuery<any>(HEADER_ME, { fetchPolicy: 'cache-first' });
 
   const currencySymbol = financeData?.publicFinanceSettings?.currency_symbol ?? '₹';
   const senderName = headerData?.me?.full_name ?? '';

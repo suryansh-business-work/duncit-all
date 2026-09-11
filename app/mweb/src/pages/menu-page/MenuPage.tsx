@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
 import { useUserData } from '@duncit/user-context';
 import MenuPanel from '../../components/app-header/profile-drawer/MenuPanel';
-import { HEADER_DATA, PUBLIC_POLICIES } from '../../components/app-header/queries';
+import { HEADER_ME, PUBLIC_POLICIES } from '../../components/app-header/queries';
 
 /**
  * The account menu as a real page (/menu) — it used to be a full-viewport
@@ -17,7 +17,7 @@ export default function MenuPage() {
   const [policiesOpen, setPoliciesOpen] = useState(false);
   // Both are already in the cache from the header — cache-and-network keeps the
   // menu fresh after a profile edit without blocking the first paint.
-  const { data, loading } = useQuery<any>(HEADER_DATA, { fetchPolicy: 'cache-and-network' });
+  const { data, loading } = useQuery<any>(HEADER_ME, { fetchPolicy: 'cache-and-network' });
   const { data: policiesData, loading: policiesLoading } = useQuery<any>(PUBLIC_POLICIES, {
     fetchPolicy: 'cache-first',
   });

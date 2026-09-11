@@ -4,7 +4,7 @@ import PlanCards from './PlanCards';
 import ComparisonTable from './ComparisonTable';
 import NotifyCard from './NotifyCard';
 import { MEMBERSHIP_PRICING, type MembershipPricingData } from './queries';
-import { HEADER_DATA } from '../../components/app-header/queries';
+import { HEADER_ME } from '../../components/app-header/queries';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /**
@@ -23,7 +23,7 @@ export default function MembershipPage() {
     { fetchPolicy: 'cache-and-network' }
   );
   // Already in the cache from the header, so the email paints with the page.
-  const { data: headerData } = useQuery<any>(HEADER_DATA, { fetchPolicy: 'cache-first' });
+  const { data: headerData } = useQuery<any>(HEADER_ME, { fetchPolicy: 'cache-first' });
 
   const pricing = data?.membershipPricing ?? null;
   const plans = pricing?.plans ?? [];

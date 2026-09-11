@@ -2,6 +2,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { formatDateTime } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
+import { StatusPill } from './StatusPill';
 
 /** Short ticket number derived from the id — matches the server's ST- scheme. */
 export function ticketNo(id: string): string {
@@ -47,9 +48,7 @@ export function TicketMeta({
         <Text fontSize={12} fontWeight="600" color="$muted">
           {category}
         </Text>
-        <Text fontSize={12} fontWeight="600" color="$primary">
-          {status}
-        </Text>
+        <StatusPill status={status} />
         {priority ? (
           <Text testID="ticket-meta-priority" fontSize={12} fontWeight="600" color="$muted">
             {priority}
@@ -57,7 +56,7 @@ export function TicketMeta({
         ) : null}
       </XStack>
       {rows.map((r) => (
-        <Text key={r.label} fontSize={11.5} color="$muted">
+        <Text key={r.label} fontSize={12} color="$muted">
           {r.label}: {r.value}
         </Text>
       ))}

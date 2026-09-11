@@ -33,7 +33,7 @@ interface Props {
  * Mirrors mWeb's HostPodsFilterSheet. */
 export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { primary } = useThemeColors();
+  const { color: ink } = useThemeColors();
   const [draft, setDraft] = useState<HostPodsFilters>(initial);
 
   useEffect(() => {
@@ -58,13 +58,13 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
           />
           <YStack
             backgroundColor="$background"
-            borderTopLeftRadius={22}
-            borderTopRightRadius={22}
+            borderTopLeftRadius={28}
+            borderTopRightRadius={28}
             maxHeight="82%"
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={17} fontWeight="700" color="$color">
+                <Text fontSize={17} fontWeight="600" color="$color">
                   Filter pods
                 </Text>
                 <XStack
@@ -73,14 +73,14 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
                   role="button"
                   aria-label={t('mweb.common.close')}
                   onPress={onClose}
-                  width={32}
-                  height={32}
+                  width={40}
+                  height={40}
                   alignItems="center"
                   justifyContent="center"
-                  borderRadius={16}
+                  borderRadius={20}
                   backgroundColor="$surface"
                 >
-                  <MaterialIcons name="close" size={18} color={primary} />
+                  <MaterialIcons name="close" size={20} color={ink} />
                 </XStack>
               </XStack>
               <ScrollView paddingHorizontal={16}>
@@ -118,15 +118,15 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
                   aria-label={t('mweb.common.resetFilters')}
                   onPress={() => setDraft(DEFAULT_HOST_PODS_FILTERS)}
                   flex={1}
-                  height={46}
+                  height={52}
                   alignItems="center"
                   justifyContent="center"
-                  borderRadius={12}
+                  borderRadius={999}
                   borderWidth={1}
                   borderColor="$borderColor"
                   pressStyle={PRESS_STYLE.control}
                 >
-                  <Text fontSize={14} fontWeight="600" color="$color">
+                  <Text fontSize={15} fontWeight="600" color="$color">
                     Reset
                   </Text>
                 </XStack>
@@ -136,14 +136,14 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
                   aria-label={t('mweb.common.applyFilters')}
                   onPress={() => onApply(draft)}
                   flex={1}
-                  height={46}
+                  height={52}
                   alignItems="center"
                   justifyContent="center"
-                  borderRadius={12}
+                  borderRadius={999}
                   backgroundColor="$primary"
-                  pressStyle={PRESS_STYLE.control}
+                  pressStyle={PRESS_STYLE.solid}
                 >
-                  <Text fontSize={14} fontWeight="700" color="$onPrimary">
+                  <Text fontSize={15} fontWeight="600" color="$onPrimary">
                     Apply
                   </Text>
                 </XStack>

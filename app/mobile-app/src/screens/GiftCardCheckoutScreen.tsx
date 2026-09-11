@@ -1,12 +1,14 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 
 import { ProcessingOverlay, RazorpayWebView } from '@/components/checkout';
 import { GiftCardPurchaseSuccess, GiftCardVisual } from '@/components/gift-cards';
+import { GiftCardSummaryRow as SummaryRow } from '@/components/gift-cards/GiftCardSummaryRow';
 import { PaymentFailureDialog, usePaymentFailure } from '@/components/payment-failure';
 import { StackScreen } from '@/components/StackScreen';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { CheckoutForm, type CheckoutFormValues } from '@/forms/checkout';
 import {
   buildCheckoutContact,
@@ -19,19 +21,6 @@ import type { RootStackParamList } from '@/navigation/types';
 import { formatMoney } from '@/utils/checkout-math';
 import { toErrorMessage } from '@/utils/errors';
 import { RefreshScrollView } from '@/components/PullToRefresh';
-
-function SummaryRow({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <XStack justifyContent="space-between" gap={10}>
-      <Text fontSize={13} color="$muted">
-        {label}
-      </Text>
-      <Text flex={1} fontSize={13} fontWeight="600" color="$color" textAlign="right">
-        {value}
-      </Text>
-    </XStack>
-  );
-}
 
 /** Gift card checkout — summary + contact form, charged at face value through
  * the dedicated gift-card payment engine (no coupons, coins or fees). RN twin
@@ -139,22 +128,16 @@ export function GiftCardCheckoutScreen() {
           artworkBackUrl={selection.scope_image_back_url}
           amountLabel={amountLabel}
         />
-        <YStack
-          gap={6}
-          padding={14}
-          borderRadius={14}
-          borderWidth={1}
-          borderColor="$borderColor"
-          backgroundColor="$surface"
-        >
+        <SurfaceCard gap={10}>
           <SummaryRow label={t('mweb.giftCards.checkoutTheme')} value={themeLabel} />
           <SummaryRow label={t('mweb.giftCards.checkoutAmount')} value={amountLabel} />
           <SummaryRow label={t('mweb.giftCards.checkoutRecipient')} value={recipientLabel} />
-          <SummaryRow label={t('mweb.giftCards.checkoutTotal')} value={amountLabel} />
-          <Text fontSize={11.5} color="$muted">
+          <YStack height={1} backgroundColor="$borderColor" />
+          <SummaryRow bold label={t('mweb.giftCards.checkoutTotal')} value={amountLabel} />
+          <Text fontSize={12} color="$muted">
             {t('mweb.giftCards.checkoutNote')}
           </Text>
-        </YStack>
+        </SurfaceCard>
         <CheckoutForm
           initialValues={initialValues}
           mainAddress={me?.address ?? null}

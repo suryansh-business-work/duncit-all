@@ -21,7 +21,7 @@ function TabBadge({ count }: Readonly<{ count: number }>) {
     <YStack
       testID="tab-bar-cart-count"
       position="absolute"
-      top={2}
+      top={0}
       right={4}
       minWidth={16}
       height={16}
@@ -29,9 +29,9 @@ function TabBadge({ count }: Readonly<{ count: number }>) {
       alignItems="center"
       justifyContent="center"
       borderRadius={999}
-      backgroundColor="$danger"
+      backgroundColor="$accent"
     >
-      <Text fontSize={9} fontWeight="700" color="#ffffff">
+      <Text fontSize={9} fontWeight="700" color="$onPrimary">
         {cartBadgeLabel(count)}
       </Text>
     </YStack>
@@ -39,9 +39,11 @@ function TabBadge({ count }: Readonly<{ count: number }>) {
 }
 
 /**
- * Edge-to-edge flat tab bar — full width, no border radius, with the active tab
- * tinted in the primary colour (icon scales in smoothly). Identical to mWeb's
- * BottomNav. Used as React Navigation's custom `tabBar`.
+ * Edge-to-edge flat surface tab bar — full width, no border radius, the active
+ * tab in the coral accent. Light: no top line, a faint lift; dark: the card
+ * hairline (`$cardBorder` is transparent in light), the shadow sinks into the
+ * ground. Identical to mWeb's BottomNav. Used as React Navigation's custom
+ * `tabBar`.
  *
  * It draws whatever the navigator registered, and every tab is `flex: 1` — so
  * with products switched off, where `MainTabs` never registers the Cart, the
@@ -49,7 +51,7 @@ function TabBadge({ count }: Readonly<{ count: number }>) {
  */
 export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
   const insets = useSafeAreaInsets();
-  const { muted, primary } = useThemeColors();
+  const { muted, accent } = useThemeColors();
   const { t } = useTranslation();
   const cartCount = useCartStore(selectCartCount);
 
@@ -61,14 +63,14 @@ export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
       bottom={0}
       backgroundColor="$surface"
       borderTopWidth={1}
-      borderColor="$borderColor"
+      borderColor="$cardBorder"
       paddingTop={6}
       paddingBottom={insets.bottom + 6}
       justifyContent="space-between"
       shadowColor="#000000"
-      shadowOpacity={0.14}
-      shadowRadius={18}
-      shadowOffset={{ width: 0, height: -6 }}
+      shadowOpacity={0.06}
+      shadowRadius={12}
+      shadowOffset={{ width: 0, height: -2 }}
     >
       {state.routes.map((route, index) => {
         const focused = state.index === index;
@@ -98,12 +100,12 @@ export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
             paddingVertical={4}
             pressStyle={PRESS_STYLE.control}
           >
-            {/* Active tab = primary tint only, no background shape (user ask). */}
-            <YStack width={44} height={30} alignItems="center" justifyContent="center">
-              <MaterialIcons name={cfg.icon} size={21} color={focused ? primary : muted} />
+            {/* Active tab = accent tint only, no background shape (user ask). */}
+            <YStack width={44} height={28} alignItems="center" justifyContent="center">
+              <MaterialIcons name={cfg.icon} size={24} color={focused ? accent : muted} />
               <TabBadge count={cfg.name === 'Cart' ? cartCount : 0} />
             </YStack>
-            <Text fontSize={11} fontWeight="600" color={focused ? '$primary' : '$muted'}>
+            <Text fontSize={11} fontWeight="600" color={focused ? '$accent' : '$muted'}>
               {t(cfg.labelKey)}
             </Text>
           </YStack>

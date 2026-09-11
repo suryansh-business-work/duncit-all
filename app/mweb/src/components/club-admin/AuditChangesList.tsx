@@ -19,7 +19,7 @@ export default function AuditChangesList({ changes, note, heading = false }: Rea
   return (
     <Stack spacing={0.5}>
       {heading && (
-        <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
           {t('clubAdmin.monitoring.changesCount', { vars: { total: changes.length } })}
         </Typography>
       )}

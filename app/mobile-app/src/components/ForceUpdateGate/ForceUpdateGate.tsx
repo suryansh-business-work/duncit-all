@@ -3,7 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { dark, light } from '@duncit/auth-tokens';
 import { Text, YStack } from 'tamagui';
 
-import { AppBackground, DARK, LIGHT } from '@/components/AppBackground';
+import { AppBackground, APP_BG } from '@/components/AppBackground';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useAppVersionStore } from '@/stores/app-version.store';
@@ -94,14 +94,23 @@ export function ForceUpdateGate() {
       right={0}
       bottom={0}
       zIndex={10000}
-      backgroundColor={scheme === 'dark' ? DARK[0] : LIGHT[0]}
+      backgroundColor={APP_BG[scheme]}
       alignItems="center"
       justifyContent="center"
       padding={28}
       gap={16}
     >
       <AppBackground />
-      <MaterialIcons name="system-update" size={72} color={tokens.primary} />
+      <YStack
+        width={96}
+        height={96}
+        borderRadius={48}
+        alignItems="center"
+        justifyContent="center"
+        backgroundColor={tokens.surface}
+      >
+        <MaterialIcons name="system-update" size={44} color={tokens.primary} />
+      </YStack>
       <Text
         testID="force-update-title"
         fontSize={24}

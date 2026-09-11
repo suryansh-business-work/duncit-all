@@ -1,8 +1,10 @@
-import { Input, Text, XStack, YStack } from 'tamagui';
+import { Input, YStack } from 'tamagui';
 
 import { Field } from '@/components/Field';
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
+import { GiftCardSegmented, type SegmentOption } from './GiftCardSegmented';
 
 interface Props {
   /** True when the card is being sent to someone else. */
@@ -31,44 +33,18 @@ export function GiftCardRecipientFields({
   onMessage,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const options = [
-    { gift: false, label: t('mweb.giftCards.forMyself'), testID: 'gift-card-for-myself' },
-    { gift: true, label: t('mweb.giftCards.forSomeone'), testID: 'gift-card-for-someone' },
+  const options: readonly SegmentOption<boolean>[] = [
+    { value: false, label: t('mweb.giftCards.forMyself'), testID: 'gift-card-for-myself' },
+    { value: true, label: t('mweb.giftCards.forSomeone'), testID: 'gift-card-for-someone' },
   ];
   const emailLabel = t('mweb.giftCards.recipientEmailLabel');
   const nameLabel = t('mweb.giftCards.recipientNameLabel');
   const messageLabel = t('mweb.giftCards.messageLabel');
 
   return (
-    <YStack gap={10}>
-      <Text fontSize={15} fontWeight="700" color="$color">
-        {t('mweb.giftCards.forHeading')}
-      </Text>
-      <XStack gap={8}>
-        {options.map((option) => {
-          const isActive = forGift === option.gift;
-          return (
-            <XStack
-              key={option.testID}
-              testID={option.testID}
-              role="button"
-              aria-label={option.label}
-              onPress={() => onToggle(option.gift)}
-              paddingHorizontal={14}
-              paddingVertical={8}
-              borderRadius={999}
-              borderWidth={1}
-              borderColor={isActive ? '$primary' : '$borderColor'}
-              backgroundColor={isActive ? '$primary' : 'transparent'}
-              pressStyle={PRESS_STYLE.control}
-            >
-              <Text fontSize={13} fontWeight="700" color={isActive ? '$onPrimary' : '$color'}>
-                {option.label}
-              </Text>
-            </XStack>
-          );
-        })}
-      </XStack>
+    <SurfaceCard gap={12}>
+      <SectionHeader title={t('mweb.giftCards.forHeading')} />
+      <GiftCardSegmented options={options} value={forGift} onChange={onToggle} />
       {forGift ? (
         <YStack gap={10}>
           <Field
@@ -117,6 +93,6 @@ export function GiftCardRecipientFields({
           </Field>
         </YStack>
       ) : null}
-    </YStack>
+    </SurfaceCard>
   );
 }

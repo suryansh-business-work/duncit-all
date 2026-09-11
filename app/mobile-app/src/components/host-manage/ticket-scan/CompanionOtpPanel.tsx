@@ -52,7 +52,7 @@ export function CompanionOtpPanel({ index, entry, state, otp, onVerified }: Read
 
   if (state === 'VERIFIED') {
     return (
-      <Text testID={`companion-verified-${index}`} fontSize={12} fontWeight="700" color="$success">
+      <Text testID={`companion-verified-${index}`} fontSize={12} fontWeight="600" color="$success">
         {t('mweb.hostScan.companionVerified')}
       </Text>
     );

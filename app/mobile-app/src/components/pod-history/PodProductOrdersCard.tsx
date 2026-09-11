@@ -1,7 +1,7 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner } from 'tamagui';
 
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ProductOrder } from '@/utils/product-orders';
 import { PodProductOrderItem } from './PodProductOrderItem';
@@ -13,44 +13,23 @@ export function PodProductOrdersCard({
   orders,
   loading,
 }: Readonly<{ orders: ProductOrder[]; loading: boolean }>) {
-  const { primary } = useThemeColors();
   const { t } = useTranslation();
 
   if (loading && orders.length === 0) {
     return (
-      <YStack
-        borderRadius={18}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$surface"
-        padding={16}
-        alignItems="center"
-      >
+      <SurfaceCard alignItems="center">
         <Spinner testID="po-loading" color="$primary" />
-      </YStack>
+      </SurfaceCard>
     );
   }
   if (orders.length === 0) return null;
 
   return (
-    <YStack
-      testID="pod-product-orders-card"
-      borderRadius={18}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      padding={16}
-      gap={12}
-    >
-      <XStack gap={8} alignItems="center">
-        <MaterialIcons name="shopping-bag" size={18} color={primary} />
-        <Text fontSize={15} fontWeight="700" color="$color">
-          {t('mweb.podHistory.productsAndTracking')}
-        </Text>
-      </XStack>
+    <SurfaceCard testID="pod-product-orders-card" gap={12}>
+      <SectionHeader title={t('mweb.podHistory.productsAndTracking')} />
       {orders.map((o) => (
         <PodProductOrderItem key={o.id} order={o} />
       ))}
-    </YStack>
+    </SurfaceCard>
   );
 }

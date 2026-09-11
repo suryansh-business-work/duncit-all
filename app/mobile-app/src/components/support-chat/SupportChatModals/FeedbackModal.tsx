@@ -29,7 +29,7 @@ function EmojiScale({ rating, onPick }: Readonly<ScaleProps>) {
           alignItems="center"
           gap={2}
           padding={4}
-          borderRadius={10}
+          borderRadius={14}
           borderWidth={1}
           borderColor={o.value === rating ? '$primary' : 'transparent'}
           pressStyle={PRESS_STYLE.row}
@@ -86,7 +86,7 @@ export function SupportFeedbackModal({
           </XStack>
         }
       >
-        <Text fontSize={16} fontWeight="700" color="$color">
+        <Text fontSize={17} fontWeight="600" color="$color">
           Your feedback
         </Text>
         <Text testID="feedback-readonly" fontSize={15} color="$color">
@@ -143,7 +143,7 @@ export function SupportFeedbackModal({
         </XStack>
       }
     >
-      <Text fontSize={16} fontWeight="700" color="$color">
+      <Text fontSize={17} fontWeight="600" color="$color">
         How did we do?
       </Text>
       <EmojiScale rating={picked} onPick={setPicked} />

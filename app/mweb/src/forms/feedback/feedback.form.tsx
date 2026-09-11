@@ -69,7 +69,7 @@ export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readon
                 variant="caption"
                 sx={{
                   color: "text.secondary",
-                  fontWeight: 700
+                  fontWeight: 600
                 }}>
                 Category
               </Typography>
@@ -85,9 +85,8 @@ export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readon
                       label={option.label}
                       data-testid={`feedback-cat-${option.label}`}
                       color={field.value === option.label ? 'primary' : 'default'}
-                      variant={field.value === option.label ? 'filled' : 'outlined'}
                       onClick={() => field.onChange(option.label)}
-                      sx={{ fontWeight: 700 }}
+                      sx={{ height: 36, px: 0.75 }}
                     />
                   ))}
                 </Stack>
@@ -137,7 +136,6 @@ export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readon
           size="large"
           disabled={loading}
           data-testid="feedback-submit"
-          sx={{ borderRadius: '16px', py: 1.1, fontWeight: 700, textTransform: 'none' }}
         >
           {loading ? 'Sending…' : 'Send feedback'}
         </DuncitButton>

@@ -36,8 +36,8 @@ export default function ClubAutoPodsPage({ locationId }: Readonly<Props>) {
   const [target, setTarget] = useState<AutoPodRow | null>(null);
 
   return (
-    <Stack spacing={2} sx={{ p: 2, pb: 4 }}>
-      <Typography variant="h6" sx={{ fontWeight: 800 }}>
+    <Stack spacing={2.5} sx={{ p: 2, pb: 4 }}>
+      <Typography variant="h5" component="h1" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>
         {queue.labels.clubTitle}
       </Typography>
 

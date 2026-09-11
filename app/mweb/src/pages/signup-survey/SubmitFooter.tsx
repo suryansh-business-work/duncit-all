@@ -1,5 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import { SURFACE_SX } from '../../theme';
 
 interface Props {
   count: number;
@@ -13,17 +14,16 @@ export default function SubmitFooter({ count, total, saving, canSubmit, onSubmit
   return (
     <Box
       sx={{
+        ...SURFACE_SX,
+        // It floats over the white group cards, so it keeps a hairline edge.
+        border: 1,
+        borderColor: 'divider',
         position: 'sticky',
         bottom: 'calc(64px + env(safe-area-inset-bottom))',
         zIndex: 10,
         mt: 0.5,
-        p: 1.25,
-        backdropFilter: 'blur(12px)',
-        bgcolor: (t) => `${t.palette.background.paper}f2`,
-        border: 1,
-        borderColor: 'divider',
-        borderRadius: '16px',
-        boxShadow: '0 14px 36px rgba(15, 23, 42, 0.14)',
+        px: 2,
+        py: 1.5,
       }}
     >
       <Stack
@@ -40,7 +40,7 @@ export default function SubmitFooter({ count, total, saving, canSubmit, onSubmit
             Selected
           </Typography>
           <Typography variant="subtitle1" sx={{
-            fontWeight: 700
+            fontWeight: 600
           }}>
             {count}
             <Box component="span" sx={{ color: 'text.secondary', fontWeight: 600 }}>
@@ -54,7 +54,7 @@ export default function SubmitFooter({ count, total, saving, canSubmit, onSubmit
           size="large"
           disabled={!canSubmit}
           onClick={onSubmit}
-          sx={{ minWidth: 160, fontWeight: 600 }}
+          sx={{ minWidth: 160 }}
         >
           {saving ? 'Saving…' : 'Find my crew'}
         </DuncitButton>

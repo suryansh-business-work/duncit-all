@@ -1,11 +1,11 @@
 import { useQuery } from '@apollo/client/react';
 import { Alert, Box, Chip, CircularProgress, Paper, Stack, Typography } from '@mui/material';
 import { useNavigate } from 'react-router';
-import HistoryIcon from '@mui/icons-material/History';
 import { formatDistanceToNowStrict } from 'date-fns';
 import SupportShell from './SupportShell';
 import { MY_UNIFIED_SUPPORT_TICKETS } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
+import { SURFACE_SX } from '../../theme';
 
 interface UnifiedTicket {
   id: string;
@@ -21,13 +21,6 @@ const SOURCE_LABEL: Record<UnifiedTicket['source'], string> = {
   SOS: 'SOS',
   CALLBACK: 'Callback Request',
   CHAT: 'Chat with Us',
-};
-
-const SOURCE_COLOR: Record<UnifiedTicket['source'], 'error' | 'info' | 'success' | 'secondary'> = {
-  SOS: 'error',
-  CALLBACK: 'info',
-  CHAT: 'success',
-  TICKET: 'secondary',
 };
 
 /** Where a row should take the user when tapped (only tickets + chat have pages). */
@@ -61,58 +54,53 @@ export default function AllTicketsPage() {
     body = <Alert severity="info">{t('mweb.supportHub.youHaveNotRaisedAnySupport')}</Alert>;
   } else {
     body = (
-      <Stack spacing={1.25}>
-        {rows.map((row) => {
+      <Paper sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
+        {rows.map((row, index) => {
           const target = targetFor(row);
           return (
-            <Paper
+            <Stack
               key={`${row.source}-${row.id}`}
-              variant="outlined"
+              direction="row"
+              spacing={1.5}
               onClick={() => target && navigate(target)}
-              sx={{ p: 1.5, borderRadius: '16px', cursor: target ? 'pointer' : 'default' }}
+              sx={{
+                alignItems: 'center',
+                minWidth: 0,
+                px: 2,
+                py: 1.75,
+                cursor: target ? 'pointer' : 'default',
+                borderTop: index === 0 ? 0 : 1,
+                borderColor: 'divider',
+              }}
             >
-              <Stack
-                direction="row"
-                spacing={1}
-                sx={{
-                  alignItems: "center",
-                  minWidth: 0
-                }}>
-                <Box sx={{ minWidth: 0, flex: 1 }}>
-                  <Stack direction="row" spacing={1} sx={{
-                    alignItems: "center"
-                  }}>
-                    <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
-                      {row.ticket_no}
-                    </Typography>
-                    <Chip size="small" label={SOURCE_LABEL[row.source]} color={SOURCE_COLOR[row.source]} variant="outlined" />
-                  </Stack>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }} noWrap>
-                    {row.title}
+              <Box sx={{ minWidth: 0, flex: 1 }}>
+                <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                  <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                    {row.ticket_no}
                   </Typography>
-                  <Typography variant="caption" sx={{
-                    color: "text.secondary"
-                  }}>
-                    {formatDistanceToNowStrict(new Date(row.created_at))} ago
-                  </Typography>
-                </Box>
-                <Chip size="small" label={row.status} sx={{ fontWeight: 600 }} />
-              </Stack>
-            </Paper>
+                  <Chip
+                    size="small"
+                    label={SOURCE_LABEL[row.source]}
+                    sx={{ height: 22, fontSize: '0.6875rem', bgcolor: 'action.hover' }}
+                  />
+                </Stack>
+                <Typography sx={{ fontSize: '0.9375rem', fontWeight: 600, mt: 0.25 }} noWrap>
+                  {row.title}
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  {formatDistanceToNowStrict(new Date(row.created_at))} ago
+                </Typography>
+              </Box>
+              <Chip size="small" label={row.status} sx={{ bgcolor: 'action.hover' }} />
+            </Stack>
           );
         })}
-      </Stack>
+      </Paper>
     );
   }
 
   return (
-    <SupportShell
-      title={t('mweb.common.allSupportTickets')}
-      subtitle={t('mweb.supportHub.everyRequestYouHaveRaisedIn')}
-      icon={<HistoryIcon fontSize="small" />}
-      gradient="linear-gradient(135deg, #7c5cff 0%, #b388ff 100%)"
-      backTo="/support"
-    >
+    <SupportShell title={t('mweb.common.allSupportTickets')} backTo="/support">
       {body}
     </SupportShell>
   );

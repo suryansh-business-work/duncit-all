@@ -1,4 +1,4 @@
-import { Avatar, Chip, Link, Paper, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Chip, Link, Stack, Typography } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CheckIcon from '@mui/icons-material/Check';
@@ -6,6 +6,7 @@ import DoneAllIcon from '@mui/icons-material/DoneAll';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import AttachmentList from '../../components/AttachmentList';
 import { userMessageTick } from './chatHelpers';
+import { bubbleRadiusSx } from './calmStyles';
 import type { SupportChatMessage } from './queries';
 
 const SEEN_BLUE = '#34b7f1';
@@ -23,7 +24,7 @@ function Tick({
       }}>
         <ErrorOutlineIcon sx={{ fontSize: 14, color: 'error.main' }} />
         {onRetry && (
-          <Link component="button" type="button" onClick={onRetry} underline="always" sx={{ fontSize: 11, fontWeight: 700, color: 'error.main' }}>
+          <Link component="button" type="button" onClick={onRetry} underline="always" sx={{ fontSize: 11, fontWeight: 600, color: 'error.main' }}>
             Retry
           </Link>
         )}
@@ -52,7 +53,7 @@ export default function ChatBubble({ msg, agentLastReadAt, timeText, onRetry }: 
           alignItems: "center",
           my: 0.5
         }}>
-        <Chip size="small" label={msg.text} sx={{ bgcolor: 'action.hover', fontWeight: 700, height: 'auto', py: 0.5, '& .MuiChip-label': { whiteSpace: 'normal', textAlign: 'center' } }} />
+        <Chip size="small" label={msg.text} sx={{ bgcolor: 'action.hover', color: 'text.secondary', height: 'auto', py: 0.5, '& .MuiChip-label': { whiteSpace: 'normal', textAlign: 'center' } }} />
       </Stack>
     );
   }
@@ -61,25 +62,25 @@ export default function ChatBubble({ msg, agentLastReadAt, timeText, onRetry }: 
   const label = msg.is_ai ? 'Duncit Assistant' : msg.sender_name || 'Support';
 
   return (
-    <Stack direction="row" sx={{ justifyContent: isUser ? 'flex-end' : 'flex-start' }} spacing={1}>
+    <Stack direction="row" sx={{ justifyContent: isUser ? 'flex-end' : 'flex-start', alignItems: 'flex-end' }} spacing={1}>
       {!isUser && (
         <Avatar src={msg.sender_photo || undefined} sx={{ width: 28, height: 28, fontSize: 12, bgcolor: msg.is_ai ? 'secondary.main' : undefined }}>
           {msg.is_ai ? <SmartToyIcon sx={{ fontSize: 16 }} /> : label[0]?.toUpperCase() || 'S'}
         </Avatar>
       )}
-      <Paper
-        variant="outlined"
+      <Box
         sx={{
-          p: 1,
-          px: 1.25,
+          py: 1,
+          px: 1.5,
           maxWidth: '80%',
-          borderRadius: '16px',
+          ...bubbleRadiusSx(isUser),
           bgcolor: isUser ? 'primary.main' : 'background.paper',
           color: isUser ? 'primary.contrastText' : 'text.primary',
+          border: isUser ? 0 : '1px solid var(--duncit-card-border)',
         }}
       >
         {!isUser && (
-          <Typography variant="caption" sx={{ fontWeight: 600, display: 'block' }}>
+          <Typography variant="caption" sx={{ fontWeight: 600, display: 'block', color: msg.is_ai ? 'secondary.main' : 'text.secondary' }}>
             {label}
           </Typography>
         )}
@@ -98,7 +99,7 @@ export default function ChatBubble({ msg, agentLastReadAt, timeText, onRetry }: 
           </Typography>
           {isUser && <Tick msg={msg} agentLastReadAt={agentLastReadAt} onRetry={onRetry} />}
         </Stack>
-      </Paper>
+      </Box>
     </Stack>
   );
 }

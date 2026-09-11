@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/client/react';
-import { Alert, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
-import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
+import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import PodProductOrderItem from './PodProductOrderItem';
+import SectionHeader from '../../components/SectionHeader';
 import { MY_PRODUCT_ORDERS_FOR_POD, type ProductOrder } from './productOrders';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -41,20 +41,9 @@ export default function PodProductOrdersCard({ podId }: Readonly<{ podId?: strin
   return (
     <Card>
       <CardContent>
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{
-            alignItems: "center",
-            mb: 1
-          }}>
-          <ShoppingBagIcon color="primary" fontSize="small" />
-          <Typography variant="subtitle1" sx={{
-            fontWeight: 700
-          }}>
-            {t('mweb.podHistory.productsAndTracking')}
-          </Typography>
-        </Stack>
+        <Box sx={{ mb: 1.5 }}>
+          <SectionHeader title={t('mweb.podHistory.productsAndTracking')} />
+        </Box>
         {error && (
           <Alert severity="warning" sx={{ mb: 1 }}>
             {t('mweb.podHistory.trackingRefreshError')}

@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { LayoutAnimation } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Separator, Text, XStack, YStack } from 'tamagui';
 
 import { Skeleton } from '@/components/Skeleton';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { SidebarRow } from './SidebarRow';
 
 interface PolicyLink {
   id: string;
@@ -14,7 +15,8 @@ interface PolicyLink {
   title: string;
 }
 
-/** Collapsible "Policies" group — RN port of mWeb's <PoliciesSection/>. */
+/** Collapsible "Policies" row of the menu's settings group — RN port of mWeb's
+ * <PoliciesSection/>. Opened, each policy is an inset row under it. */
 export function SidebarPolicies({
   policies,
   loading = false,
@@ -35,12 +37,10 @@ export function SidebarPolicies({
         testID="sidebar-policies-skeleton"
         alignItems="center"
         gap={12}
-        marginHorizontal={8}
-        marginVertical={2}
-        paddingHorizontal={12}
-        paddingVertical={18}
+        minHeight={60}
+        paddingHorizontal={16}
       >
-        <Skeleton width={24} height={24} radius={12} />
+        <Skeleton width={36} height={36} radius={18} />
         <Skeleton width="40%" height={14} />
       </XStack>
     );
@@ -54,47 +54,37 @@ export function SidebarPolicies({
 
   return (
     <YStack testID="sidebar-policies">
-      <XStack
-        pressStyle={PRESS_STYLE.surface}
-        role="button"
-        aria-label={t('mweb.common.policies')}
+      <SidebarRow
+        icon="description"
+        label={t('mweb.common.policies')}
         onPress={toggle}
-        marginHorizontal={8}
-        marginVertical={2}
-        alignItems="center"
-        gap={12}
-        borderRadius={10}
-        paddingHorizontal={12}
-        paddingVertical={12}
-      >
-        <MaterialIcons name="description" size={20} color={muted} />
-        <Text flex={1} fontSize={14} fontWeight="600" color="$color">
-          Policies
-        </Text>
-        <MaterialIcons name={open ? 'expand-less' : 'expand-more'} size={20} color={muted} />
-      </XStack>
+        chevron={false}
+        trailing={
+          <MaterialIcons name={open ? 'expand-less' : 'expand-more'} size={22} color={muted} />
+        }
+      />
       {open
         ? policies.map((p) => (
-            <XStack
-              pressStyle={PRESS_STYLE.surface}
-              key={p.id}
-              testID={`sidebar-policy-${p.slug}`}
-              role="button"
-              aria-label={p.title}
-              onPress={() => onSelect(p.slug)}
-              marginHorizontal={8}
-              alignItems="center"
-              gap={8}
-              borderRadius={10}
-              paddingVertical={8}
-              paddingLeft={48}
-              paddingRight={12}
-            >
-              <MaterialIcons name="article" size={16} color={muted} />
-              <Text fontSize={13} fontWeight="600" color="$muted">
-                {p.title}
-              </Text>
-            </XStack>
+            <YStack key={p.id}>
+              <Separator borderColor="$borderColor" marginLeft={64} marginRight={16} />
+              <XStack
+                pressStyle={PRESS_STYLE.row}
+                testID={`sidebar-policy-${p.slug}`}
+                role="button"
+                aria-label={p.title}
+                onPress={() => onSelect(p.slug)}
+                alignItems="center"
+                gap={10}
+                minHeight={48}
+                paddingLeft={64}
+                paddingRight={16}
+              >
+                <MaterialIcons name="article" size={18} color={muted} />
+                <Text flex={1} fontSize={14} fontWeight="500" color="$color">
+                  {p.title}
+                </Text>
+              </XStack>
+            </YStack>
           ))
         : null}
     </YStack>

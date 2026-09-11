@@ -91,7 +91,7 @@ export function ReportStorySheet({ storyId, onClose, onReported }: Readonly<Prop
       }
     >
       <YStack gap={10}>
-        <Text fontSize={12} fontWeight="700" color="$muted">
+        <Text fontSize={12} fontWeight="600" color="$muted">
           {t('contentReport.reasonLabel')}
         </Text>
         {REPORT_REASONS.map((value) => (
@@ -117,7 +117,7 @@ export function ReportStorySheet({ storyId, onClose, onReported }: Readonly<Prop
             </Text>
           </XStack>
         ))}
-        <Text fontSize={12} fontWeight="700" color="$muted">
+        <Text fontSize={12} fontWeight="600" color="$muted">
           {t('contentReport.detailsLabel')}
         </Text>
         <TextArea

@@ -44,7 +44,7 @@ export function CompanionRow({
 
   return (
     <YStack gap={6}>
-      <Text fontSize={12} fontWeight="700" color="$muted">
+      <Text fontSize={12} fontWeight="600" color="$muted">
         {t('mweb.hostScan.companionsHeading', { vars: { index: index + 1 } })}
       </Text>
       <Text fontSize={11.5} color="$muted">

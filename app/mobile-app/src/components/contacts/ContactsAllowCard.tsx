@@ -1,12 +1,12 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, XStack } from 'tamagui';
 import { progressPercent, type ContactSyncStage } from '@duncit/utils';
 
+import { IconDisc } from '@/components/account/IconDisc';
 import { DuncitButton } from '@/components/DuncitButton';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { ContactsProgress } from '@/components/contacts/ContactsProgress';
 import type { ContactsSyncStatus } from '@/hooks/useContacts';
 import type { ContactsSyncFailure } from '@/hooks/useContactsSync';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatDateTime } from '@/utils/date-format';
 
@@ -26,7 +26,6 @@ interface Props {
  */
 export function ContactsAllowCard({ status, busy, stage, failure, onAllow }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { primary } = useThemeColors();
   let failureText = '';
   if (failure === 'DENIED') failureText = t('mweb.contacts.permissionDenied');
   else if (failure === 'FAILED') failureText = t('mweb.contacts.syncFailed');
@@ -48,30 +47,21 @@ export function ContactsAllowCard({ status, busy, stage, failure, onAllow }: Rea
   }
 
   return (
-    <YStack
-      testID="contacts-allow-card"
-      marginHorizontal={16}
-      padding={16}
-      gap={10}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
-      <XStack alignItems="center" gap={8}>
-        <MaterialIcons name="contact-phone" size={22} color={primary} />
-        <Text fontSize={16} fontWeight="700" color="$color">
+    <SurfaceCard testID="contacts-allow-card" marginHorizontal={16} gap={12}>
+      <XStack alignItems="center" gap={12}>
+        <IconDisc icon="contact-phone" />
+        <Text flex={1} fontSize={16} fontWeight="600" color="$color">
           {t('mweb.contacts.allowTitle')}
         </Text>
       </XStack>
-      <Text fontSize={13} color="$muted">
+      <Text fontSize={14} color="$muted">
         {t('mweb.contacts.allowBody')}
       </Text>
-      <Text testID="contacts-sync-summary" fontSize={13} color="$color">
+      <Text testID="contacts-sync-summary" fontSize={14} fontWeight="500" color="$color">
         {summary}
       </Text>
       {status && status.invitable > 0 ? (
-        <Text testID="contacts-invite-summary" fontSize={13} color="$muted">
+        <Text testID="contacts-invite-summary" fontSize={14} color="$muted">
           {t('mweb.contacts.toInvite', { count: status.invitable })}
         </Text>
       ) : null}
@@ -82,19 +72,19 @@ export function ContactsAllowCard({ status, busy, stage, failure, onAllow }: Rea
           percent={progressPercent(stage.done, stage.total)}
         />
       ) : null}
-      <XStack>
-        <DuncitButton
-          testID="contacts-allow-button"
-          label={status ? t('mweb.contacts.resync') : t('mweb.contacts.allowButton')}
-          onPress={onAllow}
-          loading={busy}
-        />
-      </XStack>
+      <DuncitButton
+        testID="contacts-allow-button"
+        label={status ? t('mweb.contacts.resync') : t('mweb.contacts.allowButton')}
+        size="lg"
+        fullWidth
+        onPress={onAllow}
+        loading={busy}
+      />
       {failureText ? (
         <Text testID="contacts-sync-error" fontSize={13} color="$danger">
           {failureText}
         </Text>
       ) : null}
-    </YStack>
+    </SurfaceCard>
   );
 }

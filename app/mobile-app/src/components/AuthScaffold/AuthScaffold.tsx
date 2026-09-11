@@ -2,26 +2,31 @@ import type { ReactNode } from 'react';
 import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, YStack } from 'tamagui';
-import { auth } from '@duncit/auth-tokens';
 
 import { AuthBackground } from '@/components/AuthBackground';
 import { AuthLogo } from '@/components/AuthLogo';
 import { AuthModeToggle } from '@/components/AuthModeToggle';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
+import { TwoToneHeading } from '@/components/TwoToneHeading';
 
 export interface AuthScaffoldProps {
   title: string;
-  /** Optional accent-coloured trailing word (e.g. "back." in "Welcome back."). */
+  /** Optional softer second beat (e.g. "back." in "Welcome back."), drawn muted. */
   accentWord?: string;
-  subtitle: string;
+  /**
+   * Only a line that carries something the person needs ("you've been signed
+   * out everywhere", "you can only do this once") — never a tagline.
+   */
+  subtitle?: string;
   children: ReactNode;
   testID?: string;
 }
 
 /**
- * Shared auth screen layout — full-screen gradient backdrop with the form sitting
- * directly on it (no card/box) → shared brand logo → heading + subtitle → screen
- * content. All brand surfaces resolve from @duncit/auth-tokens.
+ * Shared auth screen layout — the flat auth ground with the form sitting
+ * directly on it (no card) → the admin logo → one calm two-tone headline →
+ * screen content, in a ~420px centred column. mWeb twin: AuthBackground +
+ * AuthScreenFrame + AuthHeading.
  */
 export function AuthScaffold({
   title,
@@ -46,24 +51,25 @@ export function AuthScaffold({
             }}
             keyboardShouldPersistTaps="handled"
           >
-            <YStack width="100%" maxWidth={460} alignSelf="center">
+            <YStack width="100%" maxWidth={420} alignSelf="center">
               <YStack alignItems="center" gap={8}>
-                <AuthLogo />
-                <Text textAlign="center" fontSize={30} fontWeight="700" color="$color">
-                  {title}
-                  {accentWord ? <Text color={auth.accent}> {accentWord}</Text> : null}
-                </Text>
-                <Text maxWidth={300} textAlign="center" fontSize={14} color="$muted">
-                  {subtitle}
-                </Text>
+                <YStack marginBottom={8}>
+                  <AuthLogo size={64} />
+                </YStack>
+                <TwoToneHeading lead={title} trail={accentWord} fontSize={28} align="center" />
+                {subtitle ? (
+                  <Text maxWidth={320} textAlign="center" fontSize={14} color="$muted">
+                    {subtitle}
+                  </Text>
+                ) : null}
               </YStack>
-              <YStack marginTop={20} gap={16}>
+              <YStack marginTop={24} gap={16}>
                 {children}
               </YStack>
               {/* Last thing on the screen, on every auth screen: a signed-out
                   person cannot reach the sidebar switch, and this is the choice
                   that decides whether the copy over an admin's backdrop reads. */}
-              <YStack marginTop={20}>
+              <YStack marginTop={24}>
                 <AuthModeToggle />
               </YStack>
             </YStack>

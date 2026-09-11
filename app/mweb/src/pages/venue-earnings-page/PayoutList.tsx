@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Box, Chip, Collapse, Stack, Typography } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Box, Chip, Collapse, Divider, Stack, Typography } from '@mui/material';
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import { DuncitIconButton } from '@duncit/buttons';
 import { useDateFormat } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -39,11 +39,11 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: s
   const expandable = (b?.version ?? 0) >= 2;
 
   return (
-    <Box sx={{ p: 1.25, borderRadius: '16px', border: 1, borderColor: 'divider' }}>
+    <Box sx={{ px: 2, py: 1.5 }}>
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>
-        <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 600 }} noWrap>
+        <Typography noWrap sx={{ flex: 1, fontSize: '0.95rem', fontWeight: 600 }}>
           {payout.pod_title}
         </Typography>
         <Chip size="small" color={STATUS_COLOR[payout.status] ?? 'default'} label={payout.status} />
@@ -64,12 +64,7 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: s
           }}>
           {formatDate(payout.created_at)}
         </Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            color: "primary.main",
-            fontWeight: 700
-          }}>
+        <Typography sx={{ fontSize: '1rem', fontWeight: 700 }}>
           {fmt(payable)}
         </Typography>
         {expandable && (
@@ -79,7 +74,7 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: s
             onClick={() => setOpen((v) => !v)}
             sx={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}
           >
-            <ExpandMoreIcon fontSize="small" />
+            <ExpandMoreRoundedIcon fontSize="small" />
           </DuncitIconButton>
         )}
       </Stack>
@@ -100,10 +95,11 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: s
   );
 }
 
-/** Venue payout history — one row per completion release, expandable v2 math. */
+/** Venue payout history — one row per completion release, expandable v2 math,
+ * split by hairlines inside the history card. */
 export default function PayoutList({ payouts, symbol }: Readonly<{ payouts: VenuePayout[]; symbol: string }>) {
   return (
-    <Stack spacing={1}>
+    <Stack divider={<Divider sx={{ mx: 2 }} />}>
       {payouts.map((payout) => (
         <PayoutRow key={payout.id} payout={payout} symbol={symbol} />
       ))}

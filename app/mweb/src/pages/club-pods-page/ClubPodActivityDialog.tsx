@@ -6,6 +6,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   Stack,
   Typography,
 } from '@mui/material';
@@ -40,7 +41,7 @@ function ActivityBody({ entries, loading, error }: Readonly<BodyProps>) {
     );
   }
   return (
-    <Stack spacing={1}>
+    <Stack divider={<Divider />}>
       {entries.map((entry) => (
         <AuditEntryCard key={entry.id} entry={entry}>
           <AuditChangesList changes={entry.changes} note={entry.note} />
@@ -68,7 +69,7 @@ export default function ClubPodActivityDialog({ pod, onClose }: Readonly<Props>)
     <Dialog open={!!pod} onClose={onClose} maxWidth="sm" fullWidth>
       {pod && (
         <>
-          <DialogTitle sx={{ fontWeight: 800 }}>
+          <DialogTitle sx={{ fontWeight: 600 }}>
             {t('clubAdmin.pods.activity', { vars: { title: pod.pod_title } })}
           </DialogTitle>
           <DialogContent dividers>

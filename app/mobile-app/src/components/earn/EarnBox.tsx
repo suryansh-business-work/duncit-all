@@ -2,6 +2,8 @@ import type { ComponentProps } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { DuncitButton } from '@/components/DuncitButton';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -27,39 +29,32 @@ interface Props {
   testID: string;
 }
 
-/** The disabled-state footer: the "Already enabled" label, plus a next-step CTA
- * button to its right when the user is approved for the role. */
+/** The disabled-state footer: the "Already enabled" status pill, plus a
+ * next-step CTA — the card's one green pill — when the user is approved. */
 function EnabledStatus({
   testID,
   label,
   cta,
 }: Readonly<{ testID: string; label: string; cta?: EarnBoxCta }>) {
   const enabledLabel = (
-    <Text testID={`${testID}-enabled`} fontSize={12} fontWeight="600" color="$primary">
-      {label}
-    </Text>
+    <XStack
+      alignSelf="flex-start"
+      alignItems="center"
+      height={28}
+      paddingHorizontal={12}
+      borderRadius={999}
+      backgroundColor="$successSoft"
+    >
+      <Text testID={`${testID}-enabled`} fontSize={12} fontWeight="600" color="$success">
+        {label}
+      </Text>
+    </XStack>
   );
   if (!cta) return enabledLabel;
   return (
     <XStack alignItems="center" gap={10} flexWrap="wrap">
       {enabledLabel}
-      <XStack
-        testID={`${testID}-cta`}
-        role="button"
-        aria-label={cta.label}
-        onPress={cta.onPress}
-        backgroundColor="$primary"
-        paddingHorizontal={12}
-        height={30}
-        borderRadius={999}
-        alignItems="center"
-        justifyContent="center"
-        pressStyle={PRESS_STYLE.control}
-      >
-        <Text fontSize={12} fontWeight="700" color="$onPrimary">
-          {cta.label}
-        </Text>
-      </XStack>
+      <DuncitButton testID={`${testID}-cta`} label={cta.label} onPress={cta.onPress} size="sm" />
     </XStack>
   );
 }
@@ -77,44 +72,39 @@ export function EarnBox({
   onPress,
   testID,
 }: Readonly<Props>) {
-  const { onPrimary } = useThemeColors();
+  const { accent } = useThemeColors();
   const handlePress = () => {
     if (!disabled) onPress();
   };
 
   return (
-    <YStack
+    <SurfaceCard
       testID={testID}
       role="button"
       aria-label={title}
       aria-disabled={disabled}
       onPress={handlePress}
       opacity={disabled && !cta ? 0.55 : 1}
-      gap={8}
-      padding={16}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      pressStyle={disabled ? undefined : { opacity: 0.85 }}
+      gap={10}
+      pressStyle={disabled ? undefined : PRESS_STYLE.surface}
     >
       <YStack
         width={44}
         height={44}
-        borderRadius={12}
+        borderRadius={22}
         alignItems="center"
         justifyContent="center"
-        backgroundColor="$primary"
+        backgroundColor="$soft"
       >
-        <MaterialIcons name={icon} size={22} color={onPrimary} />
+        <MaterialIcons name={icon} size={22} color={accent} />
       </YStack>
-      <Text fontSize={16} fontWeight="700" color="$color">
+      <Text fontSize={16} fontWeight="600" color="$color">
         {title}
       </Text>
-      <Text fontSize={13} color="$muted">
+      <Text fontSize={14} color="$muted">
         {description}
       </Text>
       {disabled ? <EnabledStatus testID={testID} label={disabledLabel} cta={cta} /> : null}
-    </YStack>
+    </SurfaceCard>
   );
 }

@@ -36,7 +36,12 @@ const brandLight = {
   borderColorHover: light.border,
   placeholderColor: light.muted,
   surface: light.surface,
+  // Light cards sit borderless on the off-white ground; dark cards keep the
+  // hairline (same rule as mWeb's --duncit-card-border).
+  cardBorder: 'transparent',
+  soft: light.soft,
   muted: light.muted,
+  accent: light.accent,
   primary: light.primary,
   primaryHover: light.primaryHover,
   primaryPress: light.primaryActive,
@@ -60,7 +65,10 @@ const brandDark: typeof brandLight = {
   borderColorHover: dark.border,
   placeholderColor: dark.muted,
   surface: dark.surface,
+  cardBorder: dark.border,
+  soft: dark.soft,
   muted: dark.muted,
+  accent: dark.accent,
   primary: dark.primary,
   primaryHover: dark.primaryHover,
   primaryPress: dark.primaryActive,

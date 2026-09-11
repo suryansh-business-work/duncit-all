@@ -1,6 +1,8 @@
 import { useQuery } from '@apollo/client/react';
-import { Alert, Box, Card, CardContent, Chip, CircularProgress, Divider, Stack, Typography } from '@mui/material';
-import PaidIcon from '@mui/icons-material/Paid';
+import { Alert, Card, Chip, CircularProgress, Stack } from '@mui/material';
+import PaidRoundedIcon from '@mui/icons-material/PaidRounded';
+import SectionHeader from '../../components/SectionHeader';
+import StudioPageHeader from '../../components/StudioPageHeader';
 import StatCards from './StatCards';
 import PayoutList, { type VenuePayout } from './PayoutList';
 import { VENUE_EARNINGS } from './queries';
@@ -31,54 +33,26 @@ export default function VenueEarningsPage() {
 
   let history;
   if (payouts.length === 0) {
-    history = <Alert severity="info">{t('mweb.venueEarnings.payoutsAppearHereAfterAPod')}</Alert>;
+    history = <Alert severity="info" sx={{ m: 2 }}>{t('mweb.venueEarnings.payoutsAppearHereAfterAPod')}</Alert>;
   } else {
     history = <PayoutList payouts={payouts} symbol={symbol} />;
   }
 
   return (
-    <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-      <Stack direction="row" spacing={1.25} sx={{
-        alignItems: "center"
-      }}>
-        <Box sx={{ width: 38, height: 38, borderRadius: '50%', display: 'grid', placeItems: 'center', color: 'common.white', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
-          <PaidIcon fontSize="small" />
-        </Box>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
-            Earnings
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 600
-            }}>
-            Your venue payouts across all pods
-          </Typography>
-        </Box>
-      </Stack>
+    <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+      <StudioPageHeader icon={<PaidRoundedIcon fontSize="small" />} title={t('mweb.venueEarnings.earnings')} />
 
       {summary && <StatCards summary={summary} />}
 
-      <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-        <CardContent>
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{
-              alignItems: "center",
-              mb: 1
-            }}>
-            <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }}>
-              Payout history
-            </Typography>
-            <Chip size="small" label={payouts.length} />
+      <Stack spacing={1.5}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <Stack sx={{ flex: 1, minWidth: 0 }}>
+            <SectionHeader title="Payout history" />
           </Stack>
-          <Divider sx={{ mb: 1.5 }} />
-          {history}
-        </CardContent>
-      </Card>
+          <Chip size="small" label={payouts.length} sx={{ height: 24, minHeight: 24 }} />
+        </Stack>
+        <Card>{history}</Card>
+      </Stack>
     </Stack>
   );
 }

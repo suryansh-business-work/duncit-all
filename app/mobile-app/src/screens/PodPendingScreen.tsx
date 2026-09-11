@@ -52,7 +52,7 @@ export function PodPendingScreen() {
     body = (
       <RefreshScrollView
         flex={1}
-        contentContainerStyle={{ padding: 16, paddingBottom: 32, gap: 14 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 32, gap: 20 }}
       >
         <PendingBanner status={view.pod.venue_approval_status} />
         <PodPendingSummaryCard view={view} />

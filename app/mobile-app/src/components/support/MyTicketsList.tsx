@@ -3,9 +3,12 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { SectionHeader } from '@/components/SectionHeader';
 import { ListSkeleton } from '@/components/Skeleton';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTickets } from '@/hooks/useSupport';
 import { ticketNo } from '@/components/support/TicketMeta';
+import { StatusPill } from '@/components/support/StatusPill';
 import type { RootStackParamList } from '@/navigation/types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -57,42 +60,39 @@ export function MyTicketsList() {
           : `No ${LABEL[filter].toLowerCase()} tickets.`}
       </Text>
     ) : (
-      items.map((t) => (
-        <YStack
-          key={t.id}
-          testID={`my-ticket-${t.id}`}
-          role="button"
-          aria-label={t.subject}
-          onPress={() => navigation.navigate('TicketDetails', { ticketId: t.id })}
-          padding={14}
-          borderRadius={14}
-          borderWidth={1}
-          borderColor="$borderColor"
-          backgroundColor="$surface"
-          gap={3}
-          pressStyle={PRESS_STYLE.control}
-        >
-          <XStack justifyContent="space-between" alignItems="center" gap={8}>
-            <Text fontSize={14} fontWeight="600" color="$color" flex={1} numberOfLines={1}>
-              {t.subject}
+      <SurfaceCard padding={0} overflow="hidden">
+        {items.map((t, index) => (
+          <YStack
+            key={t.id}
+            testID={`my-ticket-${t.id}`}
+            role="button"
+            aria-label={t.subject}
+            onPress={() => navigation.navigate('TicketDetails', { ticketId: t.id })}
+            paddingHorizontal={16}
+            paddingVertical={14}
+            borderTopWidth={index === 0 ? 0 : 1}
+            borderTopColor="$borderColor"
+            gap={3}
+            pressStyle={PRESS_STYLE.row}
+          >
+            <XStack justifyContent="space-between" alignItems="center" gap={8}>
+              <Text fontSize={15} fontWeight="600" color="$color" flex={1} numberOfLines={1}>
+                {t.subject}
+              </Text>
+              <StatusPill status={t.status} label={LABEL[t.status as Filter] ?? t.status} />
+            </XStack>
+            <Text fontSize={12} color="$muted">
+              {ticketNo(t.id)} · {t.category}
             </Text>
-            <Text fontSize={11} fontWeight="700" color="$primary">
-              {LABEL[t.status as Filter] ?? t.status}
-            </Text>
-          </XStack>
-          <Text fontSize={11.5} color="$muted">
-            {ticketNo(t.id)} · {t.category}
-          </Text>
-        </YStack>
-      ))
+          </YStack>
+        ))}
+      </SurfaceCard>
     );
 
   return (
-    <YStack gap={10} testID="my-tickets-list">
-      <Text fontSize={12} fontWeight="700" textTransform="uppercase" color="$muted">
-        Your tickets
-      </Text>
-      <XStack gap={6} flexWrap="wrap">
+    <YStack gap={12} testID="my-tickets-list">
+      <SectionHeader title="Your tickets" />
+      <XStack gap={8} flexWrap="wrap">
         {FILTERS.map((f) => {
           const active = f === filter;
           return (
@@ -102,15 +102,14 @@ export function MyTicketsList() {
               role="button"
               aria-label={LABEL[f]}
               onPress={() => setFilter(f)}
-              paddingHorizontal={12}
-              paddingVertical={6}
+              height={36}
+              alignItems="center"
+              paddingHorizontal={14}
               borderRadius={999}
-              borderWidth={1}
-              borderColor={active ? '$primary' : '$borderColor'}
-              backgroundColor={active ? '$primary' : 'transparent'}
+              backgroundColor={active ? '$primary' : '$surface'}
               pressStyle={PRESS_STYLE.control}
             >
-              <Text fontSize={12} fontWeight="600" color={active ? '$onPrimary' : '$muted'}>
+              <Text fontSize={13} fontWeight="600" color={active ? '$onPrimary' : '$color'}>
                 {LABEL[f]} ({countFor(f)})
               </Text>
             </XStack>

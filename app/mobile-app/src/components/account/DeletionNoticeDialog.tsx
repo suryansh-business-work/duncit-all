@@ -85,12 +85,11 @@ export function DeletionNoticeDialog() {
         aria-label={t('mweb.account.deletion.noticeKeep')}
         onPress={close}
         flex={1}
-        height={46}
+        height={48}
         alignItems="center"
         justifyContent="center"
-        borderRadius={12}
-        borderWidth={1}
-        borderColor="$borderColor"
+        borderRadius={999}
+        backgroundColor="$soft"
         pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="600" color="$color">
@@ -103,14 +102,14 @@ export function DeletionNoticeDialog() {
         aria-label={t('mweb.account.deletion.withdraw')}
         onPress={withdraw}
         flex={1}
-        height={46}
+        height={48}
         alignItems="center"
         justifyContent="center"
-        borderRadius={12}
+        borderRadius={999}
         backgroundColor="$primary"
-        pressStyle={PRESS_STYLE.control}
+        pressStyle={PRESS_STYLE.solid}
       >
-        <Text fontSize={14} fontWeight="700" color="$onPrimary">
+        <Text fontSize={14} fontWeight="600" color="$onPrimary">
           {cancelling
             ? t('mweb.account.deletion.withdrawing')
             : t('mweb.account.deletion.withdraw')}
@@ -130,13 +129,13 @@ export function DeletionNoticeDialog() {
       footer={footer}
     >
       <YStack gap={10}>
-        <Text fontSize={13.5} fontWeight="700" color="$danger">
+        <Text fontSize={14} fontWeight="600" color="$danger">
           {t('mweb.account.deletion.deletesOn', {
             vars: { date: formatDate(pending.scheduled_delete_at) },
           })}
         </Text>
         {pending.days_remaining != null && (
-          <Text fontSize={12.5} fontWeight="700" color="$muted">
+          <Text fontSize={13} fontWeight="600" color="$muted">
             {t('mweb.account.deletion.noticeDaysLeft', {
               vars: { count: pending.days_remaining },
             })}

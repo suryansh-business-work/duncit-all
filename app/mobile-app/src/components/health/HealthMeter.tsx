@@ -2,6 +2,7 @@ import Svg, { Path } from 'react-native-svg';
 import { Text, YStack } from 'tamagui';
 
 import { clampScore, healthBandColor } from '@/utils/health';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export interface HealthMeterProps {
@@ -24,6 +25,7 @@ export function HealthMeter({
   caption,
 }: Readonly<HealthMeterProps>) {
   const { t } = useTranslation();
+  const { soft } = useThemeColors();
   // Resolved here, not as a parameter default: a default is evaluated
   // before any hook runs, so `t` would not exist yet.
   const labelText = label ?? t('mweb.health.accountHealth');
@@ -46,13 +48,7 @@ export function HealthMeter({
     <YStack alignItems="center" testID="health-meter">
       <YStack width={size} height={height}>
         <Svg width={size} height={height}>
-          <Path
-            d={arc}
-            fill="none"
-            stroke="rgba(0,0,0,0.08)"
-            strokeWidth={thickness}
-            strokeLinecap="round"
-          />
+          <Path d={arc} fill="none" stroke={soft} strokeWidth={thickness} strokeLinecap="round" />
           <Path
             d={arc}
             fill="none"
@@ -79,7 +75,14 @@ export function HealthMeter({
           </Text>
         </YStack>
       </YStack>
-      <Text fontSize={12} fontWeight="700" textTransform="uppercase" color="$muted" marginTop={8}>
+      <Text
+        fontSize={12}
+        fontWeight="600"
+        textTransform="uppercase"
+        letterSpacing={0.6}
+        color="$muted"
+        marginTop={8}
+      >
         {labelText}
       </Text>
       {caption ? (

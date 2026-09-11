@@ -1,8 +1,8 @@
-import { StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, XStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -13,72 +13,54 @@ interface Props {
 }
 
 /**
- * The mock's pink gradient banner: "Host your own pod → Create Pod". Hosts go
- * straight to pod creation; everyone else is invited into the Earn hub. Tamagui
- * twin of mWeb's HostCtaBanner.
+ * "Host your own pod → Create Pod" as a calm card: an accent icon disc, the
+ * title and one green pill. Hosts go straight to pod creation; everyone else
+ * is invited into the Earn hub. Tamagui twin of mWeb's HostCtaBanner.
  */
 export function HostCtaBanner({ isHost, onCreatePod, onBecomeHost }: Readonly<Props>) {
   const { t } = useTranslation();
+  const { accent } = useThemeColors();
   const title = isHost ? t('mweb.home.hostCtaTitle') : t('mweb.home.becomeHostCtaTitle');
-  const subtitle = isHost ? t('mweb.home.hostCtaSubtitle') : t('mweb.home.becomeHostCtaSubtitle');
   const buttonLabel = isHost ? t('mweb.home.hostCtaButton') : t('mweb.home.becomeHostCtaButton');
   const onPress = isHost ? onCreatePod : onBecomeHost;
 
   return (
-    <XStack
+    <SurfaceCard
       testID="host-cta-banner"
       role="button"
       aria-label={title}
       onPress={onPress}
       marginHorizontal={16}
-      borderRadius={20}
-      overflow="hidden"
+      flexDirection="row"
       alignItems="center"
       gap={12}
-      padding={14}
+      padding={12}
       pressStyle={PRESS_STYLE.surface}
     >
-      <LinearGradient
-        colors={['#ff4f73', '#f5337a', '#ff8b5f']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
       <XStack
-        width={42}
-        height={42}
-        borderRadius={21}
+        width={44}
+        height={44}
+        borderRadius={22}
         alignItems="center"
         justifyContent="center"
-        backgroundColor="rgba(255,255,255,0.2)"
-        borderWidth={1}
-        borderColor="rgba(255,255,255,0.4)"
-        zIndex={1}
+        backgroundColor="$soft"
       >
-        <MaterialIcons name="groups" size={22} color="#ffffff" />
+        <MaterialIcons name="groups" size={24} color={accent} />
       </XStack>
-      <YStack flex={1} minWidth={0} zIndex={1}>
-        <Text color="#ffffff" fontSize={14.5} fontWeight="700" numberOfLines={1}>
-          {title}
-        </Text>
-        <Text color="rgba(255,255,255,0.92)" fontSize={11.5} fontWeight="600" numberOfLines={2}>
-          {subtitle}
-        </Text>
-      </YStack>
+      <Text flex={1} minWidth={0} fontSize={16} fontWeight="600" color="$color" numberOfLines={2}>
+        {title}
+      </Text>
       <XStack
+        height={44}
         alignItems="center"
-        gap={4}
-        backgroundColor="#ffffff"
+        paddingHorizontal={20}
         borderRadius={999}
-        paddingHorizontal={13}
-        paddingVertical={8}
-        zIndex={1}
+        backgroundColor="$primary"
       >
-        <Text color="#ff4f73" fontSize={12.5} fontWeight="700">
+        <Text color="$onPrimary" fontSize={14} fontWeight="600">
           {buttonLabel}
         </Text>
-        <MaterialIcons name="arrow-forward" size={14} color="#ff4f73" />
       </XStack>
-    </XStack>
+    </SurfaceCard>
   );
 }

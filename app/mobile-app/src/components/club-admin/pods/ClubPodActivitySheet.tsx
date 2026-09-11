@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Spinner, Text, YStack } from 'tamagui';
 import type { PodAuditLog } from '@duncit/utils';
 
@@ -10,6 +10,7 @@ import { useDateFormat } from '@/hooks/useDateFormat';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toPodAuditLog } from '../audit-log';
+import { RowDivider } from '../NavRow';
 import { AuditLogChanges } from '../monitoring/AuditLogChanges';
 import { AuditLogRow } from '../monitoring/AuditLogRow';
 
@@ -64,22 +65,27 @@ export function ClubPodActivitySheet({ pod, onClose }: Readonly<Props>) {
       closeLabel={closeLabel}
       footer={footer}
     >
-      <YStack gap={10}>
+      <YStack>
         {isLoading ? <Spinner testID="club-pod-activity-loading" color="$primary" /> : null}
         {!isLoading && logs.length === 0 ? (
-          <Text testID="club-pod-activity-empty" fontSize={13} color="$muted">
+          <Text testID="club-pod-activity-empty" fontSize={14} color="$muted">
             {t('clubAdmin.pods.noActivity')}
           </Text>
         ) : null}
-        {logs.map((log) => (
-          <YStack key={log.id} gap={8}>
-            <AuditLogRow
-              log={log}
-              when={formatDateTime(log.created_at)}
-              testID={`club-pod-activity-${log.id}`}
-            />
-            <AuditLogChanges log={log} testID={`club-pod-activity-${log.id}-changes`} />
-          </YStack>
+        {logs.map((log, index) => (
+          <Fragment key={log.id}>
+            {index > 0 ? <RowDivider /> : null}
+            <YStack paddingBottom={14}>
+              <AuditLogRow
+                log={log}
+                when={formatDateTime(log.created_at)}
+                testID={`club-pod-activity-${log.id}`}
+              />
+              <YStack paddingHorizontal={16}>
+                <AuditLogChanges log={log} testID={`club-pod-activity-${log.id}-changes`} />
+              </YStack>
+            </YStack>
+          </Fragment>
         ))}
       </YStack>
     </DuncitDialog>

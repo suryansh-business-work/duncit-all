@@ -103,9 +103,9 @@ export default function CategoryStep({
       <DuncitButton
         variant="contained"
         size="large"
+        fullWidth
         disabled={submitting}
         onClick={onSubmit}
-        sx={{ borderRadius: 999, fontWeight: 700 }}
       >
         {submitting ? 'Loading…' : 'Continue'}
       </DuncitButton>

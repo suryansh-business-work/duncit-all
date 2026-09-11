@@ -6,8 +6,9 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
- * Terms & Privacy footer, mirroring mWeb's <LegalLinks/>. URLs come from the
- * shared auth tokens so both apps point at the same legal pages.
+ * Terms & Privacy footer, mirroring mWeb's <LegalLinks/> — the links are green
+ * 600 like every other auth link there. URLs come from the shared auth tokens
+ * so both apps point at the same legal pages.
  */
 export function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
   const { t } = useTranslation();
@@ -21,8 +22,8 @@ export function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
       <Text
         pressStyle={PRESS_STYLE.inline}
         testID="legal-terms"
-        color={auth.accent}
-        fontWeight="700"
+        color="$primary"
+        fontWeight="600"
         onPress={() => Linking.openURL(auth.legal.termsUrl)}
       >
         {t('mweb.auth.terms')}
@@ -31,8 +32,8 @@ export function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
       <Text
         pressStyle={PRESS_STYLE.inline}
         testID="legal-privacy"
-        color={auth.accent}
-        fontWeight="700"
+        color="$primary"
+        fontWeight="600"
         onPress={() => Linking.openURL(auth.legal.privacyUrl)}
       >
         {t('mweb.auth.privacy')}

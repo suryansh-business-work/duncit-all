@@ -22,8 +22,9 @@ interface Props {
   onPress?: () => void;
 }
 
-/** One entry of the AI-monitored trail: the pod, what happened, how risky the
- * monitor judged it, who did it and the one-line AI summary. */
+/** One entry of the AI-monitored trail, as a row of its list: the pod, what
+ * happened, how risky the monitor judged it, who did it and the one-line AI
+ * summary. */
 export function AuditLogRow({ log, when, testID, onPress }: Readonly<Props>) {
   const { t } = useTranslation();
   const tones = useToneColors();
@@ -36,16 +37,13 @@ export function AuditLogRow({ log, when, testID, onPress }: Readonly<Props>) {
       role={onPress ? 'button' : undefined}
       aria-label={onPress ? log.pod_title : undefined}
       onPress={onPress}
-      pressStyle={onPress ? PRESS_STYLE.surface : undefined}
+      pressStyle={onPress ? PRESS_STYLE.row : undefined}
       gap={6}
-      padding={12}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
+      paddingHorizontal={16}
+      paddingVertical={14}
     >
       <XStack alignItems="center" gap={8}>
-        <Text flex={1} fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
+        <Text flex={1} fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
           {log.pod_title}
         </Text>
         <ToneChip
@@ -70,7 +68,7 @@ export function AuditLogRow({ log, when, testID, onPress }: Readonly<Props>) {
         {by}
       </Text>
       {log.ai_summary ? (
-        <Text fontSize={12.5} color="$color" numberOfLines={2}>
+        <Text fontSize={13} color="$muted" fontStyle="italic" numberOfLines={2}>
           {log.ai_summary}
         </Text>
       ) : null}

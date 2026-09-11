@@ -2,6 +2,7 @@ import { Controller } from 'react-hook-form';
 import { YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { TourAnchor } from '@/tours/TourAnchor';
 import { HashtagChipsField } from '../HashtagChipsField';
 import { MediaUploadField } from '../MediaUploadField';
@@ -37,61 +38,71 @@ export function BasicsStep({ form, hostCategories, showCategory = true }: Readon
     hostCategories.find((category) => hostCategoryKeyOf(category) === categoryKey),
   );
   return (
-    <YStack gap={14}>
+    <YStack gap={16}>
       {/* First field of the form: the category scopes the clubs on step 2 AND
           the products on step 4, so it is picked before the title. mWeb twin
           (rule 27). */}
-      {showCategory ? <HostCategoryField form={form} hostCategories={hostCategories} /> : null}
-      {/* The title field alone, not the title/description/photo group: the
-          native overlay cannot scroll a target into view, so a highlight taller
-          than the viewport is one the host never sees. */}
-      <TourAnchor tour="create-pod" anchor="create-pod-basics">
+      {showCategory ? (
+        <SurfaceCard>
+          <HostCategoryField form={form} hostCategories={hostCategories} />
+        </SurfaceCard>
+      ) : null}
+      <SurfaceCard gap={14}>
+        {/* The title field alone, not the title/description/photo group: the
+            native overlay cannot scroll a target into view, so a highlight
+            taller than the viewport is one the host never sees. */}
+        <TourAnchor tour="create-pod" anchor="create-pod-basics">
+          <FormTextField
+            control={control}
+            name="pod_title"
+            label={t('mweb.createPod.podTitleLabel')}
+            required
+            hint={t('mweb.createPod.podTitleHint')}
+          />
+        </TourAnchor>
         <FormTextField
           control={control}
-          name="pod_title"
-          label={t('mweb.createPod.podTitleLabel')}
+          name="pod_description"
+          label={t('mweb.createPod.podDescriptionLabel')}
+          multiline
           required
-          hint={t('mweb.createPod.podTitleHint')}
+          hint={t('mweb.createPod.podDescriptionHint')}
         />
-      </TourAnchor>
-      <FormTextField
-        control={control}
-        name="pod_description"
-        label={t('mweb.createPod.podDescriptionLabel')}
-        multiline
-        required
-        hint={t('mweb.createPod.podDescriptionHint')}
-      />
-      <Controller
-        control={control}
-        name="media_text"
-        render={({ field, fieldState }) => (
-          <MediaUploadField
-            value={field.value}
-            onChange={field.onChange}
-            error={fieldState.error?.message}
-            required
-            subCategoryName={subCategoryName}
-            maxImages={MAX_COVER_IMAGES}
-          />
-        )}
-      />
-      <Controller
-        control={control}
-        name="what_this_pod_offers"
-        render={({ field, fieldState }) => (
-          <ChipArrayField
-            label={t('mweb.createPod.offersLabel')}
-            required
-            value={field.value}
-            onChange={field.onChange}
-            error={fieldState.error?.message}
-            placeholder={t('mweb.createPod.offersPlaceholder')}
-            testID="create-pod-offers"
-          />
-        )}
-      />
-      <HashtagChipsField form={form} />
+      </SurfaceCard>
+      <SurfaceCard>
+        <Controller
+          control={control}
+          name="media_text"
+          render={({ field, fieldState }) => (
+            <MediaUploadField
+              value={field.value}
+              onChange={field.onChange}
+              error={fieldState.error?.message}
+              required
+              subCategoryName={subCategoryName}
+              maxImages={MAX_COVER_IMAGES}
+            />
+          )}
+        />
+      </SurfaceCard>
+      <SurfaceCard gap={16}>
+        <Controller
+          control={control}
+          name="what_this_pod_offers"
+          render={({ field, fieldState }) => (
+            <ChipArrayField
+              label={t('mweb.createPod.offersLabel')}
+              required
+              value={field.value}
+              onChange={field.onChange}
+              error={fieldState.error?.message}
+              placeholder={t('mweb.createPod.offersPlaceholder')}
+              testID="create-pod-offers"
+            />
+          )}
+        />
+        <HashtagChipsField form={form} />
+      </SurfaceCard>
       <OptionalSettingsCards form={form} />
       <Controller
         control={control}
@@ -99,7 +110,7 @@ export function BasicsStep({ form, hostCategories, showCategory = true }: Readon
         render={({ field }) => (
           // The nudge reads from outside the collapsed card, so it lives beside
           // the field rather than inside it, and clears once a reel is added.
-          <YStack gap={14}>
+          <YStack gap={16}>
             {field.value ? null : <ReelEngagementNotice />}
             <ReelUploadField value={field.value} onChange={field.onChange} />
           </YStack>

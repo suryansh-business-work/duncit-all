@@ -1,15 +1,16 @@
 import { type ReactNode, useMemo, useState } from 'react';
 import { Modal } from 'react-native';
-import { AppImage } from '@/components/AppImage';
 
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, ScrollView, Text, XStack, YStack } from 'tamagui';
 
+import { FIELD_HEIGHT, FIELD_RADIUS, FieldLabel } from '@/components/Field';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { SelectOptionRow } from './SelectOptionRow';
 
 export interface SelectOption {
   value: string;
@@ -74,10 +75,8 @@ export function SelectSheet({
   };
 
   return (
-    <YStack gap={6} flex={1}>
-      <Text fontSize={14} fontWeight="500" color="$color">
-        {label}
-      </Text>
+    <YStack gap={8} flex={1}>
+      <FieldLabel label={label} />
       <XStack
         testID={`${testID}-trigger`}
         role="button"
@@ -86,9 +85,9 @@ export function SelectSheet({
         onPress={disabled ? undefined : () => setOpen(true)}
         alignItems="center"
         gap={8}
-        height={48}
-        paddingHorizontal={12}
-        borderRadius={9}
+        height={FIELD_HEIGHT}
+        paddingHorizontal={14}
+        borderRadius={FIELD_RADIUS}
         borderWidth={1}
         borderColor={error ? '$danger' : '$borderColor'}
         backgroundColor="$surface"
@@ -96,10 +95,10 @@ export function SelectSheet({
         pressStyle={PRESS_STYLE.control}
       >
         {leading}
-        <Text flex={1} fontSize={14} color={triggerText ? '$color' : '$muted'} numberOfLines={1}>
+        <Text flex={1} fontSize={15} color={triggerText ? '$color' : '$muted'} numberOfLines={1}>
           {triggerText || placeholder}
         </Text>
-        <MaterialIcons name="arrow-drop-down" size={22} color={muted} />
+        <MaterialIcons name="expand-more" size={22} color={muted} />
       </XStack>
       {error ? (
         <Text testID={`${testID}-error`} fontSize={12} color="$danger">
@@ -128,25 +127,23 @@ export function SelectSheet({
                 width="92%"
                 maxWidth={420}
                 maxHeight="76%"
-                backgroundColor="$background"
-                borderRadius={20}
-                padding={16}
+                backgroundColor="$surface"
+                borderRadius={28}
+                padding={20}
                 gap={12}
               >
-                <Text fontSize={16} fontWeight="700" color="$color">
+                <Text fontSize={18} fontWeight="600" color="$color">
                   {label}
                 </Text>
                 <XStack
                   alignItems="center"
-                  gap={6}
-                  height={40}
-                  paddingHorizontal={10}
-                  borderRadius={10}
-                  borderWidth={1}
-                  borderColor="$borderColor"
-                  backgroundColor="$surface"
+                  gap={8}
+                  height={48}
+                  paddingHorizontal={16}
+                  borderRadius={999}
+                  backgroundColor="$soft"
                 >
-                  <MaterialIcons name="search" size={16} color={muted} />
+                  <MaterialIcons name="search" size={20} color={muted} />
                   <Input
                     testID={`${testID}-search`}
                     aria-label={t('mweb.common.search')}
@@ -156,7 +153,7 @@ export function SelectSheet({
                     onChangeText={setQuery}
                     placeholder={`Search ${label.toLowerCase()}`}
                     placeholderTextColor="$muted"
-                    fontSize={14}
+                    fontSize={15}
                     color="$color"
                   />
                 </XStack>
@@ -165,47 +162,18 @@ export function SelectSheet({
                   keyboardShouldPersistTaps="handled"
                 >
                   <YStack>
-                    {filtered.map((option) => {
-                      const active = option.value === value;
-                      return (
-                        <XStack
-                          key={option.value}
-                          testID={`${testID}-option-${option.value}`}
-                          role="button"
-                          aria-label={option.label}
-                          aria-pressed={active}
-                          onPress={() => {
-                            onPick(option.value);
-                            close();
-                          }}
-                          alignItems="center"
-                          gap={10}
-                          paddingVertical={11}
-                          pressStyle={PRESS_STYLE.row}
-                        >
-                          {option.flag ? (
-                            <AppImage
-                              source={{ uri: option.flag }}
-                              style={{ width: 22, height: 16, borderRadius: 2 }}
-                            />
-                          ) : null}
-                          <Text
-                            flex={1}
-                            fontSize={14}
-                            fontWeight={active ? '700' : '500'}
-                            color={active ? '$primary' : '$color'}
-                          >
-                            {option.label}
-                          </Text>
-                          {option.hint ? (
-                            <Text fontSize={13} color="$muted">
-                              {option.hint}
-                            </Text>
-                          ) : null}
-                          {active ? <MaterialIcons name="check" size={18} color={muted} /> : null}
-                        </XStack>
-                      );
-                    })}
+                    {filtered.map((option) => (
+                      <SelectOptionRow
+                        key={option.value}
+                        option={option}
+                        active={option.value === value}
+                        testID={`${testID}-option-${option.value}`}
+                        onPress={() => {
+                          onPick(option.value);
+                          close();
+                        }}
+                      />
+                    ))}
                     {filtered.length === 0 ? (
                       <Text
                         testID={`${testID}-empty`}

@@ -81,10 +81,10 @@ export function SavedAddressPicker({ onPick }: Readonly<Props>) {
         alignItems="center"
         gap={10}
         padding={12}
-        borderRadius={12}
+        borderRadius={14}
         borderWidth={1}
         borderColor="$borderColor"
-        backgroundColor="$background"
+        backgroundColor="$surface"
         pressStyle={PRESS_STYLE.control}
       >
         <MaterialIcons name="home-work" size={18} color={primary} />
@@ -118,9 +118,9 @@ export function SavedAddressPicker({ onPick }: Readonly<Props>) {
               backgroundColor="rgba(0,0,0,0.5)"
             />
             <YStack
-              backgroundColor="$background"
-              borderTopLeftRadius={22}
-              borderTopRightRadius={22}
+              backgroundColor="$surface"
+              borderTopLeftRadius={28}
+              borderTopRightRadius={28}
               maxHeight="70%"
             >
               <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>

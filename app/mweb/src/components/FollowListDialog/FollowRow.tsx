@@ -33,12 +33,12 @@ export default function FollowRow({ person, isSelf, onToggle, onOpen }: Readonly
       spacing={1.5}
       sx={{
         alignItems: "center",
-        py: 1
+        py: 1.25
       }}>
       <Avatar
         src={person.profile_photo || undefined}
         onClick={() => onOpen(person.user_id)}
-        sx={{ cursor: 'pointer' }}
+        sx={{ width: 44, height: 44, cursor: 'pointer', bgcolor: 'primary.main', fontWeight: 600 }}
       >
         {name[0]?.toUpperCase()}
       </Avatar>
@@ -47,11 +47,14 @@ export default function FollowRow({ person, isSelf, onToggle, onOpen }: Readonly
         sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }}
       >
         <Typography noWrap sx={{
+          fontSize: 15,
           fontWeight: 600
         }}>
           {name}
         </Typography>
         <Typography variant="caption" noWrap sx={{
+          display: 'block',
+          fontSize: 13,
           color: "text.secondary"
         }}>
           @{person.username}

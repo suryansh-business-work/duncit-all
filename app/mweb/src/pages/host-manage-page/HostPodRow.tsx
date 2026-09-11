@@ -1,12 +1,14 @@
 import { Link as RouterLink } from 'react-router';
 import { Alert, Box, Chip, Stack, Typography } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { coverImageUrl } from '@duncit/utils';
 import {
   HostPodActionsMenu,
   VENUE_REJECTED_NOTE,
   isVenueRejected,
   venueApprovalChip,
 } from '@duncit/host-pod-actions';
+import PodThumb from './PodThumb';
 import type { HostPodRowActions } from './hostPodRowActions';
 import { formatDateTime } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -19,8 +21,9 @@ interface Props extends HostPodRowActions {
   pod: any;
 }
 
-/** One hosted pod row — link to the pod + the host's actions behind a single
- * overflow menu. A venue-rejected pod shows its status + the resubmission note. */
+/** One hosted pod row inside the Your-pods card — cover, title, when/where, the
+ * Paid/Free pill and the host's actions behind a single overflow menu. A
+ * venue-rejected pod shows its status + the resubmission note. */
 export default function HostPodRow({
   pod,
   actions,
@@ -36,48 +39,48 @@ export default function HostPodRow({
   const free = pod.pod_type === 'FREE';
   const podPath = pod.club_slug && pod.pod_id ? `/club/${pod.club_slug}/pod/${pod.pod_id}` : '#';
   return (
-    <Stack
-      spacing={0.75}
-      sx={{
-        p: 1.25,
-        borderRadius: '16px',
-        border: 1,
-        borderColor: rejected ? 'error.light' : 'divider',
-        bgcolor: 'background.paper',
-        transition: 'all 160ms ease',
-        '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
-      }}
-    >
-      <Stack direction="row" spacing={0.5} sx={{
-        alignItems: "center"
-      }}>
+    <Stack spacing={1} sx={{ px: 2, py: 1.75 }}>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
         <Box
           component={RouterLink}
           to={podPath}
-          sx={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            textDecoration: 'none',
+            color: 'inherit',
+          }}
         >
-          <Typography variant="subtitle2" noWrap sx={{
-            fontWeight: 700
-          }}>
-            {pod.pod_title}
-          </Typography>
-          <Typography
-            variant="caption"
-            noWrap
-            sx={{
-              color: "text.secondary",
-              display: "block"
-            }}>
-            {formatDate(pod.pod_date_time)}
-            {pod.zone_name ? ` · ${pod.zone_name}` : ''}
-          </Typography>
+          <PodThumb src={coverImageUrl(pod.pod_images_and_videos)} />
+          <Box sx={{ minWidth: 0 }}>
+            <Typography noWrap sx={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+              {pod.pod_title}
+            </Typography>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{ color: 'text.secondary', display: 'block' }}
+            >
+              {formatDate(pod.pod_date_time)}
+              {pod.zone_name ? ` · ${pod.zone_name}` : ''}
+            </Typography>
+            {approvalChip && (
+              <Chip
+                label={approvalChip.label}
+                color={approvalChip.color}
+                sx={{ mt: 0.5, height: 24 }}
+              />
+            )}
+          </Box>
         </Box>
-        {approvalChip && <Chip size="small" label={approvalChip.label} color={approvalChip.color} />}
         <Chip
-          size="small"
           label={free ? t('mweb.podType.free') : t('mweb.podType.paid')}
           color={free ? 'success' : 'primary'}
           variant="outlined"
+          sx={{ height: 24 }}
         />
         <HostPodActionsMenu
           {...actions}

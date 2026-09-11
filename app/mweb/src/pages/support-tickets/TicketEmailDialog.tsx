@@ -32,7 +32,7 @@ export default function TicketEmailDialog({ open, ticketId, defaultEmail, onClos
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.supportTickets.emailThisTicket')}</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.supportTickets.emailThisTicket')}</DialogTitle>
       <DialogContent>
         {done ? (
           <Alert severity="success">Transcript sent to {email}.</Alert>

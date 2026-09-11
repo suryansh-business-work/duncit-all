@@ -2,13 +2,13 @@ import { useState, type ReactNode } from 'react';
 import { Controller } from 'react-hook-form';
 import {
   Box,
-  Card,
   CardActionArea,
   Chip,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   Stack,
   TextField,
   Typography,
@@ -17,60 +17,62 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
 import ChipArrayField from './fields/ChipArrayField';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { SURFACE_SX } from '../../../theme';
 import type { CreatePodForm } from './create-pod.types';
 
 type PanelKey = 'info' | 'perks';
 
-const PANELS: { key: PanelKey; titleKey: string; subtitleKey: string; icon: ReactNode }[] = [
-  {
-    key: 'info',
-    titleKey: 'mweb.createPod.additionalInfoTitle',
-    subtitleKey: 'mweb.createPod.additionalInfoSubtitle',
-    icon: <InfoOutlinedIcon fontSize="small" />,
-  },
-  {
-    key: 'perks',
-    titleKey: 'mweb.createPod.perksTitle',
-    subtitleKey: 'mweb.createPod.perksSubtitle',
-    icon: <StarBorderIcon fontSize="small" />,
-  },
+const PANELS: { key: PanelKey; titleKey: string; icon: ReactNode }[] = [
+  { key: 'info', titleKey: 'mweb.createPod.additionalInfoTitle', icon: <InfoOutlinedIcon /> },
+  { key: 'perks', titleKey: 'mweb.createPod.perksTitle', icon: <StarBorderIcon /> },
 ];
 
-interface CardProps {
+/** The "Added" / "2 added" pill on a filled row. */
+const SUMMARY_CHIP_SX = { height: 26, minHeight: 26, fontSize: '0.75rem' } as const;
+
+interface RowProps {
   panel: (typeof PANELS)[number];
   title: string;
-  subtitle: string;
   summary: string;
-  /** True when the field behind the card already holds something. */
+  /** True when the field behind the row already holds something. */
   filled: boolean;
   onOpen: () => void;
 }
 
-function SettingCard({ panel, title, subtitle, summary, filled, onOpen }: Readonly<CardProps>) {
+/** One tap-to-edit row of the list card: accent icon disc, title, and the
+ * summary pill once filled (a chevron before). Native twin: the rows in
+ * OptionalSettingsCards. */
+function SettingRow({ panel, title, summary, filled, onOpen }: Readonly<RowProps>) {
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px', height: '100%' }}>
-      <CardActionArea onClick={onOpen} sx={{ p: 1.5, height: '100%' }} aria-label={title}>
-        <Stack direction="row" spacing={1.25} sx={{
-          alignItems: "center"
-        }}>
-          <Box sx={{ display: 'grid', placeItems: 'center', width: 38, height: 38, borderRadius: '50%', bgcolor: 'primary.main', color: 'primary.contrastText' }}>
-            {panel.icon}
-          </Box>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle2" noWrap sx={{
-              fontWeight: 700
-            }}>{title}</Typography>
-            <Typography variant="caption" noWrap sx={{
-              color: "text.secondary"
-            }}>{subtitle}</Typography>
-          </Box>
-          {filled ? <Chip label={summary} size="small" color="primary" /> : <ChevronRightIcon color="action" />}
-        </Stack>
-      </CardActionArea>
-    </Card>
+    <CardActionArea onClick={onOpen} sx={{ px: 2, py: 1.75, borderRadius: 0 }} aria-label={title}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+        <Box
+          sx={{
+            display: 'grid',
+            placeItems: 'center',
+            width: 40,
+            height: 40,
+            flexShrink: 0,
+            borderRadius: '50%',
+            bgcolor: 'action.hover',
+            color: 'secondary.main',
+          }}
+        >
+          {panel.icon}
+        </Box>
+        <Typography noWrap sx={{ flex: 1, minWidth: 0, fontSize: '0.95rem', fontWeight: 600 }}>
+          {title}
+        </Typography>
+        {filled ? (
+          <Chip label={summary} size="small" color="primary" sx={SUMMARY_CHIP_SX} />
+        ) : (
+          <ChevronRightIcon sx={{ color: 'text.secondary' }} />
+        )}
+      </Stack>
+    </CardActionArea>
   );
 }
 
@@ -117,45 +119,40 @@ export default function OptionalSettingsCards({ form }: Readonly<{ form: CreateP
   const activePanel = PANELS.find((panel) => panel.key === active) ?? null;
 
   return (
-    <Box>
-      <Typography
-        variant="caption"
-        sx={{
-          color: "text.secondary",
-          fontWeight: 700,
-          letterSpacing: '0.1em'
-        }}>
-        {t('mweb.createPod.optionalSettings')}
-      </Typography>
-      <Stack spacing={1.25} sx={{ mt: 1 }}>
-        <SettingCard
-          panel={PANELS[0]}
-          title={t('mweb.createPod.additionalInfoTitle')}
-          subtitle={t('mweb.createPod.additionalInfoSubtitle')}
-          summary={infoSummary}
-          filled={infoFilled}
-          onOpen={() => setActive('info')}
-        />
-        <SettingCard
-          panel={PANELS[1]}
-          title={t('mweb.createPod.perksTitle')}
-          subtitle={t('mweb.createPod.perksSubtitle')}
-          summary={perksSummary}
-          filled={perksFilled}
-          onOpen={() => setActive('perks')}
-        />
-      </Stack>
+    <Box sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
+      <SettingRow
+        panel={PANELS[0]}
+        title={t('mweb.createPod.additionalInfoTitle')}
+        summary={infoSummary}
+        filled={infoFilled}
+        onOpen={() => setActive('info')}
+      />
+      <Divider />
+      <SettingRow
+        panel={PANELS[1]}
+        title={t('mweb.createPod.perksTitle')}
+        summary={perksSummary}
+        filled={perksFilled}
+        onOpen={() => setActive('perks')}
+      />
 
       <Dialog open={!!active} onClose={() => setActive(null)} fullWidth maxWidth="sm">
-        <DialogTitle sx={{ fontWeight: 700, pr: 6 }}>
+        <DialogTitle sx={{ pr: 7 }}>
           {activePanel ? t(activePanel.titleKey) : null}
-          <DuncitIconButton aria-label={t('mweb.auth.close')} onClick={() => setActive(null)} sx={{ position: 'absolute', right: 8, top: 8 }}>
+          <DuncitRoundButton
+            tone="surface"
+            aria-label={t('mweb.auth.close')}
+            onClick={() => setActive(null)}
+            sx={{ position: 'absolute', right: 12, top: 12 }}
+          >
             <CloseIcon />
-          </DuncitIconButton>
+          </DuncitRoundButton>
         </DialogTitle>
         <DialogContent>{active && <PanelBody panelKey={active} form={form} />}</DialogContent>
-        <DialogActions>
-          <DuncitButton variant="contained" onClick={() => setActive(null)} sx={{ fontWeight: 600 }}>{t('mweb.createPod.done')}</DuncitButton>
+        <DialogActions sx={{ px: 3, pb: 2.5 }}>
+          <DuncitButton variant="contained" size="large" fullWidth onClick={() => setActive(null)}>
+            {t('mweb.createPod.done')}
+          </DuncitButton>
         </DialogActions>
       </Dialog>
     </Box>

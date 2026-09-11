@@ -1,4 +1,4 @@
-import { Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 /**
  * One `value label` fact in a row's facts strip — "12 Pods", "340 Followers".
@@ -7,7 +7,10 @@ import { Typography } from '@mui/material';
 export default function FactLine({ value, label }: Readonly<{ value: string; label: string }>) {
   return (
     <Typography variant="caption" sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}>
-      <b>{value}</b> {label}
+      <Box component="span" sx={{ color: 'text.primary', fontWeight: 600 }}>
+        {value}
+      </Box>{' '}
+      {label}
     </Typography>
   );
 }

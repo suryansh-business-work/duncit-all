@@ -1,133 +1,105 @@
 import type { ComponentProps } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
-import type { VibeIconLayout } from '@/hooks/useHomeFeed';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { useThemeStore } from '@/stores/theme.store';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
-type FlexDirection = 'column' | 'column-reverse' | 'row' | 'row-reverse';
 
-/** Icon placement (relative to the label) → Tamagui `flexDirection` for the tab.
- * Hoisted to module scope so the resolve stays a single lookup; a missing/unknown
- * position falls back to 'column' (the current icon-over-label look). */
-const POSITION_TO_DIRECTION: Record<string, FlexDirection> = {
-  TOP: 'column',
-  BOTTOM: 'column-reverse',
-  LEFT: 'row',
-  RIGHT: 'row-reverse',
-};
+/** The chip's icon circle, and the glyph inside it. */
+const CIRCLE = 24;
+const GLYPH = 16;
 
-/** Server default icon size (px) when a category has no configured layout. */
-const DEFAULT_ICON_SIZE = 40;
-
-interface TabIconProps {
+interface ChipIconProps {
   testID: string;
   icon?: string;
   fallback: IconName;
   tint: string;
-  width: number;
-  height: number;
 }
 
-/** Renders the tab's icon full-bleed (no badge): an image thumbnail for a URL,
- * an emoji/text for a short string, or a MaterialIcons fallback when the category
- * has no icon. Sized by the category's configured width/height. */
-function TabIcon({ testID, icon, fallback, tint, width, height }: Readonly<TabIconProps>) {
+/** The chip's icon: an image filling the circle for a URL, an emoji/text for a
+ * short string, or a MaterialIcons fallback when the category has no icon. */
+function ChipIcon({ testID, icon, fallback, tint }: Readonly<ChipIconProps>) {
   if (icon?.startsWith('http')) {
     return (
       <AppImage
         testID={`${testID}-image`}
         source={{ uri: icon }}
-        style={{ width, height, borderRadius: 12 }}
+        style={{ width: CIRCLE, height: CIRCLE }}
       />
     );
   }
   if (icon) {
     return (
-      <Text testID={`${testID}-emoji`} fontSize={height}>
+      <Text testID={`${testID}-emoji`} fontSize={GLYPH} lineHeight={CIRCLE}>
         {icon}
       </Text>
     );
   }
-  return <MaterialIcons name={fallback} size={height} color={tint} />;
+  return <MaterialIcons name={fallback} size={GLYPH} color={tint} />;
 }
 
 interface VibeCategoryTabProps {
   testID: string;
   label: string;
   icon?: string;
-  /** CATEGORY-level icon placement + size; null → the default TOP / 40x40 look. */
-  iconLayout?: VibeIconLayout | null;
   fallback?: IconName;
   selected: boolean;
   onPress: () => void;
 }
 
-/** A single icon+label tab in the vibe category tabber. The icon's placement
- * relative to the label (TOP/BOTTOM/LEFT/RIGHT) and its size come from the
- * category's `iconLayout`; the selected state is an underline bar plus a
- * primary-coloured label. */
+/** A top-level category chip: a surface pill with the category's icon in a
+ * small circle at the left; selected = the green primary fill. mWeb twin:
+ * VibeTab. */
 export function VibeCategoryTab({
   testID,
   label,
   icon,
-  iconLayout,
   fallback = 'category',
   selected,
   onPress,
 }: Readonly<VibeCategoryTabProps>) {
-  const { primary, color } = useThemeColors();
-  const dark = useThemeStore((s) => s.scheme) === 'dark';
-  const tint = selected ? primary : color;
-  const flexDirection = POSITION_TO_DIRECTION[iconLayout?.position ?? ''] ?? 'column';
-  const iconWidth = iconLayout?.width ?? DEFAULT_ICON_SIZE;
-  const iconHeight = iconLayout?.height ?? DEFAULT_ICON_SIZE;
-  const selectedFill = dark ? 'rgba(255,79,115,0.18)' : 'rgba(255,79,115,0.08)';
+  const { color } = useThemeColors();
 
-  // The mock's CARD tile: rounded card, icon over label, selected = primary
-  // border + soft primary fill (the underline bar is gone).
   return (
-    <YStack
+    <XStack
       testID={testID}
       role="button"
       aria-label={label}
       aria-pressed={selected}
       onPress={onPress}
-      flexDirection={flexDirection}
-      width={96}
+      height={40}
       alignItems="center"
-      justifyContent="center"
-      gap={5}
-      paddingVertical={10}
-      paddingHorizontal={8}
-      borderRadius={16}
-      borderWidth={1.5}
-      borderColor={selected ? '$primary' : '$borderColor'}
-      backgroundColor={selected ? selectedFill : '$surface'}
+      gap={8}
+      paddingLeft={8}
+      paddingRight={14}
+      borderRadius={999}
+      borderWidth={1}
+      borderColor={selected ? '$primary' : '$cardBorder'}
+      backgroundColor={selected ? '$primary' : '$surface'}
       pressStyle={PRESS_STYLE.control}
     >
-      <YStack width={iconWidth} height={iconHeight} alignItems="center" justifyContent="center">
-        <TabIcon
-          testID={testID}
-          icon={icon}
-          fallback={fallback}
-          tint={tint}
-          width={iconWidth}
-          height={iconHeight}
-        />
+      <YStack
+        width={CIRCLE}
+        height={CIRCLE}
+        borderRadius={CIRCLE / 2}
+        overflow="hidden"
+        alignItems="center"
+        justifyContent="center"
+        backgroundColor={selected ? '$surface' : '$soft'}
+      >
+        <ChipIcon testID={testID} icon={icon} fallback={fallback} tint={color} />
       </YStack>
       <Text
-        fontSize={11.5}
-        fontWeight={selected ? '700' : '600'}
-        color={selected ? '$primary' : '$color'}
+        fontSize={13}
+        fontWeight="600"
+        color={selected ? '$onPrimary' : '$color'}
         numberOfLines={1}
       >
         {label}
       </Text>
-    </YStack>
+    </XStack>
   );
 }

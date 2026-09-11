@@ -13,6 +13,8 @@ export function useThemeColors() {
     color: theme.color?.val as string,
     muted: theme.muted?.val as string,
     primary: theme.primary?.val as string,
+    accent: theme.accent?.val as string,
+    soft: theme.soft?.val as string,
     danger: theme.danger?.val as string,
     success: theme.success?.val as string,
     warning: theme.warning?.val as string,

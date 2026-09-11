@@ -4,11 +4,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Spinner, Text, YStack } from 'tamagui';
 
 import {
+  CheckoutSavingsCard,
   CheckoutSuccess,
   AlreadyBookedDialog,
-  CoinRedeemField,
-  CouponField,
-  CouponTotal,
   OrderSummary,
   type CheckoutDiscount,
   ProcessingOverlay,
@@ -263,7 +261,7 @@ export function CheckoutScreen() {
           unitAmount={Number(pod?.pod_amount) || 0}
           coins={coinSummary}
         />
-        <CouponField
+        <CheckoutSavingsCard
           code={couponCode}
           setCode={setCouponCode}
           applied={coupon}
@@ -273,11 +271,7 @@ export function CheckoutScreen() {
           available={availableCoupons}
           onApply={applyCoupon}
           onRemove={removeCoupon}
-        />
-        <CoinRedeemField coins={coins} />
-        <CouponTotal
-          currency={breakup.currency}
-          effectiveTotal={coins.effectiveTotal}
+          coins={coins}
           originalTotal={breakup.total}
         />
         <CheckoutIssue issue={serverIssue.issue} />

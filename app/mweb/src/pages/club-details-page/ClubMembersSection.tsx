@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
-import { Avatar, AvatarGroup, Box, ButtonBase, Typography } from '@mui/material';
+import { Avatar, AvatarGroup, ButtonBase, Stack } from '@mui/material';
 import PodAttendeesDialog, { type AttendeePerson } from '../../components/pod-details/PodAttendeesDialog';
+import SectionHeader from '../../components/SectionHeader';
+import { SURFACE_SX } from '../../theme';
 import { useTranslation } from '../../i18n/useTranslation';
 
 const CLUB_MEMBERS = gql`
@@ -48,16 +50,12 @@ export default function ClubMembersSection({ memberIds }: Readonly<Props>) {
   if (memberIds.length === 0) return null;
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom sx={{
-        fontWeight: 700
-      }}>
-        Club Members
-      </Typography>
+    <Stack spacing={1.5} sx={{ ...SURFACE_SX, p: 2 }}>
+      <SectionHeader title="Club Members" actionLabel="View all" onAction={() => setOpen(true)} />
       <ButtonBase
         onClick={() => setOpen(true)}
         aria-label={t('mweb.clubDetails.viewAllClubMembers')}
-        sx={{ borderRadius: 999, p: 0.5 }}
+        sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
       >
         <AvatarGroup
           max={8}
@@ -66,7 +64,8 @@ export default function ClubMembersSection({ memberIds }: Readonly<Props>) {
               width: 36,
               height: 36,
               fontSize: 13,
-              bgcolor: 'primary.main',
+              bgcolor: 'action.selected',
+              color: 'text.primary',
               border: '2px solid',
               borderColor: 'background.paper',
             },
@@ -82,17 +81,8 @@ export default function ClubMembersSection({ memberIds }: Readonly<Props>) {
             </Avatar>
           ))}
         </AvatarGroup>
-        <Typography
-          variant="caption"
-          sx={{
-            color: "primary.main",
-            ml: 1,
-            fontWeight: 600
-          }}>
-          View all
-        </Typography>
       </ButtonBase>
       <PodAttendeesDialog open={open} people={people} onClose={() => setOpen(false)} />
-    </Box>
+    </Stack>
   );
 }

@@ -7,7 +7,7 @@ import type { ChartDatum, StatusSlice } from '@duncit/utils';
 const CHART_HEIGHT = 170;
 const chartWidth = () => Dimensions.get('window').width - 88;
 
-/** Bar chart (monthly earnings) — solid brand bars, token-coloured axes. */
+/** Bar chart (monthly earnings) — solid primary bars, token-coloured axes. */
 export function InsightsBars({ data, color }: Readonly<{ data: ChartDatum[]; color: string }>) {
   const { muted, borderColor } = useThemeColors();
   return (
@@ -18,7 +18,7 @@ export function InsightsBars({ data, color }: Readonly<{ data: ChartDatum[]; col
       barWidth={18}
       spacing={16}
       initialSpacing={12}
-      barBorderRadius={4}
+      barBorderRadius={6}
       noOfSections={4}
       yAxisThickness={0}
       xAxisColor={borderColor}

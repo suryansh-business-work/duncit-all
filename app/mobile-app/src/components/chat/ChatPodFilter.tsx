@@ -22,7 +22,7 @@ interface Props {
  * (All / Upcoming / Previous). Twin of mWeb's ChatsPage status chips. */
 export function ChatPodFilter({ value, onChange }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { color: ink, primary, onPrimary } = useThemeColors();
+  const { color: ink, onPrimary } = useThemeColors();
   return (
     <XStack gap={8} paddingHorizontal={16} paddingTop={12} flexWrap="wrap">
       {options(t).map((option) => {
@@ -36,20 +36,14 @@ export function ChatPodFilter({ value, onChange }: Readonly<Props>) {
             aria-pressed={selected}
             onPress={() => onChange(option.value)}
             paddingHorizontal={14}
-            height={34}
+            height={36}
             alignItems="center"
             justifyContent="center"
             borderRadius={999}
-            borderWidth={1}
-            borderColor={selected ? primary : '$borderColor'}
-            backgroundColor={selected ? primary : 'transparent'}
-            pressStyle={PRESS_STYLE.row}
+            backgroundColor={selected ? '$primary' : '$surface'}
+            pressStyle={PRESS_STYLE.control}
           >
-            <Text
-              fontSize={12.5}
-              fontWeight={selected ? '700' : '600'}
-              color={selected ? onPrimary : ink}
-            >
+            <Text fontSize={13} fontWeight="600" color={selected ? onPrimary : ink}>
               {option.label}
             </Text>
           </XStack>

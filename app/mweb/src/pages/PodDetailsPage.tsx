@@ -173,7 +173,7 @@ export default function PodDetailsPage() {
   };
   return (
     <Stack
-      spacing={3}
+      spacing={2.5}
       sx={{
         pt: 0,
         // Kept on the page, unlike the other surfaces: the shell already

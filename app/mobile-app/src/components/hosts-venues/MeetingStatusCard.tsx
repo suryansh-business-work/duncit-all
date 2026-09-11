@@ -1,7 +1,8 @@
 import { Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, XStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import type { SurveyKind } from '@/graphql/onboarding-survey';
 import { useMyMeeting } from '@/hooks/useMyMeeting';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -18,7 +19,7 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 export function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind }>) {
   const { t } = useTranslation();
   const { meeting } = useMyMeeting(kind);
-  const { primary } = useThemeColors();
+  const { accent } = useThemeColors();
   if (!meeting) return null;
 
   const label = kind === 'VENUE' ? 'Venue' : 'Host';
@@ -26,23 +27,23 @@ export function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind }>) {
     meeting.status === 'SCHEDULED' && !!(meeting.scheduled_at || meeting.meeting_link);
 
   return (
-    <YStack
-      testID={`meeting-card-${kind}`}
-      gap={8}
-      padding={14}
-      borderRadius={14}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
+    <SurfaceCard testID={`meeting-card-${kind}`} gap={8}>
       <XStack alignItems="center" gap={8}>
-        <MaterialIcons name="event-available" size={18} color={primary} />
-        <Text flex={1} fontSize={14} fontWeight="700" color="$color">
+        <MaterialIcons name="event-available" size={18} color={accent} />
+        <Text flex={1} fontSize={16} fontWeight="600" color="$color">
           Your {label} onboarding meeting
         </Text>
-        <Text fontSize={11} fontWeight="600" color="$muted">
-          {meeting.status}
-        </Text>
+        <XStack
+          height={24}
+          paddingHorizontal={10}
+          borderRadius={999}
+          alignItems="center"
+          backgroundColor={scheduled ? '$success' : '$soft'}
+        >
+          <Text fontSize={11} fontWeight="600" color={scheduled ? '$onPrimary' : '$color'}>
+            {meeting.status}
+          </Text>
+        </XStack>
       </XStack>
 
       {meeting.request_no ? (
@@ -54,7 +55,7 @@ export function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind }>) {
       {scheduled ? (
         <>
           {meeting.scheduled_at ? (
-            <Text fontSize={13} color="$color">
+            <Text fontSize={14} color="$color">
               Scheduled for {formatDateTime(meeting.scheduled_at)}
             </Text>
           ) : null}
@@ -65,23 +66,24 @@ export function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind }>) {
               aria-label={t('mweb.hostsVenues.joinMeeting')}
               onPress={() => Linking.openURL(meeting.meeting_link as string)}
               alignSelf="flex-start"
-              paddingHorizontal={14}
-              paddingVertical={9}
+              height={44}
+              alignItems="center"
+              paddingHorizontal={20}
               borderRadius={999}
               backgroundColor="$primary"
-              pressStyle={PRESS_STYLE.control}
+              pressStyle={PRESS_STYLE.solid}
             >
-              <Text fontSize={13} fontWeight="700" color="$onPrimary">
+              <Text fontSize={14} fontWeight="600" color="$onPrimary">
                 Join meeting
               </Text>
             </XStack>
           ) : null}
         </>
       ) : (
-        <Text fontSize={12.5} color="$muted">
+        <Text fontSize={13} color="$muted">
           Requested — our onboarding team will confirm a time soon.
         </Text>
       )}
-    </YStack>
+    </SurfaceCard>
   );
 }

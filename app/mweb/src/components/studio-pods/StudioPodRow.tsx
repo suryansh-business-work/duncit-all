@@ -1,11 +1,32 @@
 import type { ReactNode } from 'react';
 import { Box, ButtonBase, Chip, LinearProgress, Stack, Typography } from '@mui/material';
+import { alpha, type Theme } from '@mui/material/styles';
 import EventIcon from '@mui/icons-material/Event';
 import { useDateFormat } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
 import StudioPodRowMenu from './StudioPodRowMenu';
-import { BUCKET_LABEL_KEY, BUCKET_TONE, podFillPercent, podPriceLabel } from './summary';
+import {
+  BUCKET_LABEL_KEY,
+  BUCKET_TONE,
+  podFillPercent,
+  podPriceLabel,
+  type StudioPodTone,
+} from './summary';
 import type { StudioPod } from './types';
+
+/** The state pill: the bucket's tone on a 12% tint of itself (soft for "past"). */
+function stateChipSx(tone: StudioPodTone) {
+  if (tone === 'default') {
+    return { height: 24, fontWeight: 600, color: 'text.secondary', bgcolor: 'action.hover' };
+  }
+  const palette: Exclude<StudioPodTone, 'default'> = tone;
+  return {
+    height: 24,
+    fontWeight: 600,
+    color: `${palette}.main`,
+    bgcolor: (theme: Theme) => alpha(theme.palette[palette].main, 0.12),
+  };
+}
 
 /** One `Label  Value` fact under a row. Hoisted, so it is never redefined. */
 function PodFact({ label, value }: Readonly<{ label: string; value: string }>) {
@@ -16,11 +37,11 @@ function PodFact({ label, value }: Readonly<{ label: string; value: string }>) {
         noWrap
         sx={{
           color: "text.secondary",
-          fontWeight: 700
+          fontWeight: 500
         }}>
         {label}
       </Typography>
-      <Typography variant="caption" sx={{ fontWeight: 700 }} noWrap>
+      <Typography variant="caption" sx={{ fontWeight: 600 }} noWrap>
         {value}
       </Typography>
     </Stack>
@@ -83,11 +104,7 @@ export default function StudioPodRow({
       spacing={0.5}
       sx={{
         alignItems: 'flex-start',
-        p: 1.25,
-        borderRadius: '16px',
-        border: 1,
-        borderColor: 'divider',
-        bgcolor: 'background.paper',
+        py: 1.75,
       }}
     >
       <RowSurface onOpen={open}>
@@ -95,14 +112,13 @@ export default function StudioPodRow({
           <Stack direction="row" spacing={0.75} sx={{
             alignItems: "center"
           }}>
-            <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 700 }} noWrap>
+            <Typography sx={{ flex: 1, fontSize: '0.9375rem', fontWeight: 600 }} noWrap>
               {pod.pod_title}
             </Typography>
             <Chip
               size="small"
               label={t(BUCKET_LABEL_KEY[pod.bucket])}
-              color={BUCKET_TONE[pod.bucket]}
-              sx={{ fontWeight: 700 }}
+              sx={stateChipSx(BUCKET_TONE[pod.bucket])}
             />
           </Stack>
 

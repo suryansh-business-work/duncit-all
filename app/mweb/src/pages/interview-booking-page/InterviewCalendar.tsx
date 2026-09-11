@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBackIos';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForwardIos';
+import ChevronLeftRoundedIcon from '@mui/icons-material/ChevronLeftRounded';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
 import { Slot, TIME_OPTIONS, buildMonth, isPastDay, isSameDay, slotKey } from './slotHelpers';
 import { formatDate, formatDateTime } from '../../utils/dateFormat';
 
@@ -61,14 +61,14 @@ export default function InterviewCalendar({
             justifyContent: "space-between",
             alignItems: "center"
           }}>
-          <Typography variant="h6">{monthLabel}</Typography>
-          <Stack direction="row" spacing={0.5}>
-            <DuncitIconButton size="small" onClick={goPrevMonth}>
-              <ArrowBackIcon fontSize="inherit" />
-            </DuncitIconButton>
-            <DuncitIconButton size="small" onClick={goNextMonth}>
-              <ArrowForwardIcon fontSize="inherit" />
-            </DuncitIconButton>
+          <Typography variant="h6" sx={{ fontSize: '1.0625rem' }}>{monthLabel}</Typography>
+          <Stack direction="row" spacing={1}>
+            <DuncitRoundButton tone="surface" onClick={goPrevMonth}>
+              <ChevronLeftRoundedIcon />
+            </DuncitRoundButton>
+            <DuncitRoundButton tone="surface" onClick={goNextMonth}>
+              <ChevronRightRoundedIcon />
+            </DuncitRoundButton>
           </Stack>
         </Stack>
         <Box
@@ -106,7 +106,7 @@ export default function InterviewCalendar({
                   aspectRatio: '1 / 1',
                   borderRadius: '50%',
                   p: 0,
-                  fontWeight: active ? 700 : 500,
+                  fontWeight: active ? 600 : 500,
                   bgcolor: active ? 'primary.main' : 'transparent',
                   color: active ? 'primary.contrastText' : inactiveColor,
                   '&:hover': { bgcolor: active ? 'primary.dark' : 'action.hover' },
@@ -132,10 +132,11 @@ export default function InterviewCalendar({
                   <Chip
                     key={t}
                     label={t}
-                    variant={selected ? 'filled' : 'outlined'}
+                    variant="filled"
                     color={selected ? 'primary' : 'default'}
                     onClick={() => onToggleSlot(selectedDate, t)}
                     icon={selected ? <CheckCircleIcon /> : undefined}
+                    sx={{ height: 40, minHeight: 40, px: 0.5 }}
                   />
                 );
               })}

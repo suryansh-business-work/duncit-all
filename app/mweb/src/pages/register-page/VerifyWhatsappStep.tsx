@@ -3,7 +3,6 @@ import { useMutation } from '@apollo/client/react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Link, Stack, Typography } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { DuncitButton } from '@duncit/buttons';
 import { buildSignupStepperLabels } from '@duncit/utils';
 import { makeContactOtpSchema, type ContactOtpValues } from '@duncit/forms/schemas';
@@ -111,7 +110,7 @@ export default function VerifyWhatsappStep({
 
   return (
     <form noValidate onSubmit={submit}>
-      <Stack spacing={1.5}>
+      <Stack spacing={2}>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {labels.codeSentTo(`${extension} ${number}`.trim())}
         </Typography>
@@ -130,9 +129,9 @@ export default function VerifyWhatsappStep({
         <DuncitButton
           type="submit"
           variant="contained"
+          size="large"
           fullWidth
           disabled={busy || !isValid}
-          endIcon={<ArrowForwardIcon />}
           data-testid="signup-verify"
         >
           {buttonLabel}

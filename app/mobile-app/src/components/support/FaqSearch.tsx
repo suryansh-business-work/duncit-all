@@ -23,9 +23,9 @@ function FaqResults({ results, isLoading, query, onOpen }: Readonly<FaqResultsPr
         testID="support-search-loading"
         gap={8}
         padding={12}
-        borderRadius={16}
+        borderRadius={24}
         borderWidth={1}
-        borderColor="$borderColor"
+        borderColor="$cardBorder"
         backgroundColor="$surface"
       >
         <Skeleton height={16} radius={8} />
@@ -39,9 +39,9 @@ function FaqResults({ results, isLoading, query, onOpen }: Readonly<FaqResultsPr
     return (
       <YStack
         padding={16}
-        borderRadius={16}
+        borderRadius={24}
         borderWidth={1}
-        borderColor="$borderColor"
+        borderColor="$cardBorder"
         backgroundColor="$surface"
       >
         <Text testID="support-search-empty" fontSize={13} color="$muted">
@@ -53,9 +53,9 @@ function FaqResults({ results, isLoading, query, onOpen }: Readonly<FaqResultsPr
 
   return (
     <YStack
-      borderRadius={16}
+      borderRadius={24}
       borderWidth={1}
-      borderColor="$borderColor"
+      borderColor="$cardBorder"
       backgroundColor="$surface"
       overflow="hidden"
     >
@@ -66,10 +66,11 @@ function FaqResults({ results, isLoading, query, onOpen }: Readonly<FaqResultsPr
           role="button"
           aria-label={faq.question}
           onPress={() => onOpen(faq)}
-          padding={14}
+          paddingHorizontal={16}
+          paddingVertical={14}
           borderTopWidth={index === 0 ? 0 : 1}
           borderTopColor="$borderColor"
-          pressStyle={PRESS_STYLE.control}
+          pressStyle={PRESS_STYLE.row}
         >
           <Text flex={1} fontSize={14} fontWeight="600" color="$color">
             {faq.question}
@@ -98,11 +99,11 @@ export function FaqSearch({ query, onQueryChange, onOpen }: Readonly<FaqSearchPr
       <XStack
         alignItems="center"
         gap={8}
-        paddingHorizontal={12}
-        height={48}
+        paddingHorizontal={16}
+        height={50}
         borderRadius={999}
         borderWidth={1}
-        borderColor="$borderColor"
+        borderColor="$cardBorder"
         backgroundColor="$surface"
       >
         <MaterialIcons name="search" size={18} color={muted} />

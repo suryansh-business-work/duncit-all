@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Text, YStack } from 'tamagui';
+import { Text } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { FeedbackForm } from '@/components/support/FeedbackForm';
 import { submitAppFeedback } from '@/hooks/useFeedback';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -35,27 +36,16 @@ export function FeedbackScreen() {
 
   return (
     <StackScreen title={t('mweb.common.reportAProblem')} testID="feedback-screen">
-      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 24 }}>
-        <Text fontSize={13} color="$muted">
-          Send feedback or report an issue — it reaches our team instantly
-        </Text>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 24 }}>
         {sent ? (
-          <YStack
-            testID="feedback-sent"
-            gap={6}
-            padding={14}
-            borderRadius={16}
-            borderWidth={1}
-            borderColor="$borderColor"
-            backgroundColor="$surface"
-          >
-            <Text fontSize={15} fontWeight="700" color="$color">
+          <SurfaceCard testID="feedback-sent" gap={6}>
+            <Text fontSize={16} fontWeight="600" color="$color">
               Thanks!
             </Text>
             <Text fontSize={13} color="$muted">
               Your feedback has been sent to our team.
             </Text>
-          </YStack>
+          </SurfaceCard>
         ) : (
           <FeedbackForm submitting={submitting} errorMessage={error} onSubmit={onSubmit} />
         )}

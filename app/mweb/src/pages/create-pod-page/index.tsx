@@ -1,10 +1,10 @@
 import { gql } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router';
-import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
 import CloseIcon from '@mui/icons-material/Close';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
 import { POD_PICKER_PRODUCT_FIELDS } from '@duncit/pod-product-picker';
 import {
   CreatePodStepper,
@@ -15,6 +15,7 @@ import {
   type CreatePodFormValues,
 } from './create-pod';
 import { useTranslation } from '../../i18n/useTranslation';
+import StudioPageHeader from '../../components/StudioPageHeader';
 
 const CREATE_POD_OPTIONS = gql`
   query CreatePodOptions {
@@ -217,47 +218,24 @@ export default function CreatePodPage() {
     );
   }
 
+  // The calm page header: round accent mark, the title alone (no subtitle), and
+  // a round close button — the native StackScreen header's twin (rule 27).
   return (
-    <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 }, maxWidth: 720, mx: 'auto', minHeight: '100%' }}>
-      <Stack
-        direction="row"
-        spacing={1.25}
-        sx={{
-          alignItems: "center",
-          justifyContent: "space-between"
-        }}>
-        <Stack
-          direction="row"
-          spacing={1.25}
-          sx={{
-            alignItems: "center",
-            minWidth: 0
-          }}>
-          <AddCircleOutlineIcon color="primary" />
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
-              {t('mweb.createPod.title')}
-            </Typography>
-            {/* `component` is load-bearing: MUI maps `caption` to a <span>, and an
-                inline box will not wrap inside this min-width:0 column. A block
-                element is what lets the note break onto a second line on a phone
-                instead of running under the close button — it is an instruction, so
-                it is read in full rather than cut off with an ellipsis. */}
-            <Typography
-              variant="caption"
-              component="div"
-              sx={{
-                color: "text.secondary",
-                fontWeight: 700
-              }}>
-              {t('mweb.createPod.autosaveNote')}
-            </Typography>
-          </Box>
-        </Stack>
-        <DuncitIconButton aria-label={t('mweb.auth.close')} onClick={() => navigate('/host/manage')}>
-          <CloseIcon />
-        </DuncitIconButton>
-      </Stack>
+    <Stack spacing={2.5} sx={{ p: 2, maxWidth: 720, mx: 'auto', minHeight: '100%' }}>
+      <StudioPageHeader
+        icon={<AddCircleOutlineIcon fontSize="small" />}
+        title={t('mweb.createPod.title')}
+        action={
+          <DuncitRoundButton
+            tone="paper"
+            size="large"
+            aria-label={t('mweb.auth.close')}
+            onClick={() => navigate('/host/manage')}
+          >
+            <CloseIcon />
+          </DuncitRoundButton>
+        }
+      />
       {body}
     </Stack>
   );

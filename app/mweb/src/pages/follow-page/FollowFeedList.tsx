@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { Alert, Box, Skeleton, Stack, Typography } from '@mui/material';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import { Alert, Skeleton, Stack, Typography } from '@mui/material';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorderRounded';
 import { TOGGLE_LIKE } from '../profile-page/queries';
+import IconDisc from '../account-page/IconDisc';
 import FeedPostCard from './FeedPostCard';
 import { FOLLOWING_FEED } from './queries';
 import type { FeedClub, FeedPost, FollowingFeedSource } from './queries';
@@ -57,8 +58,8 @@ export default function FollowFeedList({
   if (loading && !data) {
     return (
       <Stack spacing={2}>
-        <Skeleton variant="rounded" height={320} sx={{ borderRadius: '16px' }} />
-        <Skeleton variant="rounded" height={320} sx={{ borderRadius: '16px' }} />
+        <Skeleton variant="rounded" height={320} sx={{ borderRadius: '24px' }} />
+        <Skeleton variant="rounded" height={320} sx={{ borderRadius: '24px' }} />
       </Stack>
     );
   }
@@ -69,18 +70,14 @@ export default function FollowFeedList({
 
   if (posts.length === 0) {
     return (
-      <Box sx={{ p: 4, borderRadius: '16px', bgcolor: 'action.hover', textAlign: 'center' }}>
-        <FavoriteBorderIcon sx={{ fontSize: 40, color: 'text.disabled' }} />
-        <Typography
-          variant="body2"
-          sx={{
-            color: "text.secondary",
-            mt: 1,
-            fontWeight: 700
-          }}>
+      <Stack spacing={1.5} sx={{ alignItems: 'center', textAlign: 'center', py: 5 }}>
+        <IconDisc size={64}>
+          <FavoriteBorderIcon />
+        </IconDisc>
+        <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
           {emptyText}
         </Typography>
-      </Box>
+      </Stack>
     );
   }
 

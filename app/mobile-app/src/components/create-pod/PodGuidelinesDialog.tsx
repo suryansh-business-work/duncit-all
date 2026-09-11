@@ -1,12 +1,12 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { AiMonitorGlyph } from '@/components/ai-monitoring';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { POD_GUIDELINE_RULE_KEYS } from './create-pod.form';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -24,22 +24,13 @@ export function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const footer = (
-    <XStack
+    <DuncitButton
       testID="pod-guidelines-close"
-      role="button"
-      aria-label={t('mweb.createPod.gotIt')}
+      label={t('mweb.createPod.gotIt')}
       onPress={onClose}
-      height={46}
-      borderRadius={12}
-      alignItems="center"
-      justifyContent="center"
-      backgroundColor="$primary"
-      pressStyle={PRESS_STYLE.control}
-    >
-      <Text fontSize={14} fontWeight="600" color="$onPrimary">
-        {t('mweb.createPod.gotIt')}
-      </Text>
-    </XStack>
+      size="lg"
+      fullWidth
+    />
   );
 
   return (
@@ -58,24 +49,18 @@ export function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) {
         <YStack alignItems="center" paddingBottom={2}>
           <AiMonitorGlyph size={40} testID="pod-guidelines-glyph" />
         </YStack>
-        <YStack gap={7}>
+        <YStack gap={8}>
           {POD_GUIDELINE_RULE_KEYS.map((key) => (
             <XStack key={key} gap={8} alignItems="flex-start">
-              <MaterialIcons name="block" size={15} color={danger} />
-              <Text flex={1} fontSize={12.5} color="$color">
+              <MaterialIcons name="block" size={16} color={danger} />
+              <Text flex={1} fontSize={14} color="$color">
                 {t(key)}
               </Text>
             </XStack>
           ))}
         </YStack>
-        <YStack
-          backgroundColor="$surface"
-          borderRadius={12}
-          padding={12}
-          borderWidth={1}
-          borderColor="$borderColor"
-        >
-          <Text fontSize={12} fontWeight="700" color="$danger">
+        <YStack backgroundColor="$soft" borderRadius={16} padding={12}>
+          <Text fontSize={12} fontWeight="600" color="$danger">
             {t('mweb.createPod.guidelinesWarning')}
           </Text>
         </YStack>

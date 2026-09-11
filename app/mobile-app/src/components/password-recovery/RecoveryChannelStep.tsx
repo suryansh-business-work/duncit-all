@@ -24,10 +24,21 @@ interface ToggleProps {
   onChannel: (channel: PasswordRecoveryChannel) => void;
 }
 
-/** The Email | Phone picker. Hoisted, never nested (S6478). */
+/**
+ * The Email | Phone picker as a segmented pill: a surface track, the chosen
+ * half filled green — the sign-in password step draws the same. mWeb:
+ * CHANNEL_TABS_SX on DuncitTabs. Hoisted, never nested (S6478).
+ */
 function ChannelToggle({ channel, labels, onChannel }: Readonly<ToggleProps>) {
   return (
-    <XStack gap={8}>
+    <XStack
+      gap={4}
+      padding={4}
+      borderRadius={999}
+      borderWidth={1}
+      borderColor="$cardBorder"
+      backgroundColor="$surface"
+    >
       {PASSWORD_RECOVERY_CHANNELS.map((value) => {
         const active = value === channel;
         return (
@@ -39,12 +50,10 @@ function ChannelToggle({ channel, labels, onChannel }: Readonly<ToggleProps>) {
             onPress={() => onChannel(value)}
             pressStyle={PRESS_STYLE.inline}
             flex={1}
-            height={42}
+            height={40}
             alignItems="center"
             justifyContent="center"
-            borderRadius={12}
-            borderWidth={1}
-            borderColor={active ? '$primary' : '$borderColor'}
+            borderRadius={999}
             backgroundColor={active ? '$primary' : 'transparent'}
           >
             <Text fontSize={14} fontWeight="600" color={active ? '$onPrimary' : '$color'}>
@@ -103,10 +112,10 @@ export function RecoveryChannelStep({
   const submit = handleSubmit(onSend);
 
   return (
-    <YStack gap={12}>
+    <YStack gap={16}>
       <ChannelToggle channel={channel} labels={labels} onChannel={onChannel} />
 
-      <Text fontSize={13} color="$muted">
+      <Text fontSize={14} color="$muted">
         {copy.hint}
       </Text>
 

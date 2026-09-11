@@ -98,7 +98,7 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
               maxWidth={460}
               maxHeight="86%"
               backgroundColor="$background"
-              borderRadius={20}
+              borderRadius={28}
               padding={18}
             >
               {/* Header, scroller and footer are direct children of the capped
@@ -106,7 +106,7 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                   sit here) is unshrinkable — RN defaults flexShrink to 0 — so it
                   sizes to its full content, leaves the ScrollView unbounded, and
                   spills the upload box and the buttons outside the card. */}
-              <Text fontSize={17} fontWeight="700" color="$color" paddingBottom={10}>
+              <Text fontSize={17} fontWeight="600" color="$color" paddingBottom={10}>
                 Edit pod
               </Text>
               <ScrollView showsVerticalScrollIndicator={false}>
@@ -171,10 +171,10 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                   aria-disabled={busy}
                   onPress={dismiss}
                   flex={1}
-                  height={46}
+                  height={48}
                   alignItems="center"
                   justifyContent="center"
-                  borderRadius={12}
+                  borderRadius={999}
                   borderWidth={1}
                   borderColor="$borderColor"
                   opacity={busy ? 0.6 : 1}
@@ -191,17 +191,17 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                   aria-disabled={busy}
                   onPress={busy ? undefined : () => fireAndForget(submit())}
                   flex={1}
-                  height={46}
+                  height={48}
                   alignItems="center"
                   justifyContent="center"
                   gap={8}
-                  borderRadius={12}
+                  borderRadius={999}
                   backgroundColor="$primary"
                   opacity={busy ? 0.7 : 1}
-                  pressStyle={PRESS_STYLE.control}
+                  pressStyle={PRESS_STYLE.solid}
                 >
                   {busy ? <Spinner size="small" color={onPrimary} /> : null}
-                  <Text fontSize={14} fontWeight="700" color="$onPrimary">
+                  <Text fontSize={14} fontWeight="600" color="$onPrimary">
                     {busy ? 'Saving…' : 'Save changes'}
                   </Text>
                 </XStack>

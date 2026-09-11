@@ -48,7 +48,7 @@ function TimelineNode({ node, depth }: Readonly<{ node: PodTimelineNode; depth: 
         <MaterialIcons name={icon.name} size={20} color={icon.color} />
         <YStack flex={1}>
           <XStack alignItems="center" gap={8} flexWrap="wrap">
-            <Text fontSize={14} fontWeight="700" color="$color">
+            <Text fontSize={14} fontWeight="600" color="$color">
               {copy.title}
             </Text>
             {node.state === 'current' ? (

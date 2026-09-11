@@ -3,7 +3,9 @@ import { Box, Card, CardContent, CardMedia, Chip, Grid, Stack, Typography } from
 import { Link as RouterLink } from 'react-router';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PeopleIcon from '@mui/icons-material/People';
+import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
 import { DuncitButton } from '@duncit/buttons';
+import EmptyState from '../../components/EmptyState';
 import FollowButton from '../../components/FollowButton';
 import { venueUrl } from '../../utils/seoUrls';
 
@@ -34,21 +36,11 @@ interface Props {
 
 export default function VenueList({ venues, meId, statusFor, pendingUserId, onToggleFollow }: Readonly<Props>) {
   if (!venues.length) {
-    return (
-      <Card variant="outlined">
-        <CardContent>
-          <Typography variant="body2" sx={{
-            color: "text.secondary"
-          }}>
-            No approved venues yet — list yours to be featured here.
-          </Typography>
-        </CardContent>
-      </Card>
-    );
+    return <EmptyState icon={<StorefrontOutlinedIcon />} title="No approved venues yet." />;
   }
 
   return (
-    <Grid container spacing={2}>
+    <Grid container spacing={1.5}>
       {venues.map((v) => (
         <Grid
           key={v.id}
@@ -56,37 +48,35 @@ export default function VenueList({ venues, meId, statusFor, pendingUserId, onTo
             xs: 12,
             sm: 6
           }}>
-          <Card variant="outlined" sx={{ height: '100%', borderRadius: '16px', overflow: 'hidden', transition: 'transform 180ms ease, border-color 180ms ease', '&:hover': { transform: 'translateY(-2px)', borderColor: 'primary.main' } }}>
+          <Card sx={{ height: '100%', p: 1 }}>
             {v.cover_image_url ? (
               <CardMedia
                 component="img"
                 image={v.cover_image_url}
                 alt={v.venue_name}
-                sx={{ height: 168, objectFit: 'cover' }}
+                sx={{ height: 168, objectFit: 'cover', borderRadius: '18px' }}
               />
             ) : (
               <Box
                 sx={{
                   height: 160,
+                  borderRadius: '18px',
                   bgcolor: 'action.hover',
+                  color: 'secondary.main',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <Typography variant="caption" sx={{
-                  color: "text.secondary"
-                }}>
-                  No image
-                </Typography>
+                <StorefrontOutlinedIcon sx={{ fontSize: 40 }} />
               </Box>
             )}
-            <CardContent>
+            <CardContent sx={{ px: 1, pt: 1.5, '&:last-child': { pb: 1 } }}>
               <Stack direction="row" spacing={1} sx={{
                 alignItems: "center"
               }}>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }} noWrap>
+                  <Typography sx={{ fontSize: '1rem', fontWeight: 600 }} noWrap>
                     {v.venue_name}
                   </Typography>
                 </Box>
@@ -163,7 +153,7 @@ export default function VenueList({ venues, meId, statusFor, pendingUserId, onTo
                   ))}
                 </Stack>
               )}
-              <DuncitButton component={RouterLink} to={venueUrl(v.id)} fullWidth variant="contained" size="small" sx={{ mt: 1.25, borderRadius: 999, fontWeight: 700 }}>
+              <DuncitButton component={RouterLink} to={venueUrl(v.id)} fullWidth variant="contained" sx={{ mt: 1.5 }}>
                 View venue
               </DuncitButton>
             </CardContent>

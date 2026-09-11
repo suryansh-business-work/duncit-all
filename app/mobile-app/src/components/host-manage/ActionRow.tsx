@@ -3,6 +3,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
+import { useInRowGroup } from '@/components/host-manage/RowGroup';
+
 export type ActionIconName = keyof typeof MaterialIcons.glyphMap;
 
 interface ActionRowProps {
@@ -19,7 +21,9 @@ interface ActionRowProps {
   onPress: () => void;
 }
 
-/** One tappable action line inside the host's pod-actions sheet. */
+/** One tappable action line. Inside a RowGroup it is a bare row — the card
+ * around the list draws the surface and the dividers; on its own it is a calm
+ * surface tile. */
 export function ActionRow({
   testID,
   icon,
@@ -30,6 +34,7 @@ export function ActionRow({
   disabled = false,
   onPress,
 }: Readonly<ActionRowProps>) {
+  const grouped = useInRowGroup();
   return (
     <XStack
       testID={testID}
@@ -41,16 +46,16 @@ export function ActionRow({
       alignItems="center"
       gap={12}
       height={52}
-      paddingLeft={14}
-      paddingRight={trailing ? 6 : 14}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      pressStyle={PRESS_STYLE.control}
+      paddingLeft={16}
+      paddingRight={trailing ? 6 : 16}
+      borderRadius={grouped ? 0 : 16}
+      borderWidth={grouped ? 0 : 1}
+      borderColor="$cardBorder"
+      backgroundColor={grouped ? 'transparent' : '$surface'}
+      pressStyle={grouped ? PRESS_STYLE.row : PRESS_STYLE.control}
     >
       <MaterialIcons name={icon} size={20} color={tint} />
-      <Text flex={1} fontSize={14.5} fontWeight="600" color={danger ? '$danger' : '$color'}>
+      <Text flex={1} fontSize={15} fontWeight="500" color={danger ? '$danger' : '$color'}>
         {label}
       </Text>
       {trailing}

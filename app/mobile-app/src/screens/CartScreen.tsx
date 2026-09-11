@@ -1,27 +1,29 @@
 import { useMemo } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { CartPodGroup } from '@/components/cart/CartPodGroup';
+import { EmptyState } from '@/components/EmptyState';
+import { PrimaryButton } from '@/components/PrimaryButton';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { TabScreen } from '@/components/TabScreen';
 import { useBottomNavSpace } from '@/hooks/useBottomNavSpace';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cartLineKey, groupLinesByPod, selectCartTotal, useCartStore } from '@/stores/cart.store';
 import type { RootStackParamList } from '@/navigation/types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
+/** Room the pinned checkout bar takes above the bottom nav (button + gap). */
+const CHECKOUT_BAR_SPACE = 76;
+
 /** The cart — every product added from any Pod Shop, grouped by pod for
  * display, paid together as ONE product payment (delivery is still quoted per
  * warehouse at checkout). RN twin of mWeb's CartPage. */
 export function CartScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { muted, onPrimary } = useThemeColors();
   const { t } = useTranslation();
-  const exploreShopLabel = t('mweb.cart.exploreShop');
   const checkoutLabel = t('mweb.cart.checkout');
   const clearLabel = t('mweb.cart.clear');
   const lines = useCartStore((s) => s.lines);
@@ -30,42 +32,16 @@ export function CartScreen() {
   const clearAll = useCartStore((s) => s.clearAll);
   const total = useCartStore(selectCartTotal);
   const bottomSpace = useBottomNavSpace();
+  // The checkout bar floats just above the floating bottom nav.
+  const barBottom = useBottomNavSpace(8);
 
   const groups = useMemo(() => groupLinesByPod(lines), [lines]);
+  const hasItems = groups.length > 0;
 
   let body;
-  if (groups.length === 0) {
+  if (hasItems) {
     body = (
-      <YStack alignItems="center" gap={10} paddingVertical={64} testID="cart-empty">
-        <MaterialIcons name="shopping-cart" size={44} color={muted} />
-        <Text fontSize={17} fontWeight="700" color="$color">
-          {t('mweb.cart.empty')}
-        </Text>
-        <Text fontSize={13} color="$muted" textAlign="center">
-          {t('mweb.cart.emptyBody')}
-        </Text>
-        <XStack
-          testID="cart-explore-shop"
-          role="button"
-          aria-label={exploreShopLabel}
-          onPress={() => navigation.navigate('Shop')}
-          paddingHorizontal={24}
-          height={44}
-          alignItems="center"
-          justifyContent="center"
-          borderRadius={999}
-          backgroundColor="$primary"
-          pressStyle={PRESS_STYLE.control}
-        >
-          <Text fontSize={14} fontWeight="700" color={onPrimary}>
-            {exploreShopLabel}
-          </Text>
-        </XStack>
-      </YStack>
-    );
-  } else {
-    body = (
-      <YStack gap={12} padding={16}>
+      <YStack gap={16} padding={16}>
         {groups.map(([podId, group]) => (
           <CartPodGroup
             key={podId}
@@ -76,45 +52,42 @@ export function CartScreen() {
             onRemove={(line) => removeLine(podId, cartLineKey(line))}
           />
         ))}
-        <XStack justifyContent="space-between" alignItems="center">
-          <Text fontSize={12} color="$muted">
-            {t('mweb.cart.total')}
-          </Text>
-          <Text testID="cart-total" fontSize={16} fontWeight="700" color="$color">
-            ₹{total}
-          </Text>
-        </XStack>
-        {/* ONE cart-wide checkout — every line pays in a single product payment. */}
-        <XStack
-          testID="cart-checkout"
-          role="button"
-          aria-label={checkoutLabel}
-          onPress={() => navigation.navigate('ProductCheckout')}
-          height={46}
-          alignItems="center"
-          justifyContent="center"
-          borderRadius={999}
-          backgroundColor="$primary"
-          pressStyle={PRESS_STYLE.control}
-        >
-          <Text fontSize={14} fontWeight="700" color={onPrimary}>
-            {checkoutLabel}
-          </Text>
-        </XStack>
+        <SurfaceCard>
+          <XStack justifyContent="space-between" alignItems="center">
+            <Text fontSize={14} color="$muted">
+              {t('mweb.cart.total')}
+            </Text>
+            <Text testID="cart-total" fontSize={18} fontWeight="700" color="$color">
+              ₹{total}
+            </Text>
+          </XStack>
+        </SurfaceCard>
         <XStack
           testID="cart-clear"
           role="button"
           aria-label={clearLabel}
           onPress={clearAll}
           alignSelf="center"
-          padding={8}
+          paddingHorizontal={16}
+          paddingVertical={10}
           pressStyle={PRESS_STYLE.row}
         >
-          <Text fontSize={13} fontWeight="600" color="$danger">
+          <Text fontSize={14} fontWeight="600" color="$danger">
             {clearLabel}
           </Text>
         </XStack>
       </YStack>
+    );
+  } else {
+    body = (
+      <EmptyState
+        testID="cart-empty"
+        icon="shopping-cart"
+        title={t('mweb.cart.empty')}
+        actionLabel={t('mweb.cart.exploreShop')}
+        onAction={() => navigation.navigate('Shop')}
+        actionTestID="cart-explore-shop"
+      />
     );
   }
 
@@ -123,12 +96,26 @@ export function CartScreen() {
       {/* A tab, not a pushed screen, so there is no back-bar to carry the title
           and no safe-area strip below — mWeb's CartPage puts its heading in the
           page for the same reason, and the bar has to be cleared here. */}
-      <RefreshScrollView flex={1} contentContainerStyle={{ paddingBottom: bottomSpace }}>
-        <Text paddingHorizontal={16} paddingTop={12} fontSize={20} fontWeight="700" color="$color">
+      <RefreshScrollView
+        flex={1}
+        contentContainerStyle={{ paddingBottom: bottomSpace + (hasItems ? CHECKOUT_BAR_SPACE : 0) }}
+      >
+        <Text paddingHorizontal={16} paddingTop={12} fontSize={20} fontWeight="600" color="$color">
           {t('mweb.cart.title')}
         </Text>
         {body}
       </RefreshScrollView>
+      {/* ONE cart-wide checkout — every line pays in a single product payment,
+          pinned above the bottom nav while the lines scroll. */}
+      {hasItems ? (
+        <YStack position="absolute" left={16} right={16} bottom={barBottom}>
+          <PrimaryButton
+            testID="cart-checkout"
+            label={checkoutLabel}
+            onPress={() => navigation.navigate('ProductCheckout')}
+          />
+        </YStack>
+      ) : null}
     </TabScreen>
   );
 }

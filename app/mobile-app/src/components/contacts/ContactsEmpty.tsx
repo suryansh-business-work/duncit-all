@@ -45,7 +45,7 @@ export function ContactsEmpty({ scope, synced, searching, loading, error }: Read
     <Text
       testID="contacts-empty"
       textAlign="center"
-      fontSize={13}
+      fontSize={14}
       color="$muted"
       paddingVertical={32}
       paddingHorizontal={24}

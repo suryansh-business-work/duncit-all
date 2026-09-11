@@ -2,11 +2,11 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import type { AiMonitoringCopy } from '@duncit/ai-monitoring';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { AiMonitorGlyph } from './AiMonitorGlyph';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -31,22 +31,13 @@ export function AiMonitoringDialog({ open, onClose, copy }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const footer = (
-    <XStack
+    <DuncitButton
       testID="ai-monitoring-close"
-      role="button"
-      aria-label={copy.dismissLabel}
+      label={copy.dismissLabel}
       onPress={onClose}
-      height={46}
-      borderRadius={12}
-      alignItems="center"
-      justifyContent="center"
-      backgroundColor="$primary"
-      pressStyle={PRESS_STYLE.control}
-    >
-      <Text fontSize={14} fontWeight="600" color="$onPrimary">
-        {copy.dismissLabel}
-      </Text>
-    </XStack>
+      size="lg"
+      fullWidth
+    />
   );
 
   return (
@@ -69,7 +60,7 @@ export function AiMonitoringDialog({ open, onClose, copy }: Readonly<Props>) {
           {copy.points.map((point) => (
             <XStack key={point} gap={8} alignItems="flex-start">
               <MaterialIcons name="check-circle-outline" size={15} color={success} />
-              <Text flex={1} fontSize={12.5} color="$color">
+              <Text flex={1} fontSize={13} color="$color">
                 {point}
               </Text>
             </XStack>
@@ -78,10 +69,10 @@ export function AiMonitoringDialog({ open, onClose, copy }: Readonly<Props>) {
         {copy.footnote ? (
           <YStack
             backgroundColor="$surface"
-            borderRadius={12}
+            borderRadius={16}
             padding={12}
             borderWidth={1}
-            borderColor="$borderColor"
+            borderColor="$cardBorder"
           >
             <Text fontSize={12} color="$muted">
               {copy.footnote}

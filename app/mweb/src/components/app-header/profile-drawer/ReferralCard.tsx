@@ -1,14 +1,17 @@
-import { Box, Paper, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { SURFACE_SX } from '../../../theme';
 import { REFERRAL_TILE } from './profileSections';
 
-/** The full-width "Refer & Earn" featured card (green gift accent). */
+/** The full-width "Refer & Earn" featured card — an accent gift on a soft disc
+ * and the label; the title says it all. */
 export default function ReferralCard({ onNavigate }: Readonly<{ onNavigate: (to: string) => void }>) {
   return (
-    <Box sx={{ px: 2, pb: 1.25 }}>
-      <Paper
-        variant="outlined"
+    <Box sx={{ px: 2, pb: 1.5 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
         onClick={() => onNavigate(REFERRAL_TILE.to)}
         role="button"
         tabIndex={0}
@@ -16,46 +19,34 @@ export default function ReferralCard({ onNavigate }: Readonly<{ onNavigate: (to:
           if (e.key === 'Enter' || e.key === ' ') onNavigate(REFERRAL_TILE.to);
         }}
         sx={{
-          p: 1.5,
-          borderRadius: '16px',
+          ...SURFACE_SX,
+          p: 2,
+          alignItems: 'center',
           cursor: 'pointer',
           transition: 'border-color 160ms ease',
-          '&:hover': { borderColor: 'success.main' },
+          '&:hover': { borderColor: 'divider' },
         }}
         aria-label={REFERRAL_TILE.label}
       >
-        <Stack direction="row" spacing={1.5} sx={{
-          alignItems: "center"
-        }}>
-          <Box
-            sx={{
-              width: 44,
-              height: 44,
-              borderRadius: '16px',
-              display: 'grid',
-              placeItems: 'center',
-              color: 'success.main',
-              bgcolor: 'rgba(34,197,94,0.14)',
-              flexShrink: 0,
-            }}
-          >
-            <CardGiftcardIcon />
-          </Box>
-          <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography noWrap sx={{
-              fontWeight: 600
-            }}>
-              {REFERRAL_TILE.label}
-            </Typography>
-            <Typography variant="body2" noWrap sx={{
-              color: "text.secondary"
-            }}>
-              {REFERRAL_TILE.caption}
-            </Typography>
-          </Box>
-          <ChevronRightIcon color="disabled" />
-        </Stack>
-      </Paper>
+        <Box
+          sx={{
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
+            display: 'grid',
+            placeItems: 'center',
+            color: 'secondary.main',
+            bgcolor: 'action.hover',
+            flexShrink: 0,
+          }}
+        >
+          <CardGiftcardIcon />
+        </Box>
+        <Typography noWrap sx={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 600 }}>
+          {REFERRAL_TILE.label}
+        </Typography>
+        <ChevronRightIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+      </Stack>
     </Box>
   );
 }

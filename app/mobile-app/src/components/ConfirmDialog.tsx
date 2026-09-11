@@ -1,9 +1,8 @@
-import { Spinner, Text, XStack } from 'tamagui';
+import { Text } from 'tamagui';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { ConfirmFooter } from '@/components/DuncitDialog/ConfirmFooter';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   open: boolean;
@@ -45,52 +44,18 @@ export function ConfirmDialog({
   // any hook runs, so `t` would not exist yet.
   const confirmLabelText = confirmLabel ?? t('mweb.confirm.confirm');
   const cancelLabelText = cancelLabel ?? t('mweb.common.cancel');
-  const { onPrimary } = useThemeColors();
 
   const footer = (
-    <XStack gap={12}>
-      <XStack
-        testID={`${testID}-cancel`}
-        role="button"
-        aria-label={cancelLabelText}
-        aria-disabled={busy}
-        onPress={busy ? undefined : onCancel}
-        flex={1}
-        height={46}
-        alignItems="center"
-        justifyContent="center"
-        borderRadius={12}
-        borderWidth={1}
-        borderColor="$borderColor"
-        opacity={busy ? 0.6 : 1}
-        pressStyle={PRESS_STYLE.control}
-      >
-        <Text fontSize={14} fontWeight="600" color="$color">
-          {cancelLabelText}
-        </Text>
-      </XStack>
-      <XStack
-        testID={`${testID}-confirm`}
-        role="button"
-        aria-label={confirmLabelText}
-        aria-disabled={busy}
-        onPress={busy ? undefined : onConfirm}
-        flex={1}
-        height={46}
-        gap={8}
-        alignItems="center"
-        justifyContent="center"
-        borderRadius={12}
-        backgroundColor={destructive ? '$danger' : '$primary'}
-        opacity={busy ? 0.7 : 1}
-        pressStyle={PRESS_STYLE.control}
-      >
-        {busy ? <Spinner size="small" color={onPrimary} /> : null}
-        <Text fontSize={14} fontWeight="700" color={onPrimary}>
-          {confirmLabelText}
-        </Text>
-      </XStack>
-    </XStack>
+    <ConfirmFooter
+      cancelLabel={cancelLabelText}
+      confirmLabel={confirmLabelText}
+      busy={busy}
+      destructive={destructive}
+      cancelTestID={`${testID}-cancel`}
+      confirmTestID={`${testID}-confirm`}
+      onCancel={onCancel}
+      onConfirm={onConfirm}
+    />
   );
 
   return (
@@ -110,7 +75,7 @@ export function ConfirmDialog({
       footer={footer}
     >
       {message ? (
-        <Text fontSize={13.5} color="$muted" lineHeight={19}>
+        <Text fontSize={14} color="$muted" lineHeight={20}>
           {message}
         </Text>
       ) : null}

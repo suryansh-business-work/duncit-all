@@ -47,9 +47,7 @@ export default function SmsPreferencePage() {
   return (
     <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', pb: 4 }}>
       <Stack spacing={0.5}>
-        <Typography variant="h6" sx={{
-          fontWeight: 800
-        }}>
+        <Typography component="h1" sx={{ fontSize: 20, fontWeight: 600 }}>
           {t('mweb.smsPreference.title')}
         </Typography>
         <Typography variant="body2" sx={{
@@ -61,9 +59,9 @@ export default function SmsPreferencePage() {
 
       <AuthMessagesCard channel="SMS" />
 
-      <Alert severity="info" variant="outlined">
+      <Typography variant="body2" sx={{ color: 'text.secondary', px: 1 }}>
         {t('mweb.smsPreference.authOnly')}
-      </Alert>
+      </Typography>
     </Stack>
   );
 }

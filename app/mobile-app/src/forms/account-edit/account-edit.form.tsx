@@ -10,7 +10,6 @@ import {
 } from '@duncit/utils';
 
 import { FormTextField } from '@/components/FormTextField';
-import { PrimaryButton } from '@/components/PrimaryButton';
 import { AddressFields } from '@/forms/components/AddressFields';
 import { ContactSection } from '@/components/contact-change';
 import type { AccountMe } from '@/hooks/useAccount';
@@ -19,6 +18,7 @@ import { useDateFormat } from '@/hooks/useDateFormat';
 import { DobDateField } from './DobDateField';
 import { LocationSelect } from './LocationSelect';
 import { UsernameField } from './UsernameField';
+import { AccountEditActions } from './AccountEditActions';
 import {
   accountEditDefaults,
   makeAccountEditSchema,
@@ -26,7 +26,6 @@ import {
   type AccountEditValues,
 } from './account-edit.types';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const ADDRESS_NAMES = {
   line1: 'address_line1',
@@ -102,7 +101,6 @@ export function AccountEditForm({
   });
 
   const discard = () => reset(accountEditDefaults(me));
-  const discardDisabled = loading || !isDirty;
   const handleBlocked = usernameBlocksSave(handleStatus, !!me?.username);
   // The three contact details are required, and none of them rides this Save —
   // each is its own proved write — so a missing one has to hold the button
@@ -172,39 +170,17 @@ export function AccountEditForm({
 
       <LocationSelect control={control} setValue={setValue} />
 
-      <Text fontSize={12} fontWeight="700" color="$muted" letterSpacing={0.6}>
-        MAIN ADDRESS
+      <Text fontSize={15} fontWeight="600" color="$color" paddingTop={4}>
+        Main address
       </Text>
       <AddressFields control={control} names={ADDRESS_NAMES} pincodeHint="6-digit PIN code" />
 
-      <XStack
-        testID="account-edit-discard"
-        role="button"
-        aria-label={t('mweb.accountEdit.discardChanges')}
-        aria-disabled={discardDisabled}
-        onPress={() => {
-          if (!discardDisabled) discard();
-        }}
-        height={46}
-        alignItems="center"
-        justifyContent="center"
-        borderRadius={12}
-        borderWidth={1}
-        borderColor="$borderColor"
-        opacity={discardDisabled ? 0.5 : 1}
-        pressStyle={PRESS_STYLE.control}
-      >
-        <Text fontSize={14} fontWeight="600" color="$color">
-          Discard changes
-        </Text>
-      </XStack>
-
-      <PrimaryButton
-        testID="account-edit-submit"
-        label={loading ? 'Saving…' : 'Save'}
+      <AccountEditActions
         loading={loading}
-        disabled={loading || !isDirty || !isValid || handleBlocked || contactsIncomplete}
-        onPress={handleSubmit(onSubmit)}
+        canDiscard={isDirty}
+        canSave={isDirty && isValid && !handleBlocked && !contactsIncomplete}
+        onDiscard={discard}
+        onSave={handleSubmit(onSubmit)}
       />
     </YStack>
   );

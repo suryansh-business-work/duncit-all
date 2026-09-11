@@ -1,7 +1,10 @@
-import { Spinner, Text, YStack } from 'tamagui';
+import { Spinner, YStack } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
+import { EmptyState } from '@/components/EmptyState';
+import { SectionHeader } from '@/components/SectionHeader';
 import type { PodIdea } from '@/hooks/usePodIdeas';
+import { useTranslation } from '@/hooks/useTranslation';
 import { IdeaCard } from './IdeaCard';
 
 interface Props {
@@ -29,6 +32,7 @@ export function IdeasList({
   onShare,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const cardActions = (idea: PodIdea) => ({
     onOpen: () => onOpen(idea.id),
     onLike: () => onLike(idea.id),
@@ -37,12 +41,10 @@ export function IdeasList({
   });
 
   return (
-    <YStack gap={16}>
+    <YStack gap={12}>
       {myIdeas.length > 0 ? (
-        <YStack gap={10}>
-          <Text fontSize={12} fontWeight="700" color="$muted" textTransform="uppercase">
-            Your submissions
-          </Text>
+        <YStack gap={12} marginBottom={12}>
+          <SectionHeader title="Your submissions" />
           {myIdeas.map((idea, index) => (
             <Reveal key={idea.id} index={index} scale>
               <IdeaCard idea={idea} myId={myId} showStatus {...cardActions(idea)} />
@@ -58,9 +60,11 @@ export function IdeasList({
       ) : null}
 
       {!(isLoading && !hasData) && ideas.length === 0 ? (
-        <Text testID="pod-ideas-empty" color="$muted" paddingVertical={16}>
-          No ideas yet — be the first to share one!
-        </Text>
+        <EmptyState
+          icon="lightbulb-outline"
+          title={t('mweb.podIdeas.noIdeasYetBeTheFirst')}
+          testID="pod-ideas-empty"
+        />
       ) : null}
 
       {ideas.map((idea, index) => (

@@ -1,7 +1,6 @@
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Link, Stack, Typography } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { DuncitButton } from '@duncit/buttons';
 import type { PasswordRecoveryLabels } from '@duncit/utils';
 import RhfTextField from '../../forms/components/RhfTextField';
@@ -62,7 +61,7 @@ export default function RecoveryCodeStep({
 
   return (
     <form noValidate onSubmit={submit}>
-      <Stack spacing={1.5}>
+      <Stack spacing={2}>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {labels.codeSubtitle(destination)}
         </Typography>
@@ -82,9 +81,8 @@ export default function RecoveryCodeStep({
           type="submit"
           variant="contained"
           size="large"
-          endIcon={<ArrowForwardIcon />}
+          fullWidth
           disabled={busy || !isValid}
-          sx={{ borderRadius: '16px', py: 1.25, fontWeight: 700, textTransform: 'none' }}
         >
           {busy ? labels.verifying : labels.verify}
         </DuncitButton>

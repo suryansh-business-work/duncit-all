@@ -20,7 +20,8 @@ interface AccordionProps {
   error?: boolean;
 }
 
-/** A single collapsible section — RN port of mWeb's PodAccordion. */
+/** A single collapsible section: a 24px surface card whose header is an icon
+ * disc and a section title — RN port of mWeb's PodAccordion. */
 export function Accordion({
   title,
   icon,
@@ -30,8 +31,8 @@ export function Accordion({
   testID,
   error = false,
 }: Readonly<AccordionProps>) {
-  const { primary, muted } = useThemeColors();
-  const borderTint = error ? '$danger' : '$borderColor';
+  const { accent, danger, muted } = useThemeColors();
+  const borderTint = error ? '$danger' : '$cardBorder';
   const titleTint = error ? '$danger' : '$color';
 
   return (
@@ -39,9 +40,9 @@ export function Accordion({
       testID={testID}
       borderWidth={1}
       borderColor={borderTint}
-      borderRadius={14}
+      borderRadius={24}
       backgroundColor="$surface"
-      marginBottom={10}
+      marginBottom={12}
       overflow="hidden"
     >
       <XStack
@@ -51,12 +52,22 @@ export function Accordion({
         aria-expanded={open}
         onPress={onToggle}
         alignItems="center"
-        gap={10}
-        padding={14}
+        gap={12}
+        paddingHorizontal={16}
+        paddingVertical={14}
         pressStyle={PRESS_STYLE.control}
       >
-        <MaterialIcons name={icon} size={18} color={primary} />
-        <Text flex={1} fontSize={15} fontWeight="700" color={titleTint}>
+        <YStack
+          width={36}
+          height={36}
+          borderRadius={18}
+          backgroundColor="$soft"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <MaterialIcons name={icon} size={20} color={error ? danger : accent} />
+        </YStack>
+        <Text flex={1} fontSize={17} fontWeight="600" color={titleTint}>
           {title}
         </Text>
         <MaterialIcons
@@ -68,7 +79,7 @@ export function Accordion({
       </XStack>
       {open ? (
         <Reveal>
-          <YStack paddingHorizontal={14} paddingBottom={14} gap={8}>
+          <YStack paddingHorizontal={16} paddingBottom={16} gap={8}>
             {children}
           </YStack>
         </Reveal>

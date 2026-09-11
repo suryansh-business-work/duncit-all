@@ -7,4 +7,3 @@ export { SupportMoreWays } from './SupportMoreWays';
 export { FaqAnswerModal } from './FaqAnswerModal';
 export { SUPPORT_MORE_WAYS } from './supportSections';
 export type { SupportSection, SupportRoute } from './supportSections';
-export { SUPPORT_GRADIENTS, START_CONVERSATION_GRADIENT } from './gradients';

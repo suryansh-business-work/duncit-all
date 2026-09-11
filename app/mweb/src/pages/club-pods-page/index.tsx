@@ -2,8 +2,8 @@ import { useCallback, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Link as RouterLink, useParams } from 'react-router';
 import { Alert, Stack } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import EventNoteIcon from '@mui/icons-material/EventNote';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import EventNoteRoundedIcon from '@mui/icons-material/EventNoteRounded';
 import { DuncitButton } from '@duncit/buttons';
 import { CLUB_ADMIN_POD_LOOKUPS, CLUB_ADMIN_PODS_TABLE } from '@duncit/pod-form';
 import { useDebouncedValue } from '@duncit/ui';
@@ -60,19 +60,18 @@ export default function ClubPodsPage() {
   const del = useDeletePod(list.reload);
 
   return (
-    <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+    <Stack spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <StudioPageHeader
-        icon={<EventNoteIcon fontSize="small" />}
+        icon={<EventNoteRoundedIcon fontSize="small" />}
         title={club?.club_name ?? t('clubAdmin.pods.clubPods')}
-        caption={t('clubAdmin.pods.createEditDelete')}
         action={
           <DuncitButton
             component={RouterLink}
             to={`${podsPath}/new`}
             variant="contained"
             size="small"
-            startIcon={<AddIcon />}
-            sx={{ borderRadius: 999, fontWeight: 700, flexShrink: 0 }}
+            startIcon={<AddRoundedIcon />}
+            sx={{ flexShrink: 0 }}
           >
             {t('clubAdmin.pods.newPod')}
           </DuncitButton>

@@ -64,8 +64,8 @@ export function AutoPodCategoryChips({ value, onChange, labels }: Readonly<Props
   const none = loaded && categories.length === 0;
 
   return (
-    <YStack testID="auto-pods-category-chips" gap={6}>
-      <Text fontSize={11.5} fontWeight="600" color="$muted" textTransform="uppercase">
+    <YStack testID="auto-pods-category-chips" gap={8}>
+      <Text fontSize={13} fontWeight="600" color="$muted">
         {labels.categoryLabel}
       </Text>
       {/* Until the host's approved categories are back, "All my categories"
@@ -79,7 +79,7 @@ export function AutoPodCategoryChips({ value, onChange, labels }: Readonly<Props
         onSelect={onChange}
       />
       {none ? (
-        <Text testID="auto-pods-no-categories" fontSize={12} color="$muted">
+        <Text testID="auto-pods-no-categories" fontSize={13} color="$muted">
           {labels.noHostCategories}
         </Text>
       ) : null}

@@ -1,5 +1,6 @@
 import { Avatar, Box, Paper, Stack, Typography } from '@mui/material';
 import { formatTime } from '../../utils/dateFormat';
+import { bubbleRadiusSx } from '../support-chat/calmStyles';
 
 interface MessageBubbleProps {
   message: any;
@@ -15,7 +16,7 @@ export default function MessageBubble({ message, mine, onOpenReact }: Readonly<M
         component="img"
         src={m.image_url}
         alt=""
-        sx={{ maxWidth: 240, maxHeight: 240, borderRadius: 1, display: 'block' }}
+        sx={{ maxWidth: 240, maxHeight: 240, borderRadius: '12px', display: 'block' }}
       />
     ) : (
       <Typography
@@ -29,7 +30,7 @@ export default function MessageBubble({ message, mine, onOpenReact }: Readonly<M
     <Stack
       direction="row"
       spacing={1}
-      sx={{ mb: 1, justifyContent: mine ? 'flex-end' : 'flex-start' }}
+      sx={{ mb: 1, justifyContent: mine ? 'flex-end' : 'flex-start', alignItems: 'flex-end' }}
     >
       {!mine && (
         <Avatar src={m.user_photo || undefined} sx={{ width: 32, height: 32 }}>
@@ -44,17 +45,16 @@ export default function MessageBubble({ message, mine, onOpenReact }: Readonly<M
           maxWidth: '78%',
           bgcolor: mine ? 'primary.main' : 'background.paper',
           color: mine ? 'primary.contrastText' : 'text.primary',
-          borderRadius: mine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+          ...bubbleRadiusSx(mine),
           cursor: 'pointer',
-          border: mine ? 0 : 1,
-          borderColor: 'divider',
-          boxShadow: mine ? '0 10px 24px rgba(255,79,115,0.22)' : '0 10px 26px rgba(9,7,18,0.12)',
+          border: mine ? 0 : '1px solid var(--duncit-card-border)',
+          boxShadow: 'none',
         }}
       >
         {!mine && (
           <Typography
             variant="caption"
-            sx={{ fontWeight: 700, opacity: 0.78, display: 'block' }}
+            sx={{ fontWeight: 600, color: 'text.secondary', display: 'block' }}
           >
             {m.user_name || 'User'}
           </Typography>
@@ -66,7 +66,7 @@ export default function MessageBubble({ message, mine, onOpenReact }: Readonly<M
         ) : (
           messageContent
         )}
-        <Typography variant="caption" sx={{ opacity: 0.58, display: 'block', mt: 0.5, fontWeight: 700 }}>
+        <Typography variant="caption" sx={{ opacity: 0.7, display: 'block', mt: 0.5, textAlign: 'right' }}>
           {formatTime(m.createdAt)}
         </Typography>
         {m.reactions?.length > 0 && (

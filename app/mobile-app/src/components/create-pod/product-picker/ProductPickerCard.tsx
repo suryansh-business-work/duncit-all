@@ -25,13 +25,13 @@ interface Props {
 const selectedFrame = {
   borderWidth: 2,
   borderColor: '$primary',
-  backgroundColor: 'rgba(99,102,241,0.08)',
+  backgroundColor: '$primarySoft',
 } as const;
 
 const idleFrame = {
-  borderWidth: 1,
-  borderColor: '$borderColor',
-  backgroundColor: 'transparent',
+  borderWidth: 2,
+  borderColor: '$cardBorder',
+  backgroundColor: '$surface',
 } as const;
 
 /** Product thumbnail, or the placeholder icon when the product has no image. */
@@ -40,9 +40,9 @@ function ProductThumb({ image, muted }: Readonly<{ image: string | null; muted: 
     <YStack
       width={64}
       height={64}
-      borderRadius={10}
+      borderRadius={12}
       overflow="hidden"
-      backgroundColor="$borderColor"
+      backgroundColor="$soft"
       alignItems="center"
       justifyContent="center"
     >
@@ -91,9 +91,9 @@ export function ProductPickerCard({ product, selected, added, onSelect }: Readon
       aria-pressed={selected}
       aria-disabled={disabled}
       onPress={handlePress}
-      gap={10}
-      padding={10}
-      borderRadius={12}
+      gap={12}
+      padding={12}
+      borderRadius={24}
       {...frame}
       opacity={disabled ? 0.55 : 1}
       pressStyle={PRESS_STYLE.control}
@@ -101,24 +101,24 @@ export function ProductPickerCard({ product, selected, added, onSelect }: Readon
       <ProductThumb image={image} muted={muted} />
 
       <YStack flex={1} gap={2}>
-        <Text fontSize={14} fontWeight="700" color="$color" numberOfLines={2}>
+        <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={2}>
           {product.product_name}
         </Text>
         {product.brand_name ? (
-          <Text fontSize={11.5} color="$muted" numberOfLines={1}>
+          <Text fontSize={12} color="$muted" numberOfLines={1}>
             {product.brand_name}
           </Text>
         ) : null}
         {blurb ? (
-          <Text fontSize={11.5} color="$muted" numberOfLines={2}>
+          <Text fontSize={12} color="$muted" numberOfLines={2}>
             {blurb}
           </Text>
         ) : null}
         <XStack alignItems="center" justifyContent="space-between" gap={8} marginTop={2}>
-          <Text fontSize={13} fontWeight="700" color="$primary">
+          <Text fontSize={14} fontWeight="700" color="$primary">
             {t('podProduct.perUnit', { vars: { cost: `₹${product.unit_cost}` } })}
           </Text>
-          <Text fontSize={11.5} color="$muted">
+          <Text fontSize={12} color="$muted">
             {statusLabel}
           </Text>
         </XStack>

@@ -21,8 +21,10 @@ interface StackScreenProps {
   header?: boolean;
 }
 
-/** Shared scaffold for pushed (stack) screens: gradient backdrop + a back-bar
- * with the title (and optional right action). */
+/** Shared scaffold for pushed (stack) screens: the app ground + a back-bar with
+ * the title (and optional right action). The calm inner-page header: a 40px
+ * round surface back button, the title at 17/600 — centred when a right action
+ * balances it — and no subtitle. mWeb twin: components/StudioPageHeader. */
 export function StackScreen({
   title,
   testID,
@@ -33,6 +35,7 @@ export function StackScreen({
   const goBack = useGoBack();
   const { color: ink } = useThemeColors();
   const { t } = useTranslation();
+  const titleAlign = right ? 'center' : 'left';
 
   return (
     <YStack flex={1} testID={testID}>
@@ -45,7 +48,7 @@ export function StackScreen({
           `useBottomNavSpace`, so adding it here too would double it.) */}
       <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
         {header ? <AppHeader /> : null}
-        <XStack alignItems="center" gap={8} paddingHorizontal={12} paddingVertical={8}>
+        <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={8}>
           <XStack
             testID={`${testID}-back`}
             role="button"
@@ -56,11 +59,21 @@ export function StackScreen({
             alignItems="center"
             justifyContent="center"
             borderRadius={20}
-            pressStyle={PRESS_STYLE.row}
+            borderWidth={1}
+            borderColor="$cardBorder"
+            backgroundColor="$surface"
+            pressStyle={PRESS_STYLE.control}
           >
-            <MaterialIcons name="arrow-back" size={22} color={ink} />
+            <MaterialIcons name="arrow-back" size={20} color={ink} />
           </XStack>
-          <Text flex={1} fontSize={18} fontWeight="600" color="$color" numberOfLines={1}>
+          <Text
+            flex={1}
+            fontSize={17}
+            fontWeight="600"
+            color="$color"
+            textAlign={titleAlign}
+            numberOfLines={1}
+          >
             {title}
           </Text>
           {right}

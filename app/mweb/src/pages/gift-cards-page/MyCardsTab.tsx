@@ -1,6 +1,9 @@
 import { useQuery } from '@apollo/client/react';
-import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, CircularProgress, Stack } from '@mui/material';
+import CardGiftcardOutlinedIcon from '@mui/icons-material/CardGiftcardOutlined';
 import { HEADER_ME } from '../../components/app-header/queries';
+import EmptyState from '../../components/EmptyState';
+import SectionHeader from '../../components/SectionHeader';
 import { PUBLIC_FINANCE } from '../checkout-page/queries';
 import { useTranslation } from '../../i18n/useTranslation';
 import MyCardTile from './MyCardTile';
@@ -38,18 +41,14 @@ export default function MyCardsTab() {
     <Stack spacing={2}>
       {error && <Alert severity="error">{t('mweb.giftCards.loadError')}</Alert>}
       {!error && owned.length === 0 && gifted.length === 0 && (
-        <Alert severity="info">{t('mweb.giftCards.myCardsEmpty')}</Alert>
+        <EmptyState icon={<CardGiftcardOutlinedIcon />} title={t('mweb.giftCards.myCardsEmpty')} />
       )}
       {owned.map((card) => (
         <MyCardTile key={card.id} card={card} currencySymbol={currencySymbol} senderName={senderName} />
       ))}
       {gifted.length > 0 && (
         <>
-          <Typography variant="subtitle1" sx={{
-            fontWeight: 700
-          }}>
-            {t('mweb.giftCards.giftedHeading')}
-          </Typography>
+          <SectionHeader title={t('mweb.giftCards.giftedHeading')} />
           {gifted.map((card) => (
             <MyCardTile
               key={card.id}

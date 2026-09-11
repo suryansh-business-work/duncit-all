@@ -1,5 +1,5 @@
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import { GoogleLogin, useGoogleOAuth } from '@react-oauth/google';
 
 interface Props {
@@ -37,7 +37,7 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
           py: 1,
           border: 1,
           borderColor: 'divider',
-          borderRadius: 1,
+          borderRadius: '999px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -47,7 +47,7 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
         }}
       >
         <Typography variant="body2" sx={{
-          fontWeight: 700
+          fontWeight: 600
         }}>
           Google sign-in not configured (VITE_GOOGLE_CLIENT_ID missing)
         </Typography>
@@ -65,7 +65,7 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
         useOneTap={false}
         theme={isDark ? 'filled_black' : 'outline'}
         text={text}
-        shape="rectangular"
+        shape="pill"
         size="large"
         logo_alignment="left"
       />
@@ -77,8 +77,8 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: isDark ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.6)',
-            borderRadius: 1,
+            bgcolor: alpha(theme.palette.background.paper, 0.6),
+            borderRadius: '999px',
           }}
         >
           <CircularProgress size={20} />

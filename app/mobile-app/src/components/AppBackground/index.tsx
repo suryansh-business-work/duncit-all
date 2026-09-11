@@ -1,1 +1,1 @@
-export { AppBackground, DARK, LIGHT } from './AppBackground';
+export { AppBackground, APP_BG } from './AppBackground';

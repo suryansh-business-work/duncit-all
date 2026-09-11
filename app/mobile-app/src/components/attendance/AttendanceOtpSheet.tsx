@@ -10,6 +10,7 @@ import {
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { FormTextField } from '@/components/FormTextField';
 import { MediumToggle, PillButton } from '@/components/attendance/AttendanceOtpControls';
+import { NoticeCard } from '@/components/attendance/NoticeCard';
 import { useAttendanceOtp } from '@/hooks/useAttendanceOtp';
 
 interface Props {
@@ -118,7 +119,7 @@ export function AttendanceOtpSheet({ podId, row, labels, onClose, onVerified }: 
           name="mediums"
           render={({ field, fieldState }) => (
             <YStack gap={6}>
-              <Text fontSize={12} fontWeight="700" color="$color">
+              <Text fontSize={13} fontWeight="600" color="$color">
                 {labels.otpMediumLabel}
               </Text>
               <XStack gap={8}>
@@ -160,9 +161,7 @@ export function AttendanceOtpSheet({ podId, row, labels, onClose, onVerified }: 
         {otp.challengeId ? (
           <YStack gap={10}>
             {otp.testCode ? (
-              <Text fontSize={12.5} fontWeight="700" color="$success">
-                {labels.otpTestCode(otp.testCode)}
-              </Text>
+              <NoticeCard tone="info" title={labels.otpTestCode(otp.testCode)} />
             ) : null}
             <FormTextField
               control={control}

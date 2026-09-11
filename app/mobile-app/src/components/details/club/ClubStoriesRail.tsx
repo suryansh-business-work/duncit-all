@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
-import { MaterialIcons } from '@expo/vector-icons';
+import { ScrollView, Text, YStack } from 'tamagui';
 import { isStoryLive, parseApiError } from '@duncit/utils';
 
 import { ConfirmSheet } from '@/components/DuncitDialog';
+import { SectionHeader } from '@/components/SectionHeader';
 import { ReportStorySheet } from '@/components/status/ReportStorySheet';
 import { StatusTile } from '@/components/status/StatusTile';
 import { StatusVideoPreviewSheet } from '@/components/status/StatusVideoPreviewSheet';
@@ -12,7 +12,6 @@ import { DeleteClubStoryDocument } from '@/graphql/status';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useClubStories } from '@/hooks/useClubStories';
 import { useStatusUpload } from '@/hooks/useStatusUpload';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useStatusStore } from '@/stores/status.store';
 import { fireAndForget } from '@/utils/fire-and-forget';
@@ -35,7 +34,6 @@ interface Props {
  * them and `isStoryLive` catches the boundary while the screen stays open.
  */
 export function ClubStoriesRail({ clubId, clubName, canPost }: Readonly<Props>) {
-  const { primary } = useThemeColors();
   const { t } = useTranslation();
   const { stories, refetch } = useClubStories(clubId);
   const { uploading, error, progress, pendingVideo, pickAndUpload, confirmVideo, cancelVideo } =
@@ -115,13 +113,8 @@ export function ClubStoriesRail({ clubId, clubName, canPost }: Readonly<Props>) 
   const railError = error || deleteError;
 
   return (
-    <YStack gap={8} testID="club-stories">
-      <XStack alignItems="center" gap={6}>
-        <MaterialIcons name="auto-stories" size={15} color={primary} />
-        <Text fontSize={16} fontWeight="700" color="$color">
-          Stories
-        </Text>
-      </XStack>
+    <YStack gap={10} testID="club-stories">
+      <SectionHeader title={t('mweb.clubDetailsPage.stories')} />
       {railError ? (
         <Text testID="club-story-error" fontSize={12} color="$danger">
           {railError}

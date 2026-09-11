@@ -50,8 +50,7 @@ export default function SeatPicker({ value, onChange, maxSeats, disabled }: Read
         flex: '0 0 auto',
         height: 48,
         borderRadius: 999,
-        border: 1,
-        borderColor: 'divider',
+        bgcolor: 'action.hover',
         opacity: disabled ? 0.6 : 1
       }}>
       <DuncitIconButton

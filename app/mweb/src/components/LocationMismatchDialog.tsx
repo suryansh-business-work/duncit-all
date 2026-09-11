@@ -34,15 +34,15 @@ function LocationRow({
   value,
 }: Readonly<{ icon: ReactNode; label: string; value: string }>) {
   return (
-    <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
+    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
       <Box
         sx={{
-          width: 36,
-          height: 36,
-          borderRadius: '10px',
+          width: 40,
+          height: 40,
+          borderRadius: '50%',
           display: 'grid',
           placeItems: 'center',
-          color: 'primary.main',
+          color: 'secondary.main',
           bgcolor: 'action.hover',
           flex: '0 0 auto',
         }}
@@ -53,7 +53,7 @@ function LocationRow({
         <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
           {label}
         </Typography>
-        <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
+        <Typography variant="subtitle2" sx={{ fontWeight: 600 }} noWrap>
           {value}
         </Typography>
       </Box>
@@ -77,8 +77,8 @@ export default function LocationMismatchDialog({
   if (!mismatch) return null;
   return (
     <Dialog open onClose={keepLocation} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 800 }}>{t('mweb.locationMismatch.title')}</DialogTitle>
-      <DialogContent dividers>
+      <DialogTitle sx={{ fontSize: 20, fontWeight: 600 }}>{t('mweb.locationMismatch.title')}</DialogTitle>
+      <DialogContent>
         <Typography variant="body2">{introText(t, kind, mismatch)}</Typography>
         <Stack spacing={1.5} sx={{ mt: 2 }}>
           <LocationRow
@@ -92,16 +92,17 @@ export default function LocationMismatchDialog({
             value={mismatch.target}
           />
         </Stack>
-        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 2 }}>
-          {t('mweb.locationMismatch.hint', { vars: { target: mismatch.targetCity } })}
-        </Typography>
       </DialogContent>
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <DuncitButton onClick={keepLocation}>
-          {t('mweb.locationMismatch.keepButton', { vars: { current: mismatch.currentCity } })}
-        </DuncitButton>
-        <DuncitButton variant="contained" onClick={switchLocation}>
+      {/* The switch leads, full width; staying put sits under it. */}
+      <DialogActions
+        disableSpacing
+        sx={{ flexDirection: 'column', alignItems: 'stretch', gap: 1, px: 3, pt: 1, pb: 3 }}
+      >
+        <DuncitButton variant="contained" size="large" fullWidth onClick={switchLocation}>
           {t('mweb.locationMismatch.switchButton', { vars: { target: mismatch.targetCity } })}
+        </DuncitButton>
+        <DuncitButton variant="outlined" size="large" fullWidth onClick={keepLocation}>
+          {t('mweb.locationMismatch.keepButton', { vars: { current: mismatch.currentCity } })}
         </DuncitButton>
       </DialogActions>
     </Dialog>

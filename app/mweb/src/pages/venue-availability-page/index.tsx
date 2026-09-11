@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Alert } from '@mui/material';
-import EventRepeatIcon from '@mui/icons-material/EventRepeat';
+import EventRepeatRoundedIcon from '@mui/icons-material/EventRepeatRounded';
 import { VenueAvailabilityEditor } from '@duncit/availability-calendar';
 import { pickVenue } from '@duncit/utils';
 import VenuePageFrame from '../venue-manage-page/VenuePageFrame';
@@ -46,9 +46,8 @@ export default function VenueAvailabilityPage() {
 
   return (
     <VenuePageFrame
-      icon={<EventRepeatIcon fontSize="small" />}
+      icon={<EventRepeatRoundedIcon fontSize="small" />}
       title={t('mweb.venueAvailabilityPage.title')}
-      caption={t('mweb.venueAvailabilityPage.subtitle')}
       venues={venues}
       venue={venue}
       onSelect={setSelectedId}

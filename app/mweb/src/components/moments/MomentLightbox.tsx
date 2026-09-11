@@ -162,14 +162,14 @@ export default function MomentLightbox({
               src={moment.url}
               controls
               autoPlay
-              sx={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 1 }}
+              sx={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '12px' }}
             />
           ) : (
             <Box
               component="img"
               src={moment.url}
               alt={`Moment ${current + 1} of ${moments.length}`}
-              sx={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 1 }}
+              sx={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '12px' }}
             />
           )}
         </Stack>

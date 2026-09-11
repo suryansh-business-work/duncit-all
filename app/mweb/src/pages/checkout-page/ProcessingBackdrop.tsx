@@ -1,4 +1,5 @@
 import { Backdrop, Box, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import PaymentLottie from '../../components/PaymentLottie';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -20,16 +21,31 @@ export default function ProcessingBackdrop({ open, message }: Readonly<Props>) {
   // people end up paying twice.
   const title = message ? t('mweb.checkout.confirmingTitle') : t('mweb.checkout.processingTitle');
   return (
-    <Backdrop open={open} sx={{ zIndex: (t) => t.zIndex.modal + 1, bgcolor: 'rgba(3,7,18,0.72)', backdropFilter: 'blur(8px)', p: 2 }}>
-      <Box sx={{ width: 'min(360px, calc(100vw - 32px))', px: 3, py: 3, borderRadius: '16px', textAlign: 'center', color: '#fff', bgcolor: 'rgba(17,24,39,0.92)', border: '1px solid rgba(255,255,255,0.16)', boxShadow: '0 24px 70px rgba(0,0,0,0.42)' }}>
+    <Backdrop
+      open={open}
+      sx={(theme) => ({
+        zIndex: theme.zIndex.modal + 1,
+        bgcolor: alpha(theme.palette.common.black, 0.5),
+        p: 2,
+      })}
+    >
+      <Box
+        sx={{
+          width: 'min(360px, calc(100vw - 32px))',
+          px: 3,
+          py: 3,
+          borderRadius: '24px',
+          textAlign: 'center',
+          color: 'text.primary',
+          bgcolor: 'background.paper',
+        }}
+      >
         <PaymentLottie variant="processing" size={118} />
-        <Typography variant="subtitle1" sx={{
-          fontWeight: 700
-        }}>{title}</Typography>
+        <Typography sx={{ fontSize: 17, fontWeight: 600 }}>{title}</Typography>
         {message ? (
-          <Typography data-testid="checkout-confirming" variant="body2" sx={{ mt: 1, color: 'rgba(255,255,255,0.92)' }}>{message}</Typography>
+          <Typography data-testid="checkout-confirming" variant="body2" sx={{ mt: 1 }}>{message}</Typography>
         ) : null}
-        <Typography variant="caption" sx={{ mt: 0.75, display: 'block', color: 'rgba(255,255,255,0.74)' }}>{t('mweb.checkout.processingNoteWeb')}</Typography>
+        <Typography variant="caption" sx={{ mt: 0.75, display: 'block', color: 'text.secondary' }}>{t('mweb.checkout.processingNoteWeb')}</Typography>
       </Box>
     </Backdrop>
   );

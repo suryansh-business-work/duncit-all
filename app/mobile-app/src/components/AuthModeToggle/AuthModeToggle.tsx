@@ -6,8 +6,6 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useThemeStore } from '@/stores/theme.store';
 
-const SHADOW_OFFSET = { width: 0, height: 2 };
-
 interface SegmentProps {
   label: string;
   hint: string;
@@ -50,13 +48,9 @@ function ModeSegment({
       paddingHorizontal={16}
       borderRadius={999}
       backgroundColor={active ? '$surface' : 'transparent'}
-      shadowColor="rgba(0,0,0,0.22)"
-      shadowOffset={SHADOW_OFFSET}
-      shadowRadius={6}
-      shadowOpacity={active ? 1 : 0}
     >
       <MaterialIcons name={icon} size={16} color={active ? accent : ink} />
-      <Text fontSize={13} fontWeight="700" color={active ? '$color' : '$muted'}>
+      <Text fontSize={13} fontWeight="600" color={active ? '$color' : '$muted'}>
         {label}
       </Text>
     </XStack>
@@ -93,7 +87,7 @@ export function AuthModeToggle() {
       borderRadius={999}
       borderWidth={1}
       borderColor="$borderColor"
-      backgroundColor="$background"
+      backgroundColor="$soft"
     >
       <ModeSegment
         testID="auth-mode-light"

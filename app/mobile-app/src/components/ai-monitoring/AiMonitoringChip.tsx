@@ -71,7 +71,7 @@ export function AiMonitoringChip({ testID = 'ai-monitoring-chip' }: Readonly<Pro
         <Animated.View style={twinkleStyle}>
           <MaterialIcons name="smart-toy" size={13} color={primary} />
         </Animated.View>
-        <Text fontSize={11} fontWeight="700" color="$primary">
+        <Text fontSize={11} fontWeight="600" color="$primary">
           {copy.chipLabel}
         </Text>
       </XStack>

@@ -13,8 +13,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import CancelIcon from '@mui/icons-material/Cancel';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import { DuncitButton } from '@duncit/buttons';
 import type { SlotRequestRow } from './queries';
 import { podSummary, requestedAt, slotPrice, slotWindow } from './slot-request';
@@ -58,15 +58,13 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
   const [reason, setReason] = useState('');
 
   return (
-    <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+    <Card sx={{ p: 2 }}>
       <Stack spacing={1.5}>
         <Stack direction="row" spacing={1} sx={{
           alignItems: "flex-start"
         }}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" noWrap sx={{
-              fontWeight: 800
-            }}>
+            <Typography noWrap sx={{ fontSize: '1rem', fontWeight: 600 }}>
               {request.pod_title}
             </Typography>
             <Typography variant="body2" sx={{
@@ -106,24 +104,23 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
           />
         </Stack>
 
-        <Stack direction="row" spacing={1} sx={{
-          justifyContent: "flex-end"
-        }}>
+        <Stack direction="row" spacing={1}>
           <DuncitButton
-            size="small"
+            variant="outlined"
             color="error"
-            startIcon={<CancelIcon />}
+            startIcon={<CloseRoundedIcon />}
             disabled={busy}
             onClick={() => setDeclineOpen(true)}
+            sx={{ flex: 1, color: 'error.main', borderColor: 'error.main' }}
           >
             Decline
           </DuncitButton>
           <DuncitButton
-            size="small"
             variant="contained"
-            startIcon={<CheckCircleIcon />}
+            startIcon={<CheckRoundedIcon />}
             disabled={busy}
             onClick={() => setConfirmApprove(true)}
+            sx={{ flex: 1 }}
           >
             Approve
           </DuncitButton>

@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Button, Text, YStack } from 'tamagui';
+import { Text } from 'tamagui';
 import { grievanceSupportTicketOptions, type SubmittedGrievance } from '@duncit/utils';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { StackScreen } from '@/components/StackScreen';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { GrievanceEscalationNotice } from '@/components/support/grievance/GrievanceEscalationNotice';
 import { GrievanceForm } from '@/components/support/grievance/GrievanceForm';
 import { GrievanceOfficerCard } from '@/components/support/grievance/GrievanceOfficerCard';
@@ -52,21 +54,10 @@ export function GrievanceScreen() {
 
   return (
     <StackScreen title={t('grievance.title')} testID="grievance-screen">
-      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 24 }}>
-        <Text fontSize={13} color="$muted">
-          {t('grievance.subtitle')}
-        </Text>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 24 }}>
         {sent ? (
-          <YStack
-            testID="grievance-sent"
-            gap={6}
-            padding={14}
-            borderRadius={16}
-            borderWidth={1}
-            borderColor="$borderColor"
-            backgroundColor="$surface"
-          >
-            <Text fontSize={15} fontWeight="700" color="$color">
+          <SurfaceCard testID="grievance-sent" gap={6}>
+            <Text fontSize={16} fontWeight="600" color="$color">
               {t('grievance.successTitle')}
             </Text>
             <Text fontSize={13} color="$muted">
@@ -78,10 +69,14 @@ export function GrievanceScreen() {
             <Text fontSize={18} fontWeight="700" color="$color" testID="grievance-reference">
               {sent.grievance_no}
             </Text>
-            <Button borderRadius={12} onPress={() => setSent(null)}>
-              {t('grievance.raiseAnother')}
-            </Button>
-          </YStack>
+            <DuncitButton
+              variant="soft"
+              tone="neutral"
+              fullWidth
+              label={t('grievance.raiseAnother')}
+              onPress={() => setSent(null)}
+            />
+          </SurfaceCard>
         ) : (
           <>
             <GrievanceEscalationNotice />

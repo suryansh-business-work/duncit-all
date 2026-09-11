@@ -26,10 +26,12 @@ export default function CategorySummaryBanner({
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: 1,
-        p: 1.25,
-        mb: 1.5,
+        px: 2,
+        py: 1.5,
+        mb: 2,
         borderRadius: '16px',
-        bgcolor: 'action.hover',
+        bgcolor: 'background.paper',
+        border: '1px solid var(--duncit-card-border)',
       }}
     >
       <Stack spacing={0} sx={{ minWidth: 0 }}>
@@ -42,7 +44,7 @@ export default function CategorySummaryBanner({
           CATEGORY
         </Typography>
         <Typography variant="body2" noWrap sx={{
-          fontWeight: 700
+          fontWeight: 600
         }}>
           {text}
         </Typography>

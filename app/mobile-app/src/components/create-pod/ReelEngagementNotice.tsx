@@ -1,7 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { withAlpha } from '@/constants/survey-palette';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -16,18 +15,15 @@ export function ReelEngagementNotice() {
   return (
     <XStack
       testID="create-pod-reel-engagement"
-      gap={8}
+      gap={10}
       alignItems="flex-start"
-      backgroundColor={withAlpha(primary, 0.1)}
-      borderWidth={1}
-      borderColor={withAlpha(primary, 0.4)}
-      borderRadius={12}
-      paddingHorizontal={10}
-      paddingVertical={9}
+      backgroundColor="$primarySoft"
+      borderRadius={16}
+      padding={12}
     >
       <MaterialIcons name="lightbulb-outline" size={18} color={primary} />
-      <YStack flex={1} gap={3}>
-        <Text fontSize={13} fontWeight="600" color="$color">
+      <YStack flex={1} gap={2}>
+        <Text fontSize={14} fontWeight="600" color="$color">
           {t('mweb.createPod.reelEngagementTitle')}
         </Text>
         <Text fontSize={12} color="$muted">

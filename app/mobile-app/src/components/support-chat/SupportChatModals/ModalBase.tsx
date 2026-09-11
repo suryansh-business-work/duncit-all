@@ -87,8 +87,8 @@ export function Backdrop({ testID, children, footer }: Readonly<BackdropProps>) 
         width="100%"
         maxWidth={360}
         maxHeight={maxHeight}
-        borderRadius={16}
-        backgroundColor="$background"
+        borderRadius={28}
+        backgroundColor="$surface"
         overflow="hidden"
       >
         <ScrollView

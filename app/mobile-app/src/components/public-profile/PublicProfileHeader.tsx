@@ -5,10 +5,38 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { PublicProfileUser } from '@/hooks/usePublicProfile';
 import type { RootStackParamList } from '@/navigation/types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+
+function CountStat({
+  value,
+  label,
+  onPress,
+  testID,
+}: Readonly<{ value: number; label: string; onPress: () => void; testID: string }>) {
+  return (
+    <YStack
+      testID={testID}
+      role="button"
+      aria-label={`${value} ${label}`}
+      onPress={onPress}
+      flex={1}
+      alignItems="center"
+      paddingVertical={12}
+      pressStyle={PRESS_STYLE.row}
+    >
+      <Text fontSize={18} fontWeight="700" color="$color">
+        {value}
+      </Text>
+      <Text fontSize={12} fontWeight="500" color="$muted">
+        {label}
+      </Text>
+    </YStack>
+  );
+}
 
 /** Centered avatar + name + location + bio — RN twin of mWeb's PublicProfileHeader.
  * The follower/following counts open that user's list (bug 9). */
@@ -21,11 +49,11 @@ export function PublicProfileHeader({ user }: Readonly<{ user: PublicProfileUser
     navigation.navigate('Follow', { userId: user.user_id, tab });
 
   return (
-    <YStack alignItems="center" gap={10} paddingVertical={8}>
+    <YStack alignItems="center" gap={16}>
       <YStack
-        width={96}
-        height={96}
-        borderRadius={48}
+        width={88}
+        height={88}
+        borderRadius={44}
         overflow="hidden"
         backgroundColor="$primary"
         alignItems="center"
@@ -38,64 +66,47 @@ export function PublicProfileHeader({ user }: Readonly<{ user: PublicProfileUser
             resizeMode="cover"
           />
         ) : (
-          <Text fontSize={36} fontWeight="700" color={onPrimary}>
+          <Text fontSize={34} fontWeight="600" color={onPrimary}>
             {initial}
           </Text>
         )}
       </YStack>
-      <Text fontSize={20} fontWeight="700" color="$color" textAlign="center">
-        {user.full_name || 'Duncit user'}
-      </Text>
-      <Text fontSize={12.5} color="$muted">
-        @{user.username}
-      </Text>
-      <XStack gap={24} paddingVertical={2}>
-        <XStack
-          testID="public-followers"
-          role="button"
-          aria-label={`${user.followers_count} followers`}
-          onPress={() => openFollow('followers')}
-          alignItems="center"
-          gap={4}
-          pressStyle={PRESS_STYLE.row}
-        >
-          <Text fontSize={14} fontWeight="700" color="$color">
-            {user.followers_count}
-          </Text>
-          <Text fontSize={13} color="$muted">
-            followers
-          </Text>
-        </XStack>
-        <XStack
-          testID="public-following"
-          role="button"
-          aria-label={`${user.following_count} following`}
-          onPress={() => openFollow('following')}
-          alignItems="center"
-          gap={4}
-          pressStyle={PRESS_STYLE.row}
-        >
-          <Text fontSize={14} fontWeight="700" color="$color">
-            {user.following_count}
-          </Text>
-          <Text fontSize={13} color="$muted">
-            following
-          </Text>
-        </XStack>
-      </XStack>
-      {location ? (
-        <XStack alignItems="center" gap={4}>
-          <MaterialIcons name="place" size={14} color={muted} />
-          <Text fontSize={13} color="$muted">
-            {location}
-          </Text>
-        </XStack>
-      ) : null}
-      {user.bio ? (
-        <Text fontSize={13.5} color="$muted" textAlign="center">
-          {user.bio}
+      <YStack alignItems="center" gap={4} alignSelf="stretch">
+        <Text fontSize={22} fontWeight="600" color="$color" textAlign="center">
+          {user.full_name || 'Duncit user'}
         </Text>
-      ) : null}
+        <Text fontSize={14} fontWeight="500" color="$muted">
+          @{user.username}
+        </Text>
+        {location ? (
+          <XStack alignItems="center" gap={4}>
+            <MaterialIcons name="place" size={16} color={muted} />
+            <Text fontSize={14} color="$muted">
+              {location}
+            </Text>
+          </XStack>
+        ) : null}
+        {user.bio ? (
+          <Text fontSize={14} lineHeight={20} color="$color" textAlign="center" marginTop={4}>
+            {user.bio}
+          </Text>
+        ) : null}
+      </YStack>
+      <SurfaceCard flexDirection="row" alignSelf="stretch" padding={0}>
+        <CountStat
+          testID="public-followers"
+          value={user.followers_count}
+          label="followers"
+          onPress={() => openFollow('followers')}
+        />
+        <YStack width={1} marginVertical={12} backgroundColor="$borderColor" />
+        <CountStat
+          testID="public-following"
+          value={user.following_count}
+          label="following"
+          onPress={() => openFollow('following')}
+        />
+      </SurfaceCard>
     </YStack>
   );
 }

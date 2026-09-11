@@ -93,25 +93,27 @@ export function CoverPickerDialog({
               backgroundColor="rgba(0,0,0,0.5)"
             />
             <YStack
-              backgroundColor="$background"
-              borderTopLeftRadius={22}
-              borderTopRightRadius={22}
+              backgroundColor="$surface"
+              borderTopLeftRadius={28}
+              borderTopRightRadius={28}
               maxHeight="88%"
-              padding={16}
+              padding={20}
             >
               <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
                 <XStack alignItems="center" justifyContent="space-between" paddingBottom={12}>
-                  <Text fontSize={17} fontWeight="700" color="$color">
+                  <Text fontSize={17} fontWeight="600" color="$color">
                     {t('mweb.createPod.addPodMedia')}
                   </Text>
                   <XStack
-                    pressStyle={PRESS_STYLE.surface}
+                    pressStyle={PRESS_STYLE.control}
                     testID="cover-picker-close"
                     role="button"
                     aria-label={close}
                     onPress={onClose}
-                    width={32}
-                    height={32}
+                    width={40}
+                    height={40}
+                    borderRadius={20}
+                    backgroundColor="$soft"
                     alignItems="center"
                     justifyContent="center"
                   >
@@ -132,14 +134,12 @@ export function CoverPickerDialog({
                       alignItems="center"
                       justifyContent="center"
                       borderRadius={999}
-                      borderWidth={1}
-                      borderColor={tab === index ? '$primary' : '$borderColor'}
-                      backgroundColor={tab === index ? '$primary' : 'transparent'}
+                      backgroundColor={tab === index ? '$primary' : '$soft'}
                       pressStyle={PRESS_STYLE.control}
                     >
                       <Text
                         fontSize={13.5}
-                        fontWeight="700"
+                        fontWeight="600"
                         color={tab === index ? onPrimary : color}
                       >
                         {t(key)}
@@ -182,7 +182,7 @@ export function CoverPickerDialog({
                       borderWidth={2}
                       borderColor="$borderColor"
                       borderStyle="dashed"
-                      backgroundColor="$surface"
+                      backgroundColor="$soft"
                       opacity={busy || atLimit ? 0.6 : 1}
                       pressStyle={PRESS_STYLE.control}
                     >
@@ -219,15 +219,14 @@ export function CoverPickerDialog({
                     aria-label={t('mweb.createPod.cancel')}
                     onPress={onClose}
                     flex={1}
-                    height={48}
+                    height={52}
                     alignItems="center"
                     justifyContent="center"
-                    borderRadius={12}
-                    borderWidth={1}
-                    borderColor="$borderColor"
+                    borderRadius={999}
+                    backgroundColor="$soft"
                     pressStyle={PRESS_STYLE.control}
                   >
-                    <Text fontSize={14} fontWeight="600" color="$color">
+                    <Text fontSize={15} fontWeight="600" color="$color">
                       {t('mweb.createPod.cancel')}
                     </Text>
                   </XStack>
@@ -238,15 +237,15 @@ export function CoverPickerDialog({
                     aria-disabled={tray.length === 0}
                     onPress={tray.length === 0 ? undefined : onDone}
                     flex={2}
-                    height={48}
+                    height={52}
                     alignItems="center"
                     justifyContent="center"
-                    borderRadius={12}
+                    borderRadius={999}
                     backgroundColor="$primary"
                     opacity={tray.length === 0 ? 0.6 : 1}
-                    pressStyle={PRESS_STYLE.control}
+                    pressStyle={PRESS_STYLE.solid}
                   >
-                    <Text fontSize={14} fontWeight="700" color={onPrimary}>
+                    <Text fontSize={15} fontWeight="600" color={onPrimary}>
                       {doneLabel}
                     </Text>
                   </XStack>

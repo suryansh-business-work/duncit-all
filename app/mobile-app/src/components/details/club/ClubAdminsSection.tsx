@@ -1,6 +1,7 @@
-import { Text, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import { ClubAdminCard } from '@/components/pod-pending/ClubAdminCard';
+import { SectionHeader } from '@/components/SectionHeader';
 import type { ClubDetail } from '@/hooks/useDetails';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -15,9 +16,7 @@ export function ClubAdminsSection({ admins }: Readonly<{ admins: ClubAdmin[] }>)
 
   return (
     <YStack gap={12} testID="club-admins">
-      <Text fontSize={16} fontWeight="700" color="$color">
-        Club Admins
-      </Text>
+      <SectionHeader title="Club Admins" />
       {admins.map((admin) => (
         <ClubAdminCard
           key={admin.id}

@@ -43,7 +43,7 @@ export function SurveyChip({
       pressStyle={PRESS_STYLE.control}
     >
       {emoji ? <Text fontSize={large ? 17 : 15}>{emoji}</Text> : null}
-      <Text color={selected ? '#ffffff' : hue} fontWeight="700" fontSize={large ? 15 : 13.5}>
+      <Text color={selected ? '$onPrimary' : hue} fontWeight="600" fontSize={large ? 15 : 13.5}>
         {label}
       </Text>
     </XStack>

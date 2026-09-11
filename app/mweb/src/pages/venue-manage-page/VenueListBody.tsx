@@ -1,7 +1,7 @@
 import { Link as RouterLink } from 'react-router';
 import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
 import { DuncitButton } from '@duncit/buttons';
 import { venueUrl } from '../../utils/seoUrls';
 
@@ -41,22 +41,14 @@ export default function VenueListBody({ showSpinner, error, venue }: Readonly<Ve
     );
   }
   return (
-    <Box
-      sx={{
-        p: 1.25,
-        borderRadius: '16px',
-        border: 1,
-        borderColor: 'divider',
-        bgcolor: 'background.paper',
-      }}
-    >
-      <Stack direction="row" spacing={1.25}>
+    <Box>
+      <Stack direction="row" spacing={1.5}>
         <Box component="img" src={venue.cover_image_url || '/new-duncit-logo.png'} alt={venue.venue_name} sx={{ width: 72, height: 72, objectFit: 'cover', borderRadius: '16px', bgcolor: 'action.hover', flex: '0 0 auto' }} />
         <Stack spacing={0.35} sx={{ flex: 1, minWidth: 0 }}>
         <Stack direction="row" spacing={1} sx={{
           alignItems: "center"
         }}>
-          <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }} noWrap>
+          <Typography sx={{ flex: 1, fontSize: '1rem', fontWeight: 600 }} noWrap>
             {venue.venue_name}
           </Typography>
         </Stack>
@@ -104,12 +96,12 @@ export default function VenueListBody({ showSpinner, error, venue }: Readonly<Ve
         )}
         </Stack>
       </Stack>
-      <Stack direction="row" spacing={1} sx={{ mt: 1.25 }}>
-        <DuncitButton component={RouterLink} to="/register-venue" variant="outlined" size="small" startIcon={<EditIcon />} sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}>
+      <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
+        <DuncitButton component={RouterLink} to="/register-venue" variant="outlined" size="small" startIcon={<EditRoundedIcon />} sx={{ flex: 1 }}>
           Edit
         </DuncitButton>
         {venue?.status === 'APPROVED' && (
-          <DuncitButton component={RouterLink} to={venueUrl(venue.id)} variant="contained" size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}>
+          <DuncitButton component={RouterLink} to={venueUrl(venue.id)} variant="contained" size="small" endIcon={<OpenInNewRoundedIcon fontSize="small" />} sx={{ flex: 1 }}>
             Public link
           </DuncitButton>
         )}

@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 import { useLocation, useNavigate } from 'react-router';
-import { Alert, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Stack, TextField } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { REFERRAL_CODE } from '@duncit/regex';
 import AuthBackground from '../../components/AuthBackground';
-import AuthLogo from '../../components/AuthLogo';
+import AuthHeading from '../../components/AuthHeading';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import { notifySuccess } from '../../components/notify';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -55,30 +55,11 @@ export default function SignupReferralPage() {
     <AuthBackground>
       <AuthScreenFrame>
         <Stack spacing={2}>
-          <Stack
-            spacing={1.1}
-            sx={{
-              alignItems: "center",
-              pt: 0.5
-            }}>
-            <AuthLogo />
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 700,
-                textAlign: "center",
-                color: "text.primary"
-              }}>
-              {t('mweb.referral.promptTitle')}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                textAlign: "center",
-                color: "text.secondary"
-              }}>
-              {t('mweb.referral.promptBodyPlain')}
-            </Typography>
+          <Stack sx={{ mb: 1 }}>
+            <AuthHeading
+              title={t('mweb.referral.promptTitle')}
+              subtitle={t('mweb.referral.promptBodyPlain')}
+            />
           </Stack>
 
           <TextField
@@ -99,6 +80,7 @@ export default function SignupReferralPage() {
 
           <DuncitButton
             variant="contained"
+            size="large"
             fullWidth
             disabled={loading || !trimmed || malformed}
             onClick={() => {

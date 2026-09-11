@@ -20,7 +20,7 @@ export function HostProjectionLines({ projection, labels, formatMoney }: Readonl
   if (!projection) return null;
   if (!projection.viable) {
     return (
-      <Text testID="auto-pod-projection-not-viable" fontSize={12.5} color={warning}>
+      <Text testID="auto-pod-projection-not-viable" fontSize={13} color={warning}>
         {labels.projectionNotViable}
       </Text>
     );
@@ -28,10 +28,10 @@ export function HostProjectionLines({ projection, labels, formatMoney }: Readonl
   const fees = projection.gst_amount + projection.platform_fee_amount;
   return (
     <YStack gap={2} testID="auto-pod-host-projection">
-      <Text fontSize={12} fontWeight="700" color="$muted">
+      <Text fontSize={12} fontWeight="600" color="$muted">
         {labels.projectionTitle}
       </Text>
-      <Text fontSize={13} fontWeight="700" color={success}>
+      <Text fontSize={14} fontWeight="600" color={success}>
         {labels.projectionHost(formatMoney(projection.host_receives))}
       </Text>
       <Text fontSize={12} color="$muted">

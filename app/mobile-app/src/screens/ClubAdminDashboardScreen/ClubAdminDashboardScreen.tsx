@@ -11,7 +11,6 @@ import {
 
 import { StackScreen } from '@/components/StackScreen';
 import { LoadErrorNotice } from '@/components/club-admin/LoadErrorNotice';
-import { PageHeading } from '@/components/club-admin/PageHeading';
 import { CategoryTiles } from '@/components/club-admin/dashboard/CategoryTiles';
 import { ClubBreakdown } from '@/components/club-admin/dashboard/ClubBreakdown';
 import { KpiGroupsSection } from '@/components/club-admin/dashboard/KpiGroupsSection';
@@ -24,7 +23,7 @@ import { RefreshScrollView } from '@/components/PullToRefresh';
 
 /**
  * Club Admin Dashboard — the twin of mWeb's /clubs/dashboard (rule 27): the
- * range chips, the four KPI groups, the monthly trend, the per-club breakdown
+ * range pills, the four KPI groups, the monthly trend, the per-club breakdown
  * and the category tiles, all from `clubAdminDashboard(from, to)`. Which
  * figures become tiles and how each is written is @duncit/utils' call.
  */
@@ -41,12 +40,7 @@ export function ClubAdminDashboardScreen() {
   return (
     <StackScreen header title={t('mweb.meta.clubDashboard.title')} testID="club-dashboard-screen">
       <RefreshScrollView showsVerticalScrollIndicator={false}>
-        <YStack gap={14} padding={16} paddingBottom={48}>
-          <PageHeading
-            eyebrow={t('clubAdmin.dashboard.eyebrow')}
-            title={t('clubAdmin.dashboard.title')}
-            subtitle={t('clubAdmin.dashboard.subtitle')}
-          />
+        <YStack gap={24} padding={16} paddingBottom={48}>
           <ChipSelectField
             label={t('clubAdmin.dashboard.range')}
             options={rangeOptions}

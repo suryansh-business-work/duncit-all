@@ -13,21 +13,26 @@ interface Props {
   onSelect: (categoryId: string) => void;
 }
 
+/** Pill chips on the sheet: soft at rest, green when chosen. */
+const CHIP_SX = { height: 36, minHeight: 36, fontWeight: 600, px: 0.5 } as const;
+
 export default function SearchFilterSheet({ open, categories, categoryId, onClose, onSelect }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" slotProps={{
-      paper: { sx: { borderRadius: '16px' } }
-    }}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <Stack
         direction="row"
         sx={{
           alignItems: "center",
           justifyContent: "space-between",
-          pr: 1
+          pr: 1.5
         }}>
-        <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.search.filterByCategory')}</DialogTitle>
-        <DuncitIconButton aria-label={t('mweb.search.closeFilter')} onClick={onClose}>
+        <DialogTitle sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>{t('mweb.search.filterByCategory')}</DialogTitle>
+        <DuncitIconButton
+          aria-label={t('mweb.search.closeFilter')}
+          onClick={onClose}
+          sx={{ width: 40, height: 40, minHeight: 40, bgcolor: 'action.hover' }}
+        >
           <CloseIcon />
         </DuncitIconButton>
       </Stack>
@@ -39,12 +44,12 @@ export default function SearchFilterSheet({ open, categories, categoryId, onClos
             No categories available yet.
           </Typography>
         ) : (
-          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+          <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 1 }}>
             <Chip
               label={t('mweb.common.all')}
               color={categoryId === '' ? 'primary' : 'default'}
               onClick={() => onSelect('')}
-              sx={{ fontWeight: 600 }}
+              sx={CHIP_SX}
             />
             {categories.map((category) => (
               <Chip
@@ -53,14 +58,14 @@ export default function SearchFilterSheet({ open, categories, categoryId, onClos
                 label={category.name}
                 color={categoryId === category.id ? 'primary' : 'default'}
                 onClick={() => onSelect(category.id)}
-                sx={{ fontWeight: 600 }}
+                sx={CHIP_SX}
               />
             ))}
           </Stack>
         )}
       </Box>
       <Box sx={{ px: 3, pb: 3 }}>
-        <DuncitButton fullWidth variant="contained" onClick={onClose} sx={{ fontWeight: 700, borderRadius: 999 }}>
+        <DuncitButton fullWidth variant="contained" size="large" onClick={onClose}>
           Apply
         </DuncitButton>
       </Box>

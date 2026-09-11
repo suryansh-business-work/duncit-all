@@ -7,12 +7,33 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { PodMediaItem } from '@/hooks/usePodMediaBoard';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
+/** Square tiles, like the mWeb grid's 1:1 cells. */
+const TILE_IMAGE = { width: '100%', aspectRatio: 1 } as const;
+
 interface Props {
   items: readonly PodMediaItem[];
   labels: PodMediaLabels;
   /** Omitted on a read-only strip — the Complete dialog shows, it does not edit. */
   onRemove?: (url: string) => void;
   busy?: boolean;
+}
+
+/** Who added a tile — the host in the brand green, a guest in ink. */
+function SourcePill({ host, label }: Readonly<{ host: boolean; label: string }>) {
+  return (
+    <XStack
+      height={22}
+      paddingHorizontal={8}
+      alignItems="center"
+      borderRadius={999}
+      borderWidth={1}
+      borderColor={host ? '$primary' : '$borderColor'}
+    >
+      <Text fontSize={11} fontWeight="600" color={host ? '$primary' : '$color'}>
+        {label}
+      </Text>
+    </XStack>
+  );
 }
 
 /**
@@ -24,11 +45,11 @@ interface Props {
  * find their own to take it back down.
  */
 export function PodMediaGrid({ items, labels, onRemove, busy = false }: Readonly<Props>) {
-  const { color: ink, danger, muted } = useThemeColors();
+  const { danger } = useThemeColors();
 
   if (items.length === 0) {
     return (
-      <Text testID="pod-media-empty" fontSize={13} color="$muted">
+      <Text testID="pod-media-empty" fontSize={14} color="$muted">
         {labels.empty}
       </Text>
     );
@@ -37,11 +58,11 @@ export function PodMediaGrid({ items, labels, onRemove, busy = false }: Readonly
   return (
     <XStack flexWrap="wrap" gap={8}>
       {items.map((item) => (
-        <YStack key={item.url} width="48%" gap={4}>
-          <YStack borderRadius={12} overflow="hidden" backgroundColor="$backgroundHover">
+        <YStack key={item.url} width="48%" gap={6}>
+          <YStack borderRadius={16} overflow="hidden" backgroundColor="$soft">
             <AppImage
               source={{ uri: item.url }}
-              style={{ width: '100%', height: 120 }}
+              style={TILE_IMAGE}
               recyclingKey={item.url}
               accessibilityLabel={labels.uploadedBy(item.uploaded_by_name)}
             />
@@ -52,9 +73,12 @@ export function PodMediaGrid({ items, labels, onRemove, busy = false }: Readonly
                 position="absolute"
                 top={6}
                 right={6}
-                padding={6}
+                width={32}
+                height={32}
+                alignItems="center"
+                justifyContent="center"
                 borderRadius={999}
-                backgroundColor="$background"
+                backgroundColor="$surface"
                 opacity={busy ? 0.5 : 1}
                 onPress={() => {
                   if (!busy) onRemove(item.url);
@@ -62,18 +86,17 @@ export function PodMediaGrid({ items, labels, onRemove, busy = false }: Readonly
                 accessibilityRole="button"
                 accessibilityLabel={labels.remove}
               >
-                <MaterialIcons name="delete-outline" size={16} color={danger} />
+                <MaterialIcons name="delete-outline" size={18} color={danger} />
               </XStack>
             ) : null}
           </YStack>
-          <XStack alignItems="center" gap={4}>
-            <MaterialIcons
-              name={item.source === 'HOST' ? 'person' : 'group'}
-              size={12}
-              color={item.source === 'HOST' ? ink : muted}
+          <XStack alignItems="center" gap={6}>
+            <SourcePill
+              host={item.source === 'HOST'}
+              label={item.source === 'HOST' ? labels.byHost : labels.byGuest}
             />
-            <Text fontSize={11} color="$muted" numberOfLines={1} flex={1}>
-              {item.uploaded_by_name || (item.source === 'HOST' ? labels.byHost : labels.byGuest)}
+            <Text fontSize={12} color="$muted" numberOfLines={1} flex={1}>
+              {item.uploaded_by_name}
             </Text>
           </XStack>
         </YStack>

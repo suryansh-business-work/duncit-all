@@ -33,7 +33,8 @@ interface Props {
   height?: number;
 }
 
-/** Dependency-free bar chart (animated CSS heights) for the studio dashboards. */
+/** Dependency-free bar chart (animated CSS heights) for the studio dashboards:
+ * a green bar rising inside a soft pill track. Native twin: SimpleBarChart. */
 export default function SimpleBarChart({ data, height = 120 }: Readonly<Props>) {
   const max = Math.max(1, ...data.map((d) => d.value));
   return (
@@ -54,31 +55,34 @@ export default function SimpleBarChart({ data, height = 120 }: Readonly<Props>) 
             flex: 1,
             height: '100%'
           }}>
-          {/* The bar scales inside this flex track, so the value/label rows can
-              never overflow the card (overlap fix, B4-1). */}
-          <Stack
-            spacing={0.5}
+          {/* The track fills this flex slot, so the value/label rows can never
+              overflow the card (overlap fix, B4-1). */}
+          <Typography variant="caption" sx={{ fontWeight: 700, lineHeight: 1 }}>
+            {d.value}
+          </Typography>
+          <Box
             sx={{
-              alignItems: "center",
+              position: 'relative',
               flex: 1,
               width: '100%',
-              justifyContent: 'flex-end'
-            }}>
-            <Typography variant="caption" sx={{ fontWeight: 700, lineHeight: 1 }}>
-              {d.value}
-            </Typography>
+              maxWidth: 28,
+              borderRadius: 999,
+              overflow: 'hidden',
+              bgcolor: 'action.hover',
+            }}
+          >
             <Box
               sx={{
-                width: '100%',
-                maxWidth: 34,
-                height: `${Math.max(4, (d.value / max) * 82)}%`,
-                borderRadius: '16px',
-                background: d.value > 0 ? 'linear-gradient(180deg, #ff7a59 0%, #ff4f73 100%)' : undefined,
-                bgcolor: d.value > 0 ? undefined : 'action.hover',
+                position: 'absolute',
+                insetInline: 0,
+                bottom: 0,
+                height: `${(d.value / max) * 100}%`,
+                borderRadius: 999,
+                bgcolor: 'primary.main',
                 transition: 'height 300ms cubic-bezier(0.2, 0.8, 0.2, 1)',
               }}
             />
-          </Stack>
+          </Box>
           <Typography
             variant="caption"
             sx={{

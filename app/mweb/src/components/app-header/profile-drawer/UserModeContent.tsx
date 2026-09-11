@@ -106,18 +106,19 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
       badge: t('mweb.membership.comingSoon'),
     },
   ];
+  // Rows carry no caption in the calm menu: the label says where each goes.
   const giftCardItems: ProfileTile[] = [
     {
       key: 'giftcards-buy',
       label: t('mweb.giftCards.sidebarBuyLabel'),
-      caption: t('mweb.giftCards.sidebarBuyCaption'),
+      caption: '',
       icon: 'giftcards',
       to: '/gift-cards',
     },
     {
       key: 'giftcards-redeem',
       label: t('mweb.giftCards.sidebarRedeemLabel'),
-      caption: t('mweb.giftCards.sidebarRedeemCaption'),
+      caption: '',
       icon: 'giftcardRedeem',
       to: '/gift-cards/redeem',
     },
@@ -133,14 +134,14 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, showLea
     {
       key: 'chats',
       label: t('mweb.nav.chats'),
-      caption: t('mweb.sidebar.chatsCaption'),
+      caption: '',
       icon: 'chats',
       to: '/chats',
     },
     {
       key: 'following',
       label: t('mweb.nav.following'),
-      caption: t('mweb.sidebar.followingCaption'),
+      caption: '',
       icon: 'following',
       to: '/follow',
     },

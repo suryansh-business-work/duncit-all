@@ -16,6 +16,8 @@ import {
 } from '@/utils/pod-history';
 import type { ProductOrder } from '@/utils/product-orders';
 import { formatDateTime } from '@/utils/date-format';
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { PodHistoryActions } from './PodHistoryActions';
 import { PodHistoryTimeline } from './PodHistoryTimeline';
 import { PodProductOrdersCard } from './PodProductOrdersCard';
@@ -60,17 +62,10 @@ const STATUS_CHIP: Record<PodMembership['status'], { label: string; tone: Status
 };
 
 function Chip({ label, tone }: Readonly<{ label: string; tone: 'success' | 'warning' | 'muted' }>) {
-  const bg = tone === 'success' ? '$primary' : '$surface';
+  const bg = tone === 'success' ? '$primary' : '$soft';
   return (
-    <XStack
-      borderRadius={999}
-      paddingHorizontal={10}
-      paddingVertical={3}
-      backgroundColor={bg}
-      borderWidth={tone === 'success' ? 0 : 1}
-      borderColor="$borderColor"
-    >
-      <Text fontSize={11} fontWeight="600" color={tone === 'success' ? '$onPrimary' : '$color'}>
+    <XStack borderRadius={999} paddingHorizontal={10} paddingVertical={4} backgroundColor={bg}>
+      <Text fontSize={12} fontWeight="600" color={tone === 'success' ? '$onPrimary' : '$color'}>
         {label}
       </Text>
     </XStack>
@@ -79,21 +74,10 @@ function Chip({ label, tone }: Readonly<{ label: string; tone: 'success' | 'warn
 
 function Card({ title, children }: Readonly<{ title?: string; children: ReactNode }>) {
   return (
-    <YStack
-      borderRadius={18}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      padding={16}
-      gap={12}
-    >
-      {title ? (
-        <Text fontSize={15} fontWeight="700" color="$color">
-          {title}
-        </Text>
-      ) : null}
+    <SurfaceCard gap={12}>
+      {title ? <SectionHeader title={title} /> : null}
       {children}
-    </YStack>
+    </SurfaceCard>
   );
 }
 
@@ -109,7 +93,7 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
     productOrders,
     ordersLoading,
   } = props;
-  const { onPrimary, primary } = useThemeColors();
+  const { muted, primary } = useThemeColors();
   const { t } = useTranslation();
   const pod = item.pod;
   const image = coverImageUrl(pod?.pod_images_and_videos);
@@ -137,9 +121,9 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
             <YStack
               width={88}
               height={88}
-              borderRadius={16}
+              borderRadius={18}
               overflow="hidden"
-              backgroundColor="$primary"
+              backgroundColor="$soft"
               alignItems="center"
               justifyContent="center"
             >
@@ -150,7 +134,7 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
                   resizeMode="cover"
                 />
               ) : (
-                <MaterialIcons name="event" size={30} color={onPrimary} />
+                <MaterialIcons name="event" size={30} color={muted} />
               )}
             </YStack>
             <YStack flex={1} gap={6}>
@@ -174,7 +158,7 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
                   />
                 ) : null}
               </XStack>
-              <Text fontSize={16} fontWeight="700" color="$color">
+              <Text fontSize={16} fontWeight="600" color="$color">
                 {pod?.pod_title ?? t('mweb.podHistory.podDetailsTitle')}
               </Text>
               <Text fontSize={13} color="$muted">

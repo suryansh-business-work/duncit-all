@@ -12,31 +12,29 @@ type IconName = ComponentProps<typeof MaterialIcons>['name'];
  * low-complexity pass (no token ternary per JSX prop). */
 type FollowView = Readonly<{
   aria: string;
-  border: string;
   background: string;
   icon: IconName;
   iconColor: string;
   labelColor: string;
 }>;
 
-/** REQUESTED is tappable — it withdraws the pending ask — so it reads as an
- * outlined button, not a disabled one. */
+/** The resting Follow is the green pill; both live states (a pending ask, an
+ * existing follow) read as a soft pill. REQUESTED is tappable — it withdraws
+ * the pending ask — so it is never drawn disabled. */
 function followView(status: FollowStatus, onPrimary: string, ink: string): FollowView {
   if (status === 'FOLLOWING') {
     return {
       aria: 'Unfollow user',
-      border: '$primary',
-      background: '$primary',
+      background: '$soft',
       icon: 'how-to-reg',
-      iconColor: onPrimary,
-      labelColor: '$onPrimary',
+      iconColor: ink,
+      labelColor: '$color',
     };
   }
   if (status === 'REQUESTED') {
     return {
       aria: 'Withdraw follow request',
-      border: '$primary',
-      background: 'transparent',
+      background: '$soft',
       icon: 'hourglass-top',
       iconColor: ink,
       labelColor: '$color',
@@ -44,11 +42,10 @@ function followView(status: FollowStatus, onPrimary: string, ink: string): Follo
   }
   return {
     aria: 'Follow user',
-    border: '$borderColor',
-    background: 'transparent',
+    background: '$primary',
     icon: 'person-add-alt',
-    iconColor: ink,
-    labelColor: '$color',
+    iconColor: onPrimary,
+    labelColor: '$onPrimary',
   };
 }
 
@@ -84,17 +81,15 @@ export function FollowStatusButton({
       alignSelf="center"
       alignItems="center"
       gap={8}
+      height={44}
       paddingHorizontal={20}
-      paddingVertical={10}
       borderRadius={999}
-      borderWidth={1}
-      borderColor={view.border}
       backgroundColor={view.background}
       opacity={busy ? 0.7 : 1}
       pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name={view.icon} size={18} color={view.iconColor} />
-      <Text fontSize={14} fontWeight="700" color={view.labelColor}>
+      <Text fontSize={14} fontWeight="600" color={view.labelColor}>
         {label}
       </Text>
     </XStack>

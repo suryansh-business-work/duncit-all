@@ -1,6 +1,8 @@
-import { Input, Text, XStack, YStack } from 'tamagui';
+import { Input, Text, XStack } from 'tamagui';
 
 import { Field } from '@/components/Field';
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatMoney } from '@/utils/checkout-math';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -39,10 +41,8 @@ export function GiftCardAmountPicker({
   });
 
   return (
-    <YStack gap={10}>
-      <Text fontSize={15} fontWeight="700" color="$color">
-        {t('mweb.giftCards.amountHeading')}
-      </Text>
+    <SurfaceCard gap={12}>
+      <SectionHeader title={t('mweb.giftCards.amountHeading')} />
       <XStack gap={8} flexWrap="wrap">
         {denominations.map((amount) => {
           const isActive = selected === amount && !customText;
@@ -54,15 +54,14 @@ export function GiftCardAmountPicker({
               role="button"
               aria-label={label}
               onPress={() => onSelect(amount)}
-              paddingHorizontal={14}
-              paddingVertical={8}
+              height={36}
+              paddingHorizontal={16}
+              alignItems="center"
               borderRadius={999}
-              borderWidth={1}
-              borderColor={isActive ? '$primary' : '$borderColor'}
-              backgroundColor={isActive ? '$primary' : 'transparent'}
+              backgroundColor={isActive ? '$primary' : '$soft'}
               pressStyle={PRESS_STYLE.control}
             >
-              <Text fontSize={13} fontWeight="700" color={isActive ? '$onPrimary' : '$color'}>
+              <Text fontSize={13} fontWeight="600" color={isActive ? '$onPrimary' : '$color'}>
                 {label}
               </Text>
             </XStack>
@@ -85,6 +84,6 @@ export function GiftCardAmountPicker({
           aria-label={customLabel}
         />
       </Field>
-    </YStack>
+    </SurfaceCard>
   );
 }

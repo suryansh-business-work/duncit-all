@@ -7,73 +7,70 @@ type IconName = ComponentProps<typeof MaterialIcons>['name'];
 export type SupportRoute =
   'Sos' | 'Callback' | 'SupportTickets' | 'AllSupportTickets' | 'Feedback' | 'Grievance';
 
+/** The tile's icon tone: the brand accent, or danger for the emergency entry. */
+export type SupportTone = 'accent' | 'danger';
+
 export interface SupportSection {
   key: string;
   title: string;
-  desc: string;
   icon: IconName;
-  /** Per-section accent (mirrors mWeb's SUPPORT_SECTIONS colours). */
-  color: string;
+  tone: SupportTone;
   route: SupportRoute;
-  /** Localization keys, preferred over the literals above when present. */
+  /** Localization key, preferred over the literal above when present. */
   titleKey?: string;
-  descKey?: string;
 }
 
 /**
  * "More ways to reach us" — the non-chat support tools. Chat is promoted to the
  * primary Start-a-conversation CTA, so it is excluded here. Order, copy and
- * colours mirror mWeb's SUPPORT_SECTIONS (minus the `live` chat entry).
+ * tones mirror mWeb's SUPPORT_SECTIONS (minus the `live` chat entry).
  */
 export const SUPPORT_MORE_WAYS: SupportSection[] = [
   {
     key: 'sos',
     title: 'SOS',
-    desc: 'Emergency help at your live pod',
     icon: 'sos',
-    color: '#f44336',
+    tone: 'danger',
     route: 'Sos',
   },
   {
     key: 'callback',
     title: 'Callback Request',
-    desc: 'Call us or get a callback',
+    titleKey: 'mweb.common.callbackRequest',
     icon: 'phone-callback',
-    color: '#2196f3',
+    tone: 'accent',
     route: 'Callback',
   },
   {
     key: 'tickets',
     title: 'Create Support Tickets',
-    desc: 'Raise an issue with our team',
+    titleKey: 'mweb.common.createSupportTickets',
     icon: 'confirmation-number',
-    color: '#ff4f73',
+    tone: 'accent',
     route: 'SupportTickets',
   },
   {
     key: 'all',
     title: 'All Support Tickets',
-    desc: 'Every request you have raised, in one list',
+    titleKey: 'mweb.common.allSupportTickets',
     icon: 'history',
-    color: '#7c5cff',
+    tone: 'accent',
     route: 'AllSupportTickets',
   },
   {
     key: 'grievance',
     title: 'Raise a Grievance',
-    desc: 'File a formal grievance with our Grievance Officer',
     titleKey: 'grievance.title',
-    descKey: 'grievance.subtitle',
     icon: 'gavel',
-    color: '#795548',
+    tone: 'accent',
     route: 'Grievance',
   },
   {
     key: 'feedback',
     title: 'Report a Problem',
-    desc: 'Send feedback or report an issue to our team',
+    titleKey: 'mweb.common.reportAProblem',
     icon: 'feedback',
-    color: '#ff9800',
+    tone: 'accent',
     route: 'Feedback',
   },
 ];

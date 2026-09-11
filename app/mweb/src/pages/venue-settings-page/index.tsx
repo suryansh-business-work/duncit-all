@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { Card, CardContent, Stack, Typography } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
+import { Card, CardContent, Stack } from '@mui/material';
+import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import type { VenueCancellationPolicy } from '@duncit/forms/schemas';
 import { parseApiError, pickVenue } from '@duncit/utils';
+import SectionHeader from '../../components/SectionHeader';
 import { notifySuccess } from '../../components/notify';
 import VenuePageFrame from '../venue-manage-page/VenuePageFrame';
 import {
@@ -59,9 +60,8 @@ export default function VenueSettingsPage() {
 
   return (
     <VenuePageFrame
-      icon={<SettingsIcon fontSize="small" />}
+      icon={<SettingsRoundedIcon fontSize="small" />}
       title={t('mweb.venueSettingsPage.title')}
-      caption={t('mweb.venueSettingsPage.subtitle')}
       venues={venues}
       venue={venue}
       onSelect={setSelectedId}
@@ -69,12 +69,10 @@ export default function VenueSettingsPage() {
       error={error}
       noVenuesMessage={t('mweb.venueSettingsPage.noVenues')}
     >
-      <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-        <CardContent>
+      <Card sx={{ overflow: 'visible' }}>
+        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Stack spacing={1.5}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              {t('venueSettings.cancellationTitle')}
-            </Typography>
+            <SectionHeader title={t('venueSettings.cancellationTitle')} />
             <CancellationPolicyForm
               initialValues={initialValues}
               saving={saveState.loading}

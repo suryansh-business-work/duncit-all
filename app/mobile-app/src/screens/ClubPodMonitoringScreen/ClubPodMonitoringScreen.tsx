@@ -1,15 +1,17 @@
-import { useMemo, useState } from 'react';
-import { Spinner, Text, YStack } from 'tamagui';
+import { Fragment, useMemo, useState } from 'react';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 import type { PodAuditLog } from '@duncit/utils';
 
-import { LabeledInput } from '@/components/LabeledInput';
+import { Field } from '@/components/Field';
 import { StackScreen } from '@/components/StackScreen';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { LoadErrorNotice } from '@/components/club-admin/LoadErrorNotice';
 import { LoadMoreButton } from '@/components/club-admin/LoadMoreButton';
-import { PageHeading } from '@/components/club-admin/PageHeading';
+import { RowDivider } from '@/components/club-admin/NavRow';
 import { toPodAuditLog } from '@/components/club-admin/audit-log';
 import { AuditLogRow } from '@/components/club-admin/monitoring/AuditLogRow';
 import { AuditLogSheet } from '@/components/club-admin/monitoring/AuditLogSheet';
+import { SearchPill } from '@/components/pod-list/SearchPill';
 import { useClubAdminAuditLogs } from '@/hooks/useClubAdminAuditLogs';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -36,36 +38,42 @@ export function ClubPodMonitoringScreen() {
   return (
     <StackScreen header title={t('mweb.meta.clubMonitoring.title')} testID="club-monitoring-screen">
       <RefreshScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <YStack gap={14} padding={16} paddingBottom={48}>
-          <PageHeading
-            title={t('clubAdmin.monitoring.title')}
-            subtitle={t('clubAdmin.monitoring.subtitle')}
-          />
-          <LabeledInput
-            testID="club-monitoring-search"
-            label={searchLabel}
-            placeholder={searchLabel}
-            value={query}
-            onChangeText={setQuery}
-          />
+        <YStack gap={20} padding={16} paddingBottom={48}>
+          <Field label={searchLabel} testID="club-monitoring-search">
+            <XStack>
+              <SearchPill
+                testID="field-club-monitoring-search"
+                ariaLabel={searchLabel}
+                placeholder=""
+                value={query}
+                onChangeText={setQuery}
+              />
+            </XStack>
+          </Field>
           {logs.isLoading ? <Spinner testID="club-monitoring-loading" color="$primary" /> : null}
           {logs.hasError ? (
             <LoadErrorNotice testID="club-monitoring-error" onRetry={logs.refetch} />
           ) : null}
           {empty ? (
-            <Text testID="club-monitoring-empty" fontSize={13} color="$muted">
+            <Text testID="club-monitoring-empty" fontSize={14} color="$muted" textAlign="center">
               {t('clubAdmin.monitoring.noActivity')}
             </Text>
           ) : null}
-          {rows.map((log) => (
-            <AuditLogRow
-              key={log.id}
-              log={log}
-              when={formatDateTime(log.created_at)}
-              testID={`club-monitoring-row-${log.id}`}
-              onPress={() => setOpen(log)}
-            />
-          ))}
+          {rows.length > 0 ? (
+            <SurfaceCard padding={0} overflow="hidden">
+              {rows.map((log, index) => (
+                <Fragment key={log.id}>
+                  {index > 0 ? <RowDivider /> : null}
+                  <AuditLogRow
+                    log={log}
+                    when={formatDateTime(log.created_at)}
+                    testID={`club-monitoring-row-${log.id}`}
+                    onPress={() => setOpen(log)}
+                  />
+                </Fragment>
+              ))}
+            </SurfaceCard>
+          ) : null}
           {logs.hasMore ? (
             <LoadMoreButton
               testID="club-monitoring-more"

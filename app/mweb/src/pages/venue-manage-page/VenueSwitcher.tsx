@@ -40,12 +40,12 @@ export default function VenueSwitcher({ venues, venueId, onChange }: Readonly<Ve
             ),
         },
       }}
-      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px', fontWeight: 700 } }}
+      sx={{ '& .MuiOutlinedInput-root': { borderRadius: '16px', fontWeight: 600 } }}
     >
       {venues.map((venue) => (
         <MenuItem key={venue.id} value={venue.id}>
           <Stack spacing={0.15} sx={{ minWidth: 0 }}>
-            <Typography variant="body2" sx={{ fontWeight: 700 }} noWrap>
+            <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
               {venueLabel(venue, untitled)}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }} noWrap>

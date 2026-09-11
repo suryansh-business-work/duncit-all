@@ -3,6 +3,7 @@ import FlagIcon from '@mui/icons-material/Flag';
 import { useDateFormat } from '../../utils/dateFormat';
 import type { TicketDetail, TicketPriority } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
+import { SURFACE_SX } from '../../theme';
 
 const PRIORITY_COLOR: Record<TicketPriority, 'default' | 'warning' | 'error'> = {
   LOW: 'default',
@@ -35,7 +36,7 @@ export default function TicketMeta({ ticket }: Readonly<{ ticket: TicketDetail }
   const lastUpdated = ticket.last_message_at || ticket.updated_at;
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }}>
+    <Paper sx={{ ...SURFACE_SX, p: 2 }}>
       <Stack
         direction="row"
         spacing={1}

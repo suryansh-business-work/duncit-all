@@ -21,7 +21,7 @@ export function ChatClosedNotice() {
       borderColor="$borderColor"
     >
       <MaterialIcons name="lock-outline" size={16} color={muted} />
-      <Text fontSize={13} fontWeight="700" color="$muted">
+      <Text fontSize={13} fontWeight="600" color="$muted">
         This pod has ended — chat is closed.
       </Text>
     </XStack>

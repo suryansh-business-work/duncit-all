@@ -165,7 +165,7 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
                   fontWeight: 600
                 }}>{upload.message}</Typography>
                 <Typography variant="caption" sx={{
-                  fontWeight: 700
+                  fontWeight: 600
                 }}>{upload.progress}%</Typography>
               </Stack>
               <LinearProgress variant="determinate" value={upload.progress} color="inherit" />

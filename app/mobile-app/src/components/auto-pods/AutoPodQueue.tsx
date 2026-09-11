@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import { Text, YStack } from 'tamagui';
 import { autoPodQueueSections, type AutoPodCardChrome, type AutoPodRow } from '@duncit/utils';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { LoadingIndicator } from '@/components/LoadingIndicator';
-import { PillButton } from '@/components/attendance/AttendanceOtpControls';
 import { AutoPodCard } from '@/components/auto-pods/AutoPodCard';
 
 const noAction = () => null;
@@ -28,7 +28,7 @@ function AutoPodSection({
 }: Readonly<SectionProps>) {
   return (
     <YStack gap={10}>
-      <Text fontSize={12.5} fontWeight="700" color="$muted">
+      <Text fontSize={14} fontWeight="600" color="$muted">
         {heading}
       </Text>
       {rows.map((row) => (
@@ -81,16 +81,17 @@ export function AutoPodQueue({
 
   if (error) {
     return (
-      <YStack gap={12}>
-        <Text testID="auto-pods-error" fontSize={13} color="$danger">
+      <YStack gap={12} alignItems="flex-start">
+        <Text testID="auto-pods-error" fontSize={14} color="$danger">
           {chrome.labels.loadFailed}
         </Text>
-        <PillButton
+        <DuncitButton
           testID="auto-pods-retry"
           label={chrome.labels.retry}
           onPress={onRetry}
-          variant="ghost"
-          disabled={false}
+          variant="soft"
+          tone="neutral"
+          size="sm"
         />
       </YStack>
     );
@@ -99,7 +100,7 @@ export function AutoPodQueue({
   const sections = autoPodQueueSections(rows, chrome.role, chrome.labels);
   if (sections.length === 0) {
     return (
-      <Text testID="auto-pods-empty" fontSize={13} color="$muted">
+      <Text testID="auto-pods-empty" fontSize={14} color="$muted">
         {chrome.labels.empty(chrome.role)}
       </Text>
     );

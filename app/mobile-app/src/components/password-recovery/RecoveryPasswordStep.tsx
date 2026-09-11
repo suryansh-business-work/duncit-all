@@ -1,7 +1,7 @@
 import { formResolver } from '../../utils/form-resolver';
 import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
-import { Text, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import type { PasswordRecoveryLabels } from '@duncit/utils';
 
 import { FormTextField } from '@/components/FormTextField';
@@ -38,9 +38,6 @@ export function RecoveryPasswordStep({ labels, busy, onSave }: Readonly<Props>) 
 
   return (
     <YStack gap={16}>
-      <Text fontSize={13} color="$muted">
-        {labels.passwordSubtitle}
-      </Text>
       <FormTextField
         control={control}
         name="new_password"

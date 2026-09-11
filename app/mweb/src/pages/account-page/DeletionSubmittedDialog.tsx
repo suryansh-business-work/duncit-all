@@ -40,7 +40,7 @@ export default function DeletionSubmittedDialog({
 
   return (
     <Dialog open={open} fullWidth maxWidth="xs" data-testid="deletion-submitted">
-      <DialogTitle sx={{ fontWeight: 700 }}>
+      <DialogTitle sx={{ fontWeight: 600 }}>
         {t('mweb.account.deletion.submittedTitle')}
       </DialogTitle>
       <DialogContent dividers>
@@ -58,12 +58,13 @@ export default function DeletionSubmittedDialog({
           </Typography>
         </Stack>
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ p: 2 }}>
         <DuncitButton
           variant="contained"
+          size="large"
+          fullWidth
           onClick={onSignOut}
           data-testid="deletion-sign-out"
-          sx={{ textTransform: 'none', fontWeight: 700 }}
         >
           {t('mweb.account.deletion.signOutNow')}
         </DuncitButton>

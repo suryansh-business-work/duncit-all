@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Avatar, Box, Chip, Stack, Typography } from '@mui/material';
+import { alpha, Avatar, Box, Chip, Stack, Typography } from '@mui/material';
 import { readFollowStatus } from '@duncit/utils';
 import FollowButton from '../../components/FollowButton';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -27,11 +27,11 @@ export default memo(function ContactRow({ row, onToggleFollow, onOpen }: Readonl
   const open = () => onOpen(profile.user_id);
 
   return (
-    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', py: 1 }}>
+    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', px: 2, py: 1.25 }}>
       <Avatar
         src={profile.profile_photo || undefined}
         onClick={open}
-        sx={{ cursor: 'pointer' }}
+        sx={{ width: 44, height: 44, cursor: 'pointer', bgcolor: 'primary.main', fontWeight: 600 }}
       >
         {name[0]?.toUpperCase()}
       </Avatar>
@@ -50,11 +50,20 @@ export default memo(function ContactRow({ row, onToggleFollow, onOpen }: Readonl
         sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }}
       >
         <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center', minWidth: 0 }}>
-          <Typography noWrap sx={{ fontWeight: 600 }}>
+          <Typography noWrap sx={{ fontSize: 15, fontWeight: 600 }}>
             {name}
           </Typography>
           {row.is_nearby && (
-            <Chip size="small" color="primary" variant="outlined" label={t('mweb.contacts.nearbyBadge')} />
+            <Chip
+              size="small"
+              label={t('mweb.contacts.nearbyBadge')}
+              sx={{
+                height: 22,
+                fontSize: 11,
+                color: 'secondary.main',
+                bgcolor: (theme) => alpha(theme.palette.secondary.main, 0.12),
+              }}
+            />
           )}
         </Stack>
         <Typography variant="caption" noWrap sx={{ color: 'text.secondary', display: 'block' }}>

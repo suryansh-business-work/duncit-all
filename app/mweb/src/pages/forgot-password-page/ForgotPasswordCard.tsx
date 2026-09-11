@@ -1,12 +1,10 @@
 import { Link as RouterLink } from 'react-router';
-import { Alert, Box, Link, Stack, Typography } from '@mui/material';
+import { Alert, Link, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import { DuncitButton } from '@duncit/buttons';
 import {
-  PASSWORD_RECOVERY_STEP_COUNT,
   buildPasswordRecoveryLabels,
-  passwordRecoveryStepIndex,
   previousRecoveryStep,
   recoveryHeading,
   recoveryDestination,
@@ -40,29 +38,19 @@ export default function ForgotPasswordCard({ recovery, resendIn }: Readonly<Prop
   if (state.step === 'DONE') {
     return (
       <AuthScreenFrame center>
-        <Stack spacing={2.2} data-testid="recovery-success" sx={{ alignItems: 'center' }}>
-          <CheckCircleRoundedIcon sx={{ fontSize: 72, color: 'success.main' }} />
-          <Typography
-            variant="h4"
-            sx={{ fontWeight: 700, textAlign: 'center', color: 'text.primary' }}
-          >
-            {labels.doneTitle}{' '}
-            <Box component="span" sx={{ color: 'success.main' }}>
-              {labels.doneTitleAccent}
-            </Box>
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{ textAlign: 'center', color: 'text.secondary', maxWidth: 320 }}
-          >
-            {labels.doneSubtitle}
-          </Typography>
+        <Stack spacing={3} data-testid="recovery-success" sx={{ alignItems: 'center' }}>
+          <AuthHeading
+            title={labels.doneTitle}
+            accent={labels.doneTitleAccent}
+            subtitle={labels.doneSubtitle}
+          />
+          <CheckCircleRoundedIcon sx={{ fontSize: 64, color: 'success.main' }} />
           <DuncitButton
             component={RouterLink}
             to="/login"
             variant="contained"
             size="large"
-            sx={{ borderRadius: '16px', py: 1.1, px: 4, fontWeight: 700, textTransform: 'none' }}
+            fullWidth
           >
             {labels.continueToLogin}
           </DuncitButton>
@@ -71,91 +59,86 @@ export default function ForgotPasswordCard({ recovery, resendIn }: Readonly<Prop
     );
   }
 
+  // The step's own title only: the old "Step 1 of 3" caption and the channel
+  // step's "choose where we should send…" line restated what the boxes say.
   const heading = recoveryHeading(state.step, labels);
   const canGoBack = previousRecoveryStep(state.step) !== null;
 
   return (
     <AuthScreenFrame center>
-      <Stack spacing={2.1}>
-        <AuthHeading
-          title={heading.title}
-          accent={heading.accent}
-          subtitle={heading.subtitle}
-          caption={labels.stepOf(
-            passwordRecoveryStepIndex(state.step),
-            PASSWORD_RECOVERY_STEP_COUNT,
+      <Stack spacing={3}>
+        <AuthHeading title={heading.title} accent={heading.accent} />
+
+        <Stack spacing={2}>
+          {state.step === 'CHANNEL' && (
+            <RecoveryChannelStep
+              key={state.channel}
+              channel={state.channel}
+              labels={labels}
+              defaultValues={state.draft}
+              busy={busy.requesting}
+              notFound={notFound}
+              notSent={notSent}
+              onChannel={recovery.setChannel}
+              onSend={(draft) => {
+                recovery.sendCode(draft).catch(() => undefined);
+              }}
+            />
           )}
-        />
 
-        {state.step === 'CHANNEL' && (
-          <RecoveryChannelStep
-            key={state.channel}
-            channel={state.channel}
-            labels={labels}
-            defaultValues={state.draft}
-            busy={busy.requesting}
-            notFound={notFound}
-            notSent={notSent}
-            onChannel={recovery.setChannel}
-            onSend={(draft) => {
-              recovery.sendCode(draft).catch(() => undefined);
-            }}
-          />
-        )}
-
-        {state.step === 'CODE' && (
-          <RecoveryCodeStep
-            labels={labels}
-            destination={recoveryDestination(state.channel, state.draft)}
-            expiresInMinutes={expiresInMinutes}
-            testCode={testCode}
-            busy={busy.verifying}
-            resending={busy.requesting}
-            resendIn={resendIn}
-            onVerify={(otp) => {
-              recovery.submitCode(otp).catch(() => undefined);
-            }}
-            onResend={() => {
-              recovery.sendCode(state.draft).catch(() => undefined);
-            }}
-          />
-        )}
-
-        {state.step === 'PASSWORD' && (
-          <RecoveryPasswordStep
-            labels={labels}
-            busy={busy.saving}
-            onSave={(password) => {
-              recovery.submitPassword(password).catch(() => undefined);
-            }}
-          />
-        )}
-
-        {error && <Alert severity="error">{error}</Alert>}
-
-        <Stack spacing={0.6} sx={{ alignItems: 'center' }}>
-          {canGoBack && (
-            <Link
-              component="button"
-              type="button"
-              onClick={recovery.goBack}
-              underline="hover"
-              variant="body2"
-              sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
-            >
-              <ArrowBackIcon fontSize="inherit" />
-              {labels.back}
-            </Link>
+          {state.step === 'CODE' && (
+            <RecoveryCodeStep
+              labels={labels}
+              destination={recoveryDestination(state.channel, state.draft)}
+              expiresInMinutes={expiresInMinutes}
+              testCode={testCode}
+              busy={busy.verifying}
+              resending={busy.requesting}
+              resendIn={resendIn}
+              onVerify={(otp) => {
+                recovery.submitCode(otp).catch(() => undefined);
+              }}
+              onResend={() => {
+                recovery.sendCode(state.draft).catch(() => undefined);
+              }}
+            />
           )}
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {labels.rememberedIt}{' '}
-            <Link component={RouterLink} to="/login" underline="hover">
-              {labels.backToLogin}
-            </Link>
-          </Typography>
+
+          {state.step === 'PASSWORD' && (
+            <RecoveryPasswordStep
+              labels={labels}
+              busy={busy.saving}
+              onSave={(password) => {
+                recovery.submitPassword(password).catch(() => undefined);
+              }}
+            />
+          )}
+
+          {error && <Alert severity="error">{error}</Alert>}
+
+          <Stack spacing={1} sx={{ alignItems: 'center' }}>
+            {canGoBack && (
+              <Link
+                component="button"
+                type="button"
+                onClick={recovery.goBack}
+                underline="hover"
+                variant="body2"
+                sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
+              >
+                <ArrowBackIcon fontSize="inherit" />
+                {labels.back}
+              </Link>
+            )}
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              {labels.rememberedIt}{' '}
+              <Link component={RouterLink} to="/login" underline="hover">
+                {labels.backToLogin}
+              </Link>
+            </Typography>
+          </Stack>
         </Stack>
       </Stack>
     </AuthScreenFrame>
   );
 }
-

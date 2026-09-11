@@ -110,28 +110,25 @@ export default function FollowRequestActions({
   // the row states its outcome and stops there.
   if (state === 'SETTLED') {
     return (
-      <Typography variant="caption" sx={{ fontWeight: 700, opacity: 0.8 }}>
+      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
         {settledLabel}
       </Typography>
     );
   }
 
-  // `inherit` on an unread row: its gradient already sets a light ink, and
-  // primary.main on that background is unreadable.
-  const accentInk = unreadRow ? 'inherit' : 'primary.main';
-  const quietInk = unreadRow ? 'inherit' : 'text.secondary';
+  // Rows sit on the plain surface now (no gradient), so the inks are the
+  // theme's own; an unread row only dims Deny a touch so Accept leads.
+  const accentInk = 'primary.main';
+  const quietInk = 'text.secondary';
   const open = state === 'ANSWER';
-  // The negative margin pulls the leading BUTTON's own padding back so its text
-  // lines up with the row above; a leading caption needs no such correction.
-  const leadIn = open ? -0.5 : 0;
 
   return (
-    <Stack spacing={0.5} sx={{ mt: 1 }} onClick={(event) => event.stopPropagation()}>
+    <Stack spacing={0.5} sx={{ mt: 1.25 }} onClick={(event) => event.stopPropagation()}>
       <Stack
         direction="row"
-        spacing={0.5}
+        spacing={1}
         useFlexGap
-        sx={{ alignItems: 'center', flexWrap: 'wrap', ml: leadIn }}
+        sx={{ alignItems: 'center', flexWrap: 'wrap' }}
       >
         {open && (
           <AnswerButtons
@@ -147,7 +144,7 @@ export default function FollowRequestActions({
           />
         )}
         {!open && settledLabel && (
-          <Typography variant="caption" sx={{ fontWeight: 700, opacity: 0.8 }}>
+          <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
             {settledLabel}
           </Typography>
         )}
@@ -163,7 +160,7 @@ export default function FollowRequestActions({
         )}
       </Stack>
       {error && (
-        <Typography variant="caption" sx={{ fontWeight: 700 }}>
+        <Typography variant="caption" sx={{ fontWeight: 600, color: 'error.main' }}>
           {error}
         </Typography>
       )}

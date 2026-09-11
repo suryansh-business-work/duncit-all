@@ -31,31 +31,29 @@ export default function VenueExploreCard({
     .filter(Boolean)
     .join(' · ');
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px', overflow: 'hidden' }}>
+    <Card sx={{ p: 1 }}>
       {/* The slider owns its own taps (arrows must not navigate), so it sits
           outside the action area rather than inside it. */}
       <VenueCardMedia images={venueImages(venue)} venueName={venue.venue_name} onOpen={onOpen} />
-      {/* The name block paints its own opaque surface and sits above the
-          cover in the stacking order. The card's gradient let a busy photo
-          read straight through into the text, which is what made the venue
-          name hard to pick out; a flat panel and a rule under the image give
-          it a ground of its own. Native twin does the same. */}
-      <CardActionArea onClick={onOpen} aria-label={venue.venue_name} data-testid={`venue-card-${venue.id}`}>
+      {/* The name block paints its own opaque surface under the photo's own
+          18px corners, so a busy photo never reads through into the text.
+          Native twin does the same. */}
+      <CardActionArea onClick={onOpen} aria-label={venue.venue_name} data-testid={`venue-card-${venue.id}`} sx={{ borderRadius: '16px' }}>
         <Stack
           spacing={0.25}
           sx={{
-            p: 1.5,
+            px: 1,
+            pt: 1.25,
+            pb: 0.75,
             position: 'relative',
             bgcolor: 'background.paper',
-            borderTop: 1,
-            borderColor: 'divider',
           }}
         >
           <Typography
-            variant="subtitle1"
             noWrap
             sx={{
-              fontWeight: 700,
+              fontSize: '1rem',
+              fontWeight: 600,
               color: "text.primary"
             }}>
             {venue.venue_name}

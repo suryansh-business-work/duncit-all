@@ -1,15 +1,10 @@
 import { useState, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import {
-  Alert,
-  Box,
-  Chip,
-  CircularProgress,
-  Stack,
-  Typography,
-} from '@mui/material';
-import StorefrontIcon from '@mui/icons-material/Storefront';
+import { useNavigate } from 'react-router';
+import { Alert, Chip, CircularProgress, Stack } from '@mui/material';
 import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
+import PageHeader from '../components/PageHeader';
+import { useTranslation } from '../i18n/useTranslation';
 import { followActionFor, followStatusFrom } from '@duncit/utils';
 import HostList from './hosts-venues-page/HostList';
 import VenueList from './hosts-venues-page/VenueList';
@@ -25,6 +20,17 @@ import MeetingStatusCard from './hosts-venues-page/MeetingStatusCard';
 
 type DirectoryTab = 'HOSTS' | 'VENUES';
 
+/** A pill segmented control on the page ground: a surface track, the chosen
+ * segment a green pill. Native twin: the two-tab strip in HostsVenuesScreen. */
+const SEGMENTED_SX = {
+  p: 0.5,
+  borderRadius: 999,
+  bgcolor: 'background.paper',
+  border: '1px solid var(--duncit-card-border)',
+  '& .MuiTab-root': { minHeight: 40, borderRadius: 999, fontWeight: 600, color: 'text.primary' },
+  '& .MuiTab-root.Mui-selected': { bgcolor: 'primary.main', color: 'primary.contrastText' },
+} as const;
+
 /** Label with its live count, so the strip is built from data rather than markup. */
 const countedLabel = (text: string, count: number) => (
   <Stack direction="row" spacing={1} sx={{
@@ -36,6 +42,8 @@ const countedLabel = (text: string, count: number) => (
 );
 
 export default function HostsVenuesPage() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const hostsQ = useQuery<any>(PUBLIC_HOSTS, { fetchPolicy: 'cache-and-network' });
   const venuesQ = useQuery<any>(PUBLIC_VENUES, { fetchPolicy: 'cache-and-network' });
   const [followUser] = useMutation<any>(FOLLOW_USER);
@@ -127,27 +135,8 @@ export default function HostsVenuesPage() {
   }
 
   return (
-    <Stack spacing={2.25} sx={{ maxWidth: 960, mx: 'auto', width: '100%' }}>
-      <Stack direction="row" spacing={1.5} sx={{
-        alignItems: "center"
-      }}>
-        <Box sx={{ width: 40, height: 40, borderRadius: '50%', display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
-          <StorefrontIcon fontSize="small" />
-        </Box>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
-            Hosts &amp; Venues
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 600
-            }}>
-            Meet trusted people and spaces powering pods
-          </Typography>
-        </Box>
-      </Stack>
+    <Stack spacing={2.5} sx={{ maxWidth: 960, mx: 'auto', width: '100%' }}>
+      <PageHeader title={t('mweb.hostsVenues.hostsAndVenues')} onBack={() => navigate(-1)} />
 
       <HostsVenuesIntroCard />
 
@@ -158,7 +147,7 @@ export default function HostsVenuesPage() {
         {...tabs}
         textColor="primary"
         slotProps={{ indicator: { sx: { display: 'none' } } }}
-        sx={{ p: 0.5, borderRadius: 999, bgcolor: 'action.hover', border: 1, borderColor: 'divider', '& .MuiTab-root': { minHeight: 42, borderRadius: 999, fontWeight: 700 }, '& .Mui-selected': { bgcolor: 'background.paper', boxShadow: '0 10px 24px rgba(15,23,42,0.12)' } }}
+        sx={SEGMENTED_SX}
       />
 
       {content}

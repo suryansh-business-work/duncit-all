@@ -40,7 +40,7 @@ function SlideOverlay({ media }: Readonly<{ media: SliderMedia }>) {
       backgroundColor="rgba(0,0,0,0.35)"
     >
       {media.heading ? (
-        <Text fontSize={24} fontWeight="700" color="#ffffff" maxWidth={260}>
+        <Text fontSize={24} fontWeight="600" color="#ffffff" maxWidth={260}>
           {media.heading}
         </Text>
       ) : null}
@@ -63,7 +63,7 @@ function SlideOverlay({ media }: Readonly<{ media: SliderMedia }>) {
           backgroundColor="#ffffff"
           pressStyle={PRESS_STYLE.control}
         >
-          <Text fontSize={13} fontWeight="600" color="#111111">
+          <Text fontSize={13} fontWeight="600" color="$primary">
             {media.cta_label}
           </Text>
         </XStack>
@@ -72,13 +72,18 @@ function SlideOverlay({ media }: Readonly<{ media: SliderMedia }>) {
   );
 }
 
+/** Page side padding the slider is inset by — its corners sit inside it. */
+const SIDE_INSET = 16;
+
 /** The global Pod Shop top slider — admin-managed image/video media + overlay
  * copy/CTA (products portal), shown above the Pod Shop grid. Hidden until media
  * is configured. RN twin of mWeb's shop-page slider. */
 export function PodShopSlider() {
-  const { width } = useWindowDimensions();
+  const { width: screenWidth } = useWindowDimensions();
   const [media, setMedia] = useState<SliderMedia[]>([]);
   const [index, setIndex] = useState(0);
+  // Each page is the inset card's width, so paging still lands one slide a swipe.
+  const width = screenWidth - SIDE_INSET * 2;
   const height = Math.round(width * 0.5);
 
   useEffect(() => {
@@ -106,7 +111,15 @@ export function PodShopSlider() {
   if (media.length === 0) return null;
 
   return (
-    <YStack testID="pod-shop-slider" width={width} height={height} backgroundColor="$muted">
+    <YStack
+      testID="pod-shop-slider"
+      width={width}
+      height={height}
+      marginHorizontal={SIDE_INSET}
+      borderRadius={24}
+      overflow="hidden"
+      backgroundColor="$soft"
+    >
       <FlatList
         testID="pod-shop-slider-list"
         data={media}

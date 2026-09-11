@@ -39,16 +39,14 @@ export function ContactsFilters({ scope, onScope, search, onSearch }: Readonly<P
               aria-pressed={selected}
               onPress={() => onScope(value)}
               flex={1}
-              height={36}
+              height={40}
               alignItems="center"
               justifyContent="center"
-              borderRadius={12}
+              borderRadius={999}
               backgroundColor={selected ? '$primary' : '$surface'}
-              borderWidth={1}
-              borderColor={selected ? '$primary' : '$borderColor'}
               pressStyle={PRESS_STYLE.control}
             >
-              <Text fontSize={13} fontWeight="700" color={selected ? '$onPrimary' : '$color'}>
+              <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
                 {labels[value]}
               </Text>
             </XStack>
@@ -58,12 +56,10 @@ export function ContactsFilters({ scope, onScope, search, onSearch }: Readonly<P
       <XStack
         alignItems="center"
         gap={8}
-        paddingHorizontal={12}
-        height={46}
+        paddingHorizontal={16}
+        height={48}
         borderRadius={999}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$background"
+        backgroundColor="$surface"
       >
         <MaterialIcons name="search" size={20} color={muted} />
         <Input

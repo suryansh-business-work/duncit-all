@@ -3,20 +3,20 @@ import { Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
+import { HeaderRoundButton } from '@/components/AppHeader/HeaderRoundButton';
 import { useNotifications, type UserNotification } from '@/hooks/useNotifications';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { resolveNotificationLink } from '@/utils/notification-link';
 import { NotificationsScreen } from './NotificationsScreen';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Header bell with unread badge — RN twin of mWeb's <HeaderNotificationsBell/>.
  * Opens the full-screen notifications list and owns the data + read mutations. */
 export function NotificationsBell() {
   const [open, setOpen] = useState(false);
-  const { color, onPrimary } = useThemeColors();
+  const { color } = useThemeColors();
   const { notifs, unreadCount, busyId, markAllBusy, refetch, markRead, markAll } =
     useNotifications();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -59,37 +59,31 @@ export function NotificationsBell() {
 
   return (
     <>
-      <XStack
-        pressStyle={PRESS_STYLE.surface}
+      <HeaderRoundButton
         testID="notifications-bell"
-        role="button"
-        aria-label={`Notifications${unreadSuffix}`}
+        label={`Notifications${unreadSuffix}`}
         onPress={onOpen}
-        width={40}
-        height={40}
-        alignItems="center"
-        justifyContent="center"
       >
-        <MaterialIcons name="notifications-none" size={24} color={color} />
+        <MaterialIcons name="notifications-none" size={22} color={color} />
         {unreadCount > 0 ? (
           <YStack
             position="absolute"
-            top={4}
-            right={4}
+            top={2}
+            right={2}
             minWidth={16}
             height={16}
             borderRadius={8}
             paddingHorizontal={3}
-            backgroundColor="$danger"
+            backgroundColor="$accent"
             alignItems="center"
             justifyContent="center"
           >
-            <Text fontSize={9} fontWeight="700" color={onPrimary}>
+            <Text fontSize={9} fontWeight="700" color="$onPrimary">
               {unreadCount > 9 ? '9+' : unreadCount}
             </Text>
           </YStack>
         ) : null}
-      </XStack>
+      </HeaderRoundButton>
       <NotificationsScreen
         open={open}
         onClose={() => setOpen(false)}

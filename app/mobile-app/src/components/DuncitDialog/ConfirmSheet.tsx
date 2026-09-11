@@ -1,8 +1,7 @@
-import { Spinner, Text, XStack } from 'tamagui';
+import { Text } from 'tamagui';
 
 import { DuncitDialog } from '@/components/DuncitDialog/DuncitDialog';
-import { useThemeColors } from '@/hooks/useThemeColors';
-import { PRESS_STYLE } from '@duncit/buttons-native';
+import { ConfirmFooter } from '@/components/DuncitDialog/ConfirmFooter';
 
 interface Props {
   open: boolean;
@@ -49,53 +48,18 @@ export function ConfirmSheet({
   onCancel,
   onConfirm,
 }: Readonly<Props>) {
-  const { onPrimary } = useThemeColors();
-  const dismiss = busy ? undefined : onCancel;
-
   const footer = (
-    <XStack gap={12}>
-      <XStack
-        testID={`${testIDPrefix}-cancel`}
-        role="button"
-        aria-label={cancelLabel}
-        aria-disabled={busy}
-        onPress={dismiss}
-        flex={1}
-        height={46}
-        alignItems="center"
-        justifyContent="center"
-        borderRadius={12}
-        borderWidth={1}
-        borderColor="$borderColor"
-        opacity={busy ? 0.6 : 1}
-        pressStyle={PRESS_STYLE.control}
-      >
-        <Text fontSize={14} fontWeight="600" color="$color">
-          {cancelLabel}
-        </Text>
-      </XStack>
-      <XStack
-        testID={`${testIDPrefix}-confirm-btn`}
-        role="button"
-        aria-label={confirmLabel}
-        aria-disabled={busy}
-        onPress={busy ? undefined : onConfirm}
-        flex={1}
-        height={46}
-        alignItems="center"
-        justifyContent="center"
-        gap={8}
-        borderRadius={12}
-        backgroundColor="$danger"
-        opacity={busy ? 0.7 : 1}
-        pressStyle={PRESS_STYLE.control}
-      >
-        {busy ? <Spinner size="small" color={onPrimary} /> : null}
-        <Text fontSize={14} fontWeight="700" color={onPrimary}>
-          {busy ? busyLabel : confirmLabel}
-        </Text>
-      </XStack>
-    </XStack>
+    <ConfirmFooter
+      cancelLabel={cancelLabel}
+      confirmLabel={confirmLabel}
+      confirmText={busy ? busyLabel : confirmLabel}
+      busy={busy}
+      destructive
+      cancelTestID={`${testIDPrefix}-cancel`}
+      confirmTestID={`${testIDPrefix}-confirm-btn`}
+      onCancel={onCancel}
+      onConfirm={onConfirm}
+    />
   );
 
   return (
@@ -111,7 +75,7 @@ export function ConfirmSheet({
       showCloseButton={!busy}
       footer={footer}
     >
-      <Text fontSize={13.5} color="$muted">
+      <Text fontSize={14} lineHeight={20} color="$muted">
         {message}
       </Text>
     </DuncitDialog>

@@ -53,7 +53,15 @@ export default function IssueNotice({
     if (!issue.offerReport) return undefined;
     if (sent) return undefined;
     return (
-      <DuncitButton color="inherit" size="small" disabled={loading} onClick={() => void report()}>
+      <DuncitButton
+        color="primary"
+        size="small"
+        disabled={loading}
+        onClick={() => {
+          report().catch(() => undefined);
+        }}
+        sx={{ minHeight: 36 }}
+      >
         {loading ? t('mweb.issue.reporting') : t('mweb.issue.report')}
       </DuncitButton>
     );

@@ -1,8 +1,9 @@
-import { Avatar, Box, Card, CardContent, CardMedia, Chip, Stack, Typography } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import GroupsIcon from '@mui/icons-material/Groups';
+import { Box, Card, CardMedia, Stack, Typography } from '@mui/material';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
+import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
 import { DuncitButton } from '@duncit/buttons';
 import { isVideoMedia, videoSourceUrl } from '@duncit/utils';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface ClubListCardProps {
   club: any;
@@ -10,7 +11,13 @@ interface ClubListCardProps {
   onOpen: () => void;
 }
 
+/** 18px media corners inside the card's own 24px ones. */
+const COVER_SX = { height: 154, borderRadius: '18px' } as const;
+
+/** A club on the Clubs list: the cover inside the card's padding, the name,
+ * a muted pod count and a green Open pill. */
 export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubListCardProps>) {
+  const { t } = useTranslation();
   const cover = club.club_feature_images_and_videos?.[0];
   const coverIsVideo = isVideoMedia(cover);
   const coverMediaProps = coverIsVideo
@@ -18,48 +25,27 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
     : { alt: club.club_name };
 
   return (
-    <Card
-      variant="outlined"
-      onClick={onOpen}
-      sx={{
-        cursor: 'pointer',
-        borderRadius: '16px',
-        overflow: 'hidden',
-        bgcolor: 'background.paper',
-        background: (theme) => `linear-gradient(180deg, ${theme.palette.background.paper} 0%, ${theme.palette.action.hover} 100%)`,
-        boxShadow: '0 18px 42px rgba(9,7,18,0.18)',
-        transition: 'transform 180ms ease, box-shadow 180ms ease',
-        '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 22px 48px rgba(255,79,115,0.18)' },
-      }}
-    >
-      <Box sx={{ p: 1 }}>
-        {cover?.url ? (
-          <CardMedia
-            component={coverIsVideo ? 'video' : 'img'}
-            src={coverIsVideo ? videoSourceUrl(cover.url) : cover.url}
-            sx={{ height: 154, borderRadius: '16px', objectFit: 'cover' }}
-            {...coverMediaProps}
-          />
-        ) : (
-          <Box sx={{ height: 154, borderRadius: '16px', display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, #ff8b5f 0%, #ed4f7a 50%, #35158a 100%)' }}>
-            <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.18)', color: 'common.white' }}>
-              <GroupsIcon />
-            </Avatar>
-          </Box>
-        )}
-      </Box>
-      <CardContent sx={{ pt: 0.75, '&:last-child': { pb: 1.5 } }}>
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{
-            alignItems: "center",
-            mb: 0.75
-          }}>
-          <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700, lineHeight: 1.15 }} noWrap>
+    <Card onClick={onOpen} sx={{ cursor: 'pointer', p: 1.5 }}>
+      {cover?.url ? (
+        <CardMedia
+          component={coverIsVideo ? 'video' : 'img'}
+          src={coverIsVideo ? videoSourceUrl(cover.url) : cover.url}
+          sx={{ ...COVER_SX, objectFit: 'cover' }}
+          {...coverMediaProps}
+        />
+      ) : (
+        <Box sx={{ ...COVER_SX, bgcolor: 'action.hover', color: 'secondary.main', display: 'grid', placeItems: 'center' }}>
+          <GroupsRoundedIcon sx={{ fontSize: 40 }} />
+        </Box>
+      )}
+      <Stack spacing={0.5} sx={{ pt: 1.5 }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'baseline' }}>
+          <Typography sx={{ flex: 1, fontSize: '1rem', fontWeight: 600, lineHeight: 1.2 }} noWrap>
             {club.club_name}
           </Typography>
-          <Chip size="small" label={`${podCount} pod${podCount === 1 ? '' : 's'}`} color="primary" sx={{ fontWeight: 700 }} />
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500, flex: '0 0 auto' }}>
+            {t('mweb.clubsPage.podCount', { count: podCount })}
+          </Typography>
         </Stack>
         {club.club_description && (
           <Typography
@@ -75,10 +61,16 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
             {club.club_description}
           </Typography>
         )}
-        <DuncitButton fullWidth variant="contained" endIcon={<ArrowForwardIcon />} onClick={(event) => { event.stopPropagation(); onOpen(); }} sx={{ mt: 1.5, borderRadius: 999, fontWeight: 700 }}>
-          Open Club
-        </DuncitButton>
-      </CardContent>
+      </Stack>
+      <DuncitButton
+        fullWidth
+        variant="contained"
+        endIcon={<ArrowForwardRoundedIcon />}
+        onClick={(event) => { event.stopPropagation(); onOpen(); }}
+        sx={{ mt: 1.5 }}
+      >
+        {t('mweb.clubsPage.openClub')}
+      </DuncitButton>
     </Card>
   );
 }

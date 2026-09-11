@@ -3,10 +3,11 @@ import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
-import { Alert, Box, Container, Stack, Typography } from '@mui/material';
+import { Alert, Container, Stack } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 import { DuncitButton } from '@duncit/buttons';
+import StudioPageHeader from '../../components/StudioPageHeader';
 import { CREATE_INTERVIEW } from './queries';
 import { Slot, slotKey } from './slotHelpers';
 import InterviewCalendar from './InterviewCalendar';
@@ -119,31 +120,12 @@ export default function InterviewBookingPage({ type }: Readonly<Props>) {
   if (submittedRef) return <InterviewSuccessCard submittedRef={submittedRef} />;
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Stack spacing={3}>
-        <Stack direction="row" spacing={1.5} sx={{
-          alignItems: "center"
-        }}>
-          {isHost ? (
-            <StorefrontIcon color="primary" sx={{ fontSize: 32 }} />
-          ) : (
-            <AddBusinessIcon color="primary" sx={{ fontSize: 32 }} />
-          )}
-          <Box>
-            <Typography variant="h5" sx={{
-              fontWeight: 700
-            }}>
-              {isHost ? 'Become a Host' : 'Register Your Venue'}
-            </Typography>
-            <Typography variant="body2" sx={{
-              color: "text.secondary"
-            }}>
-              {isHost
-                ? 'Pick a few times that work for a quick onboarding interview.'
-                : 'Tell us about your venue and pick times for a quick verification call.'}
-            </Typography>
-          </Box>
-        </Stack>
+    <Container maxWidth="md" sx={{ pt: 3 }}>
+      <Stack spacing={2.5}>
+        <StudioPageHeader
+          icon={isHost ? <StorefrontIcon fontSize="small" /> : <AddBusinessIcon fontSize="small" />}
+          title={isHost ? 'Become a Host' : 'Register Your Venue'}
+        />
 
         {error && <Alert severity="error">{error}</Alert>}
 
@@ -159,15 +141,21 @@ export default function InterviewBookingPage({ type }: Readonly<Props>) {
 
         <InterviewDetailsForm isHost={isHost} control={control} />
 
-        <Stack direction="row" spacing={2} sx={{
-          justifyContent: "flex-end"
-        }}>
-          <DuncitButton onClick={() => navigate(-1)}>{t('mweb.common.cancel')}</DuncitButton>
+        {/* Sticky, so the one green CTA stays under the thumb down the whole form. */}
+        <Stack
+          direction="row"
+          spacing={1.5}
+          sx={{ position: 'sticky', bottom: 0, zIndex: 1, py: 1.5, bgcolor: 'background.default' }}
+        >
+          <DuncitButton variant="outlined" size="large" onClick={() => navigate(-1)}>
+            {t('mweb.common.cancel')}
+          </DuncitButton>
           <DuncitButton
             variant="contained"
             size="large"
             onClick={submit}
             disabled={busy || formState.isSubmitting}
+            sx={{ flex: 1 }}
           >
             {busy ? 'Submitting…' : 'Request Interview'}
           </DuncitButton>

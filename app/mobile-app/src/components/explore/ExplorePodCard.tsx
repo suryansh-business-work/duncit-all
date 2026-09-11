@@ -1,18 +1,17 @@
 import { Share } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import type { ExploreClub, ExplorePod, LikeState } from '@/stores/explore.store';
 import { isPodExpired, podPriceLabel, podWebUrl } from '@/utils/pod-format';
 import { shareUrl } from '@/services/share-link';
 import { ExploreActionRail } from '@/components/explore/ExploreActionRail';
+import { ExploreJoinBar } from '@/components/explore/ExploreJoinBar';
 import { ExplorePodOverlay } from '@/components/explore/ExplorePodOverlay';
 import { DoubleTapJoin } from '@/components/explore/DoubleTapJoin';
 import { ReelBackdrop } from '@/components/explore/ReelVideo';
 import { podSeatsTaken } from '@duncit/utils';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface ExplorePodCardProps {
   pod: ExplorePod;
@@ -34,7 +33,7 @@ interface ExplorePodCardProps {
 }
 
 /** One full-screen reel: the pod's reel video, info overlay, the right-side
- * action rail (join/like/comment/save/share/open) and the "Join in 2 taps" CTA. */
+ * action rail (join/like/comment/save/share/open) and the join bar. */
 export function ExplorePodCard({
   pod,
   club,
@@ -62,9 +61,9 @@ export function ExplorePodCard({
   const railAvailable = height - contentBottom - (insets.top + 56);
   const attendees = podSeatsTaken(pod);
   const spotsSuffix = pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : '';
-  const joinLabel = `${attendees}${spotsSuffix}`;
   // Expired pods can't be joined — the join rail + CTA become an "expired" notice.
   const expired = isPodExpired(pod.pod_date_time);
+  const joinLabel = expired ? 'Expired' : `${attendees}${spotsSuffix}`;
   // Free pods need no payment, so the "Confirm with UPI" copy is hidden for them.
   const paidSubtitle = `${podPriceLabel(pod)} · Confirm with UPI`;
   const ctaSubtitle = pod.pod_type === 'FREE' ? 'Free spot' : paidSubtitle;
@@ -104,7 +103,8 @@ export function ExplorePodCard({
               key: 'join',
               testID: `reel-join-${pod.pod_id}`,
               icon: expired ? 'info-outline' : 'how-to-reg',
-              label: expired ? 'Expired' : joinLabel,
+              label: joinLabel,
+              caption: joinLabel,
               onPress: onOpen,
             },
             {
@@ -112,6 +112,7 @@ export function ExplorePodCard({
               testID: `reel-like-${pod.pod_id}`,
               icon: like.liked_by_me ? 'favorite' : 'favorite-border',
               label: String(like.like_count),
+              caption: String(like.like_count),
               active: like.liked_by_me,
               onPress: onToggleLike,
               onLabelPress: like.like_count > 0 ? onShowLikers : undefined,
@@ -121,6 +122,7 @@ export function ExplorePodCard({
               testID: `reel-comment-${pod.pod_id}`,
               icon: 'chat-bubble-outline',
               label: String(commentCount),
+              caption: String(commentCount),
               onPress: onComment,
             },
             {
@@ -150,58 +152,13 @@ export function ExplorePodCard({
         />
       </YStack>
 
-      <XStack
-        position="absolute"
-        left={10}
-        right={10}
+      <ExploreJoinBar
+        podId={pod.pod_id}
+        expired={expired}
+        subtitle={ctaSubtitle}
         bottom={ctaBottom}
-        alignItems="center"
-        gap={10}
-        padding={10}
-        borderRadius={16}
-        backgroundColor="rgba(0,0,0,0.46)"
-        borderWidth={1}
-        borderColor="rgba(255,255,255,0.14)"
-      >
-        <YStack
-          width={36}
-          height={36}
-          borderRadius={10}
-          backgroundColor="$primary"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <MaterialIcons name={expired ? 'info-outline' : 'bolt'} size={20} color="#ffffff" />
-        </YStack>
-        <YStack flex={1}>
-          <Text color="#ffffff" fontSize={14} fontWeight="700" numberOfLines={1}>
-            {expired ? 'This pod is expired' : 'Join in 2 taps'}
-          </Text>
-          <Text color="rgba(255,255,255,0.82)" fontSize={11.5} numberOfLines={1}>
-            {expired ? 'You can still view the pod details.' : ctaSubtitle}
-          </Text>
-        </YStack>
-        {expired ? null : (
-          <XStack
-            testID={`reel-go-${pod.pod_id}`}
-            role="button"
-            aria-label={t('mweb.common.openPod')}
-            onPress={onOpen}
-            alignItems="center"
-            gap={4}
-            backgroundColor="$primary"
-            borderRadius={12}
-            paddingHorizontal={14}
-            paddingVertical={9}
-            pressStyle={PRESS_STYLE.control}
-          >
-            <Text color="$onPrimary" fontSize={13} fontWeight="700">
-              Go
-            </Text>
-            <MaterialIcons name="arrow-forward" size={16} color="#ffffff" />
-          </XStack>
-        )}
-      </XStack>
+        onGo={onOpen}
+      />
     </YStack>
   );
 }

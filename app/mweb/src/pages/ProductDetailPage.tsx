@@ -3,15 +3,17 @@ import { useEntityPageMeta } from '../app/pageMeta';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router';
-import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { DuncitIconButton } from '@duncit/buttons';
+import { DuncitRoundButton } from '@duncit/buttons';
 import MomentLightbox from '../components/moments/MomentLightbox';
 import BrandDetailDialog from './pod-details-page/BrandDetailDialog';
 import ProductReviews from './pod-details-page/ProductReviews';
-import ProductQuantityBar from './pod-details-page/ProductQuantityBar';
 import { formatRupees, productSpecs } from './pod-details-page/product-specs';
 import { PUBLIC_PRODUCT } from './pod-details-page/queries';
+import ProductGallery from './product-detail-page/ProductGallery';
+import ProductInfoCard from './product-detail-page/ProductInfoCard';
+import ProductBuyBar from './product-detail-page/ProductBuyBar';
 import { cartLineKey, useCart } from '../components/cart/CartContext';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -32,9 +34,24 @@ export const PODS_FOR_PRODUCT = gql`
   }
 `;
 
-/** Standalone product detail page (Pod Shop browse → tap a product). Browse-only:
- * products are purchased through a pod's shop, so there is no add-to-cart here —
- * variant chips swap the shown price/stock/images exactly like the pod dialog. */
+const BACK_SX = {
+  width: 40,
+  height: 40,
+  minHeight: 40,
+  alignSelf: 'flex-start',
+  bgcolor: 'background.paper',
+  color: 'text.primary',
+  border: '1px solid var(--duncit-card-border)',
+} as const;
+const PILL_SX = { height: 36, minHeight: 36, px: 0.5, fontWeight: 600 } as const;
+const IDLE_PILL_SX = { ...PILL_SX, bgcolor: 'background.paper' } as const;
+
+const variantName = (v: any): string => v.option_label || v.color || v.size_label || 'Variant';
+
+/** Standalone product detail page (Pod Shop browse → tap a product). The hero
+ * carousel, name, price, variant pills and description, with the add/quantity
+ * control in a sticky bottom bar — variant pills swap the shown price/stock/
+ * images exactly like the pod dialog. */
 export default function ProductDetailPage() {
   const { t } = useTranslation();
   const { productId = '' } = useParams();
@@ -71,12 +88,7 @@ export default function ProductDetailPage() {
   const pods: any[] = [...(podData?.podsForProduct ?? [])];
   pods.sort((a, b) => a.unit_cost - b.unit_cost);
   const pod = pods[0] ?? null;
-  const variantLabel = selectedVariant
-    ? selectedVariant.option_label ||
-      selectedVariant.color ||
-      selectedVariant.size_label ||
-      'Variant'
-    : '';
+  const variantLabel = selectedVariant ? variantName(selectedVariant) : '';
   const lineKey = cartLineKey({
     product_id: productId,
     variant_id: selectedVariant?.id ?? '',
@@ -106,11 +118,7 @@ export default function ProductDetailPage() {
 
   if (loading && !product)
     return (
-      <Stack
-        sx={{
-          alignItems: "center",
-          p: 6
-        }}>
+      <Stack sx={{ alignItems: "center", p: 6 }}>
         <CircularProgress />
       </Stack>
     );
@@ -118,121 +126,59 @@ export default function ProductDetailPage() {
   if (!product) return <Alert severity="info">{t('mweb.productDetailPage.productNotFound')}</Alert>;
 
   return (
-    <Stack spacing={1.5} sx={{ py: 0.5 }}>
-      <Stack direction="row" spacing={1} sx={{
-        alignItems: "center"
-      }}>
-        <DuncitIconButton aria-label={t('mweb.common.goBack')} onClick={() => navigate(-1)} size="small">
-          <ArrowBackIcon />
-        </DuncitIconButton>
-        <Typography variant="h6" sx={{ fontWeight: 700 }} noWrap>
+    <Stack spacing={2} sx={{ py: 0.5 }}>
+      <DuncitRoundButton aria-label={t('mweb.common.goBack')} onClick={() => navigate(-1)} sx={BACK_SX}>
+        <ArrowBackIcon />
+      </DuncitRoundButton>
+      {images.length > 0 && <ProductGallery images={images} alt={product.product_name} onZoom={setZoomIndex} />}
+      <Stack spacing={0.75}>
+        <Typography component="h1" sx={{ fontSize: '1.375rem', fontWeight: 600, lineHeight: 1.25 }}>
           {product.product_name}
         </Typography>
+        <Typography sx={{ fontSize: '1.25rem', fontWeight: 700 }}>{formatRupees(price)}</Typography>
       </Stack>
-      {images.length > 0 && (
-        <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 0.5 }}>
-          {images.map((url: string, imageIndex: number) => (
-            <Box
-              key={url}
-              component="img"
-              src={url}
-              alt={product.product_name}
-              onClick={() => setZoomIndex(imageIndex)}
-              sx={{
-                width: 180,
-                height: 180,
-                borderRadius: '16px',
-                objectFit: 'cover',
-                cursor: 'zoom-in',
-                flex: '0 0 auto',
-              }}
-            />
-          ))}
-        </Stack>
-      )}
-      <Typography variant="h5" sx={{ fontWeight: 700, color: 'primary.main' }}>
-        {formatRupees(price)}
-      </Typography>
       {variants.length > 0 && (
-        <Stack direction="row" spacing={1} useFlexGap sx={{
-          flexWrap: "wrap"
-        }}>
-          {variants.map((v: any) => (
-            <Chip
-              key={v.id}
-              label={v.option_label || v.color || v.size_label || 'Variant'}
-              onClick={() => setVariantId(v.id)}
-              color={selectedVariant?.id === v.id ? 'primary' : 'default'}
-              variant={selectedVariant?.id === v.id ? 'filled' : 'outlined'}
-              size="small"
-              sx={{ fontWeight: 700 }}
-            />
-          ))}
+        <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
+          {variants.map((v: any) => {
+            const selected = selectedVariant?.id === v.id;
+            return (
+              <Chip
+                key={v.id}
+                label={variantName(v)}
+                onClick={() => setVariantId(v.id)}
+                color={selected ? 'primary' : 'default'}
+                sx={selected ? PILL_SX : IDLE_PILL_SX}
+              />
+            );
+          })}
         </Stack>
       )}
       {product.brand_name && (
         <Chip
           label={`by ${product.brand_name}`}
-          size="small"
           onClick={product.brand_id ? () => setBrandOpen(product.brand_id) : undefined}
-          sx={{ alignSelf: 'flex-start', fontWeight: 600 }}
+          sx={{ ...IDLE_PILL_SX, alignSelf: 'flex-start' }}
         />
       )}
-      <Typography
-        variant="body2"
-        sx={{
-          color: "text.secondary",
-          whiteSpace: 'pre-wrap'
-        }}>
-        {product.description || product.short_description || 'No description provided.'}
-      </Typography>
-      {specs.length > 0 && (
-        <Box
-          sx={{
-            border: 1,
-            borderColor: 'divider',
-            borderRadius: '16px',
-            overflow: 'hidden',
-          }}
-        >
-          {specs.map((spec) => (
-            <Stack
-              key={spec.label}
-              direction="row"
-              sx={{
-                justifyContent: "space-between",
-                px: 1.5,
-                py: 1,
-                '& + &': { borderTop: 1, borderColor: 'divider' }
-              }}>
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "text.secondary",
-                  fontWeight: 700
-                }}>
-                {spec.label}
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {spec.value}
-              </Typography>
-            </Stack>
-          ))}
-        </Box>
-      )}
-      {pod ? (
-        <ProductQuantityBar
-          quantity={lineQuantity}
-          maxQuantity={pod.available_count}
-          onUpdate={updateQuantity}
-        />
-      ) : (
-        <Alert severity="info" sx={{ borderRadius: '16px' }}>
+      <ProductInfoCard
+        description={product.description || product.short_description || 'No description provided.'}
+        specs={specs}
+      />
+      {pod ? null : (
+        <Alert severity="info">
           Products are purchased from a pod&apos;s shop while booking — find this product in a pod
           near you.
         </Alert>
       )}
       <ProductReviews productId={product.id} />
+      {pod ? (
+        <ProductBuyBar
+          price={formatRupees(price)}
+          quantity={lineQuantity}
+          maxQuantity={pod.available_count}
+          onUpdate={updateQuantity}
+        />
+      ) : null}
       <MomentLightbox
         moments={images.map((url: string) => ({ url }))}
         index={zoomIndex}

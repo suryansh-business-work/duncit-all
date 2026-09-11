@@ -56,7 +56,7 @@ function SlideOverlay({ media, onCta }: Readonly<{ media: SliderMedia; onCta: (u
       {media.heading ? (
         <Typography
           variant="h4"
-          sx={{ color: 'common.white', fontWeight: 700, lineHeight: 1.05, maxWidth: 360 }}
+          sx={{ color: 'common.white', fontWeight: 600, lineHeight: 1.1, maxWidth: 360 }}
         >
           {media.heading}
         </Typography>
@@ -113,8 +113,10 @@ export default function PodShopSlider() {
     <Box
       data-testid="pod-shop-slider"
       sx={{
-        borderRadius: '16px',
+        borderRadius: '24px',
         overflow: 'hidden',
+        // Safari only clips a transformed slick track to the radius with this.
+        isolation: 'isolate',
         '.slick-dots': { bottom: 12 },
         '.slick-dots li button:before': { color: 'common.white', opacity: 0.6 },
         '.slick-dots li.slick-active button:before': { opacity: 1 },

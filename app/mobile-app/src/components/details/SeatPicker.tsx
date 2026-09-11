@@ -49,8 +49,7 @@ export function SeatPicker({ value, onChange, maxSeats, disabled }: Readonly<Pro
       alignItems="center"
       height={48}
       borderRadius={999}
-      borderWidth={1}
-      borderColor="$borderColor"
+      backgroundColor="$soft"
       opacity={disabled ? 0.6 : 1}
     >
       <XStack

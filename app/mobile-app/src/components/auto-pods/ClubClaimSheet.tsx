@@ -2,10 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
 import { autoPodCityLabel, type AutoPodLabels, type AutoPodRow } from '@duncit/utils';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { LoadingIndicator } from '@/components/LoadingIndicator';
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
-import { PillButton } from '@/components/attendance/AttendanceOtpControls';
 import { ClubClaimAutoPodDocument, MyAdminClubsForAutoPodDocument } from '@/graphql/auto-pods';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -101,22 +101,21 @@ export function ClubClaimSheet({
   const footer = (
     <XStack gap={10}>
       <YStack flex={1}>
-        <PillButton
+        <DuncitButton
           testID="auto-pod-claim-cancel"
           label={labels.dismiss}
           onPress={onClose}
-          variant="ghost"
-          disabled={false}
+          variant="soft"
+          tone="neutral"
         />
       </YStack>
       <YStack flex={1}>
-        <PillButton
+        <DuncitButton
           testID="auto-pod-claim-confirm"
           label={labels.claimForClubCta}
           onPress={() => {
             claim().catch(() => undefined);
           }}
-          variant="solid"
           disabled={!clubId || busy}
         />
       </YStack>
@@ -138,31 +137,31 @@ export function ClubClaimSheet({
     >
       <YStack gap={14}>
         {row ? (
-          <Text fontSize={14} fontWeight="700" color="$color">
+          <Text fontSize={15} fontWeight="600" color="$color">
             {row.pod_title}
           </Text>
         ) : null}
 
         {row?.location ? (
-          <Text testID="auto-pod-claim-city" fontSize={12.5} color="$color">
+          <Text testID="auto-pod-claim-city" fontSize={13} color="$color">
             {labels.pinnedTo(autoPodCityLabel(row.location))}
           </Text>
         ) : null}
 
         {venue ? (
-          <Text fontSize={12.5} color="$color">
+          <Text fontSize={13} color="$color">
             {`${venue.venue_name} · ${formatWhen(venue.pod_date_time)}`}
           </Text>
         ) : null}
 
         {noClubInCity ? (
-          <Text testID="auto-pod-no-club-in-city" fontSize={12} color={warning}>
+          <Text testID="auto-pod-no-club-in-city" fontSize={13} color={warning}>
             {labels.noClubInCity(autoPodCityLabel(row?.location))}
           </Text>
         ) : null}
 
         <YStack gap={8}>
-          <Text fontSize={12} fontWeight="700" color="$color">
+          <Text fontSize={13} fontWeight="600" color="$color">
             {labels.pickClub}
           </Text>
           {/* Reading the caller's clubs is a round trip; an empty chip column
@@ -180,7 +179,7 @@ export function ClubClaimSheet({
         {busy ? <LoadingIndicator testID="auto-pod-claim-busy" /> : null}
 
         {failure ? (
-          <Text testID="auto-pod-claim-error" fontSize={12} color="$danger">
+          <Text testID="auto-pod-claim-error" fontSize={13} color="$danger">
             {failure}
           </Text>
         ) : null}

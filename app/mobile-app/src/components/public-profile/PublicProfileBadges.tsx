@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { DuncitDialog } from '@/components/DuncitDialog';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { UserBadge } from '@/hooks/usePublicProfile';
 import { formatDate } from '@/utils/date-format';
@@ -14,26 +15,17 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 /** Badge grid with a details sheet — RN twin of mWeb's PublicProfileBadges. */
 export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }>) {
   const { t } = useTranslation();
-  const { onPrimary, primary, color } = useThemeColors();
+  const { accent, color } = useThemeColors();
   const [active, setActive] = useState<UserBadge | null>(null);
   if (badges.length === 0) return null;
 
   return (
-    <YStack
-      testID="public-profile-badges"
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      padding={16}
-      gap={12}
-    >
-      <XStack alignItems="center" gap={6}>
-        <MaterialIcons name="emoji-events" size={18} color={primary} />
-        <Text fontSize={15} fontWeight="700" color="$color">
+    <SurfaceCard testID="public-profile-badges" gap={12}>
+      <XStack alignItems="baseline" gap={6}>
+        <Text accessibilityRole="header" fontSize={17} fontWeight="600" color="$color">
           Badges
         </Text>
-        <Text fontSize={12} color="$muted">
+        <Text fontSize={12} fontWeight="500" color="$muted">
           ({badges.length})
         </Text>
       </XStack>
@@ -51,11 +43,11 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
             pressStyle={PRESS_STYLE.control}
           >
             <YStack
-              width={48}
-              height={48}
-              borderRadius={24}
+              width={56}
+              height={56}
+              borderRadius={28}
               overflow="hidden"
-              backgroundColor="$primary"
+              backgroundColor="$soft"
               alignItems="center"
               justifyContent="center"
             >
@@ -66,10 +58,10 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
                   resizeMode="cover"
                 />
               ) : (
-                <MaterialIcons name="emoji-events" size={22} color={onPrimary} />
+                <MaterialIcons name="emoji-events" size={26} color={accent} />
               )}
             </YStack>
-            <Text fontSize={11} fontWeight="700" color="$color" numberOfLines={1}>
+            <Text fontSize={13} fontWeight="600" color="$color" numberOfLines={1}>
               {item.badge?.title}
             </Text>
           </YStack>
@@ -95,8 +87,7 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
             alignItems="center"
             justifyContent="center"
             borderRadius={999}
-            borderWidth={1}
-            borderColor="$borderColor"
+            backgroundColor="$soft"
             pressStyle={PRESS_STYLE.control}
           >
             <Text fontSize={14} fontWeight="600" color={color}>
@@ -107,11 +98,11 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
       >
         <YStack gap={10} alignItems="center">
           <YStack
-            width={64}
-            height={64}
-            borderRadius={32}
+            width={72}
+            height={72}
+            borderRadius={36}
             overflow="hidden"
-            backgroundColor="$primary"
+            backgroundColor="$soft"
             alignItems="center"
             justifyContent="center"
           >
@@ -122,7 +113,7 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
                 resizeMode="cover"
               />
             ) : (
-              <MaterialIcons name="emoji-events" size={30} color={onPrimary} />
+              <MaterialIcons name="emoji-events" size={32} color={accent} />
             )}
           </YStack>
           {active?.badge?.description ? (
@@ -137,6 +128,6 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
           ) : null}
         </YStack>
       </DuncitDialog>
-    </YStack>
+    </SurfaceCard>
   );
 }

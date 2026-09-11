@@ -45,15 +45,14 @@ export function CancelDialog({
         aria-label={t('mweb.earn.keepMeeting')}
         onPress={onClose}
         flex={1}
-        height={46}
+        height={44}
         alignItems="center"
         justifyContent="center"
-        borderRadius={12}
-        borderWidth={1}
-        borderColor="$borderColor"
+        borderRadius={999}
+        backgroundColor="$soft"
         pressStyle={PRESS_STYLE.control}
       >
-        <Text fontSize={14} fontWeight="600" color="$color">
+        <Text fontSize={15} fontWeight="600" color="$color">
           Keep meeting
         </Text>
       </XStack>
@@ -64,15 +63,15 @@ export function CancelDialog({
         aria-disabled={busy}
         onPress={busy ? undefined : onConfirm}
         flex={1}
-        height={46}
+        height={44}
         alignItems="center"
         justifyContent="center"
-        borderRadius={12}
+        borderRadius={999}
         backgroundColor="$danger"
         opacity={busy ? 0.7 : 1}
-        pressStyle={PRESS_STYLE.control}
+        pressStyle={PRESS_STYLE.solid}
       >
-        <Text fontSize={14} fontWeight="700" color={onPrimary}>
+        <Text fontSize={15} fontWeight="600" color={onPrimary}>
           {busy ? 'Cancelling…' : 'Cancel meeting'}
         </Text>
       </XStack>
@@ -90,8 +89,8 @@ export function CancelDialog({
       showCloseButton={false}
       footer={footer}
     >
-      <YStack gap={10}>
-        <Text fontSize={13.5} color="$muted">
+      <YStack gap={12}>
+        <Text fontSize={14} color="$muted">
           Your onboarding meeting will be cancelled and the slot freed. You can book a new one
           anytime.
         </Text>
@@ -102,7 +101,7 @@ export function CancelDialog({
           onChangeText={onChangeReason}
         />
         {error ? (
-          <Text testID="cancel-error" fontSize={12.5} color="$danger">
+          <Text testID="cancel-error" fontSize={13} color="$danger">
             {error}
           </Text>
         ) : null}

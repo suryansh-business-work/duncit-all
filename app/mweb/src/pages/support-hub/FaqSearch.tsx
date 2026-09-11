@@ -17,6 +17,7 @@ import { DuncitIconButton } from '@duncit/buttons';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { SEARCH_FAQS, type FaqItem } from './faqQueries';
 import { useTranslation } from '../../i18n/useTranslation';
+import { SURFACE_SX } from '../../theme';
 
 interface FaqSearchProps {
   query: string;
@@ -44,12 +45,15 @@ export default function FaqSearch({ query, onQueryChange, onOpen }: Readonly<Faq
         placeholder={t('mweb.common.searchForTopicsOrQuestions')}
         value={query}
         onChange={(event) => onQueryChange(event.target.value)}
-        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper', minHeight: 48 } }}
+        sx={{
+          '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper', minHeight: 50 },
+          '& .MuiOutlinedInput-root fieldset': { borderColor: 'var(--duncit-card-border)' },
+        }}
         slotProps={{
           input: {
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
+                <SearchIcon fontSize="small" sx={{ color: 'text.secondary' }} />
               </InputAdornment>
             ),
             endAdornment: query ? (
@@ -63,7 +67,7 @@ export default function FaqSearch({ query, onQueryChange, onOpen }: Readonly<Faq
         }}
       />
       {active && (
-        <Paper variant="outlined" sx={{ mt: 1, borderRadius: '16px', overflow: 'hidden' }}>
+        <Paper sx={{ ...SURFACE_SX, mt: 1, overflow: 'hidden' }}>
           {loading && (
             <Stack sx={{ p: 1 }} spacing={1}>
               {[0, 1, 2].map((i) => (
@@ -88,9 +92,10 @@ export default function FaqSearch({ query, onQueryChange, onOpen }: Readonly<Faq
                   key={faq.id}
                   divider={index < results.length - 1}
                   onClick={() => onOpen(faq)}
+                  sx={{ px: 2, py: 1.5, borderRadius: 0 }}
                 >
                   <ListItemText primary={faq.question} slotProps={{
-                    primary: { sx: { fontWeight: 700 } }
+                    primary: { sx: { fontWeight: 600 } }
                   }} />
                 </ListItemButton>
               ))}

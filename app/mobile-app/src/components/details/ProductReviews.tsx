@@ -40,6 +40,7 @@ function Stars({
   onChange,
   size,
 }: Readonly<{ value: number; onChange?: (n: number) => void; size: number }>) {
+  const { warning } = useThemeColors();
   return (
     <XStack gap={2}>
       {[1, 2, 3, 4, 5].map((n) => (
@@ -50,7 +51,7 @@ function Stars({
           role={onChange ? 'button' : undefined}
           onPress={onChange ? () => onChange(n) : undefined}
         >
-          <MaterialIcons name={n <= value ? 'star' : 'star-border'} size={size} color="#f5a623" />
+          <MaterialIcons name={n <= value ? 'star' : 'star-border'} size={size} color={warning} />
         </YStack>
       ))}
     </XStack>

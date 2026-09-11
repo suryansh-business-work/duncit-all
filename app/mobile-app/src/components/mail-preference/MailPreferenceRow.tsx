@@ -26,25 +26,32 @@ export function MailPreferenceRow({ item, busy, onChange }: Readonly<Props>) {
   return (
     <XStack
       testID={`mail-preference-${item.category}`}
-      alignItems="flex-start"
+      alignItems="center"
       gap={12}
-      paddingVertical={12}
+      paddingVertical={14}
     >
       <YStack flex={1}>
         <XStack alignItems="center" gap={6}>
-          <Text fontSize={14.5} fontWeight="700" color="$color">
+          <Text fontSize={15} fontWeight="500" color="$color">
             {copy.label}
           </Text>
           {item.required ? (
-            <XStack alignItems="center" gap={3}>
-              <MaterialIcons name="lock-outline" size={13} color={muted} />
-              <Text fontSize={11.5} fontWeight="700" color="$muted">
+            <XStack
+              alignItems="center"
+              gap={3}
+              height={22}
+              paddingHorizontal={8}
+              borderRadius={999}
+              backgroundColor="$soft"
+            >
+              <MaterialIcons name="lock-outline" size={12} color={muted} />
+              <Text fontSize={11} fontWeight="600" color="$muted">
                 {t('mailPreference.alwaysOn')}
               </Text>
             </XStack>
           ) : null}
         </XStack>
-        <Text fontSize={12.5} color="$muted" paddingTop={2}>
+        <Text fontSize={13} color="$muted" paddingTop={2}>
           {copy.description}
         </Text>
       </YStack>

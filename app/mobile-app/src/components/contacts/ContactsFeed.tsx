@@ -14,9 +14,16 @@ export type FeedRow = ContactRowData | InvitableContact;
 const keyOf = (row: FeedRow): string => ('profile' in row ? row.profile.user_id : row.phone_key);
 
 const CONTENT_STYLE = { paddingBottom: 32 };
+/** The rows read as one card: surface cells, the first and last rounded. */
+const CARD_RADIUS = 24;
 
+/** A hairline between two rows, inset past the avatar, on the card's fill. */
 function Separator() {
-  return <YStack height={10} />;
+  return (
+    <YStack marginHorizontal={16} backgroundColor="$surface">
+      <YStack height={1} marginLeft={72} backgroundColor="$borderColor" />
+    </YStack>
+  );
 }
 
 interface Props {
@@ -58,9 +65,18 @@ export function ContactsFeed({
   const refreshControl = useScreenRefreshControl();
   const selectedKeys = useMemo(() => new Set(selected), [selected]);
 
+  const lastIndex = rows.length - 1;
   const renderItem = useCallback(
-    ({ item }: ListRenderItemInfo<FeedRow>) => (
-      <YStack paddingHorizontal={16}>
+    ({ item, index }: ListRenderItemInfo<FeedRow>) => (
+      <YStack
+        marginHorizontal={16}
+        backgroundColor="$surface"
+        overflow="hidden"
+        borderTopLeftRadius={index === 0 ? CARD_RADIUS : 0}
+        borderTopRightRadius={index === 0 ? CARD_RADIUS : 0}
+        borderBottomLeftRadius={index === lastIndex ? CARD_RADIUS : 0}
+        borderBottomRightRadius={index === lastIndex ? CARD_RADIUS : 0}
+      >
         {'profile' in item ? (
           <ContactRow
             row={item}
@@ -79,7 +95,7 @@ export function ContactsFeed({
         )}
       </YStack>
     ),
-    [busyId, busyKey, selectedKeys, onToggleFollow, onOpen, onToggleSelect, onInvite],
+    [busyId, busyKey, selectedKeys, lastIndex, onToggleFollow, onOpen, onToggleSelect, onInvite],
   );
 
   return (

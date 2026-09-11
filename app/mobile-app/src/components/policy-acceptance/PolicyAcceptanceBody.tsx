@@ -1,5 +1,6 @@
 import { ScrollView, Spinner, Text, YStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { SignupPolicy } from '@/stores/policies.store';
 import { PolicyAcceptanceRow } from './PolicyAcceptanceRow';
@@ -53,19 +54,23 @@ export function PolicyAcceptanceBody({
   }
 
   return (
-    <ScrollView contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingBottom: 12 }}>
+    <ScrollView contentContainerStyle={{ paddingHorizontal: 16, gap: 12, paddingBottom: 12 }}>
       <Text fontSize={13} lineHeight={20} color="$muted">
         {intro}
       </Text>
-      {policies.map((policy) => (
-        <PolicyAcceptanceRow
-          key={policy.id}
-          policy={policy}
-          accepted={acceptedIds.includes(policy.id)}
-          onToggle={() => onToggle(policy.id)}
-          onRead={() => onRead(policy.id)}
-        />
-      ))}
+      {/* One card, hairline-divided rows — not a card per policy. */}
+      <SurfaceCard padding={0} overflow="hidden">
+        {policies.map((policy, index) => (
+          <PolicyAcceptanceRow
+            key={policy.id}
+            policy={policy}
+            accepted={acceptedIds.includes(policy.id)}
+            divided={index > 0}
+            onToggle={() => onToggle(policy.id)}
+            onRead={() => onRead(policy.id)}
+          />
+        ))}
+      </SurfaceCard>
     </ScrollView>
   );
 }

@@ -3,7 +3,7 @@ import { YStack } from 'tamagui';
 import { autoPodActionable, autoPodWithdrawable, type AutoPodRow } from '@duncit/utils';
 
 import { StackScreen } from '@/components/StackScreen';
-import { PillButton } from '@/components/attendance/AttendanceOtpControls';
+import { DuncitButton } from '@/components/DuncitButton';
 import {
   AutoPodCategoryChips,
   AutoPodLocationRow,
@@ -43,32 +43,35 @@ export function HostAutoPodsScreen() {
   const [withdrawing, setWithdrawing] = useState<AutoPodRow | null>(null);
   const earnings = useAutoPodEarnings();
 
+  // Taking an enrolment back is the danger outline, the same one mWeb's
+  // AutoPodWithdrawAction draws; the offer's own CTA is the green pill.
   const renderMineAction = (row: AutoPodRow) =>
     autoPodWithdrawable(row, 'host') ? (
-      <PillButton
+      <DuncitButton
         testID={`auto-pod-withdraw-${row.id}`}
         label={labels.withdrawCta}
         onPress={() => setWithdrawing(row)}
-        variant="ghost"
-        disabled={false}
+        variant="outline"
+        tone="danger"
+        size="sm"
+        fullWidth
       />
     ) : null;
 
   const renderAction = (row: AutoPodRow) =>
     autoPodActionable(row, 'host') ? (
-      <PillButton
+      <DuncitButton
         testID={`auto-pod-assign-${row.id}`}
         label={labels.assignMyselfCta}
         onPress={() => setOffer(row)}
-        variant="solid"
-        disabled={false}
+        fullWidth
       />
     ) : null;
 
   return (
     <StackScreen title={labels.hostTitle} testID="host-auto-pods-screen">
-      <RefreshScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
-        <YStack gap={14}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        <YStack gap={16}>
           <AutoPodLocationRow labels={labels} />
           <AutoPodCategoryChips value={subCategoryId} onChange={setSubCategoryId} labels={labels} />
           <AutoPodQueue

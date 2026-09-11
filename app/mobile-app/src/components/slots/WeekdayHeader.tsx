@@ -12,7 +12,7 @@ export function WeekdayHeader({ initials }: Readonly<Props>) {
     <XStack>
       {initials.map((weekday) => (
         <YStack key={weekday.id} flex={1} alignItems="center" paddingVertical={4}>
-          <Text fontSize={11} fontWeight="700" color="$muted">
+          <Text fontSize={11} fontWeight="600" color="$muted">
             {weekday.label}
           </Text>
         </YStack>

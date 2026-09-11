@@ -22,14 +22,12 @@ export default function ClubSocialLinks({ club }: Readonly<Props>) {
       {social.map((item) => (
         <DuncitButton
           key={item.label}
-          variant="outlined"
           startIcon={item.icon}
-          size="small"
           component="a"
           href={item.href}
           target="_blank"
           rel="noreferrer"
-          sx={{ textTransform: 'none' }}
+          sx={{ bgcolor: 'background.paper', color: 'text.primary', border: '1px solid var(--duncit-card-border)' }}
         >
           {item.label}
         </DuncitButton>

@@ -1,8 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
-import { Box, Stack, Typography } from '@mui/material';
-import ContactPhoneIcon from '@mui/icons-material/ContactPhone';
+import { Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import { contactSearchText, invitableSearchText } from '@duncit/utils';
@@ -102,17 +101,9 @@ export default function ContactsPage() {
 
   return (
     <Stack spacing={2} sx={{ maxWidth: 760, mx: 'auto', width: '100%', pb: 6 }}>
-      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-        <ContactPhoneIcon color="primary" />
-        <Box>
-          <Typography variant="h5" sx={{ fontWeight: 600 }}>
-            {t('mweb.contacts.title')}
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {t('mweb.contacts.subtitle')}
-          </Typography>
-        </Box>
-      </Stack>
+      <Typography component="h1" sx={{ fontSize: 20, fontWeight: 600 }}>
+        {t('mweb.contacts.title')}
+      </Typography>
 
       <ContactsAllowCard
         status={status}

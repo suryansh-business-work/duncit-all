@@ -3,7 +3,7 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
 import { Alert, Box, CircularProgress, Drawer, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { DuncitIconButton } from '@duncit/buttons';
+import { DuncitRoundButton } from '@duncit/buttons';
 import {
   POD_COMMENTS,
   ADD_POD_COMMENT,
@@ -96,8 +96,8 @@ export default function PodCommentsSheet({
         paper: {
           sx: {
             height: '70vh',
-            borderTopLeftRadius: '16px',
-            borderTopRightRadius: '16px',
+            borderTopLeftRadius: '28px',
+            borderTopRightRadius: '28px',
             display: 'flex',
             flexDirection: 'column',
           },
@@ -110,14 +110,15 @@ export default function PodCommentsSheet({
           alignItems: "center",
           justifyContent: "space-between",
           px: 2,
-          py: 1.5,
-          borderBottom: 1,
-          borderColor: 'divider'
+          pt: 2,
+          pb: 1,
         }}>
-        <Typography variant="h6">{t('mweb.podDetails.comments')}</Typography>
-        <DuncitIconButton onClick={onClose}>
+        <Typography component="h2" sx={{ fontSize: 17, fontWeight: 600 }}>
+          {t('mweb.podDetails.comments')}
+        </Typography>
+        <DuncitRoundButton tone="surface" onClick={onClose} aria-label={t('mweb.podDetails.close')}>
           <CloseIcon />
-        </DuncitIconButton>
+        </DuncitRoundButton>
       </Stack>
 
       <Box sx={{ flex: 1, overflowY: 'auto' }}>

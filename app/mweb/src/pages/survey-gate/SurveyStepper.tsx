@@ -1,6 +1,7 @@
 import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
-import { Alert, Stack, Step, StepLabel, Stepper, Typography } from '@mui/material';
+import { Alert, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import StepProgressBar from '../../components/StepProgressBar';
 import SurveyQuestionField, { type FieldAnswer } from './SurveyQuestionField';
 import { splitSections } from './surveySections';
 import type { ActiveSurvey } from './queries';
@@ -71,21 +72,17 @@ export default function SurveyStepper({
   };
 
   if (sections.length === 0) {
-    return <DuncitButton variant="contained" size="large" onClick={() => onSubmit([])} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>{submitLabelText}</DuncitButton>;
+    return <DuncitButton variant="contained" size="large" fullWidth onClick={() => onSubmit([])} disabled={submitting}>{submitLabelText}</DuncitButton>;
   }
   const active = sections[step];
 
   return (
     <Stack spacing={2}>
       {sections.length > 1 && (
-        <Stepper activeStep={step} alternativeLabel>
-          {sections.map((s) => <Step key={s.title}><StepLabel>{s.title}</StepLabel></Step>)}
-        </Stepper>
+        <StepProgressBar steps={sections.map((s) => s.title)} current={step + 1} label={active.title} />
       )}
       <Stack spacing={1.75}>
-        <Typography variant="subtitle1" sx={{
-          fontWeight: 600
-        }}>{active.title}</Typography>
+        <Typography sx={{ fontSize: 17, fontWeight: 600 }}>{active.title}</Typography>
         {active.help && <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>{active.help}</Typography>}
@@ -97,11 +94,11 @@ export default function SurveyStepper({
       <Stack direction="row" spacing={1.5} sx={{
         justifyContent: "space-between"
       }}>
-        <DuncitButton disabled={step === 0 || submitting} onClick={() => setStep((s) => Math.max(0, s - 1))}>Back</DuncitButton>
+        <DuncitButton size="large" disabled={step === 0 || submitting} onClick={() => setStep((s) => Math.max(0, s - 1))} sx={{ flex: 1 }}>Back</DuncitButton>
         {isLast ? (
-          <DuncitButton variant="contained" onClick={submit} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>{submitting ? 'Submitting…' : submitLabelText}</DuncitButton>
+          <DuncitButton variant="contained" size="large" onClick={submit} disabled={submitting} sx={{ flex: 1 }}>{submitting ? 'Submitting…' : submitLabelText}</DuncitButton>
         ) : (
-          <DuncitButton variant="contained" onClick={next} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>Next</DuncitButton>
+          <DuncitButton variant="contained" size="large" onClick={next} disabled={submitting} sx={{ flex: 1 }}>Next</DuncitButton>
         )}
       </Stack>
     </Stack>

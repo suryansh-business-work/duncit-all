@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { ExploreActionButton } from '@/components/explore/ExploreActionButton';
 import { railLayout } from '@/utils/explore-rail';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -14,6 +15,8 @@ export interface ExploreRailAction {
   key: string;
   icon: IconName;
   label: string;
+  /** Count drawn under the disc; label-only actions leave it unset. */
+  caption?: string;
   onPress: () => void;
   active?: boolean;
   loading?: boolean;
@@ -32,6 +35,7 @@ interface ExploreActionRailProps {
  * (⋮) menu. */
 export function ExploreActionRail({ actions, availableHeight }: Readonly<ExploreActionRailProps>) {
   const { t } = useTranslation();
+  const { color: ink, accent } = useThemeColors();
   const [menuOpen, setMenuOpen] = useState(false);
   const { visible, overflow } = railLayout(actions.length, availableHeight);
   const shown = overflow ? actions.slice(0, visible) : actions;
@@ -45,6 +49,7 @@ export function ExploreActionRail({ actions, availableHeight }: Readonly<Explore
           testID={action.testID}
           icon={action.icon}
           label={action.label}
+          caption={action.caption}
           active={action.active}
           loading={action.loading}
           onPress={action.onPress}
@@ -65,11 +70,13 @@ export function ExploreActionRail({ actions, availableHeight }: Readonly<Explore
               position="absolute"
               right={54}
               bottom={0}
-              backgroundColor="rgba(0,0,0,0.92)"
-              borderRadius={12}
+              backgroundColor="$surface"
+              borderRadius={16}
+              borderWidth={1}
+              borderColor="$cardBorder"
               padding={6}
               gap={2}
-              minWidth={150}
+              minWidth={160}
             >
               {hidden.map((action) => (
                 <XStack
@@ -83,12 +90,17 @@ export function ExploreActionRail({ actions, availableHeight }: Readonly<Explore
                   }}
                   alignItems="center"
                   gap={10}
-                  paddingVertical={8}
-                  paddingHorizontal={10}
+                  paddingVertical={10}
+                  paddingHorizontal={12}
+                  borderRadius={12}
                   pressStyle={PRESS_STYLE.row}
                 >
-                  <MaterialIcons name={action.icon} size={18} color="#ffffff" />
-                  <Text color="#ffffff" fontSize={13} fontWeight="600">
+                  <MaterialIcons
+                    name={action.icon}
+                    size={18}
+                    color={action.active ? accent : ink}
+                  />
+                  <Text color="$color" fontSize={14} fontWeight="600">
                     {action.label}
                   </Text>
                 </XStack>

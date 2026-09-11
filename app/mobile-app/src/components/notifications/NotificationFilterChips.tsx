@@ -20,7 +20,7 @@ export function NotificationFilterChips({ chips, value, onChange }: Readonly<Pro
       // react-native-web puts flexGrow/flexShrink: 1 on every ScrollView, so a
       // horizontal one in a flex column steals half the screen from the list.
       style={{ flexGrow: 0, flexShrink: 0 }}
-      contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 10, gap: 8 }}
+      contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12, gap: 8 }}
     >
       {chips.map((chip) => {
         const active = value === chip.key;
@@ -33,15 +33,13 @@ export function NotificationFilterChips({ chips, value, onChange }: Readonly<Pro
             aria-pressed={active}
             onPress={() => onChange(chip.key)}
             alignItems="center"
-            height={34}
+            height={36}
             paddingHorizontal={14}
             borderRadius={999}
-            borderWidth={1}
-            borderColor={active ? '$primary' : '$borderColor'}
             backgroundColor={active ? '$primary' : '$surface'}
             pressStyle={PRESS_STYLE.control}
           >
-            <Text fontSize={13} fontWeight="700" color={active ? '$onPrimary' : '$color'}>
+            <Text fontSize={13} fontWeight="600" color={active ? '$onPrimary' : '$color'}>
               {chip.label} {chip.count}
             </Text>
           </XStack>

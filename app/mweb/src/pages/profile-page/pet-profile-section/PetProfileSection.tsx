@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Alert, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Alert, Box, Stack } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
-import PetsIcon from '@mui/icons-material/Pets';
 import { DuncitButton } from '@duncit/buttons';
 import PetForm from './PetForm';
 import PetSummary from './PetSummary';
@@ -18,59 +17,46 @@ export default function PetProfileSection({ pet, onSaved }: Readonly<Props>) {
 
   const hasPet = !!(pet && (pet.name || pet.species || pet.bio || pet.photo_url));
 
+  // Sits inside the "Pet profile" accordion, which already names it — so no
+  // second card and no second title, just the action on the right.
   return (
-    <Card variant="outlined">
-      <CardContent>
-        <Stack
-          direction="row"
-          spacing={1.5}
-          sx={{
-            alignItems: "center",
-            mb: 2
-          }}>
-          <PetsIcon color="primary" />
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 700,
-              flex: 1
-            }}>
-            Pet Profile
-          </Typography>
-          {!editing && (
-            <DuncitButton
-              size="small"
-              startIcon={<EditIcon />}
-              onClick={() => {
-                setSavedMsg(null);
-                setEditing(true);
-              }}
-            >
-              {hasPet ? 'Edit' : 'Add pet'}
-            </DuncitButton>
-          )}
-        </Stack>
-
-        {editing ? (
-          <PetForm
-            pet={pet}
-            onCancel={() => setEditing(false)}
-            onSaved={() => {
-              setEditing(false);
-              setSavedMsg('Pet profile saved');
-              onSaved?.();
+    <Box>
+      {!editing && (
+        <Stack direction="row" sx={{ justifyContent: 'flex-end', mb: 1.5 }}>
+          <DuncitButton
+            size="small"
+            color="inherit"
+            startIcon={<EditIcon />}
+            onClick={() => {
+              setSavedMsg(null);
+              setEditing(true);
             }}
-          />
-        ) : (
-          <PetSummary pet={pet} />
-        )}
+            sx={{ bgcolor: 'action.hover', minHeight: 36 }}
+          >
+            {hasPet ? 'Edit' : 'Add pet'}
+          </DuncitButton>
+        </Stack>
+      )}
 
-        {savedMsg && !editing && (
-          <Alert severity="success" sx={{ mt: 2 }} onClose={() => setSavedMsg(null)}>
-            {savedMsg}
-          </Alert>
-        )}
-      </CardContent>
-    </Card>
+      {editing ? (
+        <PetForm
+          pet={pet}
+          onCancel={() => setEditing(false)}
+          onSaved={() => {
+            setEditing(false);
+            setSavedMsg('Pet profile saved');
+            onSaved?.();
+          }}
+        />
+      ) : (
+        <PetSummary pet={pet} />
+      )}
+
+      {savedMsg && !editing && (
+        <Alert severity="success" sx={{ mt: 2 }} onClose={() => setSavedMsg(null)}>
+          {savedMsg}
+        </Alert>
+      )}
+    </Box>
   );
 }

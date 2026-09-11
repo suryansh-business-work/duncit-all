@@ -17,8 +17,8 @@ interface AnswerActionsProps {
 
 /**
  * Accept / Deny — the private profile's whole gate, since accepting is what
- * CREATES the follow edge. Text buttons, not filled ones: the row is already a
- * large tappable card, so a solid button fights it. mWeb twin (rule 27).
+ * CREATES the follow edge. Accept is the filled pill, Deny the soft one.
+ * mWeb twin (rule 27).
  */
 export function AnswerActions({
   acceptLabel,
@@ -31,31 +31,39 @@ export function AnswerActions({
 }: Readonly<AnswerActionsProps>) {
   return (
     <>
-      <Text
+      <XStack
         testID="follow-request-accept"
         role="button"
         aria-label={acceptLabel}
         onPress={onAccept}
-        fontSize={13.5}
-        fontWeight="800"
-        color={accentInk}
-        pressStyle={PRESS_STYLE.inline}
+        height={32}
+        paddingHorizontal={14}
+        alignItems="center"
+        borderRadius={999}
+        backgroundColor={accentInk}
+        pressStyle={PRESS_STYLE.solid}
       >
-        {acceptLabel}
-      </Text>
-      <Text
+        <Text fontSize={13} fontWeight="600" color="$onPrimary">
+          {acceptLabel}
+        </Text>
+      </XStack>
+      <XStack
         testID="follow-request-reject"
         role="button"
         aria-label={denyLabel}
         onPress={onDeny}
-        fontSize={13.5}
-        fontWeight="800"
-        color={quietInk}
+        height={32}
+        paddingHorizontal={14}
+        alignItems="center"
+        borderRadius={999}
+        backgroundColor="$soft"
         opacity={dimQuiet ? 0.75 : 1}
-        pressStyle={PRESS_STYLE.inline}
+        pressStyle={PRESS_STYLE.control}
       >
-        {denyLabel}
-      </Text>
+        <Text fontSize={13} fontWeight="600" color={quietInk}>
+          {denyLabel}
+        </Text>
+      </XStack>
     </>
   );
 }
@@ -85,13 +93,17 @@ export function FollowBackAction({
       role="button"
       aria-label={label}
       gap={5}
+      height={32}
+      paddingHorizontal={14}
       alignItems="center"
+      borderRadius={999}
+      backgroundColor="$soft"
       opacity={pending ? 0.6 : 1}
       onPress={onPress}
-      pressStyle={PRESS_STYLE.inline}
+      pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name="person-add-alt-1" size={15} color={accentInk} />
-      <Text fontSize={13.5} fontWeight="800" color={accentInk}>
+      <Text fontSize={13} fontWeight="600" color={accentInk}>
         {label}
       </Text>
     </XStack>

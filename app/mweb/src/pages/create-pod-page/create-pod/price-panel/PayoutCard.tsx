@@ -24,10 +24,8 @@ export default function PayoutCard({ amount, payingPax, earnPct, collection, tot
       data-testid="price-panel-payout"
       sx={{
         borderRadius: '16px',
-        p: 1.5,
-        bgcolor: alpha(theme.palette.success.main, 0.08),
-        border: '1px solid',
-        borderColor: alpha(theme.palette.success.main, 0.3),
+        p: 1.75,
+        bgcolor: alpha(theme.palette.success.main, 0.12),
       }}
     >
       <Stack direction="row" spacing={1.25} sx={{
@@ -35,9 +33,7 @@ export default function PayoutCard({ amount, payingPax, earnPct, collection, tot
       }}>
         <AccountBalanceWalletOutlinedIcon color="success" sx={{ mt: 0.25 }} />
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="subtitle1" sx={{
-            fontWeight: 700
-          }}>
+          <Typography sx={{ fontSize: '1rem', fontWeight: 600 }}>
             {receiveLabel}
           </Typography>
           <Stack
@@ -51,16 +47,14 @@ export default function PayoutCard({ amount, payingPax, earnPct, collection, tot
               variant="caption"
               sx={{
                 color: "text.secondary",
-                fontWeight: 700
+                fontWeight: 600
               }}>
               {t('mweb.createPod.payingPax', { vars: { count: payingPax } })}
             </Typography>
             <Chip
               size="small"
-              color="success"
-              variant="outlined"
               label={t('mweb.createPod.shareOfCollection', { vars: { pct: earnPct } })}
-              sx={{ fontWeight: 600 }}
+              sx={{ height: 24, fontSize: '0.75rem', bgcolor: 'background.paper', color: 'success.main' }}
             />
           </Stack>
         </Box>
@@ -121,22 +115,9 @@ export default function PayoutCard({ amount, payingPax, earnPct, collection, tot
           </Typography>
         </Stack>
       </Stack>
-      <Box
-        sx={{
-          mt: 1.25,
-          px: 1.25,
-          py: 0.75,
-          borderRadius: '16px',
-          border: '1px dashed',
-          borderColor: alpha(theme.palette.success.main, 0.4),
-        }}
-      >
-        <Typography variant="caption" sx={{
-          color: "text.secondary"
-        }}>
-          {t('mweb.createPod.estimatesNote')}
-        </Typography>
-      </Box>
+      <Typography variant="caption" component="div" sx={{ mt: 1.25, px: 0.5, color: 'text.secondary' }}>
+        {t('mweb.createPod.estimatesNote')}
+      </Typography>
     </Box>
   );
 }

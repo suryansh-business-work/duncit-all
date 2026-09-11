@@ -91,13 +91,13 @@ function StatusHeaderText({
           onPress={onPress}
           color="#ffffff"
           fontSize={16}
-          fontWeight="700"
+          fontWeight="600"
           numberOfLines={1}
         >
           {name}
         </Text>
       ) : (
-        <Text color="#ffffff" fontSize={16} fontWeight="700" numberOfLines={1}>
+        <Text color="#ffffff" fontSize={16} fontWeight="600" numberOfLines={1}>
           {name}
         </Text>
       )}
@@ -106,7 +106,7 @@ function StatusHeaderText({
           testID="status-sublabel"
           color="rgba(255,255,255,0.75)"
           fontSize={11.5}
-          fontWeight="700"
+          fontWeight="500"
           numberOfLines={1}
         >
           {subLabel}
@@ -117,7 +117,7 @@ function StatusHeaderText({
           testID="status-remaining"
           color="rgba(255,255,255,0.75)"
           fontSize={11.5}
-          fontWeight="700"
+          fontWeight="500"
         >
           {remaining}
         </Text>
@@ -211,7 +211,7 @@ function StatusLikeButton({
   likeCount,
   onPress,
 }: Readonly<{ liked: boolean; likeCount: number; onPress: () => void }>) {
-  const { primary } = useThemeColors();
+  const { accent } = useThemeColors();
   return (
     <XStack paddingHorizontal={16} paddingTop={8} alignItems="center" gap={8}>
       <XStack
@@ -226,7 +226,7 @@ function StatusLikeButton({
         <MaterialIcons
           name={liked ? 'favorite' : 'favorite-border'}
           size={26}
-          color={liked ? primary : '#ffffff'}
+          color={liked ? accent : '#ffffff'}
         />
         {likeCount > 0 ? (
           <Text testID="status-like-count" fontSize={14} fontWeight="600" color="#ffffff">
@@ -493,7 +493,7 @@ export function StatusViewer({
                   aria-label={t('mweb.status.openDetails')}
                   onPress={() => onOpenTarget(status.target as StoryTarget)}
                   flex={1}
-                  height={46}
+                  height={52}
                   alignItems="center"
                   justifyContent="center"
                   gap={6}
@@ -501,7 +501,7 @@ export function StatusViewer({
                   backgroundColor="$primary"
                   pressStyle={PRESS_STYLE.control}
                 >
-                  <Text fontSize={14} fontWeight="700" color={onPrimary}>
+                  <Text fontSize={15} fontWeight="600" color={onPrimary}>
                     Open details
                   </Text>
                   <MaterialIcons name="arrow-forward" size={16} color={onPrimary} />

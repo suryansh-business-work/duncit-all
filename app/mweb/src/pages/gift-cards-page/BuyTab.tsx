@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useQuery } from '@apollo/client/react';
-import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, CircularProgress, Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { EMAIL } from '@duncit/regex';
 import { PUBLIC_FINANCE } from '../checkout-page/queries';
@@ -81,22 +81,7 @@ export default function BuyTab() {
   };
 
   return (
-    <Stack spacing={2.5}>
-      <Box>
-        <Typography variant="subtitle1" sx={{
-          fontWeight: 700
-        }}>
-          {t('mweb.giftCards.buyTitle')}
-        </Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            color: "text.secondary",
-            mt: 0.5
-          }}>
-          {t('mweb.giftCards.buySubtitle')}
-        </Typography>
-      </Box>
+    <Stack spacing={2}>
       {(settingsError || categoriesError) && <Alert severity="error">{t('mweb.giftCards.loadError')}</Alert>}
       {settingsLoading && !settings && (
         <Stack
@@ -135,13 +120,7 @@ export default function BuyTab() {
             message={message}
             onMessage={setMessage}
           />
-          <DuncitButton
-            variant="contained"
-            size="large"
-            disabled={!canContinue}
-            onClick={onContinue}
-            sx={{ borderRadius: 999, fontWeight: 700 }}
-          >
+          <DuncitButton variant="contained" size="large" fullWidth disabled={!canContinue} onClick={onContinue}>
             {t('mweb.giftCards.continueCta')}
           </DuncitButton>
         </>

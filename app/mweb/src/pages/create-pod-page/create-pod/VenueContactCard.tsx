@@ -16,10 +16,8 @@ export default function VenueContactCard({ venue }: Readonly<{ venue: CreatePodV
   const directions = mapSearchUrl([venue.venue_name, address].filter(Boolean).join(', '));
 
   return (
-    <Card variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }} data-testid="create-pod-venue-contact">
-      <Typography variant="subtitle2" sx={{
-        fontWeight: 700
-      }}>{venue.venue_name}</Typography>
+    <Card sx={{ p: 2 }} data-testid="create-pod-venue-contact">
+      <Typography sx={{ fontSize: '1rem', fontWeight: 600 }}>{venue.venue_name}</Typography>
       {address && (
         <Typography
           variant="body2"
@@ -28,17 +26,17 @@ export default function VenueContactCard({ venue }: Readonly<{ venue: CreatePodV
             mt: 0.25
           }}>{address}</Typography>
       )}
-      <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
+      <Stack direction="row" sx={{ mt: 1.5, flexWrap: 'wrap', gap: 1 }}>
         {venue.owner_phone && (
-          <DuncitButton href={`tel:${venue.owner_phone}`} size="small" startIcon={<PhoneIcon fontSize="small" />} sx={{ fontWeight: 600 }}>
+          <DuncitButton href={`tel:${venue.owner_phone}`} variant="outlined" size="small" startIcon={<PhoneIcon fontSize="small" />} sx={{ minHeight: 36 }}>
             {t('mweb.createPod.callVenue')}
           </DuncitButton>
         )}
-        <DuncitButton href={directions} target="_blank" rel="noreferrer" size="small" startIcon={<DirectionsIcon fontSize="small" />} sx={{ fontWeight: 600 }}>
+        <DuncitButton href={directions} target="_blank" rel="noreferrer" variant="outlined" size="small" startIcon={<DirectionsIcon fontSize="small" />} sx={{ minHeight: 36 }}>
           {t('mweb.createPod.getDirections')}
         </DuncitButton>
       </Stack>
-      <Stack spacing={0.25} sx={{ mt: 1 }}>
+      <Stack spacing={0.25} sx={{ mt: 1.5 }}>
         <Typography
           variant="caption"
           sx={{

@@ -1,15 +1,20 @@
+import { Fragment } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { leaderboardMedal, type LeaderboardMedal } from '@duncit/utils';
 import { AppImage } from '@/components/AppImage';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { LeaderboardEntryShape } from './types';
 
-/** Podium metals — page-local colour constants, same values as mWeb's list. */
-const MEDAL_COLOR: Record<LeaderboardMedal, string> = {
-  gold: '#F2A413',
-  silver: '#9FA8B2',
-  bronze: '#C77B45',
+type MedalTone = '$warning' | '$muted' | '$accent';
+
+/** Podium metals as theme tokens — gold, silver, bronze — so the ring flips
+ * with light/dark like every other colour. mWeb twin: LeaderboardList. */
+const MEDAL_TONE: Record<LeaderboardMedal, MedalTone> = {
+  gold: '$warning',
+  silver: '$muted',
+  bronze: '$accent',
 };
 
 function RankAvatar({
@@ -25,7 +30,7 @@ function RankAvatar({
       borderRadius={size / 2}
       borderWidth={3}
       borderColor={borderColor}
-      backgroundColor="$surface"
+      backgroundColor="$soft"
       alignItems="center"
       justifyContent="center"
       overflow="hidden"
@@ -33,7 +38,7 @@ function RankAvatar({
       {entry.avatar_url ? (
         <AppImage source={{ uri: entry.avatar_url }} style={{ width: size, height: size }} />
       ) : (
-        <Text fontSize={size / 3} fontWeight="700" color="$color">
+        <Text fontSize={size / 3} fontWeight="600" color="$color">
           {initial}
         </Text>
       )}
@@ -41,21 +46,38 @@ function RankAvatar({
   );
 }
 
+/** The small soft pill a rank sits in. */
+function RankPill({ rank, color = '$color' }: Readonly<{ rank: number; color?: string }>) {
+  return (
+    <XStack
+      minWidth={32}
+      height={22}
+      paddingHorizontal={8}
+      borderRadius={999}
+      alignItems="center"
+      justifyContent="center"
+      backgroundColor="$soft"
+    >
+      <Text fontSize={12} fontWeight="700" color={color}>
+        #{rank}
+      </Text>
+    </XStack>
+  );
+}
+
 function PodiumSpot({ entry }: Readonly<{ entry: LeaderboardEntryShape }>) {
   const { t } = useTranslation();
   const medal = leaderboardMedal(entry.rank);
-  const color = medal ? MEDAL_COLOR[medal] : 'transparent';
+  const tone = medal ? MEDAL_TONE[medal] : 'transparent';
   const size = entry.rank === 1 ? 76 : 60;
   return (
     <YStack alignItems="center" gap={4} width={96}>
-      <RankAvatar entry={entry} size={size} borderColor={color} />
-      <Text fontSize={12} fontWeight="700" style={{ color }}>
-        #{entry.rank}
-      </Text>
-      <Text fontSize={12} fontWeight="700" color="$color" numberOfLines={1}>
+      <RankAvatar entry={entry} size={size} borderColor={tone} />
+      <RankPill rank={entry.rank} color={tone} />
+      <Text fontSize={13} fontWeight="600" color="$color" numberOfLines={1}>
         {entry.name || t('mweb.leaderboard.anonymous')}
       </Text>
-      <Text fontSize={11} color="$muted">
+      <Text fontSize={12} color="$muted">
         {entry.points} {t('mweb.leaderboard.pointsShort')}
       </Text>
     </YStack>
@@ -69,21 +91,16 @@ function BoardRow({ entry }: Readonly<{ entry: LeaderboardEntryShape }>) {
       testID={`leaderboard-row-${entry.rank}`}
       alignItems="center"
       gap={12}
-      paddingHorizontal={12}
-      paddingVertical={8}
-      borderRadius={12}
-      backgroundColor={entry.is_me ? '$surface' : 'transparent'}
-      borderWidth={entry.is_me ? 1 : 0}
-      borderColor="$borderColor"
+      paddingHorizontal={16}
+      paddingVertical={10}
+      backgroundColor={entry.is_me ? '$primarySoft' : 'transparent'}
     >
-      <Text width={32} fontSize={13} fontWeight="700" color="$muted">
-        #{entry.rank}
-      </Text>
+      <RankPill rank={entry.rank} />
       <RankAvatar entry={entry} size={36} borderColor="transparent" />
       <Text
         flex={1}
         fontSize={14}
-        fontWeight={entry.is_me ? '700' : '500'}
+        fontWeight={entry.is_me ? '600' : '500'}
         color="$color"
         numberOfLines={1}
       >
@@ -91,7 +108,7 @@ function BoardRow({ entry }: Readonly<{ entry: LeaderboardEntryShape }>) {
       </Text>
       <Text fontSize={14} fontWeight="700" color="$color">
         {entry.points}{' '}
-        <Text fontSize={11} color="$muted">
+        <Text fontSize={12} color="$muted">
           {t('mweb.leaderboard.pointsShort')}
         </Text>
       </Text>
@@ -99,8 +116,8 @@ function BoardRow({ entry }: Readonly<{ entry: LeaderboardEntryShape }>) {
   );
 }
 
-/** The ranked board: a three-spot podium, then the plain rows — RN twin of
- * mWeb's <LeaderboardList/>. The caller's own row is outlined. */
+/** The ranked board in one card: a three-spot podium, then the plain rows —
+ * RN twin of mWeb's <LeaderboardList/>. The caller's own row is tinted. */
 export function LeaderboardBoardList({ rows }: Readonly<{ rows: LeaderboardEntryShape[] }>) {
   const { t } = useTranslation();
 
@@ -110,7 +127,7 @@ export function LeaderboardBoardList({ rows }: Readonly<{ rows: LeaderboardEntry
         testID="leaderboard-empty"
         textAlign="center"
         paddingVertical={32}
-        fontSize={13}
+        fontSize={14}
         color="$muted"
       >
         {t('mweb.leaderboard.emptyBoard')}
@@ -126,17 +143,18 @@ export function LeaderboardBoardList({ rows }: Readonly<{ rows: LeaderboardEntry
   );
 
   return (
-    <YStack gap={12}>
-      <XStack justifyContent="center" alignItems="flex-end" gap={8}>
+    <SurfaceCard marginHorizontal={16} padding={0} overflow="hidden">
+      <XStack justifyContent="center" alignItems="flex-end" gap={8} padding={16}>
         {podiumOrder.map((entry) => (
           <PodiumSpot key={entry.user_id} entry={entry} />
         ))}
       </XStack>
-      <YStack paddingHorizontal={8} gap={2}>
-        {rest.map((entry) => (
-          <BoardRow key={entry.user_id} entry={entry} />
-        ))}
-      </YStack>
-    </YStack>
+      {rest.map((entry) => (
+        <Fragment key={entry.user_id}>
+          <YStack height={1} backgroundColor="$borderColor" />
+          <BoardRow entry={entry} />
+        </Fragment>
+      ))}
+    </SurfaceCard>
   );
 }

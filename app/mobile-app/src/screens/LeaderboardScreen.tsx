@@ -113,7 +113,7 @@ export function LeaderboardScreen() {
   return (
     <StackScreen title={t('mweb.leaderboard.title')} testID="leaderboard-screen">
       <RefreshScrollView flex={1} showsVerticalScrollIndicator={false}>
-        <YStack gap={14} paddingVertical={12}>
+        <YStack gap={16} paddingVertical={12} paddingBottom={24}>
           <LeaderboardCategoryTabs value={category} onChange={setCategory} />
           <LeaderboardYourPoints board={board} isLoading={isLoading} />
           <LeaderboardPeriodToggle value={period} onChange={setPeriod} />

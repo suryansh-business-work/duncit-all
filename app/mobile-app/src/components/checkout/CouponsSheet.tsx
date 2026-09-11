@@ -47,15 +47,15 @@ export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Reado
               backgroundColor="rgba(0,0,0,0.5)"
             />
             <YStack
-              backgroundColor="$background"
-              borderTopLeftRadius={22}
-              borderTopRightRadius={22}
+              backgroundColor="$surface"
+              borderTopLeftRadius={28}
+              borderTopRightRadius={28}
               maxHeight="70%"
               padding={16}
             >
               <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
                 <XStack alignItems="center" justifyContent="space-between" paddingBottom={12}>
-                  <Text fontSize={17} fontWeight="700" color="$color">
+                  <Text fontSize={17} fontWeight="600" color="$color">
                     {t('mweb.checkout.couponsTitle')}
                   </Text>
                   <XStack
@@ -85,11 +85,9 @@ export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Reado
                         onPress={() => onPick(coupon.code)}
                         alignItems="center"
                         gap={12}
-                        padding={12}
-                        borderRadius={12}
-                        borderWidth={1}
-                        borderColor="$primary"
-                        borderStyle="dashed"
+                        padding={14}
+                        borderRadius={16}
+                        backgroundColor="$soft"
                         pressStyle={PRESS_STYLE.control}
                       >
                         <MaterialIcons name="local-offer" size={20} color={success} />

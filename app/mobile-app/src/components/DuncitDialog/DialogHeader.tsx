@@ -28,17 +28,17 @@ export function DialogHeader({ title, subtitle, closeLabel, testID, onClose }: R
   return (
     <XStack
       alignItems="flex-start"
-      gap={8}
-      paddingHorizontal={16}
-      paddingTop={16}
-      paddingBottom={4}
+      gap={12}
+      paddingHorizontal={20}
+      paddingTop={20}
+      paddingBottom={8}
     >
-      <YStack flex={1} gap={2}>
-        <Text fontSize={16.5} fontWeight="800" color="$color">
+      <YStack flex={1} gap={4} paddingTop={onClose ? 6 : 0}>
+        <Text fontSize={18} lineHeight={23} fontWeight="600" color="$color">
           {title}
         </Text>
         {subtitle ? (
-          <Text fontSize={12.5} color="$muted" lineHeight={17}>
+          <Text fontSize={14} color="$muted" lineHeight={19}>
             {subtitle}
           </Text>
         ) : null}
@@ -49,14 +49,15 @@ export function DialogHeader({ title, subtitle, closeLabel, testID, onClose }: R
           role="button"
           aria-label={closeLabel}
           onPress={onClose}
-          width={32}
-          height={32}
+          width={36}
+          height={36}
           alignItems="center"
           justifyContent="center"
-          borderRadius={16}
-          pressStyle={PRESS_STYLE.inline}
+          borderRadius={18}
+          backgroundColor="$soft"
+          pressStyle={PRESS_STYLE.control}
         >
-          <MaterialIcons name="close" size={19} color={ink} />
+          <MaterialIcons name="close" size={20} color={ink} />
         </XStack>
       ) : null}
     </XStack>

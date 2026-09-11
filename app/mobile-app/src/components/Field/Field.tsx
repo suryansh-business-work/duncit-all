@@ -37,7 +37,7 @@ export function Field({
   hint,
   error,
   testID,
-  gap = 6,
+  gap = 8,
   labelAction,
 }: Readonly<FieldProps>) {
   let helper: ReactNode = null;

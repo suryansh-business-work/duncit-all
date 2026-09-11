@@ -12,9 +12,11 @@ import {
 import { AppBackground } from '@/components/AppBackground';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useNotificationPrefsStore } from '@/stores/notification-prefs.store';
 import type { UserNotification } from '@/hooks/useNotifications';
+import { GroupedRow } from './GroupedRow';
 import { NotificationFilterChips } from './NotificationFilterChips';
 import { NotificationRow } from './NotificationRow';
 import { NotificationsHero } from './NotificationsHero';
@@ -81,7 +83,7 @@ export function NotificationsScreen({
         <YStack flex={1} testID="notifications-screen">
           <AppBackground />
           <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
-            <XStack alignItems="center" gap={10} paddingHorizontal={12} paddingVertical={10}>
+            <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={10}>
               <XStack
                 testID="notifications-close"
                 role="button"
@@ -93,12 +95,12 @@ export function NotificationsScreen({
                 justifyContent="center"
                 borderRadius={20}
                 backgroundColor="$surface"
-                pressStyle={PRESS_STYLE.row}
+                pressStyle={PRESS_STYLE.control}
               >
                 <MaterialIcons name="close" size={20} color={color} />
               </XStack>
               <YStack flex={1}>
-                <Text fontSize={22} fontWeight="700" color="$color">
+                <Text fontSize={20} fontWeight="600" color="$color">
                   Notifications
                 </Text>
                 <Text fontSize={12} fontWeight="600" color="$muted">
@@ -119,7 +121,7 @@ export function NotificationsScreen({
                 borderRadius={20}
                 backgroundColor="$surface"
                 opacity={markAllDisabled ? 0.5 : 1}
-                pressStyle={PRESS_STYLE.row}
+                pressStyle={PRESS_STYLE.control}
               >
                 {markAllBusy ? (
                   <Spinner testID="notifications-mark-all-busy" size="small" color={primary} />
@@ -129,38 +131,31 @@ export function NotificationsScreen({
               </XStack>
             </XStack>
 
-            <NotificationsHero
-              total={notifs.length}
-              enabled={notifEnabled}
-              onToggle={setPendingToggle}
-            />
+            <NotificationsHero enabled={notifEnabled} onToggle={setPendingToggle} />
 
             <NotificationFilterChips chips={chips} value={activeFilter} onChange={setFilter} />
 
             <FlatList
               style={{ flex: 1 }}
-              contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24, gap: 8 }}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
               data={visible}
               keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <NotificationRow
-                  item={item}
-                  busy={busyId === item.id || markAllBusy}
-                  onPress={() => onNotifClick(item)}
-                  onAnswered={onRefresh}
-                />
+              renderItem={({ item, index }) => (
+                <GroupedRow index={index} count={visible.length}>
+                  <NotificationRow
+                    item={item}
+                    busy={busyId === item.id || markAllBusy}
+                    onPress={() => onNotifClick(item)}
+                    onAnswered={onRefresh}
+                  />
+                </GroupedRow>
               )}
               ListEmptyComponent={
-                <YStack
-                  padding={24}
-                  borderRadius={16}
-                  backgroundColor="$surface"
-                  alignItems="center"
-                >
+                <SurfaceCard padding={24} alignItems="center">
                   <Text fontSize={14} color="$muted">
                     {emptyText}
                   </Text>
-                </YStack>
+                </SurfaceCard>
               }
             />
           </SafeAreaView>

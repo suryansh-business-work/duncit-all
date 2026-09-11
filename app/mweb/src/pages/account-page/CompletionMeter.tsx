@@ -25,13 +25,14 @@ export default function CompletionMeter({ profile }: Readonly<CompletionMeterPro
         sx={{
           justifyContent: "space-between",
           alignItems: "baseline",
-          mb: 0.5
+          mb: 1
         }}>
-        <Typography variant="body2" sx={{ fontWeight: 700 }}>
+        <Typography variant="body2" sx={{ fontWeight: 600 }}>
           Profile completion
         </Typography>
         <Typography variant="body2" data-testid="profile-completion-value" sx={{
-          color: "text.secondary"
+          color: "text.secondary",
+          fontWeight: 500
         }}>
           {percent}% complete
         </Typography>
@@ -40,7 +41,6 @@ export default function CompletionMeter({ profile }: Readonly<CompletionMeterPro
         variant="determinate"
         value={percent}
         aria-label={t('mweb.account.profileCompletion')}
-        sx={{ height: 8, borderRadius: '8px' }}
       />
     </Box>
   );

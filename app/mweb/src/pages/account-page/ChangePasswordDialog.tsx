@@ -73,7 +73,6 @@ function RequestStep({
         disabled={loading}
         onClick={onSendCode}
         data-testid="change-password-send-code"
-        sx={{ borderRadius: '16px', py: 1.1, fontWeight: 700, textTransform: 'none' }}
       >
         {t('mweb.account.sendCode')}
       </DuncitButton>

@@ -48,17 +48,18 @@ export function HomeFilterSheet({
   showSort = true,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { primary } = useThemeColors();
+  const { color } = useThemeColors();
   const count = activeFilterCount(filters, categoryId);
+  const allLabel = t('mweb.common.all');
 
   // Category chips share the generic row: prepend "All" and toggle on re-tap.
   const categoryOptions = useMemo(
     () =>
       [
-        ['', 'All'] as const,
+        ['', allLabel] as const,
         ...categoryChips.map((c) => [c.id, c.level === 'SUB' ? `# ${c.name}` : c.name] as const),
       ] as readonly (readonly [string, string])[],
-    [categoryChips],
+    [categoryChips, allLabel],
   );
 
   return (
@@ -79,14 +80,14 @@ export function HomeFilterSheet({
           />
           <YStack
             backgroundColor="$background"
-            borderTopLeftRadius={22}
-            borderTopRightRadius={22}
+            borderTopLeftRadius={28}
+            borderTopRightRadius={28}
             maxHeight="82%"
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={17} fontWeight="700" color="$color">
-                  Filters
+                <Text fontSize={17} fontWeight="600" color="$color">
+                  {t('mweb.common.filters')}
                 </Text>
                 <XStack
                   pressStyle={PRESS_STYLE.surface}
@@ -94,14 +95,14 @@ export function HomeFilterSheet({
                   role="button"
                   aria-label={t('mweb.common.close')}
                   onPress={onClose}
-                  width={32}
-                  height={32}
+                  width={40}
+                  height={40}
                   alignItems="center"
                   justifyContent="center"
-                  borderRadius={16}
+                  borderRadius={20}
                   backgroundColor="$surface"
                 >
-                  <MaterialIcons name="close" size={18} color={primary} />
+                  <MaterialIcons name="close" size={20} color={color} />
                 </XStack>
               </XStack>
               <ScrollView paddingHorizontal={16}>
@@ -153,12 +154,11 @@ export function HomeFilterSheet({
                   aria-label={t('mweb.common.resetFilters')}
                   onPress={onReset}
                   flex={1}
-                  height={46}
+                  height={52}
                   alignItems="center"
                   justifyContent="center"
-                  borderRadius={12}
-                  borderWidth={1}
-                  borderColor="$borderColor"
+                  borderRadius={999}
+                  backgroundColor="$soft"
                   opacity={count === 0 ? 0.5 : 1}
                   pressStyle={PRESS_STYLE.control}
                 >
@@ -172,15 +172,15 @@ export function HomeFilterSheet({
                   aria-label={t('mweb.common.applyFilters')}
                   onPress={onClose}
                   flex={1}
-                  height={46}
+                  height={52}
                   alignItems="center"
                   justifyContent="center"
-                  borderRadius={12}
+                  borderRadius={999}
                   backgroundColor="$primary"
-                  pressStyle={PRESS_STYLE.control}
+                  pressStyle={PRESS_STYLE.solid}
                 >
-                  <Text fontSize={14} fontWeight="700" color="$onPrimary">
-                    Done
+                  <Text fontSize={14} fontWeight="600" color="$onPrimary">
+                    {t('mweb.common.done')}
                   </Text>
                 </XStack>
               </XStack>

@@ -25,7 +25,7 @@ interface Props {
  */
 export function AutoPodLocationRow({ labels }: Readonly<Props>) {
   const { cityLabel } = useLocations();
-  const { muted, primary } = useThemeColors();
+  const { primary } = useThemeColors();
   const [open, setOpen] = useState(false);
   const value = cityLabel || labels.allLocations;
 
@@ -34,20 +34,18 @@ export function AutoPodLocationRow({ labels }: Readonly<Props>) {
       <XStack
         testID="auto-pods-location-row"
         alignItems="center"
-        gap={8}
-        paddingHorizontal={12}
+        gap={6}
+        paddingLeft={12}
+        paddingRight={4}
         height={44}
-        borderRadius={12}
+        borderRadius={16}
         borderWidth={1}
         borderColor="$borderColor"
         backgroundColor="$surface"
       >
-        <MaterialIcons name="location-city" size={16} color={muted} />
-        <Text flex={1} fontSize={13} color="$color" numberOfLines={1}>
-          <Text fontSize={13} fontWeight="700" color="$color">
-            {`${labels.locationLabel}: `}
-          </Text>
-          {value}
+        <MaterialIcons name="place" size={16} color={primary} />
+        <Text flex={1} fontSize={13} fontWeight="600" color="$color" numberOfLines={1}>
+          {`${labels.locationLabel}: ${value}`}
         </Text>
         <XStack
           testID="auto-pods-change-location"
@@ -56,14 +54,15 @@ export function AutoPodLocationRow({ labels }: Readonly<Props>) {
           onPress={() => setOpen(true)}
           alignItems="center"
           gap={2}
-          paddingHorizontal={6}
-          height={32}
+          paddingHorizontal={8}
+          height={36}
+          borderRadius={999}
           pressStyle={PRESS_STYLE.row}
         >
-          <Text fontSize={12.5} fontWeight="700" color="$primary">
+          <Text fontSize={13} fontWeight="600" color="$primary">
             {labels.changeLocation}
           </Text>
-          <MaterialIcons name="chevron-right" size={16} color={primary} />
+          <MaterialIcons name="keyboard-arrow-down" size={16} color={primary} />
         </XStack>
       </XStack>
       <LocationDialog open={open} onClose={() => setOpen(false)} />

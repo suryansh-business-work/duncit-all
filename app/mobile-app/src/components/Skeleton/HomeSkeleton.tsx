@@ -23,12 +23,12 @@ export function HomeSkeleton() {
         </XStack>
         <XStack gap={8} paddingHorizontal={16}>
           {Array.from({ length: 4 }, (_, i) => `chip-${i}`).map((key) => (
-            <Skeleton key={key} width={84} height={36} radius={14} />
+            <Skeleton key={key} width={84} height={38} radius={999} />
           ))}
         </XStack>
         <XStack gap={12} paddingHorizontal={16}>
           {Array.from({ length: 2 }, (_, i) => `featured-${i}`).map((key) => (
-            <Skeleton key={key} width={280} height={200} radius={18} />
+            <Skeleton key={key} width={280} height={200} radius={24} />
           ))}
         </XStack>
         <YStack gap={12} paddingHorizontal={16}>

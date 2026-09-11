@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
-import { Alert, Box, CircularProgress, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, TextField } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import SlotPicker from './SlotPicker';
 import { MEETING_SLOTS, type MeetingSlot, type SurveyKind } from './queries';
@@ -90,12 +90,6 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
 
   return (
     <Stack spacing={2}>
-      <Typography variant="body2" sx={{
-        color: "text.secondary"
-      }}>
-        Pick an open slot — our onboarding team will meet you then to take you through the next steps.
-      </Typography>
-
       <SlotPicker slots={slots} value={slot} onChange={setSlot} />
 
       <TextField
@@ -144,7 +138,7 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
         </Alert>
       )}
       {(formError || submitError) && <Alert severity="warning">{formError ?? submitError}</Alert>}
-      <DuncitButton variant="contained" size="large" onClick={submit} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>
+      <DuncitButton variant="contained" size="large" fullWidth onClick={submit} disabled={submitting}>
         {submitting ? 'Booking…' : 'Book this slot'}
       </DuncitButton>
     </Stack>

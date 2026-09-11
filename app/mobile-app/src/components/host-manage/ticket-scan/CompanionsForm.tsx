@@ -109,7 +109,7 @@ export function CompanionsForm({
 
   return (
     <YStack gap={10} testID="scan-companions-form">
-      <Text fontSize={14} fontWeight="700" color="$color">
+      <Text fontSize={15} fontWeight="600" color="$color">
         {t('mweb.hostScan.companionsTitle')}
       </Text>
       <Text fontSize={12} color="$muted">
@@ -145,15 +145,15 @@ export function CompanionsForm({
         aria-label={t('mweb.hostManage.markAttendance')}
         aria-disabled={busy}
         onPress={busy ? undefined : press}
-        height={46}
+        height={48}
         alignItems="center"
         justifyContent="center"
-        borderRadius={12}
+        borderRadius={999}
         backgroundColor="$primary"
         opacity={busy ? 0.7 : 1}
-        pressStyle={PRESS_STYLE.control}
+        pressStyle={PRESS_STYLE.solid}
       >
-        <Text fontSize={14} fontWeight="700" color="$onPrimary">
+        <Text fontSize={14} fontWeight="600" color="$onPrimary">
           {t('mweb.hostScan.companionsSubmit')}
         </Text>
       </XStack>

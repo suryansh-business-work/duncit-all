@@ -59,7 +59,7 @@ export function GoogleDetailsStep({ onSubmit }: Readonly<Props>) {
 
   return (
     <YStack gap={16}>
-      <Text fontSize={13} color="$muted">
+      <Text fontSize={14} color="$muted">
         {labels.detailsSubtitle}
       </Text>
       <WhatsappNumberFields

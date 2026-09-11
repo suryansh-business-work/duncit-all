@@ -5,6 +5,7 @@ import PaymentsIcon from '@mui/icons-material/Payments';
 import { DuncitButton } from '@duncit/buttons';
 import { useDateFormat } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
+import StatCard, { ICON_DISC_SX } from './StatCard';
 
 /** myHostEarningsSummary — lifetime/pending/this-month totals for the host. */
 export interface HostEarningsSummary {
@@ -22,19 +23,6 @@ interface Props {
   summary?: HostEarningsSummary | null;
 }
 
-function StatBox({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <Box sx={{ flex: '1 1 40%', minWidth: 0, p: 1, borderRadius: '16px', bgcolor: 'rgba(255,255,255,0.14)' }}>
-      <Typography variant="caption" sx={{ fontWeight: 600, opacity: 0.9, display: 'block' }} noWrap>
-        {label}
-      </Typography>
-      <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }} noWrap>
-        {value}
-      </Typography>
-    </Box>
-  );
-}
-
 /** Host earnings summary — available wallet balance + next payout, with wallet
  * and withdraw shortcuts (B2-#5), plus the settled-earnings summary from
  * myHostEarningsSummary (Pod Finance Breakdown). */
@@ -45,52 +33,51 @@ export default function EarningsCard({ balance, currency, nextPayoutAt, summary 
   const money = (value: number) => `${symbol}${value.toFixed(2)}`;
 
   return (
-    <Card
-      sx={{
-        borderRadius: '16px',
-        color: 'common.white',
-        background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 60%, #16121f 100%)',
-        boxShadow: '0 18px 42px rgba(245,51,122,0.24)',
-      }}
-    >
-      <CardContent>
-        <Stack direction="row" spacing={1} sx={{
-          alignItems: "center"
-        }}>
-          <PaymentsIcon fontSize="small" />
-          <Typography variant="caption" sx={{ fontWeight: 700, letterSpacing: 1 }}>
-            AVAILABLE BALANCE
-          </Typography>
-        </Stack>
-        <Typography variant="h3" sx={{ fontWeight: 700, mt: 0.5 }}>
-          {currency}
-          {balance.toFixed(2)}
-        </Typography>
-        <Typography variant="caption" sx={{ opacity: 0.9, fontWeight: 700 }}>
-          {nextPayoutAt ? `Next payout ${formatDate(nextPayoutAt)}` : 'Earnings from your hosted pods'}
-        </Typography>
-        {summary && (
-          <Stack direction="row" sx={{ mt: 1.5, flexWrap: 'wrap', gap: 1 }}>
-            <StatBox label={t('mweb.common.lifetimeEarnings')} value={money(summary.lifetime_earnings)} />
-            <StatBox label={t('mweb.common.pendingApproval')} value={money(summary.pending_amount)} />
-            <StatBox label={t('mweb.common.thisMonth')} value={money(summary.this_month_earnings)} />
-            <StatBox label={t('mweb.common.podsCompleted')} value={String(summary.pods_completed)} />
+    <Stack spacing={1.5}>
+      <Card>
+        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+            <Box sx={ICON_DISC_SX}>
+              <PaymentsIcon fontSize="small" />
+            </Box>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography
+                variant="caption"
+                sx={{ display: 'block', color: 'text.secondary', fontWeight: 600 }}
+              >
+                AVAILABLE BALANCE
+              </Typography>
+              <Typography noWrap sx={{ fontSize: '1.75rem', fontWeight: 700, lineHeight: 1.15 }}>
+                {currency}
+                {balance.toFixed(2)}
+              </Typography>
+            </Box>
+            <DuncitButton
+              component={RouterLink}
+              to="/host/wallet"
+              variant="outlined"
+              size="small"
+              startIcon={<AccountBalanceWalletIcon />}
+              sx={{ flexShrink: 0, minHeight: 36 }}
+            >
+              Wallet
+            </DuncitButton>
           </Stack>
-        )}
-        <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-          <DuncitButton
-            component={RouterLink}
-            to="/host/wallet"
-            variant="contained"
-            size="small"
-            startIcon={<AccountBalanceWalletIcon />}
-            sx={{ borderRadius: 999, fontWeight: 700, bgcolor: 'common.white', color: 'primary.main', '&:hover': { bgcolor: 'grey.100' } }}
-          >
-            Wallet
-          </DuncitButton>
-          <Box sx={{ flex: 1 }} />
-        </Stack>
-      </CardContent>
-    </Card>
+          {nextPayoutAt ? (
+            <Typography variant="body2" sx={{ mt: 1.5, color: 'text.secondary' }}>
+              Next payout {formatDate(nextPayoutAt)}
+            </Typography>
+          ) : null}
+        </CardContent>
+      </Card>
+      {summary && (
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1.5 }}>
+          <StatCard label={t('mweb.common.lifetimeEarnings')} value={money(summary.lifetime_earnings)} />
+          <StatCard label={t('mweb.common.pendingApproval')} value={money(summary.pending_amount)} />
+          <StatCard label={t('mweb.common.thisMonth')} value={money(summary.this_month_earnings)} />
+          <StatCard label={t('mweb.common.podsCompleted')} value={String(summary.pods_completed)} />
+        </Box>
+      )}
+    </Stack>
   );
 }

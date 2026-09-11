@@ -1,4 +1,5 @@
 import { Avatar, Box, Chip, Divider, Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -23,7 +24,7 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
   const steps = buildOrderTimeline(order, t);
 
   return (
-    <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '16px', p: 1.5 }}>
+    <Box sx={{ bgcolor: 'action.hover', borderRadius: '16px', p: 1.5 }}>
       <Stack
         direction="row"
         spacing={0.75}
@@ -36,8 +37,13 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
           size="small"
           icon={isShip ? <LocalShippingIcon /> : <StorefrontIcon />}
           label={fulfilmentLabel(order.fulfilment_method, t)}
+          sx={{ bgcolor: 'background.paper' }}
         />
-        <Chip size="small" color="primary" variant="outlined" label={statusLabel(order.fulfilment_status, t)} />
+        <Chip
+          size="small"
+          label={statusLabel(order.fulfilment_status, t)}
+          sx={(theme) => ({ bgcolor: alpha(theme.palette.primary.main, 0.12), color: 'primary.main' })}
+        />
         <Box sx={{ flex: 1 }} />
         <Typography variant="caption" sx={{
           color: "text.secondary"

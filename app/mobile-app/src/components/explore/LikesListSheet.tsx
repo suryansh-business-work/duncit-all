@@ -29,7 +29,7 @@ interface Props {
  * their public profile (explore item 8). */
 export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { color } = useThemeColors();
+  const { color, muted } = useThemeColors();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [likers, setLikers] = useState<Liker[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -93,11 +93,11 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
                 width={44}
                 height={44}
                 borderRadius={22}
-                backgroundColor="$muted"
+                backgroundColor="$soft"
                 alignItems="center"
                 justifyContent="center"
               >
-                <MaterialIcons name="person" size={24} color="#ffffff" />
+                <MaterialIcons name="person" size={24} color={muted} />
               </YStack>
             )}
             <YStack flex={1}>
@@ -137,9 +137,9 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
             right={0}
             bottom={0}
             height="60%"
-            backgroundColor="$background"
-            borderTopLeftRadius={20}
-            borderTopRightRadius={20}
+            backgroundColor="$surface"
+            borderTopLeftRadius={28}
+            borderTopRightRadius={28}
           >
             <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
               <XStack
@@ -149,7 +149,7 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
                 paddingTop={16}
                 paddingBottom={8}
               >
-                <Text fontSize={18} fontWeight="700" color="$color">
+                <Text fontSize={17} fontWeight="600" color="$color">
                   Liked by
                 </Text>
                 <XStack
@@ -158,8 +158,10 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
                   role="button"
                   aria-label={t('mweb.common.close')}
                   onPress={onClose}
-                  width={32}
-                  height={32}
+                  width={40}
+                  height={40}
+                  borderRadius={20}
+                  backgroundColor="$soft"
                   alignItems="center"
                   justifyContent="center"
                 >

@@ -1,6 +1,7 @@
-import { Alert, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Card, CardContent, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
+import SectionHeader from '../SectionHeader';
 import StudioPodRow from './StudioPodRow';
 import StudioPodsFigures from './StudioPodsFigures';
 import type { StudioPod, StudioPodSummary } from './types';
@@ -78,7 +79,7 @@ function StudioPodsBody({
     );
   }
   return (
-    <Stack spacing={1}>
+    <Stack divider={<Divider flexItem />}>
       {pods.map((pod) => (
         <StudioPodRow
           key={pod.id}
@@ -96,6 +97,7 @@ function StudioPodsBody({
 
 interface Props extends RowActions {
   title: string;
+  /** Still accepted from the studios, no longer drawn: the title says it. */
   subtitle: string;
   /** Already-translated word for what the figures cover — Venues or Clubs. */
   scopeLabel: string;
@@ -114,7 +116,6 @@ interface Props extends RowActions {
  */
 export default function StudioPodsSection({
   title,
-  subtitle,
   scopeLabel,
   emptyText,
   pods,
@@ -134,22 +135,10 @@ export default function StudioPodsSection({
   const capped = summary.total > pods.length;
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-      <CardContent>
+    <Card>
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={1.5}>
-          <Stack>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              {title}
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{
-                color: "text.secondary",
-                fontWeight: 700
-              }}>
-              {subtitle}
-            </Typography>
-          </Stack>
+          <SectionHeader title={title} />
 
           {/* Hidden while the first load runs: a strip reading "Total 0 /
               None scheduled" under a spinner states something false. Native

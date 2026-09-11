@@ -32,9 +32,9 @@ export function AttendeeAvatar({ uri, name, size }: Readonly<Props>) {
       borderRadius={radius}
       alignItems="center"
       justifyContent="center"
-      backgroundColor="$surface"
+      backgroundColor="$soft"
     >
-      <Text fontSize={size / 2.6} fontWeight="700" color="$muted">
+      <Text fontSize={size / 2.6} fontWeight="600" color="$muted">
         {(name.slice(0, 1) || '?').toUpperCase()}
       </Text>
     </YStack>

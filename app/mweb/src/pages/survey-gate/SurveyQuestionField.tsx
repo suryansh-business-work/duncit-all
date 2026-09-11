@@ -24,7 +24,7 @@ export default function SurveyQuestionField({ question: q, answer, onChange }: R
       <Typography
         variant="body2"
         sx={{
-          fontWeight: 700,
+          fontWeight: 600,
           mb: 0.5
         }}>{q.label}{q.required ? ' *' : ''}</Typography>
       {q.help && <Typography

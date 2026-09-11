@@ -20,12 +20,12 @@ export default function ContactsInviteBar({ selectedCount, busy, onInviteSelecte
       </Typography>
       <DuncitButton
         variant="contained"
-        size="small"
+        size="large"
+        fullWidth
         disabled={selectedCount === 0}
         loading={busy}
         onClick={onInviteSelected}
         data-testid="contacts-invite-selected"
-        sx={{ alignSelf: 'flex-start' }}
       >
         {t('mweb.contacts.inviteSelected', { vars: { count: selectedCount } })}
       </DuncitButton>

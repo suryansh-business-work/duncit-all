@@ -37,7 +37,13 @@ export default function ProfileAboutSection({ me, onSaved }: Readonly<{ me: any;
         }}>
           Description and links
         </Typography>
-        <DuncitButton size="small" startIcon={<EditIcon />} onClick={() => setEditing(true)}>
+        <DuncitButton
+          size="small"
+          color="inherit"
+          startIcon={<EditIcon />}
+          onClick={() => setEditing(true)}
+          sx={{ bgcolor: 'action.hover', minHeight: 36 }}
+        >
           Edit
         </DuncitButton>
       </Stack>

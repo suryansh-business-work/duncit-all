@@ -1,96 +1,73 @@
 import type { ReactNode } from 'react';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 type IconPosition = 'TOP' | 'BOTTOM' | 'LEFT' | 'RIGHT';
-type FlexDirection = 'column' | 'column-reverse' | 'row' | 'row-reverse';
 
+/** A category's admin icon layout (Category catalogue). Still carried on the
+ * category data; the calm chips draw every icon in the same 24px circle. */
 export interface IconLayout {
   position: IconPosition;
   width: number;
   height: number;
 }
 
-/** Icon position (relative to the label) -> flex direction of the icon+label box. */
-const DIRECTION_BY_POSITION: Record<IconPosition, FlexDirection> = {
-  TOP: 'column',
-  BOTTOM: 'column-reverse',
-  LEFT: 'row',
-  RIGHT: 'row-reverse',
-};
-
-/** Default icon size (px) when a category has no `icon_layout_mweb`. */
-export const DEFAULT_ICON_SIZE = 40;
-
 interface VibeTabProps {
   label: string;
   icon: ReactNode;
   selected: boolean;
   onClick: () => void;
-  /** Per-category icon layout; null keeps the default icon-over-label look. */
-  layout?: IconLayout | null;
 }
 
-/** An icon+label CARD tile for a top-level category — the mock's vibe tile:
- * a rounded card with the icon over the label, selected = primary border and a
- * soft primary fill. The admin icon layout (position/size) still applies. */
-export default function VibeTab({ label, icon, selected, onClick, layout }: Readonly<VibeTabProps>) {
-  const position = layout?.position ?? 'TOP';
-  const direction = DIRECTION_BY_POSITION[position];
-  const isRow = direction === 'row' || direction === 'row-reverse';
+/** A top-level category chip: a surface pill with the category's icon in a
+ * small circle at the left; selected = the green primary fill. Native twin:
+ * VibeCategoryTab. */
+export default function VibeTab({ label, icon, selected, onClick }: Readonly<VibeTabProps>) {
   return (
-    <Stack
+    <Box
       component="button"
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      spacing={0.5}
       sx={{
-        alignItems: "center",
-        justifyContent: "center",
-
-        // Fixed width so every tile in the rail matches (user ask).
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 1,
         flex: '0 0 auto',
-
-        width: 92,
-        px: 1,
-        py: 1.1,
-        border: 1.5,
-        borderStyle: 'solid',
-        borderColor: selected ? 'primary.main' : 'divider',
-        borderRadius: '16px',
-
-        bgcolor: (theme) => {
-          if (!selected) return theme.palette.background.paper;
-          const tint = theme.palette.mode === 'dark' ? 0.16 : 0.07;
-          return `rgba(255,79,115,${tint})`;
-        },
-
+        height: 40,
+        minHeight: 40,
+        pl: 1,
+        pr: 1.75,
+        borderRadius: 999,
+        border: '1px solid',
+        borderColor: selected ? 'primary.main' : 'var(--duncit-card-border)',
+        bgcolor: selected ? 'primary.main' : 'background.paper',
+        color: selected ? 'primary.contrastText' : 'text.primary',
+        font: 'inherit',
         cursor: 'pointer',
-        color: selected ? 'primary.main' : 'text.secondary',
-        transition: 'border-color 160ms ease, background-color 160ms ease',
-        '&:hover': { borderColor: 'primary.main' }
-      }}>
-      <Stack
-        direction={direction}
-        spacing={isRow ? 0.75 : 0.5}
+        transition: 'background-color 160ms ease, color 160ms ease',
+      }}
+    >
+      <Box
+        component="span"
         sx={{
-          alignItems: "center",
-          justifyContent: "center"
-        }}>
-        <Box sx={{ minHeight: isRow ? 'auto' : 46, display: 'grid', placeItems: 'center' }}>{icon}</Box>
-        <Typography
-          variant="caption"
-          sx={{
-            fontWeight: selected ? 700 : 600,
-            lineHeight: 1.15,
-            textAlign: 'center',
-            color: selected ? 'primary.main' : 'text.primary',
-          }}
-          noWrap
-        >
-          {label}
-        </Typography>
-      </Stack>
-    </Stack>
+          width: 24,
+          height: 24,
+          borderRadius: '50%',
+          overflow: 'hidden',
+          flex: '0 0 auto',
+          display: 'grid',
+          placeItems: 'center',
+          bgcolor: selected ? 'background.paper' : 'action.hover',
+          color: 'text.primary',
+          // An admin image fills the circle rather than floating inside it.
+          '& img': { width: '100%', height: '100%', objectFit: 'cover', borderRadius: 0 },
+        }}
+      >
+        {icon}
+      </Box>
+      <Typography component="span" noWrap sx={{ fontSize: 13, fontWeight: 600, lineHeight: 1.2, color: 'inherit' }}>
+        {label}
+      </Typography>
+    </Box>
   );
 }

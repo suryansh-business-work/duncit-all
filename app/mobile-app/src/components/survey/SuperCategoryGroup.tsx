@@ -1,5 +1,6 @@
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, XStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { colorForId, emojiFromIcon, withAlpha } from '@/constants/survey-palette';
 import type { SurveyCategory } from '@/hooks/useSurvey';
 import { SurveyChip } from './SurveyChip';
@@ -24,15 +25,8 @@ export function SuperCategoryGroup({
   const items = categories.flatMap((c) => [c, ...(childrenByParent.get(c.id) ?? [])]);
 
   return (
-    <YStack
-      testID={`group-${superCategory.id}`}
-      gap={12}
-      borderRadius={16}
-      backgroundColor="$surface"
-      padding={16}
-      borderWidth={1.5}
-      borderColor={withAlpha(hue, 0.22)}
-    >
+    // A plain calm card; the group's own hue lives on its label pill and chips.
+    <SurfaceCard testID={`group-${superCategory.id}`} gap={12}>
       <XStack
         alignItems="center"
         gap={6}
@@ -67,6 +61,6 @@ export function SuperCategoryGroup({
           ))}
         </XStack>
       )}
-    </YStack>
+    </SurfaceCard>
   );
 }

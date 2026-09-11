@@ -12,6 +12,8 @@ import {
   Typography,
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
+import { useNavigate } from 'react-router';
+import PageHeader from '../components/PageHeader';
 import { useTranslation } from '../i18n/useTranslation';
 
 const PUBLIC_PLANS = gql`
@@ -42,25 +44,16 @@ interface PublicPlan {
 
 export default function PodPlansPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data, loading, error } = useQuery<{ publicPodPlans: PublicPlan[] }>(
     PUBLIC_PLANS
   );
 
   return (
-    <Container maxWidth="sm" sx={{ py: 3 }}>
-      <Stack spacing={1.5} sx={{ mb: 2 }}>
-        <Typography variant="h5" sx={{
-          fontWeight: 700
-        }}>
-          Pod Plans
-        </Typography>
-        <Typography variant="body2" sx={{
-          color: "text.secondary"
-        }}>
-          Pick the plan that suits the kind of pods you want to host. More tiers
-          are on the way — let us know what you need.
-        </Typography>
-      </Stack>
+    <Container maxWidth="sm" sx={{ py: 2 }}>
+      <Box sx={{ mb: 2.5 }}>
+        <PageHeader title={t('mweb.podPlans.podPlans')} onBack={() => navigate(-1)} />
+      </Box>
 
       {loading && (
         <Stack
@@ -73,10 +66,10 @@ export default function PodPlansPage() {
       )}
       {error && <Alert severity="error">{error.message}</Alert>}
 
-      <Stack spacing={2}>
+      <Stack spacing={1.5}>
         {(data?.publicPodPlans ?? []).map((p) => (
-          <Card key={p.id} variant="outlined">
-            <CardContent>
+          <Card key={p.id}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
               <Stack direction="row" spacing={2} sx={{
                 alignItems: "flex-start"
               }}>
@@ -88,7 +81,7 @@ export default function PodPlansPage() {
                     sx={{
                       width: 56,
                       height: 56,
-                      borderRadius: '16px',
+                      borderRadius: '12px',
                       objectFit: 'cover',
                       flexShrink: 0,
                     }}
@@ -102,8 +95,8 @@ export default function PodPlansPage() {
                       alignItems: "center",
                       flexWrap: "wrap"
                     }}>
-                    <Typography variant="h6" sx={{
-                      fontWeight: 700
+                    <Typography component="h2" sx={{
+                      fontSize: '1rem', fontWeight: 600
                     }}>
                       {p.name}
                     </Typography>
@@ -112,7 +105,7 @@ export default function PodPlansPage() {
                     )}
                   </Stack>
                   {p.price_label && (
-                    <Typography variant="subtitle2" color="primary">
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                       {p.price_label}
                     </Typography>
                   )}
@@ -142,7 +135,7 @@ export default function PodPlansPage() {
                     >
                       <CheckCircleOutlineIcon
                         fontSize="small"
-                        color="primary"
+                        color="secondary"
                       />
                       <Typography variant="body2">{f}</Typography>
                     </Stack>

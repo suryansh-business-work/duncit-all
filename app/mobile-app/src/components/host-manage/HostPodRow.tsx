@@ -1,8 +1,12 @@
-import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
-import { semantic } from '@duncit/auth-tokens';
 
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { PodThumb } from '@/components/host-manage/PodThumb';
+import {
+  ApprovalPill,
+  OverflowButton,
+  TypePill,
+  WarningNote,
+} from '@/components/host-manage/HostRowParts';
 import type { VenueApprovalChip } from '@/utils/venue-approval';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -13,6 +17,10 @@ interface Props {
   when: string;
   zoneName?: string | null;
   typeLabel: string;
+  /** Free pods wear the success-toned pill, paid ones the primary one. */
+  free?: boolean;
+  /** The pod's first still, or undefined for the glyph placeholder. */
+  cover?: string;
   /** Venue-approval chip meta (computed once by the section — rule 26g). */
   approval: VenueApprovalChip | null;
   /** Rejection note shown under a Venue Rejected pod. */
@@ -22,82 +30,61 @@ interface Props {
   onActions: () => void;
 }
 
-/** One hosted pod row — open the pod, or its actions sheet. A venue-rejected pod
- * also shows its status chip + the resubmission note. */
+/** One hosted pod row inside the Your-pods card — cover, title, when/where, the
+ * Paid/Free pill and the actions sheet. A venue-rejected pod also shows its
+ * status chip + the resubmission note. mWeb twin: host-manage-page/HostPodRow. */
 export function HostPodRow({
   id,
   title,
   when,
   zoneName,
   typeLabel,
+  free = false,
+  cover,
   approval,
   rejectedNote,
   onOpen,
   onActions,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { color: ink } = useThemeColors();
   return (
-    <YStack
-      gap={8}
-      padding={12}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
+    <YStack gap={10} paddingHorizontal={16} paddingVertical={14}>
       <XStack alignItems="center" gap={8}>
-        <YStack
+        <XStack
           testID={`host-pod-open-${id}`}
           role="button"
           aria-label={t('mweb.common.openPod')}
           onPress={onOpen}
           flex={1}
-          pressStyle={PRESS_STYLE.control}
-        >
-          <Text fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>
-            {title}
-          </Text>
-          {approval ? (
-            <Text
-              testID={`host-pod-approval-${id}`}
-              fontSize={11.5}
-              fontWeight="700"
-              color={approval.tone === 'error' ? '$danger' : semantic.warning}
-              numberOfLines={1}
-            >
-              {approval.label}
-            </Text>
-          ) : null}
-          <Text fontSize={12} color="$muted" numberOfLines={1}>
-            {when}
-            {zoneName ? ` · ${zoneName}` : ''} · {typeLabel}
-          </Text>
-        </YStack>
-        <XStack
-          testID={`host-pod-actions-${id}`}
-          role="button"
-          aria-label={`Actions for ${title}`}
-          onPress={onActions}
-          width={40}
-          height={40}
           alignItems="center"
-          justifyContent="center"
-          borderRadius={10}
-          borderWidth={1}
-          borderColor="$borderColor"
+          gap={12}
           pressStyle={PRESS_STYLE.row}
         >
-          <MaterialIcons name="more-vert" size={18} color={ink} />
+          <PodThumb uri={cover} />
+          <YStack flex={1} gap={2}>
+            <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
+              {title}
+            </Text>
+            <Text fontSize={12} color="$muted" numberOfLines={1}>
+              {when}
+              {zoneName ? ` · ${zoneName}` : ''}
+            </Text>
+            {approval ? (
+              <YStack paddingTop={4}>
+                <ApprovalPill approval={approval} testID={`host-pod-approval-${id}`} />
+              </YStack>
+            ) : null}
+          </YStack>
         </XStack>
+        <TypePill label={typeLabel} free={free} />
+        <OverflowButton
+          testID={`host-pod-actions-${id}`}
+          label={`Actions for ${title}`}
+          onPress={onActions}
+        />
       </XStack>
       {rejectedNote ? (
-        <XStack testID={`host-pod-rejected-note-${id}`} alignItems="flex-start" gap={6}>
-          <MaterialIcons name="info-outline" size={16} color={semantic.warning} />
-          <Text flex={1} fontSize={12} color="$muted">
-            {rejectedNote}
-          </Text>
-        </XStack>
+        <WarningNote testID={`host-pod-rejected-note-${id}`} text={rejectedNote} />
       ) : null}
     </YStack>
   );

@@ -9,8 +9,9 @@ import {
 } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Divider, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import { DuncitButton } from '@duncit/buttons';
+import { STICKY_BAR_SX } from '../../../components/cart/stickyBarSx';
 import CancellationTierRow from './CancellationTierRow';
 import {
   emptyTier,
@@ -112,7 +113,7 @@ export default function CancellationPolicyForm({ initialValues, saving, error, o
       {rescheduleOnly && <Alert severity="info">{t('venueSettings.policyDisabled')}</Alert>}
 
       <Stack spacing={0.25}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
           {t('venueSettings.bandsTitle')}
         </Typography>
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -127,29 +128,21 @@ export default function CancellationPolicyForm({ initialValues, saving, error, o
         onRemove={tiers.remove}
       />
 
-      <Stack direction="row" spacing={1}>
-        <DuncitButton
-          variant="outlined"
-          size="small"
-          startIcon={<AddIcon />}
-          onClick={() => tiers.append(emptyTier)}
-          disabled={rescheduleOnly}
-          sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}
-        >
-          {t('venueSettings.addBand')}
-        </DuncitButton>
-        <DuncitButton
-          type="submit"
-          variant="contained"
-          size="small"
-          disabled={saving}
-          sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}
-        >
-          {saving ? t('venueSettings.saving') : t('venueSettings.save')}
-        </DuncitButton>
-      </Stack>
+      <DuncitButton
+        variant="outlined"
+        startIcon={<AddRoundedIcon />}
+        onClick={() => tiers.append(emptyTier)}
+        disabled={rescheduleOnly}
+        sx={{ alignSelf: 'flex-start' }}
+      >
+        {t('venueSettings.addBand')}
+      </DuncitButton>
 
       {error && <Alert severity="error">{error}</Alert>}
+
+      <DuncitButton type="submit" variant="contained" size="large" fullWidth disabled={saving} sx={STICKY_BAR_SX}>
+        {saving ? t('venueSettings.saving') : t('venueSettings.save')}
+      </DuncitButton>
     </Stack>
   );
 }

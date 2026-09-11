@@ -1,6 +1,5 @@
 import { Text, XStack } from 'tamagui';
 
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** One selectable delivery channel — the RN stand-in for a checkbox row. */
@@ -9,7 +8,6 @@ export function MediumToggle({
   selected,
   onPress,
 }: Readonly<{ label: string; selected: boolean; onPress: () => void }>) {
-  const { primary, onPrimary } = useThemeColors();
   return (
     <XStack
       testID={`attendance-otp-medium-${label}`}
@@ -18,15 +16,15 @@ export function MediumToggle({
       onPress={onPress}
       alignItems="center"
       justifyContent="center"
-      paddingHorizontal={14}
-      height={34}
+      paddingHorizontal={16}
+      height={38}
       borderRadius={999}
       borderWidth={1}
-      borderColor={selected ? primary : '$borderColor'}
-      backgroundColor={selected ? primary : 'transparent'}
-      pressStyle={PRESS_STYLE.ghost}
+      borderColor={selected ? '$primary' : '$borderColor'}
+      backgroundColor={selected ? '$primary' : '$surface'}
+      pressStyle={PRESS_STYLE.control}
     >
-      <Text fontSize={12.5} fontWeight="700" color={selected ? onPrimary : '$color'}>
+      <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
         {label}
       </Text>
     </XStack>
@@ -49,7 +47,6 @@ export function PillButton({
   variant,
   disabled,
 }: Readonly<PillButtonProps>) {
-  const { primary, onPrimary } = useThemeColors();
   const solid = variant === 'solid';
   return (
     <XStack
@@ -63,11 +60,11 @@ export function PillButton({
       borderRadius={999}
       borderWidth={solid ? 0 : 1}
       borderColor="$borderColor"
-      backgroundColor={solid ? primary : 'transparent'}
+      backgroundColor={solid ? '$primary' : 'transparent'}
       opacity={disabled ? 0.55 : 1}
       pressStyle={PRESS_STYLE.control}
     >
-      <Text fontSize={13.5} fontWeight="800" color={solid ? onPrimary : '$color'}>
+      <Text fontSize={15} fontWeight="600" color={solid ? '$onPrimary' : '$color'}>
         {label}
       </Text>
     </XStack>

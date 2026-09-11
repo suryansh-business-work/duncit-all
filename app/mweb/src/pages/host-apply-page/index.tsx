@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useLazyQuery, useMutation, useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
 import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { DuncitButton } from '@duncit/buttons';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import { DuncitRoundButton } from '@duncit/buttons';
 import CategoryStep, { type CategoryScope } from '../survey-gate/CategoryStep';
 import SurveyStepper, { type SurveyAnswerInput } from '../survey-gate/SurveyStepper';
 import AuthLogo from '../../components/AuthLogo';
@@ -78,32 +78,29 @@ export default function HostApplyPage() {
   };
 
   let heading = t('mweb.hostApply.hostANewCategory');
-  let subtitle = t('mweb.common.tellUsYourCategorySoWe');
   if (step === 'survey') {
     heading = survey?.title || heading;
-    subtitle = t('mweb.hostApply.aFewQuickQuestionsBeforeYou');
   }
 
   return (
     <Box sx={{ maxWidth: 680, mx: 'auto', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}>
-      <Box sx={{ mb: 1 }}>
-        <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => navigate('/host/manage')} size="small">
-          Back
-        </DuncitButton>
-      </Box>
-      <Card variant="outlined" sx={{ borderRadius: '16px', boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 2 }}>
+        <DuncitRoundButton
+          onClick={() => navigate('/host/manage')}
+          aria-label={t('mweb.common.back')}
+          sx={{ width: 40, height: 40, minWidth: 40, minHeight: 40, bgcolor: 'background.paper', color: 'text.primary' }}
+        >
+          <ArrowBackRoundedIcon />
+        </DuncitRoundButton>
+        {step !== 'success' && (
+          <Typography component="h1" noWrap sx={{ flex: 1, minWidth: 0, fontSize: '1.0625rem', fontWeight: 600 }}>
+            {heading}
+          </Typography>
+        )}
+      </Stack>
+      <Card>
         <CardContent>
           <AuthLogo />
-          {step !== 'success' && (
-            <Stack spacing={0.5} sx={{ mb: 1.5 }}>
-              <Typography variant="h6" sx={{
-                fontWeight: 700
-              }}>{heading}</Typography>
-              <Typography variant="body2" sx={{
-                color: "text.secondary"
-              }}>{subtitle}</Typography>
-            </Stack>
-          )}
           {step === 'category' && (
             <CategoryStep
               submitting={resolving || submitting}

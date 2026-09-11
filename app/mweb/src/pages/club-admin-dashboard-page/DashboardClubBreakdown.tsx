@@ -1,6 +1,8 @@
 import { Link as RouterLink } from 'react-router';
 import { Card, CardContent, Link, Skeleton, Stack, Typography } from '@mui/material';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import { formatCount, formatMoney, formatRating, type ClubAdminClubRow } from '@duncit/utils';
+import SectionHeader from '../../components/SectionHeader';
 import FactLine from '../../components/club-admin/FactLine';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -9,32 +11,41 @@ interface RowProps {
   currencySymbol: string;
 }
 
-/** One club's figures inside the selected range; the name opens its pods. */
+/** One club's figures inside the selected range; the row opens its pods. */
 function ClubBreakdownRow({ club, currencySymbol }: Readonly<RowProps>) {
   const { t } = useTranslation();
   return (
-    <Stack spacing={0.5} sx={{ py: 1, borderTop: 1, borderColor: 'divider' }}>
-      <Link
-        component={RouterLink}
-        to={`/clubs/${club.club_id}/pods`}
-        underline="hover"
-        variant="subtitle2"
-        sx={{ fontWeight: 700 }}
-      >
-        {club.club_name}
-      </Link>
-      <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1.25 }}>
-        <FactLine value={formatCount(club.total_pods)} label={t('clubAdmin.dashboard.column.totalPods')} />
-        <FactLine value={formatCount(club.upcoming_pods)} label={t('clubAdmin.clubs.upcoming')} />
-        <FactLine value={formatCount(club.completed_pods)} label={t('clubAdmin.podStatus.completed')} />
-        <FactLine value={formatCount(club.followers)} label={t('clubAdmin.clubs.followers')} />
-        <FactLine value={formatRating(club.rating)} label={t('clubAdmin.dashboard.column.rating')} />
-        <FactLine
-          value={formatMoney(club.revenue, { symbol: currencySymbol })}
-          label={t('clubAdmin.dashboard.column.revenue')}
-        />
+    <Link
+      component={RouterLink}
+      to={`/clubs/${club.club_id}/pods`}
+      underline="none"
+      color="inherit"
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 1,
+        py: 1.75,
+        '& + &': { borderTop: 1, borderColor: 'divider' },
+      }}
+    >
+      <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+        <Typography noWrap sx={{ fontSize: '1rem', fontWeight: 600 }}>
+          {club.club_name}
+        </Typography>
+        <Stack direction="row" sx={{ flexWrap: 'wrap', columnGap: 1.25, rowGap: 0.25 }}>
+          <FactLine value={formatCount(club.total_pods)} label={t('clubAdmin.dashboard.column.totalPods')} />
+          <FactLine value={formatCount(club.upcoming_pods)} label={t('clubAdmin.clubs.upcoming')} />
+          <FactLine value={formatCount(club.completed_pods)} label={t('clubAdmin.podStatus.completed')} />
+          <FactLine value={formatCount(club.followers)} label={t('clubAdmin.clubs.followers')} />
+          <FactLine value={formatRating(club.rating)} label={t('clubAdmin.dashboard.column.rating')} />
+          <FactLine
+            value={formatMoney(club.revenue, { symbol: currencySymbol })}
+            label={t('clubAdmin.dashboard.column.revenue')}
+          />
+        </Stack>
       </Stack>
-    </Stack>
+      <ChevronRightRoundedIcon sx={{ color: 'text.secondary', flexShrink: 0 }} />
+    </Link>
   );
 }
 
@@ -46,12 +57,12 @@ interface Props {
   loading: boolean;
 }
 
-/** The per-club breakdown — every club the admin runs, with its own figures. */
+/** The per-club breakdown — every club the admin runs, one row each, in one card. */
 export default function DashboardClubBreakdown({ clubs, currencySymbol, loading }: Readonly<Props>) {
   const { t } = useTranslation();
 
   let body = (
-    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+    <Typography variant="body2" sx={{ color: 'text.secondary', py: 1 }}>
       {t('clubAdmin.dashboard.noClubs')}
     </Typography>
   );
@@ -59,7 +70,7 @@ export default function DashboardClubBreakdown({ clubs, currencySymbol, loading 
     body = (
       <Stack spacing={1}>
         {SKELETON_KEYS.map((key) => (
-          <Skeleton key={key} variant="rounded" height={56} />
+          <Skeleton key={key} variant="rounded" height={56} sx={{ borderRadius: '14px' }} />
         ))}
       </Stack>
     );
@@ -74,13 +85,11 @@ export default function DashboardClubBreakdown({ clubs, currencySymbol, loading 
   }
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-      <CardContent>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-          {t('clubAdmin.dashboard.perClubBreakdown')}
-        </Typography>
-        {body}
-      </CardContent>
-    </Card>
+    <Stack spacing={1.5}>
+      <SectionHeader title={t('clubAdmin.dashboard.perClubBreakdown')} />
+      <Card>
+        <CardContent sx={{ px: 2, py: 1, '&:last-child': { pb: 1 } }}>{body}</CardContent>
+      </Card>
+    </Stack>
   );
 }

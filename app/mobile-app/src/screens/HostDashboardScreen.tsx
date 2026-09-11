@@ -7,6 +7,8 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { DetailSkeleton } from '@/components/Skeleton';
+import { SurfaceCard } from '@/components/SurfaceCard';
+import { StatTile } from '@/components/studio/StatTile';
 import { EarningsSummaryTiles } from '@/components/earnings/EarningsSummaryTiles';
 import { HostInsightsSection } from '@/components/host-manage/host-insights';
 import { useHostDashboard, type HostDashboardStats } from '@/hooks/useHostDashboard';
@@ -33,55 +35,51 @@ const BAND_COLOR: Record<string, string> = {
   RED: semantic.error,
 };
 
-/** One dashboard stat tile. */
-function StatCard({ value, label }: Readonly<{ value: number; label: string }>) {
+/** The 40px disc a dashboard icon sits in — accent glyph on the soft fill. */
+function IconDisc({ icon }: Readonly<{ icon: IconName }>) {
+  const { accent } = useThemeColors();
   return (
     <YStack
-      flex={1}
-      padding={12}
-      borderRadius={14}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
+      width={40}
+      height={40}
+      borderRadius={999}
+      alignItems="center"
+      justifyContent="center"
+      backgroundColor="$soft"
     >
-      <Text fontSize={20} fontWeight="700" color="$color">
-        {value}
-      </Text>
-      <Text fontSize={12} fontWeight="700" color="$muted">
-        {label}
-      </Text>
+      <MaterialIcons name={icon} size={20} color={accent} />
     </YStack>
   );
 }
 
-/** One quick-action button. */
+/** One quick-action tile — two to a row. */
 function QuickAction({
   label,
   icon,
   onPress,
 }: Readonly<{ label: string; icon: IconName; onPress: () => void }>) {
-  const { primary } = useThemeColors();
   return (
-    <YStack
+    <XStack
       testID={`host-action-${label.replace(/\s+/g, '-').toLowerCase()}`}
       role="button"
       aria-label={label}
       onPress={onPress}
       flex={1}
       minWidth={140}
-      gap={6}
+      alignItems="center"
+      gap={12}
       padding={14}
-      borderRadius={14}
+      borderRadius={24}
       borderWidth={1}
-      borderColor="$borderColor"
+      borderColor="$cardBorder"
       backgroundColor="$surface"
-      pressStyle={PRESS_STYLE.control}
+      pressStyle={PRESS_STYLE.surface}
     >
-      <MaterialIcons name={icon} size={22} color={primary} />
-      <Text fontSize={13} fontWeight="700" color="$color">
+      <IconDisc icon={icon} />
+      <Text flex={1} fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
         {label}
       </Text>
-    </YStack>
+    </XStack>
   );
 }
 
@@ -111,35 +109,31 @@ export function HostDashboardScreen() {
 
   return (
     <StackScreen header title={t('mweb.hostDashboard.dashboard')} testID="host-dashboard-screen">
-      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40 }}>
-        <YStack
-          padding={18}
-          borderRadius={20}
-          backgroundColor="$primary"
-          gap={4}
-          testID="host-earnings"
-        >
-          <Text fontSize={12} fontWeight="700" color="$onPrimary" opacity={0.9}>
-            AVAILABLE BALANCE
-          </Text>
-          <Text fontSize={30} fontWeight="700" color="$onPrimary">
-            {currency}
-            {(wallet?.balance ?? 0).toFixed(2)}
-          </Text>
-          <Text fontSize={12} fontWeight="700" color="$onPrimary" opacity={0.85}>
-            {me?.full_name ? `Welcome back, ${me.full_name}` : 'Earnings from your hosted pods'}
-          </Text>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 20, paddingBottom: 40 }}>
+        <YStack gap={12}>
+          <SurfaceCard flexDirection="row" alignItems="center" gap={12} testID="host-earnings">
+            <IconDisc icon="payments" />
+            <YStack flex={1}>
+              <Text fontSize={12} fontWeight="600" color="$muted">
+                AVAILABLE BALANCE
+              </Text>
+              <Text fontSize={28} fontWeight="700" color="$color" numberOfLines={1}>
+                {currency}
+                {(wallet?.balance ?? 0).toFixed(2)}
+              </Text>
+            </YStack>
+          </SurfaceCard>
+
+          {earnings ? <EarningsSummaryTiles summary={earnings} /> : null}
         </YStack>
 
-        {earnings ? <EarningsSummaryTiles summary={earnings} /> : null}
-
-        <XStack gap={10}>
+        <XStack gap={12}>
           {statTiles(stats, t).map((tile) => (
-            <StatCard key={tile.label} value={tile.value} label={tile.label} />
+            <StatTile key={tile.label} value={tile.value} label={tile.label} size="lg" />
           ))}
         </XStack>
 
-        <XStack flexWrap="wrap" gap={10}>
+        <XStack flexWrap="wrap" gap={12}>
           {quick(t).map((action) => (
             <QuickAction
               key={action.label}
@@ -161,32 +155,27 @@ export function HostDashboardScreen() {
             alignItems="center"
             gap={12}
             padding={16}
-            borderRadius={16}
+            borderRadius={24}
             borderWidth={1}
-            borderColor="$borderColor"
+            borderColor="$cardBorder"
             backgroundColor="$surface"
-            pressStyle={PRESS_STYLE.control}
+            pressStyle={PRESS_STYLE.surface}
           >
             <YStack
-              width={44}
-              height={44}
-              borderRadius={22}
+              width={48}
+              height={48}
+              borderRadius={999}
               alignItems="center"
               justifyContent="center"
               backgroundColor={BAND_COLOR[health.band]}
             >
-              <Text fontSize={14} fontWeight="700" color="$onPrimary">
+              <Text fontSize={16} fontWeight="700" color="$onPrimary">
                 {health.total_score}
               </Text>
             </YStack>
-            <YStack flex={1}>
-              <Text fontSize={14.5} fontWeight="700" color="$color">
-                Profile health
-              </Text>
-              <Text fontSize={12.5} color="$muted">
-                Keep your profile + verification up to date to rank higher.
-              </Text>
-            </YStack>
+            <Text flex={1} fontSize={16} fontWeight="600" color="$color">
+              {t('mweb.hostDashboard.profileHealth')}
+            </Text>
             <MaterialIcons name="chevron-right" size={22} color={muted} />
           </XStack>
         ) : null}

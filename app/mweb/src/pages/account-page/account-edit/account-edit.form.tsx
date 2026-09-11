@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Stack, Typography } from '@mui/material';
-import { DuncitButton } from '@duncit/buttons';
 import {
   contactDetailsComplete,
   usernameBlocksSave,
@@ -14,6 +13,7 @@ import AddressFields, { type AddressFieldNames } from '../../../forms/components
 import { UsernameField } from '../username-field';
 import DobDateField from '../../../components/DobDateField';
 import LocationSelect from './LocationSelect';
+import AccountEditActions from './AccountEditActions';
 import { ContactSection } from '../contact-change';
 import { makeAccountEditSchema, type AccountEditValues } from './account-edit.types';
 import { useDateFormat, useMinSignupAge } from '../../../utils/dateFormat';
@@ -167,14 +167,7 @@ export default function AccountEditForm({
         />
         <DobDateField control={control} minAge={minAge} />
         <LocationSelect control={control} setValue={setValue} />
-        <Typography
-          variant="overline"
-          sx={{
-            color: "text.secondary",
-            fontWeight: 700
-          }}>
-          Main address
-        </Typography>
+        <Typography sx={{ fontSize: 15, fontWeight: 600, pt: 1 }}>Main address</Typography>
         <AddressFields
           control={control}
           names={ADDRESS_NAMES}
@@ -182,25 +175,12 @@ export default function AccountEditForm({
           shrinkLabels
           pincodeHint="6-digit PIN code"
         />
-        <Stack direction="row" spacing={1}>
-          <DuncitButton
-            type="button"
-            variant="outlined"
-            color="inherit"
-            onClick={discard}
-            disabled={loading || !isDirty}
-            data-testid="account-edit-discard"
-          >
-            Discard changes
-          </DuncitButton>
-          <DuncitButton
-            type="submit"
-            variant="contained"
-            disabled={loading || !isDirty || !isValid || handleBlocked || contactsIncomplete}
-          >
-            {loading ? 'Saving…' : 'Save'}
-          </DuncitButton>
-        </Stack>
+        <AccountEditActions
+          loading={loading}
+          canDiscard={isDirty}
+          canSave={isDirty && isValid && !handleBlocked && !contactsIncomplete}
+          onDiscard={discard}
+        />
       </Stack>
     </form>
   );

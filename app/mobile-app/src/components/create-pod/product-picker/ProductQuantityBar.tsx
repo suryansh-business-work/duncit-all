@@ -25,10 +25,9 @@ const stepperBox = {
   height: 36,
   alignItems: 'center',
   justifyContent: 'center',
-  borderRadius: 10,
-  borderWidth: 1,
-  borderColor: '$borderColor',
-  pressStyle: PRESS_STYLE.row,
+  borderRadius: 999,
+  backgroundColor: '$soft',
+  pressStyle: PRESS_STYLE.control,
 } as const;
 
 interface StepperButtonProps {
@@ -89,18 +88,18 @@ export function ProductQuantityBar({
 
   return (
     <YStack
-      gap={10}
-      padding={14}
+      gap={12}
+      padding={16}
       borderTopWidth={1}
       borderTopColor="$borderColor"
-      backgroundColor="$background"
+      backgroundColor="$surface"
     >
       {product ? (
         <XStack alignItems="center" justifyContent="space-between" gap={8}>
           <Text
             testID="product-picked-name"
-            fontSize={13.5}
-            fontWeight="700"
+            fontSize={14}
+            fontWeight="600"
             color="$color"
             flex={1}
             numberOfLines={1}
@@ -172,14 +171,14 @@ export function ProductQuantityBar({
         role="button"
         aria-label={t('podProduct.addToPod')}
         onPress={onAdd}
-        height={46}
-        borderRadius={12}
+        height={52}
+        borderRadius={999}
         alignItems="center"
         justifyContent="center"
         backgroundColor={product ? '$primary' : muted}
-        pressStyle={PRESS_STYLE.control}
+        pressStyle={PRESS_STYLE.solid}
       >
-        <Text fontSize={14.5} fontWeight="700" color="$onPrimary">
+        <Text fontSize={16} fontWeight="600" color="$onPrimary">
           {t('podProduct.addToPod')}
         </Text>
       </XStack>

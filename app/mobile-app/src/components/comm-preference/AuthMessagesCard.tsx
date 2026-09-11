@@ -1,6 +1,5 @@
 import { ActivityIndicator, Switch } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 import {
   authMessageCardState,
   buildCommPreferenceLabels,
@@ -8,6 +7,8 @@ import {
   type CommChannel,
 } from '@duncit/utils';
 
+import { IconDisc } from '@/components/account/IconDisc';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useCommPreference } from '@/hooks/useCommPreference';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -32,7 +33,7 @@ interface Props {
  */
 export function AuthMessagesCard({ channel }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { color, primary, danger } = useThemeColors();
+  const { primary, danger } = useThemeColors();
   const labels = buildCommPreferenceLabels(t);
   const state = useCommPreference();
   const row = findCommChannel(state.preference?.channels, channel);
@@ -52,21 +53,13 @@ export function AuthMessagesCard({ channel }: Readonly<Props>) {
         </Text>
       ) : null}
 
-      <XStack
-        padding={16}
-        borderRadius={18}
-        backgroundColor="$surface"
-        borderWidth={1}
-        borderColor="$borderColor"
-        alignItems="flex-start"
-        gap={12}
-      >
-        <MaterialIcons name="shield" size={20} color={color} />
+      <SurfaceCard flexDirection="row" alignItems="flex-start" gap={16}>
+        <IconDisc icon="shield" />
         <YStack flex={1} gap={2}>
-          <Text fontSize={14.5} fontWeight="700" color="$color">
+          <Text fontSize={15} fontWeight="500" color="$color">
             {card.title}
           </Text>
-          <Text fontSize={12.5} color="$muted">
+          <Text fontSize={13} color="$muted">
             {card.body}
           </Text>
           <Text fontSize={12} color="$muted">
@@ -90,7 +83,7 @@ export function AuthMessagesCard({ channel }: Readonly<Props>) {
             trackColor={{ true: primary }}
           />
         ) : null}
-      </XStack>
+      </SurfaceCard>
     </YStack>
   );
 }

@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { Alert, Stack } from '@mui/material';
-import GavelIcon from '@mui/icons-material/Gavel';
+import { Alert, Paper, Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import {
   GRIEVANCE_OFFICER_SDL,
@@ -15,6 +14,7 @@ import SupportShell from './SupportShell';
 import GrievanceOfficerCard from './GrievanceOfficerCard';
 import { MY_UNIFIED_SUPPORT_TICKETS } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
+import { SURFACE_SX } from '../../theme';
 import GrievanceForm, { GrievanceEscalationNotice, type GrievanceValues } from '../../forms/grievance';
 
 const SUBMIT_GRIEVANCE = gql(SUBMIT_GRIEVANCE_SDL);
@@ -62,12 +62,7 @@ export default function GrievancePage() {
   };
 
   return (
-    <SupportShell
-      title={t('grievance.title')}
-      subtitle={t('grievance.subtitle')}
-      icon={<GavelIcon />}
-      backTo="/support"
-    >
+    <SupportShell title={t('grievance.title')} backTo="/support">
       <Stack spacing={2}>
         {sent ? (
           <>
@@ -78,19 +73,21 @@ export default function GrievancePage() {
                 {t('grievance.referenceLabel')}: <strong>{sent.grievance_no}</strong>
               </div>
             </Alert>
-            <DuncitButton variant="outlined" onClick={() => setSent(null)}>
+            <DuncitButton variant="outlined" size="large" onClick={() => setSent(null)}>
               {t('grievance.raiseAnother')}
             </DuncitButton>
           </>
         ) : (
           <>
             <GrievanceEscalationNotice />
-            <GrievanceForm
-              loading={loading}
-              tickets={tickets}
-              ticketsLoading={ticketsLoading}
-              onSubmit={onSubmit}
-            />
+            <Paper sx={{ ...SURFACE_SX, p: 2 }}>
+              <GrievanceForm
+                loading={loading}
+                tickets={tickets}
+                ticketsLoading={ticketsLoading}
+                onSubmit={onSubmit}
+              />
+            </Paper>
           </>
         )}
         <GrievanceOfficerCard officer={data?.grievanceOfficer} />

@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { Alert, Box, Chip, Paper, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Chip, Paper, Stack, TextField, Typography, alpha } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { DuncitButton } from '@duncit/buttons';
 import type { SupportPodOption } from './queries';
 import { MY_ACTIVE_SOS, RAISE_SOS } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
+import { SURFACE_SX } from '../../theme';
 
 interface Props {
   selected: SupportPodOption | null;
@@ -76,15 +77,7 @@ export default function SosContent({ selected }: Readonly<Props>) {
 
   if (active) {
     return (
-      <Paper
-        variant="outlined"
-        sx={{
-          p: 2.5,
-          borderRadius: '16px',
-          borderColor: 'rgba(76,175,80,0.4)',
-          bgcolor: 'rgba(76,175,80,0.08)',
-        }}
-      >
+      <Paper sx={{ ...SURFACE_SX, p: 3 }}>
         <Stack
           spacing={1.5}
           sx={{
@@ -92,14 +85,13 @@ export default function SosContent({ selected }: Readonly<Props>) {
             textAlign: "center"
           }}>
           <CheckCircleIcon color="success" sx={{ fontSize: 48 }} />
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          <Typography sx={{ fontSize: '1rem', fontWeight: 600 }}>
             SOS sent. Help is on the way.
           </Typography>
           <Chip
             size="small"
             color={active.status === 'ACKNOWLEDGED' ? 'success' : 'warning'}
             label={active.status === 'ACKNOWLEDGED' ? 'Acknowledged by team' : 'Awaiting response'}
-            sx={{ fontWeight: 600 }}
           />
           <Typography variant="caption" sx={{
             color: "text.secondary"
@@ -113,21 +105,19 @@ export default function SosContent({ selected }: Readonly<Props>) {
 
   return (
     <Stack spacing={2}>
-      <Paper
-        variant="outlined"
+      <Box
         sx={{
           p: 2,
-          borderRadius: '16px',
-          borderColor: 'rgba(244,67,54,0.3)',
-          bgcolor: 'rgba(244,67,54,0.08)',
+          borderRadius: '18px',
+          bgcolor: (theme) => alpha(theme.palette.error.main, 0.12),
         }}
       >
-        <Stack direction="row" spacing={1.25} sx={{
+        <Stack direction="row" spacing={1.5} sx={{
           alignItems: "flex-start"
         }}>
           <WarningAmberIcon color="error" />
           <Box>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
               Only tap SOS in a real emergency
             </Typography>
             <Typography variant="caption" sx={{
@@ -137,7 +127,7 @@ export default function SosContent({ selected }: Readonly<Props>) {
             </Typography>
           </Box>
         </Stack>
-      </Paper>
+      </Box>
 
       <TextField
         label={t('mweb.common.quickNoteOptional')}
@@ -166,7 +156,7 @@ export default function SosContent({ selected }: Readonly<Props>) {
         size="large"
         disabled={!selected || loading}
         onClick={handleRaise}
-        sx={{ py: 1.75, borderRadius: 99, fontWeight: 700, letterSpacing: 1 }}
+        sx={{ letterSpacing: 1 }}
       >
         {loading ? 'Sending SOS…' : 'SEND SOS'}
       </DuncitButton>

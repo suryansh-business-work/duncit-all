@@ -41,11 +41,8 @@ export const ContactRow = memo(function ContactRow({
       testID={`contact-row-${profile.user_id}`}
       alignItems="center"
       gap={12}
-      padding={12}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
+      paddingHorizontal={16}
+      paddingVertical={12}
     >
       <XStack
         testID={`contact-open-${profile.user_id}`}
@@ -71,7 +68,7 @@ export const ContactRow = memo(function ContactRow({
             alignItems="center"
             justifyContent="center"
           >
-            <Text fontSize={16} fontWeight="700" color="$onPrimary">
+            <Text fontSize={16} fontWeight="600" color="$onPrimary">
               {initial}
             </Text>
           </YStack>
@@ -84,18 +81,18 @@ export const ContactRow = memo(function ContactRow({
             {row.is_nearby ? (
               <XStack
                 paddingHorizontal={8}
-                paddingVertical={2}
+                height={22}
+                alignItems="center"
                 borderRadius={999}
-                borderWidth={1}
-                borderColor="$primary"
+                backgroundColor="$soft"
               >
-                <Text fontSize={10.5} fontWeight="700" color="$primary">
+                <Text fontSize={11} fontWeight="600" color="$accent">
                   {t('mweb.contacts.nearbyBadge')}
                 </Text>
               </XStack>
             ) : null}
           </XStack>
-          <Text fontSize={12.5} color="$muted" numberOfLines={1}>
+          <Text fontSize={13} color="$muted" numberOfLines={1}>
             {[`@${profile.username}`, savedAs].filter(Boolean).join(' · ')}
           </Text>
         </YStack>

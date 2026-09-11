@@ -11,8 +11,13 @@ import {
 } from '@mui/material';
 import { useTheme, type SxProps, type Theme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
-import { DuncitIconButton } from '@duncit/buttons';
+import { DuncitRoundButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
+import { RADIUS } from '../theme';
+
+/** A plain-string title reads at the dialog title's 18/600; a caller's own
+ * Typography keeps its variant. */
+const TITLE_TEXT_SX = { fontSize: '1.125rem', fontWeight: 600, lineHeight: 1.3 } as const;
 
 interface Props {
   open: boolean;
@@ -73,8 +78,8 @@ export default function ResponsiveDialog({
         slotProps={{
           paper: {
             sx: mergeSx({
-              borderTopLeftRadius: '16px',
-              borderTopRightRadius: '16px',
+              borderTopLeftRadius: `${RADIUS.dialog}px`,
+              borderTopRightRadius: `${RADIUS.dialog}px`,
               maxHeight: sheetMaxHeight,
               display: 'flex',
               flexDirection: 'column',
@@ -104,32 +109,32 @@ export default function ResponsiveDialog({
         {title && (
           <Stack
             direction="row"
+            spacing={1.5}
             sx={{
               alignItems: "center",
               justifyContent: "space-between",
-              px: 2,
-              pt: 0.5,
-              pb: 0.5,
+              px: 2.5,
+              pt: 1,
+              pb: 1,
               flex: '0 0 auto'
             }}>
-            <Box sx={{ minWidth: 0, flex: 1 }}>{title}</Box>
-            <DuncitIconButton size="small" onClick={onClose} aria-label={t('mweb.common.close')}>
-              <CloseIcon fontSize="small" />
-            </DuncitIconButton>
+            <Box sx={{ minWidth: 0, flex: 1, ...TITLE_TEXT_SX }}>{title}</Box>
+            <DuncitRoundButton tone="surface" onClick={onClose} aria-label={t('mweb.common.close')}>
+              <CloseIcon />
+            </DuncitRoundButton>
           </Stack>
         )}
-        <Box sx={mergeSx({ flex: 1, overflowY: 'auto', px: 2, pt: 0.5, pb: 1 }, contentSx)}>{children}</Box>
+        <Box sx={mergeSx({ flex: 1, overflowY: 'auto', px: 2.5, pt: 0.5, pb: 1 }, contentSx)}>{children}</Box>
         {actions && (
           <Box
             sx={mergeSx({
               flex: '0 0 auto',
-              px: 2,
-              py: 0.75,
-              borderTop: 1,
-              borderColor: 'divider',
+              px: 2.5,
+              pt: 1,
+              pb: 2.5,
               display: 'flex',
               justifyContent: 'flex-end',
-              gap: 1,
+              gap: 1.5,
             }, actionsSx)}
           >
             {actions}
@@ -144,20 +149,20 @@ export default function ResponsiveDialog({
       paper: { sx: paperSx }
     }}>
       {title && (
-        <DialogTitle sx={{ pr: 6 }}>
+        <DialogTitle sx={{ pr: 8, ...TITLE_TEXT_SX }}>
           {title}
-          <DuncitIconButton
+          <DuncitRoundButton
+            tone="surface"
             onClick={onClose}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-            size="small"
+            sx={{ position: 'absolute', right: 16, top: 14 }}
             aria-label={t('mweb.common.close')}
           >
-            <CloseIcon fontSize="small" />
-          </DuncitIconButton>
+            <CloseIcon />
+          </DuncitRoundButton>
         </DialogTitle>
       )}
-      <DialogContent dividers={!!actions} sx={mergeSx({ py: 1.5 }, contentSx)}>{children}</DialogContent>
-      {actions && <DialogActions sx={actionsSx}>{actions}</DialogActions>}
+      <DialogContent sx={mergeSx({ py: 1.5 }, contentSx)}>{children}</DialogContent>
+      {actions && <DialogActions sx={mergeSx({ px: 3, pb: 2.5 }, actionsSx)}>{actions}</DialogActions>}
     </Dialog>
   );
 }

@@ -33,16 +33,17 @@ export interface FieldLabelProps {
 }
 
 /**
- * The label line every mobile field renders — the label text followed by an
- * optional red required `*`. Centralises the required marker (rule 34) so bespoke
- * controls (chip lists, media picker, selectors, date pickers) match the plain
- * text fields; the marker always sits on the label, never on the input.
+ * The label line every mobile field renders — the label text (sentence case,
+ * 13/600) followed by an optional red required `*`. Centralises the required
+ * marker (rule 34) so bespoke controls (chip lists, media picker, selectors,
+ * date pickers) match the plain text fields; the marker always sits on the
+ * label, never on the input.
  */
 export function FieldLabel({ label, required, testID }: Readonly<FieldLabelProps>) {
   return (
     <Text
-      fontSize={14}
-      fontWeight="500"
+      fontSize={13}
+      fontWeight="600"
       color="$color"
       testID={testID ? `${testID}-label` : undefined}
     >

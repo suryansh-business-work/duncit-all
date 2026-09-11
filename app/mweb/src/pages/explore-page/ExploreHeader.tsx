@@ -1,6 +1,7 @@
-import { Box, Badge, Chip, Stack, Typography } from '@mui/material';
-import TuneIcon from '@mui/icons-material/Tune';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import { Badge, Stack, Typography } from '@mui/material';
+import { alpha, type Theme } from '@mui/material/styles';
+import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
+import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
 import { DuncitIconButton } from '@duncit/buttons';
 import type { ExploreFilters } from './exploreFilters';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -14,7 +15,19 @@ interface ExploreHeaderProps {
   onRefresh: () => void;
 }
 
-const HEADER_BTN_SX = { width: 40, height: 40, bgcolor: 'rgba(0,0,0,0.42)', color: '#fff', backdropFilter: 'blur(8px)' } as const;
+/** The dark translucent disc every control over the reel sits on — a black
+ * scrim over media, legible on any frame in either theme. */
+const scrim = (theme: Theme) => alpha(theme.palette.common.black, 0.42);
+
+const HEADER_BTN_SX = (theme: Theme) => ({
+  width: 40,
+  height: 40,
+  minHeight: 40,
+  bgcolor: scrim(theme),
+  color: 'common.white',
+  backdropFilter: 'blur(8px)',
+  '&:hover': { bgcolor: alpha(theme.palette.common.black, 0.55) },
+});
 
 export default function ExploreHeader({
   activeCount,
@@ -24,30 +37,35 @@ export default function ExploreHeader({
 }: Readonly<ExploreHeaderProps>) {
   const { t } = useTranslation();
   return (
-    <Stack spacing={1.1} sx={{ position: 'absolute', top: 10, left: 10, right: 10, zIndex: 3 }}>
-      <Stack direction="row" spacing={1} sx={{
-        alignItems: "center"
-      }}>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Stack direction="row" spacing={0.75} sx={{
-            alignItems: "center"
-          }}>
-            <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700, lineHeight: 1 }}>
-              Explore
-            </Typography>
-            <Chip
-              size="small"
-              label={`${resultCount} live`}
-              sx={{ height: 22, bgcolor: 'rgba(16,185,129,0.22)', color: '#7cf8ad', fontWeight: 700 }}
-            />
-          </Stack>
-        </Box>
+    <Stack
+      direction="row"
+      spacing={1}
+      sx={{ position: 'absolute', top: 12, left: 12, right: 12, zIndex: 3, alignItems: 'center' }}
+    >
+      {/* The live count is the only line the header keeps — the tab bar
+          already says this is Explore. */}
+      <Typography
+        sx={(theme) => ({
+          px: 1.5,
+          py: 0.75,
+          borderRadius: 999,
+          bgcolor: scrim(theme),
+          backdropFilter: 'blur(8px)',
+          color: 'common.white',
+          fontSize: '0.75rem',
+          fontWeight: 600,
+          lineHeight: 1.2,
+        })}
+      >
+        {`${resultCount} live`}
+      </Typography>
+      <Stack direction="row" spacing={1} sx={{ flex: 1, justifyContent: 'flex-end' }}>
         <DuncitIconButton onClick={onRefresh} sx={HEADER_BTN_SX} aria-label={t('mweb.explore.refreshFeed')}>
-          <RefreshIcon fontSize="small" />
+          <RefreshRoundedIcon fontSize="small" />
         </DuncitIconButton>
         <DuncitIconButton onClick={onOpenFilters} sx={HEADER_BTN_SX} aria-label={t('mweb.explore.openFilters')}>
-          <Badge badgeContent={activeCount} color="primary" overlap="circular">
-            <TuneIcon fontSize="small" />
+          <Badge badgeContent={activeCount} color="secondary" overlap="circular">
+            <TuneRoundedIcon fontSize="small" />
           </Badge>
         </DuncitIconButton>
       </Stack>

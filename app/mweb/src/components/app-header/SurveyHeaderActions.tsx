@@ -1,6 +1,7 @@
 import LogoutIcon from '@mui/icons-material/Logout';
 import { Stack, Tooltip } from '@mui/material';
 import { DuncitIconButton } from '@duncit/buttons';
+import { HEADER_ROUND_BUTTON_SX } from './headerButtonSx';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface SurveyHeaderActionsProps {
@@ -18,15 +19,7 @@ export default function SurveyHeaderActions({ onLogout }: Readonly<SurveyHeaderA
           size="small"
           onClick={onLogout}
           aria-label={t('mweb.common.logout')}
-          sx={{
-            minWidth: 40,
-            minHeight: 40,
-            bgcolor: 'background.paper',
-            border: 1,
-            borderColor: 'divider',
-            color: 'text.primary',
-            '&:hover': { bgcolor: 'action.hover', color: 'primary.main' },
-          }}
+          sx={HEADER_ROUND_BUTTON_SX}
         >
           <LogoutIcon sx={{ fontSize: 18 }} />
         </DuncitIconButton>

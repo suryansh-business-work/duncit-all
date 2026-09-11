@@ -2,16 +2,15 @@ import { gql } from '@apollo/client';
 import { useLazyQuery } from '@apollo/client/react';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useState } from 'react';
-import { Alert, Box, Card, CardContent, Stack, Typography } from '@mui/material';
-import AppleIcon from '@mui/icons-material/Apple';
+import { Alert, Box, Divider, Stack, Typography } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
-import EventAvailableIcon from '@mui/icons-material/EventAvailable';
-import GoogleIcon from '@mui/icons-material/Google';
-import StorefrontIcon from '@mui/icons-material/Storefront';
-import { alpha, useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import { DuncitButton } from '@duncit/buttons';
 import PaymentLottie from '../../components/PaymentLottie';
 import ConfettiOverlay from '../../components/ConfettiOverlay';
+import TwoToneHeading from '../../components/TwoToneHeading';
+import { SURFACE_SX } from '../../theme';
+import { SuccessPodCard, SuccessRow } from './SuccessDetails';
 import { notify } from '../../components/notify';
 import { formatMoney } from './checkoutMath';
 import { parseApiError } from '../../utils/parseApiError';
@@ -48,9 +47,9 @@ interface Props {
   profileLabel?: string;
 }
 
+/** The confirmation after a paid checkout: a calm success mark, the receipt,
+ * the booked pod, and what to do next. Native twin: checkout/CheckoutSuccess. */
 export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profileLabel }: Readonly<Props>) {
-  const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
   const [confetti, setConfetti] = useState(true);
   const [invoiceError, setInvoiceError] = useState<string | null>(null);
   const [loadInvoice, { loading: invoiceLoading }] = useLazyQuery<any>(INVOICE_PDF, { fetchPolicy: 'network-only' });
@@ -115,106 +114,65 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
     notify(t('mweb.checkout.appleWalletUnavailable'), 'info');
   };
 
-  return (
-    <Box sx={{ maxWidth: 540, mx: 'auto', minHeight: '100%', display: 'grid', alignItems: 'center', p: 1 }}>
-      <ConfettiOverlay open={confetti} onClose={() => setConfetti(false)} />
-      <Card sx={{ borderRadius: '16px', color: 'text.primary', background: isDark ? 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)' : `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.96)} 0%, ${alpha(theme.palette.primary.light, 0.18)} 55%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`, boxShadow: isDark ? '0 24px 60px rgba(17,24,39,0.28)' : `0 24px 60px ${alpha(theme.palette.primary.dark, 0.12)}` }}>
-        <CardContent sx={{ textAlign: 'center', p: 3 }}>
-          <PaymentLottie variant="success" size={140} />
-          <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>{t('mweb.checkout.successOverline')}</Typography>
-          <Typography
-            variant="h4"
-            gutterBottom
-            sx={{
-              fontWeight: 700,
-              mt: 0.5,
-              lineHeight: 1.05
-            }}>{t('mweb.checkout.successTitle')}</Typography>
-          <Typography variant="body2" gutterBottom sx={{
-            color: "text.secondary"
-          }}>
-            {t('mweb.checkout.successSubtitle')}
-          </Typography>
-          <Box sx={{ mt: 3, p: 2, borderRadius: '16px', bgcolor: isDark ? 'rgba(255,255,255,0.09)' : alpha(theme.palette.background.paper, 0.74), textAlign: 'left', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
-          <Stack spacing={0.8}>
-            <Row label={t('mweb.checkout.amountPaid')} value={formatMoney(payment.currency_symbol, payment.total)} bold />
-            {paidAt && <Row label={t('mweb.checkout.paidOn')} value={formatDateTime(paidAt)} />}
-            <Row label={t('mweb.checkout.paymentId')} value={payment.payment_id} mono />
-            {payment.invoice_no && <Row label={t('mweb.checkout.invoiceLabel')} value={payment.invoice_no} mono />}
-          </Stack>
-          </Box>
-          {pod && (
-            <Box sx={{ mt: 2, p: 2, borderRadius: '16px', bgcolor: isDark ? 'rgba(255,255,255,0.07)' : alpha(theme.palette.primary.light, 0.14), textAlign: 'left', border: '1px solid', borderColor: 'divider' }}>
-              <Stack spacing={1.25}>
-                <Stack direction="row" spacing={1} sx={{
-                  alignItems: "center"
-                }}>
-                  <EventAvailableIcon color="primary" />
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography noWrap sx={{
-                      fontWeight: 700
-                    }}>{pod.pod_title}</Typography>
-                    <Typography variant="caption" sx={{
-                      color: "text.secondary"
-                    }}>{formatDateTime(pod.pod_date_time)}</Typography>
-                  </Box>
-                </Stack>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                  <DuncitButton fullWidth variant="contained" startIcon={<AppleIcon />} onClick={requestAppleWallet} sx={{ bgcolor: '#050505', color: '#fff', borderRadius: '16px', '&:hover': { bgcolor: '#171717' } }}>
-                    {t('mweb.checkout.appleWallet')}
-                  </DuncitButton>
-                  <DuncitButton fullWidth variant="contained" startIcon={<GoogleIcon />} onClick={openGoogleCalendar} sx={{ bgcolor: '#1f2937', color: '#fff', borderRadius: '16px', '&:hover': { bgcolor: '#111827' } }}>
-                    {t('mweb.checkout.googleWallet')}
-                  </DuncitButton>
-                </Stack>
-                {venueTotal > 0 && (
-                  <Stack direction="row" spacing={1} sx={{
-                    alignItems: "center"
-                  }}>
-                    <StorefrontIcon fontSize="small" color="action" />
-                    <Typography variant="caption" sx={{
-                      color: "text.secondary"
-                    }}>
-                      {t('mweb.checkout.venueChargesPaid', {
-                        vars: { amount: formatMoney(payment.currency_symbol, venueTotal) },
-                      })}
-                    </Typography>
-                  </Stack>
-                )}
-              </Stack>
-            </Box>
-          )}
-          {invoiceError && <Alert severity="error" sx={{ mt: 2 }}>{invoiceError}</Alert>}
-          <Stack direction="row" spacing={1.5} sx={{ mt: 4, justifyContent: 'center' }}>
-            {pod?.id && (
-              <DuncitButton variant="contained" startIcon={<DownloadIcon />} onClick={downloadTicket} disabled={ticketLoading} sx={{ borderRadius: 999, fontWeight: 700, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>{t('mweb.ticket.download')}</DuncitButton>
-            )}
-            <DuncitButton variant="outlined" startIcon={<DownloadIcon />} onClick={downloadInvoice} disabled={!payment.invoice_no || invoiceLoading} sx={{ borderRadius: 999 }}>{t('mweb.checkout.downloadInvoice')}</DuncitButton>
-            <DuncitButton variant="outlined" onClick={onHome} sx={{ borderRadius: 999 }}>{t('mweb.checkout.home')}</DuncitButton>
-            <DuncitButton variant="contained" onClick={onProfile} sx={{ borderRadius: 999, fontWeight: 700, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>{profileAction}</DuncitButton>
-          </Stack>
-        </CardContent>
-      </Card>
-    </Box>
-  );
-}
+  const venueNote = venueTotal > 0
+    ? t('mweb.checkout.venueChargesPaid', { vars: { amount: formatMoney(payment.currency_symbol, venueTotal) } })
+    : null;
 
-function Row({ label, value, bold, mono }: Readonly<{ label: string; value: string; bold?: boolean; mono?: boolean }>) {
   return (
-    <Stack
-      direction="row"
-      sx={{
-        justifyContent: "space-between",
-        alignItems: "center"
-      }}>
-      <Typography variant={bold ? 'subtitle1' : 'body2'} sx={{
-        fontWeight: bold ? 700 : 500
-      }}>{label}</Typography>
-      <Typography
-        variant={bold ? 'subtitle1' : 'body2'}
-        sx={[{
-          fontWeight: bold ? 700 : 500
-        }, mono ? { fontFamily: 'monospace' } : false]}>{value}</Typography>
-    </Stack>
+    <Box sx={{ maxWidth: 540, mx: 'auto', minHeight: '100%', display: 'grid', alignItems: 'center', py: 2 }}>
+      <ConfettiOverlay open={confetti} onClose={() => setConfetti(false)} />
+      <Stack spacing={2} sx={{ textAlign: 'center' }}>
+        <Box
+          sx={(theme) => ({
+            width: 96,
+            height: 96,
+            mx: 'auto',
+            borderRadius: '50%',
+            bgcolor: alpha(theme.palette.primary.main, 0.12),
+            display: 'grid',
+            placeItems: 'center',
+          })}
+        >
+          <PaymentLottie variant="success" size={64} />
+        </Box>
+        <TwoToneHeading
+          lead={t('mweb.checkout.successTitle')}
+          trail={t('mweb.checkout.successOverline')}
+          stacked
+          align="center"
+        />
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          {t('mweb.checkout.successSubtitle')}
+        </Typography>
+        <Box sx={{ ...SURFACE_SX, p: 2, textAlign: 'left' }}>
+          <Stack spacing={1} divider={<Divider flexItem />}>
+            <SuccessRow label={t('mweb.checkout.amountPaid')} value={formatMoney(payment.currency_symbol, payment.total)} bold />
+            {paidAt && <SuccessRow label={t('mweb.checkout.paidOn')} value={formatDateTime(paidAt)} />}
+            <SuccessRow label={t('mweb.checkout.paymentId')} value={payment.payment_id} mono />
+            {payment.invoice_no && <SuccessRow label={t('mweb.checkout.invoiceLabel')} value={payment.invoice_no} mono />}
+          </Stack>
+        </Box>
+        {pod && (
+          <SuccessPodCard
+            title={pod.pod_title}
+            when={formatDateTime(pod.pod_date_time)}
+            venueNote={venueNote}
+            onAppleWallet={requestAppleWallet}
+            onGoogleCalendar={openGoogleCalendar}
+          />
+        )}
+        {invoiceError && <Alert severity="error">{invoiceError}</Alert>}
+        <Stack spacing={1.25}>
+          {pod?.id && (
+            <DuncitButton fullWidth size="large" variant="contained" startIcon={<DownloadIcon />} onClick={downloadTicket} disabled={ticketLoading}>{t('mweb.ticket.download')}</DuncitButton>
+          )}
+          <DuncitButton fullWidth size="large" variant="outlined" startIcon={<DownloadIcon />} onClick={downloadInvoice} disabled={!payment.invoice_no || invoiceLoading}>{t('mweb.checkout.downloadInvoice')}</DuncitButton>
+          <Stack direction="row" spacing={1.25}>
+            <DuncitButton fullWidth variant="outlined" onClick={onHome} sx={{ minHeight: 48 }}>{t('mweb.checkout.home')}</DuncitButton>
+            <DuncitButton fullWidth variant="contained" onClick={onProfile} sx={{ minHeight: 48 }}>{profileAction}</DuncitButton>
+          </Stack>
+        </Stack>
+      </Stack>
+    </Box>
   );
 }

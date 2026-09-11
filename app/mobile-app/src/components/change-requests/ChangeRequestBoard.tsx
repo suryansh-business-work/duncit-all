@@ -3,6 +3,7 @@ import { Spinner, Text, YStack } from 'tamagui';
 import type { PodChangeRole, PodChangeRow } from '@duncit/utils';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { NoticeCard } from '@/components/attendance/NoticeCard';
 import { LoadErrorNotice } from '@/components/club-admin/LoadErrorNotice';
 import { ChangeRequestCard } from '@/components/change-requests/ChangeRequestCard';
 import { useDateFormat } from '@/hooks/useDateFormat';
@@ -34,14 +35,12 @@ function BoardList({
   onWithdraw?: (row: PodChangeRow) => void;
 }>) {
   return (
-    <YStack testID={testID} gap={10}>
-      <Text fontSize={14} fontWeight="700" color="$color">
+    <YStack testID={testID} gap={12}>
+      <Text accessibilityRole="header" fontSize={16} fontWeight="600" color="$color">
         {title}
       </Text>
       {rows.length === 0 ? (
-        <Text fontSize={12.5} color="$muted">
-          {emptyText}
-        </Text>
+        <NoticeCard tone="info" title={emptyText} />
       ) : (
         rows.map((row) => (
           <ChangeRequestCard
@@ -99,15 +98,13 @@ export function ChangeRequestBoard({ role, testID = 'change-requests' }: Readonl
   }
 
   return (
-    <YStack testID={testID} gap={16}>
+    <YStack testID={testID} gap={20}>
       {state.feedback ? (
-        <Text
+        <NoticeCard
           testID={`${testID}-feedback`}
-          fontSize={12.5}
-          color={state.feedback.ok ? '$success' : '$danger'}
-        >
-          {state.feedback.text}
-        </Text>
+          tone={state.feedback.ok ? 'success' : 'danger'}
+          title={state.feedback.text}
+        />
       ) : null}
 
       <BoardList

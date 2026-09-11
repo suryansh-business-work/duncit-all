@@ -1,12 +1,13 @@
 import { useRef, useState } from 'react';
 import { Box, Chip, CircularProgress, Stack, TextField } from '@mui/material';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
-import SendIcon from '@mui/icons-material/Send';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import SendRoundedIcon from '@mui/icons-material/SendRounded';
+import { DuncitRoundButton } from '@duncit/buttons';
 import { ATTACHMENT_ACCEPT_ALL } from '@duncit/media-picker';
 import { useImagekitUpload } from '../../utils/imagekit';
 import { useAttachmentGate } from '../../utils/uploadLimits';
 import { useTranslation } from '../../i18n/useTranslation';
+import { PILL_FIELD_SX, SEND_BUTTON_SX } from './calmStyles';
 
 interface Props {
   disabled?: boolean;
@@ -80,13 +81,15 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
         alignItems: "center"
       }}>
         <input ref={fileRef} type="file" accept={ATTACHMENT_ACCEPT_ALL} hidden onChange={pickFile} />
-        <DuncitIconButton
+        <DuncitRoundButton
+          size="large"
+          tone="surface"
           aria-label={t('mweb.supportChat.attachFile')}
           disabled={disabled || uploading || attachments.length >= 5}
           onClick={() => fileRef.current?.click()}
         >
           {uploading ? <CircularProgress size={20} /> : <AttachFileIcon />}
-        </DuncitIconButton>
+        </DuncitRoundButton>
         <TextField
           size="small"
           fullWidth
@@ -99,16 +102,18 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
               send();
             }
           }}
+          sx={PILL_FIELD_SX}
         />
         <Box>
-          <DuncitButton
-            variant="contained"
-            endIcon={<SendIcon />}
+          <DuncitRoundButton
+            size="large"
+            aria-label={t('mweb.common.sendMessage')}
             disabled={disabled || (!text.trim() && attachments.length === 0)}
             onClick={send}
+            sx={SEND_BUTTON_SX}
           >
-            Send
-          </DuncitButton>
+            <SendRoundedIcon />
+          </DuncitRoundButton>
         </Box>
       </Stack>
     </Stack>

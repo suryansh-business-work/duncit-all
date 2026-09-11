@@ -5,14 +5,7 @@ import { DuncitButton } from '@/components/DuncitButton';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import type { VenueSlot } from '@/hooks/useOwnerVenueSlots';
 import { useTranslation } from '@/hooks/useTranslation';
-import { slotPriceLabel } from './slot-labels';
-
-const STATUS_TONE: Record<string, string> = {
-  AVAILABLE: '$success',
-  PENDING: '$primary',
-  BOOKED: '$warning',
-  BLOCKED: '$muted',
-};
+import { SLOT_STATUS_TONE, slotPriceLabel, slotStatusTone } from './slot-labels';
 
 // PENDING = a live booking request; decide it in Slot Requests, don't edit it.
 const LOCKED_STATUSES = new Set(['BOOKED', 'PENDING']);
@@ -29,7 +22,7 @@ interface Props {
 export function DaySlotRow({ slot, busy, onToggleBlock, onDelete }: Readonly<Props>) {
   const { t } = useTranslation();
   const fmt = useDateFormat();
-  const tone = STATUS_TONE[slot.status] ?? '$muted';
+  const tone = slotStatusTone(slot.status);
   const blocked = slot.status === 'BLOCKED';
   // The shared when-sentence, whole-day and multi-day aware (rule 40).
   const when = slotSpanLabel(
@@ -54,49 +47,49 @@ export function DaySlotRow({ slot, busy, onToggleBlock, onDelete }: Readonly<Pro
     <YStack
       testID={`day-slot-${slot.id}`}
       gap={4}
-      padding={10}
-      borderRadius={12}
+      padding={14}
+      borderRadius={16}
       borderWidth={1}
-      borderColor="$borderColor"
+      borderColor="$cardBorder"
       backgroundColor="$surface"
     >
       <XStack alignItems="center" gap={8}>
-        <Text flex={1} fontSize={13.5} fontWeight="700" color="$color">
+        <Text flex={1} fontSize={14} fontWeight="600" color="$color">
           {when}
         </Text>
-        <Text fontSize={12} fontWeight="700" color="$muted">
+        <Text fontSize={13} fontWeight="700" color="$color">
           {slotPriceLabel(slot.price, t)}
         </Text>
         <XStack
           testID={`day-slot-${slot.id}-status`}
-          paddingHorizontal={8}
-          paddingVertical={2}
+          paddingHorizontal={10}
+          paddingVertical={3}
           borderRadius={999}
           borderWidth={1}
           borderColor={tone}
         >
-          <Text fontSize={10} fontWeight="700" color={tone}>
+          <Text fontSize={11} fontWeight="600" color={tone}>
             {slot.status}
           </Text>
         </XStack>
       </XStack>
       {spaceLine ? (
-        <Text fontSize={11.5} color="$muted">
+        <Text fontSize={12} color="$muted">
           {spaceLine}
         </Text>
       ) : null}
       {podLine ? (
-        <Text fontSize={11.5} color="$muted">
+        <Text fontSize={12} color="$muted">
           {podLine}
         </Text>
       ) : null}
       {slot.status === 'PENDING' ? (
-        <Text fontSize={11.5} color="$primary">
+        <Text fontSize={12} color={SLOT_STATUS_TONE.PENDING}>
           {t('availability.awaitingDecision')}
         </Text>
       ) : null}
       {slot.notes ? (
-        <Text fontSize={11.5} color="$color">
+        <Text fontSize={12} color="$color">
           {slot.notes}
         </Text>
       ) : null}

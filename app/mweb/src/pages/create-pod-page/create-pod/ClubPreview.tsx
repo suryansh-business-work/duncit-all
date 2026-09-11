@@ -12,7 +12,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import GroupsIcon from '@mui/icons-material/Groups';
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
 import { useTranslation } from '../../../i18n/useTranslation';
 import type { CreatePodClub } from './create-pod.types';
 
@@ -42,17 +42,19 @@ export default function ClubPreview({ club }: Readonly<Props>) {
       spacing={1.5}
       sx={{
         alignItems: "center",
-        p: 1.25,
+        p: 1.5,
         borderRadius: '16px',
-        border: 1,
-        borderColor: 'divider',
         bgcolor: 'action.hover'
       }}>
-      <Avatar variant="rounded" src={cover} sx={{ width: 56, height: 56, bgcolor: 'primary.main' }}>
+      <Avatar
+        variant="rounded"
+        src={cover}
+        sx={{ width: 56, height: 56, borderRadius: '12px', bgcolor: 'background.paper', color: 'secondary.main' }}
+      >
         <GroupsIcon />
       </Avatar>
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
+        <Typography variant="subtitle2" sx={{ fontSize: '0.95rem' }} noWrap>
           {club.club_name}
         </Typography>
         <Stack
@@ -68,20 +70,20 @@ export default function ClubPreview({ club }: Readonly<Props>) {
             icon={<StorefrontOutlinedIcon />}
             label={venueLabel}
           />
-          <DuncitButton size="small" onClick={() => setOpen(true)} sx={{ p: 0, fontWeight: 700 }}>
+          <DuncitButton size="small" onClick={() => setOpen(true)} sx={{ p: 0 }}>
             {t('mweb.createPod.viewClubDetails')}
           </DuncitButton>
         </Stack>
       </Box>
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', pr: 1 }}>
-          <Typography component="span" sx={{ flex: 1, fontWeight: 700 }} noWrap>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Typography component="span" sx={{ flex: 1, fontSize: '1.05rem', fontWeight: 600 }} noWrap>
             {club.club_name}
           </Typography>
-          <DuncitIconButton size="small" aria-label={t('mweb.createPod.closeClubDetails')} onClick={() => setOpen(false)}>
-            <CloseIcon fontSize="small" />
-          </DuncitIconButton>
+          <DuncitRoundButton tone="surface" aria-label={t('mweb.createPod.closeClubDetails')} onClick={() => setOpen(false)}>
+            <CloseIcon />
+          </DuncitRoundButton>
         </DialogTitle>
         <DialogContent dividers>
           <Stack spacing={1.5}>
@@ -93,7 +95,7 @@ export default function ClubPreview({ club }: Readonly<Props>) {
                     component="img"
                     src={item.url}
                     alt={club.club_name}
-                    sx={{ width: 120, height: 90, objectFit: 'cover', borderRadius: '16px', flexShrink: 0 }}
+                    sx={{ width: 120, height: 90, objectFit: 'cover', borderRadius: '18px', flexShrink: 0 }}
                   />
                 ))}
               </Stack>

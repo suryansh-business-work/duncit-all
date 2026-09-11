@@ -149,6 +149,7 @@ export function SignupForm({
               testID="signup-back"
               label={labels.back}
               variant="outline"
+              size="lg"
               fullWidth
               onPress={() => {
                 setSubmitError(null);

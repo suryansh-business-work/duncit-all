@@ -83,7 +83,6 @@ export function NewPasswordForm({
         keyboardType="number-pad"
         maxLength={6}
         required
-        hint="6-digit code"
       />
       <FormTextField
         control={control}

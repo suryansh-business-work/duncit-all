@@ -9,9 +9,9 @@ import {
   type AutoPodRow,
 } from '@duncit/utils';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { LoadingIndicator } from '@/components/LoadingIndicator';
-import { PillButton } from '@/components/attendance/AttendanceOtpControls';
 import { HostEarningsFields } from '@/components/auto-pods/HostEarningsFields';
 import {
   BLANK_HOST_MEETING,
@@ -154,22 +154,21 @@ export function HostClaimSheet({
   const footer = (
     <XStack gap={10}>
       <YStack flex={1}>
-        <PillButton
+        <DuncitButton
           testID="auto-pod-assign-cancel"
           label={labels.dismiss}
           onPress={onClose}
-          variant="ghost"
-          disabled={false}
+          variant="soft"
+          tone="neutral"
         />
       </YStack>
       <YStack flex={1}>
-        <PillButton
+        <DuncitButton
           testID="auto-pod-assign-confirm"
           label={labels.assignMyselfCta}
           onPress={() => {
             assign().catch(() => undefined);
           }}
-          variant="solid"
           disabled={busy || !canAssign}
         />
       </YStack>
@@ -188,21 +187,21 @@ export function HostClaimSheet({
       closeLabel={labels.dismiss}
       footer={footer}
     >
-      <YStack gap={10}>
+      <YStack gap={12}>
         {row ? (
-          <Text fontSize={14} fontWeight="700" color="$color">
+          <Text fontSize={15} fontWeight="600" color="$color">
             {row.pod_title}
           </Text>
         ) : null}
 
         {pinned ? (
-          <Text testID="auto-pod-assign-city" fontSize={12.5} color="$color">
+          <Text testID="auto-pod-assign-city" fontSize={13} color="$color">
             {labels.pinnedTo(autoPodCityLabel(pinned))}
           </Text>
         ) : null}
 
         {venue ? (
-          <Text fontSize={12.5} color="$color">
+          <Text fontSize={13} color="$color">
             {`${venue.venue_name} · ${formatWhen(venue.pod_date_time)}`}
           </Text>
         ) : null}
@@ -224,13 +223,13 @@ export function HostClaimSheet({
         />
 
         {needsLocation ? (
-          <Text testID="auto-pod-assign-needs-location" fontSize={12} color={warning}>
+          <Text testID="auto-pod-assign-needs-location" fontSize={13} color={warning}>
             {labels.pickLocationFirst}
           </Text>
         ) : null}
 
         {pinsCity ? (
-          <Text testID="auto-pod-assign-will-pin" fontSize={12} color="$muted">
+          <Text testID="auto-pod-assign-will-pin" fontSize={13} color="$muted">
             {labels.willPinTo(locationLabel || locationId)}
           </Text>
         ) : null}
@@ -238,7 +237,7 @@ export function HostClaimSheet({
         {busy ? <LoadingIndicator testID="auto-pod-assign-busy" /> : null}
 
         {failure ? (
-          <Text testID="auto-pod-assign-error" fontSize={12} color="$danger">
+          <Text testID="auto-pod-assign-error" fontSize={13} color="$danger">
             {failure}
           </Text>
         ) : null}

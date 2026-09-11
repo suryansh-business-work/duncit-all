@@ -52,12 +52,12 @@ export function ChatsScreen() {
         gap={8}
         marginHorizontal={16}
         marginTop={12}
-        paddingHorizontal={12}
-        height={46}
+        paddingHorizontal={16}
+        height={50}
         borderRadius={999}
         borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$background"
+        borderColor="$cardBorder"
+        backgroundColor="$surface"
       >
         <MaterialIcons name="search" size={20} color={muted} />
         <Input

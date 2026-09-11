@@ -14,28 +14,34 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type ChipTone = '$onPrimary' | '$color';
 
-function FilterChip({
-  label,
-  selected,
-  testID,
-  onPress,
-}: Readonly<{ label: string; selected: boolean; testID: string; onPress: () => void }>) {
+interface ChipProps {
+  label: string;
+  selected: boolean;
+  testID: string;
+  onPress: () => void;
+  /** Segments share the track's width; chips size to their label. */
+  segment?: boolean;
+}
+
+function FilterChip({ label, selected, testID, onPress, segment = false }: Readonly<ChipProps>) {
   const ink: ChipTone = selected ? '$onPrimary' : '$color';
+  const rest = segment ? 'transparent' : '$surface';
   return (
     <XStack
       testID={testID}
       role="button"
       aria-label={label}
       onPress={onPress}
+      flex={segment ? 1 : undefined}
+      height={36}
+      alignItems="center"
+      justifyContent="center"
       paddingHorizontal={14}
-      paddingVertical={8}
       borderRadius={999}
-      borderWidth={1}
-      backgroundColor={selected ? '$primary' : '$surface'}
-      borderColor={selected ? '$primary' : '$borderColor'}
+      backgroundColor={selected ? '$primary' : rest}
       pressStyle={PRESS_STYLE.control}
     >
-      <Text fontSize={13} fontWeight="700" color={ink}>
+      <Text fontSize={13} fontWeight="600" color={ink} numberOfLines={1}>
         {label}
       </Text>
     </XStack>
@@ -67,17 +73,19 @@ export function LeaderboardCategoryTabs({
   );
 }
 
-/** This month / this year / all time. */
+/** This month / this year / all time — a pill segmented control: a soft
+ * track, the chosen window a green pill. mWeb twin: the page's toggle group. */
 export function LeaderboardPeriodToggle({
   value,
   onChange,
 }: Readonly<{ value: LeaderboardPeriodKey; onChange: (next: LeaderboardPeriodKey) => void }>) {
   const { t } = useTranslation();
   return (
-    <XStack paddingHorizontal={16} gap={8}>
+    <XStack marginHorizontal={16} padding={4} gap={4} borderRadius={999} backgroundColor="$soft">
       {LEADERBOARD_PERIODS.map((period) => (
         <FilterChip
           key={period}
+          segment
           testID={`leaderboard-period-${period}`}
           label={t(LEADERBOARD_PERIOD_KEY[period])}
           selected={period === value}

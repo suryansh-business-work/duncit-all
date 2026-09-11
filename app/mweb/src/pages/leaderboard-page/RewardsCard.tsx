@@ -1,6 +1,8 @@
 import { Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import type { LeaderboardCategory } from '@duncit/utils';
+import SectionHeader from '../../components/SectionHeader';
+import IconDisc from '../account-page/IconDisc';
 import type { LeaderboardConfigData, LeaderboardReward } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -21,9 +23,9 @@ function RewardRow({ reward }: Readonly<{ reward: LeaderboardReward }>) {
     <Stack direction="row" spacing={1.5} sx={{
       alignItems: "flex-start"
     }}>
-      <Chip size="small" label={rankLabel} sx={{ fontWeight: 700 }} />
+      <Chip size="small" label={rankLabel} sx={{ height: 24, fontSize: 12 }} />
       <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-        <Typography variant="body2" sx={{ fontWeight: 700 }}>
+        <Typography variant="body2" sx={{ fontWeight: 600 }}>
           {reward.title}
         </Typography>
         {reward.description !== '' && (
@@ -43,9 +45,11 @@ function RewardGroup({ title, rewards }: Readonly<{ title: string; rewards: Lead
   return (
     <Stack spacing={1}>
       <Typography
-        variant="overline"
+        variant="caption"
         sx={{
           color: "text.secondary",
+          fontWeight: 600,
+          textTransform: 'uppercase',
           letterSpacing: 0.6
         }}>
         {title}
@@ -65,23 +69,16 @@ export default function RewardsCard({ config, category }: Readonly<Props>) {
   const yearly = rewards.filter((reward) => reward.period === 'YEARLY');
 
   return (
-    <Card variant="outlined">
-      <CardContent>
+    <Card>
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={1.5}>
-          <Stack direction="row" spacing={1} sx={{
+          <Stack direction="row" spacing={1.5} sx={{
             alignItems: "center"
           }}>
-            <CardGiftcardIcon fontSize="small" color="primary" />
-            <Stack spacing={0.25}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                {t('mweb.leaderboard.rewardsTitle')}
-              </Typography>
-              <Typography variant="caption" sx={{
-                color: "text.secondary"
-              }}>
-                {t('mweb.leaderboard.rewardsSubtitle')}
-              </Typography>
-            </Stack>
+            <IconDisc>
+              <CardGiftcardIcon />
+            </IconDisc>
+            <SectionHeader title={t('mweb.leaderboard.rewardsTitle')} />
           </Stack>
           {rewards.length === 0 ? (
             <Typography variant="body2" sx={{

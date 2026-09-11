@@ -41,10 +41,16 @@ export const TicketThread = forwardRef<RNScrollView, Props>(function TicketThrea
           {showDaySeparator(m.created_at, messages[i - 1]?.created_at, timeZone) && m.created_at ? (
             <Text
               testID={`ticket-day-${m.id}`}
+              alignSelf="center"
               fontSize={11}
               fontWeight="600"
               color="$muted"
               textAlign="center"
+              backgroundColor="$soft"
+              borderRadius={999}
+              overflow="hidden"
+              paddingHorizontal={10}
+              paddingVertical={3}
             >
               {dayLabel(m.created_at, timeZone)}
             </Text>

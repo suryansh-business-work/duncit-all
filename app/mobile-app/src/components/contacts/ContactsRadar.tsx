@@ -43,9 +43,9 @@ function RadarFace({
       alignItems="center"
       justifyContent="center"
       borderWidth={2}
-      borderColor={nearby ? '$primary' : '$background'}
+      borderColor={nearby ? '$accent' : '$surface'}
     >
-      <Text fontSize={16} fontWeight="700" color="$onPrimary">
+      <Text fontSize={16} fontWeight="600" color="$onPrimary">
         {initial}
       </Text>
     </YStack>
@@ -67,7 +67,7 @@ export const ContactsRadar = memo(function ContactsRadar({
 }: Readonly<{ contacts: ContactRow[]; viewer: ContactsViewer; onOpen: (userId: string) => void }>) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
-  const { primary, background } = useThemeColors();
+  const { accent, surface } = useThemeColors();
   const size = Math.min(width - 32, 360);
   const spin = useRef(new Animated.Value(0)).current;
 
@@ -133,8 +133,8 @@ export const ContactsRadar = memo(function ContactsRadar({
           width={size / 2}
           height={size / 2}
           borderTopRightRadius={size / 2}
-          backgroundColor={primary}
-          opacity={0.16}
+          backgroundColor={accent}
+          opacity={0.12}
         />
       </Animated.View>
 
@@ -147,17 +147,17 @@ export const ContactsRadar = memo(function ContactsRadar({
         <YStack
           borderRadius={(FACE + 8) / 2}
           borderWidth={3}
-          borderColor="$primary"
+          borderColor="$accent"
           overflow="hidden"
         >
           <RadarFace
             photo={viewer.profile_photo}
             initial={(viewerName[0] ?? '?').toUpperCase()}
             nearby={false}
-            ring={background}
+            ring={surface}
           />
         </YStack>
-        <Text fontSize={11} fontWeight="700" color="$color">
+        <Text fontSize={11} fontWeight="600" color="$color">
           {t('mweb.contacts.you')}
         </Text>
       </YStack>
@@ -181,7 +181,7 @@ export const ContactsRadar = memo(function ContactsRadar({
               photo={row.profile.profile_photo}
               initial={(name[0] ?? '?').toUpperCase()}
               nearby={row.is_nearby}
-              ring={row.is_nearby ? primary : background}
+              ring={row.is_nearby ? accent : surface}
             />
           </XStack>
         );

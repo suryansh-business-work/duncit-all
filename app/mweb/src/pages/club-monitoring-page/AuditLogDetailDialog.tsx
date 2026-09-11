@@ -31,7 +31,7 @@ export default function AuditLogDetailDialog({ entry, onClose }: Readonly<Props>
     <Dialog open={!!entry} onClose={onClose} fullWidth maxWidth="sm">
       {entry && (
         <>
-          <DialogTitle sx={{ fontWeight: 800 }}>{entry.pod_title || entry.pod_id}</DialogTitle>
+          <DialogTitle sx={{ fontWeight: 600 }}>{entry.pod_title || entry.pod_id}</DialogTitle>
           <DialogContent dividers>
             <Stack spacing={1.5}>
               <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>

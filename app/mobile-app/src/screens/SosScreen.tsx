@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, TextArea, XStack, YStack } from 'tamagui';
-import { semantic } from '@duncit/auth-tokens';
 
 import { Field } from '@/components/Field';
 import { PodPicker } from '@/components/support-live';
 import { StackScreen } from '@/components/StackScreen';
+import { SurfaceCard } from '@/components/SurfaceCard';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useBouncer, type ActiveSos } from '@/hooks/useBouncer';
 import { useSupportPods } from '@/hooks/useSupportPods';
 import { toErrorMessage } from '@/utils/errors';
@@ -37,7 +38,7 @@ function SosSendButton({
       pressStyle={PRESS_STYLE.control}
     >
       {busy ? <Spinner color="$onPrimary" /> : null}
-      <Text fontSize={15} fontWeight="700" color="$onPrimary" letterSpacing={1}>
+      <Text fontSize={15} fontWeight="600" color="$onPrimary" letterSpacing={1}>
         {busy ? 'SENDING SOS…' : 'SEND SOS'}
       </Text>
     </XStack>
@@ -47,6 +48,7 @@ function SosSendButton({
 /** SOS — emergency help scoped to a live pod. RN twin of mWeb's SosContent. */
 export function SosScreen() {
   const { t } = useTranslation();
+  const { success, danger } = useThemeColors();
   const { options, selected, selectedId, setSelectedId } = useSupportPods();
   const { getActiveSos, raiseSos } = useBouncer();
   const [message, setMessage] = useState('');
@@ -88,46 +90,32 @@ export function SosScreen() {
 
   return (
     <StackScreen title="SOS" testID="sos-screen">
-      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
-        <Text testID="sos-subtitle" fontSize={13} color="$muted">
-          Emergency help at your live pod
-        </Text>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
         <PodPicker options={options} selectedId={selectedId} onChange={setSelectedId} />
 
         {active ? (
-          <YStack
-            testID="sos-active"
-            padding={20}
-            borderRadius={16}
-            alignItems="center"
-            gap={8}
-            backgroundColor="$surface"
-            borderWidth={1}
-            borderColor="$borderColor"
-          >
-            <MaterialIcons name="check-circle" size={44} color={semantic.success} />
-            <Text fontSize={16} fontWeight="700" color="$color" textAlign="center">
+          <SurfaceCard testID="sos-active" padding={24} alignItems="center" gap={8}>
+            <MaterialIcons name="check-circle" size={48} color={success} />
+            <Text fontSize={16} fontWeight="600" color="$color" textAlign="center">
               SOS sent. Help is on the way.
             </Text>
             <Text fontSize={12} color="$muted" textAlign="center">
               {active.status === 'ACKNOWLEDGED' ? 'Acknowledged by team' : 'Awaiting response'} —
               stay on this screen until someone reaches you.
             </Text>
-          </YStack>
+          </SurfaceCard>
         ) : (
           <>
             <XStack
               testID="sos-warning"
-              gap={10}
-              padding={14}
-              borderRadius={14}
-              backgroundColor={`${semantic.error}14`}
-              borderWidth={1}
-              borderColor={`${semantic.error}55`}
+              gap={12}
+              padding={16}
+              borderRadius={18}
+              backgroundColor="$dangerSoft"
             >
-              <MaterialIcons name="warning-amber" size={20} color={semantic.error} />
+              <MaterialIcons name="warning-amber" size={22} color={danger} />
               <YStack flex={1} gap={2}>
-                <Text fontSize={13.5} fontWeight="700" color="$color">
+                <Text fontSize={14} fontWeight="600" color="$color">
                   Only tap SOS in a real emergency
                 </Text>
                 <Text fontSize={12} color="$muted">
@@ -147,6 +135,7 @@ export function SosScreen() {
                 maxLength={500}
                 backgroundColor="$surface"
                 borderColor="$borderColor"
+                borderRadius={14}
               />
             </Field>
             {error ? (

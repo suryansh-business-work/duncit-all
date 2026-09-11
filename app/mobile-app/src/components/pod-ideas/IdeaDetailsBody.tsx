@@ -22,7 +22,7 @@ const shareLabel = (count: number) => `${count} share${count === 1 ? '' : 's'}`;
  * counts, and the comment thread. */
 export function IdeaDetailsBody({ idea, myId, onToggleLike, onDeleteComment }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { muted, danger } = useThemeColors();
+  const { muted, accent } = useThemeColors();
   const author = idea.author;
   const initial = (author?.first_name?.[0] ?? author?.full_name?.[0] ?? 'U').toUpperCase();
 
@@ -33,11 +33,11 @@ export function IdeaDetailsBody({ idea, myId, onToggleLike, onDeleteComment }: R
           width={40}
           height={40}
           borderRadius={20}
-          backgroundColor="$surface"
+          backgroundColor="$soft"
           alignItems="center"
           justifyContent="center"
         >
-          <Text fontSize={16} fontWeight="700" color="$color">
+          <Text fontSize={16} fontWeight="600" color="$color">
             {initial}
           </Text>
         </YStack>
@@ -68,9 +68,9 @@ export function IdeaDetailsBody({ idea, myId, onToggleLike, onDeleteComment }: R
           <MaterialIcons
             name={idea.liked_by_me ? 'favorite' : 'favorite-border'}
             size={18}
-            color={idea.liked_by_me ? danger : muted}
+            color={idea.liked_by_me ? accent : muted}
           />
-          <Text fontSize={13} fontWeight="700" color="$muted">
+          <Text fontSize={13} fontWeight="600" color="$muted">
             {likeLabel(idea.likes_count)}
           </Text>
         </XStack>
@@ -79,7 +79,7 @@ export function IdeaDetailsBody({ idea, myId, onToggleLike, onDeleteComment }: R
         </Text>
       </XStack>
 
-      <Text fontSize={12} fontWeight="700" color="$muted" textTransform="uppercase">
+      <Text fontSize={12} fontWeight="600" color="$muted" textTransform="uppercase">
         Comments ({idea.comments_count})
       </Text>
       {idea.comments.length === 0 ? (

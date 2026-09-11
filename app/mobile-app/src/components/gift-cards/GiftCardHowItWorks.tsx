@@ -1,5 +1,7 @@
 import { Text, XStack, YStack } from 'tamagui';
 
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 
 /** Step keys in order (full literal keys — never composed). */
@@ -16,31 +18,30 @@ export function GiftCardHowItWorks() {
   const { t } = useTranslation();
 
   return (
-    <YStack
-      testID="gift-card-how"
-      gap={8}
-      padding={14}
-      borderRadius={14}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
-      <Text fontSize={14} fontWeight="700" color="$color">
-        {t('mweb.giftCards.howTitle')}
-      </Text>
+    <SurfaceCard testID="gift-card-how" gap={12}>
+      <SectionHeader title={t('mweb.giftCards.howTitle')} />
       {STEP_KEYS.map((key, index) => (
-        <XStack key={key} gap={8} alignItems="flex-start">
-          <Text fontSize={12.5} fontWeight="700" color="$primary">
-            {index + 1}.
-          </Text>
-          <Text flex={1} fontSize={12.5} color="$color">
+        <XStack key={key} gap={12} alignItems="flex-start">
+          <YStack
+            width={24}
+            height={24}
+            borderRadius={12}
+            alignItems="center"
+            justifyContent="center"
+            backgroundColor="$primarySoft"
+          >
+            <Text fontSize={12} fontWeight="600" color="$primary">
+              {index + 1}
+            </Text>
+          </YStack>
+          <Text flex={1} fontSize={14} color="$color" lineHeight={20}>
             {t(key)}
           </Text>
         </XStack>
       ))}
-      <Text fontSize={11.5} color="$muted">
+      <Text fontSize={12} color="$muted">
         {t('mweb.giftCards.howNote')}
       </Text>
-    </YStack>
+    </SurfaceCard>
   );
 }

@@ -99,6 +99,14 @@ const BUCKET_TONES: Record<StudioPodBucket, string> = {
   CANCELLED: '$danger',
 };
 
+/** The chip's tint behind that colour — the tone at 12%, or the soft fill for "past". */
+const BUCKET_FILLS: Record<StudioPodBucket, string> = {
+  UPCOMING: '$primarySoft',
+  ONGOING: '$successSoft',
+  COMPLETED: '$soft',
+  CANCELLED: '$dangerSoft',
+};
+
 const isBucket = (value: string): value is StudioPodBucket => value in BUCKET_LABEL_KEYS;
 
 /** Copy key for a pod's state chip. */
@@ -109,6 +117,11 @@ export function bucketLabelKey(bucket: string): string {
 /** Chip colour token for a pod's state. */
 export function bucketTone(bucket: string): string {
   return isBucket(bucket) ? BUCKET_TONES[bucket] : BUCKET_TONES.UPCOMING;
+}
+
+/** Chip fill token for a pod's state. */
+export function bucketFill(bucket: string): string {
+  return isBucket(bucket) ? BUCKET_FILLS[bucket] : BUCKET_FILLS.UPCOMING;
 }
 
 /** The row as the shared venue-pod rules (`canCancelVenuePod` and friends in

@@ -61,8 +61,8 @@ export function RecoveryCodeStep({
   const resendLabel = resending ? labels.resending : idleResendLabel;
 
   return (
-    <YStack gap={12}>
-      <Text fontSize={13} color="$muted">
+    <YStack gap={16}>
+      <Text fontSize={14} color="$muted">
         {labels.codeSubtitle(destination)}
       </Text>
       {testCode ? (

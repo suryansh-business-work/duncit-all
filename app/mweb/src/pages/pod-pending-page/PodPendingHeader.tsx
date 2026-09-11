@@ -1,9 +1,8 @@
-import { useNavigate } from 'react-router';
-import { CircularProgress, Stack, Tooltip, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import { DuncitIconButton } from '@duncit/buttons';
+import { CircularProgress, Tooltip } from '@mui/material';
+import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
+import { DuncitRoundButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
+import PageBackHeader, { ROUND_HEADER_BUTTON_SX } from './PageBackHeader';
 
 interface Props {
   refreshing: boolean;
@@ -15,31 +14,26 @@ interface Props {
  * three controls on the PodPending stack screen's back bar (rule 27). */
 export default function PodPendingHeader({ refreshing, onRefresh }: Readonly<Props>) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
 
   return (
-    <Stack direction="row" spacing={0.5} sx={{
-      alignItems: "center"
-    }}>
-      <DuncitIconButton size="small" aria-label={t('mweb.common.goBack')} onClick={() => navigate(-1)}>
-        <ArrowBackIcon fontSize="small" />
-      </DuncitIconButton>
-      <Typography variant="h6" sx={{ flex: 1, fontWeight: 800 }}>
-        {t('mweb.podPending.title')}
-      </Typography>
-      <Tooltip title={t('mweb.podPending.refresh')}>
-        <span>
-          <DuncitIconButton
-            size="small"
-            disabled={refreshing}
-            aria-label={t('mweb.podPending.refresh')}
-            data-testid="pod-pending-refresh"
-            onClick={onRefresh}
-          >
-            {refreshing ? <CircularProgress size={18} /> : <RefreshIcon fontSize="small" />}
-          </DuncitIconButton>
-        </span>
-      </Tooltip>
-    </Stack>
+    <PageBackHeader
+      title={t('mweb.podPending.title')}
+      backLabel={t('mweb.common.goBack')}
+      action={
+        <Tooltip title={t('mweb.podPending.refresh')}>
+          <span>
+            <DuncitRoundButton
+              disabled={refreshing}
+              aria-label={t('mweb.podPending.refresh')}
+              data-testid="pod-pending-refresh"
+              onClick={onRefresh}
+              sx={ROUND_HEADER_BUTTON_SX}
+            >
+              {refreshing ? <CircularProgress size={18} /> : <RefreshRoundedIcon />}
+            </DuncitRoundButton>
+          </span>
+        </Tooltip>
+      }
+    />
   );
 }

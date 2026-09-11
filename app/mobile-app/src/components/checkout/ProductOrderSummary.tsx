@@ -186,21 +186,22 @@ export function ProductOrderSummary({
   coins = null,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const { accent } = useThemeColors();
   const fmt = (value: number) => formatMoney(breakup.currency, value);
   const estimated = !!quote && !quote.all_quoted;
 
   return (
     <YStack
       testID="product-order-summary"
-      borderRadius={18}
+      borderRadius={24}
       borderWidth={1}
-      borderColor="$borderColor"
+      borderColor="$cardBorder"
       backgroundColor="$surface"
       padding={16}
       gap={8}
     >
       <XStack gap={8} alignItems="center">
-        <MaterialIcons name="shopping-bag" size={20} color="#ff8b5f" />
+        <MaterialIcons name="shopping-bag" size={20} color={accent} />
         <YStack flex={1} minWidth={0}>
           <Text fontSize={11} fontWeight="600" textTransform="uppercase" color="$muted">
             {t('mweb.checkout.orderSummary')}

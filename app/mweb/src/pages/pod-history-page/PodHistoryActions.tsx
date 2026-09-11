@@ -159,10 +159,6 @@ export default function PodHistoryActions({
               disabled={item.status !== 'JOINED' || ticketLoading}
               variant="contained"
               startIcon={<ConfirmationNumberIcon />}
-              sx={{
-                background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)',
-                fontWeight: 700,
-              }}
             >
               {ticketLoading ? t('mweb.ticket.downloading') : t('mweb.ticket.download')}
             </DuncitButton>

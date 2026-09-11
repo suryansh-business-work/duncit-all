@@ -10,6 +10,7 @@ import VenueContactCard from '../VenueContactCard';
 import VirtualMeetingFields from '../VirtualMeetingFields';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import { useTranslation } from '../../../../i18n/useTranslation';
+import { SURFACE_SX } from '../../../../theme';
 import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../create-pod.types';
 
 /** `label` is what the host sees; `slotSpaceLabel` is the VenueSlot.space_label
@@ -128,8 +129,8 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
       {clubVenues.length === 0 && <Alert severity="info">{t('mweb.createPod.noVenues')}</Alert>}
       {errors.venue_id && <FormHelperText error>{errors.venue_id.message}</FormHelperText>}
       {selectedVenue && (
-        <Stack spacing={1.5} sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}>
-          <Typography variant="body2" sx={{ fontWeight: 700 }}>
+        <Stack spacing={1.5} sx={{ ...SURFACE_SX, p: 2 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
             {selectedVenue.venue_type ? `${selectedVenue.venue_type} · ` : ''}
             {t('mweb.createPod.totalCapacity', { vars: { count: selectedVenue.capacity ?? 0 } })}
           </Typography>
@@ -189,12 +190,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
         />
       )}
       {duration && (
-        <Typography
-          variant="caption"
-          sx={{
-            color: "text.secondary",
-            fontWeight: 600
-          }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
           {t('mweb.createPod.podWindow', { vars: { duration } })}
         </Typography>
       )}

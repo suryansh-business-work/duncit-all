@@ -1,20 +1,16 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import {
-  Alert,
-  Box,
-  CircularProgress,
-  InputAdornment,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import { Alert, Box, CircularProgress, Stack } from '@mui/material';
+import EventBusyOutlinedIcon from '@mui/icons-material/EventBusyOutlined';
+import SearchOffIcon from '@mui/icons-material/SearchOff';
 import { buildFeedRows, computeColumns, filterByQuery, rowForPodIndex } from '@duncit/virtual-scroll';
 import type { PublicAd } from '../../components/ads/useActiveAds';
+import EmptyState from '../../components/EmptyState';
+import PageHeader from '../../components/PageHeader';
 import { useVirtualRows } from '../../hooks/useVirtualRows';
 import { useTranslation } from '../../i18n/useTranslation';
 import { openPod } from '../../lib/open-pod';
+import SearchPillField from './SearchPillField';
 import VirtualPodRows, { LIST_GAP } from './VirtualPodRows';
 
 const CARD_WIDTH = 264;
@@ -27,8 +23,6 @@ const USER_INTENT_EVENTS = ['wheel', 'touchstart', 'pointerdown'] as const;
 
 interface PodListPageProps {
   title: string;
-  subtitle: string;
-  icon: ReactNode;
   pods: any[];
   ads?: PublicAd[];
   loading: boolean;
@@ -45,7 +39,7 @@ interface PodListPageProps {
  * and `?from=N` jumps to where the home rail stopped.
  */
 export default function PodListPage(props: Readonly<PodListPageProps>) {
-  const { title, subtitle, icon, pods, ads = NO_ADS, loading, error, emptyText, hostNameOf, filterAction } = props;
+  const { title, pods, ads = NO_ADS, loading, error, emptyText, hostNameOf, filterAction } = props;
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t } = useTranslation();
@@ -135,9 +129,9 @@ export default function PodListPage(props: Readonly<PodListPageProps>) {
   } else if (error) {
     body = <Alert severity="error">{error.message}</Alert>;
   } else if (pods.length === 0) {
-    body = <Alert severity="info">{emptyText}</Alert>;
+    body = <EmptyState icon={<EventBusyOutlinedIcon />} title={emptyText} />;
   } else if (filteredPods.length === 0) {
-    body = <Alert severity="info">{t('mweb.home.noSearchResults')}</Alert>;
+    body = <EmptyState icon={<SearchOffIcon />} title={t('mweb.home.noSearchResults')} />;
   } else {
     body = (
       <VirtualPodRows
@@ -153,42 +147,14 @@ export default function PodListPage(props: Readonly<PodListPageProps>) {
 
   return (
     <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 }, minHeight: '100%' }}>
-      <Stack direction="row" spacing={1.25} sx={{
-        alignItems: "center"
-      }}>
-        {icon}
-        <Box>
-          <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
-            {title}
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 700
-            }}>
-            {subtitle}
-          </Typography>
-        </Box>
-      </Stack>
+      <PageHeader title={title} onBack={() => navigate(-1)} />
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>
-        <TextField
-          size="small"
-          fullWidth
+        <SearchPillField
           placeholder={t('mweb.home.searchPods')}
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }
-          }}
+          onChange={setQuery}
         />
         {filterAction}
       </Stack>

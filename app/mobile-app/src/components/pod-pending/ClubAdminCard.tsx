@@ -1,12 +1,15 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, XStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { mailtoUrl, telUrl, whatsappUrl } from '@/utils/pod-pending';
 import { ActionLink } from './ActionLink';
-import { InfoRow, type InfoRowProps } from './InfoRow';
+import { InfoRowList, type InfoRowProps } from './InfoRow';
+
+const AVATAR_STYLE = { width: 44, height: 44, borderRadius: 22 } as const;
 
 /** The contact details a club admin is rendered from — satisfied both by the
  * pod-pending view's `club_admin` and by a club's `club_admins` entry. */
@@ -55,24 +58,16 @@ export function ClubAdminCard({
   }
 
   return (
-    <YStack
-      testID="club-admin-card"
-      gap={10}
-      padding={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      borderRadius={12}
-      backgroundColor="$surface"
-    >
-      <Text fontSize={12} fontWeight="600" color="$muted">
+    <SurfaceCard testID="club-admin-card" gap={12}>
+      <Text fontSize={16} fontWeight="600" color="$color">
         {caption ?? t('mweb.podPending.clubAdminCaption')}
       </Text>
-      <XStack alignItems="center" gap={10}>
+      <XStack alignItems="center" gap={12}>
         {admin.profile_photo ? (
           <AppImage
             testID="club-admin-photo"
             source={{ uri: admin.profile_photo }}
-            style={{ width: 44, height: 44, borderRadius: 22 }}
+            style={AVATAR_STYLE}
           />
         ) : (
           <XStack
@@ -82,20 +77,17 @@ export function ClubAdminCard({
             borderRadius={22}
             alignItems="center"
             justifyContent="center"
-            borderWidth={1}
-            borderColor="$borderColor"
+            backgroundColor="$soft"
           >
             <MaterialIcons name="person" size={22} color={muted} />
           </XStack>
         )}
-        <Text flex={1} fontSize={16} fontWeight="700" color="$color">
+        <Text flex={1} fontSize={15} fontWeight="600" color="$color">
           {admin.name}
         </Text>
       </XStack>
-      {rows.map((row) => (
-        <InfoRow key={row.label} {...row} />
-      ))}
-      <XStack gap={18} flexWrap="wrap">
+      <InfoRowList rows={rows} />
+      <XStack gap={8} flexWrap="wrap">
         {admin.phone ? (
           <ActionLink
             testID="club-admin-call"
@@ -121,6 +113,6 @@ export function ClubAdminCard({
           />
         ) : null}
       </XStack>
-    </YStack>
+    </SurfaceCard>
   );
 }

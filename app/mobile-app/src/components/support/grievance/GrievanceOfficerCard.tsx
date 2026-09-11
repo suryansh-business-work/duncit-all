@@ -1,6 +1,7 @@
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, XStack } from 'tamagui';
 import type { PublicGrievanceOfficer } from '@duncit/utils';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
@@ -25,34 +26,26 @@ export function GrievanceOfficerCard({ officer }: Readonly<Props>) {
   const filled = rows.filter(([, value]) => value.trim().length > 0);
 
   return (
-    <YStack
-      testID="grievance-officer"
-      gap={6}
-      padding={14}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
-      <Text fontSize={13} fontWeight="700" color="$color">
+    <SurfaceCard testID="grievance-officer" gap={8}>
+      <Text fontSize={16} fontWeight="600" color="$color">
         {t('grievance.officerTitle')}
       </Text>
       {filled.length === 0 ? (
-        <Text fontSize={12.5} color="$muted">
+        <Text fontSize={13} color="$muted">
           {t('grievance.officerEmpty')}
         </Text>
       ) : (
         filled.map(([label, value]) => (
           <XStack key={label} gap={12} justifyContent="space-between">
-            <Text fontSize={12.5} color="$muted">
+            <Text fontSize={13} color="$muted">
               {label}
             </Text>
-            <Text fontSize={12.5} color="$color" flexShrink={1} textAlign="right">
+            <Text fontSize={13} color="$color" flexShrink={1} textAlign="right">
               {value}
             </Text>
           </XStack>
         ))
       )}
-    </YStack>
+    </SurfaceCard>
   );
 }

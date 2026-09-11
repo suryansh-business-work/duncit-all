@@ -11,9 +11,10 @@ interface Props {
   onOpen: () => void;
 }
 
-/** The tappable pin + city (· zone) + chevron that opens the location picker.
- * Every studio mode renders it — a host, venue owner or club admin browses the
- * same city list a user does, so the switcher is never hidden behind a role. */
+/** The location pill — coral pin + "City · Zone" + chevron — that opens the
+ * location picker. Every studio mode renders it — a host, venue owner or club
+ * admin browses the same city list a user does, so the switcher is never
+ * hidden behind a role. Native twin: components/AppHeader/HeaderLocationRow. */
 export default function HeaderLocationRow({
   selectedLocationName,
   selectedZoneName,
@@ -38,27 +39,32 @@ export default function HeaderLocationRow({
       sx={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 0.25,
-        cursor: 'pointer',
-        color: 'primary.main',
+        gap: 0.75,
+        flex: '0 1 auto',
+        height: 40,
+        minHeight: 40,
         minWidth: 0,
-        minHeight: 'auto',
-        maxWidth: { xs: 210, sm: 340 },
+        maxWidth: '100%',
+        px: 1.5,
+        boxSizing: 'border-box',
+        borderRadius: 999,
+        cursor: 'pointer',
+        bgcolor: 'background.paper',
+        border: '1px solid var(--duncit-card-border)',
       }}
     >
       {loading && !hasData ? (
-        <Skeleton variant="text" width={90} height={14} />
+        <Skeleton variant="text" width={110} height={16} />
       ) : (
         <>
-          <LocationOnIcon sx={{ fontSize: 15, flex: '0 0 auto' }} />
+          <LocationOnIcon sx={{ fontSize: 18, color: 'secondary.main', flex: '0 0 auto' }} />
           <Typography
-            variant="caption"
-            sx={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}
             noWrap
+            sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary', minWidth: 0 }}
           >
             {cityText}
           </Typography>
-          <KeyboardArrowDownIcon sx={{ fontSize: 16, flex: '0 0 auto' }} />
+          <KeyboardArrowDownIcon sx={{ fontSize: 18, color: 'text.secondary', flex: '0 0 auto' }} />
         </>
       )}
     </Box>

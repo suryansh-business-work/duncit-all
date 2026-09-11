@@ -42,31 +42,33 @@ export default function ContactsRadar({ contacts, me, onOpen }: Readonly<Props>)
       role="group"
       aria-label={t('mweb.contacts.radarLabel')}
       data-testid="contacts-radar"
-      sx={(theme) => ({
+      sx={{
         position: 'relative',
         width: '100%',
-        maxWidth: 420,
+        maxWidth: 360,
         aspectRatio: '1 / 1',
         mx: 'auto',
         borderRadius: '50%',
         overflow: 'hidden',
-        bgcolor: alpha(theme.palette.primary.main, 0.06),
-        border: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
-      })}
+        bgcolor: 'background.paper',
+        border: 1,
+        borderColor: 'divider',
+      }}
     >
       {RADAR_RINGS.map((ring) => (
         <Box
           key={ring}
-          sx={(theme) => ({
+          sx={{
             position: 'absolute',
             left: `${(1 - ring) * 50}%`,
             top: `${(1 - ring) * 50}%`,
             width: `${ring * 100}%`,
             height: `${ring * 100}%`,
             borderRadius: '50%',
-            border: `1px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
+            border: '1px dashed',
+            borderColor: 'divider',
             pointerEvents: 'none',
-          })}
+          }}
         />
       ))}
       <Box
@@ -75,7 +77,7 @@ export default function ContactsRadar({ contacts, me, onOpen }: Readonly<Props>)
           position: 'absolute',
           inset: 0,
           borderRadius: '50%',
-          background: sweepGradient(alpha(theme.palette.primary.main, 0.35)),
+          background: sweepGradient(alpha(theme.palette.secondary.main, 0.18)),
           animation: `${sweep} 6s linear infinite`,
           pointerEvents: 'none',
           '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
@@ -93,11 +95,19 @@ export default function ContactsRadar({ contacts, me, onOpen }: Readonly<Props>)
       >
         <Avatar
           src={me.photo || undefined}
-          sx={{ width: FACE + 8, height: FACE + 8, mx: 'auto', border: 3, borderColor: 'primary.main' }}
+          sx={{
+            width: FACE + 8,
+            height: FACE + 8,
+            mx: 'auto',
+            border: 3,
+            borderColor: 'secondary.main',
+            bgcolor: 'primary.main',
+            fontWeight: 600,
+          }}
         >
           {me.name[0]?.toUpperCase()}
         </Avatar>
-        <Typography variant="caption" sx={{ fontWeight: 700 }}>
+        <Typography variant="caption" sx={{ fontWeight: 600 }}>
           {t('mweb.contacts.you')}
         </Typography>
       </Box>
@@ -128,8 +138,9 @@ export default function ContactsRadar({ contacts, me, onOpen }: Readonly<Props>)
               height: FACE,
               cursor: 'pointer',
               border: 2,
-              borderColor: row.is_nearby ? 'primary.main' : 'background.paper',
-              boxShadow: 2,
+              borderColor: row.is_nearby ? 'secondary.main' : 'background.paper',
+              bgcolor: 'primary.main',
+              fontWeight: 600,
               '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main' },
             }}
           >

@@ -2,15 +2,14 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
 
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodFinance } from '../create-pod.types';
 import { ChargesAccordion } from './ChargesAccordion';
 import { PayoutCard } from './PayoutCard';
 import type { PodPricingState } from './usePodPricing';
-
-const FREE_NOTE_BG = 'rgba(34,197,94,0.08)';
-const FREE_NOTE_BORDER = 'rgba(34,197,94,0.30)';
 
 interface Props {
   finance: CreatePodFinance;
@@ -36,48 +35,30 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
     : null;
 
   return (
-    <YStack
-      testID="create-pod-price-panel"
-      gap={10}
-      padding={14}
-      borderWidth={1}
-      borderColor="$borderColor"
-      borderRadius={12}
-    >
-      <XStack alignItems="center" gap={6}>
-        <MaterialIcons name="insights" size={16} color={success} />
-        <Text fontSize={14} fontWeight="700" color="$color">
-          {t('mweb.createPod.potentialEarnings')}
-        </Text>
-      </XStack>
-      <Text fontSize={11.5} fontWeight="600" color="$muted">
-        {t('mweb.createPod.takeHome')}
-      </Text>
+    <SurfaceCard testID="create-pod-price-panel" gap={12}>
+      <SectionHeader title={t('mweb.createPod.potentialEarnings')} />
       {noOfSpots > 0 ? (
         <XStack
           testID="price-panel-host-free-note"
           gap={8}
           alignItems="flex-start"
-          backgroundColor={FREE_NOTE_BG}
-          borderWidth={1}
-          borderColor={FREE_NOTE_BORDER}
-          borderRadius={12}
-          paddingHorizontal={10}
-          paddingVertical={8}
+          backgroundColor="$successSoft"
+          borderRadius={14}
+          padding={12}
         >
           <MaterialIcons name="info-outline" size={16} color={success} />
-          <Text flex={1} fontSize={12} color="$color">
+          <Text flex={1} fontSize={13} color="$color">
             {t('mweb.createPod.hostFreeNote')}
           </Text>
         </XStack>
       ) : null}
       {ready ? null : (
-        <Text fontSize={12.5} color="$muted">
+        <Text fontSize={13} color="$muted">
           {t('mweb.createPod.previewPrompt')}
         </Text>
       )}
       {hostOnly ? (
-        <Text testID="price-panel-host-only" fontSize={12.5} color="$muted">
+        <Text testID="price-panel-host-only" fontSize={13} color="$muted">
           {t('mweb.createPod.hostOnlyPod')}
         </Text>
       ) : null}
@@ -87,19 +68,19 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
       {/* Hide the previous waterfall while a new amount is loading, so stale
           money rows never render beside labels built from the live inputs. */}
       {ready && projection && waterfall && statement && !isLoading ? (
-        <YStack gap={10} testID="create-pod-earnings">
+        <YStack gap={12} testID="create-pod-earnings">
           <YStack gap={2}>
             <XStack justifyContent="space-between" gap={12}>
-              <Text fontSize={13} fontWeight="600" color="$color" flexShrink={1}>
+              <Text fontSize={14} fontWeight="600" color="$color" flexShrink={1}>
                 {t('mweb.createPod.totalCollection', {
                   vars: { price: money(podAmount), spots: projection.payable_spots },
                 })}
               </Text>
-              <Text fontSize={13} fontWeight="700" color="$success">
+              <Text fontSize={14} fontWeight="700" color="$success">
                 {money(waterfall.amount)}
               </Text>
             </XStack>
-            <Text testID="price-panel-included-gst" fontSize={10.5} color="$muted">
+            <Text testID="price-panel-included-gst" fontSize={12} color="$muted">
               {statement.collection.included_gst_note}
             </Text>
           </YStack>
@@ -117,10 +98,10 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
           />
         </YStack>
       ) : null}
-      <Text testID="price-panel-estimate-note" fontSize={11} color="$muted">
+      <Text testID="price-panel-estimate-note" fontSize={12} color="$muted">
         {t('mweb.createPod.earningsEstimateNote')}
       </Text>
-    </YStack>
+    </SurfaceCard>
   );
 }
 

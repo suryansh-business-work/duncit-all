@@ -1,4 +1,6 @@
-import { Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text } from 'tamagui';
+
+import { SurfaceCard } from '@/components/SurfaceCard';
 
 import { AvailabilityGrid } from './AvailabilityGrid';
 import { AvailabilityLegend } from './AvailabilityLegend';
@@ -46,15 +48,7 @@ export function AvailabilityCalendarCard({
   onRecurring,
 }: Readonly<Props>) {
   return (
-    <YStack
-      testID="availability-calendar"
-      gap={12}
-      padding={12}
-      borderRadius={14}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
+    <SurfaceCard testID="availability-calendar" gap={14} padding={12}>
       <AvailabilityToolbar
         view={view}
         onView={onView}
@@ -65,7 +59,7 @@ export function AvailabilityCalendarCard({
         onRecurring={onRecurring}
       />
       {error ? (
-        <Text testID="availability-error" fontSize={12.5} color="$danger">
+        <Text testID="availability-error" fontSize={13} color="$danger">
           {error}
         </Text>
       ) : null}
@@ -81,6 +75,6 @@ export function AvailabilityCalendarCard({
         onPickDay={onPickDay}
       />
       <AvailabilityLegend />
-    </YStack>
+    </SurfaceCard>
   );
 }

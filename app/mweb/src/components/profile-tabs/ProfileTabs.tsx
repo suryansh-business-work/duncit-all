@@ -48,7 +48,7 @@ export default function ProfileTabs({ tabs }: Readonly<Props>) {
       {...tabs}
       variant="fullWidth"
       aria-label={t('mweb.profile.profileSections')}
-      sx={{ minHeight: 44, '& .MuiTab-root': { fontWeight: 700, minHeight: 44, letterSpacing: 0.5 } }}
+      sx={{ minHeight: 44, borderBottom: 1, borderColor: 'divider', '& .MuiTab-root': { minHeight: 44 } }}
     />
   );
 }

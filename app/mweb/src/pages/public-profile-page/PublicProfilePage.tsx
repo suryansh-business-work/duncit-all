@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/client/react';
 import { useEntityPageMeta } from '../../app/pageMeta';
 import { useNavigate, useParams } from 'react-router';
 import { Alert, Skeleton, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowBackIcon from '@mui/icons-material/ArrowBackRounded';
 import { DuncitIconButton } from '@duncit/buttons';
 import ProfileFollowActions from './ProfileFollowActions';
 import PublicProfileHeader from './PublicProfileHeader';
@@ -57,7 +57,7 @@ export default function PublicProfilePage() {
   if (loading && !data) {
     return (
       <Stack spacing={2} sx={{ pt: 2, alignItems: 'center' }}>
-        <Skeleton variant="circular" width={96} height={96} />
+        <Skeleton variant="circular" width={88} height={88} />
         <Skeleton width="60%" height={32} />
         <Skeleton width="40%" />
       </Stack>
@@ -71,19 +71,15 @@ export default function PublicProfilePage() {
 
   return (
     <Stack spacing={3} sx={{ pt: 1, pb: 4 }}>
-      <Stack direction="row" spacing={1} sx={{
-        alignItems: "center"
-      }}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <DuncitIconButton
           onClick={() => navigate(-1)}
           aria-label={t('mweb.common.goBack')}
-          sx={{ minWidth: 44, minHeight: 44 }}
+          sx={{ width: 40, height: 40, minHeight: 40, bgcolor: 'background.paper', color: 'text.primary' }}
         >
-          <ArrowBackIcon />
+          <ArrowBackIcon fontSize="small" />
         </DuncitIconButton>
-        <Typography variant="h6" sx={{
-          fontWeight: 700
-        }}>
+        <Typography component="h2" sx={{ fontSize: 17, fontWeight: 600 }}>
           Profile
         </Typography>
       </Stack>

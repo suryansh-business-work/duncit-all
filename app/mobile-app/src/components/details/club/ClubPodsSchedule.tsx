@@ -1,8 +1,11 @@
-import { ScrollView, Text, YStack } from 'tamagui';
+import { ScrollView, YStack } from 'tamagui';
 
+import { EmptyState } from '@/components/EmptyState';
+import { SectionHeader } from '@/components/SectionHeader';
 import type { ClubPod } from '@/hooks/useDetails';
-import { PodCard } from '@/components/home/PodCard';
+import { useTranslation } from '@/hooks/useTranslation';
 import { clubPodPhase, type ClubPodPhase } from '@/utils/club-detail';
+import { ClubPodRailCard } from './ClubPodRailCard';
 
 const RAILS: readonly (readonly [ClubPodPhase, string])[] = [
   ['SOON', 'Happening soon'],
@@ -16,34 +19,35 @@ interface Props {
 }
 
 /** Pods Schedule segment — Happening Soon / Upcoming / Previous, each a
- * side-by-side swipe rail. */
+ * side-by-side swipe rail. mWeb twin: ClubPodsScheduleSection. */
 export function ClubPodsSchedule({ pods, onOpenPod }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (pods.length === 0) {
     return (
-      <Text testID="club-no-pods" fontSize={13} color="$muted">
-        No pods scheduled for this club yet.
-      </Text>
+      <EmptyState
+        testID="club-no-pods"
+        icon="event-busy"
+        title={t('mweb.clubDetails.noPodsScheduledForThisClub')}
+      />
     );
   }
   return (
-    <YStack gap={16} testID="club-pods-schedule">
+    <YStack gap={20} testID="club-pods-schedule">
       {RAILS.map(([phase, title]) => {
         const rail = pods.filter(
           (pod) => clubPodPhase(pod.pod_date_time, pod.pod_end_date_time) === phase,
         );
         if (rail.length === 0) return null;
         return (
-          <YStack key={phase} gap={8}>
-            <Text fontSize={15} fontWeight="700" color="$color">
-              {title}
-            </Text>
+          <YStack key={phase} gap={10}>
+            <SectionHeader title={title} />
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ gap: 12 }}
             >
               {rail.map((pod) => (
-                <PodCard key={pod.id} pod={pod} width={220} onPress={() => onOpenPod(pod)} />
+                <ClubPodRailCard key={pod.id} pod={pod} onPress={() => onOpenPod(pod)} />
               ))}
             </ScrollView>
           </YStack>

@@ -1,13 +1,12 @@
-import { Alert, Stack, Typography } from '@mui/material';
-import ShareIcon from '@mui/icons-material/Share';
+import { Stack } from '@mui/material';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
 import { podPhase } from '@duncit/utils';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { DuncitButton } from '@duncit/buttons';
-import { podUrl } from '../../utils/seoUrls';
 import BackoutInProcessPanel from './BackoutInProcessPanel';
 import MemberPanel from './MemberPanel';
-import { compactButtonSx, gradientButtonSx } from './buttonSx';
-import { buildPodShareText } from './usePodDetailActions';
+import ReferralRefillPanel from './ReferralRefillPanel';
+import { BarLabel, BarNotice } from './BarLabel';
+import { ctaButtonSx } from './buttonSx';
 import SeatPicker from './SeatPicker';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -31,7 +30,11 @@ interface Props {
   onGoToDashboard: () => void;
 }
 
-
+/**
+ * The booking bar's contents, by the viewer's state: host, closed, backing out,
+ * booked, backed out, or still deciding. The price (or state) sits on the
+ * left, the one green action on the right — the native bar's shape (rule 27).
+ */
 export default function PodActionPanel({
   pod,
   isFree,
@@ -61,15 +64,12 @@ export default function PodActionPanel({
   // — replace the booking CTA with the Host Studio entry point.
   if (isHost) {
     return (
-      <DuncitButton
-        variant="contained"
-        size="large"
-        fullWidth
-        onClick={onGoToDashboard}
-        sx={gradientButtonSx}
-      >
-        {t('mweb.podDetails.goToDashboard')}
-      </DuncitButton>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', pl: 1 }}>
+        <BarLabel caption={t('mweb.podDetails.youreHosting')} value={t('mweb.podDetails.yourPod')} />
+        <DuncitButton variant="contained" onClick={onGoToDashboard} sx={ctaButtonSx}>
+          {t('mweb.podDetails.goToDashboard')}
+        </DuncitButton>
+      </Stack>
     );
   }
 
@@ -83,9 +83,9 @@ export default function PodActionPanel({
     : t('mweb.podDetails.bookingClosed');
   if (isExpired && !isMember && !inProcess) {
     return (
-      <Alert severity="warning" sx={{ borderRadius: '16px' }}>
-        {closedMessage}
-      </Alert>
+      <Stack direction="row" sx={{ alignItems: 'center', minHeight: 48 }}>
+        <BarNotice icon={<EventBusyIcon sx={{ color: 'warning.main' }} />}>{closedMessage}</BarNotice>
+      </Stack>
     );
   }
 
@@ -105,7 +105,6 @@ export default function PodActionPanel({
         isExpired={isExpired}
         canBackout={!!ms?.can_backout}
         backingOut={backingOut}
-        deductionPct={ms?.backout_deduction_pct ?? 0}
         releasedSeats={Number(ms?.released_seats_pending ?? 0)}
         canTakeSeatsBack={!!ms?.can_cancel_backout}
         restoringSpot={restoringSpot}
@@ -117,94 +116,43 @@ export default function PodActionPanel({
 
   if (m?.status === 'BACKED_OUT' && referralToken) {
     return (
-      <Stack spacing={1}>
-        <Alert severity="warning">
-          {t('mweb.podDetails.backedOutRefundLead')} <b>{m.refund_status}</b>
-        </Alert>
-        <Typography variant="body2">{t('mweb.podDetails.referFriend')}</Typography>
-        <DuncitButton
-          variant="outlined"
-          startIcon={<ContentCopyIcon />}
-          onClick={() => onCopyReferral(referralToken)}
-          sx={compactButtonSx}
-        >
-          {t('mweb.podDetails.copyReferralLink')}
-        </DuncitButton>
-        {(navigator as any).share && (
-          <DuncitButton
-            variant="text"
-            startIcon={<ShareIcon />}
-            onClick={() => {
-              const url = `${globalThis.window.location.origin}${podUrl(pod.club_slug, pod.pod_id)}?ref=${referralToken}`;
-              // No `url` field — see the note in usePodDetailActions.onShare:
-              // targets that take `url` drop `text`, which would strip the
-              // referral share back to a bare link too. The link (with its
-              // ?ref) is the last line of the text.
-              return (navigator as any).share({
-                title: pod.pod_title,
-                text: buildPodShareText(pod, url),
-              });
-            }}
-            sx={compactButtonSx}
-          >
-            {t('mweb.podDetails.share')}
-          </DuncitButton>
-        )}
-      </Stack>
+      <ReferralRefillPanel
+        pod={pod}
+        refundStatus={m.refund_status}
+        referralToken={referralToken}
+        onCopyReferral={onCopyReferral}
+      />
     );
   }
 
   const maxSeats = Number(ms?.max_seats_per_booking ?? 1);
-  const payLabel = t('mweb.podDetails.bookAndPay', {
-    vars: { amount: priceFormat(Number(pod.pod_amount || 0) * seats) },
-  });
-
-  if (isFree) {
-    return (
-      <Stack direction="row" spacing={1} sx={{
-        alignItems: "center"
-      }}>
-        <SeatPicker
-          value={seats}
-          onChange={onSeatsChange}
-          maxSeats={maxSeats}
-          disabled={joining || ms?.can_join === false}
-        />
-        <DuncitButton
-          variant="contained"
-          size="large"
-          fullWidth
-          disabled={joining || ms?.can_join === false}
-          onClick={onJoinFree}
-          sx={gradientButtonSx}
-        >
-          {ms?.can_join === false
-            ? t('mweb.podDetails.podIsFull')
-            : t('mweb.podDetails.joinFreePod')}
-        </DuncitButton>
-      </Stack>
-    );
-  }
+  const isFull = ms?.can_join === false;
+  const bookLabel = isFree ? t('mweb.podDetails.join') : t('mweb.podDetails.bookNow');
+  const priceValue = isFree
+    ? t('mweb.podDetails.free')
+    : priceFormat(Number(pod.pod_amount || 0) * seats);
+  const busy = isFree && joining;
 
   return (
-    <Stack direction="row" spacing={1} sx={{
-      alignItems: "center"
-    }}>
+    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', pl: 1 }}>
+      <BarLabel
+        caption={isFree ? t('mweb.podDetails.entry') : t('mweb.podDetails.price')}
+        value={priceValue}
+        emphasis="price"
+      />
       <SeatPicker
         value={seats}
         onChange={onSeatsChange}
         maxSeats={maxSeats}
-        disabled={ms?.can_join === false}
+        disabled={busy || isFull}
       />
       <DuncitButton
         variant="contained"
-        size="large"
-        fullWidth
-        disabled={ms?.can_join === false}
-        onClick={onPaidCheckout}
-        sx={gradientButtonSx}
+        disabled={busy || isFull}
+        onClick={isFree ? onJoinFree : onPaidCheckout}
+        sx={ctaButtonSx}
       >
-        {ms?.can_join === false ? t('mweb.podDetails.podIsFull') : payLabel}
+        {isFull ? t('mweb.podDetails.podIsFull') : bookLabel}
       </DuncitButton>
     </Stack>
   );

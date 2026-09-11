@@ -16,7 +16,7 @@ export function AuditLogChanges({ log, testID }: Readonly<Props>) {
 
   return (
     <YStack gap={6} testID={testID}>
-      <Text fontSize={12.5} fontWeight="700" color="$color">
+      <Text fontSize={13} fontWeight="600" color="$color">
         {t('clubAdmin.monitoring.changesCount', { vars: { total: log.changes.length } })}
       </Text>
       {log.changes.length === 0 ? (
@@ -36,7 +36,7 @@ export function AuditLogChanges({ log, testID }: Readonly<Props>) {
       ))}
       {log.note ? (
         <Text testID={`${testID}-note`} fontSize={12} color="$muted">
-          <Text fontWeight="700" color="$color">
+          <Text fontWeight="600" color="$color">
             {t('clubAdmin.monitoring.note')}
           </Text>{' '}
           {log.note}

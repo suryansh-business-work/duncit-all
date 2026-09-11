@@ -4,6 +4,7 @@ import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 import { FieldLabel } from '@/components/Field';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -24,13 +25,13 @@ function HostChip({
       onPress={onRemove}
       alignItems="center"
       gap={4}
+      minHeight={32}
       paddingHorizontal={12}
-      paddingVertical={7}
       borderRadius={999}
       backgroundColor="$primary"
       pressStyle={PRESS_STYLE.control}
     >
-      <Text fontSize={12.5} fontWeight="600" color="$onPrimary">
+      <Text fontSize={13} fontWeight="600" color="$onPrimary">
         {host.full_name}
       </Text>
       <MaterialIcons name="close" size={14} color={onPrimary} />
@@ -83,7 +84,7 @@ export function AssignHostsField({ hosts, onChange, search }: Readonly<Props>) {
   const label = t('mweb.studioPods.hosts');
 
   return (
-    <YStack gap={8} testID="create-pod-hosts">
+    <SurfaceCard gap={10} testID="create-pod-hosts">
       <FieldLabel label={label} testID="create-pod-hosts" />
       <Text fontSize={12} color="$muted">
         {t('clubAdmin.editor.hostNote')}
@@ -125,14 +126,12 @@ export function AssignHostsField({ hosts, onChange, search }: Readonly<Props>) {
             alignItems="center"
             gap={10}
             padding={12}
-            borderRadius={12}
-            borderWidth={1}
-            borderColor="$borderColor"
-            backgroundColor="$surface"
+            borderRadius={16}
+            backgroundColor="$soft"
             pressStyle={PRESS_STYLE.control}
           >
             <YStack flex={1}>
-              <Text fontSize={13.5} fontWeight="600" color="$color">
+              <Text fontSize={14} fontWeight="600" color="$color">
                 {host.full_name}
               </Text>
               {host.email ? (
@@ -144,6 +143,6 @@ export function AssignHostsField({ hosts, onChange, search }: Readonly<Props>) {
             <MaterialIcons name="add" size={18} color={muted} />
           </XStack>
         ))}
-    </YStack>
+    </SurfaceCard>
   );
 }

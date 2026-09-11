@@ -46,7 +46,7 @@ export default function EmojiFeedbackDialog({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.supportChat.howDidWeDo')}</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.supportChat.howDidWeDo')}</DialogTitle>
       <DialogContent>
         {submitted ? (
           <Stack spacing={1.25} sx={{ pt: 1 }}>

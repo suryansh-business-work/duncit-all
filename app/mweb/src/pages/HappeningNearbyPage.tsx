@@ -1,4 +1,3 @@
-import WhatshotIcon from '@mui/icons-material/Whatshot';
 import PodListPage from './pod-list';
 import { usePodListFilters } from './pod-list/usePodListFilters';
 import FilterMenu from './home-page/FilterMenu';
@@ -37,8 +36,6 @@ export default function HappeningNearbyPage({
   return (
     <PodListPage
       title={t('mweb.home.happeningNearbyTitle')}
-      subtitle={t('mweb.home.happeningNearbySubtitle')}
-      icon={<WhatshotIcon color="primary" />}
       pods={activePods}
       ads={ads}
       loading={loading}

@@ -1,5 +1,5 @@
 import { Avatar, Box, Chip, LinearProgress, Stack, Typography } from '@mui/material';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEventsOutlined';
 import ResponsiveDialog from '../ResponsiveDialog';
 import { formatDate } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -61,13 +61,13 @@ export default function BadgeDetailsSheet({
         }}>
           <Avatar
             src={badge.image_url || undefined}
-            sx={{ width: 72, height: 72, bgcolor: 'primary.light' }}
+            sx={{ width: 72, height: 72, bgcolor: 'action.hover', color: 'secondary.main' }}
           >
             {!badge.image_url && <EmojiEventsIcon fontSize="large" />}
           </Avatar>
           <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography variant="h6" noWrap sx={{
-              fontWeight: 700
+              fontWeight: 600
             }}>
               {badge.title || 'Badge'}
             </Typography>
@@ -117,7 +117,7 @@ export default function BadgeDetailsSheet({
             <LinearProgress
               variant="determinate"
               value={pct ?? 100}
-              sx={{ borderRadius: 1, height: 8, mt: 0.5 }}
+              sx={{ mt: 0.75 }}
             />
           </Box>
         )}

@@ -6,14 +6,14 @@ import { Skeleton } from '@/components/Skeleton/Skeleton';
 export function SkeletonCard({ height = 200 }: Readonly<{ height?: number }>) {
   return (
     <YStack
-      borderRadius={18}
+      borderRadius={24}
       overflow="hidden"
       borderWidth={1}
-      borderColor="$borderColor"
+      borderColor="$cardBorder"
       backgroundColor="$surface"
     >
       <Skeleton width="100%" height={height} radius={0} />
-      <YStack padding={12} gap={8}>
+      <YStack padding={16} gap={8}>
         <Skeleton width="70%" height={16} />
         <Skeleton width="45%" height={12} />
       </YStack>

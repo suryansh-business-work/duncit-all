@@ -27,14 +27,14 @@ export function GrievanceStepRow({ index, title, body, isLast }: Readonly<Props>
           justifyContent="center"
           backgroundColor="$primary"
         >
-          <Text fontSize={12} fontWeight="700" color="$onPrimary">
+          <Text fontSize={12} fontWeight="600" color="$onPrimary">
             {index + 1}
           </Text>
         </YStack>
         {isLast ? null : <YStack flex={1} width={2} backgroundColor="$borderColor" />}
       </YStack>
       <YStack flex={1} gap={2} paddingBottom={isLast ? 0 : 14}>
-        <Text fontSize={13} fontWeight="700" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           {title}
         </Text>
         <Text fontSize={12} color="$muted">

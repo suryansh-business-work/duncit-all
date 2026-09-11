@@ -7,7 +7,7 @@ import { useTranslation } from '../i18n/useTranslation';
 import { Box, Paper, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import InstallMobileIcon from '@mui/icons-material/InstallMobile';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
 
 const APP_VERSION_INFO = gql`
   query AppVersionInfoBanner {
@@ -135,34 +135,33 @@ export default function OpenInAppBanner() {
         right: 12,
         bottom: BANNER_BOTTOM,
         zIndex: (t) => t.zIndex.snackbar,
-        borderRadius: '16px',
-        p: 1.25,
+        borderRadius: '24px',
+        p: 2,
       }}
     >
-      <Stack direction="row" spacing={1.25} sx={{
-        alignItems: "flex-start"
-      }}>
-        <InstallMobileIcon color="primary" sx={{ mt: 0.25 }} />
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="body2" sx={{
-            fontWeight: 600
-          }}>
-            {t('mweb.openInApp.title')}
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              display: "block"
-            }}>
-            {t('mweb.openInApp.subtitle')}
-          </Typography>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+        <Box
+          sx={{
+            width: 40,
+            height: 40,
+            flexShrink: 0,
+            borderRadius: '50%',
+            display: 'grid',
+            placeItems: 'center',
+            color: 'secondary.main',
+            bgcolor: 'action.hover',
+          }}
+        >
+          <InstallMobileIcon sx={{ fontSize: 22 }} />
         </Box>
-        <DuncitIconButton size="small" aria-label={t('mweb.openInApp.dismiss')} onClick={dismiss} sx={{ mt: -0.5, mr: -0.5 }}>
-          <CloseIcon fontSize="small" />
-        </DuncitIconButton>
+        <Typography sx={{ minWidth: 0, flex: 1, fontSize: 15, fontWeight: 600 }}>
+          {t('mweb.openInApp.title')}
+        </Typography>
+        <DuncitRoundButton tone="surface" aria-label={t('mweb.openInApp.dismiss')} onClick={dismiss}>
+          <CloseIcon />
+        </DuncitRoundButton>
       </Stack>
-      <Stack direction="row" spacing={1} sx={{ mt: 1.25 }}>
+      <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
         <DuncitButton size="small" variant="outlined" onClick={openInApp} sx={ACTION_SX}>
           {t('mweb.openInApp.open')}
         </DuncitButton>

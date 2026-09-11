@@ -33,9 +33,8 @@ export default function AvatarButton({
   onEdit,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const ringSx = hasStory
-    ? { p: '3px', borderRadius: '50%', background: 'linear-gradient(135deg, #ff8b5f, #ed4f7a)' }
-    : {};
+  // The ring only appears while a story is live — it is the signal, in the accent.
+  const ringSx = hasStory ? { p: '3px', borderRadius: '50%', bgcolor: 'secondary.main' } : {};
   const label = hasStory
     ? t('mweb.profileAvatar.viewYourStory')
     : t('mweb.profileAvatar.profilePhoto');
@@ -57,7 +56,8 @@ export default function AvatarButton({
               height: size,
               bgcolor: 'primary.main',
               fontSize: size * 0.4,
-              border: 2,
+              fontWeight: 600,
+              border: hasStory ? 2 : 0,
               borderColor: 'background.paper',
             }}
           >
@@ -78,9 +78,8 @@ export default function AvatarButton({
             right: -2,
             bottom: -2,
             bgcolor: 'background.paper',
-            border: 1,
-            borderColor: 'divider',
-            '&:hover': { bgcolor: 'action.hover' },
+            boxShadow: 'var(--duncit-card-shadow)',
+            '&:hover': { bgcolor: 'background.paper' },
           }}
         >
           {saving ? <CircularProgress size={16} /> : <EditIcon fontSize="small" />}

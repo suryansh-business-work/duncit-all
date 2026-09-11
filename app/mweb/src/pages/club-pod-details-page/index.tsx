@@ -1,7 +1,7 @@
 import { Link as RouterLink, useParams } from 'react-router';
-import { Box, Card, CardActionArea, CardContent, Stack, Typography } from '@mui/material';
-import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { Box, Card, CardActionArea, Stack, Typography } from '@mui/material';
+import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import { NO_POD_ACTIONS, NO_POD_BANNER, PodDetailsPage, type PodDetailsViewProps } from '@duncit/pod-details';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -14,17 +14,28 @@ import { useTranslation } from '../../i18n/useTranslation';
 function AttendanceLinkCard({ podId }: Readonly<{ podId: string }>) {
   const { t } = useTranslation();
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
+    <Card>
       <CardActionArea component={RouterLink} to={`/host/pod/${podId}/attendance`}>
-        <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', color: 'primary.main' }}>
-            <CheckCircleOutlinedIcon fontSize="small" />
-            <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 700 }}>
-              {t('clubAdmin.pods.podAttendance')}
-            </Typography>
-            <ChevronRightIcon fontSize="small" color="action" />
-          </Stack>
-        </CardContent>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', px: 2, py: 1.5, minHeight: 60 }}>
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              flexShrink: 0,
+              borderRadius: '50%',
+              display: 'grid',
+              placeItems: 'center',
+              bgcolor: 'action.hover',
+              color: 'primary.main',
+            }}
+          >
+            <CheckCircleOutlineRoundedIcon fontSize="small" />
+          </Box>
+          <Typography sx={{ flex: 1, fontSize: '0.95rem', fontWeight: 600 }}>
+            {t('clubAdmin.pods.podAttendance')}
+          </Typography>
+          <ChevronRightRoundedIcon sx={{ color: 'text.secondary' }} />
+        </Stack>
       </CardActionArea>
     </Card>
   );

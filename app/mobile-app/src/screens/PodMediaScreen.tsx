@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { RouteProp } from '@react-navigation/native';
 import { useRoute } from '@react-navigation/native';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 import { mwebPodMediaLabels } from '@duncit/utils';
 
 import { LoadingIndicator } from '@/components/LoadingIndicator';
@@ -10,6 +10,7 @@ import { MediaUploadField } from '@/components/create-pod/MediaUploadField';
 import { PodMediaGrid } from '@/components/pod-media/PodMediaGrid';
 import { PodMediaShareCard } from '@/components/pod-media/PodMediaShareCard';
 import { PillButton } from '@/components/attendance/AttendanceOtpControls';
+import { NoticeCard } from '@/components/attendance/NoticeCard';
 import { usePodMediaBoard } from '@/hooks/usePodMediaBoard';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
@@ -59,9 +60,7 @@ export function PodMediaScreen() {
     if (!board) {
       return (
         <YStack gap={12}>
-          <Text testID="pod-media-error" fontSize={13} color="$danger">
-            {error || labels.loadFailed}
-          </Text>
+          <NoticeCard testID="pod-media-error" tone="danger" title={error || labels.loadFailed} />
           <PillButton
             testID="pod-media-retry"
             label={labels.retry}
@@ -77,23 +76,19 @@ export function PodMediaScreen() {
     return (
       <YStack gap={16}>
         <YStack gap={4}>
-          <Text fontSize={16} fontWeight="800">
+          <Text fontSize={16} fontWeight="600" color="$color">
             {board.pod_title}
           </Text>
-          <Text fontSize={12.5} color="$muted">
+          <Text fontSize={13} color="$muted" lineHeight={18}>
             {isHost ? labels.hostIntro : labels.guestIntro}
           </Text>
         </YStack>
 
         {board.viewer === 'NONE' ? (
-          <Text testID="pod-media-not-invited" fontSize={12.5} color="$danger">
-            {labels.notInvited}
-          </Text>
+          <NoticeCard testID="pod-media-not-invited" tone="info" title={labels.notInvited} />
         ) : null}
         {board.is_cancelled ? (
-          <Text testID="pod-media-cancelled" fontSize={12.5} color="$warning">
-            {labels.cancelled}
-          </Text>
+          <NoticeCard testID="pod-media-cancelled" tone="warning" title={labels.cancelled} />
         ) : null}
 
         {/* Only the host hands the link out — a guest already has it. */}
@@ -110,18 +105,17 @@ export function PodMediaScreen() {
               deviceOnly
             />
             {busy ? (
-              <Text fontSize={12} color="$muted">
+              <Text fontSize={13} color="$muted">
                 {labels.uploading}
               </Text>
             ) : null}
           </YStack>
         ) : null}
 
-        <XStack>
-          <Text fontSize={13.5} fontWeight="700">
-            {labels.itemsHeading(board.count)}
-          </Text>
-        </XStack>
+        <YStack height={1} backgroundColor="$borderColor" />
+        <Text fontSize={15} fontWeight="600" color="$color">
+          {labels.itemsHeading(board.count)}
+        </Text>
         <PodMediaGrid
           items={board.items}
           labels={labels}

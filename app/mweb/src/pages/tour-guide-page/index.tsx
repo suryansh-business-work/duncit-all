@@ -1,14 +1,15 @@
+import { Fragment } from 'react';
 import { useNavigate } from 'react-router';
-import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Box, Divider, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import ReplayIcon from '@mui/icons-material/Replay';
-import { DuncitButton } from '@duncit/buttons';
+import { DuncitRoundButton } from '@duncit/buttons';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { isTourCompleted, toursForRoles } from '@duncit/tours';
 import { useTours } from '../../tours/useTours';
 import { useTranslation } from '../../i18n/useTranslation';
+import { SURFACE_SX } from '../../theme';
+import TourRow from './TourRow';
 
 /**
  * Tour Guide centre — every guided walkthrough, restartable at any time.
@@ -39,73 +40,37 @@ export default function TourGuidePage() {
   return (
     <Stack
       spacing={2}
-      sx={{ maxWidth: 720, mx: 'auto', width: '100%', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}
+      sx={{ maxWidth: 720, mx: 'auto', width: '100%', px: 2, pt: 1, pb: { xs: 10, sm: 8 } }}
     >
-      <Box>
-        <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} size="small">
-          {t('mweb.tourGuide.back')}
-        </DuncitButton>
-      </Box>
-      <Stack spacing={0.5}>
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+      {/* The inner-page header, as native's StackScreen draws it. */}
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+        <DuncitRoundButton
+          tone="paper"
+          onClick={() => navigate(-1)}
+          aria-label={t('mweb.tourGuide.back')}
+          sx={{ width: 40, height: 40, minWidth: 40, minHeight: 40, borderColor: 'var(--duncit-card-border)' }}
+        >
+          <ArrowBackIcon />
+        </DuncitRoundButton>
+        <Typography component="h1" noWrap sx={{ flex: 1, minWidth: 0, fontSize: 17, fontWeight: 600 }}>
           {t('mweb.tourGuide.tourGuide')}
         </Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            color: "text.secondary",
-            fontWeight: 700
-          }}>
-          {t('mweb.tourGuide.intro')}
-        </Typography>
       </Stack>
-      <Stack spacing={1.5}>
-        {tours.map((tour) => {
-          const done = isTourCompleted(completed, tour.id);
-          return (
-            <Card key={tour.id} variant="outlined" sx={{ borderRadius: '16px' }}>
-              <CardContent>
-                <Stack
-                  direction={{ xs: 'column', sm: 'row' }}
-                  spacing={1.5}
-                  sx={{
-                    alignItems: { sm: 'center' },
-                    justifyContent: "space-between"
-                  }}>
-                  <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-                    <Stack direction="row" spacing={1} sx={{
-                      alignItems: "center"
-                    }}>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                        {t(tour.titleKey)}
-                      </Typography>
-                      {done && <Chip size="small" label={t('mweb.tourGuide.completed')} color="success" />}
-                    </Stack>
-                    <Typography variant="body2" sx={{
-                      color: "text.secondary"
-                    }}>
-                      {t(tour.captionKey)}
-                    </Typography>
-                  </Stack>
-                  <DuncitButton
-                    variant="contained"
-                    size="small"
-                    data-testid={`tour-start-${tour.id}`}
-                    startIcon={done ? <ReplayIcon /> : <PlayArrowIcon />}
-                    onClick={() => {
-                      startTour(tour.id);
-                      navigate(tour.path);
-                    }}
-                    sx={{ flexShrink: 0 }}
-                  >
-                    {done ? t('mweb.tourGuide.restart') : t('mweb.tourGuide.start')}
-                  </DuncitButton>
-                </Stack>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </Stack>
+      <Box sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
+        {tours.map((tour, index) => (
+          <Fragment key={tour.id}>
+            {index > 0 ? <Divider sx={{ mx: 2 }} /> : null}
+            <TourRow
+              tour={tour}
+              done={isTourCompleted(completed, tour.id)}
+              onStart={() => {
+                startTour(tour.id);
+                navigate(tour.path);
+              }}
+            />
+          </Fragment>
+        ))}
+      </Box>
     </Stack>
   );
 }

@@ -37,7 +37,7 @@ export function GoogleLinkConsentModal({
   onAllow,
   onDeny,
 }: Readonly<Props>) {
-  const { primary } = useThemeColors();
+  const { accent } = useThemeColors();
   const { t } = useTranslation();
 
   return (
@@ -56,19 +56,19 @@ export function GoogleLinkConsentModal({
             testID="google-link-consent"
             width="88%"
             maxWidth={420}
-            backgroundColor="$background"
-            borderRadius={20}
-            padding={18}
+            backgroundColor="$surface"
+            borderRadius={28}
+            padding={20}
             gap={12}
           >
             <XStack alignItems="center" gap={8}>
-              <MaterialIcons name="link" size={20} color={primary} />
-              <Text fontSize={16.5} fontWeight="700" color="$color" flexShrink={1}>
+              <MaterialIcons name="link" size={20} color={accent} />
+              <Text fontSize={17} fontWeight="600" color="$color" flexShrink={1}>
                 {t('mweb.login.linkConsentTitle')}
               </Text>
             </XStack>
 
-            <Text fontSize={13.5} color="$color">
+            <Text fontSize={14} color="$color">
               {t('mweb.login.linkConsentBody', { vars: { email } })}
             </Text>
             <Text fontSize={12} color="$muted">
@@ -90,15 +90,15 @@ export function GoogleLinkConsentModal({
                 onPress={busy ? undefined : onDeny}
                 flex={1}
                 height={44}
-                borderRadius={12}
+                borderRadius={999}
                 borderWidth={1}
                 borderColor="$borderColor"
                 alignItems="center"
                 justifyContent="center"
                 opacity={busy ? 0.6 : 1}
-                pressStyle={PRESS_STYLE.ghost}
+                pressStyle={PRESS_STYLE.control}
               >
-                <Text fontSize={14} fontWeight="700" color="$color">
+                <Text fontSize={15} fontWeight="600" color="$color">
                   {t('mweb.login.linkConsentDeny')}
                 </Text>
               </XStack>
@@ -110,16 +110,16 @@ export function GoogleLinkConsentModal({
                 onPress={busy ? undefined : onAllow}
                 flex={1.4}
                 height={44}
-                borderRadius={12}
+                borderRadius={999}
                 backgroundColor="$primary"
                 alignItems="center"
                 justifyContent="center"
                 gap={8}
                 opacity={busy ? 0.7 : 1}
-                pressStyle={PRESS_STYLE.control}
+                pressStyle={PRESS_STYLE.solid}
               >
                 {busy ? <Spinner size="small" color="$onPrimary" /> : null}
-                <Text fontSize={14} fontWeight="700" color="$onPrimary">
+                <Text fontSize={15} fontWeight="600" color="$onPrimary">
                   {t('mweb.login.linkConsentAllow')}
                 </Text>
               </XStack>

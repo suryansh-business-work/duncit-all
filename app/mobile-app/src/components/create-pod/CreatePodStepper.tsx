@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { TourAnchor } from '@/tours/TourAnchor';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -45,7 +46,6 @@ import { AssignHostsField } from './AssignHostsField';
 import { StepHeader } from './StepHeader';
 import { ModerationBlockedDialog, type BlockedViolation } from './ModerationBlockedDialog';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export type DraftPayload = ReturnType<typeof serializeDraft>;
 
@@ -321,10 +321,9 @@ export function CreatePodStepper({
   ];
 
   return (
-    <YStack gap={16} padding={16} paddingBottom={48}>
-      {/* The wizard renders ONE page at a time, so every tour step has to live
-          on the page the host lands on. The header carries the step counter and
-          is what lets the walkthrough explain the four-step journey. */}
+    <YStack gap={16} padding={16} paddingBottom={0}>
+      {/* ONE page at a time, so every tour step lives on the page the host lands
+          on — the header's step pills let the walkthrough explain the journey. */}
       <TourAnchor tour="create-pod" anchor="create-pod-steps">
         <StepHeader step={step} podMode={podMode} />
       </TourAnchor>
@@ -337,26 +336,27 @@ export function CreatePodStepper({
           {error}
         </Text>
       ) : null}
-      <XStack gap={10}>
+      <XStack
+        gap={10}
+        marginHorizontal={-16}
+        padding={16}
+        paddingBottom={48}
+        backgroundColor="$surface"
+        borderTopWidth={1}
+        borderTopColor="$borderColor"
+      >
         {step > 0 ? (
-          <XStack
-            flex={1}
-            testID="create-pod-back"
-            role="button"
-            aria-label={t('mweb.createPod.back')}
-            onPress={() => goTo(step - 1)}
-            height={52}
-            borderRadius={12}
-            alignItems="center"
-            justifyContent="center"
-            borderWidth={1}
-            borderColor="$borderColor"
-            pressStyle={PRESS_STYLE.row}
-          >
-            <Text fontSize={15} fontWeight="700" color="$color">
-              {t('mweb.createPod.back')}
-            </Text>
-          </XStack>
+          <YStack flex={1}>
+            <DuncitButton
+              testID="create-pod-back"
+              label={t('mweb.createPod.back')}
+              onPress={() => goTo(step - 1)}
+              variant="soft"
+              tone="neutral"
+              size="lg"
+              fullWidth
+            />
+          </YStack>
         ) : null}
         {/* flex:2 is restated on the wrapper, not moved onto it: TourAnchor
             renders nothing at all when no tour is on, so the child has to keep

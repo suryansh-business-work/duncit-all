@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Button, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
+import { PrimaryButton } from '@/components/PrimaryButton';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { MobileSubscribeMembershipNewsDocument } from '@/graphql/membership';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -15,7 +17,7 @@ export function MembershipNotifyCard({
   subscribed,
 }: Readonly<{ email: string; subscribed: boolean }>) {
   const { t } = useTranslation();
-  const { primary, success } = useThemeColors();
+  const { accent, success } = useThemeColors();
   const [isDone, setIsDone] = useState(false);
   const [hasFailed, setHasFailed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,95 +34,83 @@ export function MembershipNotifyCard({
 
   if (isOnList) {
     return (
-      <XStack
+      <SurfaceCard
         testID="membership-notify-done"
         marginHorizontal={16}
-        padding={14}
-        gap={10}
-        borderRadius={16}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$surface"
-        alignItems="flex-start"
+        flexDirection="row"
+        gap={12}
+        alignItems="center"
       >
-        <MaterialIcons name="mark-email-read" size={20} color={success} />
+        <YStack
+          width={40}
+          height={40}
+          borderRadius={20}
+          alignItems="center"
+          justifyContent="center"
+          backgroundColor="$successSoft"
+        >
+          <MaterialIcons name="mark-email-read" size={20} color={success} />
+        </YStack>
         <YStack flex={1} gap={2}>
-          <Text fontSize={14} fontWeight="700" color="$color">
+          <Text fontSize={14} fontWeight="600" color="$color">
             {t('mweb.membership.notifyDone')}
           </Text>
-          <Text fontSize={12.5} color="$muted">
+          <Text fontSize={14} color="$muted">
             {t('mweb.membership.notifyDoneBody')}
           </Text>
         </YStack>
-      </XStack>
+      </SurfaceCard>
     );
   }
 
   const hasEmail = email.length > 0;
 
   return (
-    <YStack
-      testID="membership-notify-card"
-      marginHorizontal={16}
-      padding={16}
-      gap={10}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
+    <SurfaceCard testID="membership-notify-card" marginHorizontal={16} gap={16}>
       <XStack alignItems="center" gap={8}>
-        <MaterialIcons name="notifications-active" size={18} color={primary} />
-        <Text fontSize={15} fontWeight="700" color="$color">
+        <MaterialIcons name="notifications-active" size={20} color={accent} />
+        <Text flex={1} fontSize={17} fontWeight="600" color="$color">
           {t('mweb.membership.notifyTitle')}
         </Text>
       </XStack>
-      <Text fontSize={12.5} color="$muted">
-        {t('mweb.membership.notifyBody')}
-      </Text>
 
-      <YStack gap={4}>
-        <Text fontSize={11} fontWeight="600" color="$muted">
+      <YStack gap={6}>
+        <Text fontSize={12} fontWeight="600" color="$muted">
           {t('mweb.membership.notifyEmailLabel')}
         </Text>
         <YStack
-          paddingHorizontal={12}
-          paddingVertical={10}
-          borderRadius={10}
+          paddingHorizontal={14}
+          height={48}
+          justifyContent="center"
+          borderRadius={14}
           borderWidth={1}
           borderColor={hasEmail ? '$borderColor' : '$danger'}
-          backgroundColor="$background"
+          backgroundColor="$soft"
         >
-          <Text fontSize={13.5} color="$color" numberOfLines={1}>
+          <Text fontSize={14} color="$color" numberOfLines={1}>
             {email}
           </Text>
         </YStack>
-        <Text fontSize={11} color={hasEmail ? '$muted' : '$danger'}>
+        <Text fontSize={12} color={hasEmail ? '$muted' : '$danger'}>
           {hasEmail ? t('mweb.membership.notifyEmailHint') : t('mweb.membership.notifyNoEmail')}
         </Text>
       </YStack>
 
       {hasFailed ? (
-        <Text testID="membership-notify-error" fontSize={12.5} color="$danger">
+        <Text testID="membership-notify-error" fontSize={13} color="$danger">
           {t('mweb.membership.notifyError')}
         </Text>
       ) : null}
 
-      <Button
+      <PrimaryButton
         testID="membership-notify-cta"
-        size="$3"
-        backgroundColor="$primary"
-        disabled={isSubmitting || !hasEmail}
-        opacity={isSubmitting || !hasEmail ? 0.6 : 1}
+        label={
+          isSubmitting ? t('mweb.membership.notifySubmitting') : t('mweb.membership.notifyCta')
+        }
+        loading={isSubmitting}
+        disabled={!hasEmail}
         onPress={onSubscribe}
-      >
-        <XStack alignItems="center" gap={8}>
-          {isSubmitting ? <Spinner size="small" color="$onPrimary" /> : null}
-          <Text fontSize={13.5} fontWeight="700" color="$onPrimary">
-            {isSubmitting ? t('mweb.membership.notifySubmitting') : t('mweb.membership.notifyCta')}
-          </Text>
-        </XStack>
-      </Button>
-    </YStack>
+      />
+    </SurfaceCard>
   );
 }

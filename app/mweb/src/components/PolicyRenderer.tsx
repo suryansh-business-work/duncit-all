@@ -74,10 +74,11 @@ export default function PolicyRenderer({ slug, hideTitle, hideUpdated }: Readonl
     <Box sx={{ maxWidth: 880, mx: 'auto' }}>
       {!hideTitle && (
         <Typography
-          variant="h4"
+          variant="h5"
+          component="h1"
           sx={{
-            fontWeight: 700,
-            mb: 2
+            fontSize: '1.25rem',
+            mb: 1.5
           }}>
           {policy.title}
         </Typography>

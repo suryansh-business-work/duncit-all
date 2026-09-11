@@ -10,6 +10,7 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
+import { FIELD_HEIGHT, FIELD_RADIUS } from '@/components/Field';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useDateFormat } from '@/hooks/useDateFormat';
@@ -88,6 +89,8 @@ export function DobDateField<T extends FieldValues>({
           testID="field-dob"
           flex={1}
           size="$4"
+          height={FIELD_HEIGHT}
+          borderRadius={FIELD_RADIUS}
           backgroundColor="$surface"
           color="$color"
           placeholderTextColor="$muted"
@@ -104,15 +107,13 @@ export function DobDateField<T extends FieldValues>({
           role="button"
           aria-label={t('mweb.signup.dobPick')}
           onPress={() => setOpen(true)}
-          width={44}
-          height={44}
+          width={FIELD_HEIGHT}
+          height={FIELD_HEIGHT}
           alignItems="center"
           justifyContent="center"
-          borderRadius={10}
-          borderWidth={1}
-          borderColor="$borderColor"
-          backgroundColor="$surface"
-          pressStyle={PRESS_STYLE.row}
+          borderRadius={FIELD_HEIGHT / 2}
+          backgroundColor="$soft"
+          pressStyle={PRESS_STYLE.ghost}
         >
           <MaterialIcons name="event" size={20} color={ink} />
         </XStack>

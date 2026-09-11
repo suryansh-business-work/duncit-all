@@ -34,7 +34,7 @@ function BubbleBody({
       {message.image_url ? (
         <AppImage
           source={{ uri: message.image_url }}
-          style={{ width: 180, height: 180, borderRadius: 8 }}
+          style={{ width: 180, height: 180, borderRadius: 12 }}
           resizeMode="cover"
         />
       ) : null}
@@ -88,14 +88,17 @@ export function ChatMessageBubble({ message, mine, onReact }: Readonly<ChatMessa
         pressStyle={onReact ? { opacity: 0.85 } : undefined}
         maxWidth="80%"
         gap={4}
-        padding={10}
-        borderRadius={14}
+        paddingHorizontal={12}
+        paddingVertical={8}
+        borderRadius={18}
+        borderBottomRightRadius={mine ? 6 : 18}
+        borderBottomLeftRadius={mine ? 18 : 6}
         borderWidth={1}
         backgroundColor={mine ? '$primary' : '$surface'}
-        borderColor={mine ? '$primary' : '$borderColor'}
+        borderColor={mine ? '$primary' : '$cardBorder'}
       >
         {!mine && message.user_name ? (
-          <Text fontSize={11} fontWeight="600" color="$muted">
+          <Text fontSize={12} fontWeight="600" color="$muted">
             {message.user_name}
           </Text>
         ) : null}

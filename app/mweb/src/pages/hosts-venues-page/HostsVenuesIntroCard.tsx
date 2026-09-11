@@ -1,64 +1,54 @@
 import { Link as RouterLink } from 'react-router';
-import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
-import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import { Box, Card, Stack, Typography } from '@mui/material';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUserOutlined';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 import { DuncitButton } from '@duncit/buttons';
 
+/** "Want to host or list a space?" — the title and the two CTAs say it all. */
 export default function HostsVenuesIntroCard() {
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px', bgcolor: 'rgba(255,79,115,0.10)' }}>
-      <CardContent>
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          spacing={2}
-          sx={{
-            alignItems: { xs: 'stretch', sm: 'center' }
-          }}
-        >
-          <Stack
-            direction="row"
-            spacing={1.5}
+    <Card sx={{ p: 2 }}>
+      <Stack spacing={2}>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+          <Box
             sx={{
-              alignItems: "center",
-              flex: 1
-            }}>
-            <Box sx={{ width: 42, height: 42, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: 'success.main', color: 'success.contrastText' }}>
-              <VerifiedUserIcon />
-            </Box>
-            <Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                Want to host or list a space?
-              </Typography>
-              <Typography variant="body2" sx={{
-                color: "text.secondary"
-              }}>
-                Become a Duncit Host or register your venue — onboarding is just a few steps.
-              </Typography>
-            </Box>
-          </Stack>
-          <Stack direction="row" spacing={1} sx={{ '& .MuiButton-root': { borderRadius: 999, fontWeight: 700 } }}>
-            <DuncitButton
-              component={RouterLink}
-              to="/survey/host"
-              variant="contained"
-              size="small"
-              startIcon={<GroupAddIcon />}
-            >
-              Become a Host
-            </DuncitButton>
-            <DuncitButton
-              component={RouterLink}
-              to="/survey/venue"
-              variant="outlined"
-              size="small"
-              startIcon={<AddBusinessIcon />}
-            >
-              Register Venue
-            </DuncitButton>
-          </Stack>
+              width: 40,
+              height: 40,
+              flex: '0 0 auto',
+              borderRadius: '50%',
+              display: 'grid',
+              placeItems: 'center',
+              bgcolor: 'action.hover',
+              color: 'secondary.main',
+            }}
+          >
+            <VerifiedUserIcon fontSize="small" />
+          </Box>
+          <Typography sx={{ fontSize: '1rem', fontWeight: 600 }}>
+            Want to host or list a space?
+          </Typography>
         </Stack>
-      </CardContent>
+        <Stack direction="row" spacing={1}>
+          <DuncitButton
+            component={RouterLink}
+            to="/survey/host"
+            variant="contained"
+            startIcon={<GroupAddIcon />}
+            sx={{ flex: 1 }}
+          >
+            Become a Host
+          </DuncitButton>
+          <DuncitButton
+            component={RouterLink}
+            to="/survey/venue"
+            startIcon={<AddBusinessIcon />}
+            sx={{ flex: 1, bgcolor: 'action.hover', color: 'text.primary', '&:hover': { bgcolor: 'action.selected' } }}
+          >
+            Register Venue
+          </DuncitButton>
+        </Stack>
+      </Stack>
     </Card>
   );
 }

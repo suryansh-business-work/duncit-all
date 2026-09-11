@@ -1,9 +1,20 @@
 import { Avatar, Box, Stack, Typography } from '@mui/material';
+import type { Theme } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
 
-/** Vibrant "unseen story" ring shared by every story rail (home + club). */
-export const STORY_RING_GRADIENT =
-  'linear-gradient(135deg, #ff4f73 0%, #ff8a3d 42%, #13d6b3 72%, #7c5cff 100%)';
+/** The "unseen story" ring shared by every story rail (home + club): a solid
+ * accent, read from the theme so it flips with the mode. A theme callback, so
+ * it works as an `sx` `background` value; the name is kept for its importers. */
+export const STORY_RING_GRADIENT = (theme: Theme) => theme.palette.secondary.main;
+
+/** Ring, then a 2px surface gap, around the avatar: accent when unseen, a
+ * hairline once seen, a dashed outline on the "add" tile. Both rings are 2.5px
+ * deep in total so a tile never changes size when it is seen. */
+function ringSx(add: boolean, active: boolean) {
+  if (add) return { p: 1.5, border: '1.5px dashed', borderColor: 'divider' };
+  if (active) return { p: '2.5px', background: STORY_RING_GRADIENT };
+  return { p: '1.5px', border: '1px solid', borderColor: 'divider' };
+}
 
 interface HomeStatusTileProps {
   label: string;
@@ -24,16 +35,12 @@ export default function HomeStatusTile({
   active = true,
   onClick,
 }: Readonly<HomeStatusTileProps>) {
-  // Unseen tiles get the vibrant gradient ring; seen tiles keep a grey
-  // (theme divider) ring so they stay recognisable as stories — they also
-  // shift to the end of the rail.
-  const showRing = !add && active;
-  const showSeenRing = !add && !active;
-  const ring = STORY_RING_GRADIENT;
+  // Unseen tiles get the accent ring; seen tiles keep a hairline ring so they
+  // stay recognisable as stories — they also shift to the end of the rail.
   const imageOrAvatar = imageUrl ? (
     <Box component="img" src={imageUrl} alt={label} loading="lazy" decoding="async" sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
   ) : (
-    <Avatar sx={{ width: '100%', height: '100%', bgcolor: 'primary.main', fontWeight: 700 }}>
+    <Avatar sx={{ width: '100%', height: '100%', bgcolor: 'text.secondary', color: 'common.white', fontWeight: 600 }}>
       {initials || label.slice(0, 1).toUpperCase()}
     </Avatar>
   );
@@ -63,12 +70,7 @@ export default function HomeStatusTile({
           width: 62,
           height: 62,
           borderRadius: '50%',
-          p: add ? 1.5 : 0.35,
-          background: showRing ? ring : undefined,
-          bgcolor: showSeenRing ? 'divider' : undefined,
-          border: add ? 1.5 : 0,
-          borderStyle: add ? 'dashed' : 'solid',
-          borderColor: 'divider',
+          ...ringSx(add, active),
           position: 'relative',
           display: 'grid',
           placeItems: 'center',
@@ -81,6 +83,8 @@ export default function HomeStatusTile({
             borderRadius: '50%',
             overflow: 'hidden',
             bgcolor: add ? 'action.hover' : 'background.paper',
+            border: add ? 0 : '2px solid',
+            borderColor: 'background.paper',
             display: 'grid',
             placeItems: 'center',
           }}

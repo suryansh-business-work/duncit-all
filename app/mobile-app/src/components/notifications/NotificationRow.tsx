@@ -1,6 +1,5 @@
 import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { followRequestRowState } from '@duncit/utils';
 
@@ -11,8 +10,8 @@ import { notificationIconName } from '@/utils/notification-icon';
 import { FollowRequestActions } from './FollowRequestActions';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
-/** A single notification card — chat-style row (avatar · title + preview ·
- * time), with unread cards highlighted by the primary gradient (B3-4).
+/** A single notification row — icon disc · title + preview · time, with an
+ * accent dot while unread. The list groups the rows inside one card.
  * RN twin of the mWeb NotificationsScreen list item. */
 export function NotificationRow({
   item,
@@ -28,22 +27,12 @@ export function NotificationRow({
   /** Re-read the inbox once an inline action changes something. */
   onAnswered?: () => void;
 }>) {
-  const { onPrimary, primary, muted } = useThemeColors();
+  const { accent, muted } = useThemeColors();
   const unread = !item.read_at;
   const notification = item.notification;
-  // Unread cards sit on the primary gradient (white ink); read cards sit on the
-  // light `$surface` card, so they take the theme ink colour `$color` (B-fix:
-  // `undefined` resolved to a near-invisible grey on the surface).
-  const titleColor = unread ? '#ffffff' : '$color';
-  const bodyColor = unread ? '#ffffff' : '$color';
-  const ink = unread ? '#ffffff' : undefined;
   // Contextual icon by notification type (falls back to the bell) instead of
   // repeating a generic bell on every row.
   const fallbackIcon = notificationIconName(notification.title);
-  // Hoisted so the two return branches share one decision (rule 26g) and neither
-  // pays a nesting increment for it.
-  const press = busy ? undefined : onPress;
-  const rowOpacity = busy ? 0.6 : 1;
   // Hoisted to nesting 0 (rule 26g), and the same decision the buttons below
   // make so the two cannot disagree: an actionable row ends in its buttons, and
   // the "open me" chevron would be a second, competing affordance. A
@@ -58,14 +47,25 @@ export function NotificationRow({
   });
   const showChevron = !busy && !!notification.link_url && rowState === 'HIDDEN';
 
-  const body = (
-    <XStack flex={1} gap={12} padding={12} alignItems="center">
+  return (
+    <XStack
+      testID={`notification-${item.id}`}
+      role="button"
+      aria-busy={busy}
+      onPress={busy ? undefined : onPress}
+      opacity={busy ? 0.6 : 1}
+      gap={12}
+      paddingHorizontal={16}
+      paddingVertical={14}
+      alignItems="flex-start"
+      pressStyle={PRESS_STYLE.row}
+    >
       <YStack
-        width={46}
-        height={46}
-        borderRadius={23}
+        width={40}
+        height={40}
+        borderRadius={20}
         overflow="hidden"
-        backgroundColor={unread ? 'rgba(255,255,255,0.22)' : '$primary'}
+        backgroundColor="$soft"
         alignItems="center"
         justifyContent="center"
       >
@@ -76,45 +76,33 @@ export function NotificationRow({
             resizeMode="cover"
           />
         ) : (
-          <MaterialIcons name={fallbackIcon} size={22} color={onPrimary} />
+          <MaterialIcons name={fallbackIcon} size={20} color={accent} />
         )}
       </YStack>
       <YStack flex={1} gap={2}>
         <XStack alignItems="center" gap={6}>
-          <Text flex={1} fontSize={15} fontWeight="700" color={titleColor} numberOfLines={2}>
+          <Text flex={1} fontSize={14} fontWeight="600" color="$color" numberOfLines={2}>
             {notification.title}
           </Text>
-          <Text fontSize={11} fontWeight="700" color={ink ?? muted} opacity={unread ? 0.9 : 1}>
+          <Text fontSize={12} color="$muted">
             {formatRelative(item.created_at)}
-          </Text>
-        </XStack>
-        <XStack alignItems="center" gap={8}>
-          <Text
-            flex={1}
-            fontSize={13}
-            color={bodyColor}
-            opacity={unread ? 0.92 : 0.85}
-            numberOfLines={2}
-          >
-            {notification.body}
           </Text>
           {unread ? (
             <YStack
               testID={`notification-new-${item.id}`}
-              borderRadius={999}
-              backgroundColor="rgba(255,255,255,0.26)"
-              paddingHorizontal={9}
-              paddingVertical={2}
-            >
-              <Text fontSize={10.5} fontWeight="700" color="#ffffff">
-                NEW
-              </Text>
-            </YStack>
+              width={8}
+              height={8}
+              borderRadius={4}
+              backgroundColor="$accent"
+            />
           ) : null}
-          {busy ? <Spinner size="small" color={ink ?? primary} /> : null}
-          {showChevron ? (
-            <MaterialIcons name="chevron-right" size={20} color={ink ?? primary} />
-          ) : null}
+        </XStack>
+        <XStack alignItems="center" gap={8}>
+          <Text flex={1} fontSize={13} color="$muted" numberOfLines={2}>
+            {notification.body}
+          </Text>
+          {busy ? <Spinner size="small" color={muted} /> : null}
+          {showChevron ? <MaterialIcons name="chevron-right" size={20} color={muted} /> : null}
         </XStack>
         <FollowRequestActions
           actionType={notification.action_type}
@@ -126,48 +114,6 @@ export function NotificationRow({
           onAnswered={() => onAnswered?.()}
         />
       </YStack>
-    </XStack>
-  );
-
-  if (unread) {
-    return (
-      <XStack
-        testID={`notification-${item.id}`}
-        role="button"
-        aria-busy={busy}
-        onPress={press}
-        opacity={rowOpacity}
-        borderRadius={16}
-        overflow="hidden"
-        pressStyle={PRESS_STYLE.surface}
-      >
-        <LinearGradient
-          colors={['#ff4f73', '#ff7a59']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ flex: 1 }}
-        >
-          {body}
-        </LinearGradient>
-      </XStack>
-    );
-  }
-
-  return (
-    <XStack
-      testID={`notification-${item.id}`}
-      role="button"
-      aria-busy={busy}
-      onPress={press}
-      opacity={rowOpacity}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      overflow="hidden"
-      pressStyle={PRESS_STYLE.control}
-    >
-      {body}
     </XStack>
   );
 }

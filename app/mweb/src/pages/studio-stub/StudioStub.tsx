@@ -22,25 +22,22 @@ export default function StudioStub({ icon, title, subtitle }: Readonly<Props>) {
       }}>
       <Box
         sx={{
-          width: 64,
-          height: 64,
+          width: 96,
+          height: 96,
           borderRadius: '50%',
           display: 'grid',
           placeItems: 'center',
-          color: 'primary.contrastText',
-          background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)',
+          color: 'secondary.main',
+          bgcolor: 'background.paper',
+          '& svg': { fontSize: 44 },
         }}
       >
         {icon}
       </Box>
-      <Typography variant="h6" sx={{ fontWeight: 700 }}>
+      <Typography component="h1" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>
         {title}
       </Typography>
-      <Typography variant="body2" sx={{
-        color: "text.secondary"
-      }}>
-        {subtitle}
-      </Typography>
+      <Typography sx={{ fontSize: 14, color: 'text.secondary' }}>{subtitle}</Typography>
     </Stack>
   );
 }

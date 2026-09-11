@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Box, CircularProgress, Dialog, Stack, Typography } from '@mui/material';
+import { Box, CircularProgress, Dialog, Paper, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import { DuncitRoundButton } from '@duncit/buttons';
@@ -14,6 +14,8 @@ import NotificationFilterChips from './NotificationFilterChips';
 import NotificationRow from './NotificationRow';
 import NotificationsHero from './NotificationsHero';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { SURFACE_SX } from '../../../theme';
+import { HEADER_BUTTON_SX } from '../../../pages/support-chat/calmStyles';
 
 interface NotificationsScreenProps {
   open: boolean;
@@ -84,6 +86,7 @@ export default function NotificationsScreen({
       slotProps={{
         paper: {
           sx: {
+            bgcolor: 'background.default',
             backgroundImage: 'var(--duncit-app-bg)',
             backgroundSize: '180% 180%',
           },
@@ -97,23 +100,22 @@ export default function NotificationsScreen({
       <Stack sx={{ height: '100dvh', color: 'text.primary' }}>
         <Stack
           direction="row"
-          spacing={1.25}
+          spacing={1.5}
           sx={{
             alignItems: "center",
-            px: 1.5,
+            px: 2,
             py: 1.25,
             flexShrink: 0
           }}>
           <DuncitRoundButton
-            size="large"
-            tone="surface"
             onClick={onClose}
             aria-label={t('mweb.common.closeNotifications')}
+            sx={HEADER_BUTTON_SX}
           >
             <CloseIcon />
           </DuncitRoundButton>
           <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1 }}>
+            <Typography component="h1" sx={{ fontSize: '1.25rem', fontWeight: 600, lineHeight: 1.2 }}>
               Notifications
             </Typography>
             <Typography
@@ -126,19 +128,17 @@ export default function NotificationsScreen({
             </Typography>
           </Box>
           <DuncitRoundButton
-            size="large"
-            tone="surface"
             onClick={onMarkAll}
             disabled={liveUnread === 0 || markAllBusy}
             aria-label={t('mweb.common.markAllAsRead')}
             aria-busy={markAllBusy}
+            sx={HEADER_BUTTON_SX}
           >
             {markAllBusy ? <CircularProgress size={20} color="inherit" /> : <DoneAllIcon />}
           </DuncitRoundButton>
         </Stack>
 
         <NotificationsHero
-          total={notifs.length}
           pushSupported={pushSupported}
           pushOn={perm === 'granted'}
           pushBusy={pushBusy}
@@ -149,26 +149,37 @@ export default function NotificationsScreen({
 
         {/* minHeight: 0 lets a flex child actually scroll — without it the
             item's automatic minimum size keeps it as tall as its content. */}
-        <Stack spacing={1} sx={{ px: 1.5, pb: 3, flex: 1, minHeight: 0, overflowY: 'auto' }}>
+        <Box sx={{ px: 2, pb: 3, flex: 1, minHeight: 0, overflowY: 'auto' }}>
           {visible.length === 0 && (
-            <Box sx={{ p: 3, borderRadius: '16px', bgcolor: 'background.paper', textAlign: 'center' }}>
+            <Paper sx={{ ...SURFACE_SX, p: 3, textAlign: 'center' }}>
               <Typography variant="body2" sx={{
                 color: "text.secondary"
               }}>
                 {notifs.length === 0 ? 'No notifications yet.' : 'Nothing in this category.'}
               </Typography>
-            </Box>
+            </Paper>
           )}
-          {visible.map((item: any) => (
-            <NotificationRow
-              key={item.id}
-              item={item}
-              busy={busyId === item.id || markAllBusy}
-              onClick={() => onNotifClick(item)}
-              onAnswered={onRefresh}
-            />
-          ))}
-        </Stack>
+          {visible.length > 0 && (
+            <Paper
+              sx={{
+                ...SURFACE_SX,
+                overflow: 'hidden',
+                // Hairlines between rows, drawn by the list (rows stay self-contained).
+                '& > * + *': { borderTop: 1, borderColor: 'divider' },
+              }}
+            >
+              {visible.map((item: any) => (
+                <NotificationRow
+                  key={item.id}
+                  item={item}
+                  busy={busyId === item.id || markAllBusy}
+                  onClick={() => onNotifClick(item)}
+                  onAnswered={onRefresh}
+                />
+              ))}
+            </Paper>
+          )}
+        </Box>
       </Stack>
       <ConfirmDialog
         open={pendingToggle !== null}

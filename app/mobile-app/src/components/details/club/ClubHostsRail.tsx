@@ -2,6 +2,8 @@ import { AppImage } from '@/components/AppImage';
 
 import { ScrollView, Text, YStack } from 'tamagui';
 
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import type { ClubDetail } from '@/hooks/useDetails';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -17,7 +19,8 @@ interface Props {
   onOpenHost: (id: string) => void;
 }
 
-/** Hosts who run this club's events — tap an avatar to open their profile. */
+/** Hosts who run this club's events on a surface card — tap an avatar to open
+ * their profile. mWeb twin: club-details-page/ClubHostsSection. */
 export function ClubHostsRail({
   hosts,
   title,
@@ -27,17 +30,15 @@ export function ClubHostsRail({
   const { t } = useTranslation();
   // Resolved here, not as parameter defaults: a default is evaluated before
   // any hook runs, so `t` would not exist yet.
-  const titleText = title ?? t('mweb.details.clubHosts');
+  const titleText = title ?? t('mweb.clubDetails.hosts');
   if (hosts.length === 0) return null;
   return (
-    <YStack gap={8} testID={`${testIdPrefix}s`}>
-      <Text fontSize={16} fontWeight="700" color="$color">
-        {titleText}
-      </Text>
+    <SurfaceCard gap={12} testID={`${testIdPrefix}s`}>
+      <SectionHeader title={titleText} />
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 14 }}
+        contentContainerStyle={{ gap: 16 }}
       >
         {hosts.map((host) => (
           <YStack
@@ -61,21 +62,21 @@ export function ClubHostsRail({
                 width={56}
                 height={56}
                 borderRadius={28}
-                backgroundColor="$primary"
+                backgroundColor="$soft"
                 alignItems="center"
                 justifyContent="center"
               >
-                <Text color="$onPrimary" fontWeight="700" fontSize={18}>
+                <Text color="$color" fontWeight="600" fontSize={18}>
                   {host.name.charAt(0).toUpperCase()}
                 </Text>
               </YStack>
             )}
-            <Text fontSize={12} fontWeight="700" color="$color" numberOfLines={1}>
+            <Text fontSize={12} fontWeight="600" color="$color" numberOfLines={1}>
               {host.name}
             </Text>
           </YStack>
         ))}
       </ScrollView>
-    </YStack>
+    </SurfaceCard>
   );
 }

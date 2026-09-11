@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Avatar, Text, XStack, YStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { FollowClubDocument } from '@/graphql/following';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useFollowingStore } from '@/stores/following.store';
@@ -22,7 +23,7 @@ interface Props {
  * follow yet — and Join follows it in place. Tamagui twin of mWeb's row.
  */
 export function ClubRecommendationRow({ clubs, onOpenClub }: Readonly<Props>) {
-  const { primary, onPrimary } = useThemeColors();
+  const { accent } = useThemeColors();
   const { t } = useTranslation();
   // Followed ids come from the same store the Following tab reads, so a join
   // here flips that tab too.
@@ -78,38 +79,35 @@ export function ClubRecommendationRow({ clubs, onOpenClub }: Readonly<Props>) {
   const verified = (club as { is_verified?: boolean }).is_verified === true;
 
   return (
-    <XStack
+    <SurfaceCard
       testID="club-recommendation"
       role="button"
       aria-label={club.club_name}
       onPress={() => onOpenClub(club)}
       marginHorizontal={16}
+      flexDirection="row"
       alignItems="center"
-      gap={10}
-      padding={10}
-      borderRadius={18}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      pressStyle={PRESS_STYLE.control}
+      gap={12}
+      padding={12}
+      pressStyle={PRESS_STYLE.surface}
     >
       <Avatar circular size={44}>
         {image ? <Avatar.Image src={image} /> : null}
-        <Avatar.Fallback backgroundColor={primary} alignItems="center" justifyContent="center">
-          <Text color={onPrimary} fontSize={16} fontWeight="700">
+        <Avatar.Fallback backgroundColor="$soft" alignItems="center" justifyContent="center">
+          <Text color="$color" fontSize={16} fontWeight="600">
             {club.club_name?.[0]?.toUpperCase() ?? 'C'}
           </Text>
         </Avatar.Fallback>
       </Avatar>
       <YStack flex={1} minWidth={0}>
         <XStack alignItems="center" gap={4} minWidth={0}>
-          <Text fontSize={13.5} fontWeight="700" color="$color" numberOfLines={1} flexShrink={1}>
+          <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1} flexShrink={1}>
             {club.club_name}
           </Text>
-          {verified ? <MaterialIcons name="verified" size={14} color={primary} /> : null}
+          {verified ? <MaterialIcons name="verified" size={15} color={accent} /> : null}
         </XStack>
         {meta ? (
-          <Text fontSize={11.5} fontWeight="600" color="$muted" numberOfLines={1}>
+          <Text fontSize={12} fontWeight="500" color="$muted" numberOfLines={1}>
             {meta}
           </Text>
         ) : null}
@@ -122,18 +120,18 @@ export function ClubRecommendationRow({ clubs, onOpenClub }: Readonly<Props>) {
         onPress={() => {
           if (!joined && !busy) follow(club.id);
         }}
+        height={36}
+        alignItems="center"
         borderRadius={999}
-        borderWidth={1.5}
-        borderColor={joined ? '$borderColor' : '$primary'}
-        paddingHorizontal={13}
-        paddingVertical={7}
-        opacity={joined || busy ? 0.6 : 1}
-        pressStyle={PRESS_STYLE.row}
+        paddingHorizontal={14}
+        backgroundColor={joined ? '$soft' : '$primary'}
+        opacity={busy ? 0.6 : 1}
+        pressStyle={PRESS_STYLE.solid}
       >
-        <Text fontSize={12} fontWeight="700" color={joined ? '$muted' : '$primary'}>
+        <Text fontSize={12.5} fontWeight="600" color={joined ? '$muted' : '$onPrimary'}>
           {joined ? t('mweb.home.joinedClub') : t('mweb.home.joinClub')}
         </Text>
       </XStack>
-    </XStack>
+    </SurfaceCard>
   );
 }

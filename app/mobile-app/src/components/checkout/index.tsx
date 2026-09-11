@@ -8,6 +8,7 @@ export { ProcessingOverlay } from './ProcessingOverlay';
 export { RazorpayWebView } from './RazorpayWebView';
 export { AlreadyBookedDialog } from './AlreadyBookedDialog';
 export { CouponField } from './CouponField';
+export { CheckoutSavingsCard } from './CheckoutSavingsCard';
 export { CouponTotal } from './CouponTotal';
 export { CoinRedeemField } from './CoinRedeemField';
 export { CoinSummaryRows } from './CoinSummaryRows';

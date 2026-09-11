@@ -50,22 +50,18 @@ export function SurveyChip({
       sx={{
         height: dims.height,
         fontSize: dims.fontSize,
-        fontWeight: 700,
-        borderRadius: 999,
+        fontWeight: 600,
+        borderRadius: '999px',
         px: dims.paddingX,
         minWidth: size === 'large' ? 112 : 92,
         touchAction: 'manipulation',
         cursor: 'pointer',
-        transition: 'all 180ms ease',
+        transition: 'background-color 180ms ease',
         backgroundColor: selected ? hue : alpha(hue, 0.1),
-        color: selected ? '#fff' : hue,
+        color: selected ? 'common.white' : hue,
         border: `1.5px solid ${selected ? hue : alpha(hue, 0.4)}`,
-        boxShadow: selected
-          ? `0 10px 24px -10px ${alpha(hue, 0.7)}`
-          : `0 8px 18px -14px ${alpha(hue, 0.5)}`,
         '&:hover': {
           backgroundColor: selected ? hue : alpha(hue, 0.18),
-          transform: 'translateY(-1px)',
         },
         '& .MuiChip-label': { px: 0 },
       }}

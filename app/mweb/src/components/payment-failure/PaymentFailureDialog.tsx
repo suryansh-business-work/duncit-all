@@ -1,5 +1,6 @@
 import {
   Alert,
+  Box,
   Dialog,
   DialogActions,
   DialogContent,
@@ -7,6 +8,8 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineRounded';
 import { DuncitButton } from '@duncit/buttons';
 import { PAYMENT_FAILURE_KEYS, type PaymentFailure } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -44,10 +47,26 @@ export default function PaymentFailureDialog({
 
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700 }}>{t(keys.title)}</DialogTitle>
+      <Box
+        aria-hidden
+        sx={(theme) => ({
+          width: 64,
+          height: 64,
+          mx: 'auto',
+          mt: 3,
+          borderRadius: '50%',
+          bgcolor: alpha(theme.palette.error.main, 0.12),
+          color: 'error.main',
+          display: 'grid',
+          placeItems: 'center',
+        })}
+      >
+        <ErrorOutlineIcon />
+      </Box>
+      <DialogTitle sx={{ textAlign: 'center', fontSize: 20, fontWeight: 600 }}>{t(keys.title)}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5}>
-          <Typography variant="body2">{t(keys.body)}</Typography>
+          <Typography variant="body2" sx={{ textAlign: 'center', color: 'text.secondary' }}>{t(keys.body)}</Typography>
 
           {/* The gateway's own words, never ours — a buyer ringing their bank
               needs the reason the bank will recognise. */}
@@ -89,9 +108,9 @@ export default function PaymentFailureDialog({
           )}
         </Stack>
       </DialogContent>
-      <DialogActions>
-        <DuncitButton onClick={onClose}>{t('mweb.payment.close')}</DuncitButton>
-        <DuncitButton variant="contained" onClick={onRetry}>
+      <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
+        <DuncitButton fullWidth variant="outlined" onClick={onClose}>{t('mweb.payment.close')}</DuncitButton>
+        <DuncitButton fullWidth variant="contained" onClick={onRetry}>
           {t('mweb.payment.retry')}
         </DuncitButton>
       </DialogActions>

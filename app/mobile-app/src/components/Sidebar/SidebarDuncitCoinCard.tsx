@@ -1,7 +1,9 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
 import { Skeleton } from '@/components/Skeleton';
+import { SurfaceCard } from '@/components/SurfaceCard';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 import { COIN_GOLD_TINT } from '@/constants/coin-gold';
 import { useCoinBalance, useCoinGold } from '@/hooks/useCoins';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -24,33 +26,29 @@ export function SidebarDuncitCoinCard({
   const pending = isLoading && !balance;
 
   return (
-    <YStack paddingHorizontal={16} paddingBottom={10}>
-      <XStack
+    <YStack paddingHorizontal={16} paddingBottom={12}>
+      <SurfaceCard
         testID="sidebar-duncit-coin"
         role="button"
         aria-label={t('mweb.coin.title')}
         onPress={() => onNavigate(COIN_TILE.route)}
+        flexDirection="row"
         alignItems="center"
         gap={12}
-        borderRadius={12}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$surface"
-        padding={12}
-        pressStyle={{ opacity: 0.85, borderColor: gold }}
+        pressStyle={PRESS_STYLE.surface}
       >
         <YStack
           width={44}
           height={44}
           alignItems="center"
           justifyContent="center"
-          borderRadius={10}
+          borderRadius={22}
           backgroundColor={COIN_GOLD_TINT}
         >
           <MaterialIcons name={COIN_TILE.icon} size={22} color={gold} />
         </YStack>
-        <YStack flex={1}>
-          <Text numberOfLines={1} fontSize={14} fontWeight="600" color="$color">
+        <YStack flex={1} minWidth={0}>
+          <Text numberOfLines={1} fontSize={15} fontWeight="600" color="$color">
             {t('mweb.coin.title')}
           </Text>
           {pending ? (
@@ -67,7 +65,7 @@ export function SidebarDuncitCoinCard({
           <Text
             testID="sidebar-duncit-coin-balance"
             numberOfLines={1}
-            fontSize={14}
+            fontSize={16}
             fontWeight="700"
             color={gold}
           >
@@ -75,7 +73,7 @@ export function SidebarDuncitCoinCard({
           </Text>
         )}
         <MaterialIcons name="chevron-right" size={20} color={muted} />
-      </XStack>
+      </SurfaceCard>
     </YStack>
   );
 }

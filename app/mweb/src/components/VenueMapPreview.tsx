@@ -1,5 +1,5 @@
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { mapEmbedUrl, mapSearchUrl } from '../utils/mapEmbed';
 import { useTranslation } from '../i18n/useTranslation';
@@ -11,6 +11,8 @@ interface Props {
   lng?: number | null;
 }
 
+/** An interactive map of the venue with an "Open in Maps" link under it.
+ * Native twin: components/MapEmbed. */
 export default function VenueMapPreview({ title, parts, lat, lng }: Readonly<Props>) {
   const { t } = useTranslation();
   const titleText = title ?? t('mweb.venues.mapPreview');
@@ -23,21 +25,7 @@ export default function VenueMapPreview({ title, parts, lat, lng }: Readonly<Pro
   const mapUrl = mapSearchUrl(query);
 
   return (
-    <Box sx={{ mt: 1.5 }}>
-      <Stack
-        direction="row"
-        sx={{
-          alignItems: "center",
-          justifyContent: "space-between",
-          mb: 0.75
-        }}>
-        <Typography variant="caption" sx={{
-          color: "text.secondary"
-        }}>{t('mweb.venueMapPreview.mapPreview')}</Typography>
-        <DuncitButton href={mapUrl} target="_blank" rel="noreferrer" size="small" endIcon={<OpenInNewIcon fontSize="small" />}>
-          Open in Maps
-        </DuncitButton>
-      </Stack>
+    <Stack spacing={0.5}>
       <Box
         component="iframe"
         title={titleText}
@@ -45,8 +33,18 @@ export default function VenueMapPreview({ title, parts, lat, lng }: Readonly<Pro
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"
         allowFullScreen
-        sx={{ width: '100%', height: { xs: 240, sm: 280 }, border: '1px solid', borderColor: 'divider', borderRadius: '16px' }}
+        sx={{ width: '100%', height: { xs: 240, sm: 280 }, border: 0, borderRadius: '18px', display: 'block', bgcolor: 'action.hover' }}
       />
-    </Box>
+      <DuncitButton
+        href={mapUrl}
+        target="_blank"
+        rel="noreferrer"
+        size="small"
+        endIcon={<OpenInNewIcon fontSize="small" />}
+        sx={{ alignSelf: 'flex-end', minHeight: 32, px: 1 }}
+      >
+        {t('mweb.mapEmbed.openInMaps')}
+      </DuncitButton>
+    </Stack>
   );
 }

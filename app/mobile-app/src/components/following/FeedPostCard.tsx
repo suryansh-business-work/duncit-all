@@ -2,11 +2,15 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { FeedPost } from '@/hooks/useFollowingFeed';
 import { formatDateTime } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+
+const AVATAR_STYLE = { width: 40, height: 40, borderRadius: 20 };
+const MEDIA_STYLE = { width: '100%', height: 260 } as const;
 
 interface Props {
   post: FeedPost;
@@ -24,19 +28,12 @@ export function FeedPostCard({
   onOpenAuthor,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { primary, muted } = useThemeColors();
+  const { accent, muted } = useThemeColors();
   const name = post.author?.first_name || post.author?.full_name || 'Duncit member';
   const avatar = post.author?.profile_photo;
 
   return (
-    <YStack
-      testID={`feed-post-${post.id}`}
-      borderRadius={18}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      overflow="hidden"
-    >
+    <SurfaceCard testID={`feed-post-${post.id}`} padding={0} overflow="hidden">
       <XStack
         testID={`feed-author-${post.id}`}
         role="button"
@@ -45,45 +42,43 @@ export function FeedPostCard({
         alignItems="center"
         gap={10}
         padding={12}
-        pressStyle={PRESS_STYLE.control}
+        pressStyle={PRESS_STYLE.row}
       >
         {avatar ? (
-          <AppImage source={{ uri: avatar }} style={{ width: 36, height: 36, borderRadius: 18 }} />
+          <AppImage source={{ uri: avatar }} style={AVATAR_STYLE} />
         ) : (
           <YStack
-            width={36}
-            height={36}
-            borderRadius={18}
+            width={40}
+            height={40}
+            borderRadius={20}
             backgroundColor="$primary"
             alignItems="center"
             justifyContent="center"
           >
-            <Text fontSize={14} fontWeight="700" color="$onPrimary">
+            <Text fontSize={15} fontWeight="600" color="$onPrimary">
               {name.charAt(0).toUpperCase()}
             </Text>
           </YStack>
         )}
         <YStack flex={1} minWidth={0}>
-          <Text fontSize={14} fontWeight="700" color="$color" numberOfLines={1}>
+          <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
             {name}
           </Text>
-          <Text fontSize={11} color="$muted">
+          <Text fontSize={12} fontWeight="500" color="$muted">
             {formatDateTime(post.created_at)}
           </Text>
         </YStack>
       </XStack>
 
       {post.image_url ? (
-        <AppImage
-          source={{ uri: post.image_url }}
-          style={{ width: '100%', height: 260 }}
-          resizeMode="cover"
-        />
+        <YStack marginHorizontal={12} borderRadius={18} overflow="hidden" backgroundColor="$soft">
+          <AppImage source={{ uri: post.image_url }} style={MEDIA_STYLE} resizeMode="cover" />
+        </YStack>
       ) : null}
 
-      <YStack padding={12} gap={8}>
+      <YStack padding={12} paddingHorizontal={16} gap={8}>
         {post.caption ? (
-          <Text fontSize={13.5} color="$color" numberOfLines={3}>
+          <Text fontSize={14} color="$color" numberOfLines={3}>
             {post.caption}
           </Text>
         ) : null}
@@ -100,7 +95,7 @@ export function FeedPostCard({
             <MaterialIcons
               name={post.liked_by_me ? 'favorite' : 'favorite-border'}
               size={20}
-              color={post.liked_by_me ? primary : muted}
+              color={post.liked_by_me ? accent : muted}
             />
             <Text fontSize={13} fontWeight="600" color="$muted">
               {post.likes_count}
@@ -122,6 +117,6 @@ export function FeedPostCard({
           </XStack>
         </XStack>
       </YStack>
-    </YStack>
+    </SurfaceCard>
   );
 }

@@ -22,7 +22,7 @@ function DocCard({ info }: Readonly<{ info: AttachmentInfo }>) {
             alignItems: "center",
             maxWidth: 200
           }}>
-          <Typography variant="caption" noWrap sx={{ fontWeight: 700, flex: 1, minWidth: 0 }}>
+          <Typography variant="caption" noWrap sx={{ fontWeight: 600, flex: 1, minWidth: 0 }}>
             {info.name}
           </Typography>
           <Typography variant="caption" sx={{ opacity: 0.7 }}>
@@ -45,7 +45,7 @@ function VideoCard({ info }: Readonly<{ info: AttachmentInfo }>) {
         src={info.url}
         controls
         preload="metadata"
-        style={{ width: '100%', maxHeight: 160, borderRadius: '16px', background: '#000' }}
+        style={{ width: '100%', maxHeight: 160, borderRadius: '12px', background: '#000' }}
       />
       <Typography variant="caption" noWrap sx={{ display: 'block', opacity: 0.8, mt: 0.25 }}>
         {info.name}
@@ -76,7 +76,7 @@ export default function AttachmentList({ urls, size = 56 }: Readonly<Props>) {
                 component="img"
                 src={url}
                 alt={info.name}
-                sx={{ width: size, height: size, objectFit: 'cover', borderRadius: 1, display: 'block' }}
+                sx={{ width: size, height: size, objectFit: 'cover', borderRadius: '12px', display: 'block' }}
               />
             </a>
           );

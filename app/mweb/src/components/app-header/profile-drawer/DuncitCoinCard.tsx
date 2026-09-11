@@ -1,14 +1,15 @@
 import { useQuery } from '@apollo/client/react';
-import { Box, Paper, Skeleton, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Skeleton, Stack, Typography, useTheme } from '@mui/material';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { COIN_TILE } from './profileSections';
 import { MY_COIN_BALANCE } from '../../../pages/duncit-coin-page/queries';
+import { SURFACE_SX } from '../../../theme';
 import { COIN_GOLD_TINT, coinGold } from '../../../theme/coinGold';
 import { useTranslation } from '../../../i18n/useTranslation';
 
-/** The full-width Duncit Coin featured card (gold accent) — the consumer's coin
- * balance and the way into the ledger. Rendered in User mode only. */
+/** The full-width Duncit Coin featured card (the coin's own gold, kept) — the
+ * consumer's coin balance and the way into the ledger. User mode only. */
 export default function DuncitCoinCard({ onNavigate }: Readonly<{ onNavigate: (to: string) => void }>) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -21,9 +22,10 @@ export default function DuncitCoinCard({ onNavigate }: Readonly<{ onNavigate: (t
   const earnPct = data?.myCoinBalance?.earn_pct ?? 0;
 
   return (
-    <Box sx={{ px: 2, pb: 1.25 }}>
-      <Paper
-        variant="outlined"
+    <Box sx={{ px: 2, pb: 1.5 }}>
+      <Stack
+        direction="row"
+        spacing={1.5}
         onClick={() => onNavigate(COIN_TILE.to)}
         role="button"
         tabIndex={0}
@@ -31,55 +33,50 @@ export default function DuncitCoinCard({ onNavigate }: Readonly<{ onNavigate: (t
           if (e.key === 'Enter' || e.key === ' ') onNavigate(COIN_TILE.to);
         }}
         sx={{
-          p: 1.5,
-          borderRadius: '16px',
+          ...SURFACE_SX,
+          p: 2,
+          alignItems: 'center',
           cursor: 'pointer',
           transition: 'border-color 160ms ease',
           '&:hover': { borderColor: gold },
         }}
         aria-label={t('mweb.coin.title')}
       >
-        <Stack direction="row" spacing={1.5} sx={{
-          alignItems: "center"
-        }}>
-          <Box
-            sx={{
-              width: 44,
-              height: 44,
-              borderRadius: '16px',
-              display: 'grid',
-              placeItems: 'center',
-              color: gold,
-              bgcolor: COIN_GOLD_TINT,
-              flexShrink: 0,
-            }}
-          >
-            <MonetizationOnIcon />
-          </Box>
-          <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography noWrap sx={{
-              fontWeight: 600
-            }}>
-              {t('mweb.coin.title')}
-            </Typography>
-            {pending ? (
-              <Skeleton width="65%" height={20} />
-            ) : (
-              <Typography variant="body2" noWrap sx={{ color: 'text.secondary' }}>
-                {t('mweb.coin.sidebarCaption', { vars: { pct: earnPct } })}
-              </Typography>
-            )}
-          </Box>
+        <Box
+          sx={{
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
+            display: 'grid',
+            placeItems: 'center',
+            color: gold,
+            bgcolor: COIN_GOLD_TINT,
+            flexShrink: 0,
+          }}
+        >
+          <MonetizationOnIcon />
+        </Box>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography noWrap sx={{ fontSize: 15, fontWeight: 600 }}>
+            {t('mweb.coin.title')}
+          </Typography>
           {pending ? (
-            <Skeleton width={28} height={24} />
+            <Skeleton width="65%" height={18} />
           ) : (
-            <Typography noWrap sx={{ fontWeight: 700, color: gold }}>
-              {balance}
+            <Typography noWrap sx={{ fontSize: 12, color: 'text.secondary' }}>
+              {t('mweb.coin.sidebarCaption', { vars: { pct: earnPct } })}
             </Typography>
           )}
-          <ChevronRightIcon color="disabled" />
-        </Stack>
-      </Paper>
+        </Box>
+        {pending ? (
+          <Skeleton width={28} height={24} />
+        ) : (
+          <Typography noWrap sx={{ fontSize: 16, fontWeight: 700, color: gold }}>
+            {balance}
+          </Typography>
+        )}
+        <ChevronRightIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+      </Stack>
     </Box>
   );
 }

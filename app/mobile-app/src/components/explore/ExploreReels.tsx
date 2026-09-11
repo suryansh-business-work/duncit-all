@@ -5,8 +5,9 @@ import {
   type LayoutChangeEvent,
   type ViewToken,
 } from 'react-native';
-import { Text, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
+import { EmptyState } from '@/components/EmptyState';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { ExploreAdCard } from '@/components/ads/ExploreAdCard';
 import { interleaveAds, isAdEntry } from '@/components/ads/interleaveAds';
@@ -83,10 +84,8 @@ export function ExploreReels() {
       reelsBody = <DetailSkeleton testID="explore-loading" />;
     } else if (pods.length === 0) {
       reelsBody = (
-        <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
-          <Text color="$muted" textAlign="center" testID="explore-empty">
-            No pods to explore yet.
-          </Text>
+        <YStack flex={1} alignItems="center" justifyContent="center">
+          <EmptyState icon="explore" title="No pods to explore yet." testID="explore-empty" />
         </YStack>
       );
     } else {

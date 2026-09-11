@@ -16,9 +16,7 @@ export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDial
   const { t } = useTranslation();
   const navigate = useNavigate();
   return (
-    <Dialog open={faq !== null} onClose={onClose} fullWidth maxWidth="sm" slotProps={{
-      paper: { sx: { borderRadius: '16px' } }
-    }}>
+    <Dialog open={faq !== null} onClose={onClose} fullWidth maxWidth="sm">
       {faq && (
         <DialogContent sx={{ p: 2.5 }}>
           <Stack
@@ -28,7 +26,7 @@ export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDial
               alignItems: "flex-start",
               justifyContent: "space-between"
             }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, pr: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, pr: 1 }}>
               {faq.question}
             </Typography>
             <DuncitRoundButton tone="surface" onClick={onClose} aria-label={t('mweb.common.close')}>
@@ -44,26 +42,27 @@ export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDial
             }}>
             {faq.answer}
           </Typography>
-          <Box sx={{ mt: 2.5, p: 1.5, borderRadius: '16px', bgcolor: 'rgba(255,79,115,0.08)' }}>
+          <Box sx={{ mt: 2.5, p: 2, borderRadius: '18px', bgcolor: 'action.hover' }}>
             <Typography
               variant="caption"
               sx={{
                 color: "text.secondary",
-                fontWeight: 700
+                fontWeight: 600
               }}>
               Still need help?
             </Typography>
             <DuncitButton
               fullWidth
               variant="contained"
+              size="large"
               startIcon={<ChatBubbleOutlineIcon />}
               onClick={() => {
                 onClose();
                 navigate('/live-chat');
               }}
-              sx={{ mt: 1, borderRadius: 999, fontWeight: 700 }}
+              sx={{ mt: 1 }}
             >
-              Start a conversation
+              {t('mweb.common.startAConversation')}
             </DuncitButton>
           </Box>
         </DialogContent>

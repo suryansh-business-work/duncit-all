@@ -106,7 +106,7 @@ export function ChargeSection({
       <Collapse in={info} unmountOnExit>
         <Box
           data-testid={`${testId}-description`}
-          sx={{ mx: 0.5, mb: 0.5, px: 1.25, py: 1, borderRadius: '16px', bgcolor: 'background.paper' }}
+          sx={{ mx: 0.5, mb: 0.5, px: 1.25, py: 1, borderRadius: '12px', bgcolor: 'background.paper' }}
         >
           <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
             {description}
@@ -119,16 +119,16 @@ export function ChargeSection({
         </Alert>
       )}
       <Collapse in={open} unmountOnExit>
-        <Box sx={{ bgcolor: 'background.paper', mx: 0.5, mb: 0.5, borderRadius: '16px' }}>{children}</Box>
+        <Box sx={{ bgcolor: 'background.paper', mx: 0.5, mb: 0.5, borderRadius: '12px' }}>{children}</Box>
       </Collapse>
     </Box>
   );
 }
 
 /** Section background: the failing venue section wins, then the venue's own
- * warning tint, then the neutral info tint. */
+ * warning tint, then the neutral soft fill. */
 export function sectionTint(theme: Theme, isVenue: boolean, hasError: boolean): string {
   if (hasError) return alpha(theme.palette.error.main, 0.12);
-  if (isVenue) return alpha(theme.palette.warning.main, 0.1);
-  return alpha(theme.palette.info.main, 0.08);
+  if (isVenue) return alpha(theme.palette.warning.main, 0.12);
+  return theme.palette.action.hover;
 }

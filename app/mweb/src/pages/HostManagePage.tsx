@@ -1,11 +1,12 @@
 import { Link as RouterLink } from 'react-router';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
-import { Box, Stack, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AddIcon from '@mui/icons-material/Add';
 import InsightsIcon from '@mui/icons-material/Insights';
 import { DuncitButton } from '@duncit/buttons';
+import StudioPageHeader from '../components/StudioPageHeader';
 import HostDraftsCard from './HostDraftsCard';
 import HostPodActionsBridge from './host-manage-page/HostPodActionsBridge';
 import HostPodSections from './host-manage-page/HostPodSections';
@@ -75,33 +76,21 @@ export default function HostManagePage() {
   const bootLoading = (meQ.loading && !meQ.data) || (!!userId && loading && !data);
 
   return (
-    <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-      <Stack direction="row" spacing={1.25} sx={{
-        alignItems: "center"
-      }}>
-        <Box sx={{ width: 38, height: 38, borderRadius: '50%', display: 'grid', placeItems: 'center', color: 'common.white', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
-          <DashboardIcon fontSize="small" />
-        </Box>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
-            Your Pods
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 600
-            }}>
-            Manage the pods you host
-          </Typography>
-        </Box>
-        <DuncitButton component={RouterLink} to="/host/dashboard" variant="outlined" size="small" startIcon={<InsightsIcon />} sx={{ borderRadius: 999, fontWeight: 700 }}>
-          Insights
-        </DuncitButton>
-        <DuncitButton component={RouterLink} to="/create-pod" variant="contained" size="small" startIcon={<AddIcon />} sx={{ borderRadius: 999, fontWeight: 700 }}>
-          Create
-        </DuncitButton>
-      </Stack>
+    <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+      <StudioPageHeader
+        icon={<DashboardIcon fontSize="small" />}
+        title="Your Pods"
+        action={
+          <Stack direction="row" spacing={1}>
+            <DuncitButton component={RouterLink} to="/host/dashboard" variant="outlined" size="small" startIcon={<InsightsIcon />}>
+              Insights
+            </DuncitButton>
+            <DuncitButton component={RouterLink} to="/create-pod" variant="contained" size="small" startIcon={<AddIcon />}>
+              Create
+            </DuncitButton>
+          </Stack>
+        }
+      />
 
       {isHost && <HostCategoriesCard />}
       {isHost && <HostApplyBanner />}

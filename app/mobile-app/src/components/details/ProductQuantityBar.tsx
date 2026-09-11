@@ -21,9 +21,9 @@ function AddToSelection({
   onAdd,
 }: Readonly<{ outOfStock: boolean; onAdd: () => void }>) {
   const { t } = useTranslation();
-  const { muted } = useThemeColors();
-  const iconColor = outOfStock ? muted : '#fff';
-  const textColor = outOfStock ? '$muted' : '#fff';
+  const { muted, onPrimary } = useThemeColors();
+  const iconColor = outOfStock ? muted : onPrimary;
+  const textColor = outOfStock ? '$muted' : '$onPrimary';
   const label = outOfStock ? 'Out of stock' : 'Add to selection';
   return (
     <XStack
@@ -33,9 +33,9 @@ function AddToSelection({
       aria-label={t('mweb.details.addToSelection')}
       onPress={outOfStock ? undefined : onAdd}
       marginTop={4}
-      paddingVertical={12}
-      borderRadius={12}
-      backgroundColor={outOfStock ? '$surface' : '$primary'}
+      height={52}
+      borderRadius={999}
+      backgroundColor={outOfStock ? '$soft' : '$primary'}
       alignItems="center"
       justifyContent="center"
       gap={8}

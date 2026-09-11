@@ -9,6 +9,8 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 export interface PolicyAcceptanceRowProps {
   policy: SignupPolicy;
   accepted: boolean;
+  /** Draws the hairline above it — every row but the first in the card. */
+  divided?: boolean;
   onToggle: () => void;
   onRead: () => void;
 }
@@ -22,21 +24,21 @@ export interface PolicyAcceptanceRowProps {
 export function PolicyAcceptanceRow({
   policy,
   accepted,
+  divided = false,
   onToggle,
   onRead,
 }: Readonly<PolicyAcceptanceRowProps>) {
   const { t } = useTranslation();
-  const { primary, color } = useThemeColors();
+  const { primary, muted } = useThemeColors();
 
   return (
     <XStack
       alignItems="center"
       gap={10}
-      padding={12}
-      borderRadius={14}
-      borderWidth={1}
+      paddingHorizontal={16}
+      paddingVertical={14}
+      borderTopWidth={divided ? 1 : 0}
       borderColor="$borderColor"
-      backgroundColor="$surface"
     >
       <XStack
         testID={`policy-accept-${policy.slug}`}
@@ -52,7 +54,7 @@ export function PolicyAcceptanceRow({
         <MaterialIcons
           name={accepted ? 'check-box' : 'check-box-outline-blank'}
           size={22}
-          color={accepted ? primary : color}
+          color={accepted ? primary : muted}
         />
         <Text flex={1} fontSize={14} fontWeight="600" color="$color">
           {policy.title}
@@ -65,7 +67,7 @@ export function PolicyAcceptanceRow({
         aria-label={t('policyAcceptance.readAction')}
         onPress={onRead}
         fontSize={13}
-        fontWeight="700"
+        fontWeight="600"
         color="$primary"
       >
         {t('policyAcceptance.readAction')}

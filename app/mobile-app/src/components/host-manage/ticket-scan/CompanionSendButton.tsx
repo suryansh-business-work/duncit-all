@@ -51,7 +51,7 @@ export function CompanionSendButton({ index, ready, sent, sending, onStart }: Re
       opacity={ready ? 1 : 0.55}
       pressStyle={PRESS_STYLE.ghost}
     >
-      <Text fontSize={12.5} fontWeight="700" color="$color">
+      <Text fontSize={13} fontWeight="600" color="$color">
         {label}
       </Text>
     </XStack>

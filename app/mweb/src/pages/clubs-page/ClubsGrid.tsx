@@ -21,7 +21,7 @@ export default function ClubsGrid({ clubs, podCounts, onOpen }: Readonly<ClubsGr
       sx={{
         display: 'grid',
         gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
-        gap: 2,
+        gap: 1.5,
       }}
     >
       {interleaveAds(clubs, ads, AD_EVERY_CLUBS).map((entry) => {

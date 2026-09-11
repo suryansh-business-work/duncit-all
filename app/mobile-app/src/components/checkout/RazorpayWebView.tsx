@@ -3,6 +3,7 @@ import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { YStack } from 'tamagui';
 
 import type { RazorpayErrorLike } from '@duncit/utils';
+import { light } from '@duncit/auth-tokens';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import type { RazorpayOrder, RazorpaySignature } from '@/hooks/useCheckout';
@@ -26,7 +27,8 @@ export function buildRazorpayHtml(order: RazorpayOrder): string {
     description: order.description,
     order_id: order.order_id,
     prefill: { email: order.prefill_email, contact: order.prefill_contact },
-    theme: { color: '#ff4f73' },
+    // The hosted sheet's pay button wears the app's action green.
+    theme: { color: light.primary },
   };
   const serializedOptions = JSON.stringify(options).replaceAll('<', String.raw`\u003c`);
   // The failure is posted WITH what Razorpay said, and posted ONCE. Razorpay

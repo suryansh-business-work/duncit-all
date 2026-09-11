@@ -66,7 +66,7 @@ export function CompanionCodeEntry({
           opacity={verifying ? 0.7 : 1}
           pressStyle={PRESS_STYLE.control}
         >
-          <Text fontSize={12.5} fontWeight="800" color="$onPrimary">
+          <Text fontSize={13} fontWeight="600" color="$onPrimary">
             {verifying ? t('mweb.attendance.otpVerifying') : t('mweb.attendance.otpVerify')}
           </Text>
         </XStack>
@@ -84,7 +84,7 @@ export function CompanionCodeEntry({
           borderColor="$borderColor"
           pressStyle={PRESS_STYLE.ghost}
         >
-          <Text fontSize={12.5} fontWeight="700" color="$color">
+          <Text fontSize={13} fontWeight="600" color="$color">
             {t('mweb.attendance.otpCancel')}
           </Text>
         </XStack>

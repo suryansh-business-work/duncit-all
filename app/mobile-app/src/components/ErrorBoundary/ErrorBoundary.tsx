@@ -3,8 +3,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { semantic } from '@duncit/auth-tokens';
 import { Text, YStack } from 'tamagui';
 import { logs } from '@duncit/logs';
+import { DuncitButton } from '@/components/DuncitButton';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   children: ReactNode;
@@ -29,32 +29,29 @@ function ErrorPanel({ onRetry }: Readonly<{ onRetry: () => void }>) {
       flex={1}
       alignItems="center"
       justifyContent="center"
-      gap={14}
+      gap={16}
       padding={24}
       backgroundColor="$background"
     >
-      <MaterialIcons name="error-outline" size={48} color={semantic.error} />
-      <Text fontSize={20} fontWeight="700" color="$color" textAlign="center">
+      <YStack
+        width={96}
+        height={96}
+        borderRadius={48}
+        alignItems="center"
+        justifyContent="center"
+        backgroundColor="$surface"
+      >
+        <MaterialIcons name="error-outline" size={44} color={semantic.error} />
+      </YStack>
+      <Text fontSize={20} fontWeight="600" color="$color" textAlign="center">
         {t('mweb.errorBoundary.somethingWentWrong')}
       </Text>
-      <Text fontSize={14} color="$muted" textAlign="center">
-        {t('mweb.errorBoundary.anUnexpectedError')}
-      </Text>
-      <YStack
+      <DuncitButton
         testID="error-boundary-retry"
-        role="button"
-        aria-label={t('mweb.errorBoundary.tryAgain')}
+        label={t('mweb.errorBoundary.tryAgain')}
         onPress={onRetry}
-        paddingHorizontal={20}
-        paddingVertical={12}
-        borderRadius={999}
-        backgroundColor="$primary"
-        pressStyle={PRESS_STYLE.control}
-      >
-        <Text fontSize={14} fontWeight="700" color="$onPrimary">
-          {t('mweb.errorBoundary.tryAgain')}
-        </Text>
-      </YStack>
+        size="lg"
+      />
     </YStack>
   );
 }

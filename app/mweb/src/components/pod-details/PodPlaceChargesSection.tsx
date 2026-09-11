@@ -24,7 +24,7 @@ export default function PodPlaceChargesSection({ charges, currency = '\u20b9' }:
     );
   }
   return (
-    <Stack divider={<Box sx={{ borderBottom: '1px dashed', borderColor: 'divider' }} />}>
+    <Stack divider={<Box sx={{ borderBottom: '1px solid', borderColor: 'divider' }} />}>
       {charges.map((c, i) => (
         <Stack
           key={`${c.label}-${i}`}

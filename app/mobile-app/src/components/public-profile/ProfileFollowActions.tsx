@@ -54,7 +54,7 @@ export function ProfileFollowActions({
           gap={14}
           opacity={answerBusy ? 0.6 : 1}
         >
-          <Text fontSize={13.5} fontWeight="700" color="$color">
+          <Text fontSize={14} fontWeight="600" color="$color">
             {t('mweb.follow.wantsToFollowYou')}
           </Text>
           <AnswerActions

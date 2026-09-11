@@ -13,6 +13,8 @@ import {
   MyAddressesDocument,
   SaveMyAddressDocument,
 } from '@/graphql/address-book';
+import { DuncitButton } from '@/components/DuncitButton';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { toErrorMessage } from '@/utils/errors';
@@ -24,11 +26,43 @@ type UserAddress = ResultOf<typeof MyAddressesDocument>['myAddresses'][number];
 const oneLine = (a: UserAddress) =>
   [a.line1, a.line2, a.landmark, a.city, a.state, a.pincode].filter(Boolean).join(', ');
 
+/** A 36px round soft icon button (edit / delete on an address row). */
+function RowAction({
+  testID,
+  label,
+  icon,
+  onPress,
+}: Readonly<{
+  testID: string;
+  label: string;
+  icon: 'edit' | 'delete-outline';
+  onPress: () => void;
+}>) {
+  const { muted } = useThemeColors();
+  return (
+    <XStack
+      testID={testID}
+      role="button"
+      aria-label={label}
+      onPress={onPress}
+      width={36}
+      height={36}
+      alignItems="center"
+      justifyContent="center"
+      borderRadius={999}
+      backgroundColor="$soft"
+      pressStyle={PRESS_STYLE.control}
+    >
+      <MaterialIcons name={icon} size={18} color={muted} />
+    </XStack>
+  );
+}
+
 /** Profile Settings › Address Book — saved delivery addresses, selectable at
  * checkout. RN twin of mWeb's AddressBookSection. */
 export function AddressBookSection() {
   const { t } = useTranslation();
-  const { muted, primary } = useThemeColors();
+  const { onPrimary } = useThemeColors();
   const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<UserAddress | null>(null);
@@ -77,47 +111,21 @@ export function AddressBookSection() {
   };
 
   return (
-    <YStack
-      testID="address-book-section"
-      margin={16}
-      marginTop={0}
-      padding={16}
-      gap={10}
-      borderRadius={18}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$background"
-    >
-      <XStack alignItems="center" justifyContent="space-between">
-        <XStack gap={8} alignItems="center">
-          <MaterialIcons name="home-work" size={20} color={primary} />
-          <Text fontSize={15} fontWeight="700" color="$color">
-            Address Book
-          </Text>
-        </XStack>
-        <XStack
+    <SurfaceCard testID="address-book-section" marginHorizontal={16} gap={4}>
+      <XStack alignItems="center" justifyContent="space-between" gap={8} marginBottom={4}>
+        <Text fontSize={17} fontWeight="600" color="$color">
+          Address Book
+        </Text>
+        <DuncitButton
           testID="address-add"
-          role="button"
-          aria-label={t('mweb.account.addAddress')}
+          label={t('mweb.account.addAddress')}
+          size="sm"
+          icon={<MaterialIcons name="add" size={16} color={onPrimary} />}
           onPress={() => {
             setEditing(null);
             setFormOpen(true);
           }}
-          paddingHorizontal={12}
-          height={34}
-          alignItems="center"
-          justifyContent="center"
-          gap={4}
-          borderRadius={999}
-          borderWidth={1}
-          borderColor="$borderColor"
-          pressStyle={PRESS_STYLE.control}
-        >
-          <MaterialIcons name="add" size={16} color={muted} />
-          <Text fontSize={12.5} fontWeight="600" color="$color">
-            Add
-          </Text>
-        </XStack>
+        />
       </XStack>
       {error ? (
         <Text testID="address-error" fontSize={12} color="$danger">
@@ -125,58 +133,57 @@ export function AddressBookSection() {
         </Text>
       ) : null}
       {addresses.length === 0 ? (
-        <Text fontSize={12.5} color="$muted">
+        <Text fontSize={14} color="$muted" paddingVertical={8}>
           Save delivery addresses here to pick them quickly at checkout.
         </Text>
       ) : null}
-      {addresses.map((address) => (
+      {addresses.map((address, addressIndex) => (
         <XStack
           key={address.id}
           gap={8}
           alignItems="center"
-          padding={10}
-          borderRadius={12}
-          borderWidth={1}
+          paddingVertical={12}
+          borderTopWidth={addressIndex === 0 ? 0 : 1}
           borderColor="$borderColor"
         >
-          <YStack flex={1} minWidth={0}>
+          <YStack flex={1} minWidth={0} gap={2}>
             <XStack gap={6} alignItems="center">
-              <Text fontSize={13} fontWeight="600" color="$color">
+              <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={1} flexShrink={1}>
                 {address.label}
               </Text>
               {address.is_default ? (
-                <Text fontSize={10.5} fontWeight="700" color="$primary">
-                  DEFAULT
-                </Text>
+                <XStack
+                  height={22}
+                  paddingHorizontal={8}
+                  alignItems="center"
+                  borderRadius={999}
+                  backgroundColor="$primarySoft"
+                >
+                  <Text fontSize={11} fontWeight="600" color="$primary">
+                    {t('mweb.account.default')}
+                  </Text>
+                </XStack>
               ) : null}
             </XStack>
-            <Text fontSize={11.5} color="$muted" numberOfLines={1}>
+            <Text fontSize={13} color="$muted" numberOfLines={1}>
               {oneLine(address)}
             </Text>
           </YStack>
-          <XStack
+          <RowAction
             testID={`address-edit-${address.id}`}
-            role="button"
-            aria-label={`Edit ${address.label}`}
+            label={`Edit ${address.label}`}
+            icon="edit"
             onPress={() => {
               setEditing(address);
               setFormOpen(true);
             }}
-            padding={6}
-            pressStyle={PRESS_STYLE.row}
-          >
-            <MaterialIcons name="edit" size={18} color={muted} />
-          </XStack>
-          <XStack
+          />
+          <RowAction
             testID={`address-delete-${address.id}`}
-            role="button"
-            aria-label={`Delete ${address.label}`}
+            label={`Delete ${address.label}`}
+            icon="delete-outline"
             onPress={() => remove(address)}
-            padding={6}
-            pressStyle={PRESS_STYLE.row}
-          >
-            <MaterialIcons name="delete-outline" size={18} color={muted} />
-          </XStack>
+          />
         </XStack>
       ))}
       <AddressFormSheet
@@ -187,6 +194,6 @@ export function AddressBookSection() {
         onCancel={() => setFormOpen(false)}
         onSubmit={submit}
       />
-    </YStack>
+    </SurfaceCard>
   );
 }

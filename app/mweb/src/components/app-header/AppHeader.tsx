@@ -1,27 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useMutation } from '@apollo/client/react';
-import { useNavigate } from 'react-router';
+import { useCallback, useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 import { useUserData } from '@duncit/user-context';
-import { Alert, AppBar, Box, Chip, Stack, Toolbar } from '@mui/material';
-import {
-  APPLY_LOCATION_EVENT,
-  OPEN_LOCATION_PICKER_EVENT,
-  SET_MY_SELECTED_LOCATION,
-  type ApplyLocationDetail,
-} from './queries';
+import { AppBar, Toolbar } from '@mui/material';
 import HeaderGreeting from './HeaderGreeting';
-import HeaderLocationRow from './HeaderLocationRow';
+import HeaderLeading from './HeaderLeading';
 import HeaderQuickActions from './HeaderQuickActions';
 import HeaderToast from './HeaderToast';
+import HeaderVerifyEmail from './HeaderVerifyEmail';
 import LocationDialog from './LocationDialog';
 import StudioSwitchDialog from './profile-drawer/StudioSwitchDialog';
 import SuperCategoryTabs from './SuperCategoryTabs';
+import { useHeaderLocation } from './useHeaderLocation';
 import { useHeaderQueries } from './useHeaderQueries';
 import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
 import SurveyHeaderActions from './SurveyHeaderActions';
 import { useStudioMode } from '../../StudioModeContext';
 import { useAutoPodCounts } from '../../hooks/useAutoPodCounts';
-import { STUDIO_LABEL, resolveMode, studioSwitchPath } from '../../studio-mode';
+import { resolveMode, studioSwitchPath } from '../../studio-mode';
 import { useProductVisibility } from '@duncit/app-settings';
 
 interface AppHeaderProps {
@@ -44,17 +39,12 @@ export default function AppHeader({
   onZoneChange,
 }: Readonly<AppHeaderProps>) {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { logout: ctxLogout } = useUserData();
   // The account menu is its own page (/menu) — opening it is a normal push, so
   // Back returns here and a refresh keeps the user on the menu.
   const openMenu = () => navigate('/menu');
   const { staticData, staticLoading, me, meSettled, placeReady } = useHeaderQueries();
-  const [persistSelectedLocation] = useMutation<any>(SET_MY_SELECTED_LOCATION, {
-    onError: () => undefined,
-  });
-  const [locDialogOpen, setLocDialogOpen] = useState(false);
-  const [draftLocationId, setDraftLocationId] = useState('');
-  const [draftZone, setDraftZone] = useState('');
   const [toast, setToast] = useState<{ title?: string; body?: string } | null>(null);
   const { mode: studioMode, setMode: setStudioMode } = useStudioMode();
   const { visible: showProducts } = useProductVisibility();
@@ -62,6 +52,12 @@ export default function AppHeader({
 
   const branding = staticData?.branding;
   const effectiveStudio = resolveMode(studioMode, me?.roles ?? [], { products: showProducts });
+  // Home leads with its own search bar and greets the user; every other page
+  // keeps the header's search button and skips the greeting. The survey
+  // header (`minimal`) keeps its greeting — it is all that header says.
+  const onHome = pathname === '/';
+  const isUserStudio = effectiveStudio === 'USER';
+  const showGreeting = minimal || (isUserStudio && onHome);
   // The shared <UserProvider> auto-mounts a global "User data not loaded"
   // dialog when the `me` query fails, so we no longer render a local one
   // here. Keeping `me`/`loading` for the rest of the header's logic.
@@ -72,65 +68,23 @@ export default function AppHeader({
   // switch never waits on a network round trip to decide where to land.
   const autoPods = useAutoPodCounts(me?.roles ?? []);
 
-  // Persist an explicit location choice so it sticks across sessions/devices.
-  // The auto-default below does NOT persist — only a real user pick does.
-  const persistLocation = useCallback(
-    (id: string) => {
-      if (!id || id === me?.selected_location_id) return;
-      persistSelectedLocation({ variables: { locationId: id } }).catch(() => undefined);
-    },
-    [persistSelectedLocation, me?.selected_location_id]
-  );
-
-  // Both defaults wait for `me`, so they land in ONE commit: each re-keys the
-  // page (App.tsx), and landing apart would remount Home twice.
-  useEffect(() => {
-    if (meSettled && !selectedLocationId && locations.length > 0) {
-      // Prefer the user's persisted choice; then a city match; then the first.
-      const persisted = locations.find((l: any) => l.id === me?.selected_location_id);
-      const cityMatch = locations.find(
-        (l: any) => me?.city && l.location_name?.toLowerCase() === me.city.toLowerCase()
-      );
-      onLocationChange(persisted?.id ?? cityMatch?.id ?? locations[0].id);
-    }
-  }, [meSettled, locations, selectedLocationId, me, onLocationChange]);
+  // The location default, picker draft and window events. Called before the
+  // super-category default below so both defaults land in one commit.
+  const loc = useHeaderLocation({
+    me,
+    meSettled,
+    locations,
+    selectedLocationId,
+    selectedZoneName,
+    onLocationChange,
+    onZoneChange,
+  });
 
   useEffect(() => {
     if (meSettled && !selectedSuperCategory && superCats.length > 0) {
       onSuperCategoryChange(superCats[0].slug);
     }
   }, [meSettled, superCats, selectedSuperCategory, onSuperCategoryChange]);
-
-  const selectedLocation = useMemo(
-    () => locations.find((l: any) => l.id === selectedLocationId),
-    [locations, selectedLocationId]
-  );
-
-  const openLocationPicker = useCallback(() => {
-    setDraftLocationId(selectedLocationId);
-    setDraftZone(selectedZoneName);
-    setLocDialogOpen(true);
-  }, [selectedLocationId, selectedZoneName]);
-
-  // Open the picker when another screen (e.g. the Clubs page note) asks for it.
-  useEffect(() => {
-    globalThis.addEventListener(OPEN_LOCATION_PICKER_EVENT, openLocationPicker);
-    return () => globalThis.removeEventListener(OPEN_LOCATION_PICKER_EVENT, openLocationPicker);
-  }, [openLocationPicker]);
-
-  // Apply a city + area another screen chose outright — the "Switch to …"
-  // button on a pod, club or venue reached from a link into another city. It
-  // lands exactly where a pick in the dialog would: state, then persisted.
-  useEffect(() => {
-    const applyLocation = (event: Event) => {
-      const { locationId, zoneName } = (event as CustomEvent<ApplyLocationDetail>).detail;
-      onLocationChange(locationId);
-      onZoneChange(zoneName);
-      persistLocation(locationId);
-    };
-    globalThis.addEventListener(APPLY_LOCATION_EVENT, applyLocation);
-    return () => globalThis.removeEventListener(APPLY_LOCATION_EVENT, applyLocation);
-  }, [onLocationChange, onZoneChange, persistLocation]);
 
   const logout = () => {
     ctxLogout();
@@ -141,59 +95,42 @@ export default function AppHeader({
     []
   );
 
+  // The page ground, opaque: the content scrolls in its own container below
+  // the bar, so a blur here had nothing to blur.
   return (
     <AppBar
       position="sticky"
       color="inherit"
       elevation={0}
-      sx={{
-        bgcolor: 'transparent',
-        backgroundImage: 'none',
-        borderBottom: 0,
-        backdropFilter: 'blur(18px)',
-      }}
+      sx={{ bgcolor: 'background.default', backgroundImage: 'none', border: 0 }}
     >
-      <Toolbar sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', gap: 1, py: 0.75, minHeight: minimal ? 56 : 60, px: 1.5 }}>
-        {!minimal && effectiveStudio !== 'USER' ? (
-          // A studio header keeps the role badge AND the location switcher: a
-          // host/venue/club account still browses a city, so the picker stays.
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{
-              alignItems: "center",
-              minWidth: 0
-            }}>
-            <Chip
-              label={STUDIO_LABEL[effectiveStudio]}
-              color="primary"
-              size="small"
-              onClick={() => {
-                autoPods.reload();
-                setStudioSwitchOpen(true);
-              }}
-              sx={{ fontWeight: 700, borderRadius: 999, flex: '0 0 auto' }}
-            />
-            <HeaderLocationRow
-              selectedLocationName={selectedLocation?.location_name}
-              selectedZoneName={selectedZoneName}
-              loading={!placeReady}
-              hasData={placeReady}
-              onOpen={openLocationPicker}
-            />
-          </Stack>
-        ) : (
-          <HeaderGreeting
-            tagline={branding?.home_header_tagline}
-            loading={!placeReady}
-            hasData={placeReady}
-            selectedLocationName={minimal ? undefined : selectedLocation?.location_name}
-            selectedZoneName={minimal ? undefined : selectedZoneName}
-            onOpenLocation={minimal ? undefined : openLocationPicker}
-          />
-        )}
-
-        <Box sx={{ flexGrow: 1 }} />
+      <Toolbar
+        variant="dense"
+        disableGutters
+        sx={{
+          width: '100%',
+          maxWidth: APP_SHELL_MAX_WIDTH,
+          mx: 'auto',
+          gap: 1,
+          px: 2,
+          pt: 1,
+          pb: showGreeting ? 1 : 1.5,
+          minHeight: 56,
+          boxSizing: 'border-box',
+        }}
+      >
+        <HeaderLeading
+          minimal={minimal}
+          studio={effectiveStudio}
+          onOpenStudioSwitch={() => {
+            autoPods.reload();
+            setStudioSwitchOpen(true);
+          }}
+          selectedLocationName={loc.selectedLocation?.location_name}
+          selectedZoneName={selectedZoneName}
+          placeReady={placeReady}
+          onOpenLocation={loc.openLocationPicker}
+        />
 
         {minimal ? (
           <SurveyHeaderActions onLogout={logout} />
@@ -202,35 +139,16 @@ export default function AppHeader({
             {/* Studio modes (Host/Venue/ecomm) get a focused header — no search.
              * The location picker is NOT one of the things they lose. */}
             <LocationDialog
-              open={locDialogOpen}
-              onClose={() => setLocDialogOpen(false)}
+              {...loc.dialog}
               locations={locations}
               activeLocationIds={staticData?.activePodLocationIds ?? []}
-              draftLocationId={draftLocationId}
-              setDraftLocationId={setDraftLocationId}
-              draftZone={draftZone}
-              setDraftZone={setDraftZone}
-              onApply={() => {
-                onLocationChange(draftLocationId);
-                onZoneChange(draftZone);
-                persistLocation(draftLocationId);
-                setLocDialogOpen(false);
-              }}
-              onAutoApply={(locationId, zoneName) => {
-                setDraftLocationId(locationId);
-                setDraftZone(zoneName);
-                onLocationChange(locationId);
-                onZoneChange(zoneName);
-                persistLocation(locationId);
-                setLocDialogOpen(false);
-              }}
             />
 
-            {/* Labelled circular actions (mock): Search · Alerts · avatar with
+            {/* Round actions: Search (not on Home) · Alerts · avatar with
              * online dot. The cart is a bottom-bar destination, not a header
              * action. */}
             <HeaderQuickActions
-              showSearch={effectiveStudio === 'USER'}
+              showSearch={isUserStudio && !onHome}
               locationId={selectedLocationId}
               zoneName={selectedZoneName}
               onToast={handleNotifToast}
@@ -255,24 +173,16 @@ export default function AppHeader({
         )}
       </Toolbar>
 
+      {showGreeting && (
+        <HeaderGreeting
+          tagline={branding?.home_header_tagline}
+          firstName={me?.first_name}
+          onOpenLocation={minimal ? undefined : loc.openLocationPicker}
+        />
+      )}
+
       {!minimal && me?.email && me.is_email_verified === false && (
-        <Alert
-          severity="info"
-          onClick={() => navigate('/profile?verifyEmail=1')}
-          sx={{
-            width: '100%',
-            maxWidth: APP_SHELL_MAX_WIDTH,
-            mx: 'auto',
-            borderRadius: 0,
-            cursor: 'pointer',
-            // Sits between the toolbar and the category tabs; without the
-            // vertical margin it reads as part of whichever one it touches.
-            my: 1,
-            py: 0.75,
-          }}
-        >
-          Please verify your email
-        </Alert>
+        <HeaderVerifyEmail onOpen={() => navigate('/profile?verifyEmail=1')} />
       )}
 
       {!minimal && (

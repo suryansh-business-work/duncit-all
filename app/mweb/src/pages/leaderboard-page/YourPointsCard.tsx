@@ -1,6 +1,7 @@
-import { Card, CardContent, Skeleton, Stack, Typography } from '@mui/material';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import { Card, Skeleton, Stack, Typography } from '@mui/material';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEventsOutlined';
 import type { LeaderboardBoardData } from './queries';
+import IconDisc from '../account-page/IconDisc';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -8,8 +9,8 @@ interface Props {
   loading: boolean;
 }
 
-/** The hero: the caller's points and rank on the selected board, on a primary
- * gradient so "your standing" reads before anyone else's. */
+/** The hero: the caller's points and rank on the selected board, first on the
+ * page so "your standing" reads before anyone else's. */
 export default function YourPointsCard({ board, loading }: Readonly<Props>) {
   const { t } = useTranslation();
 
@@ -23,47 +24,35 @@ export default function YourPointsCard({ board, loading }: Readonly<Props>) {
     : t('mweb.leaderboard.notRanked');
 
   return (
-    <Card
-      sx={{
-        background: (theme) =>
-          `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-        color: 'primary.contrastText',
-      }}
-    >
-      <CardContent>
-        <Stack
-          direction="row"
-          spacing={2}
-          sx={{
-            alignItems: "center",
-            justifyContent: "space-between"
-          }}>
-          <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-            <Typography variant="overline" sx={{ opacity: 0.85, letterSpacing: 1 }}>
-              {t('mweb.leaderboard.yourPoints')}
+    <Card sx={{ p: 2.5 }}>
+      <Stack direction="row" spacing={2} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+        <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+            {t('mweb.leaderboard.yourPoints')}
+          </Typography>
+          {loading && !board ? (
+            <Skeleton variant="text" width={96} height={48} />
+          ) : (
+            <Typography sx={{ fontSize: 34, fontWeight: 700, lineHeight: 1.15 }}>
+              {board?.my_points ?? 0}
             </Typography>
-            {loading && !board ? (
-              <Skeleton variant="text" width={96} height={48} sx={{ bgcolor: 'rgba(255,255,255,0.25)' }} />
-            ) : (
-              <Typography variant="h3" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
-                {board?.my_points ?? 0}
-              </Typography>
-            )}
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-              {rankLine}
+          )}
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            {rankLine}
+          </Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            {participantsLine}
+          </Typography>
+          {!board?.my_rank && (
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              {t('mweb.leaderboard.notRankedHint')}
             </Typography>
-            <Typography variant="caption" sx={{ opacity: 0.75 }}>
-              {participantsLine}
-            </Typography>
-            {!board?.my_rank && (
-              <Typography variant="caption" sx={{ opacity: 0.75 }}>
-                {t('mweb.leaderboard.notRankedHint')}
-              </Typography>
-            )}
-          </Stack>
-          <EmojiEventsIcon sx={{ fontSize: 72, opacity: 0.9 }} />
+          )}
         </Stack>
-      </CardContent>
+        <IconDisc size={64}>
+          <EmojiEventsIcon />
+        </IconDisc>
+      </Stack>
     </Card>
   );
 }

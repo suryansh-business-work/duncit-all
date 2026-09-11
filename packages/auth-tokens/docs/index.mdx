@@ -52,10 +52,10 @@ const brandLight = {
 `app/mweb/src/theme.ts`:
 
 ```ts
-import { brand, neutral, semantic, surface } from '@duncit/auth-tokens';
+import { brand, neutral, semantic, light, dark } from '@duncit/auth-tokens';
 
-export const tokens = { brand, neutral, semantic, surface };
-const PRIMARY = tokens.brand[500];
+export const tokens = { brand, neutral, semantic };
+const m = isDark ? dark : light; // m.primary = green CTA, m.accent = coral
 ```
 
 A default export of the whole object also exists (`import tokens from '@duncit/auth-tokens'`),
@@ -74,8 +74,8 @@ neutral    // { '50':'#fafafa', '100':'#f5f5f5', '200':'#e5e7eb', '300':'#d1d5db
            //   '500':'#6b7280', '600':'#4b5563', '700':'#374151', '800':'#1f2937', '900':'#111827' }
 semantic   // { success:'#22c55e', warning:'#f59e0b', error:'#ef4444',
            //   info:'#3b82f6', secondary:'#8b5cf6', accent:'#06b6d4' }
-surface    // { bg:'#f8fafc', paper:'#ffffff', soft:'#f1f5f9', border:'#e5e7eb' }
-radii      // { sm: 8, md: 10, lg: 16, xl: 18, pill: 999 }
+surface    // { bg:'#f2f3ef', paper:'#ffffff', soft:'#ebede8', border:'#e3e5df' }
+radii      // { sm: 8, md: 10, lg: 16, xl: 24, pill: 999 }
 ```
 
 The two mode palettes are deliberately the same shape, key for key — that is what lets a
@@ -84,16 +84,17 @@ theme switch modes by swapping the object:
 ```ts
 light                       dark
 {                           {
-  bg:            '#f8fafc',   bg:            '#0b1220',
-  surface:       '#ffffff',   surface:       '#111a2e',
-  soft:          '#f1f5f9',   soft:          '#0f1830',
-  ink:           '#111827',   ink:           '#f4f6fb',
-  muted:         '#6b7280',   muted:         '#9aa3b2',
-  border:        '#e5e7eb',   border:        'rgba(255,255,255,0.10)',
-  primary:       '#ff5757',   primary:       '#ff5757',
-  primaryHover:  '#f03e3e',   primaryHover:  '#f03e3e',
-  primaryActive: '#d92d2d',   primaryActive: '#d92d2d',
+  bg:            '#f2f3ef',   bg:            '#0e1012',
+  surface:       '#ffffff',   surface:       '#181b1f',
+  soft:          '#ebede8',   soft:          '#22262b',
+  ink:           '#16181d',   ink:           '#f2f4f1',
+  muted:         '#6b7079',   muted:         '#9aa0a8',
+  border:        '#e3e5df',   border:        'rgba(255,255,255,0.08)',
+  primary:       '#1a874c',   primary:       '#1a874c',
+  primaryHover:  '#177a45',   primaryHover:  '#1f9656',
+  primaryActive: '#146b3c',   primaryActive: '#177a45',
   onPrimary:     '#ffffff',   onPrimary:     '#ffffff',
+  accent:        '#ff5757',   accent:        '#ff6b6b',
 }                           }
 ```
 
@@ -108,14 +109,14 @@ typography
 
 auth
 // {
-//   accent: '#ff5b72',
-//   avatars: ['#ff5b67', '#ff8d47', '#aa4cff'],
-//   avatarRing: '#201529',
-//   bgGradient:   { light: ['#f7f2ea','#fffaf4','#f5e6e8'], dark: ['#100f18','#191326','#25151d'] },
-//   cardGradient: { light: ['#ffffff','#fff6f7','#ffecef'], dark: ['#2c1c4a','#14111f','#30161e'] },
+//   accent: '#ff5757',
+//   avatars: ['#ff5757', '#1a874c', '#f59e0b'],
+//   avatarRing: '#ffffff',
+//   bgGradient:   { light: ['#f2f3ef','#f4f5f1','#eef0ea'], dark: ['#0e1012','#121417','#0e1012'] },
+//   cardGradient: { light: ['#ffffff','#ffffff','#ffffff'], dark: ['#181b1f','#181b1f','#181b1f'] },
 //   fog: {
-//     light: { veil: 'rgba(250,248,245,0.74)', edge: 'rgba(250,248,245,0.94)', clear: 'rgba(250,248,245,0)' },
-//     dark:  { veil: 'rgba(11,9,16,0.70)',     edge: 'rgba(11,9,16,0.94)',     clear: 'rgba(11,9,16,0)' },
+//     light: { veil: 'rgba(242,243,239,0.78)', edge: 'rgba(242,243,239,0.96)', clear: 'rgba(242,243,239,0)' },
+//     dark:  { veil: 'rgba(14,16,18,0.74)',    edge: 'rgba(14,16,18,0.96)',    clear: 'rgba(14,16,18,0)' },
 //     mediaOpacity: 0.9,
 //     edgeStop: 0.26,
 //   },
@@ -125,21 +126,26 @@ auth
 
 ## Worked examples
 
-`light.primary`, `dark.primary` and `brand[500]` are all `#ff5757` — the brand red does not
-change across modes; what changes around it does.
+The calm design (2026-09) splits the two jobs the brand red used to do. `primary` is the
+**green** of every call to action (`#1a874c` in both modes — the deepest green that still
+carries white button text at 4.5:1), and `accent` is the **Duncit coral** (`brand[500]`,
+`#ff5757`) for the logo, the active tab, badges and "See all". The page ground is a warm
+off-white (`#f2f3ef`) with borderless white cards; dark mode is a near-black ground with
+hairline-bordered cards.
 
 ### mWeb (MUI)
 
 ```ts
-import { brand, neutral, semantic, surface } from '@duncit/auth-tokens';
+import { dark, light, semantic } from '@duncit/auth-tokens';
 
-const PRIMARY = brand[500];              // '#ff5757'
+const m = isDark ? dark : light;
 const theme = createTheme({
   palette: {
-    primary:    { main: PRIMARY, light: brand[300], dark: brand[700] },  // #ff9e9e / #d92d2d
-    error:      { main: semantic.error },                                // '#ef4444'
-    background: { default: surface.bg, paper: surface.paper },           // '#f8fafc' / '#ffffff'
-    text:       { primary: neutral[900], secondary: neutral[500] },      // '#111827' / '#6b7280'
+    primary:    { main: m.primary, dark: m.primaryActive },  // '#1a874c' / '#146b3c'
+    secondary:  { main: m.accent },                          // '#ff5757' coral
+    error:      { main: semantic.error },                    // '#ef4444'
+    background: { default: m.bg, paper: m.surface },         // '#f2f3ef' / '#ffffff'
+    text:       { primary: m.ink, secondary: m.muted },      // '#16181d' / '#6b7079'
   },
 });
 ```
@@ -150,19 +156,21 @@ const theme = createTheme({
 import { dark, light, semantic, typography } from '@duncit/auth-tokens';
 
 const brandLight = {
-  background:  light.bg,          // '#f8fafc'
-  color:       light.ink,         // '#111827'
-  borderColor: light.border,      // '#e5e7eb'
-  primary:     light.primary,     // '#ff5757'
+  background:  light.bg,          // '#f2f3ef'
+  color:       light.ink,         // '#16181d'
+  borderColor: light.border,      // '#e3e5df'
+  primary:     light.primary,     // '#1a874c'
+  accent:      light.accent,      // '#ff5757'
   onPrimary:   light.onPrimary,   // '#ffffff'
   danger:      semantic.error,    // '#ef4444'
 };
 
 const brandDark = {
-  background:  dark.bg,           // '#0b1220'
-  color:       dark.ink,          // '#f4f6fb'
-  borderColor: dark.border,       // 'rgba(255,255,255,0.10)'
-  primary:     dark.primary,      // '#ff5757'  ← identical to light
+  background:  dark.bg,           // '#0e1012'
+  color:       dark.ink,          // '#f2f4f1'
+  borderColor: dark.border,       // 'rgba(255,255,255,0.08)'
+  primary:     dark.primary,      // '#1a874c'  ← identical to light
+  accent:      dark.accent,       // '#ff6b6b'
   onPrimary:   dark.onPrimary,    // '#ffffff'
   danger:      semantic.error,
 };
@@ -174,8 +182,8 @@ the fix is in `tokens.json` — not in the theme file that noticed it.
 ### The auth gradient
 
 ```ts
-const [from, via, to] = auth.bgGradient.dark;   // '#100f18', '#191326', '#25151d'
-// → linear-gradient(160deg, #100f18 0%, #191326 55%, #25151d 100%)
+const [from, via, to] = auth.bgGradient.dark;   // '#0e1012', '#121417', '#0e1012'
+// → linear-gradient(160deg, #0e1012 0%, #121417 55%, #0e1012 100%) — near-flat by design
 ```
 
 Both gradients are fixed three-stop tuples (`[string, string, string]`), so a consumer can
@@ -192,8 +200,8 @@ functions, no options and no defaults to pass.
 | `neutral` | `ColorScale` | Greys, keys `50`–`900`. |
 | `semantic` | `SemanticColors` | `success`, `warning`, `error`, `info`, `secondary`, `accent`. |
 | `surface` | `SurfaceColors` | `bg`, `paper`, `soft`, `border` (light-mode surfaces). |
-| `light` | `ModeColors` | Light palette — 10 keys. |
-| `dark` | `ModeColors` | Dark palette — the same 10 keys. |
+| `light` | `ModeColors` | Light palette — 11 keys. |
+| `dark` | `ModeColors` | Dark palette — the same 11 keys. |
 | `auth` | `AuthVisuals` | `accent`, `avatars`, `avatarRing`, `bgGradient`, `cardGradient`, `fog`, `legal`. |
 | `radii` | `Radii` | `sm`, `md`, `lg`, `xl`, `pill` (numbers, px). |
 | `typography` | `Typography` | `fontFamily` plus six named `weight`s. |
@@ -202,7 +210,7 @@ functions, no options and no defaults to pass.
 | Type | Shape |
 | --- | --- |
 | `ColorScale` | `Record<'50'\|'100'\|…\|'900', string>` |
-| `ModeColors` | `bg, surface, soft, ink, muted, border, primary, primaryHover, primaryActive, onPrimary` — all `string` |
+| `ModeColors` | `bg, surface, soft, ink, muted, border, primary, primaryHover, primaryActive, onPrimary, accent` — all `string` |
 | `GradientPair` | `{ light: [string, string, string]; dark: [string, string, string] }` |
 | `AuthVisuals` | `accent: string`, `avatars: [string,string,string]`, `avatarRing: string`, `bgGradient: GradientPair`, `cardGradient: GradientPair`, `fog: AuthFog`, `legal: { termsUrl, privacyUrl }` |
 | `FogLayer` | `veil`, `edge`, `clear` — all `string` |

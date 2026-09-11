@@ -104,18 +104,18 @@ export function ScannedAttendeeCard({
             borderRadius={32}
             alignItems="center"
             justifyContent="center"
-            backgroundColor="$surface"
+            backgroundColor="$soft"
           >
-            <Text fontSize={24} fontWeight="700" color="$muted">
+            <Text fontSize={24} fontWeight="600" color="$muted">
               {attendee.full_name.slice(0, 1).toUpperCase()}
             </Text>
           </YStack>
         )}
         <YStack flex={1} gap={4}>
-          <Text fontSize={17} fontWeight="700" color="$color" numberOfLines={1}>
+          <Text fontSize={17} fontWeight="600" color="$color" numberOfLines={1}>
             {attendee.full_name}
           </Text>
-          <Text fontSize={12.5} fontWeight="700" color={statusTint}>
+          <Text fontSize={13} fontWeight="600" color={statusTint}>
             {presenceLabel}
             {ticketCode ? ` · ${ticketCode}` : ''}
           </Text>
@@ -130,7 +130,7 @@ export function ScannedAttendeeCard({
         borderRadius={16}
         borderWidth={2}
         borderColor="$primary"
-        backgroundColor="$surface"
+        backgroundColor="$primarySoft"
       >
         <YStack
           width={44}
@@ -144,7 +144,7 @@ export function ScannedAttendeeCard({
             {seats}
           </Text>
         </YStack>
-        <Text flex={1} fontSize={15} fontWeight="700" color="$color">
+        <Text flex={1} fontSize={15} fontWeight="600" color="$color">
           {partyText}
         </Text>
       </XStack>
@@ -193,13 +193,13 @@ export function ScannedAttendeeCard({
         justifyContent="center"
         gap={8}
         height={44}
-        borderRadius={12}
+        borderRadius={999}
         borderWidth={1}
-        borderColor="$borderColor"
+        borderColor="$primary"
         pressStyle={PRESS_STYLE.control}
       >
         <MaterialIcons name="open-in-new" size={16} color={primary} />
-        <Text fontSize={13.5} fontWeight="700" color="$primary">
+        <Text fontSize={14} fontWeight="600" color="$primary">
           View profile
         </Text>
       </XStack>

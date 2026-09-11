@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { Alert, MenuItem, Skeleton, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Skeleton, Stack } from '@mui/material';
+import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded';
+import StudioPageHeader from '../../components/StudioPageHeader';
+import PillChips from '../../components/club-admin/PillChips';
 import SlotRequestCard from './SlotRequestCard';
 import {
   ALL_VENUES,
@@ -34,8 +37,18 @@ export default function VenueSlotRequestsPage() {
   const [approve, approveState] = useMutation<any>(APPROVE_SLOT_REQUEST);
   const [decline, declineState] = useMutation<any>(DECLINE_SLOT_REQUEST);
 
-  const venues = venuesQuery.data?.myVenues ?? [];
+  const venues: { id: string; venue_name?: string }[] = venuesQuery.data?.myVenues ?? [];
   const requests: SlotRequestRow[] = requestsQuery.data?.venueSlotRequests ?? [];
+  const venueOptions = useMemo(
+    () => [
+      { value: ALL_VENUES, label: t('mweb.venueSlotRequests.allVenues') },
+      ...venues.map((venue) => ({
+        value: venue.id,
+        label: venue.venue_name || t('mweb.venueManagePage.untitledVenue'),
+      })),
+    ],
+    [venues, t]
+  );
   const busy = approveState.loading || declineState.loading;
 
   const decide = (run: Promise<unknown>, done: string) => {
@@ -48,36 +61,14 @@ export default function VenueSlotRequestsPage() {
   };
 
   return (
-    <Stack spacing={2} sx={{ p: 2 }}>
-      <Stack spacing={0.25}>
-        <Typography variant="h6" sx={{
-          fontWeight: 800
-        }}>
-          Slot Requests
-        </Typography>
-        <Typography variant="body2" sx={{
-          color: "text.secondary"
-        }}>
-          Hosts who want to run their pod at your venue. A pod only goes live after you approve its
-          slot.
-        </Typography>
-      </Stack>
+    <Stack spacing={2.5} sx={{ p: 2 }}>
+      <StudioPageHeader
+        icon={<EventAvailableRoundedIcon fontSize="small" />}
+        title={t('mweb.venueSlotRequests.slotRequests')}
+      />
 
       {venues.length > 1 && (
-        <TextField
-          select
-          size="small"
-          label={t('mweb.common.venue')}
-          value={venueId}
-          onChange={(event) => setVenueId(event.target.value)}
-        >
-          <MenuItem value={ALL_VENUES}>{t('mweb.venueSlotRequests.allVenues')}</MenuItem>
-          {venues.map((venue: { id: string; venue_name?: string }) => (
-            <MenuItem key={venue.id} value={venue.id}>
-              {venue.venue_name || 'Untitled venue'}
-            </MenuItem>
-          ))}
-        </TextField>
+        <PillChips label={t('mweb.common.venue')} options={venueOptions} value={venueId} onChange={setVenueId} />
       )}
 
       {feedback && (
@@ -89,8 +80,8 @@ export default function VenueSlotRequestsPage() {
 
       {requestsQuery.loading && !requestsQuery.data && (
         <Stack spacing={1.5}>
-          <Skeleton variant="rounded" height={200} />
-          <Skeleton variant="rounded" height={200} />
+          <Skeleton variant="rounded" height={200} sx={{ borderRadius: '24px' }} />
+          <Skeleton variant="rounded" height={200} sx={{ borderRadius: '24px' }} />
         </Stack>
       )}
 

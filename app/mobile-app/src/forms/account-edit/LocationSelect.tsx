@@ -2,6 +2,7 @@ import { useController, useWatch, type Control, type UseFormSetValue } from 'rea
 import { Input, Text, XStack, YStack } from 'tamagui';
 import { COUNTRY_OPTIONS, findCountryByName, getStatesForCountry } from '@duncit/geo';
 
+import { FIELD_HEIGHT, FIELD_RADIUS } from '@/components/Field';
 import { SelectSheet, type SelectOption } from '../components/SelectSheet';
 import type { AccountEditValues } from './account-edit.types';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -31,9 +32,9 @@ function CityField({ control }: Readonly<{ control: Control<AccountEditValues> }
         onBlur={field.onBlur}
         placeholder={t('mweb.accountEdit.enterCity')}
         placeholderTextColor="$muted"
-        height={48}
-        paddingHorizontal={12}
-        borderRadius={9}
+        height={FIELD_HEIGHT}
+        paddingHorizontal={14}
+        borderRadius={FIELD_RADIUS}
         borderWidth={1}
         borderColor="$borderColor"
         backgroundColor="$surface"

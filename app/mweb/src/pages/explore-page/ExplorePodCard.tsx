@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useMutation } from '@apollo/client/react';
-import { Box, Stack, Typography } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import FlashOnIcon from '@mui/icons-material/FlashOn';
+import { Box } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import ShareIcon from '@mui/icons-material/Share';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
@@ -13,16 +11,16 @@ import HowToRegIcon from '@mui/icons-material/HowToReg';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import CommentIcon from '@mui/icons-material/Comment';
-import { DuncitButton } from '@duncit/buttons';
 import { TOGGLE_POD_LIKE } from '../pod-details-page/queries';
 import ExploreActionRail from './ExploreActionRail';
+import ExploreJoinBar from './ExploreJoinBar';
 import ExploreReelVideo from './ExploreReelVideo';
 import ExplorePodOverlay from './ExplorePodOverlay';
 import LikesListDialog from './LikesListDialog';
 import PodCommentsSheet from '../../components/PodCommentsSheet';
 import { usePricing } from '../../hooks/usePricing';
 import { isPodExpired } from '../../utils/podStatus';
-import { shareUrl } from '../../lib/share-link';
+import { likersWithViewer, shareExplorePod } from './explorePodActions';
 import { podSeatsTaken } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -34,16 +32,6 @@ interface Props {
   savePending?: boolean;
   onToggleSave: () => void;
   viewerId?: string | null;
-}
-
-/** Reconcile the cached likers with the viewer's own optimistic like so a
- * just-liked pod shows the viewer instead of a stale "No likes yet". */
-function likersWithViewer(ids: string[], viewerId: string | null | undefined, liked: boolean): string[] {
-  if (!viewerId) return ids;
-  const has = ids.includes(viewerId);
-  if (liked && !has) return [...ids, viewerId];
-  if (!liked && has) return ids.filter((id) => id !== viewerId);
-  return ids;
 }
 
 export default function ExplorePodCard({
@@ -96,27 +84,10 @@ export default function ExplorePodCard({
     if (pod.club_slug && pod.pod_id) navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`);
   };
 
-  const share = async () => {
-    const podUrl = pod.club_slug && pod.pod_id
-      ? `${globalThis.window.location.origin}/club/${pod.club_slug}/pod/${pod.pod_id}`
-      : `${globalThis.window.location.origin}/explore`;
-    // Tracked through Short Links, so a pod passed around from Explore is
-    // measured the same way a promoted one is.
-    const url = await shareUrl('POD', pod.id, podUrl);
-    const shareData = {
-      title: pod.pod_title,
-      text: pod.pod_description?.slice(0, 100) ?? pod.pod_title,
-      url,
-    };
-    try {
-      if (navigator.share) await navigator.share(shareData);
-      else await navigator.clipboard.writeText(url);
-    } catch {
-      /* user cancelled */
-    }
-  };
+  const share = () => shareExplorePod(pod);
 
   const spotsSuffix = pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : '';
+  const joinLabel = expired ? 'Expired' : `${podSeatsTaken(pod)}${spotsSuffix}`;
 
   return (
     <Box
@@ -141,7 +112,8 @@ export default function ExplorePodCard({
           {
             key: 'join',
             icon: expired ? <InfoOutlinedIcon /> : <HowToRegIcon />,
-            label: expired ? 'Expired' : `${podSeatsTaken(pod)}${spotsSuffix}`,
+            label: joinLabel,
+            caption: joinLabel,
             ariaLabel: t('mweb.explore.join'),
             onClick: openPod,
             tooltip: expired ? 'This pod is expired.' : 'Join',
@@ -150,6 +122,7 @@ export default function ExplorePodCard({
             key: 'like',
             icon: liked ? <FavoriteIcon /> : <FavoriteBorderIcon />,
             label: String(likeCount),
+            caption: String(likeCount),
             ariaLabel: t('mweb.explore.like'),
             onClick: onLike,
             active: liked,
@@ -159,6 +132,7 @@ export default function ExplorePodCard({
             key: 'comment',
             icon: <CommentIcon />,
             label: String(commentCount),
+            caption: String(commentCount),
             ariaLabel: t('mweb.explore.comments'),
             onClick: () => setCommentsOpen(true),
           },
@@ -188,44 +162,12 @@ export default function ExplorePodCard({
         ]}
       />
 
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{
-          alignItems: "center",
-          position: 'absolute',
-          left: 10,
-          right: 10,
-          bottom: 'var(--duncit-bottom-nav-overlay-offset, 88px)',
-          p: 0.75,
-          borderRadius: '16px',
-          bgcolor: 'rgba(0,0,0,0.42)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          backdropFilter: 'blur(16px)'
-        }}>
-        <Box sx={{ width: 36, height: 36, borderRadius: '8px', bgcolor: 'primary.main', display: 'grid', placeItems: 'center' }}>
-          {expired ? <InfoOutlinedIcon sx={{ fontSize: 19 }} /> : <FlashOnIcon sx={{ fontSize: 19 }} />}
-        </Box>
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.1 }} noWrap>
-            {expired ? 'This pod is expired' : 'Join in 2 taps'}
-          </Typography>
-          <Typography variant="caption" sx={{ opacity: 0.82 }} noWrap>
-            {expired ? 'You can still view the pod details.' : ctaSubtitle}
-          </Typography>
-        </Box>
-        {!expired && (
-          <DuncitButton
-            variant="contained"
-            endIcon={<ArrowForwardIcon />}
-            onClick={() => pod.club_slug && pod.pod_id && navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`)}
-            sx={{ minWidth: 48, borderRadius: '16px', px: 1.2 }}
-            aria-label={t('mweb.explore.openPodDetails')}
-          >
-            Go
-          </DuncitButton>
-        )}
-      </Stack>
+      <ExploreJoinBar
+        expired={expired}
+        subtitle={ctaSubtitle}
+        goAriaLabel={t('mweb.explore.openPodDetails')}
+        onGo={openPod}
+      />
 
       <PodCommentsSheet
         podId={pod.id}

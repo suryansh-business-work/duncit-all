@@ -29,8 +29,7 @@ function SocialButton({
   active?: boolean;
   onPress: () => void;
 }>) {
-  const { color, danger } = useThemeColors();
-  const fg = active ? '#ffffff' : color;
+  const { color, accent } = useThemeColors();
   return (
     <XStack
       testID={testID}
@@ -43,20 +42,21 @@ function SocialButton({
       height={42}
       borderRadius={999}
       borderWidth={1}
-      borderColor={active ? danger : '$borderColor'}
-      backgroundColor={active ? danger : 'transparent'}
+      borderColor="$cardBorder"
+      backgroundColor="$surface"
       pressStyle={PRESS_STYLE.control}
     >
-      <MaterialIcons name={icon} size={18} color={active ? '#ffffff' : color} />
-      <Text fontSize={14} fontWeight="600" color={fg}>
+      <MaterialIcons name={icon} size={18} color={active ? accent : color} />
+      <Text fontSize={14} fontWeight="600" color="$color">
         {label}
       </Text>
     </XStack>
   );
 }
 
-/** Like + Comment action row — RN port of mWeb's PodSocialBar. Both are
- * clickable: Like toggles optimistically, Comment opens the comments sheet. */
+/** Like + Comment as surface pills on the page ground — RN port of mWeb's
+ * PodSocialBar. Like toggles optimistically (the heart turns coral), Comment
+ * opens the comments sheet. */
 export function PodSocialBar({
   liked,
   likeCount,

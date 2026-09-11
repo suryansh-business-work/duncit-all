@@ -34,7 +34,7 @@ export default function SlotMonthGrid({
   fmt,
   labels,
 }: Readonly<SlotMonthGridProps>) {
-  const { muted } = useThemeColors();
+  const { color: ink } = useThemeColors();
   const weeks = buildMonthGrid(monthKey);
   const initials = weekdayInitials(fmt);
   const firstMonth = bounds ? monthKeyOf(bounds.first) : monthKey;
@@ -58,16 +58,18 @@ export default function SlotMonthGrid({
           onPress={() => {
             if (canGoBack) step(-1);
           }}
-          width={36}
-          height={36}
+          width={40}
+          height={40}
+          borderRadius={20}
           alignItems="center"
           justifyContent="center"
+          backgroundColor="$soft"
           opacity={canGoBack ? 1 : 0.3}
-          pressStyle={PRESS_STYLE.inline}
+          pressStyle={PRESS_STYLE.control}
         >
-          <MaterialIcons name="chevron-left" size={24} color={muted} />
+          <MaterialIcons name="chevron-left" size={22} color={ink} />
         </XStack>
-        <Text fontSize={14} fontWeight="600" color="$color">
+        <Text fontSize={15} fontWeight="600" color="$color">
           {title}
         </Text>
         <XStack
@@ -78,14 +80,16 @@ export default function SlotMonthGrid({
           onPress={() => {
             if (canGoNext) step(1);
           }}
-          width={36}
-          height={36}
+          width={40}
+          height={40}
+          borderRadius={20}
           alignItems="center"
           justifyContent="center"
+          backgroundColor="$soft"
           opacity={canGoNext ? 1 : 0.3}
-          pressStyle={PRESS_STYLE.inline}
+          pressStyle={PRESS_STYLE.control}
         >
-          <MaterialIcons name="chevron-right" size={24} color={muted} />
+          <MaterialIcons name="chevron-right" size={22} color={ink} />
         </XStack>
       </XStack>
 
@@ -119,7 +123,7 @@ export default function SlotMonthGrid({
                   justifyContent="center"
                   backgroundColor={selected ? '$primary' : 'transparent'}
                   opacity={enabled || selected ? 1 : 0.35}
-                  pressStyle={enabled ? { opacity: 0.7 } : undefined}
+                  pressStyle={enabled ? PRESS_STYLE.control : undefined}
                 >
                   <Text
                     fontSize={13}

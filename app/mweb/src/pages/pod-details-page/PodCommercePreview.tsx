@@ -3,11 +3,14 @@ import { Box, Chip, Divider, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
-import StorefrontIcon from '@mui/icons-material/Storefront';
+import ShoppingBagIcon from '@mui/icons-material/ShoppingBagOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import { alpha, useTheme } from '@mui/material/styles';
+import { alpha, type Theme } from '@mui/material/styles';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import ProductDetailDialog, { type VariantPick } from './ProductDetailDialog';
+import SectionHeader from '../../components/SectionHeader';
+import { SURFACE_SX } from '../../theme';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   pod: any;
@@ -26,9 +29,19 @@ function productCountLabel(count: number): string {
   return `${count} product${count === 1 ? '' : 's'} selected`;
 }
 
+/** A product row on the card: a soft tile, primary-tinted while it is in the cart. */
+const rowSx = (selected: boolean) => (theme: Theme) => ({
+  alignItems: 'center',
+  p: 1,
+  borderRadius: '16px',
+  bgcolor: selected ? alpha(theme.palette.primary.main, 0.12) : theme.palette.action.hover,
+  transition: 'background-color 0.18s ease',
+});
+
+/** The pod's own shop: its products as rows on one card, with a running total.
+ * Native twin: details/PodShop. */
 export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange, selectedTotal, onVariantQuantity }: Readonly<Props>) {
-  const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
+  const { t } = useTranslation();
   const requests = (pod.product_requests ?? []).filter((item: any) => item?.product_name);
   // Add-to-cart works in ANY pod state — the ONLY gate is the owner closing the shop.
   const readOnly = pod.products_enabled === false;
@@ -42,12 +55,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
   // The variant-aware total from the cart wins when provided.
   const shownTotal = selectedTotal ?? baseTotal;
   const selectedCount = Object.values(selectedProducts).filter((quantity) => quantity > 0).length;
-  const textColor = theme.palette.text.primary;
-  const mutedColor = theme.palette.text.secondary;
-  const itemBg = isDark ? 'rgba(255,255,255,0.05)' : alpha(theme.palette.background.paper, 0.72);
-  const selectedBg = isDark ? 'rgba(255,139,95,0.14)' : alpha(theme.palette.primary.main, 0.1);
-  const borderColor = isDark ? 'rgba(255,255,255,0.1)' : alpha(theme.palette.text.primary, 0.1);
-  const selectedBorder = isDark ? 'rgba(255,139,95,0.6)' : alpha(theme.palette.primary.main, 0.45);
+  const mutedColor = 'text.secondary';
   const updateQuantity = (productId: string, quantity: number) => {
     const next = { ...selectedProducts };
     if (quantity <= 0) delete next[productId];
@@ -67,53 +75,12 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
   };
 
   return (
-    <Box
-      sx={{
-        p: 2,
-        borderRadius: '16px',
-        color: textColor,
-        background: isDark
-          ? 'linear-gradient(145deg, #15111c 0%, #2a1926 54%, #111827 100%)'
-          : `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.96)} 0%, ${alpha(theme.palette.primary.light, 0.16)} 54%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`,
-        boxShadow: isDark ? '0 18px 44px rgba(17, 24, 39, 0.24)' : `0 18px 44px ${alpha(theme.palette.primary.dark, 0.12)}`,
-        border: '1px solid',
-        borderColor: 'divider',
-        overflow: 'hidden',
-      }}
-    >
-      <Stack
-        direction="row"
-        spacing={1.5}
-        sx={{
-          alignItems: "center",
-          justifyContent: "space-between"
-        }}>
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{
-            alignItems: "center",
-            minWidth: 0
-          }}>
-          <StorefrontIcon sx={{ color: '#ff8b5f' }} />
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="overline" sx={{ color: mutedColor, letterSpacing: 0, lineHeight: 1 }}>
-              Pod Shop
-            </Typography>
-            <Stack
-              direction="row"
-              spacing={0.75}
-              sx={{
-                alignItems: "center",
-                minWidth: 0
-              }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.1 }} noWrap>
-                Products
-              </Typography>
-            </Stack>
-          </Box>
-        </Stack>
-        <Chip size="small" label={pod.products_enabled ? 'Available' : 'Closed'} sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.text.primary, 0.08), color: textColor, fontWeight: 600 }} />
+    <Box sx={{ ...SURFACE_SX, p: 2, overflow: 'hidden' }}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ minWidth: 0 }}>
+          <SectionHeader title={t('mweb.shop.title')} />
+        </Box>
+        <Chip size="small" label={pod.products_enabled ? 'Available' : 'Closed'} sx={{ bgcolor: 'action.hover', color: 'text.primary' }} />
       </Stack>
 
       {requests.length === 0 ? (
@@ -142,17 +109,13 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
               key={`${item.product_id}-${item.product_name}`}
               direction="row"
               spacing={1}
-              sx={{
-                alignItems: "center",
-                p: 1,
-                borderRadius: '16px',
-                border: '1px solid',
-                borderColor: selected ? selectedBorder : borderColor,
-                bgcolor: selected ? selectedBg : itemBg,
-                transition: 'all 0.18s ease'
-              }}>
-              <Box sx={{ width: 54, height: 54, borderRadius: '16px', overflow: 'hidden', flex: '0 0 auto', bgcolor: 'rgba(255,139,95,0.18)' }}>
-                {imageUrl && !imageErrors[item.product_id] && <Box component="img" src={imageUrl} alt={item.product_name} onError={() => setImageErrors((prev) => ({ ...prev, [item.product_id]: true }))} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+              sx={rowSx(selected)}>
+              <Box sx={{ width: 54, height: 54, borderRadius: '12px', overflow: 'hidden', flex: '0 0 auto', bgcolor: 'background.paper', color: 'secondary.main', display: 'grid', placeItems: 'center' }}>
+                {imageUrl && !imageErrors[item.product_id] ? (
+                  <Box component="img" src={imageUrl} alt={item.product_name} onError={() => setImageErrors((prev) => ({ ...prev, [item.product_id]: true }))} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <ShoppingBagIcon fontSize="small" />
+                )}
               </Box>
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>{item.product_name}</Typography>
@@ -161,10 +124,10 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
                   <Box sx={{ mt: 0.75 }}>
                     <DuncitButton
                       size="small"
-                      variant="outlined"
+                      variant="contained"
                       startIcon={<AddShoppingCartIcon />}
                       onClick={() => updateQuantity(item.product_id, 1)}
-                      sx={{ borderRadius: 999, fontWeight: 600, textTransform: 'none' }}
+                      sx={{ minHeight: 32 }}
                     >
                       Add to cart
                     </DuncitButton>
@@ -192,7 +155,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
               >
                 <InfoOutlinedIcon fontSize="small" />
               </DuncitIconButton>
-              <Typography variant="body2" sx={{ fontWeight: 700, color: isDark ? '#ffe1b8' : 'primary.dark' }}>
+              <Typography variant="body2" sx={{ fontWeight: 700 }}>
                 +{priceFormat(Number(item.unit_cost ?? 0) * Math.max(quantity, 1))}
               </Typography>
             </Stack>
@@ -201,7 +164,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
         </Stack>
       )}
 
-      <Divider sx={{ my: 1.5, borderColor: isDark ? 'rgba(255,255,255,0.16)' : 'divider' }} />
+      <Divider sx={{ my: 1.5 }} />
       {readOnly ? (
         <Typography variant="caption" sx={{ color: mutedColor }}>
           The shop is currently closed.

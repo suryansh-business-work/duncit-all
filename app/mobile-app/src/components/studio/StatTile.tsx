@@ -1,22 +1,32 @@
-import { Text, YStack } from 'tamagui';
+import { Text } from 'tamagui';
 
-/** Stat tile shared by the studio dashboards. */
-export function StatTile({ label, value }: Readonly<{ label: string; value: string | number }>) {
+import { SurfaceCard } from '@/components/SurfaceCard';
+
+interface Props {
+  label: string;
+  value: string | number;
+  /** `lg` for a short count, `md` for money that must not be cut off. */
+  size?: 'md' | 'lg';
+}
+
+/** Stat tile shared by the studio dashboards: a muted label over the figure, on
+ * a surface card. mWeb twin: pages/host-dashboard-page/StatCard. */
+export function StatTile({ label, value, size = 'md' }: Readonly<Props>) {
   return (
-    <YStack
-      flex={1}
-      padding={12}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
-      <Text fontSize={11} fontWeight="700" color="$primary">
+    <SurfaceCard flex={1} gap={4}>
+      <Text fontSize={12} fontWeight="600" color="$muted" numberOfLines={1}>
         {label}
       </Text>
-      <Text fontSize={17} fontWeight="700" color="$color" numberOfLines={1}>
+      <Text
+        fontSize={size === 'lg' ? 24 : 20}
+        fontWeight="700"
+        color="$color"
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.6}
+      >
         {value}
       </Text>
-    </YStack>
+    </SurfaceCard>
   );
 }

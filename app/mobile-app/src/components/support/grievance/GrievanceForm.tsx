@@ -2,9 +2,10 @@ import { formResolver } from '../../../utils/form-resolver';
 import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import type { GrievanceSupportTicketOption } from '@duncit/utils';
-import { Button, Text, YStack } from 'tamagui';
+import { Text } from 'tamagui';
 
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { DuncitButton } from '@/components/DuncitButton';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import { GrievanceField } from './GrievanceField';
 import { GrievanceTicketField } from './GrievanceTicketField';
@@ -37,7 +38,6 @@ export function GrievanceForm({
   onSubmit,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { onPrimary } = useThemeColors();
   // Rebuilt when the language changes so the messages follow it.
   const schema = useMemo(() => buildGrievanceSchema(t), [t]);
   const noTickets = !ticketsLoading && tickets.length === 0;
@@ -49,15 +49,7 @@ export function GrievanceForm({
   });
 
   return (
-    <YStack
-      testID="grievance-form"
-      gap={12}
-      padding={14}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
+    <SurfaceCard testID="grievance-form" gap={12}>
       <GrievanceTicketField control={control} options={tickets} loading={ticketsLoading} />
       <GrievanceField control={control} name="name" label={t('grievance.field.name')} required />
       <GrievanceField control={control} name="email" label={t('grievance.field.email')} required />
@@ -88,16 +80,14 @@ export function GrievanceForm({
           {errorMessage}
         </Text>
       ) : null}
-      <Button
+      <DuncitButton
         testID="grievance-submit"
-        theme="active"
-        borderRadius={12}
+        size="lg"
+        fullWidth
         disabled={submitting || noTickets}
-        color={onPrimary}
+        label={submitting ? t('grievance.submitting') : t('grievance.submit')}
         onPress={handleSubmit(onSubmit)}
-      >
-        {submitting ? t('grievance.submitting') : t('grievance.submit')}
-      </Button>
-    </YStack>
+      />
+    </SurfaceCard>
   );
 }

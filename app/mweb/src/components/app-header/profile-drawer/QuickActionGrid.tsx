@@ -1,5 +1,5 @@
-import { Box, Paper, Stack, Typography } from '@mui/material';
-import { alpha } from '@mui/material/styles';
+import { Box, Typography } from '@mui/material';
+import { SURFACE_SX } from '../../../theme';
 import { profileIcon } from './profileIcons';
 import { type ProfileTile } from './profileSections';
 
@@ -11,10 +11,11 @@ const TOUR_ANCHORS: Readonly<Record<string, string>> = {
   earn: 'profile-earn',
 };
 
+/** One quick-action tile: an accent icon on a soft disc and the label. The
+ * label says where it goes, so the tile carries no caption. */
 function ActionTile({ tile, onNavigate }: Readonly<{ tile: ProfileTile; onNavigate: (to: string) => void }>) {
   return (
-    <Paper
-      variant="outlined"
+    <Box
       data-tour={TOUR_ANCHORS[tile.key]}
       onClick={() => onNavigate(tile.to)}
       role="button"
@@ -23,11 +24,16 @@ function ActionTile({ tile, onNavigate }: Readonly<{ tile: ProfileTile; onNaviga
         if (e.key === 'Enter' || e.key === ' ') onNavigate(tile.to);
       }}
       sx={{
-        p: 1.5,
+        ...SURFACE_SX,
         borderRadius: '16px',
+        p: 1.75,
         cursor: 'pointer',
-        transition: 'border-color 160ms ease, background-color 160ms ease',
-        '&:hover': { borderColor: 'primary.main', bgcolor: (t) => alpha(t.palette.primary.main, 0.05) },
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1.25,
+        minWidth: 0,
+        transition: 'border-color 160ms ease',
+        '&:hover': { borderColor: 'divider' },
       }}
       aria-label={tile.label}
     >
@@ -35,34 +41,20 @@ function ActionTile({ tile, onNavigate }: Readonly<{ tile: ProfileTile; onNaviga
         sx={{
           width: 36,
           height: 36,
-          borderRadius: '8px',
+          borderRadius: '50%',
           display: 'grid',
           placeItems: 'center',
-          color: 'primary.main',
-          bgcolor: (t) => alpha(t.palette.primary.main, 0.14),
-          mb: 1,
+          color: 'secondary.main',
+          bgcolor: 'action.hover',
+          '& svg': { fontSize: 20 },
         }}
       >
         {profileIcon(tile.icon)}
       </Box>
-      <Typography
-        noWrap
-        sx={{
-          fontSize: 14,
-          fontWeight: 600
-        }}>
+      <Typography noWrap sx={{ fontSize: 14, fontWeight: 600 }}>
         {tile.label}
       </Typography>
-      <Typography
-        noWrap
-        sx={{
-          fontSize: 11.5,
-          color: "text.secondary",
-          display: "block"
-        }}>
-        {tile.caption}
-      </Typography>
-    </Paper>
+    </Box>
   );
 }
 
@@ -75,19 +67,10 @@ interface Props {
 
 export default function QuickActionGrid({ tiles, onNavigate }: Readonly<Props>) {
   return (
-    <Box sx={{ px: 2, pb: 1.25 }}>
-      <Stack
-        direction="row"
-        sx={{
-          flexWrap: "wrap",
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 1.25
-        }}>
-        {tiles.map((tile) => (
-          <ActionTile key={tile.key} tile={tile} onNavigate={onNavigate} />
-        ))}
-      </Stack>
+    <Box sx={{ px: 2, pb: 1.5, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+      {tiles.map((tile) => (
+        <ActionTile key={tile.key} tile={tile} onNavigate={onNavigate} />
+      ))}
     </Box>
   );
 }

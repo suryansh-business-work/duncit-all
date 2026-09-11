@@ -1,4 +1,4 @@
-import { Alert, Skeleton, Stack, Typography } from '@mui/material';
+import { Alert, Card, Divider, Skeleton, Stack, Typography } from '@mui/material';
 import {
   buildCommPreferenceLabels,
   commChannelSummary,
@@ -24,18 +24,9 @@ export default function CommPreferencePage() {
   const state = useCommPreference();
 
   const heading = (
-    <Stack spacing={0.5}>
-      <Typography variant="h6" sx={{
-        fontWeight: 800
-      }}>
-        {labels.title}
-      </Typography>
-      <Typography variant="body2" sx={{
-        color: "text.secondary"
-      }}>
-        {labels.blurb}
-      </Typography>
-    </Stack>
+    <Typography component="h1" sx={{ fontSize: 20, fontWeight: 600 }}>
+      {labels.title}
+    </Typography>
   );
 
   if (state.loading) {
@@ -48,7 +39,8 @@ export default function CommPreferencePage() {
           <Skeleton
             key={channel}
             variant="rounded"
-            height={104}
+            height={72}
+            sx={{ borderRadius: '16px' }}
             data-testid={`comm-skeleton-${channel}`}
           />
         ))}
@@ -71,22 +63,24 @@ export default function CommPreferencePage() {
     <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', pb: 4 }}>
       {heading}
 
-      {COMM_CHANNELS.map((channel) => {
-        const row = findCommChannel(channels, channel);
-        if (!row) return null;
-        const copy = labels.channel(channel);
-        return (
-          <ChannelLinkCard
-            key={channel}
-            channel={channel}
-            icon={CHANNEL_UI[channel].icon}
-            to={CHANNEL_UI[channel].to}
-            name={copy.name}
-            hint={copy.hint}
-            summary={commChannelSummary(row, labels)}
-          />
-        );
-      })}
+      <Card>
+        <Stack divider={<Divider sx={{ ml: '68px' }} />}>
+          {COMM_CHANNELS.map((channel) => {
+            const row = findCommChannel(channels, channel);
+            if (!row) return null;
+            return (
+              <ChannelLinkCard
+                key={channel}
+                channel={channel}
+                icon={CHANNEL_UI[channel].icon}
+                to={CHANNEL_UI[channel].to}
+                name={labels.channel(channel).name}
+                summary={commChannelSummary(row, labels)}
+              />
+            );
+          })}
+        </Stack>
+      </Card>
     </Stack>
   );
 }

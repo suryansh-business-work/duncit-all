@@ -39,7 +39,7 @@ interface Props {
  * product can never be carried onto another. mWeb twin (PodProductDialog).
  */
 export function ProductPickerDialog({ open, onClose, products, addedIds, onAdd }: Readonly<Props>) {
-  const { muted } = useThemeColors();
+  const { color } = useThemeColors();
   const { t } = useTranslation();
   const [criteria, setCriteria] = useState<PodProductCriteria>(BLANK_POD_PRODUCT_CRITERIA);
   const [selectedId, setSelectedId] = useState('');
@@ -84,7 +84,7 @@ export function ProductPickerDialog({ open, onClose, products, addedIds, onAdd }
   };
 
   let list = (
-    <YStack gap={10}>
+    <YStack gap={12}>
       {visible.map((product) => (
         <ProductPickerCard
           key={product.id}
@@ -117,14 +117,14 @@ export function ProductPickerDialog({ open, onClose, products, addedIds, onAdd }
           <YStack flex={1} backgroundColor="$background">
             <XStack
               alignItems="center"
-              gap={10}
-              paddingHorizontal={14}
+              gap={12}
+              paddingHorizontal={16}
               paddingVertical={12}
               borderBottomWidth={1}
               borderBottomColor="$borderColor"
             >
               <YStack flex={1}>
-                <Text fontSize={16.5} fontWeight="700" color="$color">
+                <Text fontSize={17} fontWeight="600" color="$color">
                   {t('podProduct.dialogTitle')}
                 </Text>
                 <Text fontSize={12} color="$muted">
@@ -136,18 +136,20 @@ export function ProductPickerDialog({ open, onClose, products, addedIds, onAdd }
                 role="button"
                 aria-label={t('podProduct.close')}
                 onPress={close}
-                width={34}
-                height={34}
+                width={40}
+                height={40}
+                borderRadius={20}
                 alignItems="center"
                 justifyContent="center"
-                pressStyle={PRESS_STYLE.inline}
+                backgroundColor="$surface"
+                pressStyle={PRESS_STYLE.control}
               >
-                <MaterialIcons name="close" size={22} color={muted} />
+                <MaterialIcons name="close" size={20} color={color} />
               </XStack>
             </XStack>
 
             <ScrollView keyboardShouldPersistTaps="handled">
-              <YStack gap={12} padding={14}>
+              <YStack gap={12} padding={16}>
                 <ProductPickerFilters
                   criteria={criteria}
                   onChange={setCriteria}

@@ -12,12 +12,12 @@ describe('@duncit/auth-tokens', () => {
     expect(neutral[900]).toBe('#111827');
     expect(semantic.error).toBe('#ef4444');
     expect(surface.paper).toBe('#ffffff');
-    expect(light.primary).toBe('#ff5757');
-    expect(dark.bg).toBe('#0b1220');
+    expect(light.primary).toBe('#1a874c');
+    expect(dark.bg).toBe('#0e1012');
   });
 
   it('exposes the auth/login visual tokens (gradients, accent, avatars, legal)', () => {
-    expect(auth.accent).toBe('#ff5b72');
+    expect(auth.accent).toBe('#ff5757');
     expect(auth.avatars).toHaveLength(3);
     expect(auth.bgGradient.light).toHaveLength(3);
     expect(auth.cardGradient.dark).toHaveLength(3);

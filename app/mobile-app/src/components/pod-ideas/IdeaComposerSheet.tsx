@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
-import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { Field } from '@/components/Field';
@@ -16,6 +15,7 @@ import {
   type CategoryLabels,
   type CategoryScope,
 } from './CategoryCascadeField';
+import { IdeaSheetHeader } from './IdeaSheetHeader';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -35,7 +35,7 @@ const EMPTY_LABELS: CategoryLabels = {
  * Super → Category → Sub hierarchy. RN port of mWeb's composer dialog. */
 export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { color, onPrimary } = useThemeColors();
+  const { onPrimary } = useThemeColors();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [scope, setScope] = useState<CategoryScope>(EMPTY_CATEGORY_SCOPE);
@@ -107,29 +107,16 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
               right={0}
               bottom={0}
               maxHeight="88%"
-              backgroundColor="$background"
-              borderTopLeftRadius={20}
-              borderTopRightRadius={20}
+              backgroundColor="$surface"
+              borderTopLeftRadius={28}
+              borderTopRightRadius={28}
             >
               <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
-                <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                  <Text fontSize={18} fontWeight="700" color="$color">
-                    Share a pod idea
-                  </Text>
-                  <XStack
-                    pressStyle={PRESS_STYLE.surface}
-                    testID="idea-composer-close"
-                    role="button"
-                    aria-label={t('mweb.common.close')}
-                    onPress={close}
-                    width={32}
-                    height={32}
-                    alignItems="center"
-                    justifyContent="center"
-                  >
-                    <MaterialIcons name="close" size={20} color={color} />
-                  </XStack>
-                </XStack>
+                <IdeaSheetHeader
+                  title="Share a pod idea"
+                  closeTestID="idea-composer-close"
+                  onClose={close}
+                />
 
                 <ScrollView keyboardShouldPersistTaps="handled">
                   <YStack gap={10} paddingHorizontal={16} paddingBottom={16}>
@@ -141,7 +128,8 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
                         onChangeText={(t) => setTitle(t.slice(0, 160))}
                         placeholder={t('mweb.common.title')}
                         placeholderTextColor="$muted"
-                        backgroundColor="$surface"
+                        backgroundColor="$soft"
+                        borderRadius={14}
                       />
                     </Field>
                     <Field label={t('mweb.common.description')} gap={4}>
@@ -152,7 +140,8 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
                         onChangeText={(t) => setDescription(t.slice(0, 2000))}
                         placeholder={t('mweb.podIdeas.describeTheVibeFormatLocationAudience')}
                         placeholderTextColor="$muted"
-                        backgroundColor="$surface"
+                        backgroundColor="$soft"
+                        borderRadius={14}
                         multiline
                         numberOfLines={5}
                         minHeight={120}
@@ -174,17 +163,17 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
                       aria-label={t('mweb.podIdeas.submitIdea')}
                       aria-disabled={submitting}
                       onPress={submit}
-                      height={48}
+                      height={52}
                       alignItems="center"
                       justifyContent="center"
                       gap={8}
-                      borderRadius={12}
+                      borderRadius={999}
                       backgroundColor="$primary"
                       opacity={submitting ? 0.7 : 1}
-                      pressStyle={PRESS_STYLE.control}
+                      pressStyle={PRESS_STYLE.solid}
                     >
                       {submitting ? <Spinner size="small" color={onPrimary} /> : null}
-                      <Text fontSize={14} fontWeight="700" color={onPrimary}>
+                      <Text fontSize={15} fontWeight="600" color={onPrimary}>
                         {submitting ? 'Submitting…' : 'Submit'}
                       </Text>
                     </XStack>

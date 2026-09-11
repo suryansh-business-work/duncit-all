@@ -15,7 +15,7 @@ interface Props {
 }
 
 /** Interactive Google Maps embed (pan/zoom) for a place query, with an
- * "Open in Maps" shortcut. Renders nothing when the API key or query is
+ * "Open in Maps" link under it. Renders nothing when the API key or query is
  * missing — graceful, exactly like mWeb's PodMapSection. */
 export function MapEmbed({ query, height = 220 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -24,35 +24,11 @@ export function MapEmbed({ query, height = 220 }: Readonly<Props>) {
   const url = locationMapEmbedUrl(apiKey, query);
   if (!url) return null;
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  const openLabel = t('mweb.mapEmbed.openInMaps');
 
   return (
-    <YStack gap={8}>
-      <XStack alignItems="center" justifyContent="space-between">
-        <Text fontSize={12} color="$muted">
-          Map preview
-        </Text>
-        <XStack
-          testID="map-open-external"
-          role="button"
-          aria-label={t('mweb.mapEmbed.openInMaps')}
-          onPress={() => Linking.openURL(mapUrl)}
-          alignItems="center"
-          gap={4}
-          pressStyle={PRESS_STYLE.row}
-        >
-          <Text fontSize={13} fontWeight="600" color="$primary">
-            Open in Maps
-          </Text>
-          <MaterialIcons name="open-in-new" size={14} color={primary} />
-        </XStack>
-      </XStack>
-      <YStack
-        height={height}
-        borderRadius={12}
-        overflow="hidden"
-        borderWidth={1}
-        borderColor="$borderColor"
-      >
+    <YStack gap={4}>
+      <YStack height={height} borderRadius={18} overflow="hidden" backgroundColor="$soft">
         <WebView
           testID="pod-map"
           originWhitelist={['*']}
@@ -60,6 +36,23 @@ export function MapEmbed({ query, height = 220 }: Readonly<Props>) {
           style={{ flex: 1, backgroundColor: 'transparent' }}
         />
       </YStack>
+      <XStack
+        testID="map-open-external"
+        role="button"
+        aria-label={openLabel}
+        onPress={() => Linking.openURL(mapUrl)}
+        alignItems="center"
+        alignSelf="flex-end"
+        gap={4}
+        paddingVertical={6}
+        paddingHorizontal={4}
+        pressStyle={PRESS_STYLE.row}
+      >
+        <Text fontSize={13} fontWeight="600" color="$primary">
+          {openLabel}
+        </Text>
+        <MaterialIcons name="open-in-new" size={14} color={primary} />
+      </XStack>
     </YStack>
   );
 }

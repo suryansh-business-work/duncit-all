@@ -64,7 +64,7 @@ export function MailPreferenceScreen() {
     </YStack>
   ) : (
     <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
-      <Text fontSize={12.5} color="$muted">
+      <Text fontSize={14} color="$muted">
         {t('mailPreference.subtitle', { vars: { email: preference.email } })}
       </Text>
 

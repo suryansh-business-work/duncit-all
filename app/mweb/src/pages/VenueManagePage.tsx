@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import SimpleBarChart, { buildMonthlyCounts } from '../components/SimpleBarChart';
 import { MY_VENUE_HEALTH, type HealthScore } from '../components/health/queries';
-import { Card, CardContent, Chip, Box, Stack, Typography } from '@mui/material';
+import { Card, CardContent, Chip, Stack } from '@mui/material';
+import SectionHeader from '../components/SectionHeader';
 import { emptyVenueOwnerStats, pickVenue, type VenueOwnerStats } from '@duncit/utils';
 import UserVenuePanel from './profile-page/UserVenuePanel';
 import VenueEarningsLinkCard from './venue-earnings-page/VenueEarningsLinkCard';
@@ -58,7 +59,7 @@ export default function VenueManagePage() {
   const isApproved = venue?.status === 'APPROVED';
 
   return (
-    <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+    <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <VenueStudioHeader />
 
       <VenueSwitcher venues={venues} venueId={venue?.id ?? null} onChange={setSelectedId} />
@@ -75,55 +76,39 @@ export default function VenueManagePage() {
 
       <StudioChangeRequests role="VENUE" />
 
-      <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-        <CardContent>
-          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            Pods at your venue
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 700
-            }}>
-            Bookings over the last 2 and next 3 months
-          </Typography>
-          <SimpleBarChart data={buildMonthlyCounts(venuePods.map((p) => p.pod_date_time))} />
-        </CardContent>
-      </Card>
+      <Stack spacing={1.5}>
+        <SectionHeader title="Pods at your venue" />
+        <Card>
+          <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+            <SimpleBarChart data={buildMonthlyCounts(venuePods.map((p) => p.pod_date_time))} />
+          </CardContent>
+        </Card>
+      </Stack>
 
       {health && venue?.id && <VenueHealthCard health={health} venueId={venue.id} />}
 
-      <Card variant="outlined" sx={{ borderRadius: '16px', bgcolor: 'rgba(255,79,115,0.10)' }}>
-        <CardContent>
-          <Stack spacing={1.5}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              Your application
-            </Typography>
+      <Stack spacing={1.5}>
+        <SectionHeader title="Your application" />
+        <Card>
+          <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
             <UserVenuePanel venueId={venue?.id ?? null} />
-          </Stack>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </Stack>
 
-      <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-        <CardContent>
-          <Stack
-            direction="row"
-            sx={{
-              alignItems: "center",
-              mb: 1.5
-            }}>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{t('mweb.venueManagePage.yourVenues')}</Typography>
-              <Typography variant="caption" sx={{
-                color: "text.secondary"
-              }}>{venues.length} listed</Typography>
-            </Box>
-            <Chip size="small" label={isApproved ? 'Live' : 'Draft'} color={isApproved ? 'success' : 'warning'} sx={{ fontWeight: 700 }} />
+      <Stack spacing={1.5}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <Stack sx={{ flex: 1, minWidth: 0 }}>
+            <SectionHeader title={t('mweb.venueManagePage.yourVenues')} />
           </Stack>
-          <VenueListBody showSpinner={loading && !data} error={error} venue={venue} />
-        </CardContent>
-      </Card>
+          <Chip size="small" label={isApproved ? 'Live' : 'Draft'} color={isApproved ? 'success' : 'warning'} />
+        </Stack>
+        <Card>
+          <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+            <VenueListBody showSpinner={loading && !data} error={error} venue={venue} />
+          </CardContent>
+        </Card>
+      </Stack>
     </Stack>
   );
 }

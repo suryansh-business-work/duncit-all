@@ -38,7 +38,7 @@ const CART_TAB = { value: CART_PATH, labelKey: 'mweb.nav.cart', icon: <ShoppingC
 function NavIcon({ icon, count }: Readonly<{ icon: ReactNode; count: number }>) {
   return (
     <Box className="nav-icon-wrap">
-      <Badge badgeContent={count} color="error" max={CART_BADGE_MAX}>
+      <Badge badgeContent={count} color="secondary" max={CART_BADGE_MAX}>
         {icon}
       </Badge>
     </Box>
@@ -98,11 +98,14 @@ export default function BottomNav() {
   };
   const active = matchActive();
 
-  // Edge-to-edge flat bar — full width, no radius, active tab in primary.
+  // Edge-to-edge flat surface bar — full width, no radius, active tab in the
+  // coral accent. Light: no top line, a faint lift; dark: the card hairline
+  // (`--duncit-card-border` is transparent in light), the shadow sinks into
+  // the ground. Native's BottomNav draws the same bar.
   return (
     <Paper
       ref={paperRef}
-      elevation={8}
+      elevation={0}
       square
       sx={{
         position: 'fixed',
@@ -112,19 +115,13 @@ export default function BottomNav() {
         bottom: 0,
         zIndex: (t) => t.zIndex.appBar,
         border: 0,
-        borderTop: 1,
-        borderColor: 'divider',
+        borderTop: '1px solid var(--duncit-card-border)',
         borderRadius: 0,
         overflow: 'hidden',
         p: 0,
         pb: 'env(safe-area-inset-bottom)',
-        // Near-opaque, so a backdrop blur showed nothing — yet it re-blurred the
-        // strip behind the bar on every scroll frame. Native's tab bar has none.
-        bgcolor: (theme) => alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.92 : 0.98),
-        boxShadow: (theme) => theme.palette.mode === 'dark'
-          ? '0 -10px 30px rgba(0,0,0,0.42)'
-          : '0 -10px 30px rgba(15,23,42,0.10)',
-        transition: 'transform 180ms ease, box-shadow 180ms ease',
+        bgcolor: 'background.paper',
+        boxShadow: (theme) => `0 -2px 12px ${alpha(theme.palette.common.black, 0.06)}`,
       }}
     >
       <BottomNavigation
@@ -132,7 +129,7 @@ export default function BottomNav() {
         value={active}
         onChange={(_e, value) => navigate(value)}
         sx={{
-          height: 60,
+          height: 64,
           border: 0,
           width: '100%',
           maxWidth: APP_SHELL_MAX_WIDTH,
@@ -142,38 +139,32 @@ export default function BottomNav() {
             minWidth: 0,
             mx: 0,
             px: 0.25,
-            py: 0.4,
+            py: 0.5,
             borderRadius: 0,
             color: 'text.secondary',
-            transition: 'color 200ms ease, transform 200ms ease',
+            transition: 'color 180ms ease',
           },
           '& .MuiBottomNavigationAction-root.Mui-selected': {
-            color: 'primary.main',
-            transform: 'translateY(-1px)',
+            color: 'secondary.main',
           },
           '& .nav-icon-wrap': {
             width: 44,
-            height: 30,
+            height: 28,
             display: 'grid',
             placeItems: 'center',
-            mb: 0.1,
-            borderRadius: 999,
-            transition: 'all 220ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+            mb: 0.25,
           },
-          // Active tab = primary tint only, no background shape (user ask).
-          '& .Mui-selected .nav-icon-wrap': {
-            color: 'primary.main',
-            transform: 'translateY(-1px)',
+          '& .nav-icon-wrap .MuiSvgIcon-root': {
+            fontSize: 24,
           },
           '& .MuiBottomNavigationAction-label': {
             fontSize: 11,
             fontWeight: 600,
             mt: 0,
-            transition: 'color 200ms ease',
           },
           '& .MuiBottomNavigationAction-label.Mui-selected': {
             fontSize: 11,
-            color: 'primary.main',
+            color: 'secondary.main',
           },
         }}
       >

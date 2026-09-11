@@ -51,9 +51,9 @@ export function RejoinConfirmDialog({
             left={0}
             right={0}
             bottom={0}
-            backgroundColor="$background"
-            borderTopLeftRadius={20}
-            borderTopRightRadius={20}
+            backgroundColor="$surface"
+            borderTopLeftRadius={28}
+            borderTopRightRadius={28}
           >
             <SafeAreaView edges={['bottom']}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
@@ -90,7 +90,7 @@ export function RejoinConfirmDialog({
                   height={48}
                   alignItems="center"
                   justifyContent="center"
-                  borderRadius={12}
+                  borderRadius={999}
                   borderWidth={1}
                   borderColor="$borderColor"
                   opacity={busy ? 0.6 : 1}
@@ -111,7 +111,7 @@ export function RejoinConfirmDialog({
                   alignItems="center"
                   justifyContent="center"
                   gap={8}
-                  borderRadius={12}
+                  borderRadius={999}
                   backgroundColor="$primary"
                   opacity={busy ? 0.7 : 1}
                   pressStyle={PRESS_STYLE.control}

@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { Chip, Menu, MenuItem, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DownloadIcon from '@mui/icons-material/Download';
 import DescriptionIcon from '@mui/icons-material/Description';
 import EmailIcon from '@mui/icons-material/Email';
-import { DuncitIconButton } from '@duncit/buttons';
+import { DuncitRoundButton } from '@duncit/buttons';
 import type { TicketStatus, TranscriptFormat } from '../queries';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { HEADER_BUTTON_SX as ROUND_SX } from '../../support-chat/calmStyles';
 
 const STATUS_COLOR: Record<TicketStatus, 'primary' | 'warning' | 'success' | 'default'> = {
   OPEN: 'primary',
@@ -50,16 +51,16 @@ export default function TicketHeader({
     <Stack direction="row" spacing={1} sx={{
       alignItems: "center"
     }}>
-      <DuncitIconButton size="small" onClick={onBack} aria-label={t('mweb.common.back')} sx={{ bgcolor: 'action.hover' }}>
-        <ArrowBackIcon />
-      </DuncitIconButton>
-      <Typography variant="h6" sx={{ fontWeight: 700, flex: 1 }} noWrap>
+      <DuncitRoundButton onClick={onBack} aria-label={t('mweb.common.back')} sx={ROUND_SX}>
+        <ArrowBackRoundedIcon />
+      </DuncitRoundButton>
+      <Typography component="h1" sx={{ fontSize: '1.0625rem', fontWeight: 600, flex: 1, minWidth: 0 }} noWrap>
         {subject || 'Ticket'}
       </Typography>
       {status && <Chip size="small" color={STATUS_COLOR[status]} label={status} />}
-      <DuncitIconButton aria-label={t('mweb.supportTickets.ticketOptions')} disabled={!status} onClick={(e) => setAnchor(e.currentTarget)}>
-        <MoreVertIcon />
-      </DuncitIconButton>
+      <DuncitRoundButton aria-label={t('mweb.supportTickets.ticketOptions')} disabled={!status} onClick={(e) => setAnchor(e.currentTarget)} sx={ROUND_SX}>
+        <MoreHorizRoundedIcon />
+      </DuncitRoundButton>
       <Menu anchorEl={anchor} open={!!anchor} onClose={close}>
         {canResolve && (
           <MenuItem onClick={run(onResolve)}>

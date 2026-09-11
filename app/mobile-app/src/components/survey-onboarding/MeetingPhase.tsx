@@ -1,12 +1,15 @@
-import { Button, Input, Spinner, Text, TextArea, XStack, YStack } from 'tamagui';
+import { Input, Spinner, Text, TextArea, YStack } from 'tamagui';
 
+import { DuncitButton } from '@/components/DuncitButton';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useBottomInset } from '@/hooks/useBottomNavSpace';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ActiveSurvey, MeetingSlot } from '@/graphql/onboarding-survey';
+import { CALM_FIELD } from './calmField';
+import { MeetingPhoneFields } from './MeetingPhoneFields';
 import { SlotPicker } from './SlotPicker';
 import type { Answer } from './useOnboardingFlow';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
 interface Props {
@@ -53,7 +56,7 @@ export function MeetingPhase({
   onSubmit,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { color: ink, primary } = useThemeColors();
+  const { primary } = useThemeColors();
   // "Book this slot" is the last row of this scroll and nothing floats over it,
   // so it only has to clear the Android navigation bar the edge-to-edge window
   // paints over the app — on top of the container's own 16pt padding.
@@ -74,31 +77,27 @@ export function MeetingPhase({
       keyboardDismissMode="interactive"
     >
       {answered.length > 0 && (
-        <YStack gap={8} padding={12} borderRadius={12} backgroundColor="$color2">
-          <Text fontSize={12} fontWeight="600" opacity={0.7} color={ink}>
+        <SurfaceCard gap={8}>
+          <Text fontSize={12} fontWeight="600" color="$muted">
             YOUR SURVEY ANSWERS
           </Text>
           {answered.map((x) => (
             <YStack key={x.qid} gap={1}>
-              <Text fontSize={12} opacity={0.6} color={ink}>
+              <Text fontSize={12} color="$muted">
                 {x.label}
               </Text>
-              <Text fontSize={14} color={ink}>
+              <Text fontSize={14} color="$color">
                 {x.text}
               </Text>
             </YStack>
           ))}
-        </YStack>
+        </SurfaceCard>
       )}
 
       <YStack gap={10}>
-        <Text fontSize={13} opacity={0.8} color={ink}>
-          Pick an open slot — our onboarding team will meet you then. Greyed-out slots are already
-          booked.
-        </Text>
         {slotsLoading ? <Spinner testID="slots-loading" color={primary} /> : null}
         {!slotsLoading && slots.length === 0 ? (
-          <Text testID="slots-empty" fontSize={13} color={ink} opacity={0.7}>
+          <Text testID="slots-empty" fontSize={13} color="$muted">
             No slots are open right now — please check back soon.
           </Text>
         ) : null}
@@ -106,7 +105,7 @@ export function MeetingPhase({
           <SlotPicker slots={slots} value={selectedSlot} onChange={setSelectedSlot} />
         ) : null}
 
-        <Text fontSize={14} fontWeight="700" color={ink}>
+        <Text fontSize={14} fontWeight="600" color="$color">
           Your name
         </Text>
         <Input
@@ -114,65 +113,22 @@ export function MeetingPhase({
           aria-label={t('mweb.common.yourName')}
           value={name}
           onChangeText={setName}
+          {...CALM_FIELD}
           disabled={lockName}
           opacity={lockName ? 0.6 : 1}
         />
         {lockName ? (
-          <Text fontSize={11.5} color={ink} opacity={0.55}>
+          <Text fontSize={12} color="$muted">
             From your profile.
           </Text>
         ) : null}
-        <Text fontSize={14} fontWeight="700" color={ink}>
-          Phone *
-        </Text>
-        <XStack gap={8}>
-          <Input
-            testID="meeting-ext"
-            aria-label={t('mweb.surveyOnboarding.countryCode')}
-            value={ext}
-            disabled
-            opacity={0.6}
-            width={84}
-          />
-          <Input
-            testID="meeting-phone"
-            aria-label={t('mweb.common.phone')}
-            value={phone}
-            keyboardType="phone-pad"
-            disabled
-            opacity={0.6}
-            flex={1}
-          />
-        </XStack>
-        {hasProfilePhone ? (
-          <Text fontSize={11.5} color={ink} opacity={0.55}>
-            From your profile.
-          </Text>
-        ) : (
-          <YStack gap={8} padding={12} borderRadius={12} backgroundColor="$color2">
-            <Text testID="meeting-phone-missing" fontSize={12.5} color={ink}>
-              Phone number is required so our team can reach you. Please add your Phone number from
-              Profile to proceed.
-            </Text>
-            <XStack
-              testID="meeting-go-to-profile"
-              role="button"
-              aria-label={t('mweb.surveyOnboarding.goToProfile')}
-              onPress={onGoToProfile}
-              alignSelf="flex-start"
-              paddingHorizontal={16}
-              paddingVertical={8}
-              borderRadius={999}
-              backgroundColor={primary}
-              pressStyle={PRESS_STYLE.control}
-            >
-              <Text fontSize={13} fontWeight="700" color="white">
-                Go To Profile
-              </Text>
-            </XStack>
-          </YStack>
-        )}
-        <Text fontSize={14} fontWeight="700" color={ink}>
+        <MeetingPhoneFields
+          ext={ext}
+          phone={phone}
+          hasProfilePhone={hasProfilePhone}
+          onGoToProfile={onGoToProfile}
+        />
+        <Text fontSize={14} fontWeight="600" color="$color">
           Notes (optional)
         </Text>
         <TextArea
@@ -180,20 +136,19 @@ export function MeetingPhase({
           aria-label={t('mweb.surveyOnboarding.notes')}
           value={notes}
           onChangeText={setNotes}
+          {...CALM_FIELD}
           minHeight={70}
         />
       </YStack>
-      {error ? <Text color="$red10">{error}</Text> : null}
-      <Button
+      {error ? <Text color="$danger">{error}</Text> : null}
+      <DuncitButton
         testID="primary-action"
+        label={busy ? 'Booking…' : 'Book this slot'}
+        size="lg"
+        fullWidth
         disabled={busy}
         onPress={onSubmit}
-        backgroundColor={primary}
-        color="white"
-        fontWeight="600"
-      >
-        {busy ? 'Booking…' : 'Book this slot'}
-      </Button>
+      />
     </RefreshScrollView>
   );
 }

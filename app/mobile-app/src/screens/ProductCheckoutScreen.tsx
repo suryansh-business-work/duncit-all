@@ -1,15 +1,13 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ResultOf } from '@graphql-typed-document-node/core';
-import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 
+import { EmptyState } from '@/components/EmptyState';
 import {
+  CheckoutSavingsCard,
   CheckoutSuccess,
-  CoinRedeemField,
-  CouponField,
-  CouponTotal,
   ProcessingOverlay,
   ProductOrderSummary,
   RazorpayWebView,
@@ -32,13 +30,11 @@ import { coinCheckoutSummary } from '@duncit/utils';
 import { useCoinBalance } from '@/hooks/useCoins';
 import { useProductCheckout, type ProductPayment } from '@/hooks/useProductCheckout';
 import { useProductShippingQuote } from '@/hooks/useProductShippingQuote';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useCartStore } from '@/stores/cart.store';
 import { toErrorMessage } from '@/utils/errors';
 import { mapLinesToItems, productSubtotal, toPickedContact } from '@/utils/product-checkout-input';
 import type { RootStackParamList } from '@/navigation/types';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
 type CheckoutAddress = ResultOf<typeof MyAddressesDocument>['myAddresses'][number];
@@ -66,36 +62,16 @@ function addressToForm(
 
 /** Empty state when the cart was cleared before reaching checkout. */
 function EmptyProductCart({ onCart }: Readonly<{ onCart: () => void }>) {
-  const { muted, onPrimary } = useThemeColors();
   const { t } = useTranslation();
-  const backLabel = t('mweb.checkout.backToCart');
   return (
-    <YStack alignItems="center" gap={10} paddingVertical={64} testID="product-checkout-empty">
-      <MaterialIcons name="shopping-bag" size={44} color={muted} />
-      <Text fontSize={17} fontWeight="700" color="$color">
-        {t('mweb.checkout.nothingToCheckout')}
-      </Text>
-      <Text fontSize={13} color="$muted" textAlign="center">
-        {t('mweb.checkout.noProductsInCart')}
-      </Text>
-      <XStack
-        testID="product-checkout-back-to-cart"
-        role="button"
-        aria-label={backLabel}
-        onPress={onCart}
-        paddingHorizontal={24}
-        height={44}
-        alignItems="center"
-        justifyContent="center"
-        borderRadius={999}
-        backgroundColor="$primary"
-        pressStyle={PRESS_STYLE.control}
-      >
-        <Text fontSize={14} fontWeight="700" color={onPrimary}>
-          {backLabel}
-        </Text>
-      </XStack>
-    </YStack>
+    <EmptyState
+      testID="product-checkout-empty"
+      icon="shopping-bag"
+      title={t('mweb.checkout.nothingToCheckout')}
+      actionLabel={t('mweb.checkout.backToCart')}
+      onAction={onCart}
+      actionTestID="product-checkout-back-to-cart"
+    />
   );
 }
 
@@ -289,7 +265,7 @@ export function ProductCheckoutScreen() {
           onInfo={setInfoProductId}
           coins={coinSummary}
         />
-        <CouponField
+        <CheckoutSavingsCard
           code={couponCode}
           setCode={setCouponCode}
           applied={coupon}
@@ -299,11 +275,7 @@ export function ProductCheckoutScreen() {
           available={availableCoupons}
           onApply={applyCoupon}
           onRemove={removeCoupon}
-        />
-        <CoinRedeemField coins={coins} />
-        <CouponTotal
-          currency={breakup.currency}
-          effectiveTotal={coins.effectiveTotal}
+          coins={coins}
           originalTotal={breakup.total}
         />
         <CheckoutForm

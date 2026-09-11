@@ -1,4 +1,4 @@
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 import {
   SIGNUP_STEPS,
   SIGNUP_STEP_COUNT,
@@ -7,6 +7,7 @@ import {
   type SignupStep,
 } from '@duncit/utils';
 
+import { StepProgressBar } from '@/components/StepProgressBar';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
@@ -20,46 +21,29 @@ interface Props {
 }
 
 /**
- * The four-step rail, and the line under it saying what this step is for.
- * Tamagui twin of mWeb's <SignupStepperRail/>.
+ * The four-step rail: a slim segmented bar, and the current step's name under
+ * it. Tamagui twin of mWeb's <SignupStepperRail/>.
  *
- * Four bars rather than MUI's numbered rail: on a phone the step NAMES do not
- * fit side by side, so the position is shown and the current step names itself
- * underneath.
+ * "Step X of N" is the bar's accessible name now rather than a caption, since
+ * the bar already shows the position.
  */
 export function SignupStepperRail({ step, askingNumber }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = buildSignupStepperLabels(t);
   const current = signupStepIndex(step);
   // Decided above the JSX (S3358).
-  const heading = askingNumber
-    ? { title: labels.detailsTitle, subtitle: labels.detailsSubtitle }
-    : labels.step(step);
+  const title = askingNumber ? labels.detailsTitle : labels.step(step).title;
 
   return (
-    <YStack gap={8} testID="signup-stepper">
-      <XStack gap={6}>
-        {SIGNUP_STEPS.map((id, index) => (
-          <YStack
-            key={id}
-            flex={1}
-            height={4}
-            borderRadius={2}
-            backgroundColor={index < current ? '$primary' : '$borderColor'}
-          />
-        ))}
-      </XStack>
-      <YStack gap={2} alignItems="center">
-        <Text fontSize={12} color="$muted">
-          {labels.stepOf(current, SIGNUP_STEP_COUNT)}
-        </Text>
-        <Text fontSize={15} fontWeight="700" color="$color">
-          {heading.title}
-        </Text>
-        <Text fontSize={13} color="$muted" textAlign="center">
-          {heading.subtitle}
-        </Text>
-      </YStack>
+    <YStack gap={12} testID="signup-stepper">
+      <StepProgressBar
+        steps={SIGNUP_STEPS}
+        current={current}
+        label={labels.stepOf(current, SIGNUP_STEP_COUNT)}
+      />
+      <Text fontSize={17} fontWeight="600" color="$color" textAlign="center">
+        {title}
+      </Text>
     </YStack>
   );
 }

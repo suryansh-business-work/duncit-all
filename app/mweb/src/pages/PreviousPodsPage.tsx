@@ -1,4 +1,3 @@
-import HistoryIcon from '@mui/icons-material/History';
 import PodListPage from './pod-list';
 import { usePodListFilters } from './pod-list/usePodListFilters';
 import FilterMenu from './home-page/FilterMenu';
@@ -32,8 +31,6 @@ export default function PreviousPodsPage({ superCategorySlug, locationId, zoneNa
   return (
     <PodListPage
       title={t('mweb.home.previousPodsTitle')}
-      subtitle={t('mweb.home.previousPodsSubtitle')}
-      icon={<HistoryIcon color="primary" />}
       pods={previousPods}
       loading={loading}
       error={error}

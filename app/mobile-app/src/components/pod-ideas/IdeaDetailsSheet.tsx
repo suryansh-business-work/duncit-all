@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 
 import { CommentComposer } from '@/components/details/pod-comments/CommentComposer';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { usePodIdeaDetails } from '@/hooks/usePodIdeas';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { IdeaDetailsBody } from './IdeaDetailsBody';
+import { IdeaSheetHeader } from './IdeaSheetHeader';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -24,7 +23,6 @@ interface Props {
  * add-comment composer. RN port of mWeb's IdeaDetailsDialog. */
 export function IdeaDetailsSheet({ id, myId, onClose, onChanged }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { color } = useThemeColors();
   const { idea, isLoading, addComment, deleteComment, toggleLike } = usePodIdeaDetails(
     id,
     onChanged,
@@ -69,29 +67,16 @@ export function IdeaDetailsSheet({ id, myId, onClose, onChanged }: Readonly<Prop
               right={0}
               bottom={0}
               height="82%"
-              backgroundColor="$background"
-              borderTopLeftRadius={20}
-              borderTopRightRadius={20}
+              backgroundColor="$surface"
+              borderTopLeftRadius={28}
+              borderTopRightRadius={28}
             >
               <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
-                <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                  <Text flex={1} fontSize={18} fontWeight="700" color="$color" numberOfLines={1}>
-                    {idea?.title ?? 'Pod idea'}
-                  </Text>
-                  <XStack
-                    pressStyle={PRESS_STYLE.surface}
-                    testID="idea-details-close"
-                    role="button"
-                    aria-label={t('mweb.common.close')}
-                    onPress={onClose}
-                    width={32}
-                    height={32}
-                    alignItems="center"
-                    justifyContent="center"
-                  >
-                    <MaterialIcons name="close" size={20} color={color} />
-                  </XStack>
-                </XStack>
+                <IdeaSheetHeader
+                  title={idea?.title ?? 'Pod idea'}
+                  closeTestID="idea-details-close"
+                  onClose={onClose}
+                />
 
                 {isLoading && !idea ? (
                   <YStack flex={1} alignItems="center" justifyContent="center">

@@ -2,27 +2,28 @@ import { useMemo, useState } from 'react';
 import { useEntityPageMeta } from '../app/pageMeta';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import PlaceIcon from '@mui/icons-material/Place';
+import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
+import StorefrontIcon from '@mui/icons-material/StorefrontOutlined';
 import {
   Box,
   ButtonBase,
   Chip,
   CircularProgress,
-  Divider,
   Snackbar,
   Stack,
   Typography,
 } from '@mui/material';
-import { DuncitButton } from '@duncit/buttons';
+import { DuncitIconButton } from '@duncit/buttons';
 import { venueImages } from '@duncit/utils';
 import { useNavigate, useParams } from 'react-router';
 import MomentLightbox from '../components/moments/MomentLightbox';
-import VenueMapPreview from '../components/VenueMapPreview';
+import EmptyState from '../components/EmptyState';
+import PageHeader from '../components/PageHeader';
+import TwoToneHeading from '../components/TwoToneHeading';
 import { useTranslation } from '../i18n/useTranslation';
 import VenueImagesGrid from './venues-page/VenueImagesGrid';
 import VenuePodsSection from './venues-page/VenuePodsSection';
+import { VENUE_CHIP_SX, VenueChipsSection, VenueLocationCard } from './venues-page/VenueInfoSections';
 import LocationMismatchDialog from '../components/LocationMismatchDialog';
 import { useLocationMismatch } from '../hooks/useLocationMismatch';
 
@@ -54,22 +55,6 @@ const PUBLIC_VENUES = gql`
   }
 `;
 
-function VenueChipsSection({ title, items }: Readonly<{ title: string; items?: string[] | null }>) {
-  if (!items?.length) return null;
-  return (
-    <Stack spacing={1}>
-      <Typography variant="h6" sx={{
-        fontWeight: 700
-      }}>{title}</Typography>
-      <Stack direction="row" spacing={1} useFlexGap sx={{
-        flexWrap: "wrap"
-      }}>
-        {items.map((item) => <Chip key={item} label={item} variant="outlined" />)}
-      </Stack>
-    </Stack>
-  );
-}
-
 const addressParts = (venue: any) => [
   venue.address_line1,
   venue.address_line2,
@@ -79,6 +64,19 @@ const addressParts = (venue: any) => [
   venue.postal_code,
   venue.country,
 ];
+
+/** The round 40px surface action on the header's right. */
+const ROUND_BTN_SX = {
+  width: 40,
+  height: 40,
+  minHeight: 40,
+  bgcolor: 'background.paper',
+  color: 'text.primary',
+  border: '1px solid var(--duncit-card-border)',
+} as const;
+
+/** Hero inside the page padding with the calm 24px corners (native twin). */
+const HERO_SX = { width: '100%', height: { xs: 240, sm: 360 }, borderRadius: '24px', overflow: 'hidden' } as const;
 
 export default function VenueDetailsPage() {
   const { venueId } = useParams();
@@ -113,92 +111,62 @@ export default function VenueDetailsPage() {
 
   if (error || !venue) {
     return (
-      <Stack spacing={2} sx={{ py: 4 }}>
-        <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ alignSelf: 'flex-start' }}>
-          Back
-        </DuncitButton>
-        <Typography variant="h5" sx={{
-          fontWeight: 700
-        }}>{t('mweb.venueDetailsPage.venueNotFound')}</Typography>
-        <Typography sx={{
-          color: "text.secondary"
-        }}>
-          This venue link may be unavailable or the venue may not be approved yet.
-        </Typography>
+      <Stack spacing={2} sx={{ py: 2 }}>
+        <PageHeader title={t('mweb.venueDetailsPage.venueNotFound')} onBack={() => navigate(-1)} />
+        <EmptyState
+          icon={<StorefrontIcon />}
+          title="This venue link may be unavailable or the venue may not be approved yet."
+        />
       </Stack>
     );
   }
 
+  const copyButton = (
+    <DuncitIconButton aria-label={t('mweb.venueDetailsPage.copyLink')} title={t('mweb.venueDetailsPage.copyLink')} onClick={copyLink} sx={ROUND_BTN_SX}>
+      <ContentCopyIcon fontSize="small" />
+    </DuncitIconButton>
+  );
+
   return (
-    <Stack spacing={3} sx={{ pb: 4 }}>
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{
-          alignItems: "center",
-          justifyContent: "space-between"
-        }}>
-        <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)}>Back</DuncitButton>
-        <DuncitButton startIcon={<ContentCopyIcon />} onClick={copyLink}>{t('mweb.venueDetailsPage.copyLink')}</DuncitButton>
-      </Stack>
+    <Stack spacing={2.5} sx={{ pb: 4 }}>
+      <PageHeader title={venue.venue_name} onBack={() => navigate(-1)} right={copyButton} />
 
-      <Box sx={{ borderRadius: '16px', overflow: 'hidden', bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
-        {images[0] ? (
-          <ButtonBase
-            onClick={() => setZoomIndex(0)}
-            focusRipple
-            aria-label={t('mweb.podDetails.viewImage')}
-            sx={{ display: 'block', width: '100%' }}
-          >
-            <Box component="img" src={images[0]} alt={venue.venue_name} sx={{ width: '100%', height: { xs: 260, sm: 360 }, objectFit: 'cover', display: 'block' }} />
-          </ButtonBase>
-        ) : (
-          <Box sx={{ minHeight: 220, display: 'grid', placeItems: 'center', px: 3, bgcolor: 'action.hover' }}>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 600,
-                textAlign: "center"
-              }}>{venue.venue_name}</Typography>
-          </Box>
-        )}
-      </Box>
+      {images[0] ? (
+        <ButtonBase
+          onClick={() => setZoomIndex(0)}
+          focusRipple
+          aria-label={t('mweb.podDetails.viewImage')}
+          sx={{ ...HERO_SX, display: 'block' }}
+        >
+          <Box component="img" src={images[0]} alt={venue.venue_name} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        </ButtonBase>
+      ) : (
+        <Box sx={{ ...HERO_SX, display: 'grid', placeItems: 'center', bgcolor: 'action.hover', color: 'secondary.main' }}>
+          <StorefrontIcon sx={{ fontSize: 44 }} />
+        </Box>
+      )}
 
-      <Stack spacing={1}>
-        <Typography variant="h4" sx={{
-          fontWeight: 600
-        }}>{venue.venue_name}</Typography>
+      <Stack spacing={1.25}>
+        <TwoToneHeading lead={venue.venue_name} component="h2" />
         <Stack direction="row" spacing={1} useFlexGap sx={{
           flexWrap: "wrap"
         }}>
-          <Chip label={venue.venue_type} />
-          <Chip label={`${venue.capacity} capacity`} />
-          {venue.tags?.map((tag: string) => <Chip key={tag} label={tag} variant="outlined" />)}
+          <Chip label={venue.venue_type} sx={VENUE_CHIP_SX} />
+          <Chip label={`${venue.capacity} capacity`} sx={VENUE_CHIP_SX} />
+          {venue.tags?.map((tag: string) => <Chip key={tag} label={tag} sx={VENUE_CHIP_SX} />)}
         </Stack>
-      </Stack>
-
-      {venue.description && <Typography sx={{
-        color: "text.secondary"
-      }}>{venue.description}</Typography>}
-
-      <Divider />
-
-      <Stack spacing={1.5}>
-        <Stack direction="row" spacing={1} sx={{
-          alignItems: "center"
-        }}>
-          <PlaceIcon color="primary" fontSize="small" />
-          <Typography variant="h6" sx={{
-            fontWeight: 700
-          }}>{t('mweb.common.location')}</Typography>
-        </Stack>
-        <Typography sx={{
+        {venue.description && <Typography variant="body2" sx={{
           color: "text.secondary"
-        }}>
-          {addressParts(venue).map((part) => part?.trim()).filter(Boolean).join(', ')}
-        </Typography>
-        <VenueMapPreview title={venue.venue_name} parts={addressParts(venue)} lat={venue.lat} lng={venue.lng} />
+        }}>{venue.description}</Typography>}
       </Stack>
+
+      <VenueLocationCard
+        title={t('mweb.common.location')}
+        venueName={venue.venue_name}
+        parts={addressParts(venue)}
+        lat={venue.lat}
+        lng={venue.lng}
+      />
 
       <VenuePodsSection venueId={venue.id} />
 

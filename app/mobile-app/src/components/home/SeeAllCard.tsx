@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, YStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -17,26 +18,23 @@ interface Props {
 }
 
 /** Trailing rail card that continues the rail on its full-list screen, landing
- * right after the last entry shown here (rule-27 twin of mWeb's SeeAllCard). */
-export function SeeAllCard({ count, width = 200, height = 230, onPress, testID }: Readonly<Props>) {
-  const { onPrimary } = useThemeColors();
+ * right after the last entry shown here (rule-27 twin of mWeb's SeeAllCard).
+ * As tall as a pod card so it closes the rail flush. */
+export function SeeAllCard({ count, width = 200, height = 240, onPress, testID }: Readonly<Props>) {
+  const { accent } = useThemeColors();
   const { t } = useTranslation();
   return (
-    <YStack
+    <SurfaceCard
       testID={testID}
       role="button"
       aria-label={t('mweb.home.seeAll')}
       onPress={onPress}
       width={width}
       height={height}
-      borderRadius={18}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
       alignItems="center"
       justifyContent="center"
       gap={8}
-      pressStyle={PRESS_STYLE.control}
+      pressStyle={PRESS_STYLE.surface}
     >
       <YStack
         width={44}
@@ -44,18 +42,18 @@ export function SeeAllCard({ count, width = 200, height = 230, onPress, testID }
         borderRadius={22}
         alignItems="center"
         justifyContent="center"
-        backgroundColor="$primary"
+        backgroundColor="$soft"
       >
-        <MaterialIcons name="arrow-forward" size={22} color={onPrimary} />
+        <MaterialIcons name="arrow-forward" size={22} color={accent} />
       </YStack>
-      <Text fontSize={14} fontWeight="700" color="$color">
+      <Text fontSize={14} fontWeight="600" color="$color">
         {t('mweb.home.seeAll')}
       </Text>
       {count !== undefined && (
-        <Text fontSize={11} fontWeight="700" color="$muted">
+        <Text fontSize={12} fontWeight="500" color="$muted">
           {t('mweb.home.morePods', { count })}
         </Text>
       )}
-    </YStack>
+    </SurfaceCard>
   );
 }

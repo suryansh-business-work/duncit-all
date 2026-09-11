@@ -63,7 +63,7 @@ export default function HomeStatusViewerDetails({
               sx={{
                 width: 56,
                 height: 56,
-                borderRadius: '16px',
+                borderRadius: '12px',
                 bgcolor: 'rgba(255,255,255,0.18)',
                 border: '1px solid rgba(255,255,255,0.32)',
                 backgroundImage:

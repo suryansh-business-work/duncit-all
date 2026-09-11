@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useLazyQuery, useQuery } from '@apollo/client/react';
-import { Alert, Box, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Card, Stack, TextField } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
+import PageHeader from '../../components/PageHeader';
 import { PUBLIC_FINANCE } from '../checkout-page/queries';
 import { useTranslation } from '../../i18n/useTranslation';
 import GiftCardRedeemView from '../gift-cards-page/GiftCardRedeemView';
@@ -31,26 +32,10 @@ export default function GiftCardRedeemPage() {
   };
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Stack spacing={2} sx={{ maxWidth: 560, mx: 'auto', width: '100%' }}>
-        <Box>
-          <Typography variant="h6" sx={{
-            fontWeight: 700
-          }}>
-            {t('mweb.giftCards.redeemTitle')}
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{
-              color: "text.secondary",
-              mt: 0.5
-            }}>
-            {t('mweb.giftCards.redeemSubtitle')}
-          </Typography>
-        </Box>
-        <Stack direction="row" spacing={1} sx={{
-          alignItems: "flex-start"
-        }}>
+    <Stack spacing={2} sx={{ maxWidth: 560, mx: 'auto', width: '100%', py: 0.5 }}>
+      <PageHeader title={t('mweb.giftCards.redeemTitle')} />
+      <Card sx={{ p: 2 }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
           <TextField
             fullWidth
             label={t('mweb.giftCards.codeLabel')}
@@ -65,15 +50,15 @@ export default function GiftCardRedeemPage() {
             variant="contained"
             disabled={!codeInput.trim() || loading}
             onClick={check}
-            sx={{ borderRadius: 999, fontWeight: 700, mt: 1, flexShrink: 0 }}
+            sx={{ flexShrink: 0, minHeight: 40 }}
           >
             {t('mweb.giftCards.checkCta')}
           </DuncitButton>
         </Stack>
-        {error && <Alert severity="error">{t('mweb.giftCards.redeemError')}</Alert>}
-        {card && <GiftCardRedeemView key={card.id} card={card} currencySymbol={currencySymbol} />}
-        <HowItWorksCard />
-      </Stack>
-    </Box>
+      </Card>
+      {error && <Alert severity="error">{t('mweb.giftCards.redeemError')}</Alert>}
+      {card && <GiftCardRedeemView key={card.id} card={card} currencySymbol={currencySymbol} />}
+      <HowItWorksCard />
+    </Stack>
   );
 }

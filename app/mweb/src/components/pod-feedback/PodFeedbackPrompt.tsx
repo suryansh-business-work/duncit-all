@@ -94,7 +94,7 @@ export default function PodFeedbackPrompt() {
   return (
     <>
       <Dialog open={!dismissed && !asking} onClose={() => setAsking(true)} fullWidth maxWidth="xs">
-        <DialogTitle sx={{ fontWeight: 700 }}>
+        <DialogTitle sx={{ fontWeight: 600 }}>
           {t('mweb.podFeedback.title', { vars: { title: pod.title } })}
         </DialogTitle>
         <DialogContent>

@@ -1,4 +1,5 @@
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import HomeStatusTile from './HomeStatusTile';
 import { useStatusUpload } from '../../components/status-upload/StatusUploadProvider';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -78,13 +79,10 @@ export default function MyStatusUploadTile({ me, onView }: Readonly<Props>) {
             display: 'grid',
             placeItems: 'center',
             cursor: 'pointer',
-            fontSize: 14,
-            fontWeight: 700,
-            lineHeight: 1,
           }}
           aria-label={t('mweb.home.addAnother')}
         >
-          +
+          <AddIcon sx={{ fontSize: 16 }} />
         </Box>
       )}
       {uploading && (
@@ -108,11 +106,11 @@ export default function MyStatusUploadTile({ me, onView }: Readonly<Props>) {
             value={progress}
             size={62}
             thickness={3}
-            sx={{ color: '#fff' }}
+            sx={{ color: 'common.white' }}
           />
           <Typography
             variant="caption"
-            sx={{ position: 'absolute', fontWeight: 700, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}
+            sx={{ position: 'absolute', fontWeight: 700, color: 'common.white', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}
           >
             {progress}%
           </Typography>

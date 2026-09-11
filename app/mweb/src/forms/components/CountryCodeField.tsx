@@ -66,7 +66,6 @@ export default function CountryCodeField<T extends FieldValues>({
             <TextField
               {...params}
               label={label}
-              size="small"
               onBlur={field.onBlur}
               error={!!fieldState.error}
               helperText={fieldState.error?.message ?? ' '}

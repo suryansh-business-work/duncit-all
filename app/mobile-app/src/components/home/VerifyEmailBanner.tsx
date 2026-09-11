@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack } from 'tamagui';
+import { Text } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -17,31 +18,28 @@ interface Props {
  * mails and checks the OTP. */
 export function VerifyEmailBanner({ email, verified, onPress }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { primary } = useThemeColors();
+  const { accent, muted } = useThemeColors();
   if (!email || verified) return null;
 
   return (
-    <XStack
+    <SurfaceCard
       testID="verify-email-banner"
       role="button"
       aria-label={t('mweb.home.verifyYourEmail')}
       onPress={onPress}
       marginHorizontal={16}
+      flexDirection="row"
       alignItems="center"
-      gap={10}
-      paddingHorizontal={12}
-      paddingVertical={10}
-      borderRadius={10}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      pressStyle={PRESS_STYLE.control}
+      gap={12}
+      paddingHorizontal={16}
+      paddingVertical={14}
+      pressStyle={PRESS_STYLE.surface}
     >
-      <MaterialIcons name="mark-email-unread" size={18} color={primary} />
-      <Text flex={1} fontSize={13} fontWeight="700" color="$color">
-        Please verify your email
+      <MaterialIcons name="mark-email-unread" size={20} color={accent} />
+      <Text flex={1} fontSize={14} fontWeight="600" color="$color">
+        {t('mweb.home.verifyYourEmail')}
       </Text>
-      <MaterialIcons name="chevron-right" size={18} color={primary} />
-    </XStack>
+      <MaterialIcons name="chevron-right" size={20} color={muted} />
+    </SurfaceCard>
   );
 }

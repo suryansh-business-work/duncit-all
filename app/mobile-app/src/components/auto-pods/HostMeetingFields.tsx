@@ -16,6 +16,7 @@ interface Props {
 
 const inputStyle = {
   size: '$4',
+  borderRadius: 14,
   backgroundColor: '$surface',
   color: '$color',
   placeholderTextColor: '$muted',
@@ -43,8 +44,8 @@ export function HostMeetingFields({ value, onChange, labels, now }: Readonly<Pro
   const asText = (date: Date | null) => (date ? format(date, fmt.dateTimeInputFormat) : '');
 
   return (
-    <YStack gap={10} testID="auto-pod-host-meeting">
-      <Text fontSize={12.5} color="$muted">
+    <YStack gap={12} testID="auto-pod-host-meeting">
+      <Text fontSize={13} color="$muted">
         {labels.meetingHint}
       </Text>
 

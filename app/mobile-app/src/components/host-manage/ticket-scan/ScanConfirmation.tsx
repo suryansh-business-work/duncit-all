@@ -61,13 +61,13 @@ export function ScanConfirmation({ result, text, onDone }: Readonly<Props>) {
         width="88%"
         maxWidth={420}
         backgroundColor="$background"
-        borderRadius={16}
-        padding={18}
+        borderRadius={28}
+        padding={20}
         gap={12}
         alignItems="center"
       >
         <MaterialIcons name="check-circle" size={56} color={success} />
-        <Text fontSize={17} fontWeight="700" color="$color">
+        <Text fontSize={17} fontWeight="600" color="$color">
           {t('mweb.hostScan.attendanceMarked')}
         </Text>
         <Text fontSize={13} color="$muted" textAlign="center">
@@ -82,14 +82,14 @@ export function ScanConfirmation({ result, text, onDone }: Readonly<Props>) {
           aria-label={t('mweb.common.done')}
           onPress={onDone}
           alignSelf="stretch"
-          height={46}
+          height={52}
           alignItems="center"
           justifyContent="center"
-          borderRadius={12}
+          borderRadius={999}
           backgroundColor="$primary"
-          pressStyle={PRESS_STYLE.control}
+          pressStyle={PRESS_STYLE.solid}
         >
-          <Text fontSize={14} fontWeight="700" color={onPrimary}>
+          <Text fontSize={15} fontWeight="600" color={onPrimary}>
             {t('mweb.hostScan.confirmDone')}
           </Text>
         </XStack>

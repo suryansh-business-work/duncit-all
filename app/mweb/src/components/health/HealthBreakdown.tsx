@@ -1,6 +1,7 @@
-import { Alert, Box, Chip, Paper, Stack, Typography } from '@mui/material';
+import { Box, Card, Chip, Divider, Stack, Typography } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 import type { HealthScore } from './queries';
+import SectionHeader from '../SectionHeader';
 import { formatDateTime } from '../../utils/dateFormat';
 
 interface Props {
@@ -19,41 +20,43 @@ const BAND_COLOR: Record<HealthScore['band'], 'error' | 'warning' | 'success'> =
   GREEN: 'success',
 };
 
+type Adjustment = HealthScore['adjustments'][number];
+
+function RemarkRow({ adjustment }: Readonly<{ adjustment: Adjustment }>) {
+  const sign = adjustment.delta > 0 ? `+${adjustment.delta}` : `${adjustment.delta}`;
+  const color: 'success' | 'error' = adjustment.delta > 0 ? 'success' : 'error';
+  return (
+    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', px: 2, py: 1.75 }}>
+      <Chip size="small" color={color} label={sign} sx={{ minWidth: 44 }} />
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          {adjustment.remark}
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+          {adjustment.created_by_name} · {formatDateTime(adjustment.created_at)} ·{' '}
+          {formatDistanceToNow(new Date(adjustment.created_at), { addSuffix: true })}
+        </Typography>
+      </Box>
+    </Stack>
+  );
+}
+
 export default function HealthBreakdown({ score }: Readonly<Props>) {
   return (
-    <Stack spacing={2}>
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
-        <Stack
-          direction="row"
-          spacing={2}
-          sx={{
-            alignItems: "center",
-            flexWrap: "wrap",
-            rowGap: 1
-          }}>
-          <Box>
-            <Typography variant="h3" sx={{ fontWeight: 700, lineHeight: 1 }}>
+    <Stack spacing={2.5}>
+      <Card sx={{ p: 2 }}>
+        <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 1 }}>
+          <Stack direction="row" spacing={0.5} sx={{ alignItems: 'baseline' }}>
+            <Typography sx={{ fontSize: 40, fontWeight: 700, lineHeight: 1 }}>
               {score.total_score}
             </Typography>
-            <Typography variant="caption" sx={{
-              color: "text.secondary"
-            }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
               / 100
             </Typography>
-          </Box>
-          <Box sx={{ flex: 1, minWidth: 180 }}>
-            <Chip
-              size="small"
-              color={BAND_COLOR[score.band]}
-              label={BAND_LABEL[score.band]}
-              sx={{ fontWeight: 600, mb: 0.5 }}
-            />
-            <Typography
-              variant="caption"
-              sx={{
-                color: "text.secondary",
-                display: 'block'
-              }}>
+          </Stack>
+          <Stack spacing={0.5} sx={{ flex: 1, minWidth: 180, alignItems: 'flex-start' }}>
+            <Chip size="small" color={BAND_COLOR[score.band]} label={BAND_LABEL[score.band]} />
+            <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
               Base score: {score.base_score}
               {score.delta_sum !== 0 && (
                 <>
@@ -61,51 +64,28 @@ export default function HealthBreakdown({ score }: Readonly<Props>) {
                 </>
               )}
             </Typography>
-          </Box>
-        </Stack>
-      </Paper>
-
-      <Box>
-        <Typography
-          variant="overline"
-          sx={{
-            color: "text.secondary",
-            fontWeight: 700
-          }}>
-          Admin remarks
-        </Typography>
-        {score.adjustments.length === 0 ? (
-          <Alert severity="info" sx={{ mt: 1 }}>
-            No admin adjustments yet. Your score is the default {score.base_score}.
-          </Alert>
-        ) : (
-          <Stack spacing={1} sx={{ mt: 1 }}>
-            {score.adjustments.map((a) => {
-              const sign = a.delta > 0 ? `+${a.delta}` : `${a.delta}`;
-              const color: 'success' | 'error' = a.delta > 0 ? 'success' : 'error';
-              return (
-                <Paper key={a.id} variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }}>
-                  <Stack direction="row" spacing={1.25} sx={{
-                    alignItems: "center"
-                  }}>
-                    <Chip size="small" color={color} label={sign} sx={{ fontWeight: 700 }} />
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography variant="body2">{a.remark}</Typography>
-                      <Typography variant="caption" sx={{
-                        color: "text.secondary"
-                      }}>
-                        {a.created_by_name} ·{' '}
-                        {formatDateTime(a.created_at)} ·{' '}
-                        {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </Paper>
-              );
-            })}
           </Stack>
+        </Stack>
+      </Card>
+
+      <Stack spacing={1.5}>
+        <SectionHeader title="Admin remarks" />
+        {score.adjustments.length === 0 ? (
+          <Card sx={{ p: 2 }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              No admin adjustments yet. Your score is the default {score.base_score}.
+            </Typography>
+          </Card>
+        ) : (
+          <Card>
+            <Stack divider={<Divider />}>
+              {score.adjustments.map((a) => (
+                <RemarkRow key={a.id} adjustment={a} />
+              ))}
+            </Stack>
+          </Card>
         )}
-      </Box>
+      </Stack>
     </Stack>
   );
 }

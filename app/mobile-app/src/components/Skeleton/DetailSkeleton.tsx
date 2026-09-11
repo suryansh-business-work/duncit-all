@@ -19,7 +19,7 @@ export function DetailSkeleton({ testID = 'detail-skeleton' }: Readonly<{ testID
         <Skeleton width="60%" height={14} />
         <YStack gap={10} paddingTop={8}>
           {Array.from({ length: 3 }, (_, i) => `detail-row-${i}`).map((key) => (
-            <Skeleton key={key} width="100%" height={52} radius={12} />
+            <Skeleton key={key} width="100%" height={52} radius={16} />
           ))}
         </YStack>
       </YStack>

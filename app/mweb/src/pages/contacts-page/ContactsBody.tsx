@@ -3,7 +3,7 @@ import type { ContactRow as ContactRowData } from './queries';
 import VirtualRows from './VirtualRows';
 
 /** Avatar + two lines + 8px above and below. Measured once mounted. */
-const ROW_ESTIMATE = 60;
+const ROW_ESTIMATE = 68;
 
 const keyOf = (row: ContactRowData) => row.profile.user_id;
 

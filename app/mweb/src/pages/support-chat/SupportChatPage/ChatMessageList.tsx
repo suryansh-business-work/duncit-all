@@ -57,7 +57,7 @@ export default function ChatMessageList({
                   alignItems: "center",
                   my: 0.5
                 }}>
-                <Typography variant="caption" sx={{ bgcolor: 'action.hover', px: 1, borderRadius: 99, fontWeight: 700 }}>
+                <Typography variant="caption" sx={{ bgcolor: 'action.hover', color: 'text.secondary', px: 1.25, py: 0.25, borderRadius: 99, fontWeight: 600 }}>
                   {dayLabel(m.created_at, timeZone)}
                 </Typography>
               </Stack>

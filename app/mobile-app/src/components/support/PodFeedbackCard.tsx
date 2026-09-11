@@ -48,8 +48,8 @@ export function PodFeedbackCard({
   const leaveLabel = saved ? t('mweb.podFeedback.done') : t('mweb.podFeedback.close');
 
   return (
-    <YStack gap={12} padding={16} borderRadius={16} backgroundColor="$background">
-      <Text fontSize={16} fontWeight="700" color="$color">
+    <YStack gap={12} padding={16} borderRadius={24} backgroundColor="$surface">
+      <Text fontSize={16} fontWeight="600" color="$color">
         {t('mweb.podFeedback.title', { vars: { title: podTitle } })}
       </Text>
       <Text fontSize={12} color="$muted">

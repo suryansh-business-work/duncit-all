@@ -1,4 +1,5 @@
 import { Box, Stack, Typography, alpha } from '@mui/material';
+import { SURFACE_SX } from '../../theme';
 import { SurveyChip } from './SurveyChip';
 import { colorForId, emojiFromIcon } from './surveyPalette';
 
@@ -27,17 +28,8 @@ export function SuperCategoryGroup({
   const emoji = emojiFromIcon(superCategory.icon);
 
   return (
-    <Box
-      sx={(t) => ({
-        borderRadius: '16px',
-        p: { xs: 1.5, sm: 2 },
-        border: `1.5px solid ${alpha(hue, 0.22)}`,
-        background:
-          t.palette.mode === 'dark'
-            ? `radial-gradient(circle at 20% 15%, ${alpha(hue, 0.18)}, transparent 34%), ${t.palette.background.paper}`
-            : `radial-gradient(circle at 18% 12%, ${alpha(hue, 0.16)}, transparent 34%), linear-gradient(180deg, ${alpha(hue, 0.06)} 0%, ${t.palette.background.paper} 70%)`,
-      })}
-    >
+    // A plain calm card; the group's own hue lives on its label pill and chips.
+    <Box sx={{ ...SURFACE_SX, p: 2 }}>
       <Stack spacing={1.5}>
         <Box
           sx={{

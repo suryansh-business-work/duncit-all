@@ -9,6 +9,7 @@ import { inclusiveGst } from '@/utils/checkout-math';
 import { isPodExpired } from '@/utils/pod-format';
 import { Accordion } from '@/components/details/Accordion';
 import { PodClubCard } from '@/components/details/PodClubCard';
+import { ViewClubButton } from '@/components/details/ViewClubButton';
 import { PodClubAdminsSection } from '@/components/details/PodClubAdminsSection';
 import {
   AboutSection,
@@ -132,20 +133,7 @@ export function PodAccordions({
         content: pod.club ? (
           <PodClubCard club={pod.club} categoryCrumbs={categoryCrumbs} onOpenClub={onOpenClub} />
         ) : (
-          <XStack
-            testID="pod-view-club"
-            role="button"
-            aria-label={t('mweb.podDetails.viewClub')}
-            onPress={onOpenClub}
-            alignItems="center"
-            gap={8}
-            pressStyle={PRESS_STYLE.control}
-          >
-            <MaterialIcons name="groups" size={18} color={primary} />
-            <Text fontSize={14} fontWeight="600" color="$primary">
-              {t('mweb.podDetails.viewClub')}
-            </Text>
-          </XStack>
+          <ViewClubButton onOpenClub={onOpenClub} />
         ),
       },
       {
@@ -260,8 +248,8 @@ export function PodAccordions({
     });
 
   return (
-    <YStack paddingHorizontal={16} paddingBottom={8} paddingTop={8}>
-      <XStack justifyContent="flex-end" gap={18} marginBottom={10}>
+    <YStack paddingHorizontal={16} paddingBottom={8} paddingTop={20}>
+      <XStack justifyContent="flex-end" gap={18} marginBottom={12}>
         <Text
           pressStyle={PRESS_STYLE.inline}
           testID="pod-expand-all"

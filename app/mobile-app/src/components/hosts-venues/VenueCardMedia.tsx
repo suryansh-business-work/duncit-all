@@ -14,6 +14,8 @@ import { useTranslation } from '@/hooks/useTranslation';
  * twin (VenueCardMedia) uses the same ratio. */
 const RATIO = 3 / 2;
 const MAX_HEIGHT = 300;
+/** Media inside a card carries its own 18px corners. */
+const MEDIA_RADIUS = 18;
 
 /** A round glassy arrow over the photo — the mouse's way through the slider on
  * Native Web, where there is nothing to swipe. */
@@ -22,6 +24,7 @@ function Arrow({
   label,
   onPress,
 }: Readonly<{ side: 'left' | 'right'; label: string; onPress: () => void }>) {
+  const { onPrimary } = useThemeColors();
   return (
     <XStack
       position="absolute"
@@ -34,9 +37,7 @@ function Arrow({
       borderRadius={15}
       alignItems="center"
       justifyContent="center"
-      backgroundColor="rgba(17,24,39,0.42)"
-      borderWidth={1}
-      borderColor="rgba(255,255,255,0.3)"
+      backgroundColor="rgba(0,0,0,0.4)"
       role="button"
       aria-label={label}
       onPress={onPress}
@@ -45,7 +46,7 @@ function Arrow({
       <MaterialIcons
         name={side === 'left' ? 'chevron-left' : 'chevron-right'}
         size={20}
-        color="#ffffff"
+        color={onPrimary}
       />
     </XStack>
   );
@@ -63,7 +64,7 @@ interface Props {
  * venues-page/VenueCardMedia. */
 export function VenueCardMedia({ images, venueName, onOpen }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { onPrimary } = useThemeColors();
+  const { accent } = useThemeColors();
   const listRef = useRef<FlatList<string>>(null);
   const [width, setWidth] = useState(0);
   const [index, setIndex] = useState(0);
@@ -82,11 +83,12 @@ export function VenueCardMedia({ images, venueName, onOpen }: Readonly<Props>) {
       <YStack
         aspectRatio={RATIO}
         maxHeight={MAX_HEIGHT}
-        backgroundColor="$primary"
+        borderRadius={MEDIA_RADIUS}
+        backgroundColor="$soft"
         alignItems="center"
         justifyContent="center"
       >
-        <MaterialIcons name="storefront" size={40} color={onPrimary} />
+        <MaterialIcons name="storefront" size={40} color={accent} />
       </YStack>
     );
   }
@@ -98,6 +100,8 @@ export function VenueCardMedia({ images, venueName, onOpen }: Readonly<Props>) {
       aspectRatio={RATIO}
       maxHeight={MAX_HEIGHT}
       backgroundColor="#000000"
+      borderRadius={MEDIA_RADIUS}
+      overflow="hidden"
       onLayout={onLayout}
     >
       {width > 0 ? (

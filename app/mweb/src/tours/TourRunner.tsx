@@ -11,6 +11,18 @@ import { useTranslation } from '../i18n/useTranslation';
 /** Anchors are declared as `data-tour="<anchor>"` on the element they describe. */
 const selectorFor = (anchor: string) => `[data-tour="${anchor}"]`;
 
+const PILL = { borderRadius: 999, fontWeight: 600, minHeight: 36 } as const;
+
+/** Shape only — the colours still come from `options`, which reads the theme. */
+const JOYRIDE_STYLES = {
+  tooltip: { borderRadius: 24, padding: 20 },
+  tooltipTitle: { fontSize: 17, fontWeight: 600 },
+  tooltipContent: { fontSize: 14 },
+  buttonPrimary: PILL,
+  buttonBack: PILL,
+  buttonSkip: PILL,
+};
+
 /**
  * How often to look for a tour's anchors.
  *
@@ -141,6 +153,9 @@ export function TourRunner() {
         arrowColor: theme.palette.background.paper,
       }}
       onEvent={handleEvent}
+      // The calm card: 24px corners, a 600 title, pill buttons — the same
+      // tooltip native's TourCard draws.
+      styles={JOYRIDE_STYLES}
       locale={{
         back: t('mweb.tours.previous'),
         close: t('mweb.tours.close'),

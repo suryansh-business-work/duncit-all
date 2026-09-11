@@ -4,16 +4,16 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { TourAnchor } from '@/tours/TourAnchor';
 import type { MenuRoute } from '@/navigation/types';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 import { type ProfileTile } from './profileSections';
 
-/** Pink-tinted icon chip background — mirrors mWeb's alpha(primary, 0.14). */
-const PINK_CHIP = 'rgba(255,87,87,0.14)';
-
+/** One quick-action tile: an accent icon on a soft disc and the label. The
+ * label says where it goes, so the tile carries no caption. */
 function GridTile({
   tile,
   onNavigate,
 }: Readonly<{ tile: ProfileTile; onNavigate: (route: MenuRoute) => void }>) {
-  const { primary } = useThemeColors();
+  const { accent } = useThemeColors();
   return (
     <YStack
       testID={`sidebar-grid-${tile.key}`}
@@ -22,32 +22,27 @@ function GridTile({
       onPress={() => onNavigate(tile.route)}
       width="100%"
       flexGrow={1}
-      gap={8}
-      borderRadius={12}
+      gap={10}
+      borderRadius={16}
       borderWidth={1}
-      borderColor="$borderColor"
+      borderColor="$cardBorder"
       backgroundColor="$surface"
-      padding={12}
-      pressStyle={{ opacity: 0.85, borderColor: '$primary' }}
+      padding={14}
+      pressStyle={PRESS_STYLE.surface}
     >
       <YStack
         width={36}
         height={36}
         alignItems="center"
         justifyContent="center"
-        borderRadius={8}
-        backgroundColor={PINK_CHIP}
+        borderRadius={18}
+        backgroundColor="$soft"
       >
-        <MaterialIcons name={tile.icon} size={20} color={primary} />
+        <MaterialIcons name={tile.icon} size={20} color={accent} />
       </YStack>
-      <YStack gap={2}>
-        <Text numberOfLines={1} fontSize={14} fontWeight="600" color="$color">
-          {tile.label}
-        </Text>
-        <Text numberOfLines={1} fontSize={11.5} color="$muted">
-          {tile.caption}
-        </Text>
-      </YStack>
+      <Text numberOfLines={1} fontSize={14} fontWeight="600" color="$color">
+        {tile.label}
+      </Text>
     </YStack>
   );
 }
@@ -86,9 +81,9 @@ export function SidebarQuickGrid({
   return (
     <XStack
       paddingHorizontal={16}
-      paddingBottom={10}
+      paddingBottom={12}
       flexWrap="wrap"
-      gap={10}
+      gap={12}
       justifyContent="space-between"
     >
       {tiles.map((tile) => (

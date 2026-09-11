@@ -1,15 +1,14 @@
 import { useEffect } from 'react';
-import { useLocation } from 'react-router';
+import { Link as RouterLink, useLocation } from 'react-router';
 import {
   claimGoogleSignupHandoff,
   createGoogleSignupClaims,
   readGoogleSignupHandoff,
   readReferralCode,
 } from '@duncit/utils';
-import { Alert, Box, Divider, Stack, Typography } from '@mui/material';
-import { auth } from '@duncit/auth-tokens';
+import { Alert, Divider, Link, Stack, Typography } from '@mui/material';
 import AuthBackground from '../../components/AuthBackground';
-import AuthLogo from '../../components/AuthLogo';
+import AuthHeading from '../../components/AuthHeading';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import LegalLinks from '../../components/LegalLinks';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -105,66 +104,63 @@ export default function RegisterPage() {
   return (
     <AuthBackground>
       <AuthScreenFrame>
-        <Stack spacing={1.45}>
-          <Stack spacing={1.1} sx={{ alignItems: 'center', pt: 0.5 }}>
-            <AuthLogo />
-            <Typography
-              variant="h4"
-              sx={{ fontWeight: 700, textAlign: 'center', color: 'text.primary' }}
-            >
-              {t('mweb.signup.title')}{' '}
-              <Box component="span" sx={{ color: auth.accent }}>
-                {t('mweb.signup.titleAccent')}
-              </Box>
+        <Stack spacing={3}>
+          <AuthHeading title={t('mweb.signup.title')} accent={t('mweb.signup.titleAccent')} />
+
+          <Stack spacing={2}>
+            <SignupStepperRail step={flow.step} askingNumber={flow.askingNumber} />
+
+            {onNumberStep && <GoogleDetailsStep onSubmit={flow.submitDetails} />}
+
+            {onVerifyStep && flow.verifying && (
+              <VerifyWhatsappStep
+                extension={flow.verifying.extension}
+                number={flow.verifying.number}
+                email={flow.pendingEmail}
+                creating={flow.creating}
+                onVerified={flow.createAccount}
+              />
+            )}
+
+            {showForm && (
+              <>
+                <GoogleSignInButton
+                  onCredential={google.start}
+                  loading={flow.creating}
+                  text="signup_with"
+                />
+                <GoogleSignupPolicyGate
+                  credential={google.credential}
+                  policies={policies}
+                  loading={policiesLoading}
+                  failed={policiesFailed}
+                  onAccepted={google.accept}
+                  onCancelled={google.cancel}
+                />
+                {google.error && (
+                  <Alert severity="error" sx={{ width: '100%' }}>
+                    {google.error}
+                  </Alert>
+                )}
+                <Divider>{t('mweb.auth.orEmail')}</Divider>
+
+                <RegisterForm
+                  step={flow.step}
+                  onStep={flow.setStep}
+                  initialValues={initialValues}
+                  errorMessage={flow.error}
+                  onSubmit={flow.submitForm}
+                />
+              </>
+            )}
+            <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center' }}>
+              {t('mweb.signup.haveAccount')}{' '}
+              <Link component={RouterLink} to="/login" underline="hover" data-testid="go-login">
+                {t('mweb.signup.logIn')}
+              </Link>
             </Typography>
+            <LegalLinks prefix={t('mweb.auth.legalSignUp')} />
           </Stack>
-
-          <SignupStepperRail step={flow.step} askingNumber={flow.askingNumber} />
-
-          {onNumberStep && <GoogleDetailsStep onSubmit={flow.submitDetails} />}
-
-          {onVerifyStep && flow.verifying && (
-            <VerifyWhatsappStep
-              extension={flow.verifying.extension}
-              number={flow.verifying.number}
-              email={flow.pendingEmail}
-              creating={flow.creating}
-              onVerified={flow.createAccount}
-            />
-          )}
-
-          {showForm && (
-            <>
-              <GoogleSignInButton
-                onCredential={google.start}
-                loading={flow.creating}
-                text="signup_with"
-              />
-              <GoogleSignupPolicyGate
-                credential={google.credential}
-                policies={policies}
-                loading={policiesLoading}
-                failed={policiesFailed}
-                onAccepted={google.accept}
-                onCancelled={google.cancel}
-              />
-              {google.error && (
-                <Alert severity="error" sx={{ width: '100%' }}>
-                  {google.error}
-                </Alert>
-              )}
-              <Divider>{t('mweb.auth.orEmail')}</Divider>
-
-              <RegisterForm
-                step={flow.step}
-                onStep={flow.setStep}
-                initialValues={initialValues}
-                errorMessage={flow.error}
-                onSubmit={flow.submitForm}
-              />
-            </>
-          )}
-          <LegalLinks prefix={t('mweb.auth.legalSignUp')} />
         </Stack>
       </AuthScreenFrame>
     </AuthBackground>

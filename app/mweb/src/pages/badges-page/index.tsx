@@ -1,6 +1,7 @@
 import { useQuery } from '@apollo/client/react';
-import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { sortBadgeProgress } from '@duncit/utils';
+import TwoToneHeading from '../../components/TwoToneHeading';
 import BadgeProgressCard from './BadgeProgressCard';
 import { MY_BADGE_PROGRESS, type MyBadgeProgressData } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -40,29 +41,27 @@ export default function BadgesPage() {
     );
   } else {
     body = (
-      <Stack spacing={1.5}>
+      <Box
+        sx={{
+          display: 'grid',
+          gap: 1.5,
+          gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(3, minmax(0, 1fr))' },
+        }}
+      >
         {rows.map((row) => (
           <BadgeProgressCard key={row.badge.id} row={row} />
         ))}
-      </Stack>
+      </Box>
     );
   }
 
+  // The summary is the heading's muted second beat — "Badges / 3 of 10 unlocked".
+  const summary =
+    rows.length > 0 ? t('mweb.badges.summary', { vars: { unlocked, total: rows.length } }) : null;
+
   return (
-    <Stack spacing={2} sx={{ maxWidth: 720, mx: 'auto', px: { xs: 0.5, sm: 0 }, pb: 6 }}>
-      <Stack spacing={0.5}>
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>
-          {t('mweb.badges.title')}
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {t('mweb.badges.intro')}
-        </Typography>
-        {rows.length > 0 && (
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
-            {t('mweb.badges.summary', { vars: { unlocked, total: rows.length } })}
-          </Typography>
-        )}
-      </Stack>
+    <Stack spacing={2.5} sx={{ maxWidth: 720, mx: 'auto', px: { xs: 0.5, sm: 0 }, pb: 6 }}>
+      <TwoToneHeading lead={t('mweb.badges.title')} trail={summary} stacked />
       {body}
     </Stack>
   );

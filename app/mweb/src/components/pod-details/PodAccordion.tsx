@@ -21,6 +21,8 @@ interface Props {
   children: ReactNode;
 }
 
+/** One collapsible section: a 24px surface card whose header is an icon disc and
+ * a section title. Native twin: components/details/Accordion. */
 export default function PodAccordion({
   id,
   title,
@@ -30,7 +32,7 @@ export default function PodAccordion({
   error = false,
   children,
 }: Readonly<Props>) {
-  const accent = error ? 'error.main' : 'primary.main';
+  const tint = error ? 'error.main' : 'secondary.main';
   return (
     <Accordion
       expanded={expanded}
@@ -39,38 +41,57 @@ export default function PodAccordion({
       square
       sx={{
         '&:before': { display: 'none' },
-        mb: 1,
+        mb: 1.5,
         border: '1px solid',
-        borderColor: 'divider',
-        borderRadius: '16px',
+        borderColor: error ? 'error.main' : 'var(--duncit-card-border)',
+        borderRadius: '24px',
         overflow: 'hidden',
-        boxShadow: 'none',
+        boxShadow: 'var(--duncit-card-shadow)',
         bgcolor: 'background.paper',
-        '&.Mui-expanded': { mb: 1 },
+        '&.Mui-expanded': { mb: 1.5 },
       }}
     >
       <AccordionSummary
-        expandIcon={<ExpandMoreIcon />}
-        sx={{ minHeight: 56 }}
+        expandIcon={<ExpandMoreIcon sx={{ color: 'text.secondary' }} />}
+        sx={{ minHeight: 64, px: 2 }}
         aria-controls={`${id}-content`}
         id={`${id}-header`}
       >
         <Stack
           direction="row"
-          spacing={1.25}
+          spacing={1.5}
           sx={{
             alignItems: "center",
-            flex: 1
+            flex: 1,
+            minWidth: 0
           }}>
-          {icon && <Box sx={{ display: 'flex', color: accent }}>{icon}</Box>}
-          <Typography variant="subtitle1" color={error ? 'error.main' : undefined} sx={{
-            fontWeight: 600
-          }}>
+          {icon && (
+            <Box
+              sx={{
+                width: 36,
+                height: 36,
+                flexShrink: 0,
+                borderRadius: '50%',
+                bgcolor: 'action.hover',
+                color: tint,
+                display: 'grid',
+                placeItems: 'center',
+                '& svg': { fontSize: 20 },
+              }}
+            >
+              {icon}
+            </Box>
+          )}
+          <Typography
+            variant="subtitle1"
+            color={error ? 'error.main' : undefined}
+            sx={{ fontSize: '1.05rem', fontWeight: 600 }}
+          >
             {title}
           </Typography>
         </Stack>
       </AccordionSummary>
-      <AccordionDetails>{children}</AccordionDetails>
+      <AccordionDetails sx={{ px: 2, pt: 0, pb: 2 }}>{children}</AccordionDetails>
     </Accordion>
   );
 }

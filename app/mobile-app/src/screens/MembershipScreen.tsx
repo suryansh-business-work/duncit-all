@@ -77,31 +77,24 @@ export function MembershipScreen() {
   return (
     <StackScreen title={t('mweb.membership.title')} testID="membership-screen">
       <RefreshScrollView flex={1} showsVerticalScrollIndicator={false}>
-        <YStack gap={14} paddingVertical={12}>
-          <YStack paddingHorizontal={16} gap={6}>
-            <XStack alignItems="center" gap={8} flexWrap="wrap">
-              <Text fontSize={16} fontWeight="700" color="$color">
-                {t('mweb.membership.heading')}
-              </Text>
-              <Text
-                fontSize={10}
-                fontWeight="700"
-                textTransform="uppercase"
-                letterSpacing={0.3}
-                color="$primary"
-                borderWidth={1}
-                borderColor="$primary"
-                borderRadius={999}
-                paddingHorizontal={7}
-                paddingVertical={2}
-              >
+        <YStack gap={20} paddingVertical={12}>
+          <XStack paddingHorizontal={16} alignItems="center" gap={8} flexWrap="wrap">
+            <Text fontSize={17} fontWeight="600" color="$color">
+              {t('mweb.membership.heading')}
+            </Text>
+            {/* The calm "Coming soon" pill: green text on the tonal green fill. */}
+            <XStack
+              height={24}
+              paddingHorizontal={10}
+              alignItems="center"
+              borderRadius={999}
+              backgroundColor="$primarySoft"
+            >
+              <Text fontSize={12} fontWeight="600" color="$primary">
                 {t('mweb.membership.comingSoon')}
               </Text>
             </XStack>
-            <Text fontSize={13} color="$muted">
-              {t('mweb.membership.subheading')}
-            </Text>
-          </YStack>
+          </XStack>
 
           {body}
 

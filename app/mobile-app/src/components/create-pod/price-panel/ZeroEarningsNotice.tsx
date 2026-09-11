@@ -1,36 +1,32 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { withAlpha } from '@/constants/survey-palette';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
-
-/** Amber "heads up" tint — the same warning weight the mWeb twin renders. */
-const WARN = '#f59e0b';
-const WARN_BG = 'rgba(245,158,11,0.10)';
-const WARN_BORDER = 'rgba(245,158,11,0.40)';
 
 /**
  * Shown under the Ticket Price field when the server projects a take-home of
  * ₹0 or less. Create Pod stays disabled while it is on screen; raising the
- * price clears it automatically. mWeb twin.
+ * price clears it automatically. The amber tint is the theme's `warning` at
+ * low alpha — the same weight as the mWeb twin.
  */
 export function ZeroEarningsNotice() {
+  const { warning } = useThemeColors();
   const { t } = useTranslation();
   return (
     <XStack
       testID="create-pod-zero-earnings"
       role="alert"
-      gap={8}
+      gap={10}
       alignItems="flex-start"
-      backgroundColor={WARN_BG}
-      borderWidth={1}
-      borderColor={WARN_BORDER}
-      borderRadius={12}
-      paddingHorizontal={10}
-      paddingVertical={9}
+      backgroundColor={withAlpha(warning, 0.12)}
+      borderRadius={16}
+      padding={12}
     >
-      <MaterialIcons name="info-outline" size={18} color={WARN} />
-      <YStack flex={1} gap={3}>
-        <Text fontSize={13} fontWeight="600" color="$color">
+      <MaterialIcons name="info-outline" size={18} color={warning} />
+      <YStack flex={1} gap={2}>
+        <Text fontSize={14} fontWeight="600" color="$color">
           {t('mweb.createPod.zeroEarningsTitle')}
         </Text>
         <Text fontSize={12} color="$muted">

@@ -65,6 +65,7 @@ export function ProfileScreen() {
       <ProfileBadgesStrip />
       <YStack
         paddingHorizontal={16}
+        paddingTop={16}
         paddingBottom={4}
         onLayout={(e) => setVerifyY(e.nativeEvent.layout.y)}
       >
@@ -108,7 +109,7 @@ export function ProfileScreen() {
           edge-to-edge window would otherwise clip the last row of the grid
           behind the Android navigation bar. */}
       <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
-        <XStack alignItems="center" gap={8} paddingHorizontal={12} paddingVertical={8}>
+        <XStack alignItems="center" gap={8} paddingHorizontal={16} paddingVertical={8}>
           <XStack
             testID="profile-back"
             role="button"
@@ -119,11 +120,12 @@ export function ProfileScreen() {
             alignItems="center"
             justifyContent="center"
             borderRadius={20}
-            pressStyle={PRESS_STYLE.row}
+            backgroundColor="$surface"
+            pressStyle={PRESS_STYLE.ghost}
           >
             <MaterialIcons name="arrow-back" size={22} color={ink} />
           </XStack>
-          <Text flex={1} fontSize={18} fontWeight="600" color="$color">
+          <Text flex={1} fontSize={17} fontWeight="600" color="$color" textAlign="center">
             Profile
           </Text>
           <XStack
@@ -136,7 +138,8 @@ export function ProfileScreen() {
             alignItems="center"
             justifyContent="center"
             borderRadius={20}
-            pressStyle={PRESS_STYLE.row}
+            backgroundColor="$surface"
+            pressStyle={PRESS_STYLE.ghost}
           >
             <MaterialIcons name="settings" size={22} color={ink} />
           </XStack>

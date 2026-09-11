@@ -52,15 +52,16 @@ export default function LanguageSection() {
   };
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-      <CardContent>
+    <Card>
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={1.5}>
           <Stack direction="row" spacing={1} sx={{
             alignItems: "center"
           }}>
             <Typography
-              variant="subtitle1"
+              component="h2"
               sx={{
+                fontSize: '1.05rem',
                 fontWeight: 600,
                 flex: 1
               }}>
@@ -73,7 +74,6 @@ export default function LanguageSection() {
             options={locales}
             onChange={change}
             label={t('mweb.common.language')}
-            helperText={t('mweb.common.languageHint')}
           />
           {error && <Alert severity="error">{error}</Alert>}
         </Stack>

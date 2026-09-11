@@ -1,8 +1,9 @@
 import { useTranslation } from '@/hooks/useTranslation';
 import type { Translate } from '@/i18n/fallback';
 import { useMemo, useState } from 'react';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { ScrollView, YStack } from 'tamagui';
 
+import { FilterChip } from '@/components/home/HomeFilterParts';
 import { TourAnchor } from '@/tours/TourAnchor';
 import type { ClubDetail, ClubPod } from '@/hooks/useDetails';
 import type { ClubMoment } from '@/utils/club-detail';
@@ -12,7 +13,6 @@ import { ClubFaqsSection } from './ClubFaqsSection';
 import { ClubHostsRail } from './ClubHostsRail';
 import { ClubMomentsRail } from './ClubMomentsRail';
 import { ClubPodsSchedule } from './ClubPodsSchedule';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 type SegmentKey =
   'PODS' | 'MOMENTS' | 'WHO' | 'WHAT' | 'PERKS' | 'VALUES' | 'FAQS' | 'HOSTS' | 'ADMINS';
@@ -75,35 +75,24 @@ export function ClubSegments(props: Readonly<Props>) {
   const [active, setActive] = useState<SegmentKey>('PODS');
 
   return (
-    <YStack gap={14} testID="club-segments">
+    <YStack gap={16} testID="club-segments">
+      {/* Segment pills on the page ground: surface at rest, green when open —
+          mWeb twin: ClubSegments' SEGMENT_SX. */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 8 }}
       >
-        {segments.map(([key, label]) => {
-          const isActive = active === key;
-          return (
-            <XStack
-              pressStyle={PRESS_STYLE.control}
-              key={key}
-              testID={`club-tab-${key}`}
-              role="button"
-              aria-label={label}
-              onPress={() => setActive(key)}
-              paddingHorizontal={14}
-              paddingVertical={8}
-              borderRadius={999}
-              borderWidth={1}
-              borderColor={isActive ? '$primary' : '$borderColor'}
-              backgroundColor={isActive ? '$primary' : 'transparent'}
-            >
-              <Text fontSize={13} fontWeight="700" color={isActive ? '$onPrimary' : '$color'}>
-                {label}
-              </Text>
-            </XStack>
-          );
-        })}
+        {segments.map(([key, label]) => (
+          <FilterChip
+            key={key}
+            testID={`club-tab-${key}`}
+            label={label}
+            selected={active === key}
+            onPress={() => setActive(key)}
+            onPage
+          />
+        ))}
       </ScrollView>
       {segmentContent(active, props, t)}
     </YStack>

@@ -1,15 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useBouncer, type CallbackHistoryItem } from '@/hooks/useBouncer';
 import { durationLabel } from '@/utils/support-chat';
 import { formatDateTime } from '@/utils/date-format';
-
-const STATUS_COLOR: Record<string, string> = {
-  PENDING: '#f5a623',
-  CONTACTED: '#2196f3',
-  CLOSED: '#22c55e',
-};
+import { StatusPill } from './StatusPill';
 
 /** Previous callback requests with date, call duration and conclusion (Bug 5). */
 export function CallbackHistory({ refreshKey = 0 }: Readonly<{ refreshKey?: number }>) {
@@ -29,16 +25,8 @@ export function CallbackHistory({ refreshKey = 0 }: Readonly<{ refreshKey?: numb
   if (items.length === 0) return null;
 
   return (
-    <YStack
-      testID="callback-history"
-      padding={16}
-      borderRadius={16}
-      gap={10}
-      backgroundColor="$surface"
-      borderWidth={1}
-      borderColor="$borderColor"
-    >
-      <Text fontSize={12} fontWeight="700" textTransform="uppercase" color="$muted">
+    <SurfaceCard testID="callback-history" padding={0} overflow="hidden">
+      <Text fontSize={16} fontWeight="600" color="$color" padding={16} paddingBottom={8}>
         Previous callbacks
       </Text>
       {items.map((c) => {
@@ -47,27 +35,25 @@ export function CallbackHistory({ refreshKey = 0 }: Readonly<{ refreshKey?: numb
           <YStack
             key={c.id}
             testID={`callback-${c.id}`}
-            padding={12}
-            borderRadius={12}
-            borderWidth={1}
-            borderColor="$borderColor"
+            paddingHorizontal={16}
+            paddingVertical={12}
+            borderTopWidth={1}
+            borderTopColor="$borderColor"
             gap={3}
           >
             <XStack justifyContent="space-between" alignItems="center">
               <Text fontSize={12} color="$muted">
                 {formatDateTime(c.created_at)}
               </Text>
-              <Text fontSize={11} fontWeight="700" color={STATUS_COLOR[c.status] ?? '$muted'}>
-                {c.status}
-              </Text>
+              <StatusPill status={c.status} />
             </XStack>
             {c.reason ? (
-              <Text fontSize={13.5} color="$color">
+              <Text fontSize={14} color="$color">
                 {c.reason}
               </Text>
             ) : null}
             {c.contacted_at || dur || c.conclusion ? (
-              <Text fontSize={11.5} color="$muted">
+              <Text fontSize={12} color="$muted">
                 {c.contacted_at ? `Called ${formatDateTime(c.contacted_at)}` : ''}
                 {dur ? ` · ${dur}` : ''}
                 {c.conclusion ? ` · ${c.conclusion}` : ''}
@@ -76,6 +62,6 @@ export function CallbackHistory({ refreshKey = 0 }: Readonly<{ refreshKey?: numb
           </YStack>
         );
       })}
-    </YStack>
+    </SurfaceCard>
   );
 }

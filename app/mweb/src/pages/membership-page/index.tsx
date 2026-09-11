@@ -1,11 +1,21 @@
 import { useQuery } from '@apollo/client/react';
-import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import { alpha, type Theme } from '@mui/material/styles';
 import PlanCards from './PlanCards';
 import ComparisonTable from './ComparisonTable';
 import NotifyCard from './NotifyCard';
 import { MEMBERSHIP_PRICING, type MembershipPricingData } from './queries';
+import PageHeader from '../../components/PageHeader';
 import { HEADER_ME } from '../../components/app-header/queries';
 import { useTranslation } from '../../i18n/useTranslation';
+
+/** The calm "Coming soon" pill: green text on the tonal green fill. */
+const SOON_SX = {
+  height: 24,
+  fontWeight: 600,
+  color: 'primary.main',
+  bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.12),
+} as const;
 
 /**
  * Membership — the tier cards, the full comparison table and the notify-me
@@ -52,49 +62,24 @@ export default function MembershipPage() {
   }
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Stack spacing={2} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-        <Stack
-          direction="row"
-          spacing={1}
-          useFlexGap
-          sx={{
-            alignItems: "center",
-            flexWrap: "wrap"
-          }}>
-          <Typography variant="h6" sx={{
-            fontWeight: 700
-          }}>
-            {t('mweb.membership.title')}
-          </Typography>
-          <Chip size="small" color="warning" label={t('mweb.membership.comingSoon')} />
-        </Stack>
+    <Stack spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%', py: 0.5 }}>
+      <PageHeader title={t('mweb.membership.title')} />
 
-        <Box>
-          <Typography variant="subtitle1" sx={{
-            fontWeight: 700
-          }}>
-            {t('mweb.membership.heading')}
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{
-              color: "text.secondary",
-              mt: 0.5
-            }}>
-            {t('mweb.membership.subheading')}
-          </Typography>
-        </Box>
-
-        {error && <Alert severity="error">{t('mweb.membership.loadError')}</Alert>}
-
-        {body}
-
-        <NotifyCard
-          email={headerData?.me?.email ?? ''}
-          subscribed={!!pricing?.is_subscribed}
-        />
+      <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+        <Typography component="h2" sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>
+          {t('mweb.membership.heading')}
+        </Typography>
+        <Chip size="small" label={t('mweb.membership.comingSoon')} sx={SOON_SX} />
       </Stack>
-    </Box>
+
+      {error && <Alert severity="error">{t('mweb.membership.loadError')}</Alert>}
+
+      {body}
+
+      <NotifyCard
+        email={headerData?.me?.email ?? ''}
+        subscribed={!!pricing?.is_subscribed}
+      />
+    </Stack>
   );
 }

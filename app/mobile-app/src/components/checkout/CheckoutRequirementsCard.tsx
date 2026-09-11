@@ -29,13 +29,13 @@ export function CheckoutRequirementsCard({
     <YStack
       testID="checkout-requirements"
       gap={6}
-      padding={14}
-      borderRadius={14}
+      padding={16}
+      borderRadius={24}
       borderWidth={1}
       borderColor="$danger"
       backgroundColor="$surface"
     >
-      <Text fontSize={14} fontWeight="700" color="$color">
+      <Text fontSize={16} fontWeight="600" color="$color">
         {t('mweb.checkout.needTitle')}
       </Text>
       <Text fontSize={12.5} color="$muted">

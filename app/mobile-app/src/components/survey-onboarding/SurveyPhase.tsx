@@ -1,12 +1,16 @@
 import { useMemo, useState } from 'react';
-import { Button, Input, Text, TextArea, XStack, YStack } from 'tamagui';
+import { Input, Text, TextArea, XStack, YStack } from 'tamagui';
 
+import { DuncitButton } from '@/components/DuncitButton';
+import { StepProgressBar } from '@/components/StepProgressBar';
 import { useBottomInset } from '@/hooks/useBottomNavSpace';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ActiveSurvey, SurveyQuestion } from '@/graphql/onboarding-survey';
 import type { Answer } from './useOnboardingFlow';
+import { CALM_FIELD } from './calmField';
+import { SurveyOption } from './SurveyOption';
 import { splitSections } from './surveySections';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   survey: ActiveSurvey;
@@ -22,7 +26,7 @@ interface Props {
 
 /** Section-stepped survey — one step per SECTION; final step submits. */
 export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<Props>) {
-  const { color: ink, primary } = useThemeColors();
+  const { t } = useTranslation();
   // The Next/Continue button is the last row of this scroll and nothing floats
   // over it, so it only has to clear the Android navigation bar the edge-to-edge
   // window paints over the app — on top of the container's own 16pt padding.
@@ -75,17 +79,20 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="interactive"
     >
+      {/* The bar replaces the old "Step X of N" line; the section names itself below. */}
       {sections.length > 1 && (
-        <Text fontSize={12} opacity={0.7} color={ink} fontWeight="700">
-          Step {step + 1} of {sections.length}
-        </Text>
+        <StepProgressBar
+          steps={sections.map((s) => s.title)}
+          current={step + 1}
+          label={active.title}
+        />
       )}
       <YStack gap={4}>
-        <Text fontSize={16} fontWeight="600" color={ink}>
+        <Text fontSize={17} fontWeight="600" color="$color">
           {active.title}
         </Text>
         {active.help ? (
-          <Text fontSize={13} opacity={0.7} color={ink}>
+          <Text fontSize={13} color="$muted">
             {active.help}
           </Text>
         ) : null}
@@ -95,12 +102,12 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
         const a = answer.get(q.qid);
         return (
           <YStack key={q.qid} gap={6}>
-            <Text fontSize={14} fontWeight="700" color={ink}>
+            <Text fontSize={14} fontWeight="600" color="$color">
               {q.label}
               {q.required ? ' *' : ''}
             </Text>
             {q.help ? (
-              <Text fontSize={12} opacity={0.7} color={ink}>
+              <Text fontSize={12} color="$muted">
                 {q.help}
               </Text>
             ) : null}
@@ -110,6 +117,7 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
                 testID={`q-${q.qid}`}
                 value={a.value}
                 onChangeText={(t) => answer.set(q.qid, { value: t })}
+                {...CALM_FIELD}
               />
             )}
             {q.type === 'TEXTAREA' && (
@@ -118,65 +126,58 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
                 testID={`q-${q.qid}`}
                 value={a.value}
                 onChangeText={(t) => answer.set(q.qid, { value: t })}
+                {...CALM_FIELD}
                 minHeight={90}
               />
             )}
             {q.type === 'MCQ' &&
-              q.options.map((opt) => {
-                const selected = q.multi ? a.values.includes(opt) : a.value === opt;
-                return (
-                  <Button
-                    key={opt}
-                    testID={`opt-${q.qid}-${opt}`}
-                    size="$3"
-                    chromeless
-                    justifyContent="flex-start"
-                    onPress={() =>
-                      q.multi ? answer.toggle(q, opt) : answer.set(q.qid, { value: opt })
-                    }
-                  >
-                    <Text color={selected ? primary : ink} fontWeight={selected ? '700' : '400'}>
-                      {selected ? '●' : '○'} {opt}
-                    </Text>
-                  </Button>
-                );
-              })}
+              q.options.map((opt) => (
+                <SurveyOption
+                  key={opt}
+                  testID={`opt-${q.qid}-${opt}`}
+                  label={opt}
+                  multi={!!q.multi}
+                  selected={q.multi ? a.values.includes(opt) : a.value === opt}
+                  onPress={() =>
+                    q.multi ? answer.toggle(q, opt) : answer.set(q.qid, { value: opt })
+                  }
+                />
+              ))}
             {missing.has(q.qid) ? (
-              <Text testID={`required-${q.qid}`} fontSize={12} color="$red10">
-                This field is required.
+              <Text testID={`required-${q.qid}`} fontSize={12} color="$danger">
+                {t('mweb.surveyOnboarding.fieldRequired')}
               </Text>
             ) : null}
           </YStack>
         );
       })}
 
-      {localError || error ? <Text color="$red10">{localError || error}</Text> : null}
+      {localError || error ? <Text color="$danger">{localError || error}</Text> : null}
 
-      <XStack gap={10}>
+      <XStack gap={12}>
         {step > 0 && (
-          <Button
-            testID="survey-back"
-            flex={1}
-            chromeless
-            onPress={() => setStep((s) => Math.max(0, s - 1))}
-            disabled={busy}
-          >
-            <Text color={ink} fontWeight="700">
-              Back
-            </Text>
-          </Button>
+          <YStack flex={1}>
+            <DuncitButton
+              testID="survey-back"
+              label={t('mweb.common.back')}
+              variant="ghost"
+              size="lg"
+              fullWidth
+              disabled={busy}
+              onPress={() => setStep((s) => Math.max(0, s - 1))}
+            />
+          </YStack>
         )}
-        <Button
-          testID="primary-action"
-          flex={1}
-          disabled={busy}
-          onPress={onPrimary}
-          backgroundColor={primary}
-          color="white"
-          fontWeight="600"
-        >
-          {primaryLabel}
-        </Button>
+        <YStack flex={1}>
+          <DuncitButton
+            testID="primary-action"
+            label={primaryLabel}
+            size="lg"
+            fullWidth
+            disabled={busy}
+            onPress={onPrimary}
+          />
+        </YStack>
       </XStack>
     </RefreshScrollView>
   );

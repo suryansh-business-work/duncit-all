@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import { InputAdornment, MenuItem, Stack, TextField } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import { Stack } from '@mui/material';
 import { podRowStatusOptions, type PodRowStatusFilter } from '@duncit/utils';
+import PillChips from '../../components/club-admin/PillChips';
+import SearchPillField from '../pod-list/SearchPillField';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -12,7 +13,7 @@ interface Props {
 }
 
 /**
- * The search box and the status select over the club's pods. Both are query
+ * The search pill and the status pills over the club's pods. Both are query
  * arguments, so the server pages over the matching pods rather than the list
  * filtering the page it already fetched — and the status vocabulary is the one
  * `@duncit/utils` gives every surface, so a pod is filtered under the same
@@ -23,37 +24,15 @@ export default function ClubPodsFilters({ search, onSearch, status, onStatus }: 
   const options = useMemo(() => podRowStatusOptions(t), [t]);
 
   return (
-    <Stack direction="row" spacing={1}>
-      <TextField
-        size="small"
-        fullWidth
+    <Stack spacing={1.5}>
+      <SearchPillField
         value={search}
-        onChange={(event) => onSearch(event.target.value)}
+        onChange={onSearch}
         placeholder={t('mweb.common.search')}
-        slotProps={{
-          input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
-          },
-        }}
+        ariaLabel={t('mweb.common.search')}
+        enterKeyHint="search"
       />
-      <TextField
-        select
-        size="small"
-        label={t('clubAdmin.pods.statusFilter')}
-        value={status}
-        onChange={(event) => onStatus(event.target.value as PodRowStatusFilter)}
-        sx={{ minWidth: 150 }}
-      >
-        {options.map((option) => (
-          <MenuItem key={option.label} value={option.value}>
-            {option.label}
-          </MenuItem>
-        ))}
-      </TextField>
+      <PillChips label={t('clubAdmin.pods.statusFilter')} options={options} value={status} onChange={onStatus} />
     </Stack>
   );
 }

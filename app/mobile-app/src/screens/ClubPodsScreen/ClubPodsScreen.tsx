@@ -1,14 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Spinner, Text, YStack } from 'tamagui';
 import { podRowStatusOptions, type PodRowStatusFilter } from '@duncit/utils';
 
-import { PrimaryButton } from '@/components/PrimaryButton';
+import { DuncitButton } from '@/components/DuncitButton';
 import { StackScreen } from '@/components/StackScreen';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { LoadErrorNotice } from '@/components/club-admin/LoadErrorNotice';
 import { LoadMoreButton } from '@/components/club-admin/LoadMoreButton';
-import { PageHeading } from '@/components/club-admin/PageHeading';
+import { RowDivider } from '@/components/club-admin/NavRow';
 import { ClubPodRow } from '@/components/club-admin/pods/ClubPodRow';
 import { useClubPodSheets } from '@/components/club-admin/pods/useClubPodSheets';
 import { ChipSelectField } from '@/components/create-pod';
@@ -59,19 +60,19 @@ export function ClubPodsScreen() {
     if (params.notice) refetchRef.current();
   }, [params]);
 
+  // The new-pod door sits where mWeb's page header puts it: at the top right.
+  const newPod = (
+    <DuncitButton
+      testID="club-pods-new"
+      label={t('clubAdmin.pods.newPod')}
+      onPress={() => navigation.navigate('ClubPodEditor', { clubId })}
+    />
+  );
+
   return (
-    <StackScreen title={t('mweb.meta.clubPods.title')} testID="club-pods-screen">
+    <StackScreen title={t('mweb.meta.clubPods.title')} testID="club-pods-screen" right={newPod}>
       <RefreshScrollView showsVerticalScrollIndicator={false}>
-        <YStack gap={14} padding={16} paddingBottom={48}>
-          <PageHeading
-            title={t('clubAdmin.pods.clubPods')}
-            subtitle={t('clubAdmin.pods.createEditDelete')}
-          />
-          <PrimaryButton
-            testID="club-pods-new"
-            label={t('clubAdmin.pods.newPod')}
-            onPress={() => navigation.navigate('ClubPodEditor', { clubId })}
-          />
+        <YStack gap={20} padding={16} paddingBottom={48}>
           <ChipSelectField
             label={t('clubAdmin.pods.statusFilter')}
             options={statusOptions}
@@ -80,12 +81,12 @@ export function ClubPodsScreen() {
             testID="club-pods-status"
           />
           {notice ? (
-            <Text testID="club-pods-notice" fontSize={12.5} color="$success">
+            <Text testID="club-pods-notice" fontSize={13} color="$success">
               {notice}
             </Text>
           ) : null}
           {sheets.deleteError ? (
-            <Text testID="club-pods-delete-error" fontSize={12.5} color="$danger">
+            <Text testID="club-pods-delete-error" fontSize={13} color="$danger">
               {sheets.deleteError}
             </Text>
           ) : null}
@@ -94,20 +95,26 @@ export function ClubPodsScreen() {
             <LoadErrorNotice testID="club-pods-error" onRetry={pods.refetch} />
           ) : null}
           {empty ? (
-            <Text testID="club-pods-empty" fontSize={13} color="$muted">
+            <Text testID="club-pods-empty" fontSize={14} color="$muted" textAlign="center">
               {t('clubAdmin.pods.noPods')}
             </Text>
           ) : null}
-          {pods.rows.map((pod) => (
-            <ClubPodRow
-              key={pod.id}
-              pod={pod}
-              when={formatDateTime(pod.pod_date_time)}
-              testID={`club-pod-${pod.id}`}
-              onOpen={() => sheets.openPod(pod)}
-              onActions={() => sheets.openActions(pod)}
-            />
-          ))}
+          {pods.rows.length > 0 ? (
+            <SurfaceCard padding={0} overflow="hidden">
+              {pods.rows.map((pod, index) => (
+                <Fragment key={pod.id}>
+                  {index > 0 ? <RowDivider /> : null}
+                  <ClubPodRow
+                    pod={pod}
+                    when={formatDateTime(pod.pod_date_time)}
+                    testID={`club-pod-${pod.id}`}
+                    onOpen={() => sheets.openPod(pod)}
+                    onActions={() => sheets.openActions(pod)}
+                  />
+                </Fragment>
+              ))}
+            </SurfaceCard>
+          ) : null}
           {pods.hasMore ? (
             <LoadMoreButton
               testID="club-pods-more"

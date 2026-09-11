@@ -1,19 +1,15 @@
-import { AppImage } from '@/components/AppImage';
-
-import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { ScrollView, YStack } from 'tamagui';
 
 import type { ClubWithPods, HomeClub, HomePod } from '@/hooks/useHomeFeed';
-import { coverImageUrl } from '@duncit/utils';
 
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { Reveal } from '@/animations/Reveal';
-import { PodCard } from '@/components/home/PodCard';
-import { PRESS_STYLE } from '@duncit/buttons-native';
+import { POD_CARD_RAIL_WIDTH, PodCard } from '@/components/home/PodCard';
+import { SectionHeader } from '@/components/SectionHeader';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ClubSectionProps extends ClubWithPods {
   onOpenPod: (pod: HomePod) => void;
-  /** The category chip over each card's image (mock: "Sports"). */
+  /** The category pill over each card's image (mock: "Sports"). */
   categoryLabelOf?: (pod: HomePod) => string | null;
   /** Save state + toggle; omit to hide the save buttons (signed-out). */
   savedOf?: (podDocId: string) => boolean;
@@ -23,7 +19,7 @@ interface ClubSectionProps extends ClubWithPods {
   onOpenClub: (club: HomeClub) => void;
 }
 
-/** A club header (avatar + name + description) above a horizontal row of its
+/** One club's rail: the club's name with "See all" (opens the club) above its
  * pods — RN port of mWeb's ClubSection. */
 export function ClubSection({
   club,
@@ -35,51 +31,19 @@ export function ClubSection({
   savingOf,
   onToggleSave,
 }: Readonly<ClubSectionProps>) {
-  const { onPrimary } = useThemeColors();
-  const image = coverImageUrl(club.club_feature_images_and_videos) ?? null;
+  const { t } = useTranslation();
 
   return (
     <YStack gap={12}>
-      <XStack
-        testID={`club-section-${club.club_id}`}
-        role="button"
-        aria-label={club.club_name}
-        onPress={() => onOpenClub(club)}
-        alignItems="center"
-        gap={12}
-        paddingHorizontal={16}
-        pressStyle={PRESS_STYLE.control}
-      >
-        <YStack
-          width={46}
-          height={46}
-          borderRadius={14}
-          overflow="hidden"
-          backgroundColor="$primary"
-          alignItems="center"
-          justifyContent="center"
-        >
-          {image ? (
-            <AppImage
-              source={{ uri: image }}
-              style={{ width: '100%', height: '100%' }}
-              resizeMode="cover"
-            />
-          ) : (
-            <MaterialIcons name="groups" size={24} color={onPrimary} />
-          )}
-        </YStack>
-        <YStack flex={1}>
-          <Text fontSize={15.5} fontWeight="700" color="$color" numberOfLines={1}>
-            {club.club_name}
-          </Text>
-          {club.club_description ? (
-            <Text fontSize={12} fontWeight="600" color="$muted" numberOfLines={1}>
-              {club.club_description}
-            </Text>
-          ) : null}
-        </YStack>
-      </XStack>
+      <YStack paddingHorizontal={16}>
+        <SectionHeader
+          title={club.club_name}
+          actionLabel={t('mweb.home.seeAll')}
+          onAction={() => onOpenClub(club)}
+          actionTestID={`club-section-${club.club_id}`}
+          actionAriaLabel={club.club_name}
+        />
+      </YStack>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -89,7 +53,7 @@ export function ClubSection({
           <Reveal key={pod.id} index={index} scale>
             <PodCard
               pod={pod}
-              width={260}
+              width={POD_CARD_RAIL_WIDTH}
               showPlace={false}
               onPress={() => onOpenPod(pod)}
               categoryLabel={categoryLabelOf?.(pod)}

@@ -11,8 +11,6 @@ import { useSuggestedTicketPrices } from '@/hooks/useSuggestedTicketPrices';
 import { SuggestedPricesTable } from './SuggestedPricesTable';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
-const NOTE_BG = 'rgba(99,102,241,0.10)';
-
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -36,7 +34,7 @@ export function SuggestedPricesModal({
   venueAmount,
   symbol,
 }: Readonly<Props>) {
-  const { muted, primary } = useThemeColors();
+  const { color } = useThemeColors();
   const { t } = useTranslation();
   const close = t('mweb.auth.close');
   const { prices, isLoading, error } = useSuggestedTicketPrices(
@@ -51,13 +49,13 @@ export function SuggestedPricesModal({
     body = <Spinner testID="suggested-prices-loading" size="small" color="$primary" />;
   } else if (error) {
     body = (
-      <Text testID="suggested-prices-error" fontSize={12.5} color="$danger">
+      <Text testID="suggested-prices-error" fontSize={13} color="$danger">
         {t('mweb.createPod.suggestedPricesError')}
       </Text>
     );
   } else if (prices.length === 0) {
     body = (
-      <Text testID="suggested-prices-empty" fontSize={12.5} color="$muted">
+      <Text testID="suggested-prices-empty" fontSize={13} color="$muted">
         {t('mweb.createPod.suggestedPricesEmpty')}
       </Text>
     );
@@ -89,43 +87,42 @@ export function SuggestedPricesModal({
             width="90%"
             maxWidth={460}
             maxHeight="85%"
-            backgroundColor="$background"
-            borderRadius={20}
-            padding={16}
+            backgroundColor="$surface"
+            borderRadius={28}
+            padding={20}
             gap={12}
           >
             <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
-              <XStack alignItems="center" justifyContent="space-between" gap={10}>
-                <XStack alignItems="center" gap={8} flexShrink={1}>
-                  <MaterialIcons name="sell" size={20} color={primary} />
-                  <Text fontSize={16.5} fontWeight="700" color="$color" flexShrink={1}>
-                    {t('mweb.createPod.suggestedPricesTitle')}
-                  </Text>
-                </XStack>
+              <XStack alignItems="center" justifyContent="space-between" gap={12}>
+                <Text fontSize={17} fontWeight="600" color="$color" flexShrink={1}>
+                  {t('mweb.createPod.suggestedPricesTitle')}
+                </Text>
                 <XStack
                   testID="suggested-prices-close"
                   role="button"
                   aria-label={close}
                   onPress={onClose}
-                  width={32}
-                  height={32}
+                  width={40}
+                  height={40}
+                  borderRadius={20}
                   alignItems="center"
                   justifyContent="center"
-                  pressStyle={PRESS_STYLE.inline}
+                  backgroundColor="$soft"
+                  pressStyle={PRESS_STYLE.control}
                 >
-                  <MaterialIcons name="close" size={20} color={muted} />
+                  <MaterialIcons name="close" size={20} color={color} />
                 </XStack>
               </XStack>
               <ScrollView showsVerticalScrollIndicator={false}>
-                <YStack gap={12} paddingVertical={10}>
+                <YStack gap={12} paddingVertical={12}>
                   {body}
                   <YStack
                     testID="suggested-prices-note"
-                    backgroundColor={NOTE_BG}
-                    borderRadius={12}
-                    padding={12}
+                    backgroundColor="$primarySoft"
+                    borderRadius={16}
+                    padding={14}
                   >
-                    <Text fontSize={12.5} fontWeight="700" color="$color">
+                    <Text fontSize={13} fontWeight="600" color="$color">
                       {t('mweb.createPod.suggestedPricesNote')}
                     </Text>
                   </YStack>

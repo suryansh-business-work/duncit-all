@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { RouteProp } from '@react-navigation/native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Text, YStack } from 'tamagui';
 import {
   canScanTickets,
@@ -11,11 +12,13 @@ import {
   splitAttendance,
 } from '@duncit/utils';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { LoadingIndicator } from '@/components/LoadingIndicator';
 import { StackScreen } from '@/components/StackScreen';
 import { AttendanceOtpSheet } from '@/components/attendance/AttendanceOtpSheet';
 import { AttendanceRosterSection } from '@/components/attendance/AttendanceRosterSection';
 import { PillButton } from '@/components/attendance/AttendanceOtpControls';
+import { NoticeCard } from '@/components/attendance/NoticeCard';
 import {
   AttendanceSummary,
   ClubAdminHelpCard,
@@ -26,6 +29,7 @@ import {
 import { TicketScanDialog } from '@/components/host-manage/ticket-scan';
 import { useAttendanceBoard } from '@/hooks/useAttendanceBoard';
 import { useDateFormat } from '@/hooks/useDateFormat';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { RefreshScrollView } from '@/components/PullToRefresh';
@@ -45,6 +49,7 @@ import { RefreshScrollView } from '@/components/PullToRefresh';
 export function PodAttendanceScreen() {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
+  const { onPrimary } = useThemeColors();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { params } = useRoute<RouteProp<RootStackParamList, 'PodAttendance'>>();
   const podId = params?.podId ?? '';
@@ -61,9 +66,7 @@ export function PodAttendanceScreen() {
     if (!data) {
       return (
         <YStack gap={12}>
-          <Text fontSize={13} color="$danger">
-            {board.error}
-          </Text>
+          <NoticeCard tone="danger" title={board.error} />
           <PillButton
             testID="attendance-retry"
             label={labels.retry}
@@ -91,7 +94,7 @@ export function PodAttendanceScreen() {
         ) : null}
 
         {data.rows.length === 0 ? (
-          <Text fontSize={13} color="$muted">
+          <Text fontSize={14} color="$muted">
             {labels.emptyRoster}
           </Text>
         ) : null}
@@ -106,9 +109,10 @@ export function PodAttendanceScreen() {
           onMark={onMark}
         />
         {unmarked.length === 0 && data.rows.length > 0 ? (
-          <Text fontSize={13} fontWeight="700" color="$success">
-            {labels.allMarked}
-          </Text>
+          <NoticeCard tone="success" title={labels.allMarked} />
+        ) : null}
+        {marked.length > 0 && unmarked.length > 0 ? (
+          <YStack height={1} backgroundColor="$borderColor" />
         ) : null}
         <AttendanceRosterSection
           heading={labels.markedHeading}
@@ -122,12 +126,13 @@ export function PodAttendanceScreen() {
         {/* A virtual pod has no door: its members are marked when they open the
             meeting link, so there is nothing to scan. */}
         {canScanTickets(data) ? (
-          <PillButton
+          <DuncitButton
             testID="attendance-scan-cta"
             label={labels.scanCta}
             onPress={() => setScanOpen(true)}
-            variant="solid"
-            disabled={false}
+            size="lg"
+            fullWidth
+            icon={<MaterialIcons name="qr-code-scanner" size={20} color={onPrimary} />}
           />
         ) : null}
 
@@ -138,7 +143,7 @@ export function PodAttendanceScreen() {
 
   return (
     <StackScreen title={labels.pageTitle} testID="pod-attendance-screen">
-      <RefreshScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         {body()}
       </RefreshScrollView>
 

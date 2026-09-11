@@ -68,7 +68,7 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
         <Typography
           variant="subtitle1"
           sx={{
-            fontWeight: 700,
+            fontWeight: 600,
             flex: 1
           }}>
           New post
@@ -90,7 +90,7 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
                 maxHeight: 420,
                 objectFit: 'contain',
                 bgcolor: 'common.black',
-                borderRadius: 1,
+                borderRadius: '18px',
               }}
             />
             <TextField
@@ -128,11 +128,6 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
             <DuncitButton variant="contained" onClick={() => setPickerOpen(true)}>
               Choose image
             </DuncitButton>
-            <Typography variant="caption" sx={{
-              color: "text.secondary"
-            }}>
-              Upload from device or pick from Pexels — both go through ImageKit.
-            </Typography>
           </Stack>
         )}
       </DialogContent>

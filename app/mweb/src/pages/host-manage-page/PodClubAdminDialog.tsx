@@ -115,7 +115,7 @@ export default function PodClubAdminDialog({
 
   return (
     <Dialog open={!!pod} onClose={onClose} fullWidth maxWidth="xs" data-testid="pod-club-admin">
-      <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.podClubAdmin.title')}</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.podClubAdmin.title')}</DialogTitle>
       <DialogContent dividers>{body}</DialogContent>
       <DialogActions>
         <DuncitButton onClick={onClose}>{t('mweb.podClubAdmin.close')}</DuncitButton>

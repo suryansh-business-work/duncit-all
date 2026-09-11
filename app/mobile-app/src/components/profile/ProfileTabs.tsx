@@ -49,18 +49,17 @@ export function ProfileTabs({ value, onChange, isHost, isOwner }: Readonly<Props
             aria-selected={selected}
             onPress={() => onChange(tab.key)}
             flex={1}
-            height={36}
+            height={40}
+            paddingHorizontal={8}
             alignItems="center"
             justifyContent="center"
-            borderRadius={12}
+            borderRadius={999}
             backgroundColor={selected ? '$primary' : '$surface'}
-            borderWidth={1}
-            borderColor={selected ? '$primary' : '$borderColor'}
             pressStyle={PRESS_STYLE.control}
           >
             <Text
               fontSize={13}
-              fontWeight="700"
+              fontWeight="600"
               color={selected ? '$onPrimary' : '$color'}
               numberOfLines={1}
             >

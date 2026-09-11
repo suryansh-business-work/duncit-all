@@ -84,7 +84,7 @@ export default function GrievanceForm({
           minRows={4}
         />
         {submitError && <Alert severity="error">{submitError}</Alert>}
-        <DuncitButton type="submit" variant="contained" disabled={loading || noTickets}>
+        <DuncitButton type="submit" variant="contained" size="large" disabled={loading || noTickets}>
           {loading ? t('grievance.submitting') : t('grievance.submit')}
         </DuncitButton>
       </Stack>

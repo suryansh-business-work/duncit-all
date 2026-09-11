@@ -40,8 +40,8 @@ function PickButton({
       onPress={busy ? undefined : onPress}
       alignItems="center"
       gap={6}
-      paddingHorizontal={14}
-      height={40}
+      paddingHorizontal={16}
+      height={44}
       borderRadius={999}
       borderWidth={1}
       borderColor="$primary"
@@ -53,7 +53,7 @@ function PickButton({
       ) : (
         <MaterialIcons name={icon} size={16} color={primary} />
       )}
-      <Text fontSize={13} fontWeight="700" color="$primary">
+      <Text fontSize={14} fontWeight="600" color="$primary">
         {label}
       </Text>
     </XStack>

@@ -26,11 +26,9 @@ export function VenueCard({ venue, distance, onSelect, onOpen }: Readonly<Props>
       onPress={onSelect}
       width={220}
       gap={4}
-      padding={12}
+      padding={16}
       borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
+      backgroundColor="$soft"
       pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
@@ -48,8 +46,7 @@ export function VenueCard({ venue, distance, onSelect, onOpen }: Readonly<Props>
           paddingHorizontal={8}
           paddingVertical={3}
           borderRadius={999}
-          borderWidth={1}
-          borderColor="$borderColor"
+          backgroundColor="$surface"
         >
           <MaterialIcons name="near-me" size={12} color={primary} />
           <Text fontSize={11} fontWeight="600" color="$color">

@@ -1,8 +1,8 @@
-import { MaterialIcons } from '@expo/vector-icons';
 import { Separator, Text, XStack, YStack } from 'tamagui';
 
 import type { LeaderboardCategory } from '@duncit/utils';
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { IconDisc } from '@/components/account/IconDisc';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { LeaderboardConfigShape, LeaderboardRewardShape } from './types';
 
@@ -18,20 +18,21 @@ function RewardRow({ reward }: Readonly<{ reward: LeaderboardRewardShape }>) {
     <XStack gap={12} alignItems="flex-start">
       <XStack
         paddingHorizontal={10}
-        paddingVertical={4}
+        height={24}
+        alignItems="center"
         borderRadius={999}
-        backgroundColor="$background"
+        backgroundColor="$soft"
       >
-        <Text fontSize={12} fontWeight="700" color="$color">
+        <Text fontSize={12} fontWeight="600" color="$color">
           {rankLabel}
         </Text>
       </XStack>
       <YStack flex={1} gap={2}>
-        <Text fontSize={13} fontWeight="700" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           {reward.title}
         </Text>
         {reward.description !== '' && (
-          <Text fontSize={11} color="$muted">
+          <Text fontSize={12} color="$muted">
             {reward.description}
           </Text>
         )}
@@ -48,8 +49,8 @@ function RewardGroup({
   return (
     <YStack gap={8}>
       <Text
-        fontSize={11}
-        fontWeight="700"
+        fontSize={12}
+        fontWeight="600"
         textTransform="uppercase"
         letterSpacing={0.6}
         color="$muted"
@@ -73,35 +74,20 @@ export function LeaderboardRewards({
   category,
 }: Readonly<{ config: LeaderboardConfigShape; category: LeaderboardCategory }>) {
   const { t } = useTranslation();
-  const { primary } = useThemeColors();
   const rewards = config.rewards.filter((reward) => reward.category === category);
   const monthly = rewards.filter((reward) => reward.period === 'MONTHLY');
   const yearly = rewards.filter((reward) => reward.period === 'YEARLY');
 
   return (
-    <YStack
-      testID="leaderboard-rewards"
-      marginHorizontal={16}
-      padding={16}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      gap={12}
-    >
-      <XStack alignItems="center" gap={8}>
-        <MaterialIcons name="card-giftcard" size={20} color={primary} />
-        <YStack gap={2} flex={1}>
-          <Text fontSize={15} fontWeight="700" color="$color">
-            {t('mweb.leaderboard.rewardsTitle')}
-          </Text>
-          <Text fontSize={11} color="$muted">
-            {t('mweb.leaderboard.rewardsSubtitle')}
-          </Text>
-        </YStack>
+    <SurfaceCard testID="leaderboard-rewards" marginHorizontal={16} gap={12}>
+      <XStack alignItems="center" gap={12}>
+        <IconDisc icon="card-giftcard" />
+        <Text accessibilityRole="header" flex={1} fontSize={17} fontWeight="600" color="$color">
+          {t('mweb.leaderboard.rewardsTitle')}
+        </Text>
       </XStack>
       {rewards.length === 0 ? (
-        <Text fontSize={13} color="$muted">
+        <Text fontSize={14} color="$muted">
           {t('mweb.leaderboard.rewardsEmpty')}
         </Text>
       ) : (
@@ -113,6 +99,6 @@ export function LeaderboardRewards({
           <RewardGroup title={t('mweb.leaderboard.rewardsYearly')} rewards={yearly} />
         </YStack>
       )}
-    </YStack>
+    </SurfaceCard>
   );
 }

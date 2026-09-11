@@ -27,16 +27,16 @@ function OptionRow({ testID, label, selected, onPress }: Readonly<OptionRowProps
       role="button"
       aria-label={label}
       onPress={onPress}
-      paddingHorizontal={12}
-      paddingVertical={10}
-      borderRadius={10}
+      paddingHorizontal={14}
+      paddingVertical={12}
+      borderRadius={14}
       borderWidth={1}
-      borderColor={selected ? '$primary' : '$borderColor'}
+      borderColor={selected ? '$primary' : '$cardBorder'}
       backgroundColor={selected ? '$primary' : '$surface'}
       pressStyle={PRESS_STYLE.control}
     >
       <Text
-        fontSize={13}
+        fontSize={14}
         fontWeight="600"
         color={selected ? '$onPrimary' : '$color'}
         numberOfLines={1}

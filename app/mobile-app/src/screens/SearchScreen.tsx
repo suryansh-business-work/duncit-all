@@ -2,16 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import type { TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Input, XStack, YStack } from 'tamagui';
+import { XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
+import { SearchPill } from '@/components/pod-list/SearchPill';
 import { CategoryActions } from '@/components/search/CategoryActions';
 import { SearchResults } from '@/components/search/SearchResults';
 import { SearchSuggestions } from '@/components/search/SearchSuggestions';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useSearchCategories, useSearchDiscovery, useSearchSuggestions } from '@/hooks/useSearch';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import type { SearchSort } from '@/utils/search-sort';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -22,7 +21,6 @@ import { RefreshScrollView } from '@/components/PullToRefresh';
  * states. Identical experience to mWeb's SearchPage. */
 export function SearchScreen() {
   const { t } = useTranslation();
-  const { muted } = useThemeColors();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { openPod, openClub } = useDetailNav();
   const [query, setQuery] = useState('');
@@ -62,40 +60,23 @@ export function SearchScreen() {
 
   return (
     <StackScreen title={t('mweb.common.search')} testID="search-screen">
-      <XStack
-        alignItems="center"
-        gap={8}
-        margin={16}
-        marginBottom={4}
-        paddingHorizontal={12}
-        height={46}
-        borderRadius={999}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$background"
-      >
-        <MaterialIcons name="search" size={20} color={muted} />
-        <Input
-          ref={inputRef}
+      <XStack paddingHorizontal={16} paddingTop={4}>
+        <SearchPill
+          inputRef={inputRef}
           testID="search-input"
-          aria-label={t('mweb.common.search')}
-          flex={1}
-          unstyled
+          ariaLabel={t('mweb.common.search')}
+          height={52}
           autoFocus
           value={query}
           onChangeText={onChange}
           placeholder={t('mweb.search.searchClubsPodsCategoriesOrActivities')}
-          placeholderTextColor="$muted"
-          color="$color"
-          fontSize={15}
-          returnKeyType="search"
         />
       </XStack>
 
       <SearchSuggestions suggestions={showSuggest ? suggestions : []} onPick={pickSuggestion} />
 
       <RefreshScrollView showsVerticalScrollIndicator={false}>
-        <YStack padding={16} gap={16} paddingBottom={40}>
+        <YStack padding={16} paddingTop={20} gap={20} paddingBottom={40}>
           {active ? (
             <SearchResults
               happening={happening}

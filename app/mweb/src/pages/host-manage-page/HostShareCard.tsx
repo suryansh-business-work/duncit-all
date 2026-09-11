@@ -1,17 +1,8 @@
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
-import {
-  Alert,
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Divider,
-  Stack,
-  Typography,
-} from '@mui/material';
-import PaidIcon from '@mui/icons-material/Paid';
+import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import HostSectionHeader from './HostSectionHeader';
+import RowGroup from './RowGroup';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { Translate } from '../../i18n/fallback';
 
@@ -87,7 +78,7 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: any; symbol: string }>
   const payableLabel = isV2 ? t('mweb.hostManage.payout') : legacyLabel;
   const payable = payout.approved_amount ?? b?.payout_amount ?? payout.amount_requested;
   return (
-    <Box sx={{ p: 1.25, borderRadius: '16px', border: 1, borderColor: 'divider' }}>
+    <Box sx={{ px: 2, py: 1.75 }}>
       <Stack
         direction="row"
         spacing={1}
@@ -95,10 +86,14 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: any; symbol: string }>
           alignItems: "center",
           mb: 0.5
         }}>
-        <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 600 }} noWrap>
+        <Typography sx={{ flex: 1, fontSize: '0.9375rem', fontWeight: 600 }} noWrap>
           {payout.pod_title}
         </Typography>
-        <Chip size="small" color={STATUS_COLOR[payout.status as Status] ?? 'default'} label={payout.status} />
+        <Chip
+          color={STATUS_COLOR[payout.status as Status] ?? 'default'}
+          label={payout.status}
+          sx={{ height: 24 }}
+        />
       </Stack>
       <Stack spacing={0.25}>
         {lines.map((line) => (
@@ -119,7 +114,7 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: any; symbol: string }>
             justifyContent: "space-between",
             mt: 0.25
           }}>
-          <Typography variant="body2" sx={{ fontWeight: 700 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
             {payableLabel}
           </Typography>
           <Typography
@@ -155,38 +150,24 @@ export default function HostShareCard() {
       </Stack>
     );
   } else if (error) {
-    body = <Alert severity="error">{error.message}</Alert>;
+    body = <Alert severity="error" sx={{ m: 2 }}>{error.message}</Alert>;
   } else if (payouts.length === 0) {
-    body = <Alert severity="info">{t('mweb.hostManage.completeAPodToSeeYour')}</Alert>;
-  } else {
     body = (
-      <Stack spacing={1}>
-        {payouts.map((p: any) => (
-          <PayoutRow key={p.id} payout={p} symbol={symbol} />
-        ))}
-      </Stack>
+      <Typography
+        variant="body2"
+        sx={{ px: 2, py: 2.5, textAlign: 'center', color: 'text.secondary' }}
+      >
+        {t('mweb.hostManage.completeAPodToSeeYour')}
+      </Typography>
     );
+  } else {
+    body = payouts.map((p: any) => <PayoutRow key={p.id} payout={p} symbol={symbol} />);
   }
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-      <CardContent>
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{
-            alignItems: "center",
-            mb: 1
-          }}>
-          <PaidIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }}>
-            {t('mweb.hostManage.hostShare')}
-          </Typography>
-          <Chip size="small" label={payouts.length} />
-        </Stack>
-        <Divider sx={{ mb: 1.5 }} />
-        {body}
-      </CardContent>
-    </Card>
+    <Stack spacing={1.5}>
+      <HostSectionHeader title={t('mweb.hostManage.hostShare')} count={payouts.length} />
+      <RowGroup>{body}</RowGroup>
+    </Stack>
   );
 }

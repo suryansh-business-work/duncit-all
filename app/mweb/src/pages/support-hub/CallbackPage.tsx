@@ -1,4 +1,3 @@
-import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
 import SupportShell from './SupportShell';
 import CallbackContent from './CallbackContent';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -8,13 +7,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 export default function CallbackPage() {
   const { t } = useTranslation();
   return (
-    <SupportShell
-      title={t('mweb.common.callbackRequest')}
-      subtitle={t('mweb.supportHub.callUsOrGetACallback')}
-      icon={<PhoneCallbackIcon fontSize="small" />}
-      gradient="linear-gradient(135deg, #2196f3 0%, #21cbf3 100%)"
-      backTo="/support"
-    >
+    <SupportShell title={t('mweb.common.callbackRequest')} backTo="/support">
       <CallbackContent selected={null} />
     </SupportShell>
   );

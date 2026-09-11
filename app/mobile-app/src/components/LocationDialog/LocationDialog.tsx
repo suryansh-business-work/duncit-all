@@ -1,17 +1,17 @@
 import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
-import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { ScrollView, YStack } from 'tamagui';
 
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
-import { useThemeColors } from '@/hooks/useThemeColors';
 
 import { AreaList } from './AreaList';
 import { CityList } from './CityList';
 import { CountryStateChips } from './CountryStateChips';
 import { LocationMap } from './LocationMap';
+import { LocationSheetFooter } from './LocationSheetFooter';
+import { LocationSheetHeader } from './LocationSheetHeader';
 import { useLocationDraft } from './useLocationDraft';
 import type { LocationItem } from '@/stores/location.store';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -33,9 +33,13 @@ interface Props {
 export function LocationDialog({ open, onClose, onApply, initialLocationId }: Readonly<Props>) {
   const { t } = useTranslation();
   const draft = useLocationDraft(open, onClose, { onApply, initialId: initialLocationId });
-  const { color, primary, onPrimary } = useThemeColors();
   const zonesLabel = draft.zones.length ? `Apply · ${draft.zones.length} areas` : 'Apply';
   const applyLabel = draft.draftZone ? `Apply · ${draft.draftZone}` : zonesLabel;
+  // `detect` settles every failure into `draft.error` itself; the catch only
+  // keeps a press from ever leaving a floating promise.
+  const detect = () => {
+    draft.detect().catch(() => undefined);
+  };
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
@@ -62,66 +66,22 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
               bottom={0}
               maxHeight="88%"
               backgroundColor="$background"
-              borderTopLeftRadius={20}
-              borderTopRightRadius={20}
+              borderTopLeftRadius={28}
+              borderTopRightRadius={28}
+              overflow="hidden"
             >
               <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
-                <YStack paddingHorizontal={16} paddingTop={16} gap={12}>
-                  <XStack alignItems="center" justifyContent="space-between">
-                    <Text fontSize={18} fontWeight="700" color="$color">
-                      Choose your location
-                    </Text>
-                    <XStack
-                      pressStyle={PRESS_STYLE.surface}
-                      testID="location-close"
-                      role="button"
-                      aria-label={t('mweb.common.close')}
-                      onPress={onClose}
-                      width={32}
-                      height={32}
-                      alignItems="center"
-                      justifyContent="center"
-                    >
-                      <MaterialIcons name="close" size={20} color={color} />
-                    </XStack>
-                  </XStack>
-                  <XStack
-                    testID="location-gps"
-                    role="button"
-                    aria-label={t('mweb.location.useMyLocation')}
-                    onPress={() => void draft.detect()}
-                    alignItems="center"
-                    justifyContent="center"
-                    gap={8}
-                    height={46}
-                    borderRadius={12}
-                    borderWidth={1.5}
-                    borderColor="$primary"
-                    pressStyle={PRESS_STYLE.control}
-                  >
-                    {draft.busy ? (
-                      <Spinner color="$primary" />
-                    ) : (
-                      <MaterialIcons name="my-location" size={18} color={primary} />
-                    )}
-                    <Text fontSize={14} fontWeight="700" color="$primary">
-                      {draft.busy ? 'Locating…' : 'Use my location'}
-                    </Text>
-                  </XStack>
-                  {draft.detected ? (
-                    <Text fontSize={12} color="$muted">
-                      Detected: {draft.detected}
-                    </Text>
-                  ) : null}
-                  {draft.error ? (
-                    <Text testID="location-error" fontSize={12} color="$danger">
-                      {draft.error}
-                    </Text>
-                  ) : null}
-                </YStack>
+                <LocationSheetHeader
+                  title="Choose your location"
+                  onClose={onClose}
+                  onDetect={detect}
+                  busy={draft.busy}
+                  detected={draft.detected}
+                  error={draft.error}
+                />
 
                 <ScrollView style={SHEET_SAFE_AREA} showsVerticalScrollIndicator={false}>
-                  <YStack paddingHorizontal={16} paddingVertical={12} gap={16}>
+                  <YStack paddingHorizontal={16} paddingVertical={16} gap={16}>
                     <CountryStateChips
                       tree={draft.tree}
                       country={draft.country}
@@ -151,45 +111,12 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
                   </YStack>
                 </ScrollView>
 
-                <XStack paddingHorizontal={16} paddingVertical={12} gap={12}>
-                  <XStack
-                    testID="location-cancel"
-                    role="button"
-                    aria-label={t('mweb.common.cancel')}
-                    onPress={onClose}
-                    flex={1}
-                    height={48}
-                    alignItems="center"
-                    justifyContent="center"
-                    borderRadius={12}
-                    borderWidth={1}
-                    borderColor="$borderColor"
-                    pressStyle={PRESS_STYLE.control}
-                  >
-                    <Text fontSize={14} fontWeight="600" color="$color">
-                      Cancel
-                    </Text>
-                  </XStack>
-                  <XStack
-                    testID="location-apply"
-                    role="button"
-                    aria-label={t('mweb.location.applyLocation')}
-                    aria-disabled={!draft.draftId}
-                    onPress={draft.apply}
-                    flex={2}
-                    height={48}
-                    alignItems="center"
-                    justifyContent="center"
-                    borderRadius={12}
-                    backgroundColor={draft.draftId ? '$primary' : '$borderColor'}
-                    opacity={draft.draftId ? 1 : 0.6}
-                    pressStyle={PRESS_STYLE.control}
-                  >
-                    <Text fontSize={14} fontWeight="700" color={draft.draftId ? onPrimary : color}>
-                      {applyLabel}
-                    </Text>
-                  </XStack>
-                </XStack>
+                <LocationSheetFooter
+                  applyLabel={applyLabel}
+                  canApply={!!draft.draftId}
+                  onCancel={onClose}
+                  onApply={draft.apply}
+                />
               </SafeAreaView>
             </YStack>
           </YStack>

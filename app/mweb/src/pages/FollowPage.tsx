@@ -1,7 +1,7 @@
 import { useTranslation } from '../i18n/useTranslation';
 import { useMemo, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client/react';
-import { Box, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import PostDialog from './profile-page/post-dialog/PostDialog';
 import FollowFeedList from './follow-page/FollowFeedList';
@@ -63,25 +63,14 @@ export default function FollowPage({ superCategorySlug }: Readonly<{ superCatego
         minHeight: '100%',
       }}
     >
-      <Box>
-        <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
-          Following
-        </Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            color: "text.secondary",
-            mt: 0.4,
-            fontWeight: 700
-          }}>
-          {t('mweb.followPage.latestPostsFromYourClubsAnd')}
-        </Typography>
-      </Box>
+      <Typography component="h1" sx={{ fontSize: 20, fontWeight: 600 }}>
+        Following
+      </Typography>
 
       <DuncitTabs
         {...tabs}
         variant="fullWidth"
-        sx={{ minHeight: 40, '& .MuiTab-root': { fontWeight: 700, minHeight: 40 } }}
+        sx={{ minHeight: 40, borderBottom: 1, borderColor: 'divider', '& .MuiTab-root': { minHeight: 40 } }}
       />
 
       <FollowFeedList

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -10,27 +12,19 @@ interface Faq {
   answer: string;
 }
 
-/** Admin-authored FAQs as expandable question/answer pairs. */
+/** Admin-authored FAQs as expandable question/answer pairs — each its own
+ * surface card. mWeb twin: club-details-page/ClubFaqsSection. */
 export function ClubFaqsSection({ faqs }: Readonly<{ faqs: Faq[] }>) {
   const [open, setOpen] = useState<string | null>(null);
-  const { color } = useThemeColors();
+  const { muted } = useThemeColors();
   if (faqs.length === 0) return null;
   return (
     <YStack gap={8} testID="club-faqs">
-      <Text fontSize={16} fontWeight="700" color="$color">
-        FAQs
-      </Text>
+      <SectionHeader title="FAQs" />
       {faqs.map((faq) => {
         const expanded = open === faq.question;
         return (
-          <YStack
-            key={faq.question}
-            borderWidth={1}
-            borderColor="$borderColor"
-            borderRadius={12}
-            padding={12}
-            backgroundColor="$surface"
-          >
+          <SurfaceCard key={faq.question} paddingVertical={14}>
             <XStack
               pressStyle={PRESS_STYLE.surface}
               testID={`club-faq-${faq.question}`}
@@ -46,16 +40,16 @@ export function ClubFaqsSection({ faqs }: Readonly<{ faqs: Faq[] }>) {
               </Text>
               <MaterialIcons
                 name={expanded ? 'expand-less' : 'expand-more'}
-                size={20}
-                color={color}
+                size={22}
+                color={muted}
               />
             </XStack>
             {expanded ? (
-              <Text marginTop={8} fontSize={13} color="$muted" lineHeight={19}>
+              <Text marginTop={8} fontSize={14} color="$muted" lineHeight={20}>
                 {faq.answer}
               </Text>
             ) : null}
-          </YStack>
+          </SurfaceCard>
         );
       })}
     </YStack>

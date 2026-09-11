@@ -60,19 +60,16 @@ export function VenueSettingsScreen() {
   return (
     <StackScreen title={t('mweb.venueSettingsPage.title')} testID="venue-settings-screen">
       <RefreshScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <YStack gap={14} padding={16} paddingBottom={48}>
+        <YStack gap={20} padding={16} paddingBottom={48}>
           {isLoading ? <Spinner testID="venue-settings-loading" color="$primary" /> : null}
           <VenueSwitcher venues={venues} venueId={venueId} onSelect={selectVenue} />
-          <Text fontSize={12.5} color="$muted">
-            {t('mweb.venueSettingsPage.subtitle')}
-          </Text>
           {loadError ? (
             <Text testID="venue-settings-error" fontSize={13} color="$danger">
               {loadError}
             </Text>
           ) : null}
           {!isLoading && !loadError && venues.length === 0 ? (
-            <Text testID="venue-settings-empty" fontSize={13} color="$muted">
+            <Text testID="venue-settings-empty" fontSize={14} color="$muted">
               {t('mweb.venueSettingsPage.noVenues')}
             </Text>
           ) : null}

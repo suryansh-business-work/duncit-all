@@ -1,4 +1,4 @@
-import { Card, CardContent, Stack, Typography } from '@mui/material';
+import { Card, CardContent, Stack } from '@mui/material';
 import {
   formatMoney,
   venueOwnerStatTiles,
@@ -6,6 +6,7 @@ import {
   type VenueOwnerStats,
   type VenueOwnerStatTile,
 } from '@duncit/utils';
+import SectionHeader from '../../components/SectionHeader';
 import { FigureTile } from '../../components/studio-pods';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -33,17 +34,17 @@ export default function VenueOwnerStatsStrip({ stats }: Readonly<{ stats: VenueO
   };
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-      <CardContent>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-          {t('mweb.venueManagePage.slotEarnings')}
-        </Typography>
-        <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
-          {venueOwnerStatTiles(stats).map((tile) => (
-            <FigureTile key={tile.key} label={labels[tile.key]} value={tileValue(tile)} />
-          ))}
-        </Stack>
-      </CardContent>
-    </Card>
+    <Stack spacing={1.5}>
+      <SectionHeader title={t('mweb.venueManagePage.slotEarnings')} />
+      <Card>
+        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+          <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
+            {venueOwnerStatTiles(stats).map((tile) => (
+              <FigureTile key={tile.key} label={labels[tile.key]} value={tileValue(tile)} />
+            ))}
+          </Stack>
+        </CardContent>
+      </Card>
+    </Stack>
   );
 }

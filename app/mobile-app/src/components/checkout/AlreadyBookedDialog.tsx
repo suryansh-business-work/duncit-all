@@ -1,6 +1,7 @@
 import { Modal } from 'react-native';
-import { Button, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
@@ -32,22 +33,28 @@ export function AlreadyBookedDialog({ open, onClose, onHistory }: Readonly<Props
           maxWidth={360}
           gap={12}
           padding={20}
-          borderRadius={16}
-          backgroundColor="$background"
+          borderRadius={28}
+          backgroundColor="$surface"
         >
-          <Text fontSize={18} fontWeight="700" color="$color">
+          <Text fontSize={18} fontWeight="600" color="$color">
             {t('mweb.checkout.alreadyBookedTitle')}
           </Text>
           <Text fontSize={14} color="$muted">
             {t('mweb.checkout.alreadyBookedMessage')}
           </Text>
           <XStack gap={8} justifyContent="flex-end" flexWrap="wrap">
-            <Button testID="already-booked-stay" size="$3" onPress={onClose}>
-              {t('mweb.checkout.alreadyBookedStay')}
-            </Button>
-            <Button testID="already-booked-history" size="$3" theme="active" onPress={onHistory}>
-              {t('mweb.checkout.alreadyBookedHistory')}
-            </Button>
+            <DuncitButton
+              testID="already-booked-stay"
+              label={t('mweb.checkout.alreadyBookedStay')}
+              onPress={onClose}
+              variant="outline"
+              tone="neutral"
+            />
+            <DuncitButton
+              testID="already-booked-history"
+              label={t('mweb.checkout.alreadyBookedHistory')}
+              onPress={onHistory}
+            />
           </XStack>
         </YStack>
       </YStack>

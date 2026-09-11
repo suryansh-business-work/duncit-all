@@ -1,7 +1,8 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
 import { useNavigate } from 'react-router';
-import SensorsIcon from '@mui/icons-material/Sensors';
 import PodCard from './PodCard';
+import HomeRail from './HomeRail';
+import SectionHeader from '../../components/SectionHeader';
 import { openPod } from '../../lib/open-pod';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -28,28 +29,9 @@ export default function OngoingPodsRail({ pods, hostNameOf }: Readonly<Props>) {
   if (pods.length === 0) return null;
 
   return (
-    <Stack spacing={1.25} data-testid="ongoing-pods-rail">
-      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', px: 0.25 }}>
-        <SensorsIcon color="success" />
-        <Box>
-          <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
-            {t('mweb.home.ongoingPodsTitle')}
-          </Typography>
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
-            {t('mweb.home.ongoingPodsSubtitle')}
-          </Typography>
-        </Box>
-      </Stack>
-      <Box
-        sx={{
-          display: 'flex',
-          gap: 1.5,
-          overflowX: 'auto',
-          pb: 0.5,
-          scrollbarWidth: 'none',
-          '&::-webkit-scrollbar': { display: 'none' },
-        }}
-      >
+    <Stack spacing={1.5} data-testid="ongoing-pods-rail">
+      <SectionHeader title={t('mweb.home.ongoingPodsTitle')} />
+      <HomeRail>
         {pods.map((pod: any) => (
           <PodCard
             key={pod.id}
@@ -58,7 +40,7 @@ export default function OngoingPodsRail({ pods, hostNameOf }: Readonly<Props>) {
             onOpen={() => openPod(navigate, pod)}
           />
         ))}
-      </Box>
+      </HomeRail>
     </Stack>
   );
 }

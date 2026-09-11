@@ -20,7 +20,7 @@ interface FaqAnswerModalProps {
  * conversation CTA. RN twin of mWeb's FaqAnswerDialog. */
 export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswerModalProps>) {
   const { t } = useTranslation();
-  const { primary } = useThemeColors();
+  const { color: ink, onPrimary } = useThemeColors();
 
   return (
     <Modal visible={faq !== null} transparent animationType="slide" onRequestClose={onClose}>
@@ -40,15 +40,15 @@ export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswer
           />
           <YStack
             backgroundColor="$background"
-            borderTopLeftRadius={22}
-            borderTopRightRadius={22}
+            borderTopLeftRadius={28}
+            borderTopRightRadius={28}
             maxHeight="84%"
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
               {faq ? (
                 <ScrollView contentContainerStyle={{ padding: 20 }}>
                   <XStack alignItems="flex-start" justifyContent="space-between" gap={12}>
-                    <Text flex={1} fontSize={18} fontWeight="700" color="$color">
+                    <Text flex={1} fontSize={18} fontWeight="600" color="$color">
                       {faq.question}
                     </Text>
                     <XStack
@@ -57,14 +57,14 @@ export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswer
                       role="button"
                       aria-label={t('mweb.common.close')}
                       onPress={onClose}
-                      width={32}
-                      height={32}
+                      width={40}
+                      height={40}
                       alignItems="center"
                       justifyContent="center"
-                      borderRadius={16}
-                      backgroundColor="$surface"
+                      borderRadius={20}
+                      backgroundColor="$soft"
                     >
-                      <MaterialIcons name="close" size={18} color={primary} />
+                      <MaterialIcons name="close" size={20} color={ink} />
                     </XStack>
                   </XStack>
                   <Text fontSize={14} color="$muted" lineHeight={21} marginTop={12}>
@@ -72,9 +72,9 @@ export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswer
                   </Text>
                   <YStack
                     marginTop={20}
-                    padding={14}
-                    borderRadius={14}
-                    backgroundColor="rgba(255,79,115,0.08)"
+                    padding={16}
+                    borderRadius={18}
+                    backgroundColor="$soft"
                     gap={10}
                   >
                     <Text fontSize={12} fontWeight="600" color="$muted">
@@ -88,14 +88,14 @@ export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswer
                       alignItems="center"
                       justifyContent="center"
                       gap={8}
-                      height={44}
+                      height={52}
                       borderRadius={999}
                       backgroundColor="$primary"
                       pressStyle={PRESS_STYLE.surface}
                     >
-                      <MaterialIcons name="chat-bubble-outline" size={18} color="#ffffff" />
-                      <Text fontSize={14} fontWeight="700" color="#ffffff">
-                        Start a conversation
+                      <MaterialIcons name="chat-bubble-outline" size={18} color={onPrimary} />
+                      <Text fontSize={15} fontWeight="600" color="$onPrimary">
+                        {t('mweb.common.startAConversation')}
                       </Text>
                     </XStack>
                   </YStack>

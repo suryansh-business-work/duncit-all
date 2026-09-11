@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import { Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { DuncitButton } from '@duncit/buttons';
 
 interface Props {
@@ -58,7 +59,7 @@ export default function ConnectedAccountRow({
             <RadioButtonUncheckedIcon fontSize="small" color="disabled" />
           )}
           <Stack sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle2">{label}</Typography>
+            <Typography sx={{ fontSize: 15, fontWeight: 500 }}>{label}</Typography>
             <Typography variant="body2" noWrap sx={{
               color: "text.secondary"
             }}>
@@ -77,10 +78,10 @@ export default function ConnectedAccountRow({
         {onDisconnect && disconnectLabel && (
           <DuncitButton
             color="error"
-            variant="outlined"
+            size="small"
             disabled={busy}
             onClick={onDisconnect}
-            sx={{ textTransform: 'none', fontWeight: 700, borderRadius: '16px' }}
+            sx={{ minHeight: 36, bgcolor: (theme) => alpha(theme.palette.error.main, 0.1) }}
           >
             {disconnectLabel}
           </DuncitButton>

@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router';
-import { Box, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { DuncitButton } from '@duncit/buttons';
+import { Stack, Typography } from '@mui/material';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import { DuncitRoundButton } from '@duncit/buttons';
 import { EARN_KINDS, partnerPortalUrl } from '@duncit/onboarding';
 import { mwebCurrentLabel, mwebMeetingLabels } from '@duncit/slots';
 import {
@@ -41,27 +41,27 @@ export default function EarnPage() {
     [navigate, t],
   );
 
+  // The calm inner-page header — a 40px round back button and the title at
+  // 17/600, no subtitle — the same strip the native StackScreen draws.
   return (
     <Stack
-      spacing={2}
-      sx={{ maxWidth: 720, mx: 'auto', width: '100%', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}
+      spacing={1.5}
+      sx={{ maxWidth: 720, mx: 'auto', width: '100%', px: 2, py: 1, pb: { xs: 10, sm: 8 } }}
     >
-      <Box>
-        <DuncitButton startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} size="small">
-          {t('mweb.common.back')}
-        </DuncitButton>
-      </Box>
-      <Stack spacing={0.5}>
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>
-          {t('mweb.earn.earnWithDuncit')}
-        </Typography>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+        <DuncitRoundButton
+          onClick={() => navigate(-1)}
+          aria-label={t('mweb.common.back')}
+          sx={{ width: 40, height: 40, minWidth: 40, minHeight: 40, bgcolor: 'background.paper', color: 'text.primary' }}
+        >
+          <ArrowBackRoundedIcon />
+        </DuncitRoundButton>
         <Typography
-          variant="body2"
-          sx={{
-            color: "text.secondary",
-            fontWeight: 700
-          }}>
-          {t('mweb.earn.subtitle')}
+          component="h1"
+          noWrap
+          sx={{ flex: 1, minWidth: 0, fontSize: '1.0625rem', fontWeight: 600 }}
+        >
+          {t('mweb.earn.earnWithDuncit')}
         </Typography>
       </Stack>
       <EarnSurfaceProvider config={config}>

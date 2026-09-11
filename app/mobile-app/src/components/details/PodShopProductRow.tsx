@@ -38,6 +38,7 @@ export function StepButton({
       borderRadius={999}
       borderWidth={1}
       borderColor="$borderColor"
+      backgroundColor="$surface"
       opacity={disabled ? 0.5 : 1}
       pressStyle={PRESS_STYLE.row}
     >
@@ -46,7 +47,7 @@ export function StepButton({
   );
 }
 
-/** The row shell — a plain container; the in-cart state shows via the border. */
+/** The row shell — a soft tile on the card, primary-tinted while in the cart. */
 function ProductRowShell({
   testID,
   selected,
@@ -62,10 +63,8 @@ function ProductRowShell({
       gap={10}
       alignItems="center"
       padding={10}
-      borderRadius={14}
-      borderWidth={1}
-      borderColor={selected ? '$primary' : '$borderColor'}
-      backgroundColor="$surface"
+      borderRadius={16}
+      backgroundColor={selected ? '$primarySoft' : '$soft'}
     >
       {children}
     </XStack>
@@ -109,20 +108,21 @@ function AddToCartButton({
 
 /** Product thumbnail; falls back to a bag icon when the product has no image. */
 function ProductThumb({ image }: Readonly<{ image: string }>) {
+  const { accent } = useThemeColors();
   return (
     <YStack
       width={48}
       height={48}
-      borderRadius={10}
+      borderRadius={12}
       overflow="hidden"
-      backgroundColor="rgba(255,139,95,0.18)"
+      backgroundColor="$surface"
       alignItems="center"
       justifyContent="center"
     >
       {image ? (
         <AppImage source={{ uri: image }} style={{ width: 48, height: 48 }} resizeMode="cover" />
       ) : (
-        <MaterialIcons name="shopping-bag" size={20} color="#ff8b5f" />
+        <MaterialIcons name="shopping-bag" size={20} color={accent} />
       )}
     </YStack>
   );

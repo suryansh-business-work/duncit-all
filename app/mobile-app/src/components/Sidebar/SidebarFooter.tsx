@@ -1,44 +1,27 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
-import { semantic } from '@duncit/auth-tokens';
+import { Text, YStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { appVersion } from '@/utils/app-version';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
+import { SidebarRow } from './SidebarRow';
 
-/** Logout footer + app version — RN port of mWeb's <DrawerFooter/>. */
+/** Logout row (danger) + app version — RN port of mWeb's <DrawerFooter/>. */
 export function SidebarFooter({ onLogout }: Readonly<{ onLogout: () => void }>) {
   const { t } = useTranslation();
   const version = appVersion();
   return (
-    <YStack borderTopWidth={1} borderColor="$borderColor" padding={12}>
-      <XStack
-        testID="sidebar-logout"
-        role="button"
-        aria-label={t('mweb.common.logout')}
-        onPress={onLogout}
-        alignItems="center"
-        justifyContent="center"
-        gap={8}
-        borderRadius={999}
-        borderWidth={1}
-        borderColor="$danger"
-        paddingHorizontal={16}
-        paddingVertical={12}
-        pressStyle={PRESS_STYLE.control}
-      >
-        <MaterialIcons name="logout" size={18} color={semantic.error} />
-        <Text fontSize={14} fontWeight="600" color="$danger">
-          Logout
-        </Text>
-      </XStack>
-      <Text
-        testID="sidebar-app-version"
-        fontSize={11}
-        color="$muted"
-        textAlign="center"
-        paddingTop={8}
-      >
+    <YStack paddingHorizontal={16} paddingTop={4} paddingBottom={12} gap={8}>
+      <SurfaceCard padding={0} overflow="hidden">
+        <SidebarRow
+          testID="sidebar-logout"
+          icon="logout"
+          label={t('mweb.common.logout')}
+          tone="danger"
+          chevron={false}
+          onPress={onLogout}
+        />
+      </SurfaceCard>
+      <Text testID="sidebar-app-version" fontSize={12} color="$muted" textAlign="center">
         App version {version}
       </Text>
     </YStack>

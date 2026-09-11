@@ -95,7 +95,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
     <Stack spacing={1.5}>
       <Divider />
       <Typography variant="subtitle1" sx={{
-        fontWeight: 700
+        fontWeight: 600
       }}>
         Ratings &amp; reviews
       </Typography>

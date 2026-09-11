@@ -1,5 +1,5 @@
 import { Controller } from 'react-hook-form';
-import { Stack, TextField } from '@mui/material';
+import { Box, Stack, TextField } from '@mui/material';
 import { PodProductsField } from '@duncit/pod-product-picker';
 import { SpotsStepper, mwebSpotsLabels } from '@duncit/ui';
 import PlaceChargesField from '../fields/PlaceChargesField';
@@ -7,6 +7,7 @@ import PricePanel, { TicketPriceField, type EarningsPreview } from '../price-pan
 import PodTypeCards from '../PodTypeCards';
 import TermsAgreement from '../TermsAgreement';
 import { useTranslation } from '../../../../i18n/useTranslation';
+import { SURFACE_SX } from '../../../../theme';
 import type { SpotsBounds } from '@duncit/utils';
 import type { CreatePodForm, CreatePodProduct } from '../create-pod.types';
 
@@ -33,68 +34,76 @@ export default function PricingStep({ form, products, showProducts, preview, spo
 
   return (
     <Stack spacing={2}>
-      <PodTypeCards form={form} />
-      <TicketPriceField form={form} preview={preview} isFree={isFree} />
-      <Controller
-        control={control}
-        name="no_of_spots"
-        render={({ field, fieldState }) => (
-          <SpotsStepper
-            labels={spotsLabels}
-            value={Number(field.value) || 0}
-            onChange={field.onChange}
-            error={fieldState.error?.message}
-            min={spots.min}
-            max={spots.max}
-            slidable={spots.slidable}
-            boundsHint={boundsHint}
-            // Only fixed when the venue leaves no room to choose.
-            readOnly={isPhysical && !spots.slidable}
-          />
-        )}
-      />
-      <PricePanel preview={preview} />
-      <TextField
-        label={t('mweb.createPod.paymentTerms')}
-        fullWidth
-        multiline
-        minRows={3}
-        helperText={t('mweb.createPod.paymentTermsHint')}
-        {...register('payment_terms')}
-      />
-      {isPhysical && (
+      <Stack spacing={2} sx={{ ...SURFACE_SX, p: 2 }}>
+        <PodTypeCards form={form} />
+        <TicketPriceField form={form} preview={preview} isFree={isFree} />
         <Controller
           control={control}
-          name="place_charges"
-          render={({ field }) => (
-            <PlaceChargesField
-              value={field.value}
+          name="no_of_spots"
+          render={({ field, fieldState }) => (
+            <SpotsStepper
+              labels={spotsLabels}
+              value={Number(field.value) || 0}
               onChange={field.onChange}
-              helperText={t('mweb.createPod.placeChargesHint')}
+              error={fieldState.error?.message}
+              min={spots.min}
+              max={spots.max}
+              slidable={spots.slidable}
+              boundsHint={boundsHint}
+              // Only fixed when the venue leaves no room to choose.
+              readOnly={isPhysical && !spots.slidable}
             />
           )}
         />
+      </Stack>
+      <PricePanel preview={preview} />
+      <Box sx={{ ...SURFACE_SX, p: 2 }}>
+        <TextField
+          label={t('mweb.createPod.paymentTerms')}
+          fullWidth
+          multiline
+          minRows={3}
+          helperText={t('mweb.createPod.paymentTermsHint')}
+          {...register('payment_terms')}
+        />
+      </Box>
+      {isPhysical && (
+        <Box sx={{ ...SURFACE_SX, p: 2 }}>
+          <Controller
+            control={control}
+            name="place_charges"
+            render={({ field }) => (
+              <PlaceChargesField
+                value={field.value}
+                onChange={field.onChange}
+                helperText={t('mweb.createPod.placeChargesHint')}
+              />
+            )}
+          />
+        </Box>
       )}
       {showProducts && (
         // The "Attach products to this pod" switch is gone: attaching IS adding
         // a product, so `products_enabled` is derived from the row list on
         // submit rather than toggled here. `products` arrives already filtered
         // to the pod's club category, and the field says so when it is empty.
-        <Controller
-          control={control}
-          name="product_requests"
-          render={({ field, fieldState }) => (
-            <PodProductsField
-              value={field.value}
-              onChange={(next) => {
-                field.onChange(next);
-                setValue('products_enabled', next.length > 0);
-              }}
-              products={products}
-              error={fieldState.error?.message}
-            />
-          )}
-        />
+        <Box sx={{ ...SURFACE_SX, p: 2 }}>
+          <Controller
+            control={control}
+            name="product_requests"
+            render={({ field, fieldState }) => (
+              <PodProductsField
+                value={field.value}
+                onChange={(next) => {
+                  field.onChange(next);
+                  setValue('products_enabled', next.length > 0);
+                }}
+                products={products}
+                error={fieldState.error?.message}
+              />
+            )}
+          />
+        </Box>
       )}
       <TermsAgreement form={form} />
     </Stack>

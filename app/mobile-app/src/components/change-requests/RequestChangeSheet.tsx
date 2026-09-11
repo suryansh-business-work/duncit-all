@@ -5,6 +5,7 @@ import { changeRequestConfirmKey, type PodChangeRole } from '@duncit/utils';
 import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { Field } from '@/components/Field/Field';
+import { NoticeCard } from '@/components/attendance/NoticeCard';
 import { useTranslation } from '@/hooks/useTranslation';
 
 const REASON_MAX = 500;
@@ -48,6 +49,10 @@ export function RequestChangeSheet({
 
   const missing = reason.trim().length === 0;
   const invalid = touched && missing;
+  const penaltyText =
+    penalty > 0
+      ? t('changeRequest.penaltyNotice', { count: penalty, vars: { points: penalty } })
+      : t('changeRequest.penaltyFree');
 
   const close = () => {
     setReason('');
@@ -77,6 +82,7 @@ export function RequestChangeSheet({
             label={t('changeRequest.confirmCta')}
             onPress={submit}
             tone="danger"
+            size="lg"
             fullWidth
             loading={busy}
             disabled={busy}
@@ -86,6 +92,7 @@ export function RequestChangeSheet({
             label={t('changeRequest.cancelCta')}
             onPress={close}
             variant="ghost"
+            size="lg"
             fullWidth
             disabled={busy}
           />
@@ -93,21 +100,18 @@ export function RequestChangeSheet({
       }
     >
       <YStack gap={12}>
-        <Text fontSize={13} color="$color">
-          {t(changeRequestConfirmKey(role))}
-        </Text>
-        <Text testID="request-change-penalty" fontSize={12.5} fontWeight="700" color="$warning">
-          {penalty > 0
-            ? t('changeRequest.penaltyNotice', { count: penalty, vars: { points: penalty } })
-            : t('changeRequest.penaltyFree')}
-        </Text>
+        <NoticeCard tone="warning" title={t(changeRequestConfirmKey(role))} />
+        <NoticeCard testID="request-change-penalty" tone="info" title={penaltyText} />
         {attendeeCount > 0 ? (
-          <Text testID="request-change-attendees" fontSize={12.5} color="$muted">
-            {t('changeRequest.attendeeNotice', {
+          <NoticeCard
+            testID="request-change-attendees"
+            tone="warning"
+            icon="group"
+            title={t('changeRequest.attendeeNotice', {
               count: attendeeCount,
               vars: { count: attendeeCount },
             })}
-          </Text>
+          />
         ) : null}
         <Field
           testID="request-change-reason"

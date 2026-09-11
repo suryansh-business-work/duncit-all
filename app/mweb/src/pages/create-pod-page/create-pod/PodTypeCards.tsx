@@ -2,7 +2,6 @@ import { type ReactNode } from 'react';
 import { Box, Card, CardActionArea, Typography } from '@mui/material';
 import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import PaymentsIcon from '@mui/icons-material/Payments';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { isFreePodType, type CreatePodForm } from './create-pod.types';
 
@@ -15,18 +14,27 @@ interface CardProps {
   onClick: () => void;
 }
 
+/** A selection tile: green with white ink when picked, the soft fill when not
+ * (native twin: TypeCard in PodTypeCards). */
 function TypeCard({ label, caption, icon, selected, disabled, onClick }: Readonly<CardProps>) {
+  const ink = selected ? 'primary.contrastText' : 'text.primary';
   return (
-    <Card variant="outlined" sx={{ borderColor: selected ? 'primary.main' : 'divider', borderWidth: selected ? 2 : 1, position: 'relative', opacity: disabled ? 0.5 : 1 }}>
-      <CardActionArea onClick={onClick} disabled={disabled} aria-label={label} aria-pressed={selected} sx={{ p: 2, display: 'grid', placeItems: 'center', gap: 0.5, textAlign: 'center' }}>
-        {selected && <CheckCircleIcon color="primary" fontSize="small" sx={{ position: 'absolute', top: 8, right: 8 }} />}
-        <Box sx={{ color: selected ? 'primary.main' : 'text.secondary', display: 'grid', placeItems: 'center' }}>{icon}</Box>
-        <Typography variant="subtitle1" color={selected ? 'primary.main' : 'text.primary'} sx={{
-          fontWeight: 700
-        }}>{label}</Typography>
-        <Typography variant="caption" sx={{
-          color: "text.secondary"
-        }}>{caption}</Typography>
+    <Card
+      sx={{
+        borderRadius: '16px',
+        boxShadow: 'none',
+        border: 0,
+        bgcolor: selected ? 'primary.main' : 'action.hover',
+        color: ink,
+        opacity: disabled ? 0.5 : 1,
+      }}
+    >
+      <CardActionArea onClick={onClick} disabled={disabled} aria-label={label} aria-pressed={selected} sx={{ p: 2, display: 'grid', placeItems: 'center', gap: 0.5, textAlign: 'center', borderRadius: '16px' }}>
+        <Box sx={{ display: 'grid', placeItems: 'center' }}>{icon}</Box>
+        <Typography sx={{ fontSize: '1rem', fontWeight: 600, color: ink }}>{label}</Typography>
+        <Typography variant="caption" sx={{ color: selected ? 'primary.contrastText' : 'text.secondary' }}>
+          {caption}
+        </Typography>
       </CardActionArea>
     </Card>
   );
@@ -57,7 +65,7 @@ export default function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>
   };
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.25 }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
       <TypeCard label={t('mweb.createPod.podTypeFree')} caption={freeCaption} icon={<VolunteerActivismIcon />} selected={isFree} disabled={isPhysical} onClick={() => choose(true)} />
       <TypeCard label={t('mweb.createPod.podTypePaid')} caption={t('mweb.createPod.paidCaption')} icon={<PaymentsIcon />} selected={!isFree} onClick={() => choose(false)} />
     </Box>

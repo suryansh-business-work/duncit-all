@@ -12,7 +12,7 @@ interface Props {
 }
 
 /** Question/answer rows, added and removed one at a time — the Tamagui twin
- * of the club form's FAQ list (rule 27). */
+ * of the club form's FAQ list (rule 27). Each pair sits on a soft tile. */
 export function FaqListField({ value, onChange }: Readonly<Props>) {
   const { t } = useTranslation();
   const update = (id: string, patch: Partial<ClubFaqRow>) =>
@@ -27,10 +27,8 @@ export function FaqListField({ value, onChange }: Readonly<Props>) {
           testID={`club-edit-faq-${row.id}`}
           gap={8}
           padding={12}
-          borderRadius={12}
-          borderWidth={1}
-          borderColor="$borderColor"
-          backgroundColor="$surface"
+          borderRadius={16}
+          backgroundColor="$soft"
         >
           <LabeledInput
             testID={`club-edit-faq-${row.id}-question`}
@@ -57,13 +55,15 @@ export function FaqListField({ value, onChange }: Readonly<Props>) {
           </XStack>
         </YStack>
       ))}
-      <DuncitButton
-        testID="club-edit-faq-add"
-        label={t('mweb.clubEdit.addFaq')}
-        onPress={() => onChange([...value, { id: nextFaqId(), question: '', answer: '' }])}
-        variant="outline"
-        tone="neutral"
-      />
+      <XStack>
+        <DuncitButton
+          testID="club-edit-faq-add"
+          label={t('mweb.clubEdit.addFaq')}
+          onPress={() => onChange([...value, { id: nextFaqId(), question: '', answer: '' }])}
+          variant="outline"
+          tone="neutral"
+        />
+      </XStack>
     </YStack>
   );
 }

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Badge,
-  InputAdornment,
   Menu,
   MenuItem,
   Popover,
@@ -9,10 +8,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import TuneIcon from '@mui/icons-material/Tune';
-import SortIcon from '@mui/icons-material/Sort';
+import TuneIcon from '@mui/icons-material/TuneRounded';
+import SortIcon from '@mui/icons-material/SwapVertRounded';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import SearchPillField from '../pod-list/SearchPillField';
 import type { SavedCategory } from './queries';
 import {
   SAVED_SORTS,
@@ -23,6 +22,26 @@ import {
   type SavedFilters,
 } from './savedItemsFilter';
 import { useTranslation } from '../../i18n/useTranslation';
+
+/** The round green filter beside the search pill, and a round surface sort —
+ * both the pill's height. Min-height pins them against the coarse-pointer rule. */
+const FILTER_BTN_SX = {
+  width: 48,
+  height: 48,
+  minHeight: 48,
+  bgcolor: 'primary.main',
+  color: 'primary.contrastText',
+  '&:hover': { bgcolor: 'primary.dark' },
+} as const;
+const SORT_BTN_SX = {
+  width: 48,
+  height: 48,
+  minHeight: 48,
+  bgcolor: 'background.paper',
+  color: 'text.primary',
+  border: '1px solid var(--duncit-card-border)',
+  '&:hover': { bgcolor: 'background.paper' },
+} as const;
 
 interface LevelSelectProps {
   label: string;
@@ -81,29 +100,26 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
     <Stack direction="row" spacing={1} sx={{
       alignItems: "center"
     }}>
-      <TextField
-        size="small"
-        fullWidth
+      <SearchPillField
         placeholder={t('mweb.common.searchSavedPods')}
         value={search}
-        onChange={(event) => onSearch(event.target.value)}
-        slotProps={{
-          input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
-          },
-
-          htmlInput: { 'aria-label': 'Search saved pods' }
-        }} />
-      <Badge color="primary" badgeContent={filterCount} overlap="circular">
-        <DuncitIconButton aria-label={t('mweb.savedItems.filterByCategory')} onClick={(event) => setFilterAnchor(event.currentTarget)}>
+        onChange={onSearch}
+        ariaLabel="Search saved pods"
+      />
+      <Badge color="secondary" badgeContent={filterCount} overlap="circular">
+        <DuncitIconButton
+          aria-label={t('mweb.savedItems.filterByCategory')}
+          onClick={(event) => setFilterAnchor(event.currentTarget)}
+          sx={FILTER_BTN_SX}
+        >
           <TuneIcon />
         </DuncitIconButton>
       </Badge>
-      <DuncitIconButton aria-label={t('mweb.savedItems.sortSavedPods')} onClick={(event) => setSortAnchor(event.currentTarget)}>
+      <DuncitIconButton
+        aria-label={t('mweb.savedItems.sortSavedPods')}
+        onClick={(event) => setSortAnchor(event.currentTarget)}
+        sx={SORT_BTN_SX}
+      >
         <SortIcon />
       </DuncitIconButton>
 

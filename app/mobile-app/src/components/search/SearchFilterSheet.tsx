@@ -48,14 +48,14 @@ export function SearchFilterSheet({
       aria-label={t('mweb.common.applyFilters')}
       onPress={onClose}
       flex={1}
-      height={46}
+      height={52}
       alignItems="center"
       justifyContent="center"
-      borderRadius={12}
+      borderRadius={999}
       backgroundColor="$primary"
       pressStyle={PRESS_STYLE.control}
     >
-      <Text fontSize={14} fontWeight="700" color="$onPrimary">
+      <Text fontSize={15} fontWeight="600" color="$onPrimary">
         Apply
       </Text>
     </XStack>

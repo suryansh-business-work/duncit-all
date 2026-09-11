@@ -1,6 +1,10 @@
-import { Alert, Stack, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import HourglassTopIcon from '@mui/icons-material/HourglassTop';
+import LockClockIcon from '@mui/icons-material/LockClock';
 import { DuncitButton } from '@duncit/buttons';
-import { compactButtonSx } from './buttonSx';
+import { BarLabel, BarNotice } from './BarLabel';
+import { compactButtonSx, ctaButtonSx } from './buttonSx';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -8,7 +12,6 @@ interface Props {
   isExpired: boolean;
   canBackout: boolean;
   backingOut: boolean;
-  deductionPct: number;
   /** Seats this member has already released and is still waiting to have
    * filled. A partial backout leaves them JOINED, so nothing else in this
    * panel would reveal that seats are out on sale. */
@@ -21,18 +24,19 @@ interface Props {
 }
 
 /**
- * What a member sees on a pod they already hold a seat on.
+ * What a member sees on a pod they already hold a seat on: the booked state on
+ * the left, Backout on the right, and the seats a partial backout gave back.
  *
- * The note under the buttons used to be a two-way choice — either the backout
+ * The note under the state used to be a two-way choice — either the backout
  * tip or "you have used all your attempts" — so a pod that had simply already
- * happened told the member they had run out of attempts. Three states, because
- * there are three reasons the button can be missing.
+ * happened told the member they had run out of attempts. It now names the one
+ * reason the Backout button is missing, as the native bar does (rule 27); the
+ * deduction is stated by the Backout dialog before the member confirms.
  */
 export default function MemberPanel({
   isExpired,
   canBackout,
   backingOut,
-  deductionPct,
   releasedSeats,
   canTakeSeatsBack,
   restoringSpot,
@@ -40,34 +44,40 @@ export default function MemberPanel({
   onKeepSpot,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  let note: string | null = null;
+  if (!canBackout) {
+    note = isExpired ? t('mweb.podDetails.alreadyTakenPlace') : t('mweb.podDetails.backoutMaxed');
+  }
+  const overline = isExpired ? t('mweb.podDetails.youWent') : t('mweb.podDetails.youreGoing');
+  const badge = isExpired ? t('mweb.podDetails.podVisited') : t('mweb.podDetails.podBooked');
+
   return (
-    <Stack spacing={1}>
-      <Stack direction="row" spacing={1}>
-        {/* Same word Pod History uses for the same booking: "Joined" is a
-            promise about something still ahead. */}
-        <DuncitButton variant="contained" color="success" disabled fullWidth sx={compactButtonSx}>
-          {isExpired ? t('mweb.podDetails.visited') : t('mweb.podDetails.joined')}
-        </DuncitButton>
+    <Stack spacing={1} sx={{ pl: 1 }}>
+      <ReleasedSeatsRow
+        releasedSeats={releasedSeats}
+        canTakeSeatsBack={canTakeSeatsBack}
+        restoringSpot={restoringSpot}
+        onKeepSpot={onKeepSpot}
+      />
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', minHeight: 48 }}>
+        <BarLabel
+          icon={<CheckCircleIcon sx={{ color: 'success.main' }} />}
+          caption={overline}
+          value={badge}
+          note={note}
+        />
         {canBackout && (
           <DuncitButton
             variant="outlined"
             color="error"
             onClick={onBackout}
             disabled={backingOut}
-            fullWidth
-            sx={compactButtonSx}
+            sx={{ ...ctaButtonSx, fontSize: 14 }}
           >
             {t('mweb.podDetails.backout')}
           </DuncitButton>
         )}
       </Stack>
-      <ReleasedSeatsPanel
-        releasedSeats={releasedSeats}
-        canTakeSeatsBack={canTakeSeatsBack}
-        restoringSpot={restoringSpot}
-        onKeepSpot={onKeepSpot}
-      />
-      <MemberNote isExpired={isExpired} canBackout={canBackout} deductionPct={deductionPct} />
     </Stack>
   );
 }
@@ -79,7 +89,7 @@ export default function MemberPanel({
  * "Backout in process" panel — without this the released seats could only be
  * reclaimed by someone else buying them.
  */
-function ReleasedSeatsPanel({
+function ReleasedSeatsRow({
   releasedSeats,
   canTakeSeatsBack,
   restoringSpot,
@@ -93,48 +103,22 @@ function ReleasedSeatsPanel({
   const { t } = useTranslation();
   if (releasedSeats <= 0) return null;
   if (!canTakeSeatsBack) {
-    return <Alert severity="info">{t('mweb.podDetails.backoutLocked')}</Alert>;
+    return (
+      <BarNotice icon={<LockClockIcon fontSize="small" sx={{ color: 'warning.main' }} />}>
+        {t('mweb.podDetails.backoutLocked')}
+      </BarNotice>
+    );
   }
   const releasedKey =
     releasedSeats === 1 ? 'mweb.podDetails.releasedSeatsOne' : 'mweb.podDetails.releasedSeatsMany';
   return (
-    <Stack spacing={1}>
-      <Alert severity="warning">{t(releasedKey, { vars: { count: releasedSeats } })}</Alert>
-      <DuncitButton
-        variant="contained"
-        onClick={onKeepSpot}
-        disabled={restoringSpot}
-        sx={{ fontWeight: 700 }}
-      >
+    <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+      <BarNotice icon={<HourglassTopIcon fontSize="small" sx={{ color: 'warning.main' }} />}>
+        {t(releasedKey, { vars: { count: releasedSeats } })}
+      </BarNotice>
+      <DuncitButton variant="contained" onClick={onKeepSpot} disabled={restoringSpot} sx={compactButtonSx}>
         {t('mweb.podDetails.takeSeatsBack')}
       </DuncitButton>
     </Stack>
   );
-}
-
-function MemberNote({
-  isExpired,
-  canBackout,
-  deductionPct,
-}: Readonly<{ isExpired: boolean; canBackout: boolean; deductionPct: number }>) {
-  const { t } = useTranslation();
-  if (canBackout) {
-    return (
-      <Typography variant="caption" sx={{
-        color: "text.secondary"
-      }}>
-        {t('mweb.podDetails.backoutNote', { vars: { pct: deductionPct } })}
-      </Typography>
-    );
-  }
-  if (isExpired) {
-    return (
-      <Typography variant="caption" sx={{
-        color: "text.secondary"
-      }}>
-        {t('mweb.podDetails.alreadyTakenPlace')}
-      </Typography>
-    );
-  }
-  return <Alert severity="info">{t('mweb.podDetails.backoutMaxed')}</Alert>;
 }

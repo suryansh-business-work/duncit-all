@@ -16,13 +16,11 @@ import { useTranslation } from '@/hooks/useTranslation';
 export const MINUTES = [0, 15, 30, 45];
 export const pad2 = (n: number) => String(n).padStart(2, '0');
 
-/** The pill every calendar/time chip is drawn as, selected or not. */
+/** The pill every time chip is drawn as: green when picked, a soft fill when not. */
 export const chipStyle = (selected: boolean) =>
   ({
     borderRadius: 999,
-    borderWidth: 1,
-    borderColor: selected ? '$primary' : '$borderColor',
-    backgroundColor: selected ? '$primary' : 'transparent',
+    backgroundColor: selected ? '$primary' : '$soft',
   }) as const;
 
 interface TimeChipProps {
@@ -53,12 +51,13 @@ export function TimeChip({
       aria-label={ariaLabel}
       aria-disabled={blocked}
       onPress={blocked ? undefined : onPress}
+      minHeight={36}
+      justifyContent="center"
       paddingHorizontal={paddingHorizontal}
-      paddingVertical={7}
       opacity={blocked ? 0.35 : 1}
       {...chipStyle(selected)}
     >
-      <Text fontSize={12.5} fontWeight="600" color={blocked ? '$muted' : ink}>
+      <Text fontSize={13} fontWeight="600" color={blocked ? '$muted' : ink}>
         {children}
       </Text>
     </YStack>
@@ -122,7 +121,7 @@ export function TimeChipRows({
 
   return (
     <>
-      <Text fontSize={12} fontWeight="700" color="$muted">
+      <Text fontSize={12} fontWeight="600" color="$muted">
         {t('mweb.createPod.timeHeading')}
       </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>

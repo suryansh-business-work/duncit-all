@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { groupMembershipBenefits, membershipCellKind, membershipCellValue } from '@duncit/utils';
+import { SectionHeader } from '@/components/SectionHeader';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { MembershipBenefitShape, MembershipPlanShape } from './types';
@@ -61,28 +62,23 @@ export function MembershipComparison({
   const noLabel = t('mweb.membership.notIncluded');
 
   return (
-    <YStack gap={6} testID="membership-comparison">
-      <YStack paddingHorizontal={16} gap={2}>
-        <Text fontSize={15} fontWeight="700" color="$color">
-          {t('mweb.membership.compareTitle')}
-        </Text>
-        <Text fontSize={11} color="$muted">
-          {t('mweb.membership.compareHint')}
-        </Text>
+    <YStack gap={10} testID="membership-comparison">
+      <YStack paddingHorizontal={16}>
+        <SectionHeader title={t('mweb.membership.compareTitle')} />
       </YStack>
 
       <XStack
         marginHorizontal={16}
-        borderRadius={16}
+        borderRadius={24}
         borderWidth={1}
-        borderColor="$borderColor"
+        borderColor="$cardBorder"
         backgroundColor="$surface"
         overflow="hidden"
       >
         {/* Sticky label column. */}
         <YStack width={LABEL_WIDTH} borderRightWidth={1} borderRightColor="$borderColor">
-          <XStack height={ROW_HEIGHT} alignItems="center" paddingHorizontal={10}>
-            <Text fontSize={11} fontWeight="800" textTransform="uppercase" color="$muted">
+          <XStack height={ROW_HEIGHT} alignItems="center" paddingHorizontal={12}>
+            <Text fontSize={11} fontWeight="600" textTransform="uppercase" color="$muted">
               {t('mweb.membership.benefitColumn')}
             </Text>
           </XStack>
@@ -91,12 +87,12 @@ export function MembershipComparison({
               <XStack
                 height={GROUP_HEIGHT}
                 alignItems="center"
-                paddingHorizontal={10}
-                backgroundColor="$background"
+                paddingHorizontal={12}
+                backgroundColor="$soft"
               >
                 <Text
                   fontSize={10}
-                  fontWeight="800"
+                  fontWeight="600"
                   textTransform="uppercase"
                   letterSpacing={0.4}
                   color="$muted"
@@ -106,7 +102,7 @@ export function MembershipComparison({
                 </Text>
               </XStack>
               {group.rows.map((row) => (
-                <XStack key={row.id} height={ROW_HEIGHT} alignItems="center" paddingHorizontal={10}>
+                <XStack key={row.id} height={ROW_HEIGHT} alignItems="center" paddingHorizontal={12}>
                   <Text fontSize={12} fontWeight="600" color="$color" numberOfLines={2}>
                     {row.label}
                   </Text>
@@ -124,7 +120,7 @@ export function MembershipComparison({
                 <XStack key={plan.id} width={CELL_WIDTH} justifyContent="center">
                   <Text
                     fontSize={11}
-                    fontWeight="800"
+                    fontWeight="600"
                     textTransform="uppercase"
                     color={plan.accent_color || '$primary'}
                     numberOfLines={1}
@@ -136,7 +132,7 @@ export function MembershipComparison({
             </XStack>
             {groups.map((group) => (
               <YStack key={group.group}>
-                <XStack height={GROUP_HEIGHT} backgroundColor="$background" />
+                <XStack height={GROUP_HEIGHT} backgroundColor="$soft" />
                 {group.rows.map((row) => (
                   <XStack key={row.id} height={ROW_HEIGHT} alignItems="center">
                     {plans.map((plan) => (
@@ -163,7 +159,7 @@ export function MembershipComparison({
         </ScrollView>
       </XStack>
 
-      <Text paddingHorizontal={16} fontSize={11} color="$muted">
+      <Text paddingHorizontal={16} fontSize={12} color="$muted">
         {t('mweb.membership.footnote')}
       </Text>
     </YStack>

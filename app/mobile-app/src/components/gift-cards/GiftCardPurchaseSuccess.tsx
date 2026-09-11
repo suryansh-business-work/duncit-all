@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
-import { semantic } from '@duncit/auth-tokens';
 
+import { DuncitButton } from '@/components/DuncitButton';
+import { PrimaryButton } from '@/components/PrimaryButton';
+import { SurfaceCard } from '@/components/SurfaceCard';
+import { TwoToneHeading } from '@/components/TwoToneHeading';
 import type { GiftCardPayment } from '@/hooks/useGiftCardCheckout';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -21,7 +24,8 @@ interface Props {
 }
 
 /** Purchase success — the card is created and emailed by the server, so this
- * panel only says where it went and hands over the receipt (rule 27 twin). */
+ * panel only says where it went and hands over the receipt (rule 27 twin). The
+ * look matches the checkout success: a green check on its tonal disc. */
 export function GiftCardPurchaseSuccess({
   payment,
   recipientEmail,
@@ -30,7 +34,7 @@ export function GiftCardPurchaseSuccess({
   onMyCards,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { onPrimary, primary } = useThemeColors();
+  const { color: ink, primary } = useThemeColors();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const invoiceLabel = t('mweb.checkout.downloadInvoice');
@@ -51,118 +55,108 @@ export function GiftCardPurchaseSuccess({
   };
 
   return (
-    <YStack testID="gift-card-purchase-success" alignItems="center" gap={14} padding={20}>
-      <MaterialIcons name="check-circle" size={64} color={semantic.success} />
-      <Text fontSize={20} fontWeight="700" color="$color" textAlign="center">
-        {t('mweb.giftCards.successTitle')}
-      </Text>
-      <Text testID="gift-card-success-body" fontSize={13.5} color="$muted" textAlign="center">
-        {body}
-      </Text>
+    <YStack testID="gift-card-purchase-success" alignItems="center" gap={16} paddingVertical={16}>
       <YStack
-        alignSelf="stretch"
-        borderRadius={16}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$surface"
-        padding={16}
-        gap={6}
+        width={80}
+        height={80}
+        borderRadius={40}
+        alignItems="center"
+        justifyContent="center"
+        backgroundColor="$primarySoft"
       >
+        <MaterialIcons name="check" size={44} color={primary} />
+      </YStack>
+      <YStack gap={8} alignItems="center">
+        <TwoToneHeading lead={t('mweb.giftCards.successTitle')} align="center" />
+        <Text testID="gift-card-success-body" fontSize={14} color="$muted" textAlign="center">
+          {body}
+        </Text>
+      </YStack>
+      <SurfaceCard alignSelf="stretch" gap={10}>
         <Row label={t('mweb.checkout.invoiceLabel')} value={payment.invoice_no ?? '—'} />
         <Row
           label={t('mweb.checkout.amountPaid')}
           value={formatMoney(payment.currency_symbol, payment.total)}
+          bold
         />
         <Row
           label={t('mweb.checkout.paidOn')}
           value={formatDateTime(payment.paid_at ?? payment.created_at)}
         />
-      </YStack>
+      </SurfaceCard>
       {error ? (
         <Text testID="gift-card-invoice-error" fontSize={13} color="$danger">
           {error}
         </Text>
       ) : null}
-      <XStack
-        testID="gift-card-download-invoice"
-        role="button"
-        aria-label={invoiceLabel}
-        aria-disabled={busy}
-        onPress={
-          busy
-            ? undefined
-            : () => {
-                download().catch(() => undefined);
-              }
-        }
-        alignItems="center"
-        justifyContent="center"
-        gap={8}
-        alignSelf="stretch"
-        height={46}
-        borderRadius={999}
-        borderWidth={1}
-        borderColor="$primary"
-        opacity={busy ? 0.6 : 1}
-        pressStyle={PRESS_STYLE.control}
-      >
-        {busy ? (
-          <Spinner size="small" color="$primary" />
-        ) : (
-          <MaterialIcons name="download" size={18} color={primary} />
-        )}
-        <Text fontSize={14} fontWeight="600" color="$primary">
-          {busy ? t('mweb.checkout.preparing') : invoiceLabel}
-        </Text>
-      </XStack>
-      <XStack gap={10} alignSelf="stretch">
-        <XStack
-          testID="gift-card-success-home"
-          role="button"
-          aria-label={t('mweb.checkout.home')}
-          onPress={onHome}
-          flex={1}
-          height={46}
-          alignItems="center"
-          justifyContent="center"
-          borderRadius={999}
-          backgroundColor="$primary"
-          pressStyle={PRESS_STYLE.control}
-        >
-          <Text fontSize={14} fontWeight="700" color={onPrimary}>
-            {t('mweb.checkout.home')}
-          </Text>
-        </XStack>
-        <XStack
+      <YStack alignSelf="stretch" gap={10}>
+        <PrimaryButton
           testID="gift-card-success-my-cards"
-          role="button"
-          aria-label={t('mweb.giftCards.viewMyCards')}
+          label={t('mweb.giftCards.viewMyCards')}
           onPress={onMyCards}
-          flex={1}
-          height={46}
+        />
+        <XStack
+          testID="gift-card-download-invoice"
+          role="button"
+          aria-label={invoiceLabel}
+          aria-disabled={busy}
+          onPress={
+            busy
+              ? undefined
+              : () => {
+                  download().catch(() => undefined);
+                }
+          }
           alignItems="center"
           justifyContent="center"
+          gap={8}
+          height={52}
           borderRadius={999}
           borderWidth={1}
           borderColor="$borderColor"
+          opacity={busy ? 0.6 : 1}
           pressStyle={PRESS_STYLE.control}
         >
-          <Text fontSize={14} fontWeight="700" color="$color">
-            {t('mweb.giftCards.viewMyCards')}
+          {busy ? (
+            <Spinner size="small" color="$color" />
+          ) : (
+            <MaterialIcons name="download" size={18} color={ink} />
+          )}
+          <Text fontSize={15} fontWeight="600" color="$color">
+            {busy ? t('mweb.checkout.preparing') : invoiceLabel}
           </Text>
         </XStack>
-      </XStack>
+        <DuncitButton
+          testID="gift-card-success-home"
+          label={t('mweb.checkout.home')}
+          variant="outline"
+          tone="neutral"
+          size="lg"
+          fullWidth
+          onPress={onHome}
+        />
+      </YStack>
     </YStack>
   );
 }
 
-function Row({ label, value }: Readonly<{ label: string; value: string }>) {
+function Row({
+  label,
+  value,
+  bold = false,
+}: Readonly<{ label: string; value: string; bold?: boolean }>) {
   return (
-    <XStack justifyContent="space-between">
-      <Text fontSize={13} color="$muted">
+    <XStack justifyContent="space-between" gap={12}>
+      <Text fontSize={14} color="$muted">
         {label}
       </Text>
-      <Text fontSize={13} fontWeight="600" color="$color">
+      <Text
+        flexShrink={1}
+        fontSize={14}
+        fontWeight={bold ? '700' : '600'}
+        color="$color"
+        textAlign="right"
+      >
         {value}
       </Text>
     </XStack>

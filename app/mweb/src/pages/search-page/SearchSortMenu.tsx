@@ -23,18 +23,20 @@ interface Props {
 export default function SearchSortMenu({ open, value, onClose, onSelect }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" slotProps={{
-      paper: { sx: { borderRadius: '16px' } }
-    }}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <Stack
         direction="row"
         sx={{
           alignItems: "center",
           justifyContent: "space-between",
-          pr: 1
+          pr: 1.5
         }}>
-        <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.search.sortResults')}</DialogTitle>
-        <DuncitIconButton aria-label={t('mweb.search.closeSort')} onClick={onClose}>
+        <DialogTitle sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>{t('mweb.search.sortResults')}</DialogTitle>
+        <DuncitIconButton
+          aria-label={t('mweb.search.closeSort')}
+          onClick={onClose}
+          sx={{ width: 40, height: 40, minHeight: 40, bgcolor: 'action.hover' }}
+        >
           <CloseIcon />
         </DuncitIconButton>
       </Stack>

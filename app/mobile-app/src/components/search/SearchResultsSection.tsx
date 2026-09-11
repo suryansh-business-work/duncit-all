@@ -1,6 +1,6 @@
-import { Fragment } from 'react';
-import { Text, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
+import { SectionHeader } from '@/components/SectionHeader';
 import { SearchClubCard } from './SearchClubCard';
 import type { SearchClubResult } from '@/hooks/useSearch';
 
@@ -8,7 +8,8 @@ type SearchPod = SearchClubResult['upcoming_pods'][number];
 
 interface Props {
   heading: string;
-  subheading: string;
+  /** Kept for callers; sections carry their title alone. */
+  subheading?: string;
   results: SearchClubResult[];
   categoryNameOf: (club: SearchClubResult['club']) => string | null;
   onOpenClub: (clubSlug: string) => void;
@@ -16,11 +17,10 @@ interface Props {
   testID: string;
 }
 
-/** One titled result group ("Happening Soon" / "More Clubs") — club cards split
- * by an elegant dotted divider so clubs stay visually distinct. */
+/** One titled result group ("Happening Soon" / "More Clubs") — each club its
+ * own surface card, so clubs stay distinct without dividers. */
 export function SearchResultsSection({
   heading,
-  subheading,
   results,
   categoryNameOf,
   onOpenClub,
@@ -29,32 +29,16 @@ export function SearchResultsSection({
 }: Readonly<Props>) {
   if (results.length === 0) return null;
   return (
-    <YStack gap={14} testID={testID}>
-      <YStack gap={2}>
-        <Text fontSize={17} fontWeight="700" color="$color">
-          {heading}
-        </Text>
-        <Text fontSize={13} color="$muted">
-          {subheading}
-        </Text>
-      </YStack>
-      {results.map((result, index) => (
-        <Fragment key={result.club.id}>
-          <SearchClubCard
-            result={result}
-            categoryName={categoryNameOf(result.club)}
-            onOpenClub={onOpenClub}
-            onOpenPod={onOpenPod}
-          />
-          {index < results.length - 1 ? (
-            <YStack
-              borderBottomWidth={1.5}
-              borderColor="$borderColor"
-              borderStyle="dotted"
-              opacity={0.7}
-            />
-          ) : null}
-        </Fragment>
+    <YStack gap={12} testID={testID}>
+      <SectionHeader title={heading} />
+      {results.map((result) => (
+        <SearchClubCard
+          key={result.club.id}
+          result={result}
+          categoryName={categoryNameOf(result.club)}
+          onOpenClub={onOpenClub}
+          onOpenPod={onOpenPod}
+        />
       ))}
     </YStack>
   );

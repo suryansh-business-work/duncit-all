@@ -1,4 +1,4 @@
-import { Text, XStack, YStack } from 'tamagui';
+import { XStack } from 'tamagui';
 import {
   formatMoney,
   venueOwnerStatTiles,
@@ -7,8 +7,10 @@ import {
   type VenueOwnerStatTile,
 } from '@duncit/utils';
 
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
-import { StatTile } from './StatTile';
+import { FigureTile } from './StudioPodFigures';
 
 /** Literal keys, one per tile, so the shipped-key gate can see each (rule 38). */
 const TILE_LABEL_KEYS: Record<VenueOwnerStatKey, string> = {
@@ -23,35 +25,28 @@ const TILE_LABEL_KEYS: Record<VenueOwnerStatKey, string> = {
 const tileValue = (tile: VenueOwnerStatTile): string =>
   tile.kind === 'money' ? formatMoney(tile.value) : String(tile.value);
 
-/** Pairs, so the strip reads as three rows of two on a phone. */
-function pairs<T>(items: readonly T[]): T[][] {
-  const rows: T[][] = [];
-  for (let i = 0; i < items.length; i += 2) rows.push(items.slice(i, i + 2));
-  return rows;
-}
-
 /**
  * "Slot earnings" — what the venue's calendar could earn, what it will, and
- * the slots behind those figures. Which numbers, in what order and how each
- * is written is `venueOwnerStatTiles` in @duncit/utils, shared with mWeb and
- * the Partners console (rules 27 + 40).
+ * the slots behind those figures, as soft tiles in one card. Which numbers, in
+ * what order and how each is written is `venueOwnerStatTiles` in @duncit/utils,
+ * shared with mWeb and the Partners console (rules 27 + 40).
  */
 export function VenueSlotEarningsTiles({ stats }: Readonly<{ stats: VenueOwnerStats }>) {
   const { t } = useTranslation();
-  const rows = pairs(venueOwnerStatTiles(stats));
 
   return (
-    <YStack gap={10} testID="venue-slot-earnings">
-      <Text fontSize={15} fontWeight="700" color="$color">
-        {t('mweb.venueManagePage.slotEarnings')}
-      </Text>
-      {rows.map((row) => (
-        <XStack key={row.map((tile) => tile.key).join('+')} gap={10}>
-          {row.map((tile) => (
-            <StatTile key={tile.key} label={t(TILE_LABEL_KEYS[tile.key])} value={tileValue(tile)} />
-          ))}
-        </XStack>
-      ))}
-    </YStack>
+    <SurfaceCard gap={12} testID="venue-slot-earnings">
+      <SectionHeader title={t('mweb.venueManagePage.slotEarnings')} />
+      <XStack flexWrap="wrap" gap={8}>
+        {venueOwnerStatTiles(stats).map((tile) => (
+          <FigureTile
+            key={tile.key}
+            testID={`venue-slot-earnings-${tile.key}`}
+            label={t(TILE_LABEL_KEYS[tile.key])}
+            value={tileValue(tile)}
+          />
+        ))}
+      </XStack>
+    </SurfaceCard>
   );
 }

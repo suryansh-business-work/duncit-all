@@ -1,9 +1,9 @@
 import { useQuery } from '@apollo/client/react';
 import { Navigate, useLocation, useNavigate } from 'react-router';
-import { Alert, Box, Divider, Paper, Skeleton, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { Alert, Box, Card, Divider, Skeleton, Stack, Typography } from '@mui/material';
+import { DuncitButton } from '@duncit/buttons';
 import { formatMoney } from '@duncit/utils';
+import PageHeader from '../../components/PageHeader';
 import GatewayChip from '../checkout-page/GatewayChip';
 import ProcessingBackdrop from '../checkout-page/ProcessingBackdrop';
 import { PUBLIC_FINANCE } from '../checkout-page/queries';
@@ -15,25 +15,15 @@ import type { GiftCardSelection } from '../gift-cards-page/queries';
 import GiftCardSuccessCard from './GiftCardSuccessCard';
 import { useGiftCardPayment } from './useGiftCardPayment';
 
+/** A summary row: label muted, value ink; the total row is 700 and ink. */
 function SummaryRow({ label, value, bold = false }: Readonly<{ label: string; value: string; bold?: boolean }>) {
-  const variant = bold ? 'subtitle2' : 'body2';
+  const size = bold ? '1rem' : '0.875rem';
   return (
-    <Stack direction="row" spacing={1} sx={{
-      justifyContent: "space-between"
-    }}>
-      <Typography variant={variant} sx={{
-        fontWeight: bold ? 700 : 500
-      }}>
+    <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+      <Typography sx={{ fontSize: size, fontWeight: bold ? 700 : 500, color: bold ? 'text.primary' : 'text.secondary' }}>
         {label}
       </Typography>
-      <Typography
-        variant={variant}
-        noWrap
-        sx={{
-          fontWeight: bold ? 700 : 500,
-          textAlign: 'right',
-          minWidth: 0
-        }}>
+      <Typography noWrap sx={{ fontSize: size, fontWeight: bold ? 700 : 600, textAlign: 'right', minWidth: 0 }}>
         {value}
       </Typography>
     </Stack>
@@ -80,24 +70,13 @@ export default function GiftCardCheckoutPage() {
   const contactPhone = [me?.phone_extension, me?.phone_number].filter(Boolean).join(' ').trim();
 
   return (
-    <Box sx={{ maxWidth: 560, mx: 'auto', p: 2 }}>
+    <Box sx={{ maxWidth: 560, mx: 'auto', py: 0.5 }}>
       <Stack spacing={2}>
-        <Stack direction="row" spacing={1} sx={{
-          alignItems: "center"
-        }}>
-          <DuncitIconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={{ bgcolor: 'action.hover' }}>
-            <ArrowBackIcon />
-          </DuncitIconButton>
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 700,
-              flex: 1
-            }}>
-            {t('mweb.giftCards.checkoutTitle')}
-          </Typography>
-          <GatewayChip finance={payment.finance} />
-        </Stack>
+        <PageHeader
+          title={t('mweb.giftCards.checkoutTitle')}
+          onBack={() => navigate(-1)}
+          right={<GatewayChip finance={payment.finance} />}
+        />
         <GiftCardVisual
           scopeType={selection.scope_type}
           scopeCategoryId={selection.scope_category_id}
@@ -108,22 +87,20 @@ export default function GiftCardCheckoutPage() {
           amount={selection.amount}
           currencySymbol={currencySymbol}
         />
-        <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
-          <Stack spacing={1}>
+        <Card sx={{ p: 2 }}>
+          <Stack spacing={1.25}>
             <SummaryRow label={t('mweb.giftCards.checkoutTheme')} value={themeValue} />
             <SummaryRow label={t('mweb.giftCards.checkoutAmount')} value={amountLabel} />
             <SummaryRow label={t('mweb.giftCards.checkoutRecipient')} value={recipientValue} />
             <Divider />
             <SummaryRow bold label={t('mweb.giftCards.checkoutTotal')} value={amountLabel} />
           </Stack>
-          <Alert severity="info" sx={{ mt: 1.5, borderRadius: '16px' }}>
+          <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 1.5 }}>
             {t('mweb.giftCards.checkoutNote')}
-          </Alert>
-        </Paper>
-        <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
-          <Typography variant="subtitle2" gutterBottom sx={{
-            fontWeight: 700
-          }}>
+          </Typography>
+        </Card>
+        <Card sx={{ p: 2 }}>
+          <Typography component="h2" sx={{ fontSize: '1rem', fontWeight: 600, mb: 0.75 }}>
             {t('mweb.checkout.contactDetails')}
           </Typography>
           {payment.meLoading && !me ? (
@@ -150,7 +127,7 @@ export default function GiftCardCheckoutPage() {
               </Typography>
             </>
           )}
-        </Paper>
+        </Card>
         {payment.error && (
           <Alert severity="error" onClose={() => payment.setError(null)}>
             {payment.error}
@@ -160,6 +137,7 @@ export default function GiftCardCheckoutPage() {
         <DuncitButton
           variant="contained"
           size="large"
+          fullWidth
           disabled={
             payment.submitting ||
             payment.financeLoading ||
@@ -167,7 +145,6 @@ export default function GiftCardCheckoutPage() {
             eligibility.missing.length > 0
           }
           onClick={() => payment.pay(selection)}
-          sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {t('mweb.giftCards.payCta', { vars: { amount: amountLabel } })}
         </DuncitButton>

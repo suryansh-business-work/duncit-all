@@ -5,8 +5,8 @@ import { Spinner, Text, YStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 import { StackScreen } from '@/components/StackScreen';
+import { TwoToneHeading } from '@/components/TwoToneHeading';
 import { LoadErrorNotice } from '@/components/club-admin/LoadErrorNotice';
-import { PageHeading } from '@/components/club-admin/PageHeading';
 import { ClubEditForm } from '@/components/club-admin/club-edit/ClubEditForm';
 import {
   buildClubEditInput,
@@ -52,20 +52,16 @@ export function ClubEditScreen() {
   return (
     <StackScreen title={t('mweb.meta.clubEdit.title')} testID="club-edit-screen">
       <RefreshScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <YStack gap={14} padding={16} paddingBottom={48}>
-          <PageHeading
-            eyebrow={t('clubAdmin.editClub.eyebrow')}
-            title={t('clubAdmin.editClub.title')}
-            subtitle={club?.club_name}
-          />
+        <YStack gap={16} padding={16} paddingBottom={48}>
+          {club ? <TwoToneHeading lead={club.club_name} fontSize={20} /> : null}
           <Text
             testID="club-edit-back-to-pods"
             role="button"
             aria-label={t('clubAdmin.editClub.backToPods')}
             onPress={() => navigation.navigate('ClubPods', { clubId })}
             pressStyle={PRESS_STYLE.inline}
-            fontSize={13}
-            fontWeight="700"
+            fontSize={14}
+            fontWeight="600"
             color="$primary"
           >
             {t('clubAdmin.editClub.backToPods')}
@@ -73,12 +69,12 @@ export function ClubEditScreen() {
           {isLoading ? <Spinner testID="club-edit-loading" color="$primary" /> : null}
           {hasError ? <LoadErrorNotice testID="club-edit-error" onRetry={refetch} /> : null}
           {notFound ? (
-            <Text testID="club-edit-not-found" fontSize={13} color="$muted">
+            <Text testID="club-edit-not-found" fontSize={14} color="$muted">
               {t('clubAdmin.editClub.notFound')}
             </Text>
           ) : null}
           {saved ? (
-            <Text testID="club-edit-saved" fontSize={12.5} color="$success">
+            <Text testID="club-edit-saved" fontSize={13} color="$success">
               {t('clubAdmin.editClub.saved')}
             </Text>
           ) : null}

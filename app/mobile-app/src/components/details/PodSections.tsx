@@ -32,16 +32,14 @@ export function ChipList({
         <XStack
           key={item}
           alignItems="center"
-          gap={5}
+          gap={6}
+          height={32}
           borderRadius={999}
-          paddingHorizontal={11}
-          paddingVertical={6}
-          borderWidth={1}
-          borderColor="$borderColor"
-          backgroundColor="$background"
+          paddingHorizontal={12}
+          backgroundColor="$soft"
         >
-          <MaterialIcons name="check-circle" size={13} color={tint} />
-          <Text fontSize={12.5} fontWeight="700" color="$color">
+          <MaterialIcons name="check-circle" size={16} color={tint} />
+          <Text fontSize={13} fontWeight="600" color="$color">
             {item}
           </Text>
         </XStack>
@@ -55,7 +53,7 @@ export function AboutSection({ pod }: Readonly<{ pod: PodDetail }>) {
   const { t } = useTranslation();
   const text = [pod.pod_description, pod.pod_info].filter(Boolean).join('\n\n');
   return (
-    <Text fontSize={13.5} color="$color" lineHeight={20}>
+    <Text fontSize={14} color="$muted" lineHeight={21}>
       {text || t('mweb.podDetails.aboutEmpty')}
     </Text>
   );
@@ -85,20 +83,20 @@ function HostRow({
         height={40}
         borderRadius={20}
         overflow="hidden"
-        backgroundColor="$primary"
+        backgroundColor="$soft"
         alignItems="center"
         justifyContent="center"
       >
         {host.profile_photo ? (
           <AppImage source={{ uri: host.profile_photo }} style={{ width: 40, height: 40 }} />
         ) : (
-          <Text fontSize={15} fontWeight="600" color="$onPrimary">
+          <Text fontSize={15} fontWeight="600" color="$color">
             {(host.full_name?.[0] ?? 'H').toUpperCase()}
           </Text>
         )}
       </YStack>
       <YStack flex={1}>
-        <Text fontSize={14} fontWeight="700" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
           {name}
         </Text>
         <Text fontSize={11.5} color="$muted">

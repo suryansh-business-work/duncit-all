@@ -25,6 +25,15 @@ import {
 import type { PodHistoryCategory } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
 
+/** A 40px round control; the filter widens to a pill while it shows a count. */
+const roundSx = { minWidth: 40, width: 'auto', height: 40, minHeight: 40, px: 0, borderRadius: 999 };
+const surfaceSx = {
+  bgcolor: 'background.paper',
+  color: 'text.primary',
+  border: '1px solid var(--duncit-card-border)',
+  '&:hover': { bgcolor: 'background.paper' },
+};
+
 interface Props {
   filters: PodHistoryFilters;
   categories: PodHistoryCategory[];
@@ -43,6 +52,7 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
   const filterLabel = count
     ? t('mweb.podHistory.filterCount', { vars: { count } })
     : t('mweb.podHistory.filter');
+  const filterSx = count ? { ...roundSx, px: 1.5, gap: 0.5 } : { ...roundSx, ...surfaceSx };
   const superLabel = t('mweb.podHistory.superCategory');
   const categoryLabel = t('mweb.podHistory.category');
 
@@ -51,25 +61,25 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
 
   return (
     <Stack direction="row" spacing={1} sx={{ flex: '0 0 auto' }}>
+      {/* Round icon buttons, as on native: the filter turns green and shows how
+          many are on; both keep their words as the accessible name. */}
       <DuncitButton
         size="small"
-        variant={count ? 'contained' : 'outlined'}
-        color={count ? 'primary' : 'inherit'}
-        startIcon={<FilterListIcon />}
+        variant={count ? 'contained' : 'text'}
+        aria-label={filterLabel}
         onClick={(e) => setFilterAnchor(e.currentTarget)}
-        sx={{ fontWeight: 600, borderRadius: 999 }}
+        sx={filterSx}
       >
-        {filterLabel}
+        <FilterListIcon fontSize="small" />
+        {count > 0 && count}
       </DuncitButton>
       <DuncitButton
         size="small"
-        variant="outlined"
-        color="inherit"
-        startIcon={<SortIcon />}
+        aria-label={t('mweb.podHistory.sort')}
         onClick={(e) => setSortAnchor(e.currentTarget)}
-        sx={{ fontWeight: 600, borderRadius: 999 }}
+        sx={{ ...roundSx, ...surfaceSx }}
       >
-        {t('mweb.podHistory.sort')}
+        <SortIcon fontSize="small" />
       </DuncitButton>
 
       <Popover

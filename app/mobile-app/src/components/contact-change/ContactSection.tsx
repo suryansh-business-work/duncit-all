@@ -30,7 +30,7 @@ export function ContactSection({ snapshot, onChanged }: Readonly<Props>) {
 
   return (
     <YStack gap={6}>
-      <Text fontSize={12} fontWeight="700" color="$muted" letterSpacing={0.6}>
+      <Text fontSize={15} fontWeight="600" color="$color" paddingTop={4}>
         {t('mweb.account.contactDetails')}
       </Text>
       <ContactRows labels={labels} snapshot={snapshot} onChange={setChannel} />

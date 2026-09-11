@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { grievanceEscalationCopy } from '@duncit/i18n';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { GrievanceStepRow } from './GrievanceStepRow';
@@ -22,16 +23,8 @@ export function GrievanceEscalationNotice() {
   const lastIndex = copy.steps.length - 1;
 
   return (
-    <YStack
-      testID="grievance-escalation"
-      gap={12}
-      padding={14}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
-      <Text fontSize={14} fontWeight="700" color="$color">
+    <SurfaceCard testID="grievance-escalation" gap={12}>
+      <Text fontSize={16} fontWeight="600" color="$color">
         {copy.title}
       </Text>
       <YStack>
@@ -48,17 +41,15 @@ export function GrievanceEscalationNotice() {
       <XStack
         testID="grievance-escalation-warning"
         gap={8}
-        padding={10}
-        borderRadius={12}
-        borderWidth={1}
-        borderColor={warning}
-        backgroundColor={`${warning}22`} // ~13% tint — mirrors mWeb's filled Alert
+        padding={12}
+        borderRadius={14}
+        backgroundColor="$soft"
       >
         <MaterialIcons name="warning-amber" size={18} color={warning} />
-        <Text flex={1} fontSize={12} fontWeight="700" color={warning}>
+        <Text flex={1} fontSize={12} fontWeight="600" color="$color">
           {copy.warning}
         </Text>
       </XStack>
-    </YStack>
+    </SurfaceCard>
   );
 }

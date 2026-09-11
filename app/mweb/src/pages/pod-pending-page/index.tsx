@@ -59,9 +59,9 @@ export default function PodPendingPage() {
   return (
     <Stack
       ref={anchorRef}
-      spacing={1.75}
+      spacing={2.5}
       data-testid="pod-pending-page"
-      sx={{ p: { xs: 1.5, sm: 2 }, maxWidth: 720, mx: 'auto', minHeight: '100%' }}
+      sx={{ p: 2, maxWidth: 720, mx: 'auto', minHeight: '100%' }}
     >
       <PodPendingHeader refreshing={refreshing} onRefresh={refresh} />
       <PullToRefreshIndicator

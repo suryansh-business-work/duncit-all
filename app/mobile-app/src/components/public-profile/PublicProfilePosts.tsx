@@ -52,11 +52,21 @@ export function PublicProfilePosts({
         paddingVertical={32}
         paddingHorizontal={24}
       >
-        <MaterialIcons name="lock-outline" size={28} color={muted} />
-        <Text fontSize={15} fontWeight="700" color="$color">
+        <YStack
+          width={56}
+          height={56}
+          borderRadius={28}
+          alignItems="center"
+          justifyContent="center"
+          backgroundColor="$soft"
+          marginBottom={4}
+        >
+          <MaterialIcons name="lock-outline" size={26} color={muted} />
+        </YStack>
+        <Text fontSize={16} fontWeight="600" color="$color">
           This account is private
         </Text>
-        <Text fontSize={13} color="$muted" textAlign="center">
+        <Text fontSize={14} color="$muted" textAlign="center">
           Follow this account to see their posts and status.
         </Text>
       </YStack>
@@ -83,10 +93,11 @@ export function PublicProfilePosts({
         (posts.length === 0 ? (
           <Text
             testID="public-profile-no-posts"
-            fontSize={13}
+            fontSize={14}
+            fontWeight="500"
             color="$muted"
             textAlign="center"
-            paddingVertical={20}
+            paddingVertical={40}
           >
             No posts yet.
           </Text>
@@ -103,7 +114,7 @@ export function PublicProfilePosts({
               >
                 <AppImage
                   source={{ uri: post.image_url }}
-                  style={{ width: cell, height: cell, borderRadius: 6 }}
+                  style={{ width: cell, height: cell, borderRadius: 12 }}
                   resizeMode="cover"
                 />
               </XStack>

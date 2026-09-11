@@ -87,17 +87,17 @@ export function ImageViewerModal({ images, index, onClose, action, caption }: Re
                   aria-label={action.label}
                   aria-disabled={action.busy}
                   onPress={action.busy ? undefined : action.onPress}
-                  height={48}
+                  height={52}
                   alignItems="center"
                   justifyContent="center"
                   gap={8}
-                  borderRadius={12}
+                  borderRadius={999}
                   backgroundColor="$primary"
                   opacity={action.busy ? 0.7 : 1}
                   pressStyle={PRESS_STYLE.control}
                 >
                   {action.busy ? <Spinner color="$onPrimary" /> : null}
-                  <Text fontSize={14} fontWeight="700" color="$onPrimary">
+                  <Text fontSize={15} fontWeight="600" color="$onPrimary">
                     {action.label}
                   </Text>
                 </XStack>

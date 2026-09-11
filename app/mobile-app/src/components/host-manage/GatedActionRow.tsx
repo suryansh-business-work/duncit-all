@@ -34,7 +34,7 @@ export function GatedActionRow({
   onPress,
 }: Readonly<GatedActionRowProps>) {
   return (
-    <YStack gap={4}>
+    <YStack>
       <ActionRow
         testID={testID}
         icon={icon}
@@ -45,7 +45,15 @@ export function GatedActionRow({
         onPress={onPress}
       />
       {enabled ? null : (
-        <Text testID={`${testID}-why`} fontSize={11.5} color="$muted">
+        <Text
+          testID={`${testID}-why`}
+          marginTop={-8}
+          paddingLeft={48}
+          paddingRight={16}
+          paddingBottom={12}
+          fontSize={12}
+          color="$muted"
+        >
           {reason}
         </Text>
       )}

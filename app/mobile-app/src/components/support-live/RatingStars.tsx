@@ -1,6 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { XStack } from 'tamagui';
-import { semantic } from '@duncit/auth-tokens';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -13,7 +12,7 @@ export interface RatingStarsProps {
 
 /** Tappable 1–N star rating — RN twin of mWeb's <Rating/> for live feedback. */
 export function RatingStars({ value, onChange, max = 5 }: Readonly<RatingStarsProps>) {
-  const { muted } = useThemeColors();
+  const { muted, warning } = useThemeColors();
   return (
     <XStack gap={4} testID="rating-stars">
       {Array.from({ length: max }, (_, i) => i + 1).map((star) => (
@@ -29,7 +28,7 @@ export function RatingStars({ value, onChange, max = 5 }: Readonly<RatingStarsPr
           <MaterialIcons
             name={star <= value ? 'star' : 'star-border'}
             size={32}
-            color={star <= value ? semantic.warning : muted}
+            color={star <= value ? warning : muted}
           />
         </XStack>
       ))}

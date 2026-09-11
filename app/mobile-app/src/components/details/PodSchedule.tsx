@@ -1,9 +1,11 @@
-import type { ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { JoinMeetingButton } from '@/components/details/JoinMeetingButton';
+import { PodMetaRow } from '@/components/details/PodMetaRow';
 import { MapEmbed } from '@/components/MapEmbed';
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import type { PodDetail, PodLocation, PodVenue } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -20,17 +22,6 @@ interface Props {
   onJoinMeeting: () => Promise<string>;
 }
 
-function Field({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
-  return (
-    <YStack gap={3}>
-      <Text fontSize={12} color="$muted">
-        {label}
-      </Text>
-      {children}
-    </YStack>
-  );
-}
-
 function venueParts(v: PodVenue): string[] {
   return [
     v.venue_name,
@@ -44,8 +35,18 @@ function venueParts(v: PodVenue): string[] {
   ].filter((p): p is string => !!p);
 }
 
-/** When · Meeting (virtual) or Where + map (physical). RN port of mWeb's
- * PodMapSection — handles both pod modes and degrades gracefully. */
+/** The meta rows' value line — ink, medium weight. */
+function Value({ children }: Readonly<{ children: string }>) {
+  return (
+    <Text fontSize={14} fontWeight="600" color="$color">
+      {children}
+    </Text>
+  );
+}
+
+/** Time & Venue: when it runs, then where (or how to join, for a virtual pod),
+ * each as an icon row, with the map under it. RN port of mWeb's PodMapSection —
+ * handles both pod modes and degrades gracefully. */
 export function PodSchedule({ pod, venue, location, onOpenVenue, onJoinMeeting }: Readonly<Props>) {
   const { primary } = useThemeColors();
   const { t } = useTranslation();
@@ -68,35 +69,17 @@ export function PodSchedule({ pod, venue, location, onOpenVenue, onJoinMeeting }
   }
 
   return (
-    <YStack
-      testID="pod-schedule"
-      margin={16}
-      padding={16}
-      gap={14}
-      borderRadius={18}
-      backgroundColor="$background"
-      borderWidth={1}
-      borderColor="$borderColor"
-    >
-      <XStack gap={8} alignItems="center">
-        <MaterialIcons name="event" size={20} color={primary} />
-        <Text fontSize={16} fontWeight="700" color="$color">
-          {t('mweb.podDetails.timeAndVenue')}
-        </Text>
-      </XStack>
-      <Field label={t('mweb.podDetails.when')}>
-        <Text fontSize={14} fontWeight="700" color="$color">
-          {podScheduleLabel(pod.pod_date_time, pod.pod_end_date_time, t)}
-        </Text>
-      </Field>
+    <SurfaceCard testID="pod-schedule" marginHorizontal={16} marginTop={20} gap={16}>
+      <SectionHeader title={t('mweb.podDetails.timeAndVenue')} />
+      <PodMetaRow icon="event">
+        <Value>{podScheduleLabel(pod.pod_date_time, pod.pod_end_date_time, t)}</Value>
+      </PodMetaRow>
 
       {isVirtual ? (
-        <>
-          <Field label={t('mweb.podDetails.meeting')}>
-            <Text fontSize={14} fontWeight="700" color="$color">
-              {formatMeetingPlatform(pod.meeting_platform, t)}
-            </Text>
-          </Field>
+        <YStack gap={12}>
+          <PodMetaRow icon="videocam">
+            <Value>{formatMeetingPlatform(pod.meeting_platform, t)}</Value>
+          </PodMetaRow>
           {/* The link is only on the pod for joined members; opening it goes
               through the mutation so the member is marked present. */}
           {pod.meeting_url ? (
@@ -111,34 +94,33 @@ export function PodSchedule({ pod, venue, location, onOpenVenue, onJoinMeeting }
               {pod.meeting_notes}
             </Text>
           ) : null}
-        </>
+        </YStack>
       ) : (
-        <>
-          <Field label={t('mweb.podDetails.where')}>
-            <Text fontSize={14} fontWeight="700" color="$color">
-              {placeText || '—'}
-            </Text>
-          </Field>
-          {venue ? (
-            <XStack
-              testID="pod-venue-details"
-              role="button"
-              aria-label={t('mweb.podDetails.venueDetails')}
-              onPress={() => onOpenVenue?.(venue.id)}
-              alignItems="center"
-              gap={6}
-              alignSelf="flex-start"
-              pressStyle={PRESS_STYLE.row}
-            >
-              <Text fontSize={14} fontWeight="600" color="$primary">
-                {t('mweb.podDetails.venueDetails')}
-              </Text>
-              <MaterialIcons name="open-in-new" size={14} color={primary} />
-            </XStack>
-          ) : null}
+        <YStack gap={12}>
+          <PodMetaRow icon="place">
+            <Value>{placeText || '—'}</Value>
+            {venue ? (
+              <XStack
+                testID="pod-venue-details"
+                role="button"
+                aria-label={t('mweb.podDetails.venueDetails')}
+                onPress={() => onOpenVenue?.(venue.id)}
+                alignItems="center"
+                gap={6}
+                alignSelf="flex-start"
+                paddingVertical={4}
+                pressStyle={PRESS_STYLE.row}
+              >
+                <Text fontSize={13} fontWeight="600" color="$primary">
+                  {t('mweb.podDetails.venueDetails')}
+                </Text>
+                <MaterialIcons name="open-in-new" size={14} color={primary} />
+              </XStack>
+            ) : null}
+          </PodMetaRow>
           <MapEmbed query={mapQuery} />
-        </>
+        </YStack>
       )}
-    </YStack>
+    </SurfaceCard>
   );
 }

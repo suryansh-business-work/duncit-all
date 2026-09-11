@@ -1,4 +1,5 @@
-import { Box, Paper, Skeleton, Stack } from '@mui/material';
+import { Box, Skeleton, Stack } from '@mui/material';
+import { SURFACE_SX } from '../../../theme';
 
 /** Rows a placeholder Manage-Account group stands in for. */
 const LIST_ROWS = ['a', 'b', 'c'];
@@ -7,42 +8,39 @@ const GRID_TILES = ['a', 'b', 'c', 'd'];
 
 function TileSkeleton() {
   return (
-    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }}>
-      <Skeleton variant="rounded" width={36} height={36} sx={{ mb: 1 }} />
+    <Stack spacing={1.25} sx={{ ...SURFACE_SX, borderRadius: '16px', p: 1.75 }}>
+      <Skeleton variant="circular" width={36} height={36} />
       <Skeleton width="70%" height={20} />
-      <Skeleton width="45%" height={14} />
-    </Paper>
+    </Stack>
   );
 }
 
 function CardSkeleton() {
   return (
-    <Box sx={{ px: 2, pb: 1.25 }}>
-      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }}>
-        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-          <Skeleton variant="rounded" width={44} height={44} />
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Skeleton width="45%" height={22} />
-            <Skeleton width="65%" height={16} />
-          </Box>
-        </Stack>
-      </Paper>
+    <Box sx={{ px: 2, pb: 1.5 }}>
+      <Stack direction="row" spacing={1.5} sx={{ ...SURFACE_SX, p: 2, alignItems: 'center' }}>
+        <Skeleton variant="circular" width={44} height={44} />
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Skeleton width="45%" height={22} />
+          <Skeleton width="65%" height={16} />
+        </Box>
+      </Stack>
     </Box>
   );
 }
 
 function ListSkeleton() {
   return (
-    <Box sx={{ px: 2, pb: 1.25 }}>
-      <Skeleton width="35%" height={18} sx={{ mb: 1 }} />
-      <Paper variant="outlined" sx={{ borderRadius: '16px', px: 1.75, py: 0.5 }}>
+    <Box sx={{ px: 2, pb: 1.5 }}>
+      <Skeleton width="35%" height={24} sx={{ mb: 1 }} />
+      <Box sx={{ ...SURFACE_SX, px: 2 }}>
         {LIST_ROWS.map((row) => (
-          <Stack key={row} direction="row" spacing={1.5} sx={{ alignItems: 'center', py: 1.1 }}>
-            <Skeleton variant="circular" width={24} height={24} />
+          <Stack key={row} direction="row" spacing={1.5} sx={{ alignItems: 'center', minHeight: 60 }}>
+            <Skeleton variant="circular" width={36} height={36} />
             <Skeleton width="55%" height={18} />
           </Stack>
         ))}
-      </Paper>
+      </Box>
     </Box>
   );
 }
@@ -56,23 +54,23 @@ function ListSkeleton() {
 export default function MenuSkeleton() {
   return (
     <Box data-testid="menu-skeleton">
-      <Box sx={{ px: 2, py: 1 }}>
-        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', px: 1.5, py: 1 }}>
+      <Box sx={{ px: 2, pb: 1.5 }}>
+        <Stack direction="row" spacing={1.75} sx={{ ...SURFACE_SX, p: 2, alignItems: 'center' }}>
+          <Skeleton variant="circular" width={52} height={52} />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Skeleton width="55%" height={24} />
+            <Skeleton width="55%" height={26} />
             <Skeleton width="70%" height={16} />
           </Box>
-          <Skeleton variant="circular" width={44} height={44} />
         </Stack>
       </Box>
 
       <Box
         sx={{
           px: 2,
-          pb: 1.25,
+          pb: 1.5,
           display: 'grid',
           gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: 1.25,
+          gap: 1.5,
         }}
       >
         {GRID_TILES.map((tile) => (
@@ -80,7 +78,7 @@ export default function MenuSkeleton() {
         ))}
       </Box>
 
-      <Box sx={{ px: 2, pb: 1.25 }}>
+      <Box sx={{ px: 2, pb: 1.5 }}>
         <Skeleton variant="rectangular" height={132} sx={{ borderRadius: '16px' }} />
       </Box>
 

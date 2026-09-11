@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack } from 'tamagui';
+import { XStack, YStack } from 'tamagui';
 
 import { AccountButton } from '@/components/AccountButton';
 import { LocationDialog } from '@/components/LocationDialog';
@@ -15,25 +15,32 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useAutoPodCountsStore } from '@/stores/auto-pod-counts.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { TourAnchor } from '@/tours/TourAnchor';
-import { STUDIO_LABEL, resolveMode, studioSwitchRoute } from '@/utils/studio-mode';
+import { resolveMode, studioSwitchRoute } from '@/utils/studio-mode';
 import { useProductVisibility } from '@/hooks/useProductVisibility';
 
 import { HeaderGreeting } from './HeaderGreeting';
-import { HeaderLocationRow } from './HeaderLocationRow';
-import { QuickAction } from './QuickAction';
-import { PRESS_STYLE } from '@duncit/buttons-native';
+import { HeaderLeading } from './HeaderLeading';
+import { HeaderRoundButton } from './HeaderRoundButton';
+
+interface Props {
+  /** The pre-onboarding survey header: a logout button and the greeting. */
+  minimal?: boolean;
+  /** The Home tab: its own search bar leads the page, so the header drops
+   * its search button and greets the user instead. */
+  home?: boolean;
+}
 
 /**
- * In-app header — the admin-configurable tagline plus the tappable location on
- * the left (or the studio badge PLUS that same location switcher when in a
- * Host/Venue/ecomm studio — the picker is never role-gated). On the
- * right: search, notifications and either the account avatar (which opens the
- * sidebar drawer) or — when `minimal`, i.e. the pre-onboarding survey — a plain
- * logout button.
+ * In-app header. Row one: the location pill on the left (led by the studio
+ * pill in a Host/Venue/ecomm studio — the picker is never role-gated), and on
+ * the right the round search (not on Home), bell and account avatar (which
+ * opens the account menu) — or, when `minimal`, i.e. the pre-onboarding
+ * survey, a plain logout button. Row two, on Home and the survey only: the
+ * two-tone greeting.
  */
-export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) {
+export function AppHeader({ minimal = false, home = false }: Readonly<Props>) {
   const navigation = useNavigation();
-  const { color: ink, onPrimary } = useThemeColors();
+  const { color: ink } = useThemeColors();
   const { t } = useTranslation();
   const me = useMe().data?.me;
   const branding = useBranding().data?.branding;
@@ -44,7 +51,9 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
   const effectiveStudio = resolveMode(studioMode, roles, { products: showProducts });
   const [switchOpen, setSwitchOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
-  const showBrowseActions = !minimal && effectiveStudio === 'USER';
+  const isUserStudio = effectiveStudio === 'USER';
+  const showSearch = !minimal && isUserStudio && !home;
+  const showGreeting = minimal || (isUserStudio && home);
   const openLocation = () => setLocationOpen(true);
   const autoPodCounts = useAutoPodCountsStore((s) => s.data);
   const fetchAutoPodCounts = useAutoPodCountsStore((s) => s.fetch);
@@ -61,90 +70,56 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
   };
 
   return (
-    <XStack
+    <YStack
       testID="app-header"
-      alignItems="center"
-      justifyContent="space-between"
-      paddingLeft={16}
-      paddingRight={16}
-      paddingVertical={12}
+      backgroundColor="$background"
+      paddingHorizontal={16}
+      paddingTop={8}
+      paddingBottom={12}
     >
-      <XStack alignItems="center" gap={6} flex={1} minWidth={0}>
-        {!minimal && effectiveStudio !== 'USER' ? (
-          // A studio header keeps the role badge AND the location switcher: a
-          // host/venue/club account still browses a city, so the picker stays.
-          <>
-            <XStack
-              testID="header-studio-badge"
-              role="button"
-              aria-label={t('mweb.common.switchRole')}
-              onPress={openSwitch}
-              alignItems="center"
-              gap={4}
-              paddingHorizontal={10}
-              paddingVertical={5}
-              borderRadius={999}
-              backgroundColor="$primary"
-              pressStyle={PRESS_STYLE.control}
-            >
-              <Text fontSize={11.5} fontWeight="700" color="$onPrimary">
-                {STUDIO_LABEL[effectiveStudio]}
-              </Text>
-              <MaterialIcons name="swap-horiz" size={14} color={onPrimary} />
-            </XStack>
-            <HeaderLocationRow onOpen={openLocation} />
-          </>
-        ) : (
-          // The picker follows the header, not the role: only the survey
-          // header (no city to browse yet) drops it.
-          <HeaderGreeting
-            tagline={branding?.home_header_tagline}
-            onOpenLocation={minimal ? undefined : openLocation}
-          />
-        )}
-      </XStack>
       <XStack alignItems="center" gap={8}>
-        {/* Labelled circular actions (mock): Search · Alerts · avatar with
-         * online dot. Studio modes keep their focused header (no search). The
-         * cart is a bottom-bar destination now, not a header action. */}
-        {showBrowseActions ? (
-          <TourAnchor tour="home" anchor="home-search">
-            <QuickAction label={t('mweb.home.actionSearch')}>
-              <XStack
+        <HeaderLeading
+          minimal={minimal}
+          studio={effectiveStudio}
+          onOpenSwitch={openSwitch}
+          onOpenLocation={openLocation}
+        />
+        {/* Round actions: Search (not on Home) · Alerts · avatar with online
+         * dot. Studio modes keep their focused header (no search). The cart
+         * is a bottom-bar destination now, not a header action. */}
+        <XStack alignItems="center" gap={8}>
+          {showSearch ? (
+            <TourAnchor tour="home" anchor="home-search">
+              <HeaderRoundButton
                 testID="header-search"
-                role="button"
-                aria-label={t('mweb.appHeader.searchPods')}
+                label={t('mweb.appHeader.searchPods')}
                 onPress={() => navigation.navigate('Search')}
-                width={40}
-                height={40}
-                alignItems="center"
-                justifyContent="center"
-                borderRadius={20}
-                backgroundColor="$surface"
-                borderWidth={1}
-                borderColor="$borderColor"
-                pressStyle={PRESS_STYLE.row}
               >
                 <MaterialIcons name="search" size={22} color={ink} />
-              </XStack>
-            </QuickAction>
-          </TourAnchor>
-        ) : null}
-        {minimal ? null : (
-          <TourAnchor tour="home" anchor="home-notifications">
-            <QuickAction label={t('mweb.home.actionAlerts')}>
+              </HeaderRoundButton>
+            </TourAnchor>
+          ) : null}
+          {minimal ? null : (
+            <TourAnchor tour="home" anchor="home-notifications">
               <NotificationsBell />
-            </QuickAction>
-          </TourAnchor>
-        )}
-        {minimal ? (
-          <LogoutButton />
-        ) : (
-          <TourAnchor tour="home" anchor="home-profile">
-            <AccountButton />
-          </TourAnchor>
-        )}
+            </TourAnchor>
+          )}
+          {minimal ? (
+            <LogoutButton />
+          ) : (
+            <TourAnchor tour="home" anchor="home-profile">
+              <AccountButton />
+            </TourAnchor>
+          )}
+        </XStack>
       </XStack>
+      {showGreeting ? (
+        <HeaderGreeting
+          tagline={branding?.home_header_tagline}
+          firstName={me?.first_name}
+          onOpenLocation={minimal ? undefined : openLocation}
+        />
+      ) : null}
       <StudioSwitchDialog
         open={switchOpen}
         roles={roles}
@@ -162,6 +137,6 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
       {minimal ? null : (
         <LocationDialog open={locationOpen} onClose={() => setLocationOpen(false)} />
       )}
-    </XStack>
+    </YStack>
   );
 }

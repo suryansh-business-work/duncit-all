@@ -1,23 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Modal, TouchableOpacity } from 'react-native';
-import { Avatar, AvatarImage, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 import { MaterialIcons } from '@expo/vector-icons';
 
+import { DuncitButton } from '@/components/DuncitButton';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { graphqlRequest } from '@/services/graphql.client';
 import { ClubRatingsDocument, AddClubRatingDocument } from '@/graphql/details';
 import { useBottomInset } from '@/hooks/useBottomNavSpace';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { formatDate } from '@/utils/date-format';
-
-interface ClubRating {
-  id: string;
-  user_id: string;
-  user_name: string | null | undefined;
-  user_photo: string | null | undefined;
-  stars: number;
-  comment: string | null | undefined;
-  created_at: string;
-}
+import { useTranslation } from '@/hooks/useTranslation';
+import { fireAndForget } from '@/utils/fire-and-forget';
+import { ReviewRow, StarPicker, StarRow, type ClubRating } from './ClubRatingParts';
 
 interface Props {
   clubId: string;
@@ -25,45 +19,11 @@ interface Props {
   ratingsCount: number;
 }
 
-function StarRow({ value, size = 16 }: Readonly<{ value: number; size?: number }>) {
-  const { primary } = useThemeColors();
-  return (
-    <XStack gap={2}>
-      {[1, 2, 3, 4, 5].map((s) => (
-        <MaterialIcons
-          key={s}
-          name={s <= Math.round(value) ? 'star' : 'star-border'}
-          size={size}
-          color={primary}
-        />
-      ))}
-    </XStack>
-  );
-}
-
-function StarPicker({
-  value,
-  onChange,
-}: Readonly<{ value: number; onChange: (v: number) => void }>) {
-  const { primary } = useThemeColors();
-  return (
-    <XStack gap={4}>
-      {[1, 2, 3, 4, 5].map((s) => (
-        <TouchableOpacity
-          key={s}
-          testID={`star-${s}`}
-          onPress={() => onChange(s)}
-          hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
-        >
-          <MaterialIcons name={s <= value ? 'star' : 'star-border'} size={32} color={primary} />
-        </TouchableOpacity>
-      ))}
-    </XStack>
-  );
-}
-
+/** Ratings & Reviews on a surface card: the average, the latest three reviews
+ * and the Rate Club sheet. mWeb twin: club-details-page/ClubRatingSection. */
 export function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Props>) {
-  const { primary, muted } = useThemeColors();
+  const { t } = useTranslation();
+  const { muted } = useThemeColors();
   // The rate sheet is flush to the bottom edge the Android navigation bar paints
   // over — without this the Submit button sits under it.
   const bottomInset = useBottomInset();
@@ -111,20 +71,20 @@ export function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Pro
   const preview = reviews.slice(0, 3);
 
   return (
-    <YStack gap={12} testID="club-ratings">
+    <SurfaceCard gap={12} testID="club-ratings">
       <XStack alignItems="center" justifyContent="space-between">
-        <Text fontSize={16} fontWeight="700" color="$color">
+        <Text fontSize={17} fontWeight="600" color="$color">
           Ratings & Reviews
         </Text>
         <TouchableOpacity onPress={() => setDialogOpen(true)} accessibilityLabel="Rate this club">
           <XStack
-            paddingHorizontal={12}
-            paddingVertical={6}
-            borderRadius={12}
-            borderWidth={1}
-            borderColor={primary}
+            height={32}
+            paddingHorizontal={14}
+            alignItems="center"
+            borderRadius={999}
+            backgroundColor="$soft"
           >
-            <Text fontSize={12} fontWeight="600" color={primary}>
+            <Text fontSize={13} fontWeight="600" color="$color">
               Rate Club
             </Text>
           </XStack>
@@ -133,7 +93,7 @@ export function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Pro
 
       {currentCount > 0 ? (
         <XStack alignItems="center" gap={12}>
-          <Text fontSize={36} fontWeight="700" color="$color">
+          <Text fontSize={34} fontWeight="600" color="$color">
             {currentRating.toFixed(1)}
           </Text>
           <YStack gap={4}>
@@ -144,77 +104,49 @@ export function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Pro
           </YStack>
         </XStack>
       ) : (
-        <Text fontSize={13} color="$muted">
+        <Text fontSize={14} color="$muted">
           No ratings yet. Be the first to review!
         </Text>
       )}
 
       {preview.map((r) => (
-        <YStack
-          key={r.id}
-          gap={4}
-          paddingVertical={8}
-          borderTopWidth={1}
-          borderColor="$borderColor"
-        >
-          <XStack alignItems="center" gap={10}>
-            <Avatar circular size={32}>
-              <AvatarImage src={r.user_photo ?? undefined} />
-            </Avatar>
-            <YStack flex={1}>
-              <Text fontSize={13} fontWeight="700" color="$color">
-                {r.user_name ?? 'Member'}
-              </Text>
-              <XStack alignItems="center" gap={6}>
-                <StarRow value={r.stars} size={13} />
-                <Text fontSize={11} color="$muted">
-                  {formatDate(r.created_at)}
-                </Text>
-              </XStack>
-            </YStack>
-          </XStack>
-          {r.comment ? (
-            <Text fontSize={13} color="$muted" numberOfLines={3}>
-              {r.comment}
-            </Text>
-          ) : null}
-        </YStack>
+        <ReviewRow key={r.id} review={r} />
       ))}
 
-      {/* Rate dialog */}
+      {/* Rate sheet */}
       <Modal visible={dialogOpen} animationType="slide" transparent>
         <YStack flex={1} backgroundColor="rgba(0,0,0,0.5)" justifyContent="flex-end">
           <YStack
-            backgroundColor="$background"
-            borderTopLeftRadius={20}
-            borderTopRightRadius={20}
+            backgroundColor="$surface"
+            borderTopLeftRadius={28}
+            borderTopRightRadius={28}
             padding={24}
             paddingBottom={24 + bottomInset}
             gap={16}
           >
             <XStack alignItems="center" justifyContent="space-between">
-              <Text fontSize={17} fontWeight="700" color="$color">
-                Rate this Club
+              <Text fontSize={17} fontWeight="600" color="$color">
+                {t('mweb.clubDetails.rateThisClub')}
               </Text>
               <TouchableOpacity testID="rating-dialog-close" onPress={() => setDialogOpen(false)}>
                 <MaterialIcons name="close" size={22} color={muted} />
               </TouchableOpacity>
             </XStack>
             <YStack gap={8}>
-              <Text fontSize={14} fontWeight="700" color="$color">
+              <Text fontSize={14} fontWeight="600" color="$color">
                 Your rating
               </Text>
               <StarPicker value={stars} onChange={setStars} />
             </YStack>
             <YStack gap={6}>
-              <Text fontSize={14} fontWeight="700" color="$color">
-                Comment (optional)
+              <Text fontSize={14} fontWeight="600" color="$color">
+                {t('mweb.clubDetails.commentOptional')}
               </Text>
               <XStack
                 borderWidth={1}
                 borderColor="$borderColor"
-                borderRadius={12}
-                padding={10}
+                borderRadius={14}
+                padding={12}
                 minHeight={80}
                 alignItems="flex-start"
               >
@@ -229,25 +161,16 @@ export function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Pro
                 </Text>
               </XStack>
             </YStack>
-            <TouchableOpacity
-              onPress={() => void handleSubmit()}
+            <DuncitButton
+              fullWidth
+              size="lg"
+              label={submitting ? 'Submitting…' : 'Submit Rating'}
               disabled={stars === 0 || submitting}
-            >
-              <XStack
-                height={48}
-                borderRadius={14}
-                backgroundColor={stars === 0 || submitting ? '$muted' : primary}
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Text fontSize={15} fontWeight="700" color="white">
-                  {submitting ? 'Submitting…' : 'Submit Rating'}
-                </Text>
-              </XStack>
-            </TouchableOpacity>
+              onPress={() => fireAndForget(handleSubmit())}
+            />
           </YStack>
         </YStack>
       </Modal>
-    </YStack>
+    </SurfaceCard>
   );
 }

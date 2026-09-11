@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Text, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import { changeRequestMenuKey } from '@duncit/utils';
 
+import { NoticeCard } from '@/components/attendance/NoticeCard';
 import { RequestChangeSheet } from '@/components/change-requests/RequestChangeSheet';
 import { StudioPodsSection } from '@/components/studio/StudioPodsSection';
 import type { StudioPod } from '@/components/studio/studio-pods';
@@ -32,9 +33,7 @@ export function ClubStudioChangeRequests({ state }: Readonly<{ state: StudioPods
   return (
     <YStack gap={10}>
       {notice ? (
-        <Text testID="club-studio-change-notice" fontSize={12.5} fontWeight="600" color="$success">
-          {notice}
-        </Text>
+        <NoticeCard testID="club-studio-change-notice" tone="success" title={notice} />
       ) : null}
       <StudioPodsSection
         variant="CLUB"

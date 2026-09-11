@@ -1,7 +1,9 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 import { buildCommPreferenceLabels } from '@duncit/utils';
 
+import { IconDisc } from '@/components/account/IconDisc';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -22,34 +24,31 @@ interface Props {
  */
 export function CommPreferenceEntryCard({ onPress }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { color, muted } = useThemeColors();
+  const { muted } = useThemeColors();
   const labels = buildCommPreferenceLabels(t);
 
   return (
-    <XStack
+    <SurfaceCard
       testID="comm-preference-entry"
       role="button"
       aria-label={labels.title}
       onPress={onPress}
-      padding={16}
-      borderRadius={18}
-      backgroundColor="$surface"
-      borderWidth={1}
-      borderColor="$borderColor"
+      flexDirection="row"
       alignItems="center"
-      gap={12}
-      pressStyle={PRESS_STYLE.control}
+      gap={16}
+      paddingVertical={14}
+      pressStyle={PRESS_STYLE.surface}
     >
-      <MaterialIcons name="forum" size={20} color={color} />
+      <IconDisc icon="forum" />
       <YStack flex={1}>
-        <Text fontSize={15} fontWeight="800" color="$color">
+        <Text fontSize={15} fontWeight="500" color="$color">
           {labels.title}
         </Text>
-        <Text fontSize={12.5} color="$muted">
+        <Text fontSize={14} color="$muted">
           {labels.entryHint}
         </Text>
       </YStack>
       <MaterialIcons name="chevron-right" size={22} color={muted} />
-    </XStack>
+    </SurfaceCard>
   );
 }

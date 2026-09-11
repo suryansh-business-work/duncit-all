@@ -30,12 +30,10 @@ export default function WhatsAppPreferenceSection({
   if (items.length === 0) return null;
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-      <CardContent>
-        <Stack spacing={0.5} sx={{ mb: 1 }}>
-          <Typography variant="subtitle1" sx={{
-            fontWeight: 700
-          }}>
+    <Card>
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+        <Stack spacing={0.5} sx={{ mb: 0.5 }}>
+          <Typography component="h2" sx={{ fontSize: '1.05rem', fontWeight: 600 }}>
             {heading}
           </Typography>
           {hint && (

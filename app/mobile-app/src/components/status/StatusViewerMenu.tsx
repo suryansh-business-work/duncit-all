@@ -32,7 +32,7 @@ export function StatusViewerMenu({ canDelete, canReport, onDelete, onReport }: R
       right={16}
       zIndex={20}
       backgroundColor="$surface"
-      borderRadius={12}
+      borderRadius={14}
       borderWidth={1}
       borderColor="$borderColor"
       overflow="hidden"

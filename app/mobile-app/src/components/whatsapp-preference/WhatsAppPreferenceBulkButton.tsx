@@ -1,6 +1,5 @@
 import { Text, XStack } from 'tamagui';
 
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
@@ -16,7 +15,8 @@ interface Props {
  *
  * One button whose direction the screen decides, rather than two that could
  * both be on screen at once — the state it acts on is "is anything still on?",
- * and two buttons make that a question the reader has to answer.
+ * and two buttons make that a question the reader has to answer. A tonal pill:
+ * danger-soft to switch off, primary-soft to switch back on.
  */
 export function WhatsAppPreferenceBulkButton({
   label,
@@ -24,9 +24,6 @@ export function WhatsAppPreferenceBulkButton({
   disabled,
   onPress,
 }: Readonly<Props>) {
-  const { danger, primary } = useThemeColors();
-  const ink = destructive ? danger : primary;
-
   return (
     <XStack
       testID="whatsapp-preference-bulk"
@@ -34,16 +31,15 @@ export function WhatsAppPreferenceBulkButton({
       aria-label={label}
       onPress={disabled ? undefined : onPress}
       marginTop={14}
-      height={46}
+      height={52}
       alignItems="center"
       justifyContent="center"
-      borderRadius={12}
-      borderWidth={1}
-      borderColor={ink}
+      borderRadius={999}
+      backgroundColor={destructive ? '$dangerSoft' : '$primarySoft'}
       opacity={disabled ? 0.5 : 1}
       pressStyle={PRESS_STYLE.control}
     >
-      <Text fontSize={14} fontWeight="700" color={ink}>
+      <Text fontSize={15} fontWeight="600" color={destructive ? '$danger' : '$primary'}>
         {label}
       </Text>
     </XStack>

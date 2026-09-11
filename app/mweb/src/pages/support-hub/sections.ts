@@ -1,91 +1,89 @@
 import type { SvgIconComponent } from '@mui/icons-material';
-import SosIcon from '@mui/icons-material/Sos';
-import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
-import HistoryIcon from '@mui/icons-material/History';
-import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
-import SensorsIcon from '@mui/icons-material/Sensors';
+import SosRoundedIcon from '@mui/icons-material/SosRounded';
+import PhoneCallbackRoundedIcon from '@mui/icons-material/PhoneCallbackRounded';
+import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
+import ConfirmationNumberOutlinedIcon from '@mui/icons-material/ConfirmationNumberOutlined';
+import SensorsRoundedIcon from '@mui/icons-material/SensorsRounded';
 import FeedbackOutlinedIcon from '@mui/icons-material/FeedbackOutlined';
-import GavelIcon from '@mui/icons-material/Gavel';
+import GavelRoundedIcon from '@mui/icons-material/GavelRounded';
+
+/** The tile's icon tone: the brand accent, or danger for the emergency entry. */
+export type SupportTone = 'accent' | 'danger';
 
 export interface SupportSection {
   key: string;
   path: string;
   label: string;
-  description: string;
   Icon: SvgIconComponent;
-  color: string;
+  tone: SupportTone;
   podScoped: boolean;
-  /** Localization keys, preferred over the literals above when present. */
+  /** Localization key, preferred over the literal above when present. */
   labelKey?: string;
-  descriptionKey?: string;
 }
 
 // Navigation configuration for the Support hub landing grid. Each entry maps to
-// a nested route under /support and renders as a tappable card.
+// a nested route under /support and renders as a tappable tile.
 export const SUPPORT_SECTIONS: SupportSection[] = [
   {
     key: 'sos',
     path: '/support/sos',
     label: 'SOS',
-    description: 'Emergency help at your live pod',
-    Icon: SosIcon,
-    color: '#f44336',
+    Icon: SosRoundedIcon,
+    tone: 'danger',
     podScoped: true,
   },
   {
     key: 'callback',
     path: '/support/callback',
     label: 'Callback Request',
-    description: 'Call us or get a callback',
-    Icon: PhoneCallbackIcon,
-    color: '#2196f3',
+    labelKey: 'mweb.common.callbackRequest',
+    Icon: PhoneCallbackRoundedIcon,
+    tone: 'accent',
     podScoped: true,
   },
   {
     key: 'tickets',
     path: '/support/tickets',
     label: 'Create Support Tickets',
-    description: 'Raise an issue with our team',
-    Icon: ConfirmationNumberIcon,
-    color: '#ff4f73',
+    labelKey: 'mweb.common.createSupportTickets',
+    Icon: ConfirmationNumberOutlinedIcon,
+    tone: 'accent',
     podScoped: false,
   },
   {
     key: 'live',
     path: '/support/live',
     label: 'Chat with Us',
-    description: 'Real-time chat with our support team',
-    Icon: SensorsIcon,
-    color: '#4caf50',
+    labelKey: 'mweb.common.chatWithUs',
+    Icon: SensorsRoundedIcon,
+    tone: 'accent',
     podScoped: false,
   },
   {
     key: 'all',
     path: '/support/all',
     label: 'All Support Tickets',
-    description: 'Every request you have raised, in one list',
-    Icon: HistoryIcon,
-    color: '#7c5cff',
+    labelKey: 'mweb.common.allSupportTickets',
+    Icon: HistoryRoundedIcon,
+    tone: 'accent',
     podScoped: false,
   },
   {
     key: 'grievance',
     path: '/support/grievance',
     label: 'Raise a Grievance',
-    description: 'File a formal grievance with our Grievance Officer',
     labelKey: 'grievance.title',
-    descriptionKey: 'grievance.subtitle',
-    Icon: GavelIcon,
-    color: '#795548',
+    Icon: GavelRoundedIcon,
+    tone: 'accent',
     podScoped: false,
   },
   {
     key: 'feedback',
     path: '/support/feedback',
     label: 'Report a Problem',
-    description: 'Send feedback or report an issue to our team',
+    labelKey: 'mweb.common.reportAProblem',
     Icon: FeedbackOutlinedIcon,
-    color: '#ff9800',
+    tone: 'accent',
     podScoped: false,
   },
 ];

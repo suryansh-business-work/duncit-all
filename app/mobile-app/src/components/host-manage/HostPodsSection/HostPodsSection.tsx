@@ -1,9 +1,7 @@
 import { YStack } from 'tamagui';
-import { semantic } from '@duncit/auth-tokens';
 import { splitHostPods } from '@duncit/utils';
 
 import { useHostPods } from '@/hooks/useHostPods';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useHostPodSheets } from './useHostPodSheets';
 import { VenueRequestsSection } from './VenueRequestsSection';
@@ -29,24 +27,17 @@ interface HostPodsSectionProps {
  */
 export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProps>) {
   const { t } = useTranslation();
-  const { danger } = useThemeColors();
   const { pods, isLoading, refetch } = useHostPods();
   const { openActions, openPod, notice, sheets } = useHostPodSheets({ refetch, onPodCompleted });
 
   const { requested, yours, rejected } = splitHostPods(pods);
 
   return (
-    <YStack gap={20}>
+    <YStack gap={24}>
       <VenueRequestsSection
         testID="requested-pods-section"
-        icon="hourglass-top"
-        tint={semantic.warning}
         title={t('mweb.hostManage.requestedPods')}
-        subtitle={t('mweb.hostManage.requestedPodsSubtitle')}
-        empty={{
-          title: t('mweb.hostManage.noRequestedPods'),
-          text: t('mweb.hostManage.requestedPodsEmpty'),
-        }}
+        emptyText={t('mweb.hostManage.requestedPodsEmpty')}
         pods={requested}
         isLoading={isLoading}
         onOpen={openPod}
@@ -63,11 +54,8 @@ export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProp
 
       <VenueRequestsSection
         testID="rejected-pods-section"
-        icon="cancel-schedule-send"
-        tint={danger}
         title={t('mweb.hostManage.rejectedPods')}
-        subtitle={t('mweb.hostManage.rejectedPodsSubtitle')}
-        empty={null}
+        emptyText={null}
         pods={rejected}
         isLoading={isLoading}
         onOpen={openPod}

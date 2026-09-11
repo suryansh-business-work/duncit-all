@@ -108,7 +108,6 @@ export function SignupScreen() {
       testID="signup-screen"
       title={t('mweb.signup.title')}
       accentWord={t('mweb.signup.titleAccent')}
-      subtitle={t('mweb.signup.subtitle')}
     >
       <SignupStepperRail step={flow.step} askingNumber={flow.askingNumber} />
       {onNumberStep ? <GoogleDetailsStep onSubmit={flow.submitDetails} /> : null}

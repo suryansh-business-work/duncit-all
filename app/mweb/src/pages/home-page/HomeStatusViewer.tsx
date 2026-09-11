@@ -263,7 +263,7 @@ export default function HomeStatusViewer({
   const nonVideoMedia = current?.mediaUrl ? (
     <Box component="img" src={current.mediaUrl} alt={item.label} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
   ) : (
-    <Box sx={{ width: '100%', height: '100%', background: 'linear-gradient(145deg, #ff7a59 0%, #ed4f7a 45%, #15111c 100%)' }} />
+    <Box sx={{ width: '100%', height: '100%' }} />
   );
 
   return (
@@ -325,7 +325,7 @@ export default function HomeStatusViewer({
               sx={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', bgcolor: 'primary.main', cursor: item.authorId ? 'pointer' : 'default' }}
             />
             <Box {...authorProps} sx={{ minWidth: 0, flex: 1, cursor: item.authorId ? 'pointer' : 'default' }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }} noWrap>
                 {item.label}
               </Typography>
               {(current?.subLabel || item.subLabel || timeLabel) && (
@@ -357,12 +357,12 @@ export default function HomeStatusViewer({
                   onClick={toggleLike}
                   aria-label={liked ? 'Unlike story' : 'Like story'}
                   data-testid="status-like"
-                  sx={{ color: liked ? '#ff4f73' : '#fff' }}
+                  sx={{ color: liked ? 'secondary.main' : '#fff' }}
                 >
                   {liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
                 </DuncitRoundButton>
                 {likeCount > 0 && (
-                  <Typography variant="caption" sx={{ fontWeight: 700, minWidth: 12 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 600, minWidth: 12 }}>
                     {likeCount}
                   </Typography>
                 )}
@@ -396,7 +396,7 @@ export default function HomeStatusViewer({
                     setMenuAnchor(null);
                     onDelete(currentId);
                   }}
-                  sx={{ color: 'error.main', fontWeight: 700 }}
+                  sx={{ color: 'error.main', fontWeight: 600 }}
                 >
                   <DeleteOutlineIcon fontSize="small" sx={{ mr: 1 }} />
                   Delete
@@ -423,7 +423,7 @@ export default function HomeStatusViewer({
             variant="contained"
             endIcon={<ArrowForwardIcon />}
             onClick={openTarget}
-            sx={{ position: 'absolute', left: 12, right: 12, bottom: 'calc(18px + env(safe-area-inset-bottom))', borderRadius: 999, fontWeight: 700 }}
+            size="large" sx={{ position: 'absolute', left: 12, right: 12, bottom: 'calc(18px + env(safe-area-inset-bottom))' }}
           >
             Open details
           </DuncitButton>

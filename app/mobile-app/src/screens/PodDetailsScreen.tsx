@@ -13,6 +13,7 @@ import { AppBackground } from '@/components/AppBackground';
 import { DetailHero, HeroButton } from '@/components/details/DetailHero';
 import { PodAccordions } from '@/components/details/PodAccordions';
 import { PodBookingBar } from '@/components/details/PodBookingBar';
+import { PodContactSupportLink } from '@/components/details/PodContactSupportLink';
 import { PodCommentsSheet } from '@/components/details/pod-comments';
 import { PodInfo } from '@/components/details/PodInfo';
 import { PodSchedule } from '@/components/details/PodSchedule';
@@ -384,7 +385,7 @@ export function PodDetailsScreen() {
             onJoinMeeting={() => actions.onJoinMeeting(pod.id)}
           />
         </Reveal>
-        <YStack height={14} />
+        <YStack height={20} />
         <Reveal index={2}>
           <PodSocialBar
             liked={liked}
@@ -421,21 +422,11 @@ export function PodDetailsScreen() {
             <AdSlot position="POD_DETAILS" variant="banner" />
           </YStack>
         </Reveal>
-        <XStack
-          pressStyle={PRESS_STYLE.surface}
-          testID="pod-contact-support"
-          role="button"
-          aria-label={t('mweb.podDetails.contactSupport')}
+        <PodContactSupportLink
           onPress={() =>
             navigation.navigate('SupportTickets', { podId: pod.id, podTitle: pod.pod_title })
           }
-          paddingHorizontal={16}
-          paddingTop={12}
-        >
-          <Text fontSize={13} fontWeight="600" color="$primary">
-            {t('mweb.podDetails.contactSupport')}
-          </Text>
-        </XStack>
+        />
       </RefreshScrollView>
     );
   } else {

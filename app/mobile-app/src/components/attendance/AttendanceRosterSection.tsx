@@ -30,7 +30,13 @@ export function AttendanceRosterSection({
   if (rows.length === 0) return null;
   return (
     <YStack gap={8}>
-      <Text fontSize={11.5} fontWeight="800" color="$muted" textTransform="uppercase">
+      <Text
+        fontSize={12}
+        fontWeight="600"
+        letterSpacing={0.6}
+        color="$muted"
+        textTransform="uppercase"
+      >
         {heading} · {rows.length}
       </Text>
       {rows.map((row) => (

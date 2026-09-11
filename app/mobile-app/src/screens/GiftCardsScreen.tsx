@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 
 import { GiftCardBuySection, MyGiftCardsList } from '@/components/gift-cards';
+import { GiftCardSegmented, type SegmentOption } from '@/components/gift-cards/GiftCardSegmented';
 import { StackScreen } from '@/components/StackScreen';
 import { useFinanceCurrency, useGiftCards } from '@/hooks/useGiftCards';
 import { useMe } from '@/hooks/useMe';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import type { GiftCardSelection } from '@/utils/gift-cards';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
 type TabKey = 'buy' | 'cards';
@@ -45,9 +45,9 @@ export function GiftCardsScreen() {
     refreshCards().catch(() => undefined);
   }, [tab, refreshCards]);
 
-  const tabs: readonly { key: TabKey; label: string }[] = [
-    { key: 'buy', label: t('mweb.giftCards.buyTab') },
-    { key: 'cards', label: t('mweb.giftCards.myCardsTab') },
+  const tabs: readonly SegmentOption<TabKey>[] = [
+    { value: 'buy', label: t('mweb.giftCards.buyTab'), testID: 'gift-cards-tab-buy' },
+    { value: 'cards', label: t('mweb.giftCards.myCardsTab'), testID: 'gift-cards-tab-cards' },
   ];
 
   const onContinue = (selection: GiftCardSelection) => {
@@ -91,32 +91,8 @@ export function GiftCardsScreen() {
   return (
     <StackScreen title={t('mweb.giftCards.title')} testID="gift-cards-screen">
       <RefreshScrollView showsVerticalScrollIndicator={false}>
-        <YStack gap={16} padding={16} paddingBottom={48}>
-          <XStack gap={8}>
-            {tabs.map(({ key, label }) => {
-              const isActive = tab === key;
-              return (
-                <XStack
-                  key={key}
-                  testID={`gift-cards-tab-${key}`}
-                  role="button"
-                  aria-label={label}
-                  onPress={() => setTab(key)}
-                  paddingHorizontal={16}
-                  paddingVertical={8}
-                  borderRadius={999}
-                  borderWidth={1}
-                  borderColor={isActive ? '$primary' : '$borderColor'}
-                  backgroundColor={isActive ? '$primary' : 'transparent'}
-                  pressStyle={PRESS_STYLE.control}
-                >
-                  <Text fontSize={13} fontWeight="700" color={isActive ? '$onPrimary' : '$color'}>
-                    {label}
-                  </Text>
-                </XStack>
-              );
-            })}
-          </XStack>
+        <YStack gap={20} padding={16} paddingBottom={48}>
+          <GiftCardSegmented options={tabs} value={tab} onChange={setTab} />
           {body}
         </YStack>
       </RefreshScrollView>

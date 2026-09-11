@@ -7,19 +7,19 @@ interface Props {
   testID?: string;
 }
 
-/** The outlined status chip every Club Admin row draws — one shape for a pod
+/** The outlined status pill every Club Admin row draws — one shape for a pod
  * status, an audit action and an AI risk, so the three cannot drift. */
 export function ToneChip({ label, color, testID }: Readonly<Props>) {
   return (
     <XStack
       testID={testID}
-      paddingHorizontal={8}
-      paddingVertical={3}
+      paddingHorizontal={10}
+      paddingVertical={4}
       borderRadius={999}
       borderWidth={1}
       borderColor={color}
     >
-      <Text fontSize={10.5} fontWeight="700" color={color}>
+      <Text fontSize={11} fontWeight="600" color={color}>
         {label}
       </Text>
     </XStack>

@@ -6,7 +6,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import PhoneIcon from '@mui/icons-material/Phone';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
-import InfoRow, { type InfoRowProps } from './InfoRow';
+import { InfoRowList, type InfoRowProps } from './InfoRow';
 import { mailtoUrl, telUrl, whatsappUrl } from './podPending';
 
 /** The contact details a club admin is rendered from — satisfied both by the
@@ -19,7 +19,7 @@ export interface ClubAdminContact {
   email?: string | null;
 }
 
-const ICON = { fontSize: 18 } as const;
+const ICON = { fontSize: 20 } as const;
 
 /** "Need Help? Contact the Club Admin" card — profile, contact rows and
  * Call / Message (WhatsApp) / Email actions. Support availability is not
@@ -59,49 +59,35 @@ export default function ClubAdminCard({
   }
 
   return (
-    <Card variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }} data-testid="club-admin-card">
-      <Stack spacing={1.25}>
-        <Typography
-          variant="caption"
-          sx={{
-            fontWeight: 600,
-            color: "text.secondary"
-          }}>
+    <Card sx={{ p: 2 }} data-testid="club-admin-card">
+      <Stack spacing={1.5}>
+        <Typography sx={{ fontSize: '1rem', fontWeight: 600 }}>
           {caption ?? t('mweb.podPending.clubAdminCaption')}
         </Typography>
-        <Stack direction="row" spacing={1.25} sx={{
+        <Stack direction="row" spacing={1.5} sx={{
           alignItems: "center"
         }}>
           <Avatar
             src={admin.profile_photo ?? undefined}
             alt={admin.name}
             data-testid="club-admin-photo"
-            sx={{ width: 44, height: 44 }}
+            sx={{ width: 44, height: 44, bgcolor: 'action.hover', color: 'text.secondary' }}
           >
             <PersonIcon />
           </Avatar>
-          <Typography
-            variant="subtitle1"
-            sx={{
-              fontWeight: 700,
-              minWidth: 0
-            }}>
+          <Typography sx={{ fontSize: '0.9375rem', fontWeight: 600, minWidth: 0 }}>
             {admin.name}
           </Typography>
         </Stack>
-        {rows.map((row) => (
-          <InfoRow key={row.label} {...row} />
-        ))}
-        <Stack direction="row" spacing={2} sx={{
-          flexWrap: "wrap"
-        }}>
+        <InfoRowList rows={rows} />
+        <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
           {admin.phone && (
             <DuncitButton
               href={telUrl(admin.phone)}
               size="small"
+              variant="outlined"
               startIcon={<CallIcon />}
               data-testid="club-admin-call"
-              sx={{ fontWeight: 600 }}
             >
               {t('mweb.podPending.actionCall')}
             </DuncitButton>
@@ -112,9 +98,9 @@ export default function ClubAdminCard({
               target="_blank"
               rel="noopener"
               size="small"
+              variant="outlined"
               startIcon={<ChatIcon />}
               data-testid="club-admin-message"
-              sx={{ fontWeight: 600 }}
             >
               {t('mweb.podPending.actionMessage')}
             </DuncitButton>
@@ -123,9 +109,9 @@ export default function ClubAdminCard({
             <DuncitButton
               href={mailtoUrl(admin.email)}
               size="small"
+              variant="outlined"
               startIcon={<EmailIcon />}
               data-testid="club-admin-email-action"
-              sx={{ fontWeight: 600 }}
             >
               {t('mweb.podPending.actionEmail')}
             </DuncitButton>

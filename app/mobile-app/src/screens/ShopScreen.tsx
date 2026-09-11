@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
+import { EmptyState } from '@/components/EmptyState';
+import { SectionHeader } from '@/components/SectionHeader';
 import { PodShopSlider } from '@/components/shop/PodShopSlider';
 import { ShopFilterBar } from '@/components/shop/ShopFilterBar';
 import { ShopProductCard } from '@/components/shop/ShopProductCard';
@@ -38,39 +39,6 @@ export function sortShopProducts(products: ShopProduct[], sort: ShopSort): ShopP
   return copy.sort((a, b) => a.product_name.localeCompare(b.product_name));
 }
 
-const TRUST_ITEMS = [
-  ['verified-user', 'Trusted Pods', 'Quality Products'],
-  ['local-offer', 'Best Prices', 'Great Deals'],
-  ['local-shipping', 'Safe Delivery', 'Hassle Free'],
-] as const;
-
-/** Reassurance strip below the grid — static marketing copy. */
-function TrustBar({ tint }: Readonly<{ tint: string }>) {
-  return (
-    <XStack
-      justifyContent="space-around"
-      margin={16}
-      padding={14}
-      borderRadius={16}
-      backgroundColor="$surface"
-    >
-      {TRUST_ITEMS.map(([icon, title, caption]) => (
-        <XStack key={title} alignItems="center" gap={8}>
-          <MaterialIcons name={icon} size={20} color={tint} />
-          <YStack>
-            <Text fontSize={11.5} fontWeight="700" color="$color">
-              {title}
-            </Text>
-            <Text fontSize={10.5} color="$muted">
-              {caption}
-            </Text>
-          </YStack>
-        </XStack>
-      ))}
-    </XStack>
-  );
-}
-
 /** Pod Shop — the platform-wide browse catalogue of approved, pod-available
  * products with category chips, debounced search and sorting. Tapping a product
  * opens its detail screen; purchases happen through a pod's shop. RN twin of
@@ -78,7 +46,7 @@ function TrustBar({ tint }: Readonly<{ tint: string }>) {
 export function ShopScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { muted, primary } = useThemeColors();
+  const { muted } = useThemeColors();
   const { categories } = useHomeData();
   const { addingId, add } = useQuickAddToCart();
   const [products, setProducts] = useState<ShopProduct[]>([]);
@@ -112,25 +80,12 @@ export function ShopScreen() {
       </Text>
     );
   } else if (visible.length === 0) {
-    body = (
-      <Text testID="shop-empty" padding={24} color="$muted">
-        {t('mweb.shop.emptyState')}
-      </Text>
-    );
+    body = <EmptyState testID="shop-empty" icon="search-off" title={t('mweb.shop.emptyState')} />;
   } else {
     body = (
-      <YStack>
-        <Text
-          testID="shop-featured-heading"
-          fontSize={17}
-          fontWeight="700"
-          color="$color"
-          paddingHorizontal={16}
-          paddingTop={8}
-        >
-          {t('mweb.shop.featured')}
-        </Text>
-        <XStack flexWrap="wrap" gap={10} padding={16}>
+      <YStack gap={12} paddingHorizontal={16} paddingTop={4}>
+        <SectionHeader testID="shop-featured-heading" title={t('mweb.shop.featured')} />
+        <XStack flexWrap="wrap" gap={12} justifyContent="space-between">
           {visible.map((product) => (
             <ShopProductCard
               key={product.id}
@@ -149,11 +104,13 @@ export function ShopScreen() {
   // same header cart every other screen shows.
   return (
     <StackScreen title={t('mweb.shop.title')} testID="shop-screen">
-      <RefreshScrollView flex={1}>
+      <RefreshScrollView
+        flex={1}
+        contentContainerStyle={{ gap: 20, paddingTop: 4, paddingBottom: 32 }}
+      >
         <PodShopSlider />
         <ShopFilterBar filters={filters} sortOptions={SORT_OPTIONS} muted={muted} />
         {body}
-        <TrustBar tint={primary} />
       </RefreshScrollView>
     </StackScreen>
   );

@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
-import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, YStack } from 'tamagui';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
+import { EmptyState } from '@/components/EmptyState';
 import { PodProductOrderItem } from '@/components/pod-history';
 import { StackScreen } from '@/components/StackScreen';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { MyProductOrdersDocument } from '@/graphql/product-orders';
 import { graphqlRequest } from '@/services/graphql.client';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { toErrorMessage } from '@/utils/errors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { RefreshScrollView } from '@/components/PullToRefresh';
@@ -15,11 +15,10 @@ import { RefreshScrollView } from '@/components/PullToRefresh';
 type OrderRow = ResultOf<typeof MyProductOrdersDocument>['myProductOrders'][number];
 
 /** My Product Order History — every product order the buyer has placed across
- * all pods (newest first), each with its full fulfilment tracking. RN twin of
- * mWeb's OrdersHistoryPage. */
+ * all pods (newest first), each in its own card with full fulfilment tracking.
+ * RN twin of mWeb's OrdersHistoryPage. */
 export function OrdersHistoryScreen() {
   const { t } = useTranslation();
-  const { muted } = useThemeColors();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -49,29 +48,19 @@ export function OrdersHistoryScreen() {
       </Text>
     );
   } else if (orders.length === 0) {
-    body = (
-      <YStack alignItems="center" gap={10} paddingVertical={64} testID="orders-empty">
-        <MaterialIcons name="local-shipping" size={44} color={muted} />
-        <Text fontSize={17} fontWeight="700" color="$color">
-          No product orders yet
-        </Text>
-        <Text fontSize={13} color="$muted" textAlign="center">
-          Products you buy from a pod&apos;s shop will show up here with tracking.
-        </Text>
-      </YStack>
-    );
+    body = <EmptyState testID="orders-empty" icon="local-shipping" title="No product orders yet" />;
   } else {
     body = (
-      <YStack gap={12} padding={16}>
+      <YStack gap={16} padding={16}>
         {orders.map((order) => (
-          <YStack key={order.id} gap={4}>
+          <SurfaceCard key={order.id} gap={8}>
             {order.pod?.pod_title ? (
-              <Text fontSize={11.5} fontWeight="600" color="$muted">
+              <Text fontSize={12} fontWeight="600" color="$muted" numberOfLines={1}>
                 {order.pod.pod_title}
               </Text>
             ) : null}
             <PodProductOrderItem order={order} />
-          </YStack>
+          </SurfaceCard>
         ))}
       </YStack>
     );

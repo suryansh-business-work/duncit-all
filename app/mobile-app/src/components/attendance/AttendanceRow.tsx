@@ -24,13 +24,20 @@ function captionFor(
   return [method, when].filter(Boolean).join(' · ');
 }
 
-/** The green "Marked" end-cap. Hoisted (Sonar S6478). */
+/** The green "Marked" end-cap — a success pill. Hoisted (Sonar S6478). */
 function MarkedBadge({ labels }: Readonly<{ labels: PodAttendanceLabels }>) {
   const { success } = useThemeColors();
   return (
-    <XStack alignItems="center" gap={4}>
-      <MaterialIcons name="check-circle" size={20} color={success} />
-      <Text fontSize={12} fontWeight="800" color={success}>
+    <XStack
+      alignItems="center"
+      gap={4}
+      height={28}
+      paddingHorizontal={10}
+      borderRadius={999}
+      backgroundColor="$successSoft"
+    >
+      <MaterialIcons name="check-circle" size={16} color={success} />
+      <Text fontSize={12} fontWeight="600" color="$color">
         {labels.markedChip}
       </Text>
     </XStack>
@@ -48,25 +55,47 @@ interface MarkButtonProps {
 /** The per-attendee action. Dimmed, not hidden, when it cannot fire — a row
  * with no button reads as "nothing to do here", which is the opposite. */
 function MarkButton({ row, labels, state, busy, onMark }: Readonly<MarkButtonProps>) {
-  const { muted, onPrimary, primary } = useThemeColors();
+  const { muted } = useThemeColors();
   const ready = state === 'READY' && !busy;
   return (
+    <XStack alignItems="center" gap={6}>
+      <MaterialIcons name="radio-button-unchecked" size={18} color={muted} />
+      <XStack
+        testID={`attendance-mark-${row.membership_id}`}
+        role="button"
+        aria-label={labels.markButton}
+        onPress={() => ready && onMark(row)}
+        alignItems="center"
+        justifyContent="center"
+        paddingHorizontal={14}
+        height={36}
+        borderRadius={999}
+        backgroundColor={ready ? '$primary' : '$soft'}
+        pressStyle={PRESS_STYLE.control}
+      >
+        <Text fontSize={13} fontWeight="600" color={ready ? '$onPrimary' : '$muted'}>
+          {busy ? labels.marking : labels.markButton}
+        </Text>
+      </XStack>
+    </XStack>
+  );
+}
+
+/** "×N" beside a name — one booking that admits several people. */
+function SeatsPill({ label }: Readonly<{ label: string }>) {
+  const { muted } = useThemeColors();
+  return (
     <XStack
-      testID={`attendance-mark-${row.membership_id}`}
-      role="button"
-      aria-label={labels.markButton}
-      onPress={() => ready && onMark(row)}
       alignItems="center"
-      justifyContent="center"
-      paddingHorizontal={14}
-      height={36}
+      gap={3}
+      height={20}
+      paddingHorizontal={6}
       borderRadius={999}
-      backgroundColor={ready ? primary : muted}
-      opacity={ready ? 1 : 0.55}
-      pressStyle={PRESS_STYLE.control}
+      backgroundColor="$soft"
     >
-      <Text fontSize={12.5} fontWeight="800" color={onPrimary}>
-        {busy ? labels.marking : labels.markButton}
+      <MaterialIcons name="group" size={12} color={muted} />
+      <Text fontSize={11} fontWeight="600" color="$color">
+        {label}
       </Text>
     </XStack>
   );
@@ -97,7 +126,6 @@ export function AttendanceRow({
   formatDateTime,
   onMark,
 }: Readonly<Props>) {
-  const { success, primary, warning } = useThemeColors();
   const state = attendanceRowState(row, canMark);
   const marked = state === 'MARKED';
 
@@ -105,36 +133,33 @@ export function AttendanceRow({
     <XStack
       testID={`attendance-row-${row.membership_id}`}
       alignItems="center"
-      gap={10}
-      padding={12}
-      borderRadius={14}
+      gap={12}
+      paddingVertical={12}
+      paddingHorizontal={14}
+      borderRadius={16}
       borderWidth={1}
-      borderColor={marked ? success : '$borderColor'}
-      backgroundColor={marked ? 'rgba(46,160,67,0.14)' : '$surface'}
+      borderColor={marked ? '$success' : '$borderColor'}
+      backgroundColor={marked ? '$successSoft' : '$surface'}
     >
-      <AttendeeAvatar uri={row.avatar_url} name={row.name} size={38} />
+      <AttendeeAvatar uri={row.avatar_url} name={row.name} size={36} />
 
-      <YStack flex={1} gap={1}>
+      <YStack flex={1} gap={2}>
         <XStack alignItems="center" gap={6}>
-          <Text fontSize={14.5} fontWeight="700" color="$color" numberOfLines={1} flexShrink={1}>
+          <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={1} flexShrink={1}>
             {row.name}
           </Text>
-          {row.seats > 1 ? (
-            <Text fontSize={11} fontWeight="700" color={primary}>
-              {labels.seats(row.seats)}
-            </Text>
-          ) : null}
+          {row.seats > 1 ? <SeatsPill label={labels.seats(row.seats)} /> : null}
         </XStack>
-        <Text fontSize={12} color="$muted" numberOfLines={1}>
+        <Text fontSize={12.5} color="$muted" numberOfLines={1}>
           {captionFor(row, labels, formatDateTime)}
         </Text>
         {marked && row.verified_phone ? (
-          <Text fontSize={11.5} color="$muted" numberOfLines={1}>
+          <Text fontSize={12.5} color="$muted" numberOfLines={1}>
             {labels.verifiedPhone(row.verified_phone)}
           </Text>
         ) : null}
         {state === 'NEEDS_COMPANIONS' ? (
-          <Text fontSize={11.5} color={warning}>
+          <Text fontSize={12.5} color="$warning">
             {labels.companionsNeeded(row.companions_required)}
           </Text>
         ) : null}

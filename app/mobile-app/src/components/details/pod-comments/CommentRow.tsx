@@ -32,7 +32,7 @@ export function CommentRow({
   onRequestDelete,
   onOpenProfile,
 }: Readonly<Props>) {
-  const { muted, primary } = useThemeColors();
+  const { muted, accent } = useThemeColors();
   const { t } = useTranslation();
   const liked = comment.liked_by_me;
   const authorName = comment.author_name || t('mweb.podDetails.anon');
@@ -59,7 +59,7 @@ export function CommentRow({
             width={36}
             height={36}
             borderRadius={18}
-            backgroundColor="$surface"
+            backgroundColor="$soft"
             alignItems="center"
             justifyContent="center"
           >
@@ -69,7 +69,14 @@ export function CommentRow({
           </YStack>
         )}
       </PressScale>
-      <YStack flex={1} gap={2}>
+      <YStack
+        flex={1}
+        gap={2}
+        paddingHorizontal={12}
+        paddingVertical={8}
+        borderRadius={16}
+        backgroundColor="$soft"
+      >
         <XStack gap={8} alignItems="center">
           <Text
             pressStyle={PRESS_STYLE.inline}
@@ -105,10 +112,10 @@ export function CommentRow({
         <MaterialIcons
           name={liked ? 'favorite' : 'favorite-border'}
           size={16}
-          color={liked ? primary : muted}
+          color={liked ? accent : muted}
         />
         {comment.like_count > 0 ? (
-          <Text fontSize={11.5} fontWeight="700" color={liked ? '$primary' : '$muted'}>
+          <Text fontSize={11.5} fontWeight="600" color={liked ? '$accent' : '$muted'}>
             {comment.like_count}
           </Text>
         ) : null}

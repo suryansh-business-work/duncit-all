@@ -1,5 +1,7 @@
-import { Box, Stack, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+import { Card, Stack, TextField, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import SectionHeader from '../../components/SectionHeader';
 import { useTranslation } from '../../i18n/useTranslation';
+import { SEGMENTED_TOGGLE_SX } from './segmentedSx';
 
 interface GiftRecipientFieldsProps {
   gift: boolean;
@@ -33,25 +35,21 @@ export default function GiftRecipientFields({
     : t('mweb.giftCards.recipientEmailHint');
 
   return (
-    <Box>
-      <Typography variant="subtitle1" sx={{
-        fontWeight: 700
-      }}>
-        {t('mweb.giftCards.forHeading')}
-      </Typography>
+    <Card sx={{ p: 2 }}>
+      <SectionHeader title={t('mweb.giftCards.forHeading')} />
       <ToggleButtonGroup
         exclusive
         fullWidth
         size="small"
         value={gift ? 'gift' : 'self'}
         onChange={(_event, next: string | null) => next && onGift(next === 'gift')}
-        sx={{ mt: 1 }}
+        sx={{ ...SEGMENTED_TOGGLE_SX, mt: 1.5 }}
       >
         <ToggleButton value="self">{t('mweb.giftCards.forMyself')}</ToggleButton>
         <ToggleButton value="gift">{t('mweb.giftCards.forSomeone')}</ToggleButton>
       </ToggleButtonGroup>
       {gift && (
-        <Stack spacing={1.5} sx={{ mt: 1.5 }}>
+        <Stack spacing={1.5} sx={{ mt: 2 }}>
           <TextField
             required
             fullWidth
@@ -85,6 +83,6 @@ export default function GiftRecipientFields({
           />
         </Stack>
       )}
-    </Box>
+    </Card>
   );
 }

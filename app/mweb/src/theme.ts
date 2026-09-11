@@ -14,19 +14,34 @@ export const tokens = { brand, neutral, semantic };
 const WHITE = light.surface;
 
 // mWeb's own corner-radius scale, layered on top of the shared `radii` bucket
-// tokens: values that already exist upstream (surface/tooltip/pill/hairline)
+// tokens: values that already exist upstream (base/surface/tooltip/pill/hairline)
 // are re-read from `radii` so they can't drift; `dialog`/`input` are
-// mWeb-specific steps the shared scale doesn't cover (rounded-design policy,
-// 2026-08-04).
+// mWeb-specific steps the shared scale doesn't cover. `base` stays 16 because
+// it is `shape.borderRadius` — every numeric `sx` radius is a multiplier of it,
+// so moving it would silently rescale hundreds of call sites.
 export const RADIUS = {
-  surface: radii.lg, // 16 — Paper/Card/Accordion
-  dialog: 20,
-  input: 12, // OutlinedInput/Alert/ToggleButton/Menu/ListItemButton
+  base: radii.lg, // 16 — shape.borderRadius (the sx multiplier)
+  surface: radii.xl, // 24 — Paper/Card/Accordion
+  dialog: 28,
+  input: 14, // OutlinedInput/Alert/ToggleButton/Menu/ListItemButton
   tooltip: radii.md, // 10
   pill: radii.pill, // 999 — Button/IconButton/Chip/LinearProgress
   hairline: radii.sm, // 8 — scrollbar thumb + focus ring
 } as const;
 const SCROLLBAR_SIZE = 8;
+
+/**
+ * The card look for surfaces drawn with a `Box`/`Stack` rather than `<Card>` —
+ * the same radius, border and shadow the themed Card gets, read from CSS
+ * variables the theme sets per mode. Spread it: `sx={{ ...SURFACE_SX, p: 2 }}`.
+ * Native twin: components/SurfaceCard.
+ */
+export const SURFACE_SX = {
+  bgcolor: 'background.paper',
+  borderRadius: `${RADIUS.surface}px`,
+  border: '1px solid var(--duncit-card-border)',
+  boxShadow: 'var(--duncit-card-shadow)',
+} as const;
 
 export const buildTheme = (mode: PaletteMode = 'light') => {
   const isDark = mode === 'dark';
@@ -39,22 +54,28 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
   const PRIMARY = m.primary;
   const PRIMARY_HOVER = m.primaryHover;
   const PRIMARY_ACTIVE = m.primaryActive;
-  const APP_BG = isDark
-    ? 'radial-gradient(circle at 8% 0%, rgba(255,79,115,0.20), transparent 34%), radial-gradient(circle at 90% 16%, rgba(139,92,246,0.18), transparent 32%), linear-gradient(180deg, #100d18 0%, #08070b 100%)'
-    : `radial-gradient(circle at 8% 0%, rgba(255,79,115,0.15), transparent 34%), radial-gradient(circle at 90% 16%, rgba(139,92,246,0.10), transparent 32%), linear-gradient(180deg, #fff5f7 0%, ${WHITE} 62%)`;
-  const SURFACE_GRADIENT = isDark
-    ? `linear-gradient(180deg, ${alpha(WHITE, 0.05)} 0%, ${alpha(PRIMARY, 0.06)} 100%)`
-    : `linear-gradient(180deg, ${WHITE} 0%, ${alpha(PRIMARY, 0.035)} 100%)`;
+  const ON_PRIMARY = m.onPrimary;
+  const ACCENT = m.accent;
+  const SOFT = m.soft;
+  // Calm, flat page: the warm off-white (or near-black) ground IS the design —
+  // cards read by contrast against it, not by a glow behind them.
+  const APP_BG = 'none';
+  // Near-flat, like the native cards (which carry no shadow at all).
+  const CARD_SHADOW = isDark ? 'none' : `0 1px 2px ${alpha(INK, 0.05)}`;
+  // Light cards sit borderless on the off-white page; dark cards need the
+  // hairline to separate from a ground that is close in tone. The border stays
+  // 1px in both so nothing shifts between modes.
+  const CARD_BORDER_COLOR = isDark ? BORDER : 'transparent';
+  const CARD_BORDER = `1px solid ${CARD_BORDER_COLOR}`;
   return createTheme({
   palette: {
     mode,
     primary: {
-      light: tokens.brand[300],
       main: PRIMARY,
       dark: PRIMARY_ACTIVE,
-      contrastText: WHITE,
+      contrastText: ON_PRIMARY,
     },
-    secondary: { main: tokens.semantic.secondary, contrastText: WHITE },
+    secondary: { main: ACCENT, contrastText: WHITE },
     success: { main: tokens.semantic.success },
     warning: { main: tokens.semantic.warning },
     error: { main: tokens.semantic.error },
@@ -63,18 +84,19 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     text: { primary: INK, secondary: MUTED },
     divider: BORDER,
   },
-  shape: { borderRadius: RADIUS.surface },
+  shape: { borderRadius: RADIUS.base },
   typography: {
     fontFamily:
       '"Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     // Quicksand ships 300–700 — anything heavier renders as ugly synthesized
-    // faux-bold, so 700 is the ceiling and body text stays regular.
-    h1: { fontWeight: 700, letterSpacing: '-0.02em' },
-    h2: { fontWeight: 700, letterSpacing: '-0.02em' },
-    h3: { fontWeight: 700, letterSpacing: '-0.02em' },
-    h4: { fontWeight: 700, letterSpacing: '-0.015em' },
-    h5: { fontWeight: 700, letterSpacing: '-0.01em' },
-    h6: { fontWeight: 700, letterSpacing: '-0.01em' },
+    // faux-bold. Headings sit at 600: the calm look comes from size and the
+    // ink/muted two-tone, not from weight.
+    h1: { fontWeight: 600, letterSpacing: '-0.02em' },
+    h2: { fontWeight: 600, letterSpacing: '-0.02em' },
+    h3: { fontWeight: 600, letterSpacing: '-0.02em' },
+    h4: { fontWeight: 600, letterSpacing: '-0.015em' },
+    h5: { fontWeight: 600, letterSpacing: '-0.01em' },
+    h6: { fontWeight: 600, letterSpacing: '-0.01em' },
     subtitle1: { fontWeight: 600, lineHeight: 1.3 },
     subtitle2: { fontWeight: 600, lineHeight: 1.3 },
     button: { fontWeight: 600, textTransform: 'none', letterSpacing: 0 },
@@ -92,6 +114,8 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
           html: { width: '100%', overflowX: 'hidden' },
           body: {
             '--duncit-app-bg': APP_BG,
+            '--duncit-card-border': CARD_BORDER_COLOR,
+            '--duncit-card-shadow': CARD_SHADOW,
             backgroundColor: BG,
             backgroundImage: 'var(--duncit-app-bg)',
             backgroundAttachment: 'fixed',
@@ -143,15 +167,16 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
         defaultProps: { elevation: 0, color: 'default' },
         styleOverrides: {
           root: {
-            backgroundColor: SURFACE,
+            backgroundColor: BG,
             color: INK,
-            borderBottom: `1px solid ${BORDER}`,
+            borderBottom: '1px solid transparent',
           },
         },
       },
       MuiPaper: {
         defaultProps: { elevation: 0 },
         styleOverrides: {
+          root: { backgroundImage: 'none' },
           rounded: { borderRadius: RADIUS.surface },
           outlined: { borderColor: BORDER },
         },
@@ -161,14 +186,9 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
         styleOverrides: {
           root: {
             borderRadius: RADIUS.surface,
-            border: `1px solid ${BORDER}`,
+            border: CARD_BORDER,
             backgroundColor: SURFACE,
-            backgroundImage: SURFACE_GRADIENT,
-            boxShadow: `0 14px 34px -22px ${alpha(INK, isDark ? 0.72 : 0.28)}`,
-            transition: 'transform 180ms ease, box-shadow 180ms ease',
-            '&:hover': {
-              boxShadow: `0 18px 42px -24px ${alpha(PRIMARY, 0.34)}`,
-            },
+            boxShadow: CARD_SHADOW,
           },
         },
       },
@@ -184,7 +204,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
             props: { variant: 'contained', color: 'primary' },
             style: {
               backgroundColor: PRIMARY,
-              color: WHITE,
+              color: ON_PRIMARY,
               '&:hover': { backgroundColor: PRIMARY_HOVER },
               '&:active': { backgroundColor: PRIMARY_ACTIVE },
             },
@@ -208,8 +228,8 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
         styleOverrides: {
           root: {
             borderRadius: RADIUS.pill,
-            paddingInline: 18,
-            paddingBlock: 9,
+            paddingInline: 20,
+            paddingBlock: 10,
             fontWeight: 600,
             lineHeight: 1.1,
             minWidth: 0,
@@ -218,7 +238,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
               flexShrink: 0,
             },
           },
-          sizeLarge: { paddingInline: 20, paddingBlock: 11, fontSize: '0.92rem' },
+          sizeLarge: { paddingInline: 24, paddingBlock: 15, fontSize: '0.95rem' },
           sizeSmall: { paddingInline: 12, paddingBlock: 6, fontSize: '0.78rem' },
           outlined: {
             borderColor: BORDER,
@@ -238,11 +258,12 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       MuiChip: {
         defaultProps: { size: 'small' },
         variants: [
-          { props: { variant: 'filled', color: 'primary' }, style: { backgroundColor: PRIMARY, color: WHITE } },
+          { props: { variant: 'filled', color: 'primary' }, style: { backgroundColor: PRIMARY, color: ON_PRIMARY } },
           {
             props: { variant: 'filled', color: 'secondary' },
-            style: { backgroundColor: tokens.semantic.secondary, color: WHITE },
+            style: { backgroundColor: ACCENT, color: WHITE },
           },
+          { props: { variant: 'filled', color: 'default' }, style: { backgroundColor: SOFT } },
         ],
         styleOverrides: {
           root: {
@@ -255,8 +276,10 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
           outlined: { borderColor: BORDER, backgroundColor: SURFACE },
         },
       },
+      // Medium fields, trimmed to the calm design's ~52px (native FIELD_HEIGHT)
+      // by the input padding below. `size="small"` stays available for dense rows.
       MuiTextField: {
-        defaultProps: { variant: 'outlined', size: 'small' },
+        defaultProps: { variant: 'outlined', size: 'medium' },
       },
       MuiInputBase: {
         styleOverrides: {
@@ -301,6 +324,11 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
             '&:hover fieldset': { borderColor: alpha(INK, 0.3) },
             '&.Mui-focused fieldset': { borderColor: PRIMARY, borderWidth: 1.5 },
           },
+          // MUI's medium is 16.5px each side (~55px tall); 15px lands on ~52.
+          input: {
+            paddingBlock: 15,
+            '&.MuiInputBase-inputSizeSmall': { paddingBlock: 8.5 },
+          },
         },
       },
       MuiAlert: {
@@ -332,9 +360,8 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
         styleOverrides: {
           root: {
             borderRadius: RADIUS.surface,
-            border: `1px solid ${BORDER}`,
+            border: CARD_BORDER,
             backgroundColor: SURFACE,
-            backgroundImage: SURFACE_GRADIENT,
             boxShadow: 'none',
             '&:before': { display: 'none' },
             '&.Mui-expanded': { margin: 0 },
@@ -360,7 +387,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
             color: INK,
             '&.Mui-selected': {
               backgroundColor: PRIMARY,
-              color: WHITE,
+              color: ON_PRIMARY,
               '&:hover': { backgroundColor: PRIMARY_HOVER },
             },
           },
@@ -375,7 +402,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
         styleOverrides: {
           root: {
             color: MUTED,
-            '&.Mui-selected': { color: PRIMARY },
+            '&.Mui-selected': { color: ACCENT },
           },
         },
       },
@@ -403,7 +430,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       MuiSnackbarContent: { styleOverrides: { root: { borderRadius: RADIUS.input } } },
       MuiDialog: {
         styleOverrides: {
-          paper: { borderRadius: RADIUS.dialog, backgroundImage: SURFACE_GRADIENT },
+          paper: { borderRadius: RADIUS.dialog },
           // `paper` is composed AFTER MUI's own `paperFullScreen`, so without this
           // every fullScreen dialog keeps 20px corners against the backdrop — and
           // since the paper also carries `overflowY: auto`, content is clipped at

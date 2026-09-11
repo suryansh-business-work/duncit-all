@@ -1,7 +1,8 @@
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, XStack } from 'tamagui';
 import { formatMoney } from '@duncit/utils';
 import type { PreviewSummary } from '@duncit/slots';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import type { Translate } from '@/i18n/fallback';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -44,19 +45,11 @@ export function PreviewSummaryCard({ summary, maxAdvanceDays }: Readonly<Props>)
   const skips = skipLines(summary, maxAdvanceDays, t);
 
   return (
-    <YStack
-      testID="recurring-preview"
-      gap={8}
-      padding={12}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
-      <Text fontSize={11} fontWeight="700" color="$muted">
+    <SurfaceCard testID="recurring-preview" gap={8}>
+      <Text fontSize={12} fontWeight="600" color="$muted">
         {t('availability.recurring.preview.slotsToCreate')}
       </Text>
-      <Text testID="recurring-preview-total" fontSize={22} fontWeight="800" color="$primary">
+      <Text testID="recurring-preview-total" fontSize={24} fontWeight="700" color="$color">
         {t('availability.recurring.preview.slotsCount', { vars: { count: summary.total } })}
       </Text>
       {spaceLabels.map((label) => {
@@ -64,7 +57,7 @@ export function PreviewSummaryCard({ summary, maxAdvanceDays }: Readonly<Props>)
         if (!bucket) return null;
         return (
           <XStack key={label || 'whole-venue'} justifyContent="space-between" gap={8}>
-            <Text flex={1} fontSize={12.5} fontWeight="700" color="$color" numberOfLines={1}>
+            <Text flex={1} fontSize={13} fontWeight="600" color="$color" numberOfLines={1}>
               {label || t('availability.wholeVenue')}
             </Text>
             <Text fontSize={12} color="$muted">
@@ -78,10 +71,10 @@ export function PreviewSummaryCard({ summary, maxAdvanceDays }: Readonly<Props>)
         );
       })}
       <XStack justifyContent="space-between" alignItems="center">
-        <Text fontSize={11} fontWeight="700" color="$muted">
+        <Text fontSize={12} fontWeight="600" color="$muted">
           {t('availability.recurring.preview.totalRevenue')}
         </Text>
-        <Text testID="recurring-preview-revenue" fontSize={16} fontWeight="800" color="$color">
+        <Text testID="recurring-preview-revenue" fontSize={18} fontWeight="700" color="$color">
           {formatMoney(summary.estimatedRevenue)}
         </Text>
       </XStack>
@@ -90,6 +83,6 @@ export function PreviewSummaryCard({ summary, maxAdvanceDays }: Readonly<Props>)
           {t('availability.recurring.preview.autoSkipped', { vars: { list: skips.join(' · ') } })}
         </Text>
       ) : null}
-    </YStack>
+    </SurfaceCard>
   );
 }

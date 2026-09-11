@@ -4,20 +4,20 @@ import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import type { TimelineStep } from './productOrders';
 
-/** Vertical fulfilment timeline — done (check) / current (filled) / pending. */
+/** The dot a step wears: done (green check) / current (coral) / still to come (muted). */
+function stepDot(step: TimelineStep) {
+  if (step.done) return { Icon: CheckCircleIcon, color: 'primary.main' };
+  if (step.current) return { Icon: RadioButtonCheckedIcon, color: 'secondary.main' };
+  return { Icon: RadioButtonUncheckedIcon, color: 'text.disabled' };
+}
+
+/** Vertical fulfilment timeline — the steps joined by a hairline rail.
+ * Native twin: components/pod-history/OrderTrackingTimeline. */
 export default function OrderTrackingTimeline({ steps }: Readonly<{ steps: TimelineStep[] }>) {
   return (
     <Stack spacing={0}>
       {steps.map((step, i) => {
-        let Icon = RadioButtonUncheckedIcon;
-        let color = 'text.disabled';
-        if (step.done) {
-          Icon = CheckCircleIcon;
-          color = 'success.main';
-        } else if (step.current) {
-          Icon = RadioButtonCheckedIcon;
-          color = 'primary.main';
-        }
+        const { Icon, color } = stepDot(step);
         const isLast = i === steps.length - 1;
         return (
           <Stack key={step.status} direction="row" spacing={1.25} sx={{
@@ -27,12 +27,12 @@ export default function OrderTrackingTimeline({ steps }: Readonly<{ steps: Timel
               alignItems: "center"
             }}>
               <Icon sx={{ fontSize: 18, color }} />
-              {!isLast && <Box sx={{ width: 2, height: 16, bgcolor: step.done ? 'success.main' : 'divider' }} />}
+              {!isLast && <Box sx={{ width: 2, height: 16, my: 0.25, bgcolor: 'divider' }} />}
             </Stack>
             <Typography
               variant="body2"
               sx={{
-                fontWeight: step.current ? 700 : 500,
+                fontWeight: step.current ? 600 : 500,
                 color: step.current ? 'text.primary' : 'text.secondary',
                 pb: isLast ? 0 : 1,
               }}

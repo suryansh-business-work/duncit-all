@@ -1,6 +1,7 @@
 import { Paper, Stack, Typography } from '@mui/material';
 import type { PublicGrievanceOfficer } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
+import { SURFACE_SX } from '../../theme';
 
 interface Props {
   officer?: PublicGrievanceOfficer;
@@ -25,8 +26,8 @@ export default function GrievanceOfficerCard({ officer }: Readonly<Props>) {
   const filled = rows.filter(([, value]) => value.trim().length > 0);
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
-      <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+    <Paper sx={{ ...SURFACE_SX, p: 2 }}>
+      <Typography sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>
         {t('grievance.officerTitle')}
       </Typography>
       {filled.length === 0 ? (

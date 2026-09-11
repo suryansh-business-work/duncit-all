@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { Box, Container } from '@mui/material';
+import PageHeader from '../../components/PageHeader';
+import { useTranslation } from '../../i18n/useTranslation';
 import SearchBar from './SearchBar';
 import SearchResults from './SearchResults';
 import CategoryActions from './CategoryActions';
@@ -14,6 +16,7 @@ import type { SearchSort } from './searchSort';
  * actions, club-grouped results (Happening This Week / More Clubs), sort & filter
  * and discovery-oriented empty states. Mirrors the native app's SearchScreen. */
 export default function SearchPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [text, setText] = useState(() => params.get('q') ?? '');
@@ -44,8 +47,9 @@ export default function SearchPage() {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 2 }}>
-      <Box sx={{ position: 'sticky', top: 0, zIndex: 4, pb: 1.5 }}>
+    <Container maxWidth="md" sx={{ pb: 2 }}>
+      <PageHeader title={t('mweb.common.search')} onBack={() => navigate(-1)} />
+      <Box sx={{ position: 'sticky', top: 0, zIndex: 4, pt: 1.5, pb: 2.5, bgcolor: 'background.default' }}>
         <SearchBar value={text} onChange={setText} onPick={setText} />
       </Box>
       {active ? (

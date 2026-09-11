@@ -20,6 +20,7 @@ import { RootNavigator } from '@/navigation/RootNavigator';
 import { NativeTourProvider } from '@/tours/NativeTourProvider';
 import { SplashOverlay } from '@/components/SplashOverlay';
 import { ForceUpdateGate } from '@/components/ForceUpdateGate';
+import { APP_BG } from '@/components/AppBackground';
 import { AppPopup } from '@/components/AppPopup';
 import { ExitConfirmGate } from '@/components/ExitConfirmGate';
 import { linking } from '@/navigation/linking';
@@ -39,11 +40,11 @@ import config, { createBrandConfig } from './tamagui.config';
 import { configureLogs, httpTransport, detectEnvironment } from '@duncit/logs';
 import { config as appConfig } from '@/constants/config';
 
-// Base navigator background = the gradient's base colour, so there's no white
-// flash between/behind screens. Each screen paints the full gradient itself.
+// Base navigator background = the app ground, so there's no white
+// flash between/behind screens. Each screen paints the same ground itself.
 const navThemeFor = (dark: boolean): NavTheme => ({
   ...DefaultTheme,
-  colors: { ...DefaultTheme.colors, background: dark ? '#08070b' : '#ffffff' },
+  colors: { ...DefaultTheme.colors, background: dark ? APP_BG.dark : APP_BG.light },
 });
 
 // Inject the brand web font (Quicksand) on web; no-op on native. Runs once at

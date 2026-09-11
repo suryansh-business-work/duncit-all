@@ -11,6 +11,7 @@ import {
   PodHistoryToolbar,
 } from '@/components/pod-history';
 import { StackScreen } from '@/components/StackScreen';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { usePodHistory, usePodHistoryCategories } from '@/hooks/usePodHistory';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -23,6 +24,34 @@ import {
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+
+/** One icon on a soft disc and one short line — the list's empty states. */
+function EmptyLine({ text, testID }: Readonly<{ text: string; testID: string }>) {
+  const { muted } = useThemeColors();
+  return (
+    <YStack
+      testID={testID}
+      alignItems="center"
+      gap={12}
+      paddingVertical={48}
+      paddingHorizontal={24}
+    >
+      <YStack
+        width={72}
+        height={72}
+        borderRadius={36}
+        backgroundColor="$soft"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <MaterialIcons name="history" size={40} color={muted} />
+      </YStack>
+      <Text fontSize={15} fontWeight="600" color="$color" textAlign="center">
+        {text}
+      </Text>
+    </YStack>
+  );
+}
 
 /** Pod History — the pods the user has joined, with a search box over the list
  * and a top-right Filter (Super → Category) and Sort (date / price). RN twin of
@@ -85,25 +114,16 @@ export function PodHistoryScreen() {
     );
   } else if (hasHistory) {
     body = (
-      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 10 }}>
-        <YStack gap={2} marginBottom={4}>
-          <Text fontSize={20} fontWeight="700" color="$color">
-            {t('mweb.podHistory.joinedPods')}
-          </Text>
-          <Text fontSize={13} color="$muted">
-            {t('mweb.podHistory.subtitle')}
-          </Text>
-        </YStack>
+      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 16 }}>
         <XStack
           alignItems="center"
           gap={8}
-          marginBottom={4}
-          paddingHorizontal={12}
-          height={46}
+          paddingHorizontal={16}
+          height={48}
           borderRadius={999}
           borderWidth={1}
-          borderColor="$borderColor"
-          backgroundColor="$background"
+          borderColor="$cardBorder"
+          backgroundColor="$surface"
         >
           <MaterialIcons name="search" size={20} color={muted} />
           <Input
@@ -121,31 +141,28 @@ export function PodHistoryScreen() {
           />
         </XStack>
         {visible.length === 0 ? (
-          <YStack testID="pod-history-no-match" gap={4} paddingVertical={24} alignItems="center">
-            <Text fontSize={16} fontWeight="700" color="$color">
-              {t('mweb.podHistory.noPodsFound')}
-            </Text>
-            <Text fontSize={13} color="$muted" textAlign="center">
-              {t('mweb.podHistory.noPodsFoundBody')}
-            </Text>
-          </YStack>
+          <EmptyLine testID="pod-history-no-match" text={t('mweb.podHistory.noPodsFound')} />
         ) : (
-          visible.map((item) => (
-            <PodHistoryCard
-              key={item.id}
-              item={item}
-              onPress={() => navigation.navigate('PodHistoryDetails', { membershipId: item.id })}
-            />
-          ))
+          <SurfaceCard padding={0} overflow="hidden">
+            {visible.map((item, index) => (
+              <YStack key={item.id}>
+                {index > 0 ? (
+                  <YStack height={1} marginHorizontal={16} backgroundColor="$borderColor" />
+                ) : null}
+                <PodHistoryCard
+                  item={item}
+                  onPress={() =>
+                    navigation.navigate('PodHistoryDetails', { membershipId: item.id })
+                  }
+                />
+              </YStack>
+            ))}
+          </SurfaceCard>
         )}
       </RefreshScrollView>
     );
   } else {
-    body = (
-      <Text testID="pod-history-empty" padding={24} color="$muted">
-        {t('mweb.podHistory.empty')}
-      </Text>
-    );
+    body = <EmptyLine testID="pod-history-empty" text={t('mweb.podHistory.empty')} />;
   }
 
   return (

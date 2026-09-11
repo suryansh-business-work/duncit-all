@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Alert, Chip, Link, Stack, TextField, Typography } from '@mui/material';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import { alpha } from '@mui/material/styles';
 import { DuncitButton } from '@duncit/buttons';
 import type { AvailableCoupon, CouponPreview } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -44,18 +45,17 @@ export default function CouponField({
     return (
       <Stack
         direction="row"
-        sx={{
+        sx={(theme) => ({
           alignItems: "center",
           justifyContent: "space-between",
           p: 1.25,
           borderRadius: '16px',
-          bgcolor: 'success.light',
-          color: 'success.contrastText'
-        }}>
+          bgcolor: alpha(theme.palette.success.main, 0.12),
+        })}>
         <Stack direction="row" spacing={1} sx={{
           alignItems: "center"
         }}>
-          <LocalOfferIcon fontSize="small" />
+          <LocalOfferIcon fontSize="small" sx={{ color: 'success.main' }} />
           <Typography variant="body2" sx={{
             fontWeight: 600
           }}>

@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Paper, Stack, TextField, Typography } from '@mui/material';
-import SendIcon from '@mui/icons-material/Send';
-import { DuncitButton } from '@duncit/buttons';
+import { Box, Paper, Stack, TextField, Typography } from '@mui/material';
+import SendRoundedIcon from '@mui/icons-material/SendRounded';
+import { DuncitRoundButton } from '@duncit/buttons';
 import AttachmentsField from '../../../forms/support-form/AttachmentsField';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { SURFACE_SX } from '../../../theme';
+import { PILL_FIELD_SX, SEND_BUTTON_SX } from '../../support-chat/calmStyles';
 
 interface Props {
   /** Resolved/closed tickets lock the reply box (B7). */
@@ -20,13 +22,13 @@ export default function TicketComposer({ locked, busy, onSend }: Readonly<Props>
 
   if (locked) {
     return (
-      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px', textAlign: 'center', bgcolor: 'action.hover' }}>
+      <Box sx={{ p: 1.5, borderRadius: '18px', textAlign: 'center', bgcolor: 'action.hover' }}>
         <Typography variant="caption" sx={{
           color: "text.secondary"
         }}>
           This conversation has been marked as resolved.
         </Typography>
-      </Paper>
+      </Box>
     );
   }
 
@@ -38,11 +40,11 @@ export default function TicketComposer({ locked, busy, onSend }: Readonly<Props>
   };
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }}>
+    <Paper sx={{ ...SURFACE_SX, p: 1.5 }}>
       <Stack spacing={1}>
         <AttachmentsField attachments={attachments} setAttachments={setAttachments} />
         <Stack direction="row" spacing={1} sx={{
-          alignItems: "center"
+          alignItems: "flex-end"
         }}>
           <TextField
             size="small"
@@ -52,15 +54,17 @@ export default function TicketComposer({ locked, busy, onSend }: Readonly<Props>
             onChange={(e) => setMessage(e.target.value)}
             multiline
             maxRows={4}
+            sx={PILL_FIELD_SX}
           />
-          <DuncitButton
-            variant="contained"
-            endIcon={<SendIcon />}
+          <DuncitRoundButton
+            size="large"
+            aria-label={t('mweb.ticketDetails.sendReply')}
             disabled={busy || (!message.trim() && attachments.length === 0)}
             onClick={handleSend}
+            sx={SEND_BUTTON_SX}
           >
-            Send
-          </DuncitButton>
+            <SendRoundedIcon />
+          </DuncitRoundButton>
         </Stack>
       </Stack>
     </Paper>

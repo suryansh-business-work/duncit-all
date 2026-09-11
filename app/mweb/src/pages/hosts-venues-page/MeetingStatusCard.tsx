@@ -32,8 +32,8 @@ export default function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind 
   const scheduled = meeting.status === 'SCHEDULED' && !!(meeting.scheduled_at || meeting.meeting_link);
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px', bgcolor: scheduled ? 'rgba(20,184,166,0.06)' : undefined }}>
-      <CardContent>
+    <Card>
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack
           direction="row"
           spacing={1}
@@ -41,11 +41,11 @@ export default function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind 
             alignItems: "center",
             mb: 1
           }}>
-          <EventAvailableIcon color="primary" fontSize="small" />
+          <EventAvailableIcon color="secondary" fontSize="small" />
           <Typography
-            variant="subtitle1"
             sx={{
-              fontWeight: 700,
+              fontSize: '1rem',
+              fontWeight: 600,
               flex: 1
             }}>
             Your {label} onboarding meeting
@@ -74,7 +74,7 @@ export default function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind 
               </Typography>
             )}
             {meeting.meeting_link && (
-              <DuncitButton variant="contained" size="small" href={meeting.meeting_link} target="_blank" rel="noopener">
+              <DuncitButton variant="contained" href={meeting.meeting_link} target="_blank" rel="noopener">
                 Join meeting
               </DuncitButton>
             )}

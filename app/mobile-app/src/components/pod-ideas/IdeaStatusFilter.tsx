@@ -45,14 +45,16 @@ export function IdeaStatusFilter({ value, onChange }: Readonly<Props>) {
               aria-pressed={selected}
               onPress={() => onChange(option.value)}
               paddingHorizontal={12}
-              paddingVertical={7}
+              height={36}
+              alignItems="center"
+              justifyContent="center"
               borderRadius={999}
               borderWidth={1}
-              borderColor={selected ? '$primary' : '$borderColor'}
-              backgroundColor={selected ? '$primary' : 'transparent'}
+              borderColor={selected ? '$primary' : '$cardBorder'}
+              backgroundColor={selected ? '$primary' : '$surface'}
               pressStyle={PRESS_STYLE.control}
             >
-              <Text fontSize={12.5} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
+              <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
                 {option.label}
               </Text>
             </XStack>

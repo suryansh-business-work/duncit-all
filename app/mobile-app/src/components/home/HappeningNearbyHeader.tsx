@@ -1,87 +1,30 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Text, XStack, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
+import { SectionHeader } from '@/components/SectionHeader';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface HappeningNearbyHeaderProps {
+  /** The live pod count. No longer printed under the title (the rail and its
+   * See-all card show it); kept so callers need no change. */
   totalPods: number;
-  /** Opens the dedicated Happening Nearby page (title or See all tap). */
+  /** Opens the dedicated Happening Nearby page (the See all tap). */
   onPress?: () => void;
 }
 
-/** "Happening nearby" section header with the gradient flame badge; the live pod
- * count sits below the title and a "See all" pill opens the nearby-pods view.
- * (Filters moved to the "What's your vibe today?" header.) */
-export function HappeningNearbyHeader({
-  totalPods,
-  onPress,
-}: Readonly<HappeningNearbyHeaderProps>) {
+/** "Happening nearby" section title with its accent "See all". mWeb twin:
+ * HomeNearbyHeader. */
+export function HappeningNearbyHeader({ onPress }: Readonly<HappeningNearbyHeaderProps>) {
   const { t } = useTranslation();
-  const podsLabel =
-    totalPods === 1
-      ? t('mweb.home.podsNearbyOne')
-      : t('mweb.home.podsNearbyMany', { count: totalPods });
   return (
-    <XStack
-      testID="happening-nearby-header"
-      alignItems="center"
-      justifyContent="space-between"
-      gap={10}
-      paddingHorizontal={16}
-    >
-      <XStack
-        role="button"
-        aria-label={t('mweb.home.happeningNearby')}
-        onPress={onPress}
-        alignItems="center"
-        gap={10}
-        flex={1}
-        pressStyle={PRESS_STYLE.control}
-      >
-        <LinearGradient
-          colors={['#ff4f73', '#ff7a59']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 10,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <MaterialIcons name="local-fire-department" size={18} color="#ffffff" />
-        </LinearGradient>
-        <YStack flex={1}>
-          <Text fontSize={15} fontWeight="700" color="$color" numberOfLines={1}>
-            {t('mweb.home.happeningNearbyTitle')}
-          </Text>
-          <Text fontSize={11.5} fontWeight="700" color="$muted" numberOfLines={1}>
-            {podsLabel}
-          </Text>
-        </YStack>
-      </XStack>
-      <XStack
-        testID="happening-nearby-see-all"
-        role="button"
-        aria-label={t('mweb.home.seeAllLivePods')}
-        onPress={onPress}
-        alignItems="center"
-        gap={4}
-        borderRadius={999}
-        borderWidth={1.5}
-        borderColor="$primary"
-        paddingHorizontal={12}
-        paddingVertical={6}
-        pressStyle={PRESS_STYLE.control}
-      >
-        <Text fontSize={12} fontWeight="700" color="$primary">
-          {t('mweb.home.seeAll')}
-        </Text>
-        <MaterialIcons name="chevron-right" size={16} color="#ff4f73" />
-      </XStack>
-    </XStack>
+    <YStack paddingHorizontal={16}>
+      <SectionHeader
+        testID="happening-nearby-header"
+        title={t('mweb.home.happeningNearbyTitle')}
+        actionLabel={t('mweb.home.seeAll')}
+        onAction={onPress}
+        actionTestID="happening-nearby-see-all"
+        actionAriaLabel={t('mweb.home.seeAllLivePods')}
+      />
+    </YStack>
   );
 }

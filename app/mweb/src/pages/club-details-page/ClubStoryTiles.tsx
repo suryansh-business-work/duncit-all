@@ -54,7 +54,7 @@ export default function ClubStoryTiles({ clubId, canPost, stories, onOpen }: Rea
           >
             <AddIcon />
           </Avatar>
-          <Typography variant="caption" sx={{ fontWeight: 700 }}>
+          <Typography variant="caption" sx={{ fontWeight: 600 }}>
             Add
           </Typography>
         </Stack>
@@ -87,7 +87,7 @@ export default function ClubStoryTiles({ clubId, canPost, stories, onOpen }: Rea
               sx={{ width: 58, height: 58, border: '2px solid', borderColor: 'background.paper' }}
             />
           </Box>
-          <Typography variant="caption" sx={{ fontWeight: 700 }} noWrap>
+          <Typography variant="caption" sx={{ fontWeight: 600 }} noWrap>
             {story.author?.full_name?.split(' ')[0] ?? 'Member'}
           </Typography>
         </Stack>

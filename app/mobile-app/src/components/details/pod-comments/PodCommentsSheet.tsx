@@ -135,9 +135,9 @@ export function PodCommentsSheet({
               right={0}
               bottom={0}
               height="72%"
-              backgroundColor="$background"
-              borderTopLeftRadius={20}
-              borderTopRightRadius={20}
+              backgroundColor="$surface"
+              borderTopLeftRadius={28}
+              borderTopRightRadius={28}
             >
               <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
                 <XStack
@@ -147,7 +147,7 @@ export function PodCommentsSheet({
                   paddingTop={16}
                   paddingBottom={8}
                 >
-                  <Text fontSize={18} fontWeight="700" color="$color">
+                  <Text fontSize={17} fontWeight="600" color="$color">
                     {t('mweb.podDetails.comments')}
                   </Text>
                   <XStack
@@ -156,8 +156,10 @@ export function PodCommentsSheet({
                     role="button"
                     aria-label={t('mweb.podDetails.close')}
                     onPress={onClose}
-                    width={32}
-                    height={32}
+                    width={36}
+                    height={36}
+                    borderRadius={18}
+                    backgroundColor="$soft"
                     alignItems="center"
                     justifyContent="center"
                   >
@@ -196,10 +198,10 @@ export function PodCommentsSheet({
                   maxWidth={360}
                   gap={6}
                   padding={20}
-                  borderRadius={18}
-                  backgroundColor="$background"
+                  borderRadius={28}
+                  backgroundColor="$surface"
                 >
-                  <Text fontSize={16} fontWeight="700" color="$color">
+                  <Text fontSize={17} fontWeight="600" color="$color">
                     {t('mweb.podDetails.deleteCommentTitle')}
                   </Text>
                   <Text fontSize={13} color="$muted">
@@ -212,9 +214,9 @@ export function PodCommentsSheet({
                       role="button"
                       aria-label={t('mweb.podDetails.cancel')}
                       onPress={() => setDeleteTarget(null)}
-                      height={42}
+                      height={44}
                       paddingHorizontal={18}
-                      borderRadius={12}
+                      borderRadius={999}
                       alignItems="center"
                       justifyContent="center"
                       borderWidth={1}
@@ -230,14 +232,14 @@ export function PodCommentsSheet({
                       role="button"
                       aria-label={t('mweb.podDetails.delete')}
                       onPress={() => confirmDelete(deleteTarget)}
-                      height={42}
+                      height={44}
                       paddingHorizontal={18}
-                      borderRadius={12}
+                      borderRadius={999}
                       alignItems="center"
                       justifyContent="center"
                       backgroundColor="$danger"
                     >
-                      <Text fontSize={14} fontWeight="700" color="#ffffff">
+                      <Text fontSize={14} fontWeight="600" color="$onPrimary">
                         {t('mweb.podDetails.delete')}
                       </Text>
                     </XStack>

@@ -1,4 +1,5 @@
-import { Card, CardContent, Stack, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
+import { StatCard } from '@duncit/ui';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /** myVenueEarningsSummary — settled/pending venue earnings totals. */
@@ -10,7 +11,8 @@ export interface VenueEarningsSummary {
   this_month_earnings: number;
 }
 
-/** The four Venue Earnings stat cards (Lifetime / Pending / This month / Pods). */
+/** The four Venue Earnings stat cards (Lifetime / Pending / This month / Pods):
+ * a muted label over the figure, two to a row. Native twin: EarningsSummaryTiles. */
 export default function StatCards({ summary }: Readonly<{ summary: VenueEarningsSummary }>) {
   const { t } = useTranslation();
   const money = (value: number) => `${summary.currency_symbol}${value.toFixed(2)}`;
@@ -22,24 +24,22 @@ export default function StatCards({ summary }: Readonly<{ summary: VenueEarnings
   ];
 
   return (
-    <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
+    <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1.25 }}>
       {stats.map((item) => (
-        <Card key={item.label} variant="outlined" sx={{ flex: '1 1 40%', minWidth: 0, borderRadius: '16px' }}>
-          <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
-            <Typography
-              variant="caption"
-              noWrap
-              sx={{
-                color: "primary.main",
-                fontWeight: 700
-              }}>
-              {item.label}
-            </Typography>
-            <Typography variant="h6" sx={{ mt: 0.35, fontWeight: 700 }} noWrap>
-              {item.value}
-            </Typography>
-          </CardContent>
-        </Card>
+        <StatCard
+          key={item.label}
+          cardVariant="elevation"
+          label={item.label}
+          labelVariant="caption"
+          labelWeight={600}
+          value={item.value}
+          valueWeight={700}
+          valueNoWrap
+          valueSx={{ fontSize: '1.25rem', lineHeight: 1.2 }}
+          headerSx={{ mb: 0.5 }}
+          sx={{ flex: '1 1 40%', minWidth: 0 }}
+          contentSx={{ p: 2, '&:last-child': { pb: 2 } }}
+        />
       ))}
     </Stack>
   );

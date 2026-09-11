@@ -21,7 +21,7 @@ export function PodClubCard({
   categoryCrumbs = [],
   onOpenClub,
 }: Readonly<{ club: PodClub; categoryCrumbs?: readonly string[]; onOpenClub: () => void }>) {
-  const { primary } = useThemeColors();
+  const { color } = useThemeColors();
   const { t } = useTranslation();
   const logo = coverImageUrl(club.club_feature_images_and_videos) ?? '';
   const initial = (club.club_name[0] ?? 'C').toUpperCase();
@@ -36,18 +36,18 @@ export function PodClubCard({
           overflow="hidden"
           alignItems="center"
           justifyContent="center"
-          backgroundColor="$surface"
+          backgroundColor="$soft"
         >
           {logo ? (
             <AppImage source={{ uri: logo }} style={{ width: 48, height: 48 }} resizeMode="cover" />
           ) : (
-            <Text fontSize={18} fontWeight="700" color="$primary">
+            <Text fontSize={18} fontWeight="600" color="$color">
               {initial}
             </Text>
           )}
         </YStack>
         <YStack flex={1} gap={2}>
-          <Text fontSize={15} fontWeight="700" color="$color" numberOfLines={1}>
+          <Text fontSize={16} fontWeight="600" color="$color" numberOfLines={1}>
             {club.club_name}
           </Text>
           <CategoryBreadcrumb crumbs={categoryCrumbs} />
@@ -66,10 +66,15 @@ export function PodClubCard({
         alignItems="center"
         gap={8}
         alignSelf="flex-start"
+        height={36}
+        paddingHorizontal={14}
+        borderRadius={999}
+        borderWidth={1}
+        borderColor="$borderColor"
         pressStyle={PRESS_STYLE.control}
       >
-        <MaterialIcons name="groups" size={18} color={primary} />
-        <Text fontSize={14} fontWeight="600" color="$primary">
+        <MaterialIcons name="groups" size={18} color={color} />
+        <Text fontSize={13} fontWeight="600" color="$color">
           {t('mweb.podDetails.viewClub')}
         </Text>
       </XStack>

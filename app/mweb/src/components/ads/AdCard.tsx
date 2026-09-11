@@ -3,6 +3,7 @@ import type { SxProps, Theme } from '@mui/material';
 import AdMedia from './AdMedia';
 import { adClickProps } from './adClick';
 import type { PublicAd } from './useActiveAds';
+import { SURFACE_SX } from '../../theme';
 import { useTranslation } from '../../i18n/useTranslation';
 
 export type AdCardVariant = 'banner' | 'card';
@@ -15,7 +16,7 @@ interface AdCardProps {
   sx?: SxProps<Theme>;
 }
 
-/** The standard sponsored card: rounded Paper, cover media, a subtle
+/** The standard sponsored card: a calm 24px card of cover media, a subtle
  * "Sponsored" chip and an optional title caption. Clickable (new tab) only
  * when the ad carries a redirect_url. */
 export default function AdCard({ ad, variant = 'banner', sx }: Readonly<AdCardProps>) {
@@ -24,16 +25,15 @@ export default function AdCard({ ad, variant = 'banner', sx }: Readonly<AdCardPr
   const sizeSx = variant === 'card' ? { height: 132 } : { aspectRatio: '16 / 9' };
   return (
     <Paper
-      variant="outlined"
       data-testid="ad-card"
       {...adClickProps(ad)}
       sx={[
         {
+          ...SURFACE_SX,
           position: 'relative',
           width: '100%',
-          borderRadius: '16px',
           overflow: 'hidden',
-          bgcolor: 'grey.900',
+          bgcolor: 'action.hover',
           cursor: clickable ? 'pointer' : 'default',
           ...sizeSx,
         },
@@ -48,12 +48,12 @@ export default function AdCard({ ad, variant = 'banner', sx }: Readonly<AdCardPr
         size="small"
         sx={{
           position: 'absolute',
-          top: 8,
-          left: 8,
+          top: 10,
+          left: 10,
           height: 20,
           fontSize: 10.5,
           fontWeight: 600,
-          color: '#fff',
+          color: 'common.white',
           bgcolor: 'rgba(0,0,0,0.55)',
         }}
       />
@@ -70,7 +70,7 @@ export default function AdCard({ ad, variant = 'banner', sx }: Readonly<AdCardPr
             pt: 3,
             pb: 1,
             fontWeight: 600,
-            color: '#fff',
+            color: 'common.white',
             background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
           }}
         >

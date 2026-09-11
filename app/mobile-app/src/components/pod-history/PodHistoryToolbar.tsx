@@ -25,18 +25,20 @@ export function PodHistoryToolbar({ filterCount, onFilter, onSort }: Readonly<Pr
         aria-label={t('mweb.podHistory.filter')}
         onPress={onFilter}
         alignItems="center"
+        justifyContent="center"
         gap={4}
-        height={34}
-        paddingHorizontal={12}
+        minWidth={40}
+        height={40}
+        paddingHorizontal={filterActive ? 12 : 0}
         borderRadius={999}
         borderWidth={1}
-        borderColor={filterActive ? '$primary' : '$borderColor'}
+        borderColor={filterActive ? '$primary' : '$cardBorder'}
         backgroundColor={filterActive ? '$primary' : '$surface'}
         pressStyle={PRESS_STYLE.control}
       >
-        <MaterialIcons name="filter-list" size={16} color={filterActive ? onPrimary : color} />
+        <MaterialIcons name="filter-list" size={20} color={filterActive ? onPrimary : color} />
         {filterActive ? (
-          <Text fontSize={12.5} fontWeight="700" color="$onPrimary">
+          <Text fontSize={13} fontWeight="600" color="$onPrimary">
             {filterCount}
           </Text>
         ) : null}
@@ -48,15 +50,15 @@ export function PodHistoryToolbar({ filterCount, onFilter, onSort }: Readonly<Pr
         onPress={onSort}
         alignItems="center"
         justifyContent="center"
-        width={34}
-        height={34}
+        width={40}
+        height={40}
         borderRadius={999}
         borderWidth={1}
-        borderColor="$borderColor"
+        borderColor="$cardBorder"
         backgroundColor="$surface"
         pressStyle={PRESS_STYLE.control}
       >
-        <MaterialIcons name="swap-vert" size={16} color={color} />
+        <MaterialIcons name="swap-vert" size={20} color={color} />
       </XStack>
     </XStack>
   );

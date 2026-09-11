@@ -2,9 +2,12 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import type { FaqGroup } from '@/hooks/useLibrary';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** Renders a super-category `icon`: an image thumbnail for a URL, an emoji for a
  * short string, or a MaterialIcons fallback (mirrors VibeCategoryTab's TabIcon
@@ -27,7 +30,7 @@ interface SupportTopicRowProps {
 
 /** One "Topics" row — category icon + name + article count. */
 function SupportTopicRow({ group, isLast, onOpen }: Readonly<SupportTopicRowProps>) {
-  const { primary, muted } = useThemeColors();
+  const { accent, muted } = useThemeColors();
   const id = group.super_category?.id ?? 'GENERIC';
   const name = group.super_category?.name ?? 'General';
   const count = group.faqs.length;
@@ -41,24 +44,24 @@ function SupportTopicRow({ group, isLast, onOpen }: Readonly<SupportTopicRowProp
       onPress={onOpen}
       alignItems="center"
       gap={12}
-      paddingHorizontal={14}
-      paddingVertical={12}
+      paddingHorizontal={16}
+      paddingVertical={14}
       borderBottomWidth={isLast ? 0 : 1}
       borderBottomColor="$borderColor"
-      pressStyle={PRESS_STYLE.control}
+      pressStyle={PRESS_STYLE.row}
     >
       <YStack
-        width={38}
-        height={38}
-        borderRadius={12}
+        width={40}
+        height={40}
+        borderRadius={20}
         alignItems="center"
         justifyContent="center"
-        backgroundColor="rgba(255,79,115,0.12)"
+        backgroundColor="$soft"
       >
-        <TopicIcon icon={group.super_category?.icon} tint={primary} />
+        <TopicIcon icon={group.super_category?.icon} tint={accent} />
       </YStack>
       <YStack flex={1} gap={2}>
-        <Text fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>
+        <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
           {name}
         </Text>
         <Text fontSize={12} color="$muted">
@@ -78,25 +81,12 @@ interface SupportTopicsProps {
 /** "Topics" list — one row per FAQ super-category with its article count,
  * navigating to the full FAQs browser. RN twin of mWeb's SupportTopics. */
 export function SupportTopics({ groups, onOpenTopic }: Readonly<SupportTopicsProps>) {
+  const { t } = useTranslation();
   if (groups.length === 0) return null;
   return (
-    <YStack gap={8}>
-      <Text
-        fontSize={12}
-        fontWeight="700"
-        color="$muted"
-        textTransform="uppercase"
-        letterSpacing={0.5}
-      >
-        Topics
-      </Text>
-      <YStack
-        borderRadius={16}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$surface"
-        overflow="hidden"
-      >
+    <YStack gap={12}>
+      <SectionHeader title={t('mweb.supportHub.topics')} />
+      <SurfaceCard padding={0} overflow="hidden">
         {groups.map((group, index) => (
           <SupportTopicRow
             key={group.super_category?.id ?? 'general'}
@@ -105,7 +95,7 @@ export function SupportTopics({ groups, onOpenTopic }: Readonly<SupportTopicsPro
             onOpen={onOpenTopic}
           />
         ))}
-      </YStack>
+      </SurfaceCard>
     </YStack>
   );
 }

@@ -1,8 +1,9 @@
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
-import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import SimpleBarChart from '../../components/SimpleBarChart';
+import StudioPageHeader from '../../components/StudioPageHeader';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -45,27 +46,11 @@ export default function ProductsManagePage() {
     .map((p) => ({ label: String(p.product_name).slice(0, 8), value: p.available_count ?? 0 }));
 
   return (
-    <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-      <Stack direction="row" spacing={1.25} sx={{
-        alignItems: "center"
-      }}>
-        <Box sx={{ width: 38, height: 38, borderRadius: '50%', display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
-          <Inventory2Icon fontSize="small" />
-        </Box>
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
-            ecomm Studio
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 600
-            }}>
-            Your Duncit product catalogue at a glance
-          </Typography>
-        </Box>
-      </Stack>
+    <Stack spacing={2} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+      <StudioPageHeader
+        icon={<Inventory2Icon fontSize="small" />}
+        title={t('mweb.productsManage.ecommStudio')}
+      />
 
       {loading && !data && (
         <Stack
@@ -78,40 +63,36 @@ export default function ProductsManagePage() {
       )}
       {error && <Alert severity="error">{error.message}</Alert>}
 
-      <Stack direction="row" spacing={1}>
+      <Stack direction="row" spacing={1.25}>
         {[{ label: t('mweb.productsManage.products'), value: products.length }, { label: t('mweb.productsManage.inStock'), value: totalStock }, { label: t('mweb.productsManage.avgPrice'), value: `₹${avgPrice}` }].map((item) => (
-          <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: '16px' }}>
-            <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
+          <Card key={item.label} sx={{ flex: 1, minWidth: 0 }}>
+            <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
               <Typography
                 variant="caption"
                 noWrap
+                component="p"
                 sx={{
-                  color: "primary.main",
-                  fontWeight: 700
+                  color: "text.secondary",
+                  fontWeight: 600
                 }}>{item.label}</Typography>
-              <Typography variant="h6" sx={{ mt: 0.35, fontWeight: 700 }} noWrap>{item.value}</Typography>
+              <Typography variant="h6" sx={{ mt: 0.25, fontWeight: 700 }} noWrap>{item.value}</Typography>
             </CardContent>
           </Card>
         ))}
       </Stack>
 
-      <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-        <CardContent>
-          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+      <Card>
+        <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Typography variant="subtitle1" sx={{ fontSize: '1rem' }}>
             Stock by product
           </Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 700
-            }}>
-            Top {stockChart.length || 0} products by available units
-          </Typography>
           {stockChart.length === 0 ? (
-            <Alert severity="info" sx={{ mt: 1 }}>
-              No products in the catalogue yet.
-            </Alert>
+            <Stack spacing={1.25} sx={{ alignItems: 'center', py: 2 }}>
+              <Inventory2Icon sx={{ fontSize: 48, color: 'text.secondary' }} />
+              <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center' }}>
+                No products in the catalogue yet.
+              </Typography>
+            </Stack>
           ) : (
             <SimpleBarChart data={stockChart} />
           )}

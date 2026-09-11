@@ -1,6 +1,7 @@
 import { Alert, Paper, Stack, Step, StepContent, StepLabel, Stepper, Typography } from '@mui/material';
 import { grievanceEscalationCopy } from '@duncit/i18n';
 import { useTranslation } from '../../i18n/useTranslation';
+import { SURFACE_SX } from '../../theme';
 
 /**
  * Support first, grievance after — the ladder, as a timeline.
@@ -19,16 +20,16 @@ export default function GrievanceEscalationNotice() {
   const copy = grievanceEscalationCopy(t);
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
+    <Paper sx={{ ...SURFACE_SX, p: 2 }}>
       <Stack spacing={1.5}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+        <Typography sx={{ fontSize: '1rem', fontWeight: 600 }}>
           {copy.title}
         </Typography>
         <Stepper orientation="vertical" nonLinear activeStep={-1} sx={{ pl: 0.5 }}>
           {copy.steps.map((step) => (
             <Step key={step.key} active expanded completed={false}>
               <StepLabel>
-                <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
                   {step.title}
                 </Typography>
               </StepLabel>

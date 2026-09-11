@@ -18,7 +18,6 @@ interface RowProps {
 function GrievanceTicketOptionRow({ option, selected, onPick }: Readonly<RowProps>) {
   const background = selected ? '$primary' : 'transparent';
   const ink = selected ? '$onPrimary' : '$color';
-  const weight = selected ? '700' : '600';
   return (
     <XStack
       testID={`grievance-ticket-option-${option.value}`}
@@ -31,7 +30,7 @@ function GrievanceTicketOptionRow({ option, selected, onPick }: Readonly<RowProp
       backgroundColor={background}
       pressStyle={PRESS_STYLE.control}
     >
-      <Text fontSize={13} fontWeight={weight} color={ink}>
+      <Text fontSize={13} fontWeight="600" color={ink}>
         {option.label}
       </Text>
     </XStack>
@@ -49,7 +48,7 @@ export function GrievanceTicketOptions({ options, value, onPick }: Readonly<Prop
   return (
     <YStack
       testID="grievance-support_ticket_ref-options"
-      borderRadius={12}
+      borderRadius={14}
       borderWidth={1}
       borderColor="$borderColor"
       backgroundColor="$surface"

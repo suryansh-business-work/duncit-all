@@ -7,10 +7,20 @@ interface FilterChipProps {
   selected: boolean;
   onPress: () => void;
   testID: string;
+  /** Sits on the page ground rather than a sheet: a 36px pill whose idle edge
+   * is the card border (none in light), as mWeb's page chip rails draw it. */
+  onPage?: boolean;
 }
 
 /** A single pill in a filter row — RN port of FilterBar's MUI Chip. */
-export function FilterChip({ label, selected, onPress, testID }: Readonly<FilterChipProps>) {
+export function FilterChip({
+  label,
+  selected,
+  onPress,
+  testID,
+  onPage = false,
+}: Readonly<FilterChipProps>) {
+  const idleBorder = onPage ? '$cardBorder' : '$borderColor';
   return (
     <XStack
       testID={testID}
@@ -18,13 +28,13 @@ export function FilterChip({ label, selected, onPress, testID }: Readonly<Filter
       aria-label={label}
       aria-pressed={selected}
       onPress={onPress}
-      height={32}
+      height={onPage ? 36 : 32}
       paddingHorizontal={14}
       alignItems="center"
       borderRadius={999}
-      borderWidth={1.5}
+      borderWidth={1}
       backgroundColor={selected ? '$primary' : '$surface'}
-      borderColor={selected ? '$primary' : '$borderColor'}
+      borderColor={selected ? '$primary' : idleBorder}
       pressStyle={PRESS_STYLE.control}
     >
       <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
@@ -58,6 +68,8 @@ interface OptionChipRowProps<T extends string = string> {
   testIDPrefix: string;
   /** `scroll` for a horizontal rail, `wrap` for flowing rows, `column` stacked. */
   layout?: 'scroll' | 'wrap' | 'column';
+  /** The chips sit on the page ground (see FilterChip). */
+  onPage?: boolean;
 }
 
 /** Renders a [value,label] option list as selectable chips in the chosen layout. */
@@ -67,6 +79,7 @@ export function OptionChipRow<T extends string = string>({
   onSelect,
   testIDPrefix,
   layout = 'wrap',
+  onPage = false,
 }: Readonly<OptionChipRowProps<T>>) {
   const chips = options.map(([val, label]) => (
     <FilterChip
@@ -75,6 +88,7 @@ export function OptionChipRow<T extends string = string>({
       label={label}
       selected={value === val}
       onPress={() => onSelect(val)}
+      onPage={onPage}
     />
   ));
 

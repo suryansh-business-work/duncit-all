@@ -105,12 +105,12 @@ export function WithdrawDialog({
               width="92%"
               maxWidth={460}
               maxHeight="86%"
-              backgroundColor="$background"
-              borderRadius={20}
-              padding={18}
+              backgroundColor="$surface"
+              borderRadius={28}
+              padding={20}
             >
               <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
-                <Text fontSize={17} fontWeight="700" color="$color" paddingBottom={10}>
+                <Text fontSize={17} fontWeight="600" color="$color" paddingBottom={12}>
                   Withdraw {currency}
                   {maxAmount.toFixed(2)} max
                 </Text>
@@ -136,10 +136,8 @@ export function WithdrawDialog({
                           height={40}
                           alignItems="center"
                           justifyContent="center"
-                          borderRadius={10}
-                          borderWidth={1}
-                          borderColor={method === m ? '$primary' : '$borderColor'}
-                          backgroundColor={method === m ? '$primary' : 'transparent'}
+                          borderRadius={999}
+                          backgroundColor={method === m ? '$primary' : '$soft'}
                           pressStyle={PRESS_STYLE.control}
                         >
                           <Text
@@ -199,10 +197,10 @@ export function WithdrawDialog({
                     aria-disabled={busy}
                     onPress={dismiss}
                     flex={1}
-                    height={46}
+                    height={48}
                     alignItems="center"
                     justifyContent="center"
-                    borderRadius={12}
+                    borderRadius={999}
                     borderWidth={1}
                     borderColor="$borderColor"
                     opacity={busy ? 0.6 : 1}
@@ -219,17 +217,17 @@ export function WithdrawDialog({
                     aria-disabled={busy}
                     onPress={busy ? undefined : () => fireAndForget(submit())}
                     flex={1}
-                    height={46}
+                    height={48}
                     alignItems="center"
                     justifyContent="center"
                     gap={8}
-                    borderRadius={12}
+                    borderRadius={999}
                     backgroundColor="$primary"
                     opacity={busy ? 0.7 : 1}
                     pressStyle={PRESS_STYLE.control}
                   >
                     {busy ? <Spinner size="small" color={onPrimary} /> : null}
-                    <Text fontSize={14} fontWeight="700" color="$onPrimary">
+                    <Text fontSize={14} fontWeight="600" color="$onPrimary">
                       {busy ? 'Requesting…' : 'Request'}
                     </Text>
                   </XStack>

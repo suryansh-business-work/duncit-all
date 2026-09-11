@@ -9,6 +9,12 @@ import {
 } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../i18n/useTranslation';
+import {
+  DIALOG_ACTIONS_SX,
+  DIALOG_CONTENT_SX,
+  DIALOG_PILL_SX,
+  DIALOG_TITLE_SX,
+} from './dialog-styles';
 
 interface Props {
   open: boolean;
@@ -47,18 +53,20 @@ export default function ConfirmDialog({
       fullWidth
       aria-labelledby="confirm-dialog-title"
     >
-      <DialogTitle id="confirm-dialog-title">{titleText}</DialogTitle>
+      <DialogTitle id="confirm-dialog-title" sx={DIALOG_TITLE_SX}>
+        {titleText}
+      </DialogTitle>
       {message && (
-        <DialogContent>
+        <DialogContent sx={DIALOG_CONTENT_SX}>
           {typeof message === 'string' ? (
-            <DialogContentText>{message}</DialogContentText>
+            <DialogContentText sx={{ fontSize: 14 }}>{message}</DialogContentText>
           ) : (
             message
           )}
         </DialogContent>
       )}
-      <DialogActions>
-        <DuncitButton onClick={onClose} disabled={busy} sx={{ minHeight: 40 }}>
+      <DialogActions disableSpacing sx={DIALOG_ACTIONS_SX}>
+        <DuncitButton variant="outlined" onClick={onClose} disabled={busy} sx={DIALOG_PILL_SX}>
           {cancelText}
         </DuncitButton>
         <DuncitButton
@@ -67,7 +75,7 @@ export default function ConfirmDialog({
           color={destructive ? 'error' : 'primary'}
           disabled={busy}
           startIcon={busy ? <CircularProgress size={16} color="inherit" /> : undefined}
-          sx={{ minHeight: 40 }}
+          sx={DIALOG_PILL_SX}
           autoFocus
         >
           {confirmText}

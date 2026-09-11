@@ -24,7 +24,7 @@ interface Props {
  * with different payees reading as one continuous list was the reason a host
  * could not tell where the venue's money ended and Duncit's began. mWeb twin. */
 export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<Props>) {
-  const { primary, muted } = useThemeColors();
+  const { primary, muted, warning } = useThemeColors();
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);
   const govtCharges = t('mweb.createPod.govtCharges');
@@ -36,7 +36,7 @@ export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<
       // The whole tree carries the failure, exactly like the mWeb twin, so the
       // blocked venue section is findable while the accordion is collapsed.
       borderColor={venueShortfall ? '$danger' : '$borderColor'}
-      borderRadius={12}
+      borderRadius={16}
       overflow="hidden"
     >
       <XStack
@@ -47,18 +47,18 @@ export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<
         onPress={() => setOpen((value) => !value)}
         alignItems="center"
         justifyContent="space-between"
-        paddingHorizontal={12}
-        paddingVertical={11}
+        paddingHorizontal={14}
+        paddingVertical={12}
         pressStyle={PRESS_STYLE.control}
       >
         <XStack alignItems="center" gap={8} flexShrink={1}>
           <MaterialIcons name="receipt-long" size={16} color={primary} />
-          <Text fontSize={13.5} fontWeight="700" color="$color">
+          <Text fontSize={14} fontWeight="600" color="$color">
             {govtCharges}
           </Text>
         </XStack>
         <XStack alignItems="center" gap={4}>
-          <Text fontSize={13.5} fontWeight="700" color="$color">
+          <Text fontSize={14} fontWeight="700" color="$color">
             {money(statement.total_deductions)}
           </Text>
           <MaterialIcons
@@ -80,7 +80,7 @@ export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<
                 title={section.title}
                 description={section.description}
                 amount={money(section.total)}
-                tint={sectionTint(isVenue, shortfall)}
+                tint={sectionTint(isVenue, shortfall, warning)}
                 invalidMessage={shortfall ? t('mweb.createPod.venueShortfall') : undefined}
                 testID={`price-panel-${section.key}-group`}
               >
@@ -92,15 +92,15 @@ export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<
           })}
           <YStack height={1} backgroundColor="$borderColor" marginTop={2} />
           <XStack justifyContent="space-between" paddingHorizontal={12}>
-            <Text fontSize={13} fontWeight="600" color="$color">
+            <Text fontSize={14} fontWeight="600" color="$color">
               {t('mweb.createPod.totalDeductions')}
             </Text>
-            <Text fontSize={13} fontWeight="700" color="$color">
+            <Text fontSize={14} fontWeight="700" color="$color">
               {money(statement.total_deductions)}
             </Text>
           </XStack>
           {statement.reconciled ? null : (
-            <Text testID="price-panel-reconcile-warning" fontSize={11.5} color="$danger">
+            <Text testID="price-panel-reconcile-warning" fontSize={12} color="$danger">
               {t('mweb.createPod.reconcileWarning')}
             </Text>
           )}

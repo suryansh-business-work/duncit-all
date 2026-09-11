@@ -76,14 +76,13 @@ function PodDetailBody({ pod, currencySymbol }: Readonly<BodyProps>) {
   return (
     <>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
-        <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }}>
+        <Typography sx={{ flex: 1, fontSize: '1rem', fontWeight: 600 }}>
           {pod.pod_title}
         </Typography>
         <Chip
           size="small"
           label={t(BUCKET_LABEL_KEY[pod.bucket])}
           color={BUCKET_TONE[pod.bucket]}
-          sx={{ fontWeight: 700 }}
         />
       </Stack>
       <InfoRow variant="split" label={t('mweb.venuePods.venue')} value={pod.owner_name} sx={{ py: 0.5 }} />
@@ -107,7 +106,7 @@ function PodDetailBody({ pod, currencySymbol }: Readonly<BodyProps>) {
         sx={{ py: 0.5 }}
       />
       <Divider sx={{ my: 1.5 }} />
-      <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 700 }}>
+      <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
         {t('mweb.venuePods.attendees')}
       </Typography>
       <AttendeeList ids={ids} profiles={profiles} loading={loading} />
@@ -130,7 +129,7 @@ export default function VenuePodDetailDialog({ pod, currencySymbol, onClose }: R
   const { t } = useTranslation();
   return (
     <Dialog open={!!pod} onClose={onClose} fullWidth maxWidth="xs" data-testid="venue-pod-detail">
-      <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.venuePods.podDetails')}</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.venuePods.podDetails')}</DialogTitle>
       <DialogContent dividers>
         {pod && <PodDetailBody pod={pod} currencySymbol={currencySymbol} />}
       </DialogContent>

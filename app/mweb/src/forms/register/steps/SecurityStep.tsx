@@ -35,7 +35,7 @@ export default function SecurityStep({
   const hideLabel = t('mweb.auth.hidePassword');
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={2}>
       <RhfTextField
         control={control}
         name="password"

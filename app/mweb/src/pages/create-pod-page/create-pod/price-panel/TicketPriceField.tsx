@@ -58,11 +58,11 @@ export default function TicketPriceField({ form, preview, isFree }: Readonly<Pro
         <Link
           component="button"
           type="button"
-          underline="always"
+          underline="hover"
           onClick={() => setOpen(true)}
           aria-label={suggestedLink}
           data-testid="suggested-price-link"
-          sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontWeight: 700 }}
+          sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontWeight: 600 }}
         >
           {suggestedLink}
           <InfoOutlinedIcon sx={{ fontSize: 15 }} />

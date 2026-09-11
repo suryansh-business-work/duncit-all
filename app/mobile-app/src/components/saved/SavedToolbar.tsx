@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -11,8 +11,11 @@ interface Props {
   onSort: () => void;
 }
 
-/** Header Filter + Sort buttons for Saved Items (top-right). Filter shows a count
- * badge while a Super/Category/Sub filter is applied. */
+const SIZE = 48;
+
+/** The round green Filter and round surface Sort beside the Saved Items search
+ * pill. Filter carries a coral count badge while a Super/Category/Sub filter is
+ * applied. mWeb twin: SavedItemsToolbar. */
 export function SavedToolbar({ filterCount, onFilter, onSort }: Readonly<Props>) {
   const { t } = useTranslation();
   const { color, onPrimary } = useThemeColors();
@@ -25,20 +28,31 @@ export function SavedToolbar({ filterCount, onFilter, onSort }: Readonly<Props>)
         aria-label={t('mweb.common.filter')}
         onPress={onFilter}
         alignItems="center"
-        gap={4}
-        height={34}
-        paddingHorizontal={12}
-        borderRadius={999}
-        borderWidth={1}
-        borderColor={filterActive ? '$primary' : '$borderColor'}
-        backgroundColor={filterActive ? '$primary' : '$surface'}
-        pressStyle={PRESS_STYLE.control}
+        justifyContent="center"
+        width={SIZE}
+        height={SIZE}
+        borderRadius={SIZE / 2}
+        backgroundColor="$primary"
+        pressStyle={PRESS_STYLE.solid}
       >
-        <MaterialIcons name="filter-list" size={16} color={filterActive ? onPrimary : color} />
+        <MaterialIcons name="tune" size={20} color={onPrimary} />
         {filterActive ? (
-          <Text fontSize={12.5} fontWeight="700" color="$onPrimary">
-            {filterCount}
-          </Text>
+          <YStack
+            position="absolute"
+            top={-2}
+            right={-2}
+            minWidth={18}
+            height={18}
+            paddingHorizontal={4}
+            borderRadius={9}
+            alignItems="center"
+            justifyContent="center"
+            backgroundColor="$accent"
+          >
+            <Text fontSize={10} fontWeight="600" color="$onPrimary">
+              {filterCount}
+            </Text>
+          </YStack>
         ) : null}
       </XStack>
       <XStack
@@ -48,15 +62,15 @@ export function SavedToolbar({ filterCount, onFilter, onSort }: Readonly<Props>)
         onPress={onSort}
         alignItems="center"
         justifyContent="center"
-        width={34}
-        height={34}
-        borderRadius={999}
+        width={SIZE}
+        height={SIZE}
+        borderRadius={SIZE / 2}
         borderWidth={1}
-        borderColor="$borderColor"
+        borderColor="$cardBorder"
         backgroundColor="$surface"
         pressStyle={PRESS_STYLE.control}
       >
-        <MaterialIcons name="swap-vert" size={16} color={color} />
+        <MaterialIcons name="swap-vert" size={20} color={color} />
       </XStack>
     </XStack>
   );

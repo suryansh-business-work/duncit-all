@@ -37,7 +37,7 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
   const { t } = useTranslation();
   const goBack = useGoBack();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { color: ink } = useThemeColors();
+  const { color: ink, accent } = useThemeColors();
   const { data: brandingData } = useBranding();
   const logoUrl = brandingData?.branding?.logo_url;
   const flow = useOnboardingFlow(kind);
@@ -51,12 +51,21 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
       <YStack flex={1} testID="onboarding-thanks">
         <AppBackground />
         <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-          <YStack flex={1} alignItems="center" justifyContent="center" gap={14} padding={24}>
-            <MaterialIcons name="event-available" size={56} color={ink} />
-            <Text textAlign="center" fontSize={22} fontWeight="700" color={ink}>
+          <YStack flex={1} alignItems="center" justifyContent="center" gap={16} padding={24}>
+            <YStack
+              width={72}
+              height={72}
+              borderRadius={36}
+              alignItems="center"
+              justifyContent="center"
+              backgroundColor="$soft"
+            >
+              <MaterialIcons name="event-available" size={36} color={accent} />
+            </YStack>
+            <Text textAlign="center" fontSize={24} fontWeight="600" color="$color">
               You{'’'}re booked!
             </Text>
-            <Text textAlign="center" fontSize={14.5} color={ink} opacity={0.85}>
+            <Text textAlign="center" fontSize={14} color="$muted">
               Thank you for your submission! Your onboarding meeting is booked for {slotLabel}. Our
               onboarding team will meet you at your selected slot — please join 5 minutes early.
             </Text>
@@ -65,13 +74,15 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
               role="button"
               aria-label={t('mweb.surveyOnboarding.backToHome')}
               onPress={goBack}
-              paddingHorizontal={22}
-              paddingVertical={12}
+              alignSelf="stretch"
+              height={52}
+              alignItems="center"
+              justifyContent="center"
               borderRadius={999}
               backgroundColor="$primary"
-              pressStyle={PRESS_STYLE.control}
+              pressStyle={PRESS_STYLE.solid}
             >
-              <Text fontSize={14.5} fontWeight="700" color="$onPrimary">
+              <Text fontSize={16} fontWeight="600" color="$onPrimary">
                 Done
               </Text>
             </XStack>
@@ -96,7 +107,7 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
             />
           </XStack>
         ) : null}
-        <XStack alignItems="center" gap={8} paddingHorizontal={12} paddingVertical={8}>
+        <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={8}>
           <XStack
             role="button"
             aria-label={t('mweb.common.goBack')}
@@ -110,11 +121,14 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
             alignItems="center"
             justifyContent="center"
             borderRadius={20}
-            pressStyle={PRESS_STYLE.row}
+            borderWidth={1}
+            borderColor="$borderColor"
+            backgroundColor="$surface"
+            pressStyle={PRESS_STYLE.control}
           >
             <MaterialIcons name="arrow-back" size={22} color={ink} />
           </XStack>
-          <Text fontSize={18} fontWeight="600" color={ink}>
+          <Text flexShrink={1} fontSize={17} fontWeight="600" color="$color">
             {headerTitle}
           </Text>
         </XStack>

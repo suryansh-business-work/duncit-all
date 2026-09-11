@@ -38,7 +38,7 @@ export function GrievanceField({
         const borderColor = fieldState.error ? '$danger' : '$borderColor';
         return (
           <YStack gap={4}>
-            <Text fontSize={11.5} fontWeight="600" color="$muted">
+            <Text fontSize={12} fontWeight="600" color="$muted">
               {label}
               <RequiredMark required={required} testID={testID} />
             </Text>
@@ -50,7 +50,8 @@ export function GrievanceField({
                 onChangeText={field.onChange}
                 onBlur={field.onBlur}
                 minHeight={96}
-                borderRadius={12}
+                borderRadius={14}
+                backgroundColor="$surface"
                 borderColor={borderColor}
               />
             ) : (
@@ -60,7 +61,8 @@ export function GrievanceField({
                 value={field.value}
                 onChangeText={field.onChange}
                 onBlur={field.onBlur}
-                borderRadius={12}
+                borderRadius={14}
+                backgroundColor="$surface"
                 borderColor={borderColor}
               />
             )}

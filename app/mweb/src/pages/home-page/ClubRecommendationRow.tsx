@@ -50,50 +50,36 @@ export default function ClubRecommendationRow({
   return (
     <Card
       onClick={() => navigate(clubUrl(club.club_id ?? club.id))}
-      sx={{ p: 1.25, borderRadius: '18px', cursor: 'pointer' }}
+      sx={{ p: 1.5, cursor: 'pointer' }}
     >
-      <Stack direction="row" spacing={1.25} sx={{
-        alignItems: "center"
-      }}>
-        <Avatar src={image} alt={club.club_name} sx={{ width: 46, height: 46 }}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+        <Avatar src={image} alt={club.club_name} sx={{ width: 44, height: 44, bgcolor: 'action.hover', color: 'text.primary' }}>
           {club.club_name?.[0]?.toUpperCase()}
         </Avatar>
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Stack
-            direction="row"
-            spacing={0.5}
-            sx={{
-              alignItems: "center",
-              minWidth: 0
-            }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
+          <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', minWidth: 0 }}>
+            <Typography noWrap sx={{ fontSize: 14, fontWeight: 600 }}>
               {club.club_name}
             </Typography>
             {club.is_verified && (
-              <VerifiedIcon sx={{ fontSize: 15, color: 'primary.main', flex: '0 0 auto' }} />
+              <VerifiedIcon sx={{ fontSize: 15, color: 'secondary.main', flex: '0 0 auto' }} />
             )}
           </Stack>
           {meta && (
-            <Typography
-              variant="caption"
-              noWrap
-              sx={{
-                color: "text.secondary",
-                fontWeight: 600
-              }}>
+            <Typography noWrap sx={{ fontSize: 12, fontWeight: 500, color: 'text.secondary' }}>
               {meta}
             </Typography>
           )}
         </Box>
         <DuncitButton
-          variant="outlined"
+          variant="contained"
           size="small"
           disabled={joined || loading}
           onClick={(event) => {
             event.stopPropagation();
             follow(club.id).catch(() => undefined);
           }}
-          sx={{ flex: '0 0 auto', fontWeight: 700 }}
+          sx={{ flex: '0 0 auto', minHeight: 36 }}
         >
           {joined ? t('mweb.home.joinedClub') : t('mweb.home.joinClub')}
         </DuncitButton>

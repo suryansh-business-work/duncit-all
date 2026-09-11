@@ -1,4 +1,5 @@
-import { Box, ButtonBase, Stack, Typography } from '@mui/material';
+import { Box, ButtonBase, Stack } from '@mui/material';
+import SectionHeader from '../../components/SectionHeader';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -16,10 +17,8 @@ export default function VenueImagesGrid({ images, venueName, onOpen }: Readonly<
   if (images.length < 2) return null;
 
   return (
-    <Stack spacing={1}>
-      <Typography variant="h6" sx={{
-        fontWeight: 700
-      }}>{t('mweb.venues.images')}</Typography>
+    <Stack spacing={1.25}>
+      <SectionHeader title={t('mweb.venues.images')} />
       <Box sx={{ display: 'grid', gap: 1, gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' } }}>
         {images.slice(1).map((url, tileIndex) => (
           <ButtonBase
@@ -27,7 +26,7 @@ export default function VenueImagesGrid({ images, venueName, onOpen }: Readonly<
             onClick={() => onOpen(tileIndex + 1)}
             focusRipple
             aria-label={t('mweb.podDetails.viewImage')}
-            sx={{ width: '100%', aspectRatio: '4 / 3', borderRadius: '16px', overflow: 'hidden' }}
+            sx={{ width: '100%', aspectRatio: '4 / 3', borderRadius: '18px', overflow: 'hidden' }}
           >
             <Box component="img" src={url} alt={venueName} loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </ButtonBase>

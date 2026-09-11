@@ -2,8 +2,6 @@ import { useMemo, useState } from 'react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Stack } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { DuncitButton } from '@duncit/buttons';
 import {
   SIGNUP_STEP_FIELDS,
@@ -148,11 +146,9 @@ export default function RegisterForm({
         advance().catch(() => undefined);
       }}
     >
-      <Stack spacing={1.5}>
+      <Stack spacing={2}>
         {step === 'WHO' && <WhoStep control={control} minAge={minAge} />}
-        {step === 'CONTACT' && (
-          <ContactStep control={control} emailStatus={emailStatus} phoneStatus={phoneStatus} />
-        )}
+        {step === 'CONTACT' && <ContactStep control={control} emailStatus={emailStatus} phoneStatus={phoneStatus} />}
         {step === 'SECURITY' && (
           <SecurityStep
             control={control}
@@ -163,19 +159,18 @@ export default function RegisterForm({
         )}
       </Stack>
 
-      <Stack spacing={1.2} sx={{ mt: 2 }}>
-        {(submitError || errorMessage) && (
-          <Alert severity="error">{submitError || errorMessage}</Alert>
-        )}
-        <Stack direction="row" spacing={1}>
+      <Stack spacing={2} sx={{ mt: 2 }}>
+        {(submitError || errorMessage) && <Alert severity="error">{submitError || errorMessage}</Alert>}
+        {/* Back is the outlined green pill, Continue the solid one — native's pair. */}
+        <Stack direction="row" spacing={1.5}>
           {canLeaveSignupStep(step) && (
             <DuncitButton
               type="button"
               variant="outlined"
-              color="inherit"
+              size="large"
               onClick={back}
-              startIcon={<ArrowBackIcon />}
               data-testid="signup-back"
+              sx={{ flex: 1 }}
             >
               {labels.back}
             </DuncitButton>
@@ -183,10 +178,11 @@ export default function RegisterForm({
           <DuncitButton
             type="submit"
             variant="contained"
+            size="large"
             fullWidth
             disabled={blocked}
-            endIcon={<ArrowForwardIcon />}
             data-testid="signup-next"
+            sx={{ flex: 2 }}
           >
             {nextLabel}
           </DuncitButton>

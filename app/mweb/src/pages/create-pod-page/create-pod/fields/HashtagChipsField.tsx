@@ -60,9 +60,7 @@ export default function HashtagChipsField({ form }: Readonly<Props>) {
                     label={`#${tag}`}
                     size="small"
                     color="primary"
-                    variant="outlined"
                     onDelete={() => removeTag(tag)}
-                    sx={{ fontWeight: 600 }}
                   />
                 ))}
               </Box>

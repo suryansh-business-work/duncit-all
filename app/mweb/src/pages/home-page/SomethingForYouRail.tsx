@@ -9,6 +9,8 @@ import {
   type SomethingForYouItem,
   type SomethingForYouTarget,
 } from '@duncit/utils';
+import SectionHeader from '../../components/SectionHeader';
+import HomeRail from './HomeRail';
 import { useTranslation } from '../../i18n/useTranslation';
 
 const SOMETHING_FOR_YOU = gql`
@@ -35,9 +37,10 @@ const CARD_HEIGHT = 232;
  * `borderRadius: 3` in an `sx` block is not three pixels — MUI multiplies it by
  * `theme.shape.borderRadius`, which is 16 here, so the cards were rendering at
  * 48px and looked like lozenges. A string with a unit means what it says, and
- * the native twin uses the same number so the two rails match.
+ * the native twin uses the same number so the two rails match. 18 is the calm
+ * design's media corner.
  */
-const CARD_RADIUS = '4px';
+const CARD_RADIUS = '18px';
 
 /**
  * The row that scrolls sideways at the bottom of Home.
@@ -73,31 +76,12 @@ export default function SomethingForYouRail() {
   };
 
   return (
-    <Stack spacing={1.25}>
-      <Typography
-        variant="overline"
-        sx={{
-          fontWeight: 800,
-          color: "text.secondary",
-          px: 0.25
-        }}>
-        {t('mweb.home.somethingForYou')}
-      </Typography>
+    <Stack spacing={1.5}>
+      <SectionHeader title={t('mweb.home.somethingForYou')} />
 
       {/* Bleeds to the screen edge so the last card is visibly cut off — the
           only honest signal that a row scrolls when there is no scrollbar. */}
-      <Box
-        sx={{
-          display: 'flex',
-          gap: 1.5,
-          overflowX: 'auto',
-          scrollSnapType: 'x mandatory',
-          px: 0.25,
-          pb: 0.5,
-          '&::-webkit-scrollbar': { display: 'none' },
-          scrollbarWidth: 'none',
-        }}
-      >
+      <HomeRail>
         {items.map((item) => {
           const target = resolveSomethingForYouTarget(item);
           const opens = target.kind !== 'none';
@@ -116,7 +100,7 @@ export default function SomethingForYouRail() {
                 overflow: 'hidden',
                 scrollSnapAlign: 'start',
                 cursor: opens ? 'pointer' : 'default',
-                bgcolor: 'primary.main',
+                bgcolor: 'action.hover',
               }}
             >
               <Box
@@ -135,7 +119,7 @@ export default function SomethingForYouRail() {
                   left: 12,
                   right: 12,
                   color: 'common.white',
-                  fontWeight: 800,
+                  fontWeight: 600,
                   lineHeight: 1.25,
                   textShadow: '0 1px 3px rgba(0,0,0,.45)',
                   display: '-webkit-box',
@@ -158,7 +142,7 @@ export default function SomethingForYouRail() {
                     px: 1.25,
                     py: 1,
                     textAlign: 'center',
-                    fontWeight: 700,
+                    fontWeight: 600,
                     color: 'common.white',
                     bgcolor: 'rgba(0,0,0,.42)',
                     backdropFilter: 'blur(2px)',
@@ -171,7 +155,7 @@ export default function SomethingForYouRail() {
             </Box>
           );
         })}
-      </Box>
+      </HomeRail>
     </Stack>
   );
 }

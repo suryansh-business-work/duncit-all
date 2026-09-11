@@ -45,7 +45,7 @@ export function EmailTranscriptModal({
         </XStack>
       }
     >
-      <Text fontSize={16} fontWeight="700" color="$color">
+      <Text fontSize={17} fontWeight="600" color="$color">
         Email this chat
       </Text>
       {done ? (

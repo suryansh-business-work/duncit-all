@@ -1,32 +1,31 @@
-import { Card, CardContent, Skeleton, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Skeleton, Stack, Typography } from '@mui/material';
 import { formatCount, type ClubAdminCategoryRow } from '@duncit/utils';
+import SectionHeader from '../../components/SectionHeader';
 import FactLine from '../../components/club-admin/FactLine';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /**
- * One category the admin's clubs run under: the super category over the
- * name, then how many of their clubs sit in it and how many pods those clubs
- * ran in the selected range.
+ * One category the admin's clubs run under: the name over its super category,
+ * then how many of their clubs sit in it and how many pods those clubs ran in
+ * the selected range.
  */
 function CategoryTile({ row }: Readonly<{ row: ClubAdminCategoryRow }>) {
   const { t } = useTranslation();
   return (
-    <Card variant="outlined" sx={{ flex: '1 1 45%', minWidth: 140, borderRadius: '16px' }}>
-      <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
-        {row.super_category && (
-          <Typography variant="overline" component="div" noWrap sx={{ color: 'text.secondary', lineHeight: 1.4 }}>
-            {row.super_category}
-          </Typography>
-        )}
-        <Typography variant="subtitle2" noWrap sx={{ fontWeight: 700, mb: 0.5 }}>
-          {row.name}
+    <Box sx={{ flex: '1 1 45%', minWidth: 140, p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}>
+      <Typography variant="subtitle2" noWrap sx={{ fontWeight: 600 }}>
+        {row.name}
+      </Typography>
+      {row.super_category && (
+        <Typography variant="caption" component="div" noWrap sx={{ color: 'text.secondary' }}>
+          {row.super_category}
         </Typography>
-        <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1.25 }}>
-          <FactLine value={formatCount(row.clubs)} label={t('clubAdmin.dashboard.clubs')} />
-          <FactLine value={formatCount(row.pods)} label={t('clubAdmin.dashboard.pods')} />
-        </Stack>
-      </CardContent>
-    </Card>
+      )}
+      <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1.25, mt: 0.75 }}>
+        <FactLine value={formatCount(row.clubs)} label={t('clubAdmin.dashboard.clubs')} />
+        <FactLine value={formatCount(row.pods)} label={t('clubAdmin.dashboard.pods')} />
+      </Stack>
+    </Box>
   );
 }
 
@@ -54,7 +53,7 @@ export default function DashboardCategoryTiles({ categories, loading }: Readonly
     body = (
       <Stack direction="row" sx={{ gap: 1 }}>
         {SKELETON_KEYS.map((key) => (
-          <Skeleton key={key} variant="rounded" height={88} sx={{ flex: 1 }} />
+          <Skeleton key={key} variant="rounded" height={88} sx={{ flex: 1, borderRadius: '16px' }} />
         ))}
       </Stack>
     );
@@ -69,16 +68,11 @@ export default function DashboardCategoryTiles({ categories, loading }: Readonly
   }
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-      <CardContent>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-          {t('clubAdmin.dashboard.yourCategories')}
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1 }}>
-          {t('clubAdmin.dashboard.yourCategoriesHint')}
-        </Typography>
-        {body}
-      </CardContent>
-    </Card>
+    <Stack spacing={1.5}>
+      <SectionHeader title={t('clubAdmin.dashboard.yourCategories')} />
+      <Card>
+        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>{body}</CardContent>
+      </Card>
+    </Stack>
   );
 }

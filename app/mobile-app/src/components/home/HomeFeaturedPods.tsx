@@ -2,7 +2,7 @@ import { ScrollView } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
 import type { HomePod } from '@/hooks/useHomeFeed';
-import { PodCard } from '@/components/home/PodCard';
+import { POD_CARD_RAIL_WIDTH, PodCard } from '@/components/home/PodCard';
 import { SeeAllCard } from '@/components/home/SeeAllCard';
 
 interface HomeFeaturedPodsProps {
@@ -16,7 +16,7 @@ interface HomeFeaturedPodsProps {
   onOpenPod: (pod: HomePod) => void;
   /** Opens the full list, landing on `startIndex` (the first unseen pod). */
   onSeeAll: (startIndex?: number) => void;
-  /** The category chip over each card's image (mock: "Sports"). */
+  /** The category pill over each card's image (mock: "Sports"). */
   categoryLabelOf?: (pod: HomePod) => string | null;
   /** Save state + toggle; omit to hide the save buttons (signed-out). */
   savedOf?: (podDocId: string) => boolean;
@@ -49,7 +49,7 @@ export function HomeFeaturedPods({
         <Reveal key={pod.id} index={index} scale>
           <PodCard
             pod={pod}
-            width={300}
+            width={POD_CARD_RAIL_WIDTH}
             showPlace={false}
             onPress={() => onOpenPod(pod)}
             categoryLabel={categoryLabelOf?.(pod)}

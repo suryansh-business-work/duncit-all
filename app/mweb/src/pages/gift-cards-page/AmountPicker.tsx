@@ -1,7 +1,9 @@
-import { Box, Chip, Stack, TextField, Typography } from '@mui/material';
+import { Card, Chip, Stack, TextField } from '@mui/material';
 import { formatMoney } from '@duncit/utils';
+import SectionHeader from '../../components/SectionHeader';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { GiftCardSettings } from './queries';
+import { CARD_PILL_IDLE_SX, CARD_PILL_SX } from './segmentedSx';
 
 interface AmountPickerProps {
   settings: GiftCardSettings;
@@ -26,19 +28,15 @@ export default function AmountPicker({ settings, currencySymbol, amountStr, onCh
   });
 
   return (
-    <Box>
-      <Typography variant="subtitle1" sx={{
-        fontWeight: 700
-      }}>
-        {t('mweb.giftCards.amountHeading')}
-      </Typography>
+    <Card sx={{ p: 2 }}>
+      <SectionHeader title={t('mweb.giftCards.amountHeading')} />
       <Stack
         direction="row"
         spacing={1}
         useFlexGap
         sx={{
           flexWrap: "wrap",
-          mt: 1
+          mt: 1.5
         }}>
         {settings.denominations.map((denomination) => {
           const active = amount === denomination;
@@ -47,8 +45,8 @@ export default function AmountPicker({ settings, currencySymbol, amountStr, onCh
               key={denomination}
               label={formatMoney(denomination, { symbol: currencySymbol })}
               color={active ? 'primary' : 'default'}
-              variant={active ? 'filled' : 'outlined'}
               onClick={() => onChange(String(denomination))}
+              sx={active ? CARD_PILL_SX : CARD_PILL_IDLE_SX}
             />
           );
         })}
@@ -61,11 +59,11 @@ export default function AmountPicker({ settings, currencySymbol, amountStr, onCh
         onChange={(event) => onChange(event.target.value)}
         error={showError}
         helperText={rangeHint}
-        sx={{ mt: 1.5 }}
+        sx={{ mt: 2 }}
         slotProps={{
           htmlInput: { min: settings.min_amount, max: settings.max_amount, inputMode: 'numeric' }
         }}
       />
-    </Box>
+    </Card>
   );
 }

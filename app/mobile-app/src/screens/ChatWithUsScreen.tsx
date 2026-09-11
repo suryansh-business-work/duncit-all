@@ -1,9 +1,10 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -18,48 +19,36 @@ import { RefreshScrollView } from '@/components/PullToRefresh';
 export function ChatWithUsScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { onPrimary, color: ink } = useThemeColors();
+  const { onPrimary, muted } = useThemeColors();
 
   return (
     <StackScreen title={t('mweb.common.chatWithUs')} testID="chat-with-us-screen">
       <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 24 }}>
-        <Text testID="chat-inbox-subtitle" fontSize={13} color="$muted">
-          Real-time chat with our support team
-        </Text>
-        <XStack
+        <SurfaceCard
           testID="chat-live-card"
           role="button"
           aria-label={t('mweb.chatWithUs.chatLiveWithAnAgent')}
           onPress={() => navigation.navigate('LiveChat')}
+          flexDirection="row"
           alignItems="center"
           gap={12}
-          padding={14}
-          borderRadius={16}
-          borderWidth={1}
-          borderColor="$borderColor"
-          backgroundColor="$surface"
-          pressStyle={PRESS_STYLE.control}
+          pressStyle={PRESS_STYLE.surface}
         >
           <YStack
             width={44}
             height={44}
-            borderRadius={14}
+            borderRadius={22}
             backgroundColor="$primary"
             alignItems="center"
             justifyContent="center"
           >
-            <MaterialIcons name="forum" size={22} color={onPrimary} />
+            <MaterialIcons name="forum" size={20} color={onPrimary} />
           </YStack>
-          <YStack flex={1} gap={2}>
-            <Text fontSize={15} fontWeight="700" color="$color">
-              Chat live with an agent
-            </Text>
-            <Text fontSize={12.5} color="$muted">
-              Get real-time answers without raising a ticket.
-            </Text>
-          </YStack>
-          <MaterialIcons name="chevron-right" size={22} color={ink} />
-        </XStack>
+          <Text flex={1} fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
+            {t('mweb.chatWithUs.chatLiveWithAnAgent')}
+          </Text>
+          <MaterialIcons name="chevron-right" size={22} color={muted} />
+        </SurfaceCard>
       </RefreshScrollView>
     </StackScreen>
   );

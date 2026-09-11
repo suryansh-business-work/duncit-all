@@ -1,8 +1,10 @@
 import { WebView } from 'react-native-webview';
-import { Text, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import { useConfigStore } from '@/stores/config.store';
 import { locationMapEmbedUrl, locationMapQuery, mapEmbedHtml } from '@/utils/location-tree';
+
+import { SectionLabel } from './SectionLabel';
 
 interface Props {
   city?: string | null;
@@ -20,16 +22,15 @@ export function LocationMap({ city, zoneName, pincode, country }: Readonly<Props
   if (!url) return null;
 
   return (
-    <YStack gap={6}>
-      <Text fontSize={11} fontWeight="700" color="$muted" letterSpacing={0.6}>
-        MAP
-      </Text>
+    <YStack gap={8}>
+      <SectionLabel>MAP</SectionLabel>
       <YStack
-        height={180}
-        borderRadius={12}
+        height={200}
+        borderRadius={18}
         overflow="hidden"
         borderWidth={1}
-        borderColor="$borderColor"
+        borderColor="$cardBorder"
+        backgroundColor="$soft"
       >
         <WebView
           testID="location-map"

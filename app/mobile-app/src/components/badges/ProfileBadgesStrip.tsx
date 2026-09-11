@@ -5,11 +5,14 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { sortBadgeProgress } from '@duncit/utils';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useBadges } from '@/hooks/useBadges';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+
+const ART_STYLE = { width: 56, height: 56, borderRadius: 28 };
 
 /**
  * The member's earned badges, shown on their own profile directly under the
@@ -21,71 +24,65 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
  */
 export function ProfileBadgesStrip() {
   const { t } = useTranslation();
-  const { primary } = useThemeColors();
+  const { accent } = useThemeColors();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { rows } = useBadges();
   const earned = sortBadgeProgress(rows).filter((row) => row.achieved);
 
   return (
-    <YStack
-      testID="profile-badges"
-      gap={12}
-      marginHorizontal={16}
-      padding={14}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
-      <XStack alignItems="center" gap={8}>
-        <MaterialIcons name="military-tech" size={20} color={primary} />
-        <Text flex={1} fontSize={16} fontWeight="700" color="$color">
+    <SurfaceCard testID="profile-badges" gap={12} marginHorizontal={16}>
+      <XStack alignItems="center" justifyContent="space-between" gap={8}>
+        <Text
+          accessibilityRole="header"
+          flexShrink={1}
+          fontSize={17}
+          fontWeight="600"
+          color="$color"
+        >
           {t('mweb.profile.badges')}
         </Text>
         <Text
           testID="profile-badges-view-all"
           role="button"
           onPress={() => navigation.navigate('Badges')}
+          hitSlop={10}
           fontSize={13}
-          fontWeight="700"
-          color="$primary"
-          pressStyle={PRESS_STYLE.row}
+          fontWeight="600"
+          color="$accent"
+          pressStyle={PRESS_STYLE.inline}
         >
           {t('mweb.badges.viewAll')}
         </Text>
       </XStack>
       {earned.length === 0 ? (
-        <Text fontSize={13} color="$muted">
+        <Text fontSize={14} color="$muted">
           {t('mweb.badges.profileEmpty')}
         </Text>
       ) : (
-        <XStack gap={14} flexWrap="wrap">
+        <XStack gap={12} flexWrap="wrap">
           {earned.map((row) => (
-            <YStack key={row.badge.id} width={72} alignItems="center" gap={4}>
+            <YStack key={row.badge.id} width={72} alignItems="center" gap={6}>
               {row.badge.image_url ? (
-                <Image
-                  source={{ uri: row.badge.image_url }}
-                  style={{ width: 48, height: 48, borderRadius: 24 }}
-                />
+                <Image source={{ uri: row.badge.image_url }} style={ART_STYLE} />
               ) : (
                 <YStack
-                  width={48}
-                  height={48}
-                  borderRadius={24}
+                  width={56}
+                  height={56}
+                  borderRadius={28}
                   alignItems="center"
                   justifyContent="center"
-                  backgroundColor="$borderColor"
+                  backgroundColor="$soft"
                 >
-                  <MaterialIcons name="emoji-events" size={24} color={primary} />
+                  <MaterialIcons name="emoji-events" size={26} color={accent} />
                 </YStack>
               )}
-              <Text fontSize={11} fontWeight="700" color="$color" textAlign="center">
+              <Text fontSize={13} fontWeight="600" color="$color" textAlign="center">
                 {row.badge.title}
               </Text>
             </YStack>
           ))}
         </XStack>
       )}
-    </YStack>
+    </SurfaceCard>
   );
 }

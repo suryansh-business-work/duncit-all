@@ -23,6 +23,7 @@ const CATEGORY_LABELS: Record<EnvCategory, string> = {
   AISENSY: 'AiSensy (WhatsApp)',
   TURN: 'TURN relay (staff calls)',
   GITHUB: 'GitHub (app builds)',
+  GOOGLE_PLAY: 'Google Play (store releases)',
 };
 
 /** Convert [{key,value}] input into a typed config object (number/bool coercion). */

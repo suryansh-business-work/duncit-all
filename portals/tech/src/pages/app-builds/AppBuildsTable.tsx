@@ -13,6 +13,8 @@ import {
   renderBuild,
   renderCommit,
 } from './cells';
+import { makePlayStoreColumn } from './playStoreCells';
+import type { PushToPlay } from './usePlayStorePush';
 import {
   changesLabel,
   durationLabel,
@@ -27,6 +29,7 @@ interface Props {
   refetchRef: MutableRefObject<(() => void) | null>;
   onRowClick: (row: AppBuildRow) => void;
   onDelete: (row: AppBuildRow) => void;
+  onPush: PushToPlay;
 }
 
 export default function AppBuildsTable({
@@ -35,6 +38,7 @@ export default function AppBuildsTable({
   refetchRef,
   onRowClick,
   onDelete,
+  onPush,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const tableId = platform === 'ANDROID' ? 'tech-app-builds-android' : 'tech-app-builds-ios';
@@ -156,6 +160,8 @@ export default function AppBuildsTable({
         ),
         valueGetter: (row) => (row.slack_ts ? 'posted' : 'skipped'),
       },
+      // Only an AAB can go to Google Play, so only the Android table offers it.
+      ...(platform === 'ANDROID' ? [makePlayStoreColumn(t, onPush)] : []),
       {
         field: 'artifact_url',
         headerName: t('tech.appBuilds.colLinks'),
@@ -174,7 +180,7 @@ export default function AppBuildsTable({
         valueGetter: (row) => row.artifact_url,
       },
     ];
-  }, [t, onDelete]);
+  }, [t, onDelete, onPush, platform]);
 
   return (
     <DuncitTable<AppBuildRow>

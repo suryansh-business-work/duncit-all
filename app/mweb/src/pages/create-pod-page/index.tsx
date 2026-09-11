@@ -238,15 +238,14 @@ export default function CreatePodPage() {
             <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
               {t('mweb.createPod.title')}
             </Typography>
-            {/* `component` is load-bearing: MUI maps `caption` to a <span>, and
-                `noWrap`'s overflow/text-overflow do nothing on an inline box. Only
-                its white-space:nowrap took, so on a phone the note ran past this
-                Box in one unbroken line and under the close button instead of
-                ending in an ellipsis. A block element is what truncation needs. */}
+            {/* `component` is load-bearing: MUI maps `caption` to a <span>, and an
+                inline box will not wrap inside this min-width:0 column. A block
+                element is what lets the note break onto a second line on a phone
+                instead of running under the close button — it is an instruction, so
+                it is read in full rather than cut off with an ellipsis. */}
             <Typography
               variant="caption"
               component="div"
-              noWrap
               sx={{
                 color: "text.secondary",
                 fontWeight: 700

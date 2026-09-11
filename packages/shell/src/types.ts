@@ -139,9 +139,13 @@ export interface MountPortalOptions {
   children: ReactNode;
   /** Optional per-portal MUI override needing its own dep (e.g. CRM's MuiDataGrid). */
   themeExtend?: ComponentExtend;
-  /** Wrap the routed content with extra providers (e.g. admin's ConfirmProvider). */
+  /**
+   * Wrap the routed content with extra providers a single portal needs.
+   * `ConfirmProvider` and `NotifyHost` are NOT among them — `mountPortal`
+   * mounts both for every console, so a portal never repeats them.
+   */
   wrap?: (node: ReactNode) => ReactNode;
-  /** Extra router-level siblings (e.g. admin's NotifyHost). */
+  /** Extra router-level siblings, rendered beside the shell's own hosts. */
   extras?: ReactNode;
   /**
    * The portal's OWN local fallback copy, layered over the shell's chrome

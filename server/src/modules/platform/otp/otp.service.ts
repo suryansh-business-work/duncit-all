@@ -420,13 +420,33 @@ export const otpService = {
     if (expected.match && !expected.match(doc)) {
       throw badInput('That verification was for a different person');
     }
-    doc.consumed_at = new Date();
-    await doc.save();
+    /*
+      The spend itself is ONE conditional write, not the read above followed by
+      a save.
+
+      The checks are there to say WHY a code was refused, and they read a
+      snapshot: two requests arriving together — a double-tapped button, a
+      client that retried a response it never saw — both find `consumed_at`
+      empty and both would go on to set it, and one code would have opened two
+      doors. Making the flip itself the test closes that window. Whoever
+      matches `consumed_at: null` first is the one spend; everybody after gets
+      nothing back and is told the code is used, which is what they would have
+      been told had they arrived a moment later.
+
+      The account that gets created behind this is protected by its own unique
+      index; this is what stops the collision ever being reached.
+    */
+    const spent = await OtpChallengeModel.findOneAndUpdate(
+      { _id: doc._id, consumed_at: null },
+      { $set: { consumed_at: new Date() } },
+      { new: true }
+    );
+    if (!spent) throw badInput('That verification has already been used');
     logs.server.info('otp.service', 'consume', {
       msg: 'one-time code spent',
-      purpose: doc.purpose,
-      challenge_id: String(doc._id),
+      purpose: spent.purpose,
+      challenge_id: String(spent._id),
     });
-    return doc;
+    return spent;
   },
 };

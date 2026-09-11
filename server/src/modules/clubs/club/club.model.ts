@@ -1,4 +1,5 @@
 import { Schema, model, Types, type Document } from 'mongoose';
+import { attachEntityAudit } from '@modules/platform/entityAudit/entityAudit.attach';
 
 export interface IMedia {
   url: string;
@@ -92,5 +93,9 @@ const clubSchema = new Schema<IClub>(
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
+
+// Every write through mongoose is diffed and appended to the entity change
+// log (rule: the trail is captured at the model, never per service).
+attachEntityAudit(clubSchema, 'CLUB');
 
 export const ClubModel = model<IClub>('Club', clubSchema);

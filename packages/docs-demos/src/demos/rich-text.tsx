@@ -50,4 +50,23 @@ export default defineDemos('rich-text', [
         'The editor keeps a table only because the table nodes are registered; without them the same HTML loads back as flattened text, and the save that follows writes the flattened version.',
     }),
   }),
+
+  defineDemo<HtmlMock>({
+    id: 'picture',
+    title: 'A picture is a URL and its own block',
+    note:
+      "This is what the toolbar's picture button leaves behind: an <img> that is a direct child of the document, not wrapped in a <p>, and whose src is an ImageKit URL because allowBase64 is off. Swap the src for a data: URI to see what the editor refuses to write — that string would be a megabyte long and would live in the HTML column forever. Clear the alt to see the other half: the file name becomes the alt text on upload, so a picture is not silently unlabelled for a screen reader. htmlToText drops it entirely, which is correct — a picture has no words for search to match.",
+    mock: {
+      html: '<p>Court 2 after the resurfacing:</p><img src="https://ik.imagekit.io/duncit/rich-text/court-2-resurfaced.jpg" alt="court-2-resurfaced.jpg"><p>Booking reopens for <strong>DUN-POD-4821</strong> on the 14th.</p>',
+    },
+    render: (mock) => <Box sx={RICH_TEXT_BODY_SX} dangerouslySetInnerHTML={{ __html: mock.html }} />,
+    compute: (mock) => ({
+      'htmlToText(html)': htmlToText(mock.html),
+      'Stored HTML length': `${mock.html.length} characters`,
+      'Is the src a URL': String(mock.html.includes('src="https://')),
+      'Has alt text': String(/<img[^>]+alt="[^"]+"/.test(mock.html)),
+      'Why it matters':
+        'The upload finishes before anything is inserted, so a failed upload leaves the document untouched rather than saving a src that 404s for every reader from then on.',
+    }),
+  }),
 ]);

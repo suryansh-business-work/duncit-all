@@ -50,6 +50,7 @@ exports:
   - 'buildWithdrawInput'
   - 'blankWithdrawValues'
   - 'WITHDRAW_METHODS'
+  - 'BANK_PAYOUT_METHODS'
   - 'loginDefaults'
   - 'forgotPasswordDefaults'
   - 'resetPasswordDefaults'
@@ -607,6 +608,22 @@ const schema = makeVenueCancelPodSchema(t);
 schema.safeParse({ reason: '  Venue flooded overnight  ' }); // { success: true, data: { reason: 'Venue flooded overnight' } }
 schema.safeParse({ reason: 'Rain' });                        // reason — mweb.venuePods.reasonRequired
 ```
+
+### How a partner is paid out
+
+`BANK_PAYOUT_METHODS` is the three values the server’s `BankAccountVerification`
+accepts, beside `''` for a payout that is not set up yet:
+
+```ts
+import { BANK_PAYOUT_METHODS } from '@duncit/forms';
+
+BANK_PAYOUT_METHODS; // ['UPI', 'IMPS', 'NEFT']
+```
+
+It lives here because a form that offers a fourth value is normalized back to
+`''` by the server, which reads to the person who saved it as “my edit did not
+save”. The venue and host editors both render their payout dropdown from it, so
+the options and what the server accepts cannot drift (rules 2 + 34).
 
 ### Still to move
 

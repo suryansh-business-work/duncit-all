@@ -151,7 +151,8 @@ describe('Sign in', () => {
     cy.contains('button', 'Save password').should('be.enabled').click();
     cy.wait('@CompletePasswordReset');
     cy.get('[data-testid="recovery-success"]').should('be.visible');
-    cy.contains('button', 'Continue to Login').click();
+    // A router link, so it renders as an anchor rather than a button.
+    cy.contains('a', 'Continue to Login').should('have.attr', 'href', '/login').click();
     cy.location('pathname').should('match', /\/login/);
 
     // The old password is gone; the new one opens the account.

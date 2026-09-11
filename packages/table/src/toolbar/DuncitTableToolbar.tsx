@@ -22,6 +22,26 @@ import { ColumnMenu } from './ColumnMenu';
 import { FilterPopover } from './FilterPopover';
 import { filterChipLabel } from './filterState';
 
+/**
+ * The page's own toolbar buttons, switched off with the rest of the toolbar.
+ *
+ * `toolbarActions` is an opaque `ReactNode` — a "+ Create", an export, whatever
+ * the page hands over — so there is no prop to reach down into it with. A
+ * `disabled` fieldset is the platform's own answer: every control inside it goes
+ * disabled AND leaves the tab order, which `pointer-events: none` would not do.
+ * `display: contents` keeps those actions direct flex children of the toolbar
+ * row, so the wrapper changes nothing about how they sit.
+ *
+ * The dim is what tells the reader they are off, since MUI paints its disabled
+ * look from the prop it never received. `pointer-events` covers the one thing a
+ * fieldset cannot: an action rendered as a LINK (`component={RouterLink}`) is
+ * not a form control, so `disabled` passes it by.
+ */
+const ACTIONS_FIELDSET_SX = {
+  display: 'contents',
+  '&:disabled > *': { opacity: 0.6, pointerEvents: 'none' },
+} as const;
+
 export interface DuncitTableToolbarProps<T> {
   columns: ReadonlyArray<DuncitColumn<T>>;
   searchInput: string;
@@ -37,6 +57,8 @@ export interface DuncitTableToolbarProps<T> {
   toggleDensity: () => void;
   onExportCsv: () => void;
   onRefresh: () => void;
+  /** A fetch is in flight: every control here is dead until it lands. */
+  loading: boolean;
 }
 
 /** Search + filters + chips on the left; actions slot, columns, density, CSV, refresh on the right. */
@@ -56,6 +78,7 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
     toggleDensity,
     onExportCsv,
     onRefresh,
+    loading,
   } = props;
   const { t } = useTranslation();
   const [filterAnchor, setFilterAnchor] = useState<HTMLElement | null>(null);
@@ -75,6 +98,7 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
         <DuncitIconButton
           size="small"
           aria-label={t('shell.table.clearSearch')}
+          disabled={loading}
           onClick={() => setSearchInput('')}
         >
           <ClearIcon fontSize="small" />
@@ -96,6 +120,7 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
         size="small"
         placeholder={placeholder}
         value={searchInput}
+        disabled={loading}
         onChange={(event) => setSearchInput(event.target.value)}
         slotProps={{
           input: {
@@ -114,6 +139,7 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
           <DuncitButton
             size="small"
             startIcon={<FilterListIcon />}
+            disabled={loading}
             onClick={(event) => setFilterAnchor(event.currentTarget)}
           >
             {t('shell.table.filters')}
@@ -125,32 +151,51 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
           key={filter.field}
           size="small"
           label={filterChipLabel(columns, filter, t)}
+          disabled={loading}
           onDelete={() => removeFilter(filter.field)}
         />
       ))}
       <Box sx={{ flexGrow: 1 }} />
-      {toolbarActions}
+      <Box component="fieldset" disabled={loading} sx={ACTIONS_FIELDSET_SX}>
+        {toolbarActions}
+      </Box>
       <Tooltip title={t('shell.table.columns')}>
         <DuncitIconButton
           size="small"
           aria-label={t('shell.table.columns')}
+          disabled={loading}
           onClick={(event) => setColumnAnchor(event.currentTarget)}
         >
           <ViewColumnIcon fontSize="small" />
         </DuncitIconButton>
       </Tooltip>
       <Tooltip title={densityTitle}>
-        <DuncitIconButton size="small" aria-label={densityTitle} onClick={toggleDensity}>
+        <DuncitIconButton
+          size="small"
+          aria-label={densityTitle}
+          disabled={loading}
+          onClick={toggleDensity}
+        >
           {isCompact ? <DensityMediumIcon fontSize="small" /> : <DensitySmallIcon fontSize="small" />}
         </DuncitIconButton>
       </Tooltip>
       <Tooltip title={t('shell.table.exportCsv')}>
-        <DuncitIconButton size="small" aria-label={t('shell.table.exportCsv')} onClick={onExportCsv}>
+        <DuncitIconButton
+          size="small"
+          aria-label={t('shell.table.exportCsv')}
+          disabled={loading}
+          onClick={onExportCsv}
+        >
           <FileDownloadIcon fontSize="small" />
         </DuncitIconButton>
       </Tooltip>
       <Tooltip title={t('shell.table.refresh')}>
-        <DuncitIconButton size="small" aria-label={t('shell.table.refresh')} onClick={onRefresh}>
+        <DuncitIconButton
+          size="small"
+          aria-label={t('shell.table.refresh')}
+          disabled={loading}
+          onClick={onRefresh}
+        >
           <RefreshIcon fontSize="small" />
         </DuncitIconButton>
       </Tooltip>

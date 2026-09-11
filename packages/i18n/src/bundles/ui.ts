@@ -57,6 +57,13 @@ export const UI_BUNDLE: NestedCatalogue = {
       scannedHint: 'Seats scanned in at the door — a completed pod is settled on these',
       scannedCount: '{attended}/{booked} scanned',
     },
+    /** A pod’s occupancy: seats held, and the bookings holding them. */
+    podSeats: {
+      bookings: { one: '{count} booking', other: '{count} bookings' },
+      hint: '{seats} seats held by {bookings} bookings — one seat each.',
+      hintMulti:
+        '{seats} seats held by {bookings} bookings — {extra} of them are extra seats bought on a single booking.',
+    },
     /** A member's pod history, as a branching timeline. */
     timeline: {
       inProgress: 'In progress',

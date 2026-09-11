@@ -30,7 +30,14 @@ afterEach(() => {
   for (const editor of editors.splice(0)) editor.destroy();
 });
 
-const toolbar = (editor: Editor) => <RichTextToolbar compact={false} editor={editor} />;
+const toolbar = (editor: Editor) => (
+  <RichTextToolbar
+    compact={false}
+    editor={editor}
+    imageFolder="/rich-text"
+    onImageError={() => undefined}
+  />
+);
 
 describe('RichTextToolbar', () => {
   it('removes the link under the cursor', async () => {

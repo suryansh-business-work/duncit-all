@@ -1,7 +1,7 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { appBuildService } from './appBuild.service';
-import type { AppBuildPlatform } from './appBuild.model';
+import type { AppBuildPlatform, PlayStoreTrack } from './appBuild.model';
 import type { TableQueryInput } from '@utils/table-query';
 
 // App builds are a Tech-portal capability. The CI workflows authenticate with
@@ -52,6 +52,14 @@ export const appBuildResolvers = {
     deleteAppBuild: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, BUILDS_MANAGE);
       return appBuildService.remove(args.id);
+    },
+    pushAppBuildToPlayStore: (
+      _p: unknown,
+      args: { id: string; track: PlayStoreTrack },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, BUILDS_MANAGE);
+      return appBuildService.pushToPlayStore(args.id, args.track, user);
     },
   },
 };

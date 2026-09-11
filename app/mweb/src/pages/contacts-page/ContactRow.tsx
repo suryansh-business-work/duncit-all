@@ -6,7 +6,8 @@ import type { ContactRow as ContactRowData } from './queries';
 
 interface Props {
   row: ContactRowData;
-  onToggleFollow: (row: ContactRowData) => void;
+  /** Returns the follow's promise, so the row's own button spins for it. */
+  onToggleFollow: (row: ContactRowData) => Promise<void>;
   onOpen: (userId: string) => void;
 }
 

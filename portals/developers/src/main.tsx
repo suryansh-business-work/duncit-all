@@ -11,13 +11,7 @@ import { appConfig } from './config/app-config';
 import App from './App';
 
 mountPortal({
-  config: {
-    key: appConfig.key,
-    name: appConfig.name,
-    tokenKey: appConfig.tokenKey,
-    colorModeKey: appConfig.colorModeKey,
-    accent: appConfig.accent,
-  },
+  config: appConfig,
   apolloClient,
   graphqlUrl: urlConfigs.graphqlUrl,
   logsPortal: logs.portal['developers-portal'],

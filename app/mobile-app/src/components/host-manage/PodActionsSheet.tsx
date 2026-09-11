@@ -1,6 +1,7 @@
-import { Text, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import { ActionRow } from '@/components/host-manage/ActionRow';
+import { GatedActionRow } from '@/components/host-manage/GatedActionRow';
 import { PodLinkRow } from '@/components/host-manage/PodLinkRow';
 import { STAR_COLOR } from '@/components/support/AspectRatingRow';
 import { DuncitDialog } from '@/components/DuncitDialog';
@@ -28,6 +29,12 @@ interface Props {
    * the same thing mWeb's menu does with a disabled item (rule 27).
    */
   canScan: boolean;
+  /**
+   * The pod has not ended yet, so its plan can still change. Once it is over,
+   * Edit, Request Change Host and Cancel all go inert with a line under each
+   * saying why — the same three rows mWeb greys (rule 27).
+   */
+  canAmend: boolean;
   onClose: () => void;
   onScan: () => void;
   onSeeAttendance: () => void;
@@ -59,6 +66,7 @@ export function PodActionsSheet({
   venueRejected,
   canComplete,
   canScan,
+  canAmend,
   onClose,
   onScan,
   onSeeAttendance,
@@ -80,6 +88,9 @@ export function PodActionsSheet({
 
   // The actions that only make sense for a pod that actually gets to run.
   const showAttendeeActions = !venueRejected;
+  // Read once and passed to all three rows: the same sentence under each, and
+  // one lookup rather than three (rule 26g — compute in the parent).
+  const amendClosed = t('mweb.hostPodActions.amendClosed');
 
   return (
     // Eight rows are ~430px before any chrome — enough to be clipped in
@@ -94,21 +105,15 @@ export function PodActionsSheet({
     >
       <YStack gap={10}>
         {showAttendeeActions ? (
-          <YStack gap={4}>
-            <ActionRow
-              testID="pod-action-scan"
-              icon="qr-code-scanner"
-              label={t('mweb.hostManage.scanAttendeeEventTickets')}
-              tint={primary}
-              disabled={!canScan}
-              onPress={onScan}
-            />
-            {canScan ? null : (
-              <Text testID="pod-action-scan-why" fontSize={11.5} color="$muted">
-                {t('mweb.hostPodActions.scanClosed')}
-              </Text>
-            )}
-          </YStack>
+          <GatedActionRow
+            testID="pod-action-scan"
+            icon="qr-code-scanner"
+            label={t('mweb.hostManage.scanAttendeeEventTickets')}
+            tint={primary}
+            enabled={canScan}
+            reason={t('mweb.hostPodActions.scanClosed')}
+            onPress={onScan}
+          />
         ) : null}
         {showAttendeeActions ? (
           <ActionRow
@@ -135,11 +140,17 @@ export function PodActionsSheet({
             onPress={onComplete}
           />
         ) : null}
-        <ActionRow
+        {/* Edit, Request Change Host and Cancel all rewrite a pod's plan, so a
+            pod that has already run closes all three — with the reason on each,
+            because they are not adjacent and a host reaching for any one of
+            them deserves the same answer. */}
+        <GatedActionRow
           testID="pod-action-edit"
           icon="edit"
           label={t('mweb.hostManage.editPod')}
           tint={ink}
+          enabled={canAmend}
+          reason={amendClosed}
           onPress={onEdit}
         />
         {/* The pod's two links, one row each: tapping it opens the page, and
@@ -185,20 +196,24 @@ export function PodActionsSheet({
         {/* Above Cancel on purpose: asking for a different host keeps the pod
             and everyone's seat, and it is what a host should reach for first. */}
         {onRequestChange ? (
-          <ActionRow
+          <GatedActionRow
             testID="pod-action-request-change"
             icon="swap-horiz"
             label={t('changeRequest.menuHost')}
             tint={warning}
+            enabled={canAmend}
+            reason={amendClosed}
             onPress={onRequestChange}
           />
         ) : null}
-        <ActionRow
+        <GatedActionRow
           testID="pod-action-cancel"
           icon="cancel"
           label={t('mweb.hostManage.cancelPod')}
           tint={danger}
           danger
+          enabled={canAmend}
+          reason={amendClosed}
           onPress={onCancel}
         />
       </YStack>

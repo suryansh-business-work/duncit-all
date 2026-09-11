@@ -18,6 +18,22 @@ export interface AppBuildCommit {
   author: string;
 }
 
+export type PlayStoreTrack = 'INTERNAL' | 'PRODUCTION';
+export type PlayReleaseStatus = 'PUSHING' | 'RELEASED' | 'FAILED';
+
+/** One push of the build's AAB to Google Play. A build keeps every one it had. */
+export interface AppBuildPlayRelease {
+  track: PlayStoreTrack;
+  status: PlayReleaseStatus;
+  /** What Google filed the bundle under. Empty until it answered. */
+  version_code: string;
+  /** Why it FAILED. Empty otherwise. */
+  error: string;
+  by: string;
+  started_at: string;
+  finished_at: string | null;
+}
+
 /** One file a build produced — Android makes an APK and an AAB from one compile. */
 export interface AppBuildArtifact {
   kind: AppBuildArtifactKind;
@@ -61,6 +77,8 @@ export interface AppBuildRow {
   /** What the runner is doing now. Empty once the build is over. */
   stage: string;
   stages: AppBuildStage[];
+  /** Every push of this build's AAB to Google Play, oldest first. */
+  play_releases: AppBuildPlayRelease[];
   slack_channel: string | null;
   slack_ts: string | null;
   slack_error: string | null;
@@ -72,6 +90,8 @@ export interface AppBuildSettings {
   ios_channel: string | null;
   last_reported_at: string | null;
   last_reported_by: string | null;
+  play_store_configured: boolean;
+  play_package_name: string;
 }
 
 export interface AppBuildCiToken {
@@ -126,6 +146,15 @@ export const APP_BUILDS_TABLE = gql`
           name
           at
         }
+        play_releases {
+          track
+          status
+          version_code
+          error
+          by
+          started_at
+          finished_at
+        }
         slack_channel
         slack_ts
         slack_error
@@ -142,6 +171,8 @@ export const APP_BUILD_SETTINGS = gql`
       ios_channel
       last_reported_at
       last_reported_by
+      play_store_configured
+      play_package_name
     }
   }
 `;
@@ -153,6 +184,8 @@ export const UPDATE_APP_BUILD_SETTINGS = gql`
       ios_channel
       last_reported_at
       last_reported_by
+      play_store_configured
+      play_package_name
     }
   }
 `;
@@ -160,6 +193,24 @@ export const UPDATE_APP_BUILD_SETTINGS = gql`
 export const DELETE_APP_BUILD = gql`
   mutation DeleteAppBuild($id: ID!) {
     deleteAppBuild(id: $id)
+  }
+`;
+
+export const PUSH_APP_BUILD_TO_PLAY_STORE = gql`
+  mutation PushAppBuildToPlayStore($id: ID!, $track: PlayStoreTrack!) {
+    pushAppBuildToPlayStore(id: $id, track: $track) {
+      id
+      build_no
+      play_releases {
+        track
+        status
+        version_code
+        error
+        by
+        started_at
+        finished_at
+      }
+    }
   }
 `;
 
@@ -244,6 +295,41 @@ export const runningMinutes = (row: AppBuildRow): number => {
   if (!row.created_at) return 0;
   return Math.max(0, Math.floor((Date.now() - new Date(row.created_at).getTime()) / 60_000));
 };
+
+/**
+ * A PUSHING release older than this belongs to a server that died mid-push —
+ * nothing is coming back to finish it, so the button is offered again. Mirrors
+ * the server's own staleness rule.
+ */
+const MAX_PUSH_MINUTES = 15;
+
+export const PLAY_TRACKS: readonly PlayStoreTrack[] = ['INTERNAL', 'PRODUCTION'];
+
+/** The push still being waited on, if any. */
+export const isPushInFlight = (r: AppBuildPlayRelease): boolean =>
+  r.status === 'PUSHING' && Date.now() - new Date(r.started_at).getTime() < MAX_PUSH_MINUTES * 60_000;
+
+export const hasPushInFlight = (row: AppBuildRow): boolean => row.play_releases.some(isPushInFlight);
+
+/** The newest push to one track — the one that says where that track stands. */
+export const latestPlayRelease = (row: AppBuildRow, track: PlayStoreTrack): AppBuildPlayRelease | null => {
+  for (let i = row.play_releases.length - 1; i >= 0; i -= 1) {
+    const r = row.play_releases[i];
+    if (r?.track === track) return r;
+  }
+  return null;
+};
+
+/**
+ * Whether the push buttons do anything on this row. The server enforces the
+ * same list; this only keeps a button from promising what it cannot do.
+ */
+export const canPushToPlay = (row: AppBuildRow): boolean =>
+  row.platform === 'ANDROID' &&
+  row.status === 'SUCCESS' &&
+  row.app_env === 'PRODUCTION' &&
+  row.artifacts.some((a) => a.kind === 'AAB' && a.url) &&
+  !hasPushInFlight(row);
 
 /** `62.4 MB` for one file; `APK 62.4 MB · AAB 48.1 MB` when a build made several. */
 export const sizeLabel = (row: AppBuildRow): string => {

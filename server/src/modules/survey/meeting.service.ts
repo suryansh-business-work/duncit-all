@@ -590,6 +590,42 @@ async function notifyApplicant(doc: any, event: 'booked' | 'rescheduled' | 'canc
   }
 }
 
+/**
+ * The rejection WhatsApp message for a staff REJECT.
+ *
+ * To the applicant, a staff Reject on the schedule and a Deny after the
+ * interview are the same news — the application did not go through — so both
+ * carry the party's rejection campaign (`venue_rejected_onboarding` and its
+ * three siblings). Only Deny was sending it, so a rejected applicant heard
+ * nothing on the channel they actually read.
+ *
+ * WhatsApp ONLY: the reject already sends its own cancellation email, which
+ * says the thing the rejection template cannot — fill the survey again and book
+ * a new slot. Letting `notifyEvent` send its email leg too would put two
+ * different accounts of the same decision in one inbox.
+ */
+async function notifyRejectedByStaff(doc: any, reason: string) {
+  try {
+    const names = await userMap([String(doc.user_id)]);
+    const who = names.get(String(doc.user_id));
+    const name = who?.name ?? 'there';
+    await notifyEvent({
+      event: waEventsFor(doc.kind).rejected,
+      entityId: String(doc._id),
+      user: who?.user,
+      name,
+      params: [name, reason],
+      email: '',
+    });
+  } catch (err) {
+    logs.server.error('meeting', 'notifyRejectedByStaff', {
+      error: err,
+      msg: 'rejection whatsapp failed',
+      meetingId: String(doc?._id),
+    });
+  }
+}
+
 /** The staff-editable fields of a meeting (Onboarding portal update form). */
 interface MeetingStaffInput {
   status?: MeetingStatus | null;
@@ -941,28 +977,33 @@ export const meetingService = {
   },
 
   /** Onboarding staff cancel a meeting with a reason (e.g. survey not
-   * satisfying) — the applicant is emailed the reason and asked to fill the
-   * survey again and book a new slot. */
+   * satisfying) — the applicant is emailed the reason, told on WhatsApp that
+   * the application was rejected, and asked to fill the survey again and book a
+   * new slot. */
   async cancelByStaff(id: string, reason: string) {
     if (!reason?.trim()) {
       throw new GraphQLError('A cancellation reason is required', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const doc = await MeetingModel.findById(id);
     if (!doc) throw notFound();
+    const cleanReason = reason.trim();
     doc.status = 'CANCELLED';
-    doc.cancel_reason = reason.trim();
+    doc.cancel_reason = cleanReason;
     // Staff rejection — surfaced as "Rejected" (vs a user self-cancel "Cancelled").
     doc.cancelled_by_staff = true;
     await doc.save();
     await notifyApplicant(
       doc,
       'cancelled',
-      `Reason: ${reason.trim()}. Please fill the survey again and book a new slot from Earn with Duncit.`,
+      `Reason: ${cleanReason}. Please fill the survey again and book a new slot from Earn with Duncit.`,
     );
+    // The same campaign Deny sends, because it is the same outcome — a reject
+    // that only emailed left the WhatsApp half of the decision unsent.
+    await notifyRejectedByStaff(doc, cleanReason);
     await notifyUserInApp(
       String(doc.user_id),
       'Onboarding meeting cancelled',
-      `Your ${MEETING_KIND_LABELS[doc.kind] ?? 'onboarding'} meeting was cancelled. Reason: ${reason.trim()}`,
+      `Your ${MEETING_KIND_LABELS[doc.kind] ?? 'onboarding'} meeting was cancelled. Reason: ${cleanReason}`,
       MEETING_DEEP_LINK,
     );
     return pubJoined(doc);

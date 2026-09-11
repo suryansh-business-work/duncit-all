@@ -10,6 +10,8 @@ consumers:
   - 'packages/app-settings'
 exports:
   - 'createDateFormatter'
+  - 'keyboardPattern'
+  - 'patternPlaceholder'
   - 'formatClockTime'
   - 'usesTwelveHourClock'
   - 'hourChips'
@@ -239,6 +241,37 @@ These say it once, for every such picker.
 and the AM/PM row change with the setting, so a draft, a validator or an `'HH:mm'` on the wire
 never learns which clock the admin picked.
 
+## Displayed one way, typed another
+
+The admin's pattern is what a date is SHOWN as. It is not what a date box can ask for.
+
+MUI X splits a field into sections and labels each one; a letter month gets the label
+`MMMM`, so the default `dd MMM yyyy` made the signup date-of-birth box read
+**`DD MMMM YYYY`** and then expected the member to spell "Sep" into it. The native app had
+the same box with no sections at all.
+
+So a display pattern has a typed twin:
+
+```ts
+keyboardPattern('dd MMM yyyy');      // 'dd MM yyyy'
+keyboardPattern('EEE, dd MMM yyyy'); // 'dd MM yyyy'  — the weekday is unanswerable
+keyboardPattern('MM/dd/yyyy');       // 'MM/dd/yyyy'  — already typeable, untouched
+patternPlaceholder(keyboardPattern('dd MMM yyyy')); // 'DD MM YYYY'
+```
+
+Only the month name and the weekday change. Order, separators and the year's width are the
+admin's, so a member types a date in the same shape they read one.
+
+| Where | What it uses |
+| --- | --- |
+| Every MUI X field (`keyboardDate`, `keyboardDateTime*` from `muiDateFormats`) | the typed pattern |
+| Picker toolbar, calendar, and every rendered date | the admin's pattern |
+| The native text boxes (`dateInputFormat`, `dateTimeInputFormat`, `parseDate`, `parseDateTime`, `formatDayInput`) | the typed pattern |
+| `datePlaceholder` / `dateTimePlaceholder` — what a box says it wants | the typed pattern |
+
+`parseDate` reads the typed pattern only. One shape goes in the box, one shape comes back
+out of it; a second accepted shape is a second answer to the same question.
+
 ### Occasions
 
 ```ts
@@ -301,8 +334,9 @@ setting can never render a 1970 date.
 | `clock` | `ClockInput` | `{ source: 'BROWSER' }` | Drives `now`, `dayLabel` and occasion matching. |
 
 `DateFormatter` members: `formatDate`, `formatTime`, `formatDateTime`, `dayLabel`, `dayKey`,
-`formatPattern(input, pattern)`, `formatDay(isoDay)`, `formatClock(hhmm)`, `now()`, plus the
-resolved `dateFormat` / `timeFormat` / `timeZone` / `clock`. Every formatter takes
+`formatPattern(input, pattern)`, `formatDay(isoDay)`, `formatDayInput(isoDay)`,
+`formatClock(hhmm)`, `now()`, plus the resolved `dateFormat` / `timeFormat` / `timeZone` /
+`clock` and the typed half below. Every formatter takes
 `string | number | Date | null | undefined`.
 
 `formatDay` and `formatClock` are the two that never convert zones. A calendar day and a wall-
@@ -349,6 +383,7 @@ that need a clean slate call `resetServerTimeStamp()`.
 | Grouping key, `yyyy-MM-dd` | `dayKey` |
 | A genuine one-off pattern | `formatPattern(input, pattern)` |
 | A stored `yyyy-MM-dd` calendar day | `formatDay` |
+| The same day, inside the box it is typed in | `formatDayInput` |
 | A stored `HH:mm` wall-clock time | `formatClock` |
 
 Every one of them returns `''` for empty or invalid input rather than throwing — parsing and

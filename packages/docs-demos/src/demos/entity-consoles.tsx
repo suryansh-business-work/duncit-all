@@ -1,5 +1,10 @@
 import { DIRECTORY_SPECS, type DirectoryEntity } from '@duncit/entity-consoles';
 import { defineDemo, defineDemos } from '../types';
+// A whole venue or host record is eighty lines of realistic mock on its own, so
+// each one and the demo that runs on it live beside this file rather than in it.
+import { venueEditorMappingDemo } from './entity-consoles-venue';
+import { hostEditorMappingDemo } from './entity-consoles-host';
+import { clubAdminEditorMappingDemo } from './entity-consoles-club-admin';
 
 /** Which console to inspect, and the route its list would live at. */
 interface SpecMock {
@@ -70,4 +75,8 @@ export default defineDemos('entity-consoles', [
       };
     },
   }),
+
+  venueEditorMappingDemo,
+  hostEditorMappingDemo,
+  clubAdminEditorMappingDemo,
 ]);

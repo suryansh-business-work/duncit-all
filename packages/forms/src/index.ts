@@ -25,4 +25,6 @@ export {
   OTP_PATTERN,
   POSTAL_CODE_PATTERN,
   PUBLIC_URL_PATTERN,
+  BANK_PAYOUT_METHODS,
+  type BankPayoutMethod,
 } from './patterns';

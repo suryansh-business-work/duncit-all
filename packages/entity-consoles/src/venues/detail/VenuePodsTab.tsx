@@ -1,14 +1,11 @@
 import { useMemo } from 'react';
-import { useNavigate } from 'react-router';
-import { useApolloClient } from '@apollo/client/react';
-import { Chip, Stack, Typography } from '@mui/material';
-import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
+import { Chip } from '@mui/material';
+import { type DuncitColumn } from '@duncit/table';
 import { formatDateTime } from '@duncit/app-settings';
 import { useTranslation } from '@duncit/shell';
+import EntityPodsTab from '../../shared/EntityPodsTab';
 import { VENUE_PODS_TABLE, type VenuePodRow } from './queries';
 import { EMPTY } from './venue-values';
-
-const getPodRowId = (p: VenuePodRow) => p.id;
 
 const whenValue = (p: VenuePodRow) => (p.pod_date_time ? formatDateTime(p.pod_date_time) : EMPTY);
 
@@ -16,21 +13,11 @@ const hostsValue = (p: VenuePodRow) => p.host_names?.join(', ') || EMPTY;
 
 const renderApproval = (p: VenuePodRow) => <Chip size="small" label={p.venue_approval_status} />;
 
-/** Every pod booked at this venue, straight off the shared pods table engine —
- * `venue_id` is one of its allowlisted filters, so no second query exists for
- * this list. A row opens the pod's own details page. */
+/** Every pod booked at this venue — `venue_id` is one of the pods table's
+ * allowlisted filters, so no second query exists for this list. A row opens the
+ * pod's own details page. */
 export default function VenuePodsTab({ venueId }: Readonly<{ venueId: string }>) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const client = useApolloClient();
-
-  const fetchRows = useApolloTableFetch<VenuePodRow>(
-    client,
-    VENUE_PODS_TABLE,
-    'podsTable',
-    { extraFilters: [{ field: 'venue_id', op: 'eq', value: venueId }] },
-    [venueId],
-  );
 
   const columns = useMemo<DuncitColumn<VenuePodRow>[]>(
     () => [
@@ -73,25 +60,15 @@ export default function VenuePodsTab({ venueId }: Readonly<{ venueId: string }>)
   );
 
   return (
-    <Stack spacing={1.5}>
-      <Stack spacing={0.25}>
-        <Typography variant="h6" sx={{ fontWeight: 900 }}>
-          {t('admin.venueDetails.podsTitle')}
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          {t('admin.venueDetails.podsSubtitle')}
-        </Typography>
-      </Stack>
-
-      <DuncitTable<VenuePodRow>
-        tableId="admin-venue-pods"
-        columns={columns}
-        fetchRows={fetchRows}
-        getRowId={getPodRowId}
-        emptyText={t('admin.venueDetails.podsEmpty')}
-        defaultSort={{ field: 'pod_date_time', dir: 'desc' }}
-        onRowClick={(pod) => navigate(`/pods/${pod.id}`)}
-      />
-    </Stack>
+    <EntityPodsTab<VenuePodRow>
+      filterField="venue_id"
+      filterValue={venueId}
+      document={VENUE_PODS_TABLE}
+      columns={columns}
+      tableId="admin-venue-pods"
+      title={t('admin.venueDetails.podsTitle')}
+      subtitle={t('admin.venueDetails.podsSubtitle')}
+      emptyText={t('admin.venueDetails.podsEmpty')}
+    />
   );
 }

@@ -170,6 +170,45 @@ export const clubAdminProfileService = {
     return one(doc);
   },
 
+  /**
+   * Appoint a Club Admin from the console — the "Add" the table never had.
+   *
+   * Granting the CLUB_ADMIN role IS the appointment (see `ensureForUser`), and
+   * granting it is also what MINTS the record. So this does exactly that and then
+   * writes the details, rather than inserting a row the person cannot act on: a
+   * record without the role shows in every table and picker while its holder
+   * cannot open the Partners console, which is the half-appointment this console
+   * existed to stop.
+   *
+   * Refused when the account already has a record: `user_id` is unique, and one
+   * person is one Club Admin.
+   */
+  async adminCreate(
+    userId: string,
+    input: {
+      full_name?: string;
+      email?: string;
+      phone?: string;
+      super_category_id?: string | null;
+      category_id?: string | null;
+      sub_category_id?: string | null;
+      commission_pct?: number | null;
+    }
+  ) {
+    if (!Types.ObjectId.isValid(userId)) throw badInput('Invalid user');
+    const existing = await ClubAdminProfileModel.exists({ user_id: new Types.ObjectId(userId) });
+    if (existing) throw badInput('This account is already a Club Admin');
+
+    // Dynamic, because user.service reaches back into this module when a role is
+    // granted — a static import here would close the circle.
+    const { userService } = await import('@modules/access/user/user.service');
+    await userService.addRole(userId, 'CLUB_ADMIN');
+
+    const doc = await ClubAdminProfileModel.findOne({ user_id: new Types.ObjectId(userId) });
+    if (!doc) throw badInput('The Club Admin record could not be created');
+    return clubAdminProfileService.update(String(doc._id), input);
+  },
+
   async update(
     id: string,
     input: {

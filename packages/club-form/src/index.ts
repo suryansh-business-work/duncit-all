@@ -10,4 +10,5 @@ export type { ClubSchema } from './schema';
 export { buildClubInput, clubToFormValues, linesToMedia, cleanBullets, cleanFaqs } from './build-input';
 export type { BuildClubInputOptions } from './build-input';
 export { blankClubFormValues } from './types';
+export { LINKABLE_HOSTS } from './queries';
 export type { ClubFormValues, ClubFormConfig, ClubFormData, ClubFaqValue, ClubAdmin } from './types';

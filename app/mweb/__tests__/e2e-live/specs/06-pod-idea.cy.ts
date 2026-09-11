@@ -15,17 +15,28 @@ const comment = 'Would love a weekend edition of this.';
 const card = () => cy.contains('.MuiCard-root', title);
 
 /**
+ * The page's "Filter by category" cascade carries the same three labels and
+ * comes first in the DOM, under the dialog's backdrop — so the field is looked
+ * up inside the composer. The options list is portaled outside the dialog, so
+ * the option click runs outside `within`.
+ */
+function pickInDialog(label: RegExp) {
+  cy.contains('[role="dialog"]', 'Share a pod idea').within(() => cy.fieldByLabel(label).click());
+  cy.get('.MuiAutocomplete-popper [role="option"]').first().click();
+}
+
+/**
  * Each category level loads only once the level above is picked, so the pick
  * waits for the server's list before opening the next box.
  */
 function pickCategories() {
   cy.interceptOperation('SurveyGateCategories', (v) => v.level === 'CATEGORY', 'CategoryLevel');
   cy.interceptOperation('SurveyGateCategories', (v) => v.level === 'SUB', 'SubLevel');
-  cy.pickOption(/^Super Category/);
+  pickInDialog(/^Super Category/);
   cy.wait('@CategoryLevel');
-  cy.pickOption(/^Category/);
+  pickInDialog(/^Category/);
   cy.wait('@SubLevel');
-  cy.pickOption(/^Sub Category/);
+  pickInDialog(/^Sub Category/);
 }
 
 function openComposer() {
@@ -46,7 +57,7 @@ describe('Pod idea', () => {
     openComposer();
     cy.contains('label', 'Title').should('be.visible');
     cy.contains('label', 'Description').should('be.visible');
-    cy.contains('label', 'Super Category').should('be.visible');
+    cy.contains('[role="dialog"] label', 'Super Category').should('be.visible');
   });
 
   it('refuses an idea without a title and a description', () => {

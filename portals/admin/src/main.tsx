@@ -11,7 +11,6 @@ import { ADMIN_BUNDLE, flattenCatalogue } from '@duncit/app-settings';
 import { urlConfigs } from './config/url-configs';
 import { appConfig } from './config/app-config';
 import { apolloClient } from './apollo';
-import { ConfirmProvider, NotifyHost } from '@duncit/dialogs';
 import { createSessionUserLoader } from '@duncit/user-context';
 import { ADMIN_ME } from './adminSession';
 import App from './App';
@@ -19,12 +18,7 @@ import App from './App';
 const loadUser = createSessionUserLoader(apolloClient, { query: ADMIN_ME });
 
 mountPortal({
-  config: {
-    key: appConfig.key,
-    name: appConfig.name,
-    tokenKey: appConfig.tokenKey,
-    colorModeKey: appConfig.colorModeKey,
-  },
+  config: appConfig,
   apolloClient,
   graphqlUrl: urlConfigs.graphqlUrl,
   logsPortal: logs.portal.admin,
@@ -32,7 +26,5 @@ mountPortal({
   // console lives in Marketing now, so the whatsapp namespace is loaded there.
   i18nFallback: flattenCatalogue(ADMIN_BUNDLE),
   loadUser,
-  wrap: (node) => <ConfirmProvider>{node}</ConfirmProvider>,
-  extras: <NotifyHost />,
   children: <App />,
 });

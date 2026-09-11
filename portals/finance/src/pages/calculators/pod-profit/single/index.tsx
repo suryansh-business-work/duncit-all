@@ -5,6 +5,7 @@ import SingleCalculatorPanel from './SingleCalculatorPanel';
 import SavedCalculatorsTable from '../saved/SavedCalculatorsTable';
 import { POD_CALCULATORS } from '../saved/queries';
 import { useOpenParam } from '../saved/useOpenParam';
+import { useCalculatorDefaults } from '../useCalculatorDefaults';
 import type { SavedPodCalculator } from '../saved/types';
 
 /** Which saved calculation is loaded. Its own key so it never collides with the
@@ -22,6 +23,8 @@ export default function SinglePodTab() {
   const { t } = useTranslation();
   const [openId, setOpen] = useOpenParam(OPEN_PARAM);
 
+  const defaults = useCalculatorDefaults();
+
   const { data, loading, error, refetch } = useQuery<any>(POD_CALCULATORS, {
     variables: { kind: 'SINGLE' },
     fetchPolicy: 'cache-and-network',
@@ -33,7 +36,10 @@ export default function SinglePodTab() {
 
   if (error) return <Alert severity="error">{error.message}</Alert>;
 
-  if (loading && !data) return <Skeleton variant="rounded" height={320} />;
+  // The deductions gate the render rather than arriving later: the panel seeds
+  // its state once, on mount, so rates that turned up afterwards would be a
+  // second render the calculator has already stopped reading.
+  if ((loading && !data) || defaults.loading) return <Skeleton variant="rounded" height={320} />;
 
   return (
     <Stack spacing={2}>
@@ -43,6 +49,7 @@ export default function SinglePodTab() {
       <SingleCalculatorPanel
         key={open?.id ?? 'scratch'}
         saved={open}
+        defaults={defaults.inputs}
         onOpen={setOpen}
         onSaved={() => {
           refetch().catch(() => undefined);

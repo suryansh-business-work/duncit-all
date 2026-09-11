@@ -25,6 +25,7 @@ export const MY_HOST_PODS = gql`
       pod_date_time
       pod_amount
       pod_attendees
+      seats_taken
 
       pod_hosts_id
       product_cost_total

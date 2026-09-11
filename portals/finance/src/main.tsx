@@ -1,6 +1,5 @@
 import { mountPortal } from '@duncit/shell';
 import { createSessionUserLoader } from '@duncit/user-context';
-import { ConfirmProvider, NotifyHost } from '@duncit/dialogs';
 import { logs } from '@duncit/logs';
 // Via @duncit/app-settings, which already re-exports the i18n package — the
 // portal gains the copy without gaining a dependency (and without the matching
@@ -12,13 +11,7 @@ import { appConfig } from './config/app-config';
 import App from './App';
 
 mountPortal({
-  config: {
-    key: appConfig.key,
-    name: appConfig.name,
-    tokenKey: appConfig.tokenKey,
-    colorModeKey: appConfig.colorModeKey,
-    accent: appConfig.accent,
-  },
+  config: appConfig,
   apolloClient,
   graphqlUrl: urlConfigs.graphqlUrl,
   logsPortal: logs.portal.finance,
@@ -29,10 +22,5 @@ mountPortal({
   // the claims this portal decides on — one namespace, shipped by both ends.
   i18nFallback: flattenCatalogue({ ...FINANCE_BUNDLE, ...EMPLOYEE_EXPENSE_BUNDLE }),
   loadUser: createSessionUserLoader(apolloClient),
-  extras: <NotifyHost />,
-  // Same arrangement as the other portals: useConfirm() needs this above the
-  // routed pages, and the Pod Profit Calculator's delete is the first screen
-  // here to ask for a confirmation (rule 12 — never window.confirm).
-  wrap: (node) => <ConfirmProvider>{node}</ConfirmProvider>,
   children: <App />,
 });

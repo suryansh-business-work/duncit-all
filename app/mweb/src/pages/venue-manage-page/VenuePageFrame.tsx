@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Alert, CircularProgress, Stack } from '@mui/material';
+import { Alert, Stack } from '@mui/material';
+import { Loader, LoadingOverlay } from '@duncit/ui';
 import type { SwitchableVenue } from '@duncit/utils';
 import StudioPageHeader from '../../components/StudioPageHeader';
 import NoVenuesAlert from './NoVenuesAlert';
@@ -15,6 +16,9 @@ interface Props {
   onSelect: (venueId: string) => void;
   /** The first load, before any list has arrived. */
   loading: boolean;
+  /** A re-read of a list already on screen — after the page wrote to the venue.
+   *  The venue stays readable and dims, rather than being replaced by a spinner. */
+  refreshing?: boolean;
   error?: { message: string };
   /** The page's own sentence for an owner with no venue yet. */
   noVenuesMessage: string;
@@ -36,21 +40,18 @@ export default function VenuePageFrame({
   venue,
   onSelect,
   loading,
+  refreshing = false,
   error,
   noVenuesMessage,
   children,
 }: Readonly<Props>) {
   let body: ReactNode;
   if (loading) {
-    body = (
-      <Stack sx={{ alignItems: 'center', py: 4 }}>
-        <CircularProgress size={24} />
-      </Stack>
-    );
+    body = <Loader size={24} sx={{ py: 4 }} />;
   } else if (error) {
     body = <Alert severity="error">{error.message}</Alert>;
   } else if (venue) {
-    body = children;
+    body = <LoadingOverlay open={refreshing} size={24}>{children}</LoadingOverlay>;
   } else {
     body = <NoVenuesAlert message={noVenuesMessage} />;
   }

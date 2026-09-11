@@ -112,6 +112,15 @@ export const clubAdminProfileTypeDefs = /* GraphQL */ `
   }
 
   extend type Mutation {
+    """
+    Appoint a Club Admin: grants the account the CLUB_ADMIN role — which is what
+    mints the record — and writes these details onto it. Refused when the account
+    is already a Club Admin, because one person is one record.
+    """
+    adminCreateClubAdminProfile(
+      user_id: ID!
+      input: UpdateClubAdminProfileInput!
+    ): ClubAdminProfile!
     updateClubAdminProfile(id: ID!, input: UpdateClubAdminProfileInput!): ClubAdminProfile!
     "Approve the Club Admin — the table reads Active from here on."
     approveClubAdminProfile(id: ID!, notes: String): ClubAdminProfile!

@@ -5,6 +5,14 @@ export {
   type GiftCardArtwork,
 } from './gift-card-artwork';
 export {
+  claimGoogleSignupHandoff,
+  createGoogleSignupClaims,
+  openGoogleSignup,
+  readGoogleSignupHandoff,
+  type GoogleSignupClaims,
+  type GoogleSignupHandoff,
+} from './google-signup-handoff';
+export {
   backoutAttemptsLeft,
   buildPodParticipationTimeline,
   isBackoutMaxed,
@@ -228,6 +236,7 @@ export {
   attendeeSeatCount,
   payableSpots,
   payingAttendees,
+  payingSeats,
   podSeatsTaken,
   podSpotsLeft,
   spotsBounds,
@@ -245,6 +254,7 @@ export {
 } from './pod-draft';
 export {
   POD_LIVE_TAIL_MS,
+  canAmendPod,
   canCompletePod,
   canScanPodTickets,
   podPhase,

@@ -35,6 +35,10 @@ export function useVenuesWithSettings() {
 
   useEffect(() => {
     let active = true;
+    // Every `refetch` runs this again — after the recurring sheet writes venue
+    // rules, say — so the flag has to go back up, not just start there. mWeb's
+    // VenuePageFrame dims the venue for the same wait (rule 27).
+    setIsLoading(true);
     graphqlRequest(MyVenuesWithSettingsDocument, undefined, { auth: true })
       .then((data) => {
         if (!active) return;

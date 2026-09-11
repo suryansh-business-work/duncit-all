@@ -4,9 +4,11 @@ import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Button, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { AskClubAdminHelp } from '@/components/AskClubAdminHelp';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { ClubAdminCard } from '@/components/pod-pending';
 import { useClubAdmins } from '@/hooks/useClubAdmins';
+import { PodHelpSide } from '@/hooks/usePodClubAdminHelp';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -17,9 +19,9 @@ export interface PodClubAdminTarget {
   club_id?: string | null;
 }
 
-/** "Pod Club Admin" — who runs the club this pod belongs to, and how to reach
- * them, plus a support ticket that carries the pod through. Tamagui twin of
- * mWeb's PodClubAdminDialog (rule 27). */
+/** "Pod Club Admin" — who runs the club this pod belongs to, how to reach
+ * them, a one-press request for their help, and a support ticket that carries
+ * the pod through. Tamagui twin of mWeb's PodClubAdminDialog (rule 27). */
 export function PodClubAdminSheet({
   pod,
   onClose,
@@ -64,6 +66,13 @@ export function PodClubAdminSheet({
             }}
           />
         ))}
+        {pod ? (
+          <AskClubAdminHelp
+            podId={pod.id}
+            side={PodHelpSide.Host}
+            label={t('mweb.podClubAdmin.askHelp')}
+          />
+        ) : null}
       </YStack>
     );
   }

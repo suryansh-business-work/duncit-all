@@ -1,5 +1,4 @@
 import { mountPortal } from '@duncit/shell';
-import { ConfirmProvider, NotifyHost } from '@duncit/dialogs';
 import { createSessionUserLoader } from '@duncit/user-context';
 import { logs } from '@duncit/logs';
 import { urlConfigs } from './config/url-configs';
@@ -11,13 +10,7 @@ import App from './App';
 import 'react-datepicker/dist/react-datepicker.css';
 
 mountPortal({
-  config: {
-    key: appConfig.key,
-    name: appConfig.name,
-    tokenKey: appConfig.tokenKey,
-    colorModeKey: appConfig.colorModeKey,
-    accent: PARTNERS_ACCENT,
-  },
+  config: { ...appConfig, accent: PARTNERS_ACCENT },
   apolloClient,
   graphqlUrl: urlConfigs.graphqlUrl,
   logsPortal: logs.portal['partners-app'],
@@ -27,12 +20,5 @@ mountPortal({
   // portal gains the copy without gaining a dependency (and without the
   // matching Dockerfile COPY that a new @duncit/* dep would silently require).
   i18nFallback: PARTNERS_FALLBACK,
-  // The pod and club editors are pages now: they navigate back to their list on
-  // save, so the confirmation has to outlive the screen that triggered it.
-  extras: <NotifyHost />,
-  // Same arrangement as the other portals: useConfirm() needs this above the
-  // routed pages. Nothing here calls it directly — @duncit/pod-change-requests
-  // does, from the Change Requests board this console mounts.
-  wrap: (node) => <ConfirmProvider>{node}</ConfirmProvider>,
   children: <App />,
 });

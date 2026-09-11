@@ -46,6 +46,16 @@ export const CLUB_FORM_BUNDLE: NestedCatalogue = {
       location: 'Location',
       whatsappCommunityLink: 'WhatsApp Community link',
       whatsappGroupLink: 'WhatsApp Group link',
+      whatsappAnnouncementLink: 'WhatsApp Announcement link',
+      whatsappAnnouncementHint:
+        'Optional — the announcements-only channel, if this club runs one separately from its group.',
+    },
+    // Hosts an admin links to the club by hand.
+    linkedHosts: {
+      title: 'Linked hosts',
+      label: 'Hosts linked to this club',
+      placeholder: 'Search approved hosts',
+      hint: 'Optional. Leave this empty and the club page lists the hosts of its own pods instead — which is usually what you want.',
     },
     mediaField: {
       addImage: 'Add image',

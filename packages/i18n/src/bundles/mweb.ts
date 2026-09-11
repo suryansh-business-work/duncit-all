@@ -605,11 +605,18 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       googleSignIn: 'Sign in with Google',
       newHere: 'New here?',
       createOne: 'Create one',
-      // mWeb only: the web Google flow can come back with an account state the
-      // native flow never reaches, and says so in a dialog.
-      googleNotFoundTitle: 'Google account not found',
-      googleNotFoundBody: 'User is not in our system. Please sign up first.',
-      googleNotFoundAction: 'Sign up',
+      // Google knows them, Duncit does not. An invitation rather than a
+      // refusal: the credential they just signed in with is carried straight
+      // into signup, so "yes" continues instead of starting over. Both
+      // surfaces show it — the copy names what is still missing, because a
+      // Google credential carries neither a number nor a birthday.
+      googleNotFoundTitle: 'No Duncit account yet',
+      googleNotFoundBody:
+        'We could not find a Duncit account for {email}. Would you like to create one?',
+      googleNotFoundDetail:
+        'We will carry this Google sign-in into the next steps — you only need to add your WhatsApp number and date of birth. Nothing is created until you finish.',
+      googleNotFoundAction: 'Create my account',
+      googleNotFoundDismiss: 'Not now',
       // The consent step. An email/password account whose address matches a
       // verified Google account is offered the link rather than turned away —
       // granting it is the user's decision, so it is asked for in plain words.
@@ -1435,6 +1442,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // which pod this is about.
       support: 'Raise a support ticket',
       close: 'Close',
+      // Messages every admin of the pod's club by email and WhatsApp with the
+      // pod attached. The venue's pod sheet reads the same four outcomes.
+      askHelp: 'Ask for help',
+      askHelpSending: 'Asking…',
+      askHelpSent: 'The club admin has your request, with this pod’s details. They will reach out soon.',
+      askHelpAlready: 'You already asked about this pod today — the club admin has your request.',
+      askHelpNoAdmin: 'This pod’s club has no admin to ask yet. Raise a support ticket instead.',
+      askHelpFailed: 'The request could not be sent. Please try again.',
     },
     // Rating a pod after it happens. Each part is asked separately because a
     // guest can love the evening and still have been let down by the room —
@@ -2494,6 +2509,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       menuTooltip: 'Pod actions',
       menuAria: 'Actions for {title}',
       scanTickets: 'Scan attendee event tickets',
+      amendClosed: 'This pod has ended — it can no longer be edited, re-hosted or cancelled.',
       scanClosed: 'This pod has ended — tickets can no longer be scanned.',
       completePod: 'Complete pod',
       editPod: 'Edit pod',
@@ -4138,6 +4154,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venue: 'Venue',
       spots: 'Spots',
       price: 'Price',
+      askClubAdminHelp: 'Ask the club admin for help',
     },
     venueMapPreview: {
       mapPreview: 'Map preview',

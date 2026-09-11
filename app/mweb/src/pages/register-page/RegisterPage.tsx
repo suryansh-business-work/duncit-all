@@ -1,4 +1,11 @@
-import { readReferralCode } from '@duncit/utils';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router';
+import {
+  claimGoogleSignupHandoff,
+  createGoogleSignupClaims,
+  readGoogleSignupHandoff,
+  readReferralCode,
+} from '@duncit/utils';
 import { Alert, Box, Divider, Stack, Typography } from '@mui/material';
 import { auth } from '@duncit/auth-tokens';
 import AuthBackground from '../../components/AuthBackground';
@@ -31,6 +38,16 @@ import { useSignupFlow } from './useSignupFlow';
  *
  * RN twin: app/mobile-app/src/screens/SignupScreen.
  */
+/**
+ * Which carried credential this tab has already opened the Google door with.
+ *
+ * Module scope on purpose: it has to outlive the page, because the replay it
+ * guards against is a SECOND mount reading the same router state — a reload, or
+ * a trip back to login and forward again. A ref would be reset by exactly the
+ * event it exists to survive.
+ */
+const CLAIMS = createGoogleSignupClaims();
+
 export default function RegisterPage() {
   const { t } = useTranslation();
 
@@ -53,6 +70,31 @@ export default function RegisterPage() {
   const { policies, loading: policiesLoading, failed: policiesFailed } = useSignupPolicies();
   const flow = useSignupFlow(linkedCode);
   const google = useGoogleSignup(flow.googleAccepted);
+
+  /*
+    Arrived from the login screen's "no Duncit account yet" invite, holding the
+    credential Google had already returned — so this door opens on the
+    acceptance gate with it in hand rather than on a Google button they have
+    just pressed.
+
+    CLAIMED, not read. Router state outlives the navigation that carried it: a
+    reload replays it, and going back to login and forward again replays it too.
+    Starting the Google door a second time would reopen the acceptance gate on
+    top of the number and code steps already running, and the credential behind
+    it is the one thing that must be spent once. The claim answers once per
+    credential, which is what makes re-running this a no-op instead.
+  */
+  const location = useLocation();
+  const carried = readGoogleSignupHandoff(
+    (location.state as { googleSignup?: unknown } | null)?.googleSignup,
+  );
+  const carriedToken = carried?.idToken ?? '';
+  useEffect(() => {
+    const claimed = claimGoogleSignupHandoff(CLAIMS, carried);
+    if (claimed) google.start(claimed.idToken);
+    // Keyed by the credential itself; the claim guards the rest.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [carriedToken]);
 
   const onNumberStep = flow.askingNumber;
   const onVerifyStep = flow.step === 'VERIFY' && flow.verifying !== null;

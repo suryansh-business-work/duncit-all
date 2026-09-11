@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { useLocation, useNavigate } from 'react-router';
+import { openGoogleSignup, type GoogleSignupHandoff } from '@duncit/utils';
 import AuthBackground from '../../components/AuthBackground';
-import GoogleAuthNoticeDialog from '../../components/GoogleAuthNoticeDialog';
 import { type LoginSubmitValues } from '../../forms/login';
 import { useTranslation } from '../../i18n/useTranslation';
 import { parseApiError } from '../../utils/parseApiError';
@@ -14,6 +14,7 @@ import {
 } from '../../utils/redirect';
 import { LINK_GOOGLE_ACCOUNT, LOGIN, LOGIN_GOOGLE } from './queries';
 import GoogleLinkConsentDialog from './GoogleLinkConsentDialog';
+import GoogleSignupInviteDialog from './GoogleSignupInviteDialog';
 import LoginCard, { type LoginStep } from './LoginCard';
 import { useOtpLogin } from './useOtpLogin';
 
@@ -29,11 +30,22 @@ export default function LoginPage() {
   const [loginGoogle, { loading: gLoading }] = useMutation<any>(LOGIN_GOOGLE);
   const [linkGoogle, { loading: linking }] = useMutation<any>(LINK_GOOGLE_ACCOUNT);
   const [gError, setGError] = useState<string | null>(null);
-  const [gNotice, setGNotice] = useState<{
-    title: string;
-    message: string;
-    action?: string;
-  } | null>(null);
+  /*
+    A Google credential Duncit has no account for. Held — unspent — so accepting
+    the invite carries it into signup rather than asking Google for a second
+    one, and kept through `openGoogleSignup` so a repeat of the SAME credential
+    lands on the invite already open instead of swapping it underneath.
+  */
+  const [invite, setInvite] = useState<GoogleSignupHandoff | null>(null);
+  /*
+    Google renders its own button, and it stays pressable underneath our
+    spinner overlay. A second press during the exchange would put two
+    loginWithGoogle calls in the air, and for a brand-new account that is two
+    invites — and, if both are answered, two runs at making one account. One
+    exchange at a time; a ref rather than state because the guard has to hold
+    within the tick, before any re-render.
+  */
+  const exchanging = useRef(false);
   // The pending consent grant. Holds the id_token loginWithGoogle just refused
   // so "Allow" can spend it on linkGoogleAccount without a second Google round
   // trip — Google id tokens stay valid for an hour, far longer than this step.
@@ -84,6 +96,8 @@ export default function LoginPage() {
   };
 
   const handleGoogle = async (idToken: string) => {
+    if (exchanging.current) return;
+    exchanging.current = true;
     setGError(null);
     try {
       const res = await loginGoogle({ variables: { input: { id_token: idToken } } });
@@ -92,11 +106,11 @@ export default function LoginPage() {
     } catch (e: any) {
       const code = e.graphQLErrors?.[0]?.extensions?.code;
       if (code === 'GOOGLE_ACCOUNT_NOT_FOUND') {
-        setGNotice({
-          title: t('mweb.login.googleNotFoundTitle'),
-          message: t('mweb.login.googleNotFoundBody'),
-          action: t('mweb.login.googleNotFoundAction'),
-        });
+        // Not a dead end either — Google has verified this address and nobody
+        // holds it here, so we offer to make the account rather than turning
+        // them away with a credential we are about to throw out.
+        const verified = e.graphQLErrors?.[0]?.extensions?.email as string | undefined;
+        setInvite((current) => openGoogleSignup(current, idToken, verified ?? ''));
       } else if (code === 'EMAIL_LOGIN_REQUIRED') {
         // Not a dead end any more — the account exists and Google has verified
         // this address, so we ask whether to grant Google sign-in to it.
@@ -106,7 +120,24 @@ export default function LoginPage() {
       } else {
         setGError(parseApiError(e));
       }
+    } finally {
+      exchanging.current = false;
     }
+  };
+
+  /*
+    Yes to the invite: carry the credential into signup.
+
+    In router state rather than the query string — an id_token in the URL is an
+    id_token in the history, in the referrer of everything the page loads, and
+    in every access log the address reaches. Clearing the invite first is what
+    makes a double press idempotent here; the signup screen claims what arrives
+    exactly once, which is what makes it idempotent there too.
+  */
+  const acceptGoogleInvite = () => {
+    if (!invite) return;
+    setInvite(null);
+    navigate('/register', { state: { googleSignup: invite } });
   };
 
   const allowGoogleLink = async () => {
@@ -158,13 +189,11 @@ export default function LoginPage() {
         onDeny={denyGoogleLink}
       />
 
-      <GoogleAuthNoticeDialog
-        open={!!gNotice}
-        title={gNotice?.title ?? ''}
-        message={gNotice?.message ?? ''}
-        actionLabel={gNotice?.action}
-        onAction={() => navigate('/register')}
-        onClose={() => setGNotice(null)}
+      <GoogleSignupInviteDialog
+        open={!!invite}
+        email={invite?.email ?? ''}
+        onAccept={acceptGoogleInvite}
+        onDismiss={() => setInvite(null)}
       />
     </AuthBackground>
   );

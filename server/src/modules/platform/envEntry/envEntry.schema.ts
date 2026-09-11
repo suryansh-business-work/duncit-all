@@ -32,6 +32,7 @@ const SDL_CATEGORIES = [
   'AISENSY',
   'TURN',
   'GITHUB',
+  'GOOGLE_PLAY',
 ];
 
 if (SDL_CATEGORIES.join(',') !== ENV_CATEGORIES.join(',')) {
@@ -58,6 +59,7 @@ export const envEntryTypeDefs = gql`
     AISENSY
     TURN
     GITHUB
+    GOOGLE_PLAY
   }
 
   type EnvConfigPair {

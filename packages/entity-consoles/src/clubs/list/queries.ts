@@ -12,6 +12,7 @@ export const CLUBS = gql`
         type
       }
       club_whats_app_community_link
+      club_whats_app_announcement_link
       club_whats_app_group_link
       club_moments {
         url
@@ -31,6 +32,7 @@ export const CLUBS = gql`
       category_id
       super_category_id
       admin_user_ids
+      host_ids
       club_admins {
         id
         name
@@ -80,6 +82,7 @@ const CLUB_ROW_FIELDS = gql`
       type
     }
     club_whats_app_community_link
+    club_whats_app_announcement_link
     club_whats_app_group_link
     club_moments {
       url
@@ -99,6 +102,7 @@ const CLUB_ROW_FIELDS = gql`
     category_id
     super_category_id
     admin_user_ids
+    host_ids
     club_admins {
       id
       name

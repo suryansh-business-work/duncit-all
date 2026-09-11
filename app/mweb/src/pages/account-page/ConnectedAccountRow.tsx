@@ -38,8 +38,10 @@ export default function ConnectedAccountRow({
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1.5}
+        useFlexGap
         sx={{
           alignItems: { sm: 'center' },
+          flexWrap: 'wrap',
           justifyContent: "space-between"
         }}>
         <Stack
@@ -47,7 +49,7 @@ export default function ConnectedAccountRow({
           spacing={1.25}
           sx={{
             alignItems: "center",
-            flex: 1,
+            flex: '1 1 12rem',
             minWidth: 0
           }}>
           {connected ? (

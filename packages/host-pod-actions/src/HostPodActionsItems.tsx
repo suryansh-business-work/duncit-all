@@ -29,6 +29,12 @@ export interface HostPodMenuItemsProps {
    * a past pod: the row stays, greyed, saying why.
    */
   canScan: boolean;
+  /**
+   * The pod has not ended yet, so its plan can still change. False on a past
+   * pod, which greys Edit, Request Change Host and Cancel the same way — all
+   * three change something that has already happened.
+   */
+  canAmend: boolean;
   /** Closes the menu, then runs the action. */
   pick: (action: () => void) => () => void;
   onScan: () => void;
@@ -56,6 +62,7 @@ export default function HostPodActionsItems({
   showAttendeeActions,
   canComplete,
   canScan,
+  canAmend,
   pick,
   onScan,
   onComplete,
@@ -112,11 +119,18 @@ export default function HostPodActionsItems({
           <ListItemText primary={labels.completePod} />
         </MenuItem>
       )}
-      <MenuItem onClick={pick(onEdit)}>
+      {/* Edit, Request Change Host and Cancel all rewrite a pod's plan, so a
+          pod that has already run greys all three — with the reason on each,
+          because they are not adjacent and a host reaching for any one of them
+          deserves the same answer. */}
+      <MenuItem disabled={!canAmend} onClick={pick(onEdit)}>
         <ListItemIcon>
-          <EditIcon fontSize="small" />
+          <EditIcon fontSize="small" color={canAmend ? 'inherit' : 'disabled'} />
         </ListItemIcon>
-        <ListItemText primary={labels.editPod} />
+        <ListItemText
+          primary={labels.editPod}
+          secondary={canAmend ? undefined : labels.amendClosed}
+        />
       </MenuItem>
       {/* The pod's two links, each one row: clicking it opens the page, and
           the two icons beside it hand THE SAME link to the people who came —
@@ -154,18 +168,28 @@ export default function HostPodActionsItems({
       {/* Above Cancel on purpose: asking for a different host keeps the pod and
           everyone's seat, and it is the thing a host should reach for first. */}
       {onRequestChange && requestChangeLabel && (
-        <MenuItem onClick={pick(onRequestChange)}>
+        <MenuItem disabled={!canAmend} onClick={pick(onRequestChange)}>
           <ListItemIcon>
-            <SwapHorizIcon fontSize="small" color="warning" />
+            <SwapHorizIcon fontSize="small" color={canAmend ? 'warning' : 'disabled'} />
           </ListItemIcon>
-          <ListItemText primary={requestChangeLabel} />
+          <ListItemText
+            primary={requestChangeLabel}
+            secondary={canAmend ? undefined : labels.amendClosed}
+          />
         </MenuItem>
       )}
-      <MenuItem onClick={pick(onCancel)} sx={{ color: 'error.main' }}>
+      <MenuItem
+        disabled={!canAmend}
+        onClick={pick(onCancel)}
+        sx={canAmend ? { color: 'error.main' } : undefined}
+      >
         <ListItemIcon>
-          <CancelIcon fontSize="small" color="error" />
+          <CancelIcon fontSize="small" color={canAmend ? 'error' : 'disabled'} />
         </ListItemIcon>
-        <ListItemText primary={labels.cancelPod} />
+        <ListItemText
+          primary={labels.cancelPod}
+          secondary={canAmend ? undefined : labels.amendClosed}
+        />
       </MenuItem>
     </>
   );

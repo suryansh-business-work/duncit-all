@@ -58,6 +58,24 @@ vi.mock('../../src/components/AppShell', () => ({
   default: ({ children }: { children: ReactNode }) => <div data-testid="app-shell">{children}</div>,
 }));
 
+/**
+ * The email designer's canvas, faked at its module boundary.
+ *
+ * The press pass opens the Design view on /emails/templates, and real GrapesJS
+ * with mjml-browser never finishes booting in jsdom (no iframe, no layout): it
+ * pins the worker's event loop, so even the 30-second test timeout never fires,
+ * and the worker grows until it runs out of heap ~40 minutes later. That one
+ * test was what pushed the Coverage — Portal job past its time box. The canvas
+ * itself is covered by MjmlDesignPane.test.tsx, which fakes it the same way.
+ */
+vi.mock('grapesjs', () => ({
+  default: {
+    init: () => ({ on: () => undefined, getHtml: () => '', destroy: () => undefined }),
+  },
+}));
+vi.mock('grapesjs-mjml', () => ({ default: () => undefined }));
+vi.mock('grapesjs/dist/css/grapes.min.css', () => ({}));
+
 import App from '../../src/App';
 import { clearToken, setToken } from '../../src/lib/session';
 

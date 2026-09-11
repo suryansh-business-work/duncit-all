@@ -72,6 +72,7 @@ describe('buildClubInput', () => {
       club_feature_images_and_videos: [{ url: 'https://x/a.jpg', type: 'IMAGE' }],
       club_moments: [{ url: 'https://x/m.mp4', type: 'VIDEO' }],
       club_whats_app_community_link: '',
+      club_whats_app_announcement_link: '',
       club_whats_app_group_link: '',
       who_we_are: ['who'],
       what_we_do: ['do'],

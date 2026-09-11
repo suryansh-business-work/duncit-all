@@ -20,6 +20,7 @@ exports:
   - 'cleanBullets'
   - 'cleanFaqs'
   - 'blankClubFormValues'
+  - 'LINKABLE_HOSTS'
 ---
 
 ## Why this exists
@@ -361,3 +362,37 @@ section.
 a section component fails the package's own `test:coverage`, so add the test with the branch.
 The admin portal additionally keeps `club.form.cy.ts` exercising `buildClubInput` and
 `clubToFormValues` against portal-shaped data.
+
+## The two fields the form used to lose
+
+A club stores three WhatsApp links and two lists of people, and until now the form
+wrote four of the five. So `club_whats_app_announcement_link` and `host_ids` were
+fields nobody could edit anywhere on Duncit — they existed on the document, the
+server accepted them on both `CreateClubInput` and `UpdateClubInput`, and the only
+way to change one was by hand in the database.
+
+Both are on the form now:
+
+- **`announcement_link`** joins the community and group links in the Links
+  section. Optional, unlike the other two: not every club runs an
+  announcements-only channel, and the two required links already give a member a
+  way in.
+- **`host_ids`** is the `LinkedHostsField` picker, beside the Club Admin picker —
+  both answer "who runs this club", so both sit behind `config.showAdmins` and
+  neither is editable from the partner-facing flow.
+
+Its options come from `publicHosts`, not the admin `hostsTable`. That is
+deliberate: the picker renders inside the CLUBS console, whose access role is
+`ALL_CLUBS_ACCESS` and therefore cannot read the hosts directory at all. What a
+link needs is a name and an account id, which is exactly what the redacted public
+list answers with — and it is APPROVED + active only, which is the only kind of
+host worth linking.
+
+Two things to keep in mind when touching it:
+
+- The ids stored are **account** ids (`host_ids` refs `User`), not host-record
+  ids. A picker that saved `Host.id` would write ids nothing resolves.
+- **Empty is a real choice.** The club page falls back to the hosts of the club's
+  own pods when the list is empty, which is usually what you want — so the field
+  says so rather than looking unfinished, and an id the options list cannot name
+  keeps an id-labelled chip rather than being silently dropped on save.

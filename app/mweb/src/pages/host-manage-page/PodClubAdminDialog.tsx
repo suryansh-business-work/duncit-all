@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import { DuncitButton } from '@duncit/buttons';
+import AskClubAdminHelp from '../../components/AskClubAdminHelp';
 import ClubAdminCard from '../pod-pending-page/ClubAdminCard';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -50,9 +51,9 @@ export interface PodClubAdminTarget {
   club_id?: string | null;
 }
 
-/** "Pod Club Admin" — who runs the club this pod belongs to, and how to reach
- * them, plus a support ticket that carries the pod through. Native twin:
- * PodClubAdminSheet (rule 27). */
+/** "Pod Club Admin" — who runs the club this pod belongs to, how to reach
+ * them, a one-press request for their help, and a support ticket that carries
+ * the pod through. Native twin: PodClubAdminSheet (rule 27). */
 export default function PodClubAdminDialog({
   pod,
   onClose,
@@ -105,6 +106,9 @@ export default function PodClubAdminDialog({
             }}
           />
         ))}
+        {pod && (
+          <AskClubAdminHelp podId={pod.id} side="HOST" label={t('mweb.podClubAdmin.askHelp')} />
+        )}
       </Stack>
     );
   }

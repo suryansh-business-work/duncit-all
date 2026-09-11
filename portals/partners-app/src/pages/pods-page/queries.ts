@@ -27,6 +27,7 @@ export const PARTNER_PODS_PAGE = gql`
       pod_date_time
       pod_amount
       pod_attendees
+      seats_taken
       is_active
       completed_at
     }
@@ -70,6 +71,8 @@ export interface PartnerPodRow {
   pod_end_date_time?: string | null;
   pod_amount?: number | null;
   pod_attendees?: string[] | null;
+  /** Seats held — attendees plus every extra seat a multi-seat booking bought. */
+  seats_taken?: number | null;
   /** Hosts sit inside pod_attendees but never pay — see payingAttendees. */
   pod_hosts_id?: string[] | null;
   /** Seats scanned in at the door — what a completed pod settles on. */
@@ -100,6 +103,7 @@ const PARTNER_POD_ROW_FIELDS = gql`
     pod_end_date_time
     pod_amount
     pod_attendees
+    seats_taken
     attendance { attended_seats booked_seats recorded }
     venue_approval_status
     zone_name

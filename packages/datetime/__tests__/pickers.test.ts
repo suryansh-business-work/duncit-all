@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { keyboardPattern } from '../src/day-input';
 import { FALLBACK_DATE_FORMAT, FALLBACK_TIME_FORMAT } from '../src/format';
 import {
   formatTokens,
@@ -88,20 +89,23 @@ describe('muiDateFormats', () => {
 
   it('falls back when no pattern is configured yet', () => {
     const formats = muiDateFormats(null, undefined);
-    expect(formats.keyboardDate).toBe(FALLBACK_DATE_FORMAT);
+    // A field is TYPED in the fallback's digit-month twin, while everything
+    // displayed keeps the fallback exactly as written.
+    expect(formats.keyboardDate).toBe(keyboardPattern(FALLBACK_DATE_FORMAT));
+    expect(formats.fullDate).toBe(FALLBACK_DATE_FORMAT);
     expect(formats.fullTime).toBe(FALLBACK_TIME_FORMAT);
     expect(formats.fullDateTime).toBe(`${FALLBACK_DATE_FORMAT} ${FALLBACK_TIME_FORMAT}`);
   });
 
   it('degrades a pattern a picker would throw on to the fallback — never the page', () => {
     const formats = muiDateFormats('PPP', 'X');
-    expect(formats.keyboardDate).toBe(FALLBACK_DATE_FORMAT);
+    expect(formats.keyboardDate).toBe(keyboardPattern(FALLBACK_DATE_FORMAT));
     expect(formats.fullTime).toBe(FALLBACK_TIME_FORMAT);
   });
 
   it('degrades each half independently', () => {
     const formats = muiDateFormats('PPP', 'HH:mm');
-    expect(formats.keyboardDate).toBe(FALLBACK_DATE_FORMAT);
+    expect(formats.keyboardDate).toBe(keyboardPattern(FALLBACK_DATE_FORMAT));
     expect(formats.fullTime).toBe('HH:mm');
     expect(formats.fullDateTime).toBe(`${FALLBACK_DATE_FORMAT} HH:mm`);
   });

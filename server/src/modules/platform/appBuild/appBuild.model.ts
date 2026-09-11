@@ -33,6 +33,33 @@ export interface IAppBuildCommit {
   author: string;
 }
 
+/** The Google Play tracks a stored AAB can be released to from the portal. */
+export type PlayStoreTrack = 'INTERNAL' | 'PRODUCTION';
+
+/**
+ * PUSHING while the server is talking to Google — the upload and the commit
+ * take longer than a request should — then whichever way it ended.
+ */
+export type PlayReleaseStatus = 'PUSHING' | 'RELEASED' | 'FAILED';
+
+/**
+ * One press of "Push to Google Play" on this build. Appended, never replaced:
+ * a failed push followed by a successful one is two facts, and a build that
+ * went to internal testing and then to production is two releases.
+ */
+export interface IAppBuildPlayRelease {
+  track: PlayStoreTrack;
+  status: PlayReleaseStatus;
+  /** What Google filed the bundle under. Empty until it answered. */
+  version_code: string;
+  /** Why it FAILED. Empty otherwise. */
+  error: string;
+  /** Who pressed the button. */
+  by: string;
+  started_at: Date;
+  finished_at: Date | null;
+}
+
 /**
  * One file a build produced. Android makes two of these — the APK people
  * sideload and the AAB that goes to Play — from a single compile, so they
@@ -128,6 +155,8 @@ export interface IAppBuild extends Document {
   stage: string;
   /** Every stage it has entered, in order. */
   stages: IAppBuildStage[];
+  /** Every push of this build's AAB to Google Play, oldest first. */
+  play_releases: IAppBuildPlayRelease[];
   /**
    * What happened to the Slack announcement. Slack is a NOTIFICATION, not the
    * store of record — the row is. An unposted build stays visible here.
@@ -164,6 +193,19 @@ const appBuildStageSchema = new Schema<IAppBuildStage>(
   {
     name: { type: String, required: true, trim: true },
     at: { type: Date, required: true },
+  },
+  { _id: false }
+);
+
+const appBuildPlayReleaseSchema = new Schema<IAppBuildPlayRelease>(
+  {
+    track: { type: String, enum: ['INTERNAL', 'PRODUCTION'], required: true },
+    status: { type: String, enum: ['PUSHING', 'RELEASED', 'FAILED'], required: true },
+    version_code: { type: String, default: '' },
+    error: { type: String, default: '' },
+    by: { type: String, default: '' },
+    started_at: { type: Date, required: true },
+    finished_at: { type: Date, default: null },
   },
   { _id: false }
 );
@@ -206,6 +248,7 @@ const appBuildSchema = new Schema<IAppBuild>(
     submit_to_play_store: { type: Boolean, default: false },
     stage: { type: String, default: '' },
     stages: { type: [appBuildStageSchema], default: [] },
+    play_releases: { type: [appBuildPlayReleaseSchema], default: [] },
     slack_channel: { type: String, default: null },
     slack_ts: { type: String, default: null },
     slack_error: { type: String, default: null },

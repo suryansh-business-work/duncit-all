@@ -110,6 +110,12 @@ export interface HostPodActionLabels {
   scanTickets: string;
   /** Under the scan row once the pod is over and the row has gone inert. */
   scanClosed: string;
+  /**
+   * Under Edit / Request Change Host / Cancel once the pod is over. Editing,
+   * re-hosting and cancelling all change a plan, and a pod that already ran no
+   * longer has one — the rows stay, greyed, saying so.
+   */
+  amendClosed: string;
   completePod: string;
   editPod: string;
   cancelPod: string;
@@ -261,6 +267,7 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     menuTooltip: t('mweb.hostPodActions.menuTooltip'),
     scanTickets: t('mweb.hostPodActions.scanTickets'),
     scanClosed: t('mweb.hostPodActions.scanClosed'),
+    amendClosed: t('mweb.hostPodActions.amendClosed'),
     completePod: t('mweb.hostPodActions.completePod'),
     editPod: t('mweb.hostPodActions.editPod'),
     cancelPod: t('mweb.hostPodActions.cancelPod'),
@@ -380,6 +387,7 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     menuTooltip: t('shell.hostPodActions.menuTooltip'),
     scanTickets: t('shell.hostPodActions.scanTickets'),
     scanClosed: t('shell.hostPodActions.scanClosed'),
+    amendClosed: t('shell.hostPodActions.amendClosed'),
     completePod: t('shell.hostPodActions.completePod'),
     editPod: t('shell.hostPodActions.editPod'),
     cancelPod: t('shell.hostPodActions.cancelPod'),

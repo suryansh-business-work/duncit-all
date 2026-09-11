@@ -24,6 +24,7 @@ export const ENV_CATEGORIES = [
   'AISENSY',
   'TURN',
   'GITHUB',
+  'GOOGLE_PLAY',
 ] as const;
 export type EnvCategory = (typeof ENV_CATEGORIES)[number];
 

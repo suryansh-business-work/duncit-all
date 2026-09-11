@@ -7,19 +7,37 @@ import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { DuncitButton } from '@duncit/buttons';
 import { BackButton, QueryGuard } from '@duncit/ui';
+import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import { CLUB_DETAIL } from './queries';
 import ClubOverviewCard from './ClubOverviewCard';
 import ClubContentSections from './ClubContentSections';
 import ClubPodsCard from './ClubPodsCard';
 import ClubAdminsCard from './ClubAdminsCard';
 import MediaGallery from '../../shared/MediaGallery';
+import ChangeLogsSection from '../../shared/change-logs';
 import type { ClubDetail, ClubPodRow } from './types';
 import { useTranslation } from '@duncit/shell';
+
+/**
+ * The record and its history, behind a tab strip.
+ *
+ * A club has no application to review, so its detail page never had tabs — but it
+ * needs the same change log every other console record carries, and hanging that
+ * table off the bottom of a two-column layout would bury it.
+ */
+type ClubTab = 'overview' | 'changeLogs';
+type Translate = ReturnType<typeof useTranslation>['t'];
+
+const clubTabs = (t: Translate): DuncitTabItem<ClubTab>[] => [
+  { value: 'overview', label: t('directory.hostEditor.tabOverview') },
+  { value: 'changeLogs', label: t('directory.changeLogs.tab') },
+];
 
 export default function ClubDetailsPage() {
   const { t } = useTranslation();
   const { id = '' } = useParams();
   const navigate = useNavigate();
+  const tabs = useTabParam<ClubTab>({ items: clubTabs(t), fallback: 'overview' });
   const { data, loading, error } = useQuery<any>(CLUB_DETAIL, {
     variables: { id },
     skip: !id,
@@ -90,6 +108,17 @@ export default function ClubDetailsPage() {
         </DuncitButton>
       </Stack>
 
+      <DuncitTabs {...tabs} variant="scrollable" allowScrollButtonsMobile />
+
+      {tabs.value === 'changeLogs' && (
+        <ChangeLogsSection
+          entityType="CLUB"
+          entityId={club.id}
+          tableId="clubs-console-change-logs"
+        />
+      )}
+
+      {tabs.value === 'overview' && (
       <Box sx={{ display: 'grid', gap: 2.5, gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, alignItems: 'start' }}>
         <Stack spacing={2.5} sx={{ minWidth: 0 }}>
           <ClubOverviewCard club={club} podCount={pods.length} />
@@ -113,6 +142,7 @@ export default function ClubDetailsPage() {
           <ClubAdminsCard admins={club.club_admins ?? []} />
         </Stack>
       </Box>
+      )}
     </Stack>
       )}
     </QueryGuard>

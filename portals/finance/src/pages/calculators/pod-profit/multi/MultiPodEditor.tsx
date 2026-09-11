@@ -14,9 +14,12 @@ import ReportActions from '../saved/ReportActions';
 import { useMultiPodEditor } from './useMultiPodEditor';
 import { DELETE_POD_CALCULATOR, UPDATE_POD_CALCULATOR } from '../saved/queries';
 import { podPayload, type SavedPodCalculator } from '../saved/types';
+import type { PodProfitInputs } from '../types';
 
 interface Props {
   saved: SavedPodCalculator;
+  /** Finance > Default Deductions, as a fresh pod's starting inputs. */
+  defaults: PodProfitInputs;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -29,10 +32,10 @@ interface Props {
  * no effect syncing props into state, and no chance of showing one comparison's
  * pods under another's name.
  */
-export default function MultiPodEditor({ saved, onClose, onSaved }: Readonly<Props>) {
+export default function MultiPodEditor({ saved, defaults, onClose, onSaved }: Readonly<Props>) {
   const { t } = useTranslation();
   const confirm = useConfirm();
-  const editor = useMultiPodEditor(saved, t('finance.common.pod'));
+  const editor = useMultiPodEditor(saved, t('finance.common.pod'), defaults);
   const [save, saveState] = useMutation<any>(UPDATE_POD_CALCULATOR);
   const [remove, removeState] = useMutation<any>(DELETE_POD_CALCULATOR);
 

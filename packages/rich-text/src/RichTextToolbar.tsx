@@ -15,6 +15,7 @@ import UndoIcon from '@mui/icons-material/Undo';
 import { Box, Divider } from '@mui/material';
 import type { Editor } from '@tiptap/react';
 import { useTranslation } from '@duncit/app-settings';
+import { ImageButton } from './ImageButton';
 import { LinkDialog } from './LinkDialog';
 import { TableMenu } from './TableMenu';
 import { ToolbarButton } from './ToolbarButton';
@@ -45,11 +46,20 @@ const KEY_REFERENCES = {
 interface Props {
   compact: boolean;
   editor: Editor;
+  /** ImageKit folder for pictures dropped into this editor. */
+  imageFolder: string;
+  /** Raised when an image upload fails, so the editor can say so. */
+  onImageError: (failed: boolean) => void;
 }
 
 const DIVIDER_SX = { display: { xs: 'none', sm: 'block' }, mx: 0.25 };
 
-export function RichTextToolbar({ compact, editor }: Readonly<Props>) {
+export function RichTextToolbar({
+  compact,
+  editor,
+  imageFolder,
+  onImageError,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const [linkOpen, setLinkOpen] = useState(false);
   const run = (command: () => boolean) => command();
@@ -63,6 +73,9 @@ export function RichTextToolbar({ compact, editor }: Readonly<Props>) {
         sx={{
           alignItems: 'center',
           bgcolor: 'action.hover',
+          // The containing block for the image upload bar, which sits along this
+          // bar's bottom edge while a picture is on its way to ImageKit.
+          position: 'relative',
           borderBottom: 1,
           borderColor: 'divider',
           display: 'flex',
@@ -153,6 +166,11 @@ export function RichTextToolbar({ compact, editor }: Readonly<Props>) {
         >
           <FormatClearIcon fontSize="small" />
         </ToolbarButton>
+        <Divider orientation="vertical" flexItem sx={DIVIDER_SX} />
+        {/* Table and picture sit together: everything before them formats a
+            selection, and these two insert a BLOCK. */}
+        <TableMenu editor={editor} />
+        <ImageButton editor={editor} folder={imageFolder} onError={onImageError} />
         <Divider orientation="vertical" flexItem sx={DIVIDER_SX} />
         <ToolbarButton
           label={label('undo')}

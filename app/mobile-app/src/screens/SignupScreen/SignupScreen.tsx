@@ -1,7 +1,12 @@
-import { useState } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useEffect, useState } from 'react';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Text, XStack } from 'tamagui';
+import {
+  claimGoogleSignupHandoff,
+  createGoogleSignupClaims,
+  readGoogleSignupHandoff,
+} from '@duncit/utils';
 
 import { AuthDivider } from '@/components/AuthDivider';
 import { AuthScaffold } from '@/components/AuthScaffold';
@@ -18,6 +23,17 @@ import { VerifyWhatsappStep } from './VerifyWhatsappStep';
 import { useSignupFlow } from './useSignupFlow';
 import { allPoliciesAccepted } from '@/utils/policy-acceptance';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+
+/**
+ * Which carried credential this app run has already opened the Google door
+ * with.
+ *
+ * Module scope on purpose: it has to outlive the screen, because the replay it
+ * guards against is a SECOND mount reading the same navigation param — going
+ * back to login and forward again. A ref would be reset by exactly the event it
+ * exists to survive.
+ */
+const CLAIMS = createGoogleSignupClaims();
 
 export function SignupScreen() {
   const { t } = useTranslation();
@@ -45,6 +61,33 @@ export function SignupScreen() {
     }
     setGoogleToken(idToken);
   };
+
+  /*
+    Arrived from the login screen's "no Duncit account yet" invite, holding the
+    credential Google had already returned — so this door opens on the
+    acceptance sheet with it in hand rather than on a Google button they have
+    just pressed.
+
+    Waits for `loaded`, because `handleGoogle` branches on whether there is
+    anything to accept: run before the policies land and a signup with nothing
+    to gate would open an empty sheet instead of going straight through.
+
+    CLAIMED, not read. A navigation param outlives the remount that re-reads it
+    — going back to login and forward again replays it — and starting the Google
+    door a second time would reopen the sheet on top of the number and code
+    steps already running. The claim answers once per credential, which is what
+    makes re-running this a no-op instead.
+  */
+  const route = useRoute<RouteProp<RootStackParamList, 'Signup'>>();
+  const carried = readGoogleSignupHandoff(route.params?.googleSignup);
+  const carriedToken = carried?.idToken ?? '';
+  useEffect(() => {
+    if (!loaded) return;
+    const claimed = claimGoogleSignupHandoff(CLAIMS, carried);
+    if (claimed) handleGoogle(claimed.idToken);
+    // Keyed by the credential itself; the claim guards the rest.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [carriedToken, loaded]);
 
   const handleGooglePolicies = (ids: string[]) => {
     setGoogleAccepted(ids);

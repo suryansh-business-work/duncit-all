@@ -8,6 +8,8 @@ export const VENUE_DETAIL = gql`
     venue(venue_doc_id: $venue_doc_id) {
       id
       venue_no
+      owner_user_id
+      step_completed
       venue_name
       venue_type
       status
@@ -19,6 +21,9 @@ export const VENUE_DETAIL = gql`
         capacity
       }
       venue_category {
+        super_category_id
+        category_id
+        sub_category_id
         super_category_name
         category_name
         sub_category_name
@@ -31,6 +36,9 @@ export const VENUE_DETAIL = gql`
       cover_image_url
       gallery
       country
+      country_code
+      state_code
+      location_id
       address_line1
       address_line2
       city
@@ -74,6 +82,7 @@ export const VENUE_DETAIL = gql`
         }
         auto_extend {
           enabled
+          template_id
           horizon_days
           until
         }
@@ -83,6 +92,11 @@ export const VENUE_DETAIL = gql`
             hours_before
             charge_type
             value
+          }
+          trigger_hours
+          refund_tiers {
+            hours_before
+            refund_pct
           }
         }
       }
@@ -134,6 +148,11 @@ export interface VenueCancellationTier {
   value: number;
 }
 
+export interface VenueRefundTier {
+  hours_before: number;
+  refund_pct: number;
+}
+
 export interface VenueSettings {
   operating_hours: { open: string; close: string };
   weekly_off_days: number[];
@@ -148,8 +167,18 @@ export interface VenueSettings {
     booking_approval_required: boolean;
     allow_multiple_bookings: boolean;
   };
-  auto_extend: { enabled: boolean; horizon_days: number; until: string };
-  cancellation: { reschedule_only: boolean; tiers: VenueCancellationTier[] };
+  auto_extend: {
+    enabled: boolean;
+    template_id?: string | null;
+    horizon_days: number;
+    until: string;
+  };
+  cancellation: {
+    reschedule_only: boolean;
+    tiers: VenueCancellationTier[];
+    trigger_hours: number;
+    refund_tiers: VenueRefundTier[];
+  };
 }
 
 export interface VenueDocument {
@@ -161,6 +190,8 @@ export interface VenueDocument {
 export interface AdminVenueDetail {
   id: string;
   venue_no?: string | null;
+  owner_user_id: string;
+  step_completed: number;
   venue_name: string;
   venue_type: string;
   status: VenueStatus;
@@ -169,6 +200,9 @@ export interface AdminVenueDetail {
   capacity: number;
   capacity_items: VenueCapacityItem[];
   venue_category: {
+    super_category_id?: string | null;
+    category_id?: string | null;
+    sub_category_id?: string | null;
     super_category_name: string;
     category_name: string;
     sub_category_name: string;
@@ -181,6 +215,9 @@ export interface AdminVenueDetail {
   cover_image_url: string;
   gallery: string[];
   country: string;
+  country_code: string;
+  state_code: string;
+  location_id?: string | null;
   address_line1: string;
   address_line2: string;
   city: string;

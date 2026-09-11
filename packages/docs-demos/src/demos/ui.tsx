@@ -10,6 +10,7 @@ import {
   Loader,
   LoadingOverlay,
   PageHeader,
+  PodSeatsCell,
   SpotsStepper,
   StatCard,
   StatusChip,
@@ -19,6 +20,12 @@ import {
 } from '@duncit/ui';
 import { formatMoney } from '@duncit/utils';
 import { defineDemo, defineDemos } from '../types';
+
+interface SeatsMock {
+  seats_taken: number;
+  bookings: number;
+  no_of_spots: number;
+}
 
 interface TilesMock {
   disk_used_gb: number;
@@ -209,6 +216,17 @@ export default defineDemos('ui', [
       'Drop venue_capacity to the floor and the slider becomes a plain stepper — there is nothing left to choose. Raise seats_taken past no_of_spots and the thumb cannot go back below the seats already sold.',
     mock: { no_of_spots: 12, min_pax: 4, venue_capacity: 30, seats_taken: 9 },
     render: (mock) => <SpotsDemo mock={mock} />,
+  }),
+
+  defineDemo<SeatsMock>({
+    id: 'pod-seats-cell',
+    title: 'PodSeatsCell — a pod sold out by three people who bought 1, 7 and 2 seats',
+    note:
+      'Set seats_taken to 3 (what pod_attendees.length used to report) and the hint flips to "one seat each" — that is exactly the reading that made a full pod look empty in every pods table. Drop no_of_spots to 0 and the "/ N" disappears: 0 spots means uncapped, not full.',
+    mock: { seats_taken: 10, bookings: 3, no_of_spots: 10 },
+    render: (mock) => (
+      <PodSeatsCell seats={mock.seats_taken} bookings={mock.bookings} total={mock.no_of_spots} />
+    ),
   }),
 
   defineDemo<LoaderMock>({

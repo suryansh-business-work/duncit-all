@@ -19,7 +19,9 @@ interface Props {
   followsViewer?: boolean | null;
   disabled?: boolean;
   loading?: boolean;
-  onToggle: () => void;
+  /** Return the follow/unfollow promise and the button spins until it settles
+   *  — a handler that returns nothing behaves exactly as it did before. */
+  onToggle: () => void | Promise<unknown>;
 }
 
 /** Follow / Follow Back / Requested / Following. REQUESTED is a real, tappable
@@ -42,7 +44,9 @@ export default function FollowButton({
       disabled={disabled || loading}
       onClick={(event) => {
         event.stopPropagation();
-        onToggle();
+        // Returned, not dropped: DuncitButton spins on a promise-returning
+        // handler, and a follow is a round trip plus the list re-read after it.
+        return onToggle();
       }}
     >
       {t(followButtonLabelKey(status, followsViewer))}

@@ -315,6 +315,16 @@ export const authTypeDefs = gql`
     requestPortalLoginOtp(input: PortalLoginOtpRequestInput!): OtpRequestResult!
     "Trade a correct code for the same session a password would have produced."
     loginWithPortalOtp(input: PortalLoginOtpInput!): AuthPayload!
+    """
+    Sign in with a Google credential.
+
+    Two refusals carry an "email" extension holding the address Google just
+    verified, because both are offers rather than dead ends and the client
+    names the account in each: EMAIL_LOGIN_REQUIRED, which offers the link
+    below, and GOOGLE_ACCOUNT_NOT_FOUND, which offers signup and carries this
+    same id_token — unspent — into signupWithGoogle. Echoing it discloses
+    nothing: the caller supplied the token it was read out of.
+    """
     loginWithGoogle(input: GoogleAuthInput!): AuthPayload!
     """
     Grant Google sign-in to an existing email/password account, then sign in.

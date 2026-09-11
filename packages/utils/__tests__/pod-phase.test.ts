@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   POD_LIVE_TAIL_MS,
+  canAmendPod,
   canCompletePod,
   canScanPodTickets,
   podPhase,
@@ -116,5 +117,28 @@ describe('canCompletePod', () => {
 
   it('reads the clock when no `now` is passed', () => {
     expect(canCompletePod({ pod_date_time: new Date(Date.now() + HOUR).toISOString() })).toBe(false);
+  });
+});
+
+describe('canAmendPod', () => {
+  // Editing, re-hosting and cancelling all change a PLAN. On a pod that has
+  // already run there is no plan left to change — an edit would rewrite an
+  // event people attended, and a cancellation would refund seats that were used.
+  it('lets the host amend a pod that has not started', () => {
+    expect(canAmendPod({ pod_date_time: at(2 * HOUR) }, NOW)).toBe(true);
+  });
+
+  it('still lets the host amend a pod that is running', () => {
+    expect(canAmendPod({ pod_date_time: at(-HOUR), pod_end_date_time: at(HOUR) }, NOW)).toBe(true);
+  });
+
+  it('freezes the plan once the pod is over', () => {
+    expect(canAmendPod({ pod_date_time: at(-5 * HOUR), pod_end_date_time: at(-4 * HOUR) }, NOW)).toBe(
+      false,
+    );
+  });
+
+  it('reads the clock when no `now` is passed', () => {
+    expect(canAmendPod({ pod_date_time: new Date(Date.now() + HOUR).toISOString() })).toBe(true);
   });
 });

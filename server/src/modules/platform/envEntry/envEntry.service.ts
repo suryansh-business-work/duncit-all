@@ -5,6 +5,7 @@ import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@ut
 import {
   aisensyConnection,
   githubConnection,
+  googlePlayConnection,
   razorpayConnection,
   shiprocketConnection,
   slackConnection,
@@ -195,6 +196,7 @@ const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestRe
   SLACK: slackConnection,
   AISENSY: (str) => aisensyConnection(str),
   GITHUB: githubConnection,
+  GOOGLE_PLAY: googlePlayConnection,
 };
 
 /** Probe a category's credentials against its upstream API. Pure fetch. */

@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { AskClubAdminHelp } from '@/components/AskClubAdminHelp';
 import { AttendeeAvatar } from '@/components/attendance/AttendeeAvatar';
 import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { VenuePodAttendeeProfilesDocument } from '@/graphql/venue-pods';
 import { useDateFormat } from '@/hooks/useDateFormat';
+import { PodHelpSide } from '@/hooks/usePodClubAdminHelp';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 import { asVenuePodRow, bucketLabelKey, podPriceLabel, type StudioPod } from './studio-pods';
@@ -62,8 +64,9 @@ interface Props {
   onClose: () => void;
 }
 
-/** Basic pod info + who is coming, for the venue owner's tap-through — the
- * Tamagui twin of the Partners console's detail dialog (rule 27). */
+/** Basic pod info, who is coming, and a one-press request for the club
+ * admin's help, for the venue owner's tap-through — the Tamagui twin of the
+ * Partners console's detail dialog (rule 27). */
 export function VenuePodDetailSheet({ pod, currencySymbol, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
@@ -133,6 +136,13 @@ export function VenuePodDetailSheet({ pod, currencySymbol, onClose }: Readonly<P
               </Text>
             </XStack>
           ))}
+          <YStack paddingTop={10}>
+            <AskClubAdminHelp
+              podId={pod.id}
+              side={PodHelpSide.Venue}
+              label={t('mweb.venuePods.askClubAdminHelp')}
+            />
+          </YStack>
         </YStack>
       ) : null}
     </DuncitDialog>

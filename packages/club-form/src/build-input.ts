@@ -43,6 +43,7 @@ export function buildClubInput(values: ClubFormValues, { draft = false, config }
     club_feature_images_and_videos: linesToMedia(values.feature_text),
     club_moments: linesToMedia(values.moments_text),
     club_whats_app_community_link: values.community_link,
+    club_whats_app_announcement_link: values.announcement_link,
     club_whats_app_group_link: values.group_link,
     who_we_are: cleanBullets(values.who_we_are),
     what_we_do: cleanBullets(values.what_we_do),
@@ -56,7 +57,12 @@ export function buildClubInput(values: ClubFormValues, { draft = false, config }
     is_active: isEdit ? values.is_active : !draft,
   };
 
-  if (config.showAdmins) input.admin_user_ids = values.admin_user_ids;
+  if (config.showAdmins) {
+    input.admin_user_ids = values.admin_user_ids;
+    // Linked hosts sit behind the same gate as the admins picker: both decide who
+    // the club is run BY, and the partner-facing flow edits neither.
+    input.host_ids = values.host_ids;
+  }
   if (config.showVerified) input.is_verified = values.is_verified;
   if (!isEdit) input.club_id = values.club_id || undefined;
 
@@ -78,6 +84,7 @@ export function clubToFormValues(club: any): ClubFormValues {
     feature_text: (club.club_feature_images_and_videos ?? []).map((m: any) => m.url).join('\n'),
     moments_text: (club.club_moments ?? []).map((m: any) => m.url).join('\n'),
     community_link: club.club_whats_app_community_link ?? '',
+    announcement_link: club.club_whats_app_announcement_link ?? '',
     group_link: club.club_whats_app_group_link ?? '',
     who_we_are: club.who_we_are ?? [],
     what_we_do: club.what_we_do ?? [],
@@ -85,6 +92,7 @@ export function clubToFormValues(club: any): ClubFormValues {
     values: club.values ?? [],
     faqs: (club.faqs ?? []).map((f: any) => ({ question: f.question, answer: f.answer })),
     admin_user_ids: club.admin_user_ids ?? [],
+    host_ids: club.host_ids ?? [],
     is_verified: club.is_verified ?? false,
     is_active: club.is_active ?? true,
   };

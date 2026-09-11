@@ -58,7 +58,12 @@ describe('Support ticket', () => {
   it('creates a ticket and opens it, open and numbered', () => {
     cy.visitApp('/support/tickets');
     cy.get('input[name="name"]').should('not.have.value', '');
-    cy.selectOption('category', 'Bug / Something is broken');
+    // Category is a TextField with `select`: its combobox carries the TextField's
+    // own useId value, not the name-derived id selectOption looks for, and its
+    // label has no `for`. The hidden native input is the one element that
+    // carries the field name; the combobox is its sibling.
+    cy.get('input[name="category"]').parent().find('[role="combobox"]').click();
+    cy.get('[role="listbox"] [role="option"]').contains('Bug / Something is broken').click();
     cy.get('input[name="subject"]').type(subject);
     cy.get('textarea[name="message"]').type('Tapping Save on my profile shows a blank page and the change is lost.');
     cy.interceptOperation('CreateMyTicket');
@@ -112,8 +117,18 @@ describe('Support ticket', () => {
     cy.contains('.MuiChip-root', 'RESOLVED').should('be.visible');
 
     // A resolved ticket asks how it went before anything else can be touched.
+    // An emoji only picks the rating; Submit sends it, and the same dialog then
+    // re-renders as the read-only summary with a Close button — nothing closes
+    // it on its own.
+    cy.interceptOperation('SubmitMyTicketFeedback');
     cy.contains('[role="dialog"]', 'How did we do?').within(() => {
       cy.get('button[aria-label^="5 "]').click();
+      cy.contains('button', 'Submit').click();
+    });
+    cy.wait('@SubmitMyTicketFeedback');
+    cy.contains('[role="dialog"]', 'How did we do?').within(() => {
+      cy.contains('Your rating: 😍 Very Satisfied').should('be.visible');
+      cy.contains('button', 'Close').click();
     });
     cy.contains('[role="dialog"]', 'How did we do?').should('not.exist');
     cy.contains('This conversation has been marked as resolved.').should('be.visible');

@@ -1,4 +1,4 @@
-import { Text, YStack } from 'tamagui';
+import { Spinner, Text, YStack } from 'tamagui';
 
 import { ContactRow } from '@/components/contacts/ContactRow';
 import { ListSkeleton } from '@/components/Skeleton';
@@ -61,6 +61,9 @@ export function ContactsList({
   }
   return (
     <YStack testID="contacts-list" gap={10} paddingHorizontal={16}>
+      {/* A re-read of a list already on screen — after a follow, or a resync.
+          The rows stay readable while it runs, exactly as they do on mWeb. */}
+      {isLoading ? <Spinner testID="contacts-list-refreshing" color="$primary" /> : null}
       {rows.map((row) => (
         <ContactRow
           key={row.profile.user_id}

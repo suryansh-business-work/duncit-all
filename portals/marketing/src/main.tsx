@@ -1,6 +1,5 @@
 import { mountPortal } from '@duncit/shell';
 import { createSessionUserLoader } from '@duncit/user-context';
-import { ConfirmProvider } from '@duncit/dialogs';
 import {
   flattenCatalogue,
   MAIL_PREFERENCE_BUNDLE,
@@ -14,13 +13,7 @@ import { appConfig } from './config/app-config';
 import App from './App';
 
 mountPortal({
-  config: {
-    key: appConfig.key,
-    name: appConfig.name,
-    tokenKey: appConfig.tokenKey,
-    colorModeKey: appConfig.colorModeKey,
-    accent: appConfig.accent,
-  },
+  config: appConfig,
   apolloClient,
   graphqlUrl: urlConfigs.graphqlUrl,
   logsPortal: logs.portal.marketing,
@@ -37,6 +30,5 @@ mountPortal({
     ...flattenCatalogue(WHATSAPP_BUNDLE),
   },
   loadUser: createSessionUserLoader(apolloClient),
-  wrap: (node) => <ConfirmProvider>{node}</ConfirmProvider>,
   children: <App />,
 });

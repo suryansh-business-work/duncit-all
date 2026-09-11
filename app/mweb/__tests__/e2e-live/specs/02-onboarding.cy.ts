@@ -67,7 +67,7 @@ function answerVisibleQuestions() {
  */
 function answerSurveyUntilMeeting(depth = 0) {
   expect(depth, 'the survey ends within a few sections').to.be.lessThan(8);
-  cy.contains(/A few quick questions before you continue\.|Book your onboarding meeting/).then(($heading) => {
+  cy.contains<HTMLElement>(/A few quick questions before you continue\.|Book your onboarding meeting/).then(($heading) => {
     if (($heading?.text() ?? '').includes('Book your onboarding meeting')) return;
     answerVisibleQuestions();
     // Next on a middle section, the submit on the last — the one contained button.

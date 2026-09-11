@@ -45,6 +45,7 @@ exports:
   - 'ModerationBlockedDialog'
   - 'LanguageSelect'
   - 'PodParticipationTimeline'
+  - 'PodSeatsCell'
   - 'SpotsStepper'
   - 'buildSpotsLabels'
   - 'mwebSpotsLabels'
@@ -582,6 +583,26 @@ BOOKED — `venueAvailableSlots` no longer returns it, and the seats already sol
 the client at all — so the range comes from the server's `podSpotLimits`, which also guards
 the write. A host may only ever raise it; a Club Admin or an admin may also lower it, never
 below `seats_taken`.
+
+## `PodSeatsCell` — seats and bookings are two numbers, not one
+
+`pod_attendees` is an IDENTITY list: a booking for seven seats writes ONE id into it, because
+duplicating the id there would corrupt chat access, permissions and audience fan-outs. The seats
+past the buyer’s own live in `Pod.extra_seats`, and the server adds them up as `seats_taken`.
+
+Every table that counted the list instead reported a sold-out pod as nearly empty — a pod filled
+by three people who bought 1, 7 and 2 seats read as **3 / 10**. This cell renders both: the seat
+count on top, the bookings behind it underneath, and the multi-seat split in the hover.
+
+| Prop | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `seats` | `number` | yes | Seats held. Get it from `podSeatsTaken(pod)` in `@duncit/utils` — never `pod_attendees.length`. |
+| `bookings` | `number` | yes | `pod_attendees.length` — the people holding those seats, hosts included. |
+| `total` | `number | null` | no | Capacity. `0` or absent means uncapped, and the `/ N` is dropped rather than rendered as `/ 0`. |
+
+Admin’s Pods table, the Partners pods list and the Become-a-Host list all render this one
+component: three copies of the same arithmetic is three chances for two portals to quote
+different numbers for the same pod (rule 40).
 
 ## Localization and coverage
 

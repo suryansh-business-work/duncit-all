@@ -53,6 +53,9 @@ export default function VenueAvailabilityPage() {
       venue={venue}
       onSelect={setSelectedId}
       loading={loading && !data}
+      // The recurring dialog writes venue rules, then this page re-reads them:
+      // the calendar dims for that round trip instead of sitting there stale.
+      refreshing={loading && !!data}
       error={error}
       noVenuesMessage={t('mweb.venueAvailabilityPage.noVenues')}
     >

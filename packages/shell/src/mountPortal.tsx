@@ -10,6 +10,7 @@ import ReactDOM from 'react-dom/client';
 import { ApolloProvider } from '@apollo/client/react';
 import { BrowserRouter } from 'react-router';
 import { AppLocaleProvider, DuncitLocalizationProvider } from '@duncit/app-settings';
+import { ConfirmProvider, NotifyHost } from '@duncit/dialogs';
 import { SHELL_FALLBACK_FLAT } from './i18n/fallback';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { io } from 'socket.io-client';
@@ -131,6 +132,12 @@ export function mountPortal(opts: MountPortalOptions): void {
           make requests of their own, and those are exactly the waits a first-time
           visitor has no other signal for. */}
       <GlobalProgress />
+      {/* The one snackbar host for every console. `notify()` dispatches a window
+          event, so WITHOUT a host mounted the call does not throw — it silently
+          drops the message. Six portals mounted one and eleven did not, which
+          meant every `notifyError` a shared page raised (the whole failure path
+          of the pods, clubs and venues consoles) vanished on those eleven. */}
+      <NotifyHost />
       {extras}
     </>
   );
@@ -139,10 +146,21 @@ export function mountPortal(opts: MountPortalOptions): void {
   if (!mountNode) throw new Error(`mountPortal: #${rootId} mount node not found`);
 
   const render = (clientId: string) => {
+    // `useConfirm()` THROWS without a provider above it, and the caller is
+    // almost always a SHARED package rather than the portal's own code — so the
+    // gap is invisible from inside the console until a route that uses it is
+    // opened. @duncit/entity-consoles alone calls it from five places (the pods
+    // list delete, auto-pods, pod plans, pod coupons and the clubs list), which
+    // is every pod/club/venue console. Mounted here, above the portal's own
+    // `wrap`, so all 17 get it and no new console can regress (rule 34).
+    const router = (
+      <BrowserRouter>
+        <ConfirmProvider>{wrap(routed)}</ConfirmProvider>
+      </BrowserRouter>
+    );
     // With no client id configured in the Tech portal there is nothing to sign
     // in with, so the provider is left out entirely — the sign-in button reads
     // the same empty value and renders its "not configured" state.
-    const router = <BrowserRouter>{wrap(routed)}</BrowserRouter>;
     const withGoogle = clientId ? <GoogleOAuthProvider clientId={clientId}>{router}</GoogleOAuthProvider> : router;
 
     ReactDOM.createRoot(mountNode).render(

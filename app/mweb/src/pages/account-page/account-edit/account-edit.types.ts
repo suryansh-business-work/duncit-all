@@ -6,6 +6,7 @@ import {
   FALLBACK_DATE_FORMAT,
   dobMinAgeMessage,
   isEligibleDob,
+  keyboardPattern,
   patternPlaceholder,
 } from '@duncit/datetime';
 import { fallbackT, type Translate } from '../../../i18n/fallback';
@@ -59,8 +60,9 @@ const makeDob = (minAge: number, initialDob: string, datePlaceholder: string) =>
 export const makeAccountEditSchema = (
   minAge: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
   initialDob = '',
-  /** How the date box asks to be typed, from the admin's date pattern. */
-  datePlaceholder: string = patternPlaceholder(FALLBACK_DATE_FORMAT),
+  /** How the date box asks to be typed: the admin's date pattern in the shape a
+   * box can take it — digits, no month name. */
+  datePlaceholder: string = patternPlaceholder(keyboardPattern(FALLBACK_DATE_FORMAT)),
   /** Translator for the copy this schema fails with. */
   t: Translate = fallbackT,
 ) =>

@@ -1,5 +1,6 @@
 import mongoose, { Schema, Types, type Document } from 'mongoose';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
+import { attachEntityAudit } from '@modules/platform/entityAudit/entityAudit.attach';
 
 /**
  * The onboarded Club Admin record.
@@ -84,6 +85,10 @@ clubAdminProfileSchema.pre('save', async function (next) {
   }
   next();
 });
+
+// Every write through mongoose is diffed and appended to the entity change
+// log (rule: the trail is captured at the model, never per service).
+attachEntityAudit(clubAdminProfileSchema, 'CLUB_ADMIN');
 
 export const ClubAdminProfileModel =
   (mongoose.models.ClubAdminProfile as mongoose.Model<IClubAdminProfile>) ||

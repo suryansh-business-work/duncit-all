@@ -5,6 +5,7 @@ import {
   type IBankAccountVerification,
 } from '@modules/finance/finance/bankAccount';
 import { nextEntityNo } from '@modules/venues/entityIdCounter';
+import { attachEntityAudit } from '@modules/platform/entityAudit/entityAudit.attach';
 
 export type HostStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
@@ -96,5 +97,9 @@ const hostSchema = new Schema<IHost>(
 hostSchema.pre('save', async function assignHostNo(this: IHost) {
   if (this.isNew && !this.host_no) this.host_no = await nextEntityNo('HOST', 'host');
 });
+
+// Every write through mongoose is diffed and appended to the entity change
+// log (rule: the trail is captured at the model, never per service).
+attachEntityAudit(hostSchema, 'HOST');
 
 export const HostModel = model<IHost>('Host', hostSchema);

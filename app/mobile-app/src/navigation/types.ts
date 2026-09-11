@@ -1,13 +1,22 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
 import type { TabParamList } from '@/navigation/tabs';
+import type { GoogleSignupHandoff } from '@duncit/utils';
+
 import type { GiftCardSelection } from '@/utils/gift-cards';
 
 /** The single React Navigation stack. Auth/Survey/App screens are gated by the
  * auth store, but they share one param list for typed navigation everywhere. */
 export type RootStackParamList = {
   Login: undefined;
-  Signup: undefined;
+  /**
+   * Optionally carrying the credential the login screen's "no Duncit account
+   * yet" invite was answered with, so signup opens on the Google door already
+   * holding it rather than on a button they have just pressed. The screen
+   * CLAIMS it once: a param outlives the remount that re-reads it, and the
+   * credential behind it must be spent exactly once.
+   */
+  Signup: { googleSignup?: GoogleSignupHandoff } | undefined;
   ForgotPassword: undefined;
   Survey: undefined;
   /** Google signup only: the skippable "got a referral code?" step. */

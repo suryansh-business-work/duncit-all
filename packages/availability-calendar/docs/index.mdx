@@ -391,8 +391,16 @@ find the date and time pickers localization context"*. And the drawer renders in
 ### `useVenueSlots`
 
 `useVenueSlots(venueId, range)` is the editor's Apollo wiring on its own: `{ slots, pending,
-error, refetch, create, toggleBlock, remove }`. `create(input, overwrite)` maps `overwrite` to
-`on_conflict` exactly as described above.
+refreshing, error, refetch, create, toggleBlock, remove }`. `create(input, overwrite)` maps
+`overwrite` to `on_conflict` exactly as described above.
+
+The two loading flags are deliberately not one. `pending` is the first answer for a range —
+there is no month to draw yet, so the editor shows a spinner in its place. `refreshing` is a
+re-read of a month already on screen, which is how all three writes end: the grid dims under
+`LoadingOverlay` and stays readable, because blocking a slot should look like the counts
+catching up rather than the page reloading. The hook asks for `notifyOnNetworkStatusChange`
+explicitly — Apollo 4 defaults it on, but this package's peer range starts at 3, where a
+`refetch` would otherwise never register as `loading` and `refreshing` would never be true.
 
 ### Query documents
 

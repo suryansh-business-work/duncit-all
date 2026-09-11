@@ -21,6 +21,26 @@ exports:
   - 'CLUB_COUNTS'
   - 'CLUB_ADMIN_COUNTS'
   - 'HOST_COUNTS'
+  - 'VenuesPage'
+  - 'VenueDetailsPage'
+  - 'VenueEditorPage'
+  - 'ChangeLogsSection'
+  - 'useMediaPicker'
+  - 'HostsPage'
+  - 'HostDetailsPage'
+  - 'HostEditorPage'
+  - 'EditorPageShell'
+  - 'StatusFields'
+  - 'PayoutFields'
+  - 'AccountPicker'
+  - 'EntityPodsTab'
+  - 'lifecycleOptions'
+  - 'ClubAdminsPage'
+  - 'ClubAdminDetailsPage'
+  - 'ClubAdminEditorPage'
+  - 'ConsoleListPage'
+  - 'useConsoleAccess'
+  - 'Fact'
 ---
 
 ## What this is
@@ -105,3 +125,144 @@ layers it over the shell's with `i18nFallback`.
 so the numbers are raised as suites arrive and never lowered. The Shared
 packages gate enforces whatever is written in the config, so a threshold above
 the real coverage reds the build for everyone.
+
+## Every record is editable, and every edit is recorded
+
+A console is not a report. `VenueEditorPage` is mounted at both `/venues/new`
+and `/venues/:venueId/edit` and edits the WHOLE record — the space, its
+location, its photos, its paperwork, its owner and payout, its operating hours
+and booking rules, both cancellation ladders, its review status and its money
+split:
+
+```tsx
+import { VenueDetailsPage, VenueEditorPage, VenuesPage } from '@duncit/entity-consoles';
+
+// Static before dynamic, so /venues/new is never read as a venue id.
+<Route path="/venues/new" element={authed(<VenueEditorPage />)} />
+<Route path="/venues" element={authed(<VenuesPage />)} />
+<Route path="/venues/:venueId" element={authed(<VenueDetailsPage />)} />
+<Route path="/venues/:venueId/edit" element={authed(<VenueEditorPage />)} />
+```
+
+One press of Save runs the FOUR mutations a venue's writes are split across
+(`adminUpdateVenue`, `updateVenueSettings`, `setVenueDeductions` and — only when
+the switch actually moved, because it emails the owner — `setVenueActive`). The
+split exists on the server because four different people write those fields in
+production; an admin is not one of the four, so the editor is one form.
+
+`ChangeLogsSection` is the other half, and the reason editing here is safe:
+
+```tsx
+import { ChangeLogsSection } from '@duncit/entity-consoles';
+
+<ChangeLogsSection entityType="VENUE" entityId={venue.id} tableId="venues-console-change-logs" />
+```
+
+It reads `entityChangeLogsTable`, which is ONE append-only collection covering
+venues, hosts, clubs, club admins and regions with the entity as a column — so a
+console added later gets its history by passing its type. Omit `entityId` and the
+same component renders the console-wide feed (`entityChangeFeedTable`) instead.
+
+The trail is captured on the MODEL, not in the services: every write through
+mongoose is diffed against what was stored a moment earlier, so a field that
+moves through a path nobody thought about is still recorded, with who moved it
+and which surface they were on.
+
+## The hosts console, and what it shares with the venues one
+
+`hosts.duncit.com` is the same three screens over `hostsTable` /
+`host(host_doc_id:)`: the list, the record (identity, verification, categories,
+payout, the pods they run) and the editor at `/hosts/new` + `/hosts/:hostId/edit`.
+
+```tsx
+import { HostDetailsPage, HostEditorPage, HostsPage } from '@duncit/entity-consoles';
+
+<Route path="/hosts/new" element={authed(<HostEditorPage />)} />
+<Route path="/hosts" element={authed(<HostsPage />)} />
+<Route path="/hosts/:hostId" element={authed(<HostDetailsPage />)} />
+<Route path="/hosts/:hostId/edit" element={authed(<HostEditorPage />)} />
+```
+
+Two things about a host save are worth knowing before touching it:
+
+- **The commission is not on the host record.** It lives on the host's USER
+  account, so it is written with `setHostDeductions(user_id:)` rather than
+  through `adminUpdateHost`.
+- **Categories are a REPLACE, not a merge.** `adminUpdateHost(categories:)`
+  swaps the whole set, which is why removing a row in the editor is how a
+  category is taken away — and why a row with an incomplete Super→Category→Sub
+  triple is dropped from the payload rather than sent. The server rejects a
+  partial triple outright, and one abandoned row must not fail the whole save.
+
+**What the two editors share, and what they do not.** The frame is one component:
+`EditorPageShell` owns the form, the back arrow, Save (in the header AND at the
+foot, because these pages are tall), the save error and the media dialog. So does
+everything both records genuinely have in common — `StatusFields` for the
+four-state lifecycle plus the live switch (whose warning exists because both
+`setVenueActive` and `setHostActive` notify the partner), `PayoutFields` for the
+`BankAccountVerification` block they literally share, `AccountPicker` for
+"which account is this", and `EntityPodsTab` for a record's pods (`venue_id` and
+`host_user_id` are both allowlisted `podsTable` filters).
+
+What is NOT shared is the sections. A venue has eight and a host has four, and
+they are about different things — pushing them behind one configurable component
+would be the abstraction rule 40 warns about rather than the reuse it asks for.
+
+## Who can edit, and who can approve
+
+The five `ALL_*_ACCESS` roles used to gate the portal LOGIN and nothing else:
+every query behind these consoles still asked for SUPER_ADMIN / CITY_ADMIN /
+ZONAL_ADMIN (or ONBOARDING_MANAGER), so somebody granted `venues.duncit.com`
+signed in and saw an empty screen. Fine while the consoles were read-only; not
+fine once the record is edited here.
+
+There are now three levels, defined once in
+`server/src/modules/portals/console-access.ts`:
+
+| Level | Who | What |
+| --- | --- | --- |
+| READ | platform admins, onboarding, **the console role** | the list, the record, its change log |
+| EDIT | same | the record's own details — name, address, photos, documents, contact, operating hours, categories, which clubs an admin runs |
+| GOVERN | platform admins, onboarding — **NOT the console role** | approve and reject, the commission and share percentages, the live on/off switch, and appointing a Club Admin |
+
+`useConsoleAccess()` is the client half. It does not decide anything — the server
+enforces the split, including refusing a `status` argument on `adminUpdateVenue`
+/ `adminUpdateHost` from a caller who cannot govern — it exists so the screen
+does not OFFER a control that would be refused:
+
+```tsx
+import { useConsoleAccess } from '@duncit/entity-consoles';
+
+const { canGovern } = useConsoleAccess();
+// StatusFields shows the values either way; canGovern decides whether they move.
+<StatusFields canGovern={canGovern} governedByNote={t('directory.venueEditor.governedBy')} … />
+```
+
+The editor hooks use the same flag to SKIP the governance writes rather than
+send-and-fail: a console-role editor saving a venue sends `adminUpdateVenue`
+(without a status) and `updateVenueSettings`, and never `setVenueDeductions` or
+`setVenueActive`.
+
+## The club-admins console
+
+`club-admins.duncit.com` reads `clubAdminProfilesTable`, and its editor is the
+short one — three sections rather than eight — because a Club Admin record IS
+short: who they are, the clubs they run, and the decision.
+
+Three things about it are not obvious from the schema:
+
+- **"Add" is an APPOINTMENT.** There was no create mutation, because the record
+  is minted as a side effect of granting the CLUB_ADMIN role (`ensureForUser`).
+  `adminCreateClubAdminProfile(user_id:, input:)` now does that properly: it
+  grants the role — which mints the record — then writes the details and returns
+  it. Inserting a row without the role would give somebody a record in every
+  table and picker while they cannot open the Partners console.
+- **The status is not a field.** APPROVED and REJECTED are two mutations that
+  write the decision, its timestamp and the reason, so the editor calls
+  `approveClubAdminProfile` / `rejectClubAdminProfile` and only when the value
+  actually MOVED — re-sending the status somebody already holds would re-approve
+  them and re-send their email.
+- **The clubs are not on this record.** `Club.admin_user_ids` has always been
+  that answer, so the form holds the set it is about to assign and the save
+  writes it through `assignClubAdminClubs`. Assigning is an EDIT, not
+  governance — it is which clubs somebody runs, not whether they may run any.

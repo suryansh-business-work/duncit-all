@@ -1,4 +1,5 @@
-import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Stack, Typography } from '@mui/material';
+import { Loader, LoadingOverlay } from '@duncit/ui';
 import { useTranslation } from '../../i18n/useTranslation';
 import ContactRow from './ContactRow';
 import type { ContactRow as ContactRowData } from './queries';
@@ -7,12 +8,14 @@ import type { ContactsScope } from './ContactsToolbar';
 interface Props {
   loading: boolean;
   hasData: boolean;
+  /** A re-read of a list already on screen — after a follow, or a resync. */
+  refreshing: boolean;
   error?: string;
   synced: boolean;
   scope: ContactsScope;
   searching: boolean;
   rows: ContactRowData[];
-  onToggleFollow: (row: ContactRowData) => void;
+  onToggleFollow: (row: ContactRowData) => Promise<void>;
   onOpen: (userId: string) => void;
 }
 
@@ -22,6 +25,7 @@ interface Props {
 export default function ContactsBody({
   loading,
   hasData,
+  refreshing,
   error,
   synced,
   scope,
@@ -31,13 +35,7 @@ export default function ContactsBody({
   onOpen,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  if (loading && !hasData) {
-    return (
-      <Stack sx={{ alignItems: 'center', p: 6 }}>
-        <CircularProgress />
-      </Stack>
-    );
-  }
+  if (loading && !hasData) return <Loader />;
   if (error) return <Alert severity="error">{error}</Alert>;
   if (rows.length === 0) {
     let empty = t('mweb.contacts.noneMatched');
@@ -55,10 +53,12 @@ export default function ContactsBody({
     );
   }
   return (
-    <Stack data-testid="contacts-list">
-      {rows.map((row) => (
-        <ContactRow key={row.profile.user_id} row={row} onToggleFollow={onToggleFollow} onOpen={onOpen} />
-      ))}
-    </Stack>
+    <LoadingOverlay open={refreshing}>
+      <Stack data-testid="contacts-list">
+        {rows.map((row) => (
+          <ContactRow key={row.profile.user_id} row={row} onToggleFollow={onToggleFollow} onOpen={onOpen} />
+        ))}
+      </Stack>
+    </LoadingOverlay>
   );
 }

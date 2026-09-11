@@ -83,6 +83,118 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'If it is still short by 23 Aug 2026, 07:00 AM it will be cancelled automatically and everyone refunded. ' +
       'Help the host fill it, or change the venue slot or the ticket price: https://partners-app.duncit.com/club-admin/clubs/66f1/pods/66f2 — Team Duncit',
   },
+  /*
+   * The four onboarding rejections.
+   *
+   * One per partner kind because the applicant applied as one of them, and the
+   * sentence that follows the reason differs: a venue re-lists, a brand
+   * re-applies with its catalogue. Both ways out of an application now send
+   * these — the Reject on the meeting schedule and the Deny after the interview
+   * are the same news to the applicant, so they carry the same campaign.
+   *
+   * `venue_rejected_onboarding` is already LIVE at AiSensy, so its draft is
+   * inert (the board offers nothing for a row that has a campaign). The other
+   * three have never been created: `host_onboarding_rejection` is the gap the
+   * registry has carried a note about, and its two siblings the same.
+   */
+  HOST_ONBOARDING_REJECTED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, thank you for applying to host pods on Duncit. We are not able to take your application forward right now. ' +
+      'Reason: {{2}}. ' +
+      'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
+    sample:
+      'Hi Meera, thank you for applying to host pods on Duncit. We are not able to take your application forward right now. ' +
+      'Reason: The pod plan shared in the interview did not cover safety and group size. ' +
+      'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
+  },
+  VENUE_ONBOARDING_REJECTED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, thank you for your interest in listing your venue on Duncit. We are not able to take your application forward right now. ' +
+      'Reason: {{2}}. ' +
+      'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
+    sample:
+      'Hi Prakhar, thank you for your interest in listing your venue on Duncit. We are not able to take your application forward right now. ' +
+      'Reason: The venue photos and safety certificates were incomplete. ' +
+      'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
+  },
+  ECOMM_ONBOARDING_REJECTED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, thank you for applying to sell your brand on Duncit. We are not able to take your application forward right now. ' +
+      'Reason: {{2}}. ' +
+      'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
+    sample:
+      'Hi Rohit, thank you for applying to sell your brand on Duncit. We are not able to take your application forward right now. ' +
+      'Reason: The catalogue shared did not match the categories Duncit sells today. ' +
+      'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
+  },
+  CLUB_ADMIN_ONBOARDING_REJECTED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, thank you for applying to run a club on Duncit. We are not able to take your application forward right now. ' +
+      'Reason: {{2}}. ' +
+      'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
+    sample:
+      'Hi Ritu, thank you for applying to run a club on Duncit. We are not able to take your application forward right now. ' +
+      'Reason: The interview did not cover how the club would be run week to week. ' +
+      'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
+  },
+  /*
+   * The three Request Change offers. The fifth value differs per role, because
+   * `podChangeRequest.notify` sends what each of them needs to decide: the club
+   * to a venue and a club admin, the venue to a host.
+   */
+  VENUE_CHANGE_REQUEST_OFFER: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, a Duncit pod needs a new venue. The pod {{2}} on {{3}} at {{4}} for {{5}} is looking for a venue after its current one asked to step away. ' +
+      'Open your Venue Studio to take the slot or pass on it: {{6}} — Team Duncit',
+    sample:
+      'Hi Prakhar, a Duncit pod needs a new venue. The pod Sunday Badminton Doubles on 24 Aug 2026 at 07:00 AM for Noida Badminton Club is looking for a venue after its current one asked to step away. ' +
+      'Open your Venue Studio to take the slot or pass on it: https://mweb.duncit.com/change-requests — Team Duncit',
+  },
+  HOST_CHANGE_REQUEST_OFFER: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, a Duncit pod needs a new host. The pod {{2}} on {{3}} at {{4}}, held at {{5}}, is looking for a host after its current one asked to step away. ' +
+      'Open your Host Studio to take it on or pass: {{6}} — Team Duncit',
+    sample:
+      'Hi Meera, a Duncit pod needs a new host. The pod Sunday Badminton Doubles on 24 Aug 2026 at 07:00 AM, held at Sector 62 Sports Arena, is looking for a host after its current one asked to step away. ' +
+      'Open your Host Studio to take it on or pass: https://mweb.duncit.com/change-requests — Team Duncit',
+  },
+  CLUB_ADMIN_CHANGE_REQUEST_OFFER: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, a Duncit pod needs a new club admin. The pod {{2}} on {{3}} at {{4}} in {{5}} is looking for a club admin after its current one asked to step away. ' +
+      'Open your Club Studio to take it on or pass: {{6}} — Team Duncit',
+    sample:
+      'Hi Rohit, a Duncit pod needs a new club admin. The pod Sunday Badminton Doubles on 24 Aug 2026 at 07:00 AM in Noida Badminton Club is looking for a club admin after its current one asked to step away. ' +
+      'Open your Club Studio to take it on or pass: https://mweb.duncit.com/change-requests — Team Duncit',
+  },
+  /*
+   * Sent when a support agent first opens the ticket — the "seen" moment, which
+   * is what the campaign is named for. There was never a template behind it; the
+   * nearest one, `support_update`, takes four values to this scenario's three.
+   */
+  SUPPORT_TICKET_UPDATED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, our support team has opened your ticket {{2}} about {{3}} and is working on it. ' +
+      'We will reply in the ticket as soon as we can. — Team Duncit',
+    sample:
+      'Hi Meera, our support team has opened your ticket ST-4F2A9C about Refund not received for my pod booking and is working on it. ' +
+      'We will reply in the ticket as soon as we can. — Team Duncit',
+  },
 };
 
 /** Highest `{{n}}` in a body — what the registry's param count has to equal. */

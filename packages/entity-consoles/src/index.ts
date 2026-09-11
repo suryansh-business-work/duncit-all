@@ -29,11 +29,51 @@ export type {
 // ---- the venues console (from the ADMIN portal) --------------------------
 export { default as VenuesPage } from './venues/list/VenuesPage';
 export { default as VenueDetailsPage } from './venues/detail/VenueDetailsPage';
+export { default as VenueEditorPage } from './venues/editor';
+// The record <-> form mapping, so a caller (and the docs demo) can see exactly
+// what one Save sends to each of the four venue mutations.
+export {
+  blankVenueValues,
+  makeVenueFormSchema,
+  valuesToSettingsInput,
+  valuesToStep1,
+  valuesToStep2,
+  valuesToStep3,
+  venueToValues,
+  type VenueFormValues,
+} from './venues/editor';
+
+// ---- the hosts console ---------------------------------------------------
+export { default as HostsPage } from './hosts/list/HostsPage';
+export { default as HostDetailsPage } from './hosts/detail/HostDetailsPage';
+export { default as HostEditorPage } from './hosts/editor';
+export {
+  blankHostValues,
+  hostToValues,
+  makeHostFormSchema,
+  valuesToHostCategories,
+  valuesToHostStep1,
+  valuesToHostStep2,
+  valuesToHostStep3,
+  type HostFormValues,
+} from './hosts/editor';
 
 // ---- the clubs console (from the ADMIN portal) ---------------------------
 export { default as ClubsPage } from './clubs/list/ClubsPage';
 export { default as ClubDetailsPage } from './clubs/detail/ClubDetailsPage';
 export { default as ClubEditorPage } from './clubs/editor';
+
+// ---- the club admins console --------------------------------------------
+export { default as ClubAdminsPage } from './club-admins/list/ClubAdminsPage';
+export { default as ClubAdminDetailsPage } from './club-admins/detail/ClubAdminDetailsPage';
+export { default as ClubAdminEditorPage } from './club-admins/editor';
+export {
+  blankClubAdminValues,
+  clubAdminToValues,
+  makeClubAdminFormSchema,
+  valuesToClubAdminInput,
+  type ClubAdminFormValues,
+} from './club-admins/editor';
 
 // ---- the pods console (from the ADMIN portal) ----------------------------
 // Admin's whole Pods group: the list with its editor and detail, plus each of
@@ -56,8 +96,23 @@ export { default as PodPlansPage } from './pods/plans/PodPlansPage';
 // All from the admin portal, and each used by more than one console here.
 export { default as SuperCategoryFilter } from './shared/SuperCategoryFilter';
 export { default as MediaGallery } from './shared/MediaGallery';
+export { default as EntityPodsTab } from './shared/EntityPodsTab';
+export { default as ConsoleListPage } from './shared/ConsoleListPage';
+export { default as AccountPicker } from './shared/AccountPicker';
+export { default as PayoutFields } from './shared/PayoutFields';
+export { default as EditorPageShell } from './shared/EditorPageShell';
+export { default as StatusFields } from './shared/StatusFields';
+export { lifecycleOptions } from './shared/lifecycleOptions';
+export { useConsoleAccess } from './shared/useConsoleAccess';
+export type { ConsoleAccess } from './shared/useConsoleAccess';
 export { default as MediaLightbox } from './shared/MediaLightbox';
 export { default as AiFillButton } from './shared/AiFillButton';
+export { default as useMediaPicker } from './shared/useMediaPicker';
+
+// ---- the change log every console's detail page shows -------------------
+export { default as ChangeLogsSection } from './shared/change-logs';
+export type { ChangeLogsSectionProps } from './shared/change-logs';
+export type { EntityAuditType, EntityChangeLogRow } from './shared/change-logs/queries';
 export * from './shared/aiFillSanitize';
 
 // The two seams that used to reach into admin's own config.

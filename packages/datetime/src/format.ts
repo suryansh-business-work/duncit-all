@@ -5,6 +5,7 @@ import { createClock, type Clock, type ClockInput } from './clock';
 import {
   formatClockTime,
   formatIsoDay,
+  keyboardPattern,
   parseInPattern,
   patternPlaceholder,
   toIsoDay,
@@ -77,14 +78,21 @@ export interface DateFormatter {
   /** Format with an explicit pattern (escape hatch for one-off displays). */
   formatPattern: (input: DateInput, pattern: string) => string;
   /**
-   * The pattern a date+time is TYPED in — the two configured patterns joined by
-   * a plain space. `formatDateTime` reads better in a sentence with its
-   * interpunct, but that is not a character anyone types.
+   * The pattern a date is TYPED in — the display pattern with its month in
+   * digits and its weekday dropped. A date box is answered on a keyboard, and
+   * nobody spells "September" into one.
+   */
+  dateInputFormat: string;
+  /**
+   * The pattern a date+time is TYPED in — the typed date pattern and the
+   * configured time pattern joined by a plain space. `formatDateTime` reads
+   * better in a sentence with its interpunct, but that is not a character
+   * anyone types.
    */
   dateTimeInputFormat: string;
-  /** Typing hint for the date pattern, e.g. 'DD MMM YYYY'. */
+  /** Typing hint for the date pattern, e.g. 'DD MM YYYY'. */
   datePlaceholder: string;
-  /** Typing hint for date + time, e.g. 'DD MMM YYYY hh:mm AM'. */
+  /** Typing hint for date + time, e.g. 'DD MM YYYY hh:mm AM'. */
   dateTimePlaceholder: string;
   /** Read back text typed in the date pattern; null when incomplete/unreal. */
   parseDate: (text: string) => Date | null;
@@ -98,6 +106,9 @@ export interface DateFormatter {
    * and reading it through a zone moves it a day for anyone behind UTC.
    */
   formatDay: (value: string) => string;
+  /** The same day rendered the way its INPUT asks for it — `dateInputFormat`,
+   * so what a box shows is what it will read back. */
+  formatDayInput: (value: string) => string;
   /**
    * Render a stored 'HH:mm' wall-clock time in the configured time pattern.
    * The time-only twin of `formatDay`: a venue's opening hour belongs to the
@@ -147,8 +158,11 @@ export function createDateFormatter(settings: Readonly<DateFormatterSettings> = 
   };
 
   // What a user TYPES is one pattern with a plain space — the interpunct in the
-  // display form reads well in a sentence but is a character nobody types.
-  const dateTimeInput = `${dateFormat} ${timeFormat}`;
+  // display form reads well in a sentence but is a character nobody types — and
+  // its date half is the typeable form of the admin's pattern, not the pretty
+  // one it is displayed in.
+  const dateInput = keyboardPattern(dateFormat);
+  const dateTimeInput = `${dateInput} ${timeFormat}`;
 
   return {
     dateFormat,
@@ -162,13 +176,15 @@ export function createDateFormatter(settings: Readonly<DateFormatterSettings> = 
     dayLabel,
     dayKey,
     formatPattern,
+    dateInputFormat: dateInput,
     dateTimeInputFormat: dateTimeInput,
-    datePlaceholder: patternPlaceholder(dateFormat),
+    datePlaceholder: patternPlaceholder(dateInput),
     dateTimePlaceholder: patternPlaceholder(dateTimeInput),
-    parseDate: (text) => parseInPattern(text, dateFormat),
+    parseDate: (text) => parseInPattern(text, dateInput),
     parseDateTime: (text) => parseInPattern(text, dateTimeInput),
     toIsoDay,
     formatDay: (value) => formatIsoDay(value, dateFormat),
+    formatDayInput: (value) => formatIsoDay(value, dateInput),
     formatClock: (value) => formatClockTime(value, timeFormat),
   };
 }

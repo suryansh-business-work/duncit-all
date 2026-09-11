@@ -142,6 +142,7 @@ export default function ContactsPage() {
           <ContactsBody
             loading={list.loading}
             hasData={Boolean(list.data)}
+            refreshing={list.loading && Boolean(list.data)}
             error={list.error?.message}
             synced={Boolean(status)}
             scope={tabs.value}

@@ -6,7 +6,10 @@ import HostPodActionsItems, { type HostPodMenuItemsProps } from './HostPodAction
 import { useHostPodActionsConfig } from './HostPodActionsProvider';
 
 interface Props
-  extends Omit<HostPodMenuItemsProps, 'showAttendeeActions' | 'canComplete' | 'canScan' | 'pick'> {
+  extends Omit<
+    HostPodMenuItemsProps,
+    'showAttendeeActions' | 'canComplete' | 'canScan' | 'canAmend' | 'pick'
+  > {
   podTitle: string;
   /** Set on a completed/cancelled pod — the whole menu is then read-only. */
   disabled?: boolean;
@@ -28,6 +31,12 @@ interface Props
    * the roster after that, not from a scanner.
    */
   canScan?: boolean;
+  /**
+   * The pod has not ended yet, so its plan can still change. Once it is over,
+   * Edit, Request Change Host and Cancel all go inert — they rewrite a plan the
+   * pod no longer has. Settling it is Complete’s job.
+   */
+  canAmend?: boolean;
 }
 
 /**
@@ -44,6 +53,7 @@ export default function HostPodActionsMenu({
   venueRejected = false,
   canComplete = false,
   canScan = true,
+  canAmend = true,
   ...items
 }: Readonly<Props>) {
   const { labels } = useHostPodActionsConfig();
@@ -81,6 +91,7 @@ export default function HostPodActionsMenu({
           showAttendeeActions={!venueRejected}
           canComplete={canComplete}
           canScan={canScan}
+          canAmend={canAmend}
           pick={pick}
         />
       </Menu>

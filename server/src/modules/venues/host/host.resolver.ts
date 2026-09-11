@@ -2,10 +2,21 @@ import { GraphQLError } from 'graphql';
 import { hostService } from './host.service';
 import { userService } from '@modules/access/user/user.service';
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { hasRole, requireRole } from '@middleware/rbac';
+import {
+  consoleEditors,
+  consoleGovernors,
+  consoleReaders,
+} from '@modules/portals/console-access';
 
-// Onboarding console (Onboarded Hosts) reviews and configures hosts too.
-const ADMIN_REVIEW = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'ONBOARDING_MANAGER'];
+/**
+ * Reading and editing a host's own details also belongs to whoever was granted
+ * the hosts console (`ALL_HOSTS_ACCESS`); approving one, setting its commission
+ * and pausing it do NOT — see `console-access.ts`.
+ */
+const HOST_READ = consoleReaders('HOST');
+const HOST_EDIT = consoleEditors('HOST');
+const HOST_GOVERN = consoleGovernors('HOST');
 // Permanent hard-delete is a developer-only action.
 const DEVELOPER_DELETE = ['SUPER_ADMIN', 'DEVELOPERS_MANAGER'];
 
@@ -23,19 +34,19 @@ export const hostResolvers = {
   Query: {
     myHost: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => hostService.getMine(uid(ctx)),
     hosts: async (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, HOST_READ);
       return hostService.list({ status: args.status }, { withCommission: true });
     },
     hostsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, HOST_READ);
       return hostService.table(args.query);
     },
     hostByUser: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, HOST_READ);
       return hostService.getByUser(args.user_id);
     },
     host: async (_p: unknown, args: { host_doc_id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, HOST_READ);
       return hostService.getById(args.host_doc_id);
     },
     // Unauthenticated discovery query — MUST stay redacted. See
@@ -60,7 +71,7 @@ export const hostResolvers = {
       args: { host_doc_id: string; notes?: string; tags?: string[] },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, HOST_GOVERN);
       return hostService.approve(args.host_doc_id, args.notes, args.tags);
     },
     rejectHost: async (
@@ -68,7 +79,7 @@ export const hostResolvers = {
       args: { host_doc_id: string; notes: string },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, HOST_GOVERN);
       return hostService.reject(args.host_doc_id, args.notes);
     },
     adminCreateHost: async (
@@ -76,7 +87,7 @@ export const hostResolvers = {
       args: { target_user_id: string; step1: any; step2: any; step3: any; submit?: boolean },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, HOST_EDIT);
       return hostService.adminCreate({
         targetUserId: args.target_user_id,
         step1: args.step1,
@@ -90,7 +101,7 @@ export const hostResolvers = {
       args: { host_doc_id: string; categories: any[] },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, HOST_EDIT);
       return hostService.adminSetCategories(args.host_doc_id, args.categories);
     },
     adminUpdateHost: async (
@@ -98,7 +109,14 @@ export const hostResolvers = {
       args: { host_doc_id: string; step1: any; step2: any; step3: any; status?: string; categories?: any[] },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, HOST_EDIT);
+      // The status is an APPROVAL, not a detail: a console-role editor may fix a
+      // host's address but may not decide that they are approved.
+      if (args.status && !(ctx.user && hasRole(ctx.user, HOST_GOVERN))) {
+        throw new GraphQLError('You cannot change a host review status', {
+          extensions: { code: 'FORBIDDEN' },
+        });
+      }
       return hostService.adminUpdate(args.host_doc_id, {
         step1: args.step1,
         step2: args.step2,
@@ -112,7 +130,7 @@ export const hostResolvers = {
       args: { host_doc_id: string; active: boolean },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      requireRole(ctx, HOST_GOVERN);
       return hostService.setActive(args.host_doc_id, args.active);
     },
     deleteHost: async (

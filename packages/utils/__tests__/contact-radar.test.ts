@@ -5,11 +5,15 @@ import {
   RADAR_RING_CAPACITY,
   RADAR_RINGS,
   contactEntriesFromPhoneBook,
+  contactSearchText,
   invitableName,
+  invitableSearchText,
   inviteOutcomeKey,
   isInvited,
+  markInvited,
   radarPositions,
   toggleInviteKey,
+  withFollowStatus,
 } from '../src/contact-radar';
 
 describe('contactEntriesFromPhoneBook', () => {
@@ -103,11 +107,60 @@ describe('the invite list', () => {
     expect(toggleInviteKey(one, '9876543210')).toEqual([]);
   });
 
+  it('marks only the numbers an invite press sent, leaving every other row as it was', () => {
+    const marked = markInvited([waiting, asked], ['9876543210'], '2026-09-11T09:30:00Z');
+    expect(marked[0]).toEqual({ ...waiting, invited_at: '2026-09-11T09:30:00Z' });
+    expect(marked[1]).toBe(asked);
+  });
+
+  it('is found by the name it was saved under, or by the number itself', () => {
+    expect(invitableSearchText(waiting)).toEqual(['Ritu Malhotra', '9876543210']);
+  });
+
   it('names the sentence a press earned, and never confuses held-back with failed', () => {
     expect(inviteOutcomeKey({ sent: 2, failed: 0 })).toBe('mweb.contacts.invitesSent');
     expect(inviteOutcomeKey({ sent: 0, failed: 3 })).toBe('mweb.contacts.invitesFailed');
     expect(inviteOutcomeKey({ sent: 0, failed: 0 })).toBe('mweb.contacts.invitesSkipped');
     // One that went and one that did not is still a send, not a failure.
     expect(inviteOutcomeKey({ sent: 1, failed: 1 })).toBe('mweb.contacts.invitesSent');
+  });
+});
+
+describe('matched contacts', () => {
+  const riya = {
+    contact_label: 'Riya (gym)',
+    profile: {
+      user_id: 'u-riya',
+      full_name: 'Riya Sharma',
+      first_name: 'Riya',
+      username: 'riya.s',
+      follow_status: 'NONE',
+      is_following: false,
+    },
+  };
+  const aman = {
+    contact_label: 'Aman',
+    profile: {
+      user_id: 'u-aman',
+      full_name: 'Aman Verma',
+      first_name: 'Aman',
+      username: 'aman',
+      follow_status: 'FOLLOWING',
+      is_following: true,
+    },
+  };
+
+  it('is found by name, first name, @handle or the name the phone book saved', () => {
+    expect(contactSearchText(riya)).toEqual(['Riya Sharma', 'Riya', 'riya.s', 'Riya (gym)']);
+  });
+
+  it('redraws only the row a follow tap settled on', () => {
+    const followed = withFollowStatus([riya, aman], 'u-riya', 'FOLLOWING');
+    expect(followed[0].profile).toMatchObject({ follow_status: 'FOLLOWING', is_following: true });
+    expect(followed[1]).toBe(aman);
+
+    // A private profile lands on REQUESTED, which is not yet a follow.
+    const requested = withFollowStatus([riya], 'u-riya', 'REQUESTED');
+    expect(requested[0].profile).toMatchObject({ follow_status: 'REQUESTED', is_following: false });
   });
 });

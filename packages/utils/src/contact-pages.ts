@@ -59,7 +59,9 @@ export function streamContactPages<T>(input: Readonly<ContactPageStreamInput<T>>
   // Read through a call: `cancel` flips the flag between two awaits, which a
   // narrowed `!cancelled` would claim cannot happen.
   const live = () => !cancelled;
-  let settleFirst: () => void = () => undefined;
+  // Assigned synchronously by the executor, and only ever called from the
+  // closures below — no placeholder function that nothing could run.
+  let settleFirst: () => void;
   const firstPage = new Promise<void>((resolve) => {
     settleFirst = resolve;
   });
@@ -81,7 +83,7 @@ export function streamContactPages<T>(input: Readonly<ContactPageStreamInput<T>>
     .catch((error: unknown) => {
       if (live()) onError(error);
     })
-    .finally(settleFirst);
+    .finally(() => settleFirst());
 
   return {
     firstPage,

@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
-import { ContactInviteModel } from './contacts.model';
+import { ContactInviteModel, type IContactInvite } from './contacts.model';
+import { pageWindow, type ContactsPage } from './contacts.paging';
 import { UserModel } from '@modules/access/user/user.model';
 import { referralService } from '@modules/engagement/referral/referral.service';
 import { whatsappService } from '@modules/platform/whatsapp/whatsapp.service';
@@ -11,12 +12,13 @@ import { escapeRegExp } from '@utils/regex';
 /** The scenario an invite goes out on. Registered in `whatsapp.events.ts`. */
 const INVITE_EVENT = 'USER_CONTACT_INVITE';
 
-/** How many numbers one screen lists. Past this the list is a phone book. */
+/** How many numbers the unpaged `contactsToInvite` lists — kept for app builds
+ * that predate `contactsToInvitePage`, which reaches the whole phone book. */
 const MAX_INVITABLE = 500;
 /**
  * How many invites one call sends. AiSensy is posted one message at a time, so
- * a bigger batch is a longer request rather than a faster one — "Invite all"
- * sends this many and leaves the rest for the next press.
+ * a bigger batch is a longer request rather than a faster one — an older app
+ * build's "Invite all" sends this many and leaves the rest for the next press.
  */
 const MAX_PER_CALL = 100;
 /**
@@ -38,7 +40,12 @@ export interface InviteResult {
   sent: number;
   skipped: number;
   failed: number;
+  /** The numbers that actually went — what a client stamps "Invited" on
+   * without re-reading a phone book's worth of rows. */
+  sent_keys: string[];
 }
+
+const NOTHING_SENT: InviteResult = { requested: 0, sent: 0, skipped: 0, failed: 0, sent_keys: [] };
 
 /** The comparable key of every number this account can be reached on. */
 export const keysOfUser = (doc: any): string[] =>
@@ -47,7 +54,8 @@ export const keysOfUser = (doc: any): string[] =>
   );
 
 /**
- * Remember the numbers a sync did NOT match, and forget the ones that left.
+ * Remember the numbers one slice of a sync did NOT match, stamped with that
+ * sync — the slice that closes it retires whatever an older sync left behind.
  *
  * Called from `syncContacts` with the same keyed phone book the matcher read,
  * so the two halves can never disagree about which numbers were on it. A row
@@ -57,7 +65,8 @@ export const keysOfUser = (doc: any): string[] =>
 export async function recordInvitable(
   owner: Types.ObjectId,
   keyed: ReadonlyMap<string, string>,
-  matchedKeys: ReadonlySet<string>
+  matchedKeys: ReadonlySet<string>,
+  syncId: Types.ObjectId
 ): Promise<number> {
   const unmatched = [...keyed.entries()].filter(([key]) => !matchedKeys.has(key));
   if (unmatched.length > 0) {
@@ -65,21 +74,29 @@ export async function recordInvitable(
       unmatched.map(([key, label]) => ({
         updateOne: {
           filter: { owner_id: owner, phone_key: key },
-          update: { $set: { contact_label: label }, $setOnInsert: { invited_at: null } },
+          update: {
+            $set: { contact_label: label, sync_id: syncId },
+            $setOnInsert: { invited_at: null },
+          },
           upsert: true,
         },
       })),
       { ordered: false }
     );
   }
-  await ContactInviteModel.deleteMany({
-    owner_id: owner,
-    phone_key: { $nin: unmatched.map(([key]) => key) },
-  });
   return unmatched.length;
 }
 
-/** What the invite tab renders: the phone book minus everyone already here. */
+type InviteRow = Pick<IContactInvite, 'phone_key' | 'contact_label' | 'invited_at'>;
+
+const toInviteRow = (row: InviteRow) => ({
+  phone_key: row.phone_key,
+  contact_label: row.contact_label ?? '',
+  invited_at: row.invited_at ? row.invited_at.toISOString() : null,
+});
+
+/** What an older app build's invite tab renders: the first rows of the phone
+ * book minus everyone already here, narrowed by name on the server. */
 async function listInvitable(userId: string, search?: string | null) {
   const filter: Record<string, unknown> = { owner_id: new Types.ObjectId(userId) };
   const term = String(search ?? '').trim();
@@ -88,11 +105,33 @@ async function listInvitable(userId: string, search?: string | null) {
     .sort({ invited_at: 1, contact_label: 1 })
     .limit(MAX_INVITABLE)
     .lean();
-  return rows.map((row) => ({
-    phone_key: row.phone_key,
-    contact_label: row.contact_label ?? '',
-    invited_at: row.invited_at ? row.invited_at.toISOString() : null,
-  }));
+  return rows.map(toInviteRow);
+}
+
+/**
+ * One page of the whole invite list, A–Z by the name the phone book saved.
+ *
+ * Ordered on the label (then the row id, so equal names never trade places
+ * between two pages) and NOT on `invited_at`: inviting somebody mid-walk must
+ * not move them, or the pages after it would skip a row.
+ */
+async function listInvitablePage(
+  userId: string,
+  offset?: number | null,
+  limit?: number | null
+): Promise<ContactsPage<ReturnType<typeof toInviteRow>>> {
+  const filter = { owner_id: new Types.ObjectId(userId) };
+  const { skip, take } = pageWindow(offset, limit);
+  const [total, rows] = await Promise.all([
+    ContactInviteModel.countDocuments(filter),
+    ContactInviteModel.find(filter)
+      .sort({ contact_label: 1, _id: 1 })
+      .collation({ locale: 'en' })
+      .skip(skip)
+      .limit(take)
+      .lean(),
+  ]);
+  return { total, rows: rows.map(toInviteRow) };
 }
 
 /** How many invites this account may still send today. */
@@ -136,25 +175,26 @@ async function inviteContext(userId: string) {
  * Text the chosen contacts an invite, and stamp the ones that went.
  *
  * `phone_keys` empty means every number still waiting — the "Invite all"
- * button — capped at {@link MAX_PER_CALL}. A number that has already been
- * invited is never texted a second time: the row's stamp keeps it out of this
- * batch, and `WaMessageLog`'s unique slot (event + inviter + destination) is
- * the guarantee underneath, so two taps racing each other still send once.
+ * button older app builds still carry — capped at {@link MAX_PER_CALL}. A
+ * number that has already been invited is never texted a second time: the
+ * row's stamp keeps it out of this batch, and `WaMessageLog`'s unique slot
+ * (event + inviter + destination) is the guarantee underneath, so two taps
+ * racing each other still send once.
  *
- * The day's remaining allowance is what actually bounds the batch. Pressing
- * "Invite all" is one press, but each message is a billed marketing send to
- * somebody who never asked Duncit for anything — a phone book of five thousand
- * numbers must not become five thousand texts in an afternoon.
+ * The day's remaining allowance is what actually bounds the batch. Each
+ * message is a billed marketing send to somebody who never asked Duncit for
+ * anything — a phone book of five thousand numbers must not become five
+ * thousand texts in an afternoon.
  */
 async function inviteContacts(userId: string, phoneKeys: readonly string[]): Promise<InviteResult> {
   const owner = new Types.ObjectId(userId);
   const allowance = await remainingToday(owner);
-  if (allowance === 0) return { requested: 0, sent: 0, skipped: 0, failed: 0 };
+  if (allowance === 0) return NOTHING_SENT;
   const chosen = phoneKeys.map((key) => phoneKey(key)).filter(Boolean);
   const filter: Record<string, unknown> = { owner_id: owner, invited_at: null };
   if (chosen.length > 0) filter.phone_key = { $in: chosen };
   const rows = await ContactInviteModel.find(filter).limit(allowance).lean();
-  if (rows.length === 0) return { requested: 0, sent: 0, skipped: 0, failed: 0 };
+  if (rows.length === 0) return NOTHING_SENT;
 
   const context = await inviteContext(userId);
   const outcomes = await whatsappService.sendEach(
@@ -190,7 +230,8 @@ async function inviteContacts(userId: string, phoneKeys: readonly string[]): Pro
     sent: sentKeys.length,
     skipped: outcomes.filter((outcome) => outcome.status === 'SKIPPED').length,
     failed: outcomes.filter((outcome) => outcome.status === 'FAILED').length,
+    sent_keys: sentKeys,
   };
 }
 
-export const contactsInviteService = { listInvitable, inviteContacts };
+export const contactsInviteService = { listInvitable, listInvitablePage, inviteContacts };

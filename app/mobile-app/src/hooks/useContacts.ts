@@ -1,66 +1,44 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
+import { withFollowStatus, type FollowStatus } from '@duncit/utils';
 
-import { ContactsOnDuncitDocument, MyContactsSyncDocument } from '@/graphql/contacts';
+import { ContactsOnDuncitPageDocument, MyContactsSyncDocument } from '@/graphql/contacts';
+import { useContactPages } from '@/hooks/useContactPages';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
 
-export type ContactRow = ResultOf<typeof ContactsOnDuncitDocument>['contactsOnDuncit'][number];
+type MatchesPage = ResultOf<typeof ContactsOnDuncitPageDocument>['contactsOnDuncitPage'];
+export type ContactRow = MatchesPage['rows'][number];
 type SyncData = ResultOf<typeof MyContactsSyncDocument>;
 export type ContactsSyncStatus = NonNullable<SyncData['myContactsSync']>;
 export type ContactsViewer = NonNullable<SyncData['me']>;
 
-const DEBOUNCE_MS = 350;
-
 export type ContactsScope = 'all' | 'nearby' | 'invite';
 
+const fetchMatches = async (offset: number, limit: number): Promise<MatchesPage> => {
+  const data = await graphqlRequest(
+    ContactsOnDuncitPageDocument,
+    { offset, limit },
+    { auth: true },
+  );
+  return data.contactsOnDuncitPage;
+};
+
 /**
- * The viewer's matched contacts, filtered by the server: a debounced name
- * search and the same-city switch. Request sequencing drops a stale answer
- * when the filters change mid-flight (the useSavedPods pattern).
+ * Every matched contact, streamed in page by page. The scope and the search
+ * run on the device over what has landed, so switching tabs or typing never
+ * waits on a round trip — and a follow patches its one row instead of
+ * re-reading the list. Twin of mWeb's `useContactsList` (rule 27).
  */
-export function useContactsOnDuncit(search: string, scope: ContactsScope) {
-  const [rows, setRows] = useState<ContactRow[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<unknown>();
-  const seq = useRef(0);
-  const trimmed = search.trim();
-  const nearby = scope === 'nearby';
-
-  const load = useCallback(async () => {
-    const requestId = ++seq.current;
-    // Set here as well as in the effect below: `load` IS the refetch a follow
-    // and a resync call, and a re-read nothing reports is a list that silently
-    // goes stale for a round trip. The effect's own call is idempotent.
-    setIsLoading(true);
-    try {
-      const data = await graphqlRequest(
-        ContactsOnDuncitDocument,
-        { search: trimmed || null, nearby },
-        { auth: true },
-      );
-      if (seq.current !== requestId) return;
-      setRows(data.contactsOnDuncit);
-      setError(undefined);
-    } catch (err) {
-      if (seq.current !== requestId) return;
-      setError(err);
-    } finally {
-      if (seq.current === requestId) setIsLoading(false);
-    }
-  }, [trimmed, nearby]);
-
-  useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => {
-      load().catch(() => undefined);
-    }, DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [load]);
-
-  useRefreshRegistration(load);
-
-  return { rows, isLoading, error, refetch: load };
+export function useContactsOnDuncit() {
+  const pages = useContactPages(fetchMatches);
+  const { patch } = pages;
+  const setFollowStatus = useCallback(
+    (userId: string, status: FollowStatus) =>
+      patch((rows) => withFollowStatus(rows, userId, status)),
+    [patch],
+  );
+  return { ...pages, setFollowStatus };
 }
 
 /** Whether the viewer has synced, and the viewer for the radar's centre. */

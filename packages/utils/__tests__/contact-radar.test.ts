@@ -8,7 +8,6 @@ import {
   invitableName,
   inviteOutcomeKey,
   isInvited,
-  pendingInviteKeys,
   radarPositions,
   toggleInviteKey,
 } from '../src/contact-radar';
@@ -93,11 +92,6 @@ describe('the invite list', () => {
   it('falls back to the number when the phone book saved no name', () => {
     expect(invitableName(waiting)).toBe('Ritu Malhotra');
     expect(invitableName({ phone_key: '9876543212', contact_label: '   ' })).toBe('9876543212');
-  });
-
-  it('sends only the ones still waiting when Invite all is pressed', () => {
-    expect(pendingInviteKeys([waiting, asked])).toEqual(['9876543210']);
-    expect(pendingInviteKeys([asked])).toEqual([]);
   });
 
   it('ticks a key in and out as a NEW array', () => {

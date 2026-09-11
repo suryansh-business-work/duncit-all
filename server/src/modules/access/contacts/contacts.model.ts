@@ -13,6 +13,12 @@ export interface IContactMatch extends Document {
   contact_id: Types.ObjectId;
   /** The name the owner saved this person under, for a row whose account has none. */
   contact_label: string;
+  /**
+   * The sync that last saw this person. A phone book arrives in slices, and the
+   * slice that closes a sync retires every row an OLDER sync stamped — null is
+   * a row written before syncs were sliced, and counts as older than any.
+   */
+  sync_id: Types.ObjectId | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -22,12 +28,14 @@ const contactMatchSchema = new Schema<IContactMatch>(
     owner_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     contact_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     contact_label: { type: String, default: '', trim: true, maxlength: 120 },
+    sync_id: { type: Schema.Types.ObjectId, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 
 contactMatchSchema.index({ owner_id: 1, contact_id: 1 }, { unique: true });
 contactMatchSchema.index({ owner_id: 1, created_at: -1 });
+contactMatchSchema.index({ owner_id: 1, sync_id: 1 });
 
 export const ContactMatchModel = model<IContactMatch>('ContactMatch', contactMatchSchema);
 
@@ -76,6 +84,8 @@ export interface IContactInvite extends Document {
   contact_label: string;
   /** When an invite last went to this number, or null while none has. */
   invited_at: Date | null;
+  /** The sync that last saw this number — the same stamp `IContactMatch` carries. */
+  sync_id: Types.ObjectId | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -86,11 +96,13 @@ const contactInviteSchema = new Schema<IContactInvite>(
     phone_key: { type: String, required: true },
     contact_label: { type: String, default: '', trim: true, maxlength: 120 },
     invited_at: { type: Date, default: null },
+    sync_id: { type: Schema.Types.ObjectId, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 
 contactInviteSchema.index({ owner_id: 1, phone_key: 1 }, { unique: true });
 contactInviteSchema.index({ owner_id: 1, invited_at: 1 });
+contactInviteSchema.index({ owner_id: 1, sync_id: 1 });
 
 export const ContactInviteModel = model<IContactInvite>('ContactInvite', contactInviteSchema);

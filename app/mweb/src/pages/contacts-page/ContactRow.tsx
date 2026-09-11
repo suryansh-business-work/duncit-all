@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Avatar, Box, Chip, Stack, Typography } from '@mui/material';
 import { readFollowStatus } from '@duncit/utils';
 import FollowButton from '../../components/FollowButton';
@@ -12,9 +13,10 @@ interface Props {
 }
 
 /** Avatar, name, @handle, the phone-book name it was saved under and the
- * three-state follow button; the identity opens the profile. Twin of native
- * `ContactRow` (rule 27). */
-export default function ContactRow({ row, onToggleFollow, onOpen }: Readonly<Props>) {
+ * three-state follow button; the identity opens the profile. Memoised: it is
+ * one row of a windowed list thousands long. Twin of native `ContactRow`
+ * (rule 27). */
+export default memo(function ContactRow({ row, onToggleFollow, onOpen }: Readonly<Props>) {
   const { t } = useTranslation();
   const { profile } = row;
   const name = profile.full_name || profile.first_name || row.contact_label;
@@ -66,4 +68,4 @@ export default function ContactRow({ row, onToggleFollow, onOpen }: Readonly<Pro
       />
     </Stack>
   );
-}
+});

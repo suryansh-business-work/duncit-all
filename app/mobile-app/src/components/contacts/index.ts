@@ -1,7 +1,10 @@
 export { ContactsAllowCard } from './ContactsAllowCard';
+export { ContactsEmpty } from './ContactsEmpty';
+export { ContactsFeed, type FeedRow } from './ContactsFeed';
 export { ContactsFilters } from './ContactsFilters';
-export { ContactsInviteList } from './ContactsInviteList';
-export { ContactsList } from './ContactsList';
+export { ContactsHeader } from './ContactsHeader';
+export { ContactsInviteBar } from './ContactsInviteBar';
+export { ContactsLoadProgress, ContactsProgress } from './ContactsProgress';
 export { ContactsRadar } from './ContactsRadar';
 export { ContactRow } from './ContactRow';
 export { InviteRow } from './InviteRow';

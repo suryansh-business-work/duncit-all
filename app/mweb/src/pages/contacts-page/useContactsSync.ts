@@ -1,6 +1,10 @@
 import { useCallback, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
-import { contactEntriesFromPhoneBook } from '@duncit/utils';
+import {
+  contactEntriesFromPhoneBook,
+  syncContactsInSlices,
+  type ContactSyncStage,
+} from '@duncit/utils';
 import { logs } from '@duncit/logs';
 import { SYNC_CONTACTS } from './queries';
 
@@ -26,16 +30,20 @@ const contactsManager = (): ContactsManager | null => {
 };
 
 /**
- * Read the phone book through the browser's Contact Picker and sync it.
+ * Read the phone book through the browser's Contact Picker and sync it, slice
+ * by slice, reporting how far along it is — a big pick shows a bar that moves
+ * rather than a button that spins.
  *
  * The picker is the only door a browser offers, and only some browsers offer
  * it; `supported` tells the page whether to show the button or point at the
  * app. Numbers are reduced to their comparable key on the device
  * (`contactEntriesFromPhoneBook`) so the phone book itself never travels.
- * Twin of native `useContactsSync` (rule 27).
+ * Twin of native `useContactsSync` (rule 27), which reads the device's phone
+ * book a page at a time instead.
  */
 export function useContactsSync(onSynced: () => Promise<unknown>) {
-  const [syncContacts, { loading }] = useMutation<any>(SYNC_CONTACTS);
+  const [syncContacts] = useMutation<any>(SYNC_CONTACTS);
+  const [stage, setStage] = useState<ContactSyncStage | null>(null);
   const [failure, setFailure] = useState<ContactsSyncFailure | null>(null);
   const supported = contactsManager() !== null;
 
@@ -50,7 +58,14 @@ export function useContactsSync(onSynced: () => Promise<unknown>) {
       const entries = contactEntriesFromPhoneBook(
         picked.map((contact) => ({ name: contact.name?.[0] ?? '', phones: contact.tel ?? [] }))
       );
-      await syncContacts({ variables: { entries } });
+      await syncContactsInSlices({
+        entries,
+        send: async (slice, batch) => {
+          const { data } = await syncContacts({ variables: { entries: slice, batch } });
+          return data.syncContacts;
+        },
+        onProgress: setStage,
+      });
       // The sync is the write; refreshing the page is a read of what it wrote.
       // A read that fails is not a sync that failed — it is logged, and the
       // phone book stays synced rather than being reported as lost.
@@ -61,8 +76,10 @@ export function useContactsSync(onSynced: () => Promise<unknown>) {
       // A refusal is the person answering the picker, not a fault to log.
       if (!denied) logs.mWeb.error('useContactsSync', 'request', { error });
       setFailure(denied ? 'DENIED' : 'FAILED');
+    } finally {
+      setStage(null);
     }
   }, [onSynced, syncContacts]);
 
-  return { supported, request, busy: loading, failure };
+  return { supported, request, busy: stage !== null, stage, failure };
 }

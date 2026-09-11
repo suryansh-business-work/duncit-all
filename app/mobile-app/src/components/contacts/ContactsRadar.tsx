@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 import { Animated, Easing, useWindowDimensions } from 'react-native';
 import { Text, XStack, YStack } from 'tamagui';
 import { RADAR_RINGS, radarPositions } from '@duncit/utils';
@@ -55,10 +55,12 @@ function RadarFace({
 /**
  * The radar: the viewer in the middle, every matched contact on a ring around
  * them — the ones in the same city on the inner rings — and a slow sweep. Each
- * face opens that person's profile. Twin of mWeb's `ContactsRadar` (rule 27);
- * the ring maths is `radarPositions` in @duncit/utils, shared by both.
+ * face opens that person's profile. Memoised: it sits in the list header,
+ * which redraws on every keystroke in the search box. Twin of mWeb's
+ * `ContactsRadar` (rule 27); the ring maths is `radarPositions` in
+ * @duncit/utils, shared by both.
  */
-export function ContactsRadar({
+export const ContactsRadar = memo(function ContactsRadar({
   contacts,
   viewer,
   onOpen,
@@ -186,4 +188,4 @@ export function ContactsRadar({
       })}
     </YStack>
   );
-}
+});

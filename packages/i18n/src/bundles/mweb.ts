@@ -3713,6 +3713,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       allowButton: 'Allow contacts',
       resync: 'Refresh contacts',
       syncing: 'Finding your contacts…',
+      // A big phone book goes up in slices and both lists stream in page by
+      // page, so the screen says how far along it is instead of freezing.
+      syncProgress: 'Syncing {sent} of {total} contacts…',
+      loadProgress: 'Loading your contacts — {loaded} of {total}',
+      loadMoreFailed: 'Some of your contacts could not be loaded.',
+      loadRetry: 'Try again',
       lastSynced: 'Last synced {when}',
       matched: {
         one: '{count} contact is on Duncit',
@@ -3734,7 +3740,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       noneNearby: 'None of your contacts are in your city yet.',
       savedAs: 'Saved as {label}',
       // The third tab: the phone-book numbers that reached nobody, and the
-      // three ways to ask them — one row, the ticked ones, everyone waiting.
+      // two ways to ask them — one row, or the ticked ones.
       filterInvite: 'Invite',
       toInvite: {
         one: '{count} contact is not on Duncit yet.',
@@ -3747,7 +3753,6 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       invited: 'Invited',
       selectFor: 'Select {name}',
       inviteSelected: 'Invite selected ({count})',
-      inviteAll: 'Invite all ({count})',
       invitesSent: {
         one: '{count} invite sent on WhatsApp.',
         other: '{count} invites sent on WhatsApp.',

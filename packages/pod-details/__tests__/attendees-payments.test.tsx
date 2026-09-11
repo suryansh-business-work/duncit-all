@@ -45,9 +45,19 @@ describe('PodAttendeesSection', () => {
   const PAST = '2020-08-30T12:30:00.000Z';
   const FUTURE = '2099-08-30T12:30:00.000Z';
 
+  const checkedIn = {
+    joined_at: '2026-08-01T10:00:00.000Z',
+    attended: true,
+    attended_at: PAST,
+    attendance_recorded: true,
+  };
+
   // "Joined" and "Attendee" are also column headers, so those chips make two.
+  // A past pod nobody scanned them into stays "Joined": the timeline under the
+  // row says attendance was not recorded, and the chip must not contradict it.
   it.each([
-    ['Visited', row({}), PAST, 1],
+    ['Visited', row({ participation: checkedIn }), PAST, 1],
+    ['Joined', row({}), PAST, 2],
     ['Joined', row({}), FUTURE, 2],
     ['Backout in process', row({ status: 'BACKOUT_IN_PROCESS' }), FUTURE, 1],
     ['Backed out', row({ status: 'BACKED_OUT' }), FUTURE, 1],

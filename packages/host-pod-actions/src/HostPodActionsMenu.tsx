@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Menu, Tooltip } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { DuncitIconButton } from '@duncit/buttons';
+import type { PodScanWindow } from '@duncit/utils';
 import HostPodActionsItems, { type HostPodMenuItemsProps } from './HostPodActionsItems';
 import { useHostPodActionsConfig } from './HostPodActionsProvider';
 
 interface Props
   extends Omit<
     HostPodMenuItemsProps,
-    'showAttendeeActions' | 'canComplete' | 'canScan' | 'canAmend' | 'pick'
+    'showAttendeeActions' | 'canComplete' | 'canScan' | 'scanNote' | 'canAmend' | 'pick'
   > {
   podTitle: string;
   /** Set on a completed/cancelled pod — the whole menu is then read-only. */
@@ -26,11 +27,11 @@ interface Props
    */
   canComplete?: boolean;
   /**
-   * The pod has not ended yet. Scanning a ticket is what happens AT a door, so
-   * the row goes inert the moment the pod is over — the host settles it from
-   * the roster after that, not from a scanner.
+   * Where the pod's door stands. Scanning a ticket is what happens AT a door,
+   * so the row is inert until shortly before the start, and again the moment
+   * the pod is over — the host settles it from the roster after that.
    */
-  canScan?: boolean;
+  scanWindow?: PodScanWindow;
   /**
    * The pod has not ended yet, so its plan can still change. Once it is over,
    * Edit, Request Change Host and Cancel all go inert — they rewrite a plan the
@@ -52,12 +53,18 @@ export default function HostPodActionsMenu({
   disabled = false,
   venueRejected = false,
   canComplete = false,
-  canScan = true,
+  scanWindow = 'OPEN',
   canAmend = true,
   ...items
 }: Readonly<Props>) {
   const { labels } = useHostPodActionsConfig();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  // Why the scan row is inert — "not yet" and "too late" are different answers.
+  const scanNotes: Record<PodScanWindow, string | undefined> = {
+    NOT_OPEN: labels.scanNotOpen,
+    OPEN: undefined,
+    CLOSED: labels.scanClosed,
+  };
 
   const pick = (action: () => void) => () => {
     setAnchorEl(null);
@@ -90,7 +97,8 @@ export default function HostPodActionsMenu({
           // The actions that only make sense for a pod that actually gets to run.
           showAttendeeActions={!venueRejected}
           canComplete={canComplete}
-          canScan={canScan}
+          canScan={scanWindow === 'OPEN'}
+          scanNote={scanNotes[scanWindow]}
           canAmend={canAmend}
           pick={pick}
         />

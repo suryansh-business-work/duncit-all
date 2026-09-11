@@ -89,7 +89,7 @@ describe('HostPodActionsMenu rows', () => {
   it('keeps the scan row but closes it once the pod is over', async () => {
     const requestChange = 'Request Change Host';
     await open({
-      canScan: false,
+      scanWindow: 'CLOSED',
       canAmend: false,
       onRequestChange: vi.fn(),
       requestChangeLabel: requestChange,
@@ -110,12 +110,24 @@ describe('HostPodActionsMenu rows', () => {
     }
 
     cleanup();
-    await open({ canScan: true, canAmend: true, onRequestChange: vi.fn(), requestChangeLabel: requestChange });
+    await open({ scanWindow: 'OPEN', canAmend: true, onRequestChange: vi.fn(), requestChangeLabel: requestChange });
     const openRow = [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
       (item) => item.textContent?.includes(labels.scanTickets),
     ) as HTMLElement;
     expect(openRow).not.toHaveAttribute('aria-disabled', 'true');
     expect(openRow.textContent).not.toContain(labels.scanClosed);
+  });
+
+  // A live pod whose start is still more than the lead away: the door is not
+  // open yet, and the row says so — not that the pod has ended.
+  it('keeps the scan row shut, saying when it opens, before the door opens', async () => {
+    await open({ scanWindow: 'NOT_OPEN' });
+    const scanRow = [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
+      (item) => item.textContent?.includes(labels.scanTickets),
+    ) as HTMLElement;
+    expect(scanRow).toHaveAttribute('aria-disabled', 'true');
+    expect(scanRow.textContent).toContain(labels.scanNotOpen);
+    expect(scanRow.textContent).not.toContain(labels.scanClosed);
   });
 
   // No attendees to scan, no page worth sending — the venue refused the slot.

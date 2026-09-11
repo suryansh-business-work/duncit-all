@@ -2,16 +2,19 @@ import { describe, expect, it } from 'vitest';
 
 import {
   POD_LIVE_TAIL_MS,
+  POD_SCAN_LEAD_MINUTES,
   canAmendPod,
   canCompletePod,
   canScanPodTickets,
   podPhase,
+  podScanWindow,
   splitPodsByPhase,
   type PodPhaseFields,
 } from '../src/pod-phase';
 
 const NOW = new Date('2026-08-25T12:00:00.000Z').getTime();
 const HOUR = 60 * 60 * 1000;
+const LEAD = POD_SCAN_LEAD_MINUTES * 60 * 1000;
 const at = (offsetMs: number) => new Date(NOW + offsetMs).toISOString();
 
 describe('podPhase', () => {
@@ -78,11 +81,38 @@ describe('splitPodsByPhase', () => {
   });
 });
 
+describe('podScanWindow', () => {
+  // The door opens a little before the start and shuts at the end — a ticket
+  // scanned hours early would record someone present at an event not yet held.
+  it('keeps the door shut until the lead before the start', () => {
+    expect(podScanWindow({ pod_date_time: at(2 * HOUR) }, NOW)).toBe('NOT_OPEN');
+    expect(podScanWindow({ pod_date_time: at(LEAD + 1) }, NOW)).toBe('NOT_OPEN');
+  });
+
+  it('opens the door exactly the lead before the start, and keeps it open while the pod runs', () => {
+    expect(podScanWindow({ pod_date_time: at(LEAD) }, NOW)).toBe('OPEN');
+    expect(podScanWindow({ pod_date_time: at(-HOUR), pod_end_date_time: at(HOUR) }, NOW)).toBe('OPEN');
+  });
+
+  it('shuts the door once the pod is over', () => {
+    expect(podScanWindow({ pod_date_time: at(-5 * HOUR), pod_end_date_time: at(-4 * HOUR) }, NOW)).toBe(
+      'CLOSED',
+    );
+  });
+
+  it('never opens a pod that cannot be placed on a clock', () => {
+    expect(podScanWindow({ pod_date_time: null }, NOW)).toBe('NOT_OPEN');
+  });
+
+  it('reads the clock when no `now` is passed', () => {
+    expect(podScanWindow({ pod_date_time: new Date(Date.now() + HOUR).toISOString() })).toBe('NOT_OPEN');
+  });
+});
+
 describe('canScanPodTickets', () => {
-  // The exact mirror of Complete: the scanner is for a door that is still open,
-  // so it is offered right up to the end of the pod and not a minute after.
-  it('offers the scanner before the pod starts and while it runs', () => {
-    expect(canScanPodTickets({ pod_date_time: at(2 * HOUR) }, NOW)).toBe(true);
+  it('offers the scanner only while the door is open', () => {
+    expect(canScanPodTickets({ pod_date_time: at(2 * HOUR) }, NOW)).toBe(false);
+    expect(canScanPodTickets({ pod_date_time: at(LEAD) }, NOW)).toBe(true);
     expect(canScanPodTickets({ pod_date_time: at(-HOUR), pod_end_date_time: at(HOUR) }, NOW)).toBe(true);
   });
 
@@ -93,7 +123,7 @@ describe('canScanPodTickets', () => {
   });
 
   it('reads the clock when no `now` is passed', () => {
-    expect(canScanPodTickets({ pod_date_time: new Date(Date.now() + HOUR).toISOString() })).toBe(true);
+    expect(canScanPodTickets({ pod_date_time: new Date(Date.now() - HOUR).toISOString() })).toBe(true);
   });
 });
 

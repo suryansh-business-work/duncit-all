@@ -255,13 +255,16 @@ export {
 } from './pod-draft';
 export {
   POD_LIVE_TAIL_MS,
+  POD_SCAN_LEAD_MINUTES,
   canAmendPod,
   canCompletePod,
   canScanPodTickets,
   podPhase,
+  podScanWindow,
   splitPodsByPhase,
   type PodPhase,
   type PodPhaseFields,
+  type PodScanWindow,
   type PodsByPhase,
 } from './pod-phase';
 export {

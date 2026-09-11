@@ -14,6 +14,7 @@
  */
 
 import { mwebSpotsLabels, shellSpotsLabels, type SpotsStepperLabels } from '@duncit/ui';
+import { POD_SCAN_LEAD_MINUTES } from '@duncit/utils';
 
 export type HostPodTranslate = (
   key: string,
@@ -110,6 +111,8 @@ export interface HostPodActionLabels {
   scanTickets: string;
   /** Under the scan row once the pod is over and the row has gone inert. */
   scanClosed: string;
+  /** Under the scan row until its door opens, shortly before the start. */
+  scanNotOpen: string;
   /**
    * Under Edit / Request Change Host / Cancel once the pod is over. Editing,
    * re-hosting and cancelling all change a plan, and a pod that already ran no
@@ -267,6 +270,7 @@ export function mwebHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     menuTooltip: t('mweb.hostPodActions.menuTooltip'),
     scanTickets: t('mweb.hostPodActions.scanTickets'),
     scanClosed: t('mweb.hostPodActions.scanClosed'),
+    scanNotOpen: t('mweb.hostPodActions.scanNotOpen', { vars: { minutes: POD_SCAN_LEAD_MINUTES } }),
     amendClosed: t('mweb.hostPodActions.amendClosed'),
     completePod: t('mweb.hostPodActions.completePod'),
     editPod: t('mweb.hostPodActions.editPod'),
@@ -387,6 +391,7 @@ export function shellHostPodLabels(t: HostPodTranslate): HostPodActionLabels {
     menuTooltip: t('shell.hostPodActions.menuTooltip'),
     scanTickets: t('shell.hostPodActions.scanTickets'),
     scanClosed: t('shell.hostPodActions.scanClosed'),
+    scanNotOpen: t('shell.hostPodActions.scanNotOpen', { vars: { minutes: POD_SCAN_LEAD_MINUTES } }),
     amendClosed: t('shell.hostPodActions.amendClosed'),
     completePod: t('shell.hostPodActions.completePod'),
     editPod: t('shell.hostPodActions.editPod'),

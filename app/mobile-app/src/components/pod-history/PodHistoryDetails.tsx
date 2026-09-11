@@ -114,8 +114,8 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
   const pod = item.pod;
   const image = coverImageUrl(pod?.pod_images_and_videos);
   const gate = podHistoryGate(item);
-  // "Visited" once the pod has happened — "Joined" is a promise about something
-  // still ahead.
+  // "Visited" once they were checked in at a pod that has happened — never on
+  // the clock alone.
   const visited = gate.joinedLabelKind === 'VISITED' && item.status === 'JOINED';
   const statusLabel = visited
     ? t('mweb.podHistory.statusVisited')

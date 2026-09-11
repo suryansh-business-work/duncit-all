@@ -1,10 +1,14 @@
 import { z } from 'zod';
+import { fallbackT, type Translate } from '@duncit/shell';
 import type { CoinSettings } from './queries';
 
 /** Sanity ceiling: a payout above this is a typo, not a promotion. One ceiling
  * for both flat-coin rewards — a referral and a pod rating are the same order
  * of generosity, and two numbers would be two numbers to keep in step. */
 export const MAX_FLAT_COIN_REWARD = 100000;
+
+/** Ten years. Anything longer is a typo for "never", which is what 0 means. */
+export const MAX_COIN_EXPIRY_DAYS = 3650;
 
 /**
  * Every number here is held as a STRING so an emptied field stays empty rather
@@ -31,20 +35,34 @@ const coins = (what: string) =>
       `Keep the reward at or under ${MAX_FLAT_COIN_REWARD.toLocaleString('en-IN')} coins.`,
     );
 
-export const coinSettingsSchema = z.object({
-  pod_join_earn_pct: percent('pod join'),
-  shop_earn_pct: percent('shop'),
-  coins_per_referral: coins('a referral'),
-  pod_feedback_coins: coins('pod feedback'),
-});
+const expiryDays = (t: Translate) =>
+  z
+    .string()
+    .trim()
+    .min(1, t('finance.duncitCoin.coinExpiryRequired'))
+    .regex(/^\d+$/, t('finance.duncitCoin.coinExpiryWhole'))
+    .refine(
+      (value) => Number.parseInt(value, 10) <= MAX_COIN_EXPIRY_DAYS,
+      t('finance.duncitCoin.coinExpiryMax', { vars: { max: MAX_COIN_EXPIRY_DAYS } }),
+    );
 
-export type CoinSettingsForm = z.infer<typeof coinSettingsSchema>;
+export const coinSettingsSchema = (t: Translate = fallbackT) =>
+  z.object({
+    pod_join_earn_pct: percent('pod join'),
+    shop_earn_pct: percent('shop'),
+    coins_per_referral: coins('a referral'),
+    pod_feedback_coins: coins('pod feedback'),
+    coin_expiry_days: expiryDays(t),
+  });
+
+export type CoinSettingsForm = z.infer<ReturnType<typeof coinSettingsSchema>>;
 
 export const BLANK_COIN_SETTINGS: CoinSettingsForm = {
   pod_join_earn_pct: '',
   shop_earn_pct: '',
   coins_per_referral: '',
   pod_feedback_coins: '',
+  coin_expiry_days: '',
 };
 
 /** Server payload -> form strings. */
@@ -54,5 +72,6 @@ export function toCoinSettingsForm(settings: CoinSettings): CoinSettingsForm {
     shop_earn_pct: String(settings.shop_earn_pct ?? 0),
     coins_per_referral: String(settings.coins_per_referral ?? 0),
     pod_feedback_coins: String(settings.pod_feedback_coins ?? 0),
+    coin_expiry_days: String(settings.coin_expiry_days ?? 0),
   };
 }

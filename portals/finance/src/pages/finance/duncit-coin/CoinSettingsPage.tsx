@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,7 +6,9 @@ import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import { DuncitButton } from '@duncit/buttons';
 import { notifySuccess } from '@duncit/dialogs';
+import { useTranslation } from '@duncit/app-settings';
 import CoinRatesCard from './CoinRatesCard';
+import CoinExpiryCard from './CoinExpiryCard';
 import CoinGrantCard from './CoinGrantCard';
 import {
   COIN_CURRENCY,
@@ -24,15 +26,17 @@ import {
 /** Finance > Duncit Coin > Settings — every rule that decides how many coins
  * someone is given, plus the one-off adjustments no rule covers. */
 export default function CoinSettingsPage() {
+  const { t } = useTranslation();
   const { data, loading, refetch } = useQuery<{ coinSettings: CoinSettings }>(COIN_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
   const { data: currencyData } = useQuery<any>(COIN_CURRENCY);
   const [save, { loading: saving }] = useMutation<any>(UPDATE_COIN_SETTINGS);
   const [error, setError] = useState<string | null>(null);
+  const schema = useMemo(() => coinSettingsSchema(t), [t]);
 
   const { control, handleSubmit, reset, formState } = useForm<CoinSettingsForm, any, CoinSettingsForm>({
-    resolver: zodResolver(coinSettingsSchema) as unknown as Resolver<CoinSettingsForm, any, CoinSettingsForm>,
+    resolver: zodResolver(schema) as unknown as Resolver<CoinSettingsForm, any, CoinSettingsForm>,
     defaultValues: BLANK_COIN_SETTINGS,
     mode: 'onBlur',
   });
@@ -52,6 +56,7 @@ export default function CoinSettingsPage() {
             shop_earn_pct: Number.parseInt(values.shop_earn_pct, 10),
             coins_per_referral: Number.parseInt(values.coins_per_referral, 10),
             pod_feedback_coins: Number.parseInt(values.pod_feedback_coins, 10),
+            coin_expiry_days: Number.parseInt(values.coin_expiry_days, 10),
           },
         },
       });
@@ -101,6 +106,8 @@ export default function CoinSettingsPage() {
           control={control}
           currencySymbol={currencyData?.publicFinanceSettings?.currency_symbol ?? '₹'}
         />
+
+        <CoinExpiryCard control={control} />
 
         <Box>
           <DuncitButton

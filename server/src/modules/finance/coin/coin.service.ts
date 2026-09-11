@@ -8,6 +8,7 @@ import {
   type ICoinTransaction,
 } from './coin.model';
 import { coinSettingsService } from './coin.settings.service';
+import { consumeLots, expiringLot, nextExpiry, type CoinLotFields } from './coin.expiry';
 import { UserModel } from '@modules/access/user/user.model';
 import type { PaymentTargetType } from '@modules/finance/payment/payment.model';
 import { logs } from '@observability/log';
@@ -18,6 +19,55 @@ const DUPLICATE_KEY = 11000;
 const badInput = (message: string): never => {
   throw new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
 };
+
+/** What a keyed flat credit writes beyond the fields every CREDIT row has. */
+type FlatCreditRow = CoinLotFields & {
+  source: CoinTxnSource;
+  reason: string;
+  referral_id?: string;
+  gift_card_id?: string;
+  feedback_id?: string;
+};
+
+/**
+ * Credit a flat reward keyed on the event that earned it — a referral, a gift
+ * card, a pod rating. The balance moves first so the row can record
+ * balance_after in one write; the row's unique key is what enforces once-only,
+ * and a duplicate undoes this attempt's own increment and pays nothing,
+ * exactly as the payment path does.
+ *
+ * @returns the coins credited (0 when this event had already paid out).
+ */
+async function creditOnce(
+  userId: Types.ObjectId,
+  value: number,
+  row: FlatCreditRow
+): Promise<number> {
+  try {
+    const balance = await CoinBalanceModel.findOneAndUpdate(
+      { user_id: userId },
+      { $inc: { balance: value, lifetime_earned: value } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    await CoinTransactionModel.create({
+      user_id: userId,
+      type: 'CREDIT',
+      amount: value,
+      balance_after: balance!.balance,
+      ...row,
+    });
+    return value;
+  } catch (e) {
+    if ((e as { code?: number })?.code === DUPLICATE_KEY) {
+      await CoinBalanceModel.updateOne(
+        { user_id: userId },
+        { $inc: { balance: -value, lifetime_earned: -value } }
+      );
+      return 0;
+    }
+    throw e;
+  }
+}
 
 /**
  * Coins earned on a spend. 1 coin = 1 rupee, so a fractional coin would be a
@@ -58,15 +108,26 @@ export function coinsForBackoutRefund(opts: {
   return Math.floor(share - (share * pct) / 100);
 }
 
+/** The soonest batch to lapse, as the balance card states it. Never more than
+ * the balance itself: a balance that drifted under its own lots must not
+ * promise to lose coins it does not hold. */
+const expiryPub = (balance: number, soonest: { coins: number; at: Date } | null) => {
+  const coins = Math.min(soonest?.coins ?? 0, balance);
+  if (!soonest || coins <= 0) return { expiring_coins: 0, next_expiry_at: null };
+  return { expiring_coins: coins, next_expiry_at: soonest.at.toISOString() };
+};
+
 const balancePub = (
   doc: ICoinBalance | null,
-  rates: { pod: number; shop: number; podFeedback: number }
+  rates: { pod: number; shop: number; podFeedback: number },
+  soonest: { coins: number; at: Date } | null
 ) => ({
   balance: doc?.balance ?? 0,
   lifetime_earned: doc?.lifetime_earned ?? 0,
   earn_pct: rates.pod,
   shop_earn_pct: rates.shop,
   pod_feedback_coins: rates.podFeedback,
+  ...expiryPub(doc?.balance ?? 0, soonest),
 });
 
 const txnPub = (t: ICoinTransaction) => ({
@@ -79,6 +140,7 @@ const txnPub = (t: ICoinTransaction) => ({
   payment_id: t.payment_id ?? null,
   earn_pct: t.earn_pct ?? 0,
   spend_amount: t.spend_amount ?? 0,
+  expires_at: t.expires_at?.toISOString?.() ?? null,
   created_at: t.created_at?.toISOString?.() ?? '',
 });
 
@@ -112,6 +174,7 @@ export const coinService = {
 
     const session = opts.session;
     const userId = new Types.ObjectId(opts.userId);
+    const lot = await expiringLot(value);
     // The balance moves first so the ledger row can record the resulting
     // balance_after in one write; the row's unique payment_id is what actually
     // enforces once-only, and a loser of that race undoes its own increment
@@ -135,6 +198,7 @@ export const coinService = {
             payment_id: opts.paymentId,
             earn_pct: earnPct,
             spend_amount: opts.spendAmount,
+            ...lot,
           },
         ],
         { session }
@@ -179,38 +243,21 @@ export const coinService = {
     const value = Math.max(0, Math.floor(opts.coins));
     if (!Types.ObjectId.isValid(opts.userId) || !opts.referralId || value <= 0) return;
 
-    const userId = new Types.ObjectId(opts.userId);
-    try {
-      const balance = await CoinBalanceModel.findOneAndUpdate(
-        { user_id: userId },
-        { $inc: { balance: value, lifetime_earned: value } },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-      );
-      await CoinTransactionModel.create({
-        user_id: userId,
-        type: 'CREDIT',
-        amount: value,
-        balance_after: balance!.balance,
-        source: opts.source,
-        reason: opts.reason,
-        referral_id: opts.referralId,
-      });
-    } catch (e) {
-      if ((e as { code?: number })?.code === DUPLICATE_KEY) {
-        await CoinBalanceModel.updateOne(
-          { user_id: userId },
-          { $inc: { balance: -value, lifetime_earned: -value } }
-        );
-        return;
-      }
-      throw e;
-    }
+    await creditOnce(new Types.ObjectId(opts.userId), value, {
+      source: opts.source,
+      reason: opts.reason,
+      referral_id: opts.referralId,
+      ...(await expiringLot(value)),
+    });
   },
 
   /**
    * Convert a gift card's value into coins — the redemption of a purchased
    * card. A flat amount, like a referral: nothing was spent, so no rate
    * applies; the card's face value simply moves into the balance.
+   *
+   * These coins do NOT expire: they were paid for, not granted, and the card
+   * already carried its own validity until the moment it was redeemed.
    *
    * Idempotent per GIFT CARD, enforced by the unique (gift_card_id, source)
    * index rather than a read-then-write check, because two holders of a shared
@@ -228,33 +275,11 @@ export const coinService = {
     const value = Math.max(0, Math.floor(opts.coins));
     if (!Types.ObjectId.isValid(opts.userId) || !opts.giftCardId || value <= 0) return 0;
 
-    const userId = new Types.ObjectId(opts.userId);
-    try {
-      const balance = await CoinBalanceModel.findOneAndUpdate(
-        { user_id: userId },
-        { $inc: { balance: value, lifetime_earned: value } },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-      );
-      await CoinTransactionModel.create({
-        user_id: userId,
-        type: 'CREDIT',
-        amount: value,
-        balance_after: balance!.balance,
-        source: 'GIFT_CARD_REDEEM',
-        reason: opts.reason,
-        gift_card_id: opts.giftCardId,
-      });
-      return value;
-    } catch (e) {
-      if ((e as { code?: number })?.code === DUPLICATE_KEY) {
-        await CoinBalanceModel.updateOne(
-          { user_id: userId },
-          { $inc: { balance: -value, lifetime_earned: -value } }
-        );
-        return 0;
-      }
-      throw e;
-    }
+    return creditOnce(new Types.ObjectId(opts.userId), value, {
+      source: 'GIFT_CARD_REDEEM',
+      reason: opts.reason,
+      gift_card_id: opts.giftCardId,
+    });
   },
 
   /**
@@ -284,33 +309,12 @@ export const coinService = {
     const value = Math.max(0, Math.floor(await coinSettingsService.podFeedbackCoins()));
     if (value <= 0) return 0;
 
-    const userId = new Types.ObjectId(opts.userId);
-    try {
-      const balance = await CoinBalanceModel.findOneAndUpdate(
-        { user_id: userId },
-        { $inc: { balance: value, lifetime_earned: value } },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-      );
-      await CoinTransactionModel.create({
-        user_id: userId,
-        type: 'CREDIT',
-        amount: value,
-        balance_after: balance!.balance,
-        source: 'POD_FEEDBACK',
-        reason: opts.reason,
-        feedback_id: opts.feedbackId,
-      });
-      return value;
-    } catch (e) {
-      if ((e as { code?: number })?.code === DUPLICATE_KEY) {
-        await CoinBalanceModel.updateOne(
-          { user_id: userId },
-          { $inc: { balance: -value, lifetime_earned: -value } }
-        );
-        return 0;
-      }
-      throw e;
-    }
+    return creditOnce(new Types.ObjectId(opts.userId), value, {
+      source: 'POD_FEEDBACK',
+      reason: opts.reason,
+      feedback_id: opts.feedbackId,
+      ...(await expiringLot(value)),
+    });
   },
 
   /**
@@ -397,6 +401,9 @@ export const coinService = {
       }
       throw e;
     }
+    // Only once the row has landed: a duplicate above already drew its lots
+    // down the first time round.
+    await consumeLots(userId, value, session);
     return true;
   },
 
@@ -408,6 +415,10 @@ export const coinService = {
    * deduction off the top (`coinsRefundedForBackout`), so this only moves what
    * it is handed. Balance only — `lifetime_earned` is untouched, because
    * returning coins somebody already had is not earning them again.
+   *
+   * The coins come back as a fresh lot with a fresh expiry: they are counted
+   * from the day they were returned, not from the grant they were first spent
+   * out of.
    *
    * Idempotent on the BACKOUT, not the payment: a partial release leaves the
    * booking alive and refundable, so one payment can reach here more than once
@@ -430,6 +441,7 @@ export const coinService = {
 
     const session = opts.session;
     const userId = new Types.ObjectId(opts.userId);
+    const lot = await expiringLot(value);
     const balance = await CoinBalanceModel.findOneAndUpdate(
       { user_id: userId },
       { $inc: { balance: value } },
@@ -449,6 +461,7 @@ export const coinService = {
             backout_id: opts.backoutId,
             earn_pct: 0,
             spend_amount: 0,
+            ...lot,
           },
         ],
         { session }
@@ -515,6 +528,9 @@ export const coinService = {
       badInput(`That account holds ${held} coins — it cannot give up ${value}`);
     }
 
+    // A grant is a new lot that expires like any other reward; a deduction
+    // draws the lots down the same way a checkout does.
+    const lot = grant ? await expiringLot(value) : {};
     await CoinTransactionModel.create({
       user_id: userId,
       type: grant ? 'CREDIT' : 'DEBIT',
@@ -523,7 +539,9 @@ export const coinService = {
       source: grant ? 'ADMIN_GRANT' : 'ADMIN_DEDUCT',
       reason,
       admin_id: new Types.ObjectId(opts.adminId),
+      ...lot,
     });
+    if (!grant) await consumeLots(userId, value);
 
     return {
       balance: balance!.balance,
@@ -541,9 +559,13 @@ export const coinService = {
       shop: settings.shop_earn_pct,
       podFeedback: settings.pod_feedback_coins,
     };
-    if (!Types.ObjectId.isValid(userId)) return balancePub(null, rates);
-    const doc = await CoinBalanceModel.findOne({ user_id: new Types.ObjectId(userId) });
-    return balancePub(doc, rates);
+    if (!Types.ObjectId.isValid(userId)) return balancePub(null, rates, null);
+    const id = new Types.ObjectId(userId);
+    const [doc, soonest] = await Promise.all([
+      CoinBalanceModel.findOne({ user_id: id }),
+      nextExpiry(id),
+    ]);
+    return balancePub(doc, rates, soonest);
   },
 
   async listMyTransactions(userId: string) {

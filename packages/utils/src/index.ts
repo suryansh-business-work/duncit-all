@@ -214,6 +214,7 @@ export {
   coinsForSpend,
   type CoinCheckoutSummary,
 } from './coin-checkout';
+export { coinLedgerLabelKey, type CoinLedgerLabelKey } from './coin-ledger';
 export {
   AI_MONITOR_GRADIENT,
   AI_MONITOR_GRADIENT_CSS,

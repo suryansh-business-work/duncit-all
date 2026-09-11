@@ -10,6 +10,8 @@ export type CoinTxnType = 'CREDIT' | 'DEBIT';
  * ADMIN_GRANT / ADMIN_DEDUCT are the manual, user-specific adjustments made from
  * Finance > Duncit Coin > Settings — the only rows a human types the amount for,
  * which is why they are the only ones that record who did it.
+ * COIN_EXPIRY takes back the unspent part of a grant once its expiry date has
+ * passed. Only the expiry sweep writes it (coin.expiry.ts).
  */
 export type CoinTxnSource =
   | 'PAYMENT_EARN'
@@ -20,7 +22,8 @@ export type CoinTxnSource =
   | 'GIFT_CARD_REDEEM'
   | 'POD_FEEDBACK'
   | 'ADMIN_GRANT'
-  | 'ADMIN_DEDUCT';
+  | 'ADMIN_DEDUCT'
+  | 'COIN_EXPIRY';
 
 /**
  * Duncit Coins are a loyalty balance, NOT withdrawable money — which is exactly
@@ -70,6 +73,17 @@ export interface ICoinTransaction extends Document {
   earn_pct: number;
   /** Order total the grant was computed from, so a row is auditable on its own. */
   spend_amount: number;
+  /** When the unspent part of this grant lapses — the end of that day in the
+   * app time zone. Fixed at grant time, like `earn_pct`, so changing the setting
+   * later never shortens or stretches coins already given. Null on every debit,
+   * on gift-card coins (bought, not granted) and on grants made while expiry
+   * was switched off. */
+  expires_at: Date | null;
+  /** How much of this grant is still unspent. Carried only by rows that expire:
+   * spending draws it down soonest-expiring first, and the expiry sweep takes
+   * whatever is left. Rows written before expiry existed never carry it, which
+   * is exactly what keeps those coins from ever lapsing. */
+  remaining: number;
   created_at: Date;
 }
 
@@ -100,6 +114,7 @@ const coinTxnSchema = new Schema<ICoinTransaction>(
         'POD_FEEDBACK',
         'ADMIN_GRANT',
         'ADMIN_DEDUCT',
+        'COIN_EXPIRY',
       ],
       required: true,
     },
@@ -112,10 +127,23 @@ const coinTxnSchema = new Schema<ICoinTransaction>(
     admin_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     earn_pct: { type: Number, default: 0 },
     spend_amount: { type: Number, default: 0 },
+    expires_at: { type: Date, default: null },
+    remaining: { type: Number, default: 0, min: 0 },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: false } }
 );
 coinTxnSchema.index({ user_id: 1, created_at: -1 });
+
+// The expiry sweep reads every lapsed grant that still has coins on it; a spend
+// and the "next to expire" line read one member's live grants in expiry order.
+// Partial on a positive remainder, so spent, expired and never-expiring rows —
+// most of the ledger — sit in neither index. New indexes land via the same
+// syncIndexes() boot seed (`coinIndexes` in index.ts).
+coinTxnSchema.index({ expires_at: 1 }, { partialFilterExpression: { remaining: { $gt: 0 } } });
+coinTxnSchema.index(
+  { user_id: 1, expires_at: 1 },
+  { partialFilterExpression: { remaining: { $gt: 0 } } }
+);
 
 // The admin ledger table and the month-distribution aggregate both read the
 // whole collection ordered by time. The compound index above is prefixed on
@@ -202,6 +230,9 @@ export interface ICoinSettings extends Document {
    * than a percentage because nothing was spent — what is rewarded is the
    * answer, and every answer is worth the same. 0 turns the reward off. */
   pod_feedback_coins: number;
+  /** Days a granted coin stays spendable, counted to the end of the last day
+   * in the app time zone. 0 means granted coins never expire. */
+  coin_expiry_days: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -213,6 +244,7 @@ const coinSettingsSchema = new Schema<ICoinSettings>(
     shop_earn_pct: { type: Number, default: 10, min: 0, max: 100 },
     coins_per_referral: { type: Number, default: 50, min: 0 },
     pod_feedback_coins: { type: Number, default: 10, min: 0 },
+    coin_expiry_days: { type: Number, default: 30, min: 0 },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

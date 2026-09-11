@@ -104,6 +104,11 @@ function mongoConnectOptions(dbName: string | undefined): ConnectOptions {
     maxPoolSize: MONGO_MAX_POOL_SIZE,
     family: 4, // prefer IPv4 — avoids some Atlas SRV resolution issues
     retryWrites: true,
+    // Atlas sits ~200-250 ms from the VPS, so a list read is as much transfer as
+    // round trip: 33 pods took ~1 s longer than an empty page. zlib ships with
+    // Node (zstd/snappy would need native modules) and the driver falls back to
+    // plain frames if the server declines it.
+    compressors: ['zlib'],
     ...(dbName ? { dbName } : {}),
   };
 }

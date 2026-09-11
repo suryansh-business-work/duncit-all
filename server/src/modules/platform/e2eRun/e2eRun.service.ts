@@ -7,6 +7,7 @@ import {
   authStatus,
   completeFileUpload,
   deleteFile,
+  ensureChannelMember,
   getFileUploadUrl,
   isSlackConfigured,
   postMessage,
@@ -478,6 +479,8 @@ async function shareVideos(run: IE2eRun): Promise<string | null> {
   if (!run.slack_channel || !run.slack_ts) {
     return 'The run was not announced, so there is no message to hang the recordings under.';
   }
+  // The announcement can post without the bot in the channel; the files cannot.
+  await ensureChannelMember(run.slack_channel);
   const shared: Array<{ id: string; permalink: string }> = [];
   const batches = chunk(pending, SLACK_FILES_PER_MESSAGE);
   for (const [index, batch] of batches.entries()) {

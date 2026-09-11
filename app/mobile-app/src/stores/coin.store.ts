@@ -8,6 +8,8 @@ export type CoinBalanceData = ResultOf<typeof MobileMyCoinBalanceDocument>;
 export type CoinLedgerData = ResultOf<typeof MobileMyCoinTransactionsDocument>;
 
 export type CoinBalance = CoinBalanceData['myCoinBalance'];
+/** The Duncit Coin screen's balance — the sidebar's, plus the next coins to expire. */
+export type CoinLedgerBalance = CoinLedgerData['myCoinBalance'];
 export type CoinTransaction = CoinLedgerData['myCoinTransactions'][number];
 
 /** Coin balance alone — backs the sidebar card. */

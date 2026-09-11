@@ -2670,6 +2670,11 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       historyEmpty: 'No coin activity yet. Rewards from your payments will show up here.',
       earned: 'Earned',
       redeemed: 'Redeemed',
+      // Coin expiry. Every grant carries its own date; the balance card names
+      // the soonest batch to lapse, and each earned row says how long it lasts.
+      expired: 'Expired',
+      validTill: 'Valid till {date}',
+      nextExpiry: '{coins} coins expire on {date}',
       loadError: 'Could not load your Duncit Coins. Please try again.',
       checkoutTitle: 'Duncit Coins',
       checkoutAvailable: '{coins} coins available',

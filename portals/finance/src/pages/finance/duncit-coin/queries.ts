@@ -33,6 +33,8 @@ export interface CoinSettings {
   shop_earn_pct: number;
   coins_per_referral: number;
   pod_feedback_coins: number;
+  /** Days a granted coin stays spendable. 0 means granted coins never expire. */
+  coin_expiry_days: number;
   updated_at: string;
 }
 
@@ -179,6 +181,7 @@ export const COIN_SETTINGS = gql`
       shop_earn_pct
       coins_per_referral
       pod_feedback_coins
+      coin_expiry_days
       updated_at
     }
   }
@@ -191,6 +194,7 @@ export const UPDATE_COIN_SETTINGS = gql`
       shop_earn_pct
       coins_per_referral
       pod_feedback_coins
+      coin_expiry_days
       updated_at
     }
   }

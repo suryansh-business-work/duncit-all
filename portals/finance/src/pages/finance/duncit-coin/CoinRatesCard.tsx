@@ -1,22 +1,10 @@
-import { Controller, type Control } from 'react-hook-form';
-import {
-  Card,
-  CardContent,
-  Grid,
-  InputAdornment,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import type { Control } from 'react-hook-form';
+import { Card, CardContent, Grid, Stack, Typography } from '@mui/material';
 import type { CoinSettingsForm } from './coin-settings.schema';
 import { useTranslation } from '@duncit/app-settings';
+import CoinSettingField, { type CoinSettingFieldProps } from './CoinSettingField';
 
-interface RateField {
-  name: keyof CoinSettingsForm;
-  label: string;
-  unit: string;
-  helper: string;
-}
+type RateField = Omit<CoinSettingFieldProps, 'control'>;
 
 /** The payout rules, in the order value reaches a member: they join a pod, they
  * buy something, they bring somebody in, or they tell us how a pod went. */
@@ -83,27 +71,7 @@ export default function CoinRatesCard({ control, currencySymbol }: Readonly<Prop
                 sm: 6,
                 md: 3
               }}>
-              <Controller
-                name={f.name}
-                control={control}
-                render={({ field, fieldState }) => (
-                  <TextField
-                    {...field}
-                    label={f.label}
-                    required
-                    fullWidth
-                    size="small"
-                    inputMode="numeric"
-                    error={!!fieldState.error}
-                    helperText={fieldState.error?.message ?? f.helper}
-                    slotProps={{
-                      input: {
-                        endAdornment: <InputAdornment position="end">{f.unit}</InputAdornment>,
-                      }
-                    }}
-                  />
-                )}
-              />
+              <CoinSettingField control={control} {...f} />
             </Grid>
           ))}
         </Grid>

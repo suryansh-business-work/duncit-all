@@ -22,6 +22,8 @@ export const MY_COIN_TRANSACTIONS = gql`
       earn_pct
       shop_earn_pct
       pod_feedback_coins
+      expiring_coins
+      next_expiry_at
     }
     myCoinTransactions {
       id
@@ -32,6 +34,7 @@ export const MY_COIN_TRANSACTIONS = gql`
       reason
       spend_amount
       earn_pct
+      expires_at
       created_at
     }
   }
@@ -46,6 +49,8 @@ export interface CoinTransaction {
   reason: string;
   spend_amount: number;
   earn_pct: number;
+  /** When the unspent part of this grant lapses. Null on debits and on coins that never expire. */
+  expires_at: string | null;
   created_at: string;
 }
 
@@ -57,4 +62,8 @@ export interface CoinBalance {
   shop_earn_pct: number;
   /** Flat coins paid for rating an attended pod. 0 means the reward is off. */
   pod_feedback_coins: number;
+  /** Coins in the soonest batch due to expire. Absent on the sidebar's slimmer query. */
+  expiring_coins?: number;
+  /** When that batch lapses. Null when nothing is set to expire. */
+  next_expiry_at?: string | null;
 }

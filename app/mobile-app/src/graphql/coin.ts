@@ -23,6 +23,8 @@ export const MobileMyCoinTransactionsDocument = gql(`
       earn_pct
       shop_earn_pct
       pod_feedback_coins
+      expiring_coins
+      next_expiry_at
     }
     myCoinTransactions {
       id
@@ -33,6 +35,7 @@ export const MobileMyCoinTransactionsDocument = gql(`
       reason
       spend_amount
       earn_pct
+      expires_at
       created_at
     }
   }

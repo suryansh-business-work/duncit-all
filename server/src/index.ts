@@ -13,6 +13,7 @@ import { startAutoPodSweepScheduler } from '@modules/pods/autoPod/autoPod.recove
 import { startPodAutoCancelScheduler } from '@modules/pods/pod/pod.autoCancel';
 import { startRefundHoldReleaseScheduler } from '@modules/pods/pod/pod.refundHold';
 import { startSlotRequestExpiryScheduler } from '@modules/venues/venueSlot/venueSlot.expiry';
+import { startCoinExpiryScheduler } from '@modules/finance/coin/coin.expiry';
 import { startTelemetryCleanupScheduler } from './observability/telemetryScheduler';
 import { seedRateLimitDefaults } from '@modules/platform/rateLimit/rateLimit.seed';
 import { startRateLimitCleanupScheduler } from '@modules/platform/rateLimit/rateLimit.scheduler';
@@ -407,6 +408,10 @@ async function bootstrap() {
   // Venue slot requests: once a slot has started, an unanswered request can no
   // longer be answered — decline it so the host is told and the slot frees up.
   startSlotRequestExpiryScheduler();
+
+  // Duncit Coin expiry: take back the unspent part of every grant whose date
+  // (Finance > Duncit Coin > Settings, 30 days by default) has passed.
+  startCoinExpiryScheduler();
 
   // Telemetry retention: delete persisted logs/bugs past the admin window daily.
   startTelemetryCleanupScheduler();

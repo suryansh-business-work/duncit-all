@@ -128,12 +128,17 @@ export async function primePodPlaces(
   }
   const venues = unseen(venueIds, cache.venues);
   const locations = unseen(locationIds, cache.locations);
-  const [venueDocs, locationDocs] = await Promise.all([
+  // Priming is an optimisation, as primeMany's is: a failed read leaves the memo
+  // untouched and each row's resolver looks its place up itself, rather than
+  // failing the whole list over a field that has not been asked for yet.
+  const read = await Promise.all([
     venues.length ? VenueModel.find({ _id: { $in: venues } }).select(VENUE_PLACE_FIELDS).lean().exec() : [],
     locations.length
       ? LocationModel.find({ _id: { $in: locations } }).select(LOCATION_PLACE_FIELDS).lean().exec()
       : [],
-  ]);
+  ]).catch(() => null);
+  if (!read) return;
+  const [venueDocs, locationDocs] = read;
   const venueById = new Map(venueDocs.map((doc: any) => [String(doc._id), doc]));
   const locationById = new Map(locationDocs.map((doc: any) => [String(doc._id), doc]));
   for (const id of venues) cache.venues.set(id, Promise.resolve(venueById.get(id) ?? null));

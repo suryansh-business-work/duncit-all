@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
 import { Box, Container } from '@mui/material';
-import ScrollToTop from './components/ScrollToTop';
+import RouteScroll from './app/RouteScroll';
 import RouteMeta from './app/RouteMeta';
 import AppHeader from './components/AppHeader';
 import BottomNav from './components/BottomNav';
@@ -128,7 +128,7 @@ export default function App() {
           pb: fullBleed || isMenu ? 0 : 2,
         }}
       >
-        <ScrollToTop />
+        <RouteScroll />
         <RouteMeta />
         {/* The boundary sits ABOVE the keyed wrapper on purpose. React Router
             runs every navigation as a transition, and a transition only keeps

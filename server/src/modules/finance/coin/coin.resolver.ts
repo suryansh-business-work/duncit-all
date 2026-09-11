@@ -65,6 +65,7 @@ export const coinResolvers = {
           shop_earn_pct?: number | null;
           coins_per_referral?: number | null;
           pod_feedback_coins?: number | null;
+          coin_expiry_days?: number | null;
         };
       },
       ctx: GraphQLContext

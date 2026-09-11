@@ -148,10 +148,15 @@ const ffmpeg = (args) =>
  */
 function concat(parts, out) {
   const listFile = `${out}.parts.txt`;
+  // Absolute paths: the concat demuxer resolves a relative entry against the
+  // LIST FILE's folder, not the working directory, so a repo-relative part
+  // (`app/mobile-app/cypress-artifacts/videos/…`) was looked for under
+  // OUT_DIR and every suite with more than one spec failed to join.
   // Single quotes around each path, and any quote inside one escaped the way
   // the concat demuxer expects. A spec name is developer-controlled, but a
   // list file that cannot be parsed fails the whole join for one apostrophe.
-  const list = parts.map((p) => `file '${p.replaceAll("'", String.raw`'\''`)}'`).join('\n');
+  const escapedQuote = String.raw`'\''`;
+  const list = parts.map((p) => `file '${path.resolve(p).replaceAll("'", escapedQuote)}'`).join('\n');
   fs.writeFileSync(listFile, `${list}\n`);
   try {
     ffmpeg(['-f', 'concat', '-safe', '0', '-i', listFile, '-c', 'copy', '-movflags', '+faststart', out]);

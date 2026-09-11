@@ -80,8 +80,6 @@ ${body}
 
 | Slug | Gap |
 | --- | --- |
-| \`club-admin-host-help\` | Nothing in the server fires \`CLUB_ADMIN_HOST_HELP\`. The scenario is in the WhatsApp catalogue and neither channel has ever sent it — the "ask my club admin for help" action does not reach the server. |
-| \`club-admin-venue-help\` | Same, for \`CLUB_ADMIN_VENUE_HELP\`. |
 | \`payment-release-approved\` | Superseded by \`payout-statement\`, which is what \`paymentRelease.notifyApproval\` actually sends. Kept so an existing row is not orphaned. |
 | \`meeting-booked\`, \`meeting-scheduled\`, \`meeting-approved\`, \`meeting-rejected\` | Superseded by the sixteen per-party \`<party>-onboarding-*\` templates. Kept so existing rows and their admin edits are not orphaned. |
 `;

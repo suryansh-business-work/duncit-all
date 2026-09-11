@@ -1442,6 +1442,14 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // which pod this is about.
       support: 'Raise a support ticket',
       close: 'Close',
+      // Messages every admin of the pod's club by email and WhatsApp with the
+      // pod attached. The venue's pod sheet reads the same four outcomes.
+      askHelp: 'Ask for help',
+      askHelpSending: 'Asking…',
+      askHelpSent: 'The club admin has your request, with this pod’s details. They will reach out soon.',
+      askHelpAlready: 'You already asked about this pod today — the club admin has your request.',
+      askHelpNoAdmin: 'This pod’s club has no admin to ask yet. Raise a support ticket instead.',
+      askHelpFailed: 'The request could not be sent. Please try again.',
     },
     // Rating a pod after it happens. Each part is asked separately because a
     // guest can love the evening and still have been let down by the room —
@@ -4146,6 +4154,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       venue: 'Venue',
       spots: 'Spots',
       price: 'Price',
+      askClubAdminHelp: 'Ask the club admin for help',
     },
     venueMapPreview: {
       mapPreview: 'Map preview',

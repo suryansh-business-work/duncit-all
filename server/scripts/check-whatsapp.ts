@@ -36,16 +36,6 @@ const MIRROR = path.join(REPO, 'packages', 'communication', 'src', 'wa-events.ts
 const REGISTRY_FILE = path.join(SERVER_SRC, 'modules', 'platform', 'whatsapp', 'whatsapp.events.ts');
 const CATALOGUE_DIR = path.join(SERVER_SRC, 'services', 'email', 'catalogue');
 
-/**
- * Scenarios that deliberately have no send site.
- *
- * Both are the "ask my club admin for help" action, which does not reach the
- * server at all — the template and the catalogue row exist ahead of the
- * feature. `generate-email-doc.ts` says the same thing in the docs table; this
- * is the machine-readable half, so the gate does not fail on a known gap.
- */
-const UNWIRED = new Set(['CLUB_ADMIN_HOST_HELP', 'CLUB_ADMIN_VENUE_HELP']);
-
 const problems: string[] = [];
 const notes: string[] = [];
 const fail = (message: string) => problems.push(message);
@@ -303,17 +293,12 @@ function checkReachable(reached: Set<string>): void {
     .map((file) => fs.readFileSync(file, 'utf8'));
 
   for (const event of WA_EVENTS) {
-    if (reached.has(event.key) || UNWIRED.has(event.key)) continue;
+    if (reached.has(event.key)) continue;
     const named = bodies.some(
       (body) => body.includes(`'${event.key}'`) || body.includes(`"${event.key}"`)
     );
     if (!named) {
       fail(`scenario ${event.key} ("${event.campaign}") is named nowhere in server/src — nothing can fire it`);
-    }
-  }
-  for (const key of UNWIRED) {
-    if (!serverByKey.has(key)) {
-      fail(`UNWIRED names ${key}, which is not a scenario — drop it from this script`);
     }
   }
 }

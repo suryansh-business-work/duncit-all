@@ -19,6 +19,7 @@ import {
   podPriceLabel,
   type StudioPod,
 } from '../../components/studio-pods';
+import AskClubAdminHelp from '../../components/AskClubAdminHelp';
 import { useDateFormat } from '../../utils/dateFormat';
 import { VENUE_POD_ATTENDEES, type AttendeeProfile } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -110,6 +111,8 @@ function PodDetailBody({ pod, currencySymbol }: Readonly<BodyProps>) {
         {t('mweb.venuePods.attendees')}
       </Typography>
       <AttendeeList ids={ids} profiles={profiles} loading={loading} />
+      <Divider sx={{ my: 1.5 }} />
+      <AskClubAdminHelp podId={pod.id} side="VENUE" label={t('mweb.venuePods.askClubAdminHelp')} />
     </>
   );
 }
@@ -121,8 +124,8 @@ interface Props {
   onClose: () => void;
 }
 
-/** The pod a Venue Studio row opens on tap: its facts and who is coming.
- * Native twin (rule 27). */
+/** The pod a Venue Studio row opens on tap: its facts, who is coming, and a
+ * one-press request for the club admin's help. Native twin (rule 27). */
 export default function VenuePodDetailDialog({ pod, currencySymbol, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   return (

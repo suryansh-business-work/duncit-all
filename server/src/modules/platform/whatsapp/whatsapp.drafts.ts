@@ -145,6 +145,56 @@ export const WA_TEMPLATE_DRAFTS: Readonly<Record<string, WaTemplateDraft>> = {
       'Reason: The interview did not cover how the club would be run week to week. ' +
       'You can fill the survey again and book a fresh onboarding slot from Earn with Duncit whenever you are ready. — Team Duncit',
   },
+  /*
+   * The three Request Change offers. The fifth value differs per role, because
+   * `podChangeRequest.notify` sends what each of them needs to decide: the club
+   * to a venue and a club admin, the venue to a host.
+   */
+  VENUE_CHANGE_REQUEST_OFFER: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, a Duncit pod needs a new venue. The pod {{2}} on {{3}} at {{4}} for {{5}} is looking for a venue after its current one asked to step away. ' +
+      'Open your Venue Studio to take the slot or pass on it: {{6}} — Team Duncit',
+    sample:
+      'Hi Prakhar, a Duncit pod needs a new venue. The pod Sunday Badminton Doubles on 24 Aug 2026 at 07:00 AM for Noida Badminton Club is looking for a venue after its current one asked to step away. ' +
+      'Open your Venue Studio to take the slot or pass on it: https://mweb.duncit.com/change-requests — Team Duncit',
+  },
+  HOST_CHANGE_REQUEST_OFFER: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, a Duncit pod needs a new host. The pod {{2}} on {{3}} at {{4}}, held at {{5}}, is looking for a host after its current one asked to step away. ' +
+      'Open your Host Studio to take it on or pass: {{6}} — Team Duncit',
+    sample:
+      'Hi Meera, a Duncit pod needs a new host. The pod Sunday Badminton Doubles on 24 Aug 2026 at 07:00 AM, held at Sector 62 Sports Arena, is looking for a host after its current one asked to step away. ' +
+      'Open your Host Studio to take it on or pass: https://mweb.duncit.com/change-requests — Team Duncit',
+  },
+  CLUB_ADMIN_CHANGE_REQUEST_OFFER: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, a Duncit pod needs a new club admin. The pod {{2}} on {{3}} at {{4}} in {{5}} is looking for a club admin after its current one asked to step away. ' +
+      'Open your Club Studio to take it on or pass: {{6}} — Team Duncit',
+    sample:
+      'Hi Rohit, a Duncit pod needs a new club admin. The pod Sunday Badminton Doubles on 24 Aug 2026 at 07:00 AM in Noida Badminton Club is looking for a club admin after its current one asked to step away. ' +
+      'Open your Club Studio to take it on or pass: https://mweb.duncit.com/change-requests — Team Duncit',
+  },
+  /*
+   * Sent when a support agent first opens the ticket — the "seen" moment, which
+   * is what the campaign is named for. There was never a template behind it; the
+   * nearest one, `support_update`, takes four values to this scenario's three.
+   */
+  SUPPORT_TICKET_UPDATED: {
+    category: 'UTILITY',
+    language: 'English',
+    body:
+      'Hi {{1}}, our support team has opened your ticket {{2}} about {{3}} and is working on it. ' +
+      'We will reply in the ticket as soon as we can. — Team Duncit',
+    sample:
+      'Hi Meera, our support team has opened your ticket ST-4F2A9C about Refund not received for my pod booking and is working on it. ' +
+      'We will reply in the ticket as soon as we can. — Team Duncit',
+  },
 };
 
 /** Highest `{{n}}` in a body — what the registry's param count has to equal. */

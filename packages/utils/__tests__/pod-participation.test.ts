@@ -608,9 +608,21 @@ describe('podParticipationActions', () => {
     expect(podParticipationActions(input({ cancelledBy: 'HOST' })).canBackout).toBe(false);
   });
 
-  it('labels the booking Visited once the pod has happened and Joined while it is ahead', () => {
-    expect(podParticipationActions(input({ podDateTime: PAST })).joinedLabelKind).toBe('VISITED');
+  it('labels the booking Visited once they were checked in at a pod that happened, Joined while it is ahead', () => {
+    expect(podParticipationActions(input({ podDateTime: PAST, attended: true })).joinedLabelKind).toBe(
+      'VISITED',
+    );
     expect(podParticipationActions(input()).joinedLabelKind).toBe('JOINED');
+  });
+
+  // The chip sits above the timeline: "Visited" over "Attendance Not Recorded"
+  // (or "Pod Not Attended") told the reader two different things.
+  it('never calls a booking Visited when nobody checked them in', () => {
+    expect(podParticipationActions(input({ podDateTime: PAST })).joinedLabelKind).toBe('JOINED');
+    expect(
+      podParticipationActions(input({ podDateTime: PAST, attended: false, attendanceRecorded: true }))
+        .joinedLabelKind,
+    ).toBe('JOINED');
   });
 
   // Nobody visited a pod that never happened, however old its date is.
@@ -723,7 +735,10 @@ describe('podParticipationActions', () => {
   });
 
   it('reads the real clock when no now is injected', () => {
-    const { now: _omitted, ...noClock } = input({ podDateTime: '2000-01-01T00:00:00.000Z' });
+    const { now: _omitted, ...noClock } = input({
+      podDateTime: '2000-01-01T00:00:00.000Z',
+      attended: true,
+    });
     const actions = podParticipationActions(noClock);
     expect(actions.canBackout).toBe(false);
     expect(actions.joinedLabelKind).toBe('VISITED');

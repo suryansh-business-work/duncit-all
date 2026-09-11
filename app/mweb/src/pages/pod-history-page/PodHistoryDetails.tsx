@@ -95,8 +95,8 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
   // Rejoin is offered only for a backed-out booking whose pod has not started
   // and is not deleted — the free, no-payment path back in.
   const canRejoin = item.status === 'BACKED_OUT' && !isDeleted && !!pod?.id && !podPast;
-  // "Visited" once the pod has happened — "Joined" is a promise about something
-  // still ahead. Resolved once here so the chip stays branch-free.
+  // "Visited" once they were checked in at a pod that has happened — never on
+  // the clock alone. Resolved once here so the chip stays branch-free.
   const visited = gate.joinedLabelKind === 'VISITED' && item.status === 'JOINED';
   const statusLabel = visited
     ? t('mweb.podHistory.statusVisited')

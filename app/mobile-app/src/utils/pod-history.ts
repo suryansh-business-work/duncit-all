@@ -168,8 +168,8 @@ export function dedupeByPod(items: PodMembership[]): PodMembership[] {
  *
  * The rules live in @duncit/utils so this screen and mWeb's cannot drift: a pod
  * that has already happened has nothing left to back out of, a booking nobody
- * asked a refund for has no refund state to report, and after the date the word
- * is Visited rather than Joined.
+ * asked a refund for has no refund state to report, and the word is Visited
+ * rather than Joined only once they were checked in at a pod that happened.
  */
 export function podHistoryGate(item: PodMembership) {
   return podParticipationActions(

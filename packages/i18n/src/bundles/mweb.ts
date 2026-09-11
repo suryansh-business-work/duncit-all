@@ -1337,8 +1337,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       sortDateOldest: 'Date · Oldest first',
       sortPriceLowHigh: 'Price · Low to High',
       sortPriceHighLow: 'Price · High to Low',
-      // The booking's own state. "Visited" replaces "Joined" once the pod has
-      // happened — Joined is a promise about something still ahead.
+      // The booking's own state. "Visited" replaces "Joined" once they were
+      // checked in at a pod that has happened — never on the clock alone.
       statusJoined: 'Joined',
       statusVisited: 'Visited',
       statusBackoutInProcess: 'Backout in process',

@@ -422,7 +422,7 @@ export function podParticipationActions(input: PodParticipationInput): {
   coinsRefunded: number;
   /** What to show when a refund IS in play — never the booking's stale copy. */
   refundStatus: PodRefundStatus;
-  /** "Visited" once the pod has happened; "Joined" while it is still ahead. */
+  /** "Visited" once the pod has happened AND they were checked in; "Joined" otherwise. */
   joinedLabelKind: 'JOINED' | 'VISITED';
 } {
   const now = input.now ?? new Date();
@@ -440,7 +440,10 @@ export function podParticipationActions(input: PodParticipationInput): {
     // says when nobody ever asked for one, which is most of them.
     showRefundState: refundStatus !== 'NONE',
     refundStatus,
-    joinedLabelKind: podPast && !cancelled ? 'VISITED' : 'JOINED',
+    // A claim about the door, not the clock: the timeline under the same row
+    // says "Attendance Not Recorded" for anybody never checked in, and a
+    // Visited chip above it contradicted the only record there is.
+    joinedLabelKind: podPast && !cancelled && Boolean(input.attended) ? 'VISITED' : 'JOINED',
   };
 }
 

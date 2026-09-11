@@ -11,8 +11,9 @@ const COLUMNS = ['', 'Attendee', 'Seats', 'Contact', 'Status', 'Source', 'Joined
 /**
  * What to call this person's booking.
  *
- * "Visited" once the pod has happened, from the same rule mWeb and the app use
- * — an admin reading a complaint should see the word the member is quoting.
+ * "Visited" once they were checked in at a pod that has happened, from the same
+ * rule mWeb and the app use — an admin reading a complaint should see the word
+ * the member is quoting, and the timeline under the row must not contradict it.
  */
 function statusLabel(row: AdminPodAttendeeRow, podDateTime?: string | null): string {
   if (row.status === 'BACKOUT_IN_PROCESS') return 'Backout in process';

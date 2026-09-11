@@ -84,9 +84,12 @@ export const apolloClient = new ApolloClient({
       // result with other User-returning queries and warns about possible data
       // loss (Apollo error #15). Normalising on user_id fixes the merge.
       User: { keyFields: ['user_id'] },
-      // Branding is a single un-id'd config object; without a merge policy Apollo
-      // warns about possible data loss when two queries return different Branding
-      // shapes. Replace the whole field on each fetch (no normalization needed).
+      // Branding is a single un-id'd config object, so every query selecting it
+      // writes the same ROOT_QUERY field. The header, favicon, font loader and
+      // logo each ask for different fields; replacing the whole object on each
+      // fetch wiped the others', and their cache-first readers went back to the
+      // network on every mount. Merge the selections instead (see the policy
+      // below), as PodMembershipState does.
       Branding: { keyFields: false },
       // PodMembershipState carries no `id`, so Apollo cannot normalize it:
       // every query selecting it writes the SAME ROOT_QUERY field, keyed by
@@ -98,7 +101,7 @@ export const apolloClient = new ApolloClient({
       PodMembershipState: { keyFields: false },
       Query: {
         fields: {
-          branding: { merge: (_existing, incoming) => incoming },
+          branding: { merge: true },
           podMembershipState: { merge: true },
         },
       },

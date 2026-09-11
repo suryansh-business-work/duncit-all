@@ -31,7 +31,7 @@ export default function HomeStatusTile({
   const showSeenRing = !add && !active;
   const ring = STORY_RING_GRADIENT;
   const imageOrAvatar = imageUrl ? (
-    <Box component="img" src={imageUrl} alt={label} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+    <Box component="img" src={imageUrl} alt={label} loading="lazy" decoding="async" sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
   ) : (
     <Avatar sx={{ width: '100%', height: '100%', bgcolor: 'primary.main', fontWeight: 700 }}>
       {initials || label.slice(0, 1).toUpperCase()}

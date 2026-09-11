@@ -104,7 +104,6 @@ export default function PodCard({
             fontWeight: 600,
             color: 'common.white',
             bgcolor: 'rgba(9,7,18,0.62)',
-            backdropFilter: 'blur(6px)',
           }}
         />
       )}
@@ -124,7 +123,6 @@ export default function PodCard({
             right: 6,
             color: saved ? 'primary.main' : 'common.white',
             bgcolor: 'rgba(9,7,18,0.35)',
-            backdropFilter: 'blur(6px)',
             '&:hover': { bgcolor: 'rgba(9,7,18,0.5)' },
             // Disabled only while the toggle is in flight — keep it legible on
             // the image instead of MUI's grey-on-dark.
@@ -136,7 +134,9 @@ export default function PodCard({
       )}
 
       {/* The mock's white info box, kept translucent so the image reads through;
-       * dark mode swaps to a translucent surface tone. */}
+       * dark mode swaps to a translucent surface tone. No backdrop blur, as on
+       * native: three blurred layers per card, on a feed of hundreds, made every
+       * scroll frame re-blur the image under each one. */}
       <Stack
         spacing={0.4}
         sx={{
@@ -147,8 +147,7 @@ export default function PodCard({
           p: 1.25,
           borderRadius: '14px',
           bgcolor: (theme) =>
-            alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.78 : 0.8),
-          backdropFilter: 'blur(10px)',
+            alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.88 : 0.9),
           border: '1px solid',
           borderColor: (theme) =>
             theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.65)',

@@ -1,7 +1,6 @@
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { GoogleLogin } from '@react-oauth/google';
-import { getGoogleClientId } from '../config/runtimeConfig';
+import { GoogleLogin, useGoogleOAuth } from '@react-oauth/google';
 
 interface Props {
   onCredential: (idToken: string) => void;
@@ -22,7 +21,10 @@ interface Props {
  * it can sit beside other controls in a row and wrap instead of overflowing.
  */
 export default function GoogleSignInButton({ onCredential, loading, text = 'signin_with' }: Readonly<Props>) {
-  const clientId = getGoogleClientId();
+  // From the provider, not the module config: the server's id can land after
+  // this renders (first paint no longer waits for it), and reading it here is
+  // what re-renders the button when it does.
+  const { clientId } = useGoogleOAuth();
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 

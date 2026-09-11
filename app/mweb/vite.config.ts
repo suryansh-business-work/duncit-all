@@ -23,9 +23,15 @@ import pkg from './package.json' with { type: 'json' };
 // rolldown emits them as their own `rolldown-runtime-*.js` that imports nothing.
 // `verify-chunk-graph`, chained into `build`, is what proves that: re-run it after
 // touching a group, because a cycle here is invisible until the page loads.
+//
+// `@mui/icons-material` is deliberately NOT in the `mui` group. A group takes every
+// module its `test` matches, reachable statically or not, so the full icon set that
+// `superCategoryIcon` lazy-loads (~10.7k modules) would ride in a boot chunk again.
+// Left ungrouped, the icons the app imports by path stay with their importers and
+// the rest only load with that one dynamic import.
 const VENDOR_GROUPS = [
   { name: 'duncit', test: /\/packages\/[^/]+\/src\// },
-  { name: 'mui', test: /node_modules\/(@mui|@emotion)\// },
+  { name: 'mui', test: /node_modules\/(@mui\/(?!icons-material\/)|@emotion\/)/ },
   { name: 'apollo', test: /node_modules\/(@apollo|graphql)\// },
   { name: 'quill', test: /node_modules\/(react-)?quill/ },
   { name: 'slick', test: /node_modules\/(react-slick|slick-carousel)\// },

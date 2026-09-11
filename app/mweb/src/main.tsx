@@ -1,7 +1,7 @@
 // Self-hosted Quicksand (variable weight axis) — replaces the Google Fonts
 // <link> in index.html; same font, served from our own origin.
 import '@fontsource-variable/quicksand/wght.css';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { gql } from '@apollo/client';
 import { ApolloProvider } from '@apollo/client/react';
@@ -110,8 +110,8 @@ configureLogs(
 );
 
 // Read the short-link click id BEFORE anything else runs. RequireAuth rewrites
-// the URL to /login?redirect=… for signed-out visitors, and mounting waits up to
-// 3s on config below — by then the parameter is gone from location.search.
+// the URL to /login?redirect=… for signed-out visitors — by then the parameter
+// is gone from location.search.
 captureShortLinkClick(globalThis.window.location.search);
 // …then send the visitor to sign in, because a short link is measured by the
 // account it produces. Runs AFTER the capture so the click id is already on
@@ -135,6 +135,37 @@ function LocalizedPortalModeGate(props: Readonly<Omit<PortalModeGateProps, 't'>>
   return <PortalModeGate {...props} t={t} />;
 }
 
+// Pull the public client config for the Tech-portal Google client id + Maps key.
+// A failure keeps the build-time values (see runtimeConfig).
+const configReady = apolloClient
+  .query<any>({ query: PUBLIC_CLIENT_CONFIG, fetchPolicy: 'network-only' })
+  .then(({ data }) => {
+    const c = data?.publicClientConfig;
+    if (c) setRuntimeConfig({ googleClientId: c.google_client_id, googleMapsApiKey: c.google_maps_api_key });
+  })
+  .catch(() => undefined);
+
+/**
+ * Google sign-in with the client id the public config carries. First paint used
+ * to wait on that round trip — the whole mount was held behind it, for up to 3s
+ * on a slow network — only so this provider started with the right id. It now
+ * starts with the build-time one, and GoogleLogin re-initialises (its effect
+ * keys on clientId) the moment the server's lands.
+ */
+function RuntimeGoogleOAuthProvider({ children }: Readonly<{ children: React.ReactNode }>) {
+  const [clientId, setClientId] = useState(getGoogleClientId);
+  useEffect(() => {
+    let live = true;
+    configReady.then(() => {
+      if (live) setClientId(getGoogleClientId());
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+  return <GoogleOAuthProvider clientId={clientId}>{children}</GoogleOAuthProvider>;
+}
+
 function mount() {
   // A top-level ErrorBoundary wraps the WHOLE provider tree (not just the routes)
   // so a boot-time throw from a provider / gate / failing query shows the
@@ -148,12 +179,12 @@ function mount() {
             <ColorModeProvider>
               <StudioModeProvider>
                 <DuncitLocalizationProvider timeZoneAware>
-                  <GoogleOAuthProvider clientId={getGoogleClientId()}>
+                  <RuntimeGoogleOAuthProvider>
                     {/* The v7_* opt-ins are gone: react-router 7 IS that behaviour. */}
                     <BrowserRouter>
                       <LocalizedPortalModeGate portalKey="mweb" graphqlUrl={urlConfigs.graphqlUrl} appName="Duncit"><App /></LocalizedPortalModeGate>
                     </BrowserRouter>
-                  </GoogleOAuthProvider>
+                  </RuntimeGoogleOAuthProvider>
                 </DuncitLocalizationProvider>
               </StudioModeProvider>
             </ColorModeProvider>
@@ -165,15 +196,4 @@ function mount() {
   );
 }
 
-// Pull the public client config before first render so GoogleOAuthProvider gets
-// the Tech-portal client id. Render regardless on failure (env fallback applies)
-// — and never block first paint on a hung/slow API: cap the wait at 3s.
-const configReady = apolloClient
-  .query<any>({ query: PUBLIC_CLIENT_CONFIG, fetchPolicy: 'network-only' })
-  .then(({ data }) => {
-    const c = data?.publicClientConfig;
-    if (c) setRuntimeConfig({ googleClientId: c.google_client_id, googleMapsApiKey: c.google_maps_api_key });
-  })
-  .catch(() => undefined);
-
-Promise.race([configReady, new Promise((resolve) => setTimeout(resolve, 3000))]).finally(mount);
+mount();

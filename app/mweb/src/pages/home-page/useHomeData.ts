@@ -94,6 +94,16 @@ export function useHomeData({
   dateFilter,
   sortBy,
 }: UseHomeDataParams) {
+  const header = useQuery<any>(HEADER_DATA, { fetchPolicy: 'cache-first' });
+  const headerData = header.data;
+  // The header picks the city on its first answer, and that pick re-keys the
+  // whole page (App.tsx). Asking before it ran the live feed once with NO
+  // location — every active pod in every city, the heaviest read there is — only
+  // for the remount to throw the answer away and ask again. Wait for the pick,
+  // unless the header answered with no city to pick or failed outright.
+  const awaitingPlace =
+    !locationId && !header.error && (headerData?.locations?.length ?? 1) > 0;
+
   // The catalogue half: cacheable server-side, and unaffected by the location
   // filters, so it is fetched once and reused as the user moves around.
   const {
@@ -117,6 +127,7 @@ export function useHomeData({
       },
     },
     fetchPolicy: 'cache-and-network',
+    skip: awaitingPlace,
   });
 
   // Merged back into the single object every derivation below already reads, so
@@ -127,7 +138,7 @@ export function useHomeData({
     return { ...staticData, ...liveData };
   }, [staticData, liveData]);
 
-  const loading = staticLoading || liveLoading;
+  const loading = staticLoading || liveLoading || awaitingPlace;
   const error = liveError ?? staticError;
 
   const refetch = useCallback(
@@ -146,7 +157,6 @@ export function useHomeData({
     return () => globalThis.removeEventListener(HOME_REFRESH_EVENT, onRefresh);
   }, [refetch]);
 
-  const { data: headerData } = useQuery<any>(HEADER_DATA, { fetchPolicy: 'cache-first' });
   const isHost = (headerData?.me?.roles ?? []).includes('HOST');
   const { ids: followedClubIds } = useFollowedClubs();
   const followingUserIds: string[] = headerData?.me?.following_user_ids ?? [];

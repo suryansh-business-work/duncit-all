@@ -1,6 +1,7 @@
 import { useAppPopupStore } from '@/stores/app-popup.store';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCoinBalanceStore, useCoinLedgerStore } from '@/stores/coin.store';
+import { resetNotifications } from '@/stores/notifications.store';
 
 /**
  * Ending a session, as a plain function — the RN twin of mWeb's
@@ -28,6 +29,9 @@ export async function endSession(): Promise<void> {
   // Which popups somebody has already closed is per-account, so the cached
   // answer must not decide what the NEXT user who signs in on this phone sees.
   useAppPopupStore.getState().reset();
+  // The notifications feed is app-wide now (one poll for every tab's bell), so
+  // it outlives the headers that read it and must be dropped with the account.
+  resetNotifications();
 }
 
 /**

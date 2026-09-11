@@ -16,6 +16,8 @@ const SLACK_API = 'https://slack.com/api';
  *
  *   conversations.list    channels:read     list public channels
  *                         groups:read       list private channels
+ *   conversations.info    channels:read     is the bot in this channel?
+ *                         groups:read
  *   team.info             team:read         workspace domain, for archive links
  *   chat.postMessage      chat:write        post messages + in-app feedback
  *   conversations.history channels:history  read a public channel's messages
@@ -38,6 +40,7 @@ const SLACK_API = 'https://slack.com/api';
  */
 const REQUIRED_SCOPES = new Map<string, string[]>([
   ['conversations.list', ['channels:read', 'groups:read']],
+  ['conversations.info', ['channels:read', 'groups:read']],
   ['team.info', ['team:read']],
   ['chat.postMessage', ['chat:write']],
   ['conversations.history', ['channels:history', 'groups:history']],
@@ -492,6 +495,21 @@ export async function deleteFile(fileId: string): Promise<void> {
 export async function joinChannel(channel: string): Promise<SlackChannel> {
   const data = await slackPost('conversations.join', { channel });
   return toChannel(data.channel ?? { id: channel });
+}
+
+/**
+ * Make the bot a member of `channel` before it shares files there.
+ *
+ * chat.postMessage reaches a public channel the bot never joined (the
+ * `chat:write.public` scope), but files.completeUploadExternal refuses anyone
+ * outside it with `not_in_channel` — so a message lands and every file meant
+ * for its thread is rejected. A bot already inside costs one
+ * conversations.info; only one outside needs `channels:join`.
+ */
+export async function ensureChannelMember(channel: string): Promise<void> {
+  const data = await slackGet('conversations.info', { channel });
+  if (data.channel?.is_member) return;
+  await joinChannel(channel);
 }
 
 /** Why each scope is needed, in the words of what breaks without it. */

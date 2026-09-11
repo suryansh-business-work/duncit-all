@@ -118,8 +118,17 @@ describe('PromptLibraryView with rows', () => {
     // way out must hit the cleared-row guard, not fire the mutation again.
     if (confirm.isConnected) fireEvent.click(confirm);
     await settle();
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Reset' })).toBeNull());
 
-    expect(screen.queryByRole('alert')).toBeNull();
+    // No error surfaced: a second mutation would have hit the spent mock and
+    // shown one. Only the ERROR alert counts — the page's standing "Public GET
+    // API" notice is an Alert too, and a bare role query only missed it while
+    // the closing dialog still had the page aria-hidden, a race a slow CI runner
+    // lost.
+    const errors = screen
+      .queryAllByRole('alert')
+      .filter((alert) => alert.classList.contains('MuiAlert-colorError'));
+    expect(errors).toEqual([]);
   });
 
   it('a refused reset surfaces the API error, which the operator can dismiss', async () => {

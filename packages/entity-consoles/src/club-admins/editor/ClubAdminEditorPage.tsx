@@ -12,12 +12,15 @@ import AccountPicker from '../../shared/AccountPicker';
 import EditorPageShell from '../../shared/EditorPageShell';
 import StatusFields from '../../shared/StatusFields';
 import useMediaPicker from '../../shared/useMediaPicker';
+import { useRecordParentPath } from '../../shared/recordPaths';
 import { useClubAdminEditor } from './useClubAdminEditor';
 import AssignClubsField from './AssignClubsField';
 import { clubAdminStatusOptions } from './statusOptions';
 
 /**
- * `/club-admins/new` and `/club-admins/:clubAdminId/edit`.
+ * `/club-admins/new` and `/club-admins/:clubAdminId/edit` — and, in the clubs
+ * console, `/clubs/:clubId/club-admins/:clubAdminId/edit`, which is why Back is
+ * resolved from the path rather than written out.
  *
  * Short enough to hold its three sections inline rather than in a folder: who
  * they are, the clubs they run, and the decision. The frame, the account picker
@@ -34,7 +37,7 @@ export default function ClubAdminEditorPage() {
   const editor = useClubAdminEditor(clubAdminId);
   const { form, admin, isEdit, canGovern, busy, saveError, submit } = editor;
 
-  const backTo = isEdit && clubAdminId ? `/club-admins/${clubAdminId}` : '/club-admins';
+  const backTo = useRecordParentPath();
   const title = isEdit
     ? admin?.full_name || t('directory.clubAdminEditor.editTitle')
     : t('directory.clubAdminEditor.newTitle');

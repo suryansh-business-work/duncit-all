@@ -33,6 +33,9 @@ const CLUB_ADMIN_TABLE_CONFIG: TableEntityConfig = {
     commission_pct: { type: 'number' },
     joined_at: { type: 'date' },
     created_at: { type: 'date' },
+    // `Club.admin_user_ids` holds ACCOUNT ids, so a club finds its admins'
+    // records with `user_id in [...]`.
+    user_id: { type: 'string' },
   },
   defaultSort: { created_at: -1 },
 };

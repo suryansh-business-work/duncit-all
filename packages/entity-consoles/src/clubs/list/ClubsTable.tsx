@@ -14,6 +14,7 @@ import {
   type TableFilterValue,
 } from '@duncit/table';
 import type { ClubRow } from './queries';
+import { clubTabPath } from '../records/clubTabPath';
 import { useTranslation } from '@duncit/shell';
 
 /** The translator every cell in this file is handed. */
@@ -108,7 +109,7 @@ export default function ClubsTable({
       c.category_id ? <Chip size="small" label={catName(c.category_id)} /> : '—';
     const renderViewPods = (c: ClubRow) => (
       <Tooltip title={t('admin.clubs.viewPods')}>
-        <DuncitIconButton size="small" component={RouterLink} to={`/pods?club_id=${c.id}`}>
+        <DuncitIconButton size="small" component={RouterLink} to={clubTabPath(c.id, 'pods')}>
           <EventIcon fontSize="small" />
         </DuncitIconButton>
       </Tooltip>

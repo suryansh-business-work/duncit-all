@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
 import { useConsoleAccess } from '../../shared/useConsoleAccess';
+import { savedRecordPath, useRecordParentPath } from '../../shared/recordPaths';
 import {
   ADMIN_CREATE_HOST,
   ADMIN_UPDATE_HOST,
@@ -36,6 +37,7 @@ export function useHostEditor(hostId: string) {
   const { t } = useTranslation();
   const { canGovern } = useConsoleAccess();
   const navigate = useNavigate();
+  const parentPath = useRecordParentPath();
   const isEdit = !!hostId;
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -122,7 +124,7 @@ export function useHostEditor(hostId: string) {
           }
         }
         notifySuccess(isEdit ? t('directory.hostEditor.saved') : t('directory.hostEditor.created'));
-        navigate(`/hosts/${id}`);
+        navigate(savedRecordPath(parentPath, isEdit, id));
       } catch (err) {
         setSaveError(err instanceof Error ? err.message : String(err));
       } finally {
@@ -135,6 +137,7 @@ export function useHostEditor(hostId: string) {
       host?.is_active,
       isEdit,
       navigate,
+      parentPath,
       setActive,
       setDeductions,
       t,

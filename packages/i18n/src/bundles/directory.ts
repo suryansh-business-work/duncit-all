@@ -39,6 +39,17 @@ export const DIRECTORY_BUNDLE: NestedCatalogue = {
       title: 'Clubs',
       subtitle: 'Every club on Duncit — its admins, its pods, its media and its content.',
       dashboardTitle: 'Clubs at a glance',
+      // The club's own record: its hosts and pods as tables, each row opening
+      // the record it lists, editable from there without leaving the club.
+      tabHosts: 'Hosts',
+      hostsTitle: 'Hosts of this club',
+      hostsSubtitle: 'Everyone who hosts for this club. Open a host to see or edit their record.',
+      hostsEmpty: 'No hosts in this club yet.',
+      podsTitle: 'Pods in this club',
+      podsSubtitle: 'Every pod this club runs. Open a pod to see or edit it.',
+      podsEmpty: 'No pods in this club yet.',
+      backToClub: 'Back to club',
+      backToPod: 'Back to pod',
     },
     clubAdmins: {
       title: 'Club Admins',

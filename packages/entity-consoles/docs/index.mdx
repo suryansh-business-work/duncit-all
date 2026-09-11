@@ -38,6 +38,10 @@ exports:
   - 'ClubAdminsPage'
   - 'ClubAdminDetailsPage'
   - 'ClubAdminEditorPage'
+  - 'HostInClubPage'
+  - 'ClubAdminInClubPage'
+  - 'PodInClubPage'
+  - 'PodEditorInClubPage'
   - 'ConsoleListPage'
   - 'useConsoleAccess'
   - 'Fact'
@@ -266,3 +270,48 @@ Three things about it are not obvious from the schema:
   that answer, so the form holds the set it is about to assign and the save
   writes it through `assignClubAdminClubs`. Assigning is an EDIT, not
   governance — it is which clubs somebody runs, not whether they may run any.
+
+## A club's hosts, admins and pods, inside the club
+
+`clubs.duncit.com/clubs/:id` lists the club's **hosts** and **pods** as tables
+(Hosts and Pods tabs) and each **admin's name** on the overview as a link. Every
+one opens the record's full page — the hosts, club-admins and pods consoles' OWN
+pages, not copies — editable from there without leaving the club:
+
+```tsx
+import {
+  ClubAdminEditorPage,
+  ClubAdminInClubPage,
+  HostEditorPage,
+  HostInClubPage,
+  PodEditorInClubPage,
+  PodInClubPage,
+} from '@duncit/entity-consoles';
+
+<Route path="/clubs/:clubId/hosts/:hostId" element={authed(<HostInClubPage />)} />
+<Route path="/clubs/:clubId/hosts/:hostId/edit" element={authed(<HostEditorPage />)} />
+<Route path="/clubs/:clubId/club-admins/:clubAdminId" element={authed(<ClubAdminInClubPage />)} />
+<Route path="/clubs/:clubId/club-admins/:clubAdminId/edit" element={authed(<ClubAdminEditorPage />)} />
+<Route path="/pods/:id" element={authed(<PodInClubPage />)} />
+<Route path="/pods/:id/edit" element={authed(<PodEditorInClubPage />)} />
+```
+
+Two shapes, on purpose:
+
+- **Hosts and admins live UNDER the club.** Either can belong to several clubs,
+  so Back has to know which one the reader came from — the URL carries it. The
+  record pages resolve their own Edit and Save links from the path they are on
+  (`useRecordEditPath` / `useRecordParentPath`), which is what lets one page live
+  at `/hosts/:hostId` AND `/clubs/:clubId/hosts/:hostId`.
+- **Pods stay at `/pods/:id`.** A pod has exactly one club, so Back is that club
+  whichever way the reader came in — and a host's own Pods tab links there too.
+
+The club's hosts are `hostsTable` scoped with `user_id in [...]` over the ids
+`Club.hosts` resolves, and its admins' records are `clubAdminProfilesTable`
+scoped the same way over `admin_user_ids` — `user_id` is on both allowlists for
+exactly this. An `in` filter with no values is DROPPED by the table engine (it
+would list every host), so a club with nobody to list never asks.
+
+The tables are `EntityRecordsTab`, the frame `EntityPodsTab` is now a thin layer
+over; a club's pods and a venue's pods share one query and one column set
+(`shared/recordPods`).

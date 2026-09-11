@@ -7,6 +7,7 @@ import { BackHeader, QueryGuard } from '@duncit/ui';
 import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import { useTranslation } from '@duncit/shell';
 import ChangeLogsSection from '../../shared/change-logs';
+import { useRecordEditPath } from '../../shared/recordPaths';
 import { clubAdminStatusLabels } from '../list/clubAdminColumns';
 import { CLUB_ADMIN_DETAIL, type ClubAdminDetail } from '../queries';
 import ClubAdminOverviewTab from './ClubAdminOverviewTab';
@@ -20,9 +21,14 @@ const tabItems = (t: Translate): DuncitTabItem<ClubAdminTab>[] => [
   { value: 'changeLogs', label: t('directory.changeLogs.tab') },
 ];
 
-export default function ClubAdminDetailsPage() {
+/** Where Back goes: the club admins list, or — when the clubs console opens one
+ * of a club's admins — that club. */
+export default function ClubAdminDetailsPage({
+  backTo = '/club-admins',
+}: Readonly<{ backTo?: string }>) {
   const { t } = useTranslation();
   const { clubAdminId = '' } = useParams<{ clubAdminId: string }>();
+  const editPath = useRecordEditPath();
   const tabs = useTabParam<ClubAdminTab>({ items: tabItems(t), fallback: 'overview' });
   const { data, loading, error } = useQuery<{ clubAdminProfile: ClubAdminDetail | null }>(
     CLUB_ADMIN_DETAIL,
@@ -49,7 +55,7 @@ export default function ClubAdminDetailsPage() {
         admin && (
           <Stack spacing={2.5}>
             <BackHeader
-              backTo="/club-admins"
+              backTo={backTo}
               backAriaLabel={t('directory.venueEditor.backAria')}
               backSx={{ bgcolor: 'action.hover' }}
               eyebrow={t('directory.clubAdmins.eyebrow')}
@@ -59,7 +65,7 @@ export default function ClubAdminDetailsPage() {
               actions={
                 <DuncitButton
                   component={RouterLink}
-                  to={`/club-admins/${admin.id}/edit`}
+                  to={editPath}
                   variant="contained"
                   startIcon={<EditIcon />}
                 >

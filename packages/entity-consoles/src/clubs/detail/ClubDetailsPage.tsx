@@ -3,48 +3,52 @@ import { useNavigate, useParams } from 'react-router';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import VerifiedIcon from '@mui/icons-material/Verified';
-import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { DuncitButton } from '@duncit/buttons';
 import { BackButton, QueryGuard } from '@duncit/ui';
 import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import { CLUB_DETAIL } from './queries';
-import ClubOverviewCard from './ClubOverviewCard';
-import ClubContentSections from './ClubContentSections';
-import ClubPodsCard from './ClubPodsCard';
-import ClubAdminsCard from './ClubAdminsCard';
-import MediaGallery from '../../shared/MediaGallery';
+import ClubOverviewTab from './ClubOverviewTab';
+import ClubHostsTab from './ClubHostsTab';
+import ClubPodsTab from './ClubPodsTab';
 import ChangeLogsSection from '../../shared/change-logs';
-import type { ClubDetail, ClubPodRow } from './types';
+import type { ClubDetail } from './types';
 import { useTranslation } from '@duncit/shell';
 
 /**
- * The record and its history, behind a tab strip.
+ * The record, the people and pods it runs, and its history, behind a tab strip.
  *
- * A club has no application to review, so its detail page never had tabs — but it
- * needs the same change log every other console record carries, and hanging that
- * table off the bottom of a two-column layout would bury it.
+ * A club's hosts and pods are tables that open each record — editable from
+ * there without leaving the club — rather than a list to read. The change log
+ * sits on its own tab because hanging that table off the bottom of a
+ * two-column layout would bury it.
  */
-type ClubTab = 'overview' | 'changeLogs';
+export type ClubTab = 'overview' | 'hosts' | 'pods' | 'changeLogs';
 type Translate = ReturnType<typeof useTranslation>['t'];
 
 const clubTabs = (t: Translate): DuncitTabItem<ClubTab>[] => [
   { value: 'overview', label: t('directory.hostEditor.tabOverview') },
+  { value: 'hosts', label: t('directory.clubs.tabHosts') },
+  { value: 'pods', label: t('directory.hostEditor.tabPods') },
   { value: 'changeLogs', label: t('directory.changeLogs.tab') },
 ];
+
+interface ClubDetailData {
+  club: ClubDetail | null;
+  podCount: { total: number };
+}
 
 export default function ClubDetailsPage() {
   const { t } = useTranslation();
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const tabs = useTabParam<ClubTab>({ items: clubTabs(t), fallback: 'overview' });
-  const { data, loading, error } = useQuery<any>(CLUB_DETAIL, {
-    variables: { id },
+  const { data, loading, error } = useQuery<ClubDetailData>(CLUB_DETAIL, {
+    variables: { id, clubKey: id },
     skip: !id,
     fetchPolicy: 'cache-and-network',
   });
-  const club = data?.club as ClubDetail | undefined;
-  const pods = (data?.pods ?? []) as ClubPodRow[];
+  const club = data?.club;
+  const podCount = data?.podCount.total ?? 0;
 
   return (
     <QueryGuard
@@ -110,38 +114,17 @@ export default function ClubDetailsPage() {
 
       <DuncitTabs {...tabs} variant="scrollable" allowScrollButtonsMobile />
 
+      {tabs.value === 'overview' && <ClubOverviewTab club={club} podCount={podCount} />}
+      {tabs.value === 'hosts' && (
+        <ClubHostsTab clubId={club.id} hostUserIds={club.hosts.map((host) => host.id)} />
+      )}
+      {tabs.value === 'pods' && <ClubPodsTab clubId={club.id} />}
       {tabs.value === 'changeLogs' && (
         <ChangeLogsSection
           entityType="CLUB"
           entityId={club.id}
           tableId="clubs-console-change-logs"
         />
-      )}
-
-      {tabs.value === 'overview' && (
-      <Box sx={{ display: 'grid', gap: 2.5, gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, alignItems: 'start' }}>
-        <Stack spacing={2.5} sx={{ minWidth: 0 }}>
-          <ClubOverviewCard club={club} podCount={pods.length} />
-          <MediaGallery
-            title={t('admin.clubs.coverMedia')}
-            icon={<PhotoLibraryIcon color="primary" />}
-            items={club.club_feature_images_and_videos ?? []}
-            emptyText={t('admin.clubs.noCoverMedia')}
-          />
-          <MediaGallery
-            title={t('admin.clubs.moments')}
-            icon={<AutoAwesomeIcon color="primary" />}
-            items={club.club_moments ?? []}
-            emptyText={t('admin.clubs.noMoments')}
-          />
-          <ClubContentSections club={club} />
-        </Stack>
-
-        <Stack spacing={2.5} sx={{ minWidth: 0 }}>
-          <ClubPodsCard pods={pods} />
-          <ClubAdminsCard admins={club.club_admins ?? []} />
-        </Stack>
-      </Box>
       )}
     </Stack>
       )}

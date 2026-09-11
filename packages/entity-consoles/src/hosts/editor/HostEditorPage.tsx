@@ -3,6 +3,7 @@ import { QueryGuard } from '@duncit/ui';
 import { useTranslation } from '@duncit/shell';
 import useMediaPicker from '../../shared/useMediaPicker';
 import EditorPageShell from '../../shared/EditorPageShell';
+import { useRecordParentPath } from '../../shared/recordPaths';
 import { useHostEditor } from './useHostEditor';
 import IdentitySection from './sections/IdentitySection';
 import VerificationSection from './sections/VerificationSection';
@@ -11,6 +12,8 @@ import StatusSection from './sections/StatusSection';
 
 /**
  * `/hosts/new` and `/hosts/:hostId/edit` — the whole host record, editable.
+ * The clubs console mounts the editor at `/clubs/:clubId/hosts/:hostId/edit`
+ * too, which is why Back is resolved from the path rather than written out.
  *
  * Identity, the verification documents, every category they may run, the payout,
  * the review status and the commission. A page rather than a dialog for the same
@@ -24,7 +27,7 @@ export default function HostEditorPage() {
   const editor = useHostEditor(hostId);
   const { form, host, isEdit, canGovern, busy, saveError, submit } = editor;
 
-  const backTo = isEdit && hostId ? `/hosts/${hostId}` : '/hosts';
+  const backTo = useRecordParentPath();
   const title = isEdit
     ? host?.full_name || t('directory.hostEditor.editTitle')
     : t('directory.hostEditor.newTitle');

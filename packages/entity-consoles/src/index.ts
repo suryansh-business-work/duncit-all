@@ -62,6 +62,12 @@ export {
 export { default as ClubsPage } from './clubs/list/ClubsPage';
 export { default as ClubDetailsPage } from './clubs/detail/ClubDetailsPage';
 export { default as ClubEditorPage } from './clubs/editor';
+// A club's hosts, admins and pods, opened and edited without leaving the club —
+// the other consoles' own record pages, with Back pointed at the club.
+export { default as HostInClubPage } from './clubs/records/HostInClubPage';
+export { default as ClubAdminInClubPage } from './clubs/records/ClubAdminInClubPage';
+export { default as PodInClubPage } from './clubs/records/PodInClubPage';
+export { default as PodEditorInClubPage } from './clubs/records/PodEditorInClubPage';
 
 // ---- the club admins console --------------------------------------------
 export { default as ClubAdminsPage } from './club-admins/list/ClubAdminsPage';

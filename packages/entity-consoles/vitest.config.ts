@@ -61,7 +61,6 @@ export default defineConfig({
      */
     exclude: [
       'node_modules/**',
-      '__tests__/clubs/detail/ClubPodsCard.test.tsx',
       '__tests__/clubs/list/ClubsPage.test.tsx',
       '__tests__/clubs/list/ClubsTable.test.tsx',
       'src/clubs/editor/__tests__/index.test.tsx',

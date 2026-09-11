@@ -77,10 +77,13 @@ export function useClickstreamTracking({ enabled, path, superCategory }: Args) {
     }).catch(() => {});
   };
 
-  // Core: one PAGE_VIEW per route.
+  // Core: one PAGE_VIEW per route. No target: describing <body> read the whole
+  // page's textContent (and ran a regex over it) on the main thread right after
+  // every navigation, only to store its first 240 characters. Path and title
+  // already say which page this was.
   useEffect(() => {
     if (!enabled) return;
-    send('PAGE_VIEW', document.body, { source: 'route_change' });
+    send('PAGE_VIEW', null, { source: 'route_change' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, path, superCategory]);
 

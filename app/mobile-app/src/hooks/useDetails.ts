@@ -31,30 +31,38 @@ type ClubDetailsResult = ResultOf<typeof ClubDetailsDocument>;
 export type ClubDetail = NonNullable<ClubDetailsResult['club']>;
 export type ClubPod = ClubDetailsResult['pods'][number];
 
-/** Resolve a pod's doc id: use the id from in-app navigation, else resolve the
- * shared (mWeb) slug URL (/club/:clubSlug/pod/:podSlug) via podBySlugs so a
- * shared link opens the right pod. Returns '' until resolved. */
-export function useResolvedPodId(params: { podId?: string; clubSlug?: string; podSlug?: string }): {
-  podId: string;
-  resolving: boolean;
-} {
-  const { podId, clubSlug, podSlug } = params;
-  // A slug link (no in-app id) still needs a lookup before the details can load.
-  const needsResolve = !podId && !!clubSlug && !!podSlug;
-  const [resolved, setResolved] = useState(podId ?? '');
-  const [resolving, setResolving] = useState(needsResolve);
+/** Slug → doc id answers already fetched this session, so reopening a pod or a
+ * club skips the lookup round trip, the way mWeb's Apollo cache does. A slug
+ * never moves to another entity, so a remembered answer cannot go stale. */
+const resolvedIds = new Map<string, string>();
+
+/** The doc id behind a detail screen: the id in-app navigation passed, else the
+ * answer `lookup` gives for the shared slug URL named by `slugKey`. `resolving`
+ * stays true while that lookup is out, so the screen holds its skeleton rather
+ * than rendering "unavailable" for an entity that simply has not arrived yet.
+ * Returns '' until resolved, and '' when the slug resolves to nothing. */
+function useSlugResolvedId(
+  id: string | undefined,
+  slugKey: string | null,
+  lookup: () => Promise<string>,
+): { id: string; resolving: boolean } {
+  const known = slugKey ? resolvedIds.get(slugKey) : undefined;
+  const [resolved, setResolved] = useState(id ?? known ?? '');
+  const [resolving, setResolving] = useState(!id && !known && slugKey !== null);
   useEffect(() => {
-    if (podId || !clubSlug || !podSlug) {
-      setResolved(podId ?? '');
+    const cached = slugKey ? resolvedIds.get(slugKey) : undefined;
+    if (id || !slugKey || cached) {
+      setResolved(id ?? cached ?? '');
       setResolving(false);
       return;
     }
     let active = true;
     setResolving(true);
-    graphqlRequest(PodBySlugsDocument, { clubSlug, podSlug }, { auth: true })
-      .then((r) => {
+    lookup()
+      .then((next) => {
+        if (next) resolvedIds.set(slugKey, next);
         if (!active) return;
-        setResolved(r.podBySlugs?.id ?? '');
+        setResolved(next);
         setResolving(false);
       })
       .catch(() => {
@@ -65,29 +73,46 @@ export function useResolvedPodId(params: { podId?: string; clubSlug?: string; po
     return () => {
       active = false;
     };
-  }, [podId, clubSlug, podSlug]);
-  return { podId: resolved, resolving };
+  }, [id, slugKey, lookup]);
+  return { id: resolved, resolving };
+}
+
+/** Resolve a pod's doc id: use the id from in-app navigation, else resolve the
+ * shared (mWeb) slug URL (/club/:clubSlug/pod/:podSlug) via podBySlugs so a
+ * shared link opens the right pod. */
+export function useResolvedPodId(params: { podId?: string; clubSlug?: string; podSlug?: string }): {
+  podId: string;
+  resolving: boolean;
+} {
+  const { podId, clubSlug = '', podSlug = '' } = params;
+  const lookup = useCallback(
+    () =>
+      graphqlRequest(PodBySlugsDocument, { clubSlug, podSlug }, { auth: true }).then(
+        (r) => r.podBySlugs?.id ?? '',
+      ),
+    [clubSlug, podSlug],
+  );
+  const slugKey = clubSlug && podSlug ? `pod:${clubSlug}/${podSlug}` : null;
+  const { id, resolving } = useSlugResolvedId(podId, slugKey, lookup);
+  return { podId: id, resolving };
 }
 
 /** Resolve a club's doc id: use the id from in-app navigation, else resolve the
- * shared (mWeb) slug URL (/club/:clubSlug) via clubBySlug. Returns '' until resolved. */
-export function useResolvedClubId(params: { clubId?: string; clubSlug?: string }): string {
-  const { clubId, clubSlug } = params;
-  const [resolved, setResolved] = useState(clubId ?? '');
-  useEffect(() => {
-    if (clubId || !clubSlug) {
-      setResolved(clubId ?? '');
-      return;
-    }
-    let active = true;
-    graphqlRequest(ClubBySlugDocument, { clubSlug }, { auth: true })
-      .then((r) => active && setResolved(r.clubBySlug?.id ?? ''))
-      .catch(() => active && setResolved(''));
-    return () => {
-      active = false;
-    };
-  }, [clubId, clubSlug]);
-  return resolved;
+ * shared (mWeb) slug URL (/club/:clubSlug) via clubBySlug. */
+export function useResolvedClubId(params: { clubId?: string; clubSlug?: string }): {
+  clubId: string;
+  resolving: boolean;
+} {
+  const { clubId, clubSlug = '' } = params;
+  const lookup = useCallback(
+    () =>
+      graphqlRequest(ClubBySlugDocument, { clubSlug }, { auth: true }).then(
+        (r) => r.clubBySlug?.id ?? '',
+      ),
+    [clubSlug],
+  );
+  const { id, resolving } = useSlugResolvedId(clubId, clubSlug ? `club:${clubSlug}` : null, lookup);
+  return { clubId: id, resolving };
 }
 
 /** Fetches a single pod (auth) plus the venue/location it resolves to (for the
@@ -109,6 +134,16 @@ export function usePodDetails(podId: string) {
   const [error, setError] = useState<unknown>();
 
   const load = useCallback(async () => {
+    // Spot fills and seats need nothing but the id, so they go out alongside the
+    // pod itself instead of queueing behind it — the screen used to wait on four
+    // sequential round trips. Only the people lookup has to follow the pod (it
+    // needs its host/attendee ids). Same shape as mWeb's PodDetailsPage.
+    const fillsRequest = graphqlRequest(PodSpotFillsDocument, { podId }, { auth: true }).catch(
+      () => null,
+    );
+    const seatsRequest = graphqlRequest(PodAttendeeSeatsDocument, { podId }, { auth: true }).catch(
+      () => null,
+    );
     const data = await graphqlRequest(PodDetailsDocument, { podId }, { auth: true });
     const nextPod = data.pod ?? null;
     setPod(nextPod);
@@ -122,29 +157,25 @@ export function usePodDetails(podId: string) {
     setLocation(data.locations.find((l) => l.id === nextPod?.location_id) ?? null);
     setSavedInitially((data.me?.saved_pod_ids ?? []).includes(nextPod?.id ?? ''));
     setMembershipState(data.podMembershipState ?? null);
-    // Hosts + attendees public profiles for the avatar group (best-effort).
+    // Hosts + attendees public profiles for the avatar group (best-effort),
+    // awaited together with the fills/seats already in flight so the rest of
+    // the screen lands in one render rather than three.
     const ids = Array.from(
       new Set([...(nextPod?.pod_hosts_id ?? []), ...(nextPod?.pod_attendees ?? [])]),
     );
-    if (ids.length > 0) {
-      const peopleData = await graphqlRequest(PodPeopleDocument, { ids }, { auth: true }).catch(
-        () => null,
-      );
-      setPeople(peopleData?.publicUsersByIds ?? []);
-    } else {
-      setPeople([]);
-    }
+    const peopleRequest =
+      ids.length > 0
+        ? graphqlRequest(PodPeopleDocument, { ids }, { auth: true }).catch(() => null)
+        : null;
+    const [peopleData, fillData, seatData] = await Promise.all([
+      peopleRequest,
+      fillsRequest,
+      seatsRequest,
+    ]);
+    setPeople(peopleData?.publicUsersByIds ?? []);
     // Filled Backout seats for the struck-through attendee rows (best-effort).
     if (nextPod) {
-      const fillData = await graphqlRequest(PodSpotFillsDocument, { podId }, { auth: true }).catch(
-        () => null,
-      );
       setSpotFills(fillData?.podSpotFills ?? []);
-      const seatData = await graphqlRequest(
-        PodAttendeeSeatsDocument,
-        { podId },
-        { auth: true },
-      ).catch(() => null);
       setSeatsByUser(
         Object.fromEntries(
           (seatData?.podAttendeeSeats ?? []).map((row) => [row.user_id, row.seats]),

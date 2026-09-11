@@ -54,7 +54,7 @@ export default function PodDetailsPage() {
     fetchPolicy: 'cache-and-network',
   });
   const id: string = slugResolution.data?.podBySlugs?.id ?? '';
-  const { data, loading, error, refetch } = useQuery<any>(POD_DETAILS, {
+  const { data, error, refetch } = useQuery<any>(POD_DETAILS, {
     variables: { id },
     skip: !id,
     fetchPolicy: 'cache-and-network',
@@ -116,12 +116,15 @@ export default function PodDetailsPage() {
     navigate,
   });
 
-  // Pod details are still pending whenever the slug has resolved to an id but its
-  // details query hasn't returned yet — this covers the render gap between the
-  // slug resolving and POD_DETAILS starting, so the skeleton shows instead of a
-  // "Pod not found." flash.
-  const detailsPending = !!id && !error && (loading || !data);
-  if (slugResolution.loading || detailsPending) return <PodDetailsSkeleton />;
+  // The skeleton is for a page with nothing to show yet, so both halves wait on
+  // DATA, never on `loading`. `cache-and-network` answers a revisit from the
+  // cache while `loading` is still true, and Apollo 4 sets `loading` again on
+  // every refetch — gating on it put the skeleton back on every Back and after
+  // every join/save. Waiting on `data` still covers the gap between the slug
+  // resolving and POD_DETAILS starting, so there is no "Pod not found." flash.
+  const slugPending = slugResolution.loading && !slugResolution.data;
+  const detailsPending = !!id && !error && !data;
+  if (slugPending || detailsPending) return <PodDetailsSkeleton />;
   // The slug lookup FAILING is not the same as the pod not existing. A request
   // the retry link will not retry — an abort, a 4xx — leaves `id` empty with no
   // error of its own on POD_DETAILS, and that fell straight through to "Pod not

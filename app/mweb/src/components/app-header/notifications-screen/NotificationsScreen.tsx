@@ -86,7 +86,6 @@ export default function NotificationsScreen({
           sx: {
             backgroundImage: 'var(--duncit-app-bg)',
             backgroundSize: '180% 180%',
-            animation: 'duncit-bg-drift 36s ease-in-out infinite alternate',
           },
         }
       }}

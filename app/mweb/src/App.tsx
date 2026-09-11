@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
 import { Box, Container } from '@mui/material';
 import ScrollToTop from './components/ScrollToTop';
@@ -16,6 +16,7 @@ import PodFeedbackPrompt from './components/pod-feedback';
 import AppPopupDialog from './components/app-popup';
 import DeletionNoticeDialog from './components/DeletionNoticeDialog';
 import AppRoutes from './app/AppRoutes';
+import RouteFallback from './app/RouteFallback';
 import { AppLocationProvider } from './app/AppLocationContext';
 import { APP_SHELL_MAX_WIDTH } from './app/appLayout';
 import { useActivePing } from './app/useActivePing';
@@ -129,6 +130,14 @@ export default function App() {
       >
         <ScrollToTop />
         <RouteMeta />
+        {/* The boundary sits ABOVE the keyed wrapper on purpose. React Router
+            runs every navigation as a transition, and a transition only keeps
+            the current page on screen while the next page's chunk loads if the
+            boundary it suspends into is already showing content. Inside the
+            keyed wrapper the boundary was brand new on every navigation, so it
+            swapped the page for a spinner each time. The key still hands every
+            page a fresh tree. */}
+        <Suspense fallback={<RouteFallback />}>
         <Box
           key={`${location.pathname}-${superCategory}-${locationId}-${zoneName}`}
           sx={{
@@ -152,6 +161,7 @@ export default function App() {
               page ends on the same reserved strip instead of under the bar. */}
           <Box aria-hidden sx={{ height: contentPadBottom }} />
         </Box>
+        </Suspense>
       </Container>
       {showBottomNav && <BottomNav />}
       {isAuthed && <PodFeedbackPrompt />}

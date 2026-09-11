@@ -130,7 +130,11 @@ export function PodListView({
     if (!pod) return null;
     return (
       <YStack paddingHorizontal={16} height={POD_HEIGHT}>
-        <PodCard pod={pod} width={width - 32} onPress={() => openPod(pod.club_slug, pod.pod_id)} />
+        <PodCard
+          pod={pod}
+          width={width - 32}
+          onPress={() => openPod(pod.club_slug, pod.pod_id, pod.id)}
+        />
       </YStack>
     );
   };

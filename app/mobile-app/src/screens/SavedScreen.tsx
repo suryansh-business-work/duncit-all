@@ -85,7 +85,7 @@ export function SavedScreen() {
             pods={pods}
             isLoading={isLoading}
             emptyText={t('mweb.saved.noSavedPodsYetTapThe')}
-            onOpen={(pod) => openPod(pod.club_slug, pod.pod_id)}
+            onOpen={(pod) => openPod(pod.club_slug, pod.pod_id, pod.id)}
           />
         )}
       </YStack>

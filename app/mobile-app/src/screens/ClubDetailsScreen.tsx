@@ -71,7 +71,7 @@ export function ClubDetailsScreen() {
           following={following}
           followBusy={followBusy}
           onToggleFollow={() => void toggleFollow()}
-          onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
+          onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id, pod.id)}
           onOpenMember={(userId) => navigation.navigate('PublicProfile', { userId })}
           onOpenVenue={(venueId) => navigation.navigate('VenueDetails', { venueId })}
         />

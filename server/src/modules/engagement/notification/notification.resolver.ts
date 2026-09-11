@@ -32,6 +32,46 @@ async function actorIdOf(parent: any): Promise<string | null> {
   return requester ? String(requester) : null;
 }
 
+/** What `follow_back_status` answers for one row, given the viewer's edges
+ * towards the page's actors — the same rule the per-row path below applies. */
+function followBackOf(actorId: string | null, viewerId: string, statuses: Map<string, string>) {
+  if (!actorId || actorId === viewerId) return 'NONE';
+  return statuses.get(actorId) ?? 'NONE';
+}
+
+/**
+ * The follow facts a page of inbox rows reads, in one query per collection
+ * instead of up to three per row. The inbox is polled every 30s by every
+ * signed-in header, so those per-row reads were a steady share of all database
+ * traffic. An optimisation, not a prerequisite: a field resolver still loads
+ * whatever was not primed (a row reached through another query).
+ */
+async function primeInbox(rows: readonly any[], viewerId: string): Promise<void> {
+  const notifs = rows.map((row) => row?.notification).filter(Boolean);
+  const asks = notifs.filter(
+    (n) => n.action_type === 'FOLLOW_REQUEST' && n.action_ref_id && n.__followRequest === undefined
+  );
+  if (asks.length > 0) {
+    const { FollowRequestModel } = await import(
+      '@modules/access/user/relations/followRequest.model'
+    );
+    const found = await FollowRequestModel.find({ _id: { $in: asks.map((n) => n.action_ref_id) } })
+      .select('status requester_id')
+      .lean();
+    const byId = new Map(found.map((request: any) => [String(request._id), request]));
+    for (const n of asks) n.__followRequest = byId.get(String(n.action_ref_id)) ?? null;
+  }
+  const actors = await Promise.all(notifs.map((n) => actorIdOf(n)));
+  const { userService } = await import('@modules/access/user/user.service');
+  const statuses = await userService.followStatuses(
+    viewerId,
+    actors.filter((id): id is string => !!id && id !== viewerId)
+  );
+  notifs.forEach((n, index) => {
+    n.__followBackStatus = followBackOf(actors[index], viewerId, statuses);
+  });
+}
+
 export const notificationResolvers = {
   /**
    * An actionable row's buttons must disappear once the request behind it is
@@ -54,6 +94,7 @@ export const notificationResolvers = {
      * this field exists to prevent.
      */
     follow_back_status: async (parent: any, _a: unknown, ctx: GraphQLContext) => {
+      if (parent.__followBackStatus !== undefined) return parent.__followBackStatus;
       const viewerId = ctx.user?.id;
       if (!viewerId) return 'NONE';
       const actorId = await actorIdOf(parent);
@@ -77,7 +118,9 @@ export const notificationResolvers = {
       ctx: GraphQLContext
     ) => {
       const u = requireAuth(ctx);
-      return notificationService.listForUser(u.id, args.limit ?? 50, !!args.unreadOnly);
+      const rows = await notificationService.listForUser(u.id, args.limit ?? 50, !!args.unreadOnly);
+      await primeInbox(rows, String(u.id));
+      return rows;
     },
     myUnreadNotificationCount: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);

@@ -3,6 +3,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import type { RootStackParamList } from '@/navigation/types';
 
+import { rememberPodId } from './useDetails';
+
 /** Shared navigation to the detail screens from any pod/club card. Uses the exact
  * slug grammar mWeb navigates with (/club/:clubSlug/pod/:podSlug and /club/:clubSlug)
  * so the web build's address bar is byte-for-byte identical to mWeb — never
@@ -12,8 +14,12 @@ import type { RootStackParamList } from '@/navigation/types';
 export function useDetailNav() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   return {
-    openPod: (clubSlug?: string | null, podSlug?: string | null) => {
-      if (clubSlug && podSlug) navigation.navigate('PodDetails', { clubSlug, podSlug });
+    // Pass the card's pod doc id when it has one: the screen is still addressed
+    // by slugs (so the web URL stays mWeb's), but it skips asking for the id.
+    openPod: (clubSlug?: string | null, podSlug?: string | null, podId?: string | null) => {
+      if (!clubSlug || !podSlug) return;
+      if (podId) rememberPodId(clubSlug, podSlug, podId);
+      navigation.navigate('PodDetails', { clubSlug, podSlug });
     },
     openClub: (clubSlug?: string | null) => {
       if (clubSlug) navigation.navigate('ClubDetails', { clubSlug });

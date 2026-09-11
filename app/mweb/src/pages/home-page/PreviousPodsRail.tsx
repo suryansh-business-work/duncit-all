@@ -5,7 +5,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { DuncitButton } from '@duncit/buttons';
 import PodCard from './PodCard';
 import SeeAllCard from './SeeAllCard';
-import { podUrl } from '../../utils/seoUrls';
+import { openPod } from '../../lib/open-pod';
 
 /** Max entries shown on the home rail before the See-all card takes over. */
 const RAIL_CAP = 10;
@@ -75,7 +75,7 @@ export default function PreviousPodsRail({ pods, hostNameOf, filtered }: Readonl
             key={pod.id}
             pod={pod}
             hostName={hostNameOf(pod)}
-            onOpen={() => navigate(podUrl(pod.club_slug, pod.pod_id))}
+            onOpen={() => openPod(navigate, pod)}
           />
         ))}
         {pods.length > RAIL_CAP && (

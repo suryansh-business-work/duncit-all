@@ -26,17 +26,28 @@ const TOGGLE_SAVED_POD_CARD = gql`
  * saved list, plus the toggle. The Saved page reads the same `saved_pod_ids`,
  * so a toggle here updates it too.
  *
- * `isSaving` covers the whole round trip INCLUDING the refetch that follows,
- * because that refetch is what flips the icon — clearing the spinner earlier
- * would leave the old state on screen with nothing to explain it.
+ * `isSaving` covers the mutation's round trip, and the mutation's own answer is
+ * what flips the icon (see `update`), so the spinner never clears onto the old
+ * state.
  */
 export function useSavedPodHearts() {
   const { data } = useQuery<{ me?: { user_id: string; saved_pod_ids: string[] } | null }>(
     SAVED_POD_IDS,
     { fetchPolicy: 'cache-and-network' }
   );
+  const meId = data?.me?.user_id;
   const [toggleMut] = useMutation<any>(TOGGLE_SAVED_POD_CARD, {
-    refetchQueries: [{ query: SAVED_POD_IDS }],
+    // The answer carries the whole saved list, so it goes onto the viewer's User
+    // entry and every reader of saved_pod_ids updates from the mutation itself —
+    // not from a follow-up `me` round trip after it.
+    update(cache, { data: result }) {
+      const next = result?.toggleSavedPod?.saved_pod_ids;
+      if (!next || !meId) return;
+      cache.modify({
+        id: cache.identify({ __typename: 'User', user_id: meId }),
+        fields: { saved_pod_ids: () => next },
+      });
+    },
   });
 
   const [savingId, setSavingId] = useState<string | null>(null);

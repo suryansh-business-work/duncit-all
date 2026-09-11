@@ -759,10 +759,10 @@ async function softDeleteUserWrites(oid: Types.ObjectId, session?: any) {
 // frontends still expect the flat shape, so this adapter projects nested →
 // flat. Counts come from users.counters (denormalized), IDs from the relation
 // collections (materialized for backward compatibility).
-async function toPublic(u: any) {
+async function toPublic(u: any, preloaded?: Awaited<ReturnType<typeof loadRelationIds>>) {
   if (!u) return null;
   const userId = String(u._id);
-  const relations = await loadRelationIds(userId);
+  const relations = preloaded ?? (await loadRelationIds(userId));
   // Backward-compat read path. While dualWrite is on, the legacy flat fields
   // are still present on rows that have not been migrated yet. Falling back
   // to them lets the API keep serving traffic mid-cutover. After
@@ -2903,6 +2903,29 @@ export const userService = {
     return pending ? 'REQUESTED' : 'NONE';
   },
 
+  /**
+   * `followStatus` for many targets in two reads. A target absent from the map
+   * is 'NONE', exactly as `followStatus` answers it (an invalid id included).
+   */
+  async followStatuses(viewerId: string, targetIds: readonly string[]) {
+    const statuses = new Map<string, 'FOLLOWING' | 'REQUESTED'>();
+    const targets = targetIds.filter((id) => Types.ObjectId.isValid(id)).map((id) => new Types.ObjectId(id));
+    if (!Types.ObjectId.isValid(viewerId) || targets.length === 0) return statuses;
+    const viewer = new Types.ObjectId(viewerId);
+    const [following, requested] = await Promise.all([
+      UserRelationshipModel.find({ follower_id: viewer, following_id: { $in: targets } })
+        .select('following_id')
+        .lean(),
+      FollowRequestModel.find({ requester_id: viewer, target_id: { $in: targets }, status: 'PENDING' })
+        .select('target_id')
+        .lean(),
+    ]);
+    // Following wins over a stale pending ask, as in followStatus.
+    for (const row of requested as any[]) statuses.set(String(row.target_id), 'REQUESTED');
+    for (const row of following as any[]) statuses.set(String(row.following_id), 'FOLLOWING');
+    return statuses;
+  },
+
   /** The id of the OPEN ask `requesterId` has against `targetId`, or null. What
    * lets a profile page answer a request from the relationship itself rather
    * than only from the notification about it. */
@@ -3178,9 +3201,12 @@ export const userService = {
   },
 
   async me(id: string) {
-    const u = await UserModel.findById(id);
+    // The relation lists key on the id alone, so they load beside the user
+    // document rather than one round trip after it — `me` is on every
+    // surface's boot path, and each trip to the database is ~250 ms.
+    const [u, relations] = await Promise.all([UserModel.findById(id), loadRelationIds(id)]);
     // Handles are assigned, never typed — see ensureUsername.
-    return toPublic(await ensureUsername(u));
+    return toPublic(await ensureUsername(u), relations);
   },
 
   /**

@@ -40,15 +40,12 @@ export function useFollowedClubs() {
   const { data, loading } = useQuery<FollowedClubIdsData>(FOLLOWED_CLUBS, {
     fetchPolicy: 'cache-and-network',
   });
-  const refetchQueries = [{ query: FOLLOWED_CLUBS }];
-  const [followClub, followState] = useMutation<any>(FOLLOW_CLUB, {
-    awaitRefetchQueries: true,
-    refetchQueries,
-  });
-  const [unfollowClub, unfollowState] = useMutation<any>(UNFOLLOW_CLUB, {
-    awaitRefetchQueries: true,
-    refetchQueries,
-  });
+  // Both mutations answer with the viewer's User (user_id + following_club_ids),
+  // which Apollo writes straight onto the same cache entry `me` points at — so
+  // the button flips on the mutation's own answer. An awaited refetch of `me`
+  // on top of that doubled every follow's wait for nothing.
+  const [followClub, followState] = useMutation<any>(FOLLOW_CLUB);
+  const [unfollowClub, unfollowState] = useMutation<any>(UNFOLLOW_CLUB);
 
   const ids = useMemo(() => data?.me?.following_club_ids ?? [], [data?.me?.following_club_ids]);
 

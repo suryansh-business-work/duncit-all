@@ -10,7 +10,7 @@ import SeeAllCard from './SeeAllCard';
 import PodCardMedia from './PodCardMedia';
 import { usePricing } from '../../hooks/usePricing';
 import { useTranslation } from '../../i18n/useTranslation';
-import { podUrl } from '../../utils/seoUrls';
+import { openPod } from '../../lib/open-pod';
 import { podSeatsTaken } from '@duncit/utils';
 import { formatDateTime } from '../../utils/dateFormat';
 
@@ -83,11 +83,11 @@ export default function HomeFeaturedPods({
               role="button"
               tabIndex={0}
               aria-label={pod.pod_title}
-              onClick={() => navigate(podUrl(pod.club_slug, pod.pod_id))}
+              onClick={() => openPod(navigate, pod)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
                   event.preventDefault();
-                  navigate(podUrl(pod.club_slug, pod.pod_id));
+                  openPod(navigate, pod);
                 }
               }}
               sx={{

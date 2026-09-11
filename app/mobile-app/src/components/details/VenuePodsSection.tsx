@@ -38,7 +38,10 @@ export function VenuePodsSection({ venueId }: Readonly<{ venueId: string }>) {
         </Text>
       ) : null}
       {!isLoading && pods.length > 0 ? (
-        <ClubPodsSchedule pods={pods} onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)} />
+        <ClubPodsSchedule
+          pods={pods}
+          onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id, pod.id)}
+        />
       ) : null}
     </YStack>
   );

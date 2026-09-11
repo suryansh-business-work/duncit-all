@@ -140,7 +140,8 @@ export const postService = {
       assertId(authorId, 'author_id');
       q.author_id = new Types.ObjectId(authorId);
     }
-    const docs = await PostModel.find(q).sort({ created_at: -1 });
+    // Lean: every home load reads the rail, and toPub only reads plain fields.
+    const docs = await PostModel.find(q).sort({ created_at: -1 }).lean<IPost[]>();
     return docs.map((d) => toPub(d, viewerId));
   },
 

@@ -15,11 +15,11 @@ type Props = ComponentProps<typeof ScrollView>;
  * the dialogs and half-height sheets that float over a page keep the plain
  * Tamagui `ScrollView`: a pull there fights the sheet's own drag.
  *
- * It renders no refresh control at all until something on the screen has
- * registered a reload (see `useRefreshRegistration`), so a screen with nothing
- * to reload has no pull gesture rather than a spinner that does nothing. An
- * explicit `refreshControl` prop still wins, for a surface that has to word
- * the spinner differently.
+ * The control stays switched off until something on the screen has registered
+ * a reload (see `useRefreshRegistration`), so a screen with nothing to reload
+ * has no working pull rather than a spinner that does nothing. An explicit
+ * `refreshControl` prop still wins, for a surface that has to word the spinner
+ * differently.
  */
 export const RefreshScrollView = forwardRef<RNScrollView, Props>(
   function RefreshScrollView(props, ref) {

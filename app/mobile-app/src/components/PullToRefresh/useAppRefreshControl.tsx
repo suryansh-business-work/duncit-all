@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { RefreshControl, type RefreshControlProps } from 'react-native';
+import { Platform, RefreshControl, type RefreshControlProps } from 'react-native';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useScreenRefresh } from './ScreenRefreshProvider';
@@ -10,6 +10,8 @@ interface AppRefreshControlArgs {
   /** iOS spinner colour — only for surfaces the brand pink disappears into
    * (the full-bleed Reels media takes `onPrimary`). Defaults to `$primary`. */
   tintColor?: string;
+  /** Android only: iOS has no switch for the gesture short of removing the control. */
+  enabled?: boolean;
   testID?: string;
 }
 
@@ -28,6 +30,7 @@ export function useAppRefreshControl({
   refreshing,
   onRefresh,
   tintColor,
+  enabled,
   testID,
 }: AppRefreshControlArgs): ReactElement<RefreshControlProps> {
   const { primary, surface } = useThemeColors();
@@ -38,23 +41,37 @@ export function useAppRefreshControl({
       tintColor={tintColor ?? primary}
       colors={[primary]}
       progressBackgroundColor={surface}
+      enabled={enabled}
       testID={testID}
     />
   );
 }
 
 /**
- * The refresh control for the screen this component sits on, or `undefined`
- * when the screen has nothing registered to reload — a scroll view given
- * `undefined` simply has no pull gesture, which is the honest answer for a
- * screen whose content never came from the server.
+ * The refresh control for the screen this component sits on.
+ *
+ * Whether a scroll view HAS a control must never change over its life: React
+ * Native renders a different tree with one than without (Android and web wrap
+ * the scroll view in it, iOS puts it ahead of the content), so handing it in
+ * once the first data hook registered remounted the whole screen body right
+ * after the screen opened — every child mounted twice, a tap in that moment
+ * landed on a node that was about to be thrown away. So on a screen the
+ * control is always there, and is switched off while nothing is registered to
+ * reload (Android; iOS has no off switch, so there a pull on such a screen ends
+ * at once — see `refresh` in ScreenRefreshProvider).
+ *
+ * Web has no pull gesture, and react-native-web's RefreshControl is only a
+ * wrapper view, so web gets none; outside a screen (a floating dialog, a test)
+ * there is nothing to reload either.
  */
 export function useScreenRefreshControl(): ReactElement<RefreshControlProps> | undefined {
   const screen = useScreenRefresh();
   const control = useAppRefreshControl({
     refreshing: screen?.refreshing ?? false,
     onRefresh: screen?.refresh ?? (() => undefined),
+    enabled: screen?.hasHandlers ?? false,
     testID: 'screen-refresh',
   });
-  return screen?.hasHandlers ? control : undefined;
+  if (Platform.OS === 'web' || !screen) return undefined;
+  return control;
 }

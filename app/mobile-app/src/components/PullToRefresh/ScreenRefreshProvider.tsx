@@ -16,7 +16,7 @@ export type RefreshHandler = () => unknown;
 type Register = (handler: RefreshHandler) => () => void;
 
 interface ScreenRefreshState {
-  /** A screen with nothing to reload gets no pull gesture at all. */
+  /** A screen with nothing to reload gets its pull gesture switched off. */
   hasHandlers: boolean;
   refreshing: boolean;
   refresh: () => void;
@@ -63,6 +63,10 @@ export function ScreenRefreshProvider({ children }: Readonly<{ children: ReactNo
   }, []);
 
   const refresh = useCallback(() => {
+    // Only reachable on iOS, which cannot switch the control off: leaving
+    // `refreshing` false makes the native spinner end at once, rather than
+    // holding it for a reload that does not exist.
+    if (handlers.current.size === 0) return;
     setRefreshing(true);
     const reloads = [...handlers.current].map(async (handler) => handler());
     // allSettled, not all: one failing query must not cancel the rest, and the

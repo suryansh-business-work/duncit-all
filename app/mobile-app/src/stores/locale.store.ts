@@ -57,6 +57,46 @@ export const useLocaleStore = create<LocaleState>((set, get) => {
     }
   };
 
+  const runHydrate = async (userLocale: string | null) => {
+    let stored: string | null = null;
+    try {
+      stored = await getItem(STORAGE_KEY);
+    } catch {
+      stored = null;
+    }
+
+    let locales: Locale[] = [];
+    try {
+      const data: LocalesData = await graphqlRequest(PublicLocalesDocument);
+      // A REQUEST THAT SUCCEEDS can still omit the field — an older server, or
+      // a partial response with errors. That never reaches the catch, so it
+      // would crash the app on the very first screen that translates.
+      locales = data.publicLocales ?? [];
+    } catch {
+      locales = [];
+    }
+
+    const active = resolveLocale(userLocale ?? stored, locales);
+    const code = active?.code ?? DEFAULT_LOCALE;
+    set({
+      locales,
+      locale: code,
+      isRtl: active?.is_rtl === true,
+      hydrated: true,
+      appliedUserLocale: userLocale,
+    });
+    if (locales.length > 0) await loadCatalogue(code);
+  };
+
+  /**
+   * Every component using useTranslation asks for a hydrate when it mounts, and
+   * a screen's worth of them mount before the first answer lands — `hydrated`
+   * cannot guard that window. Without this, opening the app sent the locales
+   * and catalogue requests once PER COMPONENT. A call for the same account
+   * language joins the one already in flight.
+   */
+  let inFlight: { userLocale: string | null; done: Promise<void> } | null = null;
+
   return {
     locales: [],
     catalogue: {},
@@ -65,35 +105,13 @@ export const useLocaleStore = create<LocaleState>((set, get) => {
     hydrated: false,
     appliedUserLocale: null,
 
-    hydrate: async (userLocale) => {
-      let stored: string | null = null;
-      try {
-        stored = await getItem(STORAGE_KEY);
-      } catch {
-        stored = null;
-      }
-
-      let locales: Locale[] = [];
-      try {
-        const data: LocalesData = await graphqlRequest(PublicLocalesDocument);
-        // A REQUEST THAT SUCCEEDS can still omit the field — an older server, or
-        // a partial response with errors. That never reaches the catch, so it
-        // would crash the app on the very first screen that translates.
-        locales = data.publicLocales ?? [];
-      } catch {
-        locales = [];
-      }
-
-      const active = resolveLocale(userLocale ?? stored, locales);
-      const code = active?.code ?? DEFAULT_LOCALE;
-      set({
-        locales,
-        locale: code,
-        isRtl: active?.is_rtl === true,
-        hydrated: true,
-        appliedUserLocale: userLocale ?? null,
+    hydrate: (userLocale = null) => {
+      if (inFlight?.userLocale === userLocale) return inFlight.done;
+      const done = runHydrate(userLocale).finally(() => {
+        if (inFlight?.done === done) inFlight = null;
       });
-      if (locales.length > 0) await loadCatalogue(code);
+      inFlight = { userLocale, done };
+      return done;
     },
 
     setLocale: async (code) => {

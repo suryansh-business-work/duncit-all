@@ -25,10 +25,12 @@ export interface HostPodMenuItemsProps {
   showAttendeeActions: boolean;
   canComplete: boolean;
   /**
-   * The pod has not ended yet, so its door is still open to a scanner. False on
-   * a past pod: the row stays, greyed, saying why.
+   * The pod's door is open to a scanner — from shortly before the start to the
+   * end. False either side of that: the row stays, greyed, with `scanNote`.
    */
   canScan: boolean;
+  /** Why the scan row is inert; undefined while it is not. */
+  scanNote?: string;
   /**
    * The pod has not ended yet, so its plan can still change. False on a past
    * pod, which greys Edit, Request Change Host and Cancel the same way — all
@@ -62,6 +64,7 @@ export default function HostPodActionsItems({
   showAttendeeActions,
   canComplete,
   canScan,
+  scanNote,
   canAmend,
   pick,
   onScan,
@@ -89,10 +92,7 @@ export default function HostPodActionsItems({
           <ListItemIcon>
             <QrCodeScannerIcon fontSize="small" color={canScan ? 'primary' : 'disabled'} />
           </ListItemIcon>
-          <ListItemText
-            primary={labels.scanTickets}
-            secondary={canScan ? undefined : labels.scanClosed}
-          />
+          <ListItemText primary={labels.scanTickets} secondary={scanNote} />
         </MenuItem>
       )}
       {showAttendeeActions && onSeeAttendance && (

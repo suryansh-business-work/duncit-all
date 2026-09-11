@@ -2511,6 +2511,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       scanTickets: 'Scan attendee event tickets',
       amendClosed: 'This pod has ended — it can no longer be edited, re-hosted or cancelled.',
       scanClosed: 'This pod has ended — tickets can no longer be scanned.',
+      scanNotOpen: 'Scanning opens {minutes} minutes before the pod starts.',
       completePod: 'Complete pod',
       editPod: 'Edit pod',
       cancelPod: 'Cancel pod',

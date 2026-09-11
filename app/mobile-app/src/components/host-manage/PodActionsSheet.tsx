@@ -1,4 +1,5 @@
 import { YStack } from 'tamagui';
+import { POD_SCAN_LEAD_MINUTES, type PodScanWindow } from '@duncit/utils';
 
 import { ActionRow } from '@/components/host-manage/ActionRow';
 import { GatedActionRow } from '@/components/host-manage/GatedActionRow';
@@ -24,11 +25,12 @@ interface Props {
    */
   canComplete: boolean;
   /**
-   * The pod has not ended yet, so its door is still open to a scanner. Once it
-   * is over the row stays but goes inert, with a line under it saying why —
-   * the same thing mWeb's menu does with a disabled item (rule 27).
+   * Where the pod's door stands for a scanner — open from shortly before the
+   * start to the end. Either side of that the row stays but goes inert, with a
+   * line under it saying "not yet" or "too late" — the same thing mWeb's menu
+   * does with a disabled item (rule 27).
    */
-  canScan: boolean;
+  scanWindow: PodScanWindow;
   /**
    * The pod has not ended yet, so its plan can still change. Once it is over,
    * Edit, Request Change Host and Cancel all go inert with a line under each
@@ -65,7 +67,7 @@ export function PodActionsSheet({
   podTitle,
   venueRejected,
   canComplete,
-  canScan,
+  scanWindow,
   canAmend,
   onClose,
   onScan,
@@ -91,6 +93,11 @@ export function PodActionsSheet({
   // Read once and passed to all three rows: the same sentence under each, and
   // one lookup rather than three (rule 26g — compute in the parent).
   const amendClosed = t('mweb.hostPodActions.amendClosed');
+  // Only shown while the row is inert, so "not yet" or else "too late".
+  const scanReason =
+    scanWindow === 'NOT_OPEN'
+      ? t('mweb.hostPodActions.scanNotOpen', { vars: { minutes: POD_SCAN_LEAD_MINUTES } })
+      : t('mweb.hostPodActions.scanClosed');
 
   return (
     // Eight rows are ~430px before any chrome — enough to be clipped in
@@ -110,8 +117,8 @@ export function PodActionsSheet({
             icon="qr-code-scanner"
             label={t('mweb.hostManage.scanAttendeeEventTickets')}
             tint={primary}
-            enabled={canScan}
-            reason={t('mweb.hostPodActions.scanClosed')}
+            enabled={scanWindow === 'OPEN'}
+            reason={scanReason}
             onPress={onScan}
           />
         ) : null}

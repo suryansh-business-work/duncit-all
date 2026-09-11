@@ -57,6 +57,8 @@ exports:
   - 'podPhase'
   - 'canCompletePod'
   - 'canScanPodTickets'
+  - 'podScanWindow'
+  - 'POD_SCAN_LEAD_MINUTES'
   - 'splitPodsByPhase'
   - 'hostPodSection'
   - 'splitHostPods'
@@ -777,7 +779,9 @@ rails can never place the same pod differently.
 | `podPhase` | `(start?, end?, now = Date.now()) => PodPhase` | `UPCOMING` before the start, `ONGOING` through the end instant, `PREVIOUS` after. Unusable start *or* end ⇒ never "previous" on a guess. |
 | `splitPodsByPhase` | `(pods, now = Date.now()) => { upcoming, ongoing, previous }` | One pass, one clock read, so the three rails cannot disagree at a boundary. |
 | `canCompletePod` | `(pod, now = Date.now()) => boolean` | True only on a PREVIOUS pod. Completion settles the payout off the seats scanned in, so Host Studio offers it once the door has shut — never on an upcoming or ongoing pod. |
-| `canScanPodTickets` | `(pod, now = Date.now()) => boolean` | The mirror: FALSE once the pod is PREVIOUS. A scanner is held at a door that is still open, so the Host Studio row goes inert — shown greyed with the reason, not hidden. Marking someone present by hand is not closed by this; the server's attendance lock owns that. |
+| `POD_SCAN_LEAD_MINUTES` | `number` | 15 — how long before the start a pod's door opens to the host's scanner. |
+| `podScanWindow` | `(pod, now = Date.now()) => 'NOT_OPEN' \| 'OPEN' \| 'CLOSED'` | `NOT_OPEN` until `POD_SCAN_LEAD_MINUTES` before the start, `OPEN` through the end instant, `CLOSED` after. Host Studio keeps the scan row greyed either side of `OPEN`, saying "not yet" or "too late". No usable start ⇒ never opens. |
+| `canScanPodTickets` | `(pod, now = Date.now()) => boolean` | `podScanWindow(...) === 'OPEN'`. Marking someone present by hand is not gated by this; the server's attendance lock owns that. |
 
 ### Draft-pod expiry
 

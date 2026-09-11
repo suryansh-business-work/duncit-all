@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { canAmendPod, canCompletePod, canScanPodTickets } from '@duncit/utils';
+import { canAmendPod, canCompletePod, podScanWindow } from '@duncit/utils';
 
 import { useDetailNav } from '@/hooks/useDetailNav';
 import type { RootStackParamList } from '@/navigation/types';
@@ -86,7 +86,7 @@ export function useHostPodSheets({ refetch, onPodCompleted }: Readonly<Options>)
         podTitle={actionsPod?.pod_title ?? ''}
         venueRejected={isVenueRejected(actionsPod?.venue_approval_status)}
         canComplete={canCompletePod(actionsPod ?? {})}
-        canScan={canScanPodTickets(actionsPod ?? {})}
+        scanWindow={podScanWindow(actionsPod ?? {})}
         canAmend={canAmendPod(actionsPod ?? {})}
         onClose={() => setActionsPod(null)}
         onScan={() => {

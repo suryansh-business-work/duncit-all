@@ -90,21 +90,48 @@ export function canCompletePod(pod: PodPhaseFields, now: number = Date.now()): b
 }
 
 /**
- * Whether the host may still scan tickets at this pod's door — FALSE once it
- * is over.
+ * How many minutes before a pod's start its door opens to the host's scanner.
  *
- * The exact mirror of `canCompletePod`: a scanner is what you hold at a door
- * that is still open, so it is offered right up to the end of the pod and not
- * a minute after. Past that the pod is settled from its roster instead — Host
- * Studio keeps the row visible but inert, so a host who reaches for it is told
- * why rather than left looking for a vanished action.
+ * Guests queue a little ahead of the start, so the scanner opens a little
+ * ahead of it — and only a little: attendance is what a host is paid on, and a
+ * ticket scanned the day before records someone present at an event that has
+ * not happened. In minutes because that is the number the copy quotes.
+ */
+export const POD_SCAN_LEAD_MINUTES = 15;
+
+/** Where a pod's door stands for the host's ticket scanner. */
+export type PodScanWindow = 'NOT_OPEN' | 'OPEN' | 'CLOSED';
+
+/**
+ * NOT_OPEN until `POD_SCAN_LEAD_MINUTES` before the start, OPEN from then up
+ * to and including the end, CLOSED after it.
  *
- * Marking someone present by hand is NOT closed by this: rule 41 keeps that
+ * Three states rather than a boolean because the two shut ones tell the host
+ * different things — "not yet" and "too late" — and Host Studio keeps the scan
+ * row visible, greyed, saying whichever applies. Read off `podPhase`, so it
+ * shares that function's fallbacks: a pod with no usable start cannot be placed
+ * on a clock, so it never opens.
+ */
+export function podScanWindow(pod: PodPhaseFields, now: number = Date.now()): PodScanWindow {
+  const { pod_date_time: start, pod_end_date_time: end } = pod;
+  if (podPhase(start, end, now) === 'PREVIOUS') return 'CLOSED';
+  // Still UPCOMING on a clock running the lead fast = more than the lead away.
+  const leadMs = POD_SCAN_LEAD_MINUTES * 60 * 1000;
+  if (podPhase(start, end, now + leadMs) === 'UPCOMING') return 'NOT_OPEN';
+  return 'OPEN';
+}
+
+/**
+ * Whether the host may scan tickets at this pod's door right now — from
+ * `POD_SCAN_LEAD_MINUTES` before the start up to the end, and not a minute
+ * either side (see `podScanWindow`).
+ *
+ * Marking someone present by hand is NOT gated by this: rule 41 keeps that
  * open until the pod is completed, cancelled or its completion window expires,
  * and the server is the one that says so. This is the affordance only.
  */
 export function canScanPodTickets(pod: PodPhaseFields, now: number = Date.now()): boolean {
-  return podPhase(pod.pod_date_time, pod.pod_end_date_time, now) !== 'PREVIOUS';
+  return podScanWindow(pod, now) === 'OPEN';
 }
 
 /**
@@ -118,8 +145,8 @@ export function canScanPodTickets(pod: PodPhaseFields, now: number = Date.now())
  * Settling a past pod is `canCompletePod`'s job, not any of these.
  *
  * Deliberately a separate predicate from `canScanPodTickets` even though the
- * two agree today: the door closing and the plan freezing are different rules
- * about the same instant, and one is free to move without the other.
+ * two close at the same instant: the door closing and the plan freezing are
+ * different rules, and one is free to move without the other.
  */
 export function canAmendPod(pod: PodPhaseFields, now: number = Date.now()): boolean {
   return podPhase(pod.pod_date_time, pod.pod_end_date_time, now) !== 'PREVIOUS';

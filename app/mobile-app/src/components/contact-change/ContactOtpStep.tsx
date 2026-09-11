@@ -52,7 +52,7 @@ export function ContactOtpStep({
 
   return (
     <YStack gap={12}>
-      <Text fontSize={13} color="$muted">
+      <Text fontSize={14} color="$muted">
         {labels.codeSentTo(sentTo)}
       </Text>
       {testCode ? (
@@ -75,15 +75,14 @@ export function ContactOtpStep({
             role="button"
             aria-label={labels.editValue}
             onPress={onEditValue}
-            height={46}
+            height={52}
             alignItems="center"
             justifyContent="center"
-            borderRadius={12}
-            borderWidth={1}
-            borderColor="$borderColor"
+            borderRadius={999}
+            backgroundColor="$soft"
             pressStyle={PRESS_STYLE.control}
           >
-            <Text fontSize={14} fontWeight="600" color="$color">
+            <Text fontSize={15} fontWeight="600" color="$color">
               {labels.editValue}
             </Text>
           </XStack>

@@ -10,6 +10,8 @@ export interface ExploreAction {
   label: string;
   /** The button's accessible name — the caption under it is a count, not a name. */
   ariaLabel?: string;
+  /** Count drawn under the disc; label-only actions leave it unset. */
+  caption?: string;
   onClick: () => void;
   active?: boolean;
   loading?: boolean;
@@ -75,6 +77,7 @@ export default function ExploreActionRail({ actions }: Readonly<{ actions: Explo
           icon={action.icon}
           label={action.label}
           ariaLabel={action.ariaLabel}
+          caption={action.caption}
           onClick={action.onClick}
           active={action.active}
           loading={action.loading}
@@ -109,9 +112,9 @@ export default function ExploreActionRail({ actions }: Readonly<{ actions: Explo
               action.onClick();
             }}
           >
-            <ListItemIcon sx={{ color: action.active ? 'primary.main' : 'inherit' }}>{action.icon}</ListItemIcon>
+            <ListItemIcon sx={{ color: action.active ? 'secondary.main' : 'inherit' }}>{action.icon}</ListItemIcon>
             <ListItemText slotProps={{
-              primary: { sx: { fontWeight: 700 } }
+              primary: { sx: { fontWeight: 600 } }
             }}>{action.label}</ListItemText>
           </MenuItem>
         ))}

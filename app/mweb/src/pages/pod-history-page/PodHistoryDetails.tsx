@@ -19,6 +19,7 @@ import { podUrl } from '../../utils/seoUrls';
 import { useDateFormat } from '../../utils/dateFormat';
 import { fallbackT, type Translate } from '../../i18n/fallback';
 import { useTranslation } from '../../i18n/useTranslation';
+import SectionHeader from '../../components/SectionHeader';
 import PodHistoryTimeline from './PodHistoryTimeline';
 import PodProductOrdersCard from './PodProductOrdersCard';
 import ReplacementNotice from './ReplacementNotice';
@@ -151,7 +152,7 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
             alignItems: { sm: 'center' }
           }}>
-            <Avatar src={imageUrl || undefined} variant="rounded" sx={{ width: { xs: '100%', sm: 96 }, height: 96, borderRadius: '16px', bgcolor: 'action.hover' }}>
+            <Avatar src={imageUrl || undefined} variant="rounded" sx={{ width: { xs: '100%', sm: 96 }, height: { xs: 140, sm: 96 }, borderRadius: '18px', bgcolor: 'action.hover', color: 'text.secondary' }}>
               <EventIcon />
             </Avatar>
             <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -192,12 +193,7 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
                   />
                 )}
               </Stack>
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 700,
-                  lineHeight: 1.1
-                }}>
+              <Typography sx={{ fontSize: 16, fontWeight: 600, lineHeight: 1.25 }}>
                 {pod?.pod_title ?? t('mweb.podHistory.podDetailsTitle')}
               </Typography>
               <Typography variant="body2" sx={{
@@ -219,11 +215,9 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
 
       <Card>
         <CardContent>
-          <Typography variant="subtitle1" gutterBottom sx={{
-            fontWeight: 700
-          }}>
-            {t('mweb.podHistory.actions')}
-          </Typography>
+          <Box sx={{ mb: 1.5 }}>
+            <SectionHeader title={t('mweb.podHistory.actions')} />
+          </Box>
           <PodHistoryActions
             item={item}
             isDeleted={isDeleted}
@@ -264,11 +258,9 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
 
       <Card>
         <CardContent>
-          <Typography variant="subtitle1" gutterBottom sx={{
-            fontWeight: 700
-          }}>
-            {t('mweb.podHistory.timeline')}
-          </Typography>
+          <Box sx={{ mb: 1.5 }}>
+            <SectionHeader title={t('mweb.podHistory.timeline')} />
+          </Box>
           <PodHistoryTimeline item={item} />
         </CardContent>
       </Card>

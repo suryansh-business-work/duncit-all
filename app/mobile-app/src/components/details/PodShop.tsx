@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import type { PodDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { PodShopProductRow } from './PodShopProductRow';
 import { ProductDetailSheet, type VariantPick } from './ProductDetailSheet';
 
@@ -38,7 +41,8 @@ export function PodShop({
   onVariantQuantity,
   readOnly = false,
 }: Readonly<PodShopProps>) {
-  const { primary } = useThemeColors();
+  const { primary, muted } = useThemeColors();
+  const { t } = useTranslation();
   const [infoProductId, setInfoProductId] = useState<string | null>(null);
   const products = pod.product_requests ?? [];
   const baseTotal = products.reduce(
@@ -69,33 +73,16 @@ export function PodShop({
     : undefined;
 
   return (
-    <YStack
-      margin={16}
-      padding={16}
-      gap={14}
-      borderRadius={18}
-      backgroundColor="$background"
-      borderWidth={1}
-      borderColor="$borderColor"
-      testID="pod-shop"
-    >
-      <XStack alignItems="center" justifyContent="space-between">
-        <XStack gap={8} alignItems="center">
-          <MaterialIcons name="storefront" size={22} color="#ff8b5f" />
-          <YStack>
-            <Text fontSize={11} fontWeight="600" color="$muted" letterSpacing={0.4}>
-              POD SHOP
-            </Text>
-            <Text fontSize={16} fontWeight="700" color="$color">
-              Products
-            </Text>
-          </YStack>
-        </XStack>
+    <SurfaceCard marginHorizontal={16} marginTop={20} gap={14} testID="pod-shop">
+      <XStack alignItems="center" justifyContent="space-between" gap={12}>
+        <YStack flex={1}>
+          <SectionHeader title={t('mweb.shop.title')} />
+        </YStack>
         <XStack
           paddingHorizontal={10}
           paddingVertical={5}
           borderRadius={999}
-          backgroundColor="$surface"
+          backgroundColor="$soft"
         >
           <Text fontSize={12} fontWeight="600" color="$color">
             {pod.products_enabled ? 'Available' : 'Closed'}
@@ -105,7 +92,7 @@ export function PodShop({
 
       {products.length === 0 ? (
         <XStack gap={8} alignItems="center" testID="pod-shop-empty">
-          <MaterialIcons name="info-outline" size={16} color={primary} />
+          <MaterialIcons name="info-outline" size={16} color={muted} />
           <Text fontSize={13.5} color="$muted">
             No products available yet.
           </Text>
@@ -150,6 +137,6 @@ export function PodShop({
         readOnly={readOnly}
         onUpdateLine={onUpdateInfoLine}
       />
-    </YStack>
+    </SurfaceCard>
   );
 }

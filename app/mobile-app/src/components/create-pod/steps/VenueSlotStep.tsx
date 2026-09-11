@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { FieldLabel } from '@/components/Field';
 import { MapEmbed } from '@/components/MapEmbed';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
@@ -89,15 +90,14 @@ function SpaceChip({
       aria-label={label}
       aria-pressed={selected}
       onPress={() => onPick(space)}
-      paddingHorizontal={12}
-      paddingVertical={7}
+      minHeight={36}
+      alignItems="center"
+      paddingHorizontal={14}
       borderRadius={999}
-      borderWidth={1}
-      borderColor={selected ? '$primary' : '$borderColor'}
-      backgroundColor={selected ? '$primary' : 'transparent'}
+      backgroundColor={selected ? '$primary' : '$soft'}
       pressStyle={PRESS_STYLE.control}
     >
-      <Text fontSize={12.5} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
+      <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
         {label}
       </Text>
     </XStack>
@@ -122,21 +122,14 @@ function VenueSpaceCard({
   const spaceName = (space: VenueSpace) =>
     space.slotSpaceLabel ? space.label : t('mweb.slots.wholeVenue');
   return (
-    <YStack
-      gap={8}
-      padding={12}
-      borderRadius={12}
-      backgroundColor="$surface"
-      borderWidth={1}
-      borderColor="$borderColor"
-    >
-      <Text testID="create-pod-venue-capacity" fontSize={13} fontWeight="600" color="$color">
+    <SurfaceCard gap={12}>
+      <Text testID="create-pod-venue-capacity" fontSize={14} fontWeight="600" color="$color">
         {venue.venue_type ? `${venue.venue_type} · ` : ''}
         {t('mweb.createPod.totalCapacity', { vars: { count: venue.capacity ?? 0 } })}
       </Text>
-      <YStack gap={6}>
+      <YStack gap={8}>
         <FieldLabel label={t('mweb.createPod.spaceCapacity')} required testID="create-pod-space" />
-        <XStack gap={6} flexWrap="wrap">
+        <XStack gap={8} flexWrap="wrap">
           {spaces.map((space) => (
             <SpaceChip
               key={space.label}
@@ -151,7 +144,7 @@ function VenueSpaceCard({
           {spaceError ?? t('mweb.createPod.spaceHint')}
         </Text>
       </YStack>
-    </YStack>
+    </SurfaceCard>
   );
 }
 
@@ -159,9 +152,11 @@ function VenueSpaceCard({
 function SlotApprovalNote({ ownVenue }: Readonly<{ ownVenue: boolean }>) {
   const { t } = useTranslation();
   return (
-    <Text testID="create-pod-approval-note" fontSize={12.5} fontWeight="700" color="$muted">
-      {ownVenue ? t('mweb.createPod.ownVenueNote') : t('mweb.createPod.venueApprovalNote')}
-    </Text>
+    <YStack padding={12} borderRadius={14} backgroundColor={ownVenue ? '$successSoft' : '$soft'}>
+      <Text testID="create-pod-approval-note" fontSize={13} fontWeight="500" color="$color">
+        {ownVenue ? t('mweb.createPod.ownVenueNote') : t('mweb.createPod.venueApprovalNote')}
+      </Text>
+    </YStack>
   );
 }
 
@@ -243,7 +238,7 @@ export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Read
   const mapQuery = venueMapQuery(selectedVenue);
 
   return (
-    <YStack gap={14}>
+    <YStack gap={16}>
       <Controller
         control={control}
         name="venue_id"
@@ -291,7 +286,7 @@ export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Read
       {selectedVenue ? <VenueContactCard venue={selectedVenue} /> : null}
       {mapQuery ? <MapEmbed query={mapQuery} height={200} /> : null}
       {duration ? (
-        <Text testID="pod-duration" fontSize={12.5} fontWeight="600" color="$muted">
+        <Text testID="pod-duration" fontSize={14} fontWeight="600" color="$muted">
           {t('mweb.createPod.podWindow', { vars: { duration } })}
         </Text>
       ) : null}

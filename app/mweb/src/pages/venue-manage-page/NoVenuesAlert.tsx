@@ -19,7 +19,6 @@ export default function NoVenuesAlert({ message }: Readonly<{ message: string }>
           to="/register-venue"
           variant="contained"
           size="small"
-          sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {t('mweb.venueManagePage.newVenue')}
         </DuncitButton>

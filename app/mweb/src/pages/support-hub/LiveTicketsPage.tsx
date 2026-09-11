@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router';
 import { Box, Paper, Stack, Typography } from '@mui/material';
-import ForumIcon from '@mui/icons-material/Forum';
-import SensorsIcon from '@mui/icons-material/Sensors';
+import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import SupportShell from './SupportShell';
 import { useTranslation } from '../../i18n/useTranslation';
+import { SURFACE_SX } from '../../theme';
 
 /**
  * "Chat with Us" — a single entry point into the real-time agent chat. The
@@ -16,32 +17,32 @@ export default function LiveTicketsPage() {
   const navigate = useNavigate();
 
   return (
-    <SupportShell
-      title={t('mweb.common.chatWithUs')}
-      subtitle={t('mweb.supportHub.realTimeChatWithOurSupport')}
-      icon={<SensorsIcon fontSize="small" />}
-      gradient="linear-gradient(135deg, #4caf50 0%, #2196f3 100%)"
-      backTo="/support"
-    >
+    <SupportShell title={t('mweb.common.chatWithUs')} backTo="/support">
       <Paper
         onClick={() => navigate('/live-chat')}
-        variant="outlined"
-        sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'rgba(33,150,243,0.08)', cursor: 'pointer' }}
+        sx={{ ...SURFACE_SX, p: 2, cursor: 'pointer' }}
       >
-        <Stack direction="row" spacing={1} sx={{
+        <Stack direction="row" spacing={1.5} sx={{
           alignItems: "center"
         }}>
-          <ForumIcon color="primary" />
-          <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
-              Chat live with an agent
-            </Typography>
-            <Typography variant="caption" sx={{
-              color: "text.secondary"
-            }}>
-              Get real-time answers without raising a ticket.
-            </Typography>
+          <Box
+            sx={{
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              display: 'grid',
+              placeItems: 'center',
+              color: 'primary.contrastText',
+              bgcolor: 'primary.main',
+              flexShrink: 0,
+            }}
+          >
+            <ForumOutlinedIcon fontSize="small" />
           </Box>
+          <Typography sx={{ minWidth: 0, flex: 1, fontSize: '0.9375rem', fontWeight: 600 }} noWrap>
+            {t('mweb.chatWithUs.chatLiveWithAnAgent')}
+          </Typography>
+          <ChevronRightRoundedIcon sx={{ color: 'text.secondary' }} />
         </Stack>
       </Paper>
     </SupportShell>

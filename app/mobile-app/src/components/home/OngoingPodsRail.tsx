@@ -1,10 +1,9 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { semantic } from '@duncit/auth-tokens';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { ScrollView, YStack } from 'tamagui';
 
 import type { HomePod } from '@/hooks/useHomeFeed';
 import { Reveal } from '@/animations/Reveal';
-import { PodCard } from '@/components/home/PodCard';
+import { POD_CARD_RAIL_WIDTH, PodCard } from '@/components/home/PodCard';
+import { SectionHeader } from '@/components/SectionHeader';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
@@ -29,18 +28,10 @@ export function OngoingPodsRail({ pods, onOpenPod }: Readonly<Props>) {
   if (pods.length === 0) return null;
 
   return (
-    <YStack gap={10} testID="ongoing-pods-rail">
-      <XStack alignItems="center" gap={8} paddingHorizontal={16}>
-        <MaterialIcons name="sensors" size={20} color={semantic.success} />
-        <YStack flex={1}>
-          <Text fontSize={16} fontWeight="700" color="$color">
-            {t('mweb.home.ongoingPodsTitle')}
-          </Text>
-          <Text fontSize={12} fontWeight="700" color="$muted">
-            {t('mweb.home.ongoingPodsSubtitle')}
-          </Text>
-        </YStack>
-      </XStack>
+    <YStack gap={12} testID="ongoing-pods-rail">
+      <YStack paddingHorizontal={16}>
+        <SectionHeader title={t('mweb.home.ongoingPodsTitle')} />
+      </YStack>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -48,7 +39,7 @@ export function OngoingPodsRail({ pods, onOpenPod }: Readonly<Props>) {
       >
         {pods.map((pod, index) => (
           <Reveal key={pod.id} index={index} scale>
-            <PodCard pod={pod} width={300} onPress={() => onOpenPod(pod)} />
+            <PodCard pod={pod} width={POD_CARD_RAIL_WIDTH} onPress={() => onOpenPod(pod)} />
           </Reveal>
         ))}
       </ScrollView>

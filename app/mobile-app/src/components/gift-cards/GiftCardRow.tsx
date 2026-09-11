@@ -1,8 +1,10 @@
 import { Share } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, XStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
+import { GiftCardStatus } from '@/generated/graphql/graphql';
 import type { GiftCard } from '@/hooks/useGiftCards';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -23,6 +25,45 @@ interface Props {
   onNotice: (message: string) => void;
 }
 
+/** Status → the text colour of its soft pill (the fill is always `$soft`). */
+const STATUS_TONE: Record<GiftCardStatus, string> = {
+  [GiftCardStatus.Active]: '$success',
+  [GiftCardStatus.Redeemed]: '$muted',
+  [GiftCardStatus.Expired]: '$warning',
+};
+
+/** A 36px round soft icon button (copy / share). */
+function RoundAction({
+  testID,
+  label,
+  icon,
+  onPress,
+}: Readonly<{
+  testID: string;
+  label: string;
+  icon: 'content-copy' | 'share';
+  onPress: () => void;
+}>) {
+  const { color: ink } = useThemeColors();
+  return (
+    <XStack
+      testID={testID}
+      role="button"
+      aria-label={label}
+      onPress={onPress}
+      width={36}
+      height={36}
+      alignItems="center"
+      justifyContent="center"
+      borderRadius={999}
+      backgroundColor="$soft"
+      pressStyle={PRESS_STYLE.control}
+    >
+      <MaterialIcons name={icon} size={18} color={ink} />
+    </XStack>
+  );
+}
+
 /** One card in My cards: the visual with its code, status + validity, and the
  * copy/share actions. The link is the mWeb claim page (rule 27). */
 export function GiftCardRow({
@@ -33,7 +74,6 @@ export function GiftCardRow({
   onNotice,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { color: ink } = useThemeColors();
   const copyLabel = t('mweb.giftCards.copyCode');
   const shareLabel = t('mweb.giftCards.shareCard');
   const statusLabel = t(GIFT_CARD_STATUS_KEYS[card.status]);
@@ -53,7 +93,7 @@ export function GiftCardRow({
   };
 
   return (
-    <YStack testID={`gift-card-row-${card.id}`} gap={8}>
+    <SurfaceCard testID={`gift-card-row-${card.id}`} padding={12} gap={12}>
       <GiftCardVisual
         theme={card}
         imageUrl={card.scope_image_url}
@@ -62,58 +102,39 @@ export function GiftCardRow({
         amountLabel={formatMoney(currency, card.initial_amount)}
         code={card.code}
       />
-      <XStack alignItems="center" gap={8} flexWrap="wrap">
-        <Text
-          fontSize={10.5}
-          fontWeight="700"
-          textTransform="uppercase"
-          letterSpacing={0.3}
-          color="$primary"
-          borderWidth={1}
-          borderColor="$primary"
+      <XStack alignItems="center" gap={8} paddingHorizontal={4}>
+        <XStack
+          height={24}
+          paddingHorizontal={10}
+          alignItems="center"
           borderRadius={999}
-          paddingHorizontal={7}
-          paddingVertical={2}
+          backgroundColor="$soft"
         >
-          {statusLabel}
-        </Text>
-        <Text flex={1} fontSize={12} color="$muted">
+          <Text fontSize={12} fontWeight="600" color={STATUS_TONE[card.status]}>
+            {statusLabel}
+          </Text>
+        </XStack>
+        <Text flex={1} fontSize={12} color="$muted" numberOfLines={1}>
           {t('mweb.giftCards.validUntil', { vars: { date: formatDate(card.expires_at) } })}
         </Text>
-        <XStack
+        <RoundAction
           testID={`gift-card-copy-${card.id}`}
-          role="button"
-          aria-label={copyLabel}
+          label={copyLabel}
+          icon="content-copy"
           onPress={copy}
-          alignItems="center"
-          gap={4}
-          pressStyle={PRESS_STYLE.row}
-        >
-          <MaterialIcons name="content-copy" size={15} color={ink} />
-          <Text fontSize={12.5} fontWeight="700" color="$color">
-            {copyLabel}
-          </Text>
-        </XStack>
-        <XStack
+        />
+        <RoundAction
           testID={`gift-card-share-${card.id}`}
-          role="button"
-          aria-label={shareLabel}
+          label={shareLabel}
+          icon="share"
           onPress={share}
-          alignItems="center"
-          gap={4}
-          pressStyle={PRESS_STYLE.row}
-        >
-          <MaterialIcons name="share" size={15} color={ink} />
-          <Text fontSize={12.5} fontWeight="700" color="$color">
-            {shareLabel}
-          </Text>
-        </XStack>
+        />
       </XStack>
       {showRecipient && card.recipient_email ? (
-        <Text fontSize={12} color="$muted" numberOfLines={1}>
+        <Text paddingHorizontal={4} fontSize={12} color="$muted" numberOfLines={1}>
           {card.recipient_name || card.recipient_email}
         </Text>
       ) : null}
-    </YStack>
+    </SurfaceCard>
   );
 }

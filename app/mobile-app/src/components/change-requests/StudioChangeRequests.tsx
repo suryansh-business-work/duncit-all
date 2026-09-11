@@ -1,6 +1,7 @@
-import { Text, YStack } from 'tamagui';
 import type { PodChangeRole } from '@duncit/utils';
 
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { ChangeRequestBoard } from '@/components/change-requests/ChangeRequestBoard';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -16,24 +17,9 @@ export function StudioChangeRequests({ role }: Readonly<{ role: PodChangeRole }>
   const { t } = useTranslation();
 
   return (
-    <YStack
-      testID={`studio-change-requests-${role}`}
-      gap={10}
-      padding={12}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
-      <YStack gap={2}>
-        <Text fontSize={16} fontWeight="700" color="$color">
-          {t('changeRequest.sectionTitle')}
-        </Text>
-        <Text fontSize={11.5} color="$muted">
-          {t('changeRequest.sectionSubtitle')}
-        </Text>
-      </YStack>
+    <SurfaceCard testID={`studio-change-requests-${role}`} gap={16}>
+      <SectionHeader title={t('changeRequest.sectionTitle')} />
       <ChangeRequestBoard role={role} testID={`change-requests-${role}`} />
-    </YStack>
+    </SurfaceCard>
   );
 }

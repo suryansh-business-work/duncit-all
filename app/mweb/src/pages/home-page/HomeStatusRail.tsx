@@ -3,6 +3,7 @@ import { Box, Stack } from '@mui/material';
 import NearMeIcon from '@mui/icons-material/NearMe';
 import { useMutation } from '@apollo/client/react';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import { SURFACE_SX } from '../../theme';
 import AdTile from '../../components/ads/AdTile';
 import { useActiveAds } from '../../components/ads/useActiveAds';
 import HomeStatusTile from './HomeStatusTile';
@@ -106,12 +107,8 @@ export default function HomeStatusRail({
        * paper-plane doodle trailing the tiles. */}
       <Box
         sx={{
-          borderRadius: '20px',
-          border: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          py: 1.25,
-          mb: 1.25,
+          ...SURFACE_SX,
+          py: 1.5,
           minHeight: 96,
           overflowX: 'auto',
           overflowY: 'hidden',
@@ -154,10 +151,10 @@ export default function HomeStatusRail({
               opacity: 0.55,
               flex: '0 0 auto'
             }}>
-            <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'primary.main' }} />
-            <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'primary.main' }} />
-            <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'primary.main' }} />
-            <NearMeIcon sx={{ fontSize: 22, color: 'primary.main', transform: 'rotate(45deg)' }} />
+            <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'secondary.main' }} />
+            <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'secondary.main' }} />
+            <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'secondary.main' }} />
+            <NearMeIcon sx={{ fontSize: 22, color: 'secondary.main', transform: 'rotate(45deg)' }} />
           </Stack>
         </Stack>
       </Box>

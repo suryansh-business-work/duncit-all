@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -33,23 +34,15 @@ export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonl
   const close = t('mweb.auth.close');
 
   const footer = (
-    <XStack
+    <DuncitButton
       testID="moderation-blocked-close"
-      role="button"
-      aria-label={close}
+      label={close}
       onPress={onClose}
-      height={46}
-      borderRadius={12}
-      alignItems="center"
-      justifyContent="center"
-      borderWidth={1}
-      borderColor="$borderColor"
-      pressStyle={PRESS_STYLE.row}
-    >
-      <Text fontSize={14} fontWeight="600" color="$color">
-        {close}
-      </Text>
-    </XStack>
+      variant="soft"
+      tone="neutral"
+      size="lg"
+      fullWidth
+    />
   );
 
   return (
@@ -74,12 +67,10 @@ export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonl
               key={violation.id}
               gap={6}
               backgroundColor="$surface"
-              borderRadius={12}
-              padding={12}
-              borderWidth={1}
-              borderColor="$borderColor"
+              borderRadius={16}
+              padding={14}
             >
-              <Text fontSize={12.5} fontWeight="700" color="$color">
+              <Text fontSize={14} fontWeight="600" color="$color">
                 {violation.message}
               </Text>
               <XStack
@@ -93,7 +84,7 @@ export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonl
                 pressStyle={PRESS_STYLE.row}
               >
                 <MaterialIcons name="arrow-forward" size={14} color={primary} />
-                <Text fontSize={12} fontWeight="600" color="$primary">
+                <Text fontSize={13} fontWeight="600" color="$primary">
                   {fixIn}
                 </Text>
               </XStack>

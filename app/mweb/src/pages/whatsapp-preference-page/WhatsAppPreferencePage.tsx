@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Alert, Box, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -59,10 +60,11 @@ export default function WhatsAppPreferencePage() {
     <Box sx={{ pt: 1.5 }}>
       <DuncitButton
         fullWidth
-        variant="outlined"
+        size="large"
         color={allOff ? 'primary' : 'error'}
         onClick={bulkAction}
         disabled={state.busyCategory !== null || !reachable}
+        sx={{ bgcolor: (theme) => alpha(theme.palette[allOff ? 'primary' : 'error'].main, 0.1) }}
       >
         {bulkLabel}
       </DuncitButton>
@@ -72,9 +74,7 @@ export default function WhatsAppPreferencePage() {
   return (
     <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', pb: 4 }}>
       <Stack spacing={0.5}>
-        <Typography variant="h6" sx={{
-          fontWeight: 800
-        }}>
+        <Typography component="h1" sx={{ fontSize: 20, fontWeight: 600 }}>
           {t('whatsappPreference.title')}
         </Typography>
         {/* Only worth saying when there is a number to name — with none, the

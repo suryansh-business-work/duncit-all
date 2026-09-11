@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useWatch } from 'react-hook-form';
-import { Box, Skeleton, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
-import { alpha, useTheme } from '@mui/material/styles';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { Box, Skeleton, Stack } from '@mui/material';
+import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
 import { useCart } from '../../components/cart/CartContext';
+import EmptyState from '../../components/EmptyState';
+import PageHeader from '../../components/PageHeader';
 import { buildBreakup } from '../checkout-page/checkoutMath';
 import CheckoutSuccess from '../checkout-page/CheckoutSuccess';
 import GatewayChip from '../checkout-page/GatewayChip';
@@ -28,8 +27,6 @@ import { useProductShippingQuote } from './useProductShippingQuote';
  * payment with one Pay button; delivery is listed per warehouse group. */
 export default function ProductCheckoutPage() {
   const { t } = useTranslation();
-  const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
   const navigate = useNavigate();
   const { lines, clearAll } = useCart();
 
@@ -89,42 +86,24 @@ export default function ProductCheckoutPage() {
 
   if (lines.length === 0) {
     return (
-      <EmptyProductCheckout
-        onCart={() => navigate('/cart')}
+      <EmptyState
+        icon={<ShoppingBagOutlinedIcon />}
         title={t('mweb.checkout.nothingToCheckout')}
-        body={t('mweb.checkout.noProductsInCart')}
-        action={t('mweb.checkout.backToCart')}
+        actionLabel={t('mweb.checkout.backToCart')}
+        onAction={() => navigate('/cart')}
       />
     );
   }
   if (session.financeLoading || !breakup) return <ProductCheckoutSkeleton />;
 
-  const headerBg = isDark
-    ? 'linear-gradient(145deg, #15111c 0%, #2a1926 58%, #111827 100%)'
-    : `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.96)} 0%, ${alpha(theme.palette.primary.light, 0.18)} 58%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`;
-
   return (
-    <Box sx={{ maxWidth: 720, mx: 'auto' }}>
-      <Box sx={{ p: 2, borderRadius: '16px', color: 'text.primary', background: headerBg, boxShadow: isDark ? '0 18px 44px rgba(17, 24, 39, 0.22)' : `0 18px 44px ${alpha(theme.palette.primary.dark, 0.12)}`, border: '1px solid', borderColor: 'divider' }}>
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{
-            alignItems: "center",
-            mb: 2
-          }}>
-          <DuncitIconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={{ color: 'text.primary', bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.primary.main, 0.1), '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.18)' : alpha(theme.palette.primary.main, 0.16) } }}><ArrowBackIcon /></DuncitIconButton>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>{t('mweb.checkout.productTitle')}</Typography>
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 700,
-                lineHeight: 1.1
-              }}>{t('mweb.checkout.productHeading')}</Typography>
-          </Box>
-          <GatewayChip finance={session.finance} />
-        </Stack>
+    <Box sx={{ maxWidth: 720, mx: 'auto', py: 0.5 }}>
+      <Stack spacing={2}>
+        <PageHeader
+          title={t('mweb.checkout.productTitle')}
+          onBack={() => navigate(-1)}
+          right={<GatewayChip finance={session.finance} />}
+        />
         <SavedAddressPicker
           onPick={(address) => {
             session.pickAddress(address);
@@ -167,7 +146,7 @@ export default function ProductCheckoutPage() {
             addressRequired
           />
         </Stack>
-      </Box>
+      </Stack>
       <ProductDetailDialog productId={infoProductId} onClose={() => setInfoProductId(null)} />
       <PaymentFailureDialog
         failure={payment.failure}
@@ -185,40 +164,14 @@ export default function ProductCheckoutPage() {
   );
 }
 
-function EmptyProductCheckout({
-  onCart,
-  title,
-  body,
-  action,
-}: Readonly<{ onCart: () => void; title: string; body: string; action: string }>) {
-  return (
-    <Stack
-      spacing={1.5}
-      sx={{
-        alignItems: "center",
-        py: 8,
-        textAlign: 'center'
-      }}>
-      <ShoppingBagIcon sx={{ fontSize: 44, color: 'text.disabled' }} />
-      <Typography variant="h6" sx={{
-        fontWeight: 700
-      }}>{title}</Typography>
-      <Typography variant="body2" sx={{
-        color: "text.secondary"
-      }}>{body}</Typography>
-      <DuncitButton variant="contained" onClick={onCart} sx={{ borderRadius: 999, fontWeight: 600 }}>{action}</DuncitButton>
-    </Stack>
-  );
-}
-
 function ProductCheckoutSkeleton() {
   return (
-    <Box sx={{ maxWidth: 720, mx: 'auto', p: 2 }}>
+    <Box sx={{ maxWidth: 720, mx: 'auto', py: 0.5 }}>
       <Stack spacing={2}>
         <Skeleton variant="text" width="40%" height={40} />
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-          <Skeleton variant="rounded" height={260} sx={{ flex: 1 }} />
-          <Skeleton variant="rounded" height={420} sx={{ flex: 1 }} />
+          <Skeleton variant="rounded" height={260} sx={{ flex: 1, borderRadius: '24px' }} />
+          <Skeleton variant="rounded" height={420} sx={{ flex: 1, borderRadius: '24px' }} />
         </Stack>
       </Stack>
     </Box>

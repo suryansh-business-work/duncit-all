@@ -8,22 +8,31 @@ import { formatTime, tickState } from '@/utils/support-chat';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
-const TICK_COLOR = { delivered: '#9aa0a6', seen: '#34b7f1' } as const;
+/** The "seen" double tick keeps the blue every chat uses (mWeb SEEN_BLUE). */
+const SEEN_TICK = '#34b7f1';
+const TICK_DIM = { opacity: 0.7 } as const;
 
 /** WhatsApp-style delivery indicator for the user's own message (B12):
- * clock = pending, single grey ✓ = Sent/delivered, double blue ✓✓ = Seen. */
+ * clock = pending, single ✓ = Sent/delivered, double blue ✓✓ = Seen. The
+ * pending/sent marks are the bubble's own ink, dimmed. */
 function Tick({ id, state }: Readonly<{ id: string; state: 'pending' | 'delivered' | 'seen' }>) {
+  const { onPrimary } = useThemeColors();
   if (state === 'pending') {
-    return <MaterialIcons testID={`tick-${id}`} name="schedule" size={12} color="#e6e6e6" />;
+    return (
+      <MaterialIcons
+        testID={`tick-${id}`}
+        name="schedule"
+        size={12}
+        color={onPrimary}
+        style={TICK_DIM}
+      />
+    );
   }
-  const seen = state === 'seen';
+  if (state === 'seen') {
+    return <MaterialIcons testID={`tick-${id}`} name="done-all" size={13} color={SEEN_TICK} />;
+  }
   return (
-    <MaterialIcons
-      testID={`tick-${id}`}
-      name={seen ? 'done-all' : 'done'}
-      size={13}
-      color={TICK_COLOR[state]}
-    />
+    <MaterialIcons testID={`tick-${id}`} name="done" size={13} color={onPrimary} style={TICK_DIM} />
   );
 }
 
@@ -52,9 +61,9 @@ export function SupportChatBubble({
           fontWeight="600"
           color="$muted"
           textAlign="center"
-          borderWidth={1}
-          borderColor="$borderColor"
+          backgroundColor="$soft"
           borderRadius={999}
+          overflow="hidden"
           paddingHorizontal={10}
           paddingVertical={4}
         >
@@ -72,14 +81,17 @@ export function SupportChatBubble({
       <YStack
         maxWidth="80%"
         gap={6}
-        padding={10}
-        borderRadius={14}
+        paddingHorizontal={12}
+        paddingVertical={8}
+        borderRadius={18}
+        borderBottomRightRadius={mine ? 6 : 18}
+        borderBottomLeftRadius={mine ? 18 : 6}
         backgroundColor={mine ? '$primary' : '$surface'}
         borderWidth={mine ? 0 : 1}
-        borderColor="$borderColor"
+        borderColor="$cardBorder"
       >
         {!mine && (
-          <Text fontSize={11} fontWeight="600" color={message.is_ai ? '$primary' : '$muted'}>
+          <Text fontSize={12} fontWeight="600" color={message.is_ai ? '$accent' : '$muted'}>
             {message.is_ai ? 'Duncit Assistant' : message.sender_name || 'Support'}
           </Text>
         )}

@@ -30,7 +30,7 @@ export default function LocationMapPreview({ city, zoneName, pincode, country }:
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 
   return (
-    <Box sx={{ mt: 0.5, mb: 1 }}>
+    <Box>
       <Stack
         direction="row"
         sx={{
@@ -42,7 +42,8 @@ export default function LocationMapPreview({ city, zoneName, pincode, country }:
           variant="overline"
           sx={{
             color: "text.secondary",
-            fontWeight: 700
+            fontWeight: 600,
+            lineHeight: 1.4
           }}>
           Map
         </Typography>
@@ -52,7 +53,7 @@ export default function LocationMapPreview({ city, zoneName, pincode, country }:
           rel="noreferrer"
           size="small"
           endIcon={<OpenInNewIcon fontSize="small" />}
-          sx={{ minHeight: 30, px: 1 }}
+          sx={{ minHeight: 32, px: 1.25 }}
         >
           Open in Maps
         </DuncitButton>
@@ -67,9 +68,8 @@ export default function LocationMapPreview({ city, zoneName, pincode, country }:
         sx={{
           width: '100%',
           height: 200,
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: '16px',
+          border: '1px solid var(--duncit-card-border)',
+          borderRadius: '18px',
           display: 'block',
           bgcolor: 'action.hover',
         }}

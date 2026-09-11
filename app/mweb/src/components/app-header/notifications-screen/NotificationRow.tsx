@@ -1,6 +1,6 @@
-import { Avatar, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import { Avatar, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { followRequestRowState } from '@duncit/utils';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import { formatRelative } from '../queries';
 import { notificationIcon } from '../notificationIcon';
 import FollowRequestActions from './FollowRequestActions';
@@ -22,8 +22,9 @@ const CLAMP_2 = {
   overflow: 'hidden',
 } as const;
 
-/** One notification card — chat-style row (avatar · title + preview · time),
- * unread highlighted by the primary gradient. */
+/** One notification row — icon disc · title + preview · time, with an accent
+ * dot while unread. The list groups the rows inside one card. Native twin:
+ * components/notifications/NotificationRow. */
 export default function NotificationRow({
   item,
   busy,
@@ -61,80 +62,65 @@ export default function NotificationRow({
       }}
       aria-busy={busy}
       sx={{
-        p: 1.35,
-        borderRadius: '16px',
+        px: 2,
+        py: 1.75,
         cursor: busy ? 'progress' : 'pointer',
-        color: unread ? 'primary.contrastText' : 'text.primary',
-        background: unread ? 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' : undefined,
-        bgcolor: unread ? undefined : 'background.paper',
-        border: 1,
-        borderColor: unread ? 'transparent' : 'divider',
-        boxShadow: unread ? '0 16px 34px rgba(255,79,115,0.28)' : 'none',
+        color: 'text.primary',
         opacity: busy ? 0.6 : 1,
-        // The gradient → surface swap on read is the transition worth animating:
-        // without it the card snaps from pink to white mid-tap.
-        transition:
-          'transform 160ms ease, box-shadow 220ms ease, opacity 160ms ease, background-color 260ms ease, color 260ms ease',
-        '&:hover': { transform: busy ? 'none' : 'translateY(-1px)' },
-        '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
+        transition: 'background-color 160ms ease, opacity 160ms ease',
+        '&:hover': { bgcolor: busy ? undefined : 'action.hover' },
+        '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: -2 },
       }}
     >
-      <Stack direction="row" spacing={1.25} sx={{
-        alignItems: "center"
+      <Stack direction="row" spacing={1.5} sx={{
+        alignItems: "flex-start"
       }}>
         <Avatar
           src={notification?.image_url || undefined}
-          sx={{ width: 48, height: 48, bgcolor: unread ? 'rgba(255,255,255,0.24)' : 'primary.main' }}
+          sx={{ width: 40, height: 40, bgcolor: 'action.hover', color: 'secondary.main' }}
         >
-          <RowIcon />
+          <RowIcon fontSize="small" />
         </Avatar>
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Stack direction="row" spacing={0.75} sx={{
             alignItems: "center"
           }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, flex: 1, minWidth: 0, ...CLAMP_2 }}>
+            <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, flex: 1, minWidth: 0, ...CLAMP_2 }}>
               {notification?.title ?? 'Notification'}
             </Typography>
-            <Typography variant="caption" sx={{ fontWeight: 600, opacity: unread ? 0.9 : 0.7 }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary', flexShrink: 0 }}>
               {formatRelative(item.created_at)}
             </Typography>
+            {unread && (
+              <Box
+                aria-hidden
+                sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'secondary.main', flexShrink: 0 }}
+              />
+            )}
           </Stack>
           <Stack direction="row" spacing={1} sx={{
             alignItems: "center"
           }}>
             <Typography
               variant="body2"
-              sx={{ flex: 1, minWidth: 0, opacity: unread ? 0.92 : 0.75, ...CLAMP_2 }}
+              sx={{ flex: 1, minWidth: 0, color: 'text.secondary', fontSize: '0.8125rem', ...CLAMP_2 }}
             >
               {notification?.body}
             </Typography>
-            {unread && (
-              <Chip
-                label="NEW"
-                size="small"
-                sx={{
-                  height: 20,
-                  fontSize: 10.5,
-                  fontWeight: 700,
-                  color: '#fff',
-                  bgcolor: 'rgba(255,255,255,0.26)',
-                }}
-              />
-            )}
+            {busy && <CircularProgress size={18} color="inherit" />}
+            {showChevron && <ChevronRightRoundedIcon sx={{ color: 'text.secondary' }} />}
           </Stack>
+          <FollowRequestActions
+            actionType={notification?.action_type}
+            requestId={notification?.action_ref_id}
+            status={notification?.action_status}
+            actorId={notification?.action_actor_id}
+            followBackStatus={notification?.follow_back_status}
+            unreadRow={unread}
+            onAnswered={() => onAnswered?.()}
+          />
         </Box>
-        {busy && <CircularProgress size={18} color="inherit" />}
-        {showChevron && <ArrowForwardIcon sx={{ color: unread ? '#fff' : 'primary.main' }} />}
       </Stack>
-      <FollowRequestActions
-        actionType={notification?.action_type}
-        requestId={notification?.action_ref_id}
-        status={notification?.action_status}
-        actorId={notification?.action_actor_id}
-        followBackStatus={notification?.follow_back_status}
-        unreadRow={unread}
-        onAnswered={() => onAnswered?.()}
-      />
     </Box>
   );
 }

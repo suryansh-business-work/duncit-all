@@ -25,7 +25,7 @@ function CoinRow({ gold, caption, children }: Readonly<RowProps>) {
       justifyContent="space-between"
       gap={8}
       padding={12}
-      borderRadius={12}
+      borderRadius={16}
       backgroundColor={COIN_GOLD_TINT}
       borderWidth={1}
       borderColor={gold}

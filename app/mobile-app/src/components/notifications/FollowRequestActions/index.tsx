@@ -69,7 +69,7 @@ export function FollowRequestActions({
   unreadRow,
   onAnswered,
 }: Readonly<Props>) {
-  const { muted, onPrimary, primary } = useThemeColors();
+  const { muted, primary } = useThemeColors();
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
@@ -84,12 +84,10 @@ export function FollowRequestActions({
   // NEW_FOLLOWER row (no request behind it) or a withdrawn one (going away).
   const outcomeKey = followOutcomeLabelKey(status);
   const settledLabel = outcomeKey ? t(outcomeKey) : null;
-  // Hoisted to nesting 0 (rule 26g): both inks are the same decision in every
-  // branch below, and computing them once keeps them all on one value — and
-  // out of a child, where the branch would only run on that child's path and
-  // leave the other side uncovered.
-  const accentInk = unreadRow ? onPrimary : primary;
-  const quietInk = unreadRow ? onPrimary : muted;
+  // Rows sit on the plain surface now (no gradient), so the inks are the
+  // theme's own; an unread row only dims Deny a touch so Accept leads.
+  const accentInk = primary;
+  const quietInk = muted;
 
   const followBackOffered = offersFollowBack(row);
 
@@ -98,7 +96,7 @@ export function FollowRequestActions({
   // the row states its outcome and stops there.
   if (state === 'SETTLED') {
     return (
-      <Text testID="follow-request-settled" fontSize={12.5} fontWeight="700" color="$muted">
+      <Text testID="follow-request-settled" fontSize={12.5} fontWeight="600" color="$muted">
         {settledLabel}
       </Text>
     );
@@ -138,7 +136,7 @@ export function FollowRequestActions({
   const askPending = !canFollowBack(followBackStatus);
 
   return (
-    <XStack gap={16} paddingTop={10} alignItems="center" flexWrap="wrap">
+    <XStack gap={8} paddingTop={10} alignItems="center" flexWrap="wrap">
       {open ? (
         <AnswerActions
           acceptLabel={t('mweb.follow.accept')}
@@ -151,7 +149,7 @@ export function FollowRequestActions({
         />
       ) : null}
       {!open && settledLabel ? (
-        <Text fontSize={12.5} fontWeight="700" color={quietInk}>
+        <Text fontSize={12.5} fontWeight="600" color={quietInk}>
           {settledLabel}
         </Text>
       ) : null}

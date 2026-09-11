@@ -1,6 +1,11 @@
 import { Stack } from '@mui/material';
-import { ChangeRequestBoard } from '@duncit/pod-change-requests';
+import {
+  ChangeRequestBoard,
+  useTranslation as useChangeRequestTranslation,
+} from '@duncit/pod-change-requests';
+import PageBackHeader from '../pod-pending-page/PageBackHeader';
 import { notifySuccess } from '../../components/notify';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /**
  * Change Requests, for a partner on their phone.
@@ -11,14 +16,22 @@ import { notifySuccess } from '../../components/notify';
  * its own role; this is where the notification, the email CTA and the WhatsApp
  * link all land, so it must answer for whoever taps it.
  *
- * The page's tab title comes from the shared route table
- * (server/meta-routes.ts), like every other mWeb route — there is nothing for
- * the component itself to set.
+ * The page draws the calm back bar itself (the native screen's StackScreen,
+ * rule 27), so the board's own heading is hidden. The tab title comes from the
+ * shared route table (server/meta-routes.ts), like every other mWeb route.
  */
 export default function ChangeRequestsPage() {
+  const { t } = useTranslation();
+  // The board's own translator carries the `changeRequest.*` fallback bundle.
+  const { t: tBoard } = useChangeRequestTranslation();
+
   return (
-    <Stack spacing={2} sx={{ p: 2 }}>
-      <ChangeRequestBoard onChanged={notifySuccess} />
+    <Stack spacing={2.5} sx={{ p: 2 }}>
+      <PageBackHeader
+        title={tBoard('changeRequest.sectionTitle')}
+        backLabel={t('mweb.common.goBack')}
+      />
+      <ChangeRequestBoard hideHeader onChanged={notifySuccess} />
     </Stack>
   );
 }

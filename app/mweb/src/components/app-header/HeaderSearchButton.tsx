@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router';
 import { Tooltip } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { DuncitIconButton } from '@duncit/buttons';
+import { HEADER_ROUND_BUTTON_SX } from './headerButtonSx';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -19,9 +20,9 @@ export default function HeaderSearchButton(_props: Readonly<Props>) {
       <DuncitIconButton
         aria-label={t('mweb.common.search')}
         onClick={() => navigate('/search')}
-        sx={{ minWidth: 44, minHeight: 44 }}
+        sx={HEADER_ROUND_BUTTON_SX}
       >
-        <SearchIcon />
+        <SearchIcon sx={{ fontSize: 22 }} />
       </DuncitIconButton>
     </Tooltip>
   );

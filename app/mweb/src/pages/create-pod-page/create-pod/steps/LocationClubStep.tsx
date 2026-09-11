@@ -14,7 +14,6 @@ import {
 import PlaceIcon from '@mui/icons-material/Place';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
-import EditLocationAltIcon from '@mui/icons-material/EditLocationAlt';
 import { DuncitButton } from '@duncit/buttons';
 import LocationDialog from '../../../../components/app-header/LocationDialog';
 import VenueMapPreview from '../../../../components/VenueMapPreview';
@@ -28,6 +27,18 @@ interface Props {
   clubs: CreatePodClub[];
   locations: CreatePodLocation[];
 }
+
+/** 40px round soft disc carrying the accent place glyph (native twin: same disc). */
+const ICON_DISC_SX = {
+  display: 'grid',
+  placeItems: 'center',
+  width: 40,
+  height: 40,
+  flexShrink: 0,
+  borderRadius: '50%',
+  bgcolor: 'action.hover',
+  color: 'secondary.main',
+} as const;
 
 /** Step 2 — pod location + locality (chosen in the header-style location picker,
  * which shows the club count per locality), the pod mode and the club. The
@@ -69,21 +80,16 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
 
   return (
     <Stack spacing={2}>
-      <Card variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }}>
-        <Stack direction="row" spacing={1.25} sx={{
-          alignItems: "center"
-        }}>
-          <PlaceIcon color="primary" />
+      <Card sx={{ p: 2 }}>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+          <Box sx={ICON_DISC_SX}>
+            <PlaceIcon />
+          </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography
-              variant="caption"
-              sx={{
-                color: "text.secondary",
-                fontWeight: 600
-              }}>{t('mweb.createPod.podLocation')}</Typography>
-            <Typography variant="subtitle2" noWrap data-testid="create-pod-location-label" sx={{
-              fontWeight: 700
-            }}>
+            <Typography variant="caption" component="div" sx={{ color: 'text.secondary' }}>
+              {t('mweb.createPod.podLocation')}
+            </Typography>
+            <Typography variant="subtitle2" noWrap data-testid="create-pod-location-label" sx={{ fontSize: '0.95rem' }}>
               {location ? [location.location_name || location.city, location.state].filter(Boolean).join(', ') : t('mweb.createPod.noLocationSelected')}
             </Typography>
             {locality && (
@@ -94,7 +100,7 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
               </Typography>
             )}
           </Box>
-          <DuncitButton size="small" variant="outlined" startIcon={<EditLocationAltIcon />} onClick={openPicker} data-testid="create-pod-change-location">
+          <DuncitButton size="small" variant="outlined" onClick={openPicker} data-testid="create-pod-change-location" sx={{ minHeight: 36 }}>
             {t('mweb.createPod.change')}
           </DuncitButton>
         </Stack>
@@ -108,15 +114,8 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
         />
       )}
 
-      <Box>
-        <Typography
-          variant="caption"
-          sx={{
-            color: "text.secondary",
-            fontWeight: 600,
-            display: 'block',
-            mb: 0.75
-          }}>{t('mweb.createPod.podMode')}</Typography>
+      <Card sx={{ p: 2 }}>
+        <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('mweb.createPod.podMode')}</Typography>
         <Controller
           control={control}
           name="pod_mode"
@@ -143,25 +142,27 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
             </ToggleButtonGroup>
           )}
         />
-      </Box>
+      </Card>
 
-      <Controller
-        control={control}
-        name="club_id"
-        render={({ field }) => (
-          <Autocomplete
-            options={clubs}
-            getOptionLabel={(option) => option.club_name}
-            value={clubs.find((club) => club.id === field.value) ?? null}
-            onChange={(_e, next) => field.onChange(next?.id ?? '')}
-            isOptionEqualToValue={(option, selected) => option.id === selected.id}
-            renderInput={(params) => (
-              <TextField {...params} label={requiredLabel(t('mweb.createPod.clubLabel'), true)} error={!!errors.club_id} helperText={errors.club_id?.message ?? t('mweb.createPod.clubHint')} />
-            )}
-          />
-        )}
-      />
-      <ClubPreview club={clubs.find((club) => club.id === watch('club_id')) ?? null} />
+      <Card sx={{ p: 2, display: 'grid', gap: 1.5 }}>
+        <Controller
+          control={control}
+          name="club_id"
+          render={({ field }) => (
+            <Autocomplete
+              options={clubs}
+              getOptionLabel={(option) => option.club_name}
+              value={clubs.find((club) => club.id === field.value) ?? null}
+              onChange={(_e, next) => field.onChange(next?.id ?? '')}
+              isOptionEqualToValue={(option, selected) => option.id === selected.id}
+              renderInput={(params) => (
+                <TextField {...params} label={requiredLabel(t('mweb.createPod.clubLabel'), true)} error={!!errors.club_id} helperText={errors.club_id?.message} />
+              )}
+            />
+          )}
+        />
+        <ClubPreview club={clubs.find((club) => club.id === watch('club_id')) ?? null} />
+      </Card>
 
       <LocationDialog
         open={pickerOpen}

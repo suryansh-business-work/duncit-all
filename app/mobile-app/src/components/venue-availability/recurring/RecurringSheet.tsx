@@ -97,20 +97,19 @@ export function RecurringSheet({
       onClose={close}
       testID="recurring-sheet"
       title={t('availability.recurring.title')}
-      subtitle={t('availability.recurring.subtitle')}
       closeLabel={t('availability.close')}
       dismissOnBackdrop={!submitting}
       footer={footer}
     >
-      <YStack gap={14}>
+      <YStack gap={20}>
         <RecurringBasicSection form={form} patch={patch} settings={venueSettings} />
         {serverError ? (
-          <Text testID="recurring-server-error" fontSize={12.5} color="$danger">
+          <Text testID="recurring-server-error" fontSize={13} color="$danger">
             {serverError}
           </Text>
         ) : null}
         {datesPicked && firstError ? (
-          <Text testID="recurring-issue" fontSize={12.5} color="$warning">
+          <Text testID="recurring-issue" fontSize={13} color="$warning">
             {recurringErrorMessage(firstError, t, venueSettings)}
           </Text>
         ) : null}

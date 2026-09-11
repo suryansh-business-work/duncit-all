@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Box, Chip, Stack, Typography } from '@mui/material';
-import GroupsIcon from '@mui/icons-material/Groups';
-import EventIcon from '@mui/icons-material/Event';
+import { alpha, type Theme } from '@mui/material/styles';
+import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
+import EventRoundedIcon from '@mui/icons-material/EventRounded';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { usePricing } from '../../hooks/usePricing';
 import { formatDateTime } from '../../utils/dateFormat';
@@ -15,6 +16,18 @@ interface Props {
 }
 
 const CAPTION_COLLAPSE_AT = 90;
+
+/** Translucent white over the scrim — every chip and the club disc on a reel. */
+const glass = (theme: Theme) => alpha(theme.palette.common.white, 0.16);
+
+const CHIP_SX = (theme: Theme) => ({
+  height: 28,
+  bgcolor: glass(theme),
+  color: 'common.white',
+  fontWeight: 600,
+  backdropFilter: 'blur(8px)',
+  '& .MuiChip-icon': { color: 'common.white', fontSize: 15 },
+});
 
 export default function ExplorePodOverlay({ pod, club, location }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -31,7 +44,9 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
         sx={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(180deg, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.02) 34%, rgba(0,0,0,0.88) 100%)',
+          // Black scrim over the reel — media chrome, the same in both modes.
+          background:
+            'linear-gradient(180deg, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.02) 34%, rgba(0,0,0,0.88) 100%)',
           pointerEvents: 'none',
         }}
       />
@@ -60,11 +75,11 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
               alignItems: "center",
               cursor: 'pointer'
             }}>
-            <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: 'primary.main', display: 'grid', placeItems: 'center' }}>
-              <GroupsIcon sx={{ fontSize: 15 }} />
+            <Box sx={(theme) => ({ width: 26, height: 26, borderRadius: '50%', bgcolor: glass(theme), display: 'grid', placeItems: 'center' })}>
+              <GroupsRoundedIcon sx={{ fontSize: 15 }} />
             </Box>
             <Typography variant="subtitle2" noWrap sx={{
-              fontWeight: 700
+              fontWeight: 600
             }}>
               {club.club_name}
             </Typography>
@@ -74,12 +89,12 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
           </Stack>
         )}
         <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 700,
-            lineHeight: 1.05,
-            textShadow: '0 2px 12px rgba(0,0,0,0.36)'
-          }}>
+          sx={(theme) => ({
+            fontSize: '1.375rem',
+            fontWeight: 600,
+            lineHeight: 1.15,
+            textShadow: `0 2px 12px ${alpha(theme.palette.common.black, 0.36)}`,
+          })}>
           {pod.pod_title}
         </Typography>
         {description && (
@@ -93,13 +108,13 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
               sx={
                 collapsible && !expanded
                   ? { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', opacity: 0.9 }
-                  : { opacity: 0.92 }
+                  : { opacity: 0.9 }
               }
             >
               {description}
             </Typography>
             {collapsible && (
-              <Typography component="span" variant="caption" sx={{ fontWeight: 600, opacity: 0.85 }}>
+              <Typography component="span" variant="caption" sx={{ fontWeight: 600 }}>
                 {expanded ? 'Show less' : 'More'}
               </Typography>
             )}
@@ -113,19 +128,9 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
             alignItems: "center",
             flexWrap: "wrap"
           }}>
-          <Chip
-            size="small"
-            label={isFree ? 'Free' : format(pod.pod_amount)}
-            color={isFree ? 'success' : 'primary'}
-            sx={{ color: 'common.white' }}
-          />
+          <Chip label={isFree ? 'Free' : format(pod.pod_amount)} sx={CHIP_SX} />
           {pod.pod_date_time && (
-            <Chip
-              size="small"
-              icon={<EventIcon sx={{ color: 'common.white !important' }} />}
-              label={formatDateTime(pod.pod_date_time)}
-              sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'common.white' }}
-            />
+            <Chip icon={<EventRoundedIcon />} label={formatDateTime(pod.pod_date_time)} sx={CHIP_SX} />
           )}
         </Stack>
       </Stack>

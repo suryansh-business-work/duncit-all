@@ -8,7 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
-import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import { DuncitIconButton } from '@duncit/buttons';
 import type { ShopProduct } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -20,6 +20,31 @@ interface Props {
   onOpen: (id: string) => void;
   onQuickAdd: (product: ShopProduct) => void;
 }
+
+const NAME_SX = {
+  fontSize: '0.875rem',
+  fontWeight: 600,
+  lineHeight: 1.3,
+  display: '-webkit-box',
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: 'vertical',
+  overflow: 'hidden',
+} as const;
+
+/** The round green "+" that quick-adds — pinned to the card's bottom-right,
+ * outside the tappable area so a button never sits inside a button. */
+const ADD_SX = {
+  position: 'absolute',
+  right: 8,
+  bottom: 8,
+  width: 36,
+  height: 36,
+  minHeight: 36,
+  bgcolor: 'primary.main',
+  color: 'primary.contrastText',
+  '&:hover': { bgcolor: 'primary.dark' },
+  '&.Mui-disabled': { bgcolor: 'primary.main', color: 'primary.contrastText' },
+} as const;
 
 /** One product tile in the Pod Shop browse grid — image, name, price and (when
  * reviewed) an average-rating chip. Tapping opens the full product detail page;
@@ -42,57 +67,39 @@ export default function ShopProductCard({
     onQuickAdd(product);
   };
   return (
-    <Card
-      sx={{ position: 'relative', borderRadius: '16px', border: 1, borderColor: 'divider', boxShadow: 'none', overflow: 'hidden' }}
-    >
-      <CardActionArea onClick={() => onOpen(product.id)} aria-label={`View ${product.product_name}`}>
-        <Box sx={{ aspectRatio: '1 / 1', bgcolor: 'action.hover' }}>
+    <Card sx={{ position: 'relative', overflow: 'hidden' }}>
+      <CardActionArea onClick={() => onOpen(product.id)} aria-label={`View ${product.product_name}`} sx={{ p: 1 }}>
+        <Box sx={{ aspectRatio: '1 / 1', bgcolor: 'action.hover', borderRadius: '18px', overflow: 'hidden' }}>
           {imageUrl && (
             <Box
               component="img"
               src={imageUrl}
               alt={product.product_name}
-              sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
           )}
         </Box>
-        <Stack spacing={0.25} sx={{ p: 1.25 }}>
-          <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
-            {product.product_name}
-          </Typography>
+        <Stack spacing={0.25} sx={{ pt: 1, px: 0.5, pb: 0.25 }}>
+          <Typography sx={NAME_SX}>{product.product_name}</Typography>
           {product.brand_name && (
-            <Typography variant="caption" noWrap sx={{
-              color: "text.secondary"
-            }}>
+            <Typography variant="caption" noWrap sx={{ color: 'text.secondary' }}>
               {product.brand_name}
             </Typography>
           )}
-          <Stack
-            direction="row"
-            sx={{
-              alignItems: "center",
-              justifyContent: "space-between",
-              mt: 0.25
-            }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'primary.main' }}>
-              {priceFormat(product.unit_cost)}
-            </Typography>
-            {hasRating && (
-              <Stack direction="row" spacing={0.25} sx={{
-                alignItems: "center"
-              }}>
-                <StarRoundedIcon sx={{ fontSize: 16, color: '#f5a623' }} />
-                <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                  {summary.average_rating.toFixed(1)}
-                </Typography>
-                <Typography variant="caption" sx={{
-                  color: "text.secondary"
-                }}>
-                  ({summary.total})
-                </Typography>
-              </Stack>
-            )}
-          </Stack>
+          {hasRating && (
+            <Stack direction="row" spacing={0.25} sx={{ alignItems: 'center' }}>
+              <StarRoundedIcon sx={{ fontSize: 16, color: 'warning.main' }} />
+              <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                {summary.average_rating.toFixed(1)}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                ({summary.total})
+              </Typography>
+            </Stack>
+          )}
+          <Typography sx={{ fontSize: '1rem', fontWeight: 700, pt: 0.5, pr: 5, minHeight: 36, display: 'flex', alignItems: 'center' }}>
+            {priceFormat(product.unit_cost)}
+          </Typography>
         </Stack>
       </CardActionArea>
       {outOfStock ? (
@@ -101,9 +108,9 @@ export default function ShopProductCard({
           size="small"
           sx={{
             position: 'absolute',
-            top: 6,
-            right: 6,
-            height: 22,
+            top: 16,
+            right: 16,
+            height: 24,
             fontWeight: 600,
             fontSize: 11,
             bgcolor: 'grey.800',
@@ -116,21 +123,12 @@ export default function ShopProductCard({
           disabled={adding}
           onClick={quickAdd}
           size="small"
-          sx={{
-            position: 'absolute',
-            top: 6,
-            right: 6,
-            bgcolor: 'primary.main',
-            color: 'primary.contrastText',
-            boxShadow: 2,
-            '&:hover': { bgcolor: 'primary.dark' },
-            '&.Mui-disabled': { bgcolor: 'primary.main', color: 'primary.contrastText' },
-          }}
+          sx={ADD_SX}
         >
           {adding ? (
             <CircularProgress size={16} sx={{ color: 'primary.contrastText' }} />
           ) : (
-            <AddShoppingCartIcon sx={{ fontSize: 18 }} />
+            <AddRoundedIcon sx={{ fontSize: 22 }} />
           )}
         </DuncitIconButton>
       )}

@@ -3,7 +3,6 @@ import { useLocation, useNavigate, useParams } from 'react-router';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, Skeleton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { alpha, useTheme } from '@mui/material/styles';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import { toCheckoutContact, toCheckoutBilling } from './checkout';
 import { buildBreakup } from './checkoutMath';
@@ -33,10 +32,19 @@ import { useCoinRedemption } from './useCoinRedemption';
 import { applyBillDiscounts, coinCheckoutSummary } from '@duncit/utils';
 import AlreadyBookedDialog from './AlreadyBookedDialog';
 
+/** The inner page's back control — a 40px round surface button. */
+const roundBackSx = {
+  width: 40,
+  height: 40,
+  minHeight: 40,
+  bgcolor: 'background.paper',
+  color: 'text.primary',
+  border: '1px solid var(--duncit-card-border)',
+  '&:hover': { bgcolor: 'background.paper' },
+};
+
 export default function CheckoutPage() {
   const { t } = useTranslation();
-  const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
   const { podId = '' } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -219,30 +227,14 @@ export default function CheckoutPage() {
   }
   if (session.financeLoading || podLoading || !breakup) return <CheckoutSkeleton />;
 
-  const headerBg = isDark
-    ? 'linear-gradient(145deg, #15111c 0%, #2a1926 58%, #111827 100%)'
-    : `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.96)} 0%, ${alpha(theme.palette.primary.light, 0.18)} 58%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`;
-
   return (
     <Box sx={{ maxWidth: 720, mx: 'auto' }}>
-      <Box sx={{ p: 2, borderRadius: '16px', color: 'text.primary', background: headerBg, boxShadow: isDark ? '0 18px 44px rgba(17, 24, 39, 0.22)' : `0 18px 44px ${alpha(theme.palette.primary.dark, 0.12)}`, border: '1px solid', borderColor: 'divider' }}>
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{
-            alignItems: "center",
-            mb: 2
-          }}>
-          <DuncitIconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={{ color: 'text.primary', bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.primary.main, 0.1), '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.18)' : alpha(theme.palette.primary.main, 0.16) } }}><ArrowBackIcon /></DuncitIconButton>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>{t('mweb.checkout.title')}</Typography>
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 700,
-                lineHeight: 1.1
-              }}>{t('mweb.checkout.heading')}</Typography>
-          </Box>
+      <Box>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 2.5 }}>
+          <DuncitIconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={roundBackSx}><ArrowBackIcon fontSize="small" /></DuncitIconButton>
+          <Typography component="h1" noWrap sx={{ flex: 1, minWidth: 0, fontSize: 20, fontWeight: 600 }}>
+            {t('mweb.checkout.title')}
+          </Typography>
           <GatewayChip finance={session.finance} />
         </Stack>
         {podError && <Alert severity="error" sx={{ mb: 2 }}>{podError.message}</Alert>}

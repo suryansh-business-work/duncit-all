@@ -1,5 +1,5 @@
 import { Link as RouterLink } from 'react-router';
-import { Alert, Box, Divider, Link, Stack, Typography } from '@mui/material';
+import { Alert, Divider, Link, Stack, Typography } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PinOutlinedIcon from '@mui/icons-material/PinOutlined';
 import { DuncitButton } from '@duncit/buttons';
@@ -14,6 +14,19 @@ interface Props {
   onChoosePassword: () => void;
   onChooseOtp: () => void;
 }
+
+/**
+ * The two "continue with…" choices: surface pills with a hairline, ink label
+ * and icon — the same weight as the Google pill above them, because all three
+ * are a choice of door, not the action itself. The green pill waits one step
+ * in, on the button that actually signs you in. Native twin: MethodButton in
+ * screens/LoginScreen/LoginMethodStep.tsx.
+ */
+const METHOD_SX = {
+  bgcolor: 'background.paper',
+  borderColor: 'divider',
+  color: 'text.primary',
+} as const;
 
 /**
  * The landing step: how would you like to sign in?
@@ -34,12 +47,8 @@ export default function LoginMethodStep({
   const { t } = useTranslation();
 
   return (
-    <Stack spacing={1.6}>
-      <Typography variant="body2" sx={{ textAlign: 'center', color: 'text.secondary' }}>
-        {t('mweb.login.chooseMethod')}
-      </Typography>
-
-      <Stack spacing={1.4} sx={{ alignItems: 'center' }}>
+    <Stack spacing={2}>
+      <Stack spacing={1.5} sx={{ alignItems: 'center' }}>
         <GoogleSignInButton
           onCredential={onGoogleCredential}
           loading={gLoading}
@@ -56,20 +65,14 @@ export default function LoginMethodStep({
 
       <DuncitButton
         type="button"
-        variant="contained"
+        variant="outlined"
+        color="inherit"
         size="large"
+        fullWidth
         startIcon={<LockOutlinedIcon />}
         onClick={onChoosePassword}
         data-testid="continue-with-password"
-        sx={{
-          borderRadius: '16px',
-          py: 1.25,
-          fontWeight: 700,
-          textTransform: 'none',
-          boxShadow: '0 8px 20px rgba(255,77,79,0.3)',
-          transition: 'transform 0.18s ease',
-          '&:hover': { transform: 'translateY(-1px)' },
-        }}
+        sx={METHOD_SX}
       >
         {t('mweb.login.continueWithPassword')}
       </DuncitButton>
@@ -77,16 +80,18 @@ export default function LoginMethodStep({
       <DuncitButton
         type="button"
         variant="outlined"
+        color="inherit"
         size="large"
+        fullWidth
         startIcon={<PinOutlinedIcon />}
         onClick={onChooseOtp}
         data-testid="continue-with-otp"
-        sx={{ borderRadius: '16px', py: 1.25, fontWeight: 700, textTransform: 'none' }}
+        sx={METHOD_SX}
       >
         {t('mweb.login.continueWithOtp')}
       </DuncitButton>
 
-      <Stack spacing={1.4} sx={{ alignItems: 'center' }}>
+      <Stack spacing={1.5} sx={{ alignItems: 'center', pt: 1 }}>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {t('mweb.login.newHere')}{' '}
           <Link component={RouterLink} to="/register" underline="hover">
@@ -94,11 +99,9 @@ export default function LoginMethodStep({
           </Link>
         </Typography>
         <LegalLinks prefix={t('mweb.auth.legalSignIn')} />
-        <Box component="span">
-          <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-            {t('mweb.auth.appVersion', { vars: { version: __APP_VERSION__ } })}
-          </Typography>
-        </Box>
+        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+          {t('mweb.auth.appVersion', { vars: { version: __APP_VERSION__ } })}
+        </Typography>
       </Stack>
     </Stack>
   );

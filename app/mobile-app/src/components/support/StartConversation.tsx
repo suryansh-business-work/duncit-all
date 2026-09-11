@@ -1,9 +1,8 @@
-import { StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
-import { START_CONVERSATION_GRADIENT } from './gradients';
+import { SurfaceCard } from '@/components/SurfaceCard';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -11,44 +10,32 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
  * StartConversation. */
 export function StartConversation({ onPress }: Readonly<{ onPress: () => void }>) {
   const { t } = useTranslation();
+  const { onPrimary, muted } = useThemeColors();
   return (
-    <XStack
+    <SurfaceCard
       testID="support-start-chat"
       role="button"
       aria-label={t('mweb.common.startAConversationWithSupport')}
       onPress={onPress}
+      flexDirection="row"
       alignItems="center"
-      gap={14}
-      padding={16}
-      borderRadius={18}
-      overflow="hidden"
+      gap={12}
       pressStyle={PRESS_STYLE.surface}
     >
-      <LinearGradient
-        colors={START_CONVERSATION_GRADIENT}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
       <YStack
         width={44}
         height={44}
-        borderRadius={14}
+        borderRadius={22}
         alignItems="center"
         justifyContent="center"
-        backgroundColor="rgba(255,255,255,0.2)"
+        backgroundColor="$primary"
       >
-        <MaterialIcons name="chat-bubble-outline" size={22} color="#ffffff" />
+        <MaterialIcons name="chat-bubble-outline" size={20} color={onPrimary} />
       </YStack>
-      <YStack flex={1} gap={2}>
-        <Text fontSize={15} fontWeight="700" color="#ffffff">
-          Start a conversation
-        </Text>
-        <Text fontSize={12.5} color="#ffffff" opacity={0.9}>
-          Chat with our support team in real time
-        </Text>
-      </YStack>
-      <MaterialIcons name="chevron-right" size={22} color="#ffffff" />
-    </XStack>
+      <Text flex={1} fontSize={15} fontWeight="600" color="$color">
+        {t('mweb.common.startAConversation')}
+      </Text>
+      <MaterialIcons name="chevron-right" size={22} color={muted} />
+    </SurfaceCard>
   );
 }

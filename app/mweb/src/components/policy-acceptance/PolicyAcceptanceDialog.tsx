@@ -66,7 +66,7 @@ export default function PolicyAcceptanceDialog({
 
   return (
     <Dialog open={open} onClose={finish} fullWidth maxWidth="sm" scroll="paper">
-      <DialogTitle sx={{ fontWeight: 700 }}>{t('policyAcceptance.dialogTitle')}</DialogTitle>
+      <DialogTitle sx={{ fontSize: 17, fontWeight: 600 }}>{t('policyAcceptance.dialogTitle')}</DialogTitle>
       <DialogContent dividers>
         <Typography
           variant="body2"
@@ -102,9 +102,11 @@ export default function PolicyAcceptanceDialog({
           </Stack>
         )}
       </DialogContent>
-      <DialogActions>
-        <DuncitButton onClick={finish}>{t('policyAcceptance.close')}</DuncitButton>
-        <DuncitButton variant="contained" onClick={acceptAll} disabled={!ready}>
+      <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+        <DuncitButton variant="outlined" color="inherit" onClick={finish} sx={{ flex: 1 }}>
+          {t('policyAcceptance.close')}
+        </DuncitButton>
+        <DuncitButton variant="contained" onClick={acceptAll} disabled={!ready} sx={{ flex: 1.4 }}>
           {t('policyAcceptance.acceptAll')}
         </DuncitButton>
       </DialogActions>

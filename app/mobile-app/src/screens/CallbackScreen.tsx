@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, TextArea, XStack, YStack } from 'tamagui';
+import { Text, TextArea, XStack } from 'tamagui';
 
 import { Field } from '@/components/Field';
 import { StackScreen } from '@/components/StackScreen';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { SupportAlert } from '@/components/support/SupportAlert';
 import { CallbackHistory } from '@/components/support/CallbackHistory';
 import { useBouncer } from '@/hooks/useBouncer';
@@ -25,15 +26,8 @@ function CallNowCard({ target }: Readonly<{ target: SupportTarget }>) {
   const disabled = !target?.available;
   const fg = disabled ? muted : onPrimary;
   return (
-    <YStack
-      padding={16}
-      borderRadius={16}
-      gap={10}
-      backgroundColor="$surface"
-      borderWidth={1}
-      borderColor="$borderColor"
-    >
-      <Text fontSize={12} fontWeight="700" textTransform="uppercase" color="$muted">
+    <SurfaceCard gap={12}>
+      <Text fontSize={16} fontWeight="600" color="$color">
         Call support now
       </Text>
       <Text fontSize={13} color="$muted">
@@ -47,7 +41,7 @@ function CallNowCard({ target }: Readonly<{ target: SupportTarget }>) {
         aria-label={t('mweb.callback.callNow')}
         aria-disabled={disabled}
         onPress={target?.available ? () => Linking.openURL(`tel:${target.phone}`) : undefined}
-        height={46}
+        height={52}
         alignItems="center"
         justifyContent="center"
         gap={8}
@@ -61,7 +55,7 @@ function CallNowCard({ target }: Readonly<{ target: SupportTarget }>) {
           Call Now
         </Text>
       </XStack>
-    </YStack>
+    </SurfaceCard>
   );
 }
 
@@ -105,21 +99,11 @@ export function CallbackScreen() {
 
   return (
     <StackScreen title={t('mweb.common.callbackRequest')} testID="callback-screen">
-      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
-        <Text testID="callback-subtitle" fontSize={13} color="$muted">
-          Call us or get a callback
-        </Text>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
         <CallNowCard target={target} />
 
-        <YStack
-          padding={16}
-          borderRadius={16}
-          gap={10}
-          backgroundColor="$surface"
-          borderWidth={1}
-          borderColor="$borderColor"
-        >
-          <Text fontSize={12} fontWeight="700" textTransform="uppercase" color="$muted">
+        <SurfaceCard gap={12}>
+          <Text fontSize={16} fontWeight="600" color="$color">
             Request a callback
           </Text>
           <Text fontSize={13} color="$muted">
@@ -134,8 +118,9 @@ export function CallbackScreen() {
               placeholder="What's it about? (optional)"
               placeholderTextColor="$muted"
               maxLength={500}
-              backgroundColor="$background"
+              backgroundColor="$surface"
               borderColor="$borderColor"
+              borderRadius={14}
             />
           </Field>
           {error ? (
@@ -160,7 +145,7 @@ export function CallbackScreen() {
             aria-label={t('mweb.callback.requestCallback')}
             aria-disabled={busy}
             onPress={busy ? undefined : () => void request()}
-            height={46}
+            height={52}
             alignItems="center"
             justifyContent="center"
             gap={8}
@@ -175,7 +160,7 @@ export function CallbackScreen() {
               {busy ? 'Requesting…' : 'Request callback'}
             </Text>
           </XStack>
-        </YStack>
+        </SurfaceCard>
 
         <CallbackHistory refreshKey={historyKey} />
       </RefreshScrollView>

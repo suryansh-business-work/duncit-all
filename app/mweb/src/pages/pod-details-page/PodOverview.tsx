@@ -1,13 +1,15 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
-import { alpha, useTheme } from '@mui/material/styles';
+import { alpha, useTheme, type Theme } from '@mui/material/styles';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import PlaceIcon from '@mui/icons-material/Place';
 import VideocamIcon from '@mui/icons-material/Videocam';
+import CategoryIcon from '@mui/icons-material/CategoryOutlined';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import { DuncitButton } from '@duncit/buttons';
 import PodQuickStats from './PodQuickStats';
 import CategoryBreadcrumb from '../../components/CategoryBreadcrumb';
+import PodMetaRow from '../../components/pod-details/PodMetaRow';
 import { useTranslation } from '../../i18n/useTranslation';
 import { podSeatsTaken } from '@duncit/utils';
 
@@ -21,18 +23,27 @@ interface Props {
   categoryCrumbs?: readonly string[];
 }
 
+type Tone = 'error' | 'warning' | 'info';
+
+/** A calm tonal pill: the tone tints the fill and the icon, the text stays ink. */
+const toneChipSx = (theme: Theme, tone: Tone) => ({
+  bgcolor: alpha(theme.palette[tone].main, 0.12),
+  color: 'text.primary',
+  '& .MuiChip-icon': { color: `${tone}.main` },
+});
+
 function TimeChip({ iso }: Readonly<{ iso?: string | null }>) {
   const { t } = useTranslation();
+  const theme = useTheme();
   if (!iso) return null;
   const ms = new Date(iso).getTime() - Date.now();
   if (Number.isNaN(ms)) return null;
   if (ms < 0) {
     return (
       <Chip
-        color="error"
-        variant="filled"
         icon={<EventBusyIcon />}
         label={t('mweb.podDetails.podExpired')}
+        sx={toneChipSx(theme, 'error')}
       />
     );
   }
@@ -46,96 +57,75 @@ function TimeChip({ iso }: Readonly<{ iso?: string | null }>) {
   const label =
     days > 1 ? t('mweb.podDetails.daysRemaining', { vars: { days } }) : hoursLabel;
 
-  return <Chip color={days <= 1 ? 'warning' : 'info'} icon={<HourglassBottomIcon />} label={label} />;
+  return (
+    <Chip
+      icon={<HourglassBottomIcon />}
+      label={label}
+      sx={toneChipSx(theme, days <= 1 ? 'warning' : 'info')}
+    />
+  );
 }
 
+/**
+ * The pod's title block: the title, who hosts it, what kind of pod it is, the
+ * facts the tour's first step names (price · mode · when) and how full it is.
+ * Sits on the page ground rather than in a card. Native twin: details/PodInfo.
+ */
 export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddStatus, categoryCrumbs = [] }: Readonly<Props>) {
-  const theme = useTheme();
   const { t } = useTranslation();
-  const isDark = theme.palette.mode === 'dark';
   const hostLine = (pod.host_names ?? []).filter(Boolean).join(', ');
   const modeLabel = pod.pod_mode === 'VIRTUAL' ? t('mweb.podDetails.virtual') : t('mweb.podDetails.physical');
   const spotsTaken = podSeatsTaken(pod);
   const spotsTotal = pod.no_of_spots ?? 0;
-  const textColor = theme.palette.text.primary;
-  const mutedColor = theme.palette.text.secondary;
-  const softBg = isDark ? 'rgba(255,255,255,0.09)' : alpha(theme.palette.background.paper, 0.72);
-  const chipBg = isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.text.primary, 0.08);
 
   return (
-    <Box
-      sx={{
-        p: 2,
-        mt: -1.5,
-        borderRadius: '16px',
-        color: textColor,
-        background: isDark
-          ? 'linear-gradient(145deg, #15111c 0%, #2a1926 52%, #0f172a 100%)'
-          : `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.96)} 0%, ${alpha(theme.palette.primary.light, 0.16)} 52%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`,
-        boxShadow: isDark ? '0 18px 48px rgba(17,24,39,0.24)' : `0 18px 48px ${alpha(theme.palette.primary.dark, 0.12)}`,
-        border: '1px solid',
-        borderColor: 'divider',
-      }}
-    >
-      <Stack
-        direction="row"
-        spacing={1.5}
-        sx={{
-          justifyContent: "space-between",
-          alignItems: "flex-start"
-        }}>
+    <Stack spacing={1.5}>
+      <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <Box sx={{ minWidth: 0 }}>
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: 700,
-              lineHeight: 1.05
-            }}>
-        {pod.pod_title}
-      </Typography>
-          {hostLine && <Typography variant="body2" sx={{ color: mutedColor, mt: 0.6 }} noWrap>{t('mweb.podDetails.hostedBy', { vars: { names: hostLine } })}</Typography>}
-          {categoryCrumbs.length > 0 && (
-            <Box sx={{ mt: 0.6, color: mutedColor }}>
-              <CategoryBreadcrumb crumbs={categoryCrumbs} />
-            </Box>
+          <Typography component="h1" sx={{ fontSize: 24, fontWeight: 600, lineHeight: 1.2 }}>
+            {pod.pod_title}
+          </Typography>
+          {hostLine && (
+            <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }} noWrap>
+              {t('mweb.podDetails.hostedBy', { vars: { names: hostLine } })}
+            </Typography>
           )}
         </Box>
         {isHost && (
-          <DuncitButton size="small" variant="contained" startIcon={<AddPhotoAlternateIcon />} onClick={onAddStatus} sx={{ borderRadius: 999, bgcolor: chipBg, color: textColor, boxShadow: 'none', '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.2)' : alpha(theme.palette.primary.main, 0.14) } }}>
+          <DuncitButton
+            size="small"
+            startIcon={<AddPhotoAlternateIcon />}
+            onClick={onAddStatus}
+            sx={{ flexShrink: 0, minHeight: 36, bgcolor: 'background.paper', color: 'text.primary', '&:hover': { bgcolor: 'background.paper' } }}
+          >
             {t('mweb.podDetails.addStatus')}
           </DuncitButton>
         )}
       </Stack>
+      {categoryCrumbs.length > 0 && (
+        <PodMetaRow icon={<CategoryIcon />}>
+          <CategoryBreadcrumb crumbs={categoryCrumbs} />
+        </PodMetaRow>
+      )}
       {/* The chip row carries all three facts the tour step names, in its order:
           price, Physical/Virtual, and when it runs. */}
-      <Stack
-        direction="row"
-        spacing={1}
-        data-tour="pod-summary"
-        sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}
-      >
+      <Stack direction="row" data-tour="pod-summary" sx={{ flexWrap: 'wrap', gap: 1 }}>
         <Chip
           label={isFree ? t('mweb.podDetails.free') : priceFormat(pod.pod_amount)}
-          sx={{ fontWeight: 700, fontSize: '1rem', px: 0.5, height: 32, bgcolor: isDark ? '#fff' : alpha(theme.palette.primary.main, 0.12), color: isDark ? '#111827' : 'primary.dark' }}
+          sx={(theme) => ({
+            fontWeight: 700,
+            bgcolor: alpha(theme.palette.primary.main, 0.12),
+            color: 'primary.main',
+          })}
         />
         <Chip
           icon={pod.pod_mode === 'VIRTUAL' ? <VideocamIcon /> : <PlaceIcon />}
           label={modeLabel}
-          sx={{ bgcolor: chipBg, color: textColor, '& .MuiChip-icon': { color: textColor } }}
+          sx={{ bgcolor: 'background.paper', color: 'text.primary', '& .MuiChip-icon': { color: 'text.primary' } }}
         />
         <TimeChip iso={pod.pod_date_time} />
       </Stack>
-      <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-        <Box sx={{ flex: 1, p: 1.2, borderRadius: '16px', bgcolor: softBg }}>
-          <Typography variant="caption" sx={{ color: mutedColor }}>{t('mweb.podDetails.peopleIn')}</Typography>
-          <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1 }}>{spotsTaken}</Typography>
-        </Box>
-        <Box data-tour="pod-spots" sx={{ flex: 1, p: 1.2, borderRadius: '16px', bgcolor: softBg }}>
-          <Typography variant="caption" sx={{ color: mutedColor }}>{t('mweb.podDetails.spotsLeft')}</Typography>
-          <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1 }}>{Math.max(spotsTotal - spotsTaken, 0)}</Typography>
-        </Box>
-      </Stack>
       <PodQuickStats spotsTaken={spotsTaken} spotsTotal={spotsTotal} />
-    </Box>
+    </Stack>
   );
 }

@@ -3,6 +3,7 @@ import { Box, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import SectionHeader from '../../../../components/SectionHeader';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import type { PodPlaceCharge } from '../create-pod.types';
 
@@ -35,28 +36,30 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
 
   return (
     <Box>
-      <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-        {t('mweb.createPod.placeCharges')}
-      </Typography>
+      <SectionHeader title={t('mweb.createPod.placeCharges')} />
       {helperText && (
         <Typography
           variant="caption"
           sx={{
             color: "text.secondary",
             display: 'block',
-            mb: 1
+            mt: 0.5
           }}>
           {helperText}
         </Typography>
       )}
-      <Stack spacing={1.5}>
+      <Stack spacing={1.5} sx={{ mt: 1.5 }}>
         {value.map((row, idx) => (
           <Stack
             key={keys.current[idx]}
             direction={{ xs: 'column', sm: 'row' }}
             spacing={1}
             sx={{
-              alignItems: { xs: 'stretch', sm: 'center' }
+              alignItems: { xs: 'stretch', sm: 'center' },
+              p: 1.5,
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: '16px'
             }}
           >
             <TextField

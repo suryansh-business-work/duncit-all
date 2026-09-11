@@ -44,8 +44,8 @@ function CardVideo({ src }: Readonly<{ src: string }>) {
   return <Box component="video" ref={ref} src={src} muted loop playsInline preload="none" sx={FILL_SX} />;
 }
 
-/** The pod card's full-bleed background media: image, silent looping video, or
- * the brand-gradient fallback when a pod has no media yet. */
+/** The pod card's image area: image, silent looping video, or a calm soft
+ * panel with an event glyph when a pod has no media yet. */
 export default function PodCardMedia({
   media,
   title,
@@ -59,10 +59,10 @@ export default function PodCardMedia({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(145deg, #ff8b5f 0%, #ed4f7a 50%, #16121f 100%)',
+          bgcolor: 'action.hover',
         }}
       >
-        <EventIcon fontSize="large" sx={{ color: 'common.white' }} />
+        <EventIcon sx={{ fontSize: 40, color: 'text.secondary' }} />
       </Box>
     );
   }

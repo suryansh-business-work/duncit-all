@@ -4,6 +4,7 @@ import { Input, Text, XStack, YStack } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
 import { Accordion } from '@/components/details/Accordion';
+import { SectionHeader } from '@/components/SectionHeader';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { StackScreen } from '@/components/StackScreen';
 import { useFaqs, type FaqGroup } from '@/hooks/useLibrary';
@@ -64,12 +65,12 @@ export function FaqsScreen() {
         gap={8}
         margin={16}
         marginBottom={4}
-        paddingHorizontal={12}
-        height={44}
+        paddingHorizontal={16}
+        height={50}
         borderRadius={999}
         borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$background"
+        borderColor="$cardBorder"
+        backgroundColor="$surface"
       >
         <MaterialIcons name="search" size={18} color={muted} />
         <Input
@@ -97,10 +98,8 @@ export function FaqsScreen() {
         >
           {filteredGroups.map((group, groupIndex) => (
             <Reveal key={group.super_category?.id ?? 'general'} index={groupIndex}>
-              <YStack gap={6} marginBottom={14}>
-                <Text fontSize={13} fontWeight="700" color="$muted" textTransform="uppercase">
-                  {group.super_category?.name ?? 'General'}
-                </Text>
+              <YStack gap={12} marginBottom={16}>
+                <SectionHeader title={group.super_category?.name ?? 'General'} />
                 {group.faqs.map((faq) => (
                   <Accordion
                     key={faq.id}
@@ -110,7 +109,7 @@ export function FaqsScreen() {
                     onToggle={() => toggleFaq(faq.id)}
                     testID={`faq-${faq.id}`}
                   >
-                    <Text fontSize={13.5} color="$color" lineHeight={20}>
+                    <Text fontSize={14} color="$muted" lineHeight={20}>
                       {faq.answer}
                     </Text>
                   </Accordion>

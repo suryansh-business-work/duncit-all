@@ -54,7 +54,7 @@ export function AvailabilityGrid({
       {rows.map((row) => {
         const rowKey = row.find(Boolean) ?? '';
         return (
-          <XStack key={rowKey} gap={3}>
+          <XStack key={rowKey} gap={4}>
             {row.map((dayKey, column) => {
               if (!dayKey) return <YStack key={`${rowKey}-c${column}`} flex={1} />;
               const state = dayCellState(dayKey, todayKey, lastKey, holidays);

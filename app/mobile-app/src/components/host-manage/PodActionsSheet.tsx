@@ -1,9 +1,9 @@
-import { YStack } from 'tamagui';
 import { POD_SCAN_LEAD_MINUTES, type PodScanWindow } from '@duncit/utils';
 
 import { ActionRow } from '@/components/host-manage/ActionRow';
 import { GatedActionRow } from '@/components/host-manage/GatedActionRow';
 import { PodLinkRow } from '@/components/host-manage/PodLinkRow';
+import { RowGroup } from '@/components/host-manage/RowGroup';
 import { STAR_COLOR } from '@/components/support/AspectRatingRow';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -107,10 +107,9 @@ export function PodActionsSheet({
       onClose={onClose}
       testID="pod-actions-sheet"
       title={podTitle}
-      subtitle={t('mweb.hostManage.podActions')}
       closeLabel="Close"
     >
-      <YStack gap={10}>
+      <RowGroup>
         {showAttendeeActions ? (
           <GatedActionRow
             testID="pod-action-scan"
@@ -223,7 +222,7 @@ export function PodActionsSheet({
           reason={amendClosed}
           onPress={onCancel}
         />
-      </YStack>
+      </RowGroup>
     </DuncitDialog>
   );
 }

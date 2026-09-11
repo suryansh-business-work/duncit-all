@@ -47,13 +47,13 @@ export function PodProductsField({ value, onChange, products, error }: Readonly<
   const remove = (index: number) => onChange(value.filter((_, i) => i !== index));
 
   return (
-    <YStack gap={10}>
-      <Text fontSize={14} fontWeight="700" color="$color">
+    <YStack gap={12}>
+      <Text fontSize={15} fontWeight="600" color="$color">
         {t('podProduct.attachedTitle')}
       </Text>
 
       {value.length === 0 ? (
-        <Text testID="products-empty" fontSize={12.5} color="$muted">
+        <Text testID="products-empty" fontSize={13} color="$muted">
           {t('podProduct.attachedEmpty')}
         </Text>
       ) : null}
@@ -88,26 +88,26 @@ export function PodProductsField({ value, onChange, products, error }: Readonly<
         justifyContent="center"
         gap={6}
         height={44}
-        borderRadius={12}
+        borderRadius={999}
         borderWidth={1}
         borderColor="$primary"
         opacity={noProducts ? 0.5 : 1}
         pressStyle={PRESS_STYLE.ghost}
       >
         <MaterialIcons name="add-shopping-cart" size={18} color={primary} />
-        <Text fontSize={14} fontWeight="700" color="$primary">
+        <Text fontSize={15} fontWeight="600" color="$primary">
           {t('podProduct.addButton')}
         </Text>
       </XStack>
 
       {noProducts ? (
-        <Text testID="products-empty-category" fontSize={12.5} color={muted}>
+        <Text testID="products-empty-category" fontSize={13} color={muted}>
           {t('podProduct.emptyCategory')}
         </Text>
       ) : null}
 
       {value.length > 0 ? (
-        <Text testID="product-total" fontSize={13} fontWeight="700" color="$color">
+        <Text testID="product-total" fontSize={14} fontWeight="700" color="$color">
           {t('podProduct.productTotal', { vars: { amount: `₹${total}` } })}
         </Text>
       ) : null}

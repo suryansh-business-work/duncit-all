@@ -19,7 +19,7 @@ export function DuncitCoinScreen() {
   return (
     <StackScreen title={t('mweb.coin.title')} testID="duncit-coin-screen">
       <RefreshScrollView flex={1} showsVerticalScrollIndicator={false}>
-        <YStack gap={16} padding={16} paddingBottom={48}>
+        <YStack gap={20} padding={16} paddingBottom={48}>
           {error ? (
             <Text testID="coin-error" fontSize={13} color="$danger">
               {t('mweb.coin.loadError')}

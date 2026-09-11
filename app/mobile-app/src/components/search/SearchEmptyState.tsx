@@ -2,6 +2,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { PressScale } from '@/animations/PressScale';
+import { EmptyState } from '@/components/EmptyState';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -10,54 +12,54 @@ type Glyph = keyof typeof MaterialIcons.glyphMap;
 interface CtaBlockProps {
   icon: Glyph;
   title: string;
-  description: string;
   cta: string;
   testID: string;
   onPress: () => void;
 }
 
-/** A single call-to-action card — hoisted to module scope (no nested component). */
-function CtaBlock({ icon, title, description, cta, testID, onPress }: Readonly<CtaBlockProps>) {
-  const { primary, onPrimary } = useThemeColors();
+/** A single call-to-action card: an accent icon on a soft disc, the title and
+ * a green pill — the title and the CTA say it all. Hoisted (no nested component). */
+function CtaBlock({ icon, title, cta, testID, onPress }: Readonly<CtaBlockProps>) {
+  const { accent } = useThemeColors();
   return (
-    <YStack
-      gap={8}
-      padding={16}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
-      <XStack alignItems="center" gap={8}>
-        <MaterialIcons name={icon} size={20} color={primary} />
-        <Text fontSize={15} fontWeight="700" color="$color">
+    <SurfaceCard gap={12}>
+      <XStack alignItems="center" gap={12}>
+        <YStack
+          width={40}
+          height={40}
+          borderRadius={20}
+          backgroundColor="$soft"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <MaterialIcons name={icon} size={20} color={accent} />
+        </YStack>
+        <Text flex={1} fontSize={16} fontWeight="600" color="$color">
           {title}
         </Text>
       </XStack>
-      <Text fontSize={13} color="$muted">
-        {description}
-      </Text>
       <PressScale testID={testID} accessibilityLabel={cta} onPress={onPress}>
         <XStack
           alignSelf="flex-start"
-          height={40}
-          paddingHorizontal={18}
+          height={44}
+          paddingHorizontal={20}
           borderRadius={999}
           backgroundColor="$primary"
           alignItems="center"
         >
-          <Text fontSize={14} fontWeight="700" color={onPrimary}>
+          <Text fontSize={14} fontWeight="600" color="$onPrimary">
             {cta}
           </Text>
         </XStack>
       </PressScale>
-    </YStack>
+    </SurfaceCard>
   );
 }
 
 interface Props {
   variant: 'no-results' | 'empty-category';
-  keyword: string;
+  /** Kept for the callers; the one-line empty state no longer echoes it. */
+  keyword?: string;
   onShareIdea: () => void;
   onEarn: () => void;
   onExploreCategories: () => void;
@@ -65,35 +67,21 @@ interface Props {
 
 export function SearchEmptyState({
   variant,
-  keyword,
   onShareIdea,
   onEarn,
   onExploreCategories,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { muted } = useThemeColors();
   const isCategory = variant === 'empty-category';
   const heading = isCategory ? 'Nothing Here Yet' : 'No Pods Match Your Search';
-  const description = isCategory
-    ? 'Looks like this category is just getting started. Explore other interests or share your own Pod idea to help grow the community.'
-    : `We couldn't find any Pods, Clubs or experiences matching “${keyword}”. But don't let your curiosity stop here — you can inspire the next experience with Duncit.`;
 
   return (
-    <YStack gap={16} testID="search-empty-state">
-      <YStack alignItems="center" gap={8} paddingVertical={8}>
-        <MaterialIcons name="search-off" size={48} color={muted} />
-        <Text fontSize={17} fontWeight="700" color="$color" textAlign="center">
-          {heading}
-        </Text>
-        <Text fontSize={13} color="$muted" textAlign="center">
-          {description}
-        </Text>
-      </YStack>
+    <YStack gap={12} testID="search-empty-state">
+      <EmptyState icon="search-off" title={heading} testID="search-empty-state-message" />
 
       <CtaBlock
         icon="lightbulb-outline"
         title="Didn't Find What You Were Looking For?"
-        description="Great communities are built around great ideas. Share the Pod you'd love to attend, and we'll explore bringing it to life with our growing community."
         cta="Share a Pod Idea"
         testID="search-cta-idea"
         onPress={onShareIdea}
@@ -103,7 +91,6 @@ export function SearchEmptyState({
         <CtaBlock
           icon="explore"
           title={t('mweb.search.exploreOtherInterests')}
-          description={t('mweb.search.browseTheFullSetOfCategories')}
           cta="Explore More Categories"
           testID="search-cta-explore"
           onPress={onExploreCategories}
@@ -112,7 +99,6 @@ export function SearchEmptyState({
         <CtaBlock
           icon="storefront"
           title={t('mweb.search.turnYourPassionIntoSomethingBigger')}
-          description="If the experience you're searching for doesn't exist yet, why not create it? Host experiences, register your venue or list your products and start earning with Duncit."
           cta="Earn With Duncit"
           testID="search-cta-earn"
           onPress={onEarn}

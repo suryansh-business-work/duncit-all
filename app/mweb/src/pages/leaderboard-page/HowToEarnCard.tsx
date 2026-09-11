@@ -1,5 +1,7 @@
 import type { JSX } from 'react';
-import { Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { alpha, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import SectionHeader from '../../components/SectionHeader';
+import IconDisc from '../account-page/IconDisc';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import GroupsIcon from '@mui/icons-material/Groups';
@@ -37,34 +39,27 @@ export default function HowToEarnCard({ config }: Readonly<Props>) {
   if (active.length === 0) return null;
 
   return (
-    <Card variant="outlined">
-      <CardContent>
+    <Card>
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={1.5}>
-          <Stack spacing={0.25}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              {t('mweb.leaderboard.howToTitle')}
-            </Typography>
-            <Typography variant="caption" sx={{
-              color: "text.secondary"
-            }}>
-              {t('mweb.leaderboard.howToSubtitle')}
-            </Typography>
-          </Stack>
+          <SectionHeader title={t('mweb.leaderboard.howToTitle')} />
           {active.map((category) => (
             <Stack key={category} direction="row" spacing={1.5} sx={{
               alignItems: "center"
             }}>
-              <Stack sx={{ color: 'primary.main' }}>{EARN_ICON[category]}</Stack>
-              <Typography variant="body2" sx={{ flex: 1 }}>
+              <IconDisc>{EARN_ICON[category]}</IconDisc>
+              <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }}>
                 {t(LEADERBOARD_EARN_KEY[category])}
               </Typography>
               <Chip
                 size="small"
-                color="primary"
-                variant="outlined"
                 label={t('mweb.leaderboard.earnPoints', {
                   vars: { points: config[LEADERBOARD_POINTS_FIELD[category]] },
                 })}
+                sx={{
+                  color: 'primary.main',
+                  bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
+                }}
               />
             </Stack>
           ))}

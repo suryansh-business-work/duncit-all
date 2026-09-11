@@ -7,6 +7,10 @@ import { DuncitButton } from '@duncit/buttons';
 import type { SupportPodOption } from './queries';
 import { SUPPORT_CALL_TARGET, REQUEST_CALLBACK, MY_CALLBACK_REQUESTS } from './queries';
 import CallbackHistory from './CallbackHistory';
+import { SURFACE_SX } from '../../theme';
+
+const CARD_SX = { ...SURFACE_SX, p: 2 } as const;
+const CARD_TITLE_SX = { fontSize: '1rem', fontWeight: 600 } as const;
 
 interface Props {
   selected: SupportPodOption | null;
@@ -45,16 +49,9 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
 
   return (
     <Stack spacing={2}>
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
+      <Paper sx={CARD_SX}>
         <Stack spacing={1.25}>
-          <Typography
-            variant="overline"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 700
-            }}>
-            Call support now
-          </Typography>
+          <Typography sx={CARD_TITLE_SX}>Call support now</Typography>
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
@@ -69,23 +66,15 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
             startIcon={<CallIcon />}
             disabled={!target?.available}
             onClick={handleCallNow}
-            sx={{ borderRadius: 99, fontWeight: 600 }}
           >
             Call Now
           </DuncitButton>
         </Stack>
       </Paper>
 
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
+      <Paper sx={CARD_SX}>
         <Stack spacing={1.5}>
-          <Typography
-            variant="overline"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 700
-            }}>
-            Request a callback
-          </Typography>
+          <Typography sx={CARD_TITLE_SX}>Request a callback</Typography>
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
@@ -118,7 +107,6 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
             startIcon={<PhoneCallbackIcon />}
             disabled={loading}
             onClick={handleRequest}
-            sx={{ borderRadius: 99, fontWeight: 600 }}
           >
             {loading ? 'Requesting…' : 'Request callback'}
           </DuncitButton>

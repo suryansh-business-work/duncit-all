@@ -26,12 +26,13 @@ interface Props {
 
 /** Address verification — structured manual form (State / City / Pincode / line)
  * instead of a document upload. Approved and under-review rows are read-only.
+ * The submit is the outlined green pill mWeb's MUI card draws (rule 27).
  *
  * The schema, the prefill and the input builder come from @duncit/verification,
  * so this form and mWeb's MUI card accept exactly the same addresses. */
 export function AddressCard({ item, busy, onSubmit }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { onPrimary } = useThemeColors();
+  const { primary } = useThemeColors();
   const schema = useMemo(() => makeAddressSchema(t), [t]);
   const { control, handleSubmit } = useForm<AddressValues, any, AddressValues>({
     resolver: formResolver<AddressValues>(schema),
@@ -96,17 +97,20 @@ export function AddressCard({ item, busy, onSubmit }: Readonly<Props>) {
             aria-label={t('verification.submitAddress')}
             aria-disabled={busy}
             onPress={busy ? undefined : submit}
+            alignSelf="flex-start"
             alignItems="center"
             justifyContent="center"
             gap={8}
-            height={46}
-            borderRadius={12}
-            backgroundColor="$primary"
+            height={44}
+            paddingHorizontal={18}
+            borderRadius={999}
+            borderWidth={1}
+            borderColor="$primary"
             opacity={busy ? 0.6 : 1}
             pressStyle={PRESS_STYLE.control}
           >
-            {busy ? <Spinner testID="address-busy" size="small" color={onPrimary} /> : null}
-            <Text fontSize={14} fontWeight="700" color={onPrimary}>
+            {busy ? <Spinner testID="address-busy" size="small" color={primary} /> : null}
+            <Text fontSize={14} fontWeight="600" color="$primary">
               {submitLabel}
             </Text>
           </XStack>

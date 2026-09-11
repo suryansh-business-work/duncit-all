@@ -39,14 +39,14 @@ export function DeletionSubmittedDialog({
       role="button"
       aria-label={t('mweb.account.deletion.signOutNow')}
       onPress={onSignOut}
-      height={46}
+      height={52}
       alignItems="center"
       justifyContent="center"
-      borderRadius={12}
+      borderRadius={999}
       backgroundColor="$primary"
-      pressStyle={PRESS_STYLE.control}
+      pressStyle={PRESS_STYLE.solid}
     >
-      <Text fontSize={14} fontWeight="700" color="$onPrimary">
+      <Text fontSize={16} fontWeight="600" color="$onPrimary">
         {t('mweb.account.deletion.signOutNow')}
       </Text>
     </XStack>
@@ -64,10 +64,10 @@ export function DeletionSubmittedDialog({
       footer={footer}
     >
       <YStack gap={10}>
-        <Text fontSize={13.5} fontWeight="700" color="$danger">
+        <Text fontSize={14} fontWeight="600" color="$danger">
           {t('mweb.account.deletion.submittedOn', { vars: { date: formatDate(deletesOn) } })}
         </Text>
-        <Text fontSize={12.5} color="$muted">
+        <Text fontSize={14} color="$muted">
           {t('mweb.account.deletion.submittedSealed')}
         </Text>
         <Text fontSize={12} color="$muted">

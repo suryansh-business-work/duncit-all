@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Spinner, Text, YStack } from 'tamagui';
+import { Spinner, YStack } from 'tamagui';
 
+import { EmptyState } from '@/components/EmptyState';
+import { SectionHeader } from '@/components/SectionHeader';
 import { ClubPodsSchedule } from '@/components/details/club/ClubPodsSchedule';
 import { MobileVenuePodsDocument } from '@/graphql/hosts-venues';
 import { useDetailNav } from '@/hooks/useDetailNav';
@@ -9,7 +11,7 @@ import { graphqlRequest } from '@/services/graphql.client';
 
 /** "Pods at this venue" — every live pod hosted at the venue, in the same
  * Happening soon / Upcoming / Previous rails as the club page. mWeb twin:
- * VenueDetailsPage's pods section. */
+ * venues-page/VenuePodsSection. */
 export function VenuePodsSection({ venueId }: Readonly<{ venueId: string }>) {
   const { openPod } = useDetailNav();
   const [pods, setPods] = useState<ClubPod[]>([]);
@@ -28,14 +30,14 @@ export function VenuePodsSection({ venueId }: Readonly<{ venueId: string }>) {
 
   return (
     <YStack gap={10} testID="venue-pods-section">
-      <Text fontSize={15} fontWeight="700" color="$color">
-        Pods at this venue
-      </Text>
+      <SectionHeader title="Pods at this venue" />
       {isLoading ? <Spinner testID="venue-pods-loading" color="$primary" /> : null}
       {!isLoading && pods.length === 0 ? (
-        <Text testID="venue-no-pods" fontSize={13} color="$muted">
-          No pods hosted at this venue yet.
-        </Text>
+        <EmptyState
+          testID="venue-no-pods"
+          icon="event-busy"
+          title="No pods hosted at this venue yet."
+        />
       ) : null}
       {!isLoading && pods.length > 0 ? (
         <ClubPodsSchedule

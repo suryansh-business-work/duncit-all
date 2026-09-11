@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Switch } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
+import { IconDisc } from './IconDisc';
 
 /** Account privacy toggle — a private profile hides posts and status from people
  * who don't follow you (Instagram-style). Name + avatar stay visible. */
@@ -13,7 +14,7 @@ export function PrivacyToggleCard({
   onChange,
 }: Readonly<{ isPrivate: boolean; onChange: (next: boolean) => Promise<void> }>) {
   const { t } = useTranslation();
-  const { primary, color } = useThemeColors();
+  const { primary } = useThemeColors();
   const [busy, setBusy] = useState(false);
 
   const onValueChange = async (next: boolean) => {
@@ -27,23 +28,13 @@ export function PrivacyToggleCard({
   };
 
   return (
-    <XStack
-      testID="privacy-card"
-      paddingHorizontal={16}
-      paddingVertical={14}
-      borderRadius={18}
-      alignItems="center"
-      gap={12}
-      backgroundColor="$surface"
-      borderWidth={1}
-      borderColor="$borderColor"
-    >
-      <MaterialIcons name="lock-outline" size={20} color={color} />
+    <SurfaceCard testID="privacy-card" flexDirection="row" alignItems="center" gap={16}>
+      <IconDisc icon="lock-outline" />
       <YStack flex={1}>
-        <Text fontSize={14.5} fontWeight="700" color="$color">
+        <Text fontSize={15} fontWeight="500" color="$color">
           Private account
         </Text>
-        <Text fontSize={12.5} fontWeight="700" color="$muted">
+        <Text fontSize={14} color="$muted">
           When private, only followers see your posts and status.
         </Text>
       </YStack>
@@ -55,6 +46,6 @@ export function PrivacyToggleCard({
         onValueChange={(next) => void onValueChange(next)}
         trackColor={{ true: primary }}
       />
-    </XStack>
+    </SurfaceCard>
   );
 }

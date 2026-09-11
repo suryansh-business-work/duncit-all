@@ -21,7 +21,8 @@ interface Props {
   onActions: () => void;
 }
 
-/** One pod of the club: title, when, the shared status chip, seats and hosts. */
+/** One pod of the club, as a row of the pods card: title, when, the shared
+ * status chip, seats and hosts. */
 export function ClubPodRow({ pod, when, testID, onOpen, onActions }: Readonly<Props>) {
   const { t } = useTranslation();
   const { color: ink } = useThemeColors();
@@ -30,15 +31,7 @@ export function ClubPodRow({ pod, when, testID, onOpen, onActions }: Readonly<Pr
   const hosts = pod.host_names.filter(Boolean).join(', ');
 
   return (
-    <YStack
-      testID={testID}
-      gap={8}
-      padding={12}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
+    <YStack testID={testID} gap={10} paddingHorizontal={16} paddingVertical={14}>
       <XStack alignItems="center" gap={8}>
         <YStack
           testID={`${testID}-open`}
@@ -46,10 +39,10 @@ export function ClubPodRow({ pod, when, testID, onOpen, onActions }: Readonly<Pr
           aria-label={pod.pod_title}
           onPress={onOpen}
           flex={1}
-          gap={4}
+          gap={6}
           pressStyle={PRESS_STYLE.control}
         >
-          <Text fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>
+          <Text fontSize={16} fontWeight="600" color="$color" numberOfLines={1}>
             {pod.pod_title}
           </Text>
           <XStack alignItems="center" gap={8}>
@@ -72,12 +65,11 @@ export function ClubPodRow({ pod, when, testID, onOpen, onActions }: Readonly<Pr
           height={40}
           alignItems="center"
           justifyContent="center"
-          borderRadius={10}
-          borderWidth={1}
-          borderColor="$borderColor"
-          pressStyle={PRESS_STYLE.row}
+          borderRadius={20}
+          backgroundColor="$soft"
+          pressStyle={PRESS_STYLE.control}
         >
-          <MaterialIcons name="more-vert" size={18} color={ink} />
+          <MaterialIcons name="more-vert" size={20} color={ink} />
         </XStack>
       </XStack>
       <XStack gap={10}>

@@ -10,13 +10,14 @@ import {
   MobileMyAccountDeletionRequestDocument,
   MobileRequestAccountDeletionOtpDocument,
 } from '@/graphql/account';
-import { useDateFormat } from '@/hooks/useDateFormat';
 import { useLogout } from '@/hooks/useLogout';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 import { DeleteAccountDialog } from './DeleteAccountDialog';
+import { DeletionPendingNotice } from './DeletionPendingNotice';
 import { DeletionSubmittedDialog } from './DeletionSubmittedDialog';
+import { IconDisc } from './IconDisc';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
@@ -42,8 +43,7 @@ const errMsg = (e: unknown, t: Translate) =>
  */
 export function DeletionRequestPanel({ onDone }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { danger, muted } = useThemeColors();
-  const { formatDate } = useDateFormat();
+  const { muted } = useThemeColors();
   const logout = useLogout();
   const [pending, setPending] = useState<PendingRequest | null>(null);
   const [submitted, setSubmitted] = useState<PendingRequest | null>(null);
@@ -122,71 +122,39 @@ export function DeletionRequestPanel({ onDone }: Readonly<Props>) {
       : t('mweb.account.deletion.confirmSealedDays', { vars: { days: retentionDays } });
 
   const errorLine = error ? (
-    <Text fontSize={12.5} color="$danger" testID="deletion-panel-error">
+    <Text fontSize={13} color="$danger" testID="deletion-panel-error">
       {error}
     </Text>
   ) : null;
 
   if (pending) {
     return (
-      <YStack gap={10} testID="deletion-pending">
-        <XStack alignItems="flex-start" gap={10}>
-          <MaterialIcons name="hourglass-top" size={18} color={muted} />
-          <YStack flex={1} gap={2}>
-            <Text fontSize={13.5} fontWeight="700" color="$color">
-              {t('mweb.account.deletion.pendingTitle')}
-            </Text>
-            <Text fontSize={12.5} color="$muted">
-              {t('mweb.account.deletion.pendingBody')}
-            </Text>
-            <Text fontSize={12.5} fontWeight="700" color="$danger">
-              {t('mweb.account.deletion.deletesOn', {
-                vars: { date: formatDate(pending.scheduled_delete_at) },
-              })}
-            </Text>
-            <Text fontSize={12} color="$muted">
-              {t('mweb.account.deletion.pendingRef', { vars: { code: pending.request_id } })}
-              {' · '}
-              {t('mweb.account.deletion.pendingOn', {
-                vars: { date: formatDate(pending.requested_at) },
-              })}
-            </Text>
-          </YStack>
-        </XStack>
-        <Text
-          pressStyle={PRESS_STYLE.inline}
-          testID="withdraw-deletion"
-          role="button"
-          aria-label={t('mweb.account.deletion.withdraw')}
-          onPress={withdraw}
-          fontSize={13}
-          fontWeight="700"
-          color="$primary"
-        >
-          {cancelling
-            ? t('mweb.account.deletion.withdrawing')
-            : t('mweb.account.deletion.withdraw')}
-        </Text>
-        {errorLine}
-      </YStack>
+      <DeletionPendingNotice
+        pending={pending}
+        cancelling={cancelling}
+        onWithdraw={withdraw}
+        errorLine={errorLine}
+      />
     );
   }
 
   return (
     <YStack gap={10}>
+      {/* The danger corner: one row in the danger colour, never a filled button. */}
       <XStack
         testID="open-delete-account"
         role="button"
         aria-label={t('mweb.account.deletion.action')}
         onPress={() => setConfirmOpen(true)}
         alignItems="center"
-        gap={10}
+        gap={16}
         pressStyle={PRESS_STYLE.row}
       >
-        <MaterialIcons name="delete-forever" size={18} color={danger} />
-        <Text fontSize={13.5} fontWeight="600" color="$danger">
+        <IconDisc icon="delete-forever" tone="danger" />
+        <Text flex={1} fontSize={15} fontWeight="500" color="$danger">
           {t('mweb.account.deletion.action')}
         </Text>
+        <MaterialIcons name="chevron-right" size={22} color={muted} />
       </XStack>
       {errorLine}
 

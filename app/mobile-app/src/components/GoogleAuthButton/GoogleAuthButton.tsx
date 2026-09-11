@@ -117,7 +117,7 @@ export function GoogleAuthButton({
       gap={12}
       width="100%"
       height={52}
-      borderRadius={12}
+      borderRadius={999}
       borderWidth={1}
       borderColor="$borderColor"
       backgroundColor="$surface"

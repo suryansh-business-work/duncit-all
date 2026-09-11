@@ -183,11 +183,11 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
               maxWidth={460}
               maxHeight="88%"
               backgroundColor="$background"
-              borderRadius={20}
+              borderRadius={28}
               padding={18}
             >
               <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
-                <Text fontSize={17} fontWeight="700" color="$color">
+                <Text fontSize={17} fontWeight="600" color="$color">
                   Scan attendee tickets
                 </Text>
                 <Text
@@ -224,8 +224,8 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                     {result ? (
                       <Text
                         testID="ticket-scan-message"
-                        fontSize={13.5}
-                        fontWeight="700"
+                        fontSize={14}
+                        fontWeight="600"
                         color={resultTone(result)}
                       >
                         {result.ok ? confirmation : result.message}
@@ -280,10 +280,10 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                     aria-label={t('mweb.common.close')}
                     onPress={close}
                     flex={1}
-                    height={46}
+                    height={48}
                     alignItems="center"
                     justifyContent="center"
-                    borderRadius={12}
+                    borderRadius={999}
                     borderWidth={1}
                     borderColor="$borderColor"
                     pressStyle={PRESS_STYLE.control}
@@ -302,14 +302,14 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                         setError(null);
                       }}
                       flex={1}
-                      height={46}
+                      height={48}
                       alignItems="center"
                       justifyContent="center"
-                      borderRadius={12}
+                      borderRadius={999}
                       backgroundColor="$primary"
-                      pressStyle={PRESS_STYLE.control}
+                      pressStyle={PRESS_STYLE.solid}
                     >
-                      <Text fontSize={14} fontWeight="700" color={onPrimary}>
+                      <Text fontSize={14} fontWeight="600" color={onPrimary}>
                         Scan next
                       </Text>
                     </XStack>

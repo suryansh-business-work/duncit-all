@@ -15,7 +15,7 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 export function LocationButton() {
   const { t } = useTranslation();
   const { cityLabel, countryCode } = useLocations();
-  const { color } = useThemeColors();
+  const { accent } = useThemeColors();
   const [open, setOpen] = useState(false);
   const flag = countryFlagUrl(countryCode);
 
@@ -27,22 +27,22 @@ export function LocationButton() {
         aria-label={t('mweb.common.selectLocation')}
         onPress={() => setOpen(true)}
         alignItems="center"
-        gap={4}
-        maxWidth={132}
-        height={36}
-        paddingHorizontal={10}
-        borderRadius={10}
+        gap={6}
+        maxWidth={160}
+        height={40}
+        paddingHorizontal={12}
+        borderRadius={999}
         borderWidth={1}
-        borderColor="$borderColor"
+        borderColor="$cardBorder"
         backgroundColor="$surface"
-        pressStyle={PRESS_STYLE.row}
+        pressStyle={PRESS_STYLE.surface}
       >
         {flag ? (
-          <AppImage source={{ uri: flag }} style={{ width: 18, height: 13, borderRadius: 2 }} />
+          <AppImage source={{ uri: flag }} style={{ width: 18, height: 13, borderRadius: 3 }} />
         ) : (
-          <MaterialIcons name="place" size={15} color={color} />
+          <MaterialIcons name="place" size={18} color={accent} />
         )}
-        <Text fontSize={12} fontWeight="600" color="$color" numberOfLines={1}>
+        <Text flexShrink={1} fontSize={13} fontWeight="600" color="$color" numberOfLines={1}>
           {cityLabel || 'Location'}
         </Text>
       </XStack>

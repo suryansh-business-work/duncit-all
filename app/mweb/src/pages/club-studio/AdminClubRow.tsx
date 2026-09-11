@@ -1,9 +1,9 @@
 import { Link as RouterLink } from 'react-router';
 import { Avatar, Box, Stack, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import EventNoteIcon from '@mui/icons-material/EventNote';
-import GroupsIcon from '@mui/icons-material/Groups';
-import VerifiedIcon from '@mui/icons-material/Verified';
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import EventNoteRoundedIcon from '@mui/icons-material/EventNoteRounded';
+import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
+import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded';
 import { DuncitButton } from '@duncit/buttons';
 import { formatCount } from '@duncit/utils';
 import FactLine from '../../components/club-admin/FactLine';
@@ -20,31 +20,23 @@ export default function AdminClubRowCard({ club }: Readonly<{ club: AdminClubRow
   const clubPath = `/clubs/${club.id}`;
 
   return (
-    <Box
-      sx={{
-        p: 1.25,
-        borderRadius: '16px',
-        border: 1,
-        borderColor: 'divider',
-        bgcolor: 'background.paper',
-      }}
-    >
-      <Stack direction="row" spacing={1.25}>
+    <Box sx={{ p: 2 }}>
+      <Stack direction="row" spacing={1.5}>
         <Avatar
           variant="rounded"
           src={club.cover_image_url ?? undefined}
           alt={club.club_name}
-          sx={{ width: 56, height: 56, borderRadius: '12px', bgcolor: 'action.hover' }}
+          sx={{ width: 56, height: 56, borderRadius: '12px', bgcolor: 'action.hover', color: 'secondary.main' }}
         >
-          <GroupsIcon color="disabled" />
+          <GroupsRoundedIcon />
         </Avatar>
         <Stack spacing={0.35} sx={{ flex: 1, minWidth: 0 }}>
           <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
-            <Typography variant="subtitle1" noWrap sx={{ fontWeight: 700 }}>
+            <Typography noWrap sx={{ fontSize: '1rem', fontWeight: 600 }}>
               {club.club_name}
             </Typography>
             {club.is_verified && (
-              <VerifiedIcon
+              <VerifiedRoundedIcon
                 color="primary"
                 sx={{ fontSize: 16 }}
                 titleAccess={t('clubAdmin.clubs.verified')}
@@ -63,14 +55,14 @@ export default function AdminClubRowCard({ club }: Readonly<{ club: AdminClubRow
           </Stack>
         </Stack>
       </Stack>
-      <Stack direction="row" spacing={1} sx={{ mt: 1.25 }}>
+      <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
         <DuncitButton
           component={RouterLink}
           to={`${clubPath}/pods`}
           variant="contained"
           size="small"
-          startIcon={<EventNoteIcon />}
-          sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}
+          startIcon={<EventNoteRoundedIcon />}
+          sx={{ flex: 1 }}
         >
           {t('mweb.clubStudio.openPods')}
         </DuncitButton>
@@ -79,8 +71,8 @@ export default function AdminClubRowCard({ club }: Readonly<{ club: AdminClubRow
           to={`${clubPath}/edit`}
           variant="outlined"
           size="small"
-          startIcon={<EditIcon />}
-          sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}
+          startIcon={<EditRoundedIcon />}
+          sx={{ flex: 1 }}
         >
           {t('mweb.clubStudio.editClub')}
         </DuncitButton>

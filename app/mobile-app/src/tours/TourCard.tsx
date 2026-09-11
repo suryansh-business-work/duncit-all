@@ -44,20 +44,20 @@ export function TourCard({
       testID="tour-card"
       width="100%"
       gap={8}
-      padding={16}
-      borderRadius={16}
+      padding={20}
+      borderRadius={24}
       borderWidth={1}
-      borderColor="$borderColor"
+      borderColor="$cardBorder"
       backgroundColor="$surface"
     >
-      <Text fontSize={16} fontWeight="700" color="$color">
+      <Text fontSize={17} fontWeight="600" color="$color">
         {t(step.titleKey)}
       </Text>
-      <Text fontSize={13.5} lineHeight={19} color="$muted">
+      <Text fontSize={14} lineHeight={20} color="$muted">
         {t(step.bodyKey)}
       </Text>
-      <XStack alignItems="center" justifyContent="space-between" paddingTop={4}>
-        <Text testID="tour-progress" fontSize={11.5} fontWeight="700" color="$muted">
+      <XStack alignItems="center" justifyContent="space-between" paddingTop={8}>
+        <Text testID="tour-progress" fontSize={12} fontWeight="600" color="$muted">
           {position} / {steps.length}
         </Text>
         <XStack gap={8} alignItems="center">
@@ -66,11 +66,12 @@ export function TourCard({
             role="button"
             aria-label={t('mweb.tours.skipTour')}
             onPress={handleStop}
-            paddingVertical={8}
+            height={36}
+            alignItems="center"
             paddingHorizontal={10}
             pressStyle={PRESS_STYLE.row}
           >
-            <Text fontSize={12.5} fontWeight="600" color="$muted">
+            <Text fontSize={13} fontWeight="600" color="$muted">
               {t('mweb.tours.skip')}
             </Text>
           </XStack>
@@ -80,14 +81,15 @@ export function TourCard({
               role="button"
               aria-label={t('mweb.tours.previousStep')}
               onPress={handlePrev}
-              paddingVertical={8}
-              paddingHorizontal={12}
-              borderRadius={10}
+              height={36}
+              alignItems="center"
+              paddingHorizontal={14}
+              borderRadius={999}
               borderWidth={1}
               borderColor="$borderColor"
-              pressStyle={PRESS_STYLE.row}
+              pressStyle={PRESS_STYLE.control}
             >
-              <Text fontSize={12.5} fontWeight="600" color="$color">
+              <Text fontSize={13} fontWeight="600" color="$color">
                 {t('mweb.tours.previous')}
               </Text>
             </XStack>
@@ -97,13 +99,14 @@ export function TourCard({
             role="button"
             aria-label={isLastStep ? t('mweb.tours.finishTour') : t('mweb.tours.nextStep')}
             onPress={isLastStep ? handleStop : handleNext}
-            paddingVertical={8}
-            paddingHorizontal={14}
-            borderRadius={10}
+            height={36}
+            alignItems="center"
+            paddingHorizontal={16}
+            borderRadius={999}
             backgroundColor="$primary"
-            pressStyle={PRESS_STYLE.control}
+            pressStyle={PRESS_STYLE.solid}
           >
-            <Text fontSize={12.5} fontWeight="700" color={onPrimary}>
+            <Text fontSize={13} fontWeight="600" color={onPrimary}>
               {isLastStep ? t('mweb.tours.finish') : t('mweb.tours.next')}
             </Text>
           </XStack>

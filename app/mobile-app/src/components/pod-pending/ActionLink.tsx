@@ -1,10 +1,9 @@
 import { Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack } from 'tamagui';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { fireAndForget } from '@/utils/fire-and-forget';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface ActionLinkProps {
   icon: keyof typeof MaterialIcons.glyphMap;
@@ -13,24 +12,18 @@ export interface ActionLinkProps {
   testID: string;
 }
 
-/** Pressable "icon + label" contact action (tel:/mailto:/wa.me/maps deep link).
- * The native counterpart of mWeb's anchor actions (rule 27). */
+/** An outlined green pill that opens a contact deep link (tel:/mailto:/wa.me/
+ * maps). The native counterpart of mWeb's outlined anchor buttons (rule 27). */
 export function ActionLink({ icon, label, url, testID }: Readonly<ActionLinkProps>) {
   const { primary } = useThemeColors();
   return (
-    <XStack
+    <DuncitButton
       testID={testID}
-      role="button"
-      aria-label={label}
+      label={label}
       onPress={() => fireAndForget(Linking.openURL(url))}
-      alignItems="center"
-      gap={4}
-      pressStyle={PRESS_STYLE.row}
-    >
-      <MaterialIcons name={icon} size={16} color={primary} />
-      <Text fontSize={13} fontWeight="600" color="$primary">
-        {label}
-      </Text>
-    </XStack>
+      variant="outline"
+      size="sm"
+      icon={<MaterialIcons name={icon} size={16} color={primary} />}
+    />
   );
 }

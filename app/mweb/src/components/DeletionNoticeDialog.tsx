@@ -19,6 +19,12 @@ import {
 import { parseApiError } from '../utils/parseApiError';
 import { formatDate } from '../utils/dateFormat';
 import { useTranslation } from '../i18n/useTranslation';
+import {
+  DIALOG_ACTIONS_SX,
+  DIALOG_CONTENT_SX,
+  DIALOG_PILL_SX,
+  DIALOG_TITLE_SX,
+} from './dialog-styles';
 
 /** Marks this browser session as having been told. Cleared by logout, which
  * wipes sessionStorage whole — so the next sign-in asks again, which is
@@ -86,13 +92,13 @@ export default function DeletionNoticeDialog() {
 
   return (
     <Dialog open fullWidth maxWidth="xs" onClose={close} data-testid="deletion-notice">
-      <DialogTitle sx={{ fontWeight: 700 }}>
+      <DialogTitle sx={DIALOG_TITLE_SX}>
         {t('mweb.account.deletion.noticeTitle')}
       </DialogTitle>
-      <DialogContent dividers>
+      <DialogContent sx={DIALOG_CONTENT_SX}>
         <Stack spacing={1.5}>
           <Alert severity="warning">
-            <AlertTitle sx={{ fontWeight: 700 }}>
+            <AlertTitle sx={{ fontWeight: 600 }}>
               {t('mweb.account.deletion.deletesOn', {
                 vars: { date: formatDate(pending.scheduled_delete_at) },
               })}
@@ -115,8 +121,13 @@ export default function DeletionNoticeDialog() {
           )}
         </Stack>
       </DialogContent>
-      <DialogActions>
-        <DuncitButton onClick={close} sx={{ textTransform: 'none' }} data-testid="deletion-notice-keep">
+      <DialogActions disableSpacing sx={DIALOG_ACTIONS_SX}>
+        <DuncitButton
+          variant="outlined"
+          onClick={close}
+          sx={DIALOG_PILL_SX}
+          data-testid="deletion-notice-keep"
+        >
           {t('mweb.account.deletion.noticeKeep')}
         </DuncitButton>
         <DuncitButton
@@ -126,7 +137,7 @@ export default function DeletionNoticeDialog() {
             withdraw().catch(() => undefined);
           }}
           data-testid="deletion-notice-withdraw"
-          sx={{ textTransform: 'none', fontWeight: 700 }}
+          sx={DIALOG_PILL_SX}
         >
           {cancelling
             ? t('mweb.account.deletion.withdrawing')

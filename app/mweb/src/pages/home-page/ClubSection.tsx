@@ -1,17 +1,17 @@
 import { useNavigate } from 'react-router';
-import { Avatar, Box, Card, Chip, Stack, Typography } from '@mui/material';
-import { alpha } from '@mui/material/styles';
-import GroupsIcon from '@mui/icons-material/Groups';
-import { coverImageUrl } from '@duncit/utils';
+import { Card, Stack, Typography } from '@mui/material';
+import SectionHeader from '../../components/SectionHeader';
+import { useTranslation } from '../../i18n/useTranslation';
 import { clubUrl } from '../../utils/seoUrls';
 import { openPod } from '../../lib/open-pod';
+import HomeRail from './HomeRail';
 import PodCard from './PodCard';
 
 interface ClubSectionProps {
   club: any;
   clubPods: any[];
   hostNameOf: (pod: any) => string | null;
-  /** The category chip over each card's image (mock: "Sports"). */
+  /** The category pill over each card's image (mock: "Sports"). */
   categoryLabelOf?: (pod: any) => string | null;
   /** Save state + toggle; omit to hide the save buttons (signed-out). */
   savedOf?: (podDocId: string) => boolean;
@@ -20,92 +20,27 @@ interface ClubSectionProps {
   onToggleSave?: (podDocId: string) => void;
 }
 
+/** One club's rail: the club's name with "See all" (opens the club) above its
+ * upcoming pods. Native twin: ClubSection. */
 export default function ClubSection({ club, clubPods, hostNameOf, categoryLabelOf, savedOf, savingOf, onToggleSave }: Readonly<ClubSectionProps>) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
-    <Box sx={{ minWidth: 0 }}>
-      <Stack
-        direction="row"
-        sx={{
-          alignItems: "center",
-          justifyContent: "space-between",
-          mb: 1.5
-        }}>
-        <Stack
-          direction="row"
-          spacing={1.5}
-          onClick={() => navigate(clubUrl(club.club_id))}
-          sx={{
-            alignItems: "center",
-            minWidth: 0,
-            cursor: 'pointer'
-          }}>
-          <Avatar
-            src={coverImageUrl(club.club_feature_images_and_videos)}
-            variant="rounded"
-            sx={{
-              width: 46,
-              height: 46,
-              bgcolor: 'primary.main',
-              boxShadow: '0 10px 22px rgba(255,79,115,0.18)',
-            }}
-          >
-            <GroupsIcon />
-          </Avatar>
-          <Box sx={{ minWidth: 0 }}>
-            <Typography
-              variant="subtitle1"
-              noWrap
-              sx={{
-                fontWeight: 700,
-                lineHeight: 1.15
-              }}>
-              {club.club_name}
-            </Typography>
-            {club.club_description && (
-              <Typography
-                variant="caption"
-                sx={{
-                  color: "text.secondary",
-                  display: '-webkit-box',
-                  WebkitLineClamp: 1,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden'
-                }}>
-                {club.club_description}
-              </Typography>
-            )}
-          </Box>
-        </Stack>
-        <Chip size="small" label={`${clubPods.length} pod${clubPods.length === 1 ? '' : 's'}`} sx={{ fontWeight: 600, flex: '0 0 auto' }} />
-      </Stack>
+    <Stack spacing={1.5} sx={{ minWidth: 0 }}>
+      <SectionHeader
+        title={club.club_name}
+        actionLabel={t('mweb.home.seeAll')}
+        onAction={() => navigate(clubUrl(club.club_id))}
+      />
 
       {clubPods.length === 0 ? (
-        <Card variant="outlined" sx={{ p: 3, textAlign: 'center' }}>
-          <Typography variant="body2" sx={{
-            color: "text.secondary"
-          }}>
+        <Card sx={{ p: 3, textAlign: 'center' }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             No upcoming pods in this club for the selected city.
           </Typography>
         </Card>
       ) : (
-        <Box
-          sx={{
-            display: 'flex',
-            gap: 1.35,
-            mx: { xs: -1.25, sm: 0 },
-            px: { xs: 1.25, sm: 0 },
-            overflowX: 'auto',
-            pb: 1.75,
-            scrollSnapType: 'x mandatory',
-            scrollbarWidth: 'none',
-            '&::-webkit-scrollbar': { display: 'none' },
-            '&::-webkit-scrollbar-thumb': {
-              bgcolor: (theme) => alpha(theme.palette.text.primary, 0.16),
-              borderRadius: '16px',
-            },
-          }}
-        >
+        <HomeRail>
           {clubPods.map((p) => (
             <PodCard
               key={p.id}
@@ -119,8 +54,8 @@ export default function ClubSection({ club, clubPods, hostNameOf, categoryLabelO
               onOpen={() => openPod(navigate, p)}
             />
           ))}
-        </Box>
+        </HomeRail>
       )}
-    </Box>
+    </Stack>
   );
 }

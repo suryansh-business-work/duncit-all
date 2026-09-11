@@ -18,6 +18,14 @@ interface Props {
   onOpenPod: (id: string) => void;
 }
 
+/** Segment pills on the page ground: surface at rest, green when open. */
+const SEGMENT_SX = { height: 36, minHeight: 36, fontWeight: 600, px: 0.5, flex: '0 0 auto' } as const;
+const IDLE_SEGMENT_SX = {
+  ...SEGMENT_SX,
+  bgcolor: 'background.paper',
+  border: '1px solid var(--duncit-card-border)',
+} as const;
+
 interface RenderCtx extends Props {
   moments: any[];
 }
@@ -78,9 +86,8 @@ export default function ClubSegments({ club, pods, priceFormat, onOpenPod }: Rea
             label={label}
             clickable
             color={active === key ? 'primary' : 'default'}
-            variant={active === key ? 'filled' : 'outlined'}
             onClick={() => setActive(key)}
-            sx={{ height: 34, fontWeight: 700 }}
+            sx={active === key ? SEGMENT_SX : IDLE_SEGMENT_SX}
           />
         ))}
       </Stack>

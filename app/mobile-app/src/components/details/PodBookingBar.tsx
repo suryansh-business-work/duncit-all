@@ -2,17 +2,18 @@ import type { LayoutChangeEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
-import { semantic } from '@duncit/auth-tokens';
 import { podPhase } from '@duncit/utils';
 
 import { BackoutInProcessBar } from '@/components/details/BackoutInProcessBar';
+import { BarCta, BarLabel } from '@/components/details/BarLabel';
 import { MemberBookedBar } from '@/components/details/MemberBookedBar';
 import { PodBookBar } from '@/components/details/PodBookBar';
 import { TourAnchor } from '@/tours/TourAnchor';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { PodDetail, PodMembershipState } from '@/hooks/useDetails';
-import { PRESS_STYLE } from '@duncit/buttons-native';
+
+const SHADOW_OFFSET = { width: 0, height: 8 };
 
 interface Props {
   pod: PodDetail;
@@ -34,13 +35,15 @@ interface Props {
 }
 
 /**
- * Sticky bottom booking bar. Reflects the viewer's membership so a pod that is
- * already booked shows "Pod Booked" (+ Backout) instead of offering to pay again
- * — matching mWeb's PodActionPanel. A booking in "Backout in process" offers
- * "Keep My Spot" until the released seat is rebooked; a PARTIAL backout keeps
- * the member booked, so its released seats are taken back from the booked bar
- * instead. Full pods show a disabled "Pod is full". The pod's own host never
- * books their pod — they get a "Go to Dashboard" CTA into Host Studio instead.
+ * Floating booking bar — a 24px surface card above the bottom edge, the price
+ * or booking state on the left and the one green action on the right. Reflects
+ * the viewer's membership so a pod that is already booked shows "Pod Booked"
+ * (+ Backout) instead of offering to pay again — matching mWeb's
+ * PodActionPanel. A booking in "Backout in process" offers "Keep My Spot" until
+ * the released seat is rebooked; a PARTIAL backout keeps the member booked, so
+ * its released seats are taken back from the booked bar instead. Full pods show
+ * a disabled "Pod is full". The pod's own host never books their pod — they get
+ * a "Go to Dashboard" CTA into Host Studio instead.
  */
 export function PodBookingBar({
   pod,
@@ -77,17 +80,32 @@ export function PodBookingBar({
       left={0}
       right={0}
       bottom={0}
+      paddingHorizontal={16}
+      pointerEvents="box-none"
       onLayout={onLayout}
-      backgroundColor="$background"
-      borderTopWidth={1}
-      borderColor="$borderColor"
     >
-      <SafeAreaView edges={['bottom']}>
+      {/* Only the card takes touches — the gutters around it scroll the page. */}
+      <SafeAreaView edges={['bottom']} pointerEvents="box-none">
         {/* The whole bar, not just the Book button: which control sits here
             depends on whether the viewer is the host, already in, backing out or
             still deciding, and the tour describes the bar's job either way. */}
         <TourAnchor tour="pod-details" anchor="pod-book">
-          <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={10}>
+          <XStack
+            alignItems="center"
+            gap={12}
+            minHeight={64}
+            padding={8}
+            paddingLeft={16}
+            marginBottom={8}
+            borderRadius={24}
+            borderWidth={1}
+            borderColor="$borderColor"
+            backgroundColor="$surface"
+            shadowColor="#000000"
+            shadowOpacity={0.12}
+            shadowRadius={16}
+            shadowOffset={SHADOW_OFFSET}
+          >
             {isHost ? <HostBar onGoToDashboard={onGoToDashboard} /> : null}
             {showClosedNotice ? <ClosedNotice ongoing={phase === 'ONGOING'} /> : null}
             {!isHost && inProcess ? (
@@ -125,35 +143,15 @@ export function PodBookingBar({
 /** Host state: the host is auto-enrolled and never books their own pod — the
  * CTA jumps into Host Studio instead (mirrors mWeb's PodActionPanel). */
 function HostBar({ onGoToDashboard }: Readonly<{ onGoToDashboard: () => void }>) {
-  const { onPrimary } = useThemeColors();
   const { t } = useTranslation();
   return (
     <>
-      <YStack flex={1}>
-        <Text fontSize={11} color="$muted">
-          {t('mweb.podDetails.youreHosting')}
-        </Text>
-        <Text fontSize={16} fontWeight="700" color="$color">
-          {t('mweb.podDetails.yourPod')}
-        </Text>
-      </YStack>
-      <XStack
+      <BarLabel caption={t('mweb.podDetails.youreHosting')} value={t('mweb.podDetails.yourPod')} />
+      <BarCta
         testID="pod-go-dashboard"
-        role="button"
-        aria-label={t('mweb.podDetails.goToDashboard')}
+        label={t('mweb.podDetails.goToDashboard')}
         onPress={onGoToDashboard}
-        alignItems="center"
-        justifyContent="center"
-        paddingHorizontal={28}
-        height={48}
-        borderRadius={999}
-        backgroundColor="$primary"
-        pressStyle={PRESS_STYLE.control}
-      >
-        <Text fontSize={15} fontWeight="700" color={onPrimary}>
-          {t('mweb.podDetails.goToDashboard')}
-        </Text>
-      </XStack>
+      />
     </>
   );
 }
@@ -162,13 +160,14 @@ function HostBar({ onGoToDashboard }: Readonly<{ onGoToDashboard: () => void }>)
  * its own sentence — telling a member it has "already taken place" while it is
  * happening is the thing the Ongoing rail exists to stop saying. */
 function ClosedNotice({ ongoing }: Readonly<{ ongoing: boolean }>) {
+  const { warning } = useThemeColors();
   const { t } = useTranslation();
   const message = ongoing
     ? t('mweb.podDetails.bookingClosedOngoing')
     : t('mweb.podDetails.bookingClosed');
   return (
-    <XStack flex={1} alignItems="center" gap={8} testID="pod-booking-closed">
-      <MaterialIcons name="event-busy" size={20} color={semantic.warning} />
+    <XStack flex={1} alignItems="center" gap={8} minHeight={48} testID="pod-booking-closed">
+      <MaterialIcons name="event-busy" size={20} color={warning} />
       <Text flex={1} fontSize={13.5} fontWeight="600" color="$muted">
         {message}
       </Text>

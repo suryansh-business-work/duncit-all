@@ -1,7 +1,13 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
-import { semantic } from '@duncit/auth-tokens';
 
+import { PodThumb } from '@/components/host-manage/PodThumb';
+import {
+  ApprovalPill,
+  OverflowButton,
+  TypePill,
+  WarningNote,
+} from '@/components/host-manage/HostRowParts';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { VenueApprovalChip } from '@/utils/venue-approval';
@@ -17,7 +23,7 @@ interface FactProps {
   tint: string;
 }
 
-/** One labelled fact on the card — the venue, and the two dates. */
+/** One labelled fact on the row — the venue, and the two dates. */
 function RequestFact({ icon, label, value, tint }: Readonly<FactProps>) {
   return (
     <XStack alignItems="center" gap={6}>
@@ -36,6 +42,10 @@ interface Props {
   id: string;
   title: string;
   typeLabel: string;
+  /** Free pods wear the success-toned pill, paid ones the primary one. */
+  free?: boolean;
+  /** The pod's first still, or undefined for the glyph placeholder. */
+  cover?: string;
   /** The venue the slot was asked for. */
   venueName: string;
   /** When the host sent the request. */
@@ -60,6 +70,8 @@ export function VenueRequestRow({
   id,
   title,
   typeLabel,
+  free = false,
+  cover,
   venueName,
   requestedOn,
   eventDate,
@@ -69,86 +81,61 @@ export function VenueRequestRow({
   onActions,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { color: ink, muted } = useThemeColors();
-  const rejected = approval?.tone === 'error';
+  const { muted } = useThemeColors();
 
   return (
-    <YStack
-      gap={8}
-      padding={12}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor={rejected ? '$danger' : semantic.warning}
-      backgroundColor="$surface"
-    >
-      <XStack alignItems="center" gap={8}>
-        <YStack
+    <YStack gap={10} paddingHorizontal={16} paddingVertical={14}>
+      <XStack alignItems="flex-start" gap={8}>
+        <XStack
           testID={`venue-request-open-${id}`}
           role="button"
           aria-label={t('mweb.common.openPod')}
           onPress={onOpen}
           flex={1}
-          gap={2}
-          pressStyle={PRESS_STYLE.control}
-        >
-          <Text fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>
-            {title}
-          </Text>
-          <Text fontSize={12} color="$muted" numberOfLines={1}>
-            {typeLabel}
-          </Text>
-        </YStack>
-        <XStack
-          testID={`venue-request-actions-${id}`}
-          role="button"
-          aria-label={t('mweb.hostManage.podActions')}
-          onPress={onActions}
-          width={40}
-          height={40}
-          alignItems="center"
-          justifyContent="center"
-          borderRadius={10}
-          borderWidth={1}
-          borderColor="$borderColor"
+          alignItems="flex-start"
+          gap={12}
           pressStyle={PRESS_STYLE.row}
         >
-          <MaterialIcons name="more-vert" size={18} color={ink} />
+          <PodThumb uri={cover} />
+          <YStack flex={1} gap={2}>
+            <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
+              {title}
+            </Text>
+            <RequestFact
+              icon="place"
+              label={t('mweb.common.venue')}
+              value={venueName}
+              tint={muted}
+            />
+            <RequestFact
+              icon="schedule-send"
+              label={t('mweb.hostManage.requestedOn')}
+              value={requestedOn}
+              tint={muted}
+            />
+            <RequestFact
+              icon="event-available"
+              label={t('mweb.hostManage.eventDate')}
+              value={eventDate}
+              tint={muted}
+            />
+            {approval ? (
+              <YStack paddingTop={4}>
+                <ApprovalPill approval={approval} testID={`venue-request-approval-${id}`} />
+              </YStack>
+            ) : null}
+          </YStack>
         </XStack>
+        <TypePill label={typeLabel} free={free} />
+        <OverflowButton
+          testID={`venue-request-actions-${id}`}
+          label={t('mweb.hostManage.podActions')}
+          onPress={onActions}
+        />
       </XStack>
 
-      <RequestFact icon="place" label={t('mweb.common.venue')} value={venueName} tint={muted} />
-      <RequestFact
-        icon="schedule-send"
-        label={t('mweb.hostManage.requestedOn')}
-        value={requestedOn}
-        tint={muted}
-      />
-      <RequestFact
-        icon="event-available"
-        label={t('mweb.hostManage.eventDate')}
-        value={eventDate}
-        tint={muted}
-      />
-
-      {approval ? (
-        <Text
-          testID={`venue-request-approval-${id}`}
-          fontSize={11.5}
-          fontWeight="700"
-          color={rejected ? '$danger' : semantic.warning}
-          numberOfLines={1}
-        >
-          {approval.label}
-        </Text>
-      ) : null}
-
       {rejectedNote ? (
-        <XStack testID={`venue-request-note-${id}`} alignItems="flex-start" gap={6}>
-          <MaterialIcons name="info-outline" size={16} color={semantic.warning} />
-          <Text flex={1} fontSize={12} color="$muted">
-            {rejectedNote}
-          </Text>
-        </XStack>
+        <WarningNote testID={`venue-request-note-${id}`} text={rejectedNote} />
       ) : null}
     </YStack>
   );

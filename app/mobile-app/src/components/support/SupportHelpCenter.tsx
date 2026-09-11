@@ -4,7 +4,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Text, YStack } from 'tamagui';
 
 import { Skeleton } from '@/components/Skeleton';
+import { TwoToneHeading } from '@/components/TwoToneHeading';
 import { useFaqs, type FaqItem } from '@/hooks/useLibrary';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { FaqAnswerModal } from './FaqAnswerModal';
 import { FaqSearch } from './FaqSearch';
@@ -21,6 +23,7 @@ const TOP_FAQ_COUNT = 6;
  * the top FAQs and topic list, a Start-a-conversation CTA, and the remaining
  * support tools. RN twin of mWeb's SupportHubPage. */
 export function SupportHelpCenter() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { groups, isLoading, error } = useFaqs();
   const [query, setQuery] = useState('');
@@ -41,17 +44,14 @@ export function SupportHelpCenter() {
 
   return (
     <>
-      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 28 }}>
-        <YStack gap={4}>
-          <Text testID="support-hero-title" fontSize={22} fontWeight="700" color="$color">
-            Have a burning question?
-          </Text>
-          <Text fontSize={13.5} color="$muted">
-            Search our help center or talk to us
-          </Text>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 24, paddingBottom: 28 }}>
+        <YStack gap={16}>
+          <TwoToneHeading
+            testID="support-hero-title"
+            lead={t('mweb.supportHub.haveABurningQuestion')}
+          />
+          <FaqSearch query={query} onQueryChange={setQuery} onOpen={setSelected} />
         </YStack>
-
-        <FaqSearch query={query} onQueryChange={setQuery} onOpen={setSelected} />
 
         {error ? (
           <Text testID="support-error" fontSize={13} color="$danger">
@@ -61,8 +61,8 @@ export function SupportHelpCenter() {
 
         {showLoading ? (
           <YStack testID="support-loading" gap={12}>
-            <Skeleton height={130} radius={18} />
-            <Skeleton height={160} radius={16} />
+            <Skeleton height={140} radius={24} />
+            <Skeleton height={180} radius={24} />
           </YStack>
         ) : null}
 

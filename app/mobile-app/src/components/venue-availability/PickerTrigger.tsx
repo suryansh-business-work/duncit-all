@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
+import { FIELD_HEIGHT, FIELD_RADIUS } from '@/components/Field';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 export type PickerIconName = keyof typeof MaterialIcons.glyphMap;
@@ -27,7 +28,7 @@ export function PickerTrigger({
   disabled = false,
   onPress,
 }: Readonly<Props>) {
-  const { color, muted } = useThemeColors();
+  const { muted } = useThemeColors();
   return (
     <XStack
       testID={`${testID}-open`}
@@ -37,16 +38,16 @@ export function PickerTrigger({
       onPress={disabled ? undefined : onPress}
       alignItems="center"
       gap={8}
-      height={48}
-      paddingHorizontal={12}
-      borderRadius={9}
+      height={FIELD_HEIGHT}
+      paddingHorizontal={16}
+      borderRadius={FIELD_RADIUS}
       borderWidth={1}
       borderColor="$borderColor"
       backgroundColor="$surface"
       opacity={disabled ? 0.5 : 1}
       pressStyle={PRESS_STYLE.control}
     >
-      <MaterialIcons name={icon} size={18} color={color} />
+      <MaterialIcons name={icon} size={18} color={muted} />
       <Text flex={1} fontSize={14} color={hasValue ? '$color' : '$muted'} numberOfLines={1}>
         {shown}
       </Text>

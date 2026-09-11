@@ -23,7 +23,7 @@ export default function CategoryBreadcrumb({ crumbs }: Readonly<Props>) {
         <Typography
           key={name}
           variant="caption"
-          sx={{ fontWeight: i === lastIndex ? 700 : 600, color: i === lastIndex ? 'text.primary' : 'text.secondary' }}
+          sx={{ fontSize: '0.8125rem', fontWeight: i === lastIndex ? 600 : 500, color: i === lastIndex ? 'text.primary' : 'text.secondary' }}
         >
           {name}
         </Typography>

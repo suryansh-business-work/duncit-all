@@ -1,4 +1,4 @@
-import { Box, Paper, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Card, Stack, Typography, useTheme } from '@mui/material';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import { COIN_GOLD_TINT, coinGold } from '../../theme/coinGold';
@@ -26,8 +26,9 @@ function CoinExpiryNote({ coins, at }: Readonly<{ coins: number; at: string }>) 
   );
 }
 
-/** The gold hero card: current balance, the next coins to expire, lifetime
- * earned and the live rates. */
+/** The balance hero: the gold coin on its tint, the balance, the next coins to
+ * expire, lifetime earned and the live rates. The gold stays on the coin
+ * itself; the card is the calm surface every other hero uses. */
 export default function CoinBalanceCard({ balance, currencySymbol }: Readonly<Props>) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -40,15 +41,13 @@ export default function CoinBalanceCard({ balance, currencySymbol }: Readonly<Pr
   const nextExpiryAt = balance?.next_expiry_at;
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px', borderColor: gold }}>
-      <Stack direction="row" spacing={1.5} sx={{
-        alignItems: "center"
-      }}>
+    <Card sx={{ p: 2.5 }}>
+      <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
         <Box
           sx={{
-            width: 52,
-            height: 52,
-            borderRadius: '16px',
+            width: 56,
+            height: 56,
+            borderRadius: '50%',
             display: 'grid',
             placeItems: 'center',
             color: gold,
@@ -59,18 +58,10 @@ export default function CoinBalanceCard({ balance, currencySymbol }: Readonly<Pr
           <MonetizationOnIcon fontSize="large" />
         </Box>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="body2" sx={{
-            color: "text.secondary"
-          }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {t('mweb.coin.balanceLabel')}
           </Typography>
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: 700,
-              color: gold,
-              lineHeight: 1.2
-            }}>
+          <Typography sx={{ fontSize: '2rem', fontWeight: 700, color: gold, lineHeight: 1.2 }}>
             {balance?.balance ?? 0}
           </Typography>
           {expiringCoins > 0 && nextExpiryAt ? (
@@ -80,28 +71,16 @@ export default function CoinBalanceCard({ balance, currencySymbol }: Readonly<Pr
       </Stack>
       <Stack
         direction="row"
-        sx={{
-          justifyContent: "space-between",
-          mt: 2
-        }}>
-        <Typography variant="body2" sx={{
-          color: "text.secondary"
-        }}>
+        sx={{ justifyContent: 'space-between', mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}
+      >
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {t('mweb.coin.lifetimeLabel')}
         </Typography>
-        <Typography variant="body2" sx={{
-          fontWeight: 600
-        }}>
+        <Typography variant="body2" sx={{ fontWeight: 600 }}>
           {balance?.lifetime_earned ?? 0}
         </Typography>
       </Stack>
-      <Typography
-        variant="caption"
-        sx={{
-          color: "text.secondary",
-          display: 'block',
-          mt: 1.5
-        }}>
+      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 1.5 }}>
         {t('mweb.coin.rateNote', {
           vars: {
             pct: balance?.earn_pct ?? 0,
@@ -111,16 +90,10 @@ export default function CoinBalanceCard({ balance, currencySymbol }: Readonly<Pr
         })}
       </Typography>
       {feedbackCoins > 0 && (
-        <Typography
-          variant="caption"
-          sx={{
-            color: "text.secondary",
-            display: 'block',
-            mt: 0.5
-          }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>
           {t('mweb.coin.feedbackRateNote', { vars: { coins: feedbackCoins } })}
         </Typography>
       )}
-    </Paper>
+    </Card>
   );
 }

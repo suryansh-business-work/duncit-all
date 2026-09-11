@@ -6,6 +6,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { Link as RouterLink } from 'react-router';
 import VenueMapPreview from '../../components/VenueMapPreview';
 import { venueUrl } from '../../utils/seoUrls';
+import { SURFACE_SX } from '../../theme';
 import { formatDistance, haversineKm } from '../../utils/distance';
 
 interface Props {
@@ -49,7 +50,7 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
   };
 
   return (
-    <Box>
+    <Box sx={{ ...SURFACE_SX, p: 2 }}>
       <Stack
         direction="row"
         sx={{
@@ -58,7 +59,7 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
           mb: 0.5
         }}>
         <Typography variant="h6" sx={{
-          fontWeight: 700
+          fontWeight: 600, fontSize: '1.0625rem'
         }}>
           We usually meet
         </Typography>
@@ -74,13 +75,13 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
           return (
             <Card
               key={venue.id}
-              variant="outlined"
-              sx={{ minWidth: 220, flex: '0 0 auto', borderRadius: '16px' }}
+              elevation={0}
+              sx={{ minWidth: 220, flex: '0 0 auto', borderRadius: '16px', bgcolor: 'action.hover', border: 0, boxShadow: 'none' }}
             >
               <CardActionArea onClick={() => setSelectedId(venue.id)}>
                 <CardContent>
                   <Typography variant="body2" noWrap sx={{
-                    fontWeight: 700
+                    fontWeight: 600
                   }}>
                     {venue.venue_name}
                   </Typography>

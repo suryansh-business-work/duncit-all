@@ -23,9 +23,10 @@ export default function PetSummary({ pet }: Readonly<PetSummaryProps>) {
       <Avatar
         src={pet?.photo_url || undefined}
         sx={{
-          width: 96,
-          height: 96,
-          bgcolor: 'primary.light',
+          width: 88,
+          height: 88,
+          bgcolor: 'action.hover',
+          color: 'secondary.main',
           '& img': { objectFit: 'cover' },
         }}
         slotProps={{
@@ -42,7 +43,7 @@ export default function PetSummary({ pet }: Readonly<PetSummaryProps>) {
       </Avatar>
       <Box>
         <Typography variant="subtitle1" sx={{
-          fontWeight: 700
+          fontWeight: 600
         }}>
           {pet?.name ?? 'Unnamed pet'}
         </Typography>

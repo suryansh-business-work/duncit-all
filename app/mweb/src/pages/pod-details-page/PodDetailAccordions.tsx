@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Box, Stack } from '@mui/material';
-import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
-import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import PlaceIcon from '@mui/icons-material/Place';
 import PersonIcon from '@mui/icons-material/Person';
 import InfoIcon from '@mui/icons-material/Info';
 import StarIcon from '@mui/icons-material/Star';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import PaymentIcon from '@mui/icons-material/Payment';
+import PaymentsIcon from '@mui/icons-material/Payments';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import GroupsIcon from '@mui/icons-material/Groups';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
@@ -23,6 +22,9 @@ import PodHostsSection from '../../components/pod-details/PodHostsSection';
 import PodPlaceChargesSection from '../../components/pod-details/PodPlaceChargesSection';
 import PodPaymentDetailsSection from '../../components/pod-details/PodPaymentDetailsSection';
 import { useTranslation } from '../../i18n/useTranslation';
+
+/** Expand all / Collapse all read as quiet text links above the stack. */
+const linkSx = { minHeight: 36, px: 0.5, fontSize: 13, '&:hover': { bgcolor: 'transparent' } };
 
 interface Props {
   pod: any;
@@ -65,7 +67,7 @@ export default function PodDetailAccordions({
         { id: 'hosts', title: t('mweb.podDetails.sectionHosts'), icon: <PersonIcon fontSize="small" />, render: () => <PodHostsSection hosts={hosts} /> },
         { id: 'attendees', title: t('mweb.podDetails.sectionAttendees'), icon: <GroupsIcon fontSize="small" />, render: () => <PodAttendeesSection attendees={attendees} attendeeIds={pod.pod_attendees ?? []} hostIds={pod.pod_hosts_id ?? []} totalSpots={pod.no_of_spots ?? 0} expired={isPodExpired(pod.pod_date_time)} spotFills={spotFills} seatsByUser={seatsByUser} seatsTaken={pod.seats_taken ?? undefined} /> },
         { id: 'perks', title: t('mweb.podDetails.sectionPerks'), icon: <CardGiftcardIcon fontSize="small" />, render: () => <PodChipList items={perks} emptyText={t('mweb.podDetails.perksEmpty')} color="success" /> },
-        { id: 'payment', title: t('mweb.podDetails.sectionPayment'), icon: <PaymentIcon fontSize="small" />, render: () => <PodPaymentDetailsSection amount={Number(pod.pod_amount) || 0} isFree={isFree} priceCompute={priceCompute} /> },
+        { id: 'payment', title: t('mweb.podDetails.sectionPayment'), icon: <PaymentsIcon fontSize="small" />, render: () => <PodPaymentDetailsSection amount={Number(pod.pod_amount) || 0} isFree={isFree} priceCompute={priceCompute} /> },
         ...(paymentTerms ? [{ id: 'terms', title: t('mweb.podDetails.sectionTerms'), icon: <PaymentIcon fontSize="small" />, render: () => <Box sx={{ whiteSpace: 'pre-wrap', fontSize: 14, color: 'text.secondary' }}>{paymentTerms}</Box> }] : []),
         ...(charges.length > 0 ? [{ id: 'charges', title: t('mweb.podDetails.sectionCharges'), icon: <ReceiptLongIcon fontSize="small" />, render: () => <PodPlaceChargesSection charges={charges} /> }] : []),
       ] as const,
@@ -87,30 +89,22 @@ export default function PodDetailAccordions({
 
   return (
     <Box>
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{
-          justifyContent: "flex-end",
-          mb: 1
-        }}>
+      <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end', mb: 1 }}>
         <DuncitButton
           size="small"
-          startIcon={<UnfoldMoreIcon />}
           onClick={expandAll}
           disabled={allOpen}
           aria-label={t('mweb.podDetails.expandAllSections')}
-          sx={{ minHeight: 36 }}
+          sx={linkSx}
         >
           {t('mweb.podDetails.expandAll')}
         </DuncitButton>
         <DuncitButton
           size="small"
-          startIcon={<UnfoldLessIcon />}
           onClick={collapseAll}
           disabled={expanded.size === 0}
           aria-label={t('mweb.podDetails.collapseAllSections')}
-          sx={{ minHeight: 36 }}
+          sx={{ ...linkSx, color: 'text.secondary' }}
         >
           {t('mweb.podDetails.collapseAll')}
         </DuncitButton>

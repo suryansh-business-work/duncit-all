@@ -40,15 +40,15 @@ export function AutoPodTicksRow({ row, labels }: Readonly<Props>) {
             aria-label={`${label} — ${tick.done ? labels.tickDone : labels.tickPending}`}
             alignItems="center"
             gap={4}
-            paddingHorizontal={9}
-            height={26}
+            paddingHorizontal={10}
+            height={32}
             borderRadius={999}
             borderWidth={1}
             borderColor={tint}
             backgroundColor={background}
           >
-            <MaterialIcons name={icon} size={13} color={ink} />
-            <Text fontSize={11.5} fontWeight="700" color={ink}>
+            <MaterialIcons name={icon} size={16} color={ink} />
+            <Text fontSize={13} fontWeight="600" color={ink}>
               {label}
             </Text>
           </XStack>

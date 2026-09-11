@@ -11,6 +11,7 @@ import OptionalSettingsCards from '../OptionalSettingsCards';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import HostCategoryField from './HostCategoryField';
 import { useTranslation } from '../../../../i18n/useTranslation';
+import { SURFACE_SX } from '../../../../theme';
 import type { CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
 
 interface Props {
@@ -44,61 +45,69 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
   const hasReel = !!watch('reel_url');
 
   return (
-    <Stack spacing={2.25}>
+    <Stack spacing={2}>
       {/* First field of the form: the category scopes the clubs on step 2 AND
           the products on step 4, so it is picked before the title. Native twin
           (rule 27). */}
-      <HostCategoryField form={form} hostCategories={hostCategories} />
-      {/* The title field alone, matching native: this step is about the one line
-          people read first, and a taller highlight reads as "everything". */}
-      <Box data-tour="create-pod-basics">
+      <Box sx={{ ...SURFACE_SX, p: 2 }}>
+        <HostCategoryField form={form} hostCategories={hostCategories} />
+      </Box>
+      <Stack spacing={2} sx={{ ...SURFACE_SX, p: 2 }}>
+        {/* The title field alone, matching native: this step is about the one
+            line people read first, and a taller highlight reads as "everything". */}
+        <Box data-tour="create-pod-basics">
+          <TextField
+            label={requiredLabel(t('mweb.createPod.podTitleLabel'), true)}
+            fullWidth
+            placeholder={t('mweb.createPod.podTitlePlaceholder')}
+            {...register('pod_title')}
+            error={!!errors.pod_title}
+            helperText={errors.pod_title?.message ?? t('mweb.createPod.podTitleHint')}
+          />
+        </Box>
         <TextField
-          label={requiredLabel(t('mweb.createPod.podTitleLabel'), true)}
+          label={requiredLabel(t('mweb.createPod.podDescriptionLabel'), true)}
           fullWidth
-          placeholder={t('mweb.createPod.podTitlePlaceholder')}
-          {...register('pod_title')}
-          error={!!errors.pod_title}
-          helperText={errors.pod_title?.message ?? t('mweb.createPod.podTitleHint')}
+          multiline
+          minRows={4}
+          placeholder={t('mweb.createPod.podDescriptionPlaceholder')}
+          {...register('pod_description')}
+          error={!!errors.pod_description}
+          helperText={errors.pod_description?.message ?? t('mweb.createPod.podDescriptionHint')}
+        />
+      </Stack>
+      <Box sx={{ ...SURFACE_SX, p: 2 }}>
+        <Controller
+          control={control}
+          name="media_text"
+          render={({ field, fieldState }) => (
+            <MediaUrlsField
+              value={field.value}
+              onChange={field.onChange}
+              error={fieldState.error?.message}
+              subCategoryName={subCategoryName}
+              maxImages={MAX_COVER_IMAGES}
+            />
+          )}
         />
       </Box>
-      <TextField
-        label={requiredLabel(t('mweb.createPod.podDescriptionLabel'), true)}
-        fullWidth
-        multiline
-        minRows={4}
-        placeholder={t('mweb.createPod.podDescriptionPlaceholder')}
-        {...register('pod_description')}
-        error={!!errors.pod_description}
-        helperText={errors.pod_description?.message ?? t('mweb.createPod.podDescriptionHint')}
-      />
-      <Controller
-        control={control}
-        name="media_text"
-        render={({ field, fieldState }) => (
-          <MediaUrlsField
-            value={field.value}
-            onChange={field.onChange}
-            error={fieldState.error?.message}
-            subCategoryName={subCategoryName}
-            maxImages={MAX_COVER_IMAGES}
-          />
-        )}
-      />
-      <Controller
-        control={control}
-        name="what_this_pod_offers"
-        render={({ field, fieldState }) => (
-          <ChipArrayField
-            label={t('mweb.createPod.offersLabel')}
-            required
-            value={field.value}
-            onChange={field.onChange}
-            error={fieldState.error?.message}
-            placeholder={t('mweb.createPod.offersPlaceholder')}
-          />
-        )}
-      />
-      <HashtagChipsField form={form} />
+      <Stack spacing={2} sx={{ ...SURFACE_SX, p: 2 }}>
+        <Controller
+          control={control}
+          name="what_this_pod_offers"
+          render={({ field, fieldState }) => (
+            <ChipArrayField
+              label={t('mweb.createPod.offersLabel')}
+              required
+              value={field.value}
+              onChange={field.onChange}
+              error={fieldState.error?.message}
+              placeholder={t('mweb.createPod.offersPlaceholder')}
+            />
+          )}
+        />
+        <HashtagChipsField form={form} />
+      </Stack>
       <OptionalSettingsCards form={form} />
       {!hasReel && <ReelEngagementNotice />}
       <PodReelAccordion form={form} />

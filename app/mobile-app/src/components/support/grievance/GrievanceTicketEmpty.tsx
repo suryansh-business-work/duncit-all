@@ -2,8 +2,9 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { grievanceTicketFieldCopy } from '@duncit/i18n';
-import { Button, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
@@ -17,7 +18,7 @@ import type { RootStackParamList } from '@/navigation/types';
  */
 export function GrievanceTicketEmpty() {
   const { t } = useTranslation();
-  const { warning, onPrimary } = useThemeColors();
+  const { warning } = useThemeColors();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const copy = grievanceTicketFieldCopy(t);
 
@@ -25,31 +26,25 @@ export function GrievanceTicketEmpty() {
     <YStack
       testID="grievance-ticket-empty"
       gap={8}
-      padding={12}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor={warning}
-      backgroundColor={`${warning}22`} // ~13% tint — mirrors MUI's filled Alert
+      padding={14}
+      borderRadius={18}
+      backgroundColor="$soft"
     >
       <XStack gap={8} alignItems="center">
         <MaterialIcons name="confirmation-number" size={18} color={warning} />
-        <Text flex={1} fontSize={13} fontWeight="700" color={warning}>
+        <Text flex={1} fontSize={14} fontWeight="600" color="$color">
           {copy.emptyTitle}
         </Text>
       </XStack>
       <Text fontSize={12} color="$muted">
         {copy.emptyBody}
       </Text>
-      <Button
+      <DuncitButton
         testID="grievance-ticket-empty-cta"
-        theme="active"
-        size="$3"
-        borderRadius={10}
-        color={onPrimary}
+        size="sm"
+        label={copy.emptyCta}
         onPress={() => navigation.navigate('SupportTickets')}
-      >
-        {copy.emptyCta}
-      </Button>
+      />
     </YStack>
   );
 }

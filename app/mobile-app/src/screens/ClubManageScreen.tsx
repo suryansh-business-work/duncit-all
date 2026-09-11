@@ -36,7 +36,7 @@ export function ClubManageScreen() {
   return (
     <StackScreen header title={t('mweb.studioPods.clubStudio')} testID="club-manage-screen">
       <RefreshScrollView showsVerticalScrollIndicator={false}>
-        <YStack gap={14} padding={16} paddingBottom={48}>
+        <YStack gap={24} padding={16} paddingBottom={48}>
           <ClubQuickActions onNavigate={navigate} />
           <YourClubsSection
             state={clubsState}

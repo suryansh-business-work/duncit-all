@@ -1,8 +1,9 @@
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
-import { Box, CircularProgress, Stack, Typography } from '@mui/material';
+import { Box, CircularProgress, Stack } from '@mui/material';
 import ClubPodsScheduleSection from '../club-details-page/ClubPodsScheduleSection';
+import SectionHeader from '../../components/SectionHeader';
 import { usePricing } from '../../hooks/usePricing';
 
 export const VENUE_PODS = gql`
@@ -49,12 +50,8 @@ export default function VenuePodsSection({ venueId }: Readonly<{ venueId: string
   };
 
   return (
-    <Stack spacing={1} data-testid="venue-pods-section">
-      <Typography variant="subtitle1" sx={{
-        fontWeight: 700
-      }}>
-        Pods at this venue
-      </Typography>
+    <Stack spacing={1.25} data-testid="venue-pods-section">
+      <SectionHeader title="Pods at this venue" />
       {loading && !data ? (
         <Box sx={{ display: 'grid', placeItems: 'center', py: 2 }}>
           <CircularProgress size={20} />

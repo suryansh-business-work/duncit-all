@@ -202,7 +202,7 @@ export default function ProductDetailDialog({
             ))}
           </Stack>
         )}
-        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
           {product.product_name}
         </Typography>
         <Stack direction="row" spacing={1} sx={{

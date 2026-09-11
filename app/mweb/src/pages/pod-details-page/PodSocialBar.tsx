@@ -3,11 +3,21 @@ import { useMutation } from '@apollo/client/react';
 import { Stack } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import CommentIcon from '@mui/icons-material/Comment';
+import CommentIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
 import { DuncitButton } from '@duncit/buttons';
 import { TOGGLE_POD_LIKE } from './queries';
 import PodCommentsSheet from '../../components/PodCommentsSheet';
 import { useTranslation } from '../../i18n/useTranslation';
+
+/** Like / Comment as surface pills on the page ground; a liked heart turns coral. */
+const socialPillSx = {
+  minHeight: 42,
+  px: 2,
+  bgcolor: 'background.paper',
+  color: 'text.primary',
+  border: '1px solid var(--duncit-card-border)',
+  '&:hover': { bgcolor: 'background.paper' },
+};
 
 interface Props {
   podId: string;
@@ -59,20 +69,18 @@ export default function PodSocialBar({
 
   return (
     <>
-      <Stack direction="row" spacing={1.5} sx={{ flexWrap: 'wrap', gap: 1 }}>
+      <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1.5 }}>
         <DuncitButton
-          variant={liked ? 'contained' : 'outlined'}
-          color={liked ? 'error' : 'inherit'}
-          startIcon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+          startIcon={liked ? <FavoriteIcon sx={{ color: 'secondary.main' }} /> : <FavoriteBorderIcon />}
           onClick={onLike}
+          sx={socialPillSx}
         >
           {likeLabel}
         </DuncitButton>
         <DuncitButton
-          variant="outlined"
-          color="inherit"
           startIcon={<CommentIcon />}
           onClick={() => setCommentsOpen(true)}
+          sx={socialPillSx}
         >
           {t('mweb.podDetails.commentCount', { vars: { count: commentCount } })}
         </DuncitButton>

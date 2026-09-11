@@ -115,7 +115,7 @@ export function SpotsStepper({
         <YStack
           gap={8}
           padding={14}
-          borderRadius={14}
+          borderRadius={16}
           borderWidth={1}
           borderColor={error ? '$danger' : '$borderColor'}
           backgroundColor="$surface"
@@ -158,7 +158,7 @@ export function SpotsStepper({
         alignItems="center"
         justifyContent="space-between"
         padding={14}
-        borderRadius={14}
+        borderRadius={16}
         borderWidth={1}
         borderColor={error ? '$danger' : '$borderColor'}
         backgroundColor="$surface"

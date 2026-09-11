@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { ListSkeleton } from '@/components/Skeleton';
 import { StackScreen } from '@/components/StackScreen';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useUnifiedTickets, type UnifiedTicket } from '@/hooks/useUnifiedTickets';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -17,12 +18,54 @@ const SOURCE_LABEL: Record<string, string> = {
   CHAT: 'Chat with Us',
 };
 
-const SOURCE_TINT: Record<string, string> = {
-  TICKET: 'rgba(255,79,115,0.16)',
-  SOS: 'rgba(244,67,54,0.16)',
-  CALLBACK: 'rgba(33,150,243,0.16)',
-  CHAT: 'rgba(76,175,80,0.16)',
-};
+/** A small soft pill — the source and status labels on a row. */
+function SoftPill({ label }: Readonly<{ label: string }>) {
+  return (
+    <XStack borderRadius={999} paddingHorizontal={10} paddingVertical={3} backgroundColor="$soft">
+      <Text fontSize={11} fontWeight="600" color="$color">
+        {label}
+      </Text>
+    </XStack>
+  );
+}
+
+interface TicketLineProps {
+  row: UnifiedTicket;
+  isFirst: boolean;
+  onOpen: (row: UnifiedTicket) => void;
+}
+
+/** One unified request row — number + source pill, title, status pill. */
+function TicketLine({ row, isFirst, onOpen }: Readonly<TicketLineProps>) {
+  return (
+    <XStack
+      testID={`all-ticket-${row.ticket_no}`}
+      role="button"
+      aria-label={row.title}
+      onPress={() => onOpen(row)}
+      gap={12}
+      paddingHorizontal={16}
+      paddingVertical={14}
+      borderTopWidth={isFirst ? 0 : 1}
+      borderTopColor="$borderColor"
+      alignItems="center"
+      pressStyle={PRESS_STYLE.row}
+    >
+      <YStack flex={1} gap={4}>
+        <XStack gap={8} alignItems="center">
+          <Text fontSize={12} fontWeight="600" color="$muted">
+            {row.ticket_no}
+          </Text>
+          <SoftPill label={SOURCE_LABEL[row.source] ?? row.source} />
+        </XStack>
+        <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
+          {row.title}
+        </Text>
+      </YStack>
+      <SoftPill label={row.status} />
+    </XStack>
+  );
+}
 
 /** One list of every support request the user has raised — across SOS,
  * callbacks, support tickets and chat, with prefixed ticket numbers. */
@@ -48,59 +91,27 @@ export function AllSupportTicketsScreen() {
   } else if (rows.length === 0) {
     body = (
       <Text testID="all-tickets-empty" textAlign="center" color="$muted" paddingVertical={40}>
-        You have not raised any support requests yet.
+        {t('mweb.supportHub.youHaveNotRaisedAnySupport')}
       </Text>
     );
   } else {
-    body = rows.map((row) => (
-      <XStack
-        key={`${row.source}-${row.id}`}
-        testID={`all-ticket-${row.ticket_no}`}
-        role="button"
-        aria-label={row.title}
-        onPress={() => open(row)}
-        gap={10}
-        padding={12}
-        borderRadius={14}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$surface"
-        alignItems="center"
-        pressStyle={PRESS_STYLE.control}
-      >
-        <YStack flex={1} gap={2}>
-          <XStack gap={8} alignItems="center">
-            <Text fontSize={11} fontWeight="700" color="$muted">
-              {row.ticket_no}
-            </Text>
-            <XStack
-              borderRadius={999}
-              paddingHorizontal={8}
-              paddingVertical={2}
-              backgroundColor={SOURCE_TINT[row.source] ?? '$background'}
-            >
-              <Text fontSize={10.5} fontWeight="600" color="$color">
-                {SOURCE_LABEL[row.source] ?? row.source}
-              </Text>
-            </XStack>
-          </XStack>
-          <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
-            {row.title}
-          </Text>
-        </YStack>
-        <Text fontSize={11.5} fontWeight="600" color="$muted">
-          {row.status}
-        </Text>
-      </XStack>
-    ));
+    body = (
+      <SurfaceCard padding={0} overflow="hidden">
+        {rows.map((row, index) => (
+          <TicketLine
+            key={`${row.source}-${row.id}`}
+            row={row}
+            isFirst={index === 0}
+            onOpen={open}
+          />
+        ))}
+      </SurfaceCard>
+    );
   }
 
   return (
     <StackScreen title={t('mweb.common.allSupportTickets')} testID="all-support-tickets-screen">
-      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 24 }}>
-        <Text testID="all-tickets-subtitle" fontSize={13} color="$muted">
-          Every request you have raised, in one list
-        </Text>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 24 }}>
         {body}
       </RefreshScrollView>
     </StackScreen>

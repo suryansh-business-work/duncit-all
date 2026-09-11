@@ -27,9 +27,8 @@ function AttachmentChip({ url, index, tint, onRemove }: Readonly<ChipProps>) {
       paddingVertical={4}
       paddingLeft={8}
       paddingRight={4}
-      borderRadius={14}
-      borderWidth={1}
-      borderColor="$borderColor"
+      borderRadius={999}
+      backgroundColor="$soft"
       maxWidth={180}
     >
       <MaterialIcons name="insert-drive-file" size={14} color={tint} />
@@ -110,7 +109,7 @@ export function SupportChatComposer({
   ) : null;
 
   return (
-    <YStack>
+    <YStack backgroundColor="$surface" borderTopWidth={1} borderTopColor="$borderColor">
       {previews}
       <XStack gap={8} padding={12} alignItems="center">
         <XStack
@@ -118,15 +117,14 @@ export function SupportChatComposer({
           role="button"
           aria-label={t('mweb.supportChat.attachFile')}
           onPress={busy ? undefined : onAttach}
-          width={42}
-          height={42}
+          width={44}
+          height={44}
           alignItems="center"
           justifyContent="center"
-          borderRadius={21}
-          borderWidth={1}
-          borderColor="$borderColor"
+          borderRadius={22}
+          backgroundColor="$soft"
           opacity={busy ? 0.6 : 1}
-          pressStyle={PRESS_STYLE.row}
+          pressStyle={PRESS_STYLE.control}
         >
           {busy ? (
             <Spinner testID="support-chat-attach-busy" />
@@ -139,26 +137,24 @@ export function SupportChatComposer({
           role="button"
           aria-label={t('mweb.supportChat.attachDocument')}
           onPress={busy ? undefined : onAttachDocument}
-          width={42}
-          height={42}
+          width={44}
+          height={44}
           alignItems="center"
           justifyContent="center"
-          borderRadius={21}
-          borderWidth={1}
-          borderColor="$borderColor"
+          borderRadius={22}
+          backgroundColor="$soft"
           opacity={busy ? 0.6 : 1}
-          pressStyle={PRESS_STYLE.row}
+          pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="description" size={20} color={muted} />
         </XStack>
         <XStack
           flex={1}
-          borderWidth={1}
-          borderColor="$borderColor"
+          backgroundColor="$soft"
           borderRadius={22}
-          paddingHorizontal={14}
+          paddingHorizontal={16}
           alignItems="center"
-          minHeight={42}
+          minHeight={44}
         >
           <TextInput
             testID="support-chat-input"
@@ -175,11 +171,11 @@ export function SupportChatComposer({
           role="button"
           aria-label={t('mweb.common.sendMessage')}
           onPress={send}
-          width={42}
-          height={42}
+          width={44}
+          height={44}
           alignItems="center"
           justifyContent="center"
-          borderRadius={21}
+          borderRadius={22}
           backgroundColor="$primary"
           pressStyle={PRESS_STYLE.control}
         >

@@ -2,9 +2,12 @@ import { useMemo, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+
+import { SectionLabel } from './SectionLabel';
 
 interface Zone {
   zone_name: string;
@@ -25,11 +28,14 @@ interface Props {
   onZone: (zone: string) => void;
 }
 
+/** One row of the grouped list: a hairline above every row but the first,
+ * inset 16, and a soft green wash on the chosen one. */
 function Row({
   testID,
   label,
   sub,
   active,
+  divided,
   onPress,
   icon,
 }: Readonly<{
@@ -37,6 +43,7 @@ function Row({
   label: string;
   sub: string;
   active: boolean;
+  divided: boolean;
   onPress: () => void;
   icon: keyof typeof MaterialIcons.glyphMap;
 }>) {
@@ -49,24 +56,33 @@ function Row({
       aria-pressed={active}
       onPress={onPress}
       alignItems="center"
-      gap={10}
-      padding={10}
-      borderRadius={12}
-      borderWidth={active ? 1.5 : 1}
-      borderColor={active ? '$primary' : '$borderColor'}
-      backgroundColor="$surface"
-      pressStyle={PRESS_STYLE.control}
+      gap={12}
+      minHeight={56}
+      paddingHorizontal={16}
+      paddingVertical={10}
+      backgroundColor={active ? '$primarySoft' : 'transparent'}
+      pressStyle={PRESS_STYLE.row}
     >
-      <MaterialIcons name={icon} size={18} color={active ? primary : muted} />
+      {divided ? (
+        <YStack
+          position="absolute"
+          top={0}
+          left={16}
+          right={0}
+          height={1}
+          backgroundColor="$borderColor"
+        />
+      ) : null}
+      <MaterialIcons name={icon} size={20} color={active ? primary : muted} />
       <YStack flex={1}>
-        <Text fontSize={13.5} fontWeight="700" color="$color" numberOfLines={1}>
+        <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
           {label}
         </Text>
-        <Text fontSize={11.5} color="$muted">
+        <Text fontSize={12} color="$muted">
           {sub}
         </Text>
       </YStack>
-      {active ? <MaterialIcons name="check-circle" size={18} color={primary} /> : null}
+      {active ? <MaterialIcons name="check-circle" size={20} color={primary} /> : null}
     </XStack>
   );
 }
@@ -89,9 +105,7 @@ export function AreaList({ locationName, zones, draftZone, onZone }: Readonly<Pr
 
   return (
     <YStack gap={8}>
-      <Text fontSize={11} fontWeight="700" color="$muted" letterSpacing={0.6}>
-        AREA IN {locationName.toUpperCase()}
-      </Text>
+      <SectionLabel>AREA IN {locationName.toUpperCase()}</SectionLabel>
       {zones.length === 0 ? (
         <Text fontSize={13} color="$muted">
           This city has no areas configured.
@@ -100,15 +114,15 @@ export function AreaList({ locationName, zones, draftZone, onZone }: Readonly<Pr
         <>
           <XStack
             alignItems="center"
-            gap={6}
-            height={38}
-            paddingHorizontal={10}
-            borderRadius={10}
+            gap={8}
+            height={44}
+            paddingHorizontal={14}
+            borderRadius={999}
             borderWidth={1}
             borderColor="$borderColor"
             backgroundColor="$surface"
           >
-            <MaterialIcons name="search" size={16} color={muted} />
+            <MaterialIcons name="search" size={18} color={muted} />
             <Input
               testID="area-search"
               aria-label={t('mweb.location.searchAreaOrPinCode')}
@@ -122,27 +136,31 @@ export function AreaList({ locationName, zones, draftZone, onZone }: Readonly<Pr
               color="$color"
             />
           </XStack>
-          <Row
-            testID="area-all"
-            label={t('mweb.common.allAreas')}
-            sub={`${zones.length} localities`}
-            active={!draftZone}
-            onPress={() => onZone('')}
-            icon="layers"
-          />
-          {filtered.map((z) => (
+          <SurfaceCard padding={0} overflow="hidden">
             <Row
-              key={z.zone_name}
-              testID={`area-${z.zone_name}`}
-              label={z.zone_name}
-              sub={[zoneClubLabel(z.active_club_count), z.pincode ? `PIN ${z.pincode}` : null]
-                .filter(Boolean)
-                .join(' · ')}
-              active={draftZone === z.zone_name}
-              onPress={() => onZone(z.zone_name)}
-              icon="place"
+              testID="area-all"
+              label={t('mweb.common.allAreas')}
+              sub={`${zones.length} localities`}
+              active={!draftZone}
+              divided={false}
+              onPress={() => onZone('')}
+              icon="layers"
             />
-          ))}
+            {filtered.map((z) => (
+              <Row
+                key={z.zone_name}
+                testID={`area-${z.zone_name}`}
+                label={z.zone_name}
+                sub={[zoneClubLabel(z.active_club_count), z.pincode ? `PIN ${z.pincode}` : null]
+                  .filter(Boolean)
+                  .join(' · ')}
+                active={draftZone === z.zone_name}
+                divided
+                onPress={() => onZone(z.zone_name)}
+                icon="place"
+              />
+            ))}
+          </SurfaceCard>
           {filtered.length === 0 ? (
             <Text fontSize={13} color="$muted">
               No matching areas.

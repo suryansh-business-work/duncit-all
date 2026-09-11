@@ -1,6 +1,8 @@
-import { Box, ButtonBase, Typography } from '@mui/material';
+import { Box, ButtonBase, Stack, Typography } from '@mui/material';
 import CategoryIcon from '@mui/icons-material/CategoryOutlined';
 import { renderSuperCategoryMark } from '../../components/app-header/superCategoryIcon';
+import SectionHeader from '../../components/SectionHeader';
+import { SURFACE_SX } from '../../theme';
 import type { SearchCategory } from './useSearchDiscovery';
 
 interface Props {
@@ -8,28 +10,12 @@ interface Props {
   onSelect: (categoryId: string) => void;
 }
 
-/** The default (nothing typed) search landing — quick-access category buttons so
+/** The default (nothing typed) search landing — quick-access category tiles so
  * users can explore communities by interest instead of facing a blank screen. */
 export default function CategoryActions({ categories, onSelect }: Readonly<Props>) {
   return (
-    <Box component="section">
-      <Typography
-        variant="h6"
-        sx={{
-          fontWeight: 700,
-          lineHeight: 1.2,
-          mt: 2
-        }}>
-        ✨ Discover Experiences by Interest
-      </Typography>
-      <Typography
-        variant="body2"
-        sx={{
-          color: "text.secondary",
-          mb: 2
-        }}>
-        Not sure what to search for? Explore communities by category and discover experiences happening around you.
-      </Typography>
+    <Stack component="section" spacing={1.5}>
+      <SectionHeader title="Discover Experiences by Interest" />
       {categories.length === 0 ? (
         <Typography variant="body2" sx={{
           color: "text.secondary"
@@ -41,30 +27,33 @@ export default function CategoryActions({ categories, onSelect }: Readonly<Props
           sx={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(104px, 1fr))',
-            gap: 1.25,
+            gap: 1.5,
           }}
         >
           {categories.map((category) => (
             <ButtonBase
               key={category.id}
               onClick={() => onSelect(category.id)}
-              sx={{
-                flexDirection: 'column',
-                gap: 0.75,
-                p: 1.5,
-                borderRadius: '16px',
-                border: 1,
-                borderColor: 'divider',
-                bgcolor: 'background.paper',
-                transition: 'transform 160ms ease, border-color 160ms ease',
-                '&:hover': { transform: 'translateY(-2px)', borderColor: 'primary.main' },
-              }}
+              sx={{ ...SURFACE_SX, flexDirection: 'column', gap: 1, p: 2, minWidth: 0 }}
             >
-              {renderSuperCategoryMark(category.icon) ?? <CategoryIcon color="primary" />}
+              <Box
+                sx={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: '50%',
+                  bgcolor: 'action.hover',
+                  color: 'secondary.main',
+                  display: 'grid',
+                  placeItems: 'center',
+                  fontSize: 22,
+                }}
+              >
+                {renderSuperCategoryMark(category.icon) ?? <CategoryIcon color="inherit" />}
+              </Box>
               <Typography
-                variant="caption"
                 noWrap
                 sx={{
+                  fontSize: '0.875rem',
                   fontWeight: 600,
                   textAlign: "center",
                   width: '100%'
@@ -75,6 +64,6 @@ export default function CategoryActions({ categories, onSelect }: Readonly<Props
           ))}
         </Box>
       )}
-    </Box>
+    </Stack>
   );
 }

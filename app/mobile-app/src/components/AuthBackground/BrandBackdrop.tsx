@@ -49,7 +49,7 @@ function BackdropVideo({ url }: Readonly<{ url: string }>) {
  * Video wins over image — the same precedence the server documents and mWeb
  * applies, decided by the caller passing an empty string for the one that lost.
  * Rendering nothing at all is the caller's job: with both switches off the
- * gradient underneath is the design, not a fallback.
+ * flat ground underneath is the design, not a fallback.
  */
 export function BrandBackdrop({
   videoUrl,

@@ -1,12 +1,11 @@
 import type { ReactNode } from 'react';
-import { Text, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import type { ContactSyncStage } from '@duncit/utils';
 
 import { ContactsAllowCard } from '@/components/contacts/ContactsAllowCard';
 import { ContactsFilters } from '@/components/contacts/ContactsFilters';
 import type { ContactsScope, ContactsSyncStatus } from '@/hooks/useContacts';
 import type { ContactsSyncFailure } from '@/hooks/useContactsSync';
-import { useTranslation } from '@/hooks/useTranslation';
 
 interface SyncState {
   busy: boolean;
@@ -39,12 +38,8 @@ export function ContactsHeader({
   onSearch,
   children,
 }: Readonly<Props>) {
-  const { t } = useTranslation();
   return (
-    <YStack gap={16} paddingTop={16} paddingBottom={10}>
-      <Text paddingHorizontal={16} fontSize={13} color="$muted">
-        {t('mweb.contacts.subtitle')}
-      </Text>
+    <YStack gap={16} paddingTop={16} paddingBottom={12}>
       <ContactsAllowCard
         status={status}
         busy={sync.busy}

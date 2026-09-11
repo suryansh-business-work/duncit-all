@@ -7,13 +7,15 @@ import {
   type AutoPodVenueSpace,
 } from '@duncit/utils';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
-import { PillButton } from '@/components/attendance/AttendanceOtpControls';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import type { AutoPodVenueOption } from '@/hooks/useAutoPodVenues';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 const inputStyle = {
   size: '$4',
+  borderRadius: 14,
   backgroundColor: '$surface',
   color: '$color',
   placeholderTextColor: '$muted',
@@ -51,16 +53,9 @@ function VenueSpaceRow({
   const amount = Number(price) || 0;
   const total = autoPodSpaceEarnings(amount, space.capacity);
   return (
-    <YStack
-      gap={8}
-      padding={12}
-      borderRadius={14}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
+    <SurfaceCard gap={10}>
       <XStack alignItems="center" justifyContent="space-between" gap={8}>
-        <Text flex={1} fontSize={13.5} fontWeight="700" color="$color">
+        <Text flex={1} fontSize={15} fontWeight="600" color="$color">
           {space.label || labels.earningsWholeVenue}
         </Text>
         <Text fontSize={12} color="$muted">
@@ -82,11 +77,11 @@ function VenueSpaceRow({
           {labels.earningsEnterPrice}
         </Text>
       ) : (
-        <Text testID="auto-pod-space-earning" fontSize={12.5} fontWeight="700" color={success}>
+        <Text testID="auto-pod-space-earning" fontSize={14} fontWeight="600" color={success}>
           {labels.earningsFormula(formatMoney(amount), space.capacity, formatMoney(total))}
         </Text>
       )}
-    </YStack>
+    </SurfaceCard>
   );
 }
 
@@ -136,17 +131,7 @@ export function VenueEarningsSheet({
   };
 
   const footer = (
-    <XStack gap={10}>
-      <YStack flex={1}>
-        <PillButton
-          testID="auto-pod-earnings-close"
-          label={labels.close}
-          onPress={close}
-          variant="solid"
-          disabled={false}
-        />
-      </YStack>
-    </XStack>
+    <DuncitButton testID="auto-pod-earnings-close" label={labels.close} onPress={close} fullWidth />
   );
 
   return (
@@ -158,14 +143,14 @@ export function VenueEarningsSheet({
       closeLabel={labels.closeAria}
       footer={footer}
     >
-      <YStack gap={10}>
+      <YStack gap={12}>
         {spaces.length === 0 ? (
-          <Text testID="auto-pod-no-spaces" fontSize={12.5} color="$muted">
+          <Text testID="auto-pod-no-spaces" fontSize={13} color="$muted">
             {labels.earningsNoSpaces}
           </Text>
         ) : (
           <>
-            <Text fontSize={12.5} color="$muted">
+            <Text fontSize={13} color="$muted">
               {labels.earningsSpacesHint}
             </Text>
             {spaces.map((space, index) => {

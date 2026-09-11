@@ -35,7 +35,7 @@ function ConflictOption({ mode, title, hint, selected, tint, onPress }: Readonly
         color={tint}
       />
       <YStack flex={1}>
-        <Text fontSize={13.5} fontWeight="700" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           {title}
         </Text>
         <Text fontSize={11.5} color="$muted">

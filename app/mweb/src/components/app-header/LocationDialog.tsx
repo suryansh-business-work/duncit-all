@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Box, Stack, Typography } from '@mui/material';
-import { alpha } from '@mui/material/styles';
-import PlaceIcon from '@mui/icons-material/Place';
+import { Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import ResponsiveDialog from '../ResponsiveDialog';
 import GpsLocationPicker from './GpsLocationPicker';
@@ -99,44 +97,9 @@ export default function LocationDialog({
   const applyLabel = draftZone ? `Apply · ${draftZone}` : zonesLabel;
 
   const title = (
-    <Stack
-      direction="row"
-      spacing={1}
-      sx={{
-        alignItems: "center",
-        minWidth: 0
-      }}>
-      <Box
-        sx={{
-          width: 34,
-          height: 34,
-          borderRadius: '8px',
-          display: 'grid',
-          placeItems: 'center',
-          color: 'primary.main',
-          bgcolor: (theme) =>
-            alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.18 : 0.1),
-          border: 1,
-          borderColor: (theme) => alpha(theme.palette.primary.main, 0.3),
-        }}
-      >
-        <PlaceIcon fontSize="small" />
-      </Box>
-      <Box sx={{ minWidth: 0 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.15 }} noWrap>
-          Choose your location
-        </Typography>
-        <Typography
-          variant="caption"
-          sx={{
-            color: "text.secondary",
-            display: 'block',
-            lineHeight: 1.25
-          }}>
-          Country, state, city &amp; area — pods are filtered by this.
-        </Typography>
-      </Box>
-    </Stack>
+    <Typography noWrap sx={{ fontSize: 20, fontWeight: 600, lineHeight: 1.25 }}>
+      Choose your location
+    </Typography>
   );
 
   return (
@@ -145,22 +108,16 @@ export default function LocationDialog({
       onClose={onClose}
       title={title}
       actions={
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{
-            alignItems: "center",
-            width: '100%'
-          }}>
-          <DuncitButton color="error" onClick={onClose} sx={{ fontWeight: 600 }}>
+        <Stack direction="row" spacing={1.5} sx={{ width: '100%' }}>
+          <DuncitButton variant="outlined" size="large" onClick={onClose} sx={{ flex: 1 }}>
             Cancel
           </DuncitButton>
-          <Box sx={{ flexGrow: 1 }} />
           <DuncitButton
             variant="contained"
+            size="large"
             onClick={onApply}
             disabled={!draftLocationId}
-            sx={{ minWidth: 154, borderRadius: 999, fontWeight: 600 }}
+            sx={{ flex: 2 }}
           >
             {applyLabel}
           </DuncitButton>
@@ -169,19 +126,14 @@ export default function LocationDialog({
       sheetMaxHeight="92vh"
       paperSx={{
         bgcolor: 'background.default',
-        backgroundImage: (theme) =>
-          theme.palette.mode === 'dark'
-            ? 'radial-gradient(circle at 14% 0%, rgba(255,79,115,0.22), transparent 28%), linear-gradient(180deg, #130d08 0%, #090a12 20%, #0c0d16 100%)'
-            : 'radial-gradient(circle at 16% 0%, rgba(255,79,115,0.18), transparent 30%), linear-gradient(180deg, #fff7f2 0%, #ffffff 28%, #fff 100%)',
+        backgroundImage: 'none',
+        borderTopLeftRadius: '28px',
+        borderTopRightRadius: '28px',
       }}
       contentSx={{ px: 0, pt: 0, pb: 0 }}
-      actionsSx={{
-        bgcolor: (theme) =>
-          alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.72 : 0.92),
-        backdropFilter: 'blur(16px)',
-      }}
+      actionsSx={{ bgcolor: 'background.default', borderTop: 0, px: 2, py: 1.5 }}
     >
-      <Box sx={{ px: 2, pt: 0.75, pb: 1.5 }}>
+      <Stack spacing={2} sx={{ px: 2, pt: 1, pb: 1.5 }}>
         <GpsLocationPicker
           locations={locations}
           activeLocationIds={activeLocationIds}
@@ -210,7 +162,7 @@ export default function LocationDialog({
           pincode={draftLoc?.location_pincode}
           country={draftLoc?.country}
         />
-      </Box>
+      </Stack>
     </ResponsiveDialog>
   );
 }

@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
-import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
-import { DuncitIconButton } from '@duncit/buttons';
+import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import { DuncitRoundButton } from '@duncit/buttons';
 import {
   MY_VERIFICATIONS,
   useTranslation as useVerificationTranslation,
@@ -48,24 +47,18 @@ export default function VerificationPage() {
   const verifications: Verification[] = data?.myVerifications ?? [];
 
   return (
-    <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', width: '100%', pb: 4 }}>
-      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-        <DuncitIconButton
+    <Stack spacing={2.5} sx={{ maxWidth: 640, mx: 'auto', width: '100%', pb: 4 }}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+        <DuncitRoundButton
           onClick={() => navigate(-1)}
           aria-label={t('mweb.common.goBack')}
-          sx={{ minWidth: 44, minHeight: 44 }}
+          sx={{ width: 40, height: 40, minWidth: 40, minHeight: 40, bgcolor: 'background.paper', color: 'text.primary' }}
         >
-          <ArrowBackIcon />
-        </DuncitIconButton>
-        <VerifiedUserIcon color="primary" />
-        <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1 }}>
-            {tv('verification.title')}
-          </Typography>
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-            {tv('verification.subtitle')}
-          </Typography>
-        </Box>
+          <ArrowBackRoundedIcon />
+        </DuncitRoundButton>
+        <Typography component="h1" noWrap sx={{ flex: 1, minWidth: 0, fontSize: '1.0625rem', fontWeight: 600 }}>
+          {tv('verification.title')}
+        </Typography>
       </Stack>
 
       <VerificationCards items={verifications} onChanged={onChanged} onError={setSnack} />

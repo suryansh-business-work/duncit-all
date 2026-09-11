@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Text, YStack } from 'tamagui';
 
 import { ConfirmSheet, DuncitDialog } from '@/components/DuncitDialog';
+import { SectionHeader } from '@/components/SectionHeader';
 import type { NewVenueSlotInput, VenueSlot } from '@/hooks/useOwnerVenueSlots';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatDay } from '@/utils/date-format';
@@ -79,20 +80,18 @@ export function DaySheet({
       {dayKey ? (
         <YStack gap={12}>
           {isHoliday ? (
-            <Text testID="availability-holiday-alert" fontSize={12.5} color="$danger">
+            <Text testID="availability-holiday-alert" fontSize={13} color="$danger">
               {t('availability.holidayAlert')}
             </Text>
           ) : null}
-          <Text fontSize={12} fontWeight="700" color="$muted" letterSpacing={1}>
-            {t('availability.existingSlots')}
-          </Text>
+          <SectionHeader title={t('availability.existingSlots')} />
           {error ? (
-            <Text testID="availability-day-error" fontSize={12.5} color="$danger">
+            <Text testID="availability-day-error" fontSize={13} color="$danger">
               {error}
             </Text>
           ) : null}
           {slots.length === 0 ? (
-            <Text testID="availability-day-empty" fontSize={13} color="$muted">
+            <Text testID="availability-day-empty" fontSize={14} color="$muted">
               {t('availability.noSlotsForDate')}
             </Text>
           ) : null}

@@ -9,6 +9,7 @@ import {
 } from '@duncit/utils';
 
 import { DuncitButton } from '@/components/DuncitButton';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { ToneChip } from '@/components/club-admin/ToneChip';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -16,11 +17,11 @@ import { useTranslation } from '@/hooks/useTranslation';
 /** One `Label / Value` fact on a card. Hoisted, never redefined per render. */
 function Fact({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
-    <YStack flexBasis="45%" flexGrow={1} gap={1}>
-      <Text fontSize={10.5} fontWeight="700" color="$muted" numberOfLines={1}>
+    <YStack flexBasis="45%" flexGrow={1} gap={2}>
+      <Text fontSize={12} fontWeight="500" color="$muted" numberOfLines={1}>
         {label}
       </Text>
-      <Text fontSize={13} fontWeight="600" color="$color" numberOfLines={1}>
+      <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
         {value}
       </Text>
     </YStack>
@@ -75,19 +76,18 @@ export function ChangeRequestCard({
   const showWithdraw = Boolean(onWithdraw) && canWithdrawChangeRequest(row);
 
   return (
-    <YStack
-      testID={testID}
-      gap={8}
-      padding={12}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
-      <XStack alignItems="center" gap={8}>
-        <Text flex={1} fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>
-          {row.pod.pod_title}
-        </Text>
+    // A hairline even in light mode, like mWeb's outlined card: a studio draws
+    // this board inside its own card, where a borderless one would disappear.
+    <SurfaceCard testID={testID} gap={12} borderColor="$borderColor">
+      <XStack alignItems="flex-start" gap={8}>
+        <YStack flex={1} gap={2}>
+          <Text fontSize={16} fontWeight="600" color="$color" numberOfLines={1}>
+            {row.pod.pod_title}
+          </Text>
+          <Text fontSize={12.5} color="$muted" numberOfLines={1}>
+            {when}
+          </Text>
+        </YStack>
         <ToneChip
           testID={`${testID}-role`}
           label={t(changeRequestRoleKey(row.role))}
@@ -100,11 +100,9 @@ export function ChangeRequestCard({
         />
       </XStack>
 
-      <Text fontSize={12} color="$muted" numberOfLines={1}>
-        {when}
-      </Text>
+      <YStack height={1} backgroundColor="$borderColor" />
 
-      <XStack gap={10} flexWrap="wrap">
+      <XStack gap={12} flexWrap="wrap">
         <Fact label={t('changeRequest.requestNo')} value={row.change_request_no} />
         <Fact label={t('changeRequest.filedOn')} value={filedOn} />
         <Fact label={t('changeRequest.attendees')} value={String(row.pod.attendee_count)} />
@@ -113,23 +111,23 @@ export function ChangeRequestCard({
         ) : null}
       </XStack>
 
-      <YStack gap={1}>
-        <Text fontSize={10.5} fontWeight="700" color="$muted">
+      <YStack gap={2}>
+        <Text fontSize={12} fontWeight="500" color="$muted">
           {t('changeRequest.reason')}
         </Text>
-        <Text fontSize={13} color="$color">
+        <Text fontSize={14} color="$color">
           {row.reason || t('changeRequest.noReason')}
         </Text>
       </YStack>
 
       {onApprove || onPass || showWithdraw ? (
-        <XStack gap={8} justifyContent="flex-end">
+        <XStack gap={8} justifyContent="flex-end" flexWrap="wrap">
           {showWithdraw ? (
             <DuncitButton
               testID={`${testID}-withdraw`}
               label={t('changeRequest.withdraw')}
               onPress={onWithdraw ?? (() => undefined)}
-              variant="ghost"
+              variant="outline"
               size="sm"
               disabled={busy}
             />
@@ -157,6 +155,6 @@ export function ChangeRequestCard({
           ) : null}
         </XStack>
       ) : null}
-    </YStack>
+    </SurfaceCard>
   );
 }

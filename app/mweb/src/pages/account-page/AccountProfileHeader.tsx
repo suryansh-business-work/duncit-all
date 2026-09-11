@@ -1,7 +1,8 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import LogoutIcon from '@mui/icons-material/Logout';
-import ShareIcon from '@mui/icons-material/Share';
+import { alpha } from '@mui/material/styles';
+import EditIcon from '@mui/icons-material/EditOutlined';
+import LogoutIcon from '@mui/icons-material/LogoutRounded';
+import ShareIcon from '@mui/icons-material/ShareOutlined';
 import { DuncitButton } from '@duncit/buttons';
 import ProfileAvatar from '../../components/profile-avatar';
 import { useRoleLabels } from '../../hooks/useRoleLabels';
@@ -15,6 +16,9 @@ export interface AccountProfileHeaderProps {
   onChanged?: () => void;
 }
 
+const PILL_SX = { flex: 1, minHeight: 44, px: 1 } as const;
+const SOFT_SX = { ...PILL_SX, bgcolor: 'action.hover' } as const;
+
 export default function AccountProfileHeader({
   me,
   onEdit,
@@ -22,62 +26,49 @@ export default function AccountProfileHeader({
   onChanged,
 }: Readonly<AccountProfileHeaderProps>) {
   const { labelFor } = useRoleLabels();
+  const name = me.full_name || `${me.first_name ?? ''} ${me.last_name ?? ''}`.trim();
 
   return (
-    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} sx={{
-      alignItems: "center"
-    }}>
-      <ProfileAvatar
-        photo={me.profile_photo}
-        name={me.full_name || `${me.first_name ?? ''} ${me.last_name ?? ''}`.trim()}
-        size={96}
-        onChanged={onChanged}
-      />
-      <Box sx={{ flex: 1, textAlign: { xs: 'center', sm: 'left' } }}>
-        <Typography variant="h5" sx={{
-          fontWeight: 700
-        }}>
+    <Stack spacing={2} sx={{ alignItems: 'center' }}>
+      <ProfileAvatar photo={me.profile_photo} name={name} size={88} onChanged={onChanged} />
+      <Box sx={{ width: '100%', textAlign: 'center' }}>
+        <Typography component="h1" sx={{ fontSize: 22, fontWeight: 600, lineHeight: 1.2 }}>
           {me.full_name || `${me.first_name} ${me.last_name}`}
         </Typography>
         {me.bio && (
-          <Typography
-            variant="body2"
-            sx={{
-              color: "text.secondary",
-              mt: 0.5
-            }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
             {me.bio}
           </Typography>
         )}
         <Stack
           direction="row"
           useFlexGap
-          spacing={1}
-          sx={{ mt: 1.5, flexWrap: 'wrap', rowGap: 1, justifyContent: { xs: 'center', sm: 'flex-start' } }}
+          spacing={0.75}
+          sx={{ mt: 1.5, flexWrap: 'wrap', rowGap: 0.75, justifyContent: 'center' }}
         >
           {me.roles?.map((r: string) => (
-            <Chip key={r} label={labelFor(r)} size="small" color="primary" variant="outlined" />
+            <Chip key={r} label={labelFor(r)} size="small" sx={{ height: 26, fontSize: 11 }} />
           ))}
         </Stack>
       </Box>
-      <Stack direction={{ xs: 'row', sm: 'column' }} spacing={1}>
-        <DuncitButton variant="outlined" startIcon={<EditIcon />} onClick={onEdit}>
+      <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
+        <DuncitButton color="inherit" startIcon={<EditIcon />} onClick={onEdit} sx={SOFT_SX}>
           Edit
         </DuncitButton>
         <DuncitButton
-          variant="outlined"
+          color="inherit"
           startIcon={<ShareIcon />}
-          onClick={() =>
-            shareProfile(
-              me.user_id,
-              me.full_name || `${me.first_name ?? ''} ${me.last_name ?? ''}`.trim(),
-              me.username,
-            )
-          }
+          onClick={() => shareProfile(me.user_id, name, me.username)}
+          sx={SOFT_SX}
         >
           Share
         </DuncitButton>
-        <DuncitButton variant="outlined" color="error" startIcon={<LogoutIcon />} onClick={onLogout}>
+        <DuncitButton
+          color="error"
+          startIcon={<LogoutIcon />}
+          onClick={onLogout}
+          sx={{ ...PILL_SX, bgcolor: (theme) => alpha(theme.palette.error.main, 0.1) }}
+        >
           Logout
         </DuncitButton>
       </Stack>

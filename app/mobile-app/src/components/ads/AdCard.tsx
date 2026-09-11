@@ -2,7 +2,9 @@ import { Linking } from 'react-native';
 import { Text, YStack } from 'tamagui';
 
 import type { ActiveAd } from '@/hooks/useActiveAds';
+import { useTranslation } from '@/hooks/useTranslation';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 import { AdMedia } from './AdMedia';
 
 export type AdVariant = 'banner' | 'card' | 'tile';
@@ -15,6 +17,7 @@ const BANNER_HEIGHT = 120;
 
 /** The small "Sponsored" pill every ad surface must carry. */
 export function SponsoredBadge({ testID }: Readonly<{ testID: string }>) {
+  const { t } = useTranslation();
   return (
     <YStack
       testID={testID}
@@ -24,7 +27,7 @@ export function SponsoredBadge({ testID }: Readonly<{ testID: string }>) {
       style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
     >
       <Text fontSize={9} fontWeight="600" letterSpacing={0.4} color="rgba(255,255,255,0.92)">
-        Sponsored
+        {t('mweb.ads.sponsored')}
       </Text>
     </YStack>
   );
@@ -96,13 +99,13 @@ export function AdCard({
       aria-label={ad.ad_title}
       onPress={onPress}
       height={variant === 'card' ? CARD_HEIGHT : BANNER_HEIGHT}
-      borderRadius={16}
+      borderRadius={24}
       overflow="hidden"
-      backgroundColor="$surface"
-      pressStyle={onPress ? { opacity: 0.9 } : undefined}
+      backgroundColor="$soft"
+      pressStyle={onPress ? PRESS_STYLE.surface : undefined}
     >
       <AdMedia ad={ad} testID={id} />
-      <YStack position="absolute" top={8} left={8}>
+      <YStack position="absolute" top={10} left={10}>
         <SponsoredBadge testID={`${id}-sponsored`} />
       </YStack>
       <YStack

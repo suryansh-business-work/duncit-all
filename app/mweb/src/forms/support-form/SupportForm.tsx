@@ -158,7 +158,6 @@ export default function SupportForm({
           variant="contained"
           size="large"
           disabled={loading || isSubmitting}
-          sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {loading || isSubmitting ? 'Sending…' : 'Send to support'}
         </DuncitButton>

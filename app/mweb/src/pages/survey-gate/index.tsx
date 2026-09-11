@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLazyQuery, useMutation } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router';
-import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { DuncitButton } from '@duncit/buttons';
+import { Box, CircularProgress } from '@mui/material';
 import { useProductVisibility } from '@duncit/app-settings';
 import {
   ACTIVE_SURVEY_FOR,
@@ -17,12 +15,20 @@ import CategorySummaryBanner from './CategorySummaryBanner';
 import SurveyStepper, { type SurveyAnswerInput, type SurveyAnswerState } from './SurveyStepper';
 import SubmittedSummary from './SubmittedSummary';
 import MeetingForm, { type MeetingInput } from './MeetingForm';
+import GateHeader from './GateHeader';
+import GateThanks from './GateThanks';
 import { getGateDraft, setGateDraft, clearGateDraft } from './draft';
-import AuthLogo from '../../components/AuthLogo';
 import { formatDateTime } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
 
 type Step = 'loading' | 'category' | 'survey' | 'meeting' | 'thanks';
+
+const KIND_HEADINGS: Record<SurveyKind, string> = {
+  VENUE: 'Register your venue',
+  HOST: 'Become a host',
+  ECOMM: 'List your product',
+  CLUB_ADMIN: 'Be a Club Admin',
+};
 
 /**
  * Gate before "Register a Venue" / "Become a Host" / "List your product": pick
@@ -145,94 +151,48 @@ export default function SurveyGatePage() {
     return <Box sx={{ display: 'grid', placeItems: 'center', minHeight: '60vh' }}><CircularProgress /></Box>;
   }
 
-  const KIND_HEADINGS: Record<SurveyKind, string> = {
-    VENUE: 'Register your venue',
-    HOST: 'Become a host',
-    ECOMM: 'List your product',
-    CLUB_ADMIN: 'Be a Club Admin',
-  };
+  // The phase names itself; the old subtitle under it restated the phase.
   const kindHeading = KIND_HEADINGS[kind];
   let heading: string;
   if (step === 'category') heading = kindHeading;
   else if (step === 'survey') heading = survey?.title || kindHeading;
   else if (step === 'thanks') heading = t('mweb.surveyGate.youReBooked');
   else heading = t('mweb.surveyGate.bookYourOnboardingMeeting');
-  let subtitle: string;
-  if (step === 'category') subtitle = t('mweb.common.tellUsYourCategorySoWe');
-  else if (step === 'survey') subtitle = t('mweb.surveyGate.aFewQuickQuestionsBeforeYou');
-  else if (step === 'thanks') subtitle = t('mweb.surveyGate.weLookForwardToMeetingYou');
-  else subtitle = t('mweb.surveyGate.pickASlotThatWorksFor');
 
   const slotLabel = bookedSlot
     ? formatDateTime(bookedSlot)
     : '';
 
   return (
-    <Box sx={{ maxWidth: 680, mx: 'auto', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}>
-      <Box sx={{ mb: 1 }}>
-        <DuncitButton startIcon={<ArrowBackIcon />} onClick={goBackStep} size="small">
-          Back
-        </DuncitButton>
-      </Box>
-      <Card
-        variant="outlined"
-        sx={{ borderRadius: '16px', boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}
-      >
-        <CardContent>
-          <AuthLogo />
-          <Stack spacing={0.5} sx={{ mb: 1.5 }}>
-            <Typography variant="h6" sx={{
-              fontWeight: 700
-            }}>{heading}</Typography>
-            <Typography variant="body2" sx={{
-              color: "text.secondary"
-            }}>{subtitle}</Typography>
-          </Stack>
-          {step === 'category' && (
-            <CategoryStep
-              submitting={resolving}
-              onContinue={onCategory}
-              initialScope={scope ?? undefined}
-            />
-          )}
-          {step === 'survey' && survey && (
-            <>
-              <CategorySummaryBanner labels={labels} onChange={() => setStep('category')} />
-              <SurveyStepper
-                survey={survey}
-                submitting={submittingSurvey}
-                onSubmit={onSurvey}
-                answers={surveyAnswers}
-                setAnswers={setSurveyAnswers}
-              />
-            </>
-          )}
-          {step === 'meeting' && (
-            <>
-              <CategorySummaryBanner labels={labels} onChange={() => setStep('category')} />
-              {survey && <SubmittedSummary survey={survey} answers={submittedAnswers} />}
-              <MeetingForm kind={kind} submitting={requesting} error={meetingError} onSubmit={onMeeting} />
-            </>
-          )}
-          {step === 'thanks' && (
-            <Stack spacing={2}>
-              <Alert severity="success" sx={{ borderRadius: '16px' }}>
-                Thank you for your submission! Your onboarding meeting is booked for{' '}
-                <strong>{slotLabel}</strong>. Our onboarding team will meet you at your selected
-                slot — please join 5 minutes early.
-              </Alert>
-              <DuncitButton
-                variant="contained"
-                size="large"
-                onClick={() => navigate('/', { replace: true })}
-                sx={{ borderRadius: 999, fontWeight: 700 }}
-              >
-                Back to Home
-              </DuncitButton>
-            </Stack>
-          )}
-        </CardContent>
-      </Card>
+    <Box sx={{ maxWidth: 680, mx: 'auto', px: 2, pt: 1.5, pb: { xs: 10, sm: 8 } }}>
+      <GateHeader title={heading} onBack={goBackStep} />
+      {step === 'category' && (
+        <CategoryStep
+          submitting={resolving}
+          onContinue={onCategory}
+          initialScope={scope ?? undefined}
+        />
+      )}
+      {step === 'survey' && survey && (
+        <>
+          <CategorySummaryBanner labels={labels} onChange={() => setStep('category')} />
+          <SurveyStepper
+            survey={survey}
+            submitting={submittingSurvey}
+            onSubmit={onSurvey}
+            answers={surveyAnswers}
+            setAnswers={setSurveyAnswers}
+          />
+        </>
+      )}
+      {step === 'meeting' && (
+        <>
+          <CategorySummaryBanner labels={labels} onChange={() => setStep('category')} />
+          {survey && <SubmittedSummary survey={survey} answers={submittedAnswers} />}
+          <MeetingForm kind={kind} submitting={requesting} error={meetingError} onSubmit={onMeeting} />
+        </>
+      )}
+      {step === 'thanks' && <GateThanks slotLabel={slotLabel} />}
     </Box>
   );
 }

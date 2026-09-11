@@ -31,8 +31,8 @@ export function ChatComposer({
   return (
     <XStack
       alignItems="center"
-      gap={6}
-      paddingHorizontal={10}
+      gap={8}
+      paddingHorizontal={12}
       paddingVertical={8}
       backgroundColor="$surface"
       borderTopWidth={1}
@@ -44,18 +44,19 @@ export function ChatComposer({
         aria-label={t('mweb.common.sendImage')}
         aria-disabled={sending}
         onPress={sending ? undefined : onPickImage}
-        width={40}
-        height={40}
+        width={44}
+        height={44}
         alignItems="center"
         justifyContent="center"
-        borderRadius={20}
+        borderRadius={22}
+        backgroundColor="$soft"
         opacity={sending ? 0.5 : 1}
-        pressStyle={PRESS_STYLE.inline}
+        pressStyle={PRESS_STYLE.control}
       >
         {sending ? (
           <Spinner color="$muted" />
         ) : (
-          <MaterialIcons name="image" size={24} color={muted} />
+          <MaterialIcons name="image" size={22} color={muted} />
         )}
       </XStack>
 
@@ -70,10 +71,11 @@ export function ChatComposer({
         multiline
         maxLength={2000}
         maxHeight={120}
-        backgroundColor="$background"
-        borderColor="$borderColor"
+        backgroundColor="$soft"
+        borderColor="$soft"
         color="$color"
-        borderRadius={20}
+        borderRadius={22}
+        minHeight={44}
       />
 
       <XStack
@@ -102,7 +104,7 @@ export function ChatComposer({
         alignItems="center"
         justifyContent="center"
         borderRadius={22}
-        backgroundColor={canSend ? '$primary' : '$borderColor'}
+        backgroundColor={canSend ? '$primary' : '$soft'}
         opacity={canSend ? 1 : 0.6}
         pressStyle={PRESS_STYLE.control}
       >

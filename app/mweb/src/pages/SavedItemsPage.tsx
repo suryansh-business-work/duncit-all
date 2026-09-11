@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
-import { Box, Stack, Typography } from '@mui/material';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
+import { Stack } from '@mui/material';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import { useTranslation } from '../i18n/useTranslation';
+import PageHeader from '../components/PageHeader';
 import { SAVED_CATEGORIES, SAVED_ITEMS, type SavedPod } from './saved-items-page/queries';
 import { DEFAULT_SAVED_FILTERS, effectiveCategoryId, type SavedFilters } from './saved-items-page/savedItemsFilter';
 import SavedItemsToolbar from './saved-items-page/SavedItemsToolbar';
 import SavedItemsBody from './saved-items-page/SavedItemsBody';
 
 export default function SavedItemsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState('');
   const [filters, setFilters] = useState<SavedFilters>(DEFAULT_SAVED_FILTERS);
@@ -34,23 +36,7 @@ export default function SavedItemsPage() {
 
   return (
     <Stack spacing={2} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-      <Stack direction="row" spacing={1} sx={{
-        alignItems: "center"
-      }}>
-        <BookmarkIcon color="primary" />
-        <Box>
-          <Typography variant="h5" sx={{
-            fontWeight: 600
-          }}>
-            Saved Items
-          </Typography>
-          <Typography variant="body2" sx={{
-            color: "text.secondary"
-          }}>
-            Pods you saved from Explore.
-          </Typography>
-        </Box>
-      </Stack>
+      <PageHeader title={t('mweb.saved.savedItems')} onBack={() => navigate(-1)} />
 
       <SavedItemsToolbar
         search={searchText}

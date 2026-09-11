@@ -1,14 +1,13 @@
 import { useState } from 'react';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Input, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { PodCardScroll } from '@/components/library/PodCardScroll';
+import { SearchPill } from '@/components/pod-list/SearchPill';
 import { SavedFilterSheet, SavedSortSheet, SavedToolbar } from '@/components/saved';
 import { StackScreen } from '@/components/StackScreen';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { usePodHistoryCategories } from '@/hooks/usePodHistory';
 import { useSavedPods } from '@/hooks/useSavedPods';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { toErrorMessage } from '@/utils/errors';
 import {
   activeSavedFilterCount,
@@ -23,7 +22,6 @@ import { useTranslation } from '@/hooks/useTranslation';
  * SavedItemsPage; all three inputs drive the one `mySavedPods` query. */
 export function SavedScreen() {
   const { t } = useTranslation();
-  const { muted } = useThemeColors();
   const { openPod } = useDetailNav();
   const categories = usePodHistoryCategories();
   const [searchText, setSearchText] = useState('');
@@ -37,42 +35,23 @@ export function SavedScreen() {
     sort: filters.sort,
   });
 
-  const toolbar = (
-    <SavedToolbar
-      filterCount={activeSavedFilterCount(filters)}
-      onFilter={() => setFilterOpen(true)}
-      onSort={() => setSortOpen(true)}
-    />
-  );
-
   return (
-    <StackScreen title={t('mweb.saved.savedItems')} testID="saved-screen" right={toolbar}>
+    <StackScreen title={t('mweb.saved.savedItems')} testID="saved-screen">
       <YStack flex={1}>
-        <XStack
-          alignItems="center"
-          gap={8}
-          margin={16}
-          marginBottom={4}
-          paddingHorizontal={12}
-          height={46}
-          borderRadius={999}
-          borderWidth={1}
-          borderColor="$borderColor"
-          backgroundColor="$background"
-        >
-          <MaterialIcons name="search" size={20} color={muted} />
-          <Input
+        {/* Search pill + round green filter + round sort in one row — the same
+            row mWeb's SavedItemsToolbar draws (rule 27). */}
+        <XStack alignItems="center" gap={8} marginHorizontal={16} marginTop={4}>
+          <SearchPill
             testID="saved-search"
-            aria-label={t('mweb.saved.searchSavedPods')}
-            flex={1}
-            unstyled
+            ariaLabel={t('mweb.saved.searchSavedPods')}
             value={searchText}
             onChangeText={setSearchText}
             placeholder={t('mweb.common.searchSavedPods')}
-            placeholderTextColor="$muted"
-            color="$color"
-            fontSize={15}
-            returnKeyType="search"
+          />
+          <SavedToolbar
+            filterCount={activeSavedFilterCount(filters)}
+            onFilter={() => setFilterOpen(true)}
+            onSort={() => setSortOpen(true)}
           />
         </XStack>
         {error ? (

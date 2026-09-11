@@ -9,7 +9,6 @@ import VenueSwitcher from './VenueSwitcher';
 interface Props {
   icon: ReactNode;
   title: string;
-  caption: string;
   venues: SwitchableVenue[];
   /** The venue the switcher landed on — null once the list is known empty. */
   venue: SwitchableVenue | null;
@@ -35,7 +34,6 @@ interface Props {
 export default function VenuePageFrame({
   icon,
   title,
-  caption,
   venues,
   venue,
   onSelect,
@@ -57,8 +55,8 @@ export default function VenuePageFrame({
   }
 
   return (
-    <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-      <StudioPageHeader icon={icon} title={title} caption={caption} />
+    <Stack spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+      <StudioPageHeader icon={icon} title={title} />
       <VenueSwitcher venues={venues} venueId={venue?.id ?? null} onChange={onSelect} />
       {body}
     </Stack>

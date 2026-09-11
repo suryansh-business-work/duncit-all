@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 import {
   groupSlotsByDay,
@@ -124,21 +125,21 @@ export default function SlotCalendar({
                     if (!slot.disabled) onPick(slot);
                   }}
                   minWidth={96}
-                  paddingHorizontal={12}
-                  paddingVertical={8}
-                  borderRadius={12}
-                  borderWidth={selected ? 2 : 1}
+                  paddingHorizontal={14}
+                  paddingVertical={10}
+                  borderRadius={16}
+                  borderWidth={1}
                   borderColor={selected ? '$primary' : '$borderColor'}
                   backgroundColor={selected ? '$primary' : '$surface'}
                   opacity={slot.disabled ? 0.45 : 1}
                   alignItems="center"
-                  pressStyle={slot.disabled ? undefined : { opacity: 0.7 }}
+                  pressStyle={slot.disabled ? undefined : PRESS_STYLE.control}
                 >
-                  <Text fontSize={14} fontWeight="700" color={selected ? '$onPrimary' : '$color'}>
+                  <Text fontSize={14} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
                     {time}
                   </Text>
                   {secondary ? (
-                    <Text fontSize={11.5} color={selected ? '$onPrimary' : '$muted'}>
+                    <Text fontSize={12} color={selected ? '$onPrimary' : '$muted'}>
                       {secondary}
                     </Text>
                   ) : null}

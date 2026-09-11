@@ -10,6 +10,7 @@ import {
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { ConfirmSheet } from '@/components/DuncitDialog';
+import { SectionHeader } from '@/components/SectionHeader';
 import type { NewVenueSlotInput } from '@/hooks/useOwnerVenueSlots';
 import { useTranslation } from '@/hooks/useTranslation';
 import { appNow } from '@/utils/app-formatter';
@@ -130,10 +131,8 @@ export function AddSlotForm({ date, spaces, onCreate }: Readonly<Props>) {
   const message = error ?? liveIssue;
 
   return (
-    <YStack gap={12} paddingTop={12} borderTopWidth={1} borderTopColor="$borderColor">
-      <Text fontSize={12} fontWeight="700" color="$muted" letterSpacing={1}>
-        {t('availability.addTitle')}
-      </Text>
+    <YStack gap={14} paddingTop={16} borderTopWidth={1} borderTopColor="$borderColor">
+      <SectionHeader title={t('availability.addTitle')} />
       <AddSlotFields
         draft={draft}
         patch={patch}
@@ -142,7 +141,7 @@ export function AddSlotForm({ date, spaces, onCreate }: Readonly<Props>) {
         now={now}
       />
       {message ? (
-        <Text testID="add-slot-issue" fontSize={12.5} color="$danger">
+        <Text testID="add-slot-issue" fontSize={13} color="$danger">
           {message}
         </Text>
       ) : null}
@@ -162,6 +161,7 @@ export function AddSlotForm({ date, spaces, onCreate }: Readonly<Props>) {
         onPress={handleAdd}
         disabled={creating || !!liveIssue}
         loading={creating}
+        size="lg"
         fullWidth
       />
       <ConfirmSheet

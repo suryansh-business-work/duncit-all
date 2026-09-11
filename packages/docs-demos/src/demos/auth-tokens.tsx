@@ -32,7 +32,7 @@ export default defineDemos('auth-tokens', [
     id: 'palette',
     title: 'The raw design tokens, before any framework touches them',
     note:
-      "Switch mode to 'dark'. These are plain values with no MUI and no Tamagui in sight — which is why the native app and the portals can both be built from them.",
+      "Switch mode to 'dark'. `primary` is the green of every call to action and `accent` the Duncit coral for the logo, active tab and badges. These are plain values with no MUI and no Tamagui in sight — which is why mWeb and the native app can both be built from them.",
     mock: { mode: 'light' },
     render: (mock) => {
       const mode = mock.mode === 'dark' ? dark : light;

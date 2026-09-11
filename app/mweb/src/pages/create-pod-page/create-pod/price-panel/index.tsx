@@ -1,7 +1,7 @@
 import { Alert, Card, CircularProgress, Stack, Typography } from '@mui/material';
-import InsightsIcon from '@mui/icons-material/Insights';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
+import SectionHeader from '../../../../components/SectionHeader';
 import { usePricing } from '../../../../hooks/usePricing';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import ChargesAccordion from './ChargesAccordion';
@@ -105,31 +105,14 @@ export default function PricePanel({ preview }: Readonly<Props>) {
   };
 
   return (
-    <Card variant="outlined" sx={{ p: 2, borderRadius: '16px' }} data-testid="create-pod-price-panel">
-      <Stack spacing={1.25}>
-        <Stack direction="row" spacing={1} sx={{
-          alignItems: "center"
-        }}>
-          <InsightsIcon color="primary" fontSize="small" />
-          <Typography variant="subtitle2" sx={{
-            fontWeight: 700
-          }}>
-            {t('mweb.createPod.potentialEarnings')}
-          </Typography>
-        </Stack>
-        <Typography
-          variant="caption"
-          sx={{
-            fontWeight: 600,
-            color: "text.secondary"
-          }}>
-          {t('mweb.createPod.takeHome')}
-        </Typography>
+    <Card sx={{ p: 2 }} data-testid="create-pod-price-panel">
+      <Stack spacing={1.5}>
+        <SectionHeader title={t('mweb.createPod.potentialEarnings')} />
         {noOfSpots > 0 && (
           <Alert
             severity="success"
             icon={<InfoOutlinedIcon fontSize="small" />}
-            sx={{ borderRadius: '16px', py: 0.25 }}
+            sx={{ py: 0.25 }}
             data-testid="price-panel-host-free-note"
           >
             {t('mweb.createPod.hostFreeNote')}

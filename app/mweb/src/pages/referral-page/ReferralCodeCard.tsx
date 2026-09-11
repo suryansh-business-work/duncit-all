@@ -1,10 +1,11 @@
-import { Alert, Box, Card, CardContent, Stack, Typography } from '@mui/material';
-import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { Box, Card, Stack, Typography } from '@mui/material';
+import CardGiftcardIcon from '@mui/icons-material/CardGiftcardOutlined';
+import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
 import IosShareIcon from '@mui/icons-material/IosShare';
-import LinkIcon from '@mui/icons-material/Link';
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import { DuncitButton } from '@duncit/buttons';
+import LinkIcon from '@mui/icons-material/LinkRounded';
+import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import TwoToneHeading from '../../components/TwoToneHeading';
+import IconDisc from '../account-page/IconDisc';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { MyReferral } from './queries';
 
@@ -15,7 +16,22 @@ interface Props {
   onShare: () => void;
 }
 
-/** My code, the three ways to pass it on, and what it is worth. */
+/** The dashed soft pill the code sits in, with its round copy button. */
+const CODE_PILL_SX = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 1,
+  width: '100%',
+  minHeight: 56,
+  pl: 2.5,
+  pr: 0.75,
+  borderRadius: 999,
+  border: '1.5px dashed',
+  borderColor: 'divider',
+  bgcolor: 'action.hover',
+} as const;
+
+/** The hero: what referring is worth, my code, and the ways to pass it on. */
 export default function ReferralCodeCard({
   referral,
   onCopyCode,
@@ -23,94 +39,83 @@ export default function ReferralCodeCard({
   onShare,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const coins =
+    referral.coins_per_referral > 0
+      ? t('mweb.referral.bothEarn', { vars: { coins: referral.coins_per_referral } })
+      : null;
 
   return (
-    <Card variant="outlined">
-      <CardContent>
-        <Typography
-          variant="caption"
-          sx={{
-            color: "text.secondary",
-            fontWeight: 700
-          }}>
-          {t('mweb.referral.yourCode')}
-        </Typography>
-        <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: 1, mt: 0.5 }}>
-          {referral.code}
-        </Typography>
+    <Card sx={{ p: 2.5 }}>
+      <Stack spacing={2} sx={{ alignItems: 'center', textAlign: 'center' }}>
+        <IconDisc size={56}>
+          <CardGiftcardIcon />
+        </IconDisc>
+        <TwoToneHeading lead={t('mweb.referral.title')} trail={coins} stacked align="center" />
+
+        <Stack spacing={0.75} sx={{ width: '100%' }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+            {t('mweb.referral.yourCode')}
+          </Typography>
+          <Box sx={CODE_PILL_SX}>
+            <Typography sx={{ flex: 1, fontSize: 20, fontWeight: 700, letterSpacing: 2, textAlign: 'left' }} noWrap>
+              {referral.code}
+            </Typography>
+            <DuncitIconButton
+              onClick={onCopyCode}
+              data-testid="referral-copy-code"
+              aria-label={t('mweb.referral.copyCode')}
+              sx={{ width: 44, height: 44, bgcolor: 'background.paper', flexShrink: 0 }}
+            >
+              <ContentCopyIcon fontSize="small" />
+            </DuncitIconButton>
+          </Box>
+        </Stack>
 
         {/*
           Three ways out, because they travel differently: a code survives being
           read out loud, a link does the typing for whoever receives it, and the
           share sheet carries the message Finance wrote around both.
         */}
-        <Stack direction="row" spacing={1} sx={{ mt: 1.5, flexWrap: 'wrap', gap: 1 }}>
+        <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
           <DuncitButton
-            size="small"
             variant="contained"
+            size="large"
             startIcon={<IosShareIcon />}
             onClick={onShare}
             data-testid="referral-share"
+            sx={{ flex: 1 }}
           >
             {t('mweb.referral.share')}
           </DuncitButton>
           <DuncitButton
-            size="small"
-            startIcon={<ContentCopyIcon />}
-            onClick={onCopyCode}
-            data-testid="referral-copy-code"
-          >
-            {t('mweb.referral.copyCode')}
-          </DuncitButton>
-          <DuncitButton
-            size="small"
+            color="inherit"
+            size="large"
             startIcon={<LinkIcon />}
             onClick={onCopyLink}
             data-testid="referral-copy-link"
+            sx={{ flex: 1, bgcolor: 'action.hover' }}
           >
             {t('mweb.referral.copyLink')}
           </DuncitButton>
         </Stack>
 
-        {referral.coins_per_referral > 0 && (
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{
-              alignItems: "center",
-              mt: 1.75
-            }}>
-            <MonetizationOnIcon fontSize="small" color="primary" />
-            <Typography
-              variant="body2"
-              sx={{
-                color: "primary.main",
-                fontWeight: 700
-              }}>
-              {t('mweb.referral.bothEarn', { vars: { coins: referral.coins_per_referral } })}
+        {referral.gift_description && (
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', width: '100%', textAlign: 'left' }}>
+            <IconDisc>
+              <CardGiftcardIcon />
+            </IconDisc>
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              {referral.gift_description}
             </Typography>
           </Stack>
         )}
 
-        {referral.gift_description && (
-          <Alert icon={<CardGiftcardIcon />} severity="success" sx={{ mt: 1.5 }}>
-            {referral.gift_description}
-          </Alert>
-        )}
-
         {referral.referred_by_name && (
-          <Box sx={{ mt: 1 }}>
-            <Typography
-              variant="caption"
-              sx={{
-                color: "text.secondary",
-                fontWeight: 700
-              }}>
-              {t('mweb.referral.referredBy', { vars: { name: referral.referred_by_name } })}
-            </Typography>
-          </Box>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            {t('mweb.referral.referredBy', { vars: { name: referral.referred_by_name } })}
+          </Typography>
         )}
-      </CardContent>
+      </Stack>
     </Card>
   );
 }

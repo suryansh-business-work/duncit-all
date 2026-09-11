@@ -40,7 +40,7 @@ export default function ResolvedNotice({
   }
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}>
+    <Paper sx={{ p: 1.5, borderRadius: '18px', bgcolor: 'action.hover' }}>
       <Stack
         direction="row"
         spacing={1}

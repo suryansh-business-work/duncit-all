@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Text, YStack } from 'tamagui';
+import { Text, XStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { MyHostCategoriesDocument } from '@/graphql/host-request';
 import { graphqlRequest } from '@/services/graphql.client';
 
@@ -18,8 +19,9 @@ function formatCategoryPath(cat: HostCategory): string {
 }
 
 /**
- * Host Studio section listing the categories this host is approved to operate in.
- * Renders null when the host holds none (or the query fails).
+ * Host Studio card listing the categories this host is approved to operate in,
+ * as soft pills. Renders null when the host holds none (or the query fails).
+ * mWeb twin: host-apply-page/HostCategoriesCard.
  */
 export function HostCategoriesCard() {
   const [categories, setCategories] = useState<HostCategory[]>([]);
@@ -37,26 +39,36 @@ export function HostCategoriesCard() {
   if (categories.length === 0) return null;
 
   return (
-    <YStack
-      testID="host-categories-card"
-      gap={8}
-      padding={16}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
-      <Text fontSize={16} fontWeight="700" color="$color">
+    <SurfaceCard testID="host-categories-card" gap={12}>
+      <Text fontSize={16} fontWeight="600" color="$color">
         Your hosting categories
       </Text>
-      {categories.map((cat) => {
-        const path = formatCategoryPath(cat);
-        return (
-          <Text key={path} testID="host-category-row" fontSize={13} color="$muted">
-            {path}
-          </Text>
-        );
-      })}
-    </YStack>
+      <XStack flexWrap="wrap" gap={8}>
+        {categories.map((cat) => {
+          const path = formatCategoryPath(cat);
+          return (
+            <XStack
+              key={path}
+              maxWidth="100%"
+              height={32}
+              paddingHorizontal={12}
+              alignItems="center"
+              borderRadius={999}
+              backgroundColor="$soft"
+            >
+              <Text
+                testID="host-category-row"
+                fontSize={13}
+                fontWeight="600"
+                color="$color"
+                numberOfLines={1}
+              >
+                {path}
+              </Text>
+            </XStack>
+          );
+        })}
+      </XStack>
+    </SurfaceCard>
   );
 }

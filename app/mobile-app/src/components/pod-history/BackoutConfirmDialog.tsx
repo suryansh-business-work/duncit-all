@@ -55,7 +55,7 @@ function BackoutActions({ busy, releasing, onClose, onConfirm }: Readonly<Backou
         height={48}
         alignItems="center"
         justifyContent="center"
-        borderRadius={12}
+        borderRadius={999}
         borderWidth={1}
         borderColor="$borderColor"
         opacity={busy ? 0.6 : 1}
@@ -76,7 +76,7 @@ function BackoutActions({ busy, releasing, onClose, onConfirm }: Readonly<Backou
         alignItems="center"
         justifyContent="center"
         gap={8}
-        borderRadius={12}
+        borderRadius={999}
         backgroundColor="$danger"
         opacity={busy ? 0.7 : 1}
         pressStyle={PRESS_STYLE.control}
@@ -155,9 +155,9 @@ export function BackoutConfirmDialog({
             right={0}
             bottom={0}
             maxHeight="86%"
-            backgroundColor="$background"
-            borderTopLeftRadius={20}
-            borderTopRightRadius={20}
+            backgroundColor="$surface"
+            borderTopLeftRadius={28}
+            borderTopRightRadius={28}
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Card, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -16,8 +16,9 @@ interface Props {
 
 /**
  * The states around a "Load more" list, in order: a failed first page, the
- * first page still loading, nothing to show, then the rows with the button
- * that fetches the next page. Every paged club-admin list renders through it.
+ * first page still loading, nothing to show, then the rows — one card, split
+ * by hairlines — with the button that fetches the next page. Every paged
+ * club-admin list renders through it.
  */
 export default function PagedListBody({
   loading,
@@ -39,22 +40,19 @@ export default function PagedListBody({
   }
   if (count === 0) {
     return (
-      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+      <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', py: 3 }}>
         {emptyText}
       </Typography>
     );
   }
   return (
-    <Stack spacing={1}>
+    <Stack spacing={1.5}>
       {error && <Alert severity="error">{error}</Alert>}
-      {children}
+      <Card>
+        <Stack divider={<Divider sx={{ mx: 2 }} />}>{children}</Stack>
+      </Card>
       {hasMore && (
-        <DuncitButton
-          variant="outlined"
-          onClick={onLoadMore}
-          disabled={loading}
-          sx={{ alignSelf: 'center', borderRadius: 999, fontWeight: 700 }}
-        >
+        <DuncitButton variant="outlined" onClick={onLoadMore} disabled={loading} sx={{ alignSelf: 'center' }}>
           {t('mweb.clubStudio.loadMore')}
         </DuncitButton>
       )}

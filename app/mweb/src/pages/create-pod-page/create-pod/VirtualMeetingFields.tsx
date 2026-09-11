@@ -6,6 +6,7 @@ import { meetingPlatformOptions } from '@duncit/utils';
 import { formatDurationBetween } from '../../../utils/dateFormat';
 import { requiredLabel } from '../../../forms/components/requiredLabel';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { SURFACE_SX } from '../../../theme';
 import { MIN_POD_DURATION_MINUTES } from './create-pod.form';
 import type { CreatePodForm } from './create-pod.types';
 
@@ -31,86 +32,85 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
 
   return (
     <Stack spacing={2}>
-      {/* A picked code, not typed text. The pod page only decodes the codes, so
-          a hand-typed "Google Meet" used to come back as "Google meet". */}
-      <Controller
-        control={control}
-        name="meeting_platform"
-        render={({ field }) => (
-          <TextField
-            select
-            label={requiredLabel(t('mweb.createPod.meetingPlatform'), true)}
-            fullWidth
-            value={field.value ?? ''}
-            onChange={field.onChange}
-            onBlur={field.onBlur}
-            error={!!errors.meeting_platform}
-            helperText={errors.meeting_platform?.message ?? t('mweb.createPod.meetingPlatformHint')}
-          >
-            {platformOptions.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </TextField>
-        )}
-      />
-      <TextField
-        label={requiredLabel(t('mweb.createPod.meetingLink'), true)}
-        fullWidth
-        {...register('meeting_url')}
-        error={!!errors.meeting_url}
-        helperText={errors.meeting_url?.message ?? t('mweb.createPod.meetingLinkHint')}
-      />
-      <TextField label={t('mweb.createPod.meetingNotes')} fullWidth multiline minRows={2} {...register('meeting_notes')} />
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+      <Stack spacing={2} sx={{ ...SURFACE_SX, p: 2 }}>
+        {/* A picked code, not typed text. The pod page only decodes the codes, so
+            a hand-typed "Google Meet" used to come back as "Google meet". */}
         <Controller
           control={control}
-          name="pod_date_time"
+          name="meeting_platform"
           render={({ field }) => (
-            <DateTimePicker
-              label={requiredLabel(t('mweb.createPod.startDateTime'), true)}
-              value={field.value}
+            <TextField
+              select
+              label={requiredLabel(t('mweb.createPod.meetingPlatform'), true)}
+              fullWidth
+              value={field.value ?? ''}
               onChange={field.onChange}
-              minDateTime={new Date()}
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  error: !!errors.pod_date_time,
-                  helperText: errors.pod_date_time?.message,
-                }}}
-            />
+              onBlur={field.onBlur}
+              error={!!errors.meeting_platform}
+              helperText={errors.meeting_platform?.message}
+            >
+              {platformOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
           )}
         />
-        <Controller
-          control={control}
-          name="pod_end_date_time"
-          render={({ field }) => (
-            <DateTimePicker
-              label={requiredLabel(t('mweb.createPod.endDateTime'), true)}
-              value={field.value}
-              onChange={field.onChange}
-              minDateTime={minEndDateTime}
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  error: !!errors.pod_end_date_time,
-                  helperText: errors.pod_end_date_time?.message,
-                }}}
-            />
-          )}
+        <TextField
+          label={requiredLabel(t('mweb.createPod.meetingLink'), true)}
+          fullWidth
+          {...register('meeting_url')}
+          error={!!errors.meeting_url}
+          helperText={errors.meeting_url?.message}
         />
+        <TextField label={t('mweb.createPod.meetingNotes')} fullWidth multiline minRows={2} {...register('meeting_notes')} />
       </Stack>
-      {duration && (
-        <Typography
-          variant="caption"
-          sx={{
-            color: "text.secondary",
-            fontWeight: 600
-          }}>
-          {t('mweb.createPod.totalDuration', { vars: { duration } })}
-        </Typography>
-      )}
+      <Stack spacing={2} sx={{ ...SURFACE_SX, p: 2 }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <Controller
+            control={control}
+            name="pod_date_time"
+            render={({ field }) => (
+              <DateTimePicker
+                label={requiredLabel(t('mweb.createPod.startDateTime'), true)}
+                value={field.value}
+                onChange={field.onChange}
+                minDateTime={new Date()}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    error: !!errors.pod_date_time,
+                    helperText: errors.pod_date_time?.message,
+                  }}}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="pod_end_date_time"
+            render={({ field }) => (
+              <DateTimePicker
+                label={requiredLabel(t('mweb.createPod.endDateTime'), true)}
+                value={field.value}
+                onChange={field.onChange}
+                minDateTime={minEndDateTime}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    error: !!errors.pod_end_date_time,
+                    helperText: errors.pod_end_date_time?.message,
+                  }}}
+              />
+            )}
+          />
+        </Stack>
+        {duration && (
+          <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+            {t('mweb.createPod.totalDuration', { vars: { duration } })}
+          </Typography>
+        )}
+      </Stack>
     </Stack>
   );
 }

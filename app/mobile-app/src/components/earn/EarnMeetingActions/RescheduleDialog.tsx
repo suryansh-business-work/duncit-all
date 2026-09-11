@@ -71,19 +71,19 @@ export function RescheduleDialog({
               maxWidth={460}
               maxHeight="80%"
               backgroundColor="$background"
-              borderRadius={20}
-              padding={16}
+              borderRadius={28}
+              padding={20}
               gap={10}
             >
               <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
-                <Text fontSize={17} fontWeight="700" color="$color" paddingBottom={8}>
+                <Text fontSize={17} fontWeight="600" color="$color" paddingBottom={8}>
                   Reschedule your onboarding meeting
                 </Text>
                 <ScrollView keyboardShouldPersistTaps="handled">
                   {currentSlot ? (
                     <Text
                       testID="reschedule-current"
-                      fontSize={12.5}
+                      fontSize={13}
                       color="$muted"
                       paddingBottom={10}
                     >
@@ -112,7 +112,7 @@ export function RescheduleDialog({
                     onChangeText={onChangeReason}
                   />
                   {error ? (
-                    <Text testID="reschedule-error" fontSize={12.5} color="$danger" paddingTop={8}>
+                    <Text testID="reschedule-error" fontSize={13} color="$danger" paddingTop={8}>
                       {error}
                     </Text>
                   ) : null}
@@ -127,12 +127,11 @@ export function RescheduleDialog({
                     height={44}
                     alignItems="center"
                     justifyContent="center"
-                    borderRadius={12}
-                    borderWidth={1}
-                    borderColor="$borderColor"
+                    borderRadius={999}
+                    backgroundColor="$soft"
                     pressStyle={PRESS_STYLE.control}
                   >
-                    <Text fontSize={14} fontWeight="600" color="$color">
+                    <Text fontSize={15} fontWeight="600" color="$color">
                       Close
                     </Text>
                   </XStack>
@@ -146,12 +145,12 @@ export function RescheduleDialog({
                     height={44}
                     alignItems="center"
                     justifyContent="center"
-                    borderRadius={12}
+                    borderRadius={999}
                     backgroundColor="$primary"
                     opacity={busy ? 0.7 : 1}
-                    pressStyle={PRESS_STYLE.control}
+                    pressStyle={PRESS_STYLE.solid}
                   >
-                    <Text fontSize={14} fontWeight="700" color={onPrimary}>
+                    <Text fontSize={15} fontWeight="600" color={onPrimary}>
                       {busy ? 'Moving…' : 'Move to this slot'}
                     </Text>
                   </XStack>

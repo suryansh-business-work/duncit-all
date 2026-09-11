@@ -2,6 +2,7 @@ import type { KeyboardEvent } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import AdMedia from './AdMedia';
 import type { PublicAd } from './useActiveAds';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /**
  * A sponsored tile shaped exactly like HomeStatusTile (70×90 with a 62px circle
@@ -13,6 +14,7 @@ import type { PublicAd } from './useActiveAds';
  * has one, is offered as "Open details" at the bottom of that story.
  */
 export default function AdTile({ ad, onOpen }: Readonly<{ ad: PublicAd; onOpen: () => void }>) {
+  const { t } = useTranslation();
   return (
     <Stack
       data-testid="ad-tile"
@@ -56,11 +58,11 @@ export default function AdTile({ ad, onOpen }: Readonly<{ ad: PublicAd; onOpen: 
             fontSize: 8.5,
             fontWeight: 600,
             lineHeight: '14px',
-            color: '#fff',
+            color: 'common.white',
             bgcolor: 'rgba(0,0,0,0.6)',
           }}
         >
-          Sponsored
+          {t('mweb.ads.sponsored')}
         </Typography>
       </Box>
       <Typography
@@ -76,7 +78,7 @@ export default function AdTile({ ad, onOpen }: Readonly<{ ad: PublicAd; onOpen: 
           whiteSpace: 'nowrap',
         }}
       >
-        {ad.ad_title ?? 'Sponsored'}
+        {ad.ad_title ?? t('mweb.ads.sponsored')}
       </Typography>
     </Stack>
   );

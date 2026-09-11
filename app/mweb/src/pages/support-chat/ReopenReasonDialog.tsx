@@ -34,7 +34,7 @@ export default function ReopenReasonDialog({ open, loading, error, onClose, onSu
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.supportChat.reOpenThisConversation')}</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.supportChat.reOpenThisConversation')}</DialogTitle>
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 1 }}>

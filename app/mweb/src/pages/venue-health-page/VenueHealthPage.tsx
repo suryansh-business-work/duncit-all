@@ -1,13 +1,19 @@
 import { useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router';
-import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { DuncitIconButton } from '@duncit/buttons';
+import { Alert, Box, Card, CardContent, CircularProgress, Stack } from '@mui/material';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import { DuncitRoundButton } from '@duncit/buttons';
 import HealthMeter from '../../components/health/HealthMeter';
 import HealthBreakdown from '../../components/health/HealthBreakdown';
+import TwoToneHeading from '../../components/TwoToneHeading';
 import { MY_VENUE_HEALTH, type HealthScore } from '../../components/health/queries';
 import { useTranslation } from '../../i18n/useTranslation';
 
+/**
+ * Venue Health detail for an owned venue: the round back button and the
+ * two-tone title (the health, then the venue in muted ink), the meter as a
+ * hero card, and the breakdown under it. Native twin: VenueHealthScreen.
+ */
 export default function VenueHealthPage() {
   const { t } = useTranslation();
   const { venueId = '' } = useParams<{ venueId: string }>();
@@ -19,25 +25,18 @@ export default function VenueHealthPage() {
   });
 
   return (
-    <Stack spacing={2.25} sx={{ mx: { xs: -0.25, sm: 0 } }}>
-      <Stack direction="row" spacing={1} sx={{
-        alignItems: "center"
-      }}>
-        <DuncitIconButton size="small" onClick={() => navigate(-1)} aria-label={t('mweb.common.back')} sx={{ bgcolor: 'action.hover' }}>
-          <ArrowBackIcon />
-        </DuncitIconButton>
-        <Box>
-          <Typography
-            variant="overline"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 700
-            }}>
-            {data?.myVenueHealth?.subject_label || 'Venue'}
-          </Typography>
-          <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
-            Venue Health
-          </Typography>
+    <Stack spacing={3} sx={{ mx: { xs: -0.25, sm: 0 } }}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+        <DuncitRoundButton tone="paper" size="large" onClick={() => navigate(-1)} aria-label={t('mweb.common.back')}>
+          <ArrowBackRoundedIcon />
+        </DuncitRoundButton>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <TwoToneHeading
+            lead={t('mweb.venueManage.venueHealth')}
+            trail={data?.myVenueHealth?.subject_label || 'Venue'}
+            stacked
+            variant="h6"
+          />
         </Box>
       </Stack>
 
@@ -54,14 +53,16 @@ export default function VenueHealthPage() {
       {error && <Alert severity="error">{error.message}</Alert>}
 
       {data?.myVenueHealth && (
-        <Stack spacing={2.5} sx={{
-          alignItems: "center"
-        }}>
-          <HealthMeter
-            score={data.myVenueHealth.total_score}
-            band={data.myVenueHealth.band}
-            label={t('mweb.venueHealth.venueHealth')}
-          />
+        <Stack spacing={3}>
+          <Card>
+            <CardContent sx={{ p: 3, display: 'flex', justifyContent: 'center', '&:last-child': { pb: 3 } }}>
+              <HealthMeter
+                score={data.myVenueHealth.total_score}
+                band={data.myVenueHealth.band}
+                label={t('mweb.venueHealth.venueHealth')}
+              />
+            </CardContent>
+          </Card>
           <Box sx={{ width: '100%' }}>
             <HealthBreakdown score={data.myVenueHealth} />
           </Box>

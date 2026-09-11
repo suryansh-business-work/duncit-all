@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { CategoryLevel, GiftCardScopeType } from '@/generated/graphql/graphql';
 import type { GiftCardCategory } from '@/hooks/useGiftCards';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -74,10 +76,8 @@ export function GiftCardThemePicker({ categories, value, onChange }: Readonly<Pr
   }
 
   return (
-    <YStack gap={10}>
-      <Text fontSize={15} fontWeight="700" color="$color">
-        {t('mweb.giftCards.themeHeading')}
-      </Text>
+    <SurfaceCard gap={12}>
+      <SectionHeader title={t('mweb.giftCards.themeHeading')} />
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -93,15 +93,14 @@ export function GiftCardThemePicker({ categories, value, onChange }: Readonly<Pr
               role="button"
               aria-label={label}
               onPress={() => setGroup(scope)}
-              paddingHorizontal={14}
-              paddingVertical={8}
+              height={36}
+              paddingHorizontal={16}
+              alignItems="center"
               borderRadius={999}
-              borderWidth={1}
-              borderColor={isActive ? '$primary' : '$borderColor'}
-              backgroundColor={isActive ? '$primary' : 'transparent'}
+              backgroundColor={isActive ? '$primary' : '$soft'}
               pressStyle={PRESS_STYLE.control}
             >
-              <Text fontSize={13} fontWeight="700" color={isActive ? '$onPrimary' : '$color'}>
+              <Text fontSize={13} fontWeight="600" color={isActive ? '$onPrimary' : '$color'}>
                 {label}
               </Text>
             </XStack>
@@ -148,6 +147,6 @@ export function GiftCardThemePicker({ categories, value, onChange }: Readonly<Pr
           );
         })}
       </ScrollView>
-    </YStack>
+    </SurfaceCard>
   );
 }

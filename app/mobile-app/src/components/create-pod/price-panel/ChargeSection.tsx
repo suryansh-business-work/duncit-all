@@ -2,16 +2,19 @@ import { useState, type ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { withAlpha } from '@/constants/survey-palette';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { StatementLine } from '@duncit/utils';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
-/** Subtle section tints — venue-side vs everything else (both themes). */
-export const DEFAULT_TINT = 'rgba(99,102,241,0.10)';
-export const VENUE_TINT = 'rgba(245,158,11,0.12)';
+/** Section tints — theme tokens, so both modes flip on their own. */
+export const DEFAULT_TINT = '$soft';
+/** Alpha of the venue's amber tint over the theme's `warning` (there is no soft
+ * warning token) — mWeb's twin is alpha(warning.main, 0.12). */
+export const VENUE_TINT = 0.12;
 /** The venue section when the pod cannot cover the slot price. */
-export const SHORTFALL_TINT = 'rgba(239,68,68,0.12)';
+export const SHORTFALL_TINT = '$dangerSoft';
 
 /** One auditable row: label + amount with the formula that produced it
  * underneath. Context rows (the taxable base) render muted, not bold. */
@@ -23,14 +26,14 @@ export function ChargeRow({
   return (
     <YStack paddingHorizontal={12} paddingVertical={6} gap={2}>
       <XStack justifyContent="space-between" gap={12}>
-        <Text fontSize={12.5} color={line.deduction ? '$color' : '$muted'} flexShrink={1}>
+        <Text fontSize={14} color={line.deduction ? '$color' : '$muted'} flexShrink={1}>
           {line.label}
         </Text>
-        <Text fontSize={12.5} fontWeight={line.deduction ? '700' : '500'} color="$color">
+        <Text fontSize={14} fontWeight={line.deduction ? '700' : '500'} color="$color">
           {money(line.amount)}
         </Text>
       </XStack>
-      <Text fontSize={10.5} color="$muted">
+      <Text fontSize={12} color="$muted">
         {t('mweb.createPod.formula', { vars: { formula: line.formula } })}
       </Text>
     </YStack>
@@ -74,7 +77,7 @@ export function ChargeSection({
   const infoColor = info ? primary : muted;
   return (
     <YStack
-      borderRadius={10}
+      borderRadius={16}
       overflow="hidden"
       backgroundColor={tint}
       borderWidth={invalidMessage ? 1.5 : 1}
@@ -94,11 +97,11 @@ export function ChargeSection({
           paddingVertical={10}
           pressStyle={PRESS_STYLE.control}
         >
-          <Text fontSize={13} fontWeight="600" color="$color" flexShrink={1}>
+          <Text fontSize={14} fontWeight="600" color="$color" flexShrink={1}>
             {title}
           </Text>
           <XStack alignItems="center" gap={4}>
-            <Text fontSize={13} fontWeight="600" color="$color">
+            <Text fontSize={14} fontWeight="600" color="$color">
               {amount}
             </Text>
             <MaterialIcons
@@ -124,14 +127,14 @@ export function ChargeSection({
       {info ? (
         <YStack
           testID={`${testID}-description`}
-          backgroundColor="$background"
+          backgroundColor="$surface"
           marginHorizontal={4}
           marginBottom={4}
-          borderRadius={8}
+          borderRadius={12}
           paddingHorizontal={10}
           paddingVertical={8}
         >
-          <Text fontSize={11} color="$muted" lineHeight={16}>
+          <Text fontSize={12} color="$muted" lineHeight={17}>
             {description}
           </Text>
         </YStack>
@@ -149,12 +152,7 @@ export function ChargeSection({
         </Text>
       ) : null}
       {open ? (
-        <YStack
-          backgroundColor="$background"
-          marginHorizontal={4}
-          marginBottom={4}
-          borderRadius={8}
-        >
+        <YStack backgroundColor="$surface" marginHorizontal={4} marginBottom={4} borderRadius={12}>
           {children}
         </YStack>
       ) : null}
@@ -162,9 +160,10 @@ export function ChargeSection({
   );
 }
 
-/** Venue-side sections carry the amber tint, and the red one when the pod
- * cannot cover the slot price; everything else stays neutral. */
-export function sectionTint(isVenue: boolean, shortfall: boolean): string {
+/** Venue-side sections carry the amber tint (the theme's `warning` colour), and
+ * the red one when the pod cannot cover the slot price; everything else stays
+ * on the soft fill. */
+export function sectionTint(isVenue: boolean, shortfall: boolean, warning: string): string {
   if (shortfall) return SHORTFALL_TINT;
-  return isVenue ? VENUE_TINT : DEFAULT_TINT;
+  return isVenue ? withAlpha(warning, VENUE_TINT) : DEFAULT_TINT;
 }

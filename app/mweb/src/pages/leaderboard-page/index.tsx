@@ -30,6 +30,21 @@ import {
 } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
 
+/** The period toggle as a pill segmented control: a soft track, the chosen
+ * window a green pill. Native twin: LeaderboardPeriodToggle. */
+const SEGMENTED_SX = {
+  bgcolor: 'action.hover',
+  borderRadius: 999,
+  p: 0.5,
+  gap: 0.5,
+  '& .MuiToggleButton-root': {
+    border: 0,
+    borderRadius: '999px !important',
+    minHeight: 36,
+    '&.Mui-selected': { bgcolor: 'primary.main', color: 'primary.contrastText' },
+  },
+} as const;
+
 /**
  * The Leaderboard — five boards (Users, Hosts, Club Admins, Venues, Brands),
  * a period toggle, the caller's own standing up top, then how points are
@@ -81,9 +96,7 @@ export default function LeaderboardPage() {
   return (
     <Box sx={{ p: 2 }}>
       <Stack spacing={2} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-        <Typography variant="h6" sx={{
-          fontWeight: 700
-        }}>
+        <Typography component="h1" sx={{ fontSize: 20, fontWeight: 600 }}>
           {t('mweb.leaderboard.title')}
         </Typography>
 
@@ -97,6 +110,7 @@ export default function LeaderboardPage() {
           size="small"
           value={period}
           onChange={(_e, next: LeaderboardPeriodKey | null) => next && setPeriod(next)}
+          sx={SEGMENTED_SX}
         >
           {LEADERBOARD_PERIODS.map((p) => (
             <ToggleButton key={p} value={p}>

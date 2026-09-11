@@ -1,5 +1,5 @@
 import { Box, ImageList, ImageListItem, Stack, Typography } from '@mui/material';
-import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternateOutlined';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { DuncitButton } from '@duncit/buttons';
@@ -16,35 +16,31 @@ export default function ProfilePostsGrid({ posts, onOpenPost, onNewPost }: Reado
   return (
     <>
       {posts.length === 0 ? (
-        <Stack
-          spacing={2}
-          sx={{
-            alignItems: "center",
-            py: 6,
-            color: 'text.secondary'
-          }}>
+        <Stack spacing={1.5} sx={{ alignItems: 'center', py: 5 }}>
           <Box
             sx={{
               width: 64,
               height: 64,
               borderRadius: '50%',
-              border: 2,
-              borderColor: 'currentColor',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              bgcolor: 'action.hover',
+              color: 'secondary.main',
+              display: 'grid',
+              placeItems: 'center',
             }}
           >
-            <AddPhotoAlternateIcon fontSize="large" />
+            <AddPhotoAlternateIcon sx={{ fontSize: 30 }} />
           </Box>
-          <Typography variant="h6">{t('mweb.profile.sharePhotos')}</Typography>
-          <Typography variant="body2">{t('mweb.profile.whenYouSharePhotosTheyWill')}</Typography>
-          <DuncitButton onClick={onNewPost}>{t('mweb.profile.shareYourFirstPhoto')}</DuncitButton>
+          <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+            {t('mweb.profile.sharePhotos')}
+          </Typography>
+          <DuncitButton variant="contained" onClick={onNewPost}>
+            {t('mweb.profile.shareYourFirstPhoto')}
+          </DuncitButton>
         </Stack>
       ) : (
         <ImageList cols={3} gap={4} sx={{ m: 0 }}>
           {posts.map((post: any) => (
-            <ImageListItem key={post.id} onClick={() => onOpenPost(post.id)} sx={{ cursor: 'pointer', aspectRatio: '1 / 1', position: 'relative', overflow: 'hidden', '&:hover .post-overlay': { opacity: 1 } }}>
+            <ImageListItem key={post.id} onClick={() => onOpenPost(post.id)} sx={{ cursor: 'pointer', aspectRatio: '1 / 1', position: 'relative', overflow: 'hidden', borderRadius: '12px', '&:hover .post-overlay': { opacity: 1 } }}>
               <Box component="img" src={post.image_url} alt={post.caption || 'post'} loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               <Box className="post-overlay" sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(0,0,0,0.45)', color: 'common.white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, opacity: 0, transition: 'opacity 150ms' }}>
                 <Stack direction="row" spacing={0.5} sx={{

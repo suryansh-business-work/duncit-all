@@ -3,6 +3,7 @@ import { addMonths, format } from 'date-fns';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   composeSelection,
@@ -11,7 +12,7 @@ import {
   minuteBlocked,
   seedFor,
 } from './date-time-limits';
-import { chipStyle, MINUTES, TimeChipRows } from './TimeChipRows';
+import { MINUTES, TimeChipRows } from './TimeChipRows';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Day cells (with leading blanks) for the visible month. */
@@ -54,14 +55,15 @@ function DayCell({ testID, d, selected, blocked, ariaLabel, onSelect }: Readonly
       justifyContent="center"
     >
       <YStack
-        width={32}
-        height={32}
+        width={34}
+        height={34}
         alignItems="center"
         justifyContent="center"
         opacity={blocked ? 0.35 : 1}
-        {...chipStyle(selected)}
+        borderRadius={999}
+        backgroundColor={selected ? '$primary' : 'transparent'}
       >
-        <Text fontSize={13} fontWeight="700" color={blocked ? '$muted' : ink}>
+        <Text fontSize={13} fontWeight="600" color={blocked ? '$muted' : ink}>
           {d}
         </Text>
       </YStack>
@@ -113,7 +115,7 @@ export function CalendarSheet({
         >
           <MaterialIcons name="chevron-left" size={22} color={muted} />
         </XStack>
-        <Text fontSize={15} fontWeight="700" color="$color">
+        <Text fontSize={16} fontWeight="600" color="$color">
           {format(view, 'MMMM yyyy')}
         </Text>
         <XStack
@@ -152,24 +154,14 @@ export function CalendarSheet({
           isMinuteBlocked={(m) => minuteBlocked(view, day, hour, m, minDateTime)}
         />
       ) : null}
-      <XStack
+      <DuncitButton
         testID={`${testID}-done`}
-        role="button"
-        aria-label={t('mweb.createPod.done')}
-        aria-disabled={pickedBlocked}
-        onPress={pickedBlocked ? undefined : () => onDone(picked)}
-        height={46}
-        alignItems="center"
-        justifyContent="center"
-        borderRadius={12}
-        backgroundColor="$primary"
-        opacity={pickedBlocked ? 0.5 : 1}
-        pressStyle={PRESS_STYLE.control}
-      >
-        <Text fontSize={14} fontWeight="700" color="$onPrimary">
-          {t('mweb.createPod.done')}
-        </Text>
-      </XStack>
+        label={t('mweb.createPod.done')}
+        onPress={() => onDone(picked)}
+        disabled={pickedBlocked}
+        size="lg"
+        fullWidth
+      />
     </YStack>
   );
 }

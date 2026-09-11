@@ -3,6 +3,7 @@ import { Controller } from 'react-hook-form';
 import { YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PlaceChargesField } from '../PlaceChargesField';
 import { PodTypeCards } from '../PodTypeCards';
@@ -54,53 +55,59 @@ export function PricingStep({
   const isFree = watch('pod_type') === 'FREE';
 
   return (
-    <YStack gap={14}>
-      <PodTypeCards form={form} />
-      <FormTextField
-        control={control}
-        name="pod_amount_text"
-        label={t('mweb.createPod.ticketPriceLabel')}
-        keyboardType="numeric"
-        placeholder={t('mweb.createPod.ticketPricePlaceholder')}
-        editable={!isFree}
-        hint={
-          isFree ? t('mweb.createPod.ticketPriceFreeHint') : t('mweb.createPod.ticketPriceHint')
-        }
-        labelAction={<SuggestedPriceLink onPress={() => setSuggestionsOpen(true)} />}
-      />
-      {pricing.zeroEarnings ? <ZeroEarningsNotice /> : null}
-      <Controller
-        control={control}
-        name="no_of_spots_text"
-        render={({ field, fieldState }) => (
-          <SpotsStepper
-            value={field.value}
-            onChange={field.onChange}
-            error={fieldState.error?.message}
-            min={spots.min}
-            max={spots.max}
-            slidable={spots.slidable}
-            boundsHint={boundsHint}
-            // Only fixed when the venue leaves no room to choose.
-            readOnly={isPhysical && !spots.slidable}
-          />
-        )}
-      />
-      <PricePanel finance={finance} pricing={pricing} />
-      <FormTextField
-        control={control}
-        name="payment_terms"
-        label={t('mweb.createPod.paymentTerms')}
-        multiline
-      />
-      {isPhysical ? (
+    <YStack gap={16}>
+      <SurfaceCard gap={16}>
+        <PodTypeCards form={form} />
+        <FormTextField
+          control={control}
+          name="pod_amount_text"
+          label={t('mweb.createPod.ticketPriceLabel')}
+          keyboardType="numeric"
+          placeholder={t('mweb.createPod.ticketPricePlaceholder')}
+          editable={!isFree}
+          hint={
+            isFree ? t('mweb.createPod.ticketPriceFreeHint') : t('mweb.createPod.ticketPriceHint')
+          }
+          labelAction={<SuggestedPriceLink onPress={() => setSuggestionsOpen(true)} />}
+        />
+        {pricing.zeroEarnings ? <ZeroEarningsNotice /> : null}
         <Controller
           control={control}
-          name="place_charges"
-          render={({ field }) => (
-            <PlaceChargesField value={field.value} onChange={field.onChange} />
+          name="no_of_spots_text"
+          render={({ field, fieldState }) => (
+            <SpotsStepper
+              value={field.value}
+              onChange={field.onChange}
+              error={fieldState.error?.message}
+              min={spots.min}
+              max={spots.max}
+              slidable={spots.slidable}
+              boundsHint={boundsHint}
+              // Only fixed when the venue leaves no room to choose.
+              readOnly={isPhysical && !spots.slidable}
+            />
           )}
         />
+      </SurfaceCard>
+      <PricePanel finance={finance} pricing={pricing} />
+      <SurfaceCard>
+        <FormTextField
+          control={control}
+          name="payment_terms"
+          label={t('mweb.createPod.paymentTerms')}
+          multiline
+        />
+      </SurfaceCard>
+      {isPhysical ? (
+        <SurfaceCard>
+          <Controller
+            control={control}
+            name="place_charges"
+            render={({ field }) => (
+              <PlaceChargesField value={field.value} onChange={field.onChange} />
+            )}
+          />
+        </SurfaceCard>
       ) : null}
       {showProducts ? (
         // The "Attach products to this pod" checkbox is gone: attaching IS
@@ -108,21 +115,23 @@ export function PricingStep({
         // on submit rather than toggled here. `products` arrives already
         // filtered to the pod's club category, and the field says so when it is
         // empty. mWeb twin (rule 27).
-        <Controller
-          control={control}
-          name="product_requests"
-          render={({ field, fieldState }) => (
-            <PodProductsField
-              value={field.value}
-              onChange={(next) => {
-                field.onChange(next);
-                setValue('products_enabled', next.length > 0);
-              }}
-              products={products}
-              error={fieldState.error?.message}
-            />
-          )}
-        />
+        <SurfaceCard>
+          <Controller
+            control={control}
+            name="product_requests"
+            render={({ field, fieldState }) => (
+              <PodProductsField
+                value={field.value}
+                onChange={(next) => {
+                  field.onChange(next);
+                  setValue('products_enabled', next.length > 0);
+                }}
+                products={products}
+                error={fieldState.error?.message}
+              />
+            )}
+          />
+        </SurfaceCard>
       ) : null}
       {showTerms ? <TermsAgreement form={form} /> : null}
       <SuggestedPricesModal

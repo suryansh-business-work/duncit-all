@@ -1,4 +1,5 @@
-import { Paper, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
+import { SURFACE_SX } from '../../theme';
 import type { ActiveSurvey } from './queries';
 import type { SurveyAnswerInput } from './SurveyStepper';
 
@@ -14,17 +15,17 @@ export default function SubmittedSummary({ survey, answers }: Readonly<Props>) {
   if (items.length === 0) return null;
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px', mb: 2 }}>
+    <Box sx={{ ...SURFACE_SX, p: 2, mb: 2 }}>
       <Typography
         variant="caption"
         sx={{
           color: "text.secondary",
-          fontWeight: 700,
+          fontWeight: 600,
           letterSpacing: 0.4
         }}>
         YOUR SURVEY ANSWERS
       </Typography>
-      <Stack spacing={0.75} sx={{ mt: 0.75 }}>
+      <Stack spacing={1} sx={{ mt: 1 }}>
         {items.map((a) => (
           <Stack key={a.qid} spacing={0.1}>
             <Typography variant="caption" sx={{
@@ -34,6 +35,6 @@ export default function SubmittedSummary({ survey, answers }: Readonly<Props>) {
           </Stack>
         ))}
       </Stack>
-    </Paper>
+    </Box>
   );
 }

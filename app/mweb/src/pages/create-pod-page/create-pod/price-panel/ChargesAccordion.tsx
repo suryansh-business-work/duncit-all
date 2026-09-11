@@ -43,11 +43,11 @@ export default function ChargesAccordion({ statement, money, venueError }: Reado
       <ButtonBase
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
-        sx={{ width: '100%', px: 1.5, py: 1.25, justifyContent: 'space-between', textAlign: 'left' }}
+        sx={{ width: '100%', px: 1.75, py: 1.5, justifyContent: 'space-between', textAlign: 'left' }}
       >
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <ReceiptLongOutlinedIcon fontSize="small" color="primary" />
-          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+          <Typography variant="subtitle2">
             {t('mweb.createPod.govtCharges')}
           </Typography>
         </Stack>

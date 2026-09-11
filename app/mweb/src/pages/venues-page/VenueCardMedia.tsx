@@ -3,7 +3,8 @@ import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import { Box, ButtonBase } from '@mui/material';
-import StorefrontIcon from '@mui/icons-material/Storefront';
+import { alpha, type Theme } from '@mui/material/styles';
+import StorefrontIcon from '@mui/icons-material/StorefrontOutlined';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { DuncitIconButton } from '@duncit/buttons';
@@ -15,18 +16,21 @@ import { useTranslation } from '../../i18n/useTranslation';
  * leaves the name block below it. Native twin uses the same ratio. */
 const FRAME = { width: '100%', aspectRatio: '3 / 2', maxHeight: 300 } as const;
 
-const arrowSx = {
+/** Media inside a card carries its own 18px corners. */
+const MEDIA_RADIUS = '18px';
+
+const arrowSx = (theme: Theme) => ({
   position: 'absolute' as const,
   top: '50%',
   transform: 'translateY(-50%)',
   zIndex: 2,
   width: 30,
   height: 30,
-  bgcolor: 'rgba(17,24,39,0.42)',
-  color: '#fff',
-  border: '1px solid rgba(255,255,255,0.3)',
-  '&:hover': { bgcolor: 'rgba(17,24,39,0.6)' },
-};
+  minHeight: 30,
+  bgcolor: alpha(theme.palette.common.black, 0.4),
+  color: 'common.white',
+  '&:hover': { bgcolor: alpha(theme.palette.common.black, 0.55) },
+});
 
 function PrevArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
   const { t } = useTranslation();
@@ -35,7 +39,7 @@ function PrevArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
       size="small"
       onClick={onClick}
       aria-label={t('mweb.details.previousImage')}
-      sx={{ ...arrowSx, left: 8 }}
+      sx={(theme) => ({ ...arrowSx(theme), left: 8 })}
     >
       <ChevronLeftIcon fontSize="small" />
     </DuncitIconButton>
@@ -49,7 +53,7 @@ function NextArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
       size="small"
       onClick={onClick}
       aria-label={t('mweb.details.nextImage')}
-      sx={{ ...arrowSx, right: 8 }}
+      sx={(theme) => ({ ...arrowSx(theme), right: 8 })}
     >
       <ChevronRightIcon fontSize="small" />
     </DuncitIconButton>
@@ -76,8 +80,9 @@ export default function VenueCardMedia({ images, venueName, onOpen }: Readonly<P
       <Box
         sx={{
           ...FRAME,
-          bgcolor: 'primary.main',
-          color: 'primary.contrastText',
+          borderRadius: MEDIA_RADIUS,
+          bgcolor: 'action.hover',
+          color: 'secondary.main',
           display: 'grid',
           placeItems: 'center',
         }}
@@ -92,6 +97,8 @@ export default function VenueCardMedia({ images, venueName, onOpen }: Readonly<P
     <Box
       sx={{
         position: 'relative',
+        borderRadius: MEDIA_RADIUS,
+        overflow: 'hidden',
         bgcolor: 'common.black',
         '.slick-dots': { bottom: 8 },
         '.slick-dots li': { width: 14, height: 14, mx: 0 },

@@ -11,16 +11,18 @@ import PlaceIcon from '@mui/icons-material/Place';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
-import InfoRow, { type InfoRowProps } from './InfoRow';
+import { InfoRowList, type InfoRowProps } from './InfoRow';
 import { approvalBadge, type ApprovalIcon, venueMapUrl } from './podPending';
 import type { PodPendingVenue } from './queries';
 
-const ICON = { fontSize: 18 } as const;
+const ICON = { fontSize: 20 } as const;
+/** The badge's glyph, a size under the rows' — it sits inside a 28px pill. */
+const BADGE_ICON = { fontSize: 14 } as const;
 
 const BADGE_ICONS: Record<ApprovalIcon, ReactElement> = {
-  schedule: <ScheduleIcon sx={ICON} />,
-  'check-circle': <CheckCircleIcon sx={ICON} />,
-  cancel: <CancelIcon sx={ICON} />,
+  schedule: <ScheduleIcon sx={BADGE_ICON} />,
+  'check-circle': <CheckCircleIcon sx={BADGE_ICON} />,
+  cancel: <CancelIcon sx={BADGE_ICON} />,
 };
 
 interface Props {
@@ -76,8 +78,8 @@ export default function VenuePendingCard({ venue, status }: Readonly<Props>) {
   });
 
   return (
-    <Card variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }} data-testid="venue-pending-card">
-      <Stack spacing={1.25}>
+    <Card sx={{ p: 2 }} data-testid="venue-pending-card">
+      <Stack spacing={1}>
         <Stack
           direction="row"
           spacing={1}
@@ -85,12 +87,7 @@ export default function VenuePendingCard({ venue, status }: Readonly<Props>) {
             alignItems: "center",
             justifyContent: "space-between"
           }}>
-          <Typography
-            variant="subtitle1"
-            sx={{
-              fontWeight: 700,
-              minWidth: 0
-            }}>
+          <Typography sx={{ fontSize: '1rem', fontWeight: 600, minWidth: 0 }}>
             {venue.venue_name}
           </Typography>
           <Chip
@@ -100,21 +97,20 @@ export default function VenuePendingCard({ venue, status }: Readonly<Props>) {
             icon={BADGE_ICONS[badge.icon]}
             label={badge.label}
             data-testid="venue-pending-badge"
-            sx={{ fontWeight: 700 }}
+            sx={{ height: 28, fontSize: '0.75rem' }}
           />
         </Stack>
-        {rows.map((row) => (
-          <InfoRow key={row.label} {...row} />
-        ))}
+        <InfoRowList rows={rows} />
         {mapUrl && (
           <DuncitButton
             href={mapUrl}
             target="_blank"
             rel="noopener"
             size="small"
+            variant="outlined"
             startIcon={<MapIcon />}
             data-testid="venue-pending-map"
-            sx={{ alignSelf: 'flex-start', fontWeight: 600 }}
+            sx={{ alignSelf: 'flex-start' }}
           >
             {t('mweb.podPending.actionViewOnMap')}
           </DuncitButton>

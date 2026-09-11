@@ -36,7 +36,7 @@ export function ProfileHandleLink({ username, fallback }: Readonly<Props>) {
 
   if (!username) {
     return (
-      <Text testID="profile-handle" fontSize={13} color="$muted" numberOfLines={1}>
+      <Text testID="profile-handle" fontSize={14} color="$muted" numberOfLines={1}>
         {fallback}
       </Text>
     );
@@ -56,13 +56,13 @@ export function ProfileHandleLink({ username, fallback }: Readonly<Props>) {
       onPress={copy}
       alignItems="center"
       gap={5}
-      alignSelf="flex-start"
+      alignSelf="center"
       pressStyle={PRESS_STYLE.row}
     >
-      <Text fontSize={13} color="$muted" numberOfLines={1}>
+      <Text fontSize={14} fontWeight="500" color="$muted" numberOfLines={1}>
         {labels.handle(username)}
       </Text>
-      <MaterialIcons name="content-copy" size={13} color={copied ? success : muted} />
+      <MaterialIcons name="content-copy" size={14} color={copied ? success : muted} />
       {copied ? (
         <Text testID="profile-handle-copied" fontSize={11.5} color={success}>
           {labels.linkCopied}

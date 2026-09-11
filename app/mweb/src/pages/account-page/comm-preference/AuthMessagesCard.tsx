@@ -18,6 +18,7 @@ import {
 } from '@duncit/utils';
 import { useTranslation } from '@duncit/app-settings';
 import { useCommPreference } from './useCommPreference';
+import IconDisc from '../IconDisc';
 
 interface Props {
   channel: CommChannel;
@@ -53,20 +54,21 @@ export default function AuthMessagesCard({ channel }: Readonly<Props>) {
     <>
       {state.saveFailed && <Alert severity="error">{labels.saveFailed}</Alert>}
 
-      <Card variant="outlined" data-testid={`auth-messages-${channel}`}>
-        <CardContent>
-          <Stack direction="row" spacing={1.5} sx={{
+      <Card data-testid={`auth-messages-${channel}`}>
+        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+          <Stack direction="row" spacing={2} sx={{
             alignItems: "flex-start"
           }}>
-            <ShieldOutlinedIcon color="action" fontSize="small" sx={{ mt: 0.25 }} />
+            <IconDisc>
+              <ShieldOutlinedIcon />
+            </IconDisc>
             <Stack spacing={0.25} sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle2" sx={{
-                fontWeight: 700
-              }}>
+              <Typography sx={{ fontSize: 15, fontWeight: 500 }}>
                 {card.title}
               </Typography>
               <Typography variant="body2" sx={{
-                color: "text.secondary"
+                color: "text.secondary",
+                fontSize: 13
               }}>
                 {card.body}
               </Typography>

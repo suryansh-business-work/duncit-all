@@ -12,21 +12,11 @@ export default function OfflineBanner() {
       data-testid="offline-banner"
       role="status"
       aria-live="polite"
-      sx={{ bgcolor: 'error.main', color: 'error.contrastText', px: 2, py: 0.75 }}
+      sx={{ bgcolor: 'error.main', color: 'error.contrastText', px: 2, py: 1 }}
     >
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{
-          alignItems: "center",
-          justifyContent: "center"
-        }}>
-        <WifiOffIcon fontSize="small" />
-        <Typography variant="body2" sx={{
-          fontWeight: 600
-        }}>
-          No internet connection
-        </Typography>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'center' }}>
+        <WifiOffIcon sx={{ fontSize: 16 }} />
+        <Typography sx={{ fontSize: 13, fontWeight: 600 }}>No internet connection</Typography>
       </Stack>
     </Box>
   );

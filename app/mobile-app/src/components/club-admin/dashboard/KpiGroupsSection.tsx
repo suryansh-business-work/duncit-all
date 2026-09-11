@@ -1,4 +1,4 @@
-import { Text, XStack, YStack } from 'tamagui';
+import { XStack, YStack } from 'tamagui';
 import {
   clubAdminGroupHeadings,
   clubAdminKpiGroups,
@@ -8,6 +8,7 @@ import {
   type ClubAdminKpis,
 } from '@duncit/utils';
 
+import { SectionHeader } from '@/components/SectionHeader';
 import { StatTile } from '@/components/studio';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -23,7 +24,8 @@ function pairs(cards: ClubAdminKpiCard[]): ClubAdminKpiCard[][] {
 /**
  * The four titled KPI groups — which figures become tiles, in what order and
  * how each is written all come from @duncit/utils, so the Partners console,
- * mWeb and this screen read the same dashboard (rule 27).
+ * mWeb and this screen read the same dashboard (rule 27). A short count reads
+ * big; money, a rate or a rating keeps the size that never truncates.
  */
 export function KpiGroupsSection({ kpis }: Readonly<{ kpis: ClubAdminKpis }>) {
   const { t } = useTranslation();
@@ -31,12 +33,10 @@ export function KpiGroupsSection({ kpis }: Readonly<{ kpis: ClubAdminKpis }>) {
   const labels = clubAdminKpiLabels(t);
 
   return (
-    <YStack gap={14} testID="club-dashboard-kpis">
+    <YStack gap={24} testID="club-dashboard-kpis">
       {clubAdminKpiGroups(kpis).map((group) => (
-        <YStack key={group.key} gap={8} testID={`club-dashboard-group-${group.key}`}>
-          <Text fontSize={14} fontWeight="700" color="$color">
-            {headings[group.key]}
-          </Text>
+        <YStack key={group.key} gap={12} testID={`club-dashboard-group-${group.key}`}>
+          <SectionHeader title={headings[group.key]} />
           {pairs(group.cards).map((row) => (
             <XStack key={row[0]?.key ?? group.key} gap={10}>
               {row.map((card) => (
@@ -44,6 +44,7 @@ export function KpiGroupsSection({ kpis }: Readonly<{ kpis: ClubAdminKpis }>) {
                   key={card.key}
                   label={labels[card.key].label}
                   value={clubAdminKpiValue(card, kpis.currency_symbol)}
+                  size={card.kind === 'count' ? 'lg' : 'md'}
                 />
               ))}
             </XStack>

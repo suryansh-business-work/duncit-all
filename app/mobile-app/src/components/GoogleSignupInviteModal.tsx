@@ -34,7 +34,7 @@ interface Props {
  * (GoogleSignupInviteDialog).
  */
 export function GoogleSignupInviteModal({ open, email, onAccept, onDismiss }: Readonly<Props>) {
-  const { primary } = useThemeColors();
+  const { accent } = useThemeColors();
   const { t } = useTranslation();
 
   return (
@@ -53,19 +53,19 @@ export function GoogleSignupInviteModal({ open, email, onAccept, onDismiss }: Re
             testID="google-signup-invite"
             width="88%"
             maxWidth={420}
-            backgroundColor="$background"
-            borderRadius={20}
-            padding={18}
+            backgroundColor="$surface"
+            borderRadius={28}
+            padding={20}
             gap={12}
           >
             <XStack alignItems="center" gap={8}>
-              <MaterialIcons name="person-add" size={20} color={primary} />
-              <Text fontSize={16.5} fontWeight="700" color="$color" flexShrink={1}>
+              <MaterialIcons name="person-add" size={20} color={accent} />
+              <Text fontSize={17} fontWeight="600" color="$color" flexShrink={1}>
                 {t('mweb.login.googleNotFoundTitle')}
               </Text>
             </XStack>
 
-            <Text fontSize={13.5} color="$color">
+            <Text fontSize={14} color="$color">
               {t('mweb.login.googleNotFoundBody', { vars: { email } })}
             </Text>
             <Text fontSize={12} color="$muted">
@@ -80,14 +80,14 @@ export function GoogleSignupInviteModal({ open, email, onAccept, onDismiss }: Re
                 onPress={onDismiss}
                 flex={1}
                 height={44}
-                borderRadius={12}
+                borderRadius={999}
                 borderWidth={1}
                 borderColor="$borderColor"
                 alignItems="center"
                 justifyContent="center"
-                pressStyle={PRESS_STYLE.ghost}
+                pressStyle={PRESS_STYLE.control}
               >
-                <Text fontSize={14} fontWeight="700" color="$color">
+                <Text fontSize={15} fontWeight="600" color="$color">
                   {t('mweb.login.googleNotFoundDismiss')}
                 </Text>
               </XStack>
@@ -98,13 +98,13 @@ export function GoogleSignupInviteModal({ open, email, onAccept, onDismiss }: Re
                 onPress={onAccept}
                 flex={1.4}
                 height={44}
-                borderRadius={12}
+                borderRadius={999}
                 backgroundColor="$primary"
                 alignItems="center"
                 justifyContent="center"
-                pressStyle={PRESS_STYLE.control}
+                pressStyle={PRESS_STYLE.solid}
               >
-                <Text fontSize={14} fontWeight="700" color="$onPrimary">
+                <Text fontSize={15} fontWeight="600" color="$onPrimary">
                   {t('mweb.login.googleNotFoundAction')}
                 </Text>
               </XStack>

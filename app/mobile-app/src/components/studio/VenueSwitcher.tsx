@@ -26,19 +26,19 @@ function VenueOption({ venue, label, selected, tick, onPress }: Readonly<VenueOp
       role="button"
       aria-label={label}
       onPress={() => onPress(venue.id)}
-      pressStyle={PRESS_STYLE.surface}
+      pressStyle={PRESS_STYLE.row}
       alignItems="center"
       gap={10}
       paddingHorizontal={14}
       paddingVertical={12}
-      borderRadius={12}
-      backgroundColor={selected ? '$surface' : 'transparent'}
+      borderRadius={14}
+      backgroundColor={selected ? '$soft' : 'transparent'}
     >
       <YStack flex={1}>
-        <Text fontSize={14.5} fontWeight="700" color="$color" numberOfLines={1}>
+        <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
           {label}
         </Text>
-        <Text fontSize={11.5} color="$muted" numberOfLines={1}>
+        <Text fontSize={12} color="$muted" numberOfLines={1}>
           {venueSubLabel(venue)}
         </Text>
       </YStack>
@@ -62,7 +62,7 @@ interface VenueSwitcherProps {
  */
 export function VenueSwitcher({ venues, venueId, onSelect }: Readonly<VenueSwitcherProps>) {
   const { t } = useTranslation();
-  const { color, primary } = useThemeColors();
+  const { color, primary, accent, muted } = useThemeColors();
   const [open, setOpen] = useState(false);
 
   const untitled = t('mweb.venueManagePage.untitledVenue');
@@ -85,23 +85,32 @@ export function VenueSwitcher({ venues, venueId, onSelect }: Readonly<VenueSwitc
         onPress={() => setOpen(true)}
         pressStyle={PRESS_STYLE.surface}
         alignItems="center"
-        gap={10}
-        padding={12}
-        borderRadius={14}
+        gap={12}
+        padding={14}
+        borderRadius={24}
         borderWidth={1}
-        borderColor="$borderColor"
+        borderColor="$cardBorder"
         backgroundColor="$surface"
       >
-        <MaterialIcons name="store" size={20} color={primary} />
+        <YStack
+          width={40}
+          height={40}
+          borderRadius={999}
+          alignItems="center"
+          justifyContent="center"
+          backgroundColor="$soft"
+        >
+          <MaterialIcons name="store" size={20} color={accent} />
+        </YStack>
         <YStack flex={1}>
-          <Text fontSize={11} fontWeight="700" color="$primary">
+          <Text fontSize={12} fontWeight="600" color="$muted">
             {heading}
           </Text>
-          <Text fontSize={14.5} fontWeight="700" color="$color" numberOfLines={1}>
+          <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
             {venueLabel(current, untitled)}
           </Text>
         </YStack>
-        <MaterialIcons name="expand-more" size={22} color={color} />
+        <MaterialIcons name="expand-more" size={22} color={muted} />
       </XStack>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
@@ -125,13 +134,13 @@ export function VenueSwitcher({ venues, venueId, onSelect }: Readonly<VenueSwitc
               width="86%"
               maxWidth={420}
               maxHeight="70%"
-              backgroundColor="$background"
-              borderRadius={20}
-              padding={14}
+              backgroundColor="$surface"
+              borderRadius={28}
+              padding={16}
               gap={6}
             >
               <SafeAreaView edges={[]}>
-                <Text fontSize={15} fontWeight="700" color={color} paddingBottom={8}>
+                <Text fontSize={17} fontWeight="600" color={color} paddingBottom={8}>
                   {heading}
                 </Text>
                 <ScrollView showsVerticalScrollIndicator={false}>

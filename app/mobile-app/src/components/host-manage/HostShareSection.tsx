@@ -2,6 +2,9 @@ import { useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { EmptyLine } from '@/components/host-manage/HostRowParts';
+import { HostSectionHeader } from '@/components/host-manage/HostSectionHeader';
+import { RowGroup } from '@/components/host-manage/RowGroup';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import type { HostPayout } from '@/hooks/useHostPayouts';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -16,20 +19,21 @@ interface HostShareSectionProps {
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED';
 const STATUS_BG: Record<Status, string> = {
-  PENDING: '#d97706',
-  APPROVED: '#16a34a',
-  REJECTED: '#dc2626',
+  PENDING: '$warning',
+  APPROVED: '$success',
+  REJECTED: '$danger',
 };
 
 function StatusPill({ status }: Readonly<{ status: string }>) {
   return (
     <XStack
-      paddingHorizontal={8}
-      paddingVertical={2}
+      height={24}
+      paddingHorizontal={10}
+      alignItems="center"
       borderRadius={999}
-      backgroundColor={STATUS_BG[status as Status] ?? '#6b7280'}
+      backgroundColor={STATUS_BG[status as Status] ?? '$muted'}
     >
-      <Text fontSize={10.5} fontWeight="700" color="#ffffff">
+      <Text fontSize={12} fontWeight="600" color="$onPrimary">
         {status}
       </Text>
     </XStack>
@@ -39,10 +43,10 @@ function StatusPill({ status }: Readonly<{ status: string }>) {
 function PayoutLine({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <XStack justifyContent="space-between">
-      <Text fontSize={11.5} color="$muted">
+      <Text fontSize={12} color="$muted">
         {label}
       </Text>
-      <Text fontSize={11.5} color="$color">
+      <Text fontSize={12} color="$color">
         {value}
       </Text>
     </XStack>
@@ -90,26 +94,19 @@ function PayoutCard({ payout, symbol }: Readonly<{ payout: HostPayout; symbol: s
   const fmt = (n: number) => `${symbol}${(Number(n) || 0).toFixed(2)}`;
   const payable = payout.approved_amount ?? b?.payout_amount ?? payout.amount_requested;
   return (
-    <YStack
-      gap={6}
-      padding={12}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
+    <YStack gap={6} paddingHorizontal={16} paddingVertical={14}>
       <XStack alignItems="center" gap={8}>
-        <Text flex={1} fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
+        <Text flex={1} fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
           {payout.pod_title}
         </Text>
         <StatusPill status={payout.status} />
       </XStack>
       <BreakdownLines b={b} symbol={symbol} />
       <XStack justifyContent="space-between">
-        <Text fontSize={13} fontWeight="700" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           {payableLabel(b)}
         </Text>
-        <Text fontSize={13} fontWeight="700" color="$primary">
+        <Text fontSize={14} fontWeight="700" color="$primary">
           {fmt(payable)}
         </Text>
       </XStack>
@@ -140,23 +137,25 @@ export function HostShareSection({
 
   return (
     <YStack gap={12} testID="host-share-section">
-      <Text fontSize={16} fontWeight="700" color="$color">
-        Host Share
-      </Text>
-      {isLoading ? <Spinner testID="host-share-loading" color="$primary" /> : null}
-      {!isLoading && error ? (
-        <Text testID="host-share-error" fontSize={13} color="$danger">
-          {error}
-        </Text>
-      ) : null}
-      {!isLoading && !error && payouts.length === 0 ? (
-        <Text testID="host-share-empty" fontSize={13} color="$muted">
-          Complete a pod to see your share here.
-        </Text>
-      ) : null}
-      {payouts.map((payout) => (
-        <PayoutCard key={payout.id} payout={payout} symbol={symbol} />
-      ))}
+      <HostSectionHeader title="Host Share" count={payouts.length} />
+      <RowGroup>
+        {isLoading ? (
+          <YStack paddingVertical={20} alignItems="center">
+            <Spinner testID="host-share-loading" color="$primary" />
+          </YStack>
+        ) : null}
+        {!isLoading && error ? (
+          <Text testID="host-share-error" padding={16} fontSize={13} color="$danger">
+            {error}
+          </Text>
+        ) : null}
+        {!isLoading && !error && payouts.length === 0 ? (
+          <EmptyLine testID="host-share-empty" text="Complete a pod to see your share here." />
+        ) : null}
+        {payouts.map((payout) => (
+          <PayoutCard key={payout.id} payout={payout} symbol={symbol} />
+        ))}
+      </RowGroup>
     </YStack>
   );
 }

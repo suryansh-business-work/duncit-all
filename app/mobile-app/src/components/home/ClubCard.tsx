@@ -5,12 +5,24 @@ import { Text, XStack, YStack } from 'tamagui';
 import { coverImageUrl } from '@duncit/utils';
 
 import { PressScale } from '@/animations/PressScale';
+import { DuncitButton } from '@/components/DuncitButton';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import type { HomeClub } from '@/hooks/useHomeFeed';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
-/** A full-width club row — avatar, name and description. Used by the Clubs tab. */
-export function ClubCard({ club, onPress }: Readonly<{ club: HomeClub; onPress?: () => void }>) {
-  const { onPrimary, muted } = useThemeColors();
+interface Props {
+  club: HomeClub;
+  /** The club's live pods — the muted count beside its name. */
+  podCount?: number;
+  onPress?: () => void;
+}
+
+/** A club on the Clubs tab: the cover inside the card's padding, the name, a
+ * muted pod count and a green Open pill. mWeb twin: clubs-page/ClubListCard. */
+export function ClubCard({ club, podCount = 0, onPress }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const { accent, onPrimary } = useThemeColors();
   const image = coverImageUrl(club.club_feature_images_and_videos) ?? null;
 
   return (
@@ -19,21 +31,12 @@ export function ClubCard({ club, onPress }: Readonly<{ club: HomeClub; onPress?:
       accessibilityLabel={club.club_name}
       onPress={onPress}
     >
-      <XStack
-        alignItems="center"
-        gap={14}
-        padding={12}
-        borderRadius={16}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$surface"
-      >
+      <SurfaceCard padding={12}>
         <YStack
-          width={54}
-          height={54}
-          borderRadius={16}
+          height={154}
+          borderRadius={18}
           overflow="hidden"
-          backgroundColor="$primary"
+          backgroundColor="$soft"
           alignItems="center"
           justifyContent="center"
         >
@@ -44,27 +47,33 @@ export function ClubCard({ club, onPress }: Readonly<{ club: HomeClub; onPress?:
               resizeMode="cover"
             />
           ) : (
-            <MaterialIcons name="groups" size={26} color={onPrimary} />
+            <MaterialIcons name="groups" size={40} color={accent} />
           )}
         </YStack>
-        <YStack flex={1} gap={2}>
-          <Text fontSize={15.5} fontWeight="700" color="$color" numberOfLines={1} textAlign="left">
-            {club.club_name}
-          </Text>
+        <YStack gap={4} paddingTop={12}>
+          <XStack gap={8} alignItems="baseline">
+            <Text flex={1} fontSize={16} fontWeight="600" color="$color" numberOfLines={1}>
+              {club.club_name}
+            </Text>
+            <Text fontSize={12} fontWeight="500" color="$muted">
+              {t('mweb.clubsPage.podCount', { count: podCount })}
+            </Text>
+          </XStack>
           {club.club_description ? (
-            <Text
-              fontSize={12.5}
-              fontWeight="600"
-              color="$muted"
-              numberOfLines={2}
-              textAlign="left"
-            >
+            <Text fontSize={14} lineHeight={20} minHeight={40} color="$muted" numberOfLines={2}>
               {club.club_description}
             </Text>
           ) : null}
         </YStack>
-        <MaterialIcons name="chevron-right" size={22} color={muted} />
-      </XStack>
+        <YStack marginTop={12}>
+          <DuncitButton
+            fullWidth
+            label={t('mweb.clubsPage.openClub')}
+            onPress={() => onPress?.()}
+            iconAfter={<MaterialIcons name="arrow-forward" size={18} color={onPrimary} />}
+          />
+        </YStack>
+      </SurfaceCard>
     </PressScale>
   );
 }

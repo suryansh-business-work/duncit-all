@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Stack } from '@mui/material';
-import HourglassTopIcon from '@mui/icons-material/HourglassTop';
-import CancelScheduleSendIcon from '@mui/icons-material/CancelScheduleSend';
 import { changeRequestMenuKey, splitHostPods } from '@duncit/utils';
 import { useHostPodActions } from '@duncit/host-pod-actions';
 import { useRequestPodChange } from '@duncit/pod-change-requests';
@@ -65,20 +63,12 @@ export default function HostPodSections({
     requestChangeLabel: t(changeRequestMenuKey('HOST')),
   });
 
-  const requestedEmpty = {
-    title: t('mweb.hostManage.noRequestedPods'),
-    text: t('mweb.hostManage.requestedPodsEmpty'),
-  };
-
   return (
-    <Stack spacing={2.25}>
+    <Stack spacing={3}>
       {!errorMessage && (
         <VenueRequestsCard
-          icon={HourglassTopIcon}
-          iconColor="warning"
           title={t('mweb.hostManage.requestedPods')}
-          subtitle={t('mweb.hostManage.requestedPodsSubtitle')}
-          empty={requestedEmpty}
+          emptyText={t('mweb.hostManage.requestedPodsEmpty')}
           pods={requested}
           loading={loading}
           rowProps={rowProps}
@@ -93,11 +83,8 @@ export default function HostPodSections({
       />
 
       <VenueRequestsCard
-        icon={CancelScheduleSendIcon}
-        iconColor="error"
         title={t('mweb.hostManage.rejectedPods')}
-        subtitle={t('mweb.hostManage.rejectedPodsSubtitle')}
-        empty={null}
+        emptyText={null}
         pods={rejected}
         loading={loading}
         rowProps={rowProps}

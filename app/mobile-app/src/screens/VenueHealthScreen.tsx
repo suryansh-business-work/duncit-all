@@ -4,14 +4,15 @@ import { Spinner, Text, YStack } from 'tamagui';
 
 import { HealthBreakdown, HealthMeter } from '@/components/health';
 import { StackScreen } from '@/components/StackScreen';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useVenueHealth } from '@/hooks/useHealth';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
-/** Venue Health detail for an owned venue — meter + breakdown + admin remarks.
- * RN twin of mWeb's VenueHealthPage. */
+/** Venue Health detail for an owned venue — the meter as a hero card, then the
+ * breakdown and admin remarks. RN twin of mWeb's VenueHealthPage. */
 export function VenueHealthScreen() {
   const { t } = useTranslation();
   const route = useRoute<RouteProp<RootStackParamList, 'VenueHealth'>>();
@@ -33,14 +34,14 @@ export function VenueHealthScreen() {
     );
   } else if (health) {
     body = (
-      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 20 }}>
-        <YStack alignItems="center">
+      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 24 }}>
+        <SurfaceCard alignItems="center" padding={24}>
           <HealthMeter
             score={health.total_score}
             band={health.band}
             label={t('mweb.venueHealth.venueHealth')}
           />
-        </YStack>
+        </SurfaceCard>
         <HealthBreakdown score={health} />
       </RefreshScrollView>
     );

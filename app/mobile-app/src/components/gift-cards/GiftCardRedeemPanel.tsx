@@ -4,11 +4,12 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 import { Text, XStack, YStack } from 'tamagui';
-import { semantic } from '@duncit/auth-tokens';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { GiftCardStatus } from '@/generated/graphql/graphql';
 import { MobileGiftCardByCodeDocument, MobileRedeemGiftCardDocument } from '@/graphql/gift-cards';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
 import type { RootStackParamList } from '@/navigation/types';
@@ -33,6 +34,7 @@ interface Props {
  */
 export function GiftCardRedeemPanel({ card, currency }: Readonly<Props>) {
   const { t } = useTranslation();
+  const { primary, accent } = useThemeColors();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [redeeming, setRedeeming] = useState(false);
   const [result, setResult] = useState<RedeemResult | null>(null);
@@ -63,20 +65,31 @@ export function GiftCardRedeemPanel({ card, currency }: Readonly<Props>) {
           })
         : t('mweb.giftCards.redeemAlreadyBody');
     return (
-      <YStack testID="gift-card-redeem-success" alignItems="center" gap={12} paddingVertical={12}>
-        <MaterialIcons name="check-circle" size={56} color={semantic.success} />
-        <Text fontSize={18} fontWeight="700" color="$color" textAlign="center">
+      <SurfaceCard testID="gift-card-redeem-success" alignItems="center" gap={12} padding={24}>
+        <YStack
+          width={72}
+          height={72}
+          borderRadius={36}
+          alignItems="center"
+          justifyContent="center"
+          backgroundColor="$primarySoft"
+        >
+          <MaterialIcons name="check" size={40} color={primary} />
+        </YStack>
+        <Text fontSize={20} fontWeight="600" color="$color" textAlign="center">
           {t('mweb.giftCards.redeemSuccessTitle')}
         </Text>
-        <Text fontSize={13.5} color="$muted" textAlign="center">
+        <Text fontSize={14} color="$muted" textAlign="center">
           {body}
         </Text>
-        <PrimaryButton
-          testID="gift-card-go-to-coins"
-          label={t('mweb.giftCards.goToCoins')}
-          onPress={() => navigation.navigate('DuncitCoin')}
-        />
-      </YStack>
+        <YStack alignSelf="stretch" marginTop={8}>
+          <PrimaryButton
+            testID="gift-card-go-to-coins"
+            label={t('mweb.giftCards.goToCoins')}
+            onPress={() => navigation.navigate('DuncitCoin')}
+          />
+        </YStack>
+      </SurfaceCard>
     );
   }
 
@@ -95,8 +108,8 @@ export function GiftCardRedeemPanel({ card, currency }: Readonly<Props>) {
     );
   } else {
     footer = (
-      <YStack gap={8}>
-        <Text fontSize={12} color="$muted">
+      <YStack gap={12}>
+        <Text fontSize={12} color="$muted" paddingHorizontal={4}>
           {t('mweb.giftCards.validUntil', { vars: { date: formatDate(card.expires_at) } })}
         </Text>
         <PrimaryButton
@@ -112,7 +125,7 @@ export function GiftCardRedeemPanel({ card, currency }: Readonly<Props>) {
   }
 
   return (
-    <YStack testID="gift-card-redeem-panel" gap={10}>
+    <SurfaceCard testID="gift-card-redeem-panel" padding={12} gap={12}>
       <GiftCardVisual
         theme={card}
         imageUrl={card.scope_image_url}
@@ -121,15 +134,21 @@ export function GiftCardRedeemPanel({ card, currency }: Readonly<Props>) {
         amountLabel={formatMoney(currency, card.initial_amount)}
       />
       {card.sender_name ? (
-        <XStack alignItems="center" gap={6}>
-          <MaterialIcons name="card-giftcard" size={16} color={semantic.success} />
-          <Text testID="gift-card-sender" fontSize={13} fontWeight="600" color="$color">
+        <XStack alignItems="center" gap={6} paddingHorizontal={4}>
+          <MaterialIcons name="card-giftcard" size={16} color={accent} />
+          <Text testID="gift-card-sender" fontSize={14} fontWeight="600" color="$color">
             {t('mweb.giftCards.claimFrom', { vars: { sender: card.sender_name } })}
           </Text>
         </XStack>
       ) : null}
       {card.message ? (
-        <Text testID="gift-card-message" fontSize={13} fontStyle="italic" color="$muted">
+        <Text
+          testID="gift-card-message"
+          paddingHorizontal={4}
+          fontSize={14}
+          fontStyle="italic"
+          color="$muted"
+        >
           {card.message}
         </Text>
       ) : null}
@@ -139,6 +158,6 @@ export function GiftCardRedeemPanel({ card, currency }: Readonly<Props>) {
           {error}
         </Text>
       ) : null}
-    </YStack>
+    </SurfaceCard>
   );
 }

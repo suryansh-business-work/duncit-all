@@ -1,19 +1,15 @@
 import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
-import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, CircularProgress, Stack } from '@mui/material';
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
-import HealthMeter, { type HealthBand } from '../../components/health/HealthMeter';
+import StudioPageHeader from '../../components/StudioPageHeader';
 import EarningsCard from './EarningsCard';
 import QuickActions from './QuickActions';
 import HostInsights from './HostInsights';
+import HealthRow from './HealthRow';
+import StatCard from './StatCard';
 import { HOST_DASHBOARD_ME, HOST_DASHBOARD_PODS } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
-
-const bandHint = (band?: HealthBand) => {
-  if (band === 'GREEN') return 'Your host profile is in great shape.';
-  if (band === 'YELLOW') return 'A few profile + verification items to tighten up.';
-  return 'Complete your profile and verification to host with trust.';
-};
 
 /** Host Dashboard — earnings, pod stats, quick actions and profile/verification
  * health. Split out from "Your Pods" (which is now just the pods list). B2-#5. */
@@ -56,27 +52,11 @@ export default function HostDashboardPage() {
   ];
 
   return (
-    <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-      <Stack direction="row" spacing={1.25} sx={{
-        alignItems: "center"
-      }}>
-        <Box sx={{ width: 38, height: 38, borderRadius: '50%', display: 'grid', placeItems: 'center', color: 'common.white', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
-          <SpaceDashboardIcon fontSize="small" />
-        </Box>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
-            Dashboard
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 600
-            }}>
-            {meQ.data?.me?.full_name ? `Welcome back, ${meQ.data.me.full_name}` : 'Your host overview'}
-          </Typography>
-        </Box>
-      </Stack>
+    <Stack spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+      <StudioPageHeader
+        icon={<SpaceDashboardIcon fontSize="small" />}
+        title={t('mweb.hostDashboard.dashboard')}
+      />
 
       <EarningsCard
         balance={wallet?.balance ?? 0}
@@ -85,24 +65,9 @@ export default function HostDashboardPage() {
         summary={meQ.data?.myHostEarningsSummary}
       />
 
-      <Stack direction="row" spacing={1}>
+      <Stack direction="row" spacing={1.5}>
         {stats.map((item) => (
-          <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: '16px' }}>
-            <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
-              <Typography
-                variant="caption"
-                noWrap
-                sx={{
-                  color: "primary.main",
-                  fontWeight: 700
-                }}>
-                {item.label}
-              </Typography>
-              <Typography variant="h6" sx={{ mt: 0.35, fontWeight: 700 }}>
-                {item.value}
-              </Typography>
-            </CardContent>
-          </Card>
+          <StatCard key={item.label} label={item.label} value={String(item.value)} size="lg" />
         ))}
       </Stack>
 
@@ -111,32 +76,13 @@ export default function HostDashboardPage() {
       <HostInsights pods={pods} currency={wallet?.currency_symbol ?? '₹'} />
 
       {health && (
-        <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-          <CardContent>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
-              alignItems: "center"
-            }}>
-              <HealthMeter
-                score={health.total_score}
-                band={health.band}
-                size={130}
-                label={t('mweb.hostDashboard.profileHealth')}
-                onClick={() => navigate('/account/health')}
-                caption={t('mweb.common.tapForDetails')}
-              />
-              <Box sx={{ flex: 1, minWidth: 0, textAlign: { xs: 'center', sm: 'left' } }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                  {bandHint(health.band)}
-                </Typography>
-                <Typography variant="body2" sx={{
-                  color: "text.secondary"
-                }}>
-                  Keep your profile and verification up to date to rank higher with guests.
-                </Typography>
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
+        <HealthRow
+          score={health.total_score}
+          band={health.band}
+          label={t('mweb.hostDashboard.profileHealth')}
+          ariaLabel={t('mweb.hostDashboard.viewProfileHealth')}
+          onOpen={() => navigate('/account/health')}
+        />
       )}
     </Stack>
   );

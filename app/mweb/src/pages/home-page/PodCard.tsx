@@ -1,23 +1,22 @@
-import { Card, Chip, CircularProgress, Stack, Typography } from '@mui/material';
-import { alpha } from '@mui/material/styles';
-import EventIcon from '@mui/icons-material/Event';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
-import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
-import GroupIcon from '@mui/icons-material/GroupOutlined';
-import PersonIcon from '@mui/icons-material/PersonOutlined';
-import PlaceIcon from '@mui/icons-material/PlaceOutlined';
-import { DuncitIconButton } from '@duncit/buttons';
+import { Box, Card } from '@mui/material';
 import { usePricing } from '../../hooks/usePricing';
 import { useTranslation } from '../../i18n/useTranslation';
 import PodCardMedia from './PodCardMedia';
+import PodCardInfo from './PodCardInfo';
+import { PodCategoryPill, PodDatePill, PodSaveButton } from './PodCardOverlays';
 import { podSeatsTaken } from '@duncit/utils';
 import { formatDateTime } from '../../utils/dateFormat';
 
+/** Every pod card's footprint — the same numbers native's PodCard draws (rule
+ * 27). The height is fixed so a rail's cards line up whatever their text. */
+const CARD_WIDTH = 268;
+const CARD_HEIGHT = 240;
+
 /**
- * Image-first pod card (mock): full-bleed media, the category chip and the save
- * button overlaid on top, and a translucent info panel — date, big title, spots
- * left and the price pill — floating over the bottom. The whole card opens the
- * pod.
+ * The event card: a white card with the pod's image on top (the date pill and
+ * the save button over it, the category at its foot), then who is coming, the
+ * title with the price beside it, and the host/place line. The whole card
+ * opens the pod.
  */
 export default function PodCard({
   pod,
@@ -32,7 +31,7 @@ export default function PodCard({
   pod: any;
   onOpen: () => void;
   hostName?: string | null;
-  /** The pod's club's category name — the chip over the image. */
+  /** The pod's club's category name — the pill over the image. */
   categoryLabel?: string | null;
   /** Save state; omit both to hide the button (e.g. signed-out rails). */
   saved?: boolean;
@@ -45,16 +44,14 @@ export default function PodCard({
   const { format } = usePricing();
   const { t } = useTranslation();
   const placeText = showPlace ? [pod.place_label, pod.place_detail].filter(Boolean).join(' - ') : '';
+  const hostText = hostName ? t('mweb.podDetails.hostedBy', { vars: { names: hostName } }) : '';
   const spotsTaken = podSeatsTaken(pod);
   const spotsLeft = pod.no_of_spots > 0 ? Math.max(0, pod.no_of_spots - spotsTaken) : 0;
   const spotsSuffix = pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : '';
   let spotsText = `${spotsTaken}${spotsSuffix}`;
   if (spotsLeft === 1) spotsText = t('mweb.home.spotsLeftOne');
   else if (spotsLeft > 1) spotsText = t('mweb.home.spotsLeftMany', { count: spotsLeft });
-  // Hoisted out of the JSX: a spinner-or-icon choice inline would nest ternaries
-  // in a prop (S3358).
-  const savedIcon = saved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />;
-  const saveButtonContent = saving ? <CircularProgress size={18} color="inherit" /> : savedIcon;
+  const joiningText = spotsTaken > 0 ? t('mweb.home.joiningNow', { count: spotsTaken }) : '';
   const dateText = formatDateTime(pod.pod_date_time) || '—';
 
   return (
@@ -70,182 +67,49 @@ export default function PodCard({
         }
       }}
       sx={{
-        minWidth: 268,
-        maxWidth: 268,
-        height: 250,
+        width: CARD_WIDTH,
+        minWidth: CARD_WIDTH,
+        maxWidth: CARD_WIDTH,
+        height: CARD_HEIGHT,
         flex: '0 0 auto',
+        p: 1,
+        display: 'flex',
+        flexDirection: 'column',
         scrollSnapAlign: 'start',
-        position: 'relative',
-        borderRadius: '20px',
         cursor: 'pointer',
-        overflow: 'hidden',
-        boxShadow: '0 18px 42px rgba(9,7,18,0.22)',
-        border: 1,
-        borderColor: 'divider',
-        transition: 'transform 180ms ease, box-shadow 180ms ease',
-        '&:hover': {
-          transform: 'translateY(-2px)',
-          boxShadow: '0 22px 48px rgba(255,79,115,0.20)',
-        },
+        transition: 'transform 180ms ease',
+        '&:hover': { transform: 'translateY(-2px)' },
       }}
     >
-      <PodCardMedia media={pod.pod_images_and_videos?.[0]} title={pod.pod_title} />
-
-      {categoryLabel && (
-        <Chip
-          size="small"
-          icon={<EventIcon sx={{ fontSize: 13, color: 'inherit !important' }} />}
-          label={categoryLabel}
-          sx={{
-            position: 'absolute',
-            top: 10,
-            left: 10,
-            height: 26,
-            fontWeight: 600,
-            color: 'common.white',
-            bgcolor: 'rgba(9,7,18,0.62)',
-          }}
-        />
-      )}
-
-      {onToggleSave && (
-        <DuncitIconButton
-          aria-label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
-          aria-pressed={saved}
-          disabled={saving}
-          onClick={(event) => {
-            event.stopPropagation();
-            onToggleSave();
-          }}
-          sx={{
-            position: 'absolute',
-            top: 6,
-            right: 6,
-            color: saved ? 'primary.main' : 'common.white',
-            bgcolor: 'rgba(9,7,18,0.35)',
-            '&:hover': { bgcolor: 'rgba(9,7,18,0.5)' },
-            // Disabled only while the toggle is in flight — keep it legible on
-            // the image instead of MUI's grey-on-dark.
-            '&.Mui-disabled': { color: 'common.white', bgcolor: 'rgba(9,7,18,0.35)' },
-          }}
-        >
-          {saveButtonContent}
-        </DuncitIconButton>
-      )}
-
-      {/* The mock's white info box, kept translucent so the image reads through;
-       * dark mode swaps to a translucent surface tone. No backdrop blur, as on
-       * native: three blurred layers per card, on a feed of hundreds, made every
-       * scroll frame re-blur the image under each one. */}
-      <Stack
-        spacing={0.4}
+      <Box
         sx={{
-          position: 'absolute',
-          left: 10,
-          right: 10,
-          bottom: 10,
-          p: 1.25,
-          borderRadius: '14px',
-          bgcolor: (theme) =>
-            alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.88 : 0.9),
-          border: '1px solid',
-          borderColor: (theme) =>
-            theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.65)',
+          position: 'relative',
+          flex: 1,
+          minHeight: 0,
+          borderRadius: '18px',
+          overflow: 'hidden',
+          bgcolor: 'action.hover',
         }}
       >
-        <Stack direction="row" spacing={0.5} sx={{
-          alignItems: "center"
-        }}>
-          <EventIcon sx={{ fontSize: 13, color: 'text.secondary' }} />
-          <Typography
-            variant="caption"
-            noWrap
-            sx={{
-              color: "text.secondary",
-              fontWeight: 600
-            }}>
-            {dateText}
-          </Typography>
-        </Stack>
-        <Typography
-          variant="h6"
-          sx={{
-            fontWeight: 700,
-            lineHeight: 1.15,
-            fontSize: '1.15rem',
-            display: '-webkit-box',
-            WebkitLineClamp: 1,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}
-        >
-          {pod.pod_title}
-        </Typography>
-        <Stack
-          direction="row"
-          spacing={0.75}
-          sx={{
-            alignItems: "center",
-            justifyContent: "space-between"
-          }}>
-          <Stack
-            direction="row"
-            spacing={0.4}
-            sx={{
-              alignItems: "center",
-              minWidth: 0
-            }}>
-            <GroupIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-            <Typography
-              variant="caption"
-              noWrap
-              sx={{
-                color: "text.secondary",
-                fontWeight: 600
-              }}>
-              {spotsText}
-            </Typography>
-          </Stack>
-          <Chip
-            size="small"
-            label={isFree ? t('mweb.slots.free') : format(pod.pod_amount)}
-            color={isFree ? 'success' : 'primary'}
-            sx={{ height: 24, fontWeight: 700, flex: '0 0 auto' }}
+        <PodCardMedia media={pod.pod_images_and_videos?.[0]} title={pod.pod_title} />
+        <PodDatePill text={dateText} />
+        {categoryLabel && <PodCategoryPill label={categoryLabel} />}
+        {onToggleSave && (
+          <PodSaveButton
+            saved={saved}
+            saving={saving}
+            label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
+            onToggle={onToggleSave}
           />
-        </Stack>
-        {placeText && (
-          <Stack
-            direction="row"
-            spacing={0.4}
-            sx={{
-              alignItems: "center",
-              minWidth: 0
-            }}>
-            <PlaceIcon sx={{ fontSize: 13, color: 'text.secondary', flex: '0 0 auto' }} />
-            <Typography variant="caption" noWrap sx={{
-              color: "text.secondary"
-            }}>
-              {placeText}
-            </Typography>
-          </Stack>
         )}
-        {hostName && (
-          <Stack
-            direction="row"
-            spacing={0.4}
-            sx={{
-              alignItems: "center",
-              minWidth: 0
-            }}>
-            <PersonIcon sx={{ fontSize: 13, color: 'text.secondary', flex: '0 0 auto' }} />
-            <Typography variant="caption" noWrap sx={{
-              color: "text.secondary"
-            }}>
-              {hostName}
-            </Typography>
-          </Stack>
-        )}
-      </Stack>
+      </Box>
+      <PodCardInfo
+        title={pod.pod_title}
+        price={isFree ? t('mweb.slots.free') : format(pod.pod_amount)}
+        joiningText={joiningText}
+        spotsText={spotsText}
+        subText={[hostText, placeText].filter(Boolean).join(' · ')}
+      />
     </Card>
   );
 }

@@ -11,6 +11,20 @@ import { sortClubResults, type SearchSort } from './searchSort';
 import type { SearchCategory } from './useSearchDiscovery';
 import { useTranslation } from '../../i18n/useTranslation';
 
+/** A 40px pill on the page ground: surface at rest; the Filter pill turns
+ * green while a category is applied. Explicit min-height keeps the
+ * coarse-pointer 44px rule from stretching it. */
+const PILL_SX = {
+  height: 40,
+  minHeight: 40,
+  px: 2,
+  bgcolor: 'background.paper',
+  color: 'text.primary',
+  border: '1px solid var(--duncit-card-border)',
+  '&:hover': { bgcolor: 'background.paper' },
+} as const;
+const ACTIVE_PILL_SX = { height: 40, minHeight: 40, px: 2 } as const;
+
 interface ClubResult {
   is_following: boolean;
   participant_count: number;
@@ -84,21 +98,14 @@ export default function SearchResults({
   return (
     <Stack spacing={2.5}>
       <Stack direction="row" spacing={1}>
-        <DuncitButton
-          variant="outlined"
-          color="inherit"
-          startIcon={<SortIcon />}
-          onClick={() => setSortOpen(true)}
-          sx={{ fontWeight: 600, borderRadius: 999 }}
-        >
+        <DuncitButton startIcon={<SortIcon />} onClick={() => setSortOpen(true)} sx={PILL_SX}>
           Sort
         </DuncitButton>
         <DuncitButton
-          variant={categoryId ? 'contained' : 'outlined'}
-          color={categoryId ? 'primary' : 'inherit'}
+          variant={categoryId ? 'contained' : 'text'}
           startIcon={<FilterIcon />}
           onClick={() => setFilterOpen(true)}
-          sx={{ fontWeight: 600, borderRadius: 999 }}
+          sx={categoryId ? ACTIVE_PILL_SX : PILL_SX}
         >
           Filter
         </DuncitButton>
@@ -122,13 +129,11 @@ export default function SearchResults({
 
       <SearchResultsSection
         heading={t('mweb.search.exploreExperiencesHappeningSoon')}
-        subheading="Find clubs hosting exciting experiences you can join this week."
         results={sortClubResults(happening, sort)}
         {...sectionProps}
       />
       <SearchResultsSection
         heading={t('mweb.search.moreClubsWorthExploring')}
-        subheading="Discover communities that match your interests and start your next experience."
         results={sortClubResults(moreClubs, sort)}
         {...sectionProps}
       />

@@ -35,7 +35,7 @@ export function CoinSummaryRows({ coins }: Readonly<{ coins?: CoinCheckoutSummar
       testID="coin-summary"
       marginTop={8}
       padding={12}
-      borderRadius={12}
+      borderRadius={16}
       borderWidth={1}
       borderColor={gold}
       backgroundColor={COIN_GOLD_TINT}

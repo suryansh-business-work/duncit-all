@@ -109,10 +109,10 @@ export function PodFeedbackPrompt() {
           maxHeight="90%"
           gap={12}
           padding={20}
-          borderRadius={16}
-          backgroundColor="$background"
+          borderRadius={28}
+          backgroundColor="$surface"
         >
-          <Text fontSize={16} fontWeight="700" color="$color">
+          <Text fontSize={17} fontWeight="600" color="$color">
             {t('mweb.podFeedback.title', { vars: { title: pod.title } })}
           </Text>
           <Text fontSize={12} color="$muted">

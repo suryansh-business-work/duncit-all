@@ -27,11 +27,9 @@ export function CancellationTierRow({ index, control, disabled, onRemove }: Read
     <YStack
       testID={`cancellation-tier-${index}`}
       gap={8}
-      padding={10}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
+      padding={12}
+      borderRadius={16}
+      backgroundColor="$soft"
       opacity={disabled ? 0.5 : 1}
     >
       <XStack gap={8}>

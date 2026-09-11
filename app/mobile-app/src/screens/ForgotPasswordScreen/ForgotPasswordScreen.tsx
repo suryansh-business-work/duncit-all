@@ -2,12 +2,9 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
-import { semantic } from '@duncit/auth-tokens';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 import {
-  PASSWORD_RECOVERY_STEP_COUNT,
   buildPasswordRecoveryLabels,
-  passwordRecoveryStepIndex,
   previousRecoveryStep,
   recoveryDestination,
   recoveryHeading,
@@ -18,6 +15,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { RecoveryChannelStep } from '@/components/password-recovery/RecoveryChannelStep';
 import { RecoveryCodeStep } from '@/components/password-recovery/RecoveryCodeStep';
 import { RecoveryPasswordStep } from '@/components/password-recovery/RecoveryPasswordStep';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { usePasswordRecovery } from './usePasswordRecovery';
@@ -31,6 +29,7 @@ export function ForgotPasswordScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const labels = buildPasswordRecoveryLabels(t);
+  const { success } = useThemeColors();
   const recovery = usePasswordRecovery(t('mweb.auth.somethingWentWrong'));
   const { state, error, notFound, notSent, expiresInMinutes, testCode, resendIn, busy } = recovery;
 
@@ -42,8 +41,8 @@ export function ForgotPasswordScreen() {
         accentWord={labels.doneTitleAccent}
         subtitle={labels.doneSubtitle}
       >
-        <YStack alignItems="center" gap={16}>
-          <MaterialIcons name="check-circle" size={64} color={semantic.success} />
+        <YStack alignItems="center" gap={24}>
+          <MaterialIcons name="check-circle" size={64} color={success} />
           <PrimaryButton
             testID="recovery-go-login"
             label={labels.continueToLogin}
@@ -54,20 +53,13 @@ export function ForgotPasswordScreen() {
     );
   }
 
+  // The step's own title only: the old "Step 1 of 3" caption and the channel
+  // step's "choose where we should send…" line restated what the boxes say.
   const heading = recoveryHeading(state.step, labels);
   const canGoBack = previousRecoveryStep(state.step) !== null;
 
   return (
-    <AuthScaffold
-      testID="forgot-password-screen"
-      title={heading.title}
-      accentWord={heading.accent}
-      subtitle={heading.subtitle}
-    >
-      <Text textAlign="center" fontSize={12} color="$muted" marginTop={-8}>
-        {labels.stepOf(passwordRecoveryStepIndex(state.step), PASSWORD_RECOVERY_STEP_COUNT)}
-      </Text>
-
+    <AuthScaffold testID="forgot-password-screen" title={heading.title} accentWord={heading.accent}>
       {state.step === 'CHANNEL' ? (
         <RecoveryChannelStep
           key={state.channel}

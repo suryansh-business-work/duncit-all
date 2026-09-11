@@ -1,5 +1,5 @@
-import { Fragment } from 'react';
-import { Box, Divider, Stack, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
+import SectionHeader from '../../components/SectionHeader';
 import SearchClubCard from './SearchClubCard';
 
 interface ClubResult {
@@ -20,7 +20,8 @@ interface ClubResult {
 
 interface Props {
   heading: string;
-  subheading: string;
+  /** Kept for callers; sections carry their title alone. */
+  subheading?: string;
   results: ClubResult[];
   categoryNameOf: (club: ClubResult['club']) => string | null;
   isFollowing: (clubId: string) => boolean;
@@ -30,9 +31,10 @@ interface Props {
   onOpenPod: (clubSlug: string, podSlug: string) => void;
 }
 
+/** One titled result group ("Happening Soon" / "More Clubs") — each club its
+ * own surface card, so clubs stay distinct without dividers. */
 export default function SearchResultsSection({
   heading,
-  subheading,
   results,
   categoryNameOf,
   isFollowing,
@@ -43,41 +45,20 @@ export default function SearchResultsSection({
 }: Readonly<Props>) {
   if (results.length === 0) return null;
   return (
-    <Box component="section">
-      <Typography
-        variant="h6"
-        sx={{
-          fontWeight: 700,
-          lineHeight: 1.2
-        }}>
-        {heading}
-      </Typography>
-      <Typography
-        variant="body2"
-        sx={{
-          color: "text.secondary",
-          mb: 2
-        }}>
-        {subheading}
-      </Typography>
-      <Stack spacing={2}>
-        {results.map((result, index) => (
-          <Fragment key={result.club.id}>
-            <SearchClubCard
-              result={result}
-              categoryName={categoryNameOf(result.club)}
-              following={isFollowing(result.club.id)}
-              followBusy={followBusy}
-              onToggleFollow={onToggleFollow}
-              onOpenClub={onOpenClub}
-              onOpenPod={onOpenPod}
-            />
-            {index < results.length - 1 && (
-              <Divider sx={{ borderStyle: 'dotted', borderColor: 'divider', borderBottomWidth: 2 }} />
-            )}
-          </Fragment>
-        ))}
-      </Stack>
-    </Box>
+    <Stack component="section" spacing={1.5}>
+      <SectionHeader title={heading} />
+      {results.map((result) => (
+        <SearchClubCard
+          key={result.club.id}
+          result={result}
+          categoryName={categoryNameOf(result.club)}
+          following={isFollowing(result.club.id)}
+          followBusy={followBusy}
+          onToggleFollow={onToggleFollow}
+          onOpenClub={onOpenClub}
+          onOpenPod={onOpenPod}
+        />
+      ))}
+    </Stack>
   );
 }

@@ -1,6 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
-import { semantic } from '@duncit/auth-tokens';
 
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar';
 import { useRoleLabels } from '@/hooks/useMe';
@@ -18,6 +17,44 @@ export interface AccountProfileHeaderProps {
   onChanged?: () => void | Promise<void>;
 }
 
+type PillTone = 'neutral' | 'danger';
+
+interface PillProps {
+  testID: string;
+  label: string;
+  text: string;
+  icon: 'edit' | 'share' | 'logout';
+  tone?: PillTone;
+  onPress: () => void;
+}
+
+/** One of the header's three soft pills — Edit, Share, Logout. */
+function HeaderPill({ testID, label, text, icon, tone = 'neutral', onPress }: Readonly<PillProps>) {
+  const { color, danger } = useThemeColors();
+  const isDanger = tone === 'danger';
+  return (
+    <XStack
+      testID={testID}
+      role="button"
+      aria-label={label}
+      onPress={onPress}
+      flex={1}
+      height={44}
+      alignItems="center"
+      justifyContent="center"
+      gap={6}
+      borderRadius={999}
+      backgroundColor={isDanger ? '$dangerSoft' : '$soft'}
+      pressStyle={PRESS_STYLE.control}
+    >
+      <MaterialIcons name={icon} size={16} color={isDanger ? danger : color} />
+      <Text fontSize={14} fontWeight="600" color={isDanger ? '$danger' : '$color'}>
+        {text}
+      </Text>
+    </XStack>
+  );
+}
+
 /** Avatar (Instagram-style photo/story control, items 9 + 12), name, bio, role
  * chips and the Edit/Logout actions — RN twin of mWeb's <AccountProfileHeader/>. */
 export function AccountProfileHeader({
@@ -27,34 +64,32 @@ export function AccountProfileHeader({
   onChanged,
 }: Readonly<AccountProfileHeaderProps>) {
   const { t } = useTranslation();
-  const { color } = useThemeColors();
   const { labelFor } = useRoleLabels();
   const initial = (me.first_name?.[0] ?? 'U').toUpperCase();
 
   return (
     <YStack gap={16} alignItems="center">
-      <ProfileAvatar photo={me.profile_photo} initial={initial} size={96} onChanged={onChanged} />
+      <ProfileAvatar photo={me.profile_photo} initial={initial} size={88} onChanged={onChanged} />
 
-      <YStack alignItems="center" gap={6}>
-        <Text fontSize={20} fontWeight="700" color="$color" textAlign="center">
+      <YStack alignItems="center" gap={4} alignSelf="stretch">
+        <Text fontSize={22} fontWeight="600" color="$color" textAlign="center">
           {me.full_name || `${me.first_name} ${me.last_name}`.trim()}
         </Text>
         {me.bio ? (
-          <Text fontSize={13.5} color="$muted" textAlign="center">
+          <Text fontSize={14} color="$muted" textAlign="center">
             {me.bio}
           </Text>
         ) : null}
-        <XStack flexWrap="wrap" gap={6} justifyContent="center" marginTop={4}>
+        <XStack flexWrap="wrap" gap={6} justifyContent="center" marginTop={8}>
           {me.roles.map((role) => (
             <XStack
               key={role}
               borderRadius={999}
               paddingHorizontal={10}
-              paddingVertical={3}
-              borderWidth={1}
-              borderColor="$primary"
+              paddingVertical={4}
+              backgroundColor="$soft"
             >
-              <Text fontSize={11} fontWeight="600" color="$primary">
+              <Text fontSize={11} fontWeight="600" color="$color">
                 {labelFor(role)}
               </Text>
             </XStack>
@@ -62,67 +97,29 @@ export function AccountProfileHeader({
         </XStack>
       </YStack>
 
-      <XStack gap={10} alignSelf="stretch">
-        <XStack
+      <XStack gap={8} alignSelf="stretch">
+        <HeaderPill
           testID="account-edit"
-          role="button"
-          aria-label={t('mweb.account.editProfile')}
+          label={t('mweb.account.editProfile')}
+          text="Edit"
+          icon="edit"
           onPress={onEdit}
-          flex={1}
-          height={44}
-          alignItems="center"
-          justifyContent="center"
-          gap={6}
-          borderRadius={999}
-          borderWidth={1}
-          borderColor="$borderColor"
-          pressStyle={PRESS_STYLE.control}
-        >
-          <MaterialIcons name="edit" size={16} color={color} />
-          <Text fontSize={14} fontWeight="600" color="$color">
-            Edit
-          </Text>
-        </XStack>
-        <XStack
+        />
+        <HeaderPill
           testID="account-share"
-          role="button"
-          aria-label={t('mweb.common.shareProfile')}
+          label={t('mweb.common.shareProfile')}
+          text="Share"
+          icon="share"
           onPress={() => shareProfile(me.user_id, me.full_name ?? 'Profile', me.username)}
-          flex={1}
-          height={44}
-          alignItems="center"
-          justifyContent="center"
-          gap={6}
-          borderRadius={999}
-          borderWidth={1}
-          borderColor="$borderColor"
-          pressStyle={PRESS_STYLE.control}
-        >
-          <MaterialIcons name="share" size={16} color={color} />
-          <Text fontSize={14} fontWeight="600" color="$color">
-            Share
-          </Text>
-        </XStack>
-        <XStack
+        />
+        <HeaderPill
           testID="account-logout"
-          role="button"
-          aria-label={t('mweb.common.logout')}
+          label={t('mweb.common.logout')}
+          text="Logout"
+          icon="logout"
+          tone="danger"
           onPress={onLogout}
-          flex={1}
-          height={44}
-          alignItems="center"
-          justifyContent="center"
-          gap={6}
-          borderRadius={999}
-          borderWidth={1}
-          borderColor="$danger"
-          pressStyle={PRESS_STYLE.control}
-        >
-          <MaterialIcons name="logout" size={16} color={semantic.error} />
-          <Text fontSize={14} fontWeight="600" color="$danger">
-            Logout
-          </Text>
-        </XStack>
+        />
       </XStack>
     </YStack>
   );

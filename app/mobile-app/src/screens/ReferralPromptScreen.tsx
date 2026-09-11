@@ -44,7 +44,8 @@ export function ReferralPromptScreen() {
           testID="referral-prompt-input"
           aria-label={t('mweb.referral.codeLabel')}
           size="$4"
-          backgroundColor="$background"
+          backgroundColor="$surface"
+          borderRadius={14}
           color="$color"
           placeholderTextColor="$muted"
           borderColor={malformed ? '$danger' : '$borderColor'}

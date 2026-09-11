@@ -30,9 +30,6 @@ export function LoginPasswordStep({
 
   return (
     <YStack gap={16}>
-      <Text textAlign="center" fontSize={14} color="$muted">
-        {t('mweb.login.passwordStepSubtitle')}
-      </Text>
       <LoginForm loading={loading} errorMessage={errorMessage} onSubmit={onSubmit} />
       <XStack justifyContent="flex-end">
         <Text

@@ -26,15 +26,15 @@ function AddPostButton({
       onPress={uploading ? undefined : onAddPost}
       alignItems="center"
       gap={5}
-      paddingHorizontal={12}
-      paddingVertical={7}
+      height={36}
+      paddingHorizontal={14}
       borderRadius={999}
       backgroundColor="$primary"
       opacity={uploading ? 0.6 : 1}
-      pressStyle={PRESS_STYLE.control}
+      pressStyle={PRESS_STYLE.solid}
     >
       <MaterialIcons name={uploading ? 'hourglass-top' : 'add'} size={16} color={onPrimary} />
-      <Text fontSize={13} fontWeight="700" color={onPrimary}>
+      <Text fontSize={13} fontWeight="600" color={onPrimary}>
         {uploading ? 'Uploading…' : 'Add post'}
       </Text>
     </XStack>
@@ -58,14 +58,14 @@ export function ProfilePostsGrid({
 }>) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
-  const { muted, primary, onPrimary } = useThemeColors();
+  const { muted, accent, onPrimary } = useThemeColors();
   const size = (width - 32 - 8) / 3;
   const [active, setActive] = useState<ProfilePost | null>(null);
 
   return (
-    <YStack paddingHorizontal={16} gap={10} paddingBottom={24}>
+    <YStack paddingHorizontal={16} gap={12} paddingBottom={24}>
       <XStack alignItems="center" justifyContent="space-between">
-        <Text fontSize={16} fontWeight="700" color="$color">
+        <Text accessibilityRole="header" fontSize={17} fontWeight="600" color="$color">
           Posts
         </Text>
         {onAddPost ? (
@@ -73,8 +73,18 @@ export function ProfilePostsGrid({
         ) : null}
       </XStack>
       {posts.length === 0 ? (
-        <YStack testID="profile-no-posts" alignItems="center" gap={8} paddingVertical={20}>
-          <Text fontSize={13} color="$muted">
+        <YStack testID="profile-no-posts" alignItems="center" gap={12} paddingVertical={28}>
+          <YStack
+            width={64}
+            height={64}
+            borderRadius={32}
+            alignItems="center"
+            justifyContent="center"
+            backgroundColor="$soft"
+          >
+            <MaterialIcons name="add-a-photo" size={28} color={accent} />
+          </YStack>
+          <Text fontSize={14} fontWeight="500" color="$muted">
             No posts yet.
           </Text>
           {onAddPost ? (
@@ -86,15 +96,14 @@ export function ProfilePostsGrid({
               onPress={uploading ? undefined : onAddPost}
               alignItems="center"
               gap={6}
-              paddingHorizontal={14}
-              paddingVertical={9}
+              height={44}
+              paddingHorizontal={18}
               borderRadius={999}
-              borderWidth={1}
-              borderColor="$primary"
-              pressStyle={PRESS_STYLE.control}
+              backgroundColor="$primary"
+              pressStyle={PRESS_STYLE.solid}
             >
-              <MaterialIcons name="add-a-photo" size={16} color={primary} />
-              <Text fontSize={13} fontWeight="700" color="$primary">
+              <MaterialIcons name="add" size={18} color={onPrimary} />
+              <Text fontSize={14} fontWeight="600" color="$onPrimary">
                 Add your first post
               </Text>
             </XStack>
@@ -111,9 +120,9 @@ export function ProfilePostsGrid({
               onPress={() => setActive(post)}
               width={size}
               height={size}
-              borderRadius={10}
+              borderRadius={12}
               overflow="hidden"
-              backgroundColor="$muted"
+              backgroundColor="$soft"
               alignItems="center"
               justifyContent="center"
               pressStyle={PRESS_STYLE.control}

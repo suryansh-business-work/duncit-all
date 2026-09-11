@@ -58,7 +58,7 @@ export function BrandDetailSheet({
             height={54}
             borderRadius={14}
             overflow="hidden"
-            backgroundColor="$surface"
+            backgroundColor="$soft"
             alignItems="center"
             justifyContent="center"
           >
@@ -120,9 +120,9 @@ export function BrandDetailSheet({
             backgroundColor="rgba(0,0,0,0.5)"
           />
           <YStack
-            backgroundColor="$background"
-            borderTopLeftRadius={22}
-            borderTopRightRadius={22}
+            backgroundColor="$surface"
+            borderTopLeftRadius={28}
+            borderTopRightRadius={28}
             maxHeight="84%"
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
@@ -141,7 +141,7 @@ export function BrandDetailSheet({
                   alignItems="center"
                   justifyContent="center"
                   borderRadius={16}
-                  backgroundColor="$surface"
+                  backgroundColor="$soft"
                 >
                   <MaterialIcons name="close" size={18} color={primary} />
                 </XStack>
@@ -175,7 +175,7 @@ function BrandStat({
       paddingHorizontal={10}
       paddingVertical={6}
       borderRadius={999}
-      backgroundColor="$surface"
+      backgroundColor="$soft"
     >
       <MaterialIcons name={icon} size={14} color={muted} />
       <Text fontSize={12} fontWeight="700" color="$color">

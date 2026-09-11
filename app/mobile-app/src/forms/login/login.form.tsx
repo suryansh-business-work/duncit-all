@@ -27,14 +27,25 @@ interface ToggleProps {
   onChannel: (channel: LoginChannel) => void;
 }
 
-/** The Email | Phone picker. Hoisted, never nested (S6478). */
+/**
+ * The Email | Phone picker as a segmented pill: a surface track, the chosen
+ * half filled green. mWeb draws the same with CHANNEL_TABS_SX on DuncitTabs.
+ * Hoisted, never nested (S6478).
+ */
 function ChannelToggle({ channel, onChannel }: Readonly<ToggleProps>) {
   const { t } = useTranslation();
   const nameOf = (value: LoginChannel) =>
     value === 'EMAIL' ? t('mweb.passwordRecovery.emailName') : t('mweb.passwordRecovery.phoneName');
 
   return (
-    <XStack gap={8}>
+    <XStack
+      gap={4}
+      padding={4}
+      borderRadius={999}
+      borderWidth={1}
+      borderColor="$cardBorder"
+      backgroundColor="$surface"
+    >
       {LOGIN_CHANNELS.map((value) => {
         const active = value === channel;
         return (
@@ -46,12 +57,10 @@ function ChannelToggle({ channel, onChannel }: Readonly<ToggleProps>) {
             onPress={() => onChannel(value)}
             pressStyle={PRESS_STYLE.inline}
             flex={1}
-            height={42}
+            height={40}
             alignItems="center"
             justifyContent="center"
-            borderRadius={12}
-            borderWidth={1}
-            borderColor={active ? '$primary' : '$borderColor'}
+            borderRadius={999}
             backgroundColor={active ? '$primary' : 'transparent'}
           >
             <Text fontSize={14} fontWeight="600" color={active ? '$onPrimary' : '$color'}>

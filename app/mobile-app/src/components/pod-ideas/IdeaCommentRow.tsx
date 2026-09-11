@@ -27,11 +27,11 @@ export function IdeaCommentRow({ comment, canDelete, onDelete }: Readonly<Props>
         width={34}
         height={34}
         borderRadius={17}
-        backgroundColor="$surface"
+        backgroundColor="$soft"
         alignItems="center"
         justifyContent="center"
       >
-        <Text fontSize={14} fontWeight="700" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           {initial}
         </Text>
       </YStack>

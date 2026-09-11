@@ -127,8 +127,8 @@ export function EditAccountDialog({
               bottom={0}
               maxHeight="92%"
               backgroundColor="$background"
-              borderTopLeftRadius={20}
-              borderTopRightRadius={20}
+              borderTopLeftRadius={28}
+              borderTopRightRadius={28}
             >
               <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
                 <XStack
@@ -138,17 +138,19 @@ export function EditAccountDialog({
                   paddingTop={16}
                   paddingBottom={8}
                 >
-                  <Text fontSize={18} fontWeight="700" color="$color">
+                  <Text fontSize={17} fontWeight="600" color="$color">
                     Edit profile
                   </Text>
                   <XStack
-                    pressStyle={PRESS_STYLE.surface}
+                    pressStyle={PRESS_STYLE.ghost}
                     testID="edit-account-close"
                     role="button"
                     aria-label={t('mweb.common.close')}
                     onPress={requestClose}
-                    width={32}
-                    height={32}
+                    width={36}
+                    height={36}
+                    borderRadius={18}
+                    backgroundColor="$surface"
                     alignItems="center"
                     justifyContent="center"
                   >

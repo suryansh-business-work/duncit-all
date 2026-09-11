@@ -11,12 +11,13 @@ import type { PodMembership } from '@/utils/pod-history';
 import { formatDateTime } from '@/utils/date-format';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
-/** A joined-pod row in the history list — RN twin of mWeb's PodHistoryPage card. */
+/** A joined-pod row in the history list — one row of the list card, the
+ * parent draws the hairlines between them. RN twin of mWeb's PodHistoryPage row. */
 export function PodHistoryCard({
   item,
   onPress,
 }: Readonly<{ item: PodMembership; onPress: () => void }>) {
-  const { muted, onPrimary } = useThemeColors();
+  const { muted } = useThemeColors();
   const { t } = useTranslation();
   const image = coverImageUrl(item.pod?.pod_images_and_videos);
   const title = item.pod?.pod_title ?? t('mweb.podHistory.pod');
@@ -28,20 +29,17 @@ export function PodHistoryCard({
       aria-label={title}
       onPress={onPress}
       gap={12}
-      padding={12}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
+      paddingHorizontal={16}
+      paddingVertical={14}
       alignItems="center"
-      pressStyle={PRESS_STYLE.control}
+      pressStyle={PRESS_STYLE.row}
     >
       <YStack
         width={48}
         height={48}
-        borderRadius={24}
+        borderRadius={12}
         overflow="hidden"
-        backgroundColor="$primary"
+        backgroundColor="$soft"
         alignItems="center"
         justifyContent="center"
       >
@@ -52,18 +50,18 @@ export function PodHistoryCard({
             resizeMode="cover"
           />
         ) : (
-          <MaterialIcons name="history" size={22} color={onPrimary} />
+          <MaterialIcons name="history" size={22} color={muted} />
         )}
       </YStack>
       <YStack flex={1} gap={2}>
-        <Text fontSize={15} fontWeight="700" color="$color" numberOfLines={1}>
+        <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
           {title}
         </Text>
         <Text fontSize={12} color="$muted">
           {t('mweb.podHistory.joinedOn', { vars: { date: formatDateTime(item.joined_at) } })}
         </Text>
       </YStack>
-      <MaterialIcons name="arrow-forward" size={18} color={muted} />
+      <MaterialIcons name="chevron-right" size={22} color={muted} />
     </XStack>
   );
 }

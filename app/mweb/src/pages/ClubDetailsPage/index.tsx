@@ -1,7 +1,7 @@
 import { useEntityPageMeta } from '../../app/pageMeta';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router';
-import { Alert, Box, Stack, Typography } from '@mui/material';
+import { Alert, Stack } from '@mui/material';
 import { isClubAdminOf } from '@duncit/utils';
 import { useFollowedClubs } from '../../hooks/useFollowedClubs';
 import { notify } from '../../components/notify';
@@ -129,7 +129,7 @@ export default function ClubDetailsPage() {
 
   return (
     <Stack
-      spacing={2.25}
+      spacing={2.5}
       sx={{
         mx: { xs: -1.25, sm: -2 },
         px: { xs: 1.25, sm: 2 },
@@ -159,23 +159,8 @@ export default function ClubDetailsPage() {
       />
       <ClubStoriesSection clubId={club.id} canPost={canPostStory} />
       <ClubSocialLinks club={club} />
-      {club.club_description && (
-        <Box>
-          <Typography variant="h6" gutterBottom sx={{
-            fontWeight: 700
-          }}>
-            About
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{
-              color: "text.secondary",
-              whiteSpace: 'pre-wrap'
-            }}>
-            {club.club_description}
-          </Typography>
-        </Box>
-      )}
+      {/* The description reads once, in full, in the summary card above — the
+          separate "About" block repeated it word for word. */}
       {/* Club Members is who has actually turned up — every distinct attendee
           of every pod this club has run. It replaces the follower count that
           used to sit above it: following is a tap, joining a pod is not. */}

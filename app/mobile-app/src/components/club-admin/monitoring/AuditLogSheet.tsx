@@ -18,10 +18,10 @@ import { AuditLogChanges } from './AuditLogChanges';
 function DetailLine({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <XStack justifyContent="space-between" gap={12} paddingVertical={2}>
-      <Text fontSize={12.5} color="$muted">
+      <Text fontSize={13} color="$muted">
         {label}
       </Text>
-      <Text flex={1} fontSize={13} fontWeight="600" color="$color" textAlign="right">
+      <Text flex={1} fontSize={14} fontWeight="600" color="$color" textAlign="right">
         {value}
       </Text>
     </XStack>
@@ -72,7 +72,7 @@ export function AuditLogSheet({ log, when, onClose }: Readonly<Props>) {
             value={[actor, podAuditSourceLabel(log.source, t)].join(' · ')}
           />
           <XStack alignItems="center" justifyContent="space-between" gap={12}>
-            <Text fontSize={12.5} color="$muted">
+            <Text fontSize={13} color="$muted">
               {t('clubAdmin.monitoring.aiRisk')}
             </Text>
             <ToneChip
@@ -82,11 +82,11 @@ export function AuditLogSheet({ log, when, onClose }: Readonly<Props>) {
             />
           </XStack>
           {log.ai_summary ? (
-            <YStack gap={2}>
-              <Text fontSize={12.5} color="$muted">
+            <YStack gap={4} padding={12} borderRadius={16} backgroundColor="$surface">
+              <Text fontSize={13} color="$muted">
                 {t('clubAdmin.monitoring.aiSummary')}
               </Text>
-              <Text testID="club-monitoring-detail-summary" fontSize={13} color="$color">
+              <Text testID="club-monitoring-detail-summary" fontSize={14} color="$color">
                 {log.ai_summary}
               </Text>
             </YStack>

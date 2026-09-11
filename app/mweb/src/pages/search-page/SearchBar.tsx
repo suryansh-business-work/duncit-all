@@ -3,20 +3,20 @@ import { useQuery } from '@apollo/client/react';
 import {
   Box,
   ClickAwayListener,
-  InputAdornment,
   List,
   ListItemButton,
   ListItemText,
   Paper,
-  TextField,
   Typography,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitIconButton } from '@duncit/buttons';
 import { SEARCH_SUGGESTIONS } from './queries';
+import SearchPillField from '../pod-list/SearchPillField';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { useTranslation } from '../../i18n/useTranslation';
+import { SURFACE_SX } from '../../theme';
 
 interface Suggestion {
   text: string;
@@ -56,44 +56,34 @@ export default function SearchBar({ value, onChange, onPick }: Readonly<Props>) 
   return (
     <ClickAwayListener onClickAway={() => setFocused(false)}>
       <Box sx={{ position: 'relative', width: '100%' }}>
-        <TextField
-          fullWidth
-          size="small"
+        <SearchPillField
           autoFocus
+          height={52}
           value={value}
           placeholder={t('mweb.search.searchClubsPodsCategoriesOrActivities')}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={onChange}
           onFocus={() => setFocused(true)}
-          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper', minHeight: 48 } }}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" color="action" />
-                </InputAdornment>
-              ),
-              endAdornment: value ? (
-                <InputAdornment position="end">
-                  <DuncitIconButton aria-label={t('mweb.common.clearSearch')} size="small" onClick={() => onChange('')}>
-                    <CloseIcon fontSize="small" />
-                  </DuncitIconButton>
-                </InputAdornment>
-              ) : null,
-            },
-
-            htmlInput: { 'aria-label': 'Search Duncit', enterKeyHint: 'search' }
-          }} />
+          ariaLabel="Search Duncit"
+          enterKeyHint="search"
+          endAdornment={
+            value ? (
+              <DuncitIconButton aria-label={t('mweb.common.clearSearch')} size="small" onClick={() => onChange('')}>
+                <CloseIcon fontSize="small" />
+              </DuncitIconButton>
+            ) : null
+          }
+        />
         {showSuggestions && (
           <Paper
-            elevation={6}
-            sx={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 6, borderRadius: '16px', overflow: 'hidden' }}
+            elevation={0}
+            sx={{ ...SURFACE_SX, position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0, zIndex: 6, overflow: 'hidden', py: 0.5 }}
           >
             <List dense disablePadding>
               {suggestions.map((s) => (
-                <ListItemButton key={`${s.kind}:${s.text}`} onClick={() => pick(s.text)}>
-                  <SearchIcon fontSize="small" color="action" sx={{ mr: 1.25 }} />
+                <ListItemButton key={`${s.kind}:${s.text}`} onClick={() => pick(s.text)} sx={{ py: 1.25, px: 2, borderRadius: 0 }}>
+                  <SearchRoundedIcon fontSize="small" sx={{ mr: 1.25, color: 'text.secondary' }} />
                   <ListItemText primary={s.text} slotProps={{
-                    primary: { noWrap: true, sx: { fontWeight: 700 } }
+                    primary: { noWrap: true, sx: { fontWeight: 600 } }
                   }} />
                   <Typography
                     variant="caption"

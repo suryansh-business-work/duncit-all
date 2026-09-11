@@ -2,10 +2,23 @@ import { Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CreatePodVenue } from './create-pod.types';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+
+/** Call / Directions — outlined green pills, the mWeb twin's small outlined buttons. */
+const ACTION_PILL = {
+  height: 36,
+  alignItems: 'center',
+  gap: 6,
+  paddingHorizontal: 14,
+  borderRadius: 999,
+  borderWidth: 1,
+  borderColor: '$primary',
+  pressStyle: PRESS_STYLE.control,
+} as const;
 
 /** Venue partner card — address, a Call Venue / Get Directions action row and
  * the contact shared with the host for slot follow-up. mWeb twin. */
@@ -22,15 +35,8 @@ export function VenueContactCard({ venue }: Readonly<{ venue: CreatePodVenue }>)
   )}`;
 
   return (
-    <YStack
-      testID="create-pod-venue-contact"
-      gap={8}
-      padding={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      borderRadius={12}
-    >
-      <Text fontSize={15} fontWeight="700" color="$color">
+    <SurfaceCard testID="create-pod-venue-contact" gap={10}>
+      <Text fontSize={16} fontWeight="600" color="$color">
         {venue.venue_name}
       </Text>
       {address ? (
@@ -38,16 +44,14 @@ export function VenueContactCard({ venue }: Readonly<{ venue: CreatePodVenue }>)
           {address}
         </Text>
       ) : null}
-      <XStack gap={18}>
+      <XStack gap={8} flexWrap="wrap">
         {venue.owner_phone ? (
           <XStack
             testID="venue-call"
             role="button"
             aria-label={callVenue}
             onPress={() => Linking.openURL(`tel:${venue.owner_phone}`)}
-            alignItems="center"
-            gap={4}
-            pressStyle={PRESS_STYLE.row}
+            {...ACTION_PILL}
           >
             <MaterialIcons name="phone" size={16} color={primary} />
             <Text fontSize={13} fontWeight="600" color="$primary">
@@ -60,9 +64,7 @@ export function VenueContactCard({ venue }: Readonly<{ venue: CreatePodVenue }>)
           role="button"
           aria-label={getDirections}
           onPress={() => Linking.openURL(directions)}
-          alignItems="center"
-          gap={4}
-          pressStyle={PRESS_STYLE.row}
+          {...ACTION_PILL}
         >
           <MaterialIcons name="directions" size={16} color={primary} />
           <Text fontSize={13} fontWeight="600" color="$primary">
@@ -83,6 +85,6 @@ export function VenueContactCard({ venue }: Readonly<{ venue: CreatePodVenue }>)
           </Text>
         ) : null}
       </YStack>
-    </YStack>
+    </SurfaceCard>
   );
 }

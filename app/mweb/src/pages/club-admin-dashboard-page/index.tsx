@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { Alert, MenuItem, Stack, TextField } from '@mui/material';
-import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
+import { Alert, Stack } from '@mui/material';
+import SpaceDashboardRoundedIcon from '@mui/icons-material/SpaceDashboardRounded';
 import {
   DEFAULT_CLUB_ADMIN_RANGE,
   clubAdminRangeFrom,
@@ -12,6 +12,7 @@ import {
   type ClubAdminRange,
 } from '@duncit/utils';
 import StudioPageHeader from '../../components/StudioPageHeader';
+import PillChips from '../../components/club-admin/PillChips';
 import DashboardCategoryTiles from './DashboardCategoryTiles';
 import DashboardClubBreakdown from './DashboardClubBreakdown';
 import DashboardKpiGroups from './DashboardKpiGroups';
@@ -21,14 +22,17 @@ import { useTranslation } from '../../i18n/useTranslation';
 
 /**
  * Club Admin Dashboard — pods, bookings, community and revenue across every
- * club the signed-in admin runs, in the range the select puts it in. The
+ * club the signed-in admin runs, in the range the pill row puts it in. The
  * figures, the trend series and the ranges are `@duncit/utils`' (rule 40);
  * the Partners console reads the same query. Native twin: ClubAdminDashboard.
  */
 export default function ClubAdminDashboardPage() {
   const { t } = useTranslation();
   const [range, setRange] = useState<ClubAdminRange>(DEFAULT_CLUB_ADMIN_RANGE);
-  const rangeLabels = useMemo(() => clubAdminRangeLabels(t), [t]);
+  const rangeOptions = useMemo(() => {
+    const labels = clubAdminRangeLabels(t);
+    return clubAdminRanges.map((item) => ({ value: item.value, label: labels[item.value] }));
+  }, [t]);
   const from = useMemo(() => clubAdminRangeFrom(range), [range]);
   const { data, loading, error } = useQuery<any>(MWEB_CLUB_ADMIN_DASHBOARD, {
     variables: { from, to: null },
@@ -38,27 +42,18 @@ export default function ClubAdminDashboardPage() {
   const pending = loading && !data;
 
   return (
-    <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+    <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <StudioPageHeader
-        icon={<SpaceDashboardIcon fontSize="small" />}
+        icon={<SpaceDashboardRoundedIcon fontSize="small" />}
         title={t('clubAdmin.dashboard.title')}
-        caption={t('clubAdmin.dashboard.subtitle')}
       />
 
-      <TextField
-        select
-        size="small"
-        fullWidth
+      <PillChips
         label={t('clubAdmin.dashboard.range')}
+        options={rangeOptions}
         value={range}
-        onChange={(event) => setRange(event.target.value as ClubAdminRange)}
-      >
-        {clubAdminRanges.map((item) => (
-          <MenuItem key={item.value} value={item.value}>
-            {rangeLabels[item.value]}
-          </MenuItem>
-        ))}
-      </TextField>
+        onChange={setRange}
+      />
 
       {error && <Alert severity="error">{error.message}</Alert>}
 

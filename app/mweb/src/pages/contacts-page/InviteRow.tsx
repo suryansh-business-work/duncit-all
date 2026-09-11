@@ -23,7 +23,7 @@ export default memo(function InviteRow({ row, selected, busy, onToggleSelect, on
   const invited = isInvited(row);
 
   return (
-    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', py: 1 }}>
+    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', px: 1.5, py: 1.25 }}>
       <Checkbox
         checked={selected}
         disabled={invited}
@@ -31,9 +31,11 @@ export default memo(function InviteRow({ row, selected, busy, onToggleSelect, on
         slotProps={{ input: { 'aria-label': t('mweb.contacts.selectFor', { vars: { name } }) } }}
         sx={{ p: 0.5 }}
       />
-      <Avatar sx={{ width: 36, height: 36 }}>{name[0]?.toUpperCase()}</Avatar>
+      <Avatar sx={{ width: 44, height: 44, bgcolor: 'action.hover', color: 'text.primary', fontWeight: 600 }}>
+        {name[0]?.toUpperCase()}
+      </Avatar>
       <Stack sx={{ minWidth: 0, flex: 1 }}>
-        <Typography noWrap sx={{ fontWeight: 600 }}>
+        <Typography noWrap sx={{ fontSize: 15, fontWeight: 600 }}>
           {name}
         </Typography>
         <Typography variant="caption" noWrap sx={{ color: 'text.secondary' }}>
@@ -45,10 +47,11 @@ export default memo(function InviteRow({ row, selected, busy, onToggleSelect, on
       ) : (
         <DuncitButton
           size="small"
-          variant="outlined"
+          variant="contained"
           loading={busy}
           onClick={() => onInvite(row.phone_key)}
           data-testid={`contact-invite-${row.phone_key}`}
+          sx={{ minHeight: 36, px: 2 }}
         >
           {t('mweb.contacts.invite')}
         </DuncitButton>

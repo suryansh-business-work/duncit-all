@@ -1,5 +1,6 @@
 import { useQuery } from '@apollo/client/react';
-import { Alert, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Card, CircularProgress, Divider, Stack, Typography } from '@mui/material';
+import SectionHeader from '../../components/SectionHeader';
 import AdminClubRowCard from './AdminClubRow';
 import { MWEB_MY_ADMIN_CLUBS, type AdminClubRow } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -23,16 +24,22 @@ function ClubsBody({ clubs, loading, error }: Readonly<BodyProps>) {
       </Stack>
     );
   }
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  if (error) {
+    return (
+      <Alert severity="error" sx={{ m: 2 }}>
+        {error.message}
+      </Alert>
+    );
+  }
   if (clubs.length === 0) {
     return (
-      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+      <Typography variant="body2" sx={{ color: 'text.secondary', p: 2 }}>
         {t('mweb.clubStudio.noClubs')}
       </Typography>
     );
   }
   return (
-    <Stack spacing={1}>
+    <Stack divider={<Divider sx={{ mx: 2 }} />}>
       {clubs.map((club) => (
         <AdminClubRowCard key={club.id} club={club} />
       ))}
@@ -42,7 +49,8 @@ function ClubsBody({ clubs, loading, error }: Readonly<BodyProps>) {
 
 /**
  * "Your clubs" — every club the signed-in user administers, each with the
- * door to its pods and to its page. Native twin: the same list on ClubManage.
+ * door to its pods and to its page, as rows of one card. Native twin: the
+ * same list on ClubManage.
  */
 export default function YourClubsSection() {
   const { t } = useTranslation();
@@ -53,20 +61,11 @@ export default function YourClubsSection() {
   const clubs: AdminClubRow[] = data?.myAdminClubsTable?.rows ?? [];
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-      <CardContent>
-        <Stack spacing={1.5}>
-          <Stack>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              {t('mweb.clubStudio.yourClubs')}
-            </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
-              {t('mweb.clubStudio.yourClubsSubtitle')}
-            </Typography>
-          </Stack>
-          <ClubsBody clubs={clubs} loading={loading && !data} error={error} />
-        </Stack>
-      </CardContent>
-    </Card>
+    <Stack spacing={1.5}>
+      <SectionHeader title={t('mweb.clubStudio.yourClubs')} />
+      <Card>
+        <ClubsBody clubs={clubs} loading={loading && !data} error={error} />
+      </Card>
+    </Stack>
   );
 }

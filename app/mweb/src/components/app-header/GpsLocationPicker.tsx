@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { logs } from '@duncit/logs';
 import { Alert, Box, CircularProgress, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import GpsFixedIcon from '@mui/icons-material/GpsFixed';
+import MyLocationIcon from '@mui/icons-material/MyLocation';
 import { DuncitButton } from '@duncit/buttons';
 import { useGeoLocation } from './useGeoLocation';
 import { matchLocation, matchZone, type MatchableLocation } from './gps-match';
@@ -39,12 +39,11 @@ export default function GpsLocationPicker({
   }, [geocoded, matchedLocation, matchedHasPods, onAutoApply, onAutoSelect]);
 
   return (
-    <Box sx={{ mb: 1.5 }}>
+    <Box>
+      {/* A tonal green pill: an action, but not the sheet's primary one. */}
       <DuncitButton
         fullWidth
-        size="small"
-        variant="outlined"
-        startIcon={busy ? <CircularProgress size={14} /> : <GpsFixedIcon fontSize="small" />}
+        startIcon={busy ? <CircularProgress size={16} color="inherit" /> : <MyLocationIcon />}
         onClick={() => {
           reset();
           request().catch((error: unknown) =>
@@ -53,19 +52,14 @@ export default function GpsLocationPicker({
         }}
         disabled={busy}
         sx={{
-          minHeight: 42,
-          borderRadius: '16px',
-          border: '1px solid transparent',
+          minHeight: 48,
+          borderRadius: 999,
+          fontSize: 14,
+          fontWeight: 600,
           color: 'primary.main',
-          fontWeight: 700,
-          background: (theme) => {
-            const fill = alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.72 : 0.9);
-            return `linear-gradient(${fill}, ${fill}) padding-box, linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main}) border-box`;
-          },
-          '&:hover': {
-            border: '1px solid transparent',
-            bgcolor: 'transparent',
-          },
+          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
+          '&:hover': { bgcolor: (theme) => alpha(theme.palette.primary.main, 0.18) },
+          '&.Mui-disabled': { color: 'primary.main', bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12) },
         }}
       >
         {busy ? 'Locating…' : 'Use my location'}

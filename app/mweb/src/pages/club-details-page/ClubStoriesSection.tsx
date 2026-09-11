@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { Box, Stack, Typography } from '@mui/material';
-import AutoStoriesIcon from '@mui/icons-material/AutoStories';
+import { Box, Stack } from '@mui/material';
 import MomentLightbox from '../../components/moments/MomentLightbox';
+import SectionHeader from '../../components/SectionHeader';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { isStoryLive, parseApiError } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -91,19 +91,11 @@ export default function ClubStoriesSection({ clubId, canPost }: Readonly<Props>)
 
   return (
     <Box>
-      <Typography
-        variant="overline"
-        sx={{
-          color: "text.secondary",
-          fontWeight: 700
-        }}>
-        <AutoStoriesIcon sx={{ fontSize: 15, mb: '-2px', mr: 0.5 }} />
-        Stories
-      </Typography>
+      <SectionHeader title={t('mweb.clubDetailsPage.stories')} />
       <Stack
         direction="row"
         spacing={1.5}
-        sx={{ overflowX: 'auto', pt: 0.5, pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}
+        sx={{ overflowX: 'auto', pt: 1.25, pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}
       >
         <ClubStoryTiles clubId={clubId} canPost={canPost} stories={stories} onOpen={showStory} />
       </Stack>

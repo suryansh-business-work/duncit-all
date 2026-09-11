@@ -56,8 +56,7 @@ function StepButton({ testID, icon, disabled, onPress }: Readonly<StepButtonProp
       alignItems="center"
       justifyContent="center"
       borderRadius={999}
-      borderWidth={1}
-      borderColor="$borderColor"
+      backgroundColor="$soft"
       opacity={disabled ? 0.4 : 1}
       pressStyle={PRESS_STYLE.row}
     >
@@ -108,12 +107,11 @@ function PreviewBody({
         aria-label={t('mweb.common.cancel')}
         onPress={onCancel}
         flex={1}
-        height={46}
+        height={52}
         alignItems="center"
         justifyContent="center"
-        borderRadius={12}
-        borderWidth={1}
-        borderColor="$borderColor"
+        borderRadius={999}
+        backgroundColor="$soft"
         pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={14} fontWeight="600" color="$color">
@@ -126,14 +124,14 @@ function PreviewBody({
         aria-label={needsTrim ? 'Trim and post' : 'Post story'}
         onPress={confirm}
         flex={1}
-        height={46}
+        height={52}
         alignItems="center"
         justifyContent="center"
-        borderRadius={12}
+        borderRadius={999}
         backgroundColor="$primary"
         pressStyle={PRESS_STYLE.control}
       >
-        <Text fontSize={14} fontWeight="700" color={onPrimary}>
+        <Text fontSize={14} fontWeight="600" color={onPrimary}>
           {needsTrim ? 'Trim & Post' : 'Post story'}
         </Text>
       </XStack>
@@ -154,7 +152,7 @@ function PreviewBody({
       <YStack gap={12}>
         <YStack
           height={previewHeight}
-          borderRadius={14}
+          borderRadius={18}
           overflow="hidden"
           backgroundColor="#000000"
         >
@@ -167,7 +165,7 @@ function PreviewBody({
         </YStack>
         {needsTrim ? (
           <YStack gap={8}>
-            <Text fontSize={13} fontWeight="700" color="$muted">
+            <Text fontSize={13} fontWeight="500" color="$muted">
               Videos can be up to {MAX_STORY_VIDEO_SECONDS} seconds long. Pick the{' '}
               {MAX_STORY_VIDEO_SECONDS}s you want to post.
             </Text>
@@ -178,7 +176,7 @@ function PreviewBody({
                 disabled={start <= 0}
                 onPress={() => seekTo(start - TRIM_STEP_SECONDS)}
               />
-              <Text fontSize={13.5} fontWeight="700" color="$color" testID="story-trim-window">
+              <Text fontSize={13.5} fontWeight="600" color="$color" testID="story-trim-window">
                 {fmt(start)} – {fmt(windowEnd)} of {fmt(video.durationSeconds)}
               </Text>
               <StepButton

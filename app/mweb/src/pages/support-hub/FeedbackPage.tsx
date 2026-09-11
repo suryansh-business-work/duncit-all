@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
-import { Alert } from '@mui/material';
-import FeedbackOutlinedIcon from '@mui/icons-material/FeedbackOutlined';
+import { Alert, Paper } from '@mui/material';
 import { SUBMIT_APP_FEEDBACK_SDL, buildAppFeedbackInput } from '@duncit/slack';
 import SupportShell from './SupportShell';
 import FeedbackForm, { type FeedbackValues } from '../../forms/feedback';
 import { useTranslation } from '../../i18n/useTranslation';
+import { SURFACE_SX } from '../../theme';
 
 const SUBMIT_APP_FEEDBACK = gql(SUBMIT_APP_FEEDBACK_SDL);
 
@@ -44,16 +44,13 @@ export default function FeedbackPage() {
   };
 
   return (
-    <SupportShell
-      title={t('mweb.common.reportAProblem')}
-      subtitle={t('mweb.supportHub.sendFeedbackOrReportAnIssue')}
-      icon={<FeedbackOutlinedIcon />}
-      backTo="/support"
-    >
+    <SupportShell title={t('mweb.common.reportAProblem')} backTo="/support">
       {sent ? (
         <Alert severity="success">{t('mweb.supportHub.thanksYourFeedbackHasBeenSent')}</Alert>
       ) : (
-        <FeedbackForm loading={loading} onSubmit={onSubmit} />
+        <Paper sx={{ ...SURFACE_SX, p: 2 }}>
+          <FeedbackForm loading={loading} onSubmit={onSubmit} />
+        </Paper>
       )}
     </SupportShell>
   );

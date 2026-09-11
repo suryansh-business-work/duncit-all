@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { InputAdornment, Stack, Typography } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { InputAdornment, Stack } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
@@ -68,10 +67,7 @@ export default function RecoveryPasswordStep({ labels, busy, onSave }: Readonly<
 
   return (
     <form noValidate onSubmit={submit}>
-      <Stack spacing={1.5}>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {labels.passwordSubtitle}
-        </Typography>
+      <Stack spacing={2}>
         <RhfTextField
           control={control}
           name="new_password"
@@ -106,9 +102,8 @@ export default function RecoveryPasswordStep({ labels, busy, onSave }: Readonly<
           type="submit"
           variant="contained"
           size="large"
-          endIcon={<ArrowForwardIcon />}
+          fullWidth
           disabled={busy || !isValid}
-          sx={{ borderRadius: '16px', py: 1.25, fontWeight: 700, textTransform: 'none' }}
         >
           {busy ? labels.saving : labels.savePassword}
         </DuncitButton>

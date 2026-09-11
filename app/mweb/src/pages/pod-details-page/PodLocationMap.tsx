@@ -1,4 +1,4 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { DuncitButton } from '@duncit/buttons';
 import { mapEmbedUrl, mapSearchUrl } from '../../utils/mapEmbed';
@@ -22,30 +22,7 @@ export default function PodLocationMap({ locationName, zoneName, pincode }: Read
   const mapUrl = mapSearchUrl(query);
 
   return (
-    <Box sx={{ mt: 1.5 }}>
-      <Stack
-        direction="row"
-        sx={{
-          alignItems: "center",
-          justifyContent: "space-between",
-          mb: 0.75
-        }}>
-        <Typography variant="caption" sx={{
-          color: "text.secondary"
-        }}>
-          {t('mweb.podDetails.mapPreview')}
-        </Typography>
-        <DuncitButton
-          href={mapUrl}
-          target="_blank"
-          rel="noreferrer"
-          size="small"
-          endIcon={<OpenInNewIcon fontSize="small" />}
-          sx={{ minHeight: 32, px: 1 }}
-        >
-          {t('mweb.podDetails.openInMaps')}
-        </DuncitButton>
-      </Stack>
+    <Stack spacing={0.5}>
       <Box
         component="iframe"
         title={t('mweb.podDetails.locationMap')}
@@ -56,13 +33,22 @@ export default function PodLocationMap({ locationName, zoneName, pincode }: Read
         sx={{
           width: '100%',
           height: { xs: 240, sm: 280 },
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: '16px',
+          border: 0,
+          borderRadius: '18px',
           display: 'block',
           bgcolor: 'action.hover',
         }}
       />
-    </Box>
+      <DuncitButton
+        href={mapUrl}
+        target="_blank"
+        rel="noreferrer"
+        size="small"
+        endIcon={<OpenInNewIcon fontSize="small" />}
+        sx={{ alignSelf: 'flex-end', minHeight: 32, px: 1 }}
+      >
+        {t('mweb.podDetails.openInMaps')}
+      </DuncitButton>
+    </Stack>
   );
 }

@@ -74,7 +74,7 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
 
   return (
     <Dialog open={!!file} onClose={onCancel} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.common.previewYourVideoStory')}</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.common.previewYourVideoStory')}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5}>
           {url && (
@@ -85,7 +85,7 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
               controls
               playsInline
               onLoadedMetadata={onLoadedMetadata}
-              sx={{ width: '100%', maxHeight: '48vh', borderRadius: '16px', bgcolor: 'common.black' }}
+              sx={{ width: '100%', maxHeight: '48vh', borderRadius: '18px', bgcolor: 'common.black' }}
             />
           )}
           {file && <FileDetails file={file} dims={dims} />}
@@ -109,7 +109,7 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
                 variant="caption"
                 sx={{
                   color: "text.secondary",
-                  fontWeight: 700
+                  fontWeight: 600
                 }}>
                 Posting {fmt(start)} – {fmt(windowEnd)} of {fmt(duration)}
               </Typography>

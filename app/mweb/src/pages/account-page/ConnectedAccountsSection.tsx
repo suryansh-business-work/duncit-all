@@ -70,18 +70,11 @@ export default function ConnectedAccountsSection() {
 
   return (
     <Card>
-      <CardContent>
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={2}>
-          <Stack>
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              {t('mweb.account.connected.title')}
-            </Typography>
-            <Typography variant="body2" sx={{
-              color: "text.secondary"
-            }}>
-              {t('mweb.account.connected.subtitle')}
-            </Typography>
-          </Stack>
+          <Typography component="h2" sx={{ fontSize: '1.05rem', fontWeight: 600 }}>
+            {t('mweb.account.connected.title')}
+          </Typography>
 
           <ConnectedAccountRow
             label={t('mweb.account.connected.emailLabel')}

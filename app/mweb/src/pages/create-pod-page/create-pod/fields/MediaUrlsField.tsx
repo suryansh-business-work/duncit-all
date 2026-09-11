@@ -83,13 +83,7 @@ export default function MediaUrlsField({
 
   return (
     <Box>
-      <Typography
-        variant="caption"
-        sx={{
-          color: "text.secondary",
-          fontWeight: 700,
-          letterSpacing: '0.06em'
-        }}>
+      <Typography variant="subtitle2" component="div">
         {requiredLabel(fieldLabel, required)}
       </Typography>
       {urls.length === 0 ? (
@@ -116,7 +110,7 @@ export default function MediaUrlsField({
             '&:hover': { borderColor: 'primary.main' },
           }}
         >
-          <Box sx={{ width: 56, height: 56, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: 'background.paper', border: 1, borderColor: 'divider' }}>
+          <Box sx={{ width: 56, height: 56, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: 'background.paper' }}>
             <AddPhotoAlternateOutlinedIcon color="primary" />
           </Box>
           <Typography variant="subtitle2" sx={{
@@ -129,7 +123,7 @@ export default function MediaUrlsField({
       ) : (
         <Stack direction="row" sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
           {urls.map((url) => (
-            <Box key={url} sx={{ position: 'relative', width: 88, height: 88, borderRadius: '16px', overflow: 'hidden', border: 1, borderColor: 'divider', bgcolor: 'action.hover', display: 'grid', placeItems: 'center' }}>
+            <Box key={url} sx={{ position: 'relative', width: 88, height: 88, borderRadius: '16px', overflow: 'hidden', bgcolor: 'action.hover', display: 'grid', placeItems: 'center' }}>
               {isVideoUrl(url) ? (
                 <VideocamIcon color="action" />
               ) : (

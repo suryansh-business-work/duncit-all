@@ -1,6 +1,6 @@
 import type { ComponentProps } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, XStack } from 'tamagui';
 
 import {
   LEADERBOARD_CATEGORIES,
@@ -8,7 +8,8 @@ import {
   LEADERBOARD_POINTS_FIELD,
   type LeaderboardCategory,
 } from '@duncit/utils';
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { IconDisc } from '@/components/account/IconDisc';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { LeaderboardConfigShape } from './types';
 
@@ -26,7 +27,6 @@ const EARN_ICON: Record<LeaderboardCategory, IconName> = {
  * `leaderboardConfig`; RN twin of mWeb's <HowToEarnCard/>. */
 export function LeaderboardHowToEarn({ config }: Readonly<{ config: LeaderboardConfigShape }>) {
   const { t } = useTranslation();
-  const { primary } = useThemeColors();
   // A 0-point action is switched off — promising it would be a lie.
   const active = LEADERBOARD_CATEGORIES.filter(
     (category) => (config[LEADERBOARD_POINTS_FIELD[category]] ?? 0) > 0,
@@ -34,38 +34,24 @@ export function LeaderboardHowToEarn({ config }: Readonly<{ config: LeaderboardC
   if (active.length === 0) return null;
 
   return (
-    <YStack
-      testID="leaderboard-how-to-earn"
-      marginHorizontal={16}
-      padding={16}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      gap={12}
-    >
-      <YStack gap={2}>
-        <Text fontSize={15} fontWeight="700" color="$color">
-          {t('mweb.leaderboard.howToTitle')}
-        </Text>
-        <Text fontSize={11} color="$muted">
-          {t('mweb.leaderboard.howToSubtitle')}
-        </Text>
-      </YStack>
+    <SurfaceCard testID="leaderboard-how-to-earn" marginHorizontal={16} gap={12}>
+      <Text accessibilityRole="header" fontSize={17} fontWeight="600" color="$color">
+        {t('mweb.leaderboard.howToTitle')}
+      </Text>
       {active.map((category) => (
         <XStack key={category} alignItems="center" gap={12}>
-          <MaterialIcons name={EARN_ICON[category]} size={20} color={primary} />
-          <Text flex={1} fontSize={13} color="$color">
+          <IconDisc icon={EARN_ICON[category]} />
+          <Text flex={1} fontSize={14} fontWeight="500" color="$color">
             {t(LEADERBOARD_EARN_KEY[category])}
           </Text>
           <XStack
             paddingHorizontal={10}
-            paddingVertical={4}
+            height={24}
+            alignItems="center"
             borderRadius={999}
-            borderWidth={1}
-            borderColor="$primary"
+            backgroundColor="$primarySoft"
           >
-            <Text fontSize={12} fontWeight="700" color="$primary">
+            <Text fontSize={12} fontWeight="600" color="$primary">
               {t('mweb.leaderboard.earnPoints', {
                 vars: { points: config[LEADERBOARD_POINTS_FIELD[category]] },
               })}
@@ -73,6 +59,6 @@ export function LeaderboardHowToEarn({ config }: Readonly<{ config: LeaderboardC
           </XStack>
         </XStack>
       ))}
-    </YStack>
+    </SurfaceCard>
   );
 }

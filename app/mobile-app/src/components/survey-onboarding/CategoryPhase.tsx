@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Button, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { useBottomInset } from '@/hooks/useBottomNavSpace';
 import { useCategoryLevel } from '@/hooks/useCategoryLevel';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { type CategoryOption } from '@/graphql/onboarding-survey';
 import type { CategoryLabels, Scope } from './useOnboardingFlow';
 import { RefreshScrollView } from '@/components/PullToRefresh';
@@ -28,7 +29,6 @@ export function CategoryPhase({
   disabledIds,
   initialScope,
 }: Readonly<Props>) {
-  const { color: ink, primary } = useThemeColors();
   // Same as the other phases: the Continue button is the last row of the scroll
   // and the edge-to-edge window paints the Android navigation bar over it.
   const bottomInset = useBottomInset();
@@ -72,10 +72,11 @@ export function CategoryPhase({
     });
   };
 
+  // Calm pills: surface when idle, green with white text when picked.
   const group = (label: string, level: keyof Scope, options: CategoryOption[]) =>
     options.length === 0 ? null : (
       <YStack gap={8}>
-        <Text fontSize={14} fontWeight="700" color={ink}>
+        <Text fontSize={14} fontWeight="600" color="$color">
           {label}
         </Text>
         <XStack flexWrap="wrap" gap={8}>
@@ -83,23 +84,29 @@ export function CategoryPhase({
             const selected = scope[level] === c.id;
             const heldDisabled = disabledSet.has(c.id);
             return (
-              <Button
+              <XStack
                 key={c.id}
                 testID={`cat-${c.id}`}
-                size="$3"
-                borderRadius={999}
-                backgroundColor={selected ? primary : 'transparent'}
-                borderColor={selected ? primary : ink}
-                borderWidth={1}
-                disabled={heldDisabled}
+                role="button"
+                aria-label={c.name}
+                aria-pressed={selected}
                 aria-disabled={heldDisabled}
+                disabled={heldDisabled}
+                height={40}
+                paddingHorizontal={16}
+                alignItems="center"
+                borderRadius={999}
+                borderWidth={1}
+                borderColor={selected ? '$primary' : '$borderColor'}
+                backgroundColor={selected ? '$primary' : '$surface'}
                 opacity={heldDisabled ? 0.4 : 1}
+                pressStyle={PRESS_STYLE.control}
                 onPress={heldDisabled ? undefined : () => pick(level, c.id)}
               >
-                <Text color={selected ? 'white' : ink} fontWeight={selected ? '700' : '500'}>
+                <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
                   {c.name}
                 </Text>
-              </Button>
+              </XStack>
             );
           })}
         </XStack>
@@ -115,20 +122,18 @@ export function CategoryPhase({
       {group('Category *', 'category_id', cats)}
       {group('Sub-Category *', 'sub_category_id', subs)}
       {message ? (
-        <Text testID="category-error" color="$red10">
+        <Text testID="category-error" color="$danger">
           {message}
         </Text>
       ) : null}
-      <Button
+      <DuncitButton
         testID="primary-action"
+        label={busy ? 'Loading…' : 'Continue'}
+        size="lg"
+        fullWidth
         disabled={busy}
         onPress={onContinuePress}
-        backgroundColor={primary}
-        color="white"
-        fontWeight="600"
-      >
-        {busy ? 'Loading…' : 'Continue'}
-      </Button>
+      />
     </RefreshScrollView>
   );
 }

@@ -1,4 +1,4 @@
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 import { inviteOutcomeKey } from '@duncit/utils';
 
 import { DuncitButton } from '@/components/DuncitButton';
@@ -28,20 +28,19 @@ export function ContactsInviteBar({
   const { t } = useTranslation();
   return (
     <YStack testID="contacts-invite-bar" gap={10}>
-      <Text fontSize={13} color="$muted">
+      <Text fontSize={14} color="$muted">
         {t('mweb.contacts.inviteBody')}
       </Text>
-      <XStack>
-        <DuncitButton
-          testID="contacts-invite-selected"
-          label={t('mweb.contacts.inviteSelected', { vars: { count: selectedCount } })}
-          variant="solid"
-          size="sm"
-          disabled={selectedCount === 0}
-          loading={busy}
-          onPress={onInviteSelected}
-        />
-      </XStack>
+      <DuncitButton
+        testID="contacts-invite-selected"
+        label={t('mweb.contacts.inviteSelected', { vars: { count: selectedCount } })}
+        variant="solid"
+        size="lg"
+        fullWidth
+        disabled={selectedCount === 0}
+        loading={busy}
+        onPress={onInviteSelected}
+      />
       {result ? (
         <Text
           testID="contacts-invite-result"

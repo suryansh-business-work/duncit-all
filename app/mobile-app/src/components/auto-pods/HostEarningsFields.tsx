@@ -7,6 +7,7 @@ import type { AutoPodHostProjection } from '@/hooks/useAutoPodHostProjection';
 
 const inputStyle = {
   size: '$4',
+  borderRadius: 14,
   backgroundColor: '$surface',
   color: '$color',
   placeholderTextColor: '$muted',
@@ -34,10 +35,10 @@ function SpotsSlider({ min, max, value, label, onChange }: Readonly<SpotsSliderP
       onValueChange={([next]) => onChange(next ?? min)}
       aria-label={label}
     >
-      <Slider.Track>
-        <Slider.TrackActive />
+      <Slider.Track backgroundColor="$soft">
+        <Slider.TrackActive backgroundColor="$primary" />
       </Slider.Track>
-      <Slider.Thumb index={0} circular size="$2" />
+      <Slider.Thumb index={0} circular size="$2" backgroundColor="$primary" borderWidth={0} />
     </Slider>
   );
 }
@@ -85,9 +86,9 @@ export function HostEarningsFields({
   const priceInvalid = price.trim() !== '' && (Number(price) || 0) <= 0;
 
   return (
-    <YStack gap={10}>
+    <YStack gap={12}>
       {projection ? (
-        <Text testID="auto-pod-total-spots" fontSize={13} fontWeight="700" color="$color">
+        <Text testID="auto-pod-total-spots" fontSize={14} fontWeight="600" color="$color">
           {labels.earningsTotalSpots(projection.max_spots)}
         </Text>
       ) : null}
@@ -104,7 +105,7 @@ export function HostEarningsFields({
         aria-label={labels.earningsAddPrice}
       />
       {priceInvalid ? (
-        <Text testID="auto-pod-earnings-price-error" fontSize={12} color="$danger">
+        <Text testID="auto-pod-earnings-price-error" fontSize={13} color="$danger">
           {labels.earningsPricePositive}
         </Text>
       ) : null}
@@ -112,7 +113,7 @@ export function HostEarningsFields({
       {slidable ? (
         <YStack gap={6}>
           <XStack alignItems="center" justifyContent="space-between">
-            <Text fontSize={13} fontWeight="700" color="$color">
+            <Text fontSize={14} fontWeight="600" color="$color">
               {labels.spotsField}
             </Text>
             <Text testID="auto-pod-spots-value" fontSize={18} fontWeight="700" color="$color">
@@ -147,13 +148,13 @@ export function HostEarningsFields({
       {projection ? (
         <HostProjectionLines projection={projection} labels={labels} formatMoney={formatMoney} />
       ) : (
-        <Text testID="auto-pod-earnings-hint" fontSize={12.5} color="$muted">
+        <Text testID="auto-pod-earnings-hint" fontSize={13} color="$muted">
           {labels.earningsEnterPrice}
         </Text>
       )}
 
       {failed ? (
-        <Text testID="auto-pod-earnings-failed" fontSize={12} color="$danger">
+        <Text testID="auto-pod-earnings-failed" fontSize={13} color="$danger">
           {labels.loadFailed}
         </Text>
       ) : null}

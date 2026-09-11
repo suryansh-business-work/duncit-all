@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AiMonitoringChip } from '@/components/ai-monitoring';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { uploadToImagekitDirect } from '@/services/imagekit-upload';
 import { compressUploadedVideo } from '@/services/video-compression';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -32,7 +33,7 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
     null,
   );
   const [error, setError] = useState<string | undefined>();
-  const { color, onPrimary } = useThemeColors();
+  const { accent, muted } = useThemeColors();
   const { t } = useTranslation();
   const limits = useUploadLimits();
   const podReel = t('mweb.createPod.podReel');
@@ -96,46 +97,50 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
   const busyLabel = progress ? stageLabel : t('mweb.createPod.uploading');
 
   return (
-    <YStack borderWidth={1} borderColor="$borderColor" borderRadius={12} overflow="hidden">
+    <SurfaceCard padding={0} overflow="hidden">
       <XStack
         testID="optional-reel"
         role="button"
         aria-label={podReel}
         aria-expanded={open}
         onPress={() => setOpen(!open)}
-        padding={12}
-        gap={10}
+        paddingHorizontal={16}
+        paddingVertical={14}
+        gap={12}
         alignItems="center"
         pressStyle={PRESS_STYLE.row}
       >
         <YStack
-          width={36}
-          height={36}
-          borderRadius={18}
+          width={40}
+          height={40}
+          borderRadius={20}
           alignItems="center"
           justifyContent="center"
-          backgroundColor="$primary"
+          backgroundColor="$soft"
         >
-          <MaterialIcons name="movie" size={18} color={onPrimary} />
+          <MaterialIcons name="movie" size={20} color={accent} />
         </YStack>
-        <YStack flex={1}>
-          <Text fontSize={14} fontWeight="700" color="$color">
-            {podReel}
-          </Text>
-          <Text fontSize={12} color="$muted">
-            {t('mweb.createPod.reelSubtitle')}
-          </Text>
-        </YStack>
+        <Text flex={1} fontSize={15} fontWeight="600" color="$color">
+          {podReel}
+        </Text>
         {value ? (
-          <Text fontSize={12} fontWeight="600" color="$primary">
-            {t('mweb.createPod.summaryAdded')}
-          </Text>
+          <XStack
+            height={26}
+            alignItems="center"
+            paddingHorizontal={10}
+            borderRadius={999}
+            backgroundColor="$primary"
+          >
+            <Text fontSize={12} fontWeight="600" color="$onPrimary">
+              {t('mweb.createPod.summaryAdded')}
+            </Text>
+          </XStack>
         ) : (
-          <MaterialIcons name={open ? 'expand-less' : 'chevron-right'} size={22} color={color} />
+          <MaterialIcons name={open ? 'expand-less' : 'chevron-right'} size={22} color={muted} />
         )}
       </XStack>
       {open ? (
-        <YStack padding={12} paddingTop={0} gap={8}>
+        <YStack paddingHorizontal={16} paddingBottom={16} gap={10}>
           <XStack>
             <AiMonitoringChip testID="reel-ai-monitoring" />
           </XStack>
@@ -149,6 +154,6 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
           />
         </YStack>
       ) : null}
-    </YStack>
+    </SurfaceCard>
   );
 }

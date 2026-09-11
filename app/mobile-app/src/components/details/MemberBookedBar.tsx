@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
-import { semantic } from '@duncit/auth-tokens';
 
+import { BarCta, BarLabel } from '@/components/details/BarLabel';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -39,6 +39,7 @@ export function MemberBookedBar({
   onBackout,
   onKeepSpot,
 }: Readonly<MemberBookedBarProps>) {
+  const { success } = useThemeColors();
   const { t } = useTranslation();
   let note: string | null = null;
   if (!canBackout) {
@@ -55,42 +56,24 @@ export function MemberBookedBar({
         restoringSpot={restoringSpot}
         onKeepSpot={onKeepSpot}
       />
-      <XStack alignItems="center" gap={12}>
-        <XStack flex={1} alignItems="center" gap={8}>
-          <MaterialIcons name="check-circle" size={22} color={semantic.success} />
-          <YStack flex={1}>
-            <Text fontSize={11} color="$muted">
-              {overline}
-            </Text>
-            <Text fontSize={16} fontWeight="700" color="$color" testID="pod-booked-label">
-              {badge}
-            </Text>
-            {note ? (
-              <Text fontSize={10.5} color="$muted" testID="pod-backout-maxed">
-                {note}
-              </Text>
-            ) : null}
-          </YStack>
-        </XStack>
+      <XStack alignItems="center" gap={12} minHeight={48}>
+        <BarLabel
+          icon="check-circle"
+          iconColor={success}
+          caption={overline}
+          value={badge}
+          valueTestID="pod-booked-label"
+          note={note}
+          noteTestID="pod-backout-maxed"
+        />
         {canBackout ? (
-          <XStack
+          <BarCta
             testID="pod-backout"
-            role="button"
-            aria-label={t('mweb.podDetails.backoutFromPod')}
+            tone="danger"
+            label={t('mweb.podDetails.backout')}
+            ariaLabel={t('mweb.podDetails.backoutFromPod')}
             onPress={onBackout}
-            alignItems="center"
-            justifyContent="center"
-            paddingHorizontal={20}
-            height={48}
-            borderRadius={999}
-            borderWidth={1}
-            borderColor="$danger"
-            pressStyle={PRESS_STYLE.control}
-          >
-            <Text fontSize={14} fontWeight="700" color="$danger">
-              {t('mweb.podDetails.backout')}
-            </Text>
-          </XStack>
+          />
         ) : null}
       </XStack>
     </YStack>
@@ -115,12 +98,13 @@ function ReleasedSeatsRow({
   restoringSpot: boolean;
   onKeepSpot: () => void;
 }>) {
+  const { warning } = useThemeColors();
   const { t } = useTranslation();
   if (releasedSeats <= 0) return null;
   if (!canTakeSeatsBack) {
     return (
       <XStack alignItems="center" gap={8} testID="pod-released-seats-locked">
-        <MaterialIcons name="lock-clock" size={18} color={semantic.warning} />
+        <MaterialIcons name="lock-clock" size={18} color={warning} />
         <Text flex={1} fontSize={12} fontWeight="600" color="$muted">
           {t('mweb.podDetails.backoutLocked')}
         </Text>
@@ -131,7 +115,7 @@ function ReleasedSeatsRow({
     releasedSeats === 1 ? 'mweb.podDetails.releasedSeatsOne' : 'mweb.podDetails.releasedSeatsMany';
   return (
     <XStack alignItems="center" gap={8} testID="pod-released-seats">
-      <MaterialIcons name="hourglass-top" size={18} color={semantic.warning} />
+      <MaterialIcons name="hourglass-top" size={18} color={warning} />
       <Text flex={1} fontSize={12} fontWeight="600" color="$muted">
         {t(releasedKey, { vars: { count: releasedSeats } })}
       </Text>
@@ -144,25 +128,16 @@ function ReleasedSeatsRow({
         alignItems="center"
         justifyContent="center"
         paddingHorizontal={16}
-        height={38}
+        height={40}
         borderRadius={999}
         backgroundColor="$primary"
         opacity={restoringSpot ? 0.6 : 1}
         pressStyle={PRESS_STYLE.control}
       >
-        <TakeSeatsBackLabel />
+        <Text fontSize={13} fontWeight="600" color="$onPrimary">
+          {t('mweb.podDetails.takeSeatsBack')}
+        </Text>
       </XStack>
     </XStack>
-  );
-}
-
-/** Hoisted so the themed label doesn't create a branch inside the row. */
-function TakeSeatsBackLabel() {
-  const { onPrimary } = useThemeColors();
-  const { t } = useTranslation();
-  return (
-    <Text fontSize={13} fontWeight="700" color={onPrimary}>
-      {t('mweb.podDetails.takeSeatsBack')}
-    </Text>
   );
 }

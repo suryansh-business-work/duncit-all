@@ -22,14 +22,13 @@ interface Props {
 }
 
 const stepperBox = {
-  width: 30,
-  height: 30,
+  width: 32,
+  height: 32,
   alignItems: 'center',
   justifyContent: 'center',
-  borderRadius: 8,
-  borderWidth: 1,
-  borderColor: '$borderColor',
-  pressStyle: PRESS_STYLE.row,
+  borderRadius: 999,
+  backgroundColor: '$soft',
+  pressStyle: PRESS_STYLE.control,
 } as const;
 
 /** One attached product on Step 4: thumbnail, name, quantity stepper and line
@@ -53,19 +52,19 @@ export function AttachedProductRow({
   return (
     <XStack
       testID={testID}
-      gap={10}
-      padding={10}
-      borderRadius={12}
+      gap={12}
+      padding={12}
+      borderRadius={24}
       borderWidth={1}
       borderColor="$borderColor"
       alignItems="center"
     >
       <YStack
-        width={48}
-        height={48}
-        borderRadius={9}
+        width={56}
+        height={56}
+        borderRadius={12}
         overflow="hidden"
-        backgroundColor="$borderColor"
+        backgroundColor="$soft"
         alignItems="center"
         justifyContent="center"
       >
@@ -81,10 +80,10 @@ export function AttachedProductRow({
       </YStack>
 
       <YStack flex={1} gap={2}>
-        <Text fontSize={13.5} fontWeight="700" color="$color" numberOfLines={1}>
+        <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
           {product.product_name}
         </Text>
-        <Text fontSize={11.5} color="$muted">
+        <Text fontSize={12} color="$muted">
           {t('podProduct.perUnit', { vars: { cost: `₹${product.unit_cost}` } })}
         </Text>
         <XStack alignItems="center" gap={8} marginTop={4}>

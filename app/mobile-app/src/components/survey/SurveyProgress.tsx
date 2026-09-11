@@ -1,7 +1,6 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { YStack } from 'tamagui';
 
-/** Slim gradient progress bar (0–100) — matches mWeb's survey LinearProgress. */
+/** Slim progress bar (0–100): a green fill on its own tonal track — mWeb's themed LinearProgress. */
 export function SurveyProgress({ value }: Readonly<{ value: number }>) {
   return (
     <YStack
@@ -9,13 +8,13 @@ export function SurveyProgress({ value }: Readonly<{ value: number }>) {
       height={6}
       overflow="hidden"
       borderRadius={999}
-      backgroundColor="$borderColor"
+      backgroundColor="$primarySoft"
     >
-      <LinearGradient
-        colors={['#ff4f73', '#ff8b5f']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{ height: '100%', width: `${Math.max(0, Math.min(100, value))}%` }}
+      <YStack
+        height="100%"
+        width={`${Math.max(0, Math.min(100, value))}%`}
+        borderRadius={999}
+        backgroundColor="$primary"
       />
     </YStack>
   );

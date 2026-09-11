@@ -1,13 +1,14 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
-import { semantic } from '@duncit/auth-tokens';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import type { PodIdea } from '@/hooks/usePodIdeas';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRelative } from '@/utils/date-format';
 import { categoryPathLabel } from '@/utils/idea-category';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { IdeaCardActions } from './IdeaCardActions';
 
 interface Props {
   idea: PodIdea;
@@ -19,15 +20,41 @@ interface Props {
   showStatus?: boolean;
 }
 
-/** Colour for the submission-status chip (only shown on the viewer's own ideas). */
-function statusColor(status: string): string {
-  if (status === 'APPROVED') return semantic.success;
-  if (status === 'REJECTED') return semantic.error;
-  return semantic.warning;
+/** Theme token for the submission-status chip (only shown on the viewer's own ideas). */
+function statusColor(status: string): '$success' | '$danger' | '$warning' {
+  if (status === 'APPROVED') return '$success';
+  if (status === 'REJECTED') return '$danger';
+  return '$warning';
 }
 
-/** A single pod idea: author header, title/description (tap to open), and the
- * like / comment / share action row. RN port of mWeb's IdeaCard. */
+/** A soft meta pill under the description — the idea number or its category. */
+function MetaPill({
+  testID,
+  label,
+  icon,
+}: Readonly<{ testID: string; label: string; icon?: boolean }>) {
+  const { muted } = useThemeColors();
+  return (
+    <XStack
+      testID={testID}
+      alignItems="center"
+      gap={4}
+      height={24}
+      paddingHorizontal={10}
+      borderRadius={999}
+      backgroundColor="$soft"
+    >
+      {icon ? <MaterialIcons name="local-offer" size={12} color={muted} /> : null}
+      <Text fontSize={11} fontWeight="600" color="$muted">
+        {label}
+      </Text>
+    </XStack>
+  );
+}
+
+/** A single pod idea on a surface card: author header, title/description (tap
+ * to open), meta pills and the like / comment / share row. RN port of mWeb's
+ * IdeaCard. */
 export function IdeaCard({
   idea,
   myId,
@@ -38,51 +65,44 @@ export function IdeaCard({
   showStatus,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { muted, danger } = useThemeColors();
+  const { danger } = useThemeColors();
   const author = idea.author;
   const isMine = !!myId && idea.author_id === myId;
   const initial = (author?.first_name?.[0] ?? author?.full_name?.[0] ?? 'U').toUpperCase();
   const categoryPath = categoryPathLabel(idea);
 
   return (
-    <YStack
-      testID={`idea-card-${idea.id}`}
-      gap={10}
-      padding={14}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
+    <SurfaceCard testID={`idea-card-${idea.id}`} gap={12}>
       <XStack alignItems="center" gap={10}>
         <YStack
           width={36}
           height={36}
           borderRadius={18}
-          backgroundColor="$background"
+          backgroundColor="$soft"
           alignItems="center"
           justifyContent="center"
         >
-          <Text fontSize={15} fontWeight="700" color="$color">
+          <Text fontSize={15} fontWeight="600" color="$color">
             {initial}
           </Text>
         </YStack>
         <YStack flex={1}>
-          <Text fontSize={13.5} fontWeight="600" color="$color" numberOfLines={1}>
+          <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
             {author?.full_name ?? 'Member'}
           </Text>
-          <Text fontSize={11.5} color="$muted">
+          <Text fontSize={12} color="$muted">
             {formatRelative(idea.created_at)}
           </Text>
         </YStack>
         {showStatus ? (
           <XStack
-            paddingHorizontal={8}
-            paddingVertical={3}
+            height={24}
+            alignItems="center"
+            paddingHorizontal={10}
             borderRadius={999}
             backgroundColor={statusColor(idea.status)}
           >
-            <Text fontSize={10} fontWeight="700" color="#ffffff">
+            <Text fontSize={11} fontWeight="600" color="$onPrimary">
               {idea.status}
             </Text>
           </XStack>
@@ -108,96 +128,24 @@ export function IdeaCard({
         gap={4}
         pressStyle={PRESS_STYLE.control}
       >
-        <Text fontSize={16} fontWeight="700" color="$color">
+        <Text fontSize={16} fontWeight="600" color="$color">
           {idea.title}
         </Text>
-        <Text fontSize={13.5} color="$muted" numberOfLines={4} lineHeight={19}>
+        <Text fontSize={14} color="$muted" numberOfLines={4} lineHeight={20}>
           {idea.description}
         </Text>
       </YStack>
 
       {idea.idea_no || categoryPath ? (
         <XStack alignItems="center" gap={8} flexWrap="wrap">
-          {idea.idea_no ? (
-            <XStack
-              testID={`idea-no-${idea.id}`}
-              paddingHorizontal={8}
-              paddingVertical={3}
-              borderRadius={6}
-              backgroundColor="$background"
-            >
-              <Text fontSize={10.5} fontWeight="600" color="$muted">
-                {idea.idea_no}
-              </Text>
-            </XStack>
-          ) : null}
+          {idea.idea_no ? <MetaPill testID={`idea-no-${idea.id}`} label={idea.idea_no} /> : null}
           {categoryPath ? (
-            <XStack
-              testID={`idea-category-${idea.id}`}
-              alignItems="center"
-              gap={4}
-              paddingHorizontal={8}
-              paddingVertical={3}
-              borderRadius={999}
-              backgroundColor="$background"
-            >
-              <MaterialIcons name="local-offer" size={11} color={muted} />
-              <Text fontSize={10.5} fontWeight="700" color="$muted">
-                {categoryPath}
-              </Text>
-            </XStack>
+            <MetaPill testID={`idea-category-${idea.id}`} label={categoryPath} icon />
           ) : null}
         </XStack>
       ) : null}
 
-      <XStack alignItems="center" gap={20}>
-        <XStack
-          testID={`idea-like-${idea.id}`}
-          role="button"
-          aria-label={t('mweb.podIdeas.likeIdea')}
-          onPress={onLike}
-          alignItems="center"
-          gap={5}
-          pressStyle={PRESS_STYLE.inline}
-        >
-          <MaterialIcons
-            name={idea.liked_by_me ? 'favorite' : 'favorite-border'}
-            size={17}
-            color={idea.liked_by_me ? danger : muted}
-          />
-          <Text fontSize={12.5} fontWeight="700" color="$muted">
-            {idea.likes_count}
-          </Text>
-        </XStack>
-        <XStack
-          testID={`idea-comment-${idea.id}`}
-          role="button"
-          aria-label={t('mweb.podIdeas.commentOnIdea')}
-          onPress={onOpen}
-          alignItems="center"
-          gap={5}
-          pressStyle={PRESS_STYLE.inline}
-        >
-          <MaterialIcons name="chat-bubble-outline" size={16} color={muted} />
-          <Text fontSize={12.5} fontWeight="700" color="$muted">
-            {idea.comments_count}
-          </Text>
-        </XStack>
-        <XStack
-          testID={`idea-share-${idea.id}`}
-          role="button"
-          aria-label={t('mweb.podIdeas.shareIdea')}
-          onPress={onShare}
-          alignItems="center"
-          gap={5}
-          pressStyle={PRESS_STYLE.inline}
-        >
-          <MaterialIcons name="share" size={16} color={muted} />
-          <Text fontSize={12.5} fontWeight="700" color="$muted">
-            {idea.shares_count}
-          </Text>
-        </XStack>
-      </XStack>
-    </YStack>
+      <IdeaCardActions idea={idea} onOpen={onOpen} onLike={onLike} onShare={onShare} />
+    </SurfaceCard>
   );
 }

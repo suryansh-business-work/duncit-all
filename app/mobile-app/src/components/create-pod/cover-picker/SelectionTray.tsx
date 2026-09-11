@@ -23,16 +23,16 @@ export function SelectionTray({ urls, max, onRemove }: Readonly<Props>) {
   return (
     <YStack gap={6} testID="cover-selection-tray">
       <XStack alignItems="center" gap={8}>
-        <Text fontSize={12.5} fontWeight="700" color="$color">
+        <Text fontSize={13} fontWeight="600" color="$color">
           {t('mweb.createPod.selected')}
         </Text>
         <YStack
           paddingHorizontal={8}
           paddingVertical={2}
           borderRadius={999}
-          backgroundColor={urls.length ? '$primary' : '$surface'}
+          backgroundColor={urls.length ? '$primary' : '$soft'}
         >
-          <Text fontSize={11.5} fontWeight="700" color={urls.length ? '$onPrimary' : '$muted'}>
+          <Text fontSize={12} fontWeight="600" color={urls.length ? '$onPrimary' : '$muted'}>
             {t('mweb.createPod.selectedCount', { vars: { count: urls.length, max } })}
           </Text>
         </YStack>
@@ -53,7 +53,7 @@ export function SelectionTray({ urls, max, onRemove }: Readonly<Props>) {
               key={url}
               width={72}
               height={72}
-              borderRadius={10}
+              borderRadius={12}
               overflow="hidden"
               borderWidth={index === 0 ? 2 : 1}
               borderColor={index === 0 ? '$primary' : '$borderColor'}

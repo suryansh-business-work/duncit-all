@@ -42,7 +42,7 @@ export function ReopenReasonModal({
         </XStack>
       }
     >
-      <Text fontSize={16} fontWeight="700" color="$color">
+      <Text fontSize={17} fontWeight="600" color="$color">
         Re-open this conversation
       </Text>
       <Text fontSize={13} color="$muted">

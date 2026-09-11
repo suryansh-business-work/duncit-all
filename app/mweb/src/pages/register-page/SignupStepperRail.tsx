@@ -1,4 +1,4 @@
-import { Stack, Step, StepLabel, Stepper, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import {
   SIGNUP_STEPS,
   SIGNUP_STEP_COUNT,
@@ -6,6 +6,7 @@ import {
   signupStepIndex,
   type SignupStep,
 } from '@duncit/utils';
+import StepProgressBar from '../../components/StepProgressBar';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -19,36 +20,29 @@ interface Props {
 }
 
 /**
- * The four-step rail, and the line under it saying what this step is for.
+ * The four-step rail: a slim segmented bar, and the current step's name under
+ * it. Native twin: app/mobile-app/src/screens/SignupScreen/SignupStepperRail.
  *
  * The rail is read-only: a completed step is not a link back, because "Back" is
  * the button that owns that and the last step has no way back at all — the
- * account exists by then.
+ * account exists by then. "Step X of N" is the bar's accessible name now rather
+ * than a caption, since the bar already shows the position.
  */
 export default function SignupStepperRail({ step, askingNumber }: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = buildSignupStepperLabels(t);
-  const active = signupStepIndex(step) - 1;
+  const current = signupStepIndex(step);
   // Decided above the JSX (S3358).
-  const subtitle = askingNumber ? labels.detailsSubtitle : labels.step(step).subtitle;
+  const title = askingNumber ? labels.detailsTitle : labels.step(step).title;
 
   return (
-    <Stack spacing={1}>
-      <Stepper activeStep={active} alternativeLabel>
-        {SIGNUP_STEPS.map((id) => (
-          <Step key={id}>
-            <StepLabel>{labels.step(id).title}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
-      <Stack spacing={0.3} sx={{ alignItems: 'center' }}>
-        <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-          {labels.stepOf(signupStepIndex(step), SIGNUP_STEP_COUNT)}
-        </Typography>
-        <Typography variant="body2" sx={{ textAlign: 'center', color: 'text.secondary' }}>
-          {subtitle}
-        </Typography>
-      </Stack>
+    <Stack spacing={1.5} data-testid="signup-stepper">
+      <StepProgressBar
+        steps={SIGNUP_STEPS}
+        current={current}
+        label={labels.stepOf(current, SIGNUP_STEP_COUNT)}
+      />
+      <Typography sx={{ fontSize: 17, fontWeight: 600, textAlign: 'center' }}>{title}</Typography>
     </Stack>
   );
 }

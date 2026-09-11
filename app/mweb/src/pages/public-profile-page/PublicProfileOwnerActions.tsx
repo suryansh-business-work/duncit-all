@@ -1,31 +1,33 @@
 import { Stack } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import SettingsIcon from '@mui/icons-material/Settings';
-import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/EditOutlined';
+import SettingsIcon from '@mui/icons-material/SettingsOutlined';
+import AddIcon from '@mui/icons-material/AddRounded';
 import { DuncitButton } from '@duncit/buttons';
 import { useNavigate } from 'react-router';
 import { useTranslation } from '../../i18n/useTranslation';
 
+const PILL_SX = { minHeight: 44, flex: 1 } as const;
+const SOFT_SX = { ...PILL_SX, bgcolor: 'action.hover' } as const;
+
 export default function PublicProfileOwnerActions() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const btnSx = { minHeight: 44, flex: 1 } as const;
   return (
-    <Stack direction="row" spacing={1} sx={{ px: 1 }}>
+    <Stack direction="row" spacing={1}>
       <DuncitButton
-        variant="outlined"
+        color="inherit"
         startIcon={<EditIcon />}
         onClick={() => navigate('/account')}
-        sx={btnSx}
+        sx={SOFT_SX}
         aria-label={t('mweb.profile.editMyProfile')}
       >
         Edit
       </DuncitButton>
       <DuncitButton
-        variant="outlined"
+        color="inherit"
         startIcon={<SettingsIcon />}
         onClick={() => navigate('/account')}
-        sx={btnSx}
+        sx={SOFT_SX}
         aria-label={t('mweb.profile.openAccountSettings')}
       >
         Settings
@@ -34,7 +36,7 @@ export default function PublicProfileOwnerActions() {
         variant="contained"
         startIcon={<AddIcon />}
         onClick={() => navigate('/pod-ideas')}
-        sx={btnSx}
+        sx={PILL_SX}
         aria-label={t('mweb.profile.createANewPodIdea')}
       >
         New

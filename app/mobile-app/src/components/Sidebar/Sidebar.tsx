@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Separator, Text, XStack, YStack } from 'tamagui';
+import { XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
 import { useAccount } from '@/hooks/useAccount';
@@ -23,8 +22,8 @@ import { StudioSwitchDialog } from '@/components/StudioSwitchDialog';
 import { isTabRoute } from '@/navigation/tabs';
 import type { MenuRoute, MenuStackRoute, RootStackParamList } from '@/navigation/types';
 import { SidebarFooter } from './SidebarFooter';
-import { SidebarPolicies } from './SidebarPolicies';
 import { SidebarRefreshBar } from './SidebarRefreshBar';
+import { SidebarSettings } from './SidebarSettings';
 import { SidebarSkeleton } from './SidebarSkeleton';
 import { SidebarUserContent } from './SidebarUserContent';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -40,7 +39,7 @@ import { RefreshScrollView } from '@/components/PullToRefresh';
  */
 export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { color: ink, primary } = useThemeColors();
+  const { color: ink } = useThemeColors();
   const { t } = useTranslation();
 
   const { data, isLoading } = useMe();
@@ -112,29 +111,23 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
     <YStack flex={1} testID="sidebar-panel">
       <AppBackground />
       <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
-        <XStack
-          alignItems="center"
-          justifyContent="space-between"
-          paddingHorizontal={16}
-          paddingVertical={10}
-        >
-          <Text fontSize={12} fontWeight="600" textTransform="uppercase" color="$muted">
-            {effectiveMode === 'USER' ? 'Profile' : STUDIO_LABEL[effectiveMode]}
-          </Text>
+        <XStack justifyContent="flex-end" paddingHorizontal={16} paddingVertical={8}>
           <XStack
             testID="sidebar-close"
             role="button"
             aria-label={t('mweb.home.closeMenu')}
             onPress={onClose}
-            width={36}
-            height={36}
+            width={40}
+            height={40}
             alignItems="center"
             justifyContent="center"
-            borderRadius={18}
+            borderRadius={20}
+            borderWidth={1}
+            borderColor="$cardBorder"
             backgroundColor="$surface"
-            pressStyle={PRESS_STYLE.row}
+            pressStyle={PRESS_STYLE.control}
           >
-            <MaterialIcons name="close" size={18} color={ink} />
+            <MaterialIcons name="close" size={20} color={ink} />
           </XStack>
         </XStack>
 
@@ -142,10 +135,8 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
 
         <RefreshScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingVertical: 4 }}
+          contentContainerStyle={{ paddingTop: 4, paddingBottom: 8 }}
         >
-          {/* One unified card layout for every role — the studio-specific
-              menu list was retired so all modes share this design. */}
           {pending ? (
             <SidebarSkeleton />
           ) : (
@@ -166,66 +157,15 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
             />
           )}
 
-          {canSwitch ? (
-            <XStack
-              testID="sidebar-switch-role"
-              role="button"
-              aria-label={t('mweb.common.switchRole')}
-              onPress={openSwitch}
-              marginHorizontal={8}
-              marginTop={4}
-              marginBottom={15}
-              alignItems="center"
-              gap={12}
-              borderRadius={10}
-              paddingHorizontal={12}
-              paddingVertical={10}
-              backgroundColor="$surface"
-              pressStyle={PRESS_STYLE.row}
-            >
-              <MaterialIcons name="swap-horiz" size={20} color={primary} />
-              <YStack flex={1}>
-                <Text fontSize={14} fontWeight="600" color="$color">
-                  Switch role
-                </Text>
-                <Text fontSize={11.5} color="$muted">
-                  {STUDIO_LABEL[effectiveMode]}
-                </Text>
-              </YStack>
-            </XStack>
-          ) : null}
-
-          <Separator borderColor="$borderColor" />
-          <XStack
-            alignItems="center"
-            justifyContent="space-between"
-            minHeight={44}
-            paddingHorizontal={16}
-            paddingVertical={0}
-          >
-            <XStack alignItems="center" gap={12}>
-              <MaterialIcons
-                name={scheme === 'dark' ? 'dark-mode' : 'light-mode'}
-                size={20}
-                color={ink}
-              />
-              <Text fontSize={14.5} fontWeight="700" color="$color">
-                Dark mode
-              </Text>
-            </XStack>
-            <Switch
-              testID="sidebar-theme-switch"
-              aria-label={t('mweb.sidebar.toggleDarkMode')}
-              value={scheme === 'dark'}
-              onValueChange={toggleTheme}
-              trackColor={{ true: primary }}
-            />
-          </XStack>
-          <Separator borderColor="$borderColor" />
-          <SidebarPolicies
+          <SidebarSettings
+            canSwitch={canSwitch}
+            modeLabel={STUDIO_LABEL[effectiveMode]}
+            onSwitch={openSwitch}
+            dark={scheme === 'dark'}
+            onToggleTheme={toggleTheme}
             policies={policiesData?.publicPolicies ?? []}
-            loading={policiesLoading}
-            onSelect={(slug) => {
+            policiesLoading={policiesLoading}
+            onSelectPolicy={(slug) => {
               onClose();
               navigation.navigate('Policy', { slug });
             }}

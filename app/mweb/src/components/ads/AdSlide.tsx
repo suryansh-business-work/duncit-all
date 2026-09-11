@@ -12,7 +12,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 export default function AdSlide({ ad }: Readonly<{ ad: PublicAd }>) {
   const { t } = useTranslation();
   return (
-    <Box data-testid="ad-slide" sx={{ position: 'relative', height: '100%', width: '100%', bgcolor: '#000' }}>
+    <Box data-testid="ad-slide" sx={{ position: 'relative', height: '100%', width: '100%', bgcolor: 'common.black' }}>
       <Box sx={{ position: 'absolute', inset: 0 }}>
         <AdMedia ad={ad} />
       </Box>
@@ -28,15 +28,15 @@ export default function AdSlide({ ad }: Readonly<{ ad: PublicAd }>) {
           pt: 6,
           pb: 'calc(env(safe-area-inset-bottom) + 24px)',
           background: 'linear-gradient(transparent, rgba(0,0,0,0.75))',
-          color: '#fff'
+          color: 'common.white'
         }}>
         <Chip
           label={t('mweb.ads.sponsored')}
           size="small"
-          sx={{ height: 20, fontSize: 10.5, fontWeight: 600, color: '#fff', bgcolor: 'rgba(255,255,255,0.22)' }}
+          sx={{ height: 20, fontSize: 10.5, fontWeight: 600, color: 'common.white', bgcolor: 'rgba(255,255,255,0.22)' }}
         />
         {ad.ad_title && (
-          <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
             {ad.ad_title}
           </Typography>
         )}
@@ -48,7 +48,7 @@ export default function AdSlide({ ad }: Readonly<{ ad: PublicAd }>) {
             onClick={() => openAdLink(ad.redirect_url)}
             sx={{ fontWeight: 600, borderRadius: 999 }}
           >
-            Learn more
+            {t('mweb.ads.learnMore')}
           </DuncitButton>
         )}
       </Stack>

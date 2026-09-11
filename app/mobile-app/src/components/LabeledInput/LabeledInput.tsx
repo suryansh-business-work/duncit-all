@@ -1,7 +1,7 @@
 import type { TextInputProps } from 'react-native';
 import { Input } from 'tamagui';
 
-import { Field } from '@/components/Field';
+import { FIELD_HEIGHT, FIELD_RADIUS, Field } from '@/components/Field';
 
 type PassthroughProps = Pick<
   TextInputProps,
@@ -42,6 +42,9 @@ export function LabeledInput({
       <Input
         testID={`field-${testID}`}
         size="$4"
+        minHeight={FIELD_HEIGHT}
+        borderRadius={FIELD_RADIUS}
+        paddingHorizontal={16}
         backgroundColor="$surface"
         color="$color"
         placeholderTextColor="$muted"

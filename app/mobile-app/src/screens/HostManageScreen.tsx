@@ -49,33 +49,35 @@ export function HostManageScreen() {
   return (
     <StackScreen header title={t('mweb.hostManage.hostsManagement')} testID="host-manage-screen">
       <RefreshScrollView showsVerticalScrollIndicator={false}>
-        <YStack gap={16} padding={16} paddingBottom={48}>
-          <PrimaryButton
-            testID="host-manage-create"
-            label={t('mweb.hostManage.createAPod')}
-            onPress={() => navigation.navigate('CreatePod')}
-          />
+        <YStack gap={24} padding={16} paddingBottom={48}>
+          <YStack gap={12}>
+            <PrimaryButton
+              testID="host-manage-create"
+              label={t('mweb.hostManage.createAPod')}
+              onPress={() => navigation.navigate('CreatePod')}
+            />
 
-          <XStack
-            testID="host-manage-insights"
-            role="button"
-            aria-label={t('mweb.hostManage.hostDashboardAndInsights')}
-            onPress={() => navigation.navigate('HostDashboard')}
-            alignItems="center"
-            justifyContent="center"
-            gap={8}
-            height={44}
-            borderRadius={12}
-            borderWidth={1}
-            borderColor="$borderColor"
-            backgroundColor="$surface"
-            pressStyle={PRESS_STYLE.control}
-          >
-            <MaterialIcons name="insights" size={18} color={ink} />
-            <Text fontSize={14} fontWeight="600" color="$color">
-              Dashboard & Insights
-            </Text>
-          </XStack>
+            <XStack
+              testID="host-manage-insights"
+              role="button"
+              aria-label={t('mweb.hostManage.hostDashboardAndInsights')}
+              onPress={() => navigation.navigate('HostDashboard')}
+              alignItems="center"
+              justifyContent="center"
+              gap={8}
+              height={48}
+              borderRadius={999}
+              borderWidth={1}
+              borderColor="$borderColor"
+              backgroundColor="$surface"
+              pressStyle={PRESS_STYLE.control}
+            >
+              <MaterialIcons name="insights" size={18} color={ink} />
+              <Text fontSize={14} fontWeight="600" color="$color">
+                Dashboard & Insights
+              </Text>
+            </XStack>
+          </YStack>
 
           <HostCategoriesCard />
 

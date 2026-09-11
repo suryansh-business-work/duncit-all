@@ -39,11 +39,8 @@ export const InviteRow = memo(function InviteRow({
       testID={`contact-invite-row-${row.phone_key}`}
       alignItems="center"
       gap={12}
-      padding={12}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
+      paddingHorizontal={16}
+      paddingVertical={12}
     >
       {invited ? null : (
         <XStack
@@ -65,11 +62,11 @@ export const InviteRow = memo(function InviteRow({
         width={44}
         height={44}
         borderRadius={22}
-        backgroundColor="$primary"
+        backgroundColor="$soft"
         alignItems="center"
         justifyContent="center"
       >
-        <Text fontSize={16} fontWeight="700" color="$onPrimary">
+        <Text fontSize={16} fontWeight="600" color="$color">
           {initial}
         </Text>
       </YStack>
@@ -77,7 +74,7 @@ export const InviteRow = memo(function InviteRow({
         <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
           {name}
         </Text>
-        <Text fontSize={12.5} color="$muted" numberOfLines={1}>
+        <Text fontSize={13} color="$muted" numberOfLines={1}>
           {invited ? t('mweb.contacts.invited') : t('mweb.contacts.notOnDuncitYet')}
         </Text>
       </YStack>
@@ -85,7 +82,7 @@ export const InviteRow = memo(function InviteRow({
         <DuncitButton
           testID={`contact-invite-${row.phone_key}`}
           label={t('mweb.contacts.invite')}
-          variant="outline"
+          variant="solid"
           size="sm"
           loading={busy}
           onPress={() => onInvite(row.phone_key)}

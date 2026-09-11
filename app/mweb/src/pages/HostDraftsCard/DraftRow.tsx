@@ -1,5 +1,5 @@
 import { Link as RouterLink } from 'react-router';
-import { Box, Chip, Stack, Typography, alpha } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
@@ -11,12 +11,12 @@ import type { DraftRowData } from './drafts';
 
 interface DraftRowProps {
   draft: DraftRowData;
-  /** Inside the 24h deletion window: tinted, outlined and given a countdown. */
+  /** Inside the 24h deletion window: given a countdown and a warning CTA. */
   expiring: boolean;
   onDelete: (id: string) => void;
 }
 
-/** One resumable draft. The expiring variant is the same row wearing the
+/** One resumable draft row. The expiring variant is the same row wearing the
  * warning colour, so the two groups stay visually one list. */
 export default function DraftRow({ draft, expiring, onDelete }: Readonly<DraftRowProps>) {
   const { t } = useTranslation();
@@ -33,18 +33,10 @@ export default function DraftRow({ draft, expiring, onDelete }: Readonly<DraftRo
       direction="row"
       spacing={1}
       data-testid={expiring ? `draft-expiring-${draft.id}` : `draft-row-${draft.id}`}
-      sx={{
-        alignItems: 'center',
-        p: 1.25,
-        borderRadius: '16px',
-        border: 1,
-        borderColor: expiring ? 'warning.main' : 'divider',
-        bgcolor: (theme) =>
-          expiring ? alpha(theme.palette.warning.main, 0.12) : 'transparent',
-      }}
+      sx={{ alignItems: 'center', px: 2, py: 1.75 }}
     >
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="subtitle2" noWrap sx={{ fontWeight: 700 }}>
+        <Typography noWrap sx={{ fontSize: '0.9375rem', fontWeight: 600 }}>
           {draft.pod_title || t('mweb.hostManage.untitledPod')}
         </Typography>
         <Typography
@@ -57,12 +49,11 @@ export default function DraftRow({ draft, expiring, onDelete }: Readonly<DraftRo
         </Typography>
         {expiring ? (
           <Chip
-            size="small"
             color="warning"
             variant="outlined"
             icon={<ScheduleIcon />}
             label={countdown}
-            sx={{ mt: 0.75, fontWeight: 700 }}
+            sx={{ mt: 0.75, height: 24 }}
           />
         ) : null}
       </Box>
@@ -72,7 +63,6 @@ export default function DraftRow({ draft, expiring, onDelete }: Readonly<DraftRo
         size="small"
         variant={expiring ? 'contained' : 'outlined'}
         color={expiring ? 'warning' : 'primary'}
-        sx={{ borderRadius: 999, fontWeight: 700 }}
       >
         {t('mweb.common.continue')}
       </DuncitButton>

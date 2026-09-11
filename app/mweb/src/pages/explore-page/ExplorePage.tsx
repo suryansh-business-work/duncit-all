@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
+import ExploreOutlinedIcon from '@mui/icons-material/ExploreOutlined';
+import EmptyState from '../../components/EmptyState';
 import ExploreReels from './ExploreReels';
 import ExploreHeader from './ExploreHeader';
 import ExploreFilterSheet from './ExploreFilterSheet';
@@ -162,7 +164,7 @@ export default function ExplorePage({ superCategorySlug, locationId, zoneName }:
             height: '100%',
             px: 3
           }}>
-          <Alert severity="info">{t('mweb.explore.noPodsMatchTheseFilters')}</Alert>
+          <EmptyState icon={<ExploreOutlinedIcon />} title={t('mweb.explore.noPodsMatchTheseFilters')} />
         </Stack>
       ) : (
         <ExploreReels

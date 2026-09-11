@@ -1,7 +1,8 @@
-import { Avatar, Chip, Paper, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Chip, Stack, Typography } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import AttachmentList from '../../components/AttachmentList';
+import { bubbleRadiusSx } from '../support-chat/calmStyles';
 import type { TicketMessage } from './queries';
 
 const SEEN_BLUE = '#34b7f1';
@@ -27,7 +28,7 @@ export default function TicketBubble({ msg, timeText, agentLastReadAt }: Readonl
         <Chip
           size="small"
           label={msg.body_text}
-          sx={{ bgcolor: 'action.hover', fontWeight: 700, height: 'auto', py: 0.5, '& .MuiChip-label': { whiteSpace: 'normal', textAlign: 'center' } }}
+          sx={{ bgcolor: 'action.hover', color: 'text.secondary', height: 'auto', py: 0.5, '& .MuiChip-label': { whiteSpace: 'normal', textAlign: 'center' } }}
         />
       </Stack>
     );
@@ -37,24 +38,25 @@ export default function TicketBubble({ msg, timeText, agentLastReadAt }: Readonl
   const seen =
     !!agentLastReadAt && new Date(agentLastReadAt).getTime() >= new Date(msg.created_at).getTime();
   return (
-    <Stack direction="row" sx={{ justifyContent: isUser ? 'flex-end' : 'flex-start' }} spacing={1}>
+    <Stack direction="row" sx={{ justifyContent: isUser ? 'flex-end' : 'flex-start', alignItems: 'flex-end' }} spacing={1}>
       {!isUser && (
         <Avatar src={msg.author_photo || undefined} sx={{ width: 28, height: 28, fontSize: 12 }}>
           {msg.author_name?.[0]?.toUpperCase() || 'S'}
         </Avatar>
       )}
-      <Paper
-        variant="outlined"
+      <Box
         sx={{
-          p: 1.25,
+          px: 1.5,
+          py: 1,
           maxWidth: '78%',
-          borderRadius: '16px',
+          ...bubbleRadiusSx(isUser),
           bgcolor: isUser ? 'primary.main' : 'background.paper',
           color: isUser ? 'primary.contrastText' : 'text.primary',
+          border: isUser ? 0 : '1px solid var(--duncit-card-border)',
         }}
       >
         {!isUser && (
-          <Typography variant="caption" sx={{ fontWeight: 600 }}>
+          <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
             {msg.author_name || 'Support'}
           </Typography>
         )}
@@ -78,7 +80,7 @@ export default function TicketBubble({ msg, timeText, agentLastReadAt }: Readonl
               <CheckIcon sx={{ fontSize: 15, opacity: 0.7 }} />
             ))}
         </Stack>
-      </Paper>
+      </Box>
     </Stack>
   );
 }

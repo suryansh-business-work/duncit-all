@@ -5,8 +5,13 @@ import { useRoute, type RouteProp } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { EmptyState } from '@/components/EmptyState';
 import { ImageViewerModal } from '@/components/ImageViewerModal';
+import { MapEmbed } from '@/components/MapEmbed';
+import { SectionHeader } from '@/components/SectionHeader';
 import { StackScreen } from '@/components/StackScreen';
+import { SurfaceCard } from '@/components/SurfaceCard';
+import { TwoToneHeading } from '@/components/TwoToneHeading';
 import { VenueImagesGrid } from '@/components/details/VenueImagesGrid';
 import { VenuePodsSection } from '@/components/details/VenuePodsSection';
 import { useVenueDetails, type PublicVenue } from '@/hooks/useHostsVenues';
@@ -34,36 +39,35 @@ function addressLine(venue: PublicVenue): string {
     .join(', ');
 }
 
+/** The map preview's place: the pin when the venue has one, else its address
+ * (mWeb twin: VenueLocationCard's VenueMapPreview). */
+const mapQuery = (venue: PublicVenue): string =>
+  venue.lat != null && venue.lng != null ? `${venue.lat},${venue.lng}` : addressLine(venue);
+
+/** A soft info pill — venue type, capacity, tags, amenities. */
 function Chip({ label }: Readonly<{ label: string }>) {
   return (
-    <XStack
-      borderRadius={999}
-      paddingHorizontal={10}
-      paddingVertical={4}
-      backgroundColor="$surface"
-      borderWidth={1}
-      borderColor="$borderColor"
-    >
-      <Text fontSize={12} fontWeight="700" color="$color">
+    <XStack borderRadius={999} paddingHorizontal={12} paddingVertical={6} backgroundColor="$soft">
+      <Text fontSize={13} fontWeight="600" color="$color">
         {label}
       </Text>
     </XStack>
   );
 }
 
+/** Amenities / Facilities / Security: a surface card of soft pills. mWeb twin:
+ * venues-page/VenueChipsSection. */
 function ChipsGroup({ title, items }: Readonly<{ title: string; items?: string[] | null }>) {
   if (!items?.length) return null;
   return (
-    <YStack gap={8}>
-      <Text fontSize={15} fontWeight="700" color="$color">
-        {title}
-      </Text>
-      <XStack flexWrap="wrap" gap={6}>
+    <SurfaceCard gap={12}>
+      <SectionHeader title={title} />
+      <XStack flexWrap="wrap" gap={8}>
         {items.map((item) => (
           <Chip key={item} label={item} />
         ))}
       </XStack>
-    </YStack>
+    </SurfaceCard>
   );
 }
 
@@ -73,16 +77,16 @@ function VenueDetailsContent({
   venue,
   gallery,
 }: Readonly<{ venue: PublicVenue; gallery: string[] }>) {
-  const { onPrimary, primary } = useThemeColors();
+  const { accent } = useThemeColors();
   const { t } = useTranslation();
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   return (
-    <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 32 }}>
+    <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 20, paddingBottom: 32 }}>
       <YStack
-        height={200}
-        borderRadius={16}
+        height={240}
+        borderRadius={24}
         overflow="hidden"
-        backgroundColor="$primary"
+        backgroundColor="$soft"
         alignItems="center"
         justifyContent="center"
       >
@@ -103,36 +107,45 @@ function VenueDetailsContent({
             />
           </XStack>
         ) : (
-          <MaterialIcons name="storefront" size={44} color={onPrimary} />
+          <MaterialIcons name="storefront" size={44} color={accent} />
         )}
       </YStack>
 
-      <Text fontSize={22} fontWeight="700" color="$color">
-        {venue.venue_name}
-      </Text>
-      <XStack flexWrap="wrap" gap={6}>
-        {venue.venue_type ? <Chip label={venue.venue_type} /> : null}
-        {venue.capacity ? <Chip label={`${venue.capacity} capacity`} /> : null}
-        {(venue.tags ?? []).map((tag) => (
-          <Chip key={tag} label={tag} />
-        ))}
-      </XStack>
+      <YStack gap={10}>
+        <TwoToneHeading lead={venue.venue_name} />
+        <XStack flexWrap="wrap" gap={8}>
+          {venue.venue_type ? <Chip label={venue.venue_type} /> : null}
+          {venue.capacity ? <Chip label={`${venue.capacity} capacity`} /> : null}
+          {(venue.tags ?? []).map((tag) => (
+            <Chip key={tag} label={tag} />
+          ))}
+        </XStack>
+        {venue.description ? (
+          <Text fontSize={14} color="$muted" lineHeight={20}>
+            {venue.description}
+          </Text>
+        ) : null}
+      </YStack>
 
-      {venue.description ? (
-        <Text fontSize={14} color="$muted" lineHeight={20}>
-          {venue.description}
-        </Text>
-      ) : null}
-
-      <XStack alignItems="center" gap={6}>
-        <MaterialIcons name="place" size={16} color={primary} />
-        <Text fontSize={15} fontWeight="700" color="$color">
-          Location
-        </Text>
-      </XStack>
-      <Text testID="venue-address" fontSize={13} color="$muted">
-        {addressLine(venue) || 'Address not provided'}
-      </Text>
+      <SurfaceCard gap={12}>
+        <SectionHeader title={t('mweb.common.location')} />
+        <XStack alignItems="center" gap={12}>
+          <YStack
+            width={36}
+            height={36}
+            borderRadius={18}
+            backgroundColor="$soft"
+            alignItems="center"
+            justifyContent="center"
+          >
+            <MaterialIcons name="place" size={18} color={accent} />
+          </YStack>
+          <Text testID="venue-address" flex={1} fontSize={14} color="$muted">
+            {addressLine(venue) || 'Address not provided'}
+          </Text>
+        </XStack>
+        <MapEmbed query={mapQuery(venue)} />
+      </SurfaceCard>
 
       <VenuePodsSection venueId={venue.id} />
 
@@ -159,9 +172,11 @@ export function VenueDetailsScreen() {
   const gallery: string[] = venueImages(venue);
   const body =
     error || !venue ? (
-      <Text testID="venue-details-missing" padding={24} color="$muted">
-        This venue is unavailable or not approved yet.
-      </Text>
+      <EmptyState
+        icon="storefront"
+        title="This venue is unavailable or not approved yet."
+        testID="venue-details-missing"
+      />
     ) : (
       <VenueDetailsContent venue={venue} gallery={gallery} />
     );

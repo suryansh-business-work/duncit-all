@@ -12,8 +12,7 @@ import {
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
-import SellIcon from '@mui/icons-material/Sell';
-import { DuncitIconButton } from '@duncit/buttons';
+import { DuncitRoundButton } from '@duncit/buttons';
 import { SUGGESTED_TICKET_PRICES, type SuggestedTicketPrice } from './queries';
 import SuggestedPricesTable from './SuggestedPricesTable';
 import { useTranslation } from '../../../../i18n/useTranslation';
@@ -84,30 +83,27 @@ export default function SuggestedPricesDialog({
       aria-labelledby="suggested-prices-title"
       data-testid="suggested-prices-modal"
     >
-      <DialogTitle
-        id="suggested-prices-title"
-        sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700, pr: 7 }}
-      >
-        <SellIcon color="primary" fontSize="small" />
+      <DialogTitle id="suggested-prices-title" sx={{ pr: 8 }}>
         {t('mweb.createPod.suggestedPricesTitle')}
-        <DuncitIconButton
+        <DuncitRoundButton
+          tone="surface"
           aria-label={t('mweb.auth.close')}
           onClick={onClose}
           data-testid="suggested-prices-close"
-          sx={{ position: 'absolute', right: 8, top: 8 }}
+          sx={{ position: 'absolute', right: 12, top: 12 }}
         >
           <CloseIcon />
-        </DuncitIconButton>
+        </DuncitRoundButton>
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
           {body}
           <Box
             data-testid="suggested-prices-note"
-            sx={{ p: 1.5, borderRadius: '16px', bgcolor: alpha(theme.palette.primary.main, 0.1) }}
+            sx={{ p: 1.75, borderRadius: '16px', bgcolor: alpha(theme.palette.primary.main, 0.12) }}
           >
             <Typography variant="body2" sx={{
-              fontWeight: 700
+              fontWeight: 600
             }}>
               {t('mweb.createPod.suggestedPricesNote')}
             </Typography>

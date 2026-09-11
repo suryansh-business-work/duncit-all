@@ -8,32 +8,28 @@ interface ChatRoomNoticeProps {
 export default function ChatRoomNotice({ ended = false }: Readonly<ChatRoomNoticeProps>) {
   const { t } = useTranslation();
   return (
-    <Box sx={{ mb: 1.5, mx: 'auto', maxWidth: 420, p: 1.25, borderRadius: '16px', bgcolor: 'rgba(112,70,255,0.12)', border: '1px solid rgba(112,70,255,0.24)' }}>
+    <Box sx={{ mb: 1.5, display: 'flex', justifyContent: 'center' }}>
       <Stack
         direction="row"
         spacing={1}
         sx={{
           alignItems: "center",
-          justifyContent: "space-between"
+          bgcolor: 'action.hover',
+          borderRadius: 999,
+          pl: 0.5,
+          pr: ended ? 1.5 : 0.5,
+          py: 0.5,
         }}>
-        <Box sx={{ minWidth: 0 }}>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "primary.main",
-              fontWeight: 700
-            }}>
-            POD CHAT
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 700 }} noWrap>
-            {ended ? 'This pod has ended' : 'Keep the plan in one place'}
-          </Typography>
-        </Box>
         {ended ? (
-          <Chip size="small" label={t('mweb.chatRoom.ended')} sx={{ fontWeight: 700 }} />
+          <Chip size="small" label={t('mweb.chatRoom.ended')} sx={{ height: 24, bgcolor: 'background.paper' }} />
         ) : (
-          <Chip size="small" label={t('mweb.common.live')} color="success" sx={{ fontWeight: 700 }} />
+          <Chip size="small" label={t('mweb.common.live')} color="success" sx={{ height: 24 }} />
         )}
+        {ended ? (
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }} noWrap>
+            This pod has ended
+          </Typography>
+        ) : null}
       </Stack>
     </Box>
   );

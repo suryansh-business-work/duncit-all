@@ -34,17 +34,17 @@ export default function LocationChangeBar({
         width: '100%',
         justifyContent: 'space-between',
         gap: 1,
-        px: 1.5,
-        py: 1,
-        borderRadius: '16px',
-        border: '1px solid',
-        borderColor: 'divider',
+        px: 2,
+        minHeight: 48,
+        boxSizing: 'border-box',
+        borderRadius: 999,
+        border: '1px solid var(--duncit-card-border)',
         bgcolor: 'background.paper',
       }}
     >
-      <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', minWidth: 0 }}>
-        <PlaceIcon sx={{ fontSize: 16, color: 'primary.main', flex: '0 0 auto' }} />
-        <Typography variant="caption" noWrap sx={{ fontWeight: 700 }}>
+      <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center', minWidth: 0 }}>
+        <PlaceIcon sx={{ fontSize: 18, color: 'secondary.main', flex: '0 0 auto' }} />
+        <Typography noWrap sx={{ fontSize: 13, fontWeight: 600 }}>
           {label}
         </Typography>
       </Stack>
@@ -53,10 +53,10 @@ export default function LocationChangeBar({
         spacing={0.25}
         sx={{ alignItems: 'center', color: 'primary.main', flex: '0 0 auto' }}
       >
-        <Typography variant="caption" sx={{ fontWeight: 700 }}>
+        <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
           {changeLabel}
         </Typography>
-        <KeyboardArrowDownIcon sx={{ fontSize: 16 }} />
+        <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
       </Stack>
     </ButtonBase>
   );

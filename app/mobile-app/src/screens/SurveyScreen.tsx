@@ -61,7 +61,7 @@ export function SurveyScreen() {
       {toErrorMessage(error)}
     </Text>
   ) : (
-    <YStack gap={12}>
+    <YStack gap={16}>
       {supers.map((superCategory) => (
         <SuperCategoryGroup
           key={superCategory.id}
@@ -78,21 +78,21 @@ export function SurveyScreen() {
     <YStack flex={1} backgroundColor="$background">
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <AppHeader minimal />
-        <YStack paddingHorizontal={20} paddingVertical={4}>
+        <YStack paddingHorizontal={16} paddingVertical={4}>
           <SurveyProgress value={progress} />
         </YStack>
 
         <RefreshScrollView
           testID="survey-screen"
           contentContainerStyle={{
-            paddingHorizontal: 20,
+            paddingHorizontal: 16,
             paddingBottom: footerHeight + 16,
-            paddingTop: 4,
+            paddingTop: 8,
           }}
           keyboardShouldPersistTaps="handled"
         >
-          <YStack gap={4} paddingBottom={12}>
-            <Text fontSize={30} fontWeight="600" color="$color">
+          <YStack gap={4} paddingBottom={24}>
+            <Text accessibilityRole="header" fontSize={24} fontWeight="600" color="$color">
               What&apos;s your vibe? ✨
             </Text>
             <Text fontSize={14} color="$muted">

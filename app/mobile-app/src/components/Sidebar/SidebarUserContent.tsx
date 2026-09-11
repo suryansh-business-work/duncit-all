@@ -14,13 +14,8 @@ import { SidebarReferralCard } from './SidebarReferralCard';
 import { SidebarManageList } from './SidebarManageList';
 import { buildClubMenuItems } from './clubMenuItems';
 import { buildVenueMenuItems } from './venueMenuItems';
-import {
-  buildManageItems,
-  buildPartnerMenus,
-  PROFILE_GRID,
-  SHOP_ITEMS,
-  type ProfileTile,
-} from './profileSections';
+import { buildSidebarTiles } from './sidebarTiles';
+import { buildManageItems, buildPartnerMenus, SHOP_ITEMS } from './profileSections';
 
 /** The profile layout every mode shares — RN twin of mWeb's <UserModeContent/>:
  * identity, incomplete nudge, quick-action grid, referral card, the Manage
@@ -87,69 +82,8 @@ export function SidebarUserContent({
     // Each builder answers only for its own mode, so at most one contributes.
     [...buildVenueMenuItems(mode, t), ...buildClubMenuItems(mode, t)],
   );
-  // Built here rather than in profileSections so the label is translated —
-  // the section ships flag-gated and localized from day one (rule 38).
-  const leaderboardItems: ProfileTile[] = [
-    {
-      key: 'leaderboard',
-      label: t('mweb.leaderboard.sidebarLabel'),
-      caption: '',
-      icon: 'emoji-events',
-      route: 'Leaderboard',
-    },
-  ];
-  const membershipItems: ProfileTile[] = [
-    {
-      key: 'membership',
-      label: t('mweb.membership.sidebarLabel'),
-      caption: '',
-      icon: 'card-membership',
-      route: 'Membership',
-      badge: t('mweb.membership.comingSoon'),
-    },
-  ];
-  // Buying and redeeming are two different errands — someone handed a code
-  // never passes through the buy page — so the section offers both doors.
-  const giftCardItems: ProfileTile[] = [
-    {
-      key: 'gift-cards-buy',
-      label: t('mweb.giftCards.sidebarBuyLabel'),
-      caption: t('mweb.giftCards.sidebarBuyCaption'),
-      icon: 'card-giftcard',
-      route: 'GiftCards',
-    },
-    {
-      key: 'gift-cards-redeem',
-      label: t('mweb.giftCards.sidebarRedeemLabel'),
-      caption: t('mweb.giftCards.sidebarRedeemCaption'),
-      icon: 'redeem',
-      route: 'GiftCardRedeem',
-    },
-  ];
-  /*
-    Chats and Following open the grid, ahead of the config's own four. They came
-    down from the bottom bar — where Venues and the cart now sit — and they are
-    used far more often than Pod Ideas, so they take the first row rather than
-    the last. Built here because their labels are translated and
-    `profileSections` holds no copy (rule 38).
-  */
-  const gridTiles: ProfileTile[] = [
-    {
-      key: 'chats',
-      label: t('mweb.nav.chats'),
-      caption: t('mweb.sidebar.chatsCaption'),
-      icon: 'chat-bubble-outline',
-      route: 'Chats',
-    },
-    {
-      key: 'following',
-      label: t('mweb.nav.following'),
-      caption: t('mweb.sidebar.followingCaption'),
-      icon: 'favorite-border',
-      route: 'Following',
-    },
-    ...PROFILE_GRID,
-  ];
+  // The flag-gated sections and the grid's translated tiles (rule 38).
+  const tiles = buildSidebarTiles(t);
   return (
     <YStack>
       <TourAnchor tour="profile" anchor="profile-details">
@@ -158,28 +92,28 @@ export function SidebarUserContent({
       {showIncomplete ? (
         <SidebarIncompleteBanner percent={percent} onComplete={() => onNavigate('Account')} />
       ) : null}
-      <SidebarQuickGrid tiles={gridTiles} onNavigate={onNavigate} />
+      <SidebarQuickGrid tiles={tiles.grid} onNavigate={onNavigate} />
       <AdSlot position="SIDEBAR" variant="card" />
       {mode === 'USER' ? <SidebarDuncitCoinCard onNavigate={onNavigate} /> : null}
       <SidebarReferralCard onNavigate={onNavigate} />
       {showLeaderboard ? (
         <SidebarManageList
           title={t('mweb.leaderboard.title')}
-          items={leaderboardItems}
+          items={tiles.leaderboard}
           onNavigate={onNavigate}
         />
       ) : null}
       {showMembership ? (
         <SidebarManageList
           title={t('mweb.membership.title')}
-          items={membershipItems}
+          items={tiles.membership}
           onNavigate={onNavigate}
         />
       ) : null}
       {showGiftCards ? (
         <SidebarManageList
           title={t('mweb.giftCards.title')}
-          items={giftCardItems}
+          items={tiles.giftCards}
           onNavigate={onNavigate}
         />
       ) : null}

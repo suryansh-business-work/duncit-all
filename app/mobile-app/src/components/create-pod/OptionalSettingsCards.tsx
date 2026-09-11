@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { ChipArrayField } from './ChipArrayField';
@@ -13,19 +14,9 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 type PanelKey = 'info' | 'perks';
 type IconName = keyof typeof MaterialIcons.glyphMap;
 
-const PANELS: { key: PanelKey; titleKey: string; subtitleKey: string; icon: IconName }[] = [
-  {
-    key: 'info',
-    titleKey: 'mweb.createPod.additionalInfoTitle',
-    subtitleKey: 'mweb.createPod.additionalInfoSubtitle',
-    icon: 'info-outline',
-  },
-  {
-    key: 'perks',
-    titleKey: 'mweb.createPod.perksTitle',
-    subtitleKey: 'mweb.createPod.perksSubtitle',
-    icon: 'star-outline',
-  },
+const PANELS: { key: PanelKey; titleKey: string; icon: IconName }[] = [
+  { key: 'info', titleKey: 'mweb.createPod.additionalInfoTitle', icon: 'info-outline' },
+  { key: 'perks', titleKey: 'mweb.createPod.perksTitle', icon: 'star-outline' },
 ];
 
 function PanelBody({ panelKey, form }: Readonly<{ panelKey: PanelKey; form: CreatePodForm }>) {
@@ -63,7 +54,7 @@ function PanelBody({ panelKey, form }: Readonly<{ panelKey: PanelKey; form: Crea
  * OptionalSettingsCards. */
 export function OptionalSettingsCards({ form }: Readonly<{ form: CreatePodForm }>) {
   const [active, setActive] = useState<PanelKey | null>(null);
-  const { color, onPrimary } = useThemeColors();
+  const { accent, muted } = useThemeColors();
   const { t } = useTranslation();
   const info = form.watch('pod_info');
   const perks = form.watch('available_perks');
@@ -76,11 +67,8 @@ export function OptionalSettingsCards({ form }: Readonly<{ form: CreatePodForm }
   };
 
   return (
-    <YStack gap={10}>
-      <Text fontSize={12} fontWeight="700" color="$muted" letterSpacing={1}>
-        {t('mweb.createPod.optionalSettings')}
-      </Text>
-      {PANELS.map((panel) => {
+    <SurfaceCard padding={0} overflow="hidden">
+      {PANELS.map((panel, index) => {
         const open = active === panel.key;
         const summary = summaryFor(panel.key);
         const filled = filledFor(panel.key);
@@ -88,10 +76,8 @@ export function OptionalSettingsCards({ form }: Readonly<{ form: CreatePodForm }
         return (
           <YStack
             key={panel.key}
-            borderWidth={1}
-            borderColor="$borderColor"
-            borderRadius={12}
-            overflow="hidden"
+            borderTopWidth={index === 0 ? 0 : 1}
+            borderTopColor="$borderColor"
           >
             <XStack
               testID={`optional-${panel.key}`}
@@ -99,49 +85,53 @@ export function OptionalSettingsCards({ form }: Readonly<{ form: CreatePodForm }
               aria-label={title}
               aria-expanded={open}
               onPress={() => setActive(open ? null : panel.key)}
-              padding={12}
-              gap={10}
+              paddingHorizontal={16}
+              paddingVertical={14}
+              gap={12}
               alignItems="center"
               pressStyle={PRESS_STYLE.row}
             >
               <YStack
-                width={36}
-                height={36}
-                borderRadius={18}
+                width={40}
+                height={40}
+                borderRadius={20}
                 alignItems="center"
                 justifyContent="center"
-                backgroundColor="$primary"
+                backgroundColor="$soft"
               >
-                <MaterialIcons name={panel.icon} size={18} color={onPrimary} />
+                <MaterialIcons name={panel.icon} size={20} color={accent} />
               </YStack>
-              <YStack flex={1}>
-                <Text fontSize={14} fontWeight="700" color="$color">
-                  {title}
-                </Text>
-                <Text fontSize={12} color="$muted">
-                  {t(panel.subtitleKey)}
-                </Text>
-              </YStack>
+              <Text flex={1} fontSize={15} fontWeight="600" color="$color">
+                {title}
+              </Text>
               {filled ? (
-                <Text fontSize={12} fontWeight="600" color="$primary">
-                  {summary}
-                </Text>
+                <XStack
+                  height={26}
+                  alignItems="center"
+                  paddingHorizontal={10}
+                  borderRadius={999}
+                  backgroundColor="$primary"
+                >
+                  <Text fontSize={12} fontWeight="600" color="$onPrimary">
+                    {summary}
+                  </Text>
+                </XStack>
               ) : (
                 <MaterialIcons
                   name={open ? 'expand-less' : 'chevron-right'}
                   size={22}
-                  color={color}
+                  color={muted}
                 />
               )}
             </XStack>
             {open ? (
-              <YStack padding={12} paddingTop={0}>
+              <YStack paddingHorizontal={16} paddingBottom={16}>
                 <PanelBody panelKey={panel.key} form={form} />
               </YStack>
             ) : null}
           </YStack>
         );
       })}
-    </YStack>
+    </SurfaceCard>
   );
 }

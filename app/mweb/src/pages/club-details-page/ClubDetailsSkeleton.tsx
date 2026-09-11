@@ -3,7 +3,7 @@ import { Box, Skeleton, Stack } from '@mui/material';
 export default function ClubDetailsSkeleton() {
   return (
     <Stack spacing={3}>
-      <Skeleton variant="rectangular" height={280} sx={{ borderRadius: '16px' }} />
+      <Skeleton variant="rectangular" height={280} sx={{ borderRadius: '24px' }} />
       <Stack direction="row" spacing={2} sx={{
         alignItems: "center"
       }}>
@@ -23,7 +23,7 @@ export default function ClubDetailsSkeleton() {
         }}
       >
         {[0, 1, 2].map((item) => (
-          <Skeleton key={item} variant="rectangular" height={240} sx={{ borderRadius: '16px' }} />
+          <Skeleton key={item} variant="rectangular" height={240} sx={{ borderRadius: '24px' }} />
         ))}
       </Box>
     </Stack>

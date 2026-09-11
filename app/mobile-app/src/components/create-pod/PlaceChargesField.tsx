@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
+import { SectionHeader } from '@/components/SectionHeader';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { PodPlaceCharge } from './create-pod.types';
@@ -44,16 +45,14 @@ export function PlaceChargesField({ value, onChange }: Readonly<Props>) {
   };
 
   return (
-    <YStack gap={10}>
-      <Text fontSize={14} fontWeight="500" color="$color">
-        {t('mweb.createPod.placeCharges')}
-      </Text>
+    <YStack gap={12}>
+      <SectionHeader title={t('mweb.createPod.placeCharges')} />
       {value.map((row, idx) => (
         <YStack
           key={keys.current[idx]}
-          gap={6}
-          padding={10}
-          borderRadius={10}
+          gap={8}
+          padding={12}
+          borderRadius={16}
           borderWidth={1}
           borderColor="$borderColor"
         >
@@ -92,7 +91,7 @@ export function PlaceChargesField({ value, onChange }: Readonly<Props>) {
             pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="delete-outline" size={16} color={danger} />
-            <Text fontSize={13} fontWeight="700" color="$danger">
+            <Text fontSize={13} fontWeight="600" color="$danger">
               {t('mweb.createPod.remove')}
             </Text>
           </XStack>

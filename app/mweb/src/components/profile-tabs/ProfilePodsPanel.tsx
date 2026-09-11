@@ -40,7 +40,7 @@ export default function ProfilePodsPanel({ userId, kind }: Readonly<Props>) {
       <Typography
         variant="body2"
         data-testid={`profile-pods-${kind}-empty`}
-        sx={{ color: 'text.secondary', textAlign: 'center', py: 4 }}
+        sx={{ color: 'text.secondary', textAlign: 'center', py: 5, fontWeight: 500 }}
       >
         {kind === 'joined' ? t('mweb.profile.noJoinedPods') : t('mweb.profile.noHostedPods')}
       </Typography>

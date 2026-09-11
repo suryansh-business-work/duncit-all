@@ -1,4 +1,7 @@
 import { Alert, CircularProgress, Stack } from '@mui/material';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import EmptyState from '../../components/EmptyState';
+import { useTranslation } from '../../i18n/useTranslation';
 import SavedItemCard from './SavedItemCard';
 import type { SavedPod } from './queries';
 
@@ -13,6 +16,7 @@ interface Props {
 /** Loading / error / empty / list body for Saved Items — kept below the toolbar
  * so filters stay reachable in every state. */
 export default function SavedItemsBody({ loading, hasData, error, pods, onOpen }: Readonly<Props>) {
+  const { t } = useTranslation();
   if (loading && !hasData) {
     return (
       <Stack
@@ -28,11 +32,7 @@ export default function SavedItemsBody({ loading, hasData, error, pods, onOpen }
     return <Alert severity="error">{error}</Alert>;
   }
   if (!pods.length) {
-    return (
-      <Alert severity="info">
-        No saved pods found. Adjust your search or filters, or tap save in Explore to collect pods here.
-      </Alert>
-    );
+    return <EmptyState icon={<BookmarkBorderIcon />} title={t('mweb.saved.noSavedPodsYetTapThe')} />;
   }
   return (
     <Stack spacing={1.5}>

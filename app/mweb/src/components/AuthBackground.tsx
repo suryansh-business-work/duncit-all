@@ -1,13 +1,8 @@
-import { Box, keyframes, useTheme } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import { auth } from '@duncit/auth-tokens';
 import AuthModeToggle from './AuthModeToggle';
 import { useBrandingAssets } from '../hooks/useBrandingAssets';
 
-const gradientShift = keyframes`
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-`;
 interface Props {
   children: React.ReactNode;
 }
@@ -17,9 +12,9 @@ interface Props {
 const BANNER_OFFSET = 'var(--duncit-app-banner-offset, 0px)';
 
 /**
- * The admin-configured backdrop, drawn under the card and over the gradient.
+ * The admin-configured backdrop, drawn under the form and over the ground.
  *
- * Its own component so the gradient frame below stays one Box with one sx: a
+ * Its own component so the frame below stays one Box with one sx: a
  * video and an image need different elements, and branching inside that sx was
  * how the frame would end up rendering neither properly. Muted + playsInline
  * are what let a mobile browser autoplay it at all.
@@ -29,7 +24,7 @@ function BrandBackdrop({ videoUrl, imageUrl }: Readonly<{ videoUrl: string; imag
     Negative z-index rather than a wrapper around the children: a positioned
     element with z-index 0 paints ABOVE the in-flow card, and wrapping the card
     to out-rank it would make it a flex item and lose the centring the frame
-    does. Below zero it paints over the frame's gradient and under everything
+    does. Below zero it paints over the frame's ground and under everything
     in flow, which is exactly the layer a backdrop wants.
   */
   const cover = {
@@ -105,22 +100,10 @@ export default function AuthBackground({ children }: Readonly<Props>) {
         px: 2,
         overflowY: 'auto',
         WebkitOverflowScrolling: 'touch',
-        background: isDark
-          ? `linear-gradient(120deg, ${auth.bgGradient.dark[0]} 0%, ${auth.bgGradient.dark[1]} 48%, ${auth.bgGradient.dark[2]} 100%)`
-          : `linear-gradient(120deg, ${auth.bgGradient.light[0]} 0%, ${auth.bgGradient.light[1]} 46%, ${auth.bgGradient.light[2]} 100%)`,
-        backgroundSize: '300% 300%',
-        animation: `${gradientShift} 18s ease infinite`,
-        '&:before': {
-          content: '""',
-          position: 'absolute',
-          inset: 0,
-          background:
-            isDark
-              ? 'linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(0deg, rgba(255,255,255,0.025) 1px, transparent 1px)'
-              : 'linear-gradient(90deg, rgba(33,25,18,0.04) 1px, transparent 1px), linear-gradient(0deg, rgba(33,25,18,0.04) 1px, transparent 1px)',
-          backgroundSize: '34px 34px',
-          pointerEvents: 'none',
-        },
+        // The calm ground: one flat token colour, the same one native paints.
+        // No drifting gradient and no grid — the backdrop and the form are the
+        // only things on it.
+        bgcolor: 'background.default',
       }}
     >
       {backdrop && (
@@ -152,7 +135,7 @@ export default function AuthBackground({ children }: Readonly<Props>) {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: 2,
+          gap: 3,
         }}
       >
         {children}

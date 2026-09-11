@@ -54,8 +54,8 @@ export function AutoPodVenueRow({ value, onChange, labels }: Readonly<Props>) {
   const options = venues.map((venue) => [venue.id, venue.venue_name] as readonly [string, string]);
 
   return (
-    <YStack testID="auto-pods-venue-row" gap={6}>
-      <Text fontSize={11.5} fontWeight="600" color="$muted" textTransform="uppercase">
+    <YStack testID="auto-pods-venue-row" gap={8}>
+      <Text fontSize={13} fontWeight="600" color="$muted">
         {labels.venueLabel}
       </Text>
       <OptionChipRow

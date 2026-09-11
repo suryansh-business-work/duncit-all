@@ -94,9 +94,9 @@ export function TemplatesSection({
               paddingHorizontal={8}
               paddingVertical={2}
               borderRadius={999}
-              backgroundColor="$primary"
+              backgroundColor="$accent"
             >
-              <Text fontSize={10.5} fontWeight="700" color="$onPrimary">
+              <Text fontSize={11} fontWeight="600" color="$onPrimary">
                 {t('availability.templates.default')}
               </Text>
             </XStack>

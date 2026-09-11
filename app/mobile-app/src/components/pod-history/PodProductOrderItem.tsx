@@ -20,13 +20,11 @@ function Chip({ label, filled }: Readonly<{ label: string; filled?: boolean }>) 
   return (
     <XStack
       borderRadius={999}
-      paddingHorizontal={9}
-      paddingVertical={3}
-      backgroundColor={filled ? '$primary' : '$surface'}
-      borderWidth={filled ? 0 : 1}
-      borderColor="$borderColor"
+      paddingHorizontal={10}
+      paddingVertical={4}
+      backgroundColor={filled ? '$surface' : '$primarySoft'}
     >
-      <Text fontSize={10.5} fontWeight="600" color={filled ? '$onPrimary' : '$color'}>
+      <Text fontSize={11} fontWeight="600" color={filled ? '$color' : '$primary'}>
         {label}
       </Text>
     </XStack>
@@ -46,9 +44,8 @@ export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>
   return (
     <YStack
       testID={`po-item-${order.id}`}
-      borderWidth={1}
-      borderColor="$borderColor"
-      borderRadius={14}
+      borderRadius={16}
+      backgroundColor="$soft"
       padding={12}
       gap={8}
     >

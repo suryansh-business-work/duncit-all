@@ -2,31 +2,22 @@ import { useState } from 'react';
 import { notifyError } from '../../components/notify';
 import { useMutation, useQuery } from '@apollo/client/react';
 import {
-  Alert,
-  Avatar,
-  Box,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
-  Stack,
   TextField,
-  Typography,
 } from '@mui/material';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import SendIcon from '@mui/icons-material/Send';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import CloseIcon from '@mui/icons-material/Close';
+import { DuncitIconButton } from '@duncit/buttons';
 import {
   POD_IDEA_DETAILS,
   ADD_COMMENT,
   DELETE_COMMENT,
   TOGGLE_LIKE,
-  formatRelative,
 } from './queries';
-import IdeaCommentsList from './IdeaCommentsList';
+import IdeaDetailsBody from './IdeaDetailsBody';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface DetailsProps {
@@ -34,110 +25,6 @@ interface DetailsProps {
   myId?: string;
   onClose: () => void;
   onChanged: () => void;
-}
-
-interface BodyProps {
-  loading: boolean;
-  hasData: boolean;
-  idea: any;
-  myId?: string;
-  onDelete: (commentId: string) => void;
-  onToggleLike: () => void;
-}
-
-function IdeaDetailsBody({
-  loading,
-  hasData,
-  idea,
-  myId,
-  onDelete,
-  onToggleLike,
-}: Readonly<BodyProps>) {
-  const { t } = useTranslation();
-  if (loading && !hasData) {
-    return (
-      <Box sx={{ textAlign: 'center', py: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (!idea) {
-    return <Alert severity="warning">{t('mweb.podIdeas.ideaNotFound')}</Alert>;
-  }
-
-  return (
-    <>
-      <Stack
-        direction="row"
-        spacing={1.5}
-        sx={{
-          alignItems: "center",
-          mb: 1.5
-        }}>
-        <Avatar
-          src={idea.author?.profile_photo || undefined}
-          sx={{ width: 40, height: 40 }}
-        >
-          {(idea.author?.first_name?.[0] ?? 'U').toUpperCase()}
-        </Avatar>
-        <Box>
-          <Typography variant="body2" sx={{
-            fontWeight: 600
-          }}>
-            {idea.author?.full_name ?? 'Member'}
-          </Typography>
-          <Typography variant="caption" sx={{
-            color: "text.secondary"
-          }}>
-            {formatRelative(idea.created_at)}
-          </Typography>
-        </Box>
-      </Stack>
-      <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', mb: 2 }}>
-        {idea.description}
-      </Typography>
-      <Stack
-        direction="row"
-        spacing={2}
-        sx={{
-          alignItems: "center",
-          mb: 2
-        }}>
-        <DuncitButton
-          size="small"
-          startIcon={
-            idea.liked_by_me ? (
-              <FavoriteIcon fontSize="small" sx={{ color: 'error.main' }} />
-            ) : (
-              <FavoriteBorderIcon fontSize="small" />
-            )
-          }
-          onClick={onToggleLike}
-          sx={{ color: idea.liked_by_me ? 'error.main' : 'text.secondary' }}
-        >
-          {idea.likes_count} like{idea.likes_count === 1 ? '' : 's'}
-        </DuncitButton>
-        <Typography variant="caption" sx={{
-          color: "text.secondary"
-        }}>
-          {idea.shares_count} share{idea.shares_count === 1 ? '' : 's'}
-        </Typography>
-      </Stack>
-      <Divider sx={{ mb: 1 }} />
-      <Typography variant="overline" sx={{
-        color: "text.secondary"
-      }}>
-        Comments ({idea.comments_count})
-      </Typography>
-      <IdeaCommentsList
-        comments={idea.comments}
-        ideaAuthorId={idea.author_id}
-        myId={myId}
-        onDelete={onDelete}
-      />
-    </>
-  );
 }
 
 export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Readonly<DetailsProps>) {
@@ -179,14 +66,14 @@ export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Read
 
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ pr: 6 }}>
+      <DialogTitle sx={{ pr: 8, fontSize: '1.0625rem', fontWeight: 600 }}>
         {idea?.title ?? 'Pod idea'}
         <DuncitIconButton
           onClick={onClose}
-          sx={{ position: 'absolute', right: 8, top: 8 }}
-          size="small"
+          aria-label={t('mweb.common.close')}
+          sx={{ position: 'absolute', right: 12, top: 12, width: 40, height: 40, minHeight: 40, bgcolor: 'action.hover' }}
         >
-          ×
+          <CloseIcon fontSize="small" />
         </DuncitIconButton>
       </DialogTitle>
       <DialogContent dividers>

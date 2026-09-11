@@ -1,7 +1,11 @@
-import { Spinner, Text, YStack } from 'tamagui';
+import { Spinner, YStack } from 'tamagui';
+import { coverImageUrl } from '@duncit/utils';
 
 import { HostPodRow } from '@/components/host-manage/HostPodRow';
+import { EmptyLine } from '@/components/host-manage/HostRowParts';
+import { RowGroup } from '@/components/host-manage/RowGroup';
 import type { HostPod } from '@/hooks/useHostPods';
+import { useTranslation } from '@/hooks/useTranslation';
 import { podTypeLabel } from '@/utils/pod-format';
 import { isVenueRejected, VENUE_REJECTED_NOTE, venueApprovalChip } from '@/utils/venue-approval';
 import { formatDateTime } from '@/utils/date-format';
@@ -21,42 +25,49 @@ interface Props {
   onActions: (pod: HostPod) => void;
 }
 
-/** The pods themselves, or the one line that explains why there are none. */
+/** The pods themselves in one card, or the one line that explains why there are none. */
 export function HostPodsList({ pods, visible, isLoading, onOpen, onActions }: Readonly<Props>) {
-  if (isLoading) return <Spinner testID="host-pods-loading" color="$primary" />;
+  const { t } = useTranslation();
 
-  if (pods.length === 0) {
-    return (
-      <Text testID="host-pods-empty" fontSize={13} color="$muted">
-        You don't host any pods yet. New pods you host will show up here.
-      </Text>
+  let body;
+  if (isLoading) {
+    body = (
+      <YStack paddingVertical={24} alignItems="center">
+        <Spinner testID="host-pods-loading" color="$primary" />
+      </YStack>
     );
+  } else if (pods.length === 0) {
+    body = (
+      <EmptyLine
+        testID="host-pods-empty"
+        text="You don't host any pods yet. New pods you host will show up here."
+      />
+    );
+  } else if (visible.length === 0) {
+    body = (
+      <EmptyLine
+        testID="host-pods-filtered-empty"
+        text={t('mweb.hostManage.noPodsMatchTheseFiltersTry')}
+      />
+    );
+  } else {
+    body = visible.map((pod) => (
+      <HostPodRow
+        key={pod.id}
+        id={pod.id}
+        title={pod.pod_title}
+        when={formatWhen(pod.pod_date_time)}
+        zoneName={pod.zone_name}
+        typeLabel={podTypeLabel(pod.pod_type)}
+        free={pod.pod_type === 'FREE'}
+        cover={coverImageUrl(pod.pod_images_and_videos)}
+        approval={venueApprovalChip(pod.venue_approval_status)}
+        rejectedNote={isVenueRejected(pod.venue_approval_status) ? VENUE_REJECTED_NOTE : null}
+        onOpen={() => onOpen(pod)}
+        onActions={() => onActions(pod)}
+      />
+    ));
   }
 
-  if (visible.length === 0) {
-    return (
-      <Text testID="host-pods-filtered-empty" fontSize={13} color="$muted">
-        No pods match these filters. Try adjusting or resetting them.
-      </Text>
-    );
-  }
-
-  return (
-    <YStack gap={12}>
-      {visible.map((pod) => (
-        <HostPodRow
-          key={pod.id}
-          id={pod.id}
-          title={pod.pod_title}
-          when={formatWhen(pod.pod_date_time)}
-          zoneName={pod.zone_name}
-          typeLabel={podTypeLabel(pod.pod_type)}
-          approval={venueApprovalChip(pod.venue_approval_status)}
-          rejectedNote={isVenueRejected(pod.venue_approval_status) ? VENUE_REJECTED_NOTE : null}
-          onOpen={() => onOpen(pod)}
-          onActions={() => onActions(pod)}
-        />
-      ))}
-    </YStack>
-  );
+  return <RowGroup>{body}</RowGroup>;
 }

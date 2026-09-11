@@ -1,31 +1,24 @@
-import { StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { StyleSheet, View } from 'react-native';
+import { dark, light } from '@duncit/auth-tokens';
 
 import { useThemeStore } from '@/stores/theme.store';
 
-// Exported so root-level overlays (e.g. ForceUpdateGate) that must paint before
-// this gradient can match its start colour instead of typing their own copy.
-export const DARK = ['#100d18', '#08070b'] as const;
-export const LIGHT = ['#fff5f7', '#ffffff'] as const;
+// Exported so root-level overlays (e.g. ForceUpdateGate) and the navigator's
+// base colour paint exactly the ground this component paints.
+export const APP_BG = { light: light.bg, dark: dark.bg } as const;
 
 /**
- * App-wide gradient backdrop — a single vertical LinearGradient (GPU-composited,
- * cheap). The former full-screen SVG radial glows were removed: rasterising two
- * react-native-svg radial gradients on every screen — and re-rasterising them
- * frame-by-frame while native screen transitions animate the backdrop — janked
- * every non-home screen on Android. Surfaces (`$surface`) stay opaque on top.
+ * App-wide backdrop — the flat warm off-white (or near-black) ground every
+ * screen sits on. Cards read by contrast against it, the same flat page mWeb
+ * paints from the same token. Surfaces (`$surface`) stay opaque on top.
  */
 export function AppBackground() {
   const scheme = useThemeStore((s) => s.scheme);
-  const colors = scheme === 'dark' ? DARK : LIGHT;
 
   return (
-    <LinearGradient
+    <View
       testID="app-background"
-      colors={colors}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
-      style={StyleSheet.absoluteFill}
+      style={[StyleSheet.absoluteFill, { backgroundColor: APP_BG[scheme] }]}
     />
   );
 }

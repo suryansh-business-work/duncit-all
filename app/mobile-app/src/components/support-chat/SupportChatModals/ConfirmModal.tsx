@@ -19,7 +19,7 @@ export function ResolveConfirmModal({ open, busy, onConfirm, onCancel }: Readonl
   if (!open) return null;
   return (
     <Backdrop testID="resolve-confirm-modal">
-      <Text fontSize={16} fontWeight="700" color="$color">
+      <Text fontSize={17} fontWeight="600" color="$color">
         Mark as resolved?
       </Text>
       <Text fontSize={13} color="$muted">

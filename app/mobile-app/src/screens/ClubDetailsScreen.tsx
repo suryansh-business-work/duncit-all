@@ -2,9 +2,11 @@ import { Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Text, XStack, YStack } from 'tamagui';
+import { MaterialIcons } from '@expo/vector-icons';
+import { YStack } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
+import { EmptyState } from '@/components/EmptyState';
 import { useGoBack } from '@/hooks/useGoBack';
 import { AppBackground } from '@/components/AppBackground';
 import { ClubBody } from '@/components/details/ClubBody';
@@ -16,10 +18,10 @@ import { useClubDetails, useResolvedClubId } from '@/hooks/useDetails';
 import { useLocationMismatch } from '@/hooks/useLocationMismatch';
 import { LocationMismatchDialog } from '@/components/LocationMismatchDialog';
 import { useClubFollow } from '@/hooks/useFollow';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { shareUrl } from '@/services/share-link';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
 const DEEP_LINK_BASE = 'https://duncit.com/club';
@@ -28,6 +30,7 @@ const DEEP_LINK_BASE = 'https://duncit.com/club';
  * the club's upcoming pods. */
 export function ClubDetailsScreen() {
   const { t } = useTranslation();
+  const { accent } = useThemeColors();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const goBack = useGoBack();
   const route = useRoute<RouteProp<RootStackParamList, 'ClubDetails'>>();
@@ -58,8 +61,13 @@ export function ClubDetailsScreen() {
 
   const content = club ? (
     <RefreshScrollView flex={1} contentContainerStyle={{ paddingBottom: bottomInset + 16 }}>
-      <DetailHero media={club.club_feature_images_and_videos} onBack={goBack}>
-        <HeroButton testID="hb-share" icon="share" onPress={handleShare} />
+      <DetailHero
+        fullBleed
+        media={club.club_feature_images_and_videos}
+        onBack={goBack}
+        placeholder={<MaterialIcons name="groups" size={72} color={accent} />}
+      >
+        <HeroButton overMedia testID="hb-share" icon="share" onPress={handleShare} />
       </DetailHero>
       <Reveal>
         <ClubBody
@@ -78,20 +86,14 @@ export function ClubDetailsScreen() {
       </Reveal>
     </RefreshScrollView>
   ) : (
-    <YStack flex={1} alignItems="center" justifyContent="center" gap={12} padding={24}>
-      <Text color="$muted" testID="club-details-error">
-        This club is unavailable.
-      </Text>
-      <XStack
-        pressStyle={PRESS_STYLE.surface}
-        role="button"
-        aria-label={t('mweb.common.goBack')}
-        onPress={goBack}
-      >
-        <Text color="$primary" fontWeight="700">
-          Go back
-        </Text>
-      </XStack>
+    <YStack flex={1} alignItems="center" justifyContent="center">
+      <EmptyState
+        icon="groups"
+        title="This club is unavailable."
+        testID="club-details-error"
+        actionLabel={t('mweb.common.goBack')}
+        onAction={goBack}
+      />
     </YStack>
   );
 

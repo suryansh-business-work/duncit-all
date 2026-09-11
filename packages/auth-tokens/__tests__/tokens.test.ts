@@ -33,7 +33,7 @@ describe('@duncit/auth-tokens ESM view (tokens.mjs)', () => {
   it('exposes concrete token values (spot-check across scales and modes)', () => {
     expect(brand[500]).toBe('#ff5757');
     expect(light.onPrimary).toBe('#ffffff');
-    expect(dark.bg).toBe('#0b1220');
+    expect(dark.bg).toBe('#0e1012');
     expect(radii.pill).toBe(999);
     expect(auth.avatars).toHaveLength(3);
     expect(typography.weight.bold).toBe(700);

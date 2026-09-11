@@ -115,7 +115,7 @@ export function VenuePodDetailSheet({ pod, currencySymbol, onClose }: Readonly<P
               {disabledReason}
             </Text>
           ) : null}
-          <Text fontSize={13.5} fontWeight="700" color="$color" paddingTop={8}>
+          <Text fontSize={15} fontWeight="600" color="$color" paddingTop={8}>
             {t('mweb.venuePods.attendees')}
           </Text>
           {isLoading ? <Spinner color="$primary" /> : null}

@@ -1,5 +1,3 @@
-import { Text } from 'tamagui';
-
 import { StackScreen } from '@/components/StackScreen';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { useVerifications, type Verification } from '@/hooks/useVerifications';
@@ -67,10 +65,7 @@ export function VerificationScreen() {
 
   return (
     <StackScreen header title={t('verification.title')} testID="verification-screen">
-      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }}>
-        <Text fontSize={13} color="$muted">
-          {t('verification.subtitle')}
-        </Text>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40 }}>
         {items.map(renderCard)}
       </RefreshScrollView>
     </StackScreen>

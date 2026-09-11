@@ -114,7 +114,7 @@ function CancelPodDialog({ pod, onClose, onCancelled }: Readonly<Props>) {
       footer={footer}
     >
       <YStack gap={12}>
-        <Text testID="venue-cancel-pod-penalty" fontSize={13.5} fontWeight="700" color="$warning">
+        <Text testID="venue-cancel-pod-penalty" fontSize={14} fontWeight="600" color="$warning">
           {venueCancelPenaltyHeadline(penalty, t)}
         </Text>
         <Text fontSize={12.5} color="$muted">

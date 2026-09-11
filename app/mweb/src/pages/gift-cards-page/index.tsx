@@ -1,8 +1,10 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import { useTranslation } from '../../i18n/useTranslation';
+import PageHeader from '../../components/PageHeader';
 import BuyTab from './BuyTab';
 import MyCardsTab from './MyCardsTab';
+import { SEGMENTED_TABS_SX } from './segmentedSx';
 
 type GiftCardsTab = 'buy' | 'mycards';
 
@@ -22,16 +24,10 @@ export default function GiftCardsPage() {
   });
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Stack spacing={2} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-        <Typography variant="h6" sx={{
-          fontWeight: 700
-        }}>
-          {t('mweb.giftCards.title')}
-        </Typography>
-        <DuncitTabs {...tabs} />
-        {tabs.value === 'buy' ? <BuyTab /> : <MyCardsTab />}
-      </Stack>
-    </Box>
+    <Stack spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%', py: 0.5 }}>
+      <PageHeader title={t('mweb.giftCards.title')} />
+      <DuncitTabs {...tabs} variant="fullWidth" sx={SEGMENTED_TABS_SX} />
+      {tabs.value === 'buy' ? <BuyTab /> : <MyCardsTab />}
+    </Stack>
   );
 }

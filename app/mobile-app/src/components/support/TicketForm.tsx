@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Button, Input, Text, XStack, YStack } from 'tamagui';
+import { Input, Text, XStack, YStack } from 'tamagui';
 
+import { DuncitButton } from '@/components/DuncitButton';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { createTicket } from '@/hooks/useSupport';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { CategorySelect } from './CategorySelect';
@@ -72,15 +74,7 @@ export function TicketForm({
   };
 
   return (
-    <YStack
-      testID="ticket-form"
-      gap={10}
-      padding={14}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
+    <SurfaceCard testID="ticket-form" gap={12}>
       {podTitle ? (
         <XStack
           testID="ticket-attached-pod"
@@ -107,7 +101,9 @@ export function TicketForm({
           value={initialName}
           disabled
           autoComplete="name"
-          backgroundColor="$background"
+          backgroundColor="$surface"
+          borderRadius={14}
+          borderColor="$borderColor"
           opacity={0.7}
         />
       </YStack>
@@ -120,7 +116,9 @@ export function TicketForm({
           disabled
           autoCapitalize="none"
           keyboardType="email-address"
-          backgroundColor="$background"
+          backgroundColor="$surface"
+          borderRadius={14}
+          borderColor="$borderColor"
           opacity={0.7}
         />
         <Text fontSize={11} color="$muted">
@@ -141,7 +139,9 @@ export function TicketForm({
           value={subject}
           onChangeText={setSubject}
           maxLength={120}
-          backgroundColor="$background"
+          backgroundColor="$surface"
+          borderRadius={14}
+          borderColor="$borderColor"
         />
       </YStack>
       <YStack gap={4}>
@@ -155,7 +155,9 @@ export function TicketForm({
           onChangeText={setMessage}
           multiline
           numberOfLines={4}
-          backgroundColor="$background"
+          backgroundColor="$surface"
+          borderRadius={14}
+          borderColor="$borderColor"
         />
       </YStack>
       <TicketAttachments attachments={attachments} onChange={setAttachments} />
@@ -164,16 +166,14 @@ export function TicketForm({
           {error}
         </Text>
       ) : null}
-      <Button
+      <DuncitButton
         testID="ticket-submit"
+        label={submitting ? 'Sending…' : 'Send to support'}
         onPress={submit}
         disabled={submitting}
-        backgroundColor="$primary"
-        color="$onPrimary"
-        fontWeight="700"
-      >
-        {submitting ? 'Sending…' : 'Send to support'}
-      </Button>
-    </YStack>
+        size="lg"
+        fullWidth
+      />
+    </SurfaceCard>
   );
 }

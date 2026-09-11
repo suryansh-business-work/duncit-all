@@ -27,7 +27,7 @@ export default function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) 
   const { t } = useTranslation();
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth data-testid="pod-guidelines-dialog">
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <AiMonitorGlyph size={24} /> {t('mweb.createPod.aiMonitors')}
       </DialogTitle>
       <DialogContent>
@@ -52,13 +52,13 @@ export default function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) 
           ))}
         </List>
         <Box sx={{ mt: 1.5, p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}>
-          <Typography variant="caption" color="error" sx={{ fontWeight: 700 }}>
+          <Typography variant="caption" color="error" sx={{ fontWeight: 600 }}>
             {t('mweb.createPod.guidelinesWarning')}
           </Typography>
         </Box>
       </DialogContent>
-      <DialogActions>
-        <DuncitButton onClick={onClose} variant="contained" data-testid="pod-guidelines-close">
+      <DialogActions sx={{ px: 3, pb: 2.5 }}>
+        <DuncitButton onClick={onClose} variant="contained" size="large" fullWidth data-testid="pod-guidelines-close">
           {t('mweb.createPod.gotIt')}
         </DuncitButton>
       </DialogActions>

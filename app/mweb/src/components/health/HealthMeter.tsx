@@ -14,10 +14,11 @@ interface Props {
   caption?: string | null;
 }
 
-const BAND_COLOR: Record<HealthBand, string> = {
-  RED: '#e53935',
-  YELLOW: '#fb8c00',
-  GREEN: '#43a047',
+/** Band → the theme's semantic palette, so the gauge flips with light/dark. */
+const BAND_PALETTE: Record<HealthBand, 'error' | 'warning' | 'success'> = {
+  RED: 'error',
+  YELLOW: 'warning',
+  GREEN: 'success',
 };
 
 // Half-circle gauge. We render it as an SVG arc rather than reusing MUI's
@@ -37,13 +38,13 @@ export default function HealthMeter({
   // before any hook runs, so `t` would not exist yet.
   const labelText = label ?? t('mweb.health.accountHealth');
   const theme = useTheme();
-  const trackColor = alpha(theme.palette.text.primary, 0.08);
+  const trackColor = alpha(theme.palette.text.primary, 0.06);
   const radius = (size - thickness) / 2;
   const cy = size / 2;
   const circumference = Math.PI * radius;
   const safeScore = Math.max(0, Math.min(100, Math.round(score)));
   const filled = (safeScore / 100) * circumference;
-  const color = BAND_COLOR[band];
+  const color = theme.palette[BAND_PALETTE[band]].main;
   const height = size / 2 + thickness;
   // The half circle is drawn where it is shown — left end, over the top, right
   // end — rather than drawing a full circle, rotating the <svg> 180° and
@@ -113,10 +114,12 @@ export default function HealthMeter({
         </Stack>
       </Box>
       <Typography
-        variant="overline"
+        variant="caption"
         sx={{
           color: "text.secondary",
-          fontWeight: 700,
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          letterSpacing: 0.6,
           mt: 1
         }}>
         {labelText}

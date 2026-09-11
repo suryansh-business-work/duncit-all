@@ -4,6 +4,10 @@ import { hostCategoryKeyOf } from '../create-pod.form';
 import { useTranslation } from '../../../../i18n/useTranslation';
 import type { CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
 
+/** A 36px choice pill — green when picked, the soft fill when not (native's
+ * ChipSelectField). `minHeight` pins it against the coarse-pointer 44px rule. */
+const CHOICE_CHIP_SX = { height: 36, minHeight: 36, px: 0.75 } as const;
+
 const categoryPath = (category: CreatePodHostCategory) =>
   [category.super_category_name, category.category_name, category.sub_category_name]
     .filter(Boolean)
@@ -35,12 +39,7 @@ export default function HostCategoryField({ form, hostCategories }: Readonly<Pro
 
   return (
     <Box>
-      <Typography
-        variant="caption"
-        sx={{
-          color: "text.secondary",
-          fontWeight: 600
-        }}>
+      <Typography variant="subtitle2" component="div">
         {requiredLabel(t('mweb.createPod.categoryLabel'), true)}
       </Typography>
       <Typography
@@ -52,7 +51,7 @@ export default function HostCategoryField({ form, hostCategories }: Readonly<Pro
         }}>
         {t('mweb.createPod.categoryHint')}
       </Typography>
-      <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75, mt: 0.75 }}>
+      <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1, mt: 1 }}>
         {hostCategories.length > 0 ? (
           hostCategories.map((category) => {
             const key = hostCategoryKeyOf(category);
@@ -62,15 +61,15 @@ export default function HostCategoryField({ form, hostCategories }: Readonly<Pro
                 key={key}
                 label={categoryPath(category)}
                 color={selected ? 'primary' : 'default'}
-                variant={selected ? 'filled' : 'outlined'}
+                variant="filled"
                 onClick={() => pickCategory(key)}
                 data-testid={`create-pod-category-${key}`}
-                sx={{ fontWeight: 600 }}
+                sx={CHOICE_CHIP_SX}
               />
             );
           })
         ) : (
-          <Chip label={t('mweb.createPod.categoryEmpty')} variant="outlined" data-testid="create-pod-category-empty" />
+          <Chip label={t('mweb.createPod.categoryEmpty')} variant="filled" data-testid="create-pod-category-empty" sx={CHOICE_CHIP_SX} />
         )}
       </Stack>
       {errors.host_category_key && <FormHelperText error>{errors.host_category_key.message}</FormHelperText>}

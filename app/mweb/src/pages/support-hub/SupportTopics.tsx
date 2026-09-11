@@ -1,9 +1,12 @@
 import { Box, List, ListItemButton, Paper, Stack, Typography } from '@mui/material';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import { useNavigate } from 'react-router';
 import { renderSuperCategoryMark } from '../../components/app-header/superCategoryIcon';
+import SectionHeader from '../../components/SectionHeader';
+import { SURFACE_SX } from '../../theme';
 import type { FaqGroup } from './faqQueries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface SupportTopicsProps {
   groups: FaqGroup[];
@@ -11,19 +14,13 @@ interface SupportTopicsProps {
 
 /** "Topics" list — one row per FAQ super-category with its article count. */
 export default function SupportTopics({ groups }: Readonly<SupportTopicsProps>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   if (groups.length === 0) return null;
   return (
-    <Box>
-      <Typography
-        variant="overline"
-        sx={{
-          color: "text.secondary",
-          fontWeight: 700
-        }}>
-        Topics
-      </Typography>
-      <Paper variant="outlined" sx={{ mt: 0.5, borderRadius: '16px', overflow: 'hidden' }}>
+    <Stack spacing={1.5}>
+      <SectionHeader title={t('mweb.supportHub.topics')} />
+      <Paper sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
         <List disablePadding>
           {groups.map((group, index) => {
             const id = group.super_category?.id ?? 'GENERIC';
@@ -36,38 +33,37 @@ export default function SupportTopics({ groups }: Readonly<SupportTopicsProps>) 
                 key={id}
                 divider={index < groups.length - 1}
                 onClick={() => navigate(`/faqs?cat=${id}`)}
-                sx={{ px: 2, py: 1.35 }}
+                sx={{ px: 2, py: 1.75, borderRadius: 0 }}
               >
                 <Box
                   sx={{
-                    width: 38,
-                    height: 38,
+                    width: 40,
+                    height: 40,
                     mr: 1.5,
                     borderRadius: '50%',
                     display: 'grid',
                     placeItems: 'center',
-                    color: 'primary.main',
-                    bgcolor: 'rgba(255,79,115,0.12)',
+                    color: 'secondary.main',
+                    bgcolor: 'action.hover',
+                    flexShrink: 0,
                   }}
                 >
                   {mark ?? <HelpOutlineIcon fontSize="small" />}
                 </Box>
                 <Stack sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography sx={{ fontWeight: 600 }} noWrap>
+                  <Typography sx={{ fontSize: '0.9375rem', fontWeight: 600 }} noWrap>
                     {name}
                   </Typography>
-                  <Typography variant="caption" sx={{
-                    color: "text.secondary"
-                  }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                     {group.faqs.length} {group.faqs.length === 1 ? 'article' : 'articles'}
                   </Typography>
                 </Stack>
-                <ChevronRightIcon fontSize="small" color="disabled" />
+                <ChevronRightRoundedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
               </ListItemButton>
             );
           })}
         </List>
       </Paper>
-    </Box>
+    </Stack>
   );
 }

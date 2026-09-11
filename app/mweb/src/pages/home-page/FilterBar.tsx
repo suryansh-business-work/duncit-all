@@ -21,11 +21,18 @@ interface Props {
 
 const scrollRow = {
   display: 'flex',
-  gap: 0.75,
+  gap: 1,
   overflowX: 'auto',
   scrollbarWidth: 'none',
   '&::-webkit-scrollbar': { display: 'none' },
 } as const;
+
+/** Every filter pill: 32 tall on touch too (a clickable Chip is a role=button,
+ * which the coarse-pointer rule would otherwise stretch to 44). */
+const CHIP_SX = { flexShrink: 0, height: 32, minHeight: 32, fontWeight: 600 } as const;
+
+/** The small muted label over a chip row. */
+const LABEL_SX = { color: 'text.secondary', px: 0.25, fontWeight: 600, lineHeight: 1.1, textTransform: 'uppercase' } as const;
 
 export default function FilterBar({
   categoryChips,
@@ -51,7 +58,7 @@ export default function FilterBar({
             color={categoryId ? 'default' : 'primary'}
             variant={categoryId ? 'outlined' : 'filled'}
             onClick={() => setCategoryId('')}
-            sx={{ flexShrink: 0, height: 30 }}
+            sx={CHIP_SX}
           />
           {categoryChips.map((c: any) => {
             const selected = categoryId === c.id;
@@ -65,8 +72,7 @@ export default function FilterBar({
                 variant={selected ? 'filled' : 'outlined'}
                 onClick={() => setCategoryId(selected ? '' : c.id)}
                 sx={{
-                  flexShrink: 0,
-                  height: 30,
+                  ...CHIP_SX,
                   ...(isSub && !selected
                     ? { color: 'text.secondary', borderStyle: 'dashed' }
                     : null),
@@ -78,16 +84,8 @@ export default function FilterBar({
       )}
 
       {/* ── Price row ── */}
-      <Stack spacing={0.35}>
-        <Typography
-          variant="caption"
-          sx={{
-            color: "text.secondary",
-            px: 0.25,
-            fontWeight: 700,
-            lineHeight: 1.1,
-            textTransform: 'uppercase'
-          }}>
+      <Stack spacing={0.75}>
+        <Typography variant="caption" sx={LABEL_SX}>
           Price
         </Typography>
         <Box sx={scrollRow}>
@@ -105,23 +103,15 @@ export default function FilterBar({
               color={priceFilter === val ? 'primary' : 'default'}
               variant={priceFilter === val ? 'filled' : 'outlined'}
               onClick={() => setPriceFilter(val)}
-              sx={{ flexShrink: 0, height: 30 }}
+              sx={CHIP_SX}
             />
           ))}
         </Box>
       </Stack>
 
       {/* ── Date row ── */}
-      <Stack spacing={0.35}>
-        <Typography
-          variant="caption"
-          sx={{
-            color: "text.secondary",
-            px: 0.25,
-            fontWeight: 700,
-            lineHeight: 1.1,
-            textTransform: 'uppercase'
-          }}>
+      <Stack spacing={0.75}>
+        <Typography variant="caption" sx={LABEL_SX}>
           When
         </Typography>
         <Box sx={scrollRow}>
@@ -138,10 +128,10 @@ export default function FilterBar({
               key={val}
               label={lbl}
               size="small"
-              color={dateFilter === val ? 'secondary' : 'default'}
+              color={dateFilter === val ? 'primary' : 'default'}
               variant={dateFilter === val ? 'filled' : 'outlined'}
               onClick={() => setDateFilter(val)}
-              sx={{ flexShrink: 0, height: 30 }}
+              sx={CHIP_SX}
             />
           ))}
         </Box>
@@ -156,7 +146,6 @@ export default function FilterBar({
             label={t('mweb.home.sortBy')}
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortBy)}
-            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
             slotProps={{
               input: {
                 startAdornment: (

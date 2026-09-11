@@ -38,9 +38,10 @@ export function ProfilePodsPanel({ userId, kind }: Readonly<Props>) {
       <Text
         testID={`profile-pods-${kind}-empty`}
         textAlign="center"
-        fontSize={13}
+        fontSize={14}
+        fontWeight="500"
         color="$muted"
-        paddingVertical={32}
+        paddingVertical={40}
       >
         {kind === 'joined' ? t('mweb.profile.noJoinedPods') : t('mweb.profile.noHostedPods')}
       </Text>

@@ -23,7 +23,7 @@ export default function LoginOtpStep({ otp, onBack }: Readonly<Props>) {
   const onCode = state.step === 'CODE';
 
   return (
-    <Stack spacing={1.6}>
+    <Stack spacing={2}>
       {onCode ? (
         <RecoveryCodeStep
           labels={labels}

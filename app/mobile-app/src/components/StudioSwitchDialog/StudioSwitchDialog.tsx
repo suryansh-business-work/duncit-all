@@ -51,7 +51,7 @@ export function StudioSwitchDialog({
   onSelect,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { color, onPrimary, muted } = useThemeColors();
+  const { color, onPrimary, primary } = useThemeColors();
   const [pending, setPending] = useState<StudioMode>(current);
 
   // The dialog stays mounted between openings, so the staged pick is reset every
@@ -82,16 +82,16 @@ export function StudioSwitchDialog({
           <YStack
             width="86%"
             maxWidth={420}
-            backgroundColor="$background"
-            borderRadius={20}
-            padding={18}
+            backgroundColor="$surface"
+            borderRadius={28}
+            padding={20}
             gap={14}
           >
             <SafeAreaView edges={[]}>
-              <Text fontSize={17} fontWeight="700" color="$color" paddingBottom={12}>
-                Switch role
+              <Text fontSize={18} fontWeight="600" color="$color" paddingBottom={16}>
+                {t('mweb.common.switchRole')}
               </Text>
-              <XStack justifyContent="center" gap={16} paddingBottom={14}>
+              <XStack justifyContent="center" gap={16} paddingBottom={16}>
                 {availableModes(roles, { products: showProducts }).map((option) => {
                   const selected = option.mode === pending;
                   return (
@@ -107,9 +107,7 @@ export function StudioSwitchDialog({
                       alignItems="center"
                       justifyContent="center"
                       borderRadius={26}
-                      borderWidth={2}
-                      borderColor={selected ? '$primary' : '$borderColor'}
-                      backgroundColor={selected ? '$primary' : '$surface'}
+                      backgroundColor={selected ? '$primary' : '$soft'}
                       pressStyle={PRESS_STYLE.control}
                     >
                       <MaterialIcons
@@ -125,22 +123,22 @@ export function StudioSwitchDialog({
                 testID="studio-switch-active-card"
                 alignItems="center"
                 gap={12}
-                borderRadius={16}
-                paddingHorizontal={18}
-                paddingVertical={16}
-                backgroundColor="$primary"
+                borderRadius={18}
+                paddingHorizontal={16}
+                paddingVertical={14}
+                backgroundColor="$primarySoft"
               >
                 <YStack flex={1}>
-                  <Text fontSize={18} fontWeight="700" color="$onPrimary" numberOfLines={1}>
+                  <Text fontSize={17} fontWeight="600" color="$color" numberOfLines={1}>
                     {STUDIO_LABEL[pending]}
                   </Text>
-                  <Text fontSize={11.5} fontWeight="700" color="$onPrimary" opacity={0.85}>
+                  <Text fontSize={12} fontWeight="500" color="$muted">
                     {changed ? PENDING_CAPTION : ACTIVE_CAPTION}
                   </Text>
                 </YStack>
-                <MaterialIcons name="check-circle" size={22} color={onPrimary} />
+                <MaterialIcons name="check-circle" size={22} color={primary} />
               </XStack>
-              <YStack paddingTop={14}>
+              <YStack paddingTop={16}>
                 <PrimaryButton
                   testID="studio-switch-confirm"
                   label={switchButtonLabel(changed, pending)}
@@ -148,9 +146,6 @@ export function StudioSwitchDialog({
                   onPress={() => onSelect(pending)}
                 />
               </YStack>
-              <Text fontSize={11.5} color={muted} paddingTop={10} textAlign="center">
-                Switching changes your sidebar, header and dashboard.
-              </Text>
             </SafeAreaView>
           </YStack>
         </YStack>

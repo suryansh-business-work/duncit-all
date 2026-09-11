@@ -1,7 +1,7 @@
-import { Box, Chip, Stack, Typography } from '@mui/material';
+import { Card, Chip, Stack, Typography } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ShareIcon from '@mui/icons-material/Share';
-import { DuncitIconButton } from '@duncit/buttons';
+import { DuncitRoundButton } from '@duncit/buttons';
 import { formatMoney } from '@duncit/utils';
 import { notifySuccess } from '../../components/notify';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -17,11 +17,14 @@ const STATUS_KEY: Record<GiftCardStatus, string> = {
   EXPIRED: 'mweb.giftCards.statusExpired',
 };
 
-const STATUS_COLOR: Record<GiftCardStatus, 'success' | 'default' | 'warning'> = {
-  ACTIVE: 'success',
-  REDEEMED: 'default',
-  EXPIRED: 'warning',
+/** Status → the text colour of its soft pill (the fill is always the soft tone). */
+const STATUS_TONE: Record<GiftCardStatus, string> = {
+  ACTIVE: 'success.main',
+  REDEEMED: 'text.secondary',
+  EXPIRED: 'warning.main',
 };
+
+const ACTION_SX = { color: 'text.primary' } as const;
 
 interface MyCardTileProps {
   card: GiftCard;
@@ -70,7 +73,7 @@ export default function MyCardTile({ card, currencySymbol, senderName, showRecip
   };
 
   return (
-    <Box>
+    <Card sx={{ p: 1.5 }}>
       <GiftCardVisual
         scopeType={card.scope_type}
         scopeCategoryId={card.scope_category_id}
@@ -87,9 +90,14 @@ export default function MyCardTile({ card, currencySymbol, senderName, showRecip
         spacing={1}
         sx={{
           alignItems: "center",
-          mt: 0.75
+          mt: 1.5,
+          px: 0.5
         }}>
-        <Chip size="small" color={STATUS_COLOR[card.status]} label={t(STATUS_KEY[card.status])} />
+        <Chip
+          size="small"
+          label={t(STATUS_KEY[card.status])}
+          sx={{ height: 24, fontWeight: 600, bgcolor: 'action.hover', color: STATUS_TONE[card.status] }}
+        />
         <Typography
           variant="caption"
           noWrap
@@ -100,12 +108,12 @@ export default function MyCardTile({ card, currencySymbol, senderName, showRecip
           }}>
           {t('mweb.giftCards.validUntil', { vars: { date: formatDate(card.expires_at) } })}
         </Typography>
-        <DuncitIconButton size="small" onClick={copyCode} aria-label={t('mweb.giftCards.copyCode')}>
-          <ContentCopyIcon fontSize="small" />
-        </DuncitIconButton>
-        <DuncitIconButton size="small" onClick={shareCard} aria-label={t('mweb.giftCards.shareCard')}>
-          <ShareIcon fontSize="small" />
-        </DuncitIconButton>
+        <DuncitRoundButton tone="surface" onClick={copyCode} aria-label={t('mweb.giftCards.copyCode')} sx={ACTION_SX}>
+          <ContentCopyIcon />
+        </DuncitRoundButton>
+        <DuncitRoundButton tone="surface" onClick={shareCard} aria-label={t('mweb.giftCards.shareCard')} sx={ACTION_SX}>
+          <ShareIcon />
+        </DuncitRoundButton>
       </Stack>
       {showRecipient && (
         <Typography
@@ -113,11 +121,13 @@ export default function MyCardTile({ card, currencySymbol, senderName, showRecip
           noWrap
           sx={{
             color: "text.secondary",
-            display: 'block'
+            display: 'block',
+            px: 0.5,
+            mt: 0.5
           }}>
           {card.recipient_name || card.recipient_email}
         </Typography>
       )}
-    </Box>
+    </Card>
   );
 }

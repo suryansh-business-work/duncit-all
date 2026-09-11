@@ -114,7 +114,7 @@ export default function SignupSurveyPage() {
 
   return (
     <Stack
-      spacing={2.5}
+      spacing={3}
       sx={{
         maxWidth: 760,
         mx: 'auto',
@@ -133,26 +133,16 @@ export default function SignupSurveyPage() {
           backdropFilter: 'blur(10px)',
         }}
       >
+        {/* Themed: a green bar on its own 12% track — native's SurveyProgress. */}
         <LinearProgress
           variant="determinate"
           value={progress}
-          sx={{
-            bgcolor: 'action.hover',
-            borderRadius: 999,
-            height: 6,
-            overflow: 'hidden',
-            '& .MuiLinearProgress-bar': {
-              borderRadius: 999,
-              background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)',
-            },
-          }}
+          sx={{ '& .MuiLinearProgress-bar': { borderRadius: '999px' } }}
         />
       </Box>
 
       <Box>
-        <Typography variant="h4" sx={{
-          fontWeight: 600
-        }}>
+        <Typography variant="h5" component="h1" sx={{ fontWeight: 600 }}>
           What's your vibe? ✨
         </Typography>
         <Typography

@@ -26,17 +26,16 @@ function EditProfileButton({ onPress }: Readonly<{ onPress: () => void }>) {
       role="button"
       aria-label={t('mweb.publicProfile.editMyProfile')}
       onPress={onPress}
-      alignSelf="center"
+      height={44}
       alignItems="center"
+      justifyContent="center"
       gap={6}
       paddingHorizontal={18}
-      paddingVertical={10}
       borderRadius={999}
-      borderWidth={1}
-      borderColor="$borderColor"
+      backgroundColor="$soft"
       pressStyle={PRESS_STYLE.control}
     >
-      <Text fontSize={14} fontWeight="600" color="$color">
+      <Text fontSize={15} fontWeight="600" color="$color">
         Edit my profile
       </Text>
     </XStack>
@@ -83,7 +82,7 @@ export function PublicProfileScreen() {
     );
   } else if (user) {
     body = (
-      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 16 }}>
+      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 20 }}>
         <PublicProfileHeader user={user} />
         {isOwner ? null : (
           <ProfileFollowActions

@@ -13,23 +13,23 @@ export function CompletionMeter({ profile }: Readonly<CompletionMeterProps>) {
   const percent = profileCompletion(profile);
 
   return (
-    <YStack testID="profile-completion" gap={6}>
+    <YStack testID="profile-completion" gap={8}>
       <XStack alignItems="center" justifyContent="space-between">
-        <Text fontSize={13} fontWeight="600" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           Profile completion
         </Text>
-        <Text fontSize={13} color="$muted" testID="profile-completion-value">
+        <Text fontSize={14} fontWeight="500" color="$muted" testID="profile-completion-value">
           {percent}% complete
         </Text>
       </XStack>
       <YStack
-        height={8}
-        borderRadius={4}
-        backgroundColor="$borderColor"
+        height={6}
+        borderRadius={999}
+        backgroundColor="$primarySoft"
         accessibilityLabel="Profile completion"
         overflow="hidden"
       >
-        <YStack height={8} borderRadius={4} backgroundColor="$primary" width={`${percent}%`} />
+        <YStack height={6} borderRadius={999} backgroundColor="$primary" width={`${percent}%`} />
       </YStack>
     </YStack>
   );

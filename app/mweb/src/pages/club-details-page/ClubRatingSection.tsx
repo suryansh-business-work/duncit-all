@@ -22,6 +22,7 @@ import { DuncitButton } from '@duncit/buttons';
 import { ADD_CLUB_RATING, CLUB_RATINGS } from '../ClubDetailsPage/clubDetailsQueries';
 import { notify } from '../../components/notify';
 import { formatDate } from '../../utils/dateFormat';
+import { SURFACE_SX } from '../../theme';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -62,7 +63,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
   };
 
   return (
-    <Box>
+    <Box sx={{ ...SURFACE_SX, p: 2 }}>
       <Stack
         direction="row"
         sx={{
@@ -71,14 +72,14 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
           mb: 1
         }}>
         <Typography variant="h6" sx={{
-          fontWeight: 700
+          fontWeight: 600, fontSize: '1.0625rem'
         }}>
           Ratings & Reviews
         </Typography>
         <DuncitButton
           size="small"
-          variant="outlined"
-          sx={{ borderRadius: '16px', fontWeight: 600 }}
+          variant="text"
+          sx={{ minHeight: 32, bgcolor: 'action.hover', color: 'text.primary' }}
           onClick={() => setDialogOpen(true)}
         >
           Rate Club
@@ -94,7 +95,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
             mb: 1.5
           }}>
           <Typography variant="h4" sx={{
-            fontWeight: 700
+            fontWeight: 600
           }}>{rating.toFixed(1)}</Typography>
           <Box>
             <Rating value={rating} precision={0.1} readOnly size="small" emptyIcon={<StarIcon fontSize="inherit" />} />
@@ -130,7 +131,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
                       alignItems: "center"
                     }}>
                       <Typography variant="body2" sx={{
-                        fontWeight: 700
+                        fontWeight: 600
                       }}>{r.user_name}</Typography>
                       <Rating value={r.stars} readOnly size="small" max={5} />
                       <Typography variant="caption" sx={{
@@ -155,7 +156,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
           <Stack spacing={2} sx={{ pt: 1 }}>
             <Box>
               <Typography variant="body2" gutterBottom sx={{
-                fontWeight: 700
+                fontWeight: 600
               }}>
                 Your rating
               </Typography>
@@ -185,7 +186,6 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
             variant="contained"
             onClick={handleSubmit}
             disabled={!stars || submitting}
-            sx={{ borderRadius: '16px', fontWeight: 700 }}
           >
             {submitting ? 'Submitting…' : 'Submit'}
           </DuncitButton>

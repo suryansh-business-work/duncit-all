@@ -80,7 +80,7 @@ function AttendeeRow({
       gap={12}
       padding={10}
       borderRadius={12}
-      pressStyle={{ opacity: 0.8, backgroundColor: '$surface' }}
+      pressStyle={{ opacity: 0.8, backgroundColor: '$soft' }}
     >
       {person.profile_photo ? (
         <AppImage
@@ -94,20 +94,15 @@ function AttendeeRow({
           alignItems="center"
           justifyContent="center"
           borderRadius={20}
-          backgroundColor="$primary"
+          backgroundColor="$soft"
         >
-          <Text fontSize={15} fontWeight="600" color="$onPrimary">
+          <Text fontSize={15} fontWeight="600" color="$color">
             {(person.full_name?.[0] ?? '?').toUpperCase()}
           </Text>
         </YStack>
       )}
       <YStack flex={1}>
-        <Text
-          fontSize={14}
-          fontWeight={person.is_host ? '700' : '600'}
-          color="$color"
-          numberOfLines={1}
-        >
+        <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
           {name}
         </Text>
         <Text fontSize={11.5} color="$muted">
@@ -117,11 +112,11 @@ function AttendeeRow({
       {person.is_host ? (
         <YStack
           borderRadius={999}
-          backgroundColor="$primary"
+          backgroundColor="$accent"
           paddingHorizontal={10}
           paddingVertical={3}
         >
-          <Text fontSize={11} fontWeight="700" color="$onPrimary">
+          <Text fontSize={11} fontWeight="600" color="$onPrimary">
             {t('mweb.podDetails.host')}
           </Text>
         </YStack>
@@ -142,7 +137,7 @@ function SpotFillRowItem({ fill, onPress }: Readonly<{ fill: SpotFillRow; onPres
       gap={12}
       padding={10}
       borderRadius={12}
-      pressStyle={{ opacity: 0.8, backgroundColor: '$surface' }}
+      pressStyle={{ opacity: 0.8, backgroundColor: '$soft' }}
     >
       {fill.old_photo ? (
         <AppImage
@@ -156,7 +151,7 @@ function SpotFillRowItem({ fill, onPress }: Readonly<{ fill: SpotFillRow; onPres
           alignItems="center"
           justifyContent="center"
           borderRadius={20}
-          backgroundColor="$surface"
+          backgroundColor="$soft"
         >
           <Text fontSize={15} fontWeight="600" color="$muted">
             {fill.old_name.charAt(0).toUpperCase()}
@@ -166,7 +161,7 @@ function SpotFillRowItem({ fill, onPress }: Readonly<{ fill: SpotFillRow; onPres
       <YStack flex={1}>
         <Text
           fontSize={14}
-          fontWeight="700"
+          fontWeight="600"
           color="$muted"
           textDecorationLine="line-through"
           numberOfLines={1}
@@ -215,13 +210,13 @@ export function AttendeesDialog({
             width="90%"
             maxWidth={440}
             maxHeight="80%"
-            backgroundColor="$background"
-            borderRadius={20}
-            padding={14}
+            backgroundColor="$surface"
+            borderRadius={28}
+            padding={16}
           >
             <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" paddingBottom={8}>
-                <Text fontSize={16} fontWeight="700" color="$color">
+                <Text fontSize={17} fontWeight="600" color="$color">
                   {t('mweb.podDetails.attendeesCount', { vars: { count } })}
                 </Text>
                 <XStack
@@ -229,12 +224,12 @@ export function AttendeesDialog({
                   role="button"
                   aria-label={t('mweb.podDetails.closeAttendees')}
                   onPress={onClose}
-                  width={34}
-                  height={34}
+                  width={36}
+                  height={36}
                   alignItems="center"
                   justifyContent="center"
-                  borderRadius={17}
-                  backgroundColor="$surface"
+                  borderRadius={18}
+                  backgroundColor="$soft"
                   pressStyle={PRESS_STYLE.row}
                 >
                   <MaterialIcons name="close" size={18} color={ink} />

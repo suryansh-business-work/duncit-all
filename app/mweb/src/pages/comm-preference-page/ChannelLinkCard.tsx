@@ -1,14 +1,13 @@
 import type { ReactNode } from 'react';
 import { Link as RouterLink } from 'react-router';
-import { Card, CardActionArea, CardContent, Stack, Typography } from '@mui/material';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import { CardActionArea, Stack, Typography } from '@mui/material';
+import ChevronRightIcon from '@mui/icons-material/ChevronRightRounded';
 import type { CommChannelState } from '@duncit/utils';
+import IconDisc from '../account-page/IconDisc';
 
 interface Props {
   icon: ReactNode;
   name: string;
-  /** What choosing this channel leads to. */
-  hint: string;
   /** Where it goes now — destination plus whether auth messages arrive. */
   summary: string;
   to: string;
@@ -16,49 +15,30 @@ interface Props {
 }
 
 /**
- * One channel on the hub: a door, and nothing else.
+ * One channel on the hub: a row in the hub's card, a door and nothing else.
  *
- * There is deliberately no control on this card. Everything about a channel —
+ * There is deliberately no control on this row. Everything about a channel —
  * its categories AND its authentication messages — is on the other side of it,
  * so the reader never has to hold two places in their head for one channel.
  */
-export default function ChannelLinkCard({
-  icon,
-  name,
-  hint,
-  summary,
-  to,
-  channel,
-}: Readonly<Props>) {
+export default function ChannelLinkCard({ icon, name, summary, to, channel }: Readonly<Props>) {
   return (
-    <Card variant="outlined" data-testid={`comm-channel-${channel}`}>
-      <CardActionArea component={RouterLink} to={to}>
-        <CardContent>
-          <Stack direction="row" spacing={1.5} sx={{
-            alignItems: "center"
-          }}>
-            {icon}
-            <Stack sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle1" sx={{
-                fontWeight: 600
-              }}>
-                {name}
-              </Typography>
-              <Typography variant="body2" sx={{
-                color: "text.secondary"
-              }}>
-                {hint}
-              </Typography>
-              <Typography variant="caption" noWrap sx={{
-                color: "text.secondary"
-              }}>
-                {summary}
-              </Typography>
-            </Stack>
-            <ChevronRightIcon color="action" />
-          </Stack>
-        </CardContent>
-      </CardActionArea>
-    </Card>
+    <CardActionArea
+      component={RouterLink}
+      to={to}
+      data-testid={`comm-channel-${channel}`}
+      sx={{ px: 2, py: 1.75, borderRadius: 0 }}
+    >
+      <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+        <IconDisc>{icon}</IconDisc>
+        <Stack sx={{ flex: 1, minWidth: 0 }}>
+          <Typography sx={{ fontSize: 15, fontWeight: 500 }}>{name}</Typography>
+          <Typography variant="body2" noWrap sx={{ color: 'text.secondary' }}>
+            {summary}
+          </Typography>
+        </Stack>
+        <ChevronRightIcon sx={{ color: 'text.secondary' }} />
+      </Stack>
+    </CardActionArea>
   );
 }

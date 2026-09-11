@@ -2,9 +2,13 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AttachmentView } from '@/components/AttachmentView';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatTime, tickState } from '@/utils/support-chat';
 
-const TICK_COLOR = { delivered: '#9aa0a6', seen: '#34b7f1' } as const;
+/** The "seen" double tick keeps the blue every chat uses (mWeb SEEN_BLUE). */
+const SEEN_TICK = '#34b7f1';
+
+const TICK_DIM = { opacity: 0.7 } as const;
 
 export interface TicketThreadMessage {
   id: string;
@@ -32,9 +36,9 @@ function SystemLine({ id, text }: Readonly<{ id: string; text: string }>) {
         fontWeight="600"
         color="$muted"
         textAlign="center"
-        borderWidth={1}
-        borderColor="$borderColor"
+        backgroundColor="$soft"
         borderRadius={999}
+        overflow="hidden"
         paddingHorizontal={10}
         paddingVertical={4}
       >
@@ -47,6 +51,7 @@ function SystemLine({ id, text }: Readonly<{ id: string; text: string }>) {
 /** One ticket message — USER/AGENT bubbles, or a centered SYSTEM timeline line (B7).
  * The user's own messages carry a Sent (✓) / Seen (✓✓) tick like the live chat (B12). */
 export function TicketMessageBubble({ message, timeZone, agentLastReadAt }: Readonly<Props>) {
+  const { onPrimary } = useThemeColors();
   if (message.author_role === 'SYSTEM') {
     return <SystemLine id={message.id} text={message.body_text} />;
   }
@@ -57,24 +62,30 @@ export function TicketMessageBubble({ message, timeZone, agentLastReadAt }: Read
   // Every `mine`-derived value is resolved once here, so the JSX below stays flat.
   const ink = mine ? '$onPrimary' : '$color';
   const subtleInk = mine ? '$onPrimary' : '$muted';
+  const tickColor = seen ? SEEN_TICK : onPrimary;
 
   return (
     <XStack justifyContent={mine ? 'flex-end' : 'flex-start'} testID={`ticket-msg-${message.id}`}>
       <YStack
         maxWidth="80%"
-        padding={10}
-        borderRadius={12}
+        paddingHorizontal={12}
+        paddingVertical={8}
+        borderRadius={18}
+        borderBottomRightRadius={mine ? 6 : 18}
+        borderBottomLeftRadius={mine ? 18 : 6}
         backgroundColor={mine ? '$primary' : '$surface'}
         borderWidth={mine ? 0 : 1}
-        borderColor="$borderColor"
+        borderColor="$cardBorder"
         gap={3}
       >
-        <Text fontSize={11} fontWeight="600" color={subtleInk}>
-          {message.author_name}
-        </Text>
+        {mine ? null : (
+          <Text fontSize={12} fontWeight="600" color="$muted">
+            {message.author_name}
+          </Text>
+        )}
         <AttachmentView urls={message.attachments} size={120} />
         {message.body_text ? (
-          <Text fontSize={13.5} color={ink}>
+          <Text fontSize={14} color={ink}>
             {message.body_text}
           </Text>
         ) : null}
@@ -89,7 +100,8 @@ export function TicketMessageBubble({ message, timeZone, agentLastReadAt }: Read
               testID={`ticket-tick-${message.id}`}
               name={seen ? 'done-all' : 'done'}
               size={13}
-              color={seen ? TICK_COLOR.seen : TICK_COLOR.delivered}
+              color={tickColor}
+              style={seen ? undefined : TICK_DIM}
             />
           ) : null}
         </XStack>

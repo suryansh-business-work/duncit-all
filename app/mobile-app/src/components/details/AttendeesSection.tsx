@@ -83,8 +83,8 @@ function AttendeeBubble({ person, first }: Readonly<{ person: AttendeePerson; fi
       borderRadius={18}
       overflow="hidden"
       borderWidth={2}
-      borderColor={person.is_host ? '$primary' : '$background'}
-      backgroundColor="$primary"
+      borderColor={person.is_host ? '$accent' : '$surface'}
+      backgroundColor="$soft"
       alignItems="center"
       justifyContent="center"
       zIndex={person.is_host ? 1 : 0}
@@ -92,7 +92,7 @@ function AttendeeBubble({ person, first }: Readonly<{ person: AttendeePerson; fi
       {person.profile_photo ? (
         <AppImage source={{ uri: person.profile_photo }} style={{ width: 36, height: 36 }} />
       ) : (
-        <Text fontSize={13} fontWeight="600" color="$onPrimary">
+        <Text fontSize={13} fontWeight="600" color="$color">
           {(person.full_name?.[0] ?? '?').toUpperCase()}
         </Text>
       )}
@@ -146,13 +146,13 @@ export function AttendeesSection({
   return (
     <YStack gap={8}>
       {showCount ? (
-        <Text fontSize={13.5} fontWeight="700" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           {countLine}
         </Text>
       ) : null}
       {spots > 0 ? (
-        <YStack height={8} borderRadius={4} backgroundColor="$background" overflow="hidden">
-          <YStack height={8} width={`${pct}%`} backgroundColor="$primary" />
+        <YStack height={8} borderRadius={999} backgroundColor="$soft" overflow="hidden">
+          <YStack height={8} borderRadius={999} width={`${pct}%`} backgroundColor="$primary" />
         </YStack>
       ) : null}
       {going === 0 ? (
@@ -182,8 +182,8 @@ export function AttendeesSection({
                 alignItems="center"
                 justifyContent="center"
                 borderWidth={2}
-                borderColor="$background"
-                backgroundColor="$surface"
+                borderColor="$surface"
+                backgroundColor="$soft"
               >
                 <Text fontSize={11.5} fontWeight="600" color="$muted">
                   +{extra}

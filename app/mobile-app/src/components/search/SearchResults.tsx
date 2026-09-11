@@ -57,7 +57,7 @@ export function SearchResults({
   const sectionProps = { categoryNameOf, onOpenClub, onOpenPod };
 
   return (
-    <YStack gap={16}>
+    <YStack gap={20}>
       <XStack gap={10}>
         <XStack
           testID="search-sort-button"
@@ -66,16 +66,16 @@ export function SearchResults({
           onPress={() => setSortOpen(true)}
           alignItems="center"
           gap={6}
-          height={38}
-          paddingHorizontal={14}
+          height={40}
+          paddingHorizontal={16}
           borderRadius={999}
-          borderWidth={1.5}
-          borderColor="$borderColor"
+          borderWidth={1}
+          borderColor="$cardBorder"
           backgroundColor="$surface"
           pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="swap-vert" size={16} color={color} />
-          <Text fontSize={13.5} fontWeight="600" color="$color">
+          <Text fontSize={13} fontWeight="600" color="$color">
             Sort
           </Text>
         </XStack>
@@ -86,16 +86,16 @@ export function SearchResults({
           onPress={() => setFilterOpen(true)}
           alignItems="center"
           gap={6}
-          height={38}
-          paddingHorizontal={14}
+          height={40}
+          paddingHorizontal={16}
           borderRadius={999}
-          borderWidth={1.5}
-          borderColor={filterActive ? '$primary' : '$borderColor'}
+          borderWidth={1}
+          borderColor={filterActive ? '$primary' : '$cardBorder'}
           backgroundColor={filterActive ? '$primary' : '$surface'}
           pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="tune" size={16} color={filterActive ? onPrimary : color} />
-          <Text fontSize={13.5} fontWeight="600" color={filterActive ? '$onPrimary' : '$color'}>
+          <Text fontSize={13} fontWeight="600" color={filterActive ? '$onPrimary' : '$color'}>
             Filter
           </Text>
         </XStack>
@@ -119,14 +119,12 @@ export function SearchResults({
 
       <SearchResultsSection
         heading={t('mweb.search.exploreExperiencesHappeningSoon')}
-        subheading="Find clubs hosting exciting experiences you can join this week."
         results={sortClubResults(happening, sort)}
         testID="search-happening"
         {...sectionProps}
       />
       <SearchResultsSection
         heading={t('mweb.search.moreClubsWorthExploring')}
-        subheading="Discover communities that match your interests and start your next experience."
         results={sortClubResults(moreClubs, sort)}
         testID="search-more"
         {...sectionProps}

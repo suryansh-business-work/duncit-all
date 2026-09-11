@@ -40,7 +40,7 @@ export function ProcessingOverlay({ open, message }: Readonly<ProcessingOverlayP
       alignItems="center"
       justifyContent="center"
       padding={24}
-      backgroundColor="rgba(3,7,18,0.72)"
+      backgroundColor="rgba(0,0,0,0.5)"
       // No-op press keeps touches from reaching the form beneath.
       onPress={() => {}}
     >
@@ -51,26 +51,19 @@ export function ProcessingOverlay({ open, message }: Readonly<ProcessingOverlayP
         gap={12}
         paddingVertical={28}
         paddingHorizontal={24}
-        borderRadius={20}
-        backgroundColor="rgba(17,24,39,0.94)"
-        borderWidth={1}
-        borderColor="rgba(255,255,255,0.16)"
+        borderRadius={24}
+        backgroundColor="$surface"
       >
         <Spinner size="large" color={primary} />
-        <Text fontSize={16} fontWeight="700" color="#ffffff" textAlign="center">
+        <Text fontSize={17} fontWeight="600" color="$color" textAlign="center">
           {title}
         </Text>
         {message ? (
-          <Text
-            testID="checkout-confirming"
-            fontSize={13}
-            color="rgba(255,255,255,0.92)"
-            textAlign="center"
-          >
+          <Text testID="checkout-confirming" fontSize={13} color="$color" textAlign="center">
             {message}
           </Text>
         ) : null}
-        <Text fontSize={12.5} color="rgba(255,255,255,0.74)" textAlign="center">
+        <Text fontSize={12.5} color="$muted" textAlign="center">
           {t('mweb.checkout.processingNoteApp')}
         </Text>
       </YStack>

@@ -40,6 +40,8 @@ export interface ModeColors {
   primaryHover: string;
   primaryActive: string;
   onPrimary: string;
+  /** Brand coral — logo mark, active tab, badges. CTAs use `primary` (green). */
+  accent: string;
 }
 
 export interface GradientPair {

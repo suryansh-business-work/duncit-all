@@ -1,5 +1,7 @@
 import { Fragment } from 'react';
-import { Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
+import { Box, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
+import SectionHeader from '../../components/SectionHeader';
+import { SURFACE_SX } from '../../theme';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RemoveIcon from '@mui/icons-material/Remove';
 import {
@@ -43,7 +45,7 @@ function BenefitCell({
 }
 
 const headCellSx = {
-  fontWeight: 800,
+  fontWeight: 600,
   whiteSpace: 'nowrap' as const,
   textAlign: 'center' as const,
   bgcolor: 'background.paper',
@@ -66,19 +68,10 @@ export default function ComparisonTable({ plans, benefits }: Readonly<Props>) {
   const noLabel = t('mweb.membership.notIncluded');
 
   return (
-    <Stack spacing={1}>
-      <Typography variant="subtitle1" sx={{
-        fontWeight: 700
-      }}>
-        {t('mweb.membership.compareTitle')}
-      </Typography>
-      <Typography variant="caption" sx={{
-        color: "text.secondary"
-      }}>
-        {t('mweb.membership.compareHint')}
-      </Typography>
+    <Stack spacing={1.25}>
+      <SectionHeader title={t('mweb.membership.compareTitle')} />
 
-      <Paper variant="outlined" sx={{ overflowX: 'auto', borderRadius: '16px' }}>
+      <Box sx={{ ...SURFACE_SX, overflowX: 'auto' }}>
         <Table size="small" sx={{ minWidth: 560 }}>
           <TableHead>
             <TableRow>
@@ -109,8 +102,8 @@ export default function ComparisonTable({ plans, benefits }: Readonly<Props>) {
                       variant="overline"
                       sx={{
                         color: "text.secondary",
-                        fontWeight: 800,
-                        letterSpacing: 0.8
+                        fontWeight: 600,
+                        letterSpacing: 0.6
                       }}>
                       {group.group}
                     </Typography>
@@ -140,7 +133,7 @@ export default function ComparisonTable({ plans, benefits }: Readonly<Props>) {
             ))}
           </TableBody>
         </Table>
-      </Paper>
+      </Box>
 
       <Typography variant="caption" sx={{
         color: "text.secondary"

@@ -2,21 +2,17 @@ import { useState } from 'react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import { Box, CircularProgress, Stack } from '@mui/material';
+import { Box } from '@mui/material';
+import { alpha, type Theme } from '@mui/material/styles';
 import { isVideoMedia } from '@duncit/utils';
 import MomentLightbox from '../../components/moments/MomentLightbox';
-import GroupsIcon from '@mui/icons-material/Groups';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ShareIcon from '@mui/icons-material/Share';
-import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
-import CheckIcon from '@mui/icons-material/Check';
-import AddIcon from '@mui/icons-material/Add';
+import GroupsIcon from '@mui/icons-material/GroupsRounded';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { DuncitIconButton } from '@duncit/buttons';
 import VideoMedia from '../../components/media/VideoMedia';
 import { useTranslation } from '../../i18n/useTranslation';
+import ClubHeroActions from './ClubHeroActions';
 
 interface Props {
   media: { url: string; type: string }[];
@@ -30,32 +26,35 @@ interface Props {
   onShare: () => void;
 }
 
-const overlayBtn = {
-  bgcolor: 'rgba(0,0,0,0.45)',
-  color: 'common.white',
-  backdropFilter: 'blur(6px)',
-  '&:hover': { bgcolor: 'rgba(0,0,0,0.6)' },
-};
+/** Full-bleed hero with the calm design's 24px bottom corners (the native
+ * details hero is full-bleed too). */
+const FRAME_SX = {
+  position: 'relative',
+  mt: -2,
+  mx: { xs: -2, sm: -3 },
+  borderRadius: '0 0 24px 24px',
+  overflow: 'hidden',
+} as const;
 
-const arrowBtn = {
+const arrowBtn = (theme: Theme) => ({
   position: 'absolute' as const,
   top: '50%',
   transform: 'translateY(-50%)',
   zIndex: 2,
-  bgcolor: 'rgba(17,24,39,0.32)',
-  color: '#fff',
+  bgcolor: alpha(theme.palette.common.black, 0.35),
+  color: 'common.white',
   width: 40,
   height: 40,
-  border: '1px solid rgba(255,255,255,0.32)',
+  minHeight: 40,
   backdropFilter: 'blur(10px)',
   WebkitBackdropFilter: 'blur(10px)',
-  '&:hover': { bgcolor: 'rgba(17,24,39,0.48)' },
-};
+  '&:hover': { bgcolor: alpha(theme.palette.common.black, 0.5) },
+});
 
 function PrevArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
   const { t } = useTranslation();
   return (
-    <DuncitIconButton size="small" onClick={onClick} aria-label={t('mweb.common.previous')} sx={{ ...arrowBtn, left: 10 }}>
+    <DuncitIconButton size="small" onClick={onClick} aria-label={t('mweb.common.previous')} sx={(theme) => ({ ...arrowBtn(theme), left: 12 })}>
       <ChevronLeftIcon />
     </DuncitIconButton>
   );
@@ -64,7 +63,7 @@ function PrevArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
 function NextArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
   const { t } = useTranslation();
   return (
-    <DuncitIconButton size="small" onClick={onClick} aria-label={t('mweb.clubDetails.next')} sx={{ ...arrowBtn, right: 10 }}>
+    <DuncitIconButton size="small" onClick={onClick} aria-label={t('mweb.clubDetails.next')} sx={(theme) => ({ ...arrowBtn(theme), right: 12 })}>
       <ChevronRightIcon />
     </DuncitIconButton>
   );
@@ -83,81 +82,31 @@ export default function ClubHero({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [lightbox, setLightbox] = useState<number | null>(null);
-  const savedIcon = saved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />;
   const overlay = (
-    <Stack
-      direction="row"
-      sx={{
-        alignItems: "center",
-        justifyContent: "space-between",
-        position: 'absolute',
-        top: 'calc(env(safe-area-inset-top) + 8px)',
-        left: 8,
-        right: 8,
-        zIndex: 2,
-        pointerEvents: 'none',
-        '& > *': { pointerEvents: 'auto' }
-      }}>
-      <DuncitIconButton size="small" onClick={onBack} aria-label={t('mweb.common.back')} sx={overlayBtn}>
-        <ArrowBackIcon fontSize="small" />
-      </DuncitIconButton>
-      <Stack direction="row" spacing={0.75} sx={{
-        alignItems: "center"
-      }}>
-        <DuncitButton
-          size="small"
-          variant={following ? 'contained' : 'outlined'}
-          aria-label={following ? 'Following' : 'Follow'}
-          onClick={onToggleFollow}
-          startIcon={following ? <CheckIcon sx={{ fontSize: 16 }} /> : <AddIcon sx={{ fontSize: 16 }} />}
-          sx={{
-            borderRadius: 999,
-            fontWeight: 700,
-            textTransform: 'none',
-            minWidth: 0,
-            px: 1.5,
-            color: following ? 'primary.contrastText' : 'common.white',
-            borderColor: 'rgba(255,255,255,0.7)',
-            bgcolor: following ? 'primary.main' : 'rgba(0,0,0,0.45)',
-            backdropFilter: 'blur(6px)',
-            '&:hover': { bgcolor: following ? 'primary.dark' : 'rgba(0,0,0,0.6)', borderColor: 'common.white' },
-          }}
-        >
-          {following ? 'Following' : 'Follow'}
-        </DuncitButton>
-        <DuncitIconButton
-          size="small"
-          aria-label={saved ? 'Saved' : 'Save'}
-          onClick={onToggleSave}
-          disabled={saveLoading}
-          sx={overlayBtn}
-        >
-          {saveLoading ? <CircularProgress size={18} color="inherit" /> : savedIcon}
-        </DuncitIconButton>
-        <DuncitIconButton size="small" aria-label={t('mweb.common.share')} onClick={onShare} sx={overlayBtn}>
-          <ShareIcon fontSize="small" />
-        </DuncitIconButton>
-      </Stack>
-    </Stack>
+    <ClubHeroActions
+      saved={saved}
+      saveLoading={saveLoading}
+      following={following}
+      onBack={onBack}
+      onToggleFollow={onToggleFollow}
+      onToggleSave={onToggleSave}
+      onShare={onShare}
+    />
   );
 
   if (media.length === 0) {
     return (
       <Box
         sx={{
-          position: 'relative',
-          mt: -2,
-          mx: { xs: -2, sm: -3 },
+          ...FRAME_SX,
           height: 240,
-          borderRadius: '16px',
-          overflow: 'hidden',
           bgcolor: 'action.hover',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <GroupsIcon sx={{ fontSize: 80, color: 'action.disabled' }} />
+        <GroupsIcon sx={{ fontSize: 72, color: 'secondary.main' }} />
         {overlay}
       </Box>
     );
@@ -166,11 +115,7 @@ export default function ClubHero({
   return (
     <Box
       sx={{
-        position: 'relative',
-        mt: -2,
-        mx: { xs: -2, sm: -3 },
-        borderRadius: '16px',
-        overflow: 'hidden',
+        ...FRAME_SX,
         '.slick-dots': { bottom: 12 },
         '.slick-dots li button:before': { color: 'common.white', opacity: 0.6 },
         '.slick-dots li.slick-active button:before': { opacity: 1 },

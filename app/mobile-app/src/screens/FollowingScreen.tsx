@@ -68,16 +68,14 @@ export function FollowingScreen() {
               aria-pressed={selected}
               onPress={() => setTab(value)}
               flex={1}
-              height={36}
+              height={40}
               alignItems="center"
               justifyContent="center"
-              borderRadius={12}
+              borderRadius={999}
               backgroundColor={selected ? '$primary' : '$surface'}
-              borderWidth={1}
-              borderColor={selected ? '$primary' : '$borderColor'}
               pressStyle={PRESS_STYLE.control}
             >
-              <Text fontSize={13} fontWeight="700" color={selected ? '$onPrimary' : '$color'}>
+              <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
                 {TAB_LABELS[value]}
               </Text>
             </XStack>

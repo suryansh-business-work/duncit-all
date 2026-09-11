@@ -43,7 +43,7 @@ export function CategoryCascadeField({
   allowAll = false,
   idPrefix = 'idea-cat',
 }: Readonly<Props>) {
-  const { color: ink, primary, onPrimary } = useThemeColors();
+  const { color: ink, onPrimary } = useThemeColors();
   const supers = useCategoryLevel('SUPER', '', true);
   const cats = useCategoryLevel('CATEGORY', value.super_category_id, !!value.super_category_id);
   const subs = useCategoryLevel('SUB', value.category_id, !!value.category_id);
@@ -72,20 +72,16 @@ export function CategoryCascadeField({
         aria-label={label}
         onPress={() => pick(level, id)}
         paddingHorizontal={12}
-        height={32}
+        height={36}
         alignItems="center"
         justifyContent="center"
         borderRadius={999}
         borderWidth={1}
-        borderColor={selected ? primary : '$borderColor'}
-        backgroundColor={selected ? primary : 'transparent'}
+        borderColor={selected ? '$primary' : '$borderColor'}
+        backgroundColor={selected ? '$primary' : '$surface'}
         pressStyle={PRESS_STYLE.row}
       >
-        <Text
-          fontSize={12.5}
-          fontWeight={selected ? '700' : '600'}
-          color={selected ? onPrimary : ink}
-        >
+        <Text fontSize={13} fontWeight="600" color={selected ? onPrimary : ink}>
           {label}
         </Text>
       </XStack>

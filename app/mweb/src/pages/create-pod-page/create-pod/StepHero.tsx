@@ -1,58 +1,55 @@
 import { useState } from 'react';
-import { LinearProgress, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import AiMonitorChip from './AiMonitorChip';
 import PodGuidelinesDialog from './PodGuidelinesDialog';
+import { STEP_TITLE_KEYS } from './create-pod.form';
 import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
   step: number;
   total: number;
   title: string;
-  subtitle: string;
+  /** Accepted for existing callers, no longer drawn — the step title stands alone. */
+  subtitle?: string;
 }
 
-/** Per-step hero: a slim progress bar, the "STEP n OF N" eyebrow with the
- * "AI monitoring" chip (opens the guidelines dialog), the big step title and a
- * one-line intro — the reskinned header of the Create Pod stepper. */
-export default function StepHero({ step, total, title, subtitle }: Readonly<Props>) {
+/** Per-step hero: one slim pill per step (done and current in green), then the
+ * step title with the "AI monitoring" chip (opens the guidelines dialog). The
+ * "Step n of N" sentence is the progress bar's accessible name, not a caption.
+ * Native twin: StepHeader. */
+export default function StepHero({ step, total, title }: Readonly<Props>) {
   const [guideOpen, setGuideOpen] = useState(false);
   const { t } = useTranslation();
-  // One sentence for both surfaces (rule 27); the eyebrow keeps its caps in CSS
-  // rather than in the copy, which a translator would have to re-shout.
   const counter = t('mweb.createPod.stepCounter', { vars: { step: step + 1, total } });
   return (
-    <Stack spacing={0.75}>
-      <LinearProgress
-        variant="determinate"
-        value={((step + 1) / total) * 100}
-        aria-label={counter}
-        sx={{ height: 6, borderRadius: 999 }}
-      />
+    <Stack spacing={1.75}>
       <Stack
         direction="row"
-        spacing={1}
-        sx={{
-          alignItems: "center",
-          justifyContent: "space-between",
-          mt: 0.5
-        }}>
-        <Typography
-          variant="caption"
-          color="primary"
-          sx={{ fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' }}
-        >
-          {counter}
+        spacing={0.75}
+        role="progressbar"
+        aria-label={counter}
+        aria-valuemin={1}
+        aria-valuemax={total}
+        aria-valuenow={step + 1}
+      >
+        {STEP_TITLE_KEYS.map((key, index) => (
+          <Box
+            key={key}
+            sx={{
+              flex: 1,
+              height: 5,
+              borderRadius: 999,
+              bgcolor: index <= step ? 'primary.main' : 'action.hover',
+            }}
+          />
+        ))}
+      </Stack>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+        <Typography component="h2" sx={{ fontSize: '1.25rem', fontWeight: 600, lineHeight: 1.2, minWidth: 0 }}>
+          {title}
         </Typography>
         <AiMonitorChip onClick={() => setGuideOpen(true)} />
       </Stack>
-      <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.12 }}>
-        {title}
-      </Typography>
-      <Typography variant="body2" sx={{
-        color: "text.secondary"
-      }}>
-        {subtitle}
-      </Typography>
       <PodGuidelinesDialog open={guideOpen} onClose={() => setGuideOpen(false)} />
     </Stack>
   );

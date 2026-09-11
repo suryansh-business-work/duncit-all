@@ -5,6 +5,17 @@ import { useTranslation } from '../../i18n/useTranslation';
 
 export type ContactsScope = 'all' | 'nearby' | 'invite';
 
+/** The calm design's search: a borderless surface pill, 48 tall. */
+const SEARCH_SX = {
+  '& .MuiOutlinedInput-root': {
+    height: 48,
+    borderRadius: 999,
+    bgcolor: 'background.paper',
+    '& fieldset': { borderColor: 'transparent' },
+  },
+  '& .MuiInputAdornment-root': { color: 'text.secondary', ml: 0.5 },
+} as const;
+
 interface Props {
   tabs: DuncitTabsState<ContactsScope>;
   search: string;
@@ -21,7 +32,7 @@ export default function ContactsToolbar({ tabs, search, onSearch }: Readonly<Pro
       <DuncitTabs
         {...tabs}
         variant="fullWidth"
-        sx={{ minHeight: 40, '& .MuiTab-root': { fontWeight: 700, minHeight: 40 } }}
+        sx={{ minHeight: 40, borderBottom: 1, borderColor: 'divider', '& .MuiTab-root': { minHeight: 40 } }}
       />
       <TextField
         size="small"
@@ -29,6 +40,7 @@ export default function ContactsToolbar({ tabs, search, onSearch }: Readonly<Pro
         value={search}
         onChange={(event) => onSearch(event.target.value)}
         placeholder={t('mweb.contacts.searchPlaceholder')}
+        sx={SEARCH_SX}
         slotProps={{
           htmlInput: { 'aria-label': t('mweb.contacts.searchPlaceholder'), 'data-testid': 'contacts-search' },
           input: {

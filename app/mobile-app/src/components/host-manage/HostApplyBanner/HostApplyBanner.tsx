@@ -1,10 +1,13 @@
 import { useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useMe } from '@/hooks/useMe';
 import { useMyHostRequest } from '@/hooks/useMyHostRequest';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { applyButtonState } from '@/graphql/host-request';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
@@ -12,13 +15,15 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
- * Host Studio CTA inviting an approved host to apply to host in another
- * category. Renders only for HOST-role users; the button locks to "Applied"
- * while a request is pending and refetches that lock on screen focus.
+ * Host Studio card inviting an approved host to apply to host in another
+ * category — an accent mark, one title and one green CTA. Renders only for
+ * HOST-role users; the button locks to "Applied" while a request is pending and
+ * refetches that lock on screen focus. mWeb twin: host-apply-page/HostApplyBanner.
  */
 export function HostApplyBanner() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { accent } = useThemeColors();
   const roles = useMe().data?.me?.roles ?? [];
   const { request, refetch } = useMyHostRequest();
 
@@ -32,33 +37,30 @@ export function HostApplyBanner() {
   const { label, disabled } = applyButtonState(request);
 
   return (
-    <YStack
-      testID="host-apply-banner"
-      gap={10}
-      padding={16}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
-      <Text fontSize={16} fontWeight="700" color="$color">
+    <SurfaceCard testID="host-apply-banner" flexDirection="row" alignItems="center" gap={12}>
+      <YStack
+        width={44}
+        height={44}
+        borderRadius={22}
+        alignItems="center"
+        justifyContent="center"
+        backgroundColor="$soft"
+      >
+        <MaterialIcons name="add-business" size={22} color={accent} />
+      </YStack>
+      <Text flex={1} fontSize={16} fontWeight="600" color="$color">
         Ready to Host More Experiences?
-      </Text>
-      <Text fontSize={13} color="$muted">
-        You{'’'}ve already inspired a community with one category. Why stop there? Expand your
-        journey, showcase another skill, and start hosting experiences in a new category.
       </Text>
       {disabled ? (
         <XStack
           testID="host-apply-applied"
-          alignSelf="flex-start"
-          paddingHorizontal={18}
-          paddingVertical={10}
+          height={40}
+          paddingHorizontal={16}
+          alignItems="center"
           borderRadius={999}
-          backgroundColor="$muted"
-          opacity={0.7}
+          backgroundColor="$soft"
         >
-          <Text fontSize={13} fontWeight="700" color="$onPrimary">
+          <Text fontSize={14} fontWeight="600" color="$muted">
             {label}
           </Text>
         </XStack>
@@ -67,19 +69,19 @@ export function HostApplyBanner() {
           testID="host-apply-cta"
           role="button"
           aria-label={t('mweb.hostManage.applyNow')}
-          alignSelf="flex-start"
           onPress={() => navigation.navigate('HostApply')}
-          paddingHorizontal={18}
-          paddingVertical={10}
+          height={40}
+          paddingHorizontal={16}
+          alignItems="center"
           borderRadius={999}
           backgroundColor="$primary"
-          pressStyle={PRESS_STYLE.control}
+          pressStyle={PRESS_STYLE.solid}
         >
-          <Text fontSize={13} fontWeight="700" color="$onPrimary">
+          <Text fontSize={14} fontWeight="600" color="$onPrimary">
             {label}
           </Text>
         </XStack>
       )}
-    </YStack>
+    </SurfaceCard>
   );
 }

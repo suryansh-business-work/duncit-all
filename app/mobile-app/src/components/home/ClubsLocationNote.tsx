@@ -12,7 +12,7 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
  * nothing until a location is selected (the list is unfiltered until then). */
 export function ClubsLocationNote() {
   const { selectedId, cityLabel, zoneName } = useLocations();
-  const { primary } = useThemeColors();
+  const { accent } = useThemeColors();
   const [open, setOpen] = useState(false);
 
   if (!selectedId || !cityLabel) return null;
@@ -23,17 +23,18 @@ export function ClubsLocationNote() {
       <XStack
         testID="clubs-location-note"
         alignItems="flex-start"
-        gap={8}
+        gap={12}
         marginHorizontal={16}
         marginTop={12}
-        padding={10}
-        borderRadius={12}
+        paddingHorizontal={16}
+        paddingVertical={10}
+        borderRadius={14}
         borderWidth={1}
         borderColor="$borderColor"
         backgroundColor="$surface"
       >
-        <MaterialIcons name="info-outline" size={16} color={primary} />
-        <Text flex={1} fontSize={12.5} color="$muted" lineHeight={18}>
+        <MaterialIcons name="info-outline" size={20} color={accent} />
+        <Text flex={1} fontSize={14} color="$color" lineHeight={20}>
           Showing clubs in{' '}
           <Text fontWeight="600" color="$color">
             {label}

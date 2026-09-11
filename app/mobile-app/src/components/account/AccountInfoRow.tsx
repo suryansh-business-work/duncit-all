@@ -2,7 +2,7 @@ import type { ComponentProps } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { IconDisc } from './IconDisc';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -16,19 +16,9 @@ export function AccountInfoRow({
   label: string;
   value: string;
 }>) {
-  const { color } = useThemeColors();
   return (
-    <XStack alignItems="center" gap={14}>
-      <YStack
-        width={38}
-        height={38}
-        borderRadius={19}
-        alignItems="center"
-        justifyContent="center"
-        backgroundColor="$surface"
-      >
-        <MaterialIcons name={icon} size={18} color={color} />
-      </YStack>
+    <XStack alignItems="center" gap={16} paddingHorizontal={16} paddingVertical={12}>
+      <IconDisc icon={icon} />
       <YStack flex={1}>
         <Text fontSize={12} color="$muted">
           {label}

@@ -67,7 +67,7 @@ export function PublicProfileStories({ authorId, name, photo, stories }: Readonl
             onPress={() => setOpenIndex(index)}
             borderRadius={36}
             borderWidth={3}
-            borderColor="$primary"
+            borderColor="$accent"
             padding={2}
           >
             <AppImage

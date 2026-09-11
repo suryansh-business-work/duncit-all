@@ -76,7 +76,7 @@ export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>)
 
   return (
     <Dialog open={!!storyId} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700 }}>{t('contentReport.title')}</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 600 }}>{t('contentReport.title')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
           <Typography variant="body2" sx={{
@@ -88,7 +88,7 @@ export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>)
             variant="overline"
             sx={{
               color: "text.secondary",
-              fontWeight: 700
+              fontWeight: 600
             }}>
             {t('contentReport.reasonLabel')}
           </Typography>

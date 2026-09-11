@@ -18,7 +18,8 @@ interface CardProps {
 }
 
 function TypeCard({ testID, label, caption, icon, selected, onPress }: Readonly<CardProps>) {
-  const { primary, color } = useThemeColors();
+  const { onPrimary, color } = useThemeColors();
+  const ink = selected ? '$onPrimary' : '$color';
   return (
     <YStack
       testID={testID}
@@ -29,18 +30,16 @@ function TypeCard({ testID, label, caption, icon, selected, onPress }: Readonly<
       flex={1}
       padding={16}
       gap={4}
-      borderRadius={14}
-      borderWidth={selected ? 2 : 1}
-      borderColor={selected ? '$primary' : '$borderColor'}
-      backgroundColor="$surface"
+      borderRadius={16}
+      backgroundColor={selected ? '$primary' : '$soft'}
       alignItems="center"
       pressStyle={PRESS_STYLE.control}
     >
-      <MaterialIcons name={icon} size={24} color={selected ? primary : color} />
-      <Text fontSize={16} fontWeight="700" color={selected ? '$primary' : '$color'}>
+      <MaterialIcons name={icon} size={24} color={selected ? onPrimary : color} />
+      <Text fontSize={16} fontWeight="600" color={ink}>
         {label}
       </Text>
-      <Text fontSize={11.5} color="$muted">
+      <Text fontSize={12} color={selected ? '$onPrimary' : '$muted'} textAlign="center">
         {caption}
       </Text>
     </YStack>

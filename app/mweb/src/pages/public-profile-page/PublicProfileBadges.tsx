@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { Avatar, Box, ButtonBase, Card, CardContent, Stack, Typography } from '@mui/material';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEventsOutlined';
 import BadgeDetailsSheet from '../../components/badges/BadgeDetailsSheet';
 
 const USER_BADGES = gql`
@@ -38,24 +38,13 @@ export default function PublicProfileBadges({ userId }: Readonly<Props>) {
   if (badges.length === 0) return null;
 
   return (
-    <Card variant="outlined">
-      <CardContent>
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{
-            alignItems: "center",
-            mb: 1.5
-          }}>
-          <EmojiEventsIcon color="primary" />
-          <Typography variant="h6" sx={{
-            fontWeight: 700
-          }}>
+    <Card>
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+        <Stack direction="row" spacing={0.75} sx={{ alignItems: 'baseline', mb: 1.5 }}>
+          <Typography component="h2" sx={{ fontSize: '1.05rem', fontWeight: 600 }}>
             Badges
           </Typography>
-          <Typography variant="caption" sx={{
-            color: "text.secondary"
-          }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
             ({badges.length})
           </Typography>
         </Stack>
@@ -63,7 +52,7 @@ export default function PublicProfileBadges({ userId }: Readonly<Props>) {
           sx={{
             display: 'grid',
             gap: 1.5,
-            gridTemplateColumns: { xs: 'repeat(3,1fr)', sm: 'repeat(4,1fr)' },
+            gridTemplateColumns: { xs: 'repeat(4,1fr)', sm: 'repeat(6,1fr)' },
           }}
         >
           {badges.map((ub: any) => (
@@ -74,29 +63,26 @@ export default function PublicProfileBadges({ userId }: Readonly<Props>) {
               aria-label={`View badge ${ub.badge?.title ?? ''}`}
               sx={{
                 borderRadius: '16px',
-                p: 1,
+                p: 0.5,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 minHeight: 44,
+                minWidth: 0,
                 '&:hover': { bgcolor: 'action.hover' },
                 '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main' },
               }}
             >
               <Avatar
                 src={ub.badge?.image_url || undefined}
-                sx={{ width: 48, height: 48, bgcolor: 'primary.light', mb: 0.5 }}
+                sx={{ width: 56, height: 56, bgcolor: 'action.hover', color: 'secondary.main', mb: 0.75 }}
               >
-                {!ub.badge?.image_url && <EmojiEventsIcon fontSize="small" />}
+                {!ub.badge?.image_url && <EmojiEventsIcon />}
               </Avatar>
               <Typography
-                variant="caption"
                 noWrap
-                sx={{
-                  fontWeight: 600,
-                  width: '100%',
-                  textAlign: 'center'
-                }}>
+                sx={{ fontSize: 13, fontWeight: 600, width: '100%', textAlign: 'center' }}
+              >
                 {ub.badge?.title}
               </Typography>
             </ButtonBase>

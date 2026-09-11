@@ -2,22 +2,18 @@ import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import {
   Alert,
-  Avatar,
   Box,
   Chip,
   CircularProgress,
-  List,
-  ListItemAvatar,
-  ListItemButton,
-  ListItemText,
   Stack,
   Typography,
 } from '@mui/material';
-import EventIcon from '@mui/icons-material/Event';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { DuncitButton } from '@duncit/buttons';
-import { Link as RouterLink, useNavigate } from 'react-router';
-import { formatDate, formatDateTime } from '../../utils/dateFormat';
+import { Link as RouterLink } from 'react-router';
+import { formatDate } from '../../utils/dateFormat';
+import IconDisc from '../account-page/IconDisc';
+import HostPodsSection, { HOST_PODS } from './HostPodsSection';
 import { useTranslation } from '../../i18n/useTranslation';
 
 const MY_HOST = gql`
@@ -37,86 +33,6 @@ const MY_HOST = gql`
     }
   }
 `;
-
-const HOST_PODS = gql`
-  query ProfileHostPods($host_user_id: ID!) {
-    pods(filter: { host_user_id: $host_user_id }) {
-      id
-      pod_id
-      club_slug
-      pod_title
-      pod_date_time
-      pod_images_and_videos {
-        url
-        type
-      }
-    }
-  }
-`;
-
-interface HostPodsSectionProps {
-  pods: any[];
-  loading: boolean;
-}
-
-/** Pods hosted by the approved host — list, empty state and loader. */
-function HostPodsSection({ pods, loading }: Readonly<HostPodsSectionProps>) {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const emptyOrList =
-    pods.length === 0 ? (
-      <Typography
-        variant="body2"
-        sx={{
-          color: "text.secondary",
-          mt: 1
-        }}>
-        No pods yet.
-      </Typography>
-    ) : (
-      <List dense disablePadding sx={{ mt: 0.5 }}>
-        {pods.map((p: any) => {
-          const cover =
-            (p.pod_images_and_videos ?? []).find((m: any) => m?.type !== 'VIDEO')?.url ||
-            p.pod_images_and_videos?.[0]?.url;
-          return (
-            <ListItemButton
-              key={p.id}
-              onClick={() =>
-                p.club_slug && p.pod_id ? navigate(`/club/${p.club_slug}/pod/${p.pod_id}`) : null
-              }
-            >
-              <ListItemAvatar>
-                <Avatar src={cover || undefined} variant="rounded">
-                  <EventIcon fontSize="small" />
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText
-                primary={p.pod_title}
-                secondary={formatDateTime(p.pod_date_time) || undefined}
-              />
-            </ListItemButton>
-          );
-        })}
-      </List>
-    );
-
-  return (
-    <Box>
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{
-          alignItems: "center",
-          mt: 1
-        }}>
-        <Typography variant="subtitle2">{t('mweb.common.yourPods')}</Typography>
-        <Chip size="small" label={pods.length} />
-      </Stack>
-      {loading ? <CircularProgress size={20} sx={{ mt: 1 }} /> : emptyOrList}
-    </Box>
-  );
-}
 
 export default function UserHostPanel() {
   const { t } = useTranslation();
@@ -159,18 +75,11 @@ export default function UserHostPanel() {
       <Stack direction="row" spacing={1.25} sx={{
         alignItems: "center"
       }}>
-        <Box sx={{ width: 38, height: 38, borderRadius: '50%', bgcolor: 'rgba(255,193,7,0.16)', color: 'warning.main', display: 'grid', placeItems: 'center' }}>
-          <WorkspacePremiumIcon fontSize="small" />
-        </Box>
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{t('mweb.profile.hostApplication')}</Typography>
-          <Typography variant="caption" sx={{
-            color: "text.secondary"
-          }}>
-            {isApproved ? 'Approved host profile' : `Step ${completed} of 4 completed`}
-          </Typography>
-        </Box>
-        <Chip size="small" label={host.status} color={isApproved ? 'success' : 'warning'} sx={{ fontWeight: 700 }} />
+        <IconDisc size={40}>
+          <WorkspacePremiumIcon />
+        </IconDisc>
+        <Typography sx={{ minWidth: 0, flex: 1, fontSize: 15, fontWeight: 600 }}>{t('mweb.profile.hostApplication')}</Typography>
+        <Chip size="small" label={host.status} color={isApproved ? 'success' : 'warning'} />
       </Stack>
       <Stack direction="row" spacing={0.75} sx={{
         alignItems: "center"
@@ -179,8 +88,8 @@ export default function UserHostPanel() {
           const done = index < completed || isApproved;
           return (
             <Box key={label} sx={{ flex: 1, minWidth: 0 }}>
-              <Box sx={{ height: 4, borderRadius: 99, bgcolor: done ? 'primary.main' : 'divider', mb: 0.6 }} />
-              <Typography variant="caption" color={done ? 'primary.main' : 'text.secondary'} sx={{ fontSize: 10, fontWeight: 700 }} noWrap>
+              <Box sx={{ height: 4, borderRadius: 99, bgcolor: done ? 'primary.main' : 'action.hover', mb: 0.6 }} />
+              <Typography variant="caption" color={done ? 'primary.main' : 'text.secondary'} sx={{ fontSize: 11, fontWeight: 600 }} noWrap>
                 {label}
               </Typography>
             </Box>
@@ -200,7 +109,6 @@ export default function UserHostPanel() {
         to="/become-host"
         variant="contained"
         size="large"
-        sx={{ borderRadius: 999, fontWeight: 700 }}
       >
         {isApproved ? 'Update host profile' : `Resume - step ${Math.min(completed + 1, 4)} of 4`}
       </DuncitButton>

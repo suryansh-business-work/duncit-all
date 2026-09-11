@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
 import type { AutoPodLabels, AutoPodRole, AutoPodRow } from '@duncit/utils';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { LoadingIndicator } from '@/components/LoadingIndicator';
-import { PillButton } from '@/components/attendance/AttendanceOtpControls';
 import {
   ClubWithdrawAutoPodDocument,
   HostWithdrawAutoPodDocument,
@@ -70,22 +70,22 @@ export function AutoPodWithdrawSheet({ row, role, labels, onClose, onWithdrawn }
   const footer = (
     <XStack gap={10}>
       <YStack flex={1}>
-        <PillButton
+        <DuncitButton
           testID="auto-pod-withdraw-dismiss"
           label={labels.dismiss}
           onPress={onClose}
-          variant="ghost"
-          disabled={false}
+          variant="soft"
+          tone="neutral"
         />
       </YStack>
       <YStack flex={1}>
-        <PillButton
+        <DuncitButton
           testID="auto-pod-withdraw-confirm"
           label={labels.withdrawConfirm}
           onPress={() => {
             withdraw().catch(() => undefined);
           }}
-          variant="solid"
+          tone="danger"
           disabled={busy || !autoPodId}
         />
       </YStack>
@@ -101,19 +101,19 @@ export function AutoPodWithdrawSheet({ row, role, labels, onClose, onWithdrawn }
       closeLabel={labels.dismiss}
       footer={footer}
     >
-      <YStack gap={10}>
+      <YStack gap={12}>
         {row ? (
-          <Text fontSize={14} fontWeight="700" color="$color">
+          <Text fontSize={15} fontWeight="600" color="$color">
             {row.pod_title}
           </Text>
         ) : null}
 
-        <Text testID="auto-pod-withdraw-warning" fontSize={12.5} color={warning}>
+        <Text testID="auto-pod-withdraw-warning" fontSize={13} color={warning}>
           {labels.withdrawWarning}
         </Text>
 
         {points > 0 ? (
-          <Text testID="auto-pod-withdraw-penalty" fontSize={12.5} fontWeight="700" color="$danger">
+          <Text testID="auto-pod-withdraw-penalty" fontSize={13} fontWeight="600" color="$danger">
             {labels.withdrawPenalty(points)}
           </Text>
         ) : null}
@@ -121,7 +121,7 @@ export function AutoPodWithdrawSheet({ row, role, labels, onClose, onWithdrawn }
         {busy ? <LoadingIndicator testID="auto-pod-withdraw-busy" /> : null}
 
         {failure ? (
-          <Text testID="auto-pod-withdraw-error" fontSize={12} color="$danger">
+          <Text testID="auto-pod-withdraw-error" fontSize={13} color="$danger">
             {failure}
           </Text>
         ) : null}

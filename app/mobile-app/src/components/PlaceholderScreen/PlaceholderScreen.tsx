@@ -27,13 +27,13 @@ export function PlaceholderScreen({
 }>) {
   const { t } = useTranslation();
   const goBack = useGoBack();
-  const { color: ink, primary } = useThemeColors();
+  const { color: ink, accent } = useThemeColors();
 
   return (
     <YStack flex={1} testID="placeholder-screen">
       <AppBackground />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <XStack alignItems="center" gap={8} paddingHorizontal={12} paddingVertical={8}>
+        <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={8}>
           <XStack
             testID="placeholder-back"
             role="button"
@@ -44,27 +44,38 @@ export function PlaceholderScreen({
             alignItems="center"
             justifyContent="center"
             borderRadius={20}
-            pressStyle={PRESS_STYLE.row}
+            borderWidth={1}
+            borderColor="$cardBorder"
+            backgroundColor="$surface"
+            pressStyle={PRESS_STYLE.control}
           >
-            <MaterialIcons name="arrow-back" size={22} color={ink} />
+            <MaterialIcons name="arrow-back" size={20} color={ink} />
           </XStack>
-          <Text fontSize={18} fontWeight="600" color="$color">
+          <Text flex={1} fontSize={17} fontWeight="600" color="$color" numberOfLines={1}>
             {title}
           </Text>
         </XStack>
 
+        {/* The header already names the screen, so the body is one icon and
+            one line — the empty state of the calm design. */}
         <YStack
           flex={1}
           alignItems="center"
           justifyContent="center"
-          gap={12}
+          gap={16}
           paddingHorizontal={32}
         >
-          <MaterialIcons name={icon} size={56} color={primary} />
-          <Text textAlign="center" fontSize={24} fontWeight="600" color="$color">
-            {title}
-          </Text>
-          <Text textAlign="center" fontSize={14} color="$muted">
+          <YStack
+            width={96}
+            height={96}
+            borderRadius={48}
+            alignItems="center"
+            justifyContent="center"
+            backgroundColor="$surface"
+          >
+            <MaterialIcons name={icon} size={44} color={accent} />
+          </YStack>
+          <Text textAlign="center" fontSize={15} color="$muted">
             {subtitle ?? 'This space is coming soon.'}
           </Text>
         </YStack>

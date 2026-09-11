@@ -1,7 +1,9 @@
-import { Box, ButtonBase, Chip, Stack, Typography } from '@mui/material';
+import { Box, ButtonBase, Card, Chip, Stack, Typography } from '@mui/material';
+import SectionHeader from '../../components/SectionHeader';
 import { useTranslation } from '../../i18n/useTranslation';
 import GiftCardVisual from './GiftCardVisual';
 import type { GiftCardCategory, GiftCardScopeType } from './queries';
+import { CARD_PILL_IDLE_SX, CARD_PILL_SX } from './segmentedSx';
 
 /** The four theme groups, in display order. Keys are literal (rule 38). */
 const THEME_GROUPS: readonly { value: GiftCardScopeType; labelKey: string }[] = [
@@ -37,19 +39,15 @@ export default function ThemePicker({
   const options = categories.filter((category) => category.level === scopeType);
 
   return (
-    <Box>
-      <Typography variant="subtitle1" sx={{
-        fontWeight: 700
-      }}>
-        {t('mweb.giftCards.themeHeading')}
-      </Typography>
+    <Card sx={{ p: 2 }}>
+      <SectionHeader title={t('mweb.giftCards.themeHeading')} />
       <Stack
         direction="row"
         spacing={1}
         useFlexGap
         sx={{
           flexWrap: "wrap",
-          mt: 1
+          mt: 1.5
         }}>
         {THEME_GROUPS.map((group) => {
           const active = scopeType === group.value;
@@ -58,14 +56,14 @@ export default function ThemePicker({
               key={group.value}
               label={t(group.labelKey)}
               color={active ? 'primary' : 'default'}
-              variant={active ? 'filled' : 'outlined'}
               onClick={() => onGroup(group.value)}
+              sx={active ? CARD_PILL_SX : CARD_PILL_IDLE_SX}
             />
           );
         })}
       </Stack>
       {scopeType === 'SHOP' ? (
-        <Box sx={{ mt: 1.5 }}>
+        <Box sx={{ mt: 2 }}>
           <GiftCardVisual
             scopeType="SHOP"
             scopeCategoryId={null}
@@ -78,14 +76,14 @@ export default function ThemePicker({
             variant="caption"
             sx={{
               color: "text.secondary",
-              mt: 0.5,
+              mt: 1,
               display: 'block'
             }}>
             {t('mweb.giftCards.shopThemeCaption')}
           </Typography>
         </Box>
       ) : (
-        <Box sx={{ mt: 1.5, display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1 }}>
+        <Box sx={{ mt: 2, display: 'flex', gap: 1.5, overflowX: 'auto', pb: 0.5 }}>
           {options.map((category) => {
             const selected = category.id === scopeCategoryId;
             return (
@@ -96,7 +94,8 @@ export default function ThemePicker({
                 sx={{
                   flex: '0 0 auto',
                   width: 220,
-                  borderRadius: '16px',
+                  p: '2px',
+                  borderRadius: '18px',
                   border: 2,
                   borderColor: selected ? 'primary.main' : 'transparent',
                   textAlign: 'left',
@@ -118,6 +117,6 @@ export default function ThemePicker({
           })}
         </Box>
       )}
-    </Box>
+    </Card>
   );
 }

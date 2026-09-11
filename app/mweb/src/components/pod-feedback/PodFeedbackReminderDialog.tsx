@@ -37,7 +37,7 @@ export default function PodFeedbackReminderDialog({ open, title, onChoose }: Rea
 
   return (
     <Dialog open={open} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.podFeedback.remindTitle')}</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.podFeedback.remindTitle')}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {t('mweb.podFeedback.remindBody', { vars: { title } })}

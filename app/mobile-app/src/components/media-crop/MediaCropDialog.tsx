@@ -96,15 +96,15 @@ function CropPresetChips({ options, selectedKey, suggestedKey, onSelect }: Reado
             // keeps the button semantics intact.
             accessibilityState={{ selected }}
             onPress={() => onSelect(preset.key)}
-            paddingHorizontal={12}
-            paddingVertical={6}
+            paddingHorizontal={14}
+            paddingVertical={9}
             borderRadius={999}
             borderWidth={1}
             borderColor={selected ? '$primary' : 'rgba(255,255,255,0.3)'}
             backgroundColor={selected ? '$primary' : 'transparent'}
             pressStyle={PRESS_STYLE.control}
           >
-            <Text fontSize={12} fontWeight="700" color="#ffffff">
+            <Text fontSize={13} fontWeight="600" color="#ffffff">
               {preset.label}
               {suffix}
             </Text>
@@ -130,7 +130,7 @@ function MediaPreview({ media, aspect, zoom }: Readonly<PreviewProps>) {
         testID="crop-video-preview"
         width={box.width}
         height={box.height}
-        borderRadius={12}
+        borderRadius={18}
         alignItems="center"
         justifyContent="center"
         gap={8}
@@ -147,7 +147,7 @@ function MediaPreview({ media, aspect, zoom }: Readonly<PreviewProps>) {
     <YStack
       width={box.width}
       height={box.height}
-      borderRadius={12}
+      borderRadius={18}
       overflow="hidden"
       borderWidth={2}
       borderColor="rgba(255,255,255,0.85)"
@@ -301,7 +301,7 @@ export function MediaCropDialog({
               <FileDetailsPanel media={media} />
               {uploading ? <UploadProgress stage={stage} progress={progress} /> : null}
               {error ? (
-                <Text testID="crop-error" fontSize={12} color="#ff8a80">
+                <Text testID="crop-error" fontSize={13} color="$danger">
                   {error}
                 </Text>
               ) : null}
@@ -329,7 +329,7 @@ function CropHeader({
   const { t } = useTranslation();
   return (
     <XStack alignItems="center" justifyContent="space-between" padding={16}>
-      <Text color="#ffffff" fontSize={17} fontWeight="700">
+      <Text color="#ffffff" fontSize={17} fontWeight="600">
         {isImage ? 'Crop & upload' : 'Upload video'}
       </Text>
       <XStack
@@ -338,11 +338,11 @@ function CropHeader({
         role="button"
         aria-label={t('mweb.common.cancel')}
         onPress={uploading ? undefined : onCancel}
-        width={36}
-        height={36}
+        width={40}
+        height={40}
         alignItems="center"
         justifyContent="center"
-        borderRadius={18}
+        borderRadius={20}
         backgroundColor="rgba(255,255,255,0.16)"
         opacity={uploading ? 0.5 : 1}
       >
@@ -375,7 +375,7 @@ function CropActions({
         aria-label={t('mweb.common.cancel')}
         onPress={uploading ? undefined : onCancel}
         flex={1}
-        height={48}
+        height={52}
         alignItems="center"
         justifyContent="center"
         borderRadius={999}
@@ -384,7 +384,7 @@ function CropActions({
         opacity={uploading ? 0.6 : 1}
         pressStyle={PRESS_STYLE.control}
       >
-        <Text fontSize={14} fontWeight="700" color="#ffffff">
+        <Text fontSize={15} fontWeight="600" color="#ffffff">
           Cancel
         </Text>
       </XStack>
@@ -395,17 +395,17 @@ function CropActions({
         aria-disabled={uploading}
         onPress={uploading ? undefined : onConfirm}
         flex={1}
-        height={48}
+        height={52}
         alignItems="center"
         justifyContent="center"
         gap={8}
         borderRadius={999}
         backgroundColor="$primary"
         opacity={uploading ? 0.7 : 1}
-        pressStyle={PRESS_STYLE.control}
+        pressStyle={PRESS_STYLE.solid}
       >
         {uploading ? <Spinner size="small" color={onPrimary} /> : null}
-        <Text fontSize={14} fontWeight="700" color={onPrimary}>
+        <Text fontSize={15} fontWeight="600" color={onPrimary}>
           {isImage ? 'Use photo' : 'Upload'}
         </Text>
       </XStack>
@@ -445,7 +445,7 @@ function ZoomButton({ icon, label, testID, onPress }: Readonly<ZoomButtonProps>)
 /** White-on-dark wrapper so FileDetails reads on the dialog's dark scrim. */
 function FileDetailsPanel({ media }: Readonly<{ media: PickedMedia }>) {
   return (
-    <YStack backgroundColor="rgba(255,255,255,0.08)" borderRadius={12} padding={12}>
+    <YStack backgroundColor="rgba(255,255,255,0.08)" borderRadius={16} padding={12}>
       <FileDetails media={media} />
     </YStack>
   );

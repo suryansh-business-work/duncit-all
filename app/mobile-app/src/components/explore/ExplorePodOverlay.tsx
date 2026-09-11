@@ -5,54 +5,59 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { PressScale } from '@/animations/PressScale';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ExplorePod } from '@/stores/explore.store';
 import { podDateLabel, podPriceLabel } from '@/utils/pod-format';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const CAPTION_COLLAPSE_AT = 90;
+/** Translucent white over the scrim — every chip and the club disc on a reel. */
+const GLASS = 'rgba(255,255,255,0.16)';
 
-function Chip({ icon, label, tint }: Readonly<{ icon?: string; label: string; tint?: string }>) {
+function Chip({ icon, label }: Readonly<{ icon?: string; label: string }>) {
+  const { onPrimary } = useThemeColors();
   return (
     <XStack
       alignItems="center"
       gap={4}
+      height={28}
       borderRadius={999}
-      paddingHorizontal={10}
-      paddingVertical={5}
-      backgroundColor={tint ?? 'rgba(255,255,255,0.16)'}
+      paddingHorizontal={12}
+      backgroundColor={GLASS}
     >
-      {icon ? <MaterialIcons name={icon as never} size={13} color="#ffffff" /> : null}
-      <Text color="#ffffff" fontSize={11.5} fontWeight="600">
+      {icon ? <MaterialIcons name={icon as never} size={14} color={onPrimary} /> : null}
+      <Text color="$onPrimary" fontSize={12} fontWeight="600">
         {label}
       </Text>
     </XStack>
   );
 }
 
-/** The tappable club row (avatar + name + verified badge) at the top of the overlay. */
+/** The tappable club row (disc + name + verified badge) at the top of the overlay. */
 function ClubLink({
   clubName,
   isVerified,
   onOpenClub,
 }: Readonly<{ clubName: string; isVerified?: boolean; onOpenClub?: () => void }>) {
+  const { onPrimary } = useThemeColors();
   return (
     <PressScale testID="explore-club-link" accessibilityLabel={clubName} onPress={onOpenClub}>
       <XStack alignItems="center" gap={8}>
         <YStack
-          width={24}
-          height={24}
-          borderRadius={12}
-          backgroundColor="$primary"
+          width={26}
+          height={26}
+          borderRadius={13}
+          backgroundColor={GLASS}
           alignItems="center"
           justifyContent="center"
         >
-          <MaterialIcons name="groups" size={14} color="#ffffff" />
+          <MaterialIcons name="groups" size={15} color={onPrimary} />
         </YStack>
-        <Text color="#ffffff" fontSize={13} fontWeight="700" numberOfLines={1}>
+        <Text color="$onPrimary" fontSize={14} fontWeight="600" numberOfLines={1}>
           {clubName}
         </Text>
         {isVerified ? (
-          <MaterialIcons testID="explore-club-verified" name="verified" size={15} color="#1d9bf0" />
+          <MaterialIcons testID="explore-club-verified" name="verified" size={16} color="#1d9bf0" />
         ) : null}
       </XStack>
     </PressScale>
@@ -82,14 +87,15 @@ function Caption({
     >
       <Text
         testID="explore-caption"
-        color="rgba(255,255,255,0.9)"
-        fontSize={13}
+        color="$onPrimary"
+        opacity={0.9}
+        fontSize={14}
         numberOfLines={lines}
       >
         {description}
       </Text>
       {collapsible ? (
-        <Text testID="explore-caption-toggle" color="#ffffff" fontSize={12} fontWeight="600">
+        <Text testID="explore-caption-toggle" color="$onPrimary" fontSize={12} fontWeight="600">
           {toggleLabel}
         </Text>
       ) : null}
@@ -106,7 +112,7 @@ interface ExplorePodOverlayProps {
 }
 
 /** The dark gradient scrim + pod info (club, title, description, chips) anchored
- * above the CTA bar of a reel. RN port of mWeb's ExplorePodOverlay. */
+ * above the join bar of a reel. RN port of mWeb's ExplorePodOverlay. */
 export function ExplorePodOverlay({
   pod,
   clubName,
@@ -115,7 +121,6 @@ export function ExplorePodOverlay({
   bottom = 150,
 }: Readonly<ExplorePodOverlayProps>) {
   const [expanded, setExpanded] = useState(false);
-  const isFree = pod.pod_type === 'FREE';
   const description = pod.pod_description ?? '';
   const collapsible = description.length > CAPTION_COLLAPSE_AT;
   const toggleCaption = () => setExpanded((v) => !v);
@@ -123,7 +128,7 @@ export function ExplorePodOverlay({
   return (
     <>
       <LinearGradient
-        colors={['rgba(0,0,0,0.45)', 'rgba(0,0,0,0.02)', 'rgba(0,0,0,0.9)']}
+        colors={['rgba(0,0,0,0.42)', 'rgba(0,0,0,0.02)', 'rgba(0,0,0,0.88)']}
         locations={[0, 0.34, 1]}
         style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}
       />
@@ -131,7 +136,7 @@ export function ExplorePodOverlay({
         {clubName ? (
           <ClubLink clubName={clubName} isVerified={isVerified} onOpenClub={onOpenClub} />
         ) : null}
-        <Text color="#ffffff" fontSize={22} fontWeight="700" numberOfLines={2}>
+        <Text color="$onPrimary" fontSize={22} fontWeight="600" lineHeight={26} numberOfLines={2}>
           {pod.pod_title}
         </Text>
         {description ? (
@@ -143,10 +148,7 @@ export function ExplorePodOverlay({
           />
         ) : null}
         <XStack gap={8} flexWrap="wrap">
-          <Chip
-            label={podPriceLabel(pod)}
-            tint={isFree ? 'rgba(34,197,94,0.32)' : 'rgba(255,79,115,0.5)'}
-          />
+          <Chip label={podPriceLabel(pod)} />
           {pod.pod_date_time ? <Chip icon="event" label={podDateLabel(pod)} /> : null}
         </XStack>
       </YStack>

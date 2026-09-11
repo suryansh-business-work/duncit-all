@@ -12,29 +12,28 @@ interface FigureTileProps {
   testID: string;
 }
 
-/** One figure in the strip: label, the number, and an optional sub-line. */
-function FigureTile({ label, value, caption, testID }: Readonly<FigureTileProps>) {
+/** One figure in the strip: label, the number, and an optional sub-line — on the
+ * soft fill, since the strip sits inside the section's card. */
+export function FigureTile({ label, value, caption, testID }: Readonly<FigureTileProps>) {
   return (
     <YStack
       testID={testID}
       flexBasis="30%"
       flexGrow={1}
-      minWidth={100}
+      minWidth={96}
       gap={2}
-      padding={10}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
+      padding={12}
+      borderRadius={16}
+      backgroundColor="$soft"
     >
-      <Text fontSize={11} fontWeight="700" color="$primary" numberOfLines={1}>
+      <Text fontSize={12} fontWeight="600" color="$muted" numberOfLines={1}>
         {label}
       </Text>
-      <Text fontSize={16} fontWeight="700" color="$color" numberOfLines={1}>
+      <Text fontSize={18} fontWeight="700" color="$color" numberOfLines={1}>
         {value}
       </Text>
       {caption ? (
-        <Text fontSize={10.5} color="$muted" numberOfLines={1}>
+        <Text fontSize={11} color="$muted" numberOfLines={1}>
           {caption}
         </Text>
       ) : null}
@@ -117,7 +116,7 @@ export function StudioPodFigures({
   }
 
   return (
-    <XStack testID={testID} flexWrap="wrap" gap={10}>
+    <XStack testID={testID} flexWrap="wrap" gap={8}>
       {tiles.map((tile) => (
         <FigureTile
           key={tile.testID}

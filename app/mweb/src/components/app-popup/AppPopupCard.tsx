@@ -74,19 +74,14 @@ export default function AppPopupCard({
       </Box>
 
       {(showCta || showHint) && (
-        <Stack spacing={1} sx={{ p: 1.75 }}>
+        <Stack spacing={1} sx={{ p: 2 }}>
           {showCta && (
-            <DuncitButton variant="contained" fullWidth onClick={onCta}>
+            <DuncitButton variant="contained" size="large" fullWidth onClick={onCta}>
               {ctaLabel}
             </DuncitButton>
           )}
           {showHint && (
-            <Typography
-              variant="caption"
-              sx={{
-                color: "text.secondary",
-                textAlign: "center"
-              }}>
+            <Typography sx={{ fontSize: 13, color: 'text.secondary', textAlign: 'center' }}>
               {closeHint}
             </Typography>
           )}

@@ -29,10 +29,10 @@ export function PodPicker({ options, selectedId, onChange }: Readonly<PodPickerP
     return (
       <YStack
         testID="pod-picker-empty"
-        padding={14}
-        borderRadius={14}
+        padding={16}
+        borderRadius={24}
         borderWidth={1}
-        borderColor="$borderColor"
+        borderColor="$cardBorder"
         backgroundColor="$surface"
       >
         <Text fontSize={13} color="$muted">
@@ -56,9 +56,9 @@ export function PodPicker({ options, selectedId, onChange }: Readonly<PodPickerP
         alignItems="center"
         gap={8}
         minHeight={52}
-        paddingHorizontal={12}
+        paddingHorizontal={14}
         paddingVertical={8}
-        borderRadius={12}
+        borderRadius={14}
         borderWidth={1}
         borderColor="$borderColor"
         backgroundColor="$surface"
@@ -83,7 +83,7 @@ export function PodPicker({ options, selectedId, onChange }: Readonly<PodPickerP
       {open ? (
         <YStack
           testID="pod-picker-options"
-          borderRadius={12}
+          borderRadius={14}
           borderWidth={1}
           borderColor="$borderColor"
           backgroundColor="$surface"
@@ -110,7 +110,7 @@ export function PodPicker({ options, selectedId, onChange }: Readonly<PodPickerP
                 <YStack flex={1}>
                   <Text
                     fontSize={14}
-                    fontWeight={isSelected ? '700' : '600'}
+                    fontWeight="600"
                     color={isSelected ? '$onPrimary' : '$color'}
                     numberOfLines={1}
                   >

@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { Accordion } from '@/components/details/Accordion';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ProfileMe } from '@/hooks/useProfile';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -20,7 +21,7 @@ function NavRow({
   onPress: () => void;
   testID: string;
 }>) {
-  const { primary, muted } = useThemeColors();
+  const { accent, muted } = useThemeColors();
   return (
     <XStack
       testID={testID}
@@ -29,16 +30,21 @@ function NavRow({
       onPress={onPress}
       alignItems="center"
       gap={12}
-      padding={14}
-      borderRadius={14}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      marginBottom={10}
-      pressStyle={PRESS_STYLE.control}
+      paddingHorizontal={16}
+      paddingVertical={14}
+      pressStyle={PRESS_STYLE.row}
     >
-      <MaterialIcons name={icon} size={20} color={primary} />
-      <Text flex={1} fontSize={14.5} fontWeight="600" color="$color">
+      <YStack
+        width={36}
+        height={36}
+        borderRadius={18}
+        alignItems="center"
+        justifyContent="center"
+        backgroundColor="$soft"
+      >
+        <MaterialIcons name={icon} size={20} color={accent} />
+      </YStack>
+      <Text flex={1} fontSize={15} fontWeight="500" color="$color">
         {label}
       </Text>
       <MaterialIcons name="chevron-right" size={22} color={muted} />
@@ -127,18 +133,21 @@ export function ProfilePanels({
         </Accordion>
       ) : null}
 
-      <NavRow
-        testID="profile-host"
-        icon="storefront"
-        label={isHost ? 'Hosts Management' : 'Become a host'}
-        onPress={onOpenHost}
-      />
-      <NavRow
-        testID="profile-venue"
-        icon="store"
-        label={isVenue ? 'Venue Management' : 'Become a venue owner'}
-        onPress={onOpenVenue}
-      />
+      <SurfaceCard padding={0} overflow="hidden">
+        <NavRow
+          testID="profile-host"
+          icon="storefront"
+          label={isHost ? 'Hosts Management' : 'Become a host'}
+          onPress={onOpenHost}
+        />
+        <YStack height={1} marginLeft={64} backgroundColor="$borderColor" />
+        <NavRow
+          testID="profile-venue"
+          icon="store"
+          label={isVenue ? 'Venue Management' : 'Become a venue owner'}
+          onPress={onOpenVenue}
+        />
+      </SurfaceCard>
     </YStack>
   );
 }

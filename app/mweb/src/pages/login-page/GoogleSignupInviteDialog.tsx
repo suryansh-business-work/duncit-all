@@ -1,4 +1,4 @@
-import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
+import PersonAddRoundedIcon from '@mui/icons-material/PersonAddRounded';
 import {
   Dialog,
   DialogActions,
@@ -47,9 +47,9 @@ export default function GoogleSignupInviteDialog({
 
   return (
     <Dialog open={open} onClose={onDismiss} fullWidth maxWidth="xs">
-      <DialogTitle>
+      <DialogTitle sx={{ fontSize: 17, fontWeight: 600 }}>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          <PersonAddAlt1Icon fontSize="small" />
+          <PersonAddRoundedIcon fontSize="small" sx={{ color: 'secondary.main' }} />
           <span>{t('mweb.login.googleNotFoundTitle')}</span>
         </Stack>
       </DialogTitle>
@@ -63,9 +63,11 @@ export default function GoogleSignupInviteDialog({
           </Typography>
         </Stack>
       </DialogContent>
-      <DialogActions>
-        <DuncitButton onClick={onDismiss}>{t('mweb.login.googleNotFoundDismiss')}</DuncitButton>
-        <DuncitButton variant="contained" onClick={onAccept}>
+      <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+        <DuncitButton variant="outlined" color="inherit" onClick={onDismiss} sx={{ flex: 1 }}>
+          {t('mweb.login.googleNotFoundDismiss')}
+        </DuncitButton>
+        <DuncitButton variant="contained" onClick={onAccept} sx={{ flex: 1.4 }}>
           {t('mweb.login.googleNotFoundAction')}
         </DuncitButton>
       </DialogActions>

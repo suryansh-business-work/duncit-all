@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Badge, Tooltip } from '@mui/material';
-import NotificationsIcon from '@mui/icons-material/Notifications';
+import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import { DuncitIconButton } from '@duncit/buttons';
+import { HEADER_ROUND_BUTTON_SX } from './headerButtonSx';
 import { MARK_ALL, MARK_READ, MY_NOTIFS } from './queries';
 import NotificationsScreen from './notifications-screen';
 import { useHeaderPushNotifications } from './useHeaderPushNotifications';
@@ -87,17 +88,10 @@ export default function HeaderNotificationsBell({ onToast }: Readonly<HeaderNoti
           size="small"
           onClick={() => setNotificationsOpen(true)}
           aria-label={`Notifications${unreadLabel}`}
-          sx={{
-            minWidth: 40,
-            minHeight: 40,
-            bgcolor: 'action.hover',
-            border: 1,
-            borderColor: 'divider',
-            '&:hover': { bgcolor: 'action.selected' },
-          }}
+          sx={HEADER_ROUND_BUTTON_SX}
         >
-          <Badge badgeContent={unreadCount} color="error">
-            <NotificationsIcon fontSize="small" />
+          <Badge badgeContent={unreadCount} color="secondary">
+            <NotificationsNoneIcon sx={{ fontSize: 22 }} />
           </Badge>
         </DuncitIconButton>
       </Tooltip>

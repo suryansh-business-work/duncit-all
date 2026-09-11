@@ -4,18 +4,20 @@ import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { semantic } from '@duncit/auth-tokens';
-
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ChatRoom } from '@/stores/chat.store';
 import { podStatus, type PodStatus } from '@/utils/pod-format';
 import type { Translate } from '@/i18n/fallback';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
-const statusMeta = (t: Translate): Record<PodStatus, { label: string; color: string }> => ({
-  LIVE: { label: t('mweb.common.live'), color: semantic.success },
-  UPCOMING: { label: t('mweb.common.upcoming'), color: semantic.info },
-  ENDED: { label: t('mweb.common.previous'), color: semantic.warning },
+type StatusMeta = { label: string; bg: string; fg: string };
+
+/** The same filled tones as mWeb's status chip (podStatusChip). */
+const statusMeta = (t: Translate): Record<PodStatus, StatusMeta> => ({
+  LIVE: { label: t('mweb.common.live'), bg: '$success', fg: '$onPrimary' },
+  UPCOMING: { label: t('mweb.common.upcoming'), bg: '$warning', fg: '$onPrimary' },
+  ENDED: { label: t('mweb.common.previous'), bg: '$soft', fg: '$color' },
 });
 
 /** A chat-room row in the Chats thread list — cover, title, member count and the
@@ -29,24 +31,21 @@ export function ChatRoomCard({ room, onPress }: Readonly<{ room: ChatRoom; onPre
   const status = statusMeta(t)[podStatus(room.pod_date_time, room.pod_end_date_time)];
 
   return (
-    <XStack
+    <SurfaceCard
       testID={`chat-room-${room.id}`}
       role="button"
       aria-label={room.pod_title}
       onPress={onPress}
+      flexDirection="row"
       alignItems="center"
-      gap={14}
+      gap={12}
       padding={12}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
       pressStyle={PRESS_STYLE.surface}
     >
       <YStack
-        width={54}
-        height={54}
-        borderRadius={16}
+        width={48}
+        height={48}
+        borderRadius={12}
         overflow="hidden"
         backgroundColor="$primary"
         alignItems="center"
@@ -59,15 +58,15 @@ export function ChatRoomCard({ room, onPress }: Readonly<{ room: ChatRoom; onPre
             resizeMode="cover"
           />
         ) : (
-          <MaterialIcons name="forum" size={26} color={onPrimary} />
+          <MaterialIcons name="forum" size={24} color={onPrimary} />
         )}
       </YStack>
       <YStack flex={1} gap={4}>
-        <Text fontSize={15.5} fontWeight="700" color="$color" numberOfLines={1}>
+        <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
           {room.pod_title}
         </Text>
         <XStack alignItems="center" gap={8}>
-          <Text fontSize={12.5} fontWeight="600" color="$muted" numberOfLines={1}>
+          <Text fontSize={13} color="$muted" numberOfLines={1}>
             {members} {members === 1 ? 'member' : 'members'}
           </Text>
           <XStack
@@ -75,15 +74,15 @@ export function ChatRoomCard({ room, onPress }: Readonly<{ room: ChatRoom; onPre
             paddingHorizontal={8}
             paddingVertical={2}
             borderRadius={999}
-            backgroundColor={status.color}
+            backgroundColor={status.bg}
           >
-            <Text fontSize={10} fontWeight="700" color="$onPrimary">
+            <Text fontSize={10} fontWeight="600" color={status.fg}>
               {status.label}
             </Text>
           </XStack>
         </XStack>
       </YStack>
       <MaterialIcons name="chevron-right" size={22} color={muted} />
-    </XStack>
+    </SurfaceCard>
   );
 }

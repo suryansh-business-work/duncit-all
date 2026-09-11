@@ -21,8 +21,8 @@ function SuggestedPriceRow({ price, payout, description, testID }: Readonly<RowP
       justifyContent="space-between"
       alignItems="flex-start"
       gap={12}
-      paddingHorizontal={12}
-      paddingVertical={9}
+      paddingHorizontal={14}
+      paddingVertical={10}
       borderTopWidth={1}
       borderTopColor="$borderColor"
     >
@@ -30,7 +30,7 @@ function SuggestedPriceRow({ price, payout, description, testID }: Readonly<RowP
         <Text fontSize={14} fontWeight="600" color="$color">
           {price}
         </Text>
-        <Text fontSize={11} color="$muted">
+        <Text fontSize={12} color="$muted">
           {description}
         </Text>
       </YStack>
@@ -62,20 +62,20 @@ export function SuggestedPricesTable({ prices, symbol }: Readonly<Props>) {
       testID="suggested-prices-table"
       borderWidth={1}
       borderColor="$borderColor"
-      borderRadius={12}
+      borderRadius={16}
       overflow="hidden"
     >
       <XStack
         justifyContent="space-between"
         gap={12}
-        paddingHorizontal={12}
-        paddingVertical={9}
-        backgroundColor="$surface"
+        paddingHorizontal={14}
+        paddingVertical={10}
+        backgroundColor="$soft"
       >
-        <Text fontSize={12} fontWeight="700" color="$muted">
+        <Text fontSize={12} fontWeight="600" color="$muted">
           {t('mweb.createPod.suggestedPrice')}
         </Text>
-        <Text fontSize={12} fontWeight="700" color="$muted">
+        <Text fontSize={12} fontWeight="600" color="$muted">
           {t('mweb.createPod.whatYouGet')}
         </Text>
       </XStack>

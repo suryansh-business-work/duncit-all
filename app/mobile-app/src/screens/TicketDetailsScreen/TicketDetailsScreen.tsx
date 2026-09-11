@@ -8,7 +8,6 @@ import { useRoute, type RouteProp } from '@react-navigation/native';
 import { Spinner, Text, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
-import { TicketMeta } from '@/components/support/TicketMeta';
 import { TicketReopenFooter } from '@/components/support/TicketReopenFooter';
 import { JumpToLatestButton } from '@/components/support-chat/JumpToLatestButton';
 import {
@@ -26,6 +25,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { TicketThread } from './TicketThread';
 import { TicketHeaderActions } from './TicketHeaderActions';
 import { TicketComposer } from './TicketComposer';
+import { TicketSummaryCard } from './TicketSummaryCard';
 import { useTicketActions } from './useTicketActions';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -107,19 +107,7 @@ export function TicketDetailsScreen() {
   } else if (ticket) {
     ticketBody = (
       <YStack flex={1}>
-        <YStack padding={16} gap={6} borderBottomWidth={1} borderColor="$borderColor">
-          <Text fontSize={16} fontWeight="700" color="$color">
-            {ticket.subject}
-          </Text>
-          <TicketMeta
-            id={ticket.id}
-            status={ticket.status}
-            category={ticket.category}
-            priority={ticket.priority}
-            createdAt={ticket.created_at}
-            updatedAt={ticket.updated_at ?? ticket.last_message_at}
-          />
-        </YStack>
+        <TicketSummaryCard ticket={ticket} />
         <YStack flex={1}>
           <TicketThread
             ref={scrollRef}

@@ -4,7 +4,6 @@ import { Spinner, Text, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { LoadErrorNotice } from '@/components/club-admin/LoadErrorNotice';
-import { PageHeading } from '@/components/club-admin/PageHeading';
 import { CreatePodStepper, type ClubAdminStepperMode } from '@/components/create-pod';
 import { useClubAdminPodEditor } from '@/hooks/useClubAdminPodEditor';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -66,18 +65,12 @@ export function ClubPodEditorScreen() {
         </YStack>
       ) : null}
       {editor.notFound ? (
-        <Text testID="club-pod-editor-not-found" padding={16} fontSize={13} color="$muted">
+        <Text testID="club-pod-editor-not-found" padding={16} fontSize={14} color="$muted">
           {t('clubAdmin.editor.notFound')}
         </Text>
       ) : null}
       {club && options && mode ? (
         <RefreshScrollView showsVerticalScrollIndicator={false}>
-          <YStack paddingHorizontal={16} paddingTop={12}>
-            <PageHeading
-              eyebrow={t('clubAdmin.editor.eyebrow', { vars: { club: club.club_name } })}
-              title={title}
-            />
-          </YStack>
           <CreatePodStepper
             initialValues={editor.initialValues}
             initialStep={0}

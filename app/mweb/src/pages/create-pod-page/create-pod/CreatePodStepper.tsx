@@ -8,7 +8,6 @@ import {
   STEP_FIELDS,
   STEP_TITLE_KEYS,
   stepTitleKey,
-  stepSubtitleKey,
   buildCreatePodInput,
   buildModerationInput,
   filterClubs,
@@ -270,15 +269,10 @@ export default function CreatePodStepper({
   return (
     <Stack spacing={2.5}>
       {/* The wizard renders ONE page at a time, so every tour step has to live on
-          the page the host lands on. The hero carries the step counter and is
-          what lets the walkthrough explain the four-step journey. */}
+          the page the host lands on. The hero's step pills are what lets the
+          walkthrough explain the four-step journey. */}
       <Box data-tour="create-pod-steps">
-        <StepHero
-          step={step}
-          total={STEP_TITLE_KEYS.length}
-          title={t(stepTitleKey(step, podMode))}
-          subtitle={t(stepSubtitleKey(step, podMode))}
-        />
+        <StepHero step={step} total={STEP_TITLE_KEYS.length} title={t(stepTitleKey(step, podMode))} />
       </Box>
       {steps[step]}
       {error && <Alert severity="error">{error}</Alert>}

@@ -844,6 +844,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       // every leaf rendered via a literal t('…'), which `.one/.other` siblings
       // resolved from a base key would fail.
       greetingSubtitle: 'Discover. Connect. Create memories.',
+      // Line one of the two-tone home greeting; the admin tagline is line two.
+      greetingHello: 'Hello, {name}!',
       actionSearch: 'Search',
       actionAlerts: 'Alerts',
       forYouSubtitle: 'Personalized for you',
@@ -896,6 +898,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     // — it is the same chip Home renders.
     explore: {
       filtersTitle: 'Filters',
+      // The Explore reel's join bar on a pod that has already happened.
+      thisPodIsExpired: 'This pod is expired',
+      youCanStillViewThePodDetails: 'You can still view the pod details.',
       filtersSummary: '{activeCount} active - {resultCount} pods match',
       reset: 'Reset',
       showResults: 'Show {count} pods',
@@ -2905,6 +2910,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     // sends the applicable floor on `myWallet`; these keys only word it, so
     // mWeb and native say the same thing about the same number.
     wallet: {
+      availableBalance: 'Available balance',
+      withdrawals: 'Withdrawals',
+      transactions: 'Transactions',
       minimumHint: 'Minimum withdrawal {amount}.',
       minimumBlocked: 'You need at least {amount} in your wallet to withdraw.',
       accountHolderName: 'Account holder name',
@@ -3260,10 +3268,18 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       viewAllClubMembers: 'View all club members',
     },
     clubDetailsPage: {
+      moments: 'Moments',
+      stories: 'Stories',
       clubNotFound: 'Club not found.',
     },
     clubsPage: {
       noClubsFound: 'No clubs found.',
+      // The club card's pill and its pod count (mWeb ClubListCard, native ClubCard).
+      openClub: 'Open Club',
+      podCount: {
+        one: '{count} pod',
+        other: '{count} pods',
+      },
     },
     details: {
       addToSelection: 'Add to selection',
@@ -3648,6 +3664,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       loadFailed: 'Could not load your SMS preferences.',
     },
     profile: {
+      noPodsYet: 'No pods yet.',
       aboutYourPet: 'About your pet',
       accountSettings: 'Account settings',
       addPost: 'Add post',
@@ -3804,6 +3821,8 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       completeYourProfile: 'Complete your profile',
       refreshing: 'Refreshing your menu',
       toggleDarkMode: 'Toggle dark mode',
+      // The visible label of the menu's dark-mode row (toggleDarkMode names the switch).
+      darkMode: 'Dark mode',
       // Captions for the two tiles that came down from the bottom bar. Every
       // other tile in that grid says what it is for, so these do too.
       chatsCaption: 'Your pod conversations',
@@ -3852,6 +3871,10 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       typeAMessage: 'Type a message…',
     },
     supportHub: {
+      // Section titles on the support hub.
+      frequentlyAsked: 'Frequently Asked',
+      moreWaysToReachUs: 'More ways to reach us',
+      topics: 'Topics',
       callUsOrGetACallback: 'Call us or get a callback',
       describeTheIssue: 'Describe the issue',
       eGMedicalHelpNeeded: 'e.g. medical help needed',
@@ -3887,6 +3910,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       youReBooked: 'You’re booked!',
     },
     surveyOnboarding: {
+      phoneRequiredNotice:
+        'Phone number is required so our team can reach you. Please add your Phone number from Profile to proceed.',
+      fieldRequired: 'This field is required.',
       backToHome: 'Back to Home',
       changeCategory: 'Change category',
       countryCode: 'Country code',

@@ -43,9 +43,9 @@ export function CouponField({
     available.length === 1
       ? t('mweb.checkout.couponsAvailableOne')
       : t('mweb.checkout.couponsAvailableMany', { count: available.length });
-  // Same hex-alpha-suffix tint pattern as ClubTotalMembersSection — a 15% alpha
-  // channel on the resolved success token (mirrors mWeb's alpha(success, 0.15)).
-  const successTint = `${success}26`;
+  // Same hex-alpha-suffix tint pattern as ClubTotalMembersSection — a 12% alpha
+  // channel on the resolved success token (mirrors mWeb's alpha(success, 0.12)).
+  const successTint = `${success}1f`;
 
   if (applied?.ok) {
     return (
@@ -54,10 +54,8 @@ export function CouponField({
         alignItems="center"
         justifyContent="space-between"
         padding={12}
-        borderRadius={12}
+        borderRadius={16}
         backgroundColor={successTint}
-        borderWidth={1}
-        borderColor={success}
       >
         <XStack alignItems="center" gap={8} flex={1}>
           <MaterialIcons name="local-offer" size={16} color={success} />
@@ -103,9 +101,9 @@ export function CouponField({
             onPress={() => onApply()}
             alignItems="center"
             justifyContent="center"
-            paddingHorizontal={16}
+            paddingHorizontal={18}
             height={44}
-            borderRadius={10}
+            borderRadius={999}
             borderWidth={1}
             borderColor="$primary"
             opacity={applying || !code.trim() ? 0.5 : 1}

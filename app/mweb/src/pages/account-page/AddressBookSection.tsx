@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { Alert, Box, Chip, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, Chip, Stack, Typography } from '@mui/material';
+import { alpha, type Theme } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
-import HomeWorkIcon from '@mui/icons-material/HomeWork';
-import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
+import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
 import { AddressForm, type AddressFormValues, type UserAddress } from './address-book-form';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -55,6 +55,17 @@ export const DELETE_MY_ADDRESS = gql`
 const oneLine = (a: UserAddress) =>
   [a.line1, a.line2, a.landmark, a.city, a.state, a.pincode].filter(Boolean).join(', ');
 
+/** The tonal "Default" pill on the address marked default. */
+const DEFAULT_CHIP_SX = {
+  height: 22,
+  fontSize: 11,
+  fontWeight: 600,
+  color: 'primary.main',
+  bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.12),
+} as const;
+
+const ROW_ACTION_SX = { color: 'text.secondary' } as const;
+
 /** Profile Settings › Address Book — the user's saved delivery addresses,
  * selectable at checkout. Add/edit via the RHF+Zod dialog; delete inline. */
 export default function AddressBookSection() {
@@ -100,23 +111,19 @@ export default function AddressBookSection() {
   };
 
   return (
-    <Box sx={{ p: 2, borderRadius: '16px', border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+    <Card sx={{ p: 2 }}>
       <Stack
         direction="row"
+        spacing={1}
         sx={{
           alignItems: "center",
           justifyContent: "space-between",
           mb: 1
         }}>
-        <Stack direction="row" spacing={1} sx={{
-          alignItems: "center"
-        }}>
-          <HomeWorkIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            Address Book
-          </Typography>
-        </Stack>
-        <DuncitButton size="small" variant="outlined" startIcon={<AddIcon />} onClick={openAdd} sx={{ borderRadius: 999, fontWeight: 600 }}>
+        <Typography component="h2" sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>
+          Address Book
+        </Typography>
+        <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openAdd} sx={{ minHeight: 36 }}>
           Add address
         </DuncitButton>
       </Stack>
@@ -124,12 +131,13 @@ export default function AddressBookSection() {
       {notice && <Alert severity="error" onClose={() => setNotice(null)}>{notice}</Alert>}
       {!loading && addresses.length === 0 && (
         <Typography variant="body2" sx={{
-          color: "text.secondary"
+          color: "text.secondary",
+          py: 1
         }}>
           Save delivery addresses here to pick them quickly at checkout.
         </Typography>
       )}
-      <Stack spacing={1}>
+      <Box>
         {addresses.map((address) => (
           <Stack
             key={address.id}
@@ -137,39 +145,38 @@ export default function AddressBookSection() {
             spacing={1}
             sx={{
               alignItems: "center",
-              p: 1.25,
-              borderRadius: '16px',
-              border: 1,
-              borderColor: 'divider'
+              py: 1.5,
+              '& + &': { borderTop: 1, borderColor: 'divider' }
             }}>
             <Box sx={{ minWidth: 0, flex: 1 }}>
               <Stack direction="row" spacing={0.75} sx={{
                 alignItems: "center"
               }}>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                <Typography sx={{ fontSize: '0.95rem', fontWeight: 600 }} noWrap>
                   {address.label}
                 </Typography>
-                {address.is_default && <Chip size="small" color="primary" label={t('mweb.account.default')} sx={{ fontWeight: 600 }} />}
+                {address.is_default && <Chip size="small" label={t('mweb.account.default')} sx={DEFAULT_CHIP_SX} />}
               </Stack>
               <Typography
-                variant="caption"
+                variant="body2"
                 noWrap
                 sx={{
                   color: "text.secondary",
-                  display: 'block'
+                  display: 'block',
+                  mt: 0.25
                 }}>
                 {oneLine(address)}
               </Typography>
             </Box>
-            <DuncitIconButton size="small" aria-label={`Edit ${address.label}`} onClick={() => openEdit(address)}>
-              <EditOutlinedIcon fontSize="small" />
-            </DuncitIconButton>
-            <DuncitIconButton size="small" aria-label={`Delete ${address.label}`} onClick={() => remove(address)}>
-              <DeleteOutlineIcon fontSize="small" />
-            </DuncitIconButton>
+            <DuncitRoundButton tone="surface" aria-label={`Edit ${address.label}`} onClick={() => openEdit(address)} sx={ROW_ACTION_SX}>
+              <EditOutlinedIcon />
+            </DuncitRoundButton>
+            <DuncitRoundButton tone="surface" aria-label={`Delete ${address.label}`} onClick={() => remove(address)} sx={ROW_ACTION_SX}>
+              <DeleteOutlineIcon />
+            </DuncitRoundButton>
           </Stack>
         ))}
-      </Stack>
+      </Box>
       <AddressForm
         open={formOpen}
         title={editing ? 'Edit address' : 'Add address'}
@@ -178,6 +185,6 @@ export default function AddressBookSection() {
         onCancel={() => setFormOpen(false)}
         onSubmit={submit}
       />
-    </Box>
+    </Card>
   );
 }

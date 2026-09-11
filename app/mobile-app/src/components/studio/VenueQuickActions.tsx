@@ -1,7 +1,5 @@
-import { Text, XStack, YStack } from 'tamagui';
-
-import { ActionRow } from '@/components/host-manage/ActionRow';
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { NavRow, RowBadge, RowDivider } from '@/components/club-admin/NavRow';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { MenuRoute } from '@/navigation/types';
 
@@ -13,56 +11,47 @@ interface Props {
 }
 
 /** The three doors out of Venue Studio: the calendar, the settings and the
- * request queue — with the pending count on the one that is waiting on you. */
+ * request queue — with the pending count on the one that is waiting on you.
+ * One list card, as mWeb's VenueQuickActions draws it (rule 27). */
 export function VenueQuickActions({ approved, pendingRequests, onNavigate }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { primary, muted } = useThemeColors();
-
-  const pendingChip =
+  const availabilityCaption = approved
+    ? undefined
+    : t('mweb.venueManagePage.approvalNeededForAvailability');
+  const pendingBadge =
     pendingRequests > 0 ? (
-      <XStack
+      <RowBadge
         testID="venue-action-slot-requests-pending"
-        paddingHorizontal={8}
-        paddingVertical={3}
-        borderRadius={999}
-        backgroundColor="$primary"
-      >
-        <Text fontSize={11} fontWeight="700" color="$onPrimary">
-          {t('mweb.venueManagePage.slotRequestsPending', { vars: { count: pendingRequests } })}
-        </Text>
-      </XStack>
+        label={t('mweb.venueManagePage.slotRequestsPending', { vars: { count: pendingRequests } })}
+      />
     ) : undefined;
 
   return (
-    <YStack gap={8} testID="venue-quick-actions">
-      <ActionRow
+    <SurfaceCard padding={0} overflow="hidden" testID="venue-quick-actions">
+      <NavRow
         testID="venue-action-availability"
         icon="event-repeat"
         label={t('mweb.venueManagePage.availabilityAction')}
-        tint={approved ? primary : muted}
+        caption={availabilityCaption}
+        captionTestID="venue-action-availability-hint"
         disabled={!approved}
         onPress={() => onNavigate('VenueAvailability')}
       />
-      {approved ? null : (
-        <Text testID="venue-action-availability-hint" fontSize={11.5} color="$muted">
-          {t('mweb.venueManagePage.approvalNeededForAvailability')}
-        </Text>
-      )}
-      <ActionRow
+      <RowDivider />
+      <NavRow
         testID="venue-action-settings"
         icon="settings"
         label={t('mweb.venueManagePage.settingsAction')}
-        tint={primary}
         onPress={() => onNavigate('VenueSettings')}
       />
-      <ActionRow
+      <RowDivider />
+      <NavRow
         testID="venue-action-slot-requests"
         icon="event-available"
         label={t('mweb.venueManagePage.slotRequestsAction')}
-        tint={primary}
-        trailing={pendingChip}
+        badge={pendingBadge}
         onPress={() => onNavigate('VenueSlotRequests')}
       />
-    </YStack>
+    </SurfaceCard>
   );
 }

@@ -1,9 +1,10 @@
 import { InputAdornment, Stack, TextField, Tooltip } from '@mui/material';
-import SendIcon from '@mui/icons-material/Send';
-import ImageIcon from '@mui/icons-material/Image';
+import SendRoundedIcon from '@mui/icons-material/SendRounded';
+import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
-import { DuncitIconButton } from '@duncit/buttons';
+import { DuncitIconButton, DuncitRoundButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
+import { SEND_BUTTON_SX } from '../support-chat/calmStyles';
 
 interface MessageComposerProps {
   text: string;
@@ -29,12 +30,14 @@ export default function MessageComposer({
         alignItems: "center",
         px: { xs: 1.25, sm: 2 },
         py: 1,
-        bgcolor: 'transparent'
+        bgcolor: 'background.paper',
+        borderTop: 1,
+        borderColor: 'divider',
       }}>
       <Tooltip title={t('mweb.chatRoom.image')}>
-        <DuncitIconButton onClick={onOpenPicker} sx={{ bgcolor: 'action.hover' }}>
-          <ImageIcon />
-        </DuncitIconButton>
+        <DuncitRoundButton size="large" tone="surface" onClick={onOpenPicker}>
+          <ImageOutlinedIcon />
+        </DuncitRoundButton>
       </Tooltip>
       <TextField
         value={text}
@@ -52,7 +55,7 @@ export default function MessageComposer({
         }}
         slotProps={{
           input: {
-            sx: { borderRadius: 999, bgcolor: 'background.paper', boxShadow: '0 10px 28px rgba(9,7,18,0.14)' },
+            sx: { borderRadius: '22px', bgcolor: 'action.hover', minHeight: 44, '& fieldset': { border: 0 } },
             endAdornment: (
               <InputAdornment position="end">
                 <DuncitIconButton size="small" onClick={(e) => onOpenEmoji(e.currentTarget)}>
@@ -63,9 +66,9 @@ export default function MessageComposer({
           }
         }}
       />
-      <DuncitIconButton color="primary" onClick={onSend} disabled={!text.trim()} sx={{ width: 46, height: 46, bgcolor: 'primary.main', color: 'primary.contrastText', '&:hover': { bgcolor: 'primary.dark' }, '&.Mui-disabled': { bgcolor: 'action.disabledBackground' } }}>
-        <SendIcon />
-      </DuncitIconButton>
+      <DuncitRoundButton size="large" aria-label={t('mweb.common.sendMessage')} onClick={onSend} disabled={!text.trim()} sx={SEND_BUTTON_SX}>
+        <SendRoundedIcon />
+      </DuncitRoundButton>
     </Stack>
   );
 }

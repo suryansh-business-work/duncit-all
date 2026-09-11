@@ -51,7 +51,7 @@ export default function BrandDetailDialog({
           <StorefrontIcon />
         </Avatar>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700 }} noWrap>
+          <Typography variant="h6" sx={{ fontWeight: 600 }} noWrap>
             {brand.brand_name}
           </Typography>
           {brand.tagline && (

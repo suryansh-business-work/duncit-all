@@ -1,15 +1,20 @@
 import { useState } from 'react';
-import { Box, Stack, Tooltip, Typography } from '@mui/material';
-import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import { Box, Stack, Typography } from '@mui/material';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternateOutlined';
 import VerifiedIcon from '@mui/icons-material/Verified';
-import SettingsIcon from '@mui/icons-material/Settings';
-import ShareIcon from '@mui/icons-material/Share';
+import SettingsIcon from '@mui/icons-material/SettingsOutlined';
+import ShareIcon from '@mui/icons-material/ShareOutlined';
 import { DuncitButton, DuncitIconButton } from '@duncit/buttons';
 import FollowListDialog from '../../components/FollowListDialog';
 import ProfileAvatar from '../../components/profile-avatar';
 import ProfileHandleLink from './ProfileHandleLink';
+import { SURFACE_SX } from '../../theme';
 import { shareProfile } from '../../utils/share';
 import { useTranslation } from '../../i18n/useTranslation';
+
+/** A 44px round soft button — share / settings beside the pill actions. */
+const ROUND_SX = { width: 44, height: 44, flex: '0 0 44px', bgcolor: 'action.hover' } as const;
+const PILL_SX = { flex: 1, minHeight: 44, px: 1.5 } as const;
 
 function Stat({
   label,
@@ -20,29 +25,12 @@ function Stat({
     <Box
       onClick={onClick}
       role={onClick ? 'button' : undefined}
-      sx={{
-        flex: 1,
-        textAlign: 'center',
-        p: 1,
-        borderRadius: '16px',
-        bgcolor: 'action.hover',
-        cursor: onClick ? 'pointer' : 'default',
-      }}
+      sx={{ flex: 1, textAlign: 'center', py: 1.5, cursor: onClick ? 'pointer' : 'default' }}
     >
-      <Typography
-        sx={{
-          display: "block",
-          fontWeight: 700,
-          lineHeight: 1
-        }}>
+      <Typography sx={{ display: 'block', fontSize: 18, fontWeight: 700, lineHeight: 1.2 }}>
         {new Intl.NumberFormat(undefined, { notation: value > 999 ? 'compact' : 'standard' }).format(value)}
       </Typography>
-      <Typography
-        variant="caption"
-        sx={{
-          color: "text.secondary",
-          fontWeight: 600
-        }}>
+      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
         {label}
       </Typography>
     </Box>
@@ -64,129 +52,56 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
   const [followTab, setFollowTab] = useState<'followers' | 'following' | null>(null);
 
   return (
-    <Box
-      sx={{
-        borderRadius: '16px',
-        overflow: 'hidden',
-        border: 1,
-        borderColor: 'divider',
-        bgcolor: 'background.paper',
-        boxShadow: '0 20px 48px rgba(9,7,18,0.20)',
-      }}
-    >
-      <Box
-        sx={{
-          height: { xs: 116, sm: 150 },
-          background: 'linear-gradient(135deg, #ff8b5f 0%, #ed4f7a 42%, #35158a 100%)',
-          position: 'relative',
-        }}
-      >
-        <Tooltip title={t('mweb.profile.accountSettings')}>
-          <DuncitIconButton onClick={onSettings} sx={{ position: 'absolute', top: 12, right: 12, color: '#fff', bgcolor: 'rgba(0,0,0,0.32)' }}>
-            <SettingsIcon />
-          </DuncitIconButton>
-        </Tooltip>
+    <Stack spacing={2} sx={{ alignItems: 'center', pt: 1 }}>
+      <ProfileAvatar photo={me.profile_photo} name={displayName} size={88} onChanged={onChanged} />
+      <Box sx={{ width: '100%', textAlign: 'center' }}>
+        {/* The tick beside the NAME is the only thing that says the email is
+            verified. Native shows the same mark in the same place (rule 27). */}
+        <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', justifyContent: 'center' }}>
+          <Typography component="h1" sx={{ fontSize: 22, fontWeight: 600, lineHeight: 1.2 }}>
+            {displayName}
+          </Typography>
+          {me.is_email_verified && (
+            <VerifiedIcon color="primary" sx={{ fontSize: 20 }} titleAccess="Email verified" />
+          )}
+        </Stack>
+        {/* The handle is also the share link — tapping it copies `/u/<handle>`. */}
+        <ProfileHandleLink username={me.username ?? null} fallback={me.email ?? `@${me.user_id}`} />
+        {me.bio && (
+          <Typography variant="body2" sx={{ mt: 1, whiteSpace: 'pre-wrap' }}>
+            {me.bio}
+          </Typography>
+        )}
       </Box>
       <Stack
-        spacing={2}
+        direction="row"
         sx={{
-          alignItems: "center",
-          px: 2,
-          pb: 2,
-          mt: { xs: -6, sm: -7 }
-        }}>
-        <ProfileAvatar
-          photo={me.profile_photo}
-          name={displayName}
-          size={128}
-          onChanged={onChanged}
-        />
-        <Box sx={{ width: '100%', textAlign: 'center' }}>
-          {/* The tick beside the NAME is now the only thing that says the email
-              is verified — the "Your email is verified." band below is gone.
-              Native shows the same mark in the same place (rule 27). */}
-          <Stack
-            direction="row"
-            spacing={0.5}
-            sx={{
-              alignItems: "center",
-              justifyContent: "center"
-            }}>
-            <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
-              {displayName}
-            </Typography>
-            {me.is_email_verified && (
-              <VerifiedIcon color="primary" sx={{ fontSize: 20 }} titleAccess="Email verified" />
-            )}
-          </Stack>
-          {/* The handle is also the share link — tapping it copies
-              `/u/<handle>`, which is why it lives here and not in
-              settings (native shows the same, rule 27). */}
-          <ProfileHandleLink
-            username={me.username ?? null}
-            fallback={me.email ?? `@${me.user_id}`}
-          />
-          {me.bio && (
-            <Typography
-              variant="body2"
-              sx={{
-                color: "text.secondary",
-                mt: 1.25,
-                whiteSpace: 'pre-wrap'
-              }}>
-              {me.bio}
-            </Typography>
-          )}
-        </Box>
-        <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
-          <Stat label="posts" value={postsCount} />
-          <Stat
-            label="followers"
-            value={me.followers_count ?? 0}
-            onClick={() => setFollowTab('followers')}
-          />
-          <Stat
-            label="following"
-            value={me.following_count ?? 0}
-            onClick={() => setFollowTab('following')}
-          />
-        </Stack>
-        <Stack direction="row" spacing={0.75} sx={{ width: '100%' }}>
-          <DuncitButton fullWidth variant="contained" size="small" startIcon={<AddPhotoAlternateIcon />} onClick={onNewPost} sx={{ borderRadius: 999, fontWeight: 700, fontSize: 12, minHeight: 42, px: 1 }}>
-            New Post
-          </DuncitButton>
-          <DuncitButton fullWidth variant="outlined" size="small" onClick={onSettings} sx={{ borderRadius: 999, fontWeight: 700, fontSize: 12, minHeight: 42, px: 1 }}>
-            Edit profile
-          </DuncitButton>
-          <DuncitIconButton
-            onClick={() => shareProfile(me.user_id, displayName, me.username)}
-            sx={{
-              width: 44,
-              height: 42,
-              flex: '0 0 44px',
-              borderRadius: '50%',
-              border: 1,
-              borderColor: 'divider',
-            }}
-            aria-label={t('mweb.common.shareProfile')}
-          >
-            <ShareIcon />
-          </DuncitIconButton>
-          <DuncitIconButton
-            onClick={onSettings}
-            sx={{
-              width: 44,
-              height: 42,
-              flex: '0 0 44px',
-              borderRadius: '50%',
-              border: 1,
-              borderColor: 'divider',
-            }}
-            aria-label={t('mweb.profile.accountSettings')}
-          >
-            <SettingsIcon />
-          </DuncitIconButton>
-        </Stack>
+          ...SURFACE_SX,
+          width: '100%',
+          '& > * + *': { borderLeft: 1, borderColor: 'divider' },
+        }}
+      >
+        <Stat label="posts" value={postsCount} />
+        <Stat label="followers" value={me.followers_count ?? 0} onClick={() => setFollowTab('followers')} />
+        <Stat label="following" value={me.following_count ?? 0} onClick={() => setFollowTab('following')} />
+      </Stack>
+      <Stack direction="row" spacing={1} sx={{ width: '100%', alignItems: 'center' }}>
+        <DuncitButton variant="contained" startIcon={<AddPhotoAlternateIcon />} onClick={onNewPost} sx={PILL_SX}>
+          New Post
+        </DuncitButton>
+        <DuncitButton color="inherit" onClick={onSettings} sx={{ ...PILL_SX, bgcolor: 'action.hover' }}>
+          Edit profile
+        </DuncitButton>
+        <DuncitIconButton
+          onClick={() => shareProfile(me.user_id, displayName, me.username)}
+          sx={ROUND_SX}
+          aria-label={t('mweb.common.shareProfile')}
+        >
+          <ShareIcon fontSize="small" />
+        </DuncitIconButton>
+        <DuncitIconButton onClick={onSettings} sx={ROUND_SX} aria-label={t('mweb.profile.accountSettings')}>
+          <SettingsIcon fontSize="small" />
+        </DuncitIconButton>
       </Stack>
       <FollowListDialog
         open={followTab !== null}
@@ -195,6 +110,6 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
         initialTab={followTab ?? 'followers'}
         viewerId={me.user_id}
       />
-    </Box>
+    </Stack>
   );
 }

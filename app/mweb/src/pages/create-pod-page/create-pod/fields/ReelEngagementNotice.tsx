@@ -14,21 +14,17 @@ export default function ReelEngagementNotice() {
   return (
     <Stack
       direction="row"
-      spacing={1}
+      spacing={1.25}
       data-testid="create-pod-reel-engagement"
       sx={{
-        alignItems: "flex-start",
-        p: 1.25,
+        alignItems: 'flex-start',
+        p: 1.5,
         borderRadius: '16px',
-        bgcolor: alpha(theme.palette.primary.main, 0.1),
-        border: 1,
-        borderColor: alpha(theme.palette.primary.main, 0.4)
+        bgcolor: alpha(theme.palette.primary.main, 0.12),
       }}>
       <LightbulbOutlinedIcon fontSize="small" color="primary" />
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="subtitle2" sx={{
-          fontWeight: 600
-        }}>
+        <Typography variant="subtitle2">
           {t('mweb.createPod.reelEngagementTitle')}
         </Typography>
         <Typography variant="caption" sx={{

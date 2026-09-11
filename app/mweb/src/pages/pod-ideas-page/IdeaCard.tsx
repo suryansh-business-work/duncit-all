@@ -46,8 +46,8 @@ export default function IdeaCard({
   const statusColor = idea.status === 'APPROVED' ? 'success' : notApprovedColor;
   const categoryPath = categoryPathLabel(idea);
   return (
-    <Card variant="outlined">
-      <CardContent>
+    <Card>
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 1.5 } }}>
         <Stack
           direction="row"
           spacing={1.5}
@@ -83,9 +83,9 @@ export default function IdeaCard({
         </Stack>
         <Box sx={{ cursor: 'pointer' }} onClick={onOpen}>
           <Typography
-            variant="h6"
+            component="h3"
             sx={{
-              fontWeight: 700,
+              fontSize: '1rem', fontWeight: 600,
               mb: 0.5
             }}>
             {idea.title}
@@ -116,15 +116,15 @@ export default function IdeaCard({
             {idea.idea_no && (
               <Chip
                 size="small"
-                variant="outlined"
+                variant="filled"
                 label={idea.idea_no}
-                sx={{ fontFamily: 'monospace', fontWeight: 700 }}
+                sx={{ fontFamily: 'monospace', fontWeight: 600 }}
               />
             )}
             {categoryPath && (
               <Chip
                 size="small"
-                variant="outlined"
+                variant="filled"
                 icon={<LocalOfferOutlinedIcon />}
                 label={categoryPath}
               />
@@ -139,13 +139,13 @@ export default function IdeaCard({
             size="small"
             startIcon={
               idea.liked_by_me ? (
-                <FavoriteIcon fontSize="small" sx={{ color: 'error.main' }} />
+                <FavoriteIcon fontSize="small" sx={{ color: 'secondary.main' }} />
               ) : (
                 <FavoriteBorderIcon fontSize="small" />
               )
             }
             onClick={onLike}
-            sx={{ color: idea.liked_by_me ? 'error.main' : 'text.secondary' }}
+            sx={{ color: idea.liked_by_me ? 'secondary.main' : 'text.secondary' }}
           >
             {idea.likes_count}
           </DuncitButton>

@@ -30,6 +30,7 @@ export function ReasonField({ testID, label, value, onChangeText }: Readonly<Pro
         placeholderTextColor="$muted"
         minHeight={70}
         maxLength={500}
+        borderRadius={14}
         backgroundColor="$surface"
         borderColor="$borderColor"
       />

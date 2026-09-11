@@ -32,7 +32,7 @@ export default function ProfileHandleLink({ username, fallback }: Readonly<Props
         noWrap
         sx={{
           color: "text.secondary",
-          fontWeight: 600
+          fontWeight: 500
         }}>
         {fallback}
       </Typography>
@@ -76,7 +76,7 @@ export default function ProfileHandleLink({ username, fallback }: Readonly<Props
           font: 'inherit',
           '&:hover': { bgcolor: 'action.hover' }
         }}>
-        <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
+        <Typography variant="body2" sx={{ fontWeight: 500 }} noWrap>
           {labels.handle(username)}
         </Typography>
         <ContentCopyIcon sx={{ fontSize: 14 }} />

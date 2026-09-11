@@ -16,6 +16,7 @@ import {
 } from '@/components/account';
 import { CommPreferenceEntryCard } from '@/components/comm-preference';
 import { StackScreen } from '@/components/StackScreen';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { useAccount } from '@/hooks/useAccount';
 import { useLogout } from '@/hooks/useLogout';
@@ -24,6 +25,11 @@ import type { RootStackParamList } from '@/navigation/types';
 import { formatDate } from '@/utils/date-format';
 import { useTranslation } from '@/hooks/useTranslation';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+
+/** A hairline between grouped rows, inset past the row's icon disc. */
+function RowDivider() {
+  return <YStack height={1} marginLeft={68} backgroundColor="$borderColor" />;
+}
 
 /** Profile Settings — RN twin of mWeb's AccountPage: identity header with photo/
  * edit/logout, contact + location info, account health, and host/venue shortcuts. */
@@ -47,14 +53,9 @@ export function AccountScreen() {
         flex={1}
         contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}
       >
-        <YStack
-          borderRadius={18}
-          borderWidth={1}
-          borderColor="$borderColor"
-          backgroundColor="$surface"
-          padding={16}
-          gap={16}
-        >
+        {/* One order on both apps (rule 27): who you are, your details, how the
+            account is doing, then the settings, with the danger corner last. */}
+        <SurfaceCard padding={20}>
           <AccountProfileHeader
             me={me}
             onEdit={() => setEditOpen(true)}
@@ -65,41 +66,43 @@ export function AccountScreen() {
               refresh();
             }}
           />
+        </SurfaceCard>
+
+        <SurfaceCard padding={0} overflow="hidden">
+          <AccountInfoRow icon="email" label={t('mweb.common.email')} value={me.email || '—'} />
+          <RowDivider />
+          <AccountInfoRow
+            icon="phone"
+            label={t('mweb.common.phone')}
+            value={me.phone_number ? `${me.phone_extension || ''} ${me.phone_number}`.trim() : '—'}
+          />
+          <RowDivider />
+          <AccountInfoRow
+            icon="location-city"
+            label={t('mweb.common.location')}
+            value={[me.city, me.state, me.country].filter(Boolean).join(' · ') || '—'}
+          />
+          <RowDivider />
+          <AccountInfoRow
+            icon="cake"
+            label={t('mweb.common.dateOfBirth')}
+            value={me.dob ? formatDate(me.dob) : '—'}
+          />
           <YStack height={1} backgroundColor="$borderColor" />
-          <YStack gap={14}>
-            <AccountInfoRow icon="email" label={t('mweb.common.email')} value={me.email || '—'} />
-            <AccountInfoRow
-              icon="phone"
-              label={t('mweb.common.phone')}
-              value={
-                me.phone_number ? `${me.phone_extension || ''} ${me.phone_number}`.trim() : '—'
-              }
-            />
-            <AccountInfoRow
-              icon="location-city"
-              label={t('mweb.common.location')}
-              value={[me.city, me.state, me.country].filter(Boolean).join(' · ') || '—'}
-            />
-            <AccountInfoRow
-              icon="cake"
-              label={t('mweb.common.dateOfBirth')}
-              value={me.dob ? formatDate(me.dob) : '—'}
-            />
+          <YStack padding={16}>
+            <CompletionMeter profile={me} />
           </YStack>
-          <YStack height={1} backgroundColor="$borderColor" />
-          <CompletionMeter profile={me} />
-        </YStack>
+        </SurfaceCard>
+
+        {health ? (
+          <AccountHealthCard health={health} onPress={() => navigation.navigate('AccountHealth')} />
+        ) : null}
 
         <PrivacyToggleCard
           isPrivate={me.profile_visibility === ProfileVisibility.Private}
           onChange={updateVisibility}
         />
 
-        {health ? (
-          <AccountHealthCard health={health} onPress={() => navigation.navigate('AccountHealth')} />
-        ) : null}
-
-        <YStack height={1} backgroundColor="$borderColor" />
         <LanguageSection />
         {/* One row, not three cards: the channels and every switch on them
             live behind it. The @handle is minted by the server and is shown —

@@ -115,7 +115,8 @@ export default function App() {
           // The menu keeps the gutters at 0 (edge-to-edge, like the drawer it
           // replaced and like its native twin) but still scrolls, so it cannot
           // ride the `fullBleed` flag — that also hides the overflow.
-          px: fullBleed || isMenu ? 0 : { xs: 1.25, sm: 2 },
+          // 16px page gutter at every width — the native tab screens' own.
+          px: fullBleed || isMenu ? 0 : 2,
           ...(isAuthed && {
             flex: 1,
             minHeight: 0,

@@ -81,11 +81,9 @@ export function PexelsTab({
           flex={1}
           alignItems="center"
           gap={6}
-          paddingHorizontal={10}
-          borderRadius={10}
-          borderWidth={1}
-          borderColor="$borderColor"
-          backgroundColor="$surface"
+          paddingHorizontal={14}
+          borderRadius={999}
+          backgroundColor="$soft"
         >
           <MaterialIcons name="search" size={16} color={muted} />
           <Input
@@ -108,14 +106,14 @@ export function PexelsTab({
           aria-label={t('mweb.createPod.searchPexels')}
           onPress={pexels.search}
           height={40}
-          paddingHorizontal={14}
+          paddingHorizontal={16}
           alignItems="center"
           justifyContent="center"
-          borderRadius={10}
+          borderRadius={999}
           backgroundColor="$primary"
-          pressStyle={PRESS_STYLE.control}
+          pressStyle={PRESS_STYLE.solid}
         >
-          <Text fontSize={13} fontWeight="700" color="$onPrimary">
+          <Text fontSize={13} fontWeight="600" color="$onPrimary">
             {t('mweb.createPod.search')}
           </Text>
         </XStack>
@@ -157,7 +155,7 @@ export function PexelsTab({
               onPress={frozen ? undefined : () => setPreview(photo)}
               width={TILE}
               height={TILE}
-              borderRadius={10}
+              borderRadius={16}
               overflow="hidden"
               borderWidth={picked ? 2 : 1}
               borderColor={picked ? '$primary' : '$borderColor'}
@@ -199,12 +197,11 @@ export function PexelsTab({
           role="button"
           aria-label={loadMore}
           onPress={pexels.loadMore}
-          height={42}
+          height={44}
           alignItems="center"
           justifyContent="center"
-          borderRadius={10}
-          borderWidth={1}
-          borderColor="$borderColor"
+          borderRadius={999}
+          backgroundColor="$soft"
           pressStyle={PRESS_STYLE.control}
         >
           <Text fontSize={13} fontWeight="600" color="$color">

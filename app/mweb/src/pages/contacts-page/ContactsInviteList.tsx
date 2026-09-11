@@ -4,7 +4,7 @@ import InviteRow from './InviteRow';
 import VirtualRows from './VirtualRows';
 
 /** Tick box + avatar + two lines + 8px above and below. Measured once mounted. */
-const ROW_ESTIMATE = 60;
+const ROW_ESTIMATE = 68;
 
 const keyOf = (row: InvitableContact) => row.phone_key;
 

@@ -58,15 +58,31 @@ export default function CommentInput({ viewerId, posting, onSubmit }: Readonly<P
               disabled={!viewerId}
               error={!!fieldState.error}
               helperText={fieldState.error?.message}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 999,
+                  bgcolor: 'action.hover',
+                  '& fieldset': { borderColor: 'transparent' },
+                },
+              }}
             />
           )}
         />
         <DuncitIconButton
-          color="primary"
           type="submit"
+          aria-label={t('mweb.podDetails.sendComment')}
           disabled={!viewerId || posting || !text.trim()}
+          sx={{
+            width: 42,
+            height: 42,
+            flexShrink: 0,
+            bgcolor: 'primary.main',
+            color: 'primary.contrastText',
+            '&:hover': { bgcolor: 'primary.main' },
+            '&.Mui-disabled': { bgcolor: 'primary.main', color: 'primary.contrastText', opacity: 0.5 },
+          }}
         >
-          <SendIcon />
+          <SendIcon fontSize="small" />
         </DuncitIconButton>
       </Stack>
     </form>

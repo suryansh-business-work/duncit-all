@@ -5,33 +5,23 @@ import { useNavigate } from 'react-router';
 import { useUserData } from '@duncit/user-context';
 import {
   Alert,
-  Box,
   Card,
   CardContent,
   CircularProgress,
-  Divider,
   Snackbar,
   Stack,
-  Typography,
 } from '@mui/material';
-import EmailIcon from '@mui/icons-material/Email';
-import PhoneIcon from '@mui/icons-material/Phone';
-import LocationCityIcon from '@mui/icons-material/LocationCity';
-import CakeIcon from '@mui/icons-material/Cake';
-import AccountInfoRow from './account-page/AccountInfoRow';
+import AccountDetailsCard from './account-page/AccountDetailsCard';
+import AccountHealthSummary from './account-page/AccountHealthSummary';
 import AccountProfileHeader from './account-page/AccountProfileHeader';
 import EditAccountDialog from './account-page/EditAccountDialog';
-import CompletionMeter from './account-page/CompletionMeter';
 import { toDobInput } from './account-page/account-edit';
 import PrivacyToggleCard from './account-page/PrivacyToggleCard';
 import SecuritySection from './account-page/SecuritySection';
 import ConnectedAccountsSection from './account-page/ConnectedAccountsSection';
 import LanguageSection from './account-page/LanguageSection';
 import CommPreferenceEntryCard from './account-page/comm-preference';
-import HealthMeter from '../components/health/HealthMeter';
 import { MY_ACCOUNT_HEALTH, type HealthScore } from '../components/health/queries';
-import { useDateFormat } from '../utils/dateFormat';
-import { useTranslation } from '../i18n/useTranslation';
 
 const ME = gql`
   query MeProfile {
@@ -68,14 +58,7 @@ const ME = gql`
   }
 `;
 
-function bandHeadline(band: HealthScore['band']): string {
-  if (band === 'GREEN') return 'You’re in great shape.';
-  if (band === 'YELLOW') return 'A few things to tighten up.';
-  return 'Needs attention.';
-}
-
 export default function AccountPage() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const { logout: ctxLogout } = useUserData();
   const { data, loading, error, refetch } = useQuery<any>(ME, { fetchPolicy: 'cache-and-network' });
@@ -85,7 +68,6 @@ export default function AccountPage() {
   const health = healthData?.myAccountHealth ?? null;
   const [editOpen, setEditOpen] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
-  const { formatDate } = useDateFormat();
 
   const logout = () => {
     ctxLogout();
@@ -109,88 +91,24 @@ export default function AccountPage() {
   }
 
   const me = data.me;
+  // One order on both apps (rule 27): who you are, your details, how the
+  // account is doing, then the settings, with the danger corner last.
   return (
-    <Stack spacing={3} sx={{ maxWidth: 720, mx: 'auto' }}>
+    <Stack spacing={2} sx={{ maxWidth: 720, mx: 'auto', pb: 3 }}>
       <Card>
-        <CardContent>
+        <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
           <AccountProfileHeader
             me={me}
             onEdit={() => setEditOpen(true)}
             onLogout={logout}
             onChanged={() => refetch()}
           />
-
-          <Divider sx={{ my: 3 }} />
-
-          <Stack spacing={2}>
-            <AccountInfoRow icon={<EmailIcon fontSize="small" />} label={t('mweb.common.email')} value={me.email || '—'} />
-            <AccountInfoRow
-              icon={<PhoneIcon fontSize="small" />}
-              label={t('mweb.common.phone')}
-              value={
-                me.phone_number
-                  ? `${me.phone_extension || ''} ${me.phone_number}`.trim()
-                  : '—'
-              }
-            />
-            <AccountInfoRow
-              icon={<LocationCityIcon fontSize="small" />}
-              label={t('mweb.common.location')}
-              value={[me.city, me.state, me.country].filter(Boolean).join(' · ') || '—'}
-            />
-            <AccountInfoRow
-              icon={<CakeIcon fontSize="small" />}
-              label={t('mweb.common.dateOfBirth')}
-              value={me.dob ? formatDate(me.dob) : '—'}
-            />
-          </Stack>
-
-          <Divider sx={{ my: 3 }} />
-
-          <CompletionMeter profile={me} />
         </CardContent>
       </Card>
 
-      {health && (
-        <Card>
-          <CardContent>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
-              alignItems: "center"
-            }}>
-              <HealthMeter
-                score={health.total_score}
-                band={health.band}
-                size={140}
-                label={t('mweb.common.accountHealth')}
-                onClick={() => navigate('/account/health')}
-                caption={t('mweb.common.tapForDetails')}
-              />
-              <Box sx={{ flex: 1, minWidth: 0, textAlign: { xs: 'center', sm: 'left' } }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                  {bandHeadline(health.band)}
-                </Typography>
-                <Typography variant="body2" sx={{
-                  color: "text.secondary"
-                }}>
-                  Base score: {health.base_score}
-                  {health.delta_sum !== 0 && (
-                    <>
-                      {' '}· Admin adjustment: {health.delta_sum > 0 ? `+${health.delta_sum}` : health.delta_sum}
-                    </>
-                  )}
-                </Typography>
-                {health.adjustments.length > 0 && (
-                  <Typography variant="caption" sx={{
-                    color: "text.secondary"
-                  }}>
-                    {health.adjustments.length} admin remark{health.adjustments.length === 1 ? '' : 's'} — tap the meter to read.
-                  </Typography>
-                )}
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
-      )}
+      <AccountDetailsCard me={me} />
+
+      {health && <AccountHealthSummary health={health} onOpen={() => navigate('/account/health')} />}
 
       <PrivacyToggleCard visibility={me.profile_visibility} onChanged={() => refetch()} />
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Stack } from '@mui/material';
-import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
+import MonitorHeartRoundedIcon from '@mui/icons-material/MonitorHeartRounded';
 import StudioPageHeader from '../../components/StudioPageHeader';
 import AuditEntryCard from '../../components/club-admin/AuditEntryCard';
 import PagedListBody from '../../components/club-admin/PagedListBody';
@@ -32,11 +32,10 @@ export default function ClubMonitoringPage() {
   });
 
   return (
-    <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+    <Stack spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <StudioPageHeader
-        icon={<MonitorHeartIcon fontSize="small" />}
+        icon={<MonitorHeartRoundedIcon fontSize="small" />}
         title={t('clubAdmin.monitoring.title')}
-        caption={t('clubAdmin.monitoring.subtitle')}
       />
       <PagedListBody
         loading={list.loading}

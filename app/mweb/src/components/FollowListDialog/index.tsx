@@ -106,12 +106,13 @@ export default function FollowListDialog({ open, onClose, userId, initialTab, vi
         color: "text.secondary",
         textAlign: "center",
         py: 4,
-        fontWeight: 700
+        fontSize: 14,
+        fontWeight: 500
       }}>
       {tab === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}
     </Typography>
   ) : (
-    <Box>
+    <Box sx={{ '& > * + *': { borderTop: 1, borderColor: 'divider' } }}>
       {people.map((person) => (
         <FollowRow
           key={person.user_id}

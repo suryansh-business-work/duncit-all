@@ -38,10 +38,9 @@ function FollowRow({ person, isSelf, busy, onToggle, onOpen }: Readonly<RowProps
       testID={`follow-row-${person.user_id}`}
       alignItems="center"
       gap={12}
-      padding={12}
+      paddingHorizontal={14}
+      paddingVertical={12}
       borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
       backgroundColor="$surface"
     >
       <XStack
@@ -68,7 +67,7 @@ function FollowRow({ person, isSelf, busy, onToggle, onOpen }: Readonly<RowProps
             alignItems="center"
             justifyContent="center"
           >
-            <Text fontSize={16} fontWeight="700" color="$onPrimary">
+            <Text fontSize={16} fontWeight="600" color="$onPrimary">
               {initial}
             </Text>
           </YStack>
@@ -77,7 +76,7 @@ function FollowRow({ person, isSelf, busy, onToggle, onOpen }: Readonly<RowProps
           <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
             {person.full_name || person.first_name || 'Duncit user'}
           </Text>
-          <Text fontSize={12.5} color="$muted" numberOfLines={1}>
+          <Text fontSize={13} color="$muted" numberOfLines={1}>
             @{person.username}
           </Text>
         </YStack>
@@ -118,16 +117,14 @@ export function FollowListScreen() {
               aria-pressed={selected}
               onPress={() => setTab(value)}
               flex={1}
-              height={38}
+              height={40}
               alignItems="center"
               justifyContent="center"
-              borderRadius={12}
+              borderRadius={999}
               backgroundColor={selected ? '$primary' : '$surface'}
-              borderWidth={1}
-              borderColor={selected ? '$primary' : '$borderColor'}
               pressStyle={PRESS_STYLE.control}
             >
-              <Text fontSize={13} fontWeight="700" color={selected ? '$onPrimary' : '$color'}>
+              <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
                 {TAB_LABELS[value]}
               </Text>
             </XStack>

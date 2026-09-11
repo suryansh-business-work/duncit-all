@@ -28,14 +28,16 @@ function PeriodArrow({ testID, label, icon, enabled, tint, onPress }: Readonly<A
       aria-label={label}
       aria-disabled={!enabled}
       onPress={enabled ? onPress : undefined}
-      width={36}
-      height={36}
+      width={40}
+      height={40}
+      borderRadius={20}
       alignItems="center"
       justifyContent="center"
+      backgroundColor="$soft"
       opacity={enabled ? 1 : 0.3}
-      pressStyle={PRESS_STYLE.inline}
+      pressStyle={PRESS_STYLE.control}
     >
-      <MaterialIcons name={icon} size={24} color={tint} />
+      <MaterialIcons name={icon} size={22} color={tint} />
     </XStack>
   );
 }
@@ -67,7 +69,7 @@ export function AvailabilityToolbar({
   onRecurring,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { muted } = useThemeColors();
+  const { color: ink } = useThemeColors();
   const viewLabels: Record<CalendarView, string> = {
     day: t('availability.toolbar.day'),
     week: t('availability.toolbar.week'),
@@ -75,7 +77,7 @@ export function AvailabilityToolbar({
   };
 
   return (
-    <YStack gap={8} testID="availability-toolbar">
+    <YStack gap={12} testID="availability-toolbar">
       <XStack alignItems="center" justifyContent="space-between" gap={8} flexWrap="wrap">
         <XStack gap={6} aria-label={t('availability.toolbar.calendarView')}>
           {VIEWS.map((option) => (
@@ -103,10 +105,10 @@ export function AvailabilityToolbar({
           label={t('availability.toolbar.previous')}
           icon="chevron-left"
           enabled
-          tint={muted}
+          tint={ink}
           onPress={() => onShift(-1)}
         />
-        <Text testID="availability-period" fontSize={14} fontWeight="600" color="$color">
+        <Text testID="availability-period" fontSize={15} fontWeight="600" color="$color">
           {periodLabel}
         </Text>
         <PeriodArrow
@@ -114,7 +116,7 @@ export function AvailabilityToolbar({
           label={t('availability.toolbar.next')}
           icon="chevron-right"
           enabled={canGoNext}
-          tint={muted}
+          tint={ink}
           onPress={() => onShift(1)}
         />
         <DuncitButton

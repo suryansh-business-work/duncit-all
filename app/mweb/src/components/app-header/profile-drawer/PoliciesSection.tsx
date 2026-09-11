@@ -1,19 +1,12 @@
+import { Fragment } from 'react';
 import { useNavigate } from 'react-router';
-import {
-  Collapse,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Skeleton,
-  Stack,
-} from '@mui/material';
+import { Box, ButtonBase, Collapse, Divider, Skeleton, Stack, Typography } from '@mui/material';
 import ArticleIcon from '@mui/icons-material/Article';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useTranslation } from '../../../i18n/useTranslation';
+import MenuRow from './MenuRow';
 
 interface PoliciesSectionProps {
   publicPolicies: { id: string; slug: string; title: string }[];
@@ -23,6 +16,8 @@ interface PoliciesSectionProps {
   setPoliciesOpen: (fn: (v: boolean) => boolean) => void;
 }
 
+/** Collapsible "Policies" row of the menu's settings group — opened, each
+ * policy is an inset row under it. Native twin: Sidebar/SidebarPolicies. */
 export default function PoliciesSection({
   publicPolicies,
   loading = false,
@@ -37,60 +32,52 @@ export default function PoliciesSection({
         data-testid="policies-skeleton"
         direction="row"
         spacing={1.5}
-        sx={{ alignItems: 'center', px: 2.5, py: 2.25 }}
+        sx={{ alignItems: 'center', px: 2, minHeight: 60 }}
       >
-        <Skeleton variant="circular" width={24} height={24} />
+        <Skeleton variant="circular" width={36} height={36} />
         <Skeleton width="40%" height={20} />
       </Stack>
     );
   }
   if (publicPolicies.length === 0) return null;
 
+  const expandIcon = policiesOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />;
+
   return (
-    <List sx={{ py: 1 }}>
-      <ListItem disablePadding>
-        <ListItemButton
-          onClick={() => setPoliciesOpen((v) => !v)}
-          sx={{ px: 2.5, py: 1.25 }}
-        >
-          <ListItemIcon sx={{ minWidth: 36 }}>
-            <DescriptionIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText
-            primary={t('mweb.common.policies')}
-            slotProps={{
-              primary: { sx: { fontSize: 14, fontWeight: 500 } }
-            }}
-          />
-          {policiesOpen ? (
-            <ExpandLessIcon fontSize="small" />
-          ) : (
-            <ExpandMoreIcon fontSize="small" />
-          )}
-        </ListItemButton>
-      </ListItem>
+    <Box>
+      <MenuRow
+        icon={<DescriptionIcon />}
+        label={t('mweb.common.policies')}
+        onClick={() => setPoliciesOpen((v) => !v)}
+        chevron={false}
+        trailing={<Box sx={{ display: 'flex', color: 'text.secondary' }}>{expandIcon}</Box>}
+      />
       <Collapse in={policiesOpen} timeout="auto" unmountOnExit>
-        <List disablePadding>
-          {publicPolicies.map((p) => (
-            <ListItem key={p.id} disablePadding>
-              <ListItemButton
-                onClick={() => navigate(`/policies/${p.slug}`, { replace: true })}
-                sx={{ pl: 6, pr: 2.5, py: 1 }}
-              >
-                <ListItemIcon sx={{ minWidth: 32 }}>
-                  <ArticleIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText
-                  primary={p.title}
-                  slotProps={{
-                    primary: { sx: { fontSize: 13, fontWeight: 500 } }
-                  }}
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
+        {publicPolicies.map((p) => (
+          <Fragment key={p.id}>
+            <Divider sx={{ ml: 8, mr: 2 }} />
+            <ButtonBase
+              onClick={() => navigate(`/policies/${p.slug}`, { replace: true })}
+              sx={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.25,
+                minHeight: 48,
+                pl: 8,
+                pr: 2,
+                textAlign: 'left',
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+            >
+              <ArticleIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+              <Typography sx={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 500 }}>
+                {p.title}
+              </Typography>
+            </ButtonBase>
+          </Fragment>
+        ))}
       </Collapse>
-    </List>
+    </Box>
   );
 }

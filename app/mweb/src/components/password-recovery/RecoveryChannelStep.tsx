@@ -1,8 +1,7 @@
 import { Link as RouterLink } from 'react-router';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, FormHelperText, InputAdornment, Stack, Typography } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { FormHelperText, InputAdornment, Stack, Typography } from '@mui/material';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import { DuncitButton } from '@duncit/buttons';
 import { DuncitTabs } from '@duncit/tabs';
@@ -15,6 +14,7 @@ import {
 import CountryCodeField from '../../forms/components/CountryCodeField';
 import RhfTextField from '../../forms/components/RhfTextField';
 import { useTranslation } from '../../i18n/useTranslation';
+import { CHANNEL_TABS_SX } from './channelTabs';
 import { makeRecoveryLookupSchema, type RecoveryLookupValues } from './recovery.types';
 
 interface Props {
@@ -68,7 +68,7 @@ export default function RecoveryChannelStep({
   const submit = handleSubmit(onSend);
 
   return (
-    <Stack spacing={1.8}>
+    <Stack spacing={2}>
       <DuncitTabs
         items={PASSWORD_RECOVERY_CHANNELS.map((value) => ({
           value,
@@ -76,10 +76,12 @@ export default function RecoveryChannelStep({
         }))}
         value={channel}
         onChange={(next) => onChannel(next as PasswordRecoveryChannel)}
+        variant="fullWidth"
+        sx={CHANNEL_TABS_SX}
       />
 
       <form noValidate onSubmit={submit}>
-        <Stack spacing={1.5}>
+        <Stack spacing={2}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {copy.hint}
           </Typography>
@@ -137,9 +139,8 @@ export default function RecoveryChannelStep({
             type="submit"
             variant="contained"
             size="large"
-            endIcon={<ArrowForwardIcon />}
+            fullWidth
             disabled={busy || !isValid}
-            sx={{ borderRadius: '16px', py: 1.25, fontWeight: 700, textTransform: 'none' }}
           >
             {busy ? labels.sending : labels.sendCode}
           </DuncitButton>
@@ -148,14 +149,15 @@ export default function RecoveryChannelStep({
 
       {notFound && (
         <Stack spacing={1} sx={{ alignItems: 'center' }}>
-          <Alert severity="info" sx={{ width: '100%' }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {labels.newToDuncit}
-          </Alert>
+          </Typography>
           <DuncitButton
             component={RouterLink}
             to="/register"
             variant="contained"
-            sx={{ borderRadius: '16px', px: 3, fontWeight: 700, textTransform: 'none' }}
+            size="large"
+            fullWidth
           >
             {labels.createAccount}
           </DuncitButton>

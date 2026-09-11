@@ -15,7 +15,14 @@ interface Props {
  */
 export function ClosedNote({ reopenAllowed, deadlineLabel }: Readonly<Props>) {
   return (
-    <YStack alignItems="center" padding={6} gap={2}>
+    <YStack
+      alignItems="center"
+      margin={12}
+      padding={12}
+      gap={2}
+      borderRadius={18}
+      backgroundColor="$soft"
+    >
       <Text testID="chat-closed-note" fontSize={12} color="$muted" textAlign="center">
         {reopenAllowed ? RESOLVED_NOTE : EXPIRED_NOTE}
       </Text>

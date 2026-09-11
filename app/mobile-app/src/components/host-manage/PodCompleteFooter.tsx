@@ -72,10 +72,10 @@ export function PodCompleteFooter({
         aria-disabled={busy}
         onPress={onCancel}
         flex={1}
-        height={46}
+        height={48}
         alignItems="center"
         justifyContent="center"
-        borderRadius={12}
+        borderRadius={999}
         borderWidth={1}
         borderColor="$borderColor"
         opacity={cancelOpacity}
@@ -92,17 +92,17 @@ export function PodCompleteFooter({
         aria-disabled={busy}
         onPress={onSubmit}
         flex={1}
-        height={46}
+        height={48}
         alignItems="center"
         justifyContent="center"
         gap={8}
-        borderRadius={12}
+        borderRadius={999}
         backgroundColor="$primary"
         opacity={submitOpacity}
-        pressStyle={PRESS_STYLE.control}
+        pressStyle={PRESS_STYLE.solid}
       >
         {spinner}
-        <Text fontSize={14} fontWeight="700" color="$onPrimary">
+        <Text fontSize={14} fontWeight="600" color="$onPrimary">
           {submitLabel}
         </Text>
       </XStack>

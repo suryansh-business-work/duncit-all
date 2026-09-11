@@ -1,18 +1,6 @@
 import { useState } from 'react';
-import {
-  Box,
-  Divider,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Stack,
-  Switch,
-  Typography,
-} from '@mui/material';
+import { Box } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { DuncitRoundButton } from '@duncit/buttons';
 import { useNavigate } from 'react-router';
 import { useColorMode } from '../../../ColorModeContext';
@@ -23,9 +11,9 @@ import { PRODUCT_VISIBILITY_FLAG } from '@duncit/app-settings';
 import { useTranslation } from '../../../i18n/useTranslation';
 import { STUDIO_LABEL, availableModes, resolveMode, studioSwitchPath } from '../../../studio-mode';
 import DrawerFooter from './DrawerFooter';
-import PoliciesSection from './PoliciesSection';
 import StudioSwitchDialog from './StudioSwitchDialog';
 import MenuRefreshBar from './MenuRefreshBar';
+import MenuSettingsGroup from './MenuSettingsGroup';
 import MenuSkeleton from './MenuSkeleton';
 import UserModeContent from './UserModeContent';
 
@@ -92,22 +80,12 @@ export default function MenuPanel({
       data-testid="menu-panel"
       sx={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}
     >
-      <Box
-        sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-      >
-        <Typography
-          variant="subtitle2"
-          sx={{
-            color: "text.secondary",
-            fontWeight: 700,
-            letterSpacing: 0.4
-          }}>
-          {effectiveMode === 'USER' ? 'Profile' : STUDIO_LABEL[effectiveMode]}
-        </Typography>
+      <Box sx={{ px: 2, py: 1, display: 'flex', justifyContent: 'flex-end' }}>
         <DuncitRoundButton
-          tone="surface"
+          tone="paper"
           onClick={onClose}
           aria-label={t('mweb.home.closeMenu')}
+          sx={{ width: 40, height: 40, minWidth: 40, minHeight: 40, borderColor: 'var(--duncit-card-border)' }}
         >
           <CloseIcon />
         </DuncitRoundButton>
@@ -115,9 +93,7 @@ export default function MenuPanel({
 
       <MenuRefreshBar active={refreshing} />
 
-      <Box sx={{ flex: 1 }}>
-        {/* One unified card layout for every role — the studio-specific menu
-            list was retired so all modes share this design. */}
+      <Box sx={{ flex: 1, pt: 0.5 }}>
         {loading ? (
           <MenuSkeleton />
         ) : (
@@ -135,64 +111,22 @@ export default function MenuPanel({
           />
         )}
 
-        {canSwitch && (
-          <Box sx={{ px: 2, pb: 1.25 }}>
-            <ListItemButton
-              onClick={() => {
-                autoPods.reload();
-                setSwitchOpen(true);
-              }}
-              sx={{ borderRadius: '16px', border: 1, borderColor: 'divider', '&:hover': { borderColor: 'primary.main' } }}
-            >
-              <ListItemIcon sx={{ minWidth: 36, color: 'primary.main' }}>
-                <SwapHorizIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText
-                primary={t('mweb.common.switchRole')}
-                secondary={STUDIO_LABEL[effectiveMode]}
-                slotProps={{
-                  primary: { sx: { fontSize: 14, fontWeight: 600 } }
-                }}
-              />
-            </ListItemButton>
-          </Box>
-        )}
-
-        <Divider />
-        <Stack
-          direction="row"
-          sx={{
-            alignItems: "center",
-            justifyContent: "space-between",
-            px: 2,
-            py: 1.1
-          }}>
-          <Stack direction="row" spacing={1.5} sx={{
-            alignItems: "center"
-          }}>
-            {isDark ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
-            <Typography variant="body2" sx={{ fontWeight: 700 }}>
-              Dark mode
-            </Typography>
-          </Stack>
-          <Switch checked={isDark} onChange={colorMode.toggle} slotProps={{
-            input: { 'aria-label': 'Toggle dark mode' }
-          }} />
-        </Stack>
-        {(policiesLoading || publicPolicies.length > 0) && (
-          <>
-            <Divider />
-            <PoliciesSection
-              loading={policiesLoading}
-              publicPolicies={publicPolicies}
-              policiesOpen={policiesOpen}
-              setPoliciesOpen={setPoliciesOpen}
-            />
-          </>
-        )}
+        <MenuSettingsGroup
+          canSwitch={canSwitch}
+          modeLabel={STUDIO_LABEL[effectiveMode]}
+          onSwitch={() => {
+            autoPods.reload();
+            setSwitchOpen(true);
+          }}
+          dark={isDark}
+          onToggleTheme={colorMode.toggle}
+          publicPolicies={publicPolicies}
+          policiesLoading={policiesLoading}
+          policiesOpen={policiesOpen}
+          setPoliciesOpen={setPoliciesOpen}
+        />
       </Box>
 
-      <Divider />
       <DrawerFooter onLogout={onLogout} />
       <StudioSwitchDialog
         open={switchOpen}

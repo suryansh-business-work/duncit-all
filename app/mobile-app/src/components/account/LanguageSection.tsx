@@ -3,6 +3,7 @@ import { ActivityIndicator } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { SetMyLocaleDocument } from '@/graphql/localization';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -45,16 +46,13 @@ export function LanguageSection() {
   };
 
   return (
-    <YStack gap={10} testID="account-language-section">
+    <SurfaceCard gap={12} testID="account-language-section">
       <XStack alignItems="center" gap={8}>
-        <Text flex={1} fontSize={14} fontWeight="700" color="$color">
+        <Text accessibilityRole="header" flex={1} fontSize={17} fontWeight="600" color="$color">
           {t('mweb.account.preferences')}
         </Text>
         {saving ? <ActivityIndicator testID="language-saving" color={primary} /> : null}
       </XStack>
-      <Text fontSize={12} color="$muted">
-        {t('mweb.common.languageHint')}
-      </Text>
       <YStack gap={8}>
         {locales.map((option) => {
           const selected = option.code === locale;
@@ -69,20 +67,18 @@ export function LanguageSection() {
               justifyContent="space-between"
               paddingHorizontal={14}
               paddingVertical={12}
-              borderRadius={12}
-              borderWidth={1}
-              borderColor={selected ? '$primary' : '$borderColor'}
-              backgroundColor="$background"
+              borderRadius={14}
+              backgroundColor={selected ? '$primarySoft' : '$soft'}
               pressStyle={PRESS_STYLE.control}
             >
               <YStack>
                 {/* The endonym leads, so someone who switched into a script they
                     cannot read can still recognise their own language. */}
-                <Text fontSize={14} fontWeight="600" color="$color">
+                <Text fontSize={15} fontWeight="500" color="$color">
                   {option.label}
                 </Text>
                 {option.english_label ? (
-                  <Text fontSize={11.5} color="$muted">
+                  <Text fontSize={12} color="$muted">
                     {option.english_label}
                   </Text>
                 ) : null}
@@ -96,6 +92,6 @@ export function LanguageSection() {
           );
         })}
       </YStack>
-    </YStack>
+    </SurfaceCard>
   );
 }

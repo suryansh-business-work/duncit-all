@@ -27,7 +27,10 @@ export function HostApplyScreen() {
 
   if (flow.phase === 'success') return <HostRequestSuccess />;
 
-  const headerTitle = flow.phase === 'survey' ? flow.survey?.title || 'Apply Now' : 'Apply Now';
+  // The same heading mWeb's host-apply page carries: the survey's own title
+  // while answering it, otherwise "Host a new category".
+  const categoryTitle = t('mweb.hostApply.hostANewCategory');
+  const headerTitle = flow.phase === 'survey' ? flow.survey?.title || categoryTitle : categoryTitle;
 
   return (
     <YStack flex={1} testID="host-apply-screen">
@@ -41,7 +44,7 @@ export function HostApplyScreen() {
             />
           </XStack>
         ) : null}
-        <XStack alignItems="center" gap={8} paddingHorizontal={12} paddingVertical={8}>
+        <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={8}>
           <XStack
             testID="host-apply-back"
             role="button"
@@ -52,11 +55,14 @@ export function HostApplyScreen() {
             alignItems="center"
             justifyContent="center"
             borderRadius={20}
-            pressStyle={PRESS_STYLE.row}
+            borderWidth={1}
+            borderColor="$cardBorder"
+            backgroundColor="$surface"
+            pressStyle={PRESS_STYLE.control}
           >
-            <MaterialIcons name="arrow-back" size={22} color={ink} />
+            <MaterialIcons name="arrow-back" size={20} color={ink} />
           </XStack>
-          <Text fontSize={18} fontWeight="600" color={ink}>
+          <Text flex={1} fontSize={17} fontWeight="600" color="$color" numberOfLines={1}>
             {headerTitle}
           </Text>
         </XStack>

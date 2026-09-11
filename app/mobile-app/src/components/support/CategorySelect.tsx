@@ -34,10 +34,10 @@ export function CategorySelect({ value, onChange }: Readonly<Props>) {
         alignItems="center"
         height={46}
         paddingHorizontal={12}
-        borderRadius={10}
+        borderRadius={14}
         borderWidth={1}
         borderColor="$borderColor"
-        backgroundColor="$background"
+        backgroundColor="$surface"
       >
         <MaterialIcons name="category" size={18} color={muted} />
         <Text flex={1} marginLeft={8} fontSize={14} color="$color">
@@ -48,7 +48,7 @@ export function CategorySelect({ value, onChange }: Readonly<Props>) {
       {open ? (
         <YStack
           testID="ticket-category-options"
-          borderRadius={10}
+          borderRadius={14}
           borderWidth={1}
           borderColor="$borderColor"
           backgroundColor="$surface"
@@ -72,11 +72,7 @@ export function CategorySelect({ value, onChange }: Readonly<Props>) {
                 backgroundColor={selected ? '$primary' : 'transparent'}
                 pressStyle={PRESS_STYLE.control}
               >
-                <Text
-                  fontSize={14}
-                  fontWeight={selected ? '700' : '600'}
-                  color={selected ? '$onPrimary' : '$color'}
-                >
+                <Text fontSize={14} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
                   {c.label}
                 </Text>
               </XStack>

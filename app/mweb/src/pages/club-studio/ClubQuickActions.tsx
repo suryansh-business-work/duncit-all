@@ -1,8 +1,6 @@
-import { Link as RouterLink } from 'react-router';
-import { Stack } from '@mui/material';
-import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
-import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
-import { DuncitButton } from '@duncit/buttons';
+import MonitorHeartRoundedIcon from '@mui/icons-material/MonitorHeartRounded';
+import SpaceDashboardRoundedIcon from '@mui/icons-material/SpaceDashboardRounded';
+import QuickActionList, { type QuickAction } from '../../components/club-admin/QuickActionList';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /**
@@ -11,26 +9,19 @@ import { useTranslation } from '../../i18n/useTranslation';
  */
 export default function ClubQuickActions() {
   const { t } = useTranslation();
-  return (
-    <Stack direction="row" spacing={1} data-testid="club-quick-actions">
-      <DuncitButton
-        component={RouterLink}
-        to="/clubs/dashboard"
-        variant="outlined"
-        startIcon={<SpaceDashboardIcon />}
-        sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}
-      >
-        {t('mweb.clubStudio.dashboardAction')}
-      </DuncitButton>
-      <DuncitButton
-        component={RouterLink}
-        to="/clubs/monitoring"
-        variant="outlined"
-        startIcon={<MonitorHeartIcon />}
-        sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}
-      >
-        {t('mweb.clubStudio.monitoringAction')}
-      </DuncitButton>
-    </Stack>
-  );
+  const actions: QuickAction[] = [
+    {
+      key: 'dashboard',
+      icon: <SpaceDashboardRoundedIcon fontSize="small" />,
+      label: t('mweb.clubStudio.dashboardAction'),
+      to: '/clubs/dashboard',
+    },
+    {
+      key: 'monitoring',
+      icon: <MonitorHeartRoundedIcon fontSize="small" />,
+      label: t('mweb.clubStudio.monitoringAction'),
+      to: '/clubs/monitoring',
+    },
+  ];
+  return <QuickActionList actions={actions} testId="club-quick-actions" />;
 }

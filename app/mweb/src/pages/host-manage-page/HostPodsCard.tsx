@@ -1,21 +1,10 @@
 import { useState } from 'react';
-import {
-  Alert,
-  Badge,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Divider,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import EventIcon from '@mui/icons-material/Event';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import { DuncitIconButton } from '@duncit/buttons';
+import { Alert, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import FilterListRoundedIcon from '@mui/icons-material/FilterListRounded';
 import HostPodRow from './HostPodRow';
 import HostPodsFilterSheet from './HostPodsFilterSheet';
+import HostSectionHeader from './HostSectionHeader';
+import RowGroup from './RowGroup';
 import type { HostPodRowActions } from './hostPodRowActions';
 import {
   DEFAULT_HOST_PODS_FILTERS,
@@ -47,66 +36,49 @@ export default function HostPodsCard({
 
   const visible = filterHostPods(pods, filters);
   const activeCount = activeHostFilterCount(filters);
+  const filterActive = activeCount > 0;
+  const filterLabel = filterActive
+    ? t('mweb.hostManage.filterCount', { count: activeCount })
+    : t('mweb.common.filter');
+
+  const emptyLine = (text: string) => (
+    <Typography variant="body2" sx={{ px: 2, py: 2.5, textAlign: 'center', color: 'text.secondary' }}>
+      {text}
+    </Typography>
+  );
 
   let body;
   if (loading) {
     body = (
-      <Stack
-        sx={{
-          alignItems: "center",
-          py: 4
-        }}>
+      <Stack sx={{ alignItems: 'center', py: 4 }}>
         <CircularProgress size={22} />
       </Stack>
     );
   } else if (errorMessage) {
-    body = <Alert severity="error">{errorMessage}</Alert>;
+    body = <Alert severity="error" sx={{ m: 2 }}>{errorMessage}</Alert>;
   } else if (pods.length === 0) {
-    body = (
-      <Alert severity="info">
-        You don't host any pods yet. New pods you host will show up here.
-      </Alert>
-    );
+    body = emptyLine("You don't host any pods yet. New pods you host will show up here.");
   } else if (visible.length === 0) {
-    body = (
-      <Alert severity="info">{t('mweb.hostManage.noPodsMatchTheseFiltersTry')}</Alert>
-    );
+    body = emptyLine(t('mweb.hostManage.noPodsMatchTheseFiltersTry'));
   } else {
-    body = (
-      <Stack spacing={1}>
-        {visible.map((p: any) => (
-          <HostPodRow key={p.id} pod={p} {...rowProps(p)} />
-        ))}
-      </Stack>
-    );
+    body = visible.map((p: any) => <HostPodRow key={p.id} pod={p} {...rowProps(p)} />);
   }
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-      <CardContent>
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{
-            alignItems: "center",
-            mb: 1
-          }}>
-          <EventIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }}>
-            Your pods
-          </Typography>
-          <Tooltip title={t('mweb.hostManage.filterPods')}>
-            <DuncitIconButton size="small" aria-label={t('mweb.hostManage.filterPods')} onClick={() => setFilterOpen(true)}>
-              <Badge badgeContent={activeCount} color="primary">
-                <FilterListIcon fontSize="small" />
-              </Badge>
-            </DuncitIconButton>
-          </Tooltip>
-          <Chip size="small" label={visible.length} />
-        </Stack>
-        <Divider sx={{ mb: 1.5 }} />
-        {body}
-      </CardContent>
+    <Stack spacing={1.5}>
+      <HostSectionHeader title={t('mweb.common.yourPods')} count={visible.length}>
+        <Chip
+          clickable
+          icon={<FilterListRoundedIcon />}
+          label={filterLabel}
+          aria-label={t('mweb.hostManage.filterPods')}
+          color={filterActive ? 'primary' : 'default'}
+          variant={filterActive ? 'filled' : 'outlined'}
+          onClick={() => setFilterOpen(true)}
+          sx={{ height: 36, minHeight: 36 }}
+        />
+      </HostSectionHeader>
+      <RowGroup>{body}</RowGroup>
       <HostPodsFilterSheet
         open={filterOpen}
         initial={filters}
@@ -116,6 +88,6 @@ export default function HostPodsCard({
         }}
         onClose={() => setFilterOpen(false)}
       />
-    </Card>
+    </Stack>
   );
 }

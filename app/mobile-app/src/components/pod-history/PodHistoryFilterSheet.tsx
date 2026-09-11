@@ -70,9 +70,9 @@ export function PodHistoryFilterSheet({
             backgroundColor="rgba(0,0,0,0.5)"
           />
           <YStack
-            backgroundColor="$background"
-            borderTopLeftRadius={22}
-            borderTopRightRadius={22}
+            backgroundColor="$surface"
+            borderTopLeftRadius={28}
+            borderTopRightRadius={28}
             maxHeight="82%"
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
@@ -91,7 +91,7 @@ export function PodHistoryFilterSheet({
                   alignItems="center"
                   justifyContent="center"
                   borderRadius={16}
-                  backgroundColor="$surface"
+                  backgroundColor="$soft"
                 >
                   <MaterialIcons name="close" size={18} color={primary} />
                 </XStack>
@@ -132,7 +132,7 @@ export function PodHistoryFilterSheet({
                   height={46}
                   alignItems="center"
                   justifyContent="center"
-                  borderRadius={12}
+                  borderRadius={999}
                   borderWidth={1}
                   borderColor="$borderColor"
                   opacity={count === 0 ? 0.5 : 1}
@@ -151,7 +151,7 @@ export function PodHistoryFilterSheet({
                   height={46}
                   alignItems="center"
                   justifyContent="center"
-                  borderRadius={12}
+                  borderRadius={999}
                   backgroundColor="$primary"
                   pressStyle={PRESS_STYLE.control}
                 >

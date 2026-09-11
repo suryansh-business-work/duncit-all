@@ -1,12 +1,14 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
+import { semantic } from '@duncit/auth-tokens';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const STARS = [1, 2, 3, 4, 5];
 
-/** The gold a rating star is drawn in — also what marks the rating action in
- * the host's pod menu, so the two read as the same feature. */
-export const STAR_COLOR = '#f5a623';
+/** The amber a rating star is drawn in (the theme's warning token) — also what
+ * marks the rating action in the host's pod menu, so the two read as the same
+ * feature. */
+export const STAR_COLOR = semantic.warning;
 
 interface Props {
   aspect: string;

@@ -115,11 +115,9 @@ export function MediaUploadField({
               testID={`media-thumb-${url}`}
               width={84}
               height={84}
-              borderRadius={10}
+              borderRadius={16}
               overflow="hidden"
-              borderWidth={1}
-              borderColor="$borderColor"
-              backgroundColor="$surface"
+              backgroundColor="$soft"
               alignItems="center"
               justifyContent="center"
             >
@@ -165,7 +163,7 @@ export function MediaUploadField({
         borderWidth={2}
         borderColor="$borderColor"
         borderStyle="dashed"
-        backgroundColor="$surface"
+        backgroundColor="$soft"
         opacity={busy ? 0.7 : 1}
         pressStyle={PRESS_STYLE.control}
       >
@@ -175,9 +173,7 @@ export function MediaUploadField({
           borderRadius={26}
           alignItems="center"
           justifyContent="center"
-          backgroundColor="$background"
-          borderWidth={1}
-          borderColor="$borderColor"
+          backgroundColor="$surface"
         >
           <MaterialIcons name="add-photo-alternate" size={24} color={primary} />
         </YStack>

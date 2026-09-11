@@ -2,9 +2,10 @@ import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Button, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { AskClubAdminHelp } from '@/components/AskClubAdminHelp';
+import { DuncitButton } from '@/components/DuncitButton';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { ClubAdminCard } from '@/components/pod-pending';
 import { useClubAdmins } from '@/hooks/useClubAdmins';
@@ -95,13 +96,13 @@ export function PodClubAdminSheet({
           />
           <YStack
             backgroundColor="$background"
-            borderTopLeftRadius={20}
-            borderTopRightRadius={20}
+            borderTopLeftRadius={28}
+            borderTopRightRadius={28}
             padding={18}
             maxHeight="85%"
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
-              <Text fontSize={16} fontWeight="700" color="$color">
+              <Text fontSize={17} fontWeight="600" color="$color">
                 {t('mweb.podClubAdmin.title')}
               </Text>
               <Text
@@ -115,20 +116,24 @@ export function PodClubAdminSheet({
               </Text>
               <ScrollView showsVerticalScrollIndicator={false}>{body}</ScrollView>
               <XStack gap={10} paddingTop={14}>
-                <Button flex={1} onPress={onClose} chromeless>
-                  {t('mweb.podClubAdmin.close')}
-                </Button>
-                <Button
-                  testID="pod-club-admin-support"
-                  flex={2}
-                  onPress={onSupport}
-                  backgroundColor="$primary"
-                  color="$onPrimary"
-                  fontWeight="700"
-                  icon={<MaterialIcons name="support-agent" size={18} color={onPrimary} />}
-                >
-                  {t('mweb.podClubAdmin.support')}
-                </Button>
+                <YStack flex={1}>
+                  <DuncitButton
+                    label={t('mweb.podClubAdmin.close')}
+                    variant="ghost"
+                    tone="neutral"
+                    fullWidth
+                    onPress={onClose}
+                  />
+                </YStack>
+                <YStack flex={2}>
+                  <DuncitButton
+                    testID="pod-club-admin-support"
+                    label={t('mweb.podClubAdmin.support')}
+                    fullWidth
+                    icon={<MaterialIcons name="support-agent" size={18} color={onPrimary} />}
+                    onPress={onSupport}
+                  />
+                </YStack>
               </XStack>
             </SafeAreaView>
           </YStack>

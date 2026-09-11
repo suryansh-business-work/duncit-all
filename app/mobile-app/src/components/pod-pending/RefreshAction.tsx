@@ -29,6 +29,7 @@ export function RefreshAction({ refreshing, onPress }: Readonly<Props>) {
       alignItems="center"
       justifyContent="center"
       borderRadius={20}
+      backgroundColor="$surface"
       pressStyle={PRESS_STYLE.row}
     >
       {refreshing ? (

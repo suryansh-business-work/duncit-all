@@ -27,15 +27,11 @@ export function TicketComposer({ locked, busy, onSend }: Readonly<Props>) {
 
   if (locked) {
     return (
-      <Text
-        testID="ticket-resolved-note"
-        fontSize={12}
-        color="$muted"
-        textAlign="center"
-        padding={8}
-      >
-        {RESOLVED_NOTE}
-      </Text>
+      <YStack margin={12} padding={12} borderRadius={18} backgroundColor="$soft">
+        <Text testID="ticket-resolved-note" fontSize={12} color="$muted" textAlign="center">
+          {RESOLVED_NOTE}
+        </Text>
+      </YStack>
     );
   }
 
@@ -49,17 +45,22 @@ export function TicketComposer({ locked, busy, onSend }: Readonly<Props>) {
   };
 
   return (
-    <YStack gap={8} padding={12}>
+    <YStack
+      gap={8}
+      padding={12}
+      backgroundColor="$surface"
+      borderTopWidth={1}
+      borderTopColor="$borderColor"
+    >
       <TicketAttachments attachments={attachments} onChange={setAttachments} />
       <XStack gap={8} alignItems="center">
         <XStack
           flex={1}
-          borderWidth={1}
-          borderColor="$borderColor"
+          backgroundColor="$soft"
           borderRadius={22}
-          paddingHorizontal={14}
+          paddingHorizontal={16}
           alignItems="center"
-          minHeight={42}
+          minHeight={44}
         >
           <TextInput
             testID="ticket-reply-input"
@@ -76,11 +77,11 @@ export function TicketComposer({ locked, busy, onSend }: Readonly<Props>) {
           role="button"
           aria-label={t('mweb.ticketDetails.sendReply')}
           onPress={() => void submit()}
-          width={42}
-          height={42}
+          width={44}
+          height={44}
           alignItems="center"
           justifyContent="center"
-          borderRadius={21}
+          borderRadius={22}
           backgroundColor="$primary"
           opacity={busy ? 0.6 : 1}
           pressStyle={PRESS_STYLE.control}

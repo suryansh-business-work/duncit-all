@@ -21,8 +21,9 @@ export interface AppPopupCardProps {
   onImageLoad: (size: AppPopupSize) => void;
 }
 
-const CARD_RADIUS = 24;
-const CLOSE_SIZE = 34;
+/** A dialog's corners — the same 28 as mWeb's themed Dialog paper. */
+const CARD_RADIUS = 28;
+const CLOSE_SIZE = 36;
 
 /**
  * The campaign card: the artwork, the ✕ floating over its top-right corner, and
@@ -118,7 +119,7 @@ function AppPopupFooter({
 }: Readonly<AppPopupFooterProps>) {
   if (!showCta && !showHint) return null;
   return (
-    <YStack padding={14} gap={8}>
+    <YStack padding={16} gap={8}>
       {showCta ? <PrimaryButton testID="app-popup-cta" label={ctaLabel} onPress={onCta} /> : null}
       {showHint ? (
         <Text testID="app-popup-hint" textAlign="center" fontSize={13} color="$muted">

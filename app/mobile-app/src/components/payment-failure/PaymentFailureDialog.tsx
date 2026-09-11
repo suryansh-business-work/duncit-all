@@ -1,6 +1,8 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { PAYMENT_FAILURE_KEYS, type PaymentFailure } from '@duncit/utils';
 
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -30,6 +32,7 @@ export function PaymentFailureDialog({
   onClose,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const { danger } = useThemeColors();
   if (!failure) return null;
 
   const keys = PAYMENT_FAILURE_KEYS[failure.kind];
@@ -53,14 +56,25 @@ export function PaymentFailureDialog({
         width="100%"
         maxWidth={360}
         gap={12}
-        padding={20}
-        borderRadius={16}
-        backgroundColor="$background"
+        padding={24}
+        borderRadius={28}
+        backgroundColor="$surface"
       >
-        <Text fontSize={16} fontWeight="700" color="$color">
+        <YStack
+          width={64}
+          height={64}
+          borderRadius={32}
+          alignSelf="center"
+          alignItems="center"
+          justifyContent="center"
+          backgroundColor="$dangerSoft"
+        >
+          <MaterialIcons name="error-outline" size={32} color={danger} />
+        </YStack>
+        <Text fontSize={20} fontWeight="600" color="$color" textAlign="center">
           {t(keys.title)}
         </Text>
-        <Text fontSize={13} color="$color">
+        <Text fontSize={14} color="$muted" textAlign="center">
           {t(keys.body)}
         </Text>
 
@@ -73,7 +87,7 @@ export function PaymentFailureDialog({
         ) : null}
 
         {moneyAtRisk ? (
-          <YStack gap={4} padding={12} borderRadius={12} backgroundColor="$surface">
+          <YStack gap={4} padding={12} borderRadius={16} backgroundColor="$soft">
             <Text fontSize={13} fontWeight="600" color="$color">
               {t('mweb.payment.moneySafe')}
             </Text>
@@ -95,14 +109,15 @@ export function PaymentFailureDialog({
           </YStack>
         ) : null}
 
-        <XStack gap={8} justifyContent="flex-end">
+        <XStack gap={8} marginTop={4}>
           <XStack
             pressStyle={PRESS_STYLE.control}
             testID="payment-failure-close"
             role="button"
             aria-label={t('mweb.payment.close')}
             onPress={onClose}
-            height={42}
+            flex={1}
+            height={48}
             paddingHorizontal={18}
             alignItems="center"
             justifyContent="center"
@@ -120,7 +135,8 @@ export function PaymentFailureDialog({
             role="button"
             aria-label={t('mweb.payment.retry')}
             onPress={onRetry}
-            height={42}
+            flex={1}
+            height={48}
             paddingHorizontal={18}
             alignItems="center"
             justifyContent="center"

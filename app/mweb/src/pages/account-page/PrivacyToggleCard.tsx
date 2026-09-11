@@ -9,6 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import IconDisc from './IconDisc';
 
 const SET_VISIBILITY = gql`
   mutation SetMyProfileVisibility($visibility: ProfileVisibility!) {
@@ -41,13 +42,15 @@ export default function PrivacyToggleCard({ visibility, onChanged }: Readonly<Pr
 
   return (
     <Card>
-      <CardContent>
-        <Stack direction="row" spacing={1.5} sx={{
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+        <Stack direction="row" spacing={2} sx={{
           alignItems: "center"
         }}>
-          <LockOutlinedIcon color="action" />
+          <IconDisc>
+            <LockOutlinedIcon />
+          </IconDisc>
           <Stack sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+            <Typography sx={{ fontSize: 15, fontWeight: 500 }}>
               Private account
             </Typography>
             <Typography variant="body2" sx={{

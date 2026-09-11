@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Avatar, AvatarGroup, ButtonBase, Stack, Typography } from '@mui/material';
+import { Avatar, AvatarGroup, ButtonBase, LinearProgress, Stack, Typography } from '@mui/material';
+import type { Theme } from '@mui/material/styles';
 import PodAttendeesDialog, { type AttendeePerson, type SpotFillRow } from './PodAttendeesDialog';
 import { attendeeSeatCount } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -56,6 +57,12 @@ interface Props {
 
 const MAX_PREVIEW = 8;
 
+/** Hosts wear a coral ring so they stand out in the row of faces. */
+const hostRingSx = (theme: Theme) => ({
+  boxShadow: `0 0 0 2px ${theme.palette.secondary.main}`,
+  zIndex: 1,
+});
+
 /** Builds the full attendee list — hosts first, each flagged for highlighting. */
 export function buildAttendeePeople(
   attendees: Attendee[],
@@ -108,17 +115,18 @@ export default function PodAttendeesSection({
       ? t(withTotal, { vars: { count, total: totalSpots } })
       : t(withoutTotal, { vars: { count } });
 
+  const pct = totalSpots > 0 ? Math.min(100, Math.round((count / totalSpots) * 100)) : 0;
+
   return (
     <Stack spacing={1.5}>
-      <Typography variant="body2" sx={{
-        color: "text.secondary"
-      }}>
+      <Typography variant="body2" sx={{ fontWeight: 600 }}>
         {countLine}
       </Typography>
+      {totalSpots > 0 && (
+        <LinearProgress variant="determinate" value={pct} aria-hidden sx={{ height: 8, bgcolor: 'action.hover' }} />
+      )}
       {count === 0 ? (
-        <Typography variant="caption" sx={{
-          color: "text.secondary"
-        }}>
+        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
           {t('mweb.podDetails.beFirstToJoin')}
         </Typography>
       ) : (
@@ -134,7 +142,8 @@ export default function PodAttendeesSection({
                 width: 36,
                 height: 36,
                 fontSize: 13,
-                bgcolor: 'primary.main',
+                bgcolor: 'action.hover',
+                color: 'text.primary',
                 border: '2px solid',
                 borderColor: 'background.paper',
               },
@@ -145,23 +154,13 @@ export default function PodAttendeesSection({
                 key={person.user_id}
                 src={person.profile_photo || undefined}
                 alt={person.full_name || t('mweb.podDetails.attendee')}
-                sx={
-                  person.is_host
-                    ? { boxShadow: '0 0 0 2px rgba(255,79,115,0.85)', zIndex: 1 }
-                    : undefined
-                }
+                sx={person.is_host ? hostRingSx : undefined}
               >
                 {(person.full_name?.[0] ?? '?').toUpperCase()}
               </Avatar>
             ))}
           </AvatarGroup>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "primary.main",
-              ml: 1,
-              fontWeight: 600
-            }}>
+          <Typography variant="caption" sx={{ color: 'primary.main', ml: 1, fontWeight: 600 }}>
             {t('mweb.podDetails.viewAll')}
           </Typography>
         </ButtonBase>
@@ -169,9 +168,7 @@ export default function PodAttendeesSection({
       {fillRows.length > 0 && (
         <Stack spacing={0.25}>
           {fillRows.map((fill) => (
-            <Typography key={fill.key} variant="caption" sx={{
-              color: "text.secondary"
-            }}>
+            <Typography key={fill.key} variant="caption" sx={{ color: 'text.secondary' }}>
               <Typography
                 component="span"
                 variant="caption"

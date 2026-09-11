@@ -35,6 +35,7 @@ export function FormCheckbox<T extends FieldValues>({
       onPress={() => field.onChange(!checked)}
       alignItems="center"
       gap={10}
+      minHeight={44}
       pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons
@@ -42,7 +43,7 @@ export function FormCheckbox<T extends FieldValues>({
         size={22}
         color={checked ? primary : color}
       />
-      <Text fontSize={13.5} color="$color">
+      <Text flexShrink={1} fontSize={14} color="$color">
         {label}
       </Text>
     </XStack>

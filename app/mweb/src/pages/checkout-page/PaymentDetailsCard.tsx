@@ -1,7 +1,7 @@
-import { Alert, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Card, CardContent, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
-import { alpha, useTheme } from '@mui/material/styles';
 import { DuncitButton } from '@duncit/buttons';
+import SectionHeader from '../../components/SectionHeader';
 import type { Control } from 'react-hook-form';
 import type { AvailableCoupon, CheckoutContact, CheckoutForm, CouponPreview } from './queries';
 import { CheckoutFields, type PostalAddressParts } from './checkout';
@@ -69,39 +69,28 @@ export default function PaymentDetailsCard({
   // filling in a card rather than after.
   const eligibility = useCheckoutEligibility();
   const blocked = eligibility.missing.length > 0;
-  const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
+  // Fields sit on the card at the theme's own input look; only the height and
+  // corner are the checkout's.
   const fieldSx = {
-    '& .MuiInputLabel-root': { color: 'text.secondary' },
-    '& .MuiInputLabel-root.Mui-focused': { color: '#ff8b5f' },
-    '& .MuiOutlinedInput-root': { minHeight: 56, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.84), color: 'text.primary', borderRadius: '16px' },
-    '& .MuiInputBase-input, & .MuiSelect-select': { color: 'text.primary', py: 1.45 },
+    '& .MuiOutlinedInput-root': { minHeight: 56, borderRadius: '14px' },
+    '& .MuiInputBase-input, & .MuiSelect-select': { py: 1.45 },
     '& .MuiSelect-select': { display: 'flex', alignItems: 'center' },
     '& .MuiSelect-icon': { color: 'text.secondary' },
-    '& .MuiOutlinedInput-notchedOutline': { borderColor: isDark ? 'rgba(255,255,255,0.16)' : alpha(theme.palette.text.primary, 0.16) },
-    '& .MuiFormHelperText-root': { color: 'text.secondary' },
   };
   const selectMenuProps = {
     PaperProps: {
       sx: {
         mt: 1,
-        borderRadius: '16px',
-        border: '1px solid',
-        borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider',
-        bgcolor: theme.palette.background.paper,
-        boxShadow: '0 18px 44px rgba(15,23,42,0.2)',
-        '& .MuiMenuItem-root': { minHeight: 42, fontWeight: 700, borderRadius: '16px', mx: 0.75, my: 0.25 },
+        '& .MuiMenuItem-root': { minHeight: 42, fontWeight: 600, borderRadius: '12px', mx: 0.75, my: 0.25 },
       },
     },
   };
 
   return (
-    <Card sx={{ flex: 1, borderRadius: '16px', bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.82), color: 'text.primary', boxShadow: 'none', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
-      <CardContent>
-        <Typography variant="subtitle1" gutterBottom sx={{
-          fontWeight: 700
-        }}>{t('mweb.checkout.paymentDetails')}</Typography>
-        <Stack spacing={2} sx={{ mt: 3 }}>
+    <Card sx={{ flex: 1 }}>
+      <CardContent sx={{ p: 2 }}>
+        <SectionHeader title={t('mweb.checkout.paymentDetails')} />
+        <Stack spacing={2} sx={{ mt: 2 }}>
           <CheckoutFields
             control={control}
             fieldSx={fieldSx}
@@ -113,6 +102,7 @@ export default function PaymentDetailsCard({
             contactLoading={contactLoading}
             addressRequired={addressRequired}
           />
+          <Divider />
           <CouponField
             code={couponCode}
             setCode={setCouponCode}
@@ -124,6 +114,7 @@ export default function PaymentDetailsCard({
             onApply={onApplyCoupon}
             onRemove={onRemoveCoupon}
           />
+          <Divider />
           <CoinRedeemField coins={coins} />
           {error && <Alert severity="error">{error}</Alert>}
           {discounted && (
@@ -141,7 +132,7 @@ export default function PaymentDetailsCard({
             startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : <LockIcon />}
             onClick={onSubmit}
             disabled={submitting || total <= 0 || blocked}
-            sx={{ minHeight: 48, borderRadius: 999, fontWeight: 700, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}
+            sx={{ minHeight: 52 }}
           >
             {submitting
               ? t('mweb.checkout.processing')

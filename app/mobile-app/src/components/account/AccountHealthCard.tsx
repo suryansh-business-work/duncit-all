@@ -1,13 +1,12 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
-import { semantic } from '@duncit/auth-tokens';
 
+import { HealthMeter } from '@/components/health';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import type { AccountHealth } from '@/hooks/useAccount';
-
-const BAND_COLOR: Record<string, string> = {
-  GREEN: semantic.success,
-  YELLOW: semantic.warning,
-  RED: semantic.error,
-};
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
+import { PRESS_STYLE } from '@duncit/buttons-native';
 
 const BAND_MESSAGE: Record<string, string> = {
   GREEN: 'You’re in great shape.',
@@ -15,9 +14,9 @@ const BAND_MESSAGE: Record<string, string> = {
   RED: 'Needs attention.',
 };
 
-/** Account-health summary — score ring + band message + base/admin breakdown.
- * RN twin of the AccountPage health card (HealthMeter). Tappable to open the
- * full Account Health detail. */
+/** Account-health summary — the gauge, the band message and the base/admin
+ * breakdown. RN twin of mWeb's AccountHealthSummary. The whole card opens the
+ * full Account Health detail, so it carries a chevron, not a caption. */
 export function AccountHealthCard({
   health,
   onPress,
@@ -25,46 +24,33 @@ export function AccountHealthCard({
   health: AccountHealth;
   onPress?: () => void;
 }>) {
-  const bandColor = BAND_COLOR[health.band] ?? semantic.info;
+  const { t } = useTranslation();
+  const { muted } = useThemeColors();
   const remarks = health.adjustments.length;
   const deltaText = health.delta_sum > 0 ? `+${health.delta_sum}` : `${health.delta_sum}`;
   const adjustment = health.delta_sum === 0 ? '' : ` · Admin adjustment: ${deltaText}`;
 
   return (
-    <YStack
+    <SurfaceCard
       testID="account-health"
       role={onPress ? 'button' : undefined}
       aria-label={onPress ? 'Open account health' : undefined}
       onPress={onPress}
-      borderRadius={18}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      padding={16}
-      pressStyle={onPress ? { opacity: 0.85 } : undefined}
+      pressStyle={onPress ? PRESS_STYLE.surface : undefined}
     >
       <XStack alignItems="center" gap={16}>
-        <YStack
-          width={84}
-          height={84}
-          borderRadius={42}
-          borderWidth={6}
-          borderColor={bandColor}
-          alignItems="center"
-          justifyContent="center"
-        >
-          <Text fontSize={24} fontWeight="700" color="$color">
-            {health.total_score}
-          </Text>
-          <Text fontSize={10} fontWeight="700" color="$muted">
-            Health
-          </Text>
-        </YStack>
-        <YStack flex={1} gap={4}>
-          <Text fontSize={16} fontWeight="700" color="$color">
+        <HealthMeter
+          score={health.total_score}
+          band={health.band}
+          size={112}
+          thickness={10}
+          label={t('mweb.common.accountHealth')}
+        />
+        <YStack flex={1} gap={2}>
+          <Text fontSize={16} fontWeight="600" color="$color">
             {BAND_MESSAGE[health.band] ?? 'Account health'}
           </Text>
-          <Text fontSize={13} color="$muted">
+          <Text fontSize={14} color="$muted">
             Base score: {health.base_score}
             {adjustment}
           </Text>
@@ -73,13 +59,9 @@ export function AccountHealthCard({
               {remarks} admin remark{remarks === 1 ? '' : 's'}.
             </Text>
           ) : null}
-          {onPress ? (
-            <Text fontSize={12} fontWeight="600" color="$primary">
-              Tap for details
-            </Text>
-          ) : null}
         </YStack>
+        {onPress ? <MaterialIcons name="chevron-right" size={22} color={muted} /> : null}
       </XStack>
-    </YStack>
+    </SurfaceCard>
   );
 }

@@ -2,18 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
-import {
-  Alert,
-  Box,
-  CircularProgress,
-  InputAdornment,
-  Link,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import { DuncitButton } from '@duncit/buttons';
+import { Alert, CircularProgress, Link, Stack } from '@mui/material';
+import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
+import LocationOffOutlinedIcon from '@mui/icons-material/LocationOffOutlined';
+import EmptyState from '../components/EmptyState';
+import SearchPillField from './pod-list/SearchPillField';
 import ClubsGrid from './clubs-page/ClubsGrid';
 import ClubCategoryChips from './clubs-page/ClubCategoryChips';
 import { scopeCategoryButtons, useSearchCategories } from './search-page/useSearchDiscovery';
@@ -135,7 +128,7 @@ export default function ClubsPage({
   const locationHasNoClubs = Boolean(locationId) && (data?.clubs ?? []).length === 0;
   const clubsBody =
     clubs.length === 0 ? (
-      <Alert severity="info">{t('mweb.clubsPage.noClubsFound')}</Alert>
+      <EmptyState icon={<GroupsOutlinedIcon />} title={t('mweb.clubsPage.noClubsFound')} />
     ) : (
       <ClubsGrid
         clubs={clubs}
@@ -154,22 +147,10 @@ export default function ClubsPage({
         minHeight: '100%',
       }}
     >
-      <Box>
-        <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
-          Clubs
-        </Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            color: "text.secondary",
-            mt: 0.5,
-            fontWeight: 700
-          }}>
-          Find communities hosting pods near you
-        </Typography>
-      </Box>
+      {/* No page title: the coral Clubs tab already names the page, as on the
+          native Clubs tab (rule 27). */}
       {locationId && selectedLocationName && (
-        <Alert severity="info" sx={{ borderRadius: '16px', py: 0.25, alignItems: 'center', fontWeight: 700 }}>
+        <Alert severity="info" sx={{ py: 0.25, alignItems: 'center' }}>
           Showing clubs in <b>{locationNoteLabel}</b>. Want clubs from another location?{' '}
           <Link
             component="button"
@@ -182,52 +163,19 @@ export default function ClubsPage({
           </Link>
         </Alert>
       )}
-      <Stack direction="row" spacing={1} sx={{
-        alignItems: "center"
-      }}>
-        <TextField
-          size="small"
-          placeholder={t('mweb.common.searchClubs')}
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper' } }}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }
-          }}
-        />
-      </Stack>
+      <SearchPillField placeholder={t('mweb.common.searchClubs')} value={q} onChange={setQ} />
       <ClubCategoryChips
         categories={categoryOptions}
         selectedId={categoryId}
         onSelect={setCategoryId}
       />
       {locationHasNoClubs ? (
-        <Stack
-          spacing={1.5}
-          sx={{
-            alignItems: "center",
-            py: 6,
-            textAlign: 'center'
-          }}>
-          <Typography variant="h6" sx={{
-            fontWeight: 600
-          }}>
-            No Clubs operating at the selected location,
-          </Typography>
-          <DuncitButton
-            variant="contained"
-            onClick={() => globalThis.dispatchEvent(new CustomEvent(OPEN_LOCATION_PICKER_EVENT))}
-            sx={{ borderRadius: 999, fontWeight: 600 }}
-          >
-            Reset Location
-          </DuncitButton>
-        </Stack>
+        <EmptyState
+          icon={<LocationOffOutlinedIcon />}
+          title="No Clubs operating at the selected location,"
+          actionLabel="Reset Location"
+          onAction={() => globalThis.dispatchEvent(new CustomEvent(OPEN_LOCATION_PICKER_EVENT))}
+        />
       ) : (
         clubsBody
       )}

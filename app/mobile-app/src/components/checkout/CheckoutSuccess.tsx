@@ -1,10 +1,12 @@
 import { useState } from 'react';
 
 import { MaterialIcons } from '@expo/vector-icons';
-import { Spinner, Text, XStack, YStack } from 'tamagui';
-import { semantic } from '@duncit/auth-tokens';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { ConfirmationPodCard } from '@/components/checkout/ConfirmationPodCard';
+import { ActionButton, Row } from '@/components/checkout/SuccessParts';
+import { SurfaceCard } from '@/components/SurfaceCard';
+import { TwoToneHeading } from '@/components/TwoToneHeading';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { CheckoutPayment, CheckoutPod } from '@/hooks/useCheckout';
@@ -25,8 +27,8 @@ export interface CheckoutSuccessProps {
   profileLabel?: string;
 }
 
-/** Payment success view — ticket + invoice download + navigation. RN twin of
- * mWeb's CheckoutSuccess. */
+/** Payment success view — a calm success mark, the receipt, the booked pod,
+ * ticket + invoice download and navigation. RN twin of mWeb's CheckoutSuccess. */
 export function CheckoutSuccess({
   payment,
   pod,
@@ -37,7 +39,7 @@ export function CheckoutSuccess({
   profileLabel,
 }: Readonly<CheckoutSuccessProps>) {
   const { t } = useTranslation();
-  const { onPrimary, muted } = useThemeColors();
+  const { primary, muted } = useThemeColors();
   const profileAction = profileLabel ?? t('mweb.checkout.myBookings');
   const invoiceLabel = t('mweb.checkout.downloadInvoice');
   const [busy, setBusy] = useState(false);
@@ -72,30 +74,40 @@ export function CheckoutSuccess({
   };
 
   return (
-    <YStack testID="checkout-success" alignItems="center" gap={14} padding={20}>
-      <MaterialIcons name="check-circle" size={64} color={semantic.success} />
-      <Text fontSize={20} fontWeight="700" color="$color" textAlign="center">
-        {t('mweb.checkout.successTitle')}
-      </Text>
+    <YStack testID="checkout-success" alignItems="center" gap={16} paddingVertical={12}>
       <YStack
-        alignSelf="stretch"
-        borderRadius={16}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$surface"
-        padding={16}
-        gap={6}
+        width={96}
+        height={96}
+        borderRadius={48}
+        backgroundColor="$primarySoft"
+        alignItems="center"
+        justifyContent="center"
       >
-        <Row label={t('mweb.checkout.invoiceLabel')} value={payment.invoice_no ?? '—'} />
+        <MaterialIcons name="check-circle" size={56} color={primary} />
+      </YStack>
+      <TwoToneHeading
+        lead={t('mweb.checkout.successTitle')}
+        trail={t('mweb.checkout.successOverline')}
+        stacked
+        align="center"
+      />
+      <Text fontSize={14} color="$muted" textAlign="center">
+        {t('mweb.checkout.successSubtitle')}
+      </Text>
+      <SurfaceCard alignSelf="stretch" gap={10}>
         <Row
           label={t('mweb.checkout.amountPaid')}
           value={formatMoney(payment.currency_symbol, payment.total)}
+          bold
         />
+        <YStack height={1} backgroundColor="$borderColor" />
         <Row
           label={t('mweb.checkout.paidOn')}
           value={formatDateTime(payment.paid_at ?? payment.created_at)}
         />
-      </YStack>
+        <YStack height={1} backgroundColor="$borderColor" />
+        <Row label={t('mweb.checkout.invoiceLabel')} value={payment.invoice_no ?? '—'} />
+      </SurfaceCard>
 
       {pod ? <ConfirmationPodCard pod={pod} /> : null}
 
@@ -145,14 +157,15 @@ export function CheckoutSuccess({
           aria-label={t('mweb.checkout.goHome')}
           onPress={onHome}
           flex={1}
-          height={46}
+          height={48}
           alignItems="center"
           justifyContent="center"
           borderRadius={999}
-          backgroundColor="$primary"
+          borderWidth={1}
+          borderColor="$borderColor"
           pressStyle={PRESS_STYLE.control}
         >
-          <Text fontSize={14} fontWeight="700" color={onPrimary}>
+          <Text fontSize={14} fontWeight="600" color="$color">
             {t('mweb.checkout.home')}
           </Text>
         </XStack>
@@ -162,90 +175,18 @@ export function CheckoutSuccess({
           aria-label={t('mweb.checkout.viewBookings')}
           onPress={onProfile}
           flex={1}
-          height={46}
+          height={48}
           alignItems="center"
           justifyContent="center"
           borderRadius={999}
-          borderWidth={1}
-          borderColor="$borderColor"
+          backgroundColor="$primary"
           pressStyle={PRESS_STYLE.control}
         >
-          <Text fontSize={14} fontWeight="700" color="$color">
+          <Text fontSize={14} fontWeight="600" color="$onPrimary">
             {profileAction}
           </Text>
         </XStack>
       </XStack>
     </YStack>
-  );
-}
-
-interface ActionButtonProps {
-  testID: string;
-  ariaLabel: string;
-  busy: boolean;
-  onPress: () => void;
-  label: string;
-  iconName: keyof typeof MaterialIcons.glyphMap;
-  variant: 'filled' | 'outlined';
-}
-
-/** Stretched pill button with a busy spinner — used for ticket/invoice downloads. */
-function ActionButton({
-  testID,
-  ariaLabel,
-  busy,
-  onPress,
-  label,
-  iconName,
-  variant,
-}: Readonly<ActionButtonProps>) {
-  const { onPrimary, primary } = useThemeColors();
-  const { t } = useTranslation();
-  const filled = variant === 'filled';
-  return (
-    <XStack
-      testID={testID}
-      role="button"
-      aria-label={ariaLabel}
-      aria-disabled={busy}
-      onPress={busy ? undefined : onPress}
-      alignItems="center"
-      justifyContent="center"
-      gap={8}
-      alignSelf="stretch"
-      height={46}
-      borderRadius={999}
-      borderWidth={filled ? 0 : 1}
-      borderColor="$primary"
-      backgroundColor={filled ? '$primary' : undefined}
-      opacity={busy ? 0.6 : 1}
-      pressStyle={PRESS_STYLE.control}
-    >
-      {busy ? (
-        <Spinner size="small" color={filled ? onPrimary : '$primary'} />
-      ) : (
-        <MaterialIcons name={iconName} size={18} color={filled ? onPrimary : primary} />
-      )}
-      <Text
-        fontSize={14}
-        fontWeight={filled ? '700' : '600'}
-        color={filled ? onPrimary : '$primary'}
-      >
-        {busy ? t('mweb.checkout.preparing') : label}
-      </Text>
-    </XStack>
-  );
-}
-
-function Row({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <XStack justifyContent="space-between">
-      <Text fontSize={13} color="$muted">
-        {label}
-      </Text>
-      <Text fontSize={13} fontWeight="600" color="$color">
-        {value}
-      </Text>
-    </XStack>
   );
 }

@@ -2,19 +2,24 @@ import { StyleSheet } from 'react-native';
 import { AppImage } from '@/components/AppImage';
 
 import { MaterialIcons } from '@expo/vector-icons';
-import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
 import { PressScale } from '@/animations/PressScale';
+import { SurfaceCard } from '@/components/SurfaceCard';
+import { ImagePill, PodCardInfo, PodSaveButton } from '@/components/home/PodCardParts';
 import type { HomePod } from '@/hooks/useHomeFeed';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { useThemeStore } from '@/stores/theme.store';
 import { useTranslation } from '@/hooks/useTranslation';
 import { podDateLabel, podImageUrl, podPlaceLabel, podPriceLabel } from '@/utils/pod-format';
 import { imageSourceUrl, isVideoUrl, podSeatsTaken } from '@duncit/utils';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** A card's widest render in device pixels — mWeb's twin asks for the same. */
 const CARD_IMAGE_WIDTH = 720;
+/** Every card is this tall at any width, so a rail's cards line up and the
+ * full lists can size their rows up front. mWeb's PodCard draws the same. */
+const CARD_HEIGHT = 240;
+/** The width every Home rail gives its cards — mWeb's PodCard is fixed at it. */
+export const POD_CARD_RAIL_WIDTH = 268;
 
 interface PodCardProps {
   pod: HomePod;
@@ -22,7 +27,7 @@ interface PodCardProps {
   onPress?: () => void;
   /** Show the place/address line. Off in the home feed (addresses are hidden there). */
   showPlace?: boolean;
-  /** The category chip over the image (mock: "Sports"). */
+  /** The category pill over the image (mock: "Sports"). */
   categoryLabel?: string | null;
   /** Save state + toggle; omit to hide the save button. */
   saved?: boolean;
@@ -31,136 +36,11 @@ interface PodCardProps {
   onToggleSave?: () => void;
 }
 
-interface PodSaveButtonProps {
-  podId: string;
-  saved: boolean;
-  saving: boolean;
-  label: string;
-  onPress: () => void;
-}
-
-/** The save button over the image — the bookmark the pod details screen uses,
- * and a spinner in its place while the toggle is in flight. Module scope
- * (S6478), which also keeps PodCard's complexity in bounds. */
-function PodSaveButton({ podId, saved, saving, label, onPress }: Readonly<PodSaveButtonProps>) {
-  const icon = (
-    <MaterialIcons
-      name={saved ? 'bookmark' : 'bookmark-border'}
-      size={17}
-      color={saved ? '#ff4f73' : '#ffffff'}
-    />
-  );
-  return (
-    <XStack
-      testID={`pod-card-save-${podId}`}
-      role="button"
-      aria-label={label}
-      aria-pressed={saved}
-      // Ignored while in flight so a double tap cannot un-save what the first
-      // tap is still saving.
-      onPress={saving ? undefined : onPress}
-      position="absolute"
-      top={8}
-      right={8}
-      width={32}
-      height={32}
-      borderRadius={16}
-      alignItems="center"
-      justifyContent="center"
-      backgroundColor="rgba(9,7,18,0.35)"
-      pressStyle={PRESS_STYLE.row}
-    >
-      {saving ? <Spinner size="small" color="#ffffff" /> : icon}
-    </XStack>
-  );
-}
-
-interface PodInfoPanelProps {
-  pod: HomePod;
-  dark: boolean;
-  spotsText: string;
-  place: string;
-  /** "N joining now" chip copy; empty hides the chip (mWeb twin parity). */
-  joiningText: string;
-}
-
-/** The translucent bottom panel: date, big title, spots left, price, place.
- * Module scope (S6478) and out of PodCard to keep its complexity in bounds. */
-function PodInfoPanel({ pod, dark, spotsText, place, joiningText }: Readonly<PodInfoPanelProps>) {
-  const { muted: mutedInk } = useThemeColors();
-  const panelBg = dark ? 'rgba(17,26,46,0.88)' : 'rgba(255,255,255,0.90)';
-  const panelBorder = dark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.55)';
-  return (
-    <YStack
-      position="absolute"
-      left={10}
-      right={10}
-      bottom={10}
-      padding={11}
-      gap={3}
-      borderRadius={14}
-      backgroundColor={panelBg}
-      borderWidth={1}
-      borderColor={panelBorder}
-    >
-      <XStack alignItems="center" gap={6} flexWrap="wrap">
-        <XStack alignItems="center" gap={4} flexShrink={1}>
-          <MaterialIcons name="event" size={12} color={mutedInk} />
-          <Text fontSize={11} fontWeight="600" color="$muted" numberOfLines={1}>
-            {podDateLabel(pod)}
-          </Text>
-        </XStack>
-        {joiningText ? (
-          <XStack
-            backgroundColor="rgba(34,197,94,0.18)"
-            borderRadius={999}
-            paddingHorizontal={8}
-            paddingVertical={2}
-          >
-            <Text fontSize={10} fontWeight="700" color="#22c55e" numberOfLines={1}>
-              {joiningText}
-            </Text>
-          </XStack>
-        ) : null}
-      </XStack>
-      <Text fontSize={18} fontWeight="700" color="$color" numberOfLines={1}>
-        {pod.pod_title}
-      </Text>
-      <XStack alignItems="center" justifyContent="space-between" gap={6}>
-        <XStack alignItems="center" gap={4} flexShrink={1}>
-          <MaterialIcons name="group" size={13} color={mutedInk} />
-          <Text fontSize={11.5} fontWeight="600" color="$muted" numberOfLines={1}>
-            {spotsText}
-          </Text>
-        </XStack>
-        <XStack
-          backgroundColor="$primary"
-          borderRadius={999}
-          paddingHorizontal={10}
-          paddingVertical={3}
-        >
-          <Text color="$onPrimary" fontSize={11.5} fontWeight="700">
-            {podPriceLabel(pod)}
-          </Text>
-        </XStack>
-      </XStack>
-      {place ? (
-        <XStack alignItems="center" gap={4}>
-          <MaterialIcons name="place" size={12} color={mutedInk} />
-          <Text fontSize={11} fontWeight="600" color="$muted" numberOfLines={1}>
-            {place}
-          </Text>
-        </XStack>
-      ) : null}
-    </YStack>
-  );
-}
-
 /**
- * Image-first pod card (mock): full-bleed media, the category chip and the save
- * button overlaid on top, and a translucent info panel — date, big title, spots left
- * and the price pill — floating over the bottom. Tamagui twin of mWeb's
- * PodCard; no backdrop blur natively, so the panel runs a higher alpha.
+ * The event card: a white card with the pod's image on top (the date pill and
+ * the save button over it, the category at its foot), then who is coming, the
+ * title with the price beside it, and the place. Tamagui twin of mWeb's
+ * PodCard.
  */
 export function PodCard({
   pod,
@@ -177,7 +57,7 @@ export function PodCard({
   // resizing one is ImageKit's metered video re-encode.
   const image = stored && !isVideoUrl(stored) ? imageSourceUrl(stored, CARD_IMAGE_WIDTH) : stored;
   const place = showPlace ? podPlaceLabel(pod) : '';
-  const dark = useThemeStore((s) => s.scheme) === 'dark';
+  const { muted } = useThemeColors();
   const { t } = useTranslation();
 
   const taken = podSeatsTaken(pod);
@@ -195,56 +75,46 @@ export function PodCard({
       accessibilityLabel={pod.pod_title}
       onPress={onPress}
     >
-      <YStack
-        width={width}
-        height={240}
-        borderRadius={18}
-        overflow="hidden"
-        backgroundColor="$muted"
-      >
-        {image ? (
-          <AppImage source={{ uri: image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-        ) : (
-          <YStack flex={1} alignItems="center" justifyContent="center">
-            <MaterialIcons name="event" size={56} color="rgba(255,255,255,0.85)" />
-          </YStack>
-        )}
-
-        {categoryLabel ? (
-          <XStack
-            position="absolute"
-            top={10}
-            left={10}
-            alignItems="center"
-            backgroundColor="rgba(9,7,18,0.62)"
-            borderRadius={999}
-            paddingHorizontal={10}
-            paddingVertical={4}
-          >
-            <Text color="#ffffff" fontSize={11} fontWeight="600" numberOfLines={1}>
-              {categoryLabel}
+      <SurfaceCard width={width} height={CARD_HEIGHT} padding={8} overflow="hidden">
+        <YStack flex={1} borderRadius={18} overflow="hidden" backgroundColor="$soft">
+          {image ? (
+            <AppImage source={{ uri: image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+          ) : (
+            <YStack flex={1} alignItems="center" justifyContent="center">
+              <MaterialIcons name="event" size={40} color={muted} />
+            </YStack>
+          )}
+          <ImagePill top={8} maxWidth={width - 76}>
+            <MaterialIcons name="event" size={14} color={muted} />
+            <Text fontSize={11.5} fontWeight="600" color="$color" numberOfLines={1} flexShrink={1}>
+              {podDateLabel(pod)}
             </Text>
-          </XStack>
-        ) : null}
-
-        {onToggleSave ? (
-          <PodSaveButton
-            podId={pod.pod_id}
-            saved={saved}
-            saving={saving}
-            label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
-            onPress={onToggleSave}
-          />
-        ) : null}
-
-        <PodInfoPanel
-          pod={pod}
-          dark={dark}
-          spotsText={spotsText}
-          place={place}
+          </ImagePill>
+          {categoryLabel ? (
+            <ImagePill maxWidth={width - 32}>
+              <Text fontSize={11} fontWeight="600" color="$color" numberOfLines={1} flexShrink={1}>
+                {categoryLabel}
+              </Text>
+            </ImagePill>
+          ) : null}
+          {onToggleSave ? (
+            <PodSaveButton
+              podId={pod.pod_id}
+              saved={saved}
+              saving={saving}
+              label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
+              onPress={onToggleSave}
+            />
+          ) : null}
+        </YStack>
+        <PodCardInfo
+          title={pod.pod_title}
+          price={podPriceLabel(pod, t)}
           joiningText={taken > 0 ? t('mweb.home.joiningNow', { count: taken }) : ''}
+          spotsText={spotsText}
+          subText={place}
         />
-      </YStack>
+      </SurfaceCard>
     </PressScale>
   );
 }

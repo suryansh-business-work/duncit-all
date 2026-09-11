@@ -13,6 +13,7 @@ import {
 } from '@/utils/host-pods-filters';
 import { HostPodsList } from '@/components/host-manage/HostPodsList';
 import { HostPodsFilterSheet } from '@/components/host-manage/HostPodsFilterSheet';
+import { HostSectionHeader } from '@/components/host-manage/HostSectionHeader';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
@@ -43,10 +44,7 @@ export function YourPodsSection({ pods, isLoading, notice, onOpen, onActions }: 
 
   return (
     <YStack gap={12} testID="host-pods-section">
-      <XStack alignItems="center" justifyContent="space-between">
-        <Text fontSize={16} fontWeight="700" color="$color">
-          {t('mweb.common.yourPods')}
-        </Text>
+      <HostSectionHeader title={t('mweb.common.yourPods')} count={visible.length}>
         <XStack
           testID="host-pods-filter-open"
           role="button"
@@ -54,8 +52,8 @@ export function YourPodsSection({ pods, isLoading, notice, onOpen, onActions }: 
           onPress={() => setFilterOpen(true)}
           alignItems="center"
           gap={6}
-          height={34}
-          paddingHorizontal={12}
+          height={36}
+          paddingHorizontal={14}
           borderRadius={999}
           borderWidth={1}
           borderColor={filterActive ? '$primary' : '$borderColor'}
@@ -67,7 +65,7 @@ export function YourPodsSection({ pods, isLoading, notice, onOpen, onActions }: 
             {filterLabel}
           </Text>
         </XStack>
-      </XStack>
+      </HostSectionHeader>
       {notice ? (
         <Text testID="host-pods-notice" fontSize={12.5} color="$success">
           {notice}

@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { COIN_GOLD_TINT } from '@/constants/coin-gold';
 import { useCoinGold } from '@/hooks/useCoins';
 import { useDateFormat } from '@/hooks/useDateFormat';
@@ -22,15 +23,17 @@ function CoinExpiryNote({ coins, at }: Readonly<{ coins: number; at: string }>) 
   return (
     <XStack testID="coin-next-expiry" alignItems="center" gap={4} marginTop={4}>
       <MaterialIcons name="hourglass-bottom" size={14} color={warning} />
-      <Text fontSize={11.5} fontWeight="600" color="$color">
+      <Text fontSize={12} fontWeight="600" color="$color">
         {t('mweb.coin.nextExpiry', { vars: { coins, date: formatDate(at) } })}
       </Text>
     </XStack>
   );
 }
 
-/** The gold hero card: current balance, the next coins to expire, lifetime
- * earned and the live rate — RN twin of mWeb's duncit-coin-page/CoinBalanceCard. */
+/** The balance hero: the gold coin on its tint, the balance, the next coins to
+ * expire, lifetime earned and the live rate. The gold stays on the coin itself;
+ * the card is the calm surface every other hero uses — RN twin of mWeb's
+ * duncit-coin-page/CoinBalanceCard. */
 export function CoinBalanceCard({ balance, currencySymbol }: Readonly<Props>) {
   const { t } = useTranslation();
   const gold = useCoinGold();
@@ -42,30 +45,23 @@ export function CoinBalanceCard({ balance, currencySymbol }: Readonly<Props>) {
   const nextExpiryAt = balance?.next_expiry_at;
 
   return (
-    <YStack
-      testID="coin-balance-card"
-      padding={16}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor={gold}
-      backgroundColor="$surface"
-    >
-      <XStack alignItems="center" gap={12}>
+    <SurfaceCard testID="coin-balance-card" padding={20}>
+      <XStack alignItems="center" gap={16}>
         <YStack
-          width={52}
-          height={52}
+          width={56}
+          height={56}
           alignItems="center"
           justifyContent="center"
-          borderRadius={16}
+          borderRadius={28}
           backgroundColor={COIN_GOLD_TINT}
         >
-          <MaterialIcons name="monetization-on" size={30} color={gold} />
+          <MaterialIcons name="monetization-on" size={32} color={gold} />
         </YStack>
         <YStack flex={1}>
-          <Text fontSize={13} color="$muted">
+          <Text fontSize={14} color="$muted">
             {t('mweb.coin.balanceLabel')}
           </Text>
-          <Text testID="coin-balance-value" fontSize={30} fontWeight="700" color={gold}>
+          <Text testID="coin-balance-value" fontSize={32} fontWeight="700" color={gold}>
             {balance?.balance ?? 0}
           </Text>
           {expiringCoins > 0 && nextExpiryAt ? (
@@ -73,15 +69,22 @@ export function CoinBalanceCard({ balance, currencySymbol }: Readonly<Props>) {
           ) : null}
         </YStack>
       </XStack>
-      <XStack alignItems="center" justifyContent="space-between" marginTop={16}>
-        <Text fontSize={13} color="$muted">
+      <XStack
+        alignItems="center"
+        justifyContent="space-between"
+        marginTop={16}
+        paddingTop={16}
+        borderTopWidth={1}
+        borderColor="$borderColor"
+      >
+        <Text fontSize={14} color="$muted">
           {t('mweb.coin.lifetimeLabel')}
         </Text>
-        <Text fontSize={13} fontWeight="600" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           {balance?.lifetime_earned ?? 0}
         </Text>
       </XStack>
-      <Text fontSize={11.5} color="$muted" marginTop={12}>
+      <Text fontSize={12} color="$muted" marginTop={12}>
         {t('mweb.coin.rateNote', {
           vars: {
             pct: balance?.earn_pct ?? 0,
@@ -91,10 +94,10 @@ export function CoinBalanceCard({ balance, currencySymbol }: Readonly<Props>) {
         })}
       </Text>
       {feedbackCoins > 0 ? (
-        <Text testID="coin-feedback-rate" fontSize={11.5} color="$muted" marginTop={4}>
+        <Text testID="coin-feedback-rate" fontSize={12} color="$muted" marginTop={4}>
           {t('mweb.coin.feedbackRateNote', { vars: { coins: feedbackCoins } })}
         </Text>
       ) : null}
-    </YStack>
+    </SurfaceCard>
   );
 }

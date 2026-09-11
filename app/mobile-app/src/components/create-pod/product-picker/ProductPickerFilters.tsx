@@ -34,15 +34,14 @@ function FilterChip({ label, active, onPress, testID }: Readonly<ChipProps>) {
       aria-label={label}
       aria-pressed={active}
       onPress={onPress}
-      paddingHorizontal={11}
-      paddingVertical={6}
+      minHeight={36}
+      alignItems="center"
+      paddingHorizontal={14}
       borderRadius={999}
-      borderWidth={1}
-      borderColor={active ? '$primary' : '$borderColor'}
-      backgroundColor={active ? '$primary' : 'transparent'}
+      backgroundColor={active ? '$primary' : '$surface'}
       pressStyle={PRESS_STYLE.control}
     >
-      <Text fontSize={12} fontWeight="600" color={active ? '$onPrimary' : '$color'}>
+      <Text fontSize={13} fontWeight="600" color={active ? '$onPrimary' : '$color'}>
         {label}
       </Text>
     </XStack>
@@ -63,10 +62,10 @@ export function ProductPickerFilters({ criteria, onChange, onClear, brands }: Re
       <XStack
         alignItems="center"
         gap={8}
-        paddingHorizontal={12}
-        borderRadius={12}
-        borderWidth={1}
-        borderColor="$borderColor"
+        height={48}
+        paddingHorizontal={16}
+        borderRadius={999}
+        backgroundColor="$surface"
       >
         <MaterialIcons name="search" size={18} color={muted} />
         <Input
@@ -82,7 +81,7 @@ export function ProductPickerFilters({ criteria, onChange, onClear, brands }: Re
       </XStack>
 
       {brands.length > 0 ? (
-        <XStack gap={6} flexWrap="wrap">
+        <XStack gap={8} flexWrap="wrap">
           <FilterChip
             testID="product-brand-all"
             label={t('podProduct.allBrands')}
@@ -101,7 +100,7 @@ export function ProductPickerFilters({ criteria, onChange, onClear, brands }: Re
         </XStack>
       ) : null}
 
-      <XStack gap={6} flexWrap="wrap">
+      <XStack gap={8} flexWrap="wrap">
         {POD_PRODUCT_SORTS.map((option) => (
           <FilterChip
             key={option.value}
@@ -142,7 +141,7 @@ export function ProductPickerFilters({ criteria, onChange, onClear, brands }: Re
             onPress={onClear}
             pressStyle={PRESS_STYLE.row}
           >
-            <Text fontSize={12.5} fontWeight="700" color="$primary">
+            <Text fontSize={13} fontWeight="600" color="$primary">
               {t('podProduct.clearFilters')}
             </Text>
           </XStack>

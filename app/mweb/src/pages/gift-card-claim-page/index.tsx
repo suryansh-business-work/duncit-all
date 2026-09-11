@@ -1,6 +1,7 @@
 import { useQuery } from '@apollo/client/react';
 import { useParams } from 'react-router';
-import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, CircularProgress, Stack } from '@mui/material';
+import PageHeader from '../../components/PageHeader';
 import { PUBLIC_FINANCE } from '../checkout-page/queries';
 import { useTranslation } from '../../i18n/useTranslation';
 import GiftCardRedeemView from '../gift-cards-page/GiftCardRedeemView';
@@ -27,25 +28,19 @@ export default function GiftCardClaimPage() {
   const card = data?.giftCardByCode ?? null;
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Stack spacing={2} sx={{ maxWidth: 560, mx: 'auto', width: '100%' }}>
-        <Typography variant="h6" sx={{
-          fontWeight: 700
-        }}>
-          {t('mweb.giftCards.title')}
-        </Typography>
-        {loading && !card && (
-          <Stack
-            sx={{
-              alignItems: "center",
-              py: 4
-            }}>
-            <CircularProgress size={24} />
-          </Stack>
-        )}
-        {error && <Alert severity="error">{t('mweb.giftCards.redeemError')}</Alert>}
-        {card && <GiftCardRedeemView card={card} currencySymbol={currencySymbol} />}
-      </Stack>
-    </Box>
+    <Stack spacing={2} sx={{ maxWidth: 560, mx: 'auto', width: '100%', py: 0.5 }}>
+      <PageHeader title={t('mweb.giftCards.title')} />
+      {loading && !card && (
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 4
+          }}>
+          <CircularProgress size={24} />
+        </Stack>
+      )}
+      {error && <Alert severity="error">{t('mweb.giftCards.redeemError')}</Alert>}
+      {card && <GiftCardRedeemView card={card} currencySymbol={currencySymbol} />}
+    </Stack>
   );
 }

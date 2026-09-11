@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { LocationDialog } from '@/components/LocationDialog';
 import { MapEmbed } from '@/components/MapEmbed';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { ChipSelectField } from '../ChipSelectField';
@@ -31,7 +32,7 @@ const locationLabel = (location: CreatePodLocation) =>
  * moved above the page title, so the club list arrives already scoped to it. */
 export function LocationClubStep({ form, clubs, locations, pinnedClub = null }: Readonly<Props>) {
   const { control, getValues, setValue, watch } = form;
-  const { primary } = useThemeColors();
+  const { accent } = useThemeColors();
   const { t } = useTranslation();
   const modes = [
     { value: 'PHYSICAL', label: t('mweb.createPod.modePhysical') },
@@ -54,15 +55,24 @@ export function LocationClubStep({ form, clubs, locations, pinnedClub = null }: 
   };
 
   return (
-    <YStack gap={14}>
-      <YStack gap={6} padding={12} borderWidth={1} borderColor="$borderColor" borderRadius={12}>
-        <XStack alignItems="center" gap={8}>
-          <MaterialIcons name="place" size={18} color={primary} />
+    <YStack gap={16}>
+      <SurfaceCard>
+        <XStack alignItems="center" gap={12}>
+          <YStack
+            width={40}
+            height={40}
+            borderRadius={20}
+            alignItems="center"
+            justifyContent="center"
+            backgroundColor="$soft"
+          >
+            <MaterialIcons name="place" size={20} color={accent} />
+          </YStack>
           <YStack flex={1}>
-            <Text fontSize={12} fontWeight="600" color="$muted">
+            <Text fontSize={12} fontWeight="500" color="$muted">
               {t('mweb.createPod.podLocation')}
             </Text>
-            <Text testID="create-pod-location-label" fontSize={15} fontWeight="700" color="$color">
+            <Text testID="create-pod-location-label" fontSize={15} fontWeight="600" color="$color">
               {location
                 ? [locationLabel(location), location.state].filter(Boolean).join(', ')
                 : t('mweb.createPod.noLocationSelected')}
@@ -78,22 +88,20 @@ export function LocationClubStep({ form, clubs, locations, pinnedClub = null }: 
             role="button"
             aria-label={t('mweb.createPod.changeLocation')}
             onPress={() => setPickerOpen(true)}
-            paddingHorizontal={12}
-            paddingVertical={8}
+            height={36}
+            alignItems="center"
+            paddingHorizontal={14}
             borderWidth={1}
-            borderColor="$borderColor"
-            borderRadius={10}
-            pressStyle={PRESS_STYLE.row}
+            borderColor="$primary"
+            borderRadius={999}
+            pressStyle={PRESS_STYLE.control}
           >
-            <Text fontSize={13} fontWeight="600" color="$color">
+            <Text fontSize={13} fontWeight="600" color="$primary">
               {t('mweb.createPod.change')}
             </Text>
           </XStack>
         </XStack>
-        <Text fontSize={12} color="$muted">
-          {t('mweb.createPod.locationPickerHint')}
-        </Text>
-      </YStack>
+      </SurfaceCard>
 
       {location ? (
         <MapEmbed
@@ -102,46 +110,50 @@ export function LocationClubStep({ form, clubs, locations, pinnedClub = null }: 
         />
       ) : null}
 
-      <Controller
-        control={control}
-        name="pod_mode"
-        render={({ field }) => (
-          <ChipSelectField
-            label={t('mweb.createPod.podMode')}
-            options={modes}
-            value={field.value}
-            onChange={(next) => {
-              field.onChange(next);
-              // FREE is virtual-only — a VIRTUAL+FREE pick must not survive
-              // the switch to PHYSICAL.
-              if (next === 'PHYSICAL' && getValues('pod_type') !== 'PAID') {
-                setValue('pod_type', 'PAID', { shouldDirty: true });
-                // FREE forced the price to ₹0 — the now-paid pod starts blank.
-                setValue('pod_amount_text', '', { shouldDirty: true });
-              }
-            }}
-            testID="create-pod-mode"
-          />
-        )}
-      />
-      {pinnedClub ? null : (
+      <SurfaceCard>
         <Controller
           control={control}
-          name="club_id"
-          render={({ field, fieldState }) => (
-            <ClubSearchField
-              clubs={clubs}
+          name="pod_mode"
+          render={({ field }) => (
+            <ChipSelectField
+              label={t('mweb.createPod.podMode')}
+              options={modes}
               value={field.value}
-              onChange={field.onChange}
-              error={fieldState.error?.message}
-              required
+              onChange={(next) => {
+                field.onChange(next);
+                // FREE is virtual-only — a VIRTUAL+FREE pick must not survive
+                // the switch to PHYSICAL.
+                if (next === 'PHYSICAL' && getValues('pod_type') !== 'PAID') {
+                  setValue('pod_type', 'PAID', { shouldDirty: true });
+                  // FREE forced the price to ₹0 — the now-paid pod starts blank.
+                  setValue('pod_amount_text', '', { shouldDirty: true });
+                }
+              }}
+              testID="create-pod-mode"
             />
           )}
         />
-      )}
-      <ClubPreview
-        club={pinnedClub ?? clubs.find((club) => club.id === watch('club_id')) ?? null}
-      />
+      </SurfaceCard>
+      <SurfaceCard gap={12}>
+        {pinnedClub ? null : (
+          <Controller
+            control={control}
+            name="club_id"
+            render={({ field, fieldState }) => (
+              <ClubSearchField
+                clubs={clubs}
+                value={field.value}
+                onChange={field.onChange}
+                error={fieldState.error?.message}
+                required
+              />
+            )}
+          />
+        )}
+        <ClubPreview
+          club={pinnedClub ?? clubs.find((club) => club.id === watch('club_id')) ?? null}
+        />
+      </SurfaceCard>
 
       <LocationDialog
         open={pickerOpen}

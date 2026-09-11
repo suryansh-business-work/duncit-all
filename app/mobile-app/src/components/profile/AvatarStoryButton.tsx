@@ -45,7 +45,7 @@ export function AvatarStoryButton({
   testID = 'avatar-story-button',
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { onPrimary, primary, color } = useThemeColors();
+  const { onPrimary, color } = useThemeColors();
   const badge = Math.round(size * 0.34);
   const label = hasStory
     ? t('mweb.profileAvatar.viewYourStory')
@@ -67,7 +67,7 @@ export function AvatarStoryButton({
         alignItems="center"
         justifyContent="center"
         borderWidth={hasStory ? 3 : 0}
-        borderColor={hasStory ? '$primary' : 'transparent'}
+        borderColor={hasStory ? '$accent' : 'transparent'}
         pressStyle={PRESS_STYLE.control}
       >
         {photo ? (
@@ -77,7 +77,7 @@ export function AvatarStoryButton({
             resizeMode="cover"
           />
         ) : (
-          <Text fontSize={size * 0.4} fontWeight="700" color={onPrimary}>
+          <Text fontSize={size * 0.4} fontWeight="600" color={onPrimary}>
             {initial}
           </Text>
         )}
@@ -105,7 +105,7 @@ export function AvatarStoryButton({
         {saving ? (
           <Spinner size="small" color="$primary" />
         ) : (
-          <MaterialIcons name="edit" size={badge * 0.5} color={hasStory ? primary : color} />
+          <MaterialIcons name="edit" size={badge * 0.5} color={color} />
         )}
       </YStack>
     </YStack>

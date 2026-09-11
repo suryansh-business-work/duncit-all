@@ -1,10 +1,11 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Separator, Text, XStack, YStack } from 'tamagui';
 import { isTourCompleted, toursForRoles, type TourDefinition } from '@duncit/tours';
 
 import { StackScreen } from '@/components/StackScreen';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useToursStore } from '@/stores/tours.store';
@@ -14,6 +15,71 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
+/** One walkthrough: a play (or replay) disc, the title and what it covers, a
+ * Completed pill once shown, and the chevron. mWeb twin: TourRow on the
+ * tour-guide page. */
+function TourRow({
+  tour,
+  done,
+  onStart,
+}: Readonly<{ tour: TourDefinition; done: boolean; onStart: () => void }>) {
+  const { t } = useTranslation();
+  const { muted, primary } = useThemeColors();
+  const name = t(tour.titleKey);
+  return (
+    <XStack
+      testID={`tour-row-${tour.id}`}
+      role="button"
+      aria-label={
+        done
+          ? t('mweb.tourGuide.restartAria', { vars: { name } })
+          : t('mweb.tourGuide.startAria', { vars: { name } })
+      }
+      onPress={onStart}
+      alignItems="center"
+      gap={12}
+      paddingHorizontal={16}
+      paddingVertical={14}
+      pressStyle={PRESS_STYLE.row}
+    >
+      <YStack
+        width={36}
+        height={36}
+        borderRadius={18}
+        alignItems="center"
+        justifyContent="center"
+        backgroundColor="$primarySoft"
+      >
+        <MaterialIcons name={done ? 'replay' : 'play-arrow'} size={20} color={primary} />
+      </YStack>
+      <YStack flex={1} gap={2}>
+        <Text fontSize={15} fontWeight="500" color="$color">
+          {name}
+        </Text>
+        <Text fontSize={12} color="$muted">
+          {t(tour.captionKey)}
+        </Text>
+      </YStack>
+      {done ? (
+        <Text
+          testID={`tour-done-${tour.id}`}
+          fontSize={11}
+          fontWeight="600"
+          color="$success"
+          backgroundColor="$successSoft"
+          borderRadius={999}
+          paddingHorizontal={8}
+          paddingVertical={3}
+          overflow="hidden"
+        >
+          {t('mweb.tourGuide.completed')}
+        </Text>
+      ) : null}
+      <MaterialIcons name="chevron-right" size={20} color={muted} />
+    </XStack>
+  );
+}
+
 /**
  * Tour Guide centre — every guided walkthrough, restartable at any time. The
  * list comes from @duncit/tours, so adding a screen's tour is one registry
@@ -22,7 +88,6 @@ import { RefreshScrollView } from '@/components/PullToRefresh';
 export function TourGuideScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { muted, primary } = useThemeColors();
   const completed = useToursStore((s) => s.completed);
   const startTour = useToursStore((s) => s.startTour);
   // Create Pod walks through a screen a non-host cannot open.
@@ -45,55 +110,19 @@ export function TourGuideScreen() {
   return (
     <StackScreen title={t('mweb.tourGuide.tourGuide')} testID="tour-guide-screen">
       <RefreshScrollView showsVerticalScrollIndicator={false}>
-        <YStack gap={12} padding={16} paddingBottom={40}>
-          <Text fontSize={13} color="$muted">
-            {t('mweb.tourGuide.intro')}
-          </Text>
-          {tours.map((tour) => {
-            const done = isTourCompleted(completed, tour.id);
-            return (
-              <XStack
-                key={tour.id}
-                testID={`tour-row-${tour.id}`}
-                role="button"
-                aria-label={
-                  done
-                    ? t('mweb.tourGuide.restartAria', { vars: { name: t(tour.titleKey) } })
-                    : t('mweb.tourGuide.startAria', { vars: { name: t(tour.titleKey) } })
-                }
-                onPress={() => run(tour)}
-                alignItems="center"
-                gap={12}
-                padding={14}
-                borderRadius={14}
-                borderWidth={1}
-                borderColor="$borderColor"
-                backgroundColor="$surface"
-                pressStyle={PRESS_STYLE.control}
-              >
-                <MaterialIcons name={done ? 'replay' : 'play-arrow'} size={22} color={primary} />
-                <YStack flex={1} gap={2}>
-                  <Text fontSize={14} fontWeight="600" color="$color">
-                    {t(tour.titleKey)}
-                  </Text>
-                  <Text fontSize={12} color="$muted">
-                    {t(tour.captionKey)}
-                  </Text>
-                </YStack>
-                {done ? (
-                  <Text
-                    testID={`tour-done-${tour.id}`}
-                    fontSize={11}
-                    fontWeight="600"
-                    color="$muted"
-                  >
-                    {t('mweb.tourGuide.completed')}
-                  </Text>
-                ) : null}
-                <MaterialIcons name="chevron-right" size={20} color={muted} />
-              </XStack>
-            );
-          })}
+        <YStack padding={16} paddingBottom={40}>
+          <SurfaceCard padding={0} overflow="hidden">
+            {tours.map((tour, index) => (
+              <YStack key={tour.id}>
+                {index > 0 ? <Separator borderColor="$borderColor" marginHorizontal={16} /> : null}
+                <TourRow
+                  tour={tour}
+                  done={isTourCompleted(completed, tour.id)}
+                  onStart={() => run(tour)}
+                />
+              </YStack>
+            ))}
+          </SurfaceCard>
         </YStack>
       </RefreshScrollView>
     </StackScreen>

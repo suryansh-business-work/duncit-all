@@ -1,30 +1,14 @@
-import type { ReactNode } from 'react';
-import { Avatar, Badge, Box, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, Badge, Box, Tooltip } from '@mui/material';
 import { DuncitIconButton } from '@duncit/buttons';
 import HeaderNotificationsBell from './HeaderNotificationsBell';
 import HeaderSearchButton from './HeaderSearchButton';
+import { HEADER_ROUND_BUTTON_SX } from './headerButtonSx';
 import { initials, normalizeMe } from '@duncit/user-core';
 import { useTranslation } from '../../i18n/useTranslation';
 
-/** A labelled circular header action (mock): the button with a tiny caption. */
-function QuickAction({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
-  return (
-    <Stack
-      spacing={0.1}
-      sx={{
-        alignItems: "center",
-        flex: '0 0 auto'
-      }}>
-      {children}
-      <Typography sx={{ fontSize: 10, fontWeight: 700, color: 'text.secondary', lineHeight: 1 }}>
-        {label}
-      </Typography>
-    </Stack>
-  );
-}
-
 interface Props {
-  /** Search hides outside the USER studio (focused partner headers). */
+  /** Search hides on Home (its own search bar leads the page) and outside the
+   * USER studio (focused partner headers). */
   showSearch: boolean;
   locationId: string;
   zoneName: string;
@@ -42,8 +26,9 @@ interface Props {
 }
 
 /**
- * The header's right-side cluster (mock): labelled circular actions — Search,
- * Alerts — then the avatar with its online dot. Extracted from AppHeader
+ * The header's right-side cluster: 40px round surface actions — Search,
+ * Alerts — then the avatar with its online dot. Each carries its name as an
+ * aria-label; there are no captions under them. Extracted from AppHeader
  * (which is over the line cap) and keeps every tour anchor in place.
  *
  * The cart used to sit between them and no longer does: it is a bottom-bar
@@ -61,21 +46,15 @@ export default function HeaderQuickActions({
   const { t } = useTranslation();
   return (
     <>
-      {showSearch && (
-        <QuickAction label={t('mweb.home.actionSearch')}>
-          <HeaderSearchButton locationId={locationId} zoneName={zoneName} />
-        </QuickAction>
-      )}
-      <QuickAction label={t('mweb.home.actionAlerts')}>
-        <Box data-tour="home-notifications" component="span" sx={{ display: 'inline-flex' }}>
-          <HeaderNotificationsBell onToast={onToast} />
-        </Box>
-      </QuickAction>
+      {showSearch && <HeaderSearchButton locationId={locationId} zoneName={zoneName} />}
+      <Box data-tour="home-notifications" component="span" sx={{ display: 'inline-flex' }}>
+        <HeaderNotificationsBell onToast={onToast} />
+      </Box>
       <Tooltip title={me?.full_name ?? 'Account'}>
         <DuncitIconButton
           onClick={onOpenMenu}
           data-tour="home-profile"
-          sx={{ p: 0.25, minWidth: 44, minHeight: 44 }}
+          sx={HEADER_ROUND_BUTTON_SX}
           aria-label={t('mweb.common.openAccountMenu')}
         >
           <Badge
@@ -99,10 +78,9 @@ export default function HeaderQuickActions({
                 width: 34,
                 height: 34,
                 bgcolor: 'primary.main',
-                fontSize: 13,
-                border: 2,
-                borderColor: 'primary.main',
-                boxShadow: '0 0 0 3px rgba(255,79,115,0.24)',
+                color: 'primary.contrastText',
+                fontSize: 14,
+                fontWeight: 600,
               }}
             >
               {initials(normalizeMe(me))}

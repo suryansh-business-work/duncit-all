@@ -1,5 +1,6 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import ClubAdminCard from '../pod-pending-page/ClubAdminCard';
+import SectionHeader from '../../components/SectionHeader';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /** A `ClubActor` off the club query, admin flavour — carries the contact
@@ -22,12 +23,8 @@ export default function ClubAdminsSection({ admins }: Readonly<{ admins: ClubAdm
 
   return (
     <Box data-testid="club-admins">
-      <Typography variant="h6" gutterBottom sx={{
-        fontWeight: 700
-      }}>
-        Club Admins
-      </Typography>
-      <Stack spacing={1.5}>
+      <SectionHeader title="Club Admins" />
+      <Stack spacing={1.5} sx={{ mt: 1.25 }}>
         {admins.map((admin) => (
           <ClubAdminCard
             key={admin.id}

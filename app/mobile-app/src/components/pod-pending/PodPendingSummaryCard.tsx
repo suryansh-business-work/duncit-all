@@ -1,12 +1,15 @@
-import { Text, YStack } from 'tamagui';
+import { Text } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import type { PodPendingView } from '@/hooks/usePodPendingView';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formatMoney } from '@/utils/checkout-math';
 import { podScheduleLabel } from '@/utils/pod-format';
 import { pendingPodImage, podPendingStatus } from '@/utils/pod-pending';
-import { InfoRow, type InfoRowProps } from './InfoRow';
+import { InfoRowList, type InfoRowProps } from './InfoRow';
+
+const COVER_STYLE = { width: '100%', height: 160, borderRadius: 18 } as const;
 
 /** Pod details card on the waiting screen — featured image, title, date & time
  * slot, expected earnings, location, category and current status. */
@@ -53,28 +56,14 @@ export function PodPendingSummaryCard({ view }: Readonly<{ view: PodPendingView 
   });
 
   return (
-    <YStack
-      testID="pod-pending-summary"
-      gap={10}
-      padding={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      borderRadius={12}
-      backgroundColor="$surface"
-    >
+    <SurfaceCard testID="pod-pending-summary" gap={12}>
       {image ? (
-        <AppImage
-          testID="pod-pending-image"
-          source={{ uri: image }}
-          style={{ width: '100%', height: 160, borderRadius: 10 }}
-        />
+        <AppImage testID="pod-pending-image" source={{ uri: image }} style={COVER_STYLE} />
       ) : null}
-      <Text fontSize={16} fontWeight="700" color="$color">
+      <Text fontSize={16} fontWeight="600" color="$color">
         {pod.pod_title}
       </Text>
-      {rows.map((row) => (
-        <InfoRow key={row.label} {...row} />
-      ))}
-    </YStack>
+      <InfoRowList rows={rows} />
+    </SurfaceCard>
   );
 }

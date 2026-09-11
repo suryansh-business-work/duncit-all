@@ -19,13 +19,15 @@ const AUTH_BRANDING = gql`
 interface Props {
   /** Optional tagline rendered below the brand name. */
   tagline?: string;
+  /** Logo height in px — the auth hero size by default (native AuthLogo's `size`). */
+  size?: number;
 }
 
 /**
  * Renders the active branding logo + app name, sourced from the dynamic
  * `branding` server settings. Used on the Login & Register pages.
  */
-export default function AuthLogo({ tagline }: Readonly<Props>) {
+export default function AuthLogo({ tagline, size = 64 }: Readonly<Props>) {
   const { data, loading } = useQuery<any>(AUTH_BRANDING, {
     fetchPolicy: 'cache-first',
   });
@@ -43,7 +45,7 @@ export default function AuthLogo({ tagline }: Readonly<Props>) {
 
   let logoContent: ReactNode;
   if (loading && !b) {
-    logoContent = <Skeleton variant="rounded" width={148} height={48} />;
+    logoContent = <Skeleton variant="rounded" width={size * 2.5} height={size} />;
   } else {
     logoContent = (
       <Box
@@ -51,7 +53,7 @@ export default function AuthLogo({ tagline }: Readonly<Props>) {
         src={source}
         alt={b?.app_name ?? 'Duncit'}
         onError={() => setFailed(true)}
-        sx={{ height: 58, width: 'auto', maxWidth: 180, objectFit: 'contain' }}
+        sx={{ height: size, width: 'auto', maxWidth: size * 4, objectFit: 'contain' }}
       />
     );
   }

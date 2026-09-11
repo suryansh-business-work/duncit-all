@@ -18,11 +18,12 @@ export const BUCKET_LABEL_KEY: Record<StudioPodBucket, string> = {
   CANCELLED: 'mweb.studioPods.bucketCancelled',
 };
 
-/** Framework-neutral intent per bucket; the renderer maps it to its palette. */
-export type StudioPodTone = 'info' | 'success' | 'default' | 'error';
+/** Framework-neutral intent per bucket; the renderer maps it to its palette.
+ * Upcoming reads in the primary green, as on native (`$primary`, rule 27). */
+export type StudioPodTone = 'primary' | 'success' | 'default' | 'error';
 
 export const BUCKET_TONE: Record<StudioPodBucket, StudioPodTone> = {
-  UPCOMING: 'info',
+  UPCOMING: 'primary',
   ONGOING: 'success',
   COMPLETED: 'default',
   CANCELLED: 'error',

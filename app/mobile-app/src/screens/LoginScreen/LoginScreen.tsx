@@ -163,12 +163,7 @@ export function LoginScreen() {
   }
 
   return (
-    <AuthScaffold
-      testID="login-screen"
-      title={headingTitle}
-      accentWord={headingAccent}
-      subtitle={choosing ? t('mweb.login.subtitle') : ''}
-    >
+    <AuthScaffold testID="login-screen" title={headingTitle} accentWord={headingAccent}>
       {choosing ? (
         <LoginMethodStep
           googleLoading={googleBusy}

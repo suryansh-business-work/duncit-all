@@ -55,13 +55,13 @@ export function ChipArrayField({
               onPress={() => onChange(value.filter((item) => item !== tag))}
               alignItems="center"
               gap={4}
+              minHeight={32}
               paddingHorizontal={12}
-              paddingVertical={7}
               borderRadius={999}
               backgroundColor="$primary"
               pressStyle={PRESS_STYLE.control}
             >
-              <Text fontSize={12.5} fontWeight="600" color="$onPrimary">
+              <Text fontSize={13} fontWeight="600" color="$onPrimary">
                 {tag}
               </Text>
               <MaterialIcons name="close" size={14} color={onPrimary} />

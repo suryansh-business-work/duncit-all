@@ -45,12 +45,10 @@ export default function PodFeedbackCard({
   const busyLabel = rated ? t('mweb.podFeedback.updating') : t('mweb.podFeedback.submitting');
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-      <CardContent>
+    <Card>
+      <CardContent sx={{ p: 2 }}>
         <Stack spacing={1.5}>
-          <Typography variant="h6" sx={{
-            fontWeight: 700
-          }}>
+          <Typography component="h1" sx={{ fontSize: 20, fontWeight: 600, lineHeight: 1.25 }}>
             {t('mweb.podFeedback.title', { vars: { title: podTitle } })}
           </Typography>
           <Typography variant="body2" sx={{
@@ -74,13 +72,14 @@ export default function PodFeedbackCard({
           <Stack direction="row" spacing={1} sx={{
             justifyContent: "flex-end"
           }}>
-            <DuncitButton onClick={onLeave}>
+            <DuncitButton variant="outlined" onClick={onLeave} sx={{ minHeight: 44 }}>
               {saved ? t('mweb.podFeedback.done') : t('mweb.podFeedback.close')}
             </DuncitButton>
             <DuncitButton
               variant="contained"
               disabled={!canSubmitPodFeedback(scores) || saving}
               onClick={onSubmit}
+              sx={{ minHeight: 44 }}
             >
               {saving ? busyLabel : submitLabel}
             </DuncitButton>

@@ -24,13 +24,14 @@ export function AutoPodEarningsButton({ labels, onPress, testID }: Readonly<Prop
       role="button"
       aria-label={labels.viewEarningsCta}
       onPress={onPress}
+      alignSelf="flex-start"
       alignItems="center"
       gap={6}
-      paddingVertical={6}
+      height={36}
       pressStyle={PRESS_STYLE.inline}
     >
-      <MaterialIcons name="insights" size={14} color={primary} />
-      <Text fontSize={12.5} fontWeight="700" color={primary}>
+      <MaterialIcons name="insights" size={16} color={primary} />
+      <Text fontSize={13} fontWeight="600" color={primary}>
         {labels.viewEarningsCta}
       </Text>
     </XStack>

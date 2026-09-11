@@ -5,7 +5,7 @@ import { YStack } from 'tamagui';
 import { autoPodActionable, autoPodWithdrawable, type AutoPodRow } from '@duncit/utils';
 
 import { StackScreen } from '@/components/StackScreen';
-import { PillButton } from '@/components/attendance/AttendanceOtpControls';
+import { DuncitButton } from '@/components/DuncitButton';
 import {
   AutoPodLocationRow,
   AutoPodQueue,
@@ -51,30 +51,31 @@ export function VenueAutoPodsScreen() {
 
   const renderMineAction = (row: AutoPodRow) =>
     autoPodWithdrawable(row, 'venue') ? (
-      <PillButton
+      <DuncitButton
         testID={`auto-pod-withdraw-${row.id}`}
         label={labels.withdrawCta}
         onPress={() => setWithdrawing(row)}
-        variant="ghost"
-        disabled={false}
+        variant="outline"
+        tone="neutral"
+        fullWidth
       />
     ) : null;
 
   const renderAction = (row: AutoPodRow) =>
     autoPodActionable(row, 'venue') ? (
-      <PillButton
+      <DuncitButton
         testID={`auto-pod-accept-${row.id}`}
         label={labels.acceptCta}
         onPress={() => setOffer(row)}
-        variant="solid"
         disabled={!venue}
+        fullWidth
       />
     ) : null;
 
   return (
     <StackScreen title={labels.venueTitle} testID="venue-auto-pods-screen">
-      <RefreshScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
-        <YStack gap={14}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        <YStack gap={20}>
           <AutoPodVenueRow value={venue} onChange={setVenue} labels={labels} />
           <AutoPodLocationRow labels={labels} />
           <AutoPodQueue

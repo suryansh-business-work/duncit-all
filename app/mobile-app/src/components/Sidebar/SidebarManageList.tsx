@@ -1,61 +1,11 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { Separator, Text, XStack, YStack } from 'tamagui';
-
-import { useThemeColors } from '@/hooks/useThemeColors';
 import type { MenuRoute } from '@/navigation/types';
 import type { ProfileTile } from './profileSections';
-import { PRESS_STYLE } from '@duncit/buttons-native';
+import { SidebarGroup } from './SidebarGroup';
+import { SidebarRow } from './SidebarRow';
 
-function ManageRow({
-  item,
-  showDivider,
-  onNavigate,
-}: Readonly<{ item: ProfileTile; showDivider: boolean; onNavigate: (route: MenuRoute) => void }>) {
-  const { muted } = useThemeColors();
-  return (
-    <YStack>
-      <XStack
-        testID={`sidebar-item-${item.label}`}
-        role="button"
-        aria-label={item.label}
-        onPress={() => onNavigate(item.route)}
-        alignItems="center"
-        gap={12}
-        paddingHorizontal={14}
-        paddingVertical={9}
-        pressStyle={PRESS_STYLE.control}
-      >
-        <MaterialIcons name={item.icon} size={20} color={muted} />
-        <Text flex={1} fontSize={14} fontWeight="700" color="$color">
-          {item.label}
-        </Text>
-        {/* Outlined rather than filled: the theme has no soft/tint token, and a
-            solid $primary fill would shout louder than the row it labels. */}
-        {item.badge ? (
-          <Text
-            fontSize={10}
-            fontWeight="700"
-            textTransform="uppercase"
-            letterSpacing={0.3}
-            color="$primary"
-            borderWidth={1}
-            borderColor="$primary"
-            borderRadius={999}
-            paddingHorizontal={7}
-            paddingVertical={2}
-          >
-            {item.badge}
-          </Text>
-        ) : null}
-        <MaterialIcons name="chevron-right" size={20} color={muted} />
-      </XStack>
-      {showDivider ? <Separator borderColor="$borderColor" /> : null}
-    </YStack>
-  );
-}
-
-/** A titled, grouped sidebar list (icon + label + chevron rows) — RN port of
- * mWeb's <ManageAccountList/>. Reused for both Manage Account and Shop. */
+/** A titled, grouped sidebar list (icon disc + label + chevron rows) — RN port
+ * of mWeb's <ManageAccountList/>. Reused for Manage Account, Shop and the
+ * partner menus. Rows carry no caption: the label says where it goes. */
 export function SidebarManageList({
   title,
   items,
@@ -66,33 +16,17 @@ export function SidebarManageList({
   onNavigate: (route: MenuRoute) => void;
 }>) {
   return (
-    <YStack paddingHorizontal={16} paddingBottom={10} gap={4}>
-      <Text
-        fontSize={11}
-        fontWeight="600"
-        letterSpacing={0.4}
-        textTransform="uppercase"
-        color="$muted"
-        paddingLeft={2}
-      >
-        {title}
-      </Text>
-      <YStack
-        borderRadius={12}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$surface"
-        overflow="hidden"
-      >
-        {items.map((item, index) => (
-          <ManageRow
-            key={item.key}
-            item={item}
-            showDivider={index < items.length - 1}
-            onNavigate={onNavigate}
-          />
-        ))}
-      </YStack>
-    </YStack>
+    <SidebarGroup title={title}>
+      {items.map((item) => (
+        <SidebarRow
+          key={item.key}
+          testID={`sidebar-item-${item.label}`}
+          icon={item.icon}
+          label={item.label}
+          badge={item.badge}
+          onPress={() => onNavigate(item.route)}
+        />
+      ))}
+    </SidebarGroup>
   );
 }

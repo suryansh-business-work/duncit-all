@@ -1,9 +1,8 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { Input, XStack, YStack } from 'tamagui';
+import { XStack, YStack } from 'tamagui';
 
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
+import { SearchPill } from '@/components/pod-list/SearchPill';
 import type { CategoryOption } from '@/hooks/useClubsFilter';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface ClubsSearchFilterProps {
@@ -14,7 +13,8 @@ interface ClubsSearchFilterProps {
   onCategoryChange: (id: string) => void;
 }
 
-/** Search box + horizontal category filter rail above the Clubs list. */
+/** Search pill + horizontal category rail above the Clubs list. mWeb twin:
+ * ClubsPage's SearchPillField + clubs-page/ClubCategoryChips. */
 export function ClubsSearchFilter({
   query,
   onQueryChange,
@@ -23,34 +23,17 @@ export function ClubsSearchFilter({
   onCategoryChange,
 }: Readonly<ClubsSearchFilterProps>) {
   const { t } = useTranslation();
-  const { muted } = useThemeColors();
-  const options: CategoryOption[] = [['', 'All'], ...categoryOptions];
+  const options: CategoryOption[] = [['', t('mweb.common.all')], ...categoryOptions];
 
   return (
-    <YStack gap={10} paddingHorizontal={16} paddingTop={12} paddingBottom={4}>
-      <XStack
-        alignItems="center"
-        gap={8}
-        paddingHorizontal={12}
-        height={46}
-        borderRadius={999}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$background"
-      >
-        <MaterialIcons name="search" size={20} color={muted} />
-        <Input
+    <YStack gap={16} paddingHorizontal={16} paddingTop={12} paddingBottom={4}>
+      <XStack>
+        <SearchPill
           testID="clubs-search-input"
-          aria-label={t('mweb.common.searchClubs')}
-          flex={1}
-          unstyled
+          ariaLabel={t('mweb.common.searchClubs')}
+          placeholder={t('mweb.common.searchClubs')}
           value={query}
           onChangeText={onQueryChange}
-          placeholder={t('mweb.home.searchClubsByNameOrVibe')}
-          placeholderTextColor="$muted"
-          color="$color"
-          fontSize={15}
-          returnKeyType="search"
         />
       </XStack>
 
@@ -61,6 +44,7 @@ export function ClubsSearchFilter({
           value={categoryId}
           onSelect={onCategoryChange}
           layout="scroll"
+          onPage
         />
       ) : null}
     </YStack>

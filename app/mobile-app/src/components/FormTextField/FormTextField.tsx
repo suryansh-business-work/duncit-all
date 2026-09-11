@@ -5,7 +5,7 @@ import type { TextInputProps } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, XStack } from 'tamagui';
 
-import { Field } from '@/components/Field';
+import { FIELD_HEIGHT, FIELD_RADIUS, Field } from '@/components/Field';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -104,6 +104,9 @@ export function FormTextField<T extends FieldValues>({
           flex={1}
           testID={`field-${name}`}
           size="$4"
+          minHeight={FIELD_HEIGHT}
+          borderRadius={FIELD_RADIUS}
+          paddingHorizontal={16}
           backgroundColor="$surface"
           color="$color"
           placeholderTextColor="$muted"

@@ -15,7 +15,8 @@ import {
   Typography,
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
-import { DuncitButton } from '@duncit/buttons';
+import SectionHeader from '../../components/SectionHeader';
+import { SURFACE_SX } from '../../theme';
 
 const PUBLIC_USERS_BY_IDS = gql`
   query FriendProfiles($ids: [ID!]!) {
@@ -45,13 +46,9 @@ export default function ClubFriendsSection({ friendIds }: Readonly<Props>) {
   if (friends.length === 0) return null;
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom sx={{
-        fontWeight: 700
-      }}>
-        Friends Here
-      </Typography>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+    <Box sx={{ ...SURFACE_SX, p: 2 }}>
+      <SectionHeader title="Friends Here" actionLabel="View all" onAction={() => setOpen(true)} />
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 1.5 }}>
         <AvatarGroup max={5} sx={{ '& .MuiAvatar-root': { width: 36, height: 36 } }}>
           {friends.map((f) => (
             <Avatar key={f.user_id} src={f.profile_photo} alt={f.full_name}>
@@ -59,16 +56,11 @@ export default function ClubFriendsSection({ friendIds }: Readonly<Props>) {
             </Avatar>
           ))}
         </AvatarGroup>
-        <Box>
-          <Typography variant="body2" sx={{
-            fontWeight: 700
-          }}>
-            {friends.length === 1 ? friends[0].full_name : `${friends[0].full_name} and ${friends.length - 1} more`}
-          </Typography>
-          <DuncitButton size="small" sx={{ p: 0, minWidth: 0, fontWeight: 700 }} onClick={() => setOpen(true)}>
-            View all
-          </DuncitButton>
-        </Box>
+        <Typography variant="body2" sx={{
+          fontWeight: 600
+        }}>
+          {friends.length === 1 ? friends[0].full_name : `${friends[0].full_name} and ${friends.length - 1} more`}
+        </Typography>
       </Box>
 
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Box, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import GroupsIcon from '@mui/icons-material/Groups';
-import { alpha, useTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
@@ -50,15 +50,14 @@ export default function OrderSummaryCard({
   unitAmount = 0,
   coins = null,
 }: Readonly<Props>) {
-  const theme = useTheme();
   const { t } = useTranslation();
   // The buyer chose this on Pod Details and the ticket price is × it, so the
   // number has to be visible here — a silent multiplier reads as a wrong price.
   const seatsText =
     seats === 1 ? t('mweb.checkout.seatsOne') : t('mweb.checkout.seatsMany', { count: seats });
-  const isDark = theme.palette.mode === 'dark';
   const title = pod?.pod_title || stateTitle || t('mweb.checkout.podBooking');
   const when = formatDateTime(pod?.pod_date_time);
+  const whenWhere = [when, pod?.zone_name].filter(Boolean).join(' · ');
   const fmt = (value: number) => formatMoney(breakup.currency, value);
   const media = (pod?.pod_images_and_videos ?? []).find((item: any) => item?.url);
   const mediaIsVideo = isVideoMedia(media);
@@ -74,33 +73,25 @@ export default function OrderSummaryCard({
   const [venueInfoOpen, setVenueInfoOpen] = useState(false);
 
   return (
-    <Card sx={{ flex: 1, borderRadius: '16px', bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.82), color: 'text.primary', boxShadow: 'none', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
-      <CardContent sx={{ p: 1.25 }}>
-        <Box sx={{ height: 150, borderRadius: '16px', overflow: 'hidden', position: 'relative', bgcolor: 'rgba(255,255,255,0.08)' }}>
-          {media?.url && <Box component={mediaIsVideo ? 'video' : 'img'} src={mediaIsVideo ? videoSourceUrl(media.url) : media.url} autoPlay muted loop playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
-          <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 12%, rgba(0,0,0,0.75) 100%)' }} />
-          <Box sx={{ position: 'absolute', left: 12, right: 12, bottom: 12 }}>
-            <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.7)', letterSpacing: 0, lineHeight: 1 }}>{t('mweb.checkout.ticket')}</Typography>
-            <Typography variant="subtitle1" noWrap sx={{
-              fontWeight: 700
-            }}>{title}</Typography>
-            {when && <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.74)' }}>{when}</Typography>}
+    <Card sx={{ flex: 1 }}>
+      <CardContent sx={{ p: 2 }}>
+        {media?.url && (
+          <Box sx={{ height: 140, borderRadius: '18px', overflow: 'hidden', bgcolor: 'action.hover', mb: 1.5 }}>
+            <Box component={mediaIsVideo ? 'video' : 'img'} src={mediaIsVideo ? videoSourceUrl(media.url) : media.url} autoPlay muted loop playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           </Box>
-        </Box>
+        )}
+        <Typography noWrap sx={{ fontSize: 16, fontWeight: 600 }}>{title}</Typography>
+        {whenWhere && (
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            {whenWhere}
+          </Typography>
+        )}
         <Chip
           size="small"
-          color="primary"
           icon={<GroupsIcon />}
           label={seatsText}
-          sx={{ mt: 1, fontWeight: 700 }}
+          sx={(theme) => ({ mt: 1.25, bgcolor: alpha(theme.palette.primary.main, 0.12), color: 'primary.main', '& .MuiChip-icon': { color: 'primary.main' } })}
         />
-        {pod?.zone_name && <Typography
-          variant="caption"
-          sx={{
-            color: "text.secondary",
-            mt: 1,
-            display: 'block'
-          }}>{pod.zone_name}</Typography>}
         <Divider sx={{ my: 1.5 }} />
         <Stack spacing={0.75}>
           {seats > 1 && unitAmount > 0 && (
@@ -127,7 +118,7 @@ export default function OrderSummaryCard({
           <Row label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
           <CoinSummaryRows coins={coins} />
           {venueCharges.length > 0 && (
-            <Box sx={{ mt: 1, p: 1.25, borderRadius: '16px', border: '1px dashed', borderColor: 'divider', bgcolor: 'action.hover' }}>
+            <Box sx={{ mt: 1, p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}>
               <Stack
                 direction="row"
                 spacing={1}
@@ -179,7 +170,7 @@ function Row({
         variant={bold ? 'subtitle1' : 'body2'}
         sx={{
           fontWeight: bold ? 700 : 500,
-          color: tone
+          color: tone ?? (bold ? 'text.primary' : 'text.secondary')
         }}>{label}</Typography>
       <Typography
         variant={bold ? 'subtitle1' : 'body2'}

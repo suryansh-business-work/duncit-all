@@ -12,8 +12,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import FilterListRoundedIcon from '@mui/icons-material/FilterListRounded';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
 import { DuncitIconButton } from '@duncit/buttons';
 import { SHOP_SORT_OPTIONS, type ShopSort } from './queries';
 import { SHOP_RATING_OPTIONS, type ShopFilters } from './useShopFilters';
@@ -22,6 +22,20 @@ import { useTranslation } from '../../i18n/useTranslation';
 type Option = readonly [string, string];
 
 const railSx = { overflowX: 'auto', scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' } } as const;
+
+/** The same filter pill as Home's FilterBar and the native FilterChip: 32 tall
+ * on touch too (a clickable Chip is a role=button, which the coarse-pointer
+ * rule would otherwise stretch to 44); idle = outlined surface, picked = green. */
+const CHIP_SX = { height: 32, minHeight: 32, fontWeight: 600, flex: '0 0 auto' } as const;
+
+/** The pill search field — white on the page ground, borderless in light mode. */
+const SEARCH_SX = {
+  flex: 1,
+  '& .MuiOutlinedInput-root': { height: 52, borderRadius: 999, bgcolor: 'background.paper', pl: '18px' },
+  '& .MuiOutlinedInput-input::placeholder': { color: 'text.secondary', opacity: 1 },
+  '& .MuiOutlinedInput-root fieldset': { borderColor: 'var(--duncit-card-border)' },
+  '& .MuiOutlinedInput-root.Mui-focused fieldset': { borderColor: 'primary.main' },
+} as const;
 
 /** A horizontally-scrollable chip row for a single filter dimension. */
 function FilterChipRow({
@@ -32,17 +46,20 @@ function FilterChipRow({
   return (
     <Box sx={railSx}>
       <Stack direction="row" spacing={1} sx={{ width: 'max-content', pb: 0.25 }}>
-        {options.map(([val, label]) => (
-          <Chip
-            key={val || 'all'}
-            label={label}
-            clickable
-            color={value === val ? 'primary' : 'default'}
-            variant={value === val ? 'filled' : 'outlined'}
-            onClick={() => onSelect(val)}
-            sx={{ height: 32, fontWeight: 600, borderRadius: 999, flex: '0 0 auto' }}
-          />
-        ))}
+        {options.map(([val, label]) => {
+          const selected = value === val;
+          return (
+            <Chip
+              key={val || 'all'}
+              label={label}
+              clickable
+              color={selected ? 'primary' : 'default'}
+              variant={selected ? 'filled' : 'outlined'}
+              onClick={() => onSelect(val)}
+              sx={CHIP_SX}
+            />
+          );
+        })}
       </Stack>
     </Box>
   );
@@ -52,7 +69,7 @@ function FilterChipRow({
 function FilterSection({ title, children }: Readonly<{ title: string; children: React.ReactNode }>) {
   return (
     <Stack spacing={0.75}>
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
+      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
         {title.toUpperCase()}
       </Typography>
       {children}
@@ -79,29 +96,33 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
           placeholder={t('mweb.shop.searchPlaceholder')}
           value={filters.query}
           onChange={(e) => filters.setQuery(e.target.value)}
-          sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper' } }}
+          sx={SEARCH_SX}
           slotProps={{
             input: {
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
+                  <SearchRoundedIcon sx={{ fontSize: 22, color: 'text.secondary' }} />
                 </InputAdornment>
               ),
             }
           }}
         />
+        {/* The round green filter button; a darker green while the panel is open. */}
         <DuncitIconButton
           aria-label={t('mweb.common.filters')}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
           sx={{
-            bgcolor: open ? 'primary.main' : 'action.hover',
-            color: open ? 'primary.contrastText' : 'inherit',
-            '&:hover': { bgcolor: open ? 'primary.dark' : 'action.selected' },
+            width: 52,
+            height: 52,
+            flexShrink: 0,
+            bgcolor: open ? 'primary.dark' : 'primary.main',
+            color: 'primary.contrastText',
+            '&:hover': { bgcolor: 'primary.dark' },
           }}
         >
-          <Badge badgeContent={filters.activeCount} color="error">
-            <FilterListRoundedIcon />
+          <Badge badgeContent={filters.activeCount} color="secondary">
+            <TuneRoundedIcon sx={{ fontSize: 24 }} />
           </Badge>
         </DuncitIconButton>
       </Stack>

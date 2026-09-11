@@ -1,7 +1,6 @@
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import type { PodSettlement } from '@/hooks/useSettlementPreview';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
@@ -18,11 +17,7 @@ interface Line {
 function SettlementRow({ symbol, line }: Readonly<{ symbol: string; line: Line }>) {
   return (
     <XStack justifyContent="space-between" testID={`settlement-row-${line.label}`}>
-      <Text
-        fontSize={12.5}
-        color={line.strong ? '$color' : '$muted'}
-        fontWeight={line.strong ? '700' : '600'}
-      >
+      <Text fontSize={12.5} color={line.strong ? '$color' : '$muted'} fontWeight="600">
         {line.label}
       </Text>
       <Text
@@ -40,10 +35,6 @@ function SettlementRow({ symbol, line }: Readonly<{ symbol: string; line: Line }
 /** "Host Share" preview of the reconciled split for the entered venue bill. */
 export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { primary } = useThemeColors();
-  // Hex-alpha-suffix tint pattern (same as CouponField/ClubTotalMembersSection) —
-  // an 8% alpha channel on the resolved primary token instead of a hardcoded rgba.
-  const primaryTint = `${primary}14`;
   let body;
   if (settlement) {
     const w = settlement.waterfall;
@@ -104,12 +95,12 @@ export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
   return (
     <YStack
       gap={6}
-      padding={12}
-      borderRadius={12}
-      backgroundColor={primaryTint}
+      padding={14}
+      borderRadius={16}
+      backgroundColor="$primarySoft"
       testID="settlement-summary"
     >
-      <Text fontSize={13} fontWeight="700" color="$color">
+      <Text fontSize={14} fontWeight="600" color="$color">
         Your share (credited to your wallet on completion)
       </Text>
       {body}

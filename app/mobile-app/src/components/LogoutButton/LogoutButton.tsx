@@ -22,9 +22,9 @@ export function LogoutButton() {
       height={40}
       alignItems="center"
       justifyContent="center"
-      borderRadius={10}
+      borderRadius={20}
       borderWidth={1}
-      borderColor="$borderColor"
+      borderColor="$cardBorder"
       backgroundColor="$surface"
       pressStyle={PRESS_STYLE.control}
     >

@@ -1,5 +1,6 @@
 import { useQuery } from '@apollo/client/react';
-import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, CircularProgress, Stack } from '@mui/material';
+import PageHeader from '../../components/PageHeader';
 import CoinBalanceCard from './CoinBalanceCard';
 import CoinHistoryList from './CoinHistoryList';
 import { MY_COIN_TRANSACTIONS, type CoinBalance, type CoinTransaction } from './queries';
@@ -20,30 +21,24 @@ export default function DuncitCoinPage() {
   const currencySymbol = financeData?.publicFinanceSettings?.currency_symbol ?? '₹';
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Stack spacing={2}>
-        <Typography variant="h6" sx={{
-          fontWeight: 700
-        }}>
-          {t('mweb.coin.title')}
-        </Typography>
+    <Stack spacing={2.5} sx={{ py: 0.5 }}>
+      <PageHeader title={t('mweb.coin.title')} />
 
-        {error && <Alert severity="error">{t('mweb.coin.loadError')}</Alert>}
+      {error && <Alert severity="error">{t('mweb.coin.loadError')}</Alert>}
 
-        <CoinBalanceCard balance={balance} currencySymbol={currencySymbol} />
+      <CoinBalanceCard balance={balance} currencySymbol={currencySymbol} />
 
-        {loading && !data ? (
-          <Stack
-            sx={{
-              alignItems: "center",
-              py: 3
-            }}>
-            <CircularProgress size={24} />
-          </Stack>
-        ) : (
-          <CoinHistoryList transactions={transactions} />
-        )}
-      </Stack>
-    </Box>
+      {loading && !data ? (
+        <Stack
+          sx={{
+            alignItems: "center",
+            py: 3
+          }}>
+          <CircularProgress size={24} />
+        </Stack>
+      ) : (
+        <CoinHistoryList transactions={transactions} />
+      )}
+    </Stack>
   );
 }

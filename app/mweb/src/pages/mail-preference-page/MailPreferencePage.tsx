@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link as RouterLink, useSearchParams } from 'react-router';
 import { Alert, Box, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -92,10 +93,11 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
       <Box sx={{ pt: 1.5 }}>
         <DuncitButton
           fullWidth
-          variant="outlined"
+          size="large"
           color={allOff ? 'primary' : 'error'}
           onClick={bulkAction}
           disabled={state.busyCategory !== null}
+          sx={{ bgcolor: (theme) => alpha(theme.palette[allOff ? 'primary' : 'error'].main, 0.1) }}
         >
           {bulkLabel}
         </DuncitButton>
@@ -105,9 +107,7 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
   return (
     <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', pb: 4 }}>
       <Stack spacing={0.5}>
-        <Typography variant="h6" sx={{
-          fontWeight: 800
-        }}>
+        <Typography component="h1" sx={{ fontSize: 20, fontWeight: 600 }}>
           {fromLink ? t('mailPreference.linkTitle') : t('mailPreference.title')}
         </Typography>
         <Typography variant="body2" sx={{

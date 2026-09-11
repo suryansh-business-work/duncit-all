@@ -1,8 +1,9 @@
-import { Box, InputAdornment, Stack, TextField, Typography } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import SearchIcon from '@mui/icons-material/Search';
+import { Stack } from '@mui/material';
+import { useNavigate } from 'react-router';
+import AddIcon from '@mui/icons-material/AddRounded';
 import { DuncitButton } from '@duncit/buttons';
+import PageHeader from '../../components/PageHeader';
+import SearchPillField from '../pod-list/SearchPillField';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface PodIdeasHeaderProps {
@@ -11,52 +12,24 @@ interface PodIdeasHeaderProps {
   onShare: () => void;
 }
 
+/** Back + "Pod Ideas" with the green Share pill on the right, then the search
+ * pill — the same bar native's StackScreen draws for Pod Ideas. */
 export default function PodIdeasHeader({ search, setSearch, onShare }: Readonly<PodIdeasHeaderProps>) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const shareButton = (
+    <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={onShare} sx={{ minHeight: 40, height: 40, px: 2 }}>
+      Share idea
+    </DuncitButton>
+  );
   return (
-    <>
-      <Stack
-        direction="row"
-        spacing={1.5}
-        sx={{
-          alignItems: "center",
-          mb: 2
-        }}>
-        <LightbulbIcon color="warning" />
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" sx={{
-            fontWeight: 700
-          }}>
-            Pod Ideas
-          </Typography>
-          <Typography variant="caption" sx={{
-            color: "text.secondary"
-          }}>
-            Suggest a pod, vote on community ideas, and join the conversation.
-          </Typography>
-        </Box>
-        <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={onShare}>
-          Share idea
-        </DuncitButton>
-      </Stack>
-
-      <TextField
-        fullWidth
-        size="small"
+    <Stack spacing={2} sx={{ mb: 2.5 }}>
+      <PageHeader title={t('mweb.podIdeas.podIdeas')} onBack={() => navigate(-1)} right={shareButton} />
+      <SearchPillField
         placeholder={t('mweb.podIdeas.searchIdeas')}
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        sx={{ mb: 2 }}
-        slotProps={{
-          input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
-          }
-        }}
+        onChange={setSearch}
       />
-    </>
+    </Stack>
   );
 }

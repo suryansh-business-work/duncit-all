@@ -1,13 +1,11 @@
-import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { ScrollView, YStack } from 'tamagui';
 
 import type { HomePod } from '@/hooks/useHomeFeed';
 import { Reveal } from '@/animations/Reveal';
-import { PodCard } from '@/components/home/PodCard';
+import { POD_CARD_RAIL_WIDTH, PodCard } from '@/components/home/PodCard';
 import { SeeAllCard } from '@/components/home/SeeAllCard';
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { SectionHeader } from '@/components/SectionHeader';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /** Max entries shown on the home rail before the See-all card takes over. */
 const RAIL_CAP = 10;
@@ -26,38 +24,19 @@ interface Props {
  * link to the dedicated Previous Pods screen (bug 8). Hidden when there are none. */
 export function PreviousPodsRail({ pods, filtered, onSeeAll, onOpenPod }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { primary, muted } = useThemeColors();
   if (pods.length === 0) return null;
 
   return (
-    <YStack gap={10}>
-      <XStack alignItems="center" justifyContent="space-between" paddingHorizontal={16}>
-        <XStack alignItems="center" gap={8} flex={1}>
-          <MaterialIcons name="history" size={20} color={muted} />
-          <YStack>
-            <Text fontSize={16} fontWeight="700" color="$color">
-              Previous Pods
-            </Text>
-            <Text fontSize={12} fontWeight="700" color="$muted">
-              Already taken place
-            </Text>
-          </YStack>
-        </XStack>
-        <XStack
-          testID="previous-pods-see-all"
-          role="button"
-          aria-label={t('mweb.home.seeAllPreviousPods')}
-          onPress={() => onSeeAll()}
-          alignItems="center"
-          gap={2}
-          pressStyle={PRESS_STYLE.control}
-        >
-          <Text fontSize={13} fontWeight="600" color="$primary">
-            See all
-          </Text>
-          <MaterialIcons name="chevron-right" size={16} color={primary} />
-        </XStack>
-      </XStack>
+    <YStack gap={12}>
+      <YStack paddingHorizontal={16}>
+        <SectionHeader
+          title={t('mweb.home.previousPodsTitle')}
+          actionLabel={t('mweb.home.seeAll')}
+          onAction={() => onSeeAll()}
+          actionTestID="previous-pods-see-all"
+          actionAriaLabel={t('mweb.home.seeAllPreviousPods')}
+        />
+      </YStack>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -65,7 +44,7 @@ export function PreviousPodsRail({ pods, filtered, onSeeAll, onOpenPod }: Readon
       >
         {pods.slice(0, RAIL_CAP).map((pod, index) => (
           <Reveal key={pod.id} index={index} scale>
-            <PodCard pod={pod} width={300} onPress={() => onOpenPod(pod)} />
+            <PodCard pod={pod} width={POD_CARD_RAIL_WIDTH} onPress={() => onOpenPod(pod)} />
           </Reveal>
         ))}
         {pods.length > RAIL_CAP ? (

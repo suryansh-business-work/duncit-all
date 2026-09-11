@@ -76,7 +76,7 @@ export default function ProfileFollowActions({ profile, onChanged }: Readonly<Pr
     <Stack spacing={1} sx={{ alignItems: 'center' }}>
       {profile.inbound_request_id && (
         <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
-          <Typography variant="body2" sx={{ fontWeight: 700 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
             {t('mweb.follow.wantsToFollowYou')}
           </Typography>
           <AnswerButtons

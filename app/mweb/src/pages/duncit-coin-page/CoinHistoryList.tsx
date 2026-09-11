@@ -1,9 +1,25 @@
-import { Box, Divider, List, ListItem, ListItemText, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Card, Stack, Typography, useTheme } from '@mui/material';
+import CallMadeRoundedIcon from '@mui/icons-material/CallMadeRounded';
+import CallReceivedRoundedIcon from '@mui/icons-material/CallReceivedRounded';
 import { coinLedgerLabelKey } from '@duncit/utils';
+import SectionHeader from '../../components/SectionHeader';
 import { coinGold } from '../../theme/coinGold';
 import { useDateFormat } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
 import type { CoinTransaction } from './queries';
+
+/** The row's icon: a 40px soft disc with the in/out arrow. */
+const DISC_SX = {
+  width: 40,
+  height: 40,
+  flexShrink: 0,
+  borderRadius: '50%',
+  display: 'grid',
+  placeItems: 'center',
+  bgcolor: 'action.hover',
+  color: 'text.secondary',
+  '& svg': { fontSize: 20 },
+} as const;
 
 /** One ledger row. A CREDIT reads "+N" in gold, a DEBIT "−N" in the body colour
  * — the sign is what distinguishes them, so it is never colour alone. A grant
@@ -19,23 +35,26 @@ function CoinRow({ txn, gold }: Readonly<{ txn: CoinTransaction; gold: string }>
     : null;
 
   return (
-    <ListItem disableGutters sx={{ alignItems: 'flex-start' }}>
-      <ListItemText
-        primary={txn.reason || label}
-        secondary={
-          <>
-            {`${label} · ${formatDateTime(txn.created_at)}`}
-            {validTill ? (
-              <Box component="span" sx={{ display: 'block', fontWeight: 600 }}>
-                {validTill}
-              </Box>
-            ) : null}
-          </>
-        }
-        slotProps={{
-          primary: { variant: 'body2', sx: { fontWeight: 600 } },
-          secondary: { variant: 'caption' }
-        }} />
+    <Stack
+      component="li"
+      direction="row"
+      spacing={1.5}
+      sx={{ alignItems: 'flex-start', py: 1.5, '& + &': { borderTop: 1, borderColor: 'divider' } }}
+    >
+      <Box sx={DISC_SX}>{credit ? <CallReceivedRoundedIcon /> : <CallMadeRoundedIcon />}</Box>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+          {txn.reason || label}
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+          {`${label} · ${formatDateTime(txn.created_at)}`}
+        </Typography>
+        {validTill ? (
+          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontWeight: 600 }}>
+            {validTill}
+          </Typography>
+        ) : null}
+      </Box>
       <Typography
         variant="body2"
         sx={{
@@ -47,7 +66,7 @@ function CoinRow({ txn, gold }: Readonly<{ txn: CoinTransaction; gold: string }>
         {sign}
         {txn.amount}
       </Typography>
-    </ListItem>
+    </Stack>
   );
 }
 
@@ -60,30 +79,22 @@ export default function CoinHistoryList({ transactions }: Readonly<Props>) {
   const theme = useTheme();
   const gold = coinGold(theme.palette.mode);
 
-  if (transactions.length === 0) {
-    return (
-      <Stack spacing={1}>
-        <Typography variant="subtitle2">{t('mweb.coin.historyTitle')}</Typography>
-        <Typography variant="body2" sx={{
-          color: "text.secondary"
-        }}>
-          {t('mweb.coin.historyEmpty')}
-        </Typography>
-      </Stack>
-    );
-  }
-
   return (
-    <Stack spacing={1}>
-      <Typography variant="subtitle2">{t('mweb.coin.historyTitle')}</Typography>
-      <List disablePadding>
-        {transactions.map((txn, index) => (
-          <Stack key={txn.id}>
-            {index > 0 && <Divider component="li" />}
-            <CoinRow txn={txn} gold={gold} />
-          </Stack>
-        ))}
-      </List>
+    <Stack spacing={1.25}>
+      <SectionHeader title={t('mweb.coin.historyTitle')} />
+      <Card sx={{ px: 2, py: 0.5 }}>
+        {transactions.length === 0 ? (
+          <Typography variant="body2" sx={{ color: 'text.secondary', py: 1.5 }}>
+            {t('mweb.coin.historyEmpty')}
+          </Typography>
+        ) : (
+          <Box component="ul" sx={{ listStyle: 'none', m: 0, p: 0 }}>
+            {transactions.map((txn) => (
+              <CoinRow key={txn.id} txn={txn} gold={gold} />
+            ))}
+          </Box>
+        )}
+      </Card>
     </Stack>
   );
 }

@@ -3,6 +3,7 @@ import { Box, Stack, Typography } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { DuncitButton } from '@duncit/buttons';
 import { logs } from '@duncit/logs';
+import { useTranslation } from '../i18n/useTranslation';
 import { isStaleChunkError, reloadForStaleChunk } from './staleChunkReload';
 
 interface Props {
@@ -11,6 +12,42 @@ interface Props {
 
 interface State {
   error: Error | null;
+}
+
+/**
+ * The fallback itself, as a function component — a boundary has to be a class,
+ * and a class cannot call `useTranslation`. One icon, one line, one way back.
+ * Native twin: components/ErrorBoundary (ErrorPanel).
+ */
+function ErrorPanel({ onRetry }: Readonly<{ onRetry: () => void }>) {
+  const { t } = useTranslation();
+  return (
+    <Box
+      data-testid="error-boundary-fallback"
+      sx={{ minHeight: '60dvh', display: 'grid', placeItems: 'center', p: 3 }}
+    >
+      <Stack spacing={2} sx={{ alignItems: 'center', textAlign: 'center' }}>
+        <Box
+          sx={{
+            width: 96,
+            height: 96,
+            borderRadius: '50%',
+            display: 'grid',
+            placeItems: 'center',
+            bgcolor: 'background.paper',
+          }}
+        >
+          <ErrorOutlineIcon sx={{ fontSize: 44, color: 'error.main' }} />
+        </Box>
+        <Typography component="h1" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>
+          {t('mweb.errorBoundary.somethingWentWrong')}
+        </Typography>
+        <DuncitButton data-testid="error-boundary-retry" variant="contained" size="large" onClick={onRetry}>
+          {t('mweb.errorBoundary.tryAgain')}
+        </DuncitButton>
+      </Stack>
+    </Box>
+  );
 }
 
 /**
@@ -45,33 +82,6 @@ export default class ErrorBoundary extends Component<Props, State> {
   render() {
     if (!this.state.error) return this.props.children;
 
-    return (
-      <Box
-        data-testid="error-boundary-fallback"
-        sx={{ minHeight: '60dvh', display: 'grid', placeItems: 'center', p: 3 }}
-      >
-        <Stack
-          spacing={2}
-          sx={{
-            alignItems: "center",
-            textAlign: "center"
-          }}>
-          <ErrorOutlineIcon sx={{ fontSize: 56, color: 'error.main' }} />
-          <Typography variant="h5" sx={{
-            fontWeight: 700
-          }}>
-            Something went wrong
-          </Typography>
-          <Typography variant="body2" sx={{
-            color: "text.secondary"
-          }}>
-            An unexpected error occurred. Please try again.
-          </Typography>
-          <DuncitButton data-testid="error-boundary-retry" variant="contained" onClick={this.reset}>
-            Try again
-          </DuncitButton>
-        </Stack>
-      </Box>
-    );
+    return <ErrorPanel onRetry={this.reset} />;
   }
 }

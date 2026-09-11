@@ -5,6 +5,7 @@ import { meetingPlatformOptions } from '@duncit/utils';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { FormTextField } from '@/components/FormTextField';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { ChipSelectField } from './ChipSelectField';
 import { DateTimeField } from './DateTimeField';
 import { MIN_POD_DURATION_MINUTES } from './create-pod.form';
@@ -35,72 +36,75 @@ export function VirtualMeetingFields({
   const platformOptions = meetingPlatformOptions(t('mweb.createPod.meetingPlatformOther'));
 
   return (
-    <YStack gap={14}>
-      {/* Picked, not typed: the pod page decodes codes, so hand-typed text came
-          back as "Google meet". mWeb renders the same list as a MUI select. */}
-      <Controller
-        control={control}
-        name="meeting_platform"
-        render={({ field, fieldState }) => (
-          <ChipSelectField
-            label={t('mweb.createPod.meetingPlatform')}
-            required
-            options={[...platformOptions]}
-            value={field.value ?? ''}
-            onChange={field.onChange}
-            error={fieldState.error?.message}
-            testID="meeting_platform"
-          />
-        )}
-      />
-      <FormTextField
-        control={control}
-        name="meeting_url"
-        label={t('mweb.createPod.meetingLink')}
-        required
-        hint={t('mweb.createPod.meetingLinkHint')}
-      />
-      <FormTextField
-        control={control}
-        name="meeting_notes"
-        label={t('mweb.createPod.meetingNotes')}
-        multiline
-      />
-      <Controller
-        control={control}
-        name="pod_date_time_text"
-        render={({ field, fieldState }) => (
-          <DateTimeField
-            label={t('mweb.createPod.startDateTime')}
-            required
-            value={field.value}
-            onChange={field.onChange}
-            minDateTime={new Date()}
-            error={fieldState.error?.message}
-            testID="pod_date_time_text"
-          />
-        )}
-      />
-      <Controller
-        control={control}
-        name="pod_end_date_time_text"
-        render={({ field, fieldState }) => (
-          <DateTimeField
-            label={t('mweb.createPod.endDateTime')}
-            required
-            value={field.value}
-            onChange={field.onChange}
-            minDateTime={minEndDateTime}
-            error={fieldState.error?.message}
-            testID="pod_end_date_time_text"
-          />
-        )}
-      />
-      {duration ? (
-        <Text testID="pod-duration" fontSize={12.5} fontWeight="600" color="$muted">
-          {t('mweb.createPod.totalDuration', { vars: { duration } })}
-        </Text>
-      ) : null}
+    <YStack gap={16}>
+      <SurfaceCard gap={14}>
+        {/* Picked, not typed: the pod page decodes codes, so hand-typed text came
+            back as "Google meet". mWeb renders the same list as a MUI select. */}
+        <Controller
+          control={control}
+          name="meeting_platform"
+          render={({ field, fieldState }) => (
+            <ChipSelectField
+              label={t('mweb.createPod.meetingPlatform')}
+              required
+              options={[...platformOptions]}
+              value={field.value ?? ''}
+              onChange={field.onChange}
+              error={fieldState.error?.message}
+              testID="meeting_platform"
+            />
+          )}
+        />
+        <FormTextField
+          control={control}
+          name="meeting_url"
+          label={t('mweb.createPod.meetingLink')}
+          required
+        />
+        <FormTextField
+          control={control}
+          name="meeting_notes"
+          label={t('mweb.createPod.meetingNotes')}
+          multiline
+        />
+      </SurfaceCard>
+      <SurfaceCard gap={14}>
+        <Controller
+          control={control}
+          name="pod_date_time_text"
+          render={({ field, fieldState }) => (
+            <DateTimeField
+              label={t('mweb.createPod.startDateTime')}
+              required
+              value={field.value}
+              onChange={field.onChange}
+              minDateTime={new Date()}
+              error={fieldState.error?.message}
+              testID="pod_date_time_text"
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="pod_end_date_time_text"
+          render={({ field, fieldState }) => (
+            <DateTimeField
+              label={t('mweb.createPod.endDateTime')}
+              required
+              value={field.value}
+              onChange={field.onChange}
+              minDateTime={minEndDateTime}
+              error={fieldState.error?.message}
+              testID="pod_end_date_time_text"
+            />
+          )}
+        />
+        {duration ? (
+          <Text testID="pod-duration" fontSize={14} fontWeight="600" color="$muted">
+            {t('mweb.createPod.totalDuration', { vars: { duration } })}
+          </Text>
+        ) : null}
+      </SurfaceCard>
     </YStack>
   );
 }

@@ -3,6 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { EmptyState } from '@/components/EmptyState';
 import { HostCard, VenueCard } from '@/components/hosts-venues';
 import { MeetingStatusCard } from '@/components/hosts-venues/MeetingStatusCard';
 import { StackScreen } from '@/components/StackScreen';
@@ -29,9 +30,11 @@ export function HostsVenuesScreen() {
   if (tab === 'HOSTS') {
     tabContent =
       hosts.length === 0 ? (
-        <Text testID="hosts-empty" color="$muted">
-          No approved hosts yet — be the first to apply!
-        </Text>
+        <EmptyState
+          icon="person-outline"
+          title="No approved hosts yet — be the first to apply!"
+          testID="hosts-empty"
+        />
       ) : (
         hosts.map((host) => (
           <HostCard
@@ -48,9 +51,7 @@ export function HostsVenuesScreen() {
   } else {
     tabContent =
       venues.length === 0 ? (
-        <Text testID="venues-empty" color="$muted">
-          No approved venues yet.
-        </Text>
+        <EmptyState icon="storefront" title="No approved venues yet." testID="venues-empty" />
       ) : (
         venues.map((venue) => (
           <VenueCard
@@ -77,7 +78,7 @@ export function HostsVenuesScreen() {
     );
   } else {
     hostsVenuesBody = (
-      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 10 }}>
+      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 12 }}>
         <MeetingStatusCard kind="HOST" />
         <MeetingStatusCard kind="VENUE" />
         {tabContent}
@@ -87,7 +88,18 @@ export function HostsVenuesScreen() {
 
   return (
     <StackScreen title={t('mweb.hostsVenues.hostsAndVenues')} testID="hosts-venues-screen">
-      <XStack gap={8} paddingHorizontal={16} paddingBottom={8}>
+      {/* A pill segmented control: a surface track, the chosen segment a green
+          pill — mWeb's DuncitTabs strip draws the same (rule 27). */}
+      <XStack
+        gap={4}
+        marginHorizontal={16}
+        marginBottom={8}
+        padding={4}
+        borderRadius={999}
+        borderWidth={1}
+        borderColor="$cardBorder"
+        backgroundColor="$surface"
+      >
         {(['HOSTS', 'VENUES'] as Tab[]).map((t) => {
           const selected = tab === t;
           return (
@@ -98,16 +110,14 @@ export function HostsVenuesScreen() {
               aria-pressed={selected}
               onPress={() => setTab(t)}
               flex={1}
-              height={38}
+              height={40}
               alignItems="center"
               justifyContent="center"
-              borderRadius={12}
-              backgroundColor={selected ? '$primary' : '$surface'}
-              borderWidth={1}
-              borderColor={selected ? '$primary' : '$borderColor'}
+              borderRadius={999}
+              backgroundColor={selected ? '$primary' : 'transparent'}
               pressStyle={PRESS_STYLE.control}
             >
-              <Text fontSize={13} fontWeight="700" color={selected ? '$onPrimary' : '$color'}>
+              <Text fontSize={14} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
                 {t === 'HOSTS' ? 'Hosts' : 'Venues'}
               </Text>
             </XStack>

@@ -18,11 +18,12 @@ interface Props {
   onEdit: () => void;
 }
 
-/** One club the admin runs — cover, name, category, locality, the three
- * figures, and the two doors: its pods and its page. */
+/** One club the admin runs, as a row of the clubs card — cover, name,
+ * category, locality, the three figures, and the two doors: its pods and its
+ * page. */
 export function AdminClubRow({ club, testID, onOpenPods, onEdit }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { onPrimary } = useThemeColors();
+  const { accent, onPrimary, color: ink } = useThemeColors();
   const category = [club.super_category, club.category].filter(Boolean).join(' › ');
   const line = [category, club.locality].filter(Boolean).join(' · ');
   const verified = club.is_verified
@@ -30,15 +31,7 @@ export function AdminClubRow({ club, testID, onOpenPods, onEdit }: Readonly<Prop
     : t('clubAdmin.clubs.unverified');
 
   return (
-    <YStack
-      testID={testID}
-      gap={10}
-      padding={12}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
+    <YStack testID={testID} gap={12} padding={16}>
       <XStack alignItems="center" gap={12}>
         {club.cover_image_url ? (
           <AppImage source={{ uri: club.cover_image_url }} style={COVER_STYLE} />
@@ -49,13 +42,13 @@ export function AdminClubRow({ club, testID, onOpenPods, onEdit }: Readonly<Prop
             borderRadius={12}
             alignItems="center"
             justifyContent="center"
-            backgroundColor="$primary"
+            backgroundColor="$soft"
           >
-            <MaterialIcons name="groups" size={26} color={onPrimary} />
+            <MaterialIcons name="groups" size={26} color={accent} />
           </YStack>
         )}
         <YStack flex={1} gap={2}>
-          <Text fontSize={14.5} fontWeight="700" color="$color" numberOfLines={1}>
+          <Text fontSize={16} fontWeight="600" color="$color" numberOfLines={1}>
             {club.club_name}
           </Text>
           {line ? (
@@ -65,8 +58,8 @@ export function AdminClubRow({ club, testID, onOpenPods, onEdit }: Readonly<Prop
           ) : null}
           <Text
             testID={`${testID}-verified`}
-            fontSize={11.5}
-            fontWeight="700"
+            fontSize={12}
+            fontWeight="600"
             color={club.is_verified ? '$success' : '$muted'}
           >
             {verified}
@@ -90,21 +83,29 @@ export function AdminClubRow({ club, testID, onOpenPods, onEdit }: Readonly<Prop
           value={formatCount(club.upcoming_pods)}
         />
       </XStack>
-      <XStack gap={10} justifyContent="flex-end">
-        <DuncitButton
-          testID={`${testID}-open-pods`}
-          label={t('mweb.clubStudio.openPods')}
-          onPress={onOpenPods}
-          size="sm"
-        />
-        <DuncitButton
-          testID={`${testID}-edit`}
-          label={t('mweb.clubStudio.editClub')}
-          onPress={onEdit}
-          variant="outline"
-          tone="neutral"
-          size="sm"
-        />
+      <XStack gap={8}>
+        <YStack flex={1}>
+          <DuncitButton
+            testID={`${testID}-open-pods`}
+            label={t('mweb.clubStudio.openPods')}
+            onPress={onOpenPods}
+            size="sm"
+            fullWidth
+            icon={<MaterialIcons name="event-note" size={16} color={onPrimary} />}
+          />
+        </YStack>
+        <YStack flex={1}>
+          <DuncitButton
+            testID={`${testID}-edit`}
+            label={t('mweb.clubStudio.editClub')}
+            onPress={onEdit}
+            variant="outline"
+            tone="neutral"
+            size="sm"
+            fullWidth
+            icon={<MaterialIcons name="edit" size={16} color={ink} />}
+          />
+        </YStack>
       </XStack>
     </YStack>
   );

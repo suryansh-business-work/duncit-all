@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Text, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import { EMAIL } from '@duncit/regex';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -78,15 +78,7 @@ export function GiftCardBuySection({
   };
 
   return (
-    <YStack gap={18}>
-      <YStack gap={4}>
-        <Text fontSize={16} fontWeight="700" color="$color">
-          {t('mweb.giftCards.buyTitle')}
-        </Text>
-        <Text fontSize={13} color="$muted">
-          {t('mweb.giftCards.buySubtitle')}
-        </Text>
-      </YStack>
+    <YStack gap={16}>
       <GiftCardThemePicker categories={categories} value={theme} onChange={setTheme} />
       <GiftCardAmountPicker
         denominations={settings.denominations}

@@ -32,32 +32,25 @@ export function ConnectedAccountRow({
   hint,
   testID,
 }: Readonly<Props>) {
-  const { muted, danger, success } = useThemeColors();
+  const { muted, success } = useThemeColors();
 
   return (
-    <YStack
-      testID={testID}
-      gap={6}
-      padding={12}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-    >
-      <XStack alignItems="center" gap={10}>
+    <YStack testID={testID} gap={6}>
+      <XStack alignItems="center" gap={12}>
         <MaterialIcons
           name={connected ? 'check-circle' : 'radio-button-unchecked'}
           size={20}
           color={connected ? success : muted}
         />
         <YStack flex={1} gap={1}>
-          <Text fontSize={13.5} fontWeight="700" color="$color">
+          <Text fontSize={15} fontWeight="500" color="$color">
             {label}
           </Text>
-          <Text testID={`${testID}-value`} fontSize={12.5} color="$muted" numberOfLines={1}>
+          <Text testID={`${testID}-value`} fontSize={14} color="$muted" numberOfLines={1}>
             {value}
           </Text>
           {status ? (
-            <Text fontSize={11.5} color="$muted">
+            <Text fontSize={12} color="$muted">
               {status}
             </Text>
           ) : null}
@@ -69,15 +62,15 @@ export function ConnectedAccountRow({
             aria-label={actionLabel}
             aria-disabled={busy}
             onPress={busy ? undefined : onAction}
-            paddingHorizontal={12}
-            paddingVertical={7}
-            borderRadius={10}
-            borderWidth={1}
-            borderColor={danger}
+            height={36}
+            alignItems="center"
+            paddingHorizontal={14}
+            borderRadius={999}
+            backgroundColor="$dangerSoft"
             opacity={busy ? 0.5 : 1}
-            pressStyle={PRESS_STYLE.ghost}
+            pressStyle={PRESS_STYLE.control}
           >
-            <Text fontSize={12.5} fontWeight="700" color="$danger">
+            <Text fontSize={13} fontWeight="600" color="$danger">
               {actionLabel}
             </Text>
           </XStack>
@@ -85,7 +78,7 @@ export function ConnectedAccountRow({
       </XStack>
 
       {hint ? (
-        <Text testID={`${testID}-hint`} fontSize={11.5} color="$muted">
+        <Text testID={`${testID}-hint`} fontSize={12} color="$muted">
           {hint}
         </Text>
       ) : null}

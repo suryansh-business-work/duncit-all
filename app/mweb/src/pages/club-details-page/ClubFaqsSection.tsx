@@ -1,5 +1,6 @@
-import { Accordion, AccordionDetails, AccordionSummary, Box, Typography } from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Stack, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import SectionHeader from '../../components/SectionHeader';
 
 interface Faq {
   question: string;
@@ -10,40 +11,24 @@ interface Props {
   faqs: Faq[];
 }
 
-/** Admin-authored FAQs rendered as expandable question/answer pairs. */
+/** Admin-authored FAQs rendered as expandable question/answer pairs — each
+ * its own themed surface (24px, borderless on the light ground). */
 export default function ClubFaqsSection({ faqs }: Readonly<Props>) {
   if (faqs.length === 0) return null;
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom sx={{
-        fontWeight: 700
-      }}>
-        FAQs
-      </Typography>
+    <Stack spacing={1}>
+      <SectionHeader title="FAQs" />
       {faqs.map((faq) => (
-        <Accordion
-          key={faq.question}
-          disableGutters
-          square
-          sx={{
-            '&:before': { display: 'none' },
-            mb: 1,
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: '16px',
-            overflow: 'hidden',
-            boxShadow: 'none',
-          }}
-        >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+        <Accordion key={faq.question} disableGutters sx={{ overflow: 'hidden' }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 2 }}>
             <Typography variant="subtitle2" sx={{
-              fontWeight: 700
+              fontWeight: 600
             }}>
               {faq.question}
             </Typography>
           </AccordionSummary>
-          <AccordionDetails>
+          <AccordionDetails sx={{ px: 2, pt: 0 }}>
             <Typography
               variant="body2"
               sx={{
@@ -55,6 +40,6 @@ export default function ClubFaqsSection({ faqs }: Readonly<Props>) {
           </AccordionDetails>
         </Accordion>
       ))}
-    </Box>
+    </Stack>
   );
 }

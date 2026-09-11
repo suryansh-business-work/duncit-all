@@ -27,7 +27,7 @@ export function CommentComposer({
   posting,
   viewerPhoto,
 }: Readonly<Props>) {
-  const { muted } = useThemeColors();
+  const { muted, onPrimary } = useThemeColors();
   const { t } = useTranslation();
   const canSend = !disabled && !posting && !!value.trim();
   const placeholder = disabled
@@ -52,7 +52,7 @@ export function CommentComposer({
           width={32}
           height={32}
           borderRadius={16}
-          backgroundColor="$surface"
+          backgroundColor="$soft"
           alignItems="center"
           justifyContent="center"
         >
@@ -63,6 +63,11 @@ export function CommentComposer({
         testID="pod-comment-input"
         aria-label={t('mweb.podDetails.comment')}
         flex={1}
+        height={44}
+        borderRadius={999}
+        borderWidth={0}
+        backgroundColor="$soft"
+        paddingHorizontal={16}
         value={value}
         onChangeText={onChange}
         disabled={disabled}
@@ -85,9 +90,9 @@ export function CommentComposer({
         pressStyle={PRESS_STYLE.control}
       >
         {posting ? (
-          <Spinner color="#ffffff" />
+          <Spinner color={onPrimary} />
         ) : (
-          <MaterialIcons name="send" size={18} color="#ffffff" />
+          <MaterialIcons name="send" size={18} color={onPrimary} />
         )}
       </XStack>
     </XStack>

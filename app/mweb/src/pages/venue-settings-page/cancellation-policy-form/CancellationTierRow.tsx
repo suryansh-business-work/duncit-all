@@ -1,6 +1,6 @@
 import type { Control } from 'react-hook-form';
 import { MenuItem, Stack } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import { DuncitIconButton } from '@duncit/buttons';
 import RhfTextField from '../../../forms/components/RhfTextField';
 import type { CancellationPolicyValues } from './cancellation-policy.types';
@@ -23,7 +23,7 @@ export default function CancellationTierRow({ control, index, disabled, onRemove
   return (
     <Stack
       spacing={1}
-      sx={{ p: 1.25, borderRadius: '16px', border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}
+      sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}
     >
       <RhfTextField
         control={control}
@@ -60,7 +60,7 @@ export default function CancellationTierRow({ control, index, disabled, onRemove
           size="small"
           sx={{ mt: 0.5 }}
         >
-          <DeleteOutlineIcon fontSize="small" />
+          <DeleteOutlineRoundedIcon fontSize="small" />
         </DuncitIconButton>
       </Stack>
     </Stack>

@@ -1,5 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForwardRounded';
+import { SURFACE_SX } from '../../theme';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -23,23 +24,21 @@ export default function SeeAllCard({ count, width, onClick }: Readonly<Props>) {
       aria-label={t('mweb.home.seeAll')}
       data-testid="see-all-card"
       sx={{
+        ...SURFACE_SX,
         width,
         minHeight: 180,
         flex: '0 0 auto',
         alignSelf: 'stretch',
-        borderRadius: '16px',
-        border: '1px dashed',
-        borderColor: 'divider',
-        bgcolor: 'background.paper',
+        p: 0,
         cursor: 'pointer',
+        font: 'inherit',
+        color: 'text.primary',
         display: 'grid',
         placeItems: 'center',
         scrollSnapAlign: 'start',
       }}
     >
-      <Stack spacing={1} sx={{
-        alignItems: "center"
-      }}>
+      <Stack spacing={1} sx={{ alignItems: 'center' }}>
         <Box
           sx={{
             width: 44,
@@ -47,22 +46,15 @@ export default function SeeAllCard({ count, width, onClick }: Readonly<Props>) {
             borderRadius: '50%',
             display: 'grid',
             placeItems: 'center',
-            bgcolor: 'primary.main',
-            color: 'primary.contrastText',
+            bgcolor: 'action.hover',
+            color: 'secondary.main',
           }}
         >
           <ArrowForwardIcon />
         </Box>
-        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-          {t('mweb.home.seeAll')}
-        </Typography>
+        <Typography sx={{ fontSize: 14, fontWeight: 600 }}>{t('mweb.home.seeAll')}</Typography>
         {count !== undefined && (
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 700
-            }}>
+          <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'text.secondary' }}>
             {t('mweb.home.morePods', { count })}
           </Typography>
         )}

@@ -51,15 +51,15 @@ export function StoryViewersSheet({
           <YStack
             testID="story-viewers-sheet"
             backgroundColor="$background"
-            borderTopLeftRadius={20}
-            borderTopRightRadius={20}
+            borderTopLeftRadius={28}
+            borderTopRightRadius={28}
             maxHeight="70%"
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
                 <XStack alignItems="center" gap={8}>
                   <MaterialIcons name="visibility" size={20} color={color} />
-                  <Text fontSize={16} fontWeight="700" color="$color">
+                  <Text fontSize={17} fontWeight="600" color="$color">
                     {count === 0 ? 'No views yet' : `Seen by ${count}`}
                   </Text>
                 </XStack>
@@ -69,12 +69,12 @@ export function StoryViewersSheet({
                   role="button"
                   aria-label={t('mweb.common.closeViewers')}
                   onPress={onClose}
-                  width={34}
-                  height={34}
+                  width={40}
+                  height={40}
                   alignItems="center"
                   justifyContent="center"
-                  borderRadius={17}
-                  backgroundColor="$surface"
+                  borderRadius={20}
+                  backgroundColor="$soft"
                 >
                   <MaterialIcons name="close" size={18} color={color} />
                 </XStack>
@@ -100,7 +100,7 @@ export function StoryViewersSheet({
                         height={40}
                         borderRadius={20}
                         overflow="hidden"
-                        backgroundColor="$muted"
+                        backgroundColor="$soft"
                         alignItems="center"
                         justifyContent="center"
                       >
@@ -117,7 +117,7 @@ export function StoryViewersSheet({
                       <Text
                         flex={1}
                         fontSize={14}
-                        fontWeight="700"
+                        fontWeight="600"
                         color="$color"
                         numberOfLines={1}
                       >

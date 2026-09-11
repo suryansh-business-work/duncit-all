@@ -11,9 +11,9 @@ import { type CommChannel } from '@duncit/utils';
  * cannot list the three in a different order (rule 27).
  */
 export const CHANNEL_UI: Record<CommChannel, { icon: ReactNode; to: string }> = {
-  EMAIL: { icon: <MarkEmailReadOutlinedIcon color="action" />, to: '/account/mail-preference' },
-  WHATSAPP: { icon: <WhatsAppIcon color="action" />, to: '/account/whatsapp-preference' },
-  SMS: { icon: <SmsOutlinedIcon color="action" />, to: '/account/sms-preference' },
+  EMAIL: { icon: <MarkEmailReadOutlinedIcon />, to: '/account/mail-preference' },
+  WHATSAPP: { icon: <WhatsAppIcon />, to: '/account/whatsapp-preference' },
+  SMS: { icon: <SmsOutlinedIcon />, to: '/account/sms-preference' },
 };
 
 export { COMM_CHANNELS } from '@duncit/utils';

@@ -1,6 +1,7 @@
 import { XStack, YStack } from 'tamagui';
 
 import { Skeleton } from '@/components/Skeleton';
+import { SurfaceCard } from '@/components/SurfaceCard';
 
 /** Rows a placeholder Manage-Account group stands in for. */
 const LIST_ROWS = ['a', 'b', 'c'];
@@ -12,62 +13,45 @@ function TileSkeleton() {
     <YStack
       width="100%"
       flexGrow={1}
-      gap={8}
-      borderRadius={12}
+      gap={10}
+      borderRadius={16}
       borderWidth={1}
-      borderColor="$borderColor"
+      borderColor="$cardBorder"
       backgroundColor="$surface"
-      padding={12}
+      padding={14}
     >
-      <Skeleton width={36} height={36} radius={8} />
-      <YStack gap={4}>
-        <Skeleton width="70%" height={14} />
-        <Skeleton width="45%" height={11} />
-      </YStack>
+      <Skeleton width={36} height={36} radius={18} />
+      <Skeleton width="70%" height={14} />
     </YStack>
   );
 }
 
 function CardSkeleton() {
   return (
-    <YStack paddingHorizontal={16} paddingBottom={10}>
-      <XStack
-        alignItems="center"
-        gap={12}
-        borderRadius={12}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$surface"
-        padding={12}
-      >
-        <Skeleton width={44} height={44} radius={10} />
+    <YStack paddingHorizontal={16} paddingBottom={12}>
+      <SurfaceCard flexDirection="row" alignItems="center" gap={12}>
+        <Skeleton width={44} height={44} radius={22} />
         <YStack flex={1} gap={6}>
           <Skeleton width="45%" height={14} />
           <Skeleton width="65%" height={11} />
         </YStack>
-      </XStack>
+      </SurfaceCard>
     </YStack>
   );
 }
 
 function ListSkeleton() {
   return (
-    <YStack paddingHorizontal={16} paddingBottom={10} gap={8}>
-      <Skeleton width="35%" height={12} />
-      <YStack
-        borderRadius={12}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$surface"
-        paddingHorizontal={14}
-      >
+    <YStack paddingHorizontal={16} paddingBottom={12} gap={8}>
+      <Skeleton width="35%" height={16} />
+      <SurfaceCard paddingVertical={0}>
         {LIST_ROWS.map((row) => (
-          <XStack key={row} alignItems="center" gap={12} paddingVertical={11}>
-            <Skeleton width={24} height={24} radius={12} />
+          <XStack key={row} alignItems="center" gap={12} minHeight={60}>
+            <Skeleton width={36} height={36} radius={18} />
             <Skeleton width="55%" height={14} />
           </XStack>
         ))}
-      </YStack>
+      </SurfaceCard>
     </YStack>
   );
 }
@@ -81,19 +65,21 @@ function ListSkeleton() {
 export function SidebarSkeleton() {
   return (
     <YStack testID="sidebar-skeleton">
-      <XStack alignItems="center" gap={12} marginHorizontal={16} marginVertical={8} padding={12}>
-        <YStack flex={1} gap={6}>
-          <Skeleton width="55%" height={15} />
-          <Skeleton width="70%" height={12} />
-        </YStack>
-        <Skeleton width={44} height={44} radius={22} />
-      </XStack>
+      <YStack paddingHorizontal={16} paddingBottom={12}>
+        <SurfaceCard flexDirection="row" alignItems="center" gap={14}>
+          <Skeleton width={52} height={52} radius={26} />
+          <YStack flex={1} gap={6}>
+            <Skeleton width="55%" height={16} />
+            <Skeleton width="70%" height={12} />
+          </YStack>
+        </SurfaceCard>
+      </YStack>
 
       <XStack
         paddingHorizontal={16}
-        paddingBottom={10}
+        paddingBottom={12}
         flexWrap="wrap"
-        gap={10}
+        gap={12}
         justifyContent="space-between"
       >
         {GRID_TILES.map((tile) => (
@@ -103,7 +89,7 @@ export function SidebarSkeleton() {
         ))}
       </XStack>
 
-      <YStack paddingHorizontal={16} paddingBottom={10}>
+      <YStack paddingHorizontal={16} paddingBottom={12}>
         <Skeleton width="100%" height={132} radius={16} />
       </YStack>
 

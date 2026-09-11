@@ -2,9 +2,11 @@ import { CircularProgress } from '@mui/material';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 import { DuncitButton } from '@duncit/buttons';
 
-/** Shared sx for the row's text buttons: the row is already a large tappable
- * card (and an unread one carries a gradient), so a solid button fights it. */
-const TEXT_BUTTON = { fontWeight: 800, textTransform: 'none' } as const;
+/** Shared sx for the row's small pill buttons — a touch shorter than the 44px
+ * coarse-pointer floor so a row of them stays calm. */
+const PILL_BUTTON = { minHeight: 32, px: 1.75 } as const;
+/** The quiet (soft) pill behind Deny and Follow Back. */
+const SOFT_PILL = { ...PILL_BUTTON, bgcolor: 'action.hover' } as const;
 
 interface AnswerButtonsProps {
   /** Accept leads in the accent ink; Deny sits back in the quiet one. Both are
@@ -44,11 +46,11 @@ export function AnswerButtons({
     <>
       <DuncitButton
         size="small"
-        variant="text"
+        variant="contained"
         disabled={busy}
         startIcon={spinning ? <CircularProgress size={13} color="inherit" /> : undefined}
         onClick={onAccept}
-        sx={{ ...TEXT_BUTTON, color: accentInk }}
+        sx={{ ...PILL_BUTTON, bgcolor: accentInk }}
       >
         {acceptLabel}
       </DuncitButton>
@@ -57,7 +59,7 @@ export function AnswerButtons({
         variant="text"
         disabled={busy}
         onClick={onDeny}
-        sx={{ ...TEXT_BUTTON, color: quietInk, opacity: dimQuiet ? 0.75 : 1 }}
+        sx={{ ...SOFT_PILL, color: quietInk, opacity: dimQuiet ? 0.75 : 1 }}
       >
         {denyLabel}
       </DuncitButton>
@@ -101,7 +103,7 @@ export function FollowBackButton({
         )
       }
       onClick={onFollowBack}
-      sx={{ ...TEXT_BUTTON, color: accentInk }}
+      sx={{ ...SOFT_PILL, color: accentInk }}
     >
       {label}
     </DuncitButton>

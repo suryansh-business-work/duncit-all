@@ -1,7 +1,4 @@
 import { Box, Stack } from '@mui/material';
-import { alpha } from '@mui/material/styles';
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { DuncitButton } from '@duncit/buttons';
 import { APP_SHELL_MAX_WIDTH } from '../../../app/appLayout';
 import { useTranslation } from '../../../i18n/useTranslation';
@@ -17,9 +14,11 @@ interface Props {
   onSubmit: () => void;
 }
 
-/** Pinned Back / Next (or Create Pod) action bar. Fixed above the app's bottom
- * navigation via --duncit-bottom-nav-overlay-offset so the actions are never
- * hidden behind the bottom menu (the reason the buttons "disappeared"). */
+/** Pinned Back / Next (or Create Pod) action bar: a surface strip under a
+ * hairline, sitting right on top of the app's bottom navigation
+ * (--duncit-bottom-nav-height) so the actions are never hidden behind the
+ * bottom menu. Back is a soft pill, the green pill is the step's action.
+ * Native twin: the footer row in CreatePodStepper. */
 export default function StepFooterBar({
   isFirst,
   isLast,
@@ -39,50 +38,37 @@ export default function StepFooterBar({
         position: 'fixed',
         left: 0,
         right: 0,
-        bottom: 'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 2px)',
+        bottom: 'var(--duncit-bottom-nav-height, 0px)',
         zIndex: (theme) => theme.zIndex.appBar + 1,
-        px: { xs: 1.25, sm: 2 },
-        pointerEvents: 'none',
+        px: 2,
+        py: 1.5,
+        bgcolor: 'background.paper',
+        borderTop: 1,
+        borderColor: 'divider',
       }}
     >
-      <Box
-        sx={{
-          maxWidth: APP_SHELL_MAX_WIDTH,
-          mx: 'auto',
-          p: 1,
-          borderRadius: '16px',
-          border: 1,
-          borderColor: 'divider',
-          bgcolor: (theme) =>
-            alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.9 : 0.96),
-          backdropFilter: 'blur(18px)',
-          boxShadow: '0 16px 36px rgba(15,23,42,0.22)',
-          pointerEvents: 'auto',
-        }}
-      >
-        <Stack direction="row" spacing={1.25}>
-          <DuncitButton
-            variant="outlined"
-            fullWidth
-            disabled={isFirst || busy}
-            onClick={onBack}
-            startIcon={<ArrowBackIosNewIcon sx={{ fontSize: 14 }} />}
-            sx={{ flex: 1, fontWeight: 600 }}
-          >
-            {t('mweb.createPod.back')}
-          </DuncitButton>
-          <DuncitButton
-            variant="contained"
-            fullWidth
-            disabled={primaryDisabled}
-            onClick={isLast ? onSubmit : onNext}
-            endIcon={isLast ? undefined : <ArrowForwardIosIcon sx={{ fontSize: 14 }} />}
-            sx={{ flex: 2, fontWeight: 700 }}
-          >
-            {primaryLabel}
-          </DuncitButton>
-        </Stack>
-      </Box>
+      <Stack direction="row" spacing={1.25} sx={{ maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto' }}>
+        <DuncitButton
+          color="inherit"
+          size="large"
+          fullWidth
+          disabled={isFirst || busy}
+          onClick={onBack}
+          sx={{ flex: 1, bgcolor: 'action.hover' }}
+        >
+          {t('mweb.createPod.back')}
+        </DuncitButton>
+        <DuncitButton
+          variant="contained"
+          size="large"
+          fullWidth
+          disabled={primaryDisabled}
+          onClick={isLast ? onSubmit : onNext}
+          sx={{ flex: 2 }}
+        >
+          {primaryLabel}
+        </DuncitButton>
+      </Stack>
     </Box>
   );
 }

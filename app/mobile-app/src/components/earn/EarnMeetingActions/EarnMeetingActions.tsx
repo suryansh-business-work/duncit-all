@@ -121,21 +121,23 @@ export function EarnMeetingActions({
   };
 
   return (
-    <XStack gap={8} paddingTop={2} flexWrap="wrap" alignItems="center">
+    <XStack gap={8} paddingHorizontal={4} flexWrap="wrap" alignItems="center">
       {canReschedule ? (
         <ActionButton
           testID={`reschedule-${kind}`}
           label={t('mweb.earn.rescheduleMeeting')}
+          icon="event-repeat"
           onPress={openReschedule}
         />
       ) : (
-        <Text testID={`reschedule-used-${kind}`} fontSize={11.5} color="$muted" flex={1}>
+        <Text testID={`reschedule-used-${kind}`} fontSize={12} color="$muted" flex={1}>
           {RESCHEDULE_LIMIT_MESSAGE}
         </Text>
       )}
       <ActionButton
         testID={`cancel-${kind}`}
         label={t('mweb.earn.cancelMeeting')}
+        icon="event-busy"
         danger
         onPress={openCancel}
       />

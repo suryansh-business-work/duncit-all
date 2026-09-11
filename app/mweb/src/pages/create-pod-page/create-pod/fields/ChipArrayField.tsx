@@ -53,9 +53,15 @@ export default function ChipArrayField({
         {requiredLabel(label, required)}
       </Typography>
       {value.length > 0 && (
-        <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
+        <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75, mb: 1 }}>
           {value.map((tag) => (
-            <Chip key={tag} label={tag} onDelete={() => onChange(value.filter((t) => t !== tag))} size="small" />
+            <Chip
+              key={tag}
+              label={tag}
+              color="primary"
+              onDelete={() => onChange(value.filter((t) => t !== tag))}
+              size="small"
+            />
           ))}
         </Stack>
       )}

@@ -1,5 +1,7 @@
 import { Avatar, Box, Stack, Typography } from '@mui/material';
 import { useNavigate } from 'react-router';
+import SectionHeader from '../../components/SectionHeader';
+import { SURFACE_SX } from '../../theme';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Host {
@@ -24,13 +26,9 @@ export default function ClubHostsSection({ hosts, title }: Readonly<Props>) {
   if (hosts.length === 0) return null;
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom sx={{
-        fontWeight: 700
-      }}>
-        {titleText}
-      </Typography>
-      <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
+    <Box sx={{ ...SURFACE_SX, p: 2 }}>
+      <SectionHeader title={titleText} />
+      <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pt: 1.5, '&::-webkit-scrollbar': { display: 'none' } }}>
         {hosts.map((host) => (
           <Stack
             key={host.id}
@@ -44,10 +42,10 @@ export default function ClubHostsSection({ hosts, title }: Readonly<Props>) {
               width: 72,
               flex: '0 0 auto'
             }}>
-            <Avatar src={host.avatar_url || undefined} sx={{ width: 56, height: 56, bgcolor: 'primary.main' }}>
+            <Avatar src={host.avatar_url || undefined} sx={{ width: 56, height: 56, bgcolor: 'action.selected', color: 'text.primary' }}>
               {host.name?.[0]?.toUpperCase() || 'H'}
             </Avatar>
-            <Typography variant="caption" sx={{ fontWeight: 700, textAlign: 'center' }} noWrap>
+            <Typography variant="caption" sx={{ fontWeight: 600, textAlign: 'center', width: '100%' }} noWrap>
               {host.name}
             </Typography>
           </Stack>

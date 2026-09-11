@@ -28,7 +28,7 @@ export default function InterviewDetailsForm({
   return (
     <Card>
       <CardContent>
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h6" gutterBottom sx={{ fontSize: '1.0625rem' }}>
           Your details
         </Typography>
         <Stack spacing={2}>

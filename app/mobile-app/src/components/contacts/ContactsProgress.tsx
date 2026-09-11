@@ -23,11 +23,11 @@ export function ContactsProgress({ label, percent, testID }: Readonly<BarProps>)
         role="progressbar"
         aria-label={label}
         height={6}
-        borderRadius={3}
+        borderRadius={999}
         overflow="hidden"
-        backgroundColor="$borderColor"
+        backgroundColor="$primarySoft"
       >
-        <YStack height={6} width={`${percent}%`} backgroundColor="$primary" />
+        <YStack height={6} borderRadius={999} width={`${percent}%`} backgroundColor="$primary" />
       </YStack>
     </YStack>
   );

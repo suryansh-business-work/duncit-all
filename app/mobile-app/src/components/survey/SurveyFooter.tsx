@@ -1,7 +1,7 @@
 import type { LayoutChangeEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, XStack, YStack } from 'tamagui';
-import { PRESS_STYLE } from '@duncit/buttons-native';
+import { BUTTON_SIZES, PRESS_STYLE } from '@duncit/buttons-native';
 
 export interface SurveyFooterProps {
   count: number;
@@ -17,7 +17,8 @@ export interface SurveyFooterProps {
 
 /**
  * Sticky bottom action bar. Rendered OUTSIDE the ScrollView and absolutely
- * positioned, with the scroll content padded to clear it.
+ * positioned, with the scroll content padded to clear it: the count on the
+ * left, the green pill CTA on the right.
  */
 export function SurveyFooter({
   count,
@@ -40,19 +41,10 @@ export function SurveyFooter({
       borderColor="$borderColor"
       backgroundColor="$surface"
       paddingHorizontal={16}
-      paddingTop={8}
-      paddingBottom={insets.bottom + 8}
+      paddingTop={12}
+      paddingBottom={insets.bottom + 12}
     >
-      <XStack
-        alignItems="center"
-        gap={12}
-        borderRadius={16}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$background"
-        paddingHorizontal={16}
-        paddingVertical={12}
-      >
+      <XStack alignItems="center" gap={16}>
         <YStack flex={1}>
           <Text fontSize={12} color="$muted">
             Selected
@@ -74,14 +66,17 @@ export function SurveyFooter({
           onPress={() => {
             if (canSubmit) onSubmit();
           }}
-          borderRadius={10}
+          minWidth={160}
+          height={BUTTON_SIZES.lg.height}
+          alignItems="center"
+          justifyContent="center"
+          borderRadius={999}
           backgroundColor="$primary"
-          paddingHorizontal={20}
-          paddingVertical={12}
+          paddingHorizontal={BUTTON_SIZES.lg.paddingHorizontal}
           opacity={canSubmit ? 1 : 0.5}
-          pressStyle={PRESS_STYLE.control}
+          pressStyle={PRESS_STYLE.solid}
         >
-          <Text fontSize={16} fontWeight="600" color="$onPrimary">
+          <Text fontSize={BUTTON_SIZES.lg.fontSize} fontWeight="600" color="$onPrimary">
             {saving ? 'Saving…' : 'Find my crew'}
           </Text>
         </XStack>

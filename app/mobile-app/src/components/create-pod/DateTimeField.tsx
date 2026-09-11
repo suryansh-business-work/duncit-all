@@ -75,11 +75,9 @@ export function DateTimeField({
           height={44}
           alignItems="center"
           justifyContent="center"
-          borderRadius={10}
-          borderWidth={1}
-          borderColor="$borderColor"
-          backgroundColor="$surface"
-          pressStyle={PRESS_STYLE.row}
+          borderRadius={22}
+          backgroundColor="$soft"
+          pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="event" size={20} color={ink} />
         </XStack>
@@ -115,9 +113,9 @@ export function DateTimeField({
               width="92%"
               maxWidth={420}
               maxHeight="86%"
-              backgroundColor="$background"
-              borderRadius={20}
-              padding={16}
+              backgroundColor="$surface"
+              borderRadius={28}
+              padding={20}
             >
               <ScrollView showsVerticalScrollIndicator={false}>
                 <CalendarSheet

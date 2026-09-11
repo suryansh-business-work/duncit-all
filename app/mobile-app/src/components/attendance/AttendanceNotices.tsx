@@ -10,6 +10,7 @@ import {
 } from '@duncit/utils';
 
 import { AttendeeAvatar } from '@/components/attendance/AttendeeAvatar';
+import { NoticeCard } from '@/components/attendance/NoticeCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -24,62 +25,31 @@ export function AttendanceSummary({
   board,
   labels,
 }: Readonly<{ board: PodAttendanceBoard; labels: PodAttendanceLabels }>) {
-  const { success, primary } = useThemeColors();
   const percent = attendanceProgress(board);
   const complete = board.total_count > 0 && board.marked_count === board.total_count;
-  const tint = complete ? success : primary;
 
   return (
-    <YStack gap={6} testID="attendance-summary">
+    <YStack gap={8} testID="attendance-summary">
       <XStack alignItems="center" justifyContent="space-between" gap={8}>
-        <Text fontSize={13.5} fontWeight="700" color="$color">
+        <Text flexShrink={1} fontSize={15} fontWeight="600" color="$color">
           {labels.summary(board.marked_seats, board.total_seats)}
         </Text>
-        <Text fontSize={12} fontWeight="700" color={tint}>
-          {labels.bookingsSummary(board.marked_count, board.total_count)}
-        </Text>
+        <XStack
+          alignItems="center"
+          height={28}
+          paddingHorizontal={12}
+          borderRadius={999}
+          backgroundColor={complete ? '$successSoft' : '$soft'}
+        >
+          <Text fontSize={12} fontWeight="600" color="$color">
+            {labels.bookingsSummary(board.marked_count, board.total_count)}
+          </Text>
+        </XStack>
       </XStack>
-      <YStack height={8} borderRadius={999} backgroundColor="$surface" overflow="hidden">
-        <YStack height={8} width={`${percent}%`} backgroundColor={tint} />
+      <YStack height={8} borderRadius={999} backgroundColor="$primarySoft" overflow="hidden">
+        <YStack height={8} borderRadius={999} width={`${percent}%`} backgroundColor="$primary" />
       </YStack>
     </YStack>
-  );
-}
-
-/** A titled block of copy with a coloured rail — the RN stand-in for an Alert. */
-function NoticeBlock({
-  tint,
-  icon,
-  title,
-  body,
-  testID,
-}: Readonly<{
-  tint: string;
-  icon: keyof typeof MaterialIcons.glyphMap;
-  title: string;
-  body: string;
-  testID: string;
-}>) {
-  return (
-    <XStack
-      testID={testID}
-      gap={10}
-      padding={12}
-      borderRadius={14}
-      borderLeftWidth={3}
-      borderLeftColor={tint}
-      backgroundColor="$surface"
-    >
-      <MaterialIcons name={icon} size={18} color={tint} />
-      <YStack flex={1} gap={3}>
-        <Text fontSize={13} fontWeight="800" color="$color">
-          {title}
-        </Text>
-        <Text fontSize={12.5} color="$muted" lineHeight={17}>
-          {body}
-        </Text>
-      </YStack>
-    </XStack>
   );
 }
 
@@ -90,12 +60,10 @@ export function EarningsNotice({
   labels,
   body,
 }: Readonly<{ labels: PodAttendanceLabels; body: string }>) {
-  const { primary } = useThemeColors();
   return (
-    <NoticeBlock
+    <NoticeCard
       testID="attendance-earnings-note"
-      tint={primary}
-      icon="info"
+      tone="info"
       title={labels.earningsTitle}
       body={body}
     />
@@ -115,11 +83,10 @@ export function DeadlineNotice({
   when,
   hours,
 }: Readonly<{ labels: PodAttendanceLabels; when: string; hours: number }>) {
-  const { warning } = useThemeColors();
   return (
-    <NoticeBlock
+    <NoticeCard
       testID="attendance-deadline-note"
-      tint={warning}
+      tone="warning"
       icon="schedule"
       title={labels.deadlineTitle(when)}
       body={labels.deadlineBody(hours)}
@@ -132,11 +99,10 @@ export function LockedNotice({
   lock,
   labels,
 }: Readonly<{ lock: PodAttendanceLock; labels: PodAttendanceLabels }>) {
-  const { warning } = useThemeColors();
   return (
-    <NoticeBlock
+    <NoticeCard
       testID="attendance-locked-note"
-      tint={warning}
+      tone="warning"
       icon="lock"
       title={labels.lockedTitle(lock)}
       body={labels.lockedBody(lock)}
@@ -144,29 +110,28 @@ export function LockedNotice({
   );
 }
 
-/** One tappable way to reach a person. */
+/** One tappable way to reach a person — a soft pill, like the mWeb chip. */
 function ContactPill({
   label,
   icon,
   url,
 }: Readonly<{ label: string; icon: keyof typeof MaterialIcons.glyphMap; url: string }>) {
-  const { primary } = useThemeColors();
+  const { color: ink } = useThemeColors();
   return (
     <XStack
       role="button"
       aria-label={label}
       onPress={() => openUrl(url)}
       alignItems="center"
-      gap={5}
-      paddingHorizontal={10}
-      height={30}
+      gap={6}
+      paddingHorizontal={12}
+      height={32}
       borderRadius={999}
-      borderWidth={1}
-      borderColor="$borderColor"
-      pressStyle={PRESS_STYLE.row}
+      backgroundColor="$soft"
+      pressStyle={PRESS_STYLE.control}
     >
-      <MaterialIcons name={icon} size={14} color={primary} />
-      <Text fontSize={12} fontWeight="700" color="$color">
+      <MaterialIcons name={icon} size={14} color={ink} />
+      <Text fontSize={13} fontWeight="600" color="$color">
         {label}
       </Text>
     </XStack>
@@ -180,10 +145,10 @@ function ClubAdminRow({
   const dial = admin.phone.replace(/[^\d+]/g, '');
   const wa = admin.whatsapp.replace(/\D/g, '');
   return (
-    <XStack gap={10} alignItems="center">
-      <AttendeeAvatar uri={admin.avatar_url} name={admin.name} size={34} />
-      <YStack flex={1} gap={4}>
-        <Text fontSize={13.5} fontWeight="700" color="$color" numberOfLines={1}>
+    <XStack gap={12} alignItems="center">
+      <AttendeeAvatar uri={admin.avatar_url} name={admin.name} size={36} />
+      <YStack flex={1} gap={6}>
+        <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
           {admin.name}
         </Text>
         <XStack gap={6} flexWrap="wrap">
@@ -216,20 +181,22 @@ export function ClubAdminHelpCard({
   return (
     <YStack
       testID="attendance-club-admin-card"
-      gap={10}
-      padding={14}
-      borderRadius={14}
+      gap={12}
+      padding={16}
+      borderRadius={16}
       borderWidth={1}
       borderColor="$borderColor"
     >
-      <Text fontSize={13.5} fontWeight="800" color="$color">
-        {labels.clubAdminTitle}
-      </Text>
-      <Text fontSize={12} color="$muted" lineHeight={17}>
-        {labels.clubAdminBody}
-      </Text>
+      <YStack gap={4}>
+        <Text fontSize={15} fontWeight="600" color="$color">
+          {labels.clubAdminTitle}
+        </Text>
+        <Text fontSize={13} color="$muted" lineHeight={18}>
+          {labels.clubAdminBody}
+        </Text>
+      </YStack>
       {admins.length === 0 ? (
-        <Text fontSize={12.5} color="$muted">
+        <Text fontSize={13} color="$muted">
           {labels.clubAdminNone}
         </Text>
       ) : (

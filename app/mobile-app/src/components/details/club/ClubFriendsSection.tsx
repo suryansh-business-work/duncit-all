@@ -3,6 +3,8 @@ import { Modal, TouchableOpacity } from 'react-native';
 import { Avatar, AvatarImage, Text, XStack, YStack } from 'tamagui';
 import { MaterialIcons } from '@expo/vector-icons';
 
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { graphqlRequest } from '@/services/graphql.client';
 import { PodPeopleDocument } from '@/graphql/details';
 import type { PodPerson } from '@/hooks/useDetails';
@@ -32,7 +34,7 @@ function useFriendProfiles(friendIds: string[]) {
 }
 
 export function ClubFriendsSection({ friendIds, onOpenProfile }: Readonly<Props>) {
-  const { primary, muted } = useThemeColors();
+  const { muted } = useThemeColors();
   // The sheet is flush to the bottom edge the Android navigation bar paints over.
   const bottomInset = useBottomInset();
   const [modalVisible, setModalVisible] = useState(false);
@@ -46,38 +48,33 @@ export function ClubFriendsSection({ friendIds, onOpenProfile }: Readonly<Props>
     profiles.length === 1 ? firstLabel : `${firstLabel} and ${profiles.length - 1} more`;
 
   return (
-    <YStack gap={8} testID="club-friends">
-      <Text fontSize={16} fontWeight="700" color="$color">
-        Friends Here
-      </Text>
+    <SurfaceCard gap={12} testID="club-friends">
+      <SectionHeader
+        title="Friends Here"
+        actionLabel="View all"
+        onAction={() => setModalVisible(true)}
+      />
       <XStack alignItems="center" gap={12}>
         <XStack>
           {preview.map((p, i) => (
             <XStack key={p.user_id} marginLeft={i === 0 ? 0 : -10} zIndex={preview.length - i}>
-              <Avatar circular size={36} borderColor="$background" borderWidth={2}>
+              <Avatar circular size={36} borderColor="$surface" borderWidth={2}>
                 <AvatarImage src={p.profile_photo ?? undefined} />
               </Avatar>
             </XStack>
           ))}
         </XStack>
-        <YStack flex={1}>
-          <Text fontSize={13} fontWeight="700" color="$color" numberOfLines={1}>
-            {subtitle}
-          </Text>
-          <TouchableOpacity onPress={() => setModalVisible(true)}>
-            <Text fontSize={12} fontWeight="700" color={primary}>
-              View all
-            </Text>
-          </TouchableOpacity>
-        </YStack>
+        <Text flex={1} fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
+          {subtitle}
+        </Text>
       </XStack>
 
       <Modal visible={modalVisible} animationType="slide" transparent>
         <YStack flex={1} backgroundColor="rgba(0,0,0,0.5)" justifyContent="flex-end">
           <YStack
-            backgroundColor="$background"
-            borderTopLeftRadius={20}
-            borderTopRightRadius={20}
+            backgroundColor="$surface"
+            borderTopLeftRadius={28}
+            borderTopRightRadius={28}
             padding={20}
             paddingBottom={20 + bottomInset}
             maxHeight="70%"
@@ -111,6 +108,6 @@ export function ClubFriendsSection({ friendIds, onOpenProfile }: Readonly<Props>
           </YStack>
         </YStack>
       </Modal>
-    </YStack>
+    </SurfaceCard>
   );
 }

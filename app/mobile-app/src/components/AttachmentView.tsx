@@ -20,15 +20,15 @@ function FileCard({ info }: Readonly<{ info: AttachmentInfo }>) {
       onPress={() => Linking.openURL(info.url)}
       alignItems="center"
       gap={8}
-      padding={8}
+      padding={10}
       maxWidth={240}
-      borderRadius={10}
-      backgroundColor="$background"
+      borderRadius={14}
+      backgroundColor="$soft"
       pressStyle={PRESS_STYLE.control}
     >
       <MaterialIcons name={icon} size={22} color={muted} />
       <YStack flex={1} minWidth={0}>
-        <Text fontSize={12.5} fontWeight="700" color="$color" numberOfLines={1}>
+        <Text fontSize={12.5} fontWeight="600" color="$color" numberOfLines={1}>
           {info.name}
         </Text>
         <Text fontSize={11} color="$muted">
@@ -59,7 +59,7 @@ export function AttachmentView({ urls, size = 180 }: Readonly<Props>) {
             <AppImage
               key={url}
               source={{ uri: url }}
-              style={{ width: size, height: size, borderRadius: 10 }}
+              style={{ width: size, height: size, borderRadius: 12 }}
               resizeMode="cover"
             />
           );

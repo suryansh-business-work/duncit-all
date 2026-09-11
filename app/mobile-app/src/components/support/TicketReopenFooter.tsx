@@ -22,7 +22,7 @@ export function TicketReopenFooter({
   onReopen,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { color: ink } = useThemeColors();
+  const { primary } = useThemeColors();
 
   if (reopenable) {
     return (
@@ -32,7 +32,7 @@ export function TicketReopenFooter({
           role="button"
           aria-label={t('mweb.support.reOpenTicket')}
           onPress={onReopen}
-          height={42}
+          height={44}
           alignItems="center"
           justifyContent="center"
           gap={8}
@@ -41,7 +41,7 @@ export function TicketReopenFooter({
           borderColor="$primary"
           pressStyle={PRESS_STYLE.control}
         >
-          <MaterialIcons name="replay" size={18} color={ink} />
+          <MaterialIcons name="replay" size={18} color={primary} />
           <Text fontSize={13} fontWeight="600" color="$primary">
             Re-open ticket
           </Text>

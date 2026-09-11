@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography, alpha } from '@mui/material';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import { DuncitButton } from '@duncit/buttons';
 
@@ -21,14 +21,14 @@ export default function SuccessScreen() {
           borderRadius: '50%',
           display: 'grid',
           placeItems: 'center',
-          color: 'common.white',
-          background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)',
+          color: 'primary.main',
+          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
         }}
       >
         <CheckCircleRoundedIcon sx={{ fontSize: 40 }} />
       </Box>
       <Typography variant="h6" sx={{
-        fontWeight: 700
+        fontWeight: 600
       }}>
         Your Request Has Been Submitted
       </Typography>
@@ -46,7 +46,7 @@ export default function SuccessScreen() {
         variant="contained"
         size="large"
         onClick={() => navigate('/host/manage')}
-        sx={{ borderRadius: 999, fontWeight: 700, px: 4 }}
+        sx={{ px: 4 }}
       >
         Okay
       </DuncitButton>

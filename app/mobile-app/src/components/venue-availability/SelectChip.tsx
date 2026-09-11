@@ -12,7 +12,8 @@ interface Props {
   onPress: () => void;
 }
 
-/** A single toggling pill, the same shape as the create-pod chip pickers. */
+/** A single toggling pill — green when picked, a hairline surface pill when
+ * not — the same shape as the create-pod chip pickers. */
 export function SelectChip({
   testID,
   label,
@@ -28,16 +29,18 @@ export function SelectChip({
       aria-label={ariaLabel ?? label}
       aria-pressed={selected}
       onPress={onPress}
-      paddingHorizontal={12}
-      paddingVertical={7}
+      alignItems="center"
+      minHeight={36}
+      paddingHorizontal={14}
+      paddingVertical={8}
       borderRadius={999}
       borderWidth={1}
       borderColor={selected ? '$primary' : '$borderColor'}
-      backgroundColor={selected ? '$primary' : 'transparent'}
+      backgroundColor={selected ? '$primary' : '$surface'}
       opacity={dim && !selected ? 0.5 : 1}
       pressStyle={PRESS_STYLE.control}
     >
-      <Text fontSize={12.5} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
+      <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
         {label}
       </Text>
     </XStack>

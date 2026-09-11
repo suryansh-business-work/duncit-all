@@ -5,6 +5,7 @@ import { Input, Text, XStack, YStack } from 'tamagui';
 import { OptionChipRow, Section } from '@/components/home/HomeFilterParts';
 import { SHOP_RATING_OPTIONS, type ShopFilters } from '@/hooks/useShopFilters';
 import type { ShopSort } from '@/screens/ShopScreen';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -20,22 +21,24 @@ interface Props {
  * twin of mWeb's ShopFilterBar. */
 export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) {
   const { t } = useTranslation();
+  const { primary, onPrimary } = useThemeColors();
   const [open, setOpen] = useState(false);
   return (
-    <YStack gap={10} paddingHorizontal={16} paddingTop={8}>
-      <XStack gap={8} alignItems="center">
+    <YStack gap={12} paddingHorizontal={16}>
+      <XStack gap={10} alignItems="center">
+        {/* The pill search field — white on the page ground, borderless in light. */}
         <XStack
           flex={1}
           alignItems="center"
           gap={8}
-          paddingHorizontal={12}
-          height={46}
+          paddingHorizontal={18}
+          height={52}
           borderRadius={999}
           borderWidth={1}
-          borderColor="$borderColor"
-          backgroundColor="$background"
+          borderColor="$cardBorder"
+          backgroundColor="$surface"
         >
-          <MaterialIcons name="search" size={20} color={muted} />
+          <MaterialIcons name="search" size={22} color={muted} />
           <Input
             testID="shop-search-input"
             aria-label={t('mweb.shop.searchProducts')}
@@ -55,32 +58,31 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
           role="button"
           aria-label={t('mweb.common.filters')}
           onPress={() => setOpen((v) => !v)}
-          width={46}
-          height={46}
+          width={52}
+          height={52}
           borderRadius={999}
-          borderWidth={1}
-          borderColor="$borderColor"
-          backgroundColor={open ? '$primary' : '$background'}
+          backgroundColor={open ? '$primaryPress' : '$primary'}
           alignItems="center"
           justifyContent="center"
           pressStyle={PRESS_STYLE.control}
         >
-          <MaterialIcons name="tune" size={20} color={open ? '#ffffff' : muted} />
+          {/* The round green filter button; a darker green while the panel is open. */}
+          <MaterialIcons name="tune" size={24} color={onPrimary} />
           {filters.activeCount > 0 ? (
             <YStack
               testID="shop-filter-count"
               position="absolute"
               top={-2}
               right={-2}
-              minWidth={16}
-              height={16}
-              paddingHorizontal={3}
+              minWidth={18}
+              height={18}
+              paddingHorizontal={4}
               alignItems="center"
               justifyContent="center"
               borderRadius={999}
-              backgroundColor="$danger"
+              backgroundColor="$accent"
             >
-              <Text fontSize={9} fontWeight="700" color="#ffffff">
+              <Text fontSize={10} fontWeight="600" color="$onPrimary">
                 {filters.activeCount}
               </Text>
             </YStack>
@@ -144,9 +146,9 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
             <MaterialIcons
               name={filters.includeOutOfStock ? 'check-box' : 'check-box-outline-blank'}
               size={22}
-              color={filters.includeOutOfStock ? '#2e7d32' : muted}
+              color={filters.includeOutOfStock ? primary : muted}
             />
-            <Text fontSize={13} fontWeight="700" color="$color">
+            <Text fontSize={13} fontWeight="600" color="$color">
               {t('mweb.shop.includeOutOfStock')}
             </Text>
           </XStack>

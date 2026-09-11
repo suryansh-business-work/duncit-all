@@ -87,13 +87,13 @@ export function PolicyAcceptanceSheet({
           />
           <YStack
             backgroundColor="$background"
-            borderTopLeftRadius={22}
-            borderTopRightRadius={22}
+            borderTopLeftRadius={28}
+            borderTopRightRadius={28}
             maxHeight="86%"
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
-              <XStack alignItems="center" gap={8} paddingHorizontal={16} paddingVertical={14}>
-                <Text flex={1} fontSize={17} fontWeight="700" color="$color" numberOfLines={2}>
+              <XStack alignItems="center" gap={8} paddingHorizontal={16} paddingVertical={16}>
+                <Text flex={1} fontSize={17} fontWeight="600" color="$color" numberOfLines={2}>
                   {reading?.title ?? t('policyAcceptance.dialogTitle')}
                 </Text>
                 <XStack
@@ -101,11 +101,11 @@ export function PolicyAcceptanceSheet({
                   role="button"
                   aria-label={t('policyAcceptance.close')}
                   onPress={dismiss}
-                  width={32}
-                  height={32}
+                  width={40}
+                  height={40}
                   alignItems="center"
                   justifyContent="center"
-                  borderRadius={16}
+                  borderRadius={20}
                   backgroundColor="$surface"
                   pressStyle={PRESS_STYLE.row}
                 >
@@ -141,15 +141,16 @@ export function PolicyAcceptanceSheet({
                       aria-label={t('policyAcceptance.close')}
                       onPress={onClose}
                       flex={1}
-                      height={46}
-                      borderRadius={12}
+                      height={48}
+                      borderRadius={999}
                       borderWidth={1}
                       borderColor="$borderColor"
+                      backgroundColor="$surface"
                       alignItems="center"
                       justifyContent="center"
-                      pressStyle={PRESS_STYLE.ghost}
+                      pressStyle={PRESS_STYLE.control}
                     >
-                      <Text fontSize={14} fontWeight="700" color="$color">
+                      <Text fontSize={15} fontWeight="600" color="$color">
                         {t('policyAcceptance.close')}
                       </Text>
                     </XStack>
@@ -160,15 +161,15 @@ export function PolicyAcceptanceSheet({
                       aria-disabled={!canAcceptAll}
                       onPress={acceptAll}
                       flex={1.4}
-                      height={46}
-                      borderRadius={12}
+                      height={48}
+                      borderRadius={999}
                       backgroundColor="$primary"
                       alignItems="center"
                       justifyContent="center"
                       opacity={canAcceptAll ? 1 : 0.5}
-                      pressStyle={PRESS_STYLE.control}
+                      pressStyle={PRESS_STYLE.solid}
                     >
-                      <Text fontSize={14} fontWeight="700" color="$onPrimary">
+                      <Text fontSize={15} fontWeight="600" color="$onPrimary">
                         {t('policyAcceptance.acceptAll')}
                       </Text>
                     </XStack>

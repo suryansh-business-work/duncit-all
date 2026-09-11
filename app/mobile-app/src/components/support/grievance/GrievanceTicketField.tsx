@@ -56,7 +56,7 @@ export function GrievanceTicketField({ control, options, loading }: Readonly<Pro
         };
         return (
           <YStack gap={4}>
-            <Text fontSize={11.5} fontWeight="600" color="$muted">
+            <Text fontSize={12} fontWeight="600" color="$muted">
               {copy.label}
               <RequiredMark required testID="grievance-support_ticket_ref" />
             </Text>
@@ -70,10 +70,10 @@ export function GrievanceTicketField({ control, options, loading }: Readonly<Pro
               alignItems="center"
               height={46}
               paddingHorizontal={12}
-              borderRadius={12}
+              borderRadius={14}
               borderWidth={1}
               borderColor={borderColor}
-              backgroundColor="$background"
+              backgroundColor="$surface"
             >
               <MaterialIcons name="confirmation-number" size={18} color={muted} />
               <Text flex={1} marginLeft={8} fontSize={14} color={chosen ? '$color' : '$muted'}>

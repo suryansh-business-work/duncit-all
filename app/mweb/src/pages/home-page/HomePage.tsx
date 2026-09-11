@@ -7,6 +7,7 @@ import FilterMenu from './FilterMenu';
 import HomeSearch from './HomeSearch';
 import HomeSkeleton from './HomeSkeleton';
 import HomeStatusRail from './HomeStatusRail';
+import HomeEmptyState from './HomeEmptyState';
 import HomeFeaturedPods from './HomeFeaturedPods';
 import HomeNearbyHeader from './HomeNearbyHeader';
 import HomeVibeChips from './HomeVibeChips';
@@ -84,38 +85,21 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
   // A chip/filter narrows the rails; the full-list pages are unfiltered, so
   // the See-all cards drop their count + jump-to-index while one is active.
   const railsFiltered = Boolean(categoryId) || priceFilter !== 'ALL' || dateFilter !== 'ALL';
+  const savedOf = saved.signedIn ? saved.isSaved : undefined;
+  const savingOf = saved.signedIn ? saved.isSaving : undefined;
+  const onToggleSave = saved.signedIn ? saved.toggle : undefined;
 
+  // One 16px gutter for the whole page (native's paddingHorizontal: 16); the
+  // rails bleed out of it to the screen edges. 24px between sections.
   return (
-    <Stack
-      spacing={3}
-      sx={{
-        pt: 0.25,
-        mx: { xs: -1.25, sm: -2 },
-        px: { xs: 1.25, sm: 2 },
-        minHeight: '100%',
-      }}
-    >
-      <HomeStatusRail
-        me={me ? { ...me, my_stories: myStories } : me}
-        branding={branding}
-        followedClubs={followedClubs}
-        hostPods={hostPods}
-        followedPosts={followedPosts}
-        clubStories={clubStories}
-        followedUsers={followedUsers}
-      />
-      <Box data-tour="home-categories">
-      <HomeVibeChips
-        categories={vibeCategories}
-        selectedId={categoryId}
-        onSelect={setCategoryId}
-        allIcon={branding?.home_all_vibe_icon_url}
-        allLayout={branding?.home_all_vibe_icon_layout}
-        heading={branding?.home_vibe_heading}
-        subheading={branding?.home_vibe_subheading}
-        action={
-          <Box data-tour="home-filters" component="span">
+    <Stack spacing={3} sx={{ pt: 0.25, mx: { xs: -1.25, sm: -2 }, px: 2, minHeight: '100%' }}>
+      <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
+        <Box data-tour="home-search" sx={{ flex: 1, minWidth: 0 }}>
+          <HomeSearch locationId={locationId} zoneName={zoneName} disabled={noContent} />
+        </Box>
+        <Box data-tour="home-filters" component="span" sx={{ display: 'inline-flex' }}>
           <FilterMenu
+            round
             open={filtersOpen}
             onOpenChange={setFiltersOpen}
             categoryChips={categoryChips}
@@ -130,73 +114,82 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
             locationId={locationId}
             disabled={noContent}
           />
-          </Box>
-        }
+        </Box>
+      </Stack>
+      <HomeStatusRail
+        me={me ? { ...me, my_stories: myStories } : me}
+        branding={branding}
+        followedClubs={followedClubs}
+        hostPods={hostPods}
+        followedPosts={followedPosts}
+        clubStories={clubStories}
+        followedUsers={followedUsers}
       />
+      <Box data-tour="home-categories">
+        <HomeVibeChips
+          categories={vibeCategories}
+          selectedId={categoryId}
+          onSelect={setCategoryId}
+          allIcon={branding?.home_all_vibe_icon_url}
+        />
       </Box>
-      <Stack spacing={2.25}>
-        <HomeNearbyHeader totalPods={totalPods} onOpen={() => navigate('/happening-nearby')} />
+      <Stack spacing={1.5}>
+        <HomeNearbyHeader onOpen={() => navigate('/happening-nearby')} />
         <Box data-tour="home-pods">
           <HomeFeaturedPods
             pods={featuredPods}
             totalCount={totalPods}
             filtered={railsFiltered}
             categoryLabelOf={categoryLabelOf}
-            savedOf={saved.signedIn ? saved.isSaved : undefined}
-            savingOf={saved.signedIn ? saved.isSaving : undefined}
-            onToggleSave={saved.signedIn ? saved.toggle : undefined}
+            savedOf={savedOf}
+            savingOf={savingOf}
+            onToggleSave={onToggleSave}
           />
         </Box>
-        <OngoingPodsRail pods={ongoingPods} hostNameOf={hostNameOf} />
-        <HostCtaBanner
-          isHost={isHost}
-          onCreatePod={() => navigate('/create-pod')}
-          onBecomeHost={() => navigate('/earn')}
-        />
-        <ClubRecommendationRow clubs={clubs} locations={locations} />
-        <Box data-tour="home-search">
-          <HomeSearch locationId={locationId} zoneName={zoneName} disabled={noContent} />
-        </Box>
-
-        {clubs.length === 0 ? (
-          <Alert severity="info">
-            No clubs in this category {locationId ? 'for the selected city' : ''} yet.
-          </Alert>
-        ) : (
-          <Box data-tour="home-clubs">
-            {clubs.map((club: any) => (
-              <ClubSection
-                key={club.id}
-                club={club}
-                clubPods={podsByClub.get(club.id) ?? []}
-                hostNameOf={hostNameOf}
-                categoryLabelOf={categoryLabelOf}
-                savedOf={saved.signedIn ? saved.isSaved : undefined}
-                savingOf={saved.signedIn ? saved.isSaving : undefined}
-                onToggleSave={saved.signedIn ? saved.toggle : undefined}
-              />
-            ))}
-          </Box>
-        )}
-        <PreviousPodsRail pods={previousPods} hostNameOf={hostNameOf} filtered={railsFiltered} />
-        <SomethingForYouRail />
-        <AdSlot position="HOME_BOTTOM" variant="banner" />
-        {isHost && (
-          <Fab
-            color="primary"
-            aria-label={t('mweb.common.createPod')}
-            onClick={() => navigate('/create-pod')}
-            sx={{
-              position: 'fixed',
-              bottom: 'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 16px)',
-              right: 16,
-              zIndex: 5,
-            }}
-          >
-            <AddIcon />
-          </Fab>
-        )}
       </Stack>
+      <OngoingPodsRail pods={ongoingPods} hostNameOf={hostNameOf} />
+      <HostCtaBanner
+        isHost={isHost}
+        onCreatePod={() => navigate('/create-pod')}
+        onBecomeHost={() => navigate('/earn')}
+      />
+      <ClubRecommendationRow clubs={clubs} locations={locations} />
+      {clubs.length === 0 ? (
+        <HomeEmptyState />
+      ) : (
+        <Stack spacing={3} data-tour="home-clubs">
+          {clubs.map((club: any) => (
+            <ClubSection
+              key={club.id}
+              club={club}
+              clubPods={podsByClub.get(club.id) ?? []}
+              hostNameOf={hostNameOf}
+              categoryLabelOf={categoryLabelOf}
+              savedOf={savedOf}
+              savingOf={savingOf}
+              onToggleSave={onToggleSave}
+            />
+          ))}
+        </Stack>
+      )}
+      <PreviousPodsRail pods={previousPods} hostNameOf={hostNameOf} filtered={railsFiltered} />
+      <SomethingForYouRail />
+      <AdSlot position="HOME_BOTTOM" variant="banner" />
+      {isHost && (
+        <Fab
+          color="primary"
+          aria-label={t('mweb.common.createPod')}
+          onClick={() => navigate('/create-pod')}
+          sx={{
+            position: 'fixed',
+            bottom: 'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 16px)',
+            right: 16,
+            zIndex: 5,
+          }}
+        >
+          <AddIcon />
+        </Fab>
+      )}
     </Stack>
   );
 }

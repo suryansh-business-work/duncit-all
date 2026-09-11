@@ -4,6 +4,7 @@ import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { VenueChargesSheet } from '@/components/checkout/VenueChargesSheet';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -31,7 +32,7 @@ function Row({
   const labelColor = tone ?? (bold ? '$color' : '$muted');
   return (
     <XStack justifyContent="space-between" alignItems="center">
-      <Text fontSize={bold ? 15 : 13} fontWeight={bold ? '700' : '600'} color={labelColor}>
+      <Text fontSize={bold ? 15 : 13} fontWeight={bold ? '700' : '500'} color={labelColor}>
         {label}
       </Text>
       <Text fontSize={bold ? 16 : 13} fontWeight={bold ? '700' : '600'} color={tone ?? '$color'}>
@@ -72,7 +73,7 @@ export function OrderSummary({
   /** Coins spent, left and earned on this bill. Absent hides the coin block. */
   coins?: CoinCheckoutSummary | null;
 }>) {
-  const { onPrimary, muted } = useThemeColors();
+  const { primary, muted } = useThemeColors();
   const { t } = useTranslation();
   // The buyer chose this on Pod Details and the ticket price is × it, so the
   // number has to be visible here — a silent multiplier reads as a wrong price.
@@ -91,30 +92,20 @@ export function OrderSummary({
   const [venueInfoOpen, setVenueInfoOpen] = useState(false);
 
   return (
-    <YStack
-      testID="order-summary"
-      borderRadius={18}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      overflow="hidden"
-    >
+    <SurfaceCard testID="order-summary" gap={8}>
       {image ? (
         <AppImage
           source={{ uri: image }}
-          style={{ width: '100%', height: 140 }}
+          style={{ width: '100%', height: 140, borderRadius: 18, marginBottom: 4 }}
           resizeMode="cover"
         />
       ) : null}
-      <YStack padding={16} gap={8}>
-        <Text fontSize={11} fontWeight="600" textTransform="uppercase" color="$muted">
-          {t('mweb.checkout.ticket')}
-        </Text>
-        <Text fontSize={17} fontWeight="700" color="$color">
+      <YStack gap={8}>
+        <Text fontSize={16} fontWeight="600" color="$color">
           {pod?.pod_title ?? t('mweb.checkout.podBooking')}
         </Text>
         {pod?.pod_date_time ? (
-          <Text fontSize={12.5} color="$muted">
+          <Text fontSize={13} color="$muted">
             {formatDateTime(pod.pod_date_time)}
             {pod.zone_name ? ` · ${pod.zone_name}` : ''}
           </Text>
@@ -128,10 +119,10 @@ export function OrderSummary({
           paddingHorizontal={10}
           paddingVertical={4}
           borderRadius={999}
-          backgroundColor="$primary"
+          backgroundColor="$primarySoft"
         >
-          <MaterialIcons name="groups" size={15} color={onPrimary} />
-          <Text fontSize={12.5} fontWeight="700" color={onPrimary}>
+          <MaterialIcons name="groups" size={15} color={primary} />
+          <Text fontSize={12.5} fontWeight="600" color="$primary">
             {seatsText}
           </Text>
         </XStack>
@@ -171,10 +162,8 @@ export function OrderSummary({
             testID="venue-charges-row"
             marginTop={8}
             padding={12}
-            borderRadius={12}
-            borderWidth={1}
-            borderColor="$borderColor"
-            backgroundColor="$background"
+            borderRadius={16}
+            backgroundColor="$soft"
             gap={4}
           >
             <XStack justifyContent="space-between" alignItems="center">
@@ -208,6 +197,6 @@ export function OrderSummary({
         currency={breakup.currency}
         onClose={() => setVenueInfoOpen(false)}
       />
-    </YStack>
+    </SurfaceCard>
   );
 }

@@ -19,6 +19,7 @@ import { useApolloClient } from '@apollo/client/react';
 import { AiMonitoringChip } from '@duncit/ai-monitoring/mui';
 import { MB, compressUploadedVideo, useImagekitDirectUpload, useUploadCaps } from '@duncit/media-picker';
 import { useTranslation } from '../../../../i18n/useTranslation';
+import { SURFACE_SX } from '../../../../theme';
 import type { CreatePodForm } from '../create-pod.types';
 
 const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
@@ -95,37 +96,41 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
     <Accordion
       disableGutters
       square
-      sx={{
-        '&:before': { display: 'none' },
-        border: '1px solid',
-        borderColor: 'divider',
-        borderRadius: '16px',
-        overflow: 'hidden',
-        boxShadow: 'none',
-        bgcolor: 'background.paper',
-      }}
+      sx={{ ...SURFACE_SX, '&:before': { display: 'none' }, overflow: 'hidden' }}
     >
       <AccordionSummary
-        expandIcon={<ExpandMoreIcon />}
-        sx={{ minHeight: 56 }}
+        expandIcon={<ExpandMoreIcon sx={{ color: 'text.secondary' }} />}
+        sx={{ minHeight: 68, px: 2 }}
         aria-controls="pod-reel-content"
         id="pod-reel-header"
       >
-        <Stack
-          direction="row"
-          spacing={1.25}
-          sx={{
-            alignItems: "center",
-            flex: 1
-          }}>
-          <MovieOutlinedIcon color="primary" fontSize="small" />
-          <Typography variant="subtitle2" sx={{
-            fontWeight: 700
-          }}>{t('mweb.createPod.podReel')}</Typography>
-          {hasReel && <Chip label={t('mweb.createPod.summaryAdded')} size="small" color="primary" />}
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', flex: 1 }}>
+          <Box
+            sx={{
+              display: 'grid',
+              placeItems: 'center',
+              width: 40,
+              height: 40,
+              flexShrink: 0,
+              borderRadius: '50%',
+              bgcolor: 'action.hover',
+              color: 'secondary.main',
+            }}
+          >
+            <MovieOutlinedIcon />
+          </Box>
+          <Typography sx={{ flex: 1, fontSize: '0.95rem', fontWeight: 600 }}>{t('mweb.createPod.podReel')}</Typography>
+          {hasReel && (
+            <Chip
+              label={t('mweb.createPod.summaryAdded')}
+              size="small"
+              color="primary"
+              sx={{ height: 26, minHeight: 26, fontSize: '0.75rem', mr: 1 }}
+            />
+          )}
         </Stack>
       </AccordionSummary>
-      <AccordionDetails>
+      <AccordionDetails sx={{ px: 2, pb: 2 }}>
         <Stack spacing={1.25}>
           <Typography variant="caption" sx={{
             color: "text.secondary"
@@ -141,7 +146,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
               src={reelUrl}
               controls
               playsInline
-              sx={{ width: '100%', maxHeight: 320, borderRadius: '16px', bgcolor: 'common.black' }}
+              sx={{ width: '100%', maxHeight: 320, borderRadius: '18px', bgcolor: 'common.black' }}
             />
           )}
           {error && (

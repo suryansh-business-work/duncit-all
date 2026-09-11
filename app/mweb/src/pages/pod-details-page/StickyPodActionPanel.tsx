@@ -22,6 +22,9 @@ interface Props {
   onGoToDashboard: () => void;
 }
 
+/** The booking bar: a floating 24px surface card above the bottom nav, price
+ * or state on the left and the one green action on the right.
+ * Native twin: details/PodBookingBar. */
 export default function StickyPodActionPanel(props: Readonly<Props>) {
   return (
     <Box
@@ -29,9 +32,9 @@ export default function StickyPodActionPanel(props: Readonly<Props>) {
         position: 'fixed',
         left: 0,
         right: 0,
-        bottom: 'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 2px)',
+        bottom: 'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 8px)',
         zIndex: (theme) => theme.zIndex.appBar + 1,
-        px: { xs: 1.25, sm: 2 },
+        px: 2,
         pointerEvents: 'none',
       }}
     >
@@ -43,13 +46,12 @@ export default function StickyPodActionPanel(props: Readonly<Props>) {
         sx={{
           maxWidth: APP_SHELL_MAX_WIDTH,
           mx: 'auto',
-          p: 0.75,
-          borderRadius: '16px',
+          p: 1,
+          borderRadius: '24px',
           border: 1,
           borderColor: 'divider',
-          bgcolor: (theme) => alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.88 : 0.94),
-          backdropFilter: 'blur(18px)',
-          boxShadow: '0 16px 36px rgba(15,23,42,0.22)',
+          bgcolor: 'background.paper',
+          boxShadow: (theme) => `0 8px 24px ${alpha(theme.palette.common.black, 0.12)}`,
           pointerEvents: 'auto',
         }}
       >

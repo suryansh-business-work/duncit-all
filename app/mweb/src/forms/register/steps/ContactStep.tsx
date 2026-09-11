@@ -43,7 +43,7 @@ export default function ContactStep({ control, emailStatus, phoneStatus }: Reado
   const emailLines = signupContactLines(emailStatus, labels.contactCopy.email);
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={2}>
       <WhatsappNumberFields
         control={control}
         names={WHATSAPP_NUMBER_NAMES}

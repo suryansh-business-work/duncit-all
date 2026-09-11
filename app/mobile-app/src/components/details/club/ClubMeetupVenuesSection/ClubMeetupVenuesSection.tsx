@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import * as Location from 'expo-location';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { ScrollView, Text, XStack } from 'tamagui';
 
 import { MapEmbed } from '@/components/MapEmbed';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatDistance, haversineKm } from '@/utils/distance';
 import { VenueCard, type ClubVenue } from './VenueCard';
@@ -74,9 +75,9 @@ export function ClubMeetupVenuesSection({ venues, onOpenVenue }: Readonly<Props>
       : parts.join(', ');
 
   return (
-    <YStack gap={8} testID="club-venues">
+    <SurfaceCard gap={8} testID="club-venues">
       <XStack alignItems="center" justifyContent="space-between">
-        <Text fontSize={16} fontWeight="700" color="$color">
+        <Text fontSize={17} fontWeight="600" color="$color">
           We usually meet
         </Text>
         {origin ? null : (
@@ -130,6 +131,6 @@ export function ClubMeetupVenuesSection({ venues, onOpenVenue }: Readonly<Props>
         <MaterialIcons name="open-in-new" size={13} color={primary} />
       </XStack>
       <MapEmbed query={mapQuery} />
-    </YStack>
+    </SurfaceCard>
   );
 }

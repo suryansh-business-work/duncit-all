@@ -1,0 +1,1 @@
+export { TwoToneHeading } from './TwoToneHeading';

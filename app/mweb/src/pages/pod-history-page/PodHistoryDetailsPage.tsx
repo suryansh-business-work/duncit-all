@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { isBackoutMaxed } from '@duncit/utils';
-import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { DuncitIconButton } from '@duncit/buttons';
 import BackoutConfirmDialog from '../pod-details-page/BackoutConfirmDialog';
@@ -90,27 +90,25 @@ export default function PodHistoryDetailsPage() {
 
   return (
     <Stack spacing={2} sx={{ maxWidth: 760, mx: 'auto' }}>
-      <Stack direction="row" spacing={1} sx={{
-        alignItems: "center"
-      }}>
-        <DuncitIconButton size="small" onClick={() => navigate('/pod-history')} sx={{ bgcolor: 'action.hover' }} aria-label={t('mweb.podHistory.backToPodHistory')}>
-          <ArrowBackIcon />
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+        <DuncitIconButton
+          onClick={() => navigate('/pod-history')}
+          aria-label={t('mweb.podHistory.backToPodHistory')}
+          sx={{
+            width: 40,
+            height: 40,
+            minHeight: 40,
+            bgcolor: 'background.paper',
+            color: 'text.primary',
+            border: '1px solid var(--duncit-card-border)',
+            '&:hover': { bgcolor: 'background.paper' },
+          }}
+        >
+          <ArrowBackIcon fontSize="small" />
         </DuncitIconButton>
-        <Box sx={{ minWidth: 0 }}>
-          <Typography
-            variant="overline"
-            sx={{
-              color: "text.secondary",
-              letterSpacing: 0
-            }}>{t('mweb.podHistory.title')}</Typography>
-          <Typography
-            variant="h5"
-            noWrap
-            sx={{
-              fontWeight: 700,
-              lineHeight: 1.1
-            }}>{selected.pod?.pod_title ?? t('mweb.podHistory.podDetailsTitle')}</Typography>
-        </Box>
+        <Typography component="h1" noWrap sx={{ minWidth: 0, fontSize: 20, fontWeight: 600 }}>
+          {selected.pod?.pod_title ?? t('mweb.podHistory.podDetailsTitle')}
+        </Typography>
       </Stack>
       <PodHistoryDetails
         item={selected}

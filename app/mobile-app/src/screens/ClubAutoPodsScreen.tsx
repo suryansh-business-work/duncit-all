@@ -3,7 +3,7 @@ import { YStack } from 'tamagui';
 import { autoPodActionable, autoPodWithdrawable, type AutoPodRow } from '@duncit/utils';
 
 import { StackScreen } from '@/components/StackScreen';
-import { PillButton } from '@/components/attendance/AttendanceOtpControls';
+import { DuncitButton } from '@/components/DuncitButton';
 import {
   AutoPodLocationRow,
   AutoPodQueue,
@@ -42,30 +42,30 @@ export function ClubAutoPodsScreen() {
   // and its claim can still be taken back, at the same Account Health cost.
   const renderMineAction = (row: AutoPodRow) =>
     autoPodWithdrawable(row, 'club') ? (
-      <PillButton
+      <DuncitButton
         testID={`auto-pod-withdraw-${row.id}`}
         label={labels.withdrawCta}
         onPress={() => setWithdrawing(row)}
-        variant="ghost"
-        disabled={false}
+        variant="outline"
+        tone="neutral"
+        fullWidth
       />
     ) : null;
 
   const renderAction = (row: AutoPodRow) =>
     autoPodActionable(row, 'club') ? (
-      <PillButton
+      <DuncitButton
         testID={`auto-pod-claim-${row.id}`}
         label={labels.claimForClubCta}
         onPress={() => setOfferId(row.id)}
-        variant="solid"
-        disabled={false}
+        fullWidth
       />
     ) : null;
 
   return (
     <StackScreen title={labels.clubTitle} testID="club-auto-pods-screen">
-      <RefreshScrollView contentContainerStyle={{ padding: 14, paddingBottom: 40 }}>
-        <YStack gap={14}>
+      <RefreshScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        <YStack gap={20}>
           <AutoPodLocationRow labels={labels} />
           <AutoPodQueue
             role="club"

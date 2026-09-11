@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Share } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Input, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
+import { SearchPill } from '@/components/pod-list/SearchPill';
 import { StackScreen } from '@/components/StackScreen';
 import {
   CategoryCascadeField,
@@ -29,7 +30,7 @@ import { RefreshScrollView } from '@/components/PullToRefresh';
  * comment thread. RN port of mWeb's PodIdeasPage. */
 export function PodIdeasScreen() {
   const { t } = useTranslation();
-  const { muted, onPrimary } = useThemeColors();
+  const { onPrimary } = useThemeColors();
   const [search, setSearch] = useState('');
   const [filterScope, setFilterScope] = useState<CategoryScope>(EMPTY_CATEGORY_SCOPE);
   const [statusFilter, setStatusFilter] = useState<IdeaStatusFilterValue>('ALL');
@@ -100,14 +101,14 @@ export function PodIdeasScreen() {
       onPress={() => setComposerOpen(true)}
       alignItems="center"
       gap={5}
-      paddingHorizontal={12}
-      height={36}
+      paddingHorizontal={16}
+      height={40}
       borderRadius={999}
       backgroundColor="$primary"
-      pressStyle={PRESS_STYLE.control}
+      pressStyle={PRESS_STYLE.solid}
     >
       <MaterialIcons name="add" size={16} color={onPrimary} />
-      <Text fontSize={13} fontWeight="700" color={onPrimary}>
+      <Text fontSize={14} fontWeight="600" color="$onPrimary">
         Share
       </Text>
     </XStack>
@@ -115,30 +116,13 @@ export function PodIdeasScreen() {
 
   return (
     <StackScreen title={t('mweb.podIdeas.podIdeas')} testID="pod-ideas-screen" right={shareButton}>
-      <XStack
-        alignItems="center"
-        gap={8}
-        margin={16}
-        marginBottom={4}
-        paddingHorizontal={12}
-        height={44}
-        borderRadius={999}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$background"
-      >
-        <MaterialIcons name="search" size={18} color={muted} />
-        <Input
+      <XStack marginHorizontal={16} marginTop={4}>
+        <SearchPill
           testID="pod-ideas-search"
-          aria-label={t('mweb.podIdeas.searchPodIdeas')}
-          flex={1}
-          unstyled
+          ariaLabel={t('mweb.podIdeas.searchPodIdeas')}
           value={search}
           onChangeText={setSearch}
           placeholder={t('mweb.podIdeas.searchIdeas')}
-          placeholderTextColor="$muted"
-          color="$color"
-          fontSize={14}
         />
       </XStack>
 

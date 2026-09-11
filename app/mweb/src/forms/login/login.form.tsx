@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useForm, type Control, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, InputAdornment, Stack, keyframes } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { Alert, InputAdornment, Stack } from '@mui/material';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
@@ -12,6 +11,7 @@ import { DuncitTabs } from '@duncit/tabs';
 import { LOGIN_CHANNELS, type LoginChannel } from '@duncit/forms/schemas';
 import CountryCodeField from '../components/CountryCodeField';
 import RhfTextField from '../components/RhfTextField';
+import { CHANNEL_TABS_SX } from '../../components/password-recovery/channelTabs';
 import { useTranslation } from '../../i18n/useTranslation';
 import {
   loginDefaults,
@@ -19,11 +19,6 @@ import {
   type LoginFormValues,
   type LoginSubmitValues,
 } from './login.types';
-
-const fadeUp = keyframes`
-  0%   { opacity: 0; transform: translateY(18px); }
-  100% { opacity: 1; transform: translateY(0); }
-`;
 
 interface Props {
   loading?: boolean;
@@ -119,15 +114,7 @@ function LoginFields({
 
   return (
     <form noValidate onSubmit={submit}>
-      <Stack
-        spacing={1.5}
-        sx={{
-          '& > *': { animation: `${fadeUp} 0.5s ease-out both` },
-          '& > *:nth-of-type(1)': { animationDelay: '0.05s' },
-          '& > *:nth-of-type(2)': { animationDelay: '0.12s' },
-          '& > *:nth-of-type(3)': { animationDelay: '0.18s' },
-        }}
-      >
+      <Stack spacing={2}>
         <LoginIdentityFields channel={channel} control={control} />
         <RhfTextField
           control={control}
@@ -163,25 +150,10 @@ function LoginFields({
             ),
           } }}
         />
-        <DuncitButton
-          type="submit"
-          variant="contained"
-          size="large"
-          endIcon={<ArrowForwardIcon />}
-          disabled={loading}
-          sx={{
-            borderRadius: '16px',
-            py: 1.25,
-            fontWeight: 700,
-            textTransform: 'none',
-            boxShadow: '0 8px 20px rgba(255,77,79,0.3)',
-            transition: 'transform 0.18s ease',
-            '&:hover': { transform: 'translateY(-1px)' },
-          }}
-        >
+        {(submitError || errorMessage) && <Alert severity="error">{submitError || errorMessage}</Alert>}
+        <DuncitButton type="submit" variant="contained" size="large" fullWidth disabled={loading}>
           {loading ? t('mweb.login.submitting') : (submitLabel ?? t('mweb.login.submit'))}
         </DuncitButton>
-        {(submitError || errorMessage) && <Alert severity="error">{submitError || errorMessage}</Alert>}
       </Stack>
     </form>
   );
@@ -199,7 +171,7 @@ export default function LoginForm(props: Readonly<Props>) {
   const [channel, setChannel] = useState<LoginChannel>('EMAIL');
 
   return (
-    <Stack spacing={1.8}>
+    <Stack spacing={2}>
       <DuncitTabs
         items={LOGIN_CHANNELS.map((value) => ({
           value,
@@ -210,6 +182,8 @@ export default function LoginForm(props: Readonly<Props>) {
         }))}
         value={channel}
         onChange={(next) => setChannel(next as LoginChannel)}
+        variant="fullWidth"
+        sx={CHANNEL_TABS_SX}
       />
       <LoginFields key={channel} channel={channel} {...props} />
     </Stack>

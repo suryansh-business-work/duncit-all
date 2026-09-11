@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Text, YStack } from 'tamagui';
 
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { MailPreferenceRow } from './MailPreferenceRow';
 import type { MailPreferenceCategory } from '@/hooks/useMailPreferences';
 
@@ -29,18 +30,12 @@ export function MailPreferenceSection({
   if (items.length === 0) return null;
 
   return (
-    <YStack
-      borderRadius={18}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      padding={16}
-    >
-      <Text fontSize={14} fontWeight="700" color="$color">
+    <SurfaceCard>
+      <Text accessibilityRole="header" fontSize={17} fontWeight="600" color="$color">
         {heading}
       </Text>
       {hint ? (
-        <Text fontSize={12.5} color="$muted" paddingTop={4}>
+        <Text fontSize={14} color="$muted" paddingTop={4}>
           {hint}
         </Text>
       ) : null}
@@ -59,6 +54,6 @@ export function MailPreferenceSection({
       </YStack>
 
       {footer}
-    </YStack>
+    </SurfaceCard>
   );
 }

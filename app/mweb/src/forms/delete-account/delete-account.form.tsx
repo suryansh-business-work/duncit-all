@@ -76,7 +76,6 @@ export function DeleteAccountForm({ loading, errorMessage, onSubmit }: Readonly<
           size="large"
           disabled={loading}
           data-testid="delete-account-submit"
-          sx={{ borderRadius: '16px', py: 1.1, fontWeight: 700, textTransform: 'none' }}
         >
           {loading ? t('mweb.account.deletion.submitting') : t('mweb.account.deletion.submit')}
         </DuncitButton>

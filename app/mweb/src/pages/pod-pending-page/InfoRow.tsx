@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Divider, Stack, Typography } from '@mui/material';
 
 export interface InfoRowProps {
   icon: ReactNode;
@@ -12,26 +12,28 @@ export interface InfoRowProps {
  * Native twin: components/pod-pending/InfoRow.tsx (rule 27). */
 export default function InfoRow({ icon, label, value, testId }: Readonly<InfoRowProps>) {
   return (
-    <Stack direction="row" spacing={1} data-testid={testId} sx={{
-      alignItems: "flex-start"
-    }}>
-      <Box sx={{ color: 'text.secondary', display: 'flex', mt: '2px' }}>{icon}</Box>
+    <Stack direction="row" spacing={1.5} data-testid={testId} sx={{ alignItems: 'center', py: 1.5 }}>
+      <Box sx={{ color: 'text.secondary', display: 'flex' }}>{icon}</Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography
-          variant="caption"
-          sx={{
-            fontWeight: 600,
-            color: "text.secondary",
-            display: "block"
-          }}>
+          sx={{ fontSize: '0.75rem', fontWeight: 500, color: 'text.secondary', display: 'block' }}
+        >
           {label}
         </Typography>
-        <Typography variant="body2" sx={{
-          fontWeight: 700
-        }}>
-          {value}
-        </Typography>
+        <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, mt: '2px' }}>{value}</Typography>
       </Box>
+    </Stack>
+  );
+}
+
+/** A card's rows as one list, a hairline between each. Native twin:
+ * `InfoRowList` in components/pod-pending/InfoRow.tsx (rule 27). */
+export function InfoRowList({ rows }: Readonly<{ rows: readonly InfoRowProps[] }>) {
+  return (
+    <Stack divider={<Divider />}>
+      {rows.map((row) => (
+        <InfoRow key={row.label} {...row} />
+      ))}
     </Stack>
   );
 }

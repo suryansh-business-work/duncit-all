@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { FlatList, useWindowDimensions, type ListRenderItemInfo } from 'react-native';
-import { Text, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import {
   buildFeedRows,
@@ -13,6 +13,7 @@ import {
 } from '@duncit/virtual-scroll';
 
 import { AdCard } from '@/components/ads/AdCard';
+import { EmptyState } from '@/components/EmptyState';
 import { useScreenRefreshControl } from '@/components/PullToRefresh';
 import { PodCard } from '@/components/home/PodCard';
 import { PodListSearchRow } from '@/components/pod-list/PodListSearchRow';
@@ -143,16 +144,14 @@ export function PodListView({
   // below it switches between empty, no-results and the virtualized list.
   let listBody: ReactNode;
   if (pods.length === 0) {
-    listBody = (
-      <Text testID={`${testID}-empty`} textAlign="center" color="$muted" padding={24}>
-        {emptyText}
-      </Text>
-    );
+    listBody = <EmptyState icon="event-busy" title={emptyText} testID={`${testID}-empty`} />;
   } else if (filtered.length === 0) {
     listBody = (
-      <Text testID={`${testID}-no-results`} textAlign="center" color="$muted" padding={24}>
-        {t('mweb.home.noSearchResults')}
-      </Text>
+      <EmptyState
+        icon="search-off"
+        title={t('mweb.home.noSearchResults')}
+        testID={`${testID}-no-results`}
+      />
     );
   } else {
     listBody = (

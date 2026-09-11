@@ -114,11 +114,11 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
               maxWidth={460}
               maxHeight="88%"
               backgroundColor="$background"
-              borderRadius={20}
+              borderRadius={28}
               padding={18}
             >
               <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
-                <Text fontSize={17} fontWeight="700" color="$color" paddingBottom={6}>
+                <Text fontSize={17} fontWeight="600" color="$color" paddingBottom={6}>
                   {t('mweb.hostPodActions.resubmitTitle')}
                 </Text>
                 <Text fontSize={12.5} color="$muted" paddingBottom={10}>

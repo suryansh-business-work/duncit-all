@@ -1,6 +1,7 @@
-import { Text, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 import { effectiveMaxAdvance, type VenueSettingsView } from '@duncit/slots';
 
+import { SectionHeader } from '@/components/SectionHeader';
 import { useSlotTemplates } from '@/hooks/useSlotTemplates';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RecurringForm } from '../recurring/recurring-form';
@@ -37,10 +38,8 @@ export function AdvancedSections({
   const advanceCap = effectiveMaxAdvance(settings.rules.max_advance_days);
 
   return (
-    <YStack gap={10}>
-      <Text fontSize={12} fontWeight="700" color="$muted" letterSpacing={1}>
-        {t('availability.recurring.advancedSettings')}
-      </Text>
+    <YStack gap={12}>
+      <SectionHeader title={t('availability.recurring.advancedSettings')} />
       <VenueRulesSection venueId={venueId} rules={settings.rules} onSaved={onVenueChanged} />
       <AutoExtendSection
         venueId={venueId}

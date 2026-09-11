@@ -40,8 +40,8 @@ export function AutoPodExpiryNote({ expiresAt, labels }: Readonly<Props>) {
   if (!left) return null;
   return (
     <XStack testID="auto-pod-expiry" alignItems="center" gap={4}>
-      <MaterialIcons name="timer" size={14} color={warning} />
-      <Text fontSize={11.5} fontWeight="600" color={warning}>
+      <MaterialIcons name="timer" size={16} color={warning} />
+      <Text fontSize={12} fontWeight="600" color={warning}>
         {labels.expiresIn(left.hours, left.minutes, left.seconds)}
       </Text>
     </XStack>

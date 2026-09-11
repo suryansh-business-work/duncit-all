@@ -4,6 +4,8 @@ import { Box, Chip, CircularProgress, Paper, Stack, Typography } from '@mui/mate
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
 import { formatDistanceToNow } from 'date-fns';
 import { MY_TICKETS, type TicketListItem, type TicketStatus } from './queries';
+import SectionHeader from '../../components/SectionHeader';
+import { SURFACE_SX } from '../../theme';
 
 const STATUS_COLOR: Record<TicketStatus, 'primary' | 'warning' | 'success' | 'default'> = {
   OPEN: 'primary',
@@ -59,13 +61,12 @@ export default function MyTicketsList() {
         {filter === 'ALL' ? "You haven't raised any tickets yet." : `No ${LABEL[filter].toLowerCase()} tickets.`}
       </Typography>
     ) : (
-      <Stack spacing={1.25}>
-        {items.map((t) => (
-          <Paper
+      <Paper sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
+        {items.map((t, index) => (
+          <Box
             key={t.id}
-            variant="outlined"
             onClick={() => navigate(`/tickets/${t.id}`)}
-            sx={{ p: 1.5, borderRadius: '16px', cursor: 'pointer' }}
+            sx={{ px: 2, py: 1.75, cursor: 'pointer', borderTop: index === 0 ? 0 : 1, borderColor: 'divider' }}
           >
             <Stack
               direction="row"
@@ -75,7 +76,7 @@ export default function MyTicketsList() {
                 justifyContent: "space-between"
               }}>
               <Box sx={{ minWidth: 0 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }} noWrap>
+                <Typography sx={{ fontSize: '0.9375rem', fontWeight: 600 }} noWrap>
                   {t.subject}
                 </Typography>
                 <Typography variant="caption" sx={{
@@ -87,21 +88,14 @@ export default function MyTicketsList() {
               </Box>
               <Chip size="small" color={STATUS_COLOR[t.status]} label={LABEL[t.status]} />
             </Stack>
-          </Paper>
+          </Box>
         ))}
-      </Stack>
+      </Paper>
     );
 
   return (
-    <Paper elevation={0} variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
-      <Typography
-        variant="overline"
-        sx={{
-          color: "text.secondary",
-          fontWeight: 700
-        }}>
-        Your tickets
-      </Typography>
+    <Stack spacing={1}>
+      <SectionHeader title="Your tickets" />
       <DuncitTabs
         {...tabs}
         variant="scrollable"
@@ -116,6 +110,6 @@ export default function MyTicketsList() {
       ) : (
         emptyOrList
       )}
-    </Paper>
+    </Stack>
   );
 }

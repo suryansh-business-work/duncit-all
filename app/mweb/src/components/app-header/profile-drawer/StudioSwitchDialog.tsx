@@ -1,5 +1,6 @@
 import { JSX, useEffect, useState } from 'react';
 import { Box, ButtonBase, Dialog, DialogContent, Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import PersonIcon from '@mui/icons-material/Person';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import StorefrontIcon from '@mui/icons-material/Storefront';
@@ -8,6 +9,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { DuncitButton } from '@duncit/buttons';
 import { STUDIO_LABEL, availableModes, type StudioMode } from '../../../studio-mode';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 const ICONS: Record<StudioMode, JSX.Element> = {
   USER: <PersonIcon fontSize="small" />,
@@ -38,6 +40,7 @@ interface Props {
  * and expands into the big primary card below. Picking a bubble only stages the
  * choice; nothing switches until the Switch button below is pressed. */
 export default function StudioSwitchDialog({ open, roles, showProducts = true, current, onClose, onSelect }: Readonly<Props>) {
+  const { t } = useTranslation();
   const options = availableModes(roles, { products: showProducts });
   const [pending, setPending] = useState<StudioMode>(current);
 
@@ -51,9 +54,9 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth aria-labelledby="studio-switch-title">
-      <DialogContent sx={{ pb: 3 }}>
-        <Typography id="studio-switch-title" variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>
-          Switch role
+      <DialogContent sx={{ p: 2.5 }}>
+        <Typography id="studio-switch-title" sx={{ fontSize: '1.125rem', fontWeight: 600, mb: 2 }}>
+          {t('mweb.common.switchRole')}
         </Typography>
         <Stack
           direction="row"
@@ -76,13 +79,9 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
                   borderRadius: '50%',
                   display: 'grid',
                   placeItems: 'center',
-                  color: selected ? 'primary.contrastText' : 'text.secondary',
+                  color: selected ? 'primary.contrastText' : 'text.primary',
                   bgcolor: selected ? 'primary.main' : 'action.hover',
-                  border: 2,
-                  borderColor: selected ? 'primary.main' : 'divider',
-                  transform: selected ? 'translateY(-6px) scale(1.12)' : 'none',
-                  boxShadow: selected ? '0 12px 26px rgba(255,79,115,0.38)' : 'none',
-                  transition: 'all 240ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+                  transition: 'background-color 180ms ease, color 180ms ease',
                 }}
               >
                 {ICONS[option.mode]}
@@ -93,11 +92,10 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
         <Box
           key={pending}
           sx={{
-            borderRadius: '16px',
-            px: 2.5,
-            py: 2,
-            color: 'primary.contrastText',
-            background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)',
+            borderRadius: '18px',
+            px: 2,
+            py: 1.75,
+            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
             display: 'flex',
             alignItems: 'center',
             gap: 1.5,
@@ -109,14 +107,14 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
           }}
         >
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }} noWrap>
+            <Typography sx={{ fontSize: 17, fontWeight: 600, lineHeight: 1.2 }} noWrap>
               {STUDIO_LABEL[pending]}
             </Typography>
-            <Typography variant="caption" sx={{ opacity: 0.85, fontWeight: 700 }}>
+            <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'text.secondary' }}>
               {changed ? PENDING_CAPTION : ACTIVE_CAPTION}
             </Typography>
           </Box>
-          <CheckCircleIcon />
+          <CheckCircleIcon color="primary" />
         </Box>
         <DuncitButton
           fullWidth
@@ -124,20 +122,10 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
           variant="contained"
           disabled={!changed}
           onClick={() => onSelect(pending)}
-          sx={{ mt: 2, borderRadius: 999, fontWeight: 700, height: 52 }}
+          sx={{ mt: 2, height: 52 }}
         >
           {switchButtonLabel(changed, pending)}
         </DuncitButton>
-        <Typography
-          variant="caption"
-          sx={{
-            color: "text.secondary",
-            display: 'block',
-            mt: 1.25,
-            textAlign: 'center'
-          }}>
-          Switching changes your sidebar, header and dashboard.
-        </Typography>
       </DialogContent>
     </Dialog>
   );

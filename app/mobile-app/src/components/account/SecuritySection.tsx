@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { MobileMyConnectedAccountsDocument } from '@/graphql/account';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { graphqlRequest } from '@/services/graphql.client';
+import { IconDisc } from './IconDisc';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
 import { DeletionRequestPanel } from './DeletionRequestPanel';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -29,7 +29,6 @@ interface DoneNotice {
  */
 export function SecuritySection() {
   const { t } = useTranslation();
-  const { color } = useThemeColors();
   const [changeOpen, setChangeOpen] = useState(false);
   const [done, setDone] = useState<DoneNotice | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -66,37 +65,33 @@ export function SecuritySection() {
   };
 
   return (
-    <YStack
-      testID="security-section"
-      borderRadius={18}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      padding={16}
-      gap={14}
-    >
-      <XStack alignItems="center" gap={12}>
-        <MaterialIcons name="lock-reset" size={20} color={color} />
+    <SurfaceCard testID="security-section" gap={16}>
+      <XStack alignItems="center" gap={16}>
+        <IconDisc icon="lock-reset" />
         <YStack flex={1}>
-          <Text fontSize={14.5} fontWeight="700" color="$color">
+          <Text fontSize={15} fontWeight="500" color="$color">
             {t('mweb.account.password')}
           </Text>
-          <Text fontSize={12.5} fontWeight="700" color="$muted">
+          <Text fontSize={14} color="$muted">
             {hint}
           </Text>
         </YStack>
-        <Text
-          pressStyle={PRESS_STYLE.inline}
+        <XStack
           testID="open-change-password"
           role="button"
           aria-label={label}
           onPress={() => setChangeOpen(true)}
-          fontSize={13}
-          fontWeight="700"
-          color="$primary"
+          height={36}
+          alignItems="center"
+          paddingHorizontal={14}
+          borderRadius={999}
+          backgroundColor="$soft"
+          pressStyle={PRESS_STYLE.control}
         >
-          {action}
-        </Text>
+          <Text fontSize={13} fontWeight="600" color="$color">
+            {action}
+          </Text>
+        </XStack>
       </XStack>
 
       <YStack height={1} backgroundColor="$borderColor" />
@@ -131,6 +126,6 @@ export function SecuritySection() {
         onCancel={() => setNotice(null)}
         testID="deletion-notice-dialog"
       />
-    </YStack>
+    </SurfaceCard>
   );
 }

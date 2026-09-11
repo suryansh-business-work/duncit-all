@@ -3,6 +3,7 @@ import { Card, CardContent, Stack, Typography } from '@mui/material';
 import PhonelinkEraseOutlinedIcon from '@mui/icons-material/PhonelinkEraseOutlined';
 import { DuncitButton } from '@duncit/buttons';
 import { useTranslation } from '@duncit/app-settings';
+import IconDisc from '../account-page/IconDisc';
 
 /**
  * The state Mail Preference has no equivalent of: an account with no sendable
@@ -16,16 +17,16 @@ export default function NoWhatsAppNumberCard() {
   const { t } = useTranslation();
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-      <CardContent>
+    <Card>
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack direction="row" spacing={1.5} sx={{
           alignItems: "flex-start"
         }}>
-          <PhonelinkEraseOutlinedIcon color="action" />
+          <IconDisc tone="muted">
+            <PhonelinkEraseOutlinedIcon />
+          </IconDisc>
           <Stack spacing={1} sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" sx={{
-              fontWeight: 700
-            }}>
+            <Typography sx={{ fontSize: 15, fontWeight: 600 }}>
               {t('whatsappPreference.noNumberTitle')}
             </Typography>
             <Typography variant="body2" sx={{

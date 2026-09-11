@@ -1,4 +1,4 @@
-import GoogleIcon from '@mui/icons-material/Google';
+import LinkRoundedIcon from '@mui/icons-material/LinkRounded';
 import {
   Alert,
   Dialog,
@@ -53,11 +53,11 @@ export default function GoogleLinkConsentDialog({
       fullWidth
       maxWidth="xs"
     >
-      <DialogTitle>
+      <DialogTitle sx={{ fontSize: 17, fontWeight: 600 }}>
         <Stack direction="row" spacing={1} sx={{
           alignItems: "center"
         }}>
-          <GoogleIcon fontSize="small" />
+          <LinkRoundedIcon fontSize="small" sx={{ color: 'secondary.main' }} />
           <span>{t('mweb.login.linkConsentTitle')}</span>
         </Stack>
       </DialogTitle>
@@ -74,11 +74,17 @@ export default function GoogleLinkConsentDialog({
           {error && <Alert severity="error">{error}</Alert>}
         </Stack>
       </DialogContent>
-      <DialogActions>
-        <DuncitButton onClick={onDeny} disabled={busy}>
+      <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
+        <DuncitButton
+          variant="outlined"
+          color="inherit"
+          onClick={onDeny}
+          disabled={busy}
+          sx={{ flex: 1 }}
+        >
           {t('mweb.login.linkConsentDeny')}
         </DuncitButton>
-        <DuncitButton variant="contained" onClick={onAllow} disabled={busy}>
+        <DuncitButton variant="contained" onClick={onAllow} disabled={busy} sx={{ flex: 1.4 }}>
           {t('mweb.login.linkConsentAllow')}
         </DuncitButton>
       </DialogActions>

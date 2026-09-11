@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Card, CardContent, Stack, Typography } from '@mui/material';
 import HealthMeter from '../../components/health/HealthMeter';
 import type { HealthScore } from '../../components/health/queries';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -15,7 +15,8 @@ interface Props {
   venueId: string;
 }
 
-/** Venue Account Health meter + its headline; taps through to the detail page. */
+/** Venue Account Health as a hero card: the meter centred, its headline and
+ * the score's make-up under it; the meter taps through to the detail page. */
 export default function VenueHealthCard({ health, venueId }: Readonly<Props>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -23,11 +24,9 @@ export default function VenueHealthCard({ health, venueId }: Readonly<Props>) {
   const deltaLabel = health.delta_sum > 0 ? `+${health.delta_sum}` : String(health.delta_sum);
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-      <CardContent>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
-          alignItems: "center"
-        }}>
+    <Card>
+      <CardContent sx={{ p: 3, '&:last-child': { pb: 3 } }}>
+        <Stack spacing={1.5} sx={{ alignItems: 'center', textAlign: 'center' }}>
           <HealthMeter
             score={health.total_score}
             band={health.band}
@@ -36,24 +35,16 @@ export default function VenueHealthCard({ health, venueId }: Readonly<Props>) {
             onClick={() => navigate(`/venues/${venueId}/health`)}
             caption={t('mweb.common.tapForDetails')}
           />
-          <Box sx={{ flex: 1, minWidth: 0, textAlign: { xs: 'center', sm: 'left' } }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              {bandHeadline(health.band)}
+          <Typography sx={{ fontSize: '1rem', fontWeight: 600 }}>{bandHeadline(health.band)}</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            Base activity: {health.base_score}
+            {health.delta_sum !== 0 && <> · Admin adjustment: {deltaLabel}</>}
+          </Typography>
+          {health.adjustments.length > 0 && (
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              {health.adjustments.length} admin remark{remarkSuffix} — tap the meter to read.
             </Typography>
-            <Typography variant="body2" sx={{
-              color: "text.secondary"
-            }}>
-              Base activity: {health.base_score}
-              {health.delta_sum !== 0 && <> · Admin adjustment: {deltaLabel}</>}
-            </Typography>
-            {health.adjustments.length > 0 && (
-              <Typography variant="caption" sx={{
-                color: "text.secondary"
-              }}>
-                {health.adjustments.length} admin remark{remarkSuffix} — tap the meter to read.
-              </Typography>
-            )}
-          </Box>
+          )}
         </Stack>
       </CardContent>
     </Card>

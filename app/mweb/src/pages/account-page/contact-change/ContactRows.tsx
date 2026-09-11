@@ -38,16 +38,17 @@ function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
             *
           </Box>
         </Typography>
-        <Typography variant="body2" noWrap sx={{ color: value ? 'text.primary' : 'error.main' }}>
+        <Typography noWrap sx={{ fontSize: 15, color: value ? 'text.primary' : 'error.main' }}>
           {value || copy.emptyValue}
         </Typography>
       </Stack>
       <DuncitButton
         type="button"
         size="small"
-        variant="outlined"
+        color="inherit"
         onClick={() => onChange(channel)}
         data-testid={`contact-change-${channel}`}
+        sx={{ bgcolor: 'action.hover', minHeight: 36, px: 2 }}
       >
         {value ? labels.changeAction : labels.addAction}
       </DuncitButton>

@@ -32,12 +32,12 @@ function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
   const copy = labels.channel(channel);
   const action = value ? labels.changeAction : labels.addAction;
   return (
-    <XStack gap={12} alignItems="center" paddingVertical={8}>
+    <XStack gap={12} alignItems="center" paddingVertical={10}>
       <YStack flex={1} gap={2}>
         <Text fontSize={12} color="$muted">
           {copy.name} <Text color="$danger">*</Text>
         </Text>
-        <Text fontSize={14} color={value ? '$color' : '$danger'} numberOfLines={1}>
+        <Text fontSize={15} color={value ? '$color' : '$danger'} numberOfLines={1}>
           {value || copy.emptyValue}
         </Text>
       </YStack>
@@ -47,12 +47,11 @@ function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
         aria-label={`${action} ${copy.name}`}
         onPress={() => onChange(channel)}
         height={36}
-        paddingHorizontal={14}
+        paddingHorizontal={16}
         alignItems="center"
         justifyContent="center"
-        borderRadius={10}
-        borderWidth={1}
-        borderColor="$borderColor"
+        borderRadius={999}
+        backgroundColor="$soft"
         pressStyle={PRESS_STYLE.control}
       >
         <Text fontSize={13} fontWeight="600" color="$color">
@@ -73,14 +72,16 @@ interface Props {
 export function ContactRows({ labels, snapshot, onChange }: Readonly<Props>) {
   return (
     <YStack>
-      {CONTACT_CHANNELS.map((channel) => (
-        <ContactRow
-          key={channel}
-          channel={channel}
-          labels={labels}
-          value={currentContactValue(snapshot, channel)}
-          onChange={onChange}
-        />
+      {CONTACT_CHANNELS.map((channel, index) => (
+        <YStack key={channel}>
+          {index > 0 ? <YStack height={1} backgroundColor="$borderColor" /> : null}
+          <ContactRow
+            channel={channel}
+            labels={labels}
+            value={currentContactValue(snapshot, channel)}
+            onChange={onChange}
+          />
+        </YStack>
       ))}
     </YStack>
   );

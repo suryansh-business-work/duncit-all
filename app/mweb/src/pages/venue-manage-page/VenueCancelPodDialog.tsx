@@ -44,11 +44,11 @@ function CancelPodBody({ pod, onClose, onCancelled }: Readonly<BodyProps>) {
 
   return (
     <>
-      <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.venuePods.cancelTitle')}</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.venuePods.cancelTitle')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
           <Stack spacing={0.25}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+            <Typography sx={{ fontSize: '1rem', fontWeight: 600 }}>
               {pod.pod_title}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -56,7 +56,7 @@ function CancelPodBody({ pod, onClose, onCancelled }: Readonly<BodyProps>) {
             </Typography>
           </Stack>
           <Alert severity="warning">
-            <AlertTitle sx={{ fontWeight: 700 }}>{venueCancelPenaltyHeadline(penalty, t)}</AlertTitle>
+            <AlertTitle sx={{ fontWeight: 600 }}>{venueCancelPenaltyHeadline(penalty, t)}</AlertTitle>
             {t('mweb.venuePods.refundsNote')}
           </Alert>
           <VenueCancelPodForm formId={FORM_ID} onSubmit={submit} />
@@ -72,7 +72,6 @@ function CancelPodBody({ pod, onClose, onCancelled }: Readonly<BodyProps>) {
           variant="contained"
           color="error"
           disabled={state.loading}
-          sx={{ borderRadius: 999, fontWeight: 700 }}
           data-testid="venue-cancel-pod-confirm"
         >
           {state.loading ? t('mweb.venuePods.cancelling') : t('mweb.venuePods.cancelPod')}

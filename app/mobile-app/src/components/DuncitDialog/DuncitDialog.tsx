@@ -9,6 +9,10 @@ import { dialogMetrics, type DuncitDialogVariant } from '@duncit/dialogs-native'
 import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
+/** Dialog and sheet corners — the calm design's 28, the same as mWeb's themed
+ * MUI Dialog paper. */
+const DIALOG_RADIUS = 28;
+
 export interface DuncitDialogProps {
   open: boolean;
   onClose: () => void;
@@ -114,11 +118,11 @@ export function DuncitDialog({
           />
 
           <YStack
-            backgroundColor="$background"
-            borderTopLeftRadius={20}
-            borderTopRightRadius={20}
-            borderBottomLeftRadius={sheet ? 0 : 20}
-            borderBottomRightRadius={sheet ? 0 : 20}
+            backgroundColor="$surface"
+            borderTopLeftRadius={DIALOG_RADIUS}
+            borderTopRightRadius={DIALOG_RADIUS}
+            borderBottomLeftRadius={sheet ? 0 : DIALOG_RADIUS}
+            borderBottomRightRadius={sheet ? 0 : DIALOG_RADIUS}
             width={metrics.cardWidth}
             maxWidth={metrics.cardMaxWidth}
             maxHeight={metrics.maxHeight}
@@ -140,7 +144,7 @@ export function DuncitDialog({
               testID={`${testID}-body`}
               // The body is what shrinks when the dialog hits its cap.
               style={{ flexShrink: 1 }}
-              contentContainerStyle={{ padding: 16, paddingTop: title ? 4 : 16 }}
+              contentContainerStyle={{ padding: 20, paddingTop: title ? 4 : 20 }}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
@@ -150,14 +154,12 @@ export function DuncitDialog({
             {footer ? (
               <YStack
                 testID={`${testID}-footer`}
-                paddingHorizontal={16}
-                paddingTop={12}
-                borderTopWidth={1}
-                borderTopColor="$borderColor"
+                paddingHorizontal={20}
+                paddingTop={8}
                 // The gesture-bar strip, reserved under the CTA rather than
                 // over it. Not SafeAreaView: it must collapse to 0 when the
                 // keyboard is up, or the footer floats above the keyboard.
-                paddingBottom={12 + (keyboardInset > 0 ? 0 : insets.bottom)}
+                paddingBottom={20 + (keyboardInset > 0 ? 0 : insets.bottom)}
               >
                 {footer}
               </YStack>

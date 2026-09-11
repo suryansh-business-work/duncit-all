@@ -185,8 +185,8 @@ export function ChangePasswordDialog({
             role="button"
             aria-label={t('mweb.account.resendOtp')}
             onPress={handleResend}
-            fontSize={13.5}
-            fontWeight="700"
+            fontSize={14}
+            fontWeight="600"
             color="$primary"
             textAlign="center"
           >

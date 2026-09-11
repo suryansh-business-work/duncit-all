@@ -13,6 +13,7 @@ import {
 import { ChannelLinkCard } from '@/components/comm-preference';
 import { ListSkeleton } from '@/components/Skeleton';
 import { StackScreen } from '@/components/StackScreen';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useCommPreference } from '@/hooks/useCommPreference';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
@@ -59,26 +60,26 @@ export function CommPreferenceScreen() {
     </YStack>
   ) : (
     <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 32 }}>
-      <Text fontSize={12.5} color="$muted">
-        {labels.blurb}
-      </Text>
-
-      {COMM_CHANNELS.map((channel) => {
-        const row = findCommChannel(state.preference?.channels, channel);
-        if (!row) return null;
-        const copy = labels.channel(channel);
-        return (
-          <ChannelLinkCard
-            key={channel}
-            channel={channel}
-            icon={CHANNEL_ICONS[channel]}
-            name={copy.name}
-            hint={copy.hint}
-            summary={commChannelSummary(row, labels)}
-            onPress={open[channel]}
-          />
-        );
-      })}
+      <SurfaceCard padding={0} overflow="hidden">
+        {COMM_CHANNELS.map((channel, index) => {
+          const row = findCommChannel(state.preference?.channels, channel);
+          if (!row) return null;
+          return (
+            <YStack key={channel}>
+              {index > 0 ? (
+                <YStack height={1} marginLeft={68} backgroundColor="$borderColor" />
+              ) : null}
+              <ChannelLinkCard
+                channel={channel}
+                icon={CHANNEL_ICONS[channel]}
+                name={labels.channel(channel).name}
+                summary={commChannelSummary(row, labels)}
+                onPress={open[channel]}
+              />
+            </YStack>
+          );
+        })}
+      </SurfaceCard>
     </RefreshScrollView>
   );
 

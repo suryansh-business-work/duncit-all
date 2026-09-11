@@ -34,29 +34,28 @@ export default function WhatsAppPreferenceRow({
       spacing={1.5}
       data-testid={`whatsapp-preference-${item.category}`}
       sx={{
-        alignItems: "flex-start",
-        py: 1.25
+        alignItems: "center",
+        py: 1.5
       }}>
       <Stack spacing={0.25} sx={{ flex: 1, minWidth: 0 }}>
         <Stack direction="row" spacing={0.75} sx={{
           alignItems: "center"
         }}>
-          <Typography variant="subtitle2" sx={{
-            fontWeight: 700
-          }}>
+          <Typography sx={{ fontSize: 15, fontWeight: 500 }}>
             {copy.label}
           </Typography>
           {item.required && (
             <Chip
               size="small"
-              variant="outlined"
               icon={<LockOutlinedIcon fontSize="small" />}
               label={t('whatsappPreference.alwaysOn')}
+              sx={{ height: 24, fontSize: 11 }}
             />
           )}
         </Stack>
         <Typography variant="body2" sx={{
-          color: "text.secondary"
+          color: "text.secondary",
+          fontSize: 13
         }}>
           {copy.description}
         </Typography>

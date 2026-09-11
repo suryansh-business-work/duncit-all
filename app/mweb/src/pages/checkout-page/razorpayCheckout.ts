@@ -4,6 +4,7 @@
  * comes from the server (Tech-portal managed) — never hardcoded here.
  */
 import type { RazorpayErrorLike } from '@duncit/utils';
+import { light } from '@duncit/auth-tokens';
 
 const SCRIPT_SRC = 'https://checkout.razorpay.com/v1/checkout.js';
 
@@ -88,7 +89,8 @@ export async function openRazorpayCheckout(
     description: order.description,
     order_id: order.order_id,
     prefill: { email: order.prefill_email, contact: order.prefill_contact },
-    theme: { color: '#ff4f73' },
+    // The hosted sheet's pay button wears the app's action green.
+    theme: { color: light.primary },
     handler: (res: RazorpaySignature) =>
       handlers.onSuccess({
         razorpay_payment_id: res.razorpay_payment_id,

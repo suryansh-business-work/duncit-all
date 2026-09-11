@@ -10,6 +10,10 @@ interface SkeletonProps {
   testID?: string;
 }
 
+/** The ink at MUI's skeleton strength, so a placeholder block is the same soft
+ * grey in both apps and reads on the page ground and on a card alike. */
+const BLOCK_OPACITY = 0.1;
+
 /** A single placeholder block — the RN analogue of MUI's <Skeleton/>. Static
  * (no shimmer) so no animation loop runs while a loading screen is mounted. */
 export function Skeleton({
@@ -19,12 +23,15 @@ export function Skeleton({
   style,
   testID,
 }: Readonly<SkeletonProps>) {
-  const { muted } = useThemeColors();
+  const { color } = useThemeColors();
 
   return (
     <View
       testID={testID}
-      style={[{ width, height, borderRadius: radius, backgroundColor: muted, opacity: 0.5 }, style]}
+      style={[
+        { width, height, borderRadius: radius, backgroundColor: color, opacity: BLOCK_OPACITY },
+        style,
+      ]}
     />
   );
 }

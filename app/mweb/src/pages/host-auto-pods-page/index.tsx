@@ -44,7 +44,7 @@ export default function HostAutoPodsPage({ locationId }: Readonly<Props>) {
 
   return (
     <Stack spacing={2} sx={{ p: 2, pb: 4 }}>
-      <Typography variant="h6" sx={{ fontWeight: 800 }}>
+      <Typography variant="h6" component="h1" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>
         {queue.labels.hostTitle}
       </Typography>
 

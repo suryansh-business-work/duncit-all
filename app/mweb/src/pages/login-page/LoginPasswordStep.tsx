@@ -29,20 +29,16 @@ export default function LoginPasswordStep({
   const { t } = useTranslation();
 
   return (
-    <Stack spacing={1.6}>
-      <Typography variant="body2" sx={{ textAlign: 'center', color: 'text.secondary' }}>
-        {t('mweb.login.passwordStepSubtitle')}
-      </Typography>
-
+    <Stack spacing={2}>
       <LoginForm loading={loading} errorMessage={errorMessage} onSubmit={onSubmit} />
 
-      <Stack sx={{ alignItems: 'flex-end', mt: -1 }}>
+      <Stack sx={{ alignItems: 'flex-end' }}>
         <Link component={RouterLink} to="/forgot-password" underline="hover" variant="body2">
           {t('mweb.login.forgotPassword')}
         </Link>
       </Stack>
 
-      <Stack spacing={1.2} sx={{ alignItems: 'center' }}>
+      <Stack spacing={1.5} sx={{ alignItems: 'center' }}>
         <Link
           component="button"
           type="button"

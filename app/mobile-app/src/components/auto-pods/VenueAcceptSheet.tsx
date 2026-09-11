@@ -1,10 +1,10 @@
 import { Text, XStack, YStack } from 'tamagui';
 import { autoPodCityLabel, type AutoPodLabels, type AutoPodRow } from '@duncit/utils';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
 import { LoadingIndicator } from '@/components/LoadingIndicator';
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
-import { PillButton } from '@/components/attendance/AttendanceOtpControls';
 import type { AutoPodVenueOption } from '@/hooks/useAutoPodVenues';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useVenueAcceptAutoPod } from '@/hooks/useVenueAcceptAutoPod';
@@ -64,13 +64,13 @@ export function VenueAcceptSheet({
   let earningLine = null;
   if (accept.selected?.viable) {
     earningLine = (
-      <Text testID="auto-pod-slot-earning" fontSize={12.5} fontWeight="700" color={success}>
+      <Text testID="auto-pod-slot-earning" fontSize={13} fontWeight="600" color={success}>
         {labels.potentialEarning(formatMoney(accept.selected.venue_receives))}
       </Text>
     );
   } else if (accept.selected) {
     earningLine = (
-      <Text testID="auto-pod-slot-not-viable" fontSize={12.5} color={warning}>
+      <Text testID="auto-pod-slot-not-viable" fontSize={13} color={warning}>
         {labels.slotNotViable}
       </Text>
     );
@@ -79,22 +79,21 @@ export function VenueAcceptSheet({
   const footer = (
     <XStack gap={10}>
       <YStack flex={1}>
-        <PillButton
+        <DuncitButton
           testID="auto-pod-accept-cancel"
           label={labels.dismiss}
           onPress={onClose}
-          variant="ghost"
-          disabled={false}
+          variant="soft"
+          tone="neutral"
         />
       </YStack>
       <YStack flex={1}>
-        <PillButton
+        <DuncitButton
           testID="auto-pod-accept-confirm"
           label={labels.acceptCta}
           onPress={() => {
             accept.accept().catch(() => undefined);
           }}
-          variant="solid"
           disabled={!accept.canAccept}
         />
       </YStack>
@@ -113,39 +112,39 @@ export function VenueAcceptSheet({
     >
       <YStack gap={14}>
         {row ? (
-          <Text fontSize={14} fontWeight="700" color="$color">
+          <Text fontSize={15} fontWeight="600" color="$color">
             {row.pod_title}
           </Text>
         ) : null}
 
         {row?.location ? (
-          <Text testID="auto-pod-accept-city" fontSize={12.5} color="$color">
+          <Text testID="auto-pod-accept-city" fontSize={13} color="$color">
             {labels.pinnedTo(autoPodCityLabel(row.location))}
           </Text>
         ) : null}
 
         {venue ? (
-          <Text testID="auto-pod-accepting-with" fontSize={12.5} color="$color">
+          <Text testID="auto-pod-accepting-with" fontSize={13} color="$color">
             {labels.acceptingWith(venue.venue_name)}
           </Text>
         ) : (
-          <Text testID="auto-pod-pick-venue-first" fontSize={12.5} color="$muted">
+          <Text testID="auto-pod-pick-venue-first" fontSize={13} color="$muted">
             {labels.pickVenueFirst}
           </Text>
         )}
 
         {venue && !accept.venueInCity ? (
-          <Text testID="auto-pod-no-venue-in-city" fontSize={12} color={warning}>
+          <Text testID="auto-pod-no-venue-in-city" fontSize={13} color={warning}>
             {labels.noVenueInCity(autoPodCityLabel(row?.location))}
           </Text>
         ) : null}
 
         <YStack gap={8}>
-          <Text fontSize={12} fontWeight="700" color="$color">
+          <Text fontSize={13} fontWeight="600" color="$color">
             {labels.pickSlot}
           </Text>
           {accept.windowDays > 0 ? (
-            <Text testID="auto-pod-slot-window" fontSize={11.5} color="$muted">
+            <Text testID="auto-pod-slot-window" fontSize={12} color="$muted">
               {labels.slotWindow(accept.windowDays)}
             </Text>
           ) : null}
@@ -163,17 +162,17 @@ export function VenueAcceptSheet({
         </YStack>
 
         {accept.showNoSlots ? (
-          <YStack gap={10}>
-            <Text testID="auto-pod-no-slots" fontSize={12.5} color="$muted">
+          <YStack gap={10} alignItems="flex-start">
+            <Text testID="auto-pod-no-slots" fontSize={13} color="$muted">
               {labels.noSlots}
             </Text>
             {onAddAvailability ? (
-              <PillButton
+              <DuncitButton
                 testID="auto-pod-add-availability"
                 label={labels.addAvailability}
                 onPress={onAddAvailability}
-                variant="ghost"
-                disabled={false}
+                variant="soft"
+                size="sm"
               />
             ) : null}
           </YStack>
@@ -182,7 +181,7 @@ export function VenueAcceptSheet({
         {accept.busy ? <LoadingIndicator testID="auto-pod-accept-busy" /> : null}
 
         {accept.failure ? (
-          <Text testID="auto-pod-accept-error" fontSize={12} color="$danger">
+          <Text testID="auto-pod-accept-error" fontSize={13} color="$danger">
             {accept.failure}
           </Text>
         ) : null}

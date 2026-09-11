@@ -1,7 +1,6 @@
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Stack, Typography } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { DuncitButton } from '@duncit/buttons';
 import { buildSignupStepperLabels, signupContactsBlockContinue } from '@duncit/utils';
 import {
@@ -67,7 +66,7 @@ export default function GoogleDetailsStep({ onSubmit }: Readonly<Props>) {
         submit().catch(() => undefined);
       }}
     >
-      <Stack spacing={1.5}>
+      <Stack spacing={2}>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {labels.detailsSubtitle}
         </Typography>
@@ -80,9 +79,9 @@ export default function GoogleDetailsStep({ onSubmit }: Readonly<Props>) {
         <DuncitButton
           type="submit"
           variant="contained"
+          size="large"
           fullWidth
           disabled={!isValid || blocked}
-          endIcon={<ArrowForwardIcon />}
           data-testid="signup-number-continue"
         >
           {labels.sendCode}

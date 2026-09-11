@@ -28,7 +28,7 @@ export default function PolicyBodyDialog({ policy, onClose }: Readonly<Props>) {
 
   return (
     <Dialog open={!!policy} onClose={onClose} fullWidth maxWidth="sm" scroll="paper">
-      <DialogTitle sx={{ fontWeight: 700 }}>{policy?.title}</DialogTitle>
+      <DialogTitle sx={{ fontSize: 17, fontWeight: 600 }}>{policy?.title}</DialogTitle>
       <DialogContent dividers>
         <Box sx={RICH_TEXT_BODY_SX} dangerouslySetInnerHTML={{ __html: policy?.content ?? '' }} />
       </DialogContent>

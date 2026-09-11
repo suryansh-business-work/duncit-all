@@ -9,7 +9,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import LockIcon from '@mui/icons-material/Lock';
+import LockIcon from '@mui/icons-material/LockOutlined';
 import PostDialog from '../profile-page/post-dialog/PostDialog';
 import PublicProfileStories, { type ProfileStory } from './PublicProfileStories';
 import { ProfilePodsPanel, ProfileTabs, useProfileTabs } from '../../components/profile-tabs';
@@ -67,22 +67,23 @@ export default function PublicProfilePosts({
 
   if (!canView) {
     return (
-      <Stack
-        spacing={1}
-        sx={{
-          alignItems: "center",
-          py: 5,
-          color: 'text.secondary'
-        }}>
-        <LockIcon />
-        <Typography variant="subtitle1" sx={{
-          fontWeight: 600
-        }}>
-          This account is private
-        </Typography>
-        <Typography variant="body2" sx={{
-          textAlign: "center"
-        }}>
+      <Stack spacing={1} sx={{ alignItems: 'center', py: 5 }}>
+        <Box
+          sx={{
+            width: 56,
+            height: 56,
+            borderRadius: '50%',
+            bgcolor: 'action.hover',
+            color: 'text.secondary',
+            display: 'grid',
+            placeItems: 'center',
+            mb: 0.5,
+          }}
+        >
+          <LockIcon />
+        </Box>
+        <Typography sx={{ fontSize: 16, fontWeight: 600 }}>This account is private</Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center' }}>
           Follow this account to see their posts and status.
         </Typography>
       </Stack>
@@ -95,7 +96,7 @@ export default function PublicProfilePosts({
     <ImageList cols={3} gap={4} sx={{ m: 0 }} data-testid="public-posts-loading">
       {['a', 'b', 'c', 'd', 'e', 'f'].map((slot) => (
         <ImageListItem key={slot}>
-          <Skeleton variant="rectangular" sx={{ width: '100%', aspectRatio: '1 / 1' }} />
+          <Skeleton variant="rectangular" sx={{ width: '100%', aspectRatio: '1 / 1', borderRadius: '12px' }} />
         </ImageListItem>
       ))}
     </ImageList>
@@ -109,7 +110,7 @@ export default function PublicProfilePosts({
         <ImageListItem
           key={post.id}
           onClick={() => setOpenPostId(post.id)}
-          sx={{ cursor: 'pointer', aspectRatio: '1 / 1', overflow: 'hidden' }}
+          sx={{ cursor: 'pointer', aspectRatio: '1 / 1', overflow: 'hidden', borderRadius: '12px' }}
         >
           <Box
             component="img"
@@ -129,7 +130,8 @@ export default function PublicProfilePosts({
       sx={{
         color: "text.secondary",
         textAlign: "center",
-        py: 4
+        fontWeight: 500,
+        py: 5
       }}>
       No posts yet.
     </Typography>

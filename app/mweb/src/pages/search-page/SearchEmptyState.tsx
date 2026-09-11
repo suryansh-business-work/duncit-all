@@ -1,51 +1,54 @@
 import type { JSX } from 'react';
-import { Box, Card, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import LightbulbIcon from '@mui/icons-material/LightbulbOutlined';
-import StorefrontIcon from '@mui/icons-material/Storefront';
+import StorefrontIcon from '@mui/icons-material/StorefrontOutlined';
 import ExploreIcon from '@mui/icons-material/ExploreOutlined';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
 import { DuncitButton } from '@duncit/buttons';
+import EmptyState from '../../components/EmptyState';
+import { SURFACE_SX } from '../../theme';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface CtaBlockProps {
   icon: JSX.Element;
   title: string;
-  description: string;
   cta: string;
   onClick: () => void;
 }
 
-/** A single call-to-action card — hoisted to module scope (S6478). */
-function CtaBlock({ icon, title, description, cta, onClick }: Readonly<CtaBlockProps>) {
+/** A single call-to-action card: an accent icon on a soft disc, the title and
+ * a green pill — the title and the CTA say it all. Hoisted (S6478). */
+function CtaBlock({ icon, title, cta, onClick }: Readonly<CtaBlockProps>) {
   return (
-    <Card variant="outlined" sx={{ p: 2.5, borderRadius: '16px' }}>
-      <Stack spacing={1}>
-        <Stack direction="row" spacing={1} sx={{
-          alignItems: "center"
-        }}>
+    <Stack spacing={1.5} sx={{ ...SURFACE_SX, p: 2 }}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+        <Box
+          sx={{
+            width: 40,
+            height: 40,
+            flex: '0 0 auto',
+            borderRadius: '50%',
+            bgcolor: 'action.hover',
+            color: 'secondary.main',
+            display: 'grid',
+            placeItems: 'center',
+          }}
+        >
           {icon}
-          <Typography variant="subtitle1" sx={{
-            fontWeight: 700
-          }}>
-            {title}
-          </Typography>
-        </Stack>
-        <Typography variant="body2" sx={{
-          color: "text.secondary"
-        }}>
-          {description}
-        </Typography>
-        <DuncitButton variant="contained" onClick={onClick} sx={{ alignSelf: 'flex-start', fontWeight: 700, borderRadius: 999 }}>
-          {cta}
-        </DuncitButton>
+        </Box>
+        <Typography sx={{ fontSize: '1rem', fontWeight: 600 }}>{title}</Typography>
       </Stack>
-    </Card>
+      <DuncitButton variant="contained" onClick={onClick} sx={{ alignSelf: 'flex-start' }}>
+        {cta}
+      </DuncitButton>
+    </Stack>
   );
 }
 
 interface Props {
   variant: 'no-results' | 'empty-category';
-  keyword: string;
+  /** Kept for the callers; the one-line empty state no longer echoes it. */
+  keyword?: string;
   onShareIdea: () => void;
   onEarn: () => void;
   onExploreCategories: () => void;
@@ -53,7 +56,6 @@ interface Props {
 
 export default function SearchEmptyState({
   variant,
-  keyword,
   onShareIdea,
   onEarn,
   onExploreCategories,
@@ -61,55 +63,29 @@ export default function SearchEmptyState({
   const { t } = useTranslation();
   const isCategory = variant === 'empty-category';
   const heading = isCategory ? 'Nothing Here Yet' : 'No Pods Match Your Search';
-  const description = isCategory
-    ? 'Looks like this category is just getting started. Explore other interests or share your own Pod idea to help grow the community.'
-    : `We couldn't find any Pods, Clubs or experiences matching “${keyword}”. But don't let your curiosity stop here — you can inspire the next experience with Duncit.`;
 
   return (
-    <Stack spacing={2.5} sx={{ pt: 1 }}>
-      <Box sx={{ textAlign: 'center' }}>
-        <SearchOffIcon color="disabled" sx={{ fontSize: 52 }} />
-        <Typography
-          variant="h6"
-          sx={{
-            fontWeight: 700,
-            mt: 1
-          }}>
-          {heading}
-        </Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            color: "text.secondary",
-            mt: 0.5,
-            maxWidth: 520,
-            mx: 'auto'
-          }}>
-          {description}
-        </Typography>
-      </Box>
+    <Stack spacing={1.5}>
+      <EmptyState icon={<SearchOffIcon />} title={heading} />
 
       <CtaBlock
-        icon={<LightbulbIcon color="primary" />}
+        icon={<LightbulbIcon />}
         title="Didn't Find What You Were Looking For?"
-        description="Great communities are built around great ideas. Share the Pod you'd love to attend, and we'll explore bringing it to life with our growing community."
         cta="Share a Pod Idea"
         onClick={onShareIdea}
       />
 
       {isCategory ? (
         <CtaBlock
-          icon={<ExploreIcon color="primary" />}
+          icon={<ExploreIcon />}
           title={t('mweb.search.exploreOtherInterests')}
-          description={t('mweb.search.browseTheFullSetOfCategories')}
           cta="Explore More Categories"
           onClick={onExploreCategories}
         />
       ) : (
         <CtaBlock
-          icon={<StorefrontIcon color="primary" />}
+          icon={<StorefrontIcon />}
           title={t('mweb.search.turnYourPassionIntoSomethingBigger')}
-          description="If the experience you're searching for doesn't exist yet, why not create it? Host experiences, register your venue or list your products and start earning with Duncit."
           cta="Earn With Duncit"
           onClick={onEarn}
         />

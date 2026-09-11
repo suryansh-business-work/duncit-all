@@ -1,10 +1,11 @@
 import { Avatar, Box, Chip, Stack, Typography } from '@mui/material';
-import GroupsIcon from '@mui/icons-material/Groups';
+import GroupsIcon from '@mui/icons-material/GroupsRounded';
 import { coverImageUrl } from '@duncit/utils';
-import HowToRegIcon from '@mui/icons-material/HowToReg';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import PeopleAltIcon from '@mui/icons-material/PeopleAltOutlined';
 import PodCard from '../home-page/PodCard';
 import FollowButton from '../../components/FollowButton';
+import { SURFACE_SX } from '../../theme';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface ClubResult {
@@ -45,29 +46,28 @@ export default function SearchClubCard({
   const { t } = useTranslation();
   const { club, upcoming_pods: pods } = result;
   return (
-    <Box sx={{ minWidth: 0 }}>
+    <Stack spacing={1.5} sx={{ ...SURFACE_SX, p: 2, minWidth: 0 }}>
       <Stack
         direction="row"
         spacing={1.5}
         sx={{
-          alignItems: "center",
-          mb: 1.25
+          alignItems: "center"
         }}>
         <Avatar
           src={coverImageUrl(club.club_feature_images_and_videos)}
           variant="rounded"
           onClick={() => onOpenClub(club.club_id)}
-          sx={{ width: 52, height: 52, bgcolor: 'primary.main', cursor: 'pointer', flex: '0 0 auto' }}
+          sx={{ width: 52, height: 52, borderRadius: '12px', bgcolor: 'action.hover', color: 'secondary.main', cursor: 'pointer', flex: '0 0 auto' }}
         >
           <GroupsIcon />
         </Avatar>
         <Box sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }} onClick={() => onOpenClub(club.club_id)}>
           <Typography
-            variant="subtitle1"
             noWrap
             sx={{
-              fontWeight: 700,
-              lineHeight: 1.15
+              fontSize: '1rem',
+              fontWeight: 600,
+              lineHeight: 1.2
             }}>
             {club.club_name}
           </Typography>
@@ -76,30 +76,19 @@ export default function SearchClubCard({
             spacing={1}
             sx={{
               alignItems: "center",
-              flexWrap: 'wrap'
+              flexWrap: 'wrap',
+              color: 'text.secondary'
             }}>
             {categoryName && (
-              <Typography
-                variant="caption"
-                noWrap
-                sx={{
-                  color: "primary.main",
-                  fontWeight: 600
-                }}>
+              <Typography variant="caption" noWrap sx={{ fontWeight: 500 }}>
                 {categoryName}
               </Typography>
             )}
             <Stack direction="row" spacing={0.4} sx={{
               alignItems: "center"
             }}>
-              <PeopleAltIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-              <Typography
-                variant="caption"
-                noWrap
-                sx={{
-                  color: "text.secondary",
-                  fontWeight: 700
-                }}>
+              <PeopleAltIcon sx={{ fontSize: 14 }} />
+              <Typography variant="caption" noWrap sx={{ fontWeight: 500 }}>
                 {followersLabel(club.followers_count)}
               </Typography>
             </Stack>
@@ -107,11 +96,9 @@ export default function SearchClubCard({
         </Box>
         {following ? (
           <Chip
-            size="small"
-            icon={<HowToRegIcon />}
-            color="primary"
+            icon={<CheckRoundedIcon />}
             label={t('mweb.nav.following')}
-            sx={{ fontWeight: 600, flex: '0 0 auto' }}
+            sx={{ fontWeight: 600, flex: '0 0 auto', '& .MuiChip-icon': { color: 'text.primary' } }}
           />
         ) : (
           <FollowButton
@@ -126,9 +113,9 @@ export default function SearchClubCard({
         <Box
           sx={{
             display: 'flex',
-            gap: 1.35,
+            gap: 1.5,
             overflowX: 'auto',
-            pb: 1.25,
+            pb: 0.5,
             scrollSnapType: 'x mandatory',
             scrollbarWidth: 'none',
             '&::-webkit-scrollbar': { display: 'none' },
@@ -148,12 +135,15 @@ export default function SearchClubCard({
             variant="body2"
             sx={{
               color: "text.secondary",
-              mb: 0.5
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
             }}>
             {club.club_description}
           </Typography>
         )
       )}
-    </Box>
+    </Stack>
   );
 }

@@ -4,6 +4,8 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { DuncitButton } from '@/components/DuncitButton';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { ToggleRow } from '@/components/ToggleRow';
 import { useTranslation } from '@/hooks/useTranslation';
 import { formResolver } from '@/utils/form-resolver';
@@ -53,10 +55,8 @@ export function VenueSettingsForm({
   const submit = handleSubmit((values) => onSubmit(values));
 
   return (
-    <YStack gap={14} testID="venue-settings-form">
-      <Text fontSize={16} fontWeight="700" color="$color">
-        {t('venueSettings.cancellationTitle')}
-      </Text>
+    <SurfaceCard gap={16} testID="venue-settings-form">
+      <SectionHeader title={t('venueSettings.cancellationTitle')} />
       <Controller
         control={control}
         name="reschedule_only"
@@ -71,12 +71,13 @@ export function VenueSettingsForm({
         )}
       />
       {rescheduleOnly ? (
-        <Text testID="venue-settings-policy-disabled" fontSize={12.5} color="$muted">
+        <Text testID="venue-settings-policy-disabled" fontSize={13} color="$muted">
           {t('venueSettings.policyDisabled')}
         </Text>
       ) : null}
+      <YStack height={1} backgroundColor="$borderColor" />
       <YStack gap={2}>
-        <Text fontSize={14} fontWeight="700" color="$color">
+        <Text fontSize={15} fontWeight="600" color="$color">
           {t('venueSettings.bandsTitle')}
         </Text>
         <Text fontSize={12} color="$muted">
@@ -84,7 +85,7 @@ export function VenueSettingsForm({
         </Text>
       </YStack>
       {fields.length === 0 ? (
-        <Text testID="venue-settings-no-bands" fontSize={13} color="$muted">
+        <Text testID="venue-settings-no-bands" fontSize={14} color="$muted">
           {t('venueSettings.noBands')}
         </Text>
       ) : null}
@@ -103,17 +104,17 @@ export function VenueSettingsForm({
           label={t('venueSettings.addBand')}
           onPress={() => append({ ...emptyTier })}
           variant="outline"
-          size="sm"
+          tone="neutral"
           disabled={rescheduleOnly}
         />
       </XStack>
       {error ? (
-        <Text testID="venue-settings-error" fontSize={12.5} color="$danger">
+        <Text testID="venue-settings-error" fontSize={13} color="$danger">
           {error}
         </Text>
       ) : null}
       {saved ? (
-        <Text testID="venue-settings-saved" fontSize={12.5} color="$success">
+        <Text testID="venue-settings-saved" fontSize={13} color="$success">
           {t('venueSettings.saved')}
         </Text>
       ) : null}
@@ -126,6 +127,6 @@ export function VenueSettingsForm({
         disabled={saving}
         loading={saving}
       />
-    </YStack>
+    </SurfaceCard>
   );
 }

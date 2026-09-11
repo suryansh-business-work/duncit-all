@@ -90,8 +90,8 @@ export default function PodAttendeesDialog({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', pr: 1 }}>
-        <Typography component="span" sx={{ flex: 1, fontWeight: 700 }}>
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', pr: 1 }}>
+        <Typography component="span" sx={{ flex: 1, fontSize: 17, fontWeight: 600 }}>
           {t('mweb.podDetails.attendeesCount', { vars: { count } })}
         </Typography>
         <DuncitIconButton
@@ -104,12 +104,7 @@ export default function PodAttendeesDialog({
       </DialogTitle>
       <DialogContent dividers sx={{ p: 1 }}>
         {people.length === 0 ? (
-          <Typography
-            variant="body2"
-            sx={{
-              color: "text.secondary",
-              p: 2
-            }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', p: 2 }}>
             {t('mweb.podDetails.noAttendeesYet')}
           </Typography>
         ) : (
@@ -124,10 +119,10 @@ export default function PodAttendeesDialog({
                   <Avatar
                     src={person.profile_photo || undefined}
                     sx={{
-                      bgcolor: 'primary.main',
+                      bgcolor: 'action.hover',
+                      color: 'text.primary',
                       border: person.is_host ? 2 : 0,
-                      borderColor: 'primary.main',
-                      boxShadow: person.is_host ? '0 0 0 3px rgba(255,79,115,0.24)' : 'none',
+                      borderColor: 'secondary.main',
                     }}
                   >
                     {(person.full_name?.[0] ?? '?').toUpperCase()}
@@ -152,16 +147,11 @@ export default function PodAttendeesDialog({
                   }
                   secondary={t('mweb.podDetails.viewProfile')}
                   slotProps={{
-                    primary: { sx: { fontWeight: person.is_host ? 700 : 600, fontSize: 14 } },
+                    primary: { sx: { fontWeight: 600, fontSize: 14 } },
                     secondary: { sx: { fontSize: 12 } }
                   }} />
                 {person.is_host && (
-                  <Chip
-                    size="small"
-                    color="primary"
-                    label={t('mweb.podDetails.host')}
-                    sx={{ fontWeight: 700 }}
-                  />
+                  <Chip size="small" color="secondary" label={t('mweb.podDetails.host')} />
                 )}
               </ListItemButton>
             ))}
@@ -187,7 +177,7 @@ export default function PodAttendeesDialog({
                   sx={{ borderRadius: '16px' }}
                 >
                   <ListItemAvatar>
-                    <Avatar src={fill.old_photo || undefined} sx={{ opacity: 0.6 }}>
+                    <Avatar src={fill.old_photo || undefined} sx={{ opacity: 0.6, bgcolor: 'action.hover', color: 'text.primary' }}>
                       {fill.old_name.charAt(0).toUpperCase()}
                     </Avatar>
                   </ListItemAvatar>
@@ -196,7 +186,6 @@ export default function PodAttendeesDialog({
                     secondary={fill.filled_by_label}
                     slotProps={{
                       primary: { sx: { fontSize: 14, textDecoration: 'line-through', color: 'text.disabled' } },
-
                       secondary: { sx: { fontSize: 12 } }
                     }} />
                 </ListItemButton>

@@ -52,7 +52,7 @@ export default function PublicProfileStories({ name, photo, stories }: Readonly<
               height: 64,
               cursor: 'pointer',
               border: 3,
-              borderColor: 'primary.main',
+              borderColor: 'secondary.main',
             }}
           />
         ))}

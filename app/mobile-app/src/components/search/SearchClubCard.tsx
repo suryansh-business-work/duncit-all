@@ -6,6 +6,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { PressScale } from '@/animations/PressScale';
 import { PodCard } from '@/components/home/PodCard';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useClubFollow } from '@/hooks/useFollow';
 import type { SearchClubResult } from '@/hooks/useSearch';
 import { coverImageUrl } from '@duncit/utils';
@@ -24,10 +25,11 @@ interface Props {
 
 const followersText = (n: number) => `${n.toLocaleString('en-IN')} follower${n === 1 ? '' : 's'}`;
 
-/** A club surfaced by search — avatar, name, category, follower count, a Follow
- * CTA (hidden once followed) and a horizontal rail of its upcoming pods. */
+/** A club surfaced by search, on its own surface card — thumbnail, name,
+ * category + follower count, a green Follow pill (a soft Following pill once
+ * followed) and a horizontal rail of its upcoming pods. */
 export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: Readonly<Props>) {
-  const { primary, onPrimary, muted } = useThemeColors();
+  const { color: ink, accent, onPrimary, muted } = useThemeColors();
   const { following, busy, toggle } = useClubFollow(result.club.id, result.is_following);
   const { club, upcoming_pods: pods } = result;
   const image = coverImageUrl(club.club_feature_images_and_videos) ?? null;
@@ -52,14 +54,14 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
     );
   } else if (club.club_description) {
     body = (
-      <Text fontSize={13} color="$muted" numberOfLines={2}>
+      <Text fontSize={14} color="$muted" numberOfLines={2}>
         {club.club_description}
       </Text>
     );
   }
 
   return (
-    <YStack gap={10} testID={`search-club-${club.club_id}`}>
+    <SurfaceCard gap={12} testID={`search-club-${club.club_id}`}>
       <XStack alignItems="center" gap={12}>
         <PressScale
           accessibilityLabel={club.club_name}
@@ -70,9 +72,9 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
             <YStack
               width={52}
               height={52}
-              borderRadius={16}
+              borderRadius={12}
               overflow="hidden"
-              backgroundColor="$primary"
+              backgroundColor="$soft"
               alignItems="center"
               justifyContent="center"
             >
@@ -83,13 +85,13 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
                   resizeMode="cover"
                 />
               ) : (
-                <MaterialIcons name="groups" size={26} color={onPrimary} />
+                <MaterialIcons name="groups" size={26} color={accent} />
               )}
             </YStack>
             <YStack flex={1} minWidth={0} gap={2}>
               <Text
-                fontSize={15.5}
-                fontWeight="700"
+                fontSize={16}
+                fontWeight="600"
                 color="$color"
                 numberOfLines={1}
                 textAlign="left"
@@ -98,13 +100,13 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
               </Text>
               <XStack alignItems="center" gap={8} flexWrap="wrap">
                 {categoryName ? (
-                  <Text fontSize={12} fontWeight="600" color="$primary" numberOfLines={1}>
+                  <Text fontSize={12} fontWeight="500" color="$muted" numberOfLines={1}>
                     {categoryName}
                   </Text>
                 ) : null}
                 <XStack alignItems="center" gap={3}>
-                  <MaterialIcons name="people" size={13} color={muted} />
-                  <Text fontSize={12} fontWeight="700" color="$muted" numberOfLines={1}>
+                  <MaterialIcons name="people" size={14} color={muted} />
+                  <Text fontSize={12} fontWeight="500" color="$muted" numberOfLines={1}>
                     {followersText(followers)}
                   </Text>
                 </XStack>
@@ -120,11 +122,11 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
             height={32}
             paddingHorizontal={12}
             borderRadius={999}
-            backgroundColor="$primary"
+            backgroundColor="$soft"
             justifyContent="center"
           >
-            <MaterialIcons name="check" size={15} color={onPrimary} />
-            <Text fontSize={12.5} fontWeight="700" color="$onPrimary">
+            <MaterialIcons name="check" size={15} color={ink} />
+            <Text fontSize={13} fontWeight="600" color="$color">
               Following
             </Text>
           </XStack>
@@ -141,19 +143,18 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
             height={32}
             paddingHorizontal={12}
             borderRadius={999}
-            borderWidth={1.5}
-            borderColor="$primary"
+            backgroundColor="$primary"
             justifyContent="center"
-            pressStyle={PRESS_STYLE.control}
+            pressStyle={PRESS_STYLE.solid}
           >
-            <MaterialIcons name="add" size={15} color={primary} />
-            <Text fontSize={12.5} fontWeight="700" color="$primary">
+            <MaterialIcons name="person-add-alt" size={15} color={onPrimary} />
+            <Text fontSize={13} fontWeight="600" color="$onPrimary">
               Follow
             </Text>
           </XStack>
         )}
       </XStack>
       {body}
-    </YStack>
+    </SurfaceCard>
   );
 }

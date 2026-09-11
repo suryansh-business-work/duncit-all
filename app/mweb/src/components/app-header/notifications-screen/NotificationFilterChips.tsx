@@ -14,9 +14,9 @@ export default function NotificationFilterChips({ chips, value, onChange }: Read
   return (
     <Stack
       direction="row"
-      spacing={0.75}
+      spacing={1}
       sx={{
-        px: 1.5,
+        px: 2,
         pb: 1.25,
         overflowX: 'auto',
         flexWrap: 'nowrap',
@@ -35,11 +35,11 @@ export default function NotificationFilterChips({ chips, value, onChange }: Read
           label={`${chip.label} ${chip.count}`}
           onClick={() => onChange(chip.key)}
           color={value === chip.key ? 'primary' : 'default'}
-          variant={value === chip.key ? 'filled' : 'outlined'}
           aria-pressed={value === chip.key}
           sx={{
             flex: '0 0 auto',
-            fontWeight: 700,
+            height: 36,
+            px: 0.75,
             bgcolor: value === chip.key ? undefined : 'background.paper',
             transition: 'background-color 160ms ease, color 160ms ease',
           }}

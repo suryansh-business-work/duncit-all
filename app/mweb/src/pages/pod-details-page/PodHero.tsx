@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import { Box, Typography } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -12,19 +12,28 @@ import HeroOverlayActions from './HeroOverlayActions';
 import VideoMedia from '../../components/media/VideoMedia';
 import { useTranslation } from '../../i18n/useTranslation';
 
+/** One height for the photo, the video and the empty placeholder. */
+const HERO_HEIGHT = { xs: 280, md: 420 };
+
+/** The hero sits inside the page padding as a 24px-cornered block. */
+const heroFrame = {
+  position: 'relative' as const,
+  borderRadius: '24px',
+  overflow: 'hidden',
+  bgcolor: 'action.hover',
+};
+
 const arrowBtn = {
   position: 'absolute' as const,
   top: '50%',
   transform: 'translateY(-50%)',
   zIndex: 2,
-  bgcolor: 'rgba(17,24,39,0.32)',
-  color: '#fff',
-  width: 40,
-  height: 40,
-  border: '1px solid rgba(255,255,255,0.32)',
-  backdropFilter: 'blur(10px)',
-  WebkitBackdropFilter: 'blur(10px)',
-  '&:hover': { bgcolor: 'rgba(17,24,39,0.48)' },
+  bgcolor: 'background.paper',
+  color: 'text.primary',
+  width: 36,
+  height: 36,
+  minHeight: 36,
+  '&:hover': { bgcolor: 'background.paper' },
 };
 
 function PrevArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
@@ -34,7 +43,7 @@ function PrevArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
       size="small"
       onClick={onClick}
       aria-label={t('mweb.podDetails.previousImage')}
-      sx={{ ...arrowBtn, left: 10 }}
+      sx={{ ...arrowBtn, left: 12 }}
     >
       <ChevronLeftIcon />
     </DuncitIconButton>
@@ -48,10 +57,34 @@ function NextArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
       size="small"
       onClick={onClick}
       aria-label={t('mweb.podDetails.nextImage')}
-      sx={{ ...arrowBtn, right: 10 }}
+      sx={{ ...arrowBtn, right: 12 }}
     >
       <ChevronRightIcon />
     </DuncitIconButton>
+  );
+}
+
+/** "2/5" — a surface pill over the photo's bottom-right corner. */
+function SlideCounter({ index, total }: Readonly<{ index: number; total: number }>) {
+  return (
+    <Box
+      sx={{
+        position: 'absolute',
+        right: 12,
+        bottom: 12,
+        zIndex: 2,
+        px: 1.25,
+        py: 0.5,
+        borderRadius: 999,
+        bgcolor: 'background.paper',
+        color: 'text.primary',
+        fontSize: 12,
+        fontWeight: 600,
+        lineHeight: 1.2,
+      }}
+    >
+      {index + 1}/{total}
+    </Box>
   );
 }
 
@@ -65,6 +98,11 @@ interface Props {
   onShare: () => void;
 }
 
+/**
+ * The top bar and the pod's cover media: a carousel of its photos and clips
+ * inside the page padding, or a quiet placeholder when it has none. The title
+ * is not repeated over the photo — it leads the overview right below.
+ */
 export default function PodHero({
   media,
   title,
@@ -75,115 +113,59 @@ export default function PodHero({
   onShare,
 }: Readonly<Props>) {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const topBar = (
+    <HeroOverlayActions
+      onBack={onBack}
+      saved={saved}
+      saveLoading={saveLoading}
+      onToggleSave={onToggleSave}
+      onShare={onShare}
+    />
+  );
 
   if (media.length === 0) {
     return (
-      <Box
-        sx={{
-          position: 'relative',
-          mt: -2,
-          mx: { xs: -2, sm: -3 },
-          height: 240,
-          borderRadius: '16px',
-          overflow: 'hidden',
-          background: 'linear-gradient(145deg, #17111d 0%, #2c1728 56%, #111827 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <EventIcon sx={{ fontSize: 80, color: 'rgba(255,255,255,0.24)' }} />
-        <Typography sx={{ position: 'absolute', left: 18, bottom: 20, right: 18, color: '#fff', fontWeight: 700, lineHeight: 1.05 }} variant="h4">
-          {title}
-        </Typography>
-        <HeroOverlayActions
-          onBack={onBack}
-          saved={saved}
-          saveLoading={saveLoading}
-          onToggleSave={onToggleSave}
-          onShare={onShare}
-        />
-      </Box>
+      <Stack spacing={2}>
+        {topBar}
+        <Box sx={{ ...heroFrame, height: HERO_HEIGHT, display: 'grid', placeItems: 'center' }}>
+          <EventIcon sx={{ fontSize: 64, color: 'text.secondary' }} />
+        </Box>
+      </Stack>
     );
   }
 
   return (
-    <Box
-      sx={{
-        position: 'relative',
-        mt: -2,
-        mx: { xs: -2, sm: -3 },
-        borderRadius: '16px',
-        overflow: 'hidden',
-        '.slick-dots': { bottom: 12 },
-        '.slick-dots li button:before': { color: 'common.white', opacity: 0.6 },
-        '.slick-dots li.slick-active button:before': { opacity: 1 },
-      }}
-    >
-      <Slider
-        dots={false}
-        arrows={media.length > 1}
-        prevArrow={<PrevArrow />}
-        nextArrow={<NextArrow />}
-        infinite={media.length > 1}
-        autoplay={media.length > 1}
-        autoplaySpeed={4500}
-        afterChange={setCurrentSlide}
-        slidesToShow={1}
-        slidesToScroll={1}
-      >
-        {media.map((m) =>
-          isVideoMedia(m) ? (
-            <VideoMedia key={m.url} src={m.url} height={{ xs: 280, md: 460 }} />
-          ) : (
-            <Box
-              key={m.url}
-              component="img"
-              src={m.url}
-              alt={title}
-              sx={{
-                width: '100%',
-                height: { xs: 280, md: 460 },
-                objectFit: 'cover',
-              }}
-            />
-          )
-        )}
-      </Slider>
-      <Box sx={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(180deg, rgba(5,5,8,0.22) 0%, rgba(5,5,8,0) 38%, rgba(5,5,8,0.72) 100%)' }} />
-      <Box sx={{ position: 'absolute', left: 16, right: 90, bottom: 16, zIndex: 2, color: '#fff', pointerEvents: 'none' }}>
-        <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.05 }}>
-          {title}
-        </Typography>
-      </Box>
-      <HeroOverlayActions
-        onBack={onBack}
-        saved={saved}
-        saveLoading={saveLoading}
-        onToggleSave={onToggleSave}
-        onShare={onShare}
-      />
-      {media.length > 1 && (
-        <Box
-          sx={{
-            position: 'absolute',
-            right: 14,
-            bottom: 14,
-            zIndex: 2,
-            px: 1.25,
-            py: 0.5,
-            borderRadius: 999,
-            bgcolor: 'rgba(0,0,0,0.62)',
-            color: 'common.white',
-            fontSize: 12,
-            fontWeight: 700,
-            lineHeight: 1,
-            letterSpacing: 0,
-          }}
+    <Stack spacing={2}>
+      {topBar}
+      <Box sx={heroFrame}>
+        <Slider
+          dots={false}
+          arrows={media.length > 1}
+          prevArrow={<PrevArrow />}
+          nextArrow={<NextArrow />}
+          infinite={media.length > 1}
+          autoplay={media.length > 1}
+          autoplaySpeed={4500}
+          afterChange={setCurrentSlide}
+          slidesToShow={1}
+          slidesToScroll={1}
         >
-          {currentSlide + 1}/{media.length}
-        </Box>
-      )}
-    </Box>
+          {media.map((m) =>
+            isVideoMedia(m) ? (
+              <VideoMedia key={m.url} src={m.url} height={HERO_HEIGHT} />
+            ) : (
+              <Box
+                key={m.url}
+                component="img"
+                src={m.url}
+                alt={title}
+                sx={{ width: '100%', height: HERO_HEIGHT, objectFit: 'cover', display: 'block' }}
+              />
+            )
+          )}
+        </Slider>
+        {media.length > 1 && <SlideCounter index={currentSlide} total={media.length} />}
+      </Box>
+    </Stack>
   );
 }

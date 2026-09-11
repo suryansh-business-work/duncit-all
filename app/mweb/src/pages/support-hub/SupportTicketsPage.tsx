@@ -1,17 +1,28 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useLocation, useNavigate } from 'react-router';
-import { Avatar, Box, Chip, Paper, Stack, Typography } from '@mui/material';
+import { Box, Chip, Paper, Stack, Typography } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
-import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 import { HEADER_ME } from '../../components/app-header/queries';
 import SupportForm, { type SupportFormValues } from '../../forms/support.form';
 import SupportShell from './SupportShell';
 import MyTicketsList from '../support-tickets/MyTicketsList';
 import { CREATE_TICKET } from '../support-tickets/queries';
 import { useTranslation } from '../../i18n/useTranslation';
+import { SURFACE_SX } from '../../theme';
 
+const ICON_DISC_SX = {
+  width: 40,
+  height: 40,
+  borderRadius: '50%',
+  display: 'grid',
+  placeItems: 'center',
+  color: 'secondary.main',
+  bgcolor: 'action.hover',
+  flexShrink: 0,
+} as const;
 
 export default function SupportTicketsPage() {
   const { t } = useTranslation();
@@ -78,88 +89,41 @@ export default function SupportTicketsPage() {
   };
 
   return (
-    <SupportShell
-      title={t('mweb.common.createSupportTickets')}
-      subtitle={t('mweb.supportHub.raiseAnIssueWithOurTeam')}
-      icon={<ConfirmationNumberIcon fontSize="small" />}
-      backTo="/support"
-    >
-      <Stack spacing={2.25}>
-        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'rgba(255,79,115,0.12)' }}>
-          <Stack direction="row" spacing={1.25} sx={{
-            alignItems: "center"
-          }}>
-            <Stack direction="row" spacing={-1} sx={{ flex: '0 0 auto' }}>
-              {['primary.main', 'secondary.main', 'info.main'].map((color) => (
-                <Avatar
-                  key={color}
-                  sx={{ width: 34, height: 34, bgcolor: color, border: 2, borderColor: 'background.paper' }}
-                >
-                  <SupportAgentIcon fontSize="small" />
-                </Avatar>
-              ))}
-            </Stack>
+    <SupportShell title={t('mweb.common.createSupportTickets')} backTo="/support">
+      <Stack spacing={2}>
+        <Paper sx={{ ...SURFACE_SX, p: 2 }}>
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+            <Box sx={ICON_DISC_SX}>
+              <SupportAgentIcon fontSize="small" />
+            </Box>
             <Box sx={{ minWidth: 0, flex: 1 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
+              <Typography sx={{ fontSize: '0.9375rem', fontWeight: 600 }} noWrap>
                 Help squad is ready
               </Typography>
-              <Typography
-                variant="caption"
-                sx={{
-                  color: "text.secondary",
-                  fontWeight: 600
-                }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 Average reply within 24 hours
               </Typography>
             </Box>
-            <Chip size="small" color="success" label={t('mweb.common.live')} sx={{ fontWeight: 700 }} />
+            <Chip size="small" color="success" label={t('mweb.common.live')} />
           </Stack>
         </Paper>
 
         <Paper
           onClick={() => navigate('/faqs')}
-          variant="outlined"
-          sx={{
-            p: 1.5,
-            borderRadius: '16px',
-            bgcolor: 'rgba(20,184,166,0.10)',
-            borderColor: 'rgba(20,184,166,0.24)',
-            cursor: 'pointer',
-          }}
+          sx={{ ...SURFACE_SX, p: 2, cursor: 'pointer' }}
         >
-          <Stack direction="row" spacing={1} sx={{
-            alignItems: "center"
-          }}>
-            <HelpOutlineIcon color="success" />
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                Maybe answered already?
-              </Typography>
-              <Typography variant="caption" sx={{
-                color: "text.secondary"
-              }}>
-                Tap to read quick answers before sending a ticket.
-              </Typography>
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+            <Box sx={ICON_DISC_SX}>
+              <HelpOutlineIcon fontSize="small" />
             </Box>
+            <Typography sx={{ flex: 1, minWidth: 0, fontSize: '0.9375rem', fontWeight: 600 }}>
+              Maybe answered already?
+            </Typography>
+            <ChevronRightRoundedIcon sx={{ color: 'text.secondary' }} />
           </Stack>
         </Paper>
 
-        <Paper elevation={0} variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
-          <Box sx={{ mb: 1 }}>
-            <Typography
-              variant="overline"
-              sx={{
-                color: "text.secondary",
-                fontWeight: 700
-              }}>
-              Tell us what's going on
-            </Typography>
-            <Typography variant="body2" sx={{
-              color: "text.secondary"
-            }}>
-              Add the steps, screenshots, and expected result so we can fix it faster.
-            </Typography>
-          </Box>
+        <Paper sx={{ ...SURFACE_SX, p: 2 }}>
           <SupportForm
             loading={loading}
             errorMessage={error}

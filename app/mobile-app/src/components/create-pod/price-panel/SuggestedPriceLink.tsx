@@ -21,7 +21,7 @@ export function SuggestedPriceLink({ onPress }: Readonly<{ onPress: () => void }
       gap={4}
       pressStyle={PRESS_STYLE.inline}
     >
-      <Text fontSize={13} fontWeight="700" color="$primary" textDecorationLine="underline">
+      <Text fontSize={13} fontWeight="600" color="$primary">
         {label}
       </Text>
       <MaterialIcons name="info-outline" size={15} color={primary} />

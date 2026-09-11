@@ -3,7 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Text, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import { EarnBox } from '@/components/earn/EarnBox';
 import { EarnMeetingActions } from '@/components/earn/EarnMeetingActions';
@@ -73,10 +73,7 @@ export function EarnScreen() {
   return (
     <StackScreen title={t('mweb.earn.earnWithDuncit')} testID="earn-screen">
       <RefreshScrollView showsVerticalScrollIndicator={false}>
-        <YStack gap={14} padding={16} paddingBottom={40}>
-          <Text fontSize={13} color="$muted">
-            Pick a way to start earning on Duncit.
-          </Text>
+        <YStack gap={12} padding={16} paddingBottom={40}>
           {boxes.map((box) => {
             const state = earnBoxState(box, roles, meetings);
             const { scheduledMeeting } = state;

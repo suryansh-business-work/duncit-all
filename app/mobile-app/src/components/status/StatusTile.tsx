@@ -1,7 +1,6 @@
 import { AppImage } from '@/components/AppImage';
 
 import { MaterialIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Text, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -13,7 +12,7 @@ interface StatusTileProps {
   image?: string | null;
   /** Show the "+" add-story badge (own tile only). */
   badge?: boolean;
-  /** Grey ring when true (already seen), vibrant gradient ring when false (Bug 2). */
+  /** Hairline ring when true (already seen), the accent ring when false (Bug 2). */
   seen?: boolean;
   /** Upload progress 0–100 — shows a % overlay while posting (Bug 1). */
   progress?: number;
@@ -23,9 +22,10 @@ interface StatusTileProps {
   testID?: string;
 }
 
-/** A circular story avatar with a label. The ring is a vibrant gradient for an
- * unseen story and turns grey/desaturated once seen (Bug 2); an optional "+"
- * badge marks the upload tile and a % overlay shows upload progress (Bug 1). */
+/** A circular story avatar with a label. The ring is the solid accent for an
+ * unseen story and a hairline once seen (Bug 2) — 2.5px deep either way, so a
+ * tile never changes size; an optional "+" badge marks the upload tile and a %
+ * overlay shows upload progress (Bug 1). mWeb twin: HomeStatusTile. */
 export function StatusTile({
   label,
   image,
@@ -48,7 +48,7 @@ export function StatusTile({
       width={58}
       height={58}
       borderRadius={999}
-      backgroundColor="$muted"
+      backgroundColor="$primary"
       alignItems="center"
       justifyContent="center"
       overflow="hidden"
@@ -60,7 +60,7 @@ export function StatusTile({
           resizeMode="cover"
         />
       ) : (
-        <Text fontSize={22} fontWeight="700" color="$onPrimary">
+        <Text fontSize={22} fontWeight="600" color="$onPrimary">
           {initial}
         </Text>
       )}
@@ -76,7 +76,7 @@ export function StatusTile({
           justifyContent="center"
           backgroundColor="rgba(0,0,0,0.5)"
         >
-          <Text fontSize={15} fontWeight="700" color="#ffffff">
+          <Text fontSize={15} fontWeight="600" color="#ffffff">
             {Math.round(progress)}%
           </Text>
         </YStack>
@@ -85,7 +85,7 @@ export function StatusTile({
   );
 
   const ringInner = (
-    <YStack padding={2} borderRadius={999} backgroundColor="$background">
+    <YStack padding={2} borderRadius={999} backgroundColor="$surface">
       {avatar}
     </YStack>
   );
@@ -104,21 +104,17 @@ export function StatusTile({
       {seen ? (
         <YStack
           testID={testID ? `${testID}-seen-ring` : undefined}
-          padding={2.5}
+          padding={1.5}
           borderRadius={999}
-          backgroundColor="$borderColor"
+          borderWidth={1}
+          borderColor="$borderColor"
         >
           {ringInner}
         </YStack>
       ) : (
-        <LinearGradient
-          colors={['#ff4f73', '#ff7a59']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ padding: 2.5, borderRadius: 999 }}
-        >
+        <YStack padding={2.5} borderRadius={999} backgroundColor="$accent">
           {ringInner}
-        </LinearGradient>
+        </YStack>
       )}
       {badge ? (
         <YStack
@@ -137,12 +133,12 @@ export function StatusTile({
           alignItems="center"
           justifyContent="center"
           borderWidth={2}
-          borderColor="$background"
+          borderColor="$surface"
         >
           <MaterialIcons name="add" size={13} color={onPrimary} />
         </YStack>
       ) : null}
-      <Text fontSize={11} fontWeight="700" color="$color" numberOfLines={1}>
+      <Text fontSize={12} fontWeight="600" color="$color" numberOfLines={1}>
         {label}
       </Text>
     </YStack>

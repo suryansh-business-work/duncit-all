@@ -6,11 +6,12 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import PetsIcon from '@mui/icons-material/Pets';
-import PersonIcon from '@mui/icons-material/Person';
-import StorefrontIcon from '@mui/icons-material/Storefront';
-import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
+import PetsIcon from '@mui/icons-material/PetsOutlined';
+import PersonIcon from '@mui/icons-material/PersonOutlineRounded';
+import StorefrontIcon from '@mui/icons-material/StorefrontOutlined';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremiumOutlined';
+import IconDisc from '../account-page/IconDisc';
 import EmailVerificationForm from './email-verification-form';
 import PetProfileSection from './PetProfileSection';
 import ProfileAboutSection from './ProfileAboutSection';
@@ -20,16 +21,15 @@ import { useTranslation } from '../../i18n/useTranslation';
 
 function Title({ icon, label }: Readonly<{ icon: JSX.Element; label: string }>) {
   return (
-    <Stack direction="row" spacing={1} sx={{
-      alignItems: "center"
-    }}>
-      {icon}
-      <Typography sx={{
-        fontWeight: 700
-      }}>{label}</Typography>
+    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+      <IconDisc>{icon}</IconDisc>
+      <Typography sx={{ fontSize: 15, fontWeight: 600 }}>{label}</Typography>
     </Stack>
   );
 }
+
+const SUMMARY_SX = { px: 2, minHeight: 60 } as const;
+const DETAILS_SX = { px: 2, pt: 0, pb: 2 } as const;
 
 export default function ProfileAccordions({
   me,
@@ -38,12 +38,12 @@ export default function ProfileAccordions({
 }: Readonly<{ me: any; onSaved: () => void; autoSendEmailOtp?: boolean }>) {
   const { t } = useTranslation();
   return (
-    <Stack spacing={1}>
+    <Stack spacing={1.5}>
       <Accordion defaultExpanded disableGutters>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Title icon={<PersonIcon color="primary" />} label={t('mweb.profile.yourProfile')} />
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={SUMMARY_SX}>
+          <Title icon={<PersonIcon />} label={t('mweb.profile.yourProfile')} />
         </AccordionSummary>
-        <AccordionDetails>
+        <AccordionDetails sx={DETAILS_SX}>
           <Stack spacing={2}>
             <EmailVerificationForm
               email={me.email}
@@ -51,34 +51,34 @@ export default function ProfileAccordions({
               onVerified={onSaved}
               autoSend={autoSendEmailOtp}
             />
-          <ProfileAboutSection me={me} onSaved={onSaved} />
+            <ProfileAboutSection me={me} onSaved={onSaved} />
           </Stack>
         </AccordionDetails>
       </Accordion>
 
       <Accordion disableGutters>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Title icon={<PetsIcon color="primary" />} label={t('mweb.profile.petProfile2')} />
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={SUMMARY_SX}>
+          <Title icon={<PetsIcon />} label={t('mweb.profile.petProfile2')} />
         </AccordionSummary>
-        <AccordionDetails>
+        <AccordionDetails sx={DETAILS_SX}>
           <PetProfileSection pet={me.pet_profile} onSaved={onSaved} />
         </AccordionDetails>
       </Accordion>
 
       <Accordion disableGutters>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Title icon={<WorkspacePremiumIcon color="primary" />} label={t('mweb.profile.userHost')} />
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={SUMMARY_SX}>
+          <Title icon={<WorkspacePremiumIcon />} label={t('mweb.profile.userHost')} />
         </AccordionSummary>
-        <AccordionDetails>
+        <AccordionDetails sx={DETAILS_SX}>
           <UserHostPanel />
         </AccordionDetails>
       </Accordion>
 
       <Accordion disableGutters>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Title icon={<StorefrontIcon color="primary" />} label={t('mweb.profile.userVenues')} />
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={SUMMARY_SX}>
+          <Title icon={<StorefrontIcon />} label={t('mweb.profile.userVenues')} />
         </AccordionSummary>
-        <AccordionDetails>
+        <AccordionDetails sx={DETAILS_SX}>
           <UserVenuePanel />
         </AccordionDetails>
       </Accordion>

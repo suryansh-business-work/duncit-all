@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { useUserData } from '@duncit/user-context';
 import { Alert, AlertTitle, Stack, Typography } from '@mui/material';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForeverOutlined';
+import ChevronRightIcon from '@mui/icons-material/ChevronRightRounded';
 import { DuncitButton } from '@duncit/buttons';
+import IconDisc from './IconDisc';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import DeleteAccountDialog from './DeleteAccountDialog';
 import DeletionSubmittedDialog from './DeletionSubmittedDialog';
@@ -80,7 +82,7 @@ export default function DeletionRequestPanel({ onToast }: Readonly<Props>) {
         <Alert severity="warning" data-testid="deletion-pending">
           <AlertTitle>{t('mweb.account.deletion.pendingTitle')}</AlertTitle>
           <Typography variant="body2">{t('mweb.account.deletion.pendingBody')}</Typography>
-          <Typography variant="body2" sx={{ fontWeight: 700, mt: 0.5 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600, mt: 0.5 }}>
             {t('mweb.account.deletion.deletesOn', {
               vars: { date: formatDate(pending.scheduled_delete_at) },
             })}
@@ -99,13 +101,13 @@ export default function DeletionRequestPanel({ onToast }: Readonly<Props>) {
           </Typography>
         </Alert>
         <DuncitButton
-          variant="outlined"
+          color="inherit"
           onClick={() => {
             withdraw().catch(() => undefined);
           }}
           disabled={cancelling}
           data-testid="withdraw-deletion"
-          sx={{ textTransform: 'none', fontWeight: 700, alignSelf: 'flex-start' }}
+          sx={{ alignSelf: 'flex-start', bgcolor: 'action.hover', minHeight: 40 }}
         >
           {cancelling
             ? t('mweb.account.deletion.withdrawing')
@@ -122,12 +124,28 @@ export default function DeletionRequestPanel({ onToast }: Readonly<Props>) {
 
   return (
     <Stack spacing={1}>
+      {/* The danger corner: one row in the danger colour, never a filled button. */}
       <DuncitButton
         color="error"
-        startIcon={<DeleteForeverIcon />}
+        fullWidth
+        startIcon={
+          <IconDisc tone="danger">
+            <DeleteForeverIcon />
+          </IconDisc>
+        }
+        endIcon={<ChevronRightIcon />}
         onClick={() => setConfirmOpen(true)}
         data-testid="open-delete-account"
-        sx={{ textTransform: 'none', fontWeight: 700, alignSelf: 'flex-start' }}
+        sx={{
+          justifyContent: 'flex-start',
+          px: 0.5,
+          py: 0.75,
+          fontSize: 15,
+          fontWeight: 500,
+          borderRadius: '16px',
+          '& .MuiButton-startIcon': { mr: 2, ml: 0 },
+          '& .MuiButton-endIcon': { ml: 'auto', color: 'text.secondary' },
+        }}
       >
         {t('mweb.account.deletion.action')}
       </DuncitButton>

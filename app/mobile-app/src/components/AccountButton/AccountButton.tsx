@@ -2,17 +2,18 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppImage } from '@/components/AppImage';
 
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
+import { HeaderRoundButton } from '@/components/AppHeader/HeaderRoundButton';
 import { useMe } from '@/hooks/useMe';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 /**
  * Header avatar that opens the account menu — the mobile twin of mWeb's header
  * <Avatar>, which navigates to the same /menu route (a real page on both, so
- * Back/refresh work). Falls back to the user's initial.
+ * Back/refresh work). A 34px photo (or the user's initial) inside the header's
+ * 40px round surface button.
  */
 export function AccountButton() {
   const { t } = useTranslation();
@@ -22,16 +23,10 @@ export function AccountButton() {
   const initial = (me?.first_name?.[0] ?? me?.full_name?.[0] ?? 'U').toUpperCase();
 
   return (
-    <XStack
-      pressStyle={PRESS_STYLE.surface}
+    <HeaderRoundButton
       testID="account-button"
-      role="button"
-      aria-label={t('mweb.common.openAccountMenu')}
+      label={t('mweb.common.openAccountMenu')}
       onPress={() => navigation.navigate('Menu')}
-      width={40}
-      height={40}
-      alignItems="center"
-      justifyContent="center"
     >
       {me?.profile_photo ? (
         <AppImage
@@ -41,11 +36,11 @@ export function AccountButton() {
         />
       ) : (
         <YStack
-          width={36}
-          height={36}
+          width={34}
+          height={34}
           alignItems="center"
           justifyContent="center"
-          borderRadius={18}
+          borderRadius={17}
           backgroundColor="$primary"
         >
           <Text fontSize={14} fontWeight="600" color="$onPrimary">
@@ -53,12 +48,12 @@ export function AccountButton() {
           </Text>
         </YStack>
       )}
-      {/* Online dot (mock) — decorative presence marker on the signed-in avatar. */}
+      {/* Online dot — presence marker on the signed-in avatar. */}
       {me ? (
         <YStack
           position="absolute"
-          bottom={2}
-          right={2}
+          bottom={1}
+          right={1}
           width={11}
           height={11}
           borderRadius={6}
@@ -67,6 +62,6 @@ export function AccountButton() {
           borderColor="$surface"
         />
       ) : null}
-    </XStack>
+    </HeaderRoundButton>
   );
 }

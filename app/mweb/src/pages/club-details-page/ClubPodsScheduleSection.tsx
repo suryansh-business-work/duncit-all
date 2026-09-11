@@ -1,5 +1,8 @@
-import { Alert, Box, Stack, Typography } from '@mui/material';
+import { Box, Stack } from '@mui/material';
+import EventBusyOutlinedIcon from '@mui/icons-material/EventBusyOutlined';
 import { clubPodPhase, type ClubPodPhase } from '../../utils/clubPodPhase';
+import EmptyState from '../../components/EmptyState';
+import SectionHeader from '../../components/SectionHeader';
 import ClubPodRailCard from './ClubPodRailCard';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -18,21 +21,14 @@ const RAILS: ReadonlyArray<readonly [ClubPodPhase, string]> = [
 function PodRail({ title, pods, priceFormat, onOpen }: Readonly<Props & { title: string }>) {
   if (pods.length === 0) return null;
   return (
-    <Box>
-      <Typography
-        variant="subtitle1"
-        sx={{
-          fontWeight: 700,
-          mb: 0.75
-        }}>
-        {title}
-      </Typography>
-      <Stack direction="row" spacing={1.25} sx={{ overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
+    <Stack spacing={1.25}>
+      <SectionHeader title={title} />
+      <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
         {pods.map((pod) => (
           <ClubPodRailCard key={pod.id} pod={pod} priceFormat={priceFormat} onOpen={onOpen} />
         ))}
-      </Stack>
-    </Box>
+      </Box>
+    </Stack>
   );
 }
 
@@ -43,11 +39,11 @@ export default function ClubPodsScheduleSection({ pods, priceFormat, onOpen }: R
     pods.filter((pod) => clubPodPhase(pod.pod_date_time, pod.pod_end_date_time) === phase);
 
   if (pods.length === 0) {
-    return <Alert severity="info">{t('mweb.clubDetails.noPodsScheduledForThisClub')}</Alert>;
+    return <EmptyState icon={<EventBusyOutlinedIcon />} title={t('mweb.clubDetails.noPodsScheduledForThisClub')} />;
   }
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2.5}>
       {RAILS.map(([phase, title]) => (
         <PodRail key={phase} title={title} pods={byPhase(phase)} priceFormat={priceFormat} onOpen={onOpen} />
       ))}

@@ -1,5 +1,3 @@
-import { Text, YStack } from 'tamagui';
-
 import { StackScreen } from '@/components/StackScreen';
 import { ChangeRequestBoard } from '@/components/change-requests/ChangeRequestBoard';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -20,12 +18,7 @@ export function ChangeRequestsScreen() {
   return (
     <StackScreen title={t('changeRequest.sectionTitle')} testID="change-requests-screen">
       <RefreshScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
-        <YStack gap={14}>
-          <Text fontSize={12.5} color="$muted">
-            {t('changeRequest.sectionSubtitle')}
-          </Text>
-          <ChangeRequestBoard />
-        </YStack>
+        <ChangeRequestBoard />
       </RefreshScrollView>
     </StackScreen>
   );

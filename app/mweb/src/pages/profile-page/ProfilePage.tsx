@@ -59,7 +59,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 935, mx: 'auto', px: { xs: 0.5, sm: 0 }, pb: 6 }}>
+    <Stack spacing={3} sx={{ maxWidth: 935, mx: 'auto', px: { xs: 0.5, sm: 0 }, pb: 6 }}>
       <ProfileHeader
         me={me}
         postsCount={posts.length}

@@ -1,11 +1,11 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
 import { useNavigate } from 'react-router';
-import HistoryIcon from '@mui/icons-material/History';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import { DuncitButton } from '@duncit/buttons';
 import PodCard from './PodCard';
+import HomeRail from './HomeRail';
 import SeeAllCard from './SeeAllCard';
+import SectionHeader from '../../components/SectionHeader';
 import { openPod } from '../../lib/open-pod';
+import { useTranslation } from '../../i18n/useTranslation';
 
 /** Max entries shown on the home rail before the See-all card takes over. */
 const RAIL_CAP = 10;
@@ -21,55 +21,18 @@ interface Props {
 /** Bottom-of-home rail of pods whose date has already passed, with a "See all"
  * link to the dedicated Previous Pods page (bug 8). Hidden when there are none. */
 export default function PreviousPodsRail({ pods, hostNameOf, filtered }: Readonly<Props>) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   if (pods.length === 0) return null;
 
   return (
-    <Stack spacing={1.25}>
-      <Stack
-        direction="row"
-        sx={{
-          alignItems: "center",
-          justifyContent: "space-between",
-          px: 0.25
-        }}>
-        <Stack direction="row" spacing={1} sx={{
-          alignItems: "center"
-        }}>
-          <HistoryIcon color="action" />
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
-              Previous Pods
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{
-                color: "text.secondary",
-                fontWeight: 700
-              }}>
-              Already taken place
-            </Typography>
-          </Box>
-        </Stack>
-        <DuncitButton
-          size="small"
-          endIcon={<ArrowForwardIcon />}
-          onClick={() => navigate('/previous-pods')}
-          sx={{ fontWeight: 600 }}
-        >
-          See all
-        </DuncitButton>
-      </Stack>
-      <Box
-        sx={{
-          display: 'flex',
-          gap: 1.5,
-          overflowX: 'auto',
-          pb: 0.5,
-          scrollbarWidth: 'none',
-          '&::-webkit-scrollbar': { display: 'none' },
-        }}
-      >
+    <Stack spacing={1.5}>
+      <SectionHeader
+        title={t('mweb.home.previousPodsTitle')}
+        actionLabel={t('mweb.home.seeAll')}
+        onAction={() => navigate('/previous-pods')}
+      />
+      <HomeRail>
         {pods.slice(0, RAIL_CAP).map((pod: any) => (
           <PodCard
             key={pod.id}
@@ -85,7 +48,7 @@ export default function PreviousPodsRail({ pods, hostNameOf, filtered }: Readonl
             onClick={() => navigate(filtered ? '/previous-pods' : `/previous-pods?from=${RAIL_CAP}`)}
           />
         )}
-      </Box>
+      </HomeRail>
     </Stack>
   );
 }

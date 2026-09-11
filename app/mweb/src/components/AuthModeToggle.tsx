@@ -32,11 +32,10 @@ function ModeSegment({ label, hint, icon, active, onClick, testId }: Readonly<Se
         px: 2,
         borderRadius: '999px',
         textTransform: 'none',
-        fontWeight: 700,
+        fontWeight: 600,
         fontSize: 13,
         color: active ? 'text.primary' : 'text.secondary',
         bgcolor: active ? 'background.paper' : 'transparent',
-        boxShadow: active ? '0 2px 6px rgba(0,0,0,0.22)' : 'none',
         '& .MuiSvgIcon-root': { fontSize: 16, color: active ? 'primary.main' : 'text.secondary' },
         '&:hover': { bgcolor: active ? 'background.paper' : 'action.hover' },
       }}
@@ -78,7 +77,7 @@ export default function AuthModeToggle() {
         borderRadius: '999px',
         border: 1,
         borderColor: 'divider',
-        bgcolor: 'background.default',
+        bgcolor: 'action.hover',
       }}
     >
       <ModeSegment

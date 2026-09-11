@@ -1,4 +1,7 @@
-import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
+import { Box, CircularProgress, Stack } from '@mui/material';
+import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
+import EmptyState from '../../components/EmptyState';
+import SectionHeader from '../../components/SectionHeader';
 import IdeaCard from './IdeaCard';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -28,7 +31,7 @@ export default function IdeasList({
   const { t } = useTranslation();
   const ideasContent =
     ideas.length === 0 ? (
-      <Alert severity="info">{t('mweb.podIdeas.noIdeasYetBeTheFirst')}</Alert>
+      <EmptyState icon={<LightbulbOutlinedIcon />} title={t('mweb.podIdeas.noIdeasYetBeTheFirst')} />
     ) : (
       <Stack spacing={1.5}>
         {ideas.map((idea: any) => (
@@ -49,15 +52,8 @@ export default function IdeasList({
     <>
       {myIdeas.length > 0 && (
         <Box sx={{ mb: 3 }}>
-          <Typography
-            variant="overline"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 600
-            }}>
-            Your submissions
-          </Typography>
-          <Stack spacing={1.5} sx={{ mt: 1 }}>
+          <SectionHeader title="Your submissions" />
+          <Stack spacing={1.5} sx={{ mt: 1.25 }}>
             {myIdeas.map((idea: any) => (
               <IdeaCard
                 key={idea.id}

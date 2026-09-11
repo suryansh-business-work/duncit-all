@@ -29,9 +29,15 @@ export function ToggleRow({
 }: Readonly<ToggleRowProps>) {
   const { primary } = useThemeColors();
   return (
-    <XStack testID={testID} alignItems="center" gap={12} opacity={disabled ? 0.5 : 1}>
+    <XStack
+      testID={testID}
+      alignItems="center"
+      gap={12}
+      minHeight={48}
+      opacity={disabled ? 0.5 : 1}
+    >
       <YStack flex={1} gap={2}>
-        <Text fontSize={14} fontWeight="600" color="$color">
+        <Text fontSize={15} fontWeight="500" color="$color">
           {label}
         </Text>
         {hint ? (

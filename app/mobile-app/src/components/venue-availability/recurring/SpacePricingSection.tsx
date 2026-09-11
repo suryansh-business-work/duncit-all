@@ -52,7 +52,7 @@ export function SpacePricingSection({ spaces, onChange }: Readonly<Props>) {
               </XStack>
             ) : null}
             <YStack flex={1}>
-              <Text fontSize={13.5} fontWeight="700" color="$color" numberOfLines={1}>
+              <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
                 {name}
               </Text>
               <Text fontSize={11.5} color="$muted">

@@ -1,66 +1,47 @@
-import { Stack, Typography } from '@mui/material';
-import HeaderLocationRow from './HeaderLocationRow';
+import { Box, ButtonBase } from '@mui/material';
+import TwoToneHeading from '../TwoToneHeading';
+import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
 import { useTranslation } from '../../i18n/useTranslation';
 
 const DEFAULT_TAGLINE = 'It All Starts Here!';
 
+const WRAP_SX = {
+  display: 'block',
+  width: '100%',
+  maxWidth: APP_SHELL_MAX_WIDTH,
+  mx: 'auto',
+  px: 2,
+  pt: 1,
+  pb: 1.5,
+  boxSizing: 'border-box',
+  textAlign: 'left',
+} as const;
+
 interface Props {
   tagline?: string | null;
-  loading: boolean;
-  hasData: boolean;
-  selectedLocationName?: string;
-  selectedZoneName?: string;
-  /** Opens the location picker. Omit for the minimal (survey) header — then only the tagline shows. */
+  /** The signed-in user's first name — without one the tagline leads alone. */
+  firstName?: string | null;
+  /** Opens the location picker. Omit for the minimal (survey) header. */
   onOpenLocation?: () => void;
 }
 
-/** Home header left block (mock): the tappable pin + city on top, the BIG
- * admin-configurable tagline beneath it, then the greeting subtitle. */
-export default function HeaderGreeting({
-  tagline,
-  loading,
-  hasData,
-  selectedLocationName,
-  selectedZoneName,
-  onOpenLocation,
-}: Readonly<Props>) {
+/** Home header greeting (row two): "Hello, <name>!" in ink over the
+ * admin-configurable tagline in muted, one 24px two-tone heading. Native twin:
+ * components/AppHeader/HeaderGreeting. */
+export default function HeaderGreeting({ tagline, firstName, onOpenLocation }: Readonly<Props>) {
   const { t } = useTranslation();
   const title = tagline?.trim() || DEFAULT_TAGLINE;
+  const name = firstName?.trim();
+  const lead = name ? t('mweb.home.greetingHello', { vars: { name } }) : title;
+  const trail = name ? title : null;
+  const heading = <TwoToneHeading lead={lead} trail={trail} stacked variant="h5" component="p" />;
 
+  if (!onOpenLocation) return <Box sx={WRAP_SX}>{heading}</Box>;
+  // The greeting also opens the location picker — a bigger tap target than
+  // the location pill alone (user ask).
   return (
-    <Stack sx={{ minWidth: 0 }} spacing={0.1}>
-      {onOpenLocation ? (
-        <HeaderLocationRow
-          selectedLocationName={selectedLocationName}
-          selectedZoneName={selectedZoneName}
-          loading={loading}
-          hasData={hasData}
-          onOpen={onOpenLocation}
-        />
-      ) : null}
-      {/* The title also opens the location picker — a bigger tap target than
-       * the small city row alone (user ask). */}
-      <Typography
-        onClick={onOpenLocation}
-        sx={{
-          fontWeight: 700,
-          lineHeight: 1.15,
-          fontSize: { xs: '1.05rem', sm: '1.2rem' },
-          cursor: onOpenLocation ? 'pointer' : 'default',
-        }}
-        noWrap
-      >
-        {title}
-      </Typography>
-      <Typography
-        variant="caption"
-        noWrap
-        sx={{
-          color: "text.secondary",
-          fontWeight: 500
-        }}>
-        {t('mweb.home.greetingSubtitle')}
-      </Typography>
-    </Stack>
+    <ButtonBase component="div" disableRipple onClick={onOpenLocation} sx={WRAP_SX}>
+      {heading}
+    </ButtonBase>
   );
 }

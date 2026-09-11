@@ -1,45 +1,47 @@
-import { StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, YStack } from 'tamagui';
 
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import type { FaqItem } from '@/hooks/useLibrary';
-import { SUPPORT_GRADIENTS } from './gradients';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface FrequentlyAskedTileProps {
   faq: FaqItem;
-  colors: readonly [string, string];
   onOpen: (faq: FaqItem) => void;
 }
 
-/** A single colourful gradient card for a top FAQ. */
-function FrequentlyAskedTile({ faq, colors, onOpen }: Readonly<FrequentlyAskedTileProps>) {
+/** A single card for a top FAQ — the help icon on a soft disc, then the question. */
+function FrequentlyAskedTile({ faq, onOpen }: Readonly<FrequentlyAskedTileProps>) {
+  const { accent } = useThemeColors();
   return (
-    <YStack
+    <SurfaceCard
       testID={`faq-card-${faq.id}`}
       role="button"
       aria-label={faq.question}
       onPress={() => onOpen(faq)}
       width={190}
       minHeight={130}
-      borderRadius={18}
-      overflow="hidden"
+      justifyContent="space-between"
+      gap={12}
       pressStyle={PRESS_STYLE.surface}
     >
-      <LinearGradient
-        colors={colors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <YStack flex={1} padding={16} justifyContent="space-between" gap={12}>
-        <MaterialIcons name="help-outline" size={22} color="#ffffff" style={styles.icon} />
-        <Text fontSize={14} fontWeight="700" color="#ffffff" lineHeight={18}>
-          {faq.question}
-        </Text>
+      <YStack
+        width={36}
+        height={36}
+        borderRadius={18}
+        alignItems="center"
+        justifyContent="center"
+        backgroundColor="$soft"
+      >
+        <MaterialIcons name="help-outline" size={20} color={accent} />
       </YStack>
-    </YStack>
+      <Text fontSize={15} fontWeight="600" color="$color" lineHeight={19}>
+        {faq.question}
+      </Text>
+    </SurfaceCard>
   );
 }
 
@@ -48,39 +50,23 @@ interface FrequentlyAskedProps {
   onOpen: (faq: FaqItem) => void;
 }
 
-/** Horizontal row of colourful "Frequently Asked" cards (top FAQs). RN twin of
- * mWeb's FrequentlyAsked. */
+/** Horizontal row of "Frequently Asked" cards (top FAQs). RN twin of mWeb's
+ * FrequentlyAsked. */
 export function FrequentlyAsked({ faqs, onOpen }: Readonly<FrequentlyAskedProps>) {
+  const { t } = useTranslation();
   if (faqs.length === 0) return null;
   return (
-    <YStack gap={8}>
-      <Text
-        fontSize={12}
-        fontWeight="700"
-        color="$muted"
-        textTransform="uppercase"
-        letterSpacing={0.5}
-      >
-        Frequently Asked
-      </Text>
+    <YStack gap={12}>
+      <SectionHeader title={t('mweb.supportHub.frequentlyAsked')} />
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 12, paddingVertical: 2 }}
       >
-        {faqs.map((faq, index) => (
-          <FrequentlyAskedTile
-            key={faq.id}
-            faq={faq}
-            colors={SUPPORT_GRADIENTS[index % SUPPORT_GRADIENTS.length]!}
-            onOpen={onOpen}
-          />
+        {faqs.map((faq) => (
+          <FrequentlyAskedTile key={faq.id} faq={faq} onOpen={onOpen} />
         ))}
       </ScrollView>
     </YStack>
   );
 }
-
-const styles = StyleSheet.create({
-  icon: { opacity: 0.9 },
-});

@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { isOtp } from '@duncit/regex';
-import { Input, Text, XStack, YStack } from 'tamagui';
+import { Input, Text, XStack } from 'tamagui';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import {
@@ -104,14 +105,14 @@ export function EmailVerificationSection({
   // top margin of its own. It lives here rather than on the parent so a verified
   // account — which renders nothing — leaves no empty band behind.
   return (
-    <YStack testID="email-verification" gap={10} marginTop={16}>
+    <SurfaceCard testID="email-verification" gap={12}>
       <XStack alignItems="center" gap={8}>
         <MaterialIcons name="mark-email-read" size={18} color={primary} />
-        <Text fontSize={14} fontWeight="600" color="$color">
+        <Text fontSize={15} fontWeight="600" color="$color">
           Verify email
         </Text>
       </XStack>
-      <Text fontSize={13} color="$muted">
+      <Text fontSize={14} color="$muted">
         {email || 'Add an email address to verify your account.'}
       </Text>
 
@@ -136,10 +137,11 @@ export function EmailVerificationSection({
           testID="email-verification-otp"
           flex={1}
           size="$4"
-          backgroundColor="$background"
+          borderRadius={14}
+          backgroundColor="$soft"
           color="$color"
           placeholderTextColor="$muted"
-          borderColor={error || otpHint ? '$danger' : '$borderColor'}
+          borderColor={error || otpHint ? '$danger' : 'transparent'}
           value={otp}
           onChangeText={setOtp}
           placeholder={t('mweb.common.enterOtp')}
@@ -155,14 +157,12 @@ export function EmailVerificationSection({
           onPress={() => {
             if (!sending && email) fireAndForget(sendOtp());
           }}
-          height={46}
-          paddingHorizontal={14}
+          height={44}
+          paddingHorizontal={16}
           alignItems="center"
           justifyContent="center"
-          borderRadius={10}
-          borderWidth={1}
-          borderColor="$borderColor"
-          backgroundColor="$surface"
+          borderRadius={999}
+          backgroundColor="$soft"
           opacity={sending || !email ? 0.5 : 1}
           pressStyle={PRESS_STYLE.control}
         >
@@ -187,6 +187,6 @@ export function EmailVerificationSection({
         disabled={verifying || !otpValid}
         onPress={verify}
       />
-    </YStack>
+    </SurfaceCard>
   );
 }

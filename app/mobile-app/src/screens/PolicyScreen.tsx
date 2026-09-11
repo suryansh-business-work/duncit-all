@@ -45,7 +45,7 @@ export function PolicyScreen() {
           tail of a long policy body would otherwise sit under the Android
           navigation bar. */}
       <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
-        <XStack alignItems="center" gap={8} paddingHorizontal={12} paddingVertical={8}>
+        <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={8}>
           <XStack
             testID="policy-back"
             role="button"
@@ -56,11 +56,19 @@ export function PolicyScreen() {
             alignItems="center"
             justifyContent="center"
             borderRadius={20}
-            pressStyle={PRESS_STYLE.row}
+            backgroundColor="$surface"
+            pressStyle={PRESS_STYLE.control}
           >
             <MaterialIcons name="arrow-back" size={22} color={ink} />
           </XStack>
-          <Text numberOfLines={1} flex={1} fontSize={18} fontWeight="600" color="$color">
+          <Text
+            numberOfLines={1}
+            flex={1}
+            fontSize={17}
+            fontWeight="600"
+            color="$color"
+            textAlign="center"
+          >
             {policy?.title ?? 'Policy'}
           </Text>
           <XStack
@@ -75,8 +83,9 @@ export function PolicyScreen() {
             alignItems="center"
             justifyContent="center"
             borderRadius={20}
+            backgroundColor="$surface"
             opacity={busy ? 0.5 : 1}
-            pressStyle={PRESS_STYLE.row}
+            pressStyle={PRESS_STYLE.control}
           >
             <MaterialIcons name="picture-as-pdf" size={22} color={ink} />
           </XStack>

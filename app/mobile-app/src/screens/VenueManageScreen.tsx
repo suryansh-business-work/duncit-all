@@ -5,7 +5,9 @@ import { venueSubLabel } from '@duncit/utils';
 
 import { SimpleBarChart, buildMonthlyCounts } from '@/components/SimpleBarChart';
 import { StudioChangeRequests } from '@/components/change-requests/StudioChangeRequests';
+import { SectionHeader } from '@/components/SectionHeader';
 import { StackScreen } from '@/components/StackScreen';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import {
   StatTile,
   VenueQuickActions,
@@ -43,12 +45,12 @@ export function VenueManageScreen() {
   return (
     <StackScreen header title={t('mweb.venueManage.venueStudio')} testID="venue-manage-screen">
       <RefreshScrollView showsVerticalScrollIndicator={false}>
-        <YStack gap={14} padding={16} paddingBottom={48}>
+        <YStack gap={24} padding={16} paddingBottom={48}>
           {isLoading ? <Spinner testID="venue-dashboard-loading" color="$primary" /> : null}
           <VenueSwitcher venues={venues} venueId={venueId} onSelect={selectVenue} />
           <XStack gap={10}>
-            <StatTile label={t('mweb.venueManagePage.listed')} value={venues.length} />
-            <StatTile label={t('mweb.common.capacity')} value={capacity || '-'} />
+            <StatTile label={t('mweb.venueManagePage.listed')} value={venues.length} size="lg" />
+            <StatTile label={t('mweb.common.capacity')} value={capacity || '-'} size="lg" />
             <StatTile label={t('mweb.venueManagePage.status')} value={venue?.status ?? 'New'} />
           </XStack>
           {venue ? (
@@ -61,21 +63,11 @@ export function VenueManageScreen() {
               />
             </>
           ) : null}
-          <YStack
-            gap={4}
-            padding={14}
-            borderRadius={14}
-            borderWidth={1}
-            borderColor="$borderColor"
-            backgroundColor="$surface"
-          >
-            <Text fontSize={15} fontWeight="700" color="$color">
-              Pods at your venue
-            </Text>
-            <Text fontSize={11.5} color="$muted">
-              Bookings over the last 2 and next 3 months
-            </Text>
-            <SimpleBarChart testID="venue-pods-chart" data={buildMonthlyCounts(podDates)} />
+          <YStack gap={12}>
+            <SectionHeader title="Pods at your venue" />
+            <SurfaceCard>
+              <SimpleBarChart testID="venue-pods-chart" data={buildMonthlyCounts(podDates)} />
+            </SurfaceCard>
           </YStack>
           {/* The bookings behind that chart, pod by pod, with their figures and
               the owner's per-pod actions. Hidden when there is no venue at all:
@@ -87,30 +79,26 @@ export function VenueManageScreen() {
           ) : null}
           {venues.length > 0 ? <StudioChangeRequests role="VENUE" /> : null}
           {!isLoading && venues.length === 0 ? (
-            <Text testID="venue-dashboard-empty" fontSize={13} color="$muted">
+            <Text testID="venue-dashboard-empty" fontSize={14} color="$muted" textAlign="center">
               No venues yet — register one to start hosting pods.
             </Text>
           ) : null}
           {venue ? (
-            <XStack
-              testID={`venue-row-${venue.id}`}
-              alignItems="center"
-              gap={10}
-              padding={12}
-              borderRadius={12}
-              borderWidth={1}
-              borderColor="$borderColor"
-              backgroundColor="$surface"
-            >
-              <YStack flex={1}>
-                <Text fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>
-                  {venue.venue_name}
-                </Text>
-                <Text fontSize={12} color="$muted" numberOfLines={1}>
-                  {venueSubLabel(venue)}
-                </Text>
-              </YStack>
-            </XStack>
+            <YStack gap={12}>
+              <SectionHeader title={t('mweb.venueManagePage.yourVenues')} />
+              <SurfaceCard testID={`venue-row-${venue.id}`}>
+                <XStack alignItems="center" gap={10}>
+                  <YStack flex={1} gap={2}>
+                    <Text fontSize={16} fontWeight="600" color="$color" numberOfLines={1}>
+                      {venue.venue_name}
+                    </Text>
+                    <Text fontSize={12} color="$muted" numberOfLines={1}>
+                      {venueSubLabel(venue)}
+                    </Text>
+                  </YStack>
+                </XStack>
+              </SurfaceCard>
+            </YStack>
           ) : null}
         </YStack>
       </RefreshScrollView>

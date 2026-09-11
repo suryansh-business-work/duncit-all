@@ -7,6 +7,7 @@ import type { ActiveAd } from '@/hooks/useActiveAds';
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { AdMedia } from './AdMedia';
 import { SponsoredBadge } from './AdCard';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
@@ -25,6 +26,7 @@ interface ExploreAdCardProps {
  */
 export function ExploreAdCard({ ad, width, height, isActive }: Readonly<ExploreAdCardProps>) {
   const { t } = useTranslation();
+  const { onPrimary } = useThemeColors();
   const insets = useSafeAreaInsets();
   const redirect = ad.redirect_url;
   return (
@@ -34,7 +36,7 @@ export function ExploreAdCard({ ad, width, height, isActive }: Readonly<ExploreA
         <SponsoredBadge testID={`ad-reel-${ad.id}-sponsored`} />
       </YStack>
       <YStack position="absolute" left={16} right={16} bottom={insets.bottom + 96} gap={12}>
-        <Text color="#ffffff" fontSize={18} fontWeight="700" numberOfLines={2}>
+        <Text color="#ffffff" fontSize={18} fontWeight="600" numberOfLines={2}>
           {ad.ad_title}
         </Text>
         {redirect ? (
@@ -47,15 +49,15 @@ export function ExploreAdCard({ ad, width, height, isActive }: Readonly<ExploreA
             alignItems="center"
             gap={6}
             backgroundColor="$primary"
-            borderRadius={12}
-            paddingHorizontal={14}
-            paddingVertical={9}
-            pressStyle={PRESS_STYLE.control}
+            borderRadius={999}
+            paddingHorizontal={16}
+            height={40}
+            pressStyle={PRESS_STYLE.solid}
           >
-            <Text color="$onPrimary" fontSize={13} fontWeight="700">
-              Learn more
+            <Text color="$onPrimary" fontSize={13} fontWeight="600">
+              {t('mweb.ads.learnMore')}
             </Text>
-            <MaterialIcons name="arrow-forward" size={16} color="#ffffff" />
+            <MaterialIcons name="arrow-forward" size={16} color={onPrimary} />
           </XStack>
         ) : null}
       </YStack>

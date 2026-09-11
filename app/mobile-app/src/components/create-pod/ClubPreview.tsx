@@ -19,7 +19,7 @@ interface Props {
 /** Selected-club preview — photo + name with a "View club details" dialog
  * showing the club's gallery and description. Mirrors mWeb's ClubPreview. */
 export function ClubPreview({ club }: Readonly<Props>) {
-  const { color: ink, onPrimary } = useThemeColors();
+  const { color: ink, muted, accent } = useThemeColors();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
@@ -40,10 +40,8 @@ export function ClubPreview({ club }: Readonly<Props>) {
       alignItems="center"
       gap={12}
       padding={12}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
+      borderRadius={16}
+      backgroundColor="$soft"
     >
       {cover ? (
         <AppImage source={{ uri: cover }} style={{ width: 56, height: 56, borderRadius: 12 }} />
@@ -54,18 +52,18 @@ export function ClubPreview({ club }: Readonly<Props>) {
           alignItems="center"
           justifyContent="center"
           borderRadius={12}
-          backgroundColor="$primary"
+          backgroundColor="$surface"
         >
-          <MaterialIcons name="groups" size={26} color={onPrimary} />
+          <MaterialIcons name="groups" size={26} color={accent} />
         </YStack>
       )}
       <YStack flex={1} gap={2}>
-        <Text fontSize={14.5} fontWeight="700" color="$color" numberOfLines={1}>
+        <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
           {club.club_name}
         </Text>
         <XStack alignItems="center" gap={4}>
-          <MaterialIcons name="storefront" size={13} color={ink} />
-          <Text testID="club-preview-venue-count" fontSize={12} fontWeight="700" color="$muted">
+          <MaterialIcons name="storefront" size={13} color={muted} />
+          <Text testID="club-preview-venue-count" fontSize={12} fontWeight="500" color="$muted">
             {venueLabel}
           </Text>
         </XStack>
@@ -75,8 +73,8 @@ export function ClubPreview({ club }: Readonly<Props>) {
           role="button"
           aria-label={t('mweb.createPod.viewClubDetails')}
           onPress={() => setOpen(true)}
-          fontSize={12.5}
-          fontWeight="700"
+          fontSize={13}
+          fontWeight="600"
           color="$primary"
         >
           {t('mweb.createPod.viewClubDetails')}
@@ -102,13 +100,18 @@ export function ClubPreview({ club }: Readonly<Props>) {
               width="90%"
               maxWidth={440}
               maxHeight="80%"
-              backgroundColor="$background"
-              borderRadius={20}
-              padding={16}
+              backgroundColor="$surface"
+              borderRadius={28}
+              padding={20}
             >
               <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
-                <XStack alignItems="center" justifyContent="space-between" paddingBottom={8}>
-                  <Text fontSize={16} fontWeight="700" color="$color" numberOfLines={1} flex={1}>
+                <XStack
+                  alignItems="center"
+                  justifyContent="space-between"
+                  gap={12}
+                  paddingBottom={12}
+                >
+                  <Text fontSize={17} fontWeight="600" color="$color" numberOfLines={1} flex={1}>
                     {club.club_name}
                   </Text>
                   <XStack
@@ -116,32 +119,32 @@ export function ClubPreview({ club }: Readonly<Props>) {
                     role="button"
                     aria-label={t('mweb.createPod.closeClubDetails')}
                     onPress={close}
-                    width={34}
-                    height={34}
+                    width={40}
+                    height={40}
                     alignItems="center"
                     justifyContent="center"
-                    borderRadius={17}
-                    backgroundColor="$surface"
-                    pressStyle={PRESS_STYLE.row}
+                    borderRadius={20}
+                    backgroundColor="$soft"
+                    pressStyle={PRESS_STYLE.control}
                   >
-                    <MaterialIcons name="close" size={18} color={ink} />
+                    <MaterialIcons name="close" size={20} color={ink} />
                   </XStack>
                 </XStack>
                 <ScrollView showsVerticalScrollIndicator={false}>
                   {images.length > 0 ? (
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                      <XStack gap={8} paddingBottom={10}>
+                      <XStack gap={8} paddingBottom={12}>
                         {images.map((item) => (
                           <AppImage
                             key={item.url}
                             source={{ uri: item.url }}
-                            style={{ width: 120, height: 90, borderRadius: 10 }}
+                            style={{ width: 120, height: 90, borderRadius: 18 }}
                           />
                         ))}
                       </XStack>
                     </ScrollView>
                   ) : null}
-                  <Text fontSize={13.5} color="$muted" lineHeight={20}>
+                  <Text fontSize={14} color="$muted" lineHeight={20}>
                     {club.club_description?.trim() || t('mweb.createPod.noDescription')}
                   </Text>
                 </ScrollView>

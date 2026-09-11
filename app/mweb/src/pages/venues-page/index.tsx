@@ -2,10 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
-import { Box, CircularProgress, Stack, TextField, Typography } from '@mui/material';
+import { Box, CircularProgress, Stack, Typography } from '@mui/material';
+import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
 import VenueExploreCard, { type ExploreVenue } from './VenueExploreCard';
 import VenuesLocationBar from './VenuesLocationBar';
+import SearchPillField from '../pod-list/SearchPillField';
 import AdCard from '../../components/ads/AdCard';
+import EmptyState from '../../components/EmptyState';
 import { interleaveAds, isAdEntry } from '../../components/ads/AdSlot';
 import { useActiveAds } from '../../components/ads/useActiveAds';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -102,19 +105,14 @@ export default function VenuesPage({ locationId, superCategorySlug }: Readonly<P
       spacing={1.5}
       sx={{ maxWidth: 720, mx: 'auto', width: '100%', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}
     >
-      <Typography variant="h5" sx={{ fontWeight: 700 }}>
-        Venues
-      </Typography>
+      {/* No page title: the coral Venues tab already names the page, as on the
+          native Venues tab (rule 27). */}
       <VenuesLocationBar cityLabel={cityLabel} />
-      <TextField
-        size="small"
+      <SearchPillField
         placeholder={t('mweb.venues.searchVenuesByNameTypeOr')}
         value={searchInput}
-        onChange={(e) => setSearchInput(e.target.value)}
-        fullWidth
-        slotProps={{
-          htmlInput: { 'aria-label': 'Search venues' }
-        }}
+        onChange={setSearchInput}
+        ariaLabel="Search venues"
       />
       {loading && !data && (
         <Box sx={{ display: 'grid', placeItems: 'center', py: 3 }}>
@@ -127,11 +125,10 @@ export default function VenuesPage({ locationId, superCategorySlug }: Readonly<P
         </Typography>
       )}
       {!loading && !error && venues.length === 0 && (
-        <Typography variant="body2" sx={{
-          color: "text.secondary"
-        }}>
-          No venues found here yet — try another search or category.
-        </Typography>
+        <EmptyState
+          icon={<StorefrontOutlinedIcon />}
+          title="No venues found here yet — try another search or category."
+        />
       )}
       {interleaveAds(venues, ads, 4).map((entry) =>
         isAdEntry(entry) ? (

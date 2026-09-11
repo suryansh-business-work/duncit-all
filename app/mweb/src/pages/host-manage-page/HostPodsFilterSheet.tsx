@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Chip, Stack, Typography } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import { DuncitButton } from '@duncit/buttons';
 import ResponsiveDialog from '../../components/ResponsiveDialog';
 import {
@@ -42,7 +41,7 @@ function ChipRow<T extends string>({
             color={selected ? 'primary' : 'default'}
             variant={selected ? 'filled' : 'outlined'}
             onClick={() => onChange(itemValue)}
-            sx={{ height: 32, fontWeight: 600 }}
+            sx={{ height: 36, minHeight: 36 }}
           />
         );
       })}
@@ -64,7 +63,7 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
       open={open}
       onClose={onClose}
       title={
-        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+        <Typography variant="subtitle1" sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>
           Filter pods
         </Typography>
       }
@@ -72,16 +71,19 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
       actions={
         <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
           <DuncitButton
-            startIcon={<CloseIcon />}
+            variant="outlined"
+            size="large"
             onClick={() => setDraft(DEFAULT_HOST_PODS_FILTERS)}
             color="inherit"
+            sx={{ flex: 1, borderColor: 'divider' }}
           >
             Reset
           </DuncitButton>
           <DuncitButton
             variant="contained"
+            size="large"
             onClick={() => onApply(draft)}
-            sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}
+            sx={{ flex: 1 }}
           >
             Apply
           </DuncitButton>
@@ -94,7 +96,7 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
             variant="overline"
             sx={{
               color: "text.secondary",
-              fontWeight: 700
+              fontWeight: 600
             }}>
             Type
           </Typography>
@@ -109,7 +111,7 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
             variant="overline"
             sx={{
               color: "text.secondary",
-              fontWeight: 700
+              fontWeight: 600
             }}>
             Time
           </Typography>
@@ -124,7 +126,7 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
             variant="overline"
             sx={{
               color: "text.secondary",
-              fontWeight: 700
+              fontWeight: 600
             }}>
             Price
           </Typography>

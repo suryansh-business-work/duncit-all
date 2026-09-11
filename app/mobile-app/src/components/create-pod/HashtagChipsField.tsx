@@ -67,11 +67,11 @@ export function HashtagChipsField({ form }: Readonly<Props>) {
                     alignItems="center"
                     gap={4}
                     borderRadius={999}
-                    paddingHorizontal={10}
-                    paddingVertical={5}
+                    minHeight={32}
+                    paddingHorizontal={12}
                     backgroundColor="$primary"
                   >
-                    <Text fontSize={12} fontWeight="600" color="$onPrimary">
+                    <Text fontSize={13} fontWeight="600" color="$onPrimary">
                       #{tag}
                     </Text>
                     <XStack

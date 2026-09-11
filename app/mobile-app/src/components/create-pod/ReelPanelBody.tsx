@@ -39,26 +39,22 @@ export function ReelPanelBody({
         <XStack
           testID="reel-preview"
           alignItems="center"
-          gap={10}
-          padding={10}
-          borderRadius={12}
-          borderWidth={1}
-          borderColor="$borderColor"
-          backgroundColor="$surface"
+          gap={12}
+          padding={12}
+          borderRadius={16}
+          backgroundColor="$soft"
         >
           <YStack
             width={44}
             height={44}
-            borderRadius={10}
+            borderRadius={12}
             alignItems="center"
             justifyContent="center"
-            backgroundColor="$background"
-            borderWidth={1}
-            borderColor="$borderColor"
+            backgroundColor="$surface"
           >
             <MaterialIcons name="videocam" size={22} color={muted} />
           </YStack>
-          <Text flex={1} fontSize={13} fontWeight="700" color="$color" numberOfLines={1}>
+          <Text flex={1} fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
             {fileName}
           </Text>
           <XStack
@@ -66,11 +62,11 @@ export function ReelPanelBody({
             role="button"
             aria-label={t('mweb.createPod.removeReel')}
             onPress={onRemove}
-            width={28}
-            height={28}
+            width={32}
+            height={32}
             alignItems="center"
             justifyContent="center"
-            borderRadius={14}
+            borderRadius={16}
             pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="close" size={16} color={muted} />
@@ -86,12 +82,12 @@ export function ReelPanelBody({
           alignItems="center"
           justifyContent="center"
           gap={8}
-          paddingVertical={14}
-          borderRadius={12}
+          paddingVertical={16}
+          borderRadius={16}
           borderWidth={2}
           borderColor="$borderColor"
           borderStyle="dashed"
-          backgroundColor="$surface"
+          backgroundColor="$soft"
           opacity={uploading ? 0.7 : 1}
           pressStyle={PRESS_STYLE.control}
         >
@@ -100,7 +96,7 @@ export function ReelPanelBody({
           ) : (
             <MaterialIcons name="video-library" size={20} color={primary} />
           )}
-          <Text fontSize={13.5} fontWeight="600" color="$color">
+          <Text fontSize={14} fontWeight="600" color="$color">
             {uploading ? busyLabel : t('mweb.createPod.reelUpload')}
           </Text>
         </XStack>

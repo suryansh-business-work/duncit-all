@@ -1,35 +1,22 @@
 import { Box, ButtonBase, Stack, Typography } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
+import SectionHeader from '../../components/SectionHeader';
+import { SURFACE_SX } from '../../theme';
 import type { FaqItem } from './faqQueries';
-
-/** Rotating multi-hue gradients for the cards (matches the app's support palette). */
-const GRADIENTS = [
-  'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)',
-  'linear-gradient(135deg, #7c5cff 0%, #b388ff 100%)',
-  'linear-gradient(135deg, #2196f3 0%, #21cbf3 100%)',
-  'linear-gradient(135deg, #22c55e 0%, #2196f3 100%)',
-  'linear-gradient(135deg, #f5337a 0%, #ff7a59 100%)',
-  'linear-gradient(135deg, #06b6d4 0%, #7c5cff 100%)',
-];
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface FrequentlyAskedProps {
   faqs: FaqItem[];
   onOpen: (faq: FaqItem) => void;
 }
 
-/** Horizontal row of colourful "Frequently Asked" cards (top FAQs). */
+/** Horizontal row of "Frequently Asked" cards (top FAQs). */
 export default function FrequentlyAsked({ faqs, onOpen }: Readonly<FrequentlyAskedProps>) {
+  const { t } = useTranslation();
   if (faqs.length === 0) return null;
   return (
-    <Box>
-      <Typography
-        variant="overline"
-        sx={{
-          color: "text.secondary",
-          fontWeight: 700
-        }}>
-        Frequently Asked
-      </Typography>
+    <Stack spacing={1.5}>
+      <SectionHeader title={t('mweb.supportHub.frequentlyAsked')} />
       <Box
         sx={{
           mx: { xs: -1.25, sm: -2 },
@@ -40,35 +27,45 @@ export default function FrequentlyAsked({ faqs, onOpen }: Readonly<FrequentlyAsk
           '&::-webkit-scrollbar': { display: 'none' },
         }}
       >
-        <Stack direction="row" spacing={1.25} sx={{ width: 'max-content', py: 0.5 }}>
-          {faqs.map((faq, index) => (
+        <Stack direction="row" spacing={1.5} sx={{ width: 'max-content', py: 0.5 }}>
+          {faqs.map((faq) => (
             <ButtonBase
               key={faq.id}
               onClick={() => onOpen(faq)}
               sx={{
+                ...SURFACE_SX,
                 flex: '0 0 auto',
                 width: 190,
                 minHeight: 130,
-                p: 1.75,
-                borderRadius: '16px',
+                p: 2,
+                gap: 1.5,
                 textAlign: 'left',
                 alignItems: 'flex-start',
                 justifyContent: 'space-between',
                 flexDirection: 'column',
-                color: '#fff',
-                background: GRADIENTS[index % GRADIENTS.length],
-                boxShadow: '0 12px 24px -14px rgba(0,0,0,0.5)',
               }}
               aria-label={faq.question}
             >
-              <HelpOutlineIcon sx={{ opacity: 0.9 }} />
-              <Typography sx={{ fontWeight: 700, lineHeight: 1.25, mt: 1 }}>
+              <Box
+                sx={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  display: 'grid',
+                  placeItems: 'center',
+                  color: 'secondary.main',
+                  bgcolor: 'action.hover',
+                }}
+              >
+                <HelpOutlineIcon fontSize="small" />
+              </Box>
+              <Typography sx={{ fontSize: '0.9375rem', fontWeight: 600, lineHeight: 1.3 }}>
                 {faq.question}
               </Typography>
             </ButtonBase>
           ))}
         </Stack>
       </Box>
-    </Box>
+    </Stack>
   );
 }

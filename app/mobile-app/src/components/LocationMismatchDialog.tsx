@@ -28,26 +28,24 @@ function LocationRow({
   label,
   value,
 }: Readonly<{ icon: LocationIcon; label: string; value: string }>) {
-  const { primary } = useThemeColors();
+  const { accent } = useThemeColors();
   return (
-    <XStack alignItems="center" gap={10}>
+    <XStack alignItems="center" gap={12}>
       <YStack
-        width={36}
-        height={36}
-        borderRadius={10}
+        width={40}
+        height={40}
+        borderRadius={20}
         alignItems="center"
         justifyContent="center"
-        backgroundColor="$surface"
-        borderWidth={1}
-        borderColor="$borderColor"
+        backgroundColor="$soft"
       >
-        <MaterialIcons name={icon} size={18} color={primary} />
+        <MaterialIcons name={icon} size={20} color={accent} />
       </YStack>
       <YStack flex={1} minWidth={0}>
         <Text fontSize={12} color="$muted">
           {label}
         </Text>
-        <Text fontSize={14} fontWeight="700" color="$color" numberOfLines={1}>
+        <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
           {value}
         </Text>
       </YStack>
@@ -67,7 +65,6 @@ export function LocationMismatchDialog({
   switchLocation,
   keepLocation,
 }: Readonly<Props>) {
-  const { onPrimary } = useThemeColors();
   const { t } = useTranslation();
   if (!mismatch) return null;
 
@@ -78,44 +75,45 @@ export function LocationMismatchDialog({
     vars: { target: mismatch.targetCity },
   });
 
+  // The switch leads, full width; staying put sits under it.
   const footer = (
-    <XStack gap={12}>
-      <XStack
-        testID="location-mismatch-keep"
-        role="button"
-        aria-label={keepLabel}
-        onPress={keepLocation}
-        flex={1}
-        height={48}
-        alignItems="center"
-        justifyContent="center"
-        borderRadius={12}
-        borderWidth={1}
-        borderColor="$borderColor"
-        pressStyle={PRESS_STYLE.control}
-      >
-        <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
-          {keepLabel}
-        </Text>
-      </XStack>
+    <YStack gap={10}>
       <XStack
         testID="location-mismatch-switch"
         role="button"
         aria-label={switchLabel}
         onPress={switchLocation}
-        flex={1}
-        height={48}
+        height={52}
+        paddingHorizontal={20}
         alignItems="center"
         justifyContent="center"
-        borderRadius={12}
+        borderRadius={999}
         backgroundColor="$primary"
-        pressStyle={PRESS_STYLE.control}
+        pressStyle={PRESS_STYLE.solid}
       >
-        <Text fontSize={14} fontWeight="700" color={onPrimary} numberOfLines={1}>
+        <Text fontSize={15} fontWeight="600" color="$onPrimary" numberOfLines={1}>
           {switchLabel}
         </Text>
       </XStack>
-    </XStack>
+      <XStack
+        testID="location-mismatch-keep"
+        role="button"
+        aria-label={keepLabel}
+        onPress={keepLocation}
+        height={52}
+        paddingHorizontal={20}
+        alignItems="center"
+        justifyContent="center"
+        borderRadius={999}
+        borderWidth={1}
+        borderColor="$borderColor"
+        pressStyle={PRESS_STYLE.control}
+      >
+        <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
+          {keepLabel}
+        </Text>
+      </XStack>
+    </YStack>
   );
 
   return (
@@ -142,9 +140,6 @@ export function LocationMismatchDialog({
           label={t('mweb.locationMismatch.linkLocation')}
           value={mismatch.target}
         />
-        <Text fontSize={12.5} lineHeight={18} color="$muted">
-          {t('mweb.locationMismatch.hint', { vars: { target: mismatch.targetCity } })}
-        </Text>
       </YStack>
     </DuncitDialog>
   );

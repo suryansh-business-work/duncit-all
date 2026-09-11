@@ -1,4 +1,5 @@
-import { Spinner, Text, YStack } from 'tamagui';
+import { useWindowDimensions } from 'react-native';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { sortBadgeProgress } from '@duncit/utils';
 import { StackScreen } from '@/components/StackScreen';
@@ -6,6 +7,9 @@ import { BadgeProgressCard } from '@/components/badges';
 import { useBadges } from '@/hooks/useBadges';
 import { useTranslation } from '@/hooks/useTranslation';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+
+const GRID_GAP = 12;
+const SIDE_PADDING = 16;
 
 /**
  * The Badges section — every badge Duncit publishes, each stating the goal it
@@ -18,9 +22,11 @@ import { RefreshScrollView } from '@/components/PullToRefresh';
  */
 export function BadgesScreen() {
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
   const { rows, isLoading, hasError } = useBadges();
   const sorted = sortBadgeProgress(rows);
   const unlocked = sorted.filter((row) => row.achieved).length;
+  const tileWidth = Math.floor((width - SIDE_PADDING * 2 - GRID_GAP) / 2);
 
   let body = null;
   if (isLoading) {
@@ -43,28 +49,28 @@ export function BadgesScreen() {
     );
   } else {
     body = (
-      <YStack gap={12}>
+      <XStack flexWrap="wrap" gap={GRID_GAP}>
         {sorted.map((row) => (
-          <BadgeProgressCard key={row.badge.id} row={row} />
+          <YStack key={row.badge.id} width={tileWidth}>
+            <BadgeProgressCard row={row} />
+          </YStack>
         ))}
-      </YStack>
+      </XStack>
     );
   }
 
   return (
     <StackScreen title={t('mweb.badges.title')} testID="badges-screen">
-      <RefreshScrollView flex={1} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
-        <YStack gap={12}>
-          <YStack gap={4}>
-            <Text fontSize={13} color="$muted">
-              {t('mweb.badges.intro')}
+      <RefreshScrollView
+        flex={1}
+        contentContainerStyle={{ padding: SIDE_PADDING, paddingBottom: 32 }}
+      >
+        <YStack gap={16}>
+          {sorted.length > 0 ? (
+            <Text fontSize={14} fontWeight="500" color="$muted">
+              {t('mweb.badges.summary', { vars: { unlocked, total: sorted.length } })}
             </Text>
-            {sorted.length > 0 ? (
-              <Text fontSize={12} fontWeight="700" color="$muted">
-                {t('mweb.badges.summary', { vars: { unlocked, total: sorted.length } })}
-              </Text>
-            ) : null}
-          </YStack>
+          ) : null}
           {body}
         </YStack>
       </RefreshScrollView>

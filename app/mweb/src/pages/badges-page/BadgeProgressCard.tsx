@@ -1,28 +1,19 @@
-import { Avatar, Box, Card, CardContent, Chip, LinearProgress, Stack, Typography } from '@mui/material';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import { Avatar, Card, Chip, LinearProgress, Stack, Typography } from '@mui/material';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEventsOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
 import { BADGE_GOAL_KEY, BADGE_WINDOW, BADGE_WINDOW_KEY, badgeProgressPercent } from '@duncit/utils';
 import type { BadgeProgressRow } from './queries';
 import { formatDate } from '../../utils/dateFormat';
 import { useTranslation } from '../../i18n/useTranslation';
 
-/** One line of the card: a small caption over its value. */
-function Line({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <Box>
-      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
-        {label}
-      </Typography>
-      <Typography variant="body2">{value}</Typography>
-    </Box>
-  );
-}
+const META_SX = { color: 'text.secondary', fontSize: 12, lineHeight: 1.35 } as const;
 
 /**
- * One badge as the member sees it: the artwork, what the badge is, the GOAL it
- * asks for, the WINDOW that goal has to happen in, and either how far along
- * they are or the day they got there.
+ * One badge as a tile: the artwork, what the badge is, the GOAL it asks for,
+ * how far along the member is, the WINDOW that goal has to happen in, and the
+ * day they got there. A locked badge is drawn back on the soft fill rather than
+ * hidden — the point of the grid is to show what is still there to be won.
  *
  * Twin of the native <BadgeProgressCard/> (rule 27) — both read their goal and
  * window vocabulary from @duncit/utils, so the two can never promise different
@@ -34,68 +25,52 @@ export default function BadgeProgressCard({ row }: Readonly<{ row: BadgeProgress
   const percent = badgeProgressPercent(row);
   const goal = t(BADGE_GOAL_KEY[badge.condition_type], { vars: { target: row.target } });
   const timeline = t(BADGE_WINDOW_KEY[BADGE_WINDOW[badge.condition_type]]);
+  const progress = t('mweb.badges.progressValue', {
+    vars: { current: Math.min(row.current, row.target), target: row.target },
+  });
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
-      <CardContent>
-        <Stack direction="row" spacing={2} sx={{ alignItems: 'flex-start' }}>
-          <Avatar
-            src={badge.image_url || undefined}
-            sx={{
-              width: 64,
-              height: 64,
-              bgcolor: row.achieved ? 'primary.light' : 'action.hover',
-              // A locked badge is drawn back rather than hidden: the point of
-              // the list is to show what is still there to be won.
-              opacity: row.achieved ? 1 : 0.55,
-            }}
-          >
-            {!badge.image_url && <EmojiEventsIcon />}
-          </Avatar>
-          <Stack spacing={1} sx={{ flex: 1, minWidth: 0 }}>
-            <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
-              <Typography sx={{ fontWeight: 700 }}>{badge.title}</Typography>
-              <Chip
-                size="small"
-                color={row.achieved ? 'success' : 'default'}
-                icon={row.achieved ? <CheckCircleIcon /> : <LockOutlinedIcon />}
-                label={row.achieved ? t('mweb.badges.achieved') : t('mweb.badges.locked')}
-              />
-            </Stack>
-            {badge.description && (
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {badge.description}
-              </Typography>
-            )}
-            <Line label={t('mweb.badges.goalLabel')} value={goal} />
-            <Line label={t('mweb.badges.timelineLabel')} value={timeline} />
-            <Box>
-              <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
-                  {t('mweb.badges.progressLabel')}
-                </Typography>
-                <Typography variant="caption" sx={{ fontWeight: 700 }}>
-                  {t('mweb.badges.progressValue', {
-                    vars: { current: Math.min(row.current, row.target), target: row.target },
-                  })}
-                </Typography>
-              </Stack>
-              <LinearProgress
-                variant="determinate"
-                value={percent}
-                color={row.achieved ? 'success' : 'primary'}
-                aria-label={badge.title}
-                sx={{ borderRadius: 1, height: 8, mt: 0.5 }}
-              />
-            </Box>
-            {row.achieved_at && (
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {t('mweb.badges.achievedOn', { vars: { date: formatDate(row.achieved_at) } })}
-              </Typography>
-            )}
-          </Stack>
+    <Card sx={{ p: 2, height: '100%' }}>
+      <Stack spacing={1} sx={{ alignItems: 'center', textAlign: 'center', height: '100%' }}>
+        <Avatar
+          src={badge.image_url || undefined}
+          sx={{
+            width: 64,
+            height: 64,
+            bgcolor: 'action.hover',
+            color: row.achieved ? 'secondary.main' : 'text.secondary',
+            opacity: row.achieved ? 1 : 0.55,
+          }}
+        >
+          {!badge.image_url && <EmojiEventsIcon />}
+        </Avatar>
+        <Typography sx={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>{badge.title}</Typography>
+        <Chip
+          size="small"
+          color={row.achieved ? 'success' : 'default'}
+          icon={row.achieved ? <CheckCircleIcon /> : <LockOutlinedIcon />}
+          label={row.achieved ? t('mweb.badges.achieved') : t('mweb.badges.locked')}
+          sx={{ height: 24, fontSize: 11 }}
+        />
+        {badge.description && <Typography sx={META_SX}>{badge.description}</Typography>}
+        <Typography sx={{ ...META_SX, color: 'text.primary', fontWeight: 500 }}>{goal}</Typography>
+        <Stack spacing={0.5} sx={{ width: '100%', mt: 'auto', pt: 0.5 }}>
+          <LinearProgress
+            variant="determinate"
+            value={percent}
+            color={row.achieved ? 'success' : 'primary'}
+            aria-label={badge.title}
+            sx={{ height: 4 }}
+          />
+          <Typography sx={{ fontSize: 11, fontWeight: 600 }}>{progress}</Typography>
         </Stack>
-      </CardContent>
+        <Typography sx={{ ...META_SX, fontSize: 11 }}>{timeline}</Typography>
+        {row.achieved_at && (
+          <Typography sx={{ ...META_SX, fontSize: 11 }}>
+            {t('mweb.badges.achievedOn', { vars: { date: formatDate(row.achieved_at) } })}
+          </Typography>
+        )}
+      </Stack>
     </Card>
   );
 }

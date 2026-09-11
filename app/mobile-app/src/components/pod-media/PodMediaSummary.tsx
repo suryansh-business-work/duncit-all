@@ -5,12 +5,12 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { mwebPodMediaLabels } from '@duncit/utils';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { PodMediaGrid } from '@/components/pod-media/PodMediaGrid';
 import { usePodMediaBoard } from '@/hooks/usePodMediaBoard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
-import { PRESS_STYLE } from '@duncit/buttons-native';
 
 interface Props {
   podId: string;
@@ -43,23 +43,17 @@ export function PodMediaSummary({ podId, onLeave }: Readonly<Props>) {
   return (
     <YStack gap={8}>
       <XStack alignItems="center" gap={8}>
-        <Text fontSize={13.5} fontWeight="700" flex={1}>
+        <Text fontSize={15} fontWeight="600" color="$color" flex={1}>
           {t('mweb.hostManage.podMedia')}
         </Text>
-        <XStack
-          pressStyle={PRESS_STYLE.surface}
+        <DuncitButton
           testID="pod-complete-open-media"
-          alignItems="center"
-          gap={4}
+          label={labels.pageTitle}
           onPress={open}
-          accessibilityRole="button"
-          accessibilityLabel={labels.pageTitle}
-        >
-          <MaterialIcons name="photo-camera-back" size={16} color={primary} />
-          <Text fontSize={12.5} fontWeight="700" color={primary}>
-            {labels.pageTitle}
-          </Text>
-        </XStack>
+          variant="ghost"
+          size="sm"
+          icon={<MaterialIcons name="photo-camera-back" size={16} color={primary} />}
+        />
       </XStack>
       <PodMediaGrid items={board?.items ?? []} labels={labels} />
     </YStack>

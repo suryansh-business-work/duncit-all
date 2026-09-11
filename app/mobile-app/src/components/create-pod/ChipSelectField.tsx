@@ -46,11 +46,11 @@ export function ChipSelectField({
         </Text>
       ) : null}
       {options.length === 0 ? (
-        <Text testID={`${testID}-empty`} fontSize={12.5} color="$muted">
+        <Text testID={`${testID}-empty`} fontSize={13} color="$muted">
           {emptyHint ?? t('mweb.createPod.noOptions')}
         </Text>
       ) : (
-        <XStack gap={6} flexWrap="wrap">
+        <XStack gap={8} flexWrap="wrap">
           {options.map((option) => {
             const selected = value === option.value;
             return (
@@ -61,15 +61,14 @@ export function ChipSelectField({
                 aria-label={option.label}
                 aria-pressed={selected}
                 onPress={() => onChange(option.value)}
-                paddingHorizontal={12}
-                paddingVertical={7}
+                minHeight={36}
+                alignItems="center"
+                paddingHorizontal={14}
                 borderRadius={999}
-                borderWidth={1}
-                borderColor={selected ? '$primary' : '$borderColor'}
-                backgroundColor={selected ? '$primary' : 'transparent'}
+                backgroundColor={selected ? '$primary' : '$soft'}
                 pressStyle={PRESS_STYLE.control}
               >
-                <Text fontSize={12.5} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
+                <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
                   {option.label}
                 </Text>
               </XStack>

@@ -7,6 +7,7 @@ import { ScrollView, XStack, YStack } from 'tamagui';
 
 import type { RootStackParamList } from '@/navigation/types';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useStatusUpload } from '@/hooks/useStatusUpload';
@@ -55,7 +56,7 @@ function shuffleStatus<T>(items: T[]): T[] {
  * (Bug 4) and delete (Bug 7). */
 export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
   const { t } = useTranslation();
-  const { primary } = useThemeColors();
+  const { accent } = useThemeColors();
   const { mine, items } = useStoryRail();
   const { uploading, progress, pendingVideo, pickAndUpload, confirmVideo, cancelVideo } =
     useStatusUpload();
@@ -136,14 +137,7 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
     <>
       {/* The mock frames the story rail in its own card, with a decorative
        * paper-plane doodle trailing the tiles. */}
-      <YStack
-        marginHorizontal={16}
-        borderRadius={20}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$surface"
-        paddingVertical={12}
-      >
+      <SurfaceCard marginHorizontal={16} paddingHorizontal={0} paddingVertical={12}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -193,18 +187,18 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
             paddingLeft={6}
             opacity={0.55}
           >
-            <YStack width={4} height={4} borderRadius={2} backgroundColor="$primary" />
-            <YStack width={4} height={4} borderRadius={2} backgroundColor="$primary" />
-            <YStack width={4} height={4} borderRadius={2} backgroundColor="$primary" />
+            <YStack width={4} height={4} borderRadius={2} backgroundColor="$accent" />
+            <YStack width={4} height={4} borderRadius={2} backgroundColor="$accent" />
+            <YStack width={4} height={4} borderRadius={2} backgroundColor="$accent" />
             <MaterialIcons
               name="near-me"
               size={22}
-              color={primary}
+              color={accent}
               style={{ transform: [{ rotate: '45deg' }] }}
             />
           </XStack>
         </ScrollView>
-      </YStack>
+      </SurfaceCard>
       {/* A sponsored story has no siblings to walk to, so it gets no next/prev:
           running past its end closes the viewer (which falls back to onClose). */}
       <StatusViewer

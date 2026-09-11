@@ -1,9 +1,13 @@
 import { useMemo } from 'react';
-import { Stack, Typography } from '@mui/material';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import { Box, Card, Stack, Typography } from '@mui/material';
+import ShoppingCartOutlinedIcon from '@mui/icons-material/ShoppingCartOutlined';
+import { alpha } from '@mui/material/styles';
 import { DuncitButton } from '@duncit/buttons';
 import { useNavigate } from 'react-router';
 import { useCart, cartLineKey, type CartLine } from '../components/cart/CartContext';
+import EmptyState from '../components/EmptyState';
+import PageHeader from '../components/PageHeader';
+import { STICKY_BAR_SX } from '../components/cart/stickyBarSx';
 import { usePricing } from '../hooks/usePricing';
 import { useTranslation } from '../i18n/useTranslation';
 import CartPodGroup from './cart-page/CartPodGroup';
@@ -34,36 +38,21 @@ export default function CartPage() {
 
   if (groups.length === 0) {
     return (
-      <Stack
-        spacing={1.5}
-        sx={{
-          alignItems: "center",
-          py: 8,
-          textAlign: 'center'
-        }}>
-        <ShoppingCartIcon sx={{ fontSize: 44, color: 'text.disabled' }} />
-        <Typography variant="h6" sx={{
-          fontWeight: 700
-        }}>
-          {t('mweb.cart.empty')}
-        </Typography>
-        <Typography variant="body2" sx={{
-          color: "text.secondary"
-        }}>
-          {t('mweb.cart.emptyBody')}
-        </Typography>
-        <DuncitButton variant="contained" onClick={() => navigate('/shop')} sx={{ borderRadius: 999, fontWeight: 600 }}>
-          {t('mweb.cart.exploreShop')}
-        </DuncitButton>
+      <Stack spacing={2} sx={{ py: 0.5 }}>
+        <PageHeader title={t('mweb.cart.title')} />
+        <EmptyState
+          icon={<ShoppingCartOutlinedIcon />}
+          title={t('mweb.cart.empty')}
+          actionLabel={t('mweb.cart.exploreShop')}
+          onAction={() => navigate('/shop')}
+        />
       </Stack>
     );
   }
 
   return (
-    <Stack spacing={2} sx={{ py: 1 }}>
-      <Typography variant="h5" sx={{ fontWeight: 700 }}>
-        {t('mweb.cart.title')}
-      </Typography>
+    <Stack spacing={2} sx={{ py: 0.5 }}>
+      <PageHeader title={t('mweb.cart.title')} />
       {groups.map(([podId, group]) => (
         <CartPodGroup
           key={podId}
@@ -75,34 +64,31 @@ export default function CartPage() {
           onRemove={(line) => removeLine(podId, cartLineKey(line))}
         />
       ))}
-      <Stack
-        direction="row"
-        sx={{
-          alignItems: "center",
-          justifyContent: "space-between",
-          px: 0.5
-        }}>
-        <Typography variant="body2" sx={{
-          color: "text.secondary"
-        }}>
-          {t('mweb.cart.total')}
-        </Typography>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-          {priceFormat(grandTotal)}
-        </Typography>
-      </Stack>
-      {/* The whole cart pays in ONE product payment — delivery is quoted per
-          warehouse on the checkout, but there is a single Pay. */}
-      <DuncitButton
-        variant="contained"
-        onClick={() => navigate('/product-checkout')}
-        sx={{ borderRadius: 999, fontWeight: 700 }}
-      >
-        {t('mweb.cart.checkout')}
-      </DuncitButton>
-      <DuncitButton variant="text" color="error" onClick={clearAll} sx={{ alignSelf: 'center', fontWeight: 600 }}>
+      <Card sx={{ p: 2 }}>
+        <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            {t('mweb.cart.total')}
+          </Typography>
+          <Typography sx={{ fontSize: '1.125rem', fontWeight: 700 }}>{priceFormat(grandTotal)}</Typography>
+        </Stack>
+      </Card>
+      <DuncitButton variant="text" color="error" onClick={clearAll} sx={{ alignSelf: 'center' }}>
         {t('mweb.cart.clear')}
       </DuncitButton>
+      {/* The whole cart pays in ONE product payment — delivery is quoted per
+          warehouse on the checkout, but there is a single Pay. The CTA stays
+          pinned above the bottom nav while the lines scroll. */}
+      <Box sx={STICKY_BAR_SX}>
+        <DuncitButton
+          variant="contained"
+          size="large"
+          fullWidth
+          onClick={() => navigate('/product-checkout')}
+          sx={{ boxShadow: (theme) => `0 10px 28px ${alpha(theme.palette.common.black, 0.16)}` }}
+        >
+          {t('mweb.cart.checkout')}
+        </DuncitButton>
+      </Box>
     </Stack>
   );
 }

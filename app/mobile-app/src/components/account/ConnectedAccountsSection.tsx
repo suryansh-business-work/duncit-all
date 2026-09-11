@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { GoogleAuthButton } from '@/components/GoogleAuthButton';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import {
   MobileConnectGoogleAccountDocument,
   MobileDisconnectGoogleAccountDocument,
@@ -93,12 +94,9 @@ export function ConnectedAccountsSection() {
     : undefined;
 
   return (
-    <YStack gap={10} testID="account-connected-section">
-      <Text fontSize={14} fontWeight="700" color="$color">
+    <SurfaceCard gap={12} testID="account-connected-section">
+      <Text accessibilityRole="header" fontSize={17} fontWeight="600" color="$color">
         {t('mweb.account.connected.title')}
-      </Text>
-      <Text fontSize={12} color="$muted">
-        {t('mweb.account.connected.subtitle')}
       </Text>
 
       <ConnectedAccountRow
@@ -112,6 +110,8 @@ export function ConnectedAccountsSection() {
         }
         connected={!!accounts?.has_password}
       />
+
+      <YStack height={1} backgroundColor="$borderColor" />
 
       <ConnectedAccountRow
         testID="connected-google"
@@ -157,6 +157,6 @@ export function ConnectedAccountsSection() {
         }}
         onCancel={() => setConfirmOpen(false)}
       />
-    </YStack>
+    </SurfaceCard>
   );
 }

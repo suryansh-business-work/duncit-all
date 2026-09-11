@@ -34,7 +34,7 @@ export function VenuePicker({
     return (
       <YStack gap={8}>
         <FieldLabel label={selectVenue} required={required} testID="create-pod-venue" />
-        <Text testID="create-pod-venue-empty" fontSize={12.5} color="$muted">
+        <Text testID="create-pod-venue-empty" fontSize={13} color="$muted">
           {emptyHint ?? t('mweb.createPod.noVenues')}
         </Text>
       </YStack>
@@ -45,7 +45,7 @@ export function VenuePicker({
     <YStack gap={8}>
       <FieldLabel label={selectVenue} required={required} testID="create-pod-venue" />
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <XStack gap={10} paddingRight={10}>
+        <XStack gap={12} paddingRight={12}>
           {venues.map((venue) => {
             const selected = venue.id === selectedId;
             const locality = [venue.locality, venue.city].filter(Boolean).join(', ');
@@ -59,17 +59,17 @@ export function VenuePicker({
                 aria-label={venue.venue_name}
                 aria-pressed={selected}
                 onPress={() => onSelect(venue.id)}
-                width={224}
+                width={236}
                 padding={12}
                 gap={8}
-                borderRadius={14}
-                borderWidth={selected ? 2 : 1}
-                borderColor={selected ? '$primary' : '$borderColor'}
+                borderRadius={24}
+                borderWidth={2}
+                borderColor={selected ? '$primary' : '$cardBorder'}
                 backgroundColor="$surface"
                 pressStyle={PRESS_STYLE.control}
               >
                 <XStack alignItems="center" gap={6}>
-                  <Text flex={1} fontSize={15} fontWeight="700" color="$color" numberOfLines={1}>
+                  <Text flex={1} fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
                     {venue.venue_name}
                   </Text>
                   {selected ? (
@@ -87,26 +87,24 @@ export function VenuePicker({
                 <XStack gap={6} flexWrap="wrap">
                   {venue.venue_type ? (
                     <XStack
-                      paddingHorizontal={8}
-                      paddingVertical={3}
+                      paddingHorizontal={10}
+                      paddingVertical={4}
                       borderRadius={999}
-                      borderWidth={1}
-                      borderColor="$borderColor"
+                      backgroundColor="$soft"
                     >
-                      <Text fontSize={11} fontWeight="700" color="$muted">
+                      <Text fontSize={12} fontWeight="600" color="$color">
                         {venue.venue_type}
                       </Text>
                     </XStack>
                   ) : null}
                   {capacity ? (
                     <XStack
-                      paddingHorizontal={8}
-                      paddingVertical={3}
+                      paddingHorizontal={10}
+                      paddingVertical={4}
                       borderRadius={999}
-                      borderWidth={1}
-                      borderColor="$borderColor"
+                      backgroundColor="$soft"
                     >
-                      <Text fontSize={11} fontWeight="700" color="$muted">
+                      <Text fontSize={12} fontWeight="600" color="$color">
                         {t('mweb.createPod.upTo', { vars: { capacity } })}
                       </Text>
                     </XStack>

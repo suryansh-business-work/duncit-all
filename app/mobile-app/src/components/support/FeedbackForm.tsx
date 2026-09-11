@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Button, Input, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { MediaUploadField } from '@/components/create-pod/MediaUploadField';
+import { DuncitButton } from '@/components/DuncitButton';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { useReportProblemConfig } from '@/hooks/useReportProblemConfig';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -71,15 +73,7 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
   };
 
   return (
-    <YStack
-      testID="feedback-form"
-      gap={12}
-      padding={14}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
+    <SurfaceCard testID="feedback-form" gap={16}>
       <YStack gap={6}>
         <FieldLabel>{t('mweb.common.category')}</FieldLabel>
         {loading && config.categories.length === 0 ? (
@@ -96,12 +90,11 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
                   aria-label={option.label}
                   aria-pressed={selected}
                   onPress={() => setCategory(option.label)}
+                  height={36}
+                  alignItems="center"
                   paddingHorizontal={14}
-                  paddingVertical={8}
                   borderRadius={999}
-                  borderWidth={1}
-                  borderColor={selected ? '$primary' : '$borderColor'}
-                  backgroundColor={selected ? '$primary' : '$surface'}
+                  backgroundColor={selected ? '$primary' : '$soft'}
                   pressStyle={PRESS_STYLE.control}
                 >
                   <Text fontWeight="600" fontSize={13} color={selected ? '$onPrimary' : '$color'}>
@@ -125,7 +118,9 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
           onChangeText={setMessage}
           multiline
           numberOfLines={4}
-          backgroundColor="$background"
+          backgroundColor="$surface"
+          borderColor="$borderColor"
+          borderRadius={14}
         />
         <Text fontSize={11} color="$muted">
           {config.message_hint}
@@ -147,16 +142,14 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
         </Text>
       ) : null}
 
-      <Button
+      <DuncitButton
         testID="feedback-submit"
+        label={submitting ? 'Sending…' : 'Send feedback'}
         onPress={submit}
         disabled={submitting}
-        backgroundColor="$primary"
-        color="$onPrimary"
-        fontWeight="700"
-      >
-        {submitting ? 'Sending…' : 'Send feedback'}
-      </Button>
-    </YStack>
+        size="lg"
+        fullWidth
+      />
+    </SurfaceCard>
   );
 }

@@ -4,7 +4,13 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
-import { bucketLabelKey, bucketTone, podPriceLabel, type StudioPod } from './studio-pods';
+import {
+  bucketFill,
+  bucketLabelKey,
+  bucketTone,
+  podPriceLabel,
+  type StudioPod,
+} from './studio-pods';
 
 interface RowMetricProps {
   label: string;
@@ -16,10 +22,10 @@ interface RowMetricProps {
 function RowMetric({ label, value, testID }: Readonly<RowMetricProps>) {
   return (
     <YStack testID={testID} flexBasis="30%" flexGrow={1} gap={1}>
-      <Text fontSize={10.5} fontWeight="700" color="$muted" numberOfLines={1}>
+      <Text fontSize={11} fontWeight="500" color="$muted" numberOfLines={1}>
         {label}
       </Text>
-      <Text fontSize={13.5} fontWeight="600" color="$color" numberOfLines={1}>
+      <Text fontSize={13} fontWeight="600" color="$color" numberOfLines={1}>
         {value}
       </Text>
     </YStack>
@@ -68,18 +74,25 @@ export function StudioPodRow({
       role={onOpen ? 'button' : undefined}
       aria-label={onOpen ? pod.pod_title : undefined}
       onPress={onOpen}
-      pressStyle={onOpen ? PRESS_STYLE.surface : undefined}
+      pressStyle={onOpen ? PRESS_STYLE.row : undefined}
       gap={8}
-      padding={12}
-      borderRadius={12}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
+      paddingVertical={14}
     >
       <XStack alignItems="center" gap={8}>
-        <Text flex={1} fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>
+        <Text flex={1} fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
           {pod.pod_title}
         </Text>
+        <XStack
+          testID={`${testID}-state`}
+          paddingHorizontal={10}
+          paddingVertical={4}
+          borderRadius={999}
+          backgroundColor={bucketFill(pod.bucket)}
+        >
+          <Text fontSize={12} fontWeight="600" color={bucketTone(pod.bucket)}>
+            {t(bucketLabelKey(pod.bucket))}
+          </Text>
+        </XStack>
         {onOpenActions ? (
           <XStack
             testID={`${testID}-actions`}
@@ -88,28 +101,14 @@ export function StudioPodRow({
             onPress={onOpenActions}
             alignItems="center"
             justifyContent="center"
-            width={32}
-            height={32}
-            borderRadius={10}
-            borderWidth={1}
-            borderColor="$borderColor"
-            pressStyle={PRESS_STYLE.row}
+            width={36}
+            height={36}
+            borderRadius={999}
+            pressStyle={PRESS_STYLE.ghost}
           >
-            <MaterialIcons name="more-vert" size={18} color={ink} />
+            <MaterialIcons name="more-vert" size={20} color={ink} />
           </XStack>
         ) : null}
-        <XStack
-          testID={`${testID}-state`}
-          paddingHorizontal={8}
-          paddingVertical={3}
-          borderRadius={999}
-          borderWidth={1}
-          borderColor={bucketTone(pod.bucket)}
-        >
-          <Text fontSize={10.5} fontWeight="700" color={bucketTone(pod.bucket)}>
-            {t(bucketLabelKey(pod.bucket))}
-          </Text>
-        </XStack>
       </XStack>
 
       <Text fontSize={12} color="$muted" numberOfLines={1}>

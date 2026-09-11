@@ -1,6 +1,6 @@
 import { Link as RouterLink } from 'react-router';
-import AddIcon from '@mui/icons-material/Add';
-import StorefrontIcon from '@mui/icons-material/Storefront';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import StorefrontRoundedIcon from '@mui/icons-material/StorefrontRounded';
 import { DuncitButton } from '@duncit/buttons';
 import StudioPageHeader from '../../components/StudioPageHeader';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -11,17 +11,16 @@ export default function VenueStudioHeader() {
 
   return (
     <StudioPageHeader
-      icon={<StorefrontIcon fontSize="small" />}
+      icon={<StorefrontRoundedIcon fontSize="small" />}
       title={t('mweb.venueManage.venueStudio')}
-      caption={t('mweb.venueManagePage.listYourSpace')}
       action={
         <DuncitButton
           component={RouterLink}
           to="/register-venue"
           variant="contained"
           size="small"
-          startIcon={<AddIcon />}
-          sx={{ borderRadius: 999, fontWeight: 700 }}
+          startIcon={<AddRoundedIcon />}
+          sx={{ flexShrink: 0 }}
         >
           {t('mweb.venueManagePage.newVenue')}
         </DuncitButton>

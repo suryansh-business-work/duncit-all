@@ -1,5 +1,4 @@
-import { Box, Stack, Typography } from '@mui/material';
-import { auth } from '@duncit/auth-tokens';
+import { Stack } from '@mui/material';
 import AuthHeading from '../../components/AuthHeading';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import { type LoginSubmitValues } from '../../forms/login';
@@ -36,7 +35,6 @@ export default function LoginCard({
   otp,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const choosing = step === 'CHOOSE';
   // The heading is decided above the JSX (S3358): the method chooser keeps the
   // welcome, and each method names itself once the boxes are showing.
   let headingTitle = t('mweb.login.title');
@@ -51,48 +49,10 @@ export default function LoginCard({
 
   return (
     <AuthScreenFrame center>
-      <Stack spacing={2.1}>
-        <AuthHeading
-          title={headingTitle}
-          accent={headingAccent}
-          subtitle={choosing ? t('mweb.login.subtitle') : undefined}
-        />
+      <Stack spacing={3}>
+        <AuthHeading title={headingTitle} accent={headingAccent} />
 
-        {choosing && (
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{
-              alignItems: 'center',
-              px: 1.25,
-              py: 1,
-              borderRadius: '16px',
-              bgcolor: 'action.hover',
-              border: 1,
-              borderColor: 'divider',
-            }}
-          >
-            <Stack direction="row" spacing={-0.7}>
-              {auth.avatars.map((color) => (
-                <Box
-                  key={color}
-                  sx={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: '50%',
-                    bgcolor: color,
-                    border: `2px solid ${auth.avatarRing}`,
-                  }}
-                />
-              ))}
-            </Stack>
-            <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.primary' }}>
-              {t('mweb.login.avatarsCaption')}
-            </Typography>
-          </Stack>
-        )}
-
-        {choosing && (
+        {step === 'CHOOSE' && (
           <LoginMethodStep
             gLoading={gLoading}
             gError={gError}

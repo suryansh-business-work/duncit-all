@@ -16,7 +16,7 @@ interface PersonProps {
 /** One tappable avatar + name; hosts get a badge. Hoisted so it isn't redefined
  * per render (Sonar S6478). */
 function PersonChip({ person, isHost, onPress }: Readonly<PersonProps>) {
-  const { onPrimary, primary } = useThemeColors();
+  const { onPrimary } = useThemeColors();
   const initial = (person.full_name?.[0] ?? 'U').toUpperCase();
   return (
     <YStack
@@ -45,7 +45,7 @@ function PersonChip({ person, isHost, onPress }: Readonly<PersonProps>) {
             resizeMode="cover"
           />
         ) : (
-          <Text fontSize={17} fontWeight="700" color={onPrimary}>
+          <Text fontSize={17} fontWeight="600" color={onPrimary}>
             {initial}
           </Text>
         )}
@@ -57,15 +57,15 @@ function PersonChip({ person, isHost, onPress }: Readonly<PersonProps>) {
           paddingHorizontal={6}
           paddingVertical={1}
           borderRadius={999}
-          backgroundColor={primary}
+          backgroundColor="$accent"
         >
           <MaterialIcons name="star" size={9} color={onPrimary} />
-          <Text fontSize={9} fontWeight="700" color={onPrimary}>
+          <Text fontSize={9} fontWeight="600" color={onPrimary}>
             Host
           </Text>
         </XStack>
       ) : null}
-      <Text fontSize={11} fontWeight="700" color="$color" numberOfLines={1}>
+      <Text fontSize={11} fontWeight="600" color="$color" numberOfLines={1}>
         {person.full_name}
       </Text>
     </YStack>

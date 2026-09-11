@@ -3,6 +3,7 @@ import EventIcon from '@mui/icons-material/Event';
 import { useDateFormat } from '../../utils/dateFormat';
 import type { SupportPodOption } from './queries';
 import { useTranslation } from '../../i18n/useTranslation';
+import { SURFACE_SX } from '../../theme';
 
 interface Props {
   options: SupportPodOption[];
@@ -17,7 +18,7 @@ export default function PodPicker({ options, selectedId, onChange, loading }: Re
 
   if (loading && !options.length) {
     return (
-      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }}>
+      <Paper sx={{ ...SURFACE_SX, p: 2 }}>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
@@ -28,12 +29,12 @@ export default function PodPicker({ options, selectedId, onChange, loading }: Re
   }
   if (!options.length) {
     return (
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px', bgcolor: 'rgba(255,79,115,0.08)' }}>
+      <Paper sx={{ ...SURFACE_SX, p: 2 }}>
         <Stack direction="row" spacing={1} sx={{
           alignItems: "center"
         }}>
           <EventIcon color="action" />
-          <Typography variant="body2" sx={{ fontWeight: 700 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             You haven’t joined any pods yet. Join a pod to use live support.
           </Typography>
         </Stack>

@@ -7,11 +7,11 @@ import PlaceIcon from '@mui/icons-material/Place';
 import { formatMoney } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
 import { useDateFormat } from '../../utils/dateFormat';
-import InfoRow, { type InfoRowProps } from './InfoRow';
+import { InfoRowList, type InfoRowProps } from './InfoRow';
 import { pendingPodImage, podPendingStatus } from './podPending';
 import type { PodPendingView } from './queries';
 
-const ICON = { fontSize: 18 } as const;
+const ICON = { fontSize: 20 } as const;
 
 /** Pod details card on the waiting page — featured image, title, date & time
  * slot, expected earnings, location, category and current status.
@@ -71,25 +71,19 @@ export default function PodPendingSummaryCard({ view }: Readonly<{ view: PodPend
   });
 
   return (
-    <Card variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }} data-testid="pod-pending-summary">
-      <Stack spacing={1.25}>
+    <Card sx={{ p: 2 }} data-testid="pod-pending-summary">
+      <Stack spacing={1.5}>
         {image && (
           <Box
             component="img"
             src={image}
             alt={pod.pod_title}
             data-testid="pod-pending-image"
-            sx={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: '16px' }}
+            sx={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: '18px' }}
           />
         )}
-        <Typography variant="subtitle1" sx={{
-          fontWeight: 700
-        }}>
-          {pod.pod_title}
-        </Typography>
-        {rows.map((row) => (
-          <InfoRow key={row.label} {...row} />
-        ))}
+        <Typography sx={{ fontSize: '1rem', fontWeight: 600 }}>{pod.pod_title}</Typography>
+        <InfoRowList rows={rows} />
       </Stack>
     </Card>
   );

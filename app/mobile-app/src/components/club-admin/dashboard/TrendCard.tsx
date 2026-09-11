@@ -9,6 +9,8 @@ import {
   type ClubAdminTrendPoint,
 } from '@duncit/utils';
 
+import { SectionHeader } from '@/components/SectionHeader';
+import { SurfaceCard } from '@/components/SurfaceCard';
 import { ChipSelectField } from '@/components/create-pod';
 import { InsightsLine } from '@/components/host-manage/host-insights/InsightCharts';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -20,7 +22,7 @@ interface Props {
 
 /**
  * The monthly trend, one series at a time — a phone has no room for four
- * lines and a legend, so the legend became the chip row that picks the line.
+ * lines and a legend, so the legend became the pill row that picks the line.
  * The series, their order and their palette are the shared list.
  */
 export function TrendCard({ trend }: Readonly<Props>) {
@@ -37,32 +39,24 @@ export function TrendCard({ trend }: Readonly<Props>) {
   const data: ChartDatum[] = trend.map((point) => ({ label: point.label, value: point[series] }));
 
   return (
-    <YStack
-      gap={10}
-      padding={14}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-      testID="club-dashboard-trend"
-    >
-      <Text fontSize={15} fontWeight="700" color="$color">
-        {t('clubAdmin.dashboard.monthlyTrend')}
-      </Text>
-      <ChipSelectField
-        label=""
-        options={options}
-        value={series}
-        onChange={(next) => setSeries(next as ClubAdminTrendKey)}
-        testID="club-dashboard-series"
-      />
-      {allZero(data) ? (
-        <Text testID="club-dashboard-trend-empty" fontSize={13} color="$muted">
-          {t('clubAdmin.dashboard.trendEmpty')}
-        </Text>
-      ) : (
-        <InsightsLine data={data} color={palette[paletteName]} area />
-      )}
+    <YStack gap={12} testID="club-dashboard-trend">
+      <SectionHeader title={t('clubAdmin.dashboard.monthlyTrend')} />
+      <SurfaceCard gap={12}>
+        <ChipSelectField
+          label=""
+          options={options}
+          value={series}
+          onChange={(next) => setSeries(next as ClubAdminTrendKey)}
+          testID="club-dashboard-series"
+        />
+        {allZero(data) ? (
+          <Text testID="club-dashboard-trend-empty" fontSize={14} color="$muted">
+            {t('clubAdmin.dashboard.trendEmpty')}
+          </Text>
+        ) : (
+          <InsightsLine data={data} color={palette[paletteName]} area />
+        )}
+      </SurfaceCard>
     </YStack>
   );
 }

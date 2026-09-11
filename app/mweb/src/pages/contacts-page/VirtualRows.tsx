@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Box } from '@mui/material';
 import { useVirtualRows } from '../../hooks/useVirtualRows';
+import { SURFACE_SX } from '../../theme';
 
 interface Props<T> {
   rows: readonly T[];
@@ -37,7 +38,8 @@ export default function VirtualRows<T>({
   });
   const visible = rows.slice(range.start, range.end + 1);
   return (
-    <Box ref={listRef} data-testid={testId}>
+    // The rows sit in one surface card, like every list in the calm design.
+    <Box ref={listRef} data-testid={testId} sx={SURFACE_SX}>
       {range.leadPad > 0 && <Box sx={{ height: range.leadPad }} />}
       {visible.map((row, offset) => (
         <Box key={keyOf(row)} ref={measureRow(range.start + offset)}>

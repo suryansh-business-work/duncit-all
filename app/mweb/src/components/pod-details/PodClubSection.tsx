@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Avatar, Box, Stack, Typography } from '@mui/material';
+import GroupsIcon from '@mui/icons-material/Groups';
 import { DuncitButton } from '@duncit/buttons';
 import { coverImageUrl } from '@duncit/utils';
 import { useNavigate } from 'react-router';
@@ -48,7 +49,7 @@ export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<P
             width: '100%',
             flex: 1
           }}>
-          <Avatar src={cover || undefined} sx={{ width: 48, height: 48 }}>
+          <Avatar src={cover || undefined} sx={{ width: 48, height: 48, bgcolor: 'action.hover', color: 'text.primary' }}>
             {club.club_name?.[0]?.toUpperCase() ?? 'C'}
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -80,8 +81,9 @@ export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<P
         <DuncitButton
           size="small"
           variant="outlined"
+          startIcon={<GroupsIcon />}
           onClick={() => club.club_id && navigate(`/club/${club.club_id}`)}
-          sx={{ minHeight: 36, alignSelf: { xs: 'stretch', sm: 'center' } }}
+          sx={{ minHeight: 36, alignSelf: { xs: 'flex-start', sm: 'center' } }}
         >
           {t('mweb.podDetails.viewClub')}
         </DuncitButton>

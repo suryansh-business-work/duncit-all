@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Button, Spinner, Text, XStack } from 'tamagui';
+import { Spinner, Text, XStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
+import { SelectChip } from '@/components/venue-availability/SelectChip';
 import { SlotRequestCard } from '@/components/venue-slot-requests/SlotRequestCard';
 import { SlotRequestDecisionSheets } from '@/components/venue-slot-requests/SlotRequestDecisionSheets';
 import {
@@ -52,29 +53,23 @@ export function VenueSlotRequestsScreen() {
       title={t('mweb.venueSlotRequests.slotRequests')}
       testID="venue-slot-requests-screen"
     >
-      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-        <Text fontSize={12.5} color="$muted">
-          {t('mweb.venueSlotRequests.intro')}
-        </Text>
-
+      <RefreshScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
         {slots.venues.length > 1 && (
-          <XStack gap={8} flexWrap="wrap">
-            <Button
-              size="$2"
-              theme={slots.venueId === ALL_VENUES ? 'active' : undefined}
+          <XStack gap={8} flexWrap="wrap" aria-label={t('mweb.common.venue')}>
+            <SelectChip
+              testID="slot-requests-venue-all"
+              label={t('mweb.venueSlotRequests.allVenues')}
+              selected={slots.venueId === ALL_VENUES}
               onPress={() => slots.setVenueId(ALL_VENUES)}
-            >
-              {t('mweb.venueSlotRequests.allVenues')}
-            </Button>
+            />
             {slots.venues.map((venue) => (
-              <Button
+              <SelectChip
                 key={venue.id}
-                size="$2"
-                theme={slots.venueId === venue.id ? 'active' : undefined}
+                testID={`slot-requests-venue-${venue.id}`}
+                label={venue.venue_name || t('mweb.venueManagePage.untitledVenue')}
+                selected={slots.venueId === venue.id}
                 onPress={() => slots.setVenueId(venue.id)}
-              >
-                {venue.venue_name || t('mweb.venueManagePage.untitledVenue')}
-              </Button>
+              />
             ))}
           </XStack>
         )}
@@ -82,8 +77,8 @@ export function VenueSlotRequestsScreen() {
         {slots.feedback && (
           <Text
             pressStyle={PRESS_STYLE.inline}
-            fontSize={12.5}
-            color={slots.feedback.ok ? '$green10' : '$red10'}
+            fontSize={13}
+            color={slots.feedback.ok ? '$success' : '$danger'}
             onPress={slots.clearFeedback}
             testID="slot-request-feedback"
           >
@@ -91,10 +86,10 @@ export function VenueSlotRequestsScreen() {
           </Text>
         )}
 
-        {slots.isLoading && <Spinner />}
+        {slots.isLoading && <Spinner color="$primary" />}
 
         {!slots.isLoading && slots.requests.length === 0 && (
-          <Text fontSize={13} color="$muted">
+          <Text fontSize={14} color="$muted" textAlign="center">
             {t('mweb.venueSlotRequests.empty')}
           </Text>
         )}

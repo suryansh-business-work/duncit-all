@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { Alert, Card, CardContent, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, Card, CardContent, Divider, Snackbar, Stack, Typography } from '@mui/material';
 import LockResetIcon from '@mui/icons-material/LockReset';
 import { DuncitButton } from '@duncit/buttons';
+import IconDisc from './IconDisc';
 import ChangePasswordDialog from './ChangePasswordDialog';
 import DeletionRequestPanel from './DeletionRequestPanel';
 import { MY_CONNECTED_ACCOUNTS, type ConnectedAccounts } from './connected-queries';
@@ -41,7 +42,7 @@ export default function SecuritySection() {
 
   return (
     <Card>
-      <CardContent>
+      <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={2}>
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
@@ -51,25 +52,31 @@ export default function SecuritySection() {
               justifyContent: 'space-between',
             }}
           >
-            <Stack sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                {t('mweb.account.password')}
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {hint}
-              </Typography>
+            <Stack direction="row" spacing={2} sx={{ flex: 1, minWidth: 0, alignItems: 'center' }}>
+              <IconDisc>
+                <LockResetIcon />
+              </IconDisc>
+              <Stack sx={{ minWidth: 0 }}>
+                <Typography sx={{ fontSize: 15, fontWeight: 500 }}>
+                  {t('mweb.account.password')}
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  {hint}
+                </Typography>
+              </Stack>
             </Stack>
             <DuncitButton
-              variant="outlined"
-              startIcon={<LockResetIcon />}
+              color="inherit"
               disabled={loading}
               onClick={() => setChangeOpen(true)}
               data-testid="open-change-password"
-              sx={{ textTransform: 'none', fontWeight: 700, borderRadius: '16px' }}
+              sx={{ bgcolor: 'action.hover', minHeight: 40, flexShrink: 0 }}
             >
               {action}
             </DuncitButton>
           </Stack>
+
+          <Divider />
 
           <DeletionRequestPanel onToast={setToast} />
         </Stack>

@@ -14,7 +14,7 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 export function HostRequestSuccess() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { color: ink } = useThemeColors();
+  const { accent } = useThemeColors();
 
   const onDone = () => {
     if (navigation.canGoBack()) {
@@ -28,12 +28,21 @@ export function HostRequestSuccess() {
     <YStack flex={1} testID="host-request-success">
       <AppBackground />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        <YStack flex={1} alignItems="center" justifyContent="center" gap={14} padding={24}>
-          <MaterialIcons name="check-circle" size={56} color={ink} />
-          <Text textAlign="center" fontSize={22} fontWeight="700" color={ink}>
+        <YStack flex={1} alignItems="center" justifyContent="center" gap={16} padding={24}>
+          <YStack
+            width={72}
+            height={72}
+            borderRadius={36}
+            alignItems="center"
+            justifyContent="center"
+            backgroundColor="$soft"
+          >
+            <MaterialIcons name="check-circle" size={36} color={accent} />
+          </YStack>
+          <Text textAlign="center" fontSize={24} fontWeight="600" color="$color">
             Your Request Has Been Submitted
           </Text>
-          <Text textAlign="center" fontSize={14.5} color={ink} opacity={0.85}>
+          <Text textAlign="center" fontSize={14} color="$muted">
             Thank you for expanding your hosting journey with Duncit. Our onboarding team will
             review your request for the new category and get in touch with you shortly. You{'’'}ll
             receive updates through Notifications and Email.
@@ -43,13 +52,15 @@ export function HostRequestSuccess() {
             role="button"
             aria-label={t('mweb.surveyOnboarding.okay')}
             onPress={onDone}
-            paddingHorizontal={22}
-            paddingVertical={12}
+            alignSelf="stretch"
+            height={52}
+            alignItems="center"
+            justifyContent="center"
             borderRadius={999}
             backgroundColor="$primary"
-            pressStyle={PRESS_STYLE.control}
+            pressStyle={PRESS_STYLE.solid}
           >
-            <Text fontSize={14.5} fontWeight="700" color="$onPrimary">
+            <Text fontSize={16} fontWeight="600" color="$onPrimary">
               Okay
             </Text>
           </XStack>

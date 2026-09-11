@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Spinner, Text, YStack } from 'tamagui';
 
+import { EmptyState } from '@/components/EmptyState';
+import { SectionHeader } from '@/components/SectionHeader';
 import type { MyGiftCards } from '@/hooks/useGiftCards';
 import { useTranslation } from '@/hooks/useTranslation';
 import { GiftCardRow } from './GiftCardRow';
@@ -46,16 +48,18 @@ export function MyGiftCardsList({ cards, loading, error, currency, senderName }:
   const gifted = cards?.gifted ?? [];
   if (owned.length === 0 && gifted.length === 0) {
     return (
-      <Text testID="gift-cards-empty" fontSize={13} color="$muted">
-        {t('mweb.giftCards.myCardsEmpty')}
-      </Text>
+      <EmptyState
+        testID="gift-cards-empty"
+        icon="card-giftcard"
+        title={t('mweb.giftCards.myCardsEmpty')}
+      />
     );
   }
 
   return (
     <YStack gap={16}>
       {notice ? (
-        <Text testID="gift-cards-notice" fontSize={12.5} fontWeight="700" color="$primary">
+        <Text testID="gift-cards-notice" fontSize={13} fontWeight="600" color="$primary">
           {notice}
         </Text>
       ) : null}
@@ -70,9 +74,7 @@ export function MyGiftCardsList({ cards, loading, error, currency, senderName }:
       ))}
       {gifted.length > 0 ? (
         <YStack gap={12}>
-          <Text fontSize={15} fontWeight="700" color="$color">
-            {t('mweb.giftCards.giftedHeading')}
-          </Text>
+          <SectionHeader title={t('mweb.giftCards.giftedHeading')} />
           {gifted.map((card) => (
             <GiftCardRow
               key={card.id}

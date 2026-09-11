@@ -1,7 +1,8 @@
-import { Avatar, Box, ButtonBase, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { DuncitIconButton } from '@duncit/buttons';
+import { Box, ButtonBase, Stack, Typography } from '@mui/material';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
+import { DuncitRoundButton } from '@duncit/buttons';
+import { HEADER_BUTTON_SX } from '../support-chat/calmStyles';
 
 interface ChatRoomHeaderProps {
   title?: string;
@@ -22,26 +23,24 @@ export default function ChatRoomHeader({
   return (
     <Stack
       direction="row"
-      spacing={1}
+      spacing={1.5}
       sx={{
         alignItems: "center",
         px: { xs: 1.25, sm: 2 },
         py: 1,
-        bgcolor: 'rgba(0,0,0,0.08)',
-        backdropFilter: 'blur(14px)'
+        bgcolor: 'background.default',
       }}>
-      <DuncitIconButton onClick={onBack} sx={{ bgcolor: 'action.hover' }}>
-        <ArrowBackIcon />
-      </DuncitIconButton>
+      <DuncitRoundButton onClick={onBack} sx={HEADER_BUTTON_SX}>
+        <ArrowBackRoundedIcon />
+      </DuncitRoundButton>
       <ButtonBase
         data-testid="chat-room-open-pod"
         onClick={onOpenPod}
         aria-label={`Open pod details for ${label}`}
-        sx={{ flex: 1, minWidth: 0, borderRadius: '16px', py: 0.5, justifyContent: 'flex-start' }}
+        sx={{ flex: 1, minWidth: 0, borderRadius: '14px', py: 0.5, justifyContent: 'flex-start' }}
       >
-        <Avatar sx={{ width: 38, height: 38, bgcolor: 'primary.main', mr: 1 }}>{label.charAt(0)}</Avatar>
         <Box sx={{ minWidth: 0, flex: 1, textAlign: 'left' }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.1 }} noWrap>
+          <Typography component="h1" sx={{ fontSize: '1.0625rem', fontWeight: 600, lineHeight: 1.2 }} noWrap>
             {label}
           </Typography>
           <Typography
@@ -49,12 +48,12 @@ export default function ChatRoomHeader({
             noWrap
             sx={{
               color: "text.secondary",
-              fontWeight: 600
+              fontWeight: 500
             }}>
             {messageCount} message{messageCount === 1 ? '' : 's'}
           </Typography>
         </Box>
-        <ChevronRightIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+        <ChevronRightRoundedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
       </ButtonBase>
     </Stack>
   );

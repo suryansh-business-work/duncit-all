@@ -19,7 +19,7 @@ export function CategorySummaryBanner({
   onChange,
 }: Readonly<{ labels: CategoryLabels; onChange: () => void }>) {
   const { t } = useTranslation();
-  const { color: ink, primary } = useThemeColors();
+  const { primary } = useThemeColors();
   const text = summary(labels);
   if (!text) return null;
   return (
@@ -28,17 +28,20 @@ export function CategorySummaryBanner({
       alignItems="center"
       justifyContent="space-between"
       gap={10}
-      padding={12}
+      paddingHorizontal={16}
+      paddingVertical={12}
       marginHorizontal={16}
-      marginTop={12}
-      borderRadius={12}
-      backgroundColor="$color2"
+      marginTop={8}
+      borderRadius={16}
+      borderWidth={1}
+      borderColor="$cardBorder"
+      backgroundColor="$surface"
     >
       <YStack flex={1} gap={2}>
-        <Text fontSize={11} fontWeight="600" opacity={0.6} color={ink}>
+        <Text fontSize={12} fontWeight="600" color="$muted">
           CATEGORY
         </Text>
-        <Text fontSize={13} fontWeight="700" color={ink}>
+        <Text fontSize={14} fontWeight="600" color="$color">
           {text}
         </Text>
       </YStack>

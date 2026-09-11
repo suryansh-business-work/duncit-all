@@ -1,9 +1,11 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Input, Spinner, Text, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { TabScreen } from '@/components/TabScreen';
 import { AdCard } from '@/components/ads/AdCard';
+import { EmptyState } from '@/components/EmptyState';
+import { SearchPill } from '@/components/pod-list/SearchPill';
 import { interleaveAds, isAdEntry } from '@/components/ads/interleaveAds';
 import { VenueCard, VenuesLocationBar } from '@/components/hosts-venues';
 import { useActiveAds } from '@/hooks/useActiveAds';
@@ -31,15 +33,15 @@ export function VenuesScreen() {
             last venue has to clear the floating bar itself. */}
         <YStack gap={12} padding={16} paddingBottom={bottomSpace}>
           <VenuesLocationBar cityLabel={cityLabel} />
-          <Input
-            testID="venues-search"
-            aria-label={t('mweb.venues.searchVenues')}
-            placeholder={t('mweb.venues.searchVenuesByNameTypeOr')}
-            placeholderTextColor="$muted"
-            value={searchInput}
-            onChangeText={setSearchInput}
-            backgroundColor="$surface"
-          />
+          <XStack>
+            <SearchPill
+              testID="venues-search"
+              ariaLabel={t('mweb.venues.searchVenues')}
+              placeholder={t('mweb.venues.searchVenuesByNameTypeOr')}
+              value={searchInput}
+              onChangeText={setSearchInput}
+            />
+          </XStack>
           {isLoading ? <Spinner testID="venues-loading" color="$primary" /> : null}
           {!isLoading && error ? (
             <Text testID="venues-error" fontSize={13} color="$danger">
@@ -47,9 +49,11 @@ export function VenuesScreen() {
             </Text>
           ) : null}
           {!isLoading && !error && venues.length === 0 ? (
-            <Text testID="venues-empty" fontSize={13} color="$muted">
-              No venues found here yet — try another search or category.
-            </Text>
+            <EmptyState
+              icon="storefront"
+              title="No venues found here yet — try another search or category."
+              testID="venues-empty"
+            />
           ) : null}
           {interleaveAds(venues, ads, 4).map((entry) => {
             if (isAdEntry(entry)) {

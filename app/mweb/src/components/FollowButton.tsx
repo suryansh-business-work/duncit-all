@@ -12,6 +12,17 @@ const ICONS: Record<FollowStatus, React.ReactNode> = {
   FOLLOWING: <HowToRegIcon />,
 };
 
+/** The live states (a pending ask, an existing follow) read as a soft pill;
+ * the resting Follow is the green one. Min-height keeps the coarse-pointer
+ * 44px rule off a small pill. */
+const SOFT_SX = {
+  minHeight: 32,
+  bgcolor: 'action.hover',
+  color: 'text.primary',
+  '&:hover': { bgcolor: 'action.selected' },
+} as const;
+const GREEN_SX = { minHeight: 32 } as const;
+
 interface Props {
   status: FollowStatus;
   /** Whether this person already follows the viewer — the resting state then
@@ -25,8 +36,8 @@ interface Props {
 }
 
 /** Follow / Follow Back / Requested / Following. REQUESTED is a real, tappable
- * state — it withdraws the pending ask — so it is styled as an outlined button
- * rather than a disabled one. Twin of native's <FollowStatusButton/> (rule 27). */
+ * state — it withdraws the pending ask — so it is a soft pill rather than a
+ * disabled one. Twin of native's <FollowStatusButton/> (rule 27). */
 export default function FollowButton({
   status,
   followsViewer,
@@ -35,13 +46,14 @@ export default function FollowButton({
   onToggle,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const resting = status === 'NONE';
   return (
     <DuncitButton
       size="small"
-      variant={status === 'FOLLOWING' ? 'contained' : 'outlined'}
-      color={status === 'NONE' ? 'inherit' : 'primary'}
-      startIcon={loading ? <CircularProgress size={14} /> : ICONS[status]}
+      variant={resting ? 'contained' : 'text'}
+      startIcon={loading ? <CircularProgress size={14} color="inherit" /> : ICONS[status]}
       disabled={disabled || loading}
+      sx={resting ? GREEN_SX : SOFT_SX}
       onClick={(event) => {
         event.stopPropagation();
         // Returned, not dropped: DuncitButton spins on a promise-returning

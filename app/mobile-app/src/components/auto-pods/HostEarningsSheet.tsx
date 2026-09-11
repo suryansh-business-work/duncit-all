@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
-import { XStack, YStack } from 'tamagui';
 import type { AutoPodLabels, AutoPodRow } from '@duncit/utils';
 
+import { DuncitButton } from '@/components/DuncitButton';
 import { DuncitDialog } from '@/components/DuncitDialog';
-import { PillButton } from '@/components/attendance/AttendanceOtpControls';
 import { HostEarningsFields } from '@/components/auto-pods/HostEarningsFields';
 import { useAutoPodPricing } from '@/hooks/useAutoPodPricing';
 
@@ -41,17 +40,12 @@ export function HostEarningsSheet({
   }, [row, host, onEarnings]);
 
   const footer = (
-    <XStack gap={10}>
-      <YStack flex={1}>
-        <PillButton
-          testID="auto-pod-earnings-close"
-          label={labels.close}
-          onPress={onClose}
-          variant="solid"
-          disabled={false}
-        />
-      </YStack>
-    </XStack>
+    <DuncitButton
+      testID="auto-pod-earnings-close"
+      label={labels.close}
+      onPress={onClose}
+      fullWidth
+    />
   );
 
   return (

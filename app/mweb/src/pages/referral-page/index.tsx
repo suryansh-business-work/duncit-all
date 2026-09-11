@@ -1,15 +1,14 @@
 import { useQuery } from '@apollo/client/react';
 import {
   Alert,
-  Box,
+  Avatar,
   Card,
-  CardContent,
   Chip,
   CircularProgress,
+  Divider,
   Stack,
   Typography,
 } from '@mui/material';
-import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import { referralLink, renderReferralMessage } from '@duncit/utils';
 import { useShareUrl } from '../../lib/share-link';
 import { notifySuccess } from '../../components/notify';
@@ -87,38 +86,7 @@ export default function ReferralPage() {
   const friends = referral.referred;
 
   return (
-    <Stack spacing={2.25} sx={{ maxWidth: 640, mx: 'auto', width: '100%' }}>
-      <Stack direction="row" spacing={1.25} sx={{
-        alignItems: "center"
-      }}>
-        <Box
-          sx={{
-            width: 38,
-            height: 38,
-            borderRadius: '50%',
-            display: 'grid',
-            placeItems: 'center',
-            color: 'primary.contrastText',
-            bgcolor: 'primary.main',
-          }}
-        >
-          <CardGiftcardIcon fontSize="small" />
-        </Box>
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
-            {t('mweb.referral.title')}
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              color: "text.secondary",
-              fontWeight: 600
-            }}>
-            {t('mweb.referral.subtitle')}
-          </Typography>
-        </Box>
-      </Stack>
-
+    <Stack spacing={3} sx={{ maxWidth: 640, mx: 'auto', width: '100%' }}>
       <ReferralCodeCard
         referral={referral}
         onCopyCode={() => void copy(referral.code, t('mweb.referral.codeCopied'))}
@@ -126,53 +94,42 @@ export default function ReferralPage() {
         onShare={() => void share()}
       />
 
-      <Card variant="outlined">
-        <CardContent>
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{
-              alignItems: "center",
-              mb: 1
-            }}>
-            <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }}>
-              {t('mweb.referral.friendsTitle')}
-            </Typography>
-            <Chip size="small" label={friends.length} />
-          </Stack>
-          {friends.length === 0 ? (
-            <Alert severity="info">{t('mweb.referral.empty')}</Alert>
-          ) : (
-            <Stack spacing={1}>
+      <Stack spacing={1.5}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <Typography component="h2" sx={{ flex: 1, fontSize: '1.05rem', fontWeight: 600 }}>
+            {t('mweb.referral.friendsTitle')}
+          </Typography>
+          <Chip size="small" label={friends.length} />
+        </Stack>
+        {friends.length === 0 ? (
+          <Typography variant="body2" sx={{ color: 'text.secondary', py: 2, textAlign: 'center' }}>
+            {t('mweb.referral.empty')}
+          </Typography>
+        ) : (
+          <Card>
+            <Stack divider={<Divider />}>
               {friends.map((entry) => (
                 <Stack
                   key={entry.user_id}
                   direction="row"
-                  spacing={1}
-                  sx={{
-                    alignItems: "center",
-                    p: 1.25,
-                    borderRadius: 2,
-                    border: 1,
-                    borderColor: 'divider'
-                  }}>
-                  <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 600 }} noWrap>
+                  spacing={1.5}
+                  sx={{ alignItems: 'center', px: 2, py: 1.5 }}
+                >
+                  <Avatar sx={{ width: 40, height: 40, fontSize: 16, fontWeight: 600, bgcolor: 'action.hover', color: 'text.primary' }}>
+                    {(entry.full_name || t('mweb.referral.newMember')).charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }} noWrap>
                     {entry.full_name || t('mweb.referral.newMember')}
                   </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: "text.secondary",
-                      fontWeight: 700
-                    }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                     {formatRelative(entry.referred_at)} ago
                   </Typography>
                 </Stack>
               ))}
             </Stack>
-          )}
-        </CardContent>
-      </Card>
+          </Card>
+        )}
+      </Stack>
     </Stack>
   );
 }

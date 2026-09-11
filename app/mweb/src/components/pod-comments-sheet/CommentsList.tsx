@@ -45,11 +45,11 @@ export default function CommentsList({
               role="button"
               tabIndex={0}
               aria-label={t('mweb.podDetails.openProfileOf', { vars: { name: authorName } })}
-              sx={{ cursor: 'pointer', flex: '0 0 auto' }}
+              sx={{ cursor: 'pointer', flex: '0 0 auto', width: 36, height: 36, bgcolor: 'action.hover', color: 'text.primary' }}
             >
               {(c.author_name || '?').slice(0, 1).toUpperCase()}
             </Avatar>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ flex: 1, minWidth: 0, px: 1.5, py: 1, borderRadius: '16px', bgcolor: 'action.hover' }}>
               <Stack direction="row" spacing={1} sx={{
                 alignItems: "center"
               }}>
@@ -84,13 +84,13 @@ export default function CommentsList({
                 onClick={() => onToggleLike(c.id)}
               >
                 {liked ? (
-                  <FavoriteIcon fontSize="small" color="primary" />
+                  <FavoriteIcon fontSize="small" color="secondary" />
                 ) : (
-                  <FavoriteBorderIcon fontSize="small" />
+                  <FavoriteBorderIcon fontSize="small" sx={{ color: 'text.secondary' }} />
                 )}
               </DuncitIconButton>
               {c.like_count > 0 && (
-                <Typography variant="caption" color={liked ? 'primary.main' : 'text.secondary'}>
+                <Typography variant="caption" color={liked ? 'secondary.main' : 'text.secondary'}>
                   {c.like_count}
                 </Typography>
               )}

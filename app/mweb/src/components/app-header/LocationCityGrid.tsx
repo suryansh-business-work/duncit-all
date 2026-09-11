@@ -1,5 +1,6 @@
 import { Box, Typography } from '@mui/material';
 import LocationCityCard from './LocationCityCard';
+import LocationSectionLabel from './LocationSectionLabel';
 import type { LocationLike } from '../../utils/location-tree';
 
 interface Props {
@@ -9,49 +10,29 @@ interface Props {
 }
 
 export default function LocationCityGrid({ cities, draftLocationId, onSelect }: Readonly<Props>) {
-  const popularId = cities.reduce<LocationLike | null>((best, loc) => {
-    if (!best) return loc;
-    return (loc.location_zones?.length ?? 0) > (best.location_zones?.length ?? 0) ? loc : best;
-  }, null)?.id;
-
   return (
-    <>
-      <Typography
-        variant="overline"
-        sx={{
-          color: "text.secondary",
-          fontWeight: 700,
-          lineHeight: 1.4
-        }}>
-        City
-      </Typography>
+    <Box>
+      <LocationSectionLabel>City</LocationSectionLabel>
       <Box
         sx={{
           display: 'grid',
           gridAutoFlow: 'column',
-          gridAutoColumns: { xs: 'minmax(94px, 32%)', sm: 'minmax(126px, 1fr)' },
+          gridAutoColumns: '110px',
           gap: 1,
-          mt: 0.5,
-          mb: 1.5,
           pb: 0.5,
           overflowX: 'auto',
           scrollbarWidth: 'none',
           '&::-webkit-scrollbar': { display: 'none' },
         }}
       >
-        {cities.map((city, index) => {
-          const active = city.id === draftLocationId;
-          return (
-            <LocationCityCard
-              key={city.id}
-              location={city}
-              active={active}
-              popular={!active && city.id === popularId}
-              index={index}
-              onSelect={() => onSelect(city.id)}
-            />
-          );
-        })}
+        {cities.map((city) => (
+          <LocationCityCard
+            key={city.id}
+            location={city}
+            active={city.id === draftLocationId}
+            onSelect={() => onSelect(city.id)}
+          />
+        ))}
         {cities.length === 0 && (
           <Typography variant="body2" sx={{
             color: "text.secondary"
@@ -60,6 +41,6 @@ export default function LocationCityGrid({ cities, draftLocationId, onSelect }: 
           </Typography>
         )}
       </Box>
-    </>
+    </Box>
   );
 }

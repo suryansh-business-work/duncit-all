@@ -1,3 +1,4 @@
+import type { FollowStatus } from './follow-status';
 import { phoneKey } from './pod-attendance';
 
 /**
@@ -111,10 +112,6 @@ export const isInvited = (row: InvitableContact): boolean => Boolean(row.invited
 export const invitableName = (row: InvitableContact): string =>
   row.contact_label.trim() || row.phone_key;
 
-/** The keys still waiting — what "Invite all" sends and what a header counts. */
-export const pendingInviteKeys = (rows: readonly InvitableContact[]): string[] =>
-  rows.filter((row) => !isInvited(row)).map((row) => row.phone_key);
-
 /**
  * One key in or out of the selection.
  *
@@ -126,15 +123,60 @@ export function toggleInviteKey(selected: readonly string[], key: string): strin
 }
 
 /**
- * Which bulk button is mid-flight, or null.
- *
- * Named rather than inferred from the key list: "Invite all" pressed while rows
- * happen to be ticked sends the same empty list it always does, and a spinner
- * that reads the selection to decide would put itself on the other button.
+ * The rows with the numbers an invite press sent marked invited at `at` — what
+ * both surfaces show instead of re-reading a phone book's worth of rows.
  */
-export type InviteBulkPress = 'SELECTED' | 'ALL';
+export function markInvited<T extends InvitableContact>(
+  rows: readonly T[],
+  sentKeys: readonly string[],
+  at: string
+): T[] {
+  const sent = new Set(sentKeys);
+  return rows.map((row) => (sent.has(row.phone_key) ? { ...row, invited_at: at } : row));
+}
 
-/** What one press of Invite / Invite all reported back. */
+/** The words a contact to invite is found by: the saved name, and the number. */
+export const invitableSearchText = (row: InvitableContact): string[] => [
+  row.contact_label,
+  row.phone_key,
+];
+
+/** The part of a matched contact's row the helpers below read. */
+export interface MatchedContactLike {
+  contact_label: string;
+  profile: {
+    user_id: string;
+    full_name?: string | null;
+    first_name?: string | null;
+    username?: string | null;
+  };
+}
+
+/** The words a matched contact is found by — both surfaces search on exactly these. */
+export const contactSearchText = (row: MatchedContactLike): (string | null | undefined)[] => [
+  row.profile.full_name,
+  row.profile.first_name,
+  row.profile.username,
+  row.contact_label,
+];
+
+/**
+ * The list after one follow tap settled on `status` — only that person's row
+ * changes, so a follow never re-reads the whole list.
+ */
+export function withFollowStatus<T extends MatchedContactLike>(
+  rows: readonly T[],
+  userId: string,
+  status: FollowStatus
+): T[] {
+  return rows.map((row) => {
+    if (row.profile.user_id !== userId) return row;
+    const profile = { ...row.profile, follow_status: status, is_following: status === 'FOLLOWING' };
+    return { ...row, profile };
+  });
+}
+
+/** What one invite press reported back. */
 export interface InviteOutcome {
   sent: number;
   failed: number;

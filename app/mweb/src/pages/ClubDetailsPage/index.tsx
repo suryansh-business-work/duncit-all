@@ -48,7 +48,7 @@ export default function ClubDetailsPage() {
     club ? { id: club.location_id, zone: club.locality } : null,
   );
 
-  const { data, loading, error } = useQuery<any>(CLUB_DETAILS_RELATED, {
+  const { data, error } = useQuery<any>(CLUB_DETAILS_RELATED, {
     variables: { id: clubId },
     skip: !clubId,
     fetchPolicy: 'cache-and-network',
@@ -56,12 +56,14 @@ export default function ClubDetailsPage() {
 
   const { data: catData } = useQuery<any>(CATEGORY_TREE, { fetchPolicy: 'cache-first' });
 
-  // The related query is still pending whenever the slug has resolved to an id
-  // but that query has not returned yet — this covers the render gap between the
-  // slug resolving and CLUB_DETAILS_RELATED starting, so the skeleton shows
-  // instead of a club page with no pods, venues or members on it.
-  const detailsPending = !!clubId && !error && (loading || !data);
-  if (slugQuery.loading || detailsPending) return <ClubDetailsSkeleton />;
+  // Both halves wait on DATA, never on `loading` (see PodDetailsPage): with
+  // `cache-and-network` a revisit has the cached club while `loading` is still
+  // true, so gating on it showed the skeleton on every Back. Waiting on `data`
+  // still covers the gap between the slug resolving and CLUB_DETAILS_RELATED
+  // starting, so a club never flashes with no pods, venues or members on it.
+  const slugPending = slugQuery.loading && !slugQuery.data;
+  const detailsPending = !!clubId && !error && !data;
+  if (slugPending || detailsPending) return <ClubDetailsSkeleton />;
   // The slug lookup FAILING is not the same as the club not existing. A request
   // the retry link will not retry — an abort, a 4xx — left `club` undefined with
   // no error of its own on the related query, and that fell straight through to

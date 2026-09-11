@@ -32,7 +32,7 @@ export function ClubDetailsScreen() {
   const goBack = useGoBack();
   const route = useRoute<RouteProp<RootStackParamList, 'ClubDetails'>>();
   // Doc id from in-app nav, or resolved from a shared /club/:clubSlug link.
-  const clubId = useResolvedClubId(route.params);
+  const { clubId, resolving } = useResolvedClubId(route.params);
   const { club, pods, members, followingUserIds, categoryCrumbs, isLoading, followingInitially } =
     useClubDetails(clubId);
   const {
@@ -95,13 +95,18 @@ export function ClubDetailsScreen() {
     </YStack>
   );
 
+  // A shared link is still being resolved to a club — hold the skeleton, as
+  // PodDetailsScreen does, instead of reading "This club is unavailable." for the
+  // whole lookup.
+  const showSkeleton = resolving || (isLoading && !club);
+
   return (
     <YStack flex={1} testID="club-details-screen">
       <AppBackground />
       {/* Top safe-area: page content must never overlap the device's
           notification/status bar (matches the StackScreen scaffold). */}
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-        {isLoading && !club ? <DetailSkeleton testID="club-details-loading" /> : content}
+        {showSkeleton ? <DetailSkeleton testID="club-details-loading" /> : content}
       </SafeAreaView>
       <LocationMismatchDialog kind="CLUB" {...locationPrompt} />
     </YStack>

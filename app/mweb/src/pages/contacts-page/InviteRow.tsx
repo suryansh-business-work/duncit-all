@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Avatar, Checkbox, Chip, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import { invitableName, isInvited, type InvitableContact } from '@duncit/utils';
@@ -13,9 +14,10 @@ interface Props {
 
 /** One contact who is not on Duncit: the name it is saved under, a tick box for
  * a bulk invite and its own Invite button. An already-invited row keeps its
- * badge and neither tick nor button — one invite per number, for good. Twin of
- * native `InviteRow` (rule 27). */
-export default function InviteRow({ row, selected, busy, onToggleSelect, onInvite }: Readonly<Props>) {
+ * badge and neither tick nor button — one invite per number, for good.
+ * Memoised: it is one row of a windowed list thousands long. Twin of native
+ * `InviteRow` (rule 27). */
+export default memo(function InviteRow({ row, selected, busy, onToggleSelect, onInvite }: Readonly<Props>) {
   const { t } = useTranslation();
   const name = invitableName(row);
   const invited = isInvited(row);
@@ -53,4 +55,4 @@ export default function InviteRow({ row, selected, busy, onToggleSelect, onInvit
       )}
     </Stack>
   );
-}
+});

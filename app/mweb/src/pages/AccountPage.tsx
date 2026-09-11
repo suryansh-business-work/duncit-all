@@ -91,7 +91,9 @@ export default function AccountPage() {
     ctxLogout();
   };
 
-  if (loading) {
+  // Only a first load with nothing cached shows the spinner — `loading` alone is
+  // also true on a cached revisit and on every refetch (see PodDetailsPage).
+  if (loading && !data) {
     return (
       <Stack
         sx={{

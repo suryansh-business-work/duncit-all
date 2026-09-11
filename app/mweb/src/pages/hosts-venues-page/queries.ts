@@ -41,11 +41,15 @@ export const PUBLIC_VENUES = gql`
   }
 `;
 
+/** Every follow mutation answers with BOTH of the viewer's lists, so a caller
+ * can read the status the server settled on — a private profile lands on
+ * requested, not following — the way native's `runUserFollowAction` does. */
 export const FOLLOW_USER = gql`
   mutation FollowUser($user_id: ID!) {
     followUser(user_id: $user_id) {
       user_id
       following_user_ids
+      requested_user_ids
     }
   }
 `;
@@ -55,6 +59,7 @@ export const UNFOLLOW_USER = gql`
     unfollowUser(user_id: $user_id) {
       user_id
       following_user_ids
+      requested_user_ids
     }
   }
 `;
@@ -66,6 +71,7 @@ export const CANCEL_FOLLOW_REQUEST = gql`
     cancelFollowRequest(user_id: $user_id) {
       user_id
       following_user_ids
+      requested_user_ids
     }
   }
 `;

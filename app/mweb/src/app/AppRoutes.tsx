@@ -1,8 +1,8 @@
-import { JSX, Suspense, lazy, useEffect } from 'react';
+import { JSX, lazy, useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
-import { Box, CircularProgress } from '@mui/material';
 import { useProductVisibility } from '@duncit/app-settings';
 import { RedirectIfAuthed, RequireAuth } from './AuthGuards';
+import RouteFallback from './RouteFallback';
 
 // Route-level code splitting: every page is loaded on demand so the initial
 // bundle stays small (first paint downloads only the shell + the landing route)
@@ -135,12 +135,6 @@ function PartnerRedirect({ path }: Readonly<{ path: string }>) {
   return null;
 }
 
-const routeFallback = (
-  <Box sx={{ display: 'grid', placeItems: 'center', minHeight: '40dvh' }}>
-    <CircularProgress />
-  </Box>
-);
-
 /**
  * Product routes exist only while the `is_product_visible` system flag is on.
  * With it off they are not 404s — they are pages the app currently has no
@@ -152,7 +146,7 @@ const routeFallback = (
  */
 function RequireProducts({ children }: Readonly<{ children: JSX.Element }>) {
   const { pending, visible } = useProductVisibility();
-  if (pending) return routeFallback;
+  if (pending) return <RouteFallback />;
   if (!visible) return <Navigate to="/" replace />;
   return children;
 }
@@ -162,8 +156,9 @@ const withProducts = (element: JSX.Element) => withAuth(<RequireProducts>{elemen
 
 
 export default function AppRoutes({ superCategory, locationId, zoneName }: Readonly<Props>) {
+  // The Suspense boundary for these lazy pages lives in App, ABOVE the keyed
+  // page wrapper — see the note there.
   return (
-    <Suspense fallback={routeFallback}>
       <Routes>
         <Route
           path="/"
@@ -350,6 +345,5 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/forgot-password" element={redirectIfAuthed(<ForgotPasswordPage />)} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-    </Suspense>
   );
 }

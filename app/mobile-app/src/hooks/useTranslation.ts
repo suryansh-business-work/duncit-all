@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { createTranslator, type Translator } from '@duncit/i18n';
 
 import { NATIVE_FALLBACK_FLAT } from '@/i18n/fallback';
@@ -34,12 +34,22 @@ export function useTranslation(): Translator & { setLocale: (code: string) => Pr
     hydrate(userLocale);
   }, [hydrated, hydrate, userLocale, applied]);
 
-  const translator = createTranslator({
-    locale,
-    isRtl,
-    fallback: NATIVE_FALLBACK_FLAT,
-    server: catalogue,
-  });
+  // Built once per locale/catalogue, not per render. createTranslator merges the
+  // whole bundled fallback (~3.7k keys) with the server catalogue, and this hook
+  // runs in hundreds of components — every PodCard among them — so a fresh one
+  // each render was a full catalogue copy per component per render. It also gave
+  // `t` a new identity every render, which re-ran every effect and memo that
+  // lists `t` as a dependency.
+  const translator = useMemo(
+    () =>
+      createTranslator({
+        locale,
+        isRtl,
+        fallback: NATIVE_FALLBACK_FLAT,
+        server: catalogue,
+      }),
+    [locale, isRtl, catalogue],
+  );
 
-  return { ...translator, setLocale };
+  return useMemo(() => ({ ...translator, setLocale }), [translator, setLocale]);
 }

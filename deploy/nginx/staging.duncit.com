@@ -7,11 +7,14 @@
 # staging.duncit.com` patches in the 443 listeners on the host. Do not add the
 # Certbot-managed `listen 443 ssl` lines here — they are generated on the host.
 #
+# Every block carries `http2 on;` — see deploy/nginx/duncit.com for why.
+#
 # signoz/sonarqube have no staging replica, so they have no block here.
 
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.duncit.com;
     client_max_body_size 25m;
 
@@ -44,6 +47,7 @@ map $http_origin $staging_cors_allow_credentials {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.server.duncit.com;
 
     client_max_body_size 25m;
@@ -164,6 +168,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.admin.duncit.com;
     client_max_body_size 25m;
 
@@ -183,6 +188,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.mweb.duncit.com;
     client_max_body_size 25m;
 
@@ -202,6 +208,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.partners.duncit.com;
     client_max_body_size 25m;
 
@@ -221,6 +228,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.partners-app.duncit.com;
     client_max_body_size 25m;
 
@@ -240,6 +248,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.ads.duncit.com;
     client_max_body_size 25m;
 
@@ -259,6 +268,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.ads-portal.duncit.com;
     client_max_body_size 25m;
 
@@ -278,6 +288,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.crm.duncit.com;
     client_max_body_size 25m;
 
@@ -297,6 +308,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.finance.duncit.com;
     client_max_body_size 25m;
 
@@ -316,6 +328,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.tech.duncit.com;
     client_max_body_size 25m;
 
@@ -335,6 +348,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.support.duncit.com;
     client_max_body_size 25m;
 
@@ -354,6 +368,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.website.duncit.com;
     client_max_body_size 25m;
 
@@ -373,6 +388,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.legal.duncit.com;
     client_max_body_size 25m;
 
@@ -392,6 +408,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.ai.duncit.com;
     client_max_body_size 25m;
 
@@ -411,6 +428,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.products.duncit.com;
     client_max_body_size 25m;
 
@@ -430,6 +448,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.marketing.duncit.com;
     client_max_body_size 25m;
 
@@ -449,6 +468,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.onboarding.duncit.com;
     client_max_body_size 25m;
 
@@ -468,6 +488,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.hr.duncit.com;
     client_max_body_size 25m;
 
@@ -487,6 +508,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.employee.duncit.com;
     client_max_body_size 25m;
 
@@ -506,6 +528,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.status.duncit.com;
     client_max_body_size 25m;
 
@@ -525,6 +548,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.native.duncit.com;
     client_max_body_size 25m;
 
@@ -544,6 +568,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.earnwith.duncit.com;
     client_max_body_size 25m;
 
@@ -563,6 +588,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.challenge.duncit.com;
     client_max_body_size 25m;
 
@@ -582,6 +608,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.developers.duncit.com;
     client_max_body_size 25m;
 
@@ -601,6 +628,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.regional-club-admin.duncit.com;
     client_max_body_size 25m;
 
@@ -622,6 +650,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.venues.duncit.com;
     client_max_body_size 25m;
 
@@ -642,6 +671,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.clubs.duncit.com;
     client_max_body_size 25m;
 
@@ -662,6 +692,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.club-admins.duncit.com;
     client_max_body_size 25m;
 
@@ -682,6 +713,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.hosts.duncit.com;
     client_max_body_size 25m;
 
@@ -702,6 +734,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.pods.duncit.com;
     client_max_body_size 25m;
 
@@ -724,6 +757,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.open-wa-server.duncit.com;
     client_max_body_size 50m;
 
@@ -748,6 +782,7 @@ server {
 server {
     listen 80;
     listen [::]:80;
+    http2 on;
     server_name staging.redis.duncit.com;
     client_max_body_size 5m;
 

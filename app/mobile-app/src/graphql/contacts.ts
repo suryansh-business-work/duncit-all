@@ -8,22 +8,26 @@ import { gql } from '@/generated/graphql';
  * silently skipped and `gql()` would return nothing at runtime.
  */
 
-/** The viewer's matched contacts, filtered server-side by name and city. */
-export const ContactsOnDuncitDocument = gql(`
-  query MobileContactsOnDuncit($search: String, $nearby: Boolean) {
-    contactsOnDuncit(search: $search, nearby: $nearby) {
-      contact_label
-      is_nearby
-      profile {
-        user_id
-        username
-        full_name
-        first_name
-        profile_photo
-        city
-        is_following
-        follow_status
-        follows_viewer
+/** One page of the viewer's matched contacts, and how many there are in all.
+ * Search and the same-city switch run on the device over what has landed. */
+export const ContactsOnDuncitPageDocument = gql(`
+  query MobileContactsOnDuncitPage($offset: Int, $limit: Int) {
+    contactsOnDuncitPage(offset: $offset, limit: $limit) {
+      total
+      rows {
+        contact_label
+        is_nearby
+        profile {
+          user_id
+          username
+          full_name
+          first_name
+          profile_photo
+          city
+          is_following
+          follow_status
+          follows_viewer
+        }
       }
     }
   }
@@ -47,31 +51,32 @@ export const MyContactsSyncDocument = gql(`
   }
 `);
 
+/** One slice of a phone book. The first slice omits `batch.sync_id` and every
+ * later one passes back the id it was given. */
 export const SyncContactsDocument = gql(`
-  mutation MobileSyncContacts($entries: [ContactEntryInput!]!) {
-    syncContacts(entries: $entries) {
-      submitted
-      matched
-      new_matches
-      invitable
-      synced_at
+  mutation MobileSyncContacts($entries: [ContactEntryInput!]!, $batch: ContactSyncBatchInput) {
+    syncContacts(entries: $entries, batch: $batch) {
+      sync_id
     }
   }
 `);
 
-/** The phone-book numbers that reached nobody — who an invite is for. */
-export const ContactsToInviteDocument = gql(`
-  query MobileContactsToInvite($search: String) {
-    contactsToInvite(search: $search) {
-      phone_key
-      contact_label
-      invited_at
+/** One page of the phone-book numbers that reached nobody — who an invite is for. */
+export const ContactsToInvitePageDocument = gql(`
+  query MobileContactsToInvitePage($offset: Int, $limit: Int) {
+    contactsToInvitePage(offset: $offset, limit: $limit) {
+      total
+      rows {
+        phone_key
+        contact_label
+        invited_at
+      }
     }
   }
 `);
 
-/** Text an invite to one contact, to the ticked ones, or to everyone still
- * waiting — an empty list means everyone. */
+/** Text an invite to one contact or to the ticked ones. `sent_keys` is what the
+ * screen marks Invited, rather than re-reading the whole list. */
 export const InviteContactsDocument = gql(`
   mutation MobileInviteContacts($phone_keys: [String!]) {
     inviteContacts(phone_keys: $phone_keys) {
@@ -79,6 +84,7 @@ export const InviteContactsDocument = gql(`
       sent
       skipped
       failed
+      sent_keys
     }
   }
 `);

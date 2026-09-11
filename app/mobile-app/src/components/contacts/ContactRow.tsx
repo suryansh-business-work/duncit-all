@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
 import { followButtonLabelKey, readFollowStatus } from '@duncit/utils';
 
@@ -10,14 +11,21 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 interface Props {
   row: ContactRowData;
   busy: boolean;
-  onToggleFollow: () => void;
-  onOpen: () => void;
+  /** Stable across renders, so a memoised row only redraws when it changed. */
+  onToggleFollow: (row: ContactRowData) => void;
+  onOpen: (userId: string) => void;
 }
 
 /** Avatar, name, @handle, the phone-book name it was saved under and the
- * three-state follow button; the identity opens the profile. Twin of mWeb's
- * `ContactRow` (rule 27). */
-export function ContactRow({ row, busy, onToggleFollow, onOpen }: Readonly<Props>) {
+ * three-state follow button; the identity opens the profile. Memoised: it is
+ * one cell of a virtualised list thousands long. Twin of mWeb's `ContactRow`
+ * (rule 27). */
+export const ContactRow = memo(function ContactRow({
+  row,
+  busy,
+  onToggleFollow,
+  onOpen,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const { profile } = row;
   const name = profile.full_name || profile.first_name || row.contact_label;
@@ -43,7 +51,7 @@ export function ContactRow({ row, busy, onToggleFollow, onOpen }: Readonly<Props
         testID={`contact-open-${profile.user_id}`}
         role="button"
         aria-label={t('mweb.podDetails.openProfileOf', { vars: { name } })}
-        onPress={onOpen}
+        onPress={() => onOpen(profile.user_id)}
         alignItems="center"
         gap={12}
         flex={1}
@@ -97,8 +105,8 @@ export function ContactRow({ row, busy, onToggleFollow, onOpen }: Readonly<Props
         status={status}
         label={t(followButtonLabelKey(status, profile.follows_viewer))}
         busy={busy}
-        onPress={onToggleFollow}
+        onPress={() => onToggleFollow(row)}
       />
     </XStack>
   );
-}
+});

@@ -96,7 +96,10 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
             backgroundImage: 'var(--duncit-app-bg)',
             backgroundAttachment: 'fixed',
             backgroundSize: '180% 180%',
-            animation: 'duncit-bg-drift 36s ease-in-out infinite alternate',
+            // Static, like the native AppBackground. An infinite
+            // background-position drift repainted the full-screen gradient on
+            // every frame (60 paints/s while idle, measured), under the blurred
+            // header and bottom bar, and competed with every page transition.
             WebkitFontSmoothing: 'antialiased',
             MozOsxFontSmoothing: 'grayscale',
             position: 'relative',
@@ -104,11 +107,6 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
             width: '100%',
           },
           '#root': { width: '100%', minHeight: '100dvh' },
-          '@keyframes duncit-bg-drift': {
-            '0%': { backgroundPosition: '0% 0%' },
-            '50%': { backgroundPosition: '65% 18%' },
-            '100%': { backgroundPosition: '100% 0%' },
-          },
           '@keyframes duncit-soft-enter': {
             '0%': { opacity: 0.72 },
             '100%': { opacity: 1 },

@@ -1,15 +1,17 @@
 import { useCallback, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client/react';
+import { useApolloClient, useMutation } from '@apollo/client/react';
 import {
   inviteOutcomeKey,
+  markInvited,
   toggleInviteKey,
+  type ContactsPage,
   type InvitableContact,
-  type InviteBulkPress,
 } from '@duncit/utils';
 import { notifyError, notifySuccess } from '../../components/notify';
 import { useTranslation } from '../../i18n/useTranslation';
 import { parseApiError } from '../../utils/parseApiError';
-import { CONTACTS_TO_INVITE, INVITE_CONTACTS } from './queries';
+import { CONTACTS_TO_INVITE_PAGE, INVITE_CONTACTS } from './queries';
+import { useContactPages } from './useContactPages';
 
 /** What one press reported back. */
 interface InviteResult {
@@ -17,37 +19,37 @@ interface InviteResult {
   sent: number;
   skipped: number;
   failed: number;
+  sent_keys: string[];
 }
-
-/** Which control is mid-flight: one row's button, or one of the two bulk ones. */
-interface Busy {
-  key: string | null;
-  bulk: InviteBulkPress | null;
-}
-
-const IDLE: Busy = { key: null, bulk: null };
 
 /**
- * The invite tab's state: who is still to be asked, which of them are ticked,
- * and the three presses that text them — one row, the ticked ones, or everyone
- * still waiting.
- *
- * Each press says which control it came from rather than letting the spinner
- * infer it from the key list: "Invite all" sends an empty list whatever is
- * ticked, which is the same contract the mutation states. Twin of native
+ * The invite tab's state: every number still to be asked, streamed in page by
+ * page while the tab is open, which of them are ticked, and the two presses
+ * that text them — one row, or the ticked ones. A press marks the numbers that
+ * went (`sent_keys`) rather than re-reading the phone book. Twin of native
  * `useContactsInvite` (rule 27).
  */
-export function useContactsInvite(search: string, active: boolean) {
+export function useContactsInvite(active: boolean) {
   const { t } = useTranslation();
+  const client = useApolloClient();
   const [selected, setSelected] = useState<string[]>([]);
-  const [busy, setBusy] = useState<Busy>(IDLE);
-
-  const query = useQuery<any>(CONTACTS_TO_INVITE, {
-    variables: { search: search || null },
-    skip: !active,
-    fetchPolicy: 'cache-and-network',
-  });
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
   const [inviteContacts] = useMutation<any>(INVITE_CONTACTS);
+
+  const fetchPage = useCallback(
+    async (offset: number, limit: number): Promise<ContactsPage<InvitableContact>> => {
+      const { data } = await client.query<any>({
+        query: CONTACTS_TO_INVITE_PAGE,
+        variables: { offset, limit },
+        fetchPolicy: 'no-cache',
+      });
+      return data.contactsToInvitePage;
+    },
+    [client]
+  );
+  const pages = useContactPages(fetchPage, active);
+  const { patch } = pages;
 
   const toggleSelect = useCallback(
     (key: string) => setSelected((current) => toggleInviteKey(current, key)),
@@ -70,44 +72,40 @@ export function useContactsInvite(search: string, active: boolean) {
   );
 
   const run = useCallback(
-    async (keys: string[], pressed: Busy) => {
-      setBusy(pressed);
+    async (keys: string[]) => {
       try {
         const { data } = await inviteContacts({ variables: { phone_keys: keys } });
-        report(data.inviteContacts);
+        const result: InviteResult = data.inviteContacts;
+        report(result);
         setSelected([]);
-        await query.refetch();
+        patch((rows) => markInvited(rows, result.sent_keys, new Date().toISOString()));
       } catch (error) {
         notifyError(parseApiError(error));
-      } finally {
-        setBusy(IDLE);
       }
     },
-    [inviteContacts, query, report]
+    [inviteContacts, patch, report]
   );
 
-  const inviteRow = useCallback((key: string) => run([key], { key, bulk: null }), [run]);
-  const inviteSelected = useCallback(
-    () => run(selected, { key: null, bulk: 'SELECTED' }),
-    [run, selected]
+  const inviteRow = useCallback(
+    async (key: string) => {
+      setBusyKey(key);
+      try {
+        await run([key]);
+      } finally {
+        setBusyKey(null);
+      }
+    },
+    [run]
   );
-  // An empty list is the mutation's word for "everyone still waiting" — the
-  // page never has to enumerate a phone book to press this.
-  const inviteAll = useCallback(() => run([], { key: null, bulk: 'ALL' }), [run]);
 
-  const rows: InvitableContact[] = query.data?.contactsToInvite ?? [];
-  return {
-    rows,
-    loading: query.loading,
-    hasData: Boolean(query.data),
-    error: query.error?.message,
-    selected,
-    busyKey: busy.key,
-    bulkBusy: busy.bulk,
-    toggleSelect,
-    inviteRow,
-    inviteSelected,
-    inviteAll,
-    refetch: query.refetch,
-  };
+  const inviteSelected = useCallback(async () => {
+    setBulkBusy(true);
+    try {
+      await run(selected);
+    } finally {
+      setBulkBusy(false);
+    }
+  }, [run, selected]);
+
+  return { ...pages, selected, busyKey, bulkBusy, toggleSelect, inviteRow, inviteSelected };
 }

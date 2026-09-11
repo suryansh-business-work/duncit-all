@@ -16,7 +16,8 @@ import {
   invitableName,
   inviteOutcomeKey,
   isInvited,
-  pendingInviteKeys,
+  markInvited,
+  progressPercent,
   toggleInviteKey,
   fulfilmentLabel,
   isTerminalFulfilment,
@@ -1449,7 +1450,7 @@ export default defineDemos('utils', [
     id: 'contact-invite',
     title: 'Your Contacts on Duncit — the invite half',
     note:
-      'The phone book is reduced to comparable keys ON THE DEVICE, so the numbers themselves never travel. Move a number into already_invited and it drops out of what "Invite all" sends — one invite per number, for good. Set sent to 0 and the outcome key flips to the failed or held-back sentence, which is why both surfaces read it from here.',
+      'The phone book is reduced to comparable keys ON THE DEVICE, so the numbers themselves never travel. Move a number into already_invited and its row reads invited — one invite per number, for good; an invite press marks the ticked rows the same way without re-reading the list. Set sent to 0 and the outcome key flips to the failed or held-back sentence, which is why both surfaces read it from here.',
     mock: {
       phone_book: [
         { name: 'Ritu Malhotra', phones: ['+91 98765 43210'] },
@@ -1472,7 +1473,10 @@ export default defineDemos('utils', [
       return {
         'What leaves the device': entries.map((entry) => `${entry.phone_key} (${entry.label || 'no name'})`),
         'Rows read as': rows.map((row) => `${invitableName(row)} — ${isInvited(row) ? 'invited' : 'waiting'}`),
-        'Invite all sends': pendingInviteKeys(rows),
+        'After inviting the ticked rows': markInvited(rows, mock.ticked, '2026-09-11T09:30:00Z')
+          .filter(isInvited)
+          .map(invitableName),
+        'Progress bar once 1 of 3 pages is in': `${progressPercent(1, 3)}%`,
         'Ticking the first row again': toggleInviteKey(mock.ticked, firstKey),
         'Sentence the press earns': inviteOutcomeKey({ sent: mock.sent, failed: mock.failed }),
       };

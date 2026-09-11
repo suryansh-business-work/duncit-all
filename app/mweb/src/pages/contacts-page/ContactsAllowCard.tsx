@@ -1,8 +1,11 @@
 import { Alert, Card, CardContent, Stack, Typography } from '@mui/material';
 import ContactPhoneIcon from '@mui/icons-material/ContactPhone';
 import { DuncitButton } from '@duncit/buttons';
+import { progressPercent, type ContactSyncStage } from '@duncit/utils';
 import { useTranslation } from '../../i18n/useTranslation';
+import type { Translate } from '../../i18n/fallback';
 import { formatDateTime } from '../../utils/dateFormat';
+import { ContactsProgress } from './ContactsProgress';
 import type { ContactsSyncStatus } from './queries';
 import type { ContactsSyncFailure } from './useContactsSync';
 
@@ -10,9 +13,18 @@ interface Props {
   status: ContactsSyncStatus | null;
   supported: boolean;
   busy: boolean;
+  /** Where a sync in flight has got to; null while none is. */
+  stage: ContactSyncStage | null;
   failure: ContactsSyncFailure | null;
   onAllow: () => void;
 }
+
+/** The sentence over the sync's bar. The browser's picker reads the phone
+ * book itself, so here a sync is only ever SENDING. */
+const stageLabel = (t: Translate, stage: ContactSyncStage): string =>
+  stage.phase === 'READING'
+    ? t('mweb.contacts.syncing')
+    : t('mweb.contacts.syncProgress', { vars: { sent: stage.done, total: stage.total } });
 
 const FAILURE_KEY: Record<ContactsSyncFailure, string> = {
   DENIED: 'mweb.contacts.permissionDenied',
@@ -20,12 +32,19 @@ const FAILURE_KEY: Record<ContactsSyncFailure, string> = {
 };
 
 /**
- * The "allow" card: what syncing does, the button that does it, and what the
- * last sync found. A browser without a contact picker is told to use the app —
- * matches synced there still render on this page. Twin of native
- * `ContactsAllowCard` (rule 27).
+ * The "allow" card: what syncing does, the button that does it, how far a sync
+ * in flight has got, and what the last one found. A browser without a contact
+ * picker is told to use the app — matches synced there still render on this
+ * page. Twin of native `ContactsAllowCard` (rule 27).
  */
-export default function ContactsAllowCard({ status, supported, busy, failure, onAllow }: Readonly<Props>) {
+export default function ContactsAllowCard({
+  status,
+  supported,
+  busy,
+  stage,
+  failure,
+  onAllow,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const failureText = failure ? t(FAILURE_KEY[failure]) : '';
   let summary = t('mweb.contacts.notSyncedYet');
@@ -59,6 +78,13 @@ export default function ContactsAllowCard({ status, supported, busy, failure, on
             >
               {t('mweb.contacts.toInvite', { count: status.invitable })}
             </Typography>
+          )}
+          {stage && (
+            <ContactsProgress
+              testId="contacts-sync-progress"
+              label={stageLabel(t, stage)}
+              percent={progressPercent(stage.done, stage.total)}
+            />
           )}
           {supported ? (
             <DuncitButton

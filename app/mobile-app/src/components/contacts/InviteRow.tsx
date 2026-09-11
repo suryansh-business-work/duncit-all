@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { invitableName, isInvited, type InvitableContact } from '@duncit/utils';
@@ -17,9 +18,16 @@ interface Props {
 
 /** One contact who is not on Duncit: the name it is saved under, a tick box for
  * a bulk invite and its own Invite button. An already-invited row keeps its
- * badge and neither tick nor button — one invite per number, for good. Twin of
+ * badge and neither tick nor button — one invite per number, for good.
+ * Memoised: it is one cell of a virtualised list thousands long. Twin of
  * mWeb's `InviteRow` (rule 27). */
-export function InviteRow({ row, selected, busy, onToggleSelect, onInvite }: Readonly<Props>) {
+export const InviteRow = memo(function InviteRow({
+  row,
+  selected,
+  busy,
+  onToggleSelect,
+  onInvite,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const { primary, muted } = useThemeColors();
   const name = invitableName(row);
@@ -85,4 +93,4 @@ export function InviteRow({ row, selected, busy, onToggleSelect, onInvite }: Rea
       )}
     </XStack>
   );
-}
+});

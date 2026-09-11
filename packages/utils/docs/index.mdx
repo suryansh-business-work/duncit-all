@@ -248,12 +248,32 @@ exports:
   - 'RADAR_RING_CAPACITY'
   - 'RADAR_MAX_ITEMS'
   - 'CONTACT_KEY_MIN_DIGITS'
-  - 'pendingInviteKeys'
   - 'toggleInviteKey'
   - 'inviteOutcomeKey'
   - 'invitableName'
   - 'isInvited'
-  - 'InviteBulkPress'
+  - 'markInvited'
+  - 'withFollowStatus'
+  - 'contactSearchText'
+  - 'invitableSearchText'
+  - 'MatchedContactLike'
+  - 'streamContactPages'
+  - 'applyContactPage'
+  - 'createContactPager'
+  - 'initialContactPages'
+  - 'contactLoadStatus'
+  - 'ContactPagesState'
+  - 'ContactPager'
+  - 'ContactLoadStatus'
+  - 'syncContactsInSlices'
+  - 'progressPercent'
+  - 'CONTACTS_PAGE_SIZE'
+  - 'CONTACT_SYNC_BATCH_SIZE'
+  - 'ContactsPage'
+  - 'ContactPageEvent'
+  - 'ContactPageStream'
+  - 'ContactSyncStage'
+  - 'ContactSyncSlice'
   - 'isVerifiablePhoneShape'
   - 'OTP_PHONE_MIN_DIGITS'
   - 'locationMismatch'
@@ -873,9 +893,16 @@ inside the pod window (`joinPodMeeting`, recorded as method `VIRTUAL_JOIN`).
 | `phoneKey` | `(...parts) => string` | Digits only, last ten past ten — so `+91 98765 43210`, `919876543210` and `9876543210` compare equal. |
 | `contactEntriesFromPhoneBook` | `(people: PhoneBookPerson[]) => ContactEntry[]` | The phone book as `syncContacts` entries — one per distinct `phoneKey`, first name seen kept, numbers under `CONTACT_KEY_MIN_DIGITS` digits dropped. |
 | `radarPositions` | `(items: RadarItem[]) => Map<id, RadarPoint>` | Concentric-ring layout for Your Contacts on Duncit: nearby people on the inner rings (`RADAR_RINGS`, `RADAR_RING_CAPACITY`), `x`/`y` as fractions of the radar width; past `RADAR_MAX_ITEMS` a person is listed, not plotted. |
-| `pendingInviteKeys` / `isInvited` / `invitableName` | `(rows) => string[]` / `(row) => boolean` / `(row) => string` | The invite half of the same page: who is still to be asked (what "Invite all" sends), whether one number has already been texted, and what a row is called when the phone book saved no name. |
+| `isInvited` / `invitableName` | `(row) => boolean` / `(row) => string` | The invite half of the same page: whether one number has already been texted, and what a row is called when the phone book saved no name. |
 | `toggleInviteKey` | `(selected, key) => string[]` | One key in or out of the tick-box selection, as a NEW array — a mutated one is the reference React skips re-rendering. |
-| `inviteOutcomeKey` | `(result) => string` | Which sentence a press earns: sent, failed, or held back. Both surfaces read the copy key from here so they cannot disagree about which it was.
+| `inviteOutcomeKey` | `(result) => string` | Which sentence a press earns: sent, failed, or held back. Both surfaces read the copy key from here so they cannot disagree about which it was. |
+| `markInvited` / `withFollowStatus` | `(rows, sentKeys, at) => rows` / `(rows, userId, status) => rows` | Patch the rows an invite press sent (`sent_keys`) or the one row a follow tap settled on, so neither re-reads a phone book's worth of rows. |
+| `contactSearchText` / `invitableSearchText` | `(row) => string[]` | The words each list is searched on — hand them to `@duncit/virtual-scroll`'s `filterByQuery` so both surfaces match the same rows. The invite list also matches the number. |
+| `streamContactPages` / `applyContactPage` | `({ fetchPage, onPage, onError, pageSize? }) => { firstPage, cancel }` / `(rows, event) => rows` | Walk `contactsOnDuncitPage` / `contactsToInvitePage` from the top, page by page (`CONTACTS_PAGE_SIZE`), stepping by the size asked for. `firstPage` settles when the screen can paint; the rest stream behind it, and the first page replaces while later ones append. |
+| `createContactPager` / `initialContactPages` | `(fetchPage, setPages) => { reload, cancel, patch }` / `() => ContactPagesState` | The whole state machine behind a paged list, minus React: each surface binds it to its own `useState` setter, so the mWeb and native hooks are a few lines of glue each. `reload` cancels the walk in flight; `patch` edits rows in place. |
+| `contactLoadStatus` | `(pages) => 'IDLE' \| 'FAILED' \| 'REFRESHING' \| 'STREAMING'` | What a list already on screen says about its loading. A list with no rows yet is `IDLE` — it speaks through its empty state instead. |
+| `syncContactsInSlices` | `({ entries, send, onProgress, batchSize? }) => Promise<void>` | Send a phone book up in `CONTACT_SYNC_BATCH_SIZE` slices chained by `sync_id`, the last one closing the sync, reporting a `ContactSyncStage` (`SENDING`, `done` of `total`) before the first and after each. An empty phone book is still one slice — that is what clears the lists. |
+| `progressPercent` | `(done, total) => number` | 0–100, clamped; 0 when the total is unknown. |
 | `isVerifiablePhoneShape` / `OTP_PHONE_MIN_DIGITS` | `(value) => boolean` / `10` | Long enough to be worth a WhatsApp code. `isOtpPhoneShape` still accepts six digits — that is what the record stores, not what a code should be spent on. |
 | `needsOtp` | `(board) => boolean` | HOST viewer AND `otp_required`. The Club Admin is never *required* to send a code — their board offers it as one of two doors. |
 | `canScanTickets` | `(board) => boolean` | HOST viewer AND `can_mark` AND not `VIRTUAL`. False hides the scan CTA. |

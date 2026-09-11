@@ -10,7 +10,7 @@ import SeeAllCard from './SeeAllCard';
 import PodCardMedia from './PodCardMedia';
 import { usePricing } from '../../hooks/usePricing';
 import { useTranslation } from '../../i18n/useTranslation';
-import { podUrl } from '../../utils/seoUrls';
+import { openPod } from '../../lib/open-pod';
 import { podSeatsTaken } from '@duncit/utils';
 import { formatDateTime } from '../../utils/dateFormat';
 
@@ -83,11 +83,11 @@ export default function HomeFeaturedPods({
               role="button"
               tabIndex={0}
               aria-label={pod.pod_title}
-              onClick={() => navigate(podUrl(pod.club_slug, pod.pod_id))}
+              onClick={() => openPod(navigate, pod)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
                   event.preventDefault();
-                  navigate(podUrl(pod.club_slug, pod.pod_id));
+                  openPod(navigate, pod);
                 }
               }}
               sx={{
@@ -119,7 +119,6 @@ export default function HomeFeaturedPods({
                     fontWeight: 600,
                     color: 'common.white',
                     bgcolor: 'rgba(9,7,18,0.62)',
-                    backdropFilter: 'blur(6px)',
                   }}
                 />
               )}
@@ -138,7 +137,6 @@ export default function HomeFeaturedPods({
                     right: 8,
                     color: saved ? 'primary.main' : 'common.white',
                     bgcolor: 'rgba(9,7,18,0.35)',
-                    backdropFilter: 'blur(6px)',
                     '&:hover': { bgcolor: 'rgba(9,7,18,0.5)' },
                     // Disabled only while the toggle is in flight — keep it
                     // legible on the image instead of MUI's grey-on-dark.
@@ -148,7 +146,8 @@ export default function HomeFeaturedPods({
                   {saveButtonContent}
                 </DuncitIconButton>
               )}
-              {/* Semi-transparent info panel (mock) — the image reads through. */}
+              {/* Semi-transparent info panel (mock) — the image reads through. Unblurred
+               * and as opaque as native's, like the feed's PodCard. */}
               <Stack
                 spacing={0.4}
                 sx={{
@@ -159,8 +158,7 @@ export default function HomeFeaturedPods({
                   p: 1.4,
                   borderRadius: '14px',
                   bgcolor: (theme) =>
-                    alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.78 : 0.8),
-                  backdropFilter: 'blur(10px)',
+                    alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.88 : 0.9),
                   border: '1px solid',
                   borderColor: (theme) =>
                     theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.65)',

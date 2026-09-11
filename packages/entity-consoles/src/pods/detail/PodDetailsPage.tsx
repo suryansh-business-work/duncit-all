@@ -8,6 +8,10 @@ import PodCouponsSection from './PodCouponsSection';
 import PodCancellationRiskSection from './PodCancellationRiskSection';
 import RevokeCancellationAction from '../list/revoke-cancellation';
 
+/** Where Back goes. Omitted, it is the pods list; the clubs console sends it to
+ * the pod's own club instead. */
+type AdminPodDetailsProps = Pick<PodDetailsViewProps, 'backTo' | 'backLabel'>;
+
 /** The cancellation-risk report, above everything else on the page — it
  * renders nothing for a pod that is not at risk. Admin is the one console the
  * `podCancellationRisk` query answers, so the section lives here. */
@@ -43,9 +47,11 @@ const editTo = (podId: string) => `/pods/${podId}/edit`;
  * here: the coupons console itself moved to the Marketing portal, but the codes
  * of ONE pod belong on that pod, so the section is injected as the footer
  * rather than widening the shared view. */
-export default function AdminPodDetailsPage() {
+export default function AdminPodDetailsPage({ backTo, backLabel }: Readonly<AdminPodDetailsProps>) {
   return (
     <SharedPodDetails
+      backTo={backTo}
+      backLabel={backLabel}
       userTo={userTo}
       editTo={editTo}
       actions={renderPodActions}

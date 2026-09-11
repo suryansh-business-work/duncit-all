@@ -118,8 +118,9 @@ export default function BottomNav() {
         overflow: 'hidden',
         p: 0,
         pb: 'env(safe-area-inset-bottom)',
+        // Near-opaque, so a backdrop blur showed nothing — yet it re-blurred the
+        // strip behind the bar on every scroll frame. Native's tab bar has none.
         bgcolor: (theme) => alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.92 : 0.98),
-        backdropFilter: 'blur(18px)',
         boxShadow: (theme) => theme.palette.mode === 'dark'
           ? '0 -10px 30px rgba(0,0,0,0.42)'
           : '0 -10px 30px rgba(15,23,42,0.10)',

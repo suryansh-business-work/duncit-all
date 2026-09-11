@@ -53,7 +53,7 @@ export function ProfilePodsPanel({ userId, kind }: Readonly<Props>) {
           key={pod.id}
           pod={pod}
           width={cardWidth}
-          onPress={() => openPod(pod.club_slug, pod.pod_id)}
+          onPress={() => openPod(pod.club_slug, pod.pod_id, pod.id)}
         />
       ))}
     </YStack>

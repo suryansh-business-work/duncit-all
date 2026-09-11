@@ -326,6 +326,14 @@ podSchema.index({ venue_id: 1, pod_date_time: -1 });
 // "Pods I'm co-hosting" / "my pods that have co-hosts" both look up by co-host
 // user, so keep that a covered index rather than a collection scan.
 podSchema.index({ 'co_hosts.user_id': 1, 'co_hosts.status': 1 });
+// The discovery feed (`pods` with no club/venue): the soft-delete hook's
+// `deleted_at: null` and `is_active` are equalities, then it sorts newest
+// first. Without this it scanned the collection and sorted in memory.
+podSchema.index({ deleted_at: 1, is_active: 1, pod_date_time: -1 });
+// A host's own pods (profile tab, host dashboards) and the chat-room list,
+// which ORs host and attendee membership — each side needs its own index.
+podSchema.index({ pod_hosts_id: 1, pod_date_time: -1 });
+podSchema.index({ pod_attendees: 1 });
 
 // Soft-delete: every read automatically excludes deleted pods (deleted_at set),
 // so discovery/listing/metrics never surface a deleted pod. Callers that must

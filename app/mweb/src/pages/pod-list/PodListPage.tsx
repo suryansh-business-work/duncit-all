@@ -14,7 +14,7 @@ import { buildFeedRows, computeColumns, filterByQuery, rowForPodIndex } from '@d
 import type { PublicAd } from '../../components/ads/useActiveAds';
 import { useVirtualRows } from '../../hooks/useVirtualRows';
 import { useTranslation } from '../../i18n/useTranslation';
-import { podUrl } from '../../utils/seoUrls';
+import { openPod } from '../../lib/open-pod';
 import VirtualPodRows, { LIST_GAP } from './VirtualPodRows';
 
 const CARD_WIDTH = 264;
@@ -146,7 +146,7 @@ export default function PodListPage(props: Readonly<PodListPageProps>) {
         listRef={listRef}
         measureRow={measureRow}
         hostNameOf={hostNameOf}
-        onOpenPod={(pod) => navigate(podUrl(pod.club_slug, pod.pod_id))}
+        onOpenPod={(pod) => openPod(navigate, pod)}
       />
     );
   }

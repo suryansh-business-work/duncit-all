@@ -115,26 +115,6 @@ export const VENUE_DETAIL = gql`
   }
 `;
 
-/** Pods hosted at this venue, via the shared table engine (venue_id is an
- * allowlisted podsTable filter). */
-export const VENUE_PODS_TABLE = gql`
-  query AdminVenuePodsTable($query: TableQueryInput) {
-    podsTable(query: $query) {
-      total
-      rows {
-        id
-        pod_title
-        pod_date_time
-        pod_mode
-        no_of_spots
-        is_active
-        venue_approval_status
-        host_names
-      }
-    }
-  }
-`;
-
 export type VenueStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
 export interface VenueCapacityItem {
@@ -250,15 +230,4 @@ export interface AdminVenueDetail {
   rejected_at?: string | null;
   created_at: string;
   updated_at: string;
-}
-
-export interface VenuePodRow {
-  id: string;
-  pod_title: string;
-  pod_date_time: string;
-  pod_mode: 'PHYSICAL' | 'VIRTUAL';
-  no_of_spots: number;
-  is_active: boolean;
-  venue_approval_status: 'NONE' | 'PENDING' | 'APPROVED' | 'DECLINED';
-  host_names: string[];
 }

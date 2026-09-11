@@ -52,6 +52,17 @@ server {
 
     client_max_body_size 25m;
 
+    # GraphQL answers are JSON and shrink 3-10x under gzip (a home feed is
+    # hundreds of KB). Only spa.conf turned gzip on, so every API response —
+    # Redis cache hits included — left raw. text/event-stream is deliberately
+    # NOT listed: compressing the notifications stream would buffer its events.
+    gzip            on;
+    gzip_vary       on;
+    gzip_proxied    any;
+    gzip_comp_level 5;
+    gzip_min_length 1024;
+    gzip_types      application/json application/graphql-response+json text/plain;
+
     add_header Access-Control-Allow-Origin      $staging_cors_allow_origin     always;
     add_header Access-Control-Allow-Credentials $staging_cors_allow_credentials always;
     add_header Access-Control-Allow-Methods     "GET, POST, OPTIONS, PUT, DELETE, PATCH, HEAD" always;

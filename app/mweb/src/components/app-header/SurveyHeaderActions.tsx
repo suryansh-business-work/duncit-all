@@ -1,6 +1,5 @@
-import '@fortawesome/fontawesome-free/css/fontawesome.min.css';
-import '@fortawesome/fontawesome-free/css/solid.min.css';
-import { Box, Stack, Tooltip } from '@mui/material';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { Stack, Tooltip } from '@mui/material';
 import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
 
@@ -29,7 +28,7 @@ export default function SurveyHeaderActions({ onLogout }: Readonly<SurveyHeaderA
             '&:hover': { bgcolor: 'action.hover', color: 'primary.main' },
           }}
         >
-          <Box component="i" className="fa-solid fa-right-from-bracket" sx={{ fontSize: 16, lineHeight: 1 }} />
+          <LogoutIcon sx={{ fontSize: 18 }} />
         </DuncitIconButton>
       </Tooltip>
     </Stack>

@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client/react';
+import { useMutation } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
 import { useUserData } from '@duncit/user-context';
 import { Alert, AppBar, Box, Chip, Stack, Toolbar } from '@mui/material';
 import {
   APPLY_LOCATION_EVENT,
-  HEADER_DATA,
   OPEN_LOCATION_PICKER_EVENT,
   SET_MY_SELECTED_LOCATION,
   type ApplyLocationDetail,
@@ -17,6 +16,7 @@ import HeaderToast from './HeaderToast';
 import LocationDialog from './LocationDialog';
 import StudioSwitchDialog from './profile-drawer/StudioSwitchDialog';
 import SuperCategoryTabs from './SuperCategoryTabs';
+import { useHeaderQueries } from './useHeaderQueries';
 import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
 import SurveyHeaderActions from './SurveyHeaderActions';
 import { useStudioMode } from '../../StudioModeContext';
@@ -48,7 +48,7 @@ export default function AppHeader({
   // The account menu is its own page (/menu) — opening it is a normal push, so
   // Back returns here and a refresh keeps the user on the menu.
   const openMenu = () => navigate('/menu');
-  const { data, loading } = useQuery<any>(HEADER_DATA, { fetchPolicy: 'cache-and-network' });
+  const { staticData, staticLoading, me, meSettled, placeReady } = useHeaderQueries();
   const [persistSelectedLocation] = useMutation<any>(SET_MY_SELECTED_LOCATION, {
     onError: () => undefined,
   });
@@ -60,14 +60,13 @@ export default function AppHeader({
   const { visible: showProducts } = useProductVisibility();
   const [studioSwitchOpen, setStudioSwitchOpen] = useState(false);
 
-  const branding = data?.branding;
-  const me = data?.me;
+  const branding = staticData?.branding;
   const effectiveStudio = resolveMode(studioMode, me?.roles ?? [], { products: showProducts });
   // The shared <UserProvider> auto-mounts a global "User data not loaded"
   // dialog when the `me` query fails, so we no longer render a local one
   // here. Keeping `me`/`loading` for the rest of the header's logic.
-  const superCats = data?.superCategories ?? [];
-  const locations = data?.locations ?? [];
+  const superCats = staticData?.superCategories ?? [];
+  const locations = staticData?.locations ?? [];
   const superCategoryValue = selectedSuperCategory || superCats[0]?.slug || '';
   // Mounted with the header — the whole point of the counts is that the role
   // switch never waits on a network round trip to decide where to land.
@@ -83,8 +82,10 @@ export default function AppHeader({
     [persistSelectedLocation, me?.selected_location_id]
   );
 
+  // Both defaults wait for `me`, so they land in ONE commit: each re-keys the
+  // page (App.tsx), and landing apart would remount Home twice.
   useEffect(() => {
-    if (!selectedLocationId && locations.length > 0) {
+    if (meSettled && !selectedLocationId && locations.length > 0) {
       // Prefer the user's persisted choice; then a city match; then the first.
       const persisted = locations.find((l: any) => l.id === me?.selected_location_id);
       const cityMatch = locations.find(
@@ -92,13 +93,13 @@ export default function AppHeader({
       );
       onLocationChange(persisted?.id ?? cityMatch?.id ?? locations[0].id);
     }
-  }, [locations, selectedLocationId, me, onLocationChange]);
+  }, [meSettled, locations, selectedLocationId, me, onLocationChange]);
 
   useEffect(() => {
-    if (!selectedSuperCategory && superCats.length > 0) {
+    if (meSettled && !selectedSuperCategory && superCats.length > 0) {
       onSuperCategoryChange(superCats[0].slug);
     }
-  }, [superCats, selectedSuperCategory, onSuperCategoryChange]);
+  }, [meSettled, superCats, selectedSuperCategory, onSuperCategoryChange]);
 
   const selectedLocation = useMemo(
     () => locations.find((l: any) => l.id === selectedLocationId),
@@ -176,16 +177,16 @@ export default function AppHeader({
             <HeaderLocationRow
               selectedLocationName={selectedLocation?.location_name}
               selectedZoneName={selectedZoneName}
-              loading={loading}
-              hasData={!!data}
+              loading={!placeReady}
+              hasData={placeReady}
               onOpen={openLocationPicker}
             />
           </Stack>
         ) : (
           <HeaderGreeting
             tagline={branding?.home_header_tagline}
-            loading={loading}
-            hasData={!!data}
+            loading={!placeReady}
+            hasData={placeReady}
             selectedLocationName={minimal ? undefined : selectedLocation?.location_name}
             selectedZoneName={minimal ? undefined : selectedZoneName}
             onOpenLocation={minimal ? undefined : openLocationPicker}
@@ -204,7 +205,7 @@ export default function AppHeader({
               open={locDialogOpen}
               onClose={() => setLocDialogOpen(false)}
               locations={locations}
-              activeLocationIds={data?.activePodLocationIds ?? []}
+              activeLocationIds={staticData?.activePodLocationIds ?? []}
               draftLocationId={draftLocationId}
               setDraftLocationId={setDraftLocationId}
               draftZone={draftZone}
@@ -276,7 +277,7 @@ export default function AppHeader({
 
       {!minimal && (
         <SuperCategoryTabs
-          loading={loading}
+          loading={staticLoading}
           superCats={superCats}
           value={superCategoryValue}
           onChange={onSuperCategoryChange}

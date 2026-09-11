@@ -78,7 +78,6 @@ export default defineConfig({
     videosFolder: `${here}/../../cypress-artifacts/videos`,
     downloadsFolder: `${here}/../../cypress-artifacts/downloads`,
     screenshotOnRunFailure: true,
-    video: false,
     viewportWidth: 412,
     viewportHeight: 915,
     // A real server answers in its own time, and the content screening before

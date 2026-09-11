@@ -221,6 +221,9 @@ const HOST_TABLE_CONFIG: TableEntityConfig = {
     is_active: { type: 'boolean' },
     submitted_at: { type: 'date' },
     created_at: { type: 'date' },
+    // A club names its hosts by ACCOUNT (`Club.hosts`), so the clubs console
+    // scopes this table to them with `user_id in [...]`.
+    user_id: { type: 'string' },
   },
   defaultSort: { created_at: -1 },
 };

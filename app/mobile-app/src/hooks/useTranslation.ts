@@ -5,6 +5,41 @@ import { NATIVE_FALLBACK_FLAT } from '@/i18n/fallback';
 import { useLocaleStore } from '@/stores/locale.store';
 import { useMeStore } from '@/stores/me.store';
 
+interface SharedTranslator {
+  locale: string;
+  isRtl: boolean;
+  catalogue: Record<string, string>;
+  translator: Translator;
+}
+
+let shared: SharedTranslator | null = null;
+
+/**
+ * The translator for the store's current locale + catalogue, shared by every
+ * component. createTranslator copies the whole bundled fallback (~3.7k keys)
+ * plus the server catalogue; a per-component useMemo still did that once per
+ * MOUNTED component, and again for all of them when the catalogue landed —
+ * hundreds of copies on the first screen. Every caller reads the same store
+ * values, so one build per distinct (locale, isRtl, catalogue) serves them all.
+ */
+function sharedTranslator(
+  locale: string,
+  isRtl: boolean,
+  catalogue: Record<string, string>,
+): Translator {
+  if (shared?.locale === locale && shared.isRtl === isRtl && shared.catalogue === catalogue) {
+    return shared.translator;
+  }
+  const translator = createTranslator({
+    locale,
+    isRtl,
+    fallback: NATIVE_FALLBACK_FLAT,
+    server: catalogue,
+  });
+  shared = { locale, isRtl, catalogue, translator };
+  return translator;
+}
+
 /**
  * Translate in the native app — the RN twin of mWeb's useTranslation, built on
  * the same @duncit/i18n core so both surfaces resolve text identically.
@@ -34,22 +69,10 @@ export function useTranslation(): Translator & { setLocale: (code: string) => Pr
     hydrate(userLocale);
   }, [hydrated, hydrate, userLocale, applied]);
 
-  // Built once per locale/catalogue, not per render. createTranslator merges the
-  // whole bundled fallback (~3.7k keys) with the server catalogue, and this hook
-  // runs in hundreds of components — every PodCard among them — so a fresh one
-  // each render was a full catalogue copy per component per render. It also gave
-  // `t` a new identity every render, which re-ran every effect and memo that
-  // lists `t` as a dependency.
-  const translator = useMemo(
-    () =>
-      createTranslator({
-        locale,
-        isRtl,
-        fallback: NATIVE_FALLBACK_FLAT,
-        server: catalogue,
-      }),
-    [locale, isRtl, catalogue],
-  );
+  // One translator for the whole app per locale/catalogue (see sharedTranslator),
+  // so `t` also keeps one identity across renders and components — a new one
+  // re-ran every effect and memo that lists `t` as a dependency.
+  const translator = sharedTranslator(locale, isRtl, catalogue);
 
   return useMemo(() => ({ ...translator, setLocale }), [translator, setLocale]);
 }

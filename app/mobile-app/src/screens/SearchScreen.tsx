@@ -109,7 +109,7 @@ export function SearchScreen() {
               onCategoryChange={setCategoryId}
               categoryNameOf={nameOf}
               onOpenClub={openClub}
-              onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
+              onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id, pod.id)}
               onShareIdea={() => navigation.navigate('PodIdeas')}
               onEarn={() => navigation.navigate('Earn')}
             />

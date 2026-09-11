@@ -88,6 +88,24 @@ const everyShippedKey = (): FlatCatalogue => {
   return shippedFallback;
 };
 
+/** The cached value under `key`, built by `create` the first time it is asked for. */
+function cached<K, V>(cache: { get(key: K): V | undefined; set(key: K, value: V): unknown }, key: K, create: () => V): V {
+  const hit = cache.get(key);
+  if (hit !== undefined) return hit;
+  const built = create();
+  cache.set(key, built);
+  return built;
+}
+
+/**
+ * One provider-free translator per fallback catalogue, shared by every caller.
+ * Building one copies the whole catalogue — thousands of keys — and the hook
+ * used to do that for EVERY mounted component, even under a provider where the
+ * result was thrown away. Keyed on the catalogue object, which every surface
+ * passes as a module constant.
+ */
+const fallbackTranslators = new WeakMap<FlatCatalogue, Translator>();
+
 interface ProviderProps {
   /** The surface's bundled fallback catalogue — renders before/without the API. */
   fallback: FlatCatalogue;
@@ -187,11 +205,11 @@ export function LocaleProvider({
  */
 export function useTranslation(fallback?: FlatCatalogue): LocaleContextValue {
   const context = useContext(LocaleContext);
-  const fallbackTranslator = useMemo(
-    () => createTranslator({ locale: 'en-IN', fallback: fallback ?? everyShippedKey() }),
-    [fallback],
-  );
   if (context) return context;
+  const floor = fallback ?? everyShippedKey();
+  const fallbackTranslator = cached(fallbackTranslators, floor, () =>
+    createTranslator({ locale: 'en-IN', fallback: floor }),
+  );
   return {
     t: fallbackTranslator.t,
     has: fallbackTranslator.has,
@@ -220,10 +238,12 @@ export function useTranslation(fallback?: FlatCatalogue): LocaleContextValue {
  */
 export function createBundleTranslation(bundle: NestedCatalogue) {
   const fallback = flattenCatalogue(bundle);
+  // One local translator per locale for the package, not one per mounted component.
+  const locals = new Map<string, Translator>();
   return function usePackageTranslation(): LocaleContextValue {
     const outer = useTranslation(fallback);
     return useMemo(() => {
-      const local = createTranslator({ locale: outer.locale, fallback });
+      const local = cached(locals, outer.locale, () => createTranslator({ locale: outer.locale, fallback }));
       return {
         ...outer,
         has: (key: string) => outer.has(key) || local.has(key),

@@ -6,20 +6,25 @@
  * unbounded discovery feed turned a single `pods` query into hundreds of round
  * trips and blew straight past the client's request timeout.
  *
- * Calling this before the rows are returned loads every club and every host in
- * ONE read each, so the field resolvers that follow are cache hits. It is an
+ * Calling this before the rows are returned loads every club, every host and
+ * every venue/location in ONE read each, so the field resolvers that follow
+ * (club, host_names, co_hosts, place_label, place_detail) are cache hits. It is an
  * optimisation, not a prerequisite: each resolver still asks the same loader
  * and fetches whatever was not primed, which is what keeps single-pod reads
  * (`pod`, `podBySlugs`) correct without a priming step of their own.
  */
 import { primeUserActors } from '@modules/access/user/user.loaders';
 import { primeClubs } from '@modules/clubs/club/club.loaders';
+import { primePodPlaces } from './pod.place';
 import type { CacheCarrier } from '@utils/request-cache';
 
 interface PodRowRelations {
   club_id?: string | null;
   pod_hosts_id?: string[] | null;
   co_hosts?: { user_id?: string | null }[] | null;
+  pod_mode?: string | null;
+  venue_id?: string | null;
+  location_id?: string | null;
 }
 
 export async function primePodRelations(
@@ -40,5 +45,9 @@ export async function primePodRelations(
     }
   }
 
-  await Promise.all([primeClubs(carrier, clubIds), primeUserActors(carrier, userIds)]);
+  await Promise.all([
+    primeClubs(carrier, clubIds),
+    primeUserActors(carrier, userIds),
+    primePodPlaces(carrier, rows),
+  ]);
 }

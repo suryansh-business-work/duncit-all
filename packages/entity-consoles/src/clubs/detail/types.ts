@@ -41,15 +41,8 @@ export interface ClubDetail {
   club_moments: ClubMedia[];
   admin_user_ids: string[];
   club_admins: ClubActor[];
-}
-
-export interface ClubPodRow {
-  id: string;
-  pod_title: string;
-  pod_date_time?: string | null;
-  pod_type?: string | null;
-  pod_amount: number;
-  is_active: boolean;
+  /** Only the ids: the Hosts tab reads the host RECORDS they name. */
+  hosts: Pick<ClubActor, 'id'>[];
 }
 
 /** True when a media item should render as a playable video. */

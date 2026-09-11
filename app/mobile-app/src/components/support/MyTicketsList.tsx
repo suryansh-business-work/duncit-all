@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Text, XStack, YStack } from 'tamagui';
@@ -30,8 +30,15 @@ export function MyTicketsList() {
 
   // Reload whenever the screen regains focus so a ticket just created (which
   // navigates to its detail thread and back) appears in the list right away.
+  // The first focus is skipped: useTickets has already fetched on mount, and
+  // reloading there fetched the whole list twice every time the screen opened.
+  const firstFocus = useRef(true);
   useFocusEffect(
     useCallback(() => {
+      if (firstFocus.current) {
+        firstFocus.current = false;
+        return;
+      }
       reload();
     }, [reload]),
   );

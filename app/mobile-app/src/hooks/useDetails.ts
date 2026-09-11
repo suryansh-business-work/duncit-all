@@ -36,6 +36,14 @@ export type ClubPod = ClubDetailsResult['pods'][number];
  * never moves to another entity, so a remembered answer cannot go stale. */
 const resolvedIds = new Map<string, string>();
 
+const podSlugKey = (clubSlug: string, podSlug: string) => `pod:${clubSlug}/${podSlug}`;
+
+/** Record a slug → id answer the caller already holds — a card knows its pod's
+ * id — so the details screen it opens skips the lookup round trip. */
+export function rememberPodId(clubSlug: string, podSlug: string, podId: string): void {
+  resolvedIds.set(podSlugKey(clubSlug, podSlug), podId);
+}
+
 /** The doc id behind a detail screen: the id in-app navigation passed, else the
  * answer `lookup` gives for the shared slug URL named by `slugKey`. `resolving`
  * stays true while that lookup is out, so the screen holds its skeleton rather
@@ -92,7 +100,7 @@ export function useResolvedPodId(params: { podId?: string; clubSlug?: string; po
       ),
     [clubSlug, podSlug],
   );
-  const slugKey = clubSlug && podSlug ? `pod:${clubSlug}/${podSlug}` : null;
+  const slugKey = clubSlug && podSlug ? podSlugKey(clubSlug, podSlug) : null;
   const { id, resolving } = useSlugResolvedId(podId, slugKey, lookup);
   return { podId: id, resolving };
 }

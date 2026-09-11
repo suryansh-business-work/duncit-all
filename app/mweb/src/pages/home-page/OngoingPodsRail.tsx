@@ -2,7 +2,7 @@ import { Box, Stack, Typography } from '@mui/material';
 import { useNavigate } from 'react-router';
 import SensorsIcon from '@mui/icons-material/Sensors';
 import PodCard from './PodCard';
-import { podUrl } from '../../utils/seoUrls';
+import { openPod } from '../../lib/open-pod';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
@@ -55,7 +55,7 @@ export default function OngoingPodsRail({ pods, hostNameOf }: Readonly<Props>) {
             key={pod.id}
             pod={pod}
             hostName={hostNameOf(pod)}
-            onOpen={() => navigate(podUrl(pod.club_slug, pod.pod_id))}
+            onOpen={() => openPod(navigate, pod)}
           />
         ))}
       </Box>

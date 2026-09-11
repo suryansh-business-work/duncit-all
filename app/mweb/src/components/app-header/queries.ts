@@ -1,7 +1,14 @@
 import { gql } from '@apollo/client';
 
-export const HEADER_DATA = gql`
-  query AppHeader {
+/**
+ * The header's public half: branding, the vibe tabs and the city list. Every
+ * field is on the server's Redis whitelist, so it answers from cache — which it
+ * never could while `me` rode in the same document (a response is cached only
+ * when EVERY top-level field is whitelisted), so each boot paid a dozen
+ * database reads for data that is the same for everyone.
+ */
+export const HEADER_STATIC = gql`
+  query AppHeaderStatic {
     branding {
       app_name
       logo_url
@@ -17,25 +24,6 @@ export const HEADER_DATA = gql`
       home_vibe_heading
       home_vibe_subheading
       home_header_tagline
-    }
-    me {
-      user_id
-      full_name
-      first_name
-      last_name
-      email
-      is_email_verified
-      profile_photo
-      bio
-      dob
-      city
-      state
-      country
-      phone_number
-      whatsapp_number
-      selected_location_id
-      roles
-      following_user_ids
     }
     superCategories: categories(filter: { level: SUPER }) {
       id
@@ -63,6 +51,31 @@ export const HEADER_DATA = gql`
       }
     }
     activePodLocationIds
+  }
+`;
+
+/** The signed-in account the header, Home and the menu read. */
+export const HEADER_ME = gql`
+  query AppHeaderMe {
+    me {
+      user_id
+      full_name
+      first_name
+      last_name
+      email
+      is_email_verified
+      profile_photo
+      bio
+      dob
+      city
+      state
+      country
+      phone_number
+      whatsapp_number
+      selected_location_id
+      roles
+      following_user_ids
+    }
   }
 `;
 

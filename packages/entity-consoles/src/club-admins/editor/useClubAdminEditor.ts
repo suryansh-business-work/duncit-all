@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { notifySuccess } from '@duncit/dialogs';
 import { useTranslation } from '@duncit/shell';
 import { useConsoleAccess } from '../../shared/useConsoleAccess';
+import { savedRecordPath, useRecordParentPath } from '../../shared/recordPaths';
 import {
   ADMIN_CREATE_CLUB_ADMIN,
   APPROVE_CLUB_ADMIN,
@@ -39,6 +40,7 @@ export function useClubAdminEditor(clubAdminId: string) {
   const { t } = useTranslation();
   const { canGovern } = useConsoleAccess();
   const navigate = useNavigate();
+  const parentPath = useRecordParentPath();
   const isEdit = !!clubAdminId;
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -129,7 +131,7 @@ export function useClubAdminEditor(clubAdminId: string) {
             ? t('directory.clubAdminEditor.saved')
             : t('directory.clubAdminEditor.created'),
         );
-        navigate(`/club-admins/${id}`);
+        navigate(savedRecordPath(parentPath, isEdit, id));
       } catch (err) {
         setSaveError(err instanceof Error ? err.message : String(err));
       } finally {
@@ -145,6 +147,7 @@ export function useClubAdminEditor(clubAdminId: string) {
       createAdmin,
       isEdit,
       navigate,
+      parentPath,
       setActive,
       setCommission,
       t,

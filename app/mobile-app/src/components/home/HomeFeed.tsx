@@ -155,7 +155,7 @@ export function HomeFeed() {
                   totalCount={totalPods}
                   filtered={railsFiltered}
                   onSeeAll={openHappeningNearby}
-                  onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
+                  onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id, pod.id)}
                   categoryLabelOf={categoryLabelOf}
                   savedOf={saved.signedIn ? saved.isSaved : undefined}
                   savingOf={saved.signedIn ? saved.isSaving : undefined}
@@ -165,7 +165,7 @@ export function HomeFeed() {
             </Reveal>
             <OngoingPodsRail
               pods={ongoingPods}
-              onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
+              onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id, pod.id)}
             />
             <HostCtaBanner
               isHost={isHost}
@@ -189,7 +189,7 @@ export function HomeFeed() {
                       <ClubSection
                         club={club}
                         pods={pods}
-                        onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
+                        onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id, pod.id)}
                         onOpenClub={(c) => openClub(c.club_id)}
                         categoryLabelOf={categoryLabelOf}
                         savedOf={saved.signedIn ? saved.isSaved : undefined}
@@ -206,7 +206,7 @@ export function HomeFeed() {
                 pods={previousPods}
                 filtered={railsFiltered}
                 onSeeAll={openPreviousPods}
-                onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
+                onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id, pod.id)}
               />
             </Reveal>
             {/* No Reveal wrapper: it is a plain View, and an empty one is still

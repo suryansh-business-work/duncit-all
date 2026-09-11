@@ -67,6 +67,9 @@ interface TranslationGroupAggregate {
  * `$group` output field name, so the codes stay in a parallel array. */
 const localeCountField = (index: number) => `locale_${index}`;
 
+/** A locale code that is safe to use as a projection path segment. */
+const PROJECTABLE_LOCALE = /^[A-Za-z]{2,3}(?:[-_][A-Za-z\d]{2,8})*$/;
+
 const badInput = (message: string) =>
   new GraphQLError(message, { extensions: { code: "BAD_USER_INPUT" } });
 
@@ -108,10 +111,14 @@ export const localizationService = {
 
   /** The platform's source language — every other locale falls back to it. */
   async defaultLocaleCode(): Promise<string | null> {
-    const doc = await LocaleModel.findOne({ is_default: true, is_active: true });
-    if (doc) return doc.code;
-    const first = await LocaleModel.findOne({ is_active: true }).sort({ sort_order: 1, code: 1 });
-    return first?.code ?? null;
+    // One read of the (handful of) active locales: the marked default, else the
+    // first by order. It was two lookups one after the other whenever no locale
+    // is marked default — which is production's state — on every translation read.
+    const active = await LocaleModel.find({ is_active: true })
+      .select("code is_default")
+      .sort({ sort_order: 1, code: 1 })
+      .lean();
+    return (active.find((locale) => locale.is_default) ?? active[0])?.code ?? null;
   },
 
   /**
@@ -123,7 +130,15 @@ export const localizationService = {
     const code = (locale ?? "").trim();
     if (!code) throw badInput("A locale code is required");
     const fallbackCode = await this.defaultLocaleCode();
-    const docs = await TranslationModel.find().select("key values").lean();
+    // Only the two columns this answer can use. Every row carries a value per
+    // language, and reading `values` whole pulled all of them across the
+    // ~250 ms link to Atlas — seconds on every cache miss, for one column. A code
+    // that is not a locale can match no column, so it asks for none.
+    const projection: Record<string, 1> = { key: 1 };
+    for (const column of [code, fallbackCode]) {
+      if (column && PROJECTABLE_LOCALE.test(column)) projection[`values.${column}`] = 1;
+    }
+    const docs = await TranslationModel.find().select(projection).lean();
 
     const entries: { key: string; value: string }[] = [];
     for (const doc of docs as any[]) {

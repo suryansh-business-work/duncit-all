@@ -3,7 +3,8 @@ import { Avatar, Box, Card, Chip, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { coverImageUrl } from '@duncit/utils';
-import { clubUrl, podUrl } from '../../utils/seoUrls';
+import { clubUrl } from '../../utils/seoUrls';
+import { openPod } from '../../lib/open-pod';
 import PodCard from './PodCard';
 
 interface ClubSectionProps {
@@ -115,7 +116,7 @@ export default function ClubSection({ club, clubPods, hostNameOf, categoryLabelO
               saving={savingOf?.(p.id)}
               onToggleSave={onToggleSave ? () => onToggleSave(p.id) : undefined}
               showPlace={false}
-              onOpen={() => navigate(podUrl(p.club_slug, p.pod_id))}
+              onOpen={() => openPod(navigate, p)}
             />
           ))}
         </Box>

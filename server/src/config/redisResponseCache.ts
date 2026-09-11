@@ -97,6 +97,14 @@ const PUBLIC_CACHEABLE_FIELDS = new Set([
   'activePodLocationIds',
   'categories',
   'categoryTree',
+  // The city picker. No auth and no ctx read: `active_club_count` only memoises
+  // an aggregate on the context. The admin grid reads `locationsTable`, which
+  // stays off this list, so an edit there is never served stale.
+  'locations',
+  // Every ad slot on every surface. Argument-keyed (position), no auth, no ctx,
+  // no write and no field resolver on PublicAd; an approved ad reaches the slots
+  // within the TTL of its start time.
+  'activeAds',
 ]);
 
 /**

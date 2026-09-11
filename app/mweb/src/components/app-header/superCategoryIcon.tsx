@@ -1,14 +1,76 @@
+import { useEffect, useState } from 'react';
 import { Box } from '@mui/material';
-import * as MuiIcons from '@mui/icons-material';
 import type { SvgIconComponent } from '@mui/icons-material';
+import { logs } from '@duncit/logs';
+
+type IconSet = Readonly<Record<string, SvgIconComponent>>;
 
 const isImageIcon = (value: string | null | undefined) => {
   const next = (value ?? '').trim();
   return /^data:image\//i.test(next) || /^https?:\/\//i.test(next) || next.startsWith('/');
 };
 
-const resolveMuiIcon = (name: string) =>
-  (MuiIcons as Record<string, SvgIconComponent>)[name] || null;
+/** An MUI icon export is always a PascalCase identifier. */
+const isMuiIconName = (value: string) => /^[A-Z][A-Za-z\d]*$/.test(value);
+
+/**
+ * An admin may name ANY MUI icon (the picker is freeSolo), so the whole set has
+ * to stay reachable — but not at boot. As a static namespace import it put all
+ * ~10.7k icons in the boot chunk and evaluated every one on each page load,
+ * whether or not a category named an icon at all. It now loads the first time
+ * one does.
+ */
+let iconSet: IconSet | null = null;
+let iconSetLoad: Promise<IconSet> | null = null;
+
+function loadIconSet(): Promise<IconSet> {
+  iconSetLoad ??= import('@mui/icons-material').then(
+    (mod) => {
+      iconSet = mod as unknown as IconSet;
+      return iconSet;
+    },
+    (error: unknown) => {
+      // A failed chunk (offline, a deploy mid-session) is retried next render.
+      iconSetLoad = null;
+      throw error;
+    }
+  );
+  return iconSetLoad;
+}
+
+function TextMark({ text, fontSize }: Readonly<{ text: string; fontSize: number }>) {
+  if (text.length > 2) return null;
+  return (
+    <Box component="span" sx={{ lineHeight: 1, fontSize, flex: '0 0 auto' }}>
+      {text}
+    </Box>
+  );
+}
+
+function NamedMuiIcon({ name, fontSize }: Readonly<{ name: string; fontSize: number }>) {
+  const [icons, setIcons] = useState<IconSet | null>(iconSet);
+
+  useEffect(() => {
+    if (icons) return undefined;
+    let live = true;
+    loadIconSet()
+      .then((set) => {
+        if (live) setIcons(set);
+      })
+      .catch((error) => logs.mWeb.error('superCategoryIcon', 'loadIconSet', { error, name }));
+    return () => {
+      live = false;
+    };
+  }, [icons, name]);
+
+  if (!icons) {
+    // Holds the icon's box while the set loads, so the chip does not reflow.
+    return <Box component="span" sx={{ display: 'inline-block', width: fontSize, height: fontSize, flex: '0 0 auto' }} />;
+  }
+  const Icon = icons[name];
+  if (Icon) return <Icon sx={{ fontSize, flex: '0 0 auto' }} />;
+  return <TextMark text={name} fontSize={fontSize} />;
+}
 
 /**
  * Render a super/category `icon` value (image URL, MUI icon name or emoji) as a
@@ -31,11 +93,6 @@ export function renderSuperCategoryMark(icon: string | null | undefined, size = 
       />
     );
   }
-  const MuiIcon = resolveMuiIcon(next);
-  if (MuiIcon) return <MuiIcon sx={{ fontSize, flex: '0 0 auto' }} />;
-  return next.length <= 2 ? (
-    <Box component="span" sx={{ lineHeight: 1, fontSize, flex: '0 0 auto' }}>
-      {next}
-    </Box>
-  ) : null;
+  if (isMuiIconName(next)) return <NamedMuiIcon name={next} fontSize={fontSize} />;
+  return <TextMark text={next} fontSize={fontSize} />;
 }

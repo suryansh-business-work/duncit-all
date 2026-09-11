@@ -6,7 +6,8 @@ import AppHeader from '../AppHeader';
 import { PUBLIC_FEATURE_FLAGS } from '@duncit/app-settings';
 import { CartProvider, type CartLine } from '../../cart/CartContext';
 import {
-  HEADER_DATA,
+  HEADER_ME,
+  HEADER_STATIC,
   PUBLIC_POLICIES,
   SET_MY_SELECTED_LOCATION,
   OPEN_LOCATION_PICKER_EVENT,
@@ -136,10 +137,11 @@ const headerData = {
   activePodLocationIds: ['loc-1'],
 };
 
-const headerMock = (data = headerData) => ({
-  request: { query: HEADER_DATA },
-  result: { data },
-});
+/** The header reads two queries; one fixture answers both halves. */
+const headerMocks = ({ me, ...rest }: any = headerData) => [
+  { request: { query: HEADER_STATIC }, result: { data: rest } },
+  { request: { query: HEADER_ME }, result: { data: { me } } },
+];
 
 const policiesMock = {
   request: { query: PUBLIC_POLICIES },
@@ -186,7 +188,7 @@ function seedCart(quantity: number) {
   localStorage.setItem('mweb_cart_lines', JSON.stringify([line]));
 }
 
-function renderHeader(props: Partial<typeof baseProps> & { minimal?: boolean } = {}, mocks: any[] = [headerMock(), policiesMock, flagsMock(true)]) {
+function renderHeader(props: Partial<typeof baseProps> & { minimal?: boolean } = {}, mocks: any[] = [...headerMocks(), policiesMock, flagsMock(true)]) {
   const merged = { ...baseProps, onSuperCategoryChange: vi.fn(), onLocationChange: vi.fn(), onZoneChange: vi.fn(), ...props };
   const utils = render(
     <MockedProvider mockLinkDefaultOptions={{ delay: 0 }} mocks={mocks}>
@@ -229,7 +231,7 @@ describe('AppHeader', () => {
 
   it('opens the location dialog via greeting and applies a draft selection', async () => {
     const { props } = renderHeader({ selectedLocationId: 'loc-1' }, [
-      headerMock(),
+      ...headerMocks(),
       policiesMock,
     ]);
     await screen.findByTestId('greeting');
@@ -247,7 +249,7 @@ describe('AppHeader', () => {
 
   it('applies via onAutoApply and persists a changed location', async () => {
     const { props } = renderHeader({ selectedLocationId: 'loc-1' }, [
-      headerMock(),
+      ...headerMocks(),
       policiesMock,
       setLocationMock('loc-2'),
     ]);
@@ -340,7 +342,7 @@ describe('AppHeader', () => {
 
   it('drops the cart entry point entirely once products are switched off', async () => {
     seedCart(3);
-    renderHeader({}, [headerMock(), policiesMock, flagsMock(false)]);
+    renderHeader({}, [...headerMocks(), policiesMock, flagsMock(false)]);
     await screen.findByTestId('greeting');
     expect(screen.queryByRole('button', { name: /open cart/i })).toBeNull();
   });
@@ -368,7 +370,7 @@ describe('AppHeader', () => {
 
   it('does not render the verify alert when the email is already verified', async () => {
     const verified = { ...headerData, me: { ...headerData.me, is_email_verified: true } };
-    renderHeader({}, [headerMock(verified), policiesMock]);
+    renderHeader({}, [...headerMocks(verified), policiesMock]);
     await screen.findByTestId('greeting');
     expect(screen.queryByText('Please verify your email')).toBeNull();
   });

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import PodCard from '../../pages/home-page/PodCard';
 import { useTranslation } from '../../i18n/useTranslation';
-import { podUrl } from '../../utils/seoUrls';
+import { openPod } from '../../lib/open-pod';
 import { USER_HOSTED_PODS, USER_JOINED_PODS } from './queries';
 
 export type ProfilePodsKind = 'joined' | 'hosted';
@@ -61,7 +61,7 @@ export default function ProfilePodsPanel({ userId, kind }: Readonly<Props>) {
           key={pod.id}
           pod={pod}
           hostName={pod.host_names?.[0] ?? null}
-          onOpen={() => navigate(podUrl(pod.club_slug, pod.pod_id))}
+          onOpen={() => openPod(navigate, pod)}
         />
       ))}
     </Box>

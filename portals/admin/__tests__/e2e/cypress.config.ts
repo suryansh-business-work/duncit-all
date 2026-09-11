@@ -14,7 +14,6 @@ export default defineConfig({
     videosFolder: path.join(here, '../../cypress-artifacts/videos'),
     downloadsFolder: path.join(here, '../../cypress-artifacts/downloads'),
     screenshotOnRunFailure: true,
-    video: false,
     viewportWidth: 1280,
     viewportHeight: 800,
   },

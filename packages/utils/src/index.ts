@@ -612,6 +612,7 @@ export {
 } from './app-popup';
 export {
   coverImageUrl,
+  imageSourceUrl,
   isVideoMedia,
   isVideoUrl,
   mediaTypeForUrl,

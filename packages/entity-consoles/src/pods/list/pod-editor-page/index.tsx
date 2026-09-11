@@ -21,12 +21,22 @@ import usePodAiFill from './usePodAiFill';
 
 const getClubVenueIds = (club: any): string[] => (club?.matched_venues ?? []).map((v: any) => v.id);
 
+/** Where Back, Cancel and Save go, and what Back says. Omitted, it is the pods
+ * list; the clubs console opens the editor from a pod and returns to it. */
+interface AdminPodEditorProps {
+  backTo?: string;
+  backLabel?: string;
+}
+
 /**
  * The admin pod editor, as a page rather than a dialog: `/pods/new` and
  * `/pods/:id/edit`. It carries the club filter back to the list so cancelling
  * out of the editor returns to the same view the author left.
  */
-export default function AdminPodEditorPage() {
+export default function AdminPodEditorPage({
+  backTo: backToProp,
+  backLabel = 'Back to pods',
+}: Readonly<AdminPodEditorProps>) {
   const { id = '' } = useParams();
   const [params] = useSearchParams();
   const navigate = useNavigate();
@@ -35,7 +45,8 @@ export default function AdminPodEditorPage() {
   const slotLabels = useMemo(() => buildSlotLabels(t, 'shell.slots'), [t]);
 
   const clubFilter = params.get('club_id') ?? '';
-  const backTo = clubFilter ? `/pods?club_id=${clubFilter}` : '/pods';
+  const listPath = clubFilter ? `/pods?club_id=${clubFilter}` : '/pods';
+  const backTo = backToProp ?? listPath;
 
   const lookups = usePodPageData();
   const picker = useMediaPickerBridge();
@@ -99,7 +110,7 @@ export default function AdminPodEditorPage() {
             editing={!!pod}
             eyebrow="Admin · Pods"
             onBack={() => navigate(backTo)}
-            backLabel="Back to pods"
+            backLabel={backLabel}
             initialValues={editor.initialValues}
             config={config}
             busy={editor.busy}

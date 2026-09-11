@@ -181,15 +181,16 @@ export const podResolvers = {
     pods: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
       const rows = await podService.list(args.filter, {
         includePendingApproval: canReviewPendingPods(ctx),
+        // Every club, host and place for the whole page, in one read each and
+        // in the same round trip as the club slugs. Without this the Pod field
+        // resolvers below run once per row and the feed costs hundreds of
+        // round trips.
+        prime: (docs) => primePodRelations(ctx, docs),
       });
       // The feed is the slowest read there is, so it is also the one most likely
       // to outlive its caller. Stop here rather than resolving a field per row
       // for a socket that has already closed.
       throwIfClientGone(ctx);
-      // Every club and every host for the whole page, in one read each. Without
-      // this the Pod field resolvers below run once per row and the feed costs
-      // hundreds of round trips.
-      await primePodRelations(ctx, rows);
       return rows;
     },
     userJoinedPods: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {

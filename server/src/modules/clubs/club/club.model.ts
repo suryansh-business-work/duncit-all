@@ -94,6 +94,10 @@ const clubSchema = new Schema<IClub>(
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 
+// The public club list filters `is_active` and sorts by name; without this it
+// scanned every club and sorted in memory on each cache miss.
+clubSchema.index({ is_active: 1, club_name: 1 });
+
 // Every write through mongoose is diffed and appended to the entity change
 // log (rule: the trail is captured at the model, never per service).
 attachEntityAudit(clubSchema, 'CLUB');

@@ -350,6 +350,12 @@ jobs:
           # older default used and is what keeps a ten-spec suite in single-digit
           # megabytes rather than hundreds. The parts are joined into ONE video
           # of the whole suite by the stitch step below.
+          #
+          # So NO cypress.config.ts may set `video` itself. A value inside the
+          # config's `e2e: {}` block beats this flag: all 26 carried
+          # `video: false`, every leg printed `Video: false` beneath a command
+          # line that said `video=true`, and no run ever had a recording to post.
+          # Left unset, a local run gets Cypress's own default (off).
           command: >-
             pnpm ${{ matrix.e2e || 'e2e' }} --browser chrome --reporter junit
             --reporter-options mochaFile=cypress-artifacts/junit/results-[hash].xml

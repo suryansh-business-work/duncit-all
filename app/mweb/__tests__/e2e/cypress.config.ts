@@ -21,7 +21,6 @@ export default defineConfig({
     videosFolder: `${here}/../../cypress-artifacts/videos`,
     downloadsFolder: `${here}/../../cypress-artifacts/downloads`,
     screenshotOnRunFailure: true,
-    video: false,
     viewportWidth: 412,
     viewportHeight: 915,
     defaultCommandTimeout: 8000,

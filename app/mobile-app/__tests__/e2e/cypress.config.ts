@@ -21,7 +21,6 @@ export default defineConfig({
     videosFolder: 'cypress-artifacts/videos',
     downloadsFolder: 'cypress-artifacts/downloads',
     screenshotOnRunFailure: true,
-    video: false,
     // Pixel 7 — the mobile viewport this suite has always run in.
     viewportWidth: 412,
     viewportHeight: 915,

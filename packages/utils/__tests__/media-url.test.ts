@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   coverImageUrl,
+  imageSourceUrl,
   isVideoMedia,
   isVideoUrl,
   mediaTypeForUrl,
@@ -47,6 +48,34 @@ describe('videoSourceUrl', () => {
     expect(videoSourceUrl(null)).toBe('');
     expect(videoSourceUrl(undefined)).toBe('');
     expect(videoSourceUrl('   ')).toBe('');
+  });
+});
+
+describe('imageSourceUrl', () => {
+  const PHOTO = 'https://ik.imagekit.io/esdata1/pods/sunday-run-club_VMVCL3hjz.jpg';
+
+  it('asks ImageKit for a copy resized to the width the card paints', () => {
+    expect(imageSourceUrl(PHOTO, 720)).toBe(`${PHOTO}?tr=w-720`);
+  });
+
+  it('rounds a computed width to whole pixels', () => {
+    expect(imageSourceUrl(PHOTO, 719.6)).toBe(`${PHOTO}?tr=w-720`);
+  });
+
+  it('appends after other query parameters and before a fragment', () => {
+    expect(imageSourceUrl(`${PHOTO}?updatedAt=1724832000#top`, 360)).toBe(
+      `${PHOTO}?updatedAt=1724832000&tr=w-360#top`,
+    );
+  });
+
+  it('leaves a transformation somebody asked for on purpose alone', () => {
+    expect(imageSourceUrl(`${PHOTO}?tr=w-1080`, 720)).toBe(`${PHOTO}?tr=w-1080`);
+  });
+
+  it('rewrites nothing that is not served by our CDN', () => {
+    const pexels = 'https://images.pexels.com/photos/3764011/pexels-photo-3764011.jpeg';
+    expect(imageSourceUrl(pexels, 720)).toBe(pexels);
+    expect(imageSourceUrl(null, 720)).toBe('');
   });
 });
 

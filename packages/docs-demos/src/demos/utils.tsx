@@ -119,6 +119,7 @@ import {
   coverImageUrl,
   isVideoMedia,
   videoSourceUrl,
+  imageSourceUrl,
   type AutoPodRow,
   type HostChartRange,
   type MonthlyEarning,
@@ -1120,6 +1121,24 @@ export default defineDemos('utils', [
       ],
     },
     compute: (mock) => Object.fromEntries(mock.urls.map((url) => [url, videoSourceUrl(url)])),
+  }),
+  defineDemo<{ width: number; urls: string[] }>({
+    id: 'image-source-url',
+    title: 'The URL a pod card paints its photo from',
+    note:
+      'Change `width` and only the ImageKit address follows it — ImageKit returns a copy that ' +
+      'wide (still WebP), 3-4x fewer bytes than the stored photo for a card. The Pexels photo ' +
+      'and the address that already asks for `tr=w-1080` are left exactly as they are.',
+    mock: {
+      width: 720,
+      urls: [
+        'https://ik.imagekit.io/esdata1/pods/1000412163_VMVCL3hjz.jpg',
+        'https://ik.imagekit.io/esdata1/pods/1000412163_VMVCL3hjz.jpg?tr=w-1080',
+        'https://images.pexels.com/photos/3764011/pexels-photo-3764011.jpeg',
+      ],
+    },
+    compute: (mock) =>
+      Object.fromEntries(mock.urls.map((url) => [url, imageSourceUrl(url, mock.width)])),
   }),
   defineDemo<PodFeedbackMock>({
     id: 'pod-feedback',

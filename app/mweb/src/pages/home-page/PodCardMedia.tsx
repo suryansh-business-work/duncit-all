@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Box, CardMedia } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
-import { isVideoMedia, videoSourceUrl } from '@duncit/utils';
+import { imageSourceUrl, isVideoMedia, videoSourceUrl } from '@duncit/utils';
 import { logs } from '@duncit/logs';
 
 interface Media {
@@ -10,6 +10,9 @@ interface Media {
 }
 
 const FILL_SX = { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' } as const;
+
+/** A card's widest render in device pixels — native's twin asks for the same. */
+const CARD_IMAGE_WIDTH = 720;
 
 /**
  * A card's silent looping video, downloaded and played only while it is on
@@ -64,7 +67,17 @@ export default function PodCardMedia({
     );
   }
   if (isVideoMedia(media)) return <CardVideo src={videoSourceUrl(media.url)} />;
-  // Lazy + async decode: a feed mounts every card, and an eager image each was
-  // a download and a main-thread decode for cards far below the fold.
-  return <CardMedia component="img" image={media.url} alt={title} loading="lazy" decoding="async" sx={FILL_SX} />;
+  // Card-sized, lazy and async-decoded: a feed mounts every card, and the full
+  // stored photo, eagerly, was a download and a main-thread decode for cards far
+  // below the fold at 3-4x the bytes the card could show.
+  return (
+    <CardMedia
+      component="img"
+      image={imageSourceUrl(media.url, CARD_IMAGE_WIDTH)}
+      alt={title}
+      loading="lazy"
+      decoding="async"
+      sx={FILL_SX}
+    />
+  );
 }

@@ -25,14 +25,14 @@ const IMAGEKIT_URL = /^https?:\/\/([^/?#]*\.)?imagekit\.io(:\d+)?[/?#]/i;
 const ORIGINAL = 'tr=orig-true';
 
 /**
- * The URL to hand a video player.
+ * `url` with one ImageKit `tr=` parameter appended, before any fragment.
  *
  * Left alone: a non-ImageKit address (a Pexels clip, a local file), and one
  * that already carries a `tr=` transformation, which somebody asked for on
- * purpose. Idempotent, so a URL that was stored with the flag survives a
+ * purpose. Idempotent, so a URL stored with a transformation survives a
  * second pass unchanged.
  */
-export function videoSourceUrl(url?: string | null): string {
+function withImageKitTransform(url: string | null | undefined, transform: string): string {
   const raw = (url ?? '').trim();
   if (!IMAGEKIT_URL.test(raw)) return raw;
   const hashAt = raw.indexOf('#');
@@ -40,7 +40,26 @@ export function videoSourceUrl(url?: string | null): string {
   const hash = hashAt === -1 ? '' : raw.slice(hashAt);
   if (/[?&]tr=/i.test(address)) return raw;
   const separator = address.includes('?') ? '&' : '?';
-  return `${address}${separator}${ORIGINAL}${hash}`;
+  return `${address}${separator}${transform}${hash}`;
+}
+
+/** The URL to hand a video player: the stored file, never a metered re-encode. */
+export function videoSourceUrl(url?: string | null): string {
+  return withImageKitTransform(url, ORIGINAL);
+}
+
+/**
+ * The URL to paint an image `width` pixels wide: our ImageKit addresses ask for
+ * a copy resized to that width (the aspect ratio is kept, and ImageKit still
+ * picks WebP/AVIF for the browser), everything else is unchanged.
+ *
+ * A stored photo is often several megapixels, while a card is a few hundred
+ * pixels wide — the full file was 3-4x the bytes, and the decode, a card can
+ * show. Image resizes are not the metered video re-encode above. Pass the
+ * largest width the image renders at, device pixels included.
+ */
+export function imageSourceUrl(url: string | null | undefined, width: number): string {
+  return withImageKitTransform(url, `tr=w-${Math.round(width)}`);
 }
 
 /**

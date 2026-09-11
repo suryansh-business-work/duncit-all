@@ -10,8 +10,11 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useThemeStore } from '@/stores/theme.store';
 import { useTranslation } from '@/hooks/useTranslation';
 import { podDateLabel, podImageUrl, podPlaceLabel, podPriceLabel } from '@/utils/pod-format';
-import { podSeatsTaken } from '@duncit/utils';
+import { imageSourceUrl, isVideoUrl, podSeatsTaken } from '@duncit/utils';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+
+/** A card's widest render in device pixels — mWeb's twin asks for the same. */
+const CARD_IMAGE_WIDTH = 720;
 
 interface PodCardProps {
   pod: HomePod;
@@ -169,7 +172,10 @@ export function PodCard({
   saving = false,
   onToggleSave,
 }: Readonly<PodCardProps>) {
-  const image = podImageUrl(pod);
+  const stored = podImageUrl(pod);
+  // Card-sized copy of a photo (3-4x fewer bytes). A video address is left alone:
+  // resizing one is ImageKit's metered video re-encode.
+  const image = stored && !isVideoUrl(stored) ? imageSourceUrl(stored, CARD_IMAGE_WIDTH) : stored;
   const place = showPlace ? podPlaceLabel(pod) : '';
   const dark = useThemeStore((s) => s.scheme) === 'dark';
   const { t } = useTranslation();

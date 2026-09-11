@@ -12,10 +12,34 @@ export type ActiveAd = ResultOf<typeof ActiveAdsDocument>['activeAds'][number];
 /** Placement value accepted as a plain string literal (e.g. "HOME_BOTTOM"). */
 export type AdPositionValue = `${AdPosition}`;
 
+/** How long one placement's answer is reused before a mount asks again. */
+const ADS_TTL_MS = 60_000;
+
+const adsByPosition = new Map<AdPositionValue, { at: number; request: Promise<ActiveAd[]> }>();
+
 /**
- * Loads the live ads for one placement, once per surface mount. Failures and
- * empty windows both resolve to an empty list so ad slots simply render null —
- * ads never block or break the surface they decorate.
+ * One request per placement for every slot showing it. Each tab keeps its
+ * screens mounted, so the same placement was fetched once per slot and again
+ * on every remount; now slots share an answer for a minute (the server's own
+ * cache window). `force` is pull-to-refresh. A failed answer is not kept.
+ */
+function loadAds(position: AdPositionValue, force: boolean): Promise<ActiveAd[]> {
+  const hit = adsByPosition.get(position);
+  if (!force && hit && Date.now() - hit.at < ADS_TTL_MS) return hit.request;
+  const request = graphqlRequest(ActiveAdsDocument, { position: position as AdPosition }).then(
+    (data) => data.activeAds,
+  );
+  adsByPosition.set(position, { at: Date.now(), request });
+  request.catch(() => {
+    if (adsByPosition.get(position)?.request === request) adsByPosition.delete(position);
+  });
+  return request;
+}
+
+/**
+ * The live ads for one placement (shared across slots, see loadAds). Failures
+ * and empty windows both resolve to an empty list so ad slots simply render
+ * null — ads never block or break the surface they decorate.
  */
 export function useActiveAds(position: AdPositionValue): { ads: ActiveAd[]; loading: boolean } {
   const [ads, setAds] = useState<ActiveAd[]>([]);
@@ -26,9 +50,9 @@ export function useActiveAds(position: AdPositionValue): { ads: ActiveAd[]; load
 
   useEffect(() => {
     let active = true;
-    graphqlRequest(ActiveAdsDocument, { position: position as AdPosition })
-      .then((data) => {
-        if (active) setAds(data.activeAds);
+    loadAds(position, attempt > 0)
+      .then((next) => {
+        if (active) setAds(next);
       })
       .catch(() => undefined)
       .finally(() => {

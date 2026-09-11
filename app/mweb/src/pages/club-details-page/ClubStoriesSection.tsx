@@ -39,6 +39,9 @@ export default function ClubStoriesSection({ clubId, canPost }: Readonly<Props>)
     // Club pages stay open for a while — keep the 24h expiry honest without a
     // reload. The server filter is authoritative; this catches the boundary.
     pollInterval: 60_000,
+    // A background tab has nobody to show the rail to; the next visible tick
+    // (or a return to the page) catches up.
+    skipPollAttempt: () => document.hidden,
   });
   const [recordView] = useMutation<any>(RECORD_STORY_VIEW);
   const [deleteStory] = useMutation<any>(DELETE_CLUB_STORY);

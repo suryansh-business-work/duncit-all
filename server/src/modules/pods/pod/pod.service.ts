@@ -1259,7 +1259,29 @@ function locationVenueOr(location: any, zone?: string): any[] {
   return all;
 }
 
+/**
+ * A city's venue ids barely move, yet the feed asked for them on every load —
+ * two serial Atlas reads (the location, then its venues) before the pod query
+ * could even start. Held per process for the response cache's own TTL, so a
+ * venue added to a city reaches the feed no later than a cached feed would.
+ * Only settled answers are kept (a failed read is retried next time), and the
+ * map is bounded because the zone half of the key is caller-supplied.
+ */
+const VENUE_IDS_TTL_MS = 60_000;
+const VENUE_IDS_MAX_KEYS = 200;
+const venueIdsByPlace = new Map<string, { at: number; ids: Types.ObjectId[] }>();
+
 async function venueIdsForLocationFilter(locationId?: string, zoneName?: string) {
+  const key = `${locationId ?? ''}|${zoneName?.trim() ?? ''}`;
+  const hit = venueIdsByPlace.get(key);
+  if (hit && Date.now() - hit.at < VENUE_IDS_TTL_MS) return hit.ids;
+  const ids = await readVenueIdsForLocation(locationId, zoneName);
+  if (venueIdsByPlace.size >= VENUE_IDS_MAX_KEYS) venueIdsByPlace.clear();
+  venueIdsByPlace.set(key, { at: Date.now(), ids });
+  return ids;
+}
+
+async function readVenueIdsForLocation(locationId?: string, zoneName?: string): Promise<Types.ObjectId[]> {
   const or: any[] = [];
   const zone = zoneName?.trim();
   if (locationId) {
@@ -2020,7 +2042,13 @@ export const podService = {
       host_user_id?: string;
       has_reel?: boolean;
     },
-    opts?: { includePendingApproval?: boolean }
+    opts?: {
+      includePendingApproval?: boolean;
+      /** Runs over the raw rows alongside the club-slug read — a caller's
+       * per-page prime reads other collections off the same rows, so the two
+       * go out together rather than one round trip after the other. */
+      prime?: (docs: readonly any[]) => Promise<unknown>;
+    }
   ) {
     const q: any = {};
     if (filter?.club_id) q.club_id = filter.club_id;
@@ -2057,7 +2085,7 @@ export const podService = {
         filter: JSON.stringify(filter ?? {}),
       });
     }
-    const slugMap = await loadClubSlugMap(docs);
+    const [slugMap] = await Promise.all([loadClubSlugMap(docs), opts?.prime?.(docs)]);
     return docs.map((d) => toPub(d, slugMap));
   },
 

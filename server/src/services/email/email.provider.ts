@@ -131,6 +131,12 @@ function transporterFor(config: EmailProviderConfig): Transporter {
         pool: true,
         maxConnections: 2,
         maxMessages: 100,
+        // nodemailer's defaults are 2 min to connect and 10 min of socket
+        // silence. A signup awaits its code email, so a hung mail host held the
+        // request until nginx cut it off — fail fast and let the caller report it.
+        connectionTimeout: 10_000,
+        greetingTimeout: 10_000,
+        socketTimeout: 30_000,
         host: config.host,
         port: config.port,
         secure: config.port === 465 || config.secure,

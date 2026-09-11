@@ -74,6 +74,8 @@ const postSchema = new Schema<IPost>(
 );
 
 postSchema.index({ author_id: 1, created_at: -1 });
+// The story rails read every live STORY newest first.
+postSchema.index({ kind: 1, created_at: -1 });
 // TTL: a document is removed once expires_at passes. Docs without expires_at
 // (permanent posts) are ignored by the TTL monitor.
 postSchema.index({ expires_at: 1 }, { expireAfterSeconds: 0 });

@@ -1,5 +1,9 @@
+import { Types } from 'mongoose';
 import { LocationModel } from '@modules/platform/location/location.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
+
+const VENUE_PLACE_FIELDS = 'venue_name address_line1 address_line2 locality city state country postal_code';
+const LOCATION_PLACE_FIELDS = 'location_name city state country location_pincode location_zones';
 
 /** Where a pod happens, in the two lines every surface shows: a short place
  * name and the address under it. Either may be null for a pod that has
@@ -47,10 +51,7 @@ export async function resolvePodPlace(parent: any, carrier: any): Promise<PodPla
     if (!cache.venues.has(key)) {
       cache.venues.set(
         key,
-        VenueModel.findById(key)
-          .select('venue_name address_line1 address_line2 locality city state country postal_code')
-          .lean()
-          .exec()
+        VenueModel.findById(key).select(VENUE_PLACE_FIELDS).lean().exec()
       );
     }
     const venue = await cache.venues.get(key);
@@ -77,10 +78,7 @@ export async function resolvePodPlace(parent: any, carrier: any): Promise<PodPla
     if (!cache.locations.has(key)) {
       cache.locations.set(
         key,
-        LocationModel.findById(key)
-          .select('location_name city state country location_pincode location_zones')
-          .lean()
-          .exec()
+        LocationModel.findById(key).select(LOCATION_PLACE_FIELDS).lean().exec()
       );
     }
     const location = await cache.locations.get(key);
@@ -97,6 +95,49 @@ export async function resolvePodPlace(parent: any, carrier: any): Promise<PodPla
 
   parent.__podPlace = zoneName ? { label: zoneName, detail: '' } : { label: null, detail: null };
   return parent.__podPlace;
+}
+
+interface PodPlaceRow {
+  pod_mode?: string | null;
+  venue_id?: unknown;
+  location_id?: unknown;
+}
+
+/** The ids in `ids` this memo has not seen yet, valid ones only — a malformed
+ * id is left for `resolvePodPlace`, which fails that one row as it always did. */
+const unseen = (ids: Set<string>, memo: Map<string, Promise<any>>) =>
+  [...ids].filter((id) => !memo.has(id) && Types.ObjectId.isValid(id));
+
+/**
+ * Every venue and location a page of pods names, in one read each, written into
+ * the same per-operation memo `resolvePodPlace` reads. A feed's place_label /
+ * place_detail then resolve from memory instead of a findById per distinct
+ * place, one round trip after the list had already come back.
+ */
+export async function primePodPlaces(
+  carrier: any,
+  rows: readonly (PodPlaceRow | null | undefined)[]
+): Promise<void> {
+  const cache = getPlaceCache(carrier);
+  const venueIds = new Set<string>();
+  const locationIds = new Set<string>();
+  for (const row of rows) {
+    if (!row || (row.pod_mode ?? 'PHYSICAL') === 'VIRTUAL') continue;
+    if (row.venue_id) venueIds.add(String(row.venue_id));
+    if (row.location_id) locationIds.add(String(row.location_id));
+  }
+  const venues = unseen(venueIds, cache.venues);
+  const locations = unseen(locationIds, cache.locations);
+  const [venueDocs, locationDocs] = await Promise.all([
+    venues.length ? VenueModel.find({ _id: { $in: venues } }).select(VENUE_PLACE_FIELDS).lean().exec() : [],
+    locations.length
+      ? LocationModel.find({ _id: { $in: locations } }).select(LOCATION_PLACE_FIELDS).lean().exec()
+      : [],
+  ]);
+  const venueById = new Map(venueDocs.map((doc: any) => [String(doc._id), doc]));
+  const locationById = new Map(locationDocs.map((doc: any) => [String(doc._id), doc]));
+  for (const id of venues) cache.venues.set(id, Promise.resolve(venueById.get(id) ?? null));
+  for (const id of locations) cache.locations.set(id, Promise.resolve(locationById.get(id) ?? null));
 }
 
 /**

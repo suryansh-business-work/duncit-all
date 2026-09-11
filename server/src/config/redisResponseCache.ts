@@ -97,6 +97,10 @@ const PUBLIC_CACHEABLE_FIELDS = new Set([
   'activePodLocationIds',
   'categories',
   'categoryTree',
+  // The city picker. No auth and no ctx read: `active_club_count` only memoises
+  // an aggregate on the context. The admin grid reads `locationsTable`, which
+  // stays off this list, so an edit there is never served stale.
+  'locations',
 ]);
 
 /**

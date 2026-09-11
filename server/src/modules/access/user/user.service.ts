@@ -120,6 +120,12 @@ const cleanProfileLinks = (links: UpdateMyProfileDTO['profile_links'] = []) =>
     .filter((link) => link.label && link.url)
     .slice(0, 5);
 
+/** What a public profile card reads — the nested fields plus the legacy flat
+ * copies `toPublic` still falls back to while dualWrite is on. */
+const PUBLIC_CARD_FIELDS =
+  'profile counters metadata.profile_visibility metadata.role_keys ' +
+  'first_name last_name profile_photo bio city zone roles';
+
 // Resolve relation IDs for a single user. Hot read path: each list is bounded
 // by index lookup. Used to materialize the flat GraphQL shape during the
 // backward-compat window.
@@ -3192,6 +3198,29 @@ export const userService = {
   async getById(id: string) {
     const u = await UserModel.findById(id);
     return toPublic(u);
+  },
+
+  /**
+   * The documents and role-relation keys behind a list of public profile
+   * cards, in two reads for the whole list. `getById` per row also loaded
+   * seven relation lists per user, so a 50-person follow rail was ~400
+   * concurrent queries. Invalid ids drop out, as `getById`'s cast error did.
+   */
+  async listPublicCardSources(ids: readonly string[]) {
+    const oids = ids.filter((id) => Types.ObjectId.isValid(id)).map((id) => new Types.ObjectId(id));
+    const rolesByUser = new Map<string, string[]>();
+    if (oids.length === 0) return { docs: [] as any[], rolesByUser };
+    const [docs, roleRows] = await Promise.all([
+      UserModel.find({ _id: { $in: oids } }).select(PUBLIC_CARD_FIELDS).lean(),
+      UserRoleModel.find({ user_id: { $in: oids } }).select('user_id role').lean(),
+    ]);
+    for (const row of roleRows as any[]) {
+      const key = String(row.user_id);
+      const roles = rolesByUser.get(key) ?? [];
+      if (!roles.includes(row.role)) roles.push(row.role);
+      rolesByUser.set(key, roles);
+    }
+    return { docs, rolesByUser };
   },
 
   async listContactActions(user_id: string) {

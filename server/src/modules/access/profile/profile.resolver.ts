@@ -1,4 +1,5 @@
 import { userService } from '@modules/access/user/user.service';
+import { USER_SCHEMA_FLAGS } from '@modules/access/user/user.featureFlags';
 import {
   updateMyProfileSchema,
   petProfileSchema,
@@ -96,23 +97,28 @@ function followStatusOf(isFollowing: boolean, requested: boolean) {
  * A list that only needs the public card (the contacts radar) reads the
  * documents in one query and shapes them here instead.
  */
-function flatPublicFields(doc: any) {
+function flatPublicFields(doc: any, relationRoles: readonly string[] = []) {
+  // A row not yet migrated off the flat legacy fields still carries them while
+  // dualWrite is on — the same fallback `toPublic` reads.
+  const legacy = USER_SCHEMA_FLAGS.dualWrite ? doc : {};
   const profile = doc.profile ?? {};
   const counters = doc.counters ?? {};
   const metadata = doc.metadata ?? {};
   return {
     user_id: String(doc._id),
     username: profile.username ?? null,
-    first_name: profile.first_name ?? null,
-    last_name: profile.last_name ?? null,
-    profile_photo: profile.profile_photo ?? null,
-    bio: profile.bio ?? null,
-    city: profile.city ?? null,
-    zone: profile.zone ?? null,
+    first_name: profile.first_name ?? legacy.first_name ?? null,
+    last_name: profile.last_name ?? legacy.last_name ?? null,
+    profile_photo: profile.profile_photo ?? legacy.profile_photo ?? null,
+    bio: profile.bio ?? legacy.bio ?? null,
+    city: profile.city ?? legacy.city ?? null,
+    zone: profile.zone ?? legacy.zone ?? null,
     followers_count: counters.followers_count ?? 0,
     following_count: counters.following_count ?? 0,
     profile_visibility: metadata.profile_visibility ?? 'PUBLIC',
-    roles: metadata.role_keys ?? [],
+    // The role relation wins; the metadata copy is what a row with no relation
+    // rows reads — the same precedence as `toPublic`.
+    roles: relationRoles.length ? relationRoles : (metadata.role_keys ?? legacy.roles ?? []),
   };
 }
 
@@ -141,11 +147,15 @@ async function viewerRelations(viewerId: string | null) {
  * Public profiles for user documents already in hand — the same privacy
  * shaping as `mapPublicProfiles`, without a per-id read. Order is preserved.
  */
-export async function publicProfilesFromDocs(docs: readonly any[], viewerId: string | null) {
+export async function publicProfilesFromDocs(
+  docs: readonly any[],
+  viewerId: string | null,
+  rolesByUser: ReadonlyMap<string, readonly string[]> = new Map()
+) {
   if (docs.length === 0) return [];
   const rel = await viewerRelations(viewerId);
   return docs.map((doc) => {
-    const u = flatPublicFields(doc);
+    const u = flatPublicFields(doc, rolesByUser.get(String(doc._id)));
     return toPublicProfile(u, viewerId, {
       isFollowing: rel.following.has(u.user_id),
       hasRequested: rel.requested.has(u.user_id),
@@ -160,28 +170,12 @@ export async function publicProfilesFromDocs(docs: readonly any[], viewerId: str
 export async function mapPublicProfiles(ids: string[], viewerId: string | null) {
   const clean = ids.filter(Boolean);
   if (clean.length === 0) return [];
-  const users = await Promise.all(clean.map((id) => userService.getById(id).catch(() => null)));
-  // Every set is fetched once for the whole list — a per-row lookup would make
-  // a 200-follower list 800 queries.
-  const [following, requested, followers, inbound] = viewerId
-    ? await Promise.all([
-        userService.listFollowingUserIds(viewerId).then((r) => new Set(r)),
-        userService.listRequestedUserIds(viewerId).then((r) => new Set(r)),
-        userService.listFollowerUserIds(viewerId).then((r) => new Set(r)),
-        userService
-          .listPendingFollowRequests(viewerId)
-          .then((rows) => new Map(rows.map((r) => [r.requester_id, r.id]))),
-      ])
-    : [new Set<string>(), new Set<string>(), new Set<string>(), new Map<string, string>()];
-  return users.filter(Boolean).map((u) => {
-    const id = (u as any).user_id;
-    return toPublicProfile(u, viewerId, {
-      isFollowing: following.has(id),
-      hasRequested: requested.has(id),
-      followsViewer: followers.has(id),
-      inboundRequestId: inbound.get(id) ?? null,
-    });
-  });
+  // Two reads for the whole list, then the viewer's edges once — never a
+  // per-row lookup. Order (and any repeat) follows `ids`; a missing user drops.
+  const { docs, rolesByUser } = await userService.listPublicCardSources(clean);
+  const byId = new Map(docs.map((doc: any) => [String(doc._id), doc]));
+  const ordered = clean.map((id) => byId.get(id)).filter(Boolean);
+  return publicProfilesFromDocs(ordered, viewerId, rolesByUser);
 }
 
 export const profileResolvers = {

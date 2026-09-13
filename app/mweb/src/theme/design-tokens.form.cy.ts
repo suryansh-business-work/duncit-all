@@ -12,7 +12,7 @@ describe('@duncit/auth-tokens', () => {
     expect(neutral[900]).toBe('#111827');
     expect(semantic.error).toBe('#ef4444');
     expect(surface.paper).toBe('#ffffff');
-    expect(light.primary).toBe('#1a874c');
+    expect(light.primary).toBe('#f82c2e');
     expect(dark.bg).toBe('#0e1012');
   });
 

@@ -20,6 +20,12 @@ const STRESS_VERDICT_SITE = {
   trigger: 'Someone presses "Generate verdict" on a finished stress run',
 } as const;
 
+const SERVER_ADVICE_SITE = {
+  file: 'server/src/modules/platform/tech/tech.advice.ts',
+  surface: 'Tech · Server > Info',
+  trigger: 'Someone presses "Generate recommendations" on the server info page',
+} as const;
+
 const CHANGELOG_SITE = {
   file: 'server/src/modules/platform/appRelease/appRelease.changelog.ts',
   surface: 'Tech · App Builds',
@@ -159,6 +165,56 @@ export const PLATFORM_PROMPTS = [
     ],
     usage: [STRESS_VERDICT_SITE],
     content: 'Review this stress run:\n{{run_data}}',
+  },
+  {
+    key: 'tech.server_advice',
+    name: 'Server recommendations',
+    description: 'Reads a month of per-day server readings and recommends what to improve on the server, and why.',
+    category: PLATFORM,
+    role: 'SYSTEM',
+    tasks: ['platform.server_advice'],
+    target_model: '',
+    variables: [],
+    usage: [SERVER_ADVICE_SITE],
+    content: [
+      'You are a senior site-reliability engineer doing a monthly capacity and health review of the server behind Duncit, a social-events platform.',
+      'Architecture: a Node.js (Express + Apollo GraphQL) API with MongoDB Atlas and Redis, an SSR mobile-web app (mWeb), several staff portals and observability tools (SignOz/ClickHouse), all as Docker containers on ONE VPS that production and staging share. Host CPU, memory, swap and disk are the whole machine (both environments); latency, requests and errors are only the environment named in the data.',
+      '',
+      'The data is JSON: the host size, the readings right now, Docker status, a month summary, one row per day for the last 30 days (null = no reading that day, NOT zero — a day with 0 samples means the API was down or not yet recording), the heaviest containers with their daily peak memory, and the slowest GraphQL operations of the month.',
+      'Per day: cpu_avg_pct / cpu_peak_pct (peak = worst 5-second reading), load_avg_5, memory_avg_pct / memory_peak_pct, swap_peak_pct, disk_pct and disk_used_gb at the end of the day, requests and errors_5xx, api_latency_avg_ms and api_latency_p95_ms (request-weighted, measured inside the API), worst_5min_p95_ms, health_probe_ms (the public /health round trip), uptime_pct, event_loop_p99_peak_ms and api_rss_peak_mb.',
+      '',
+      'HOW TO JUDGE — think it through day by day before answering:',
+      '1. Healthy bands: CPU avg < 60% with peaks < 85%; memory avg < 75% and peak < 90%; swap use near 0%; disk < 80% with more than 90 days until full; API p95 < 500 ms; health probe < 800 ms; uptime >= 99.9%; 5xx under 0.5% of requests; event-loop p99 < 100 ms.',
+      '2. Trends: compare the first week with the last week. Rising memory or api_rss_peak_mb day after day (or one container whose daily peak keeps climbing) is a leak; steady disk growth sets a date the disk fills; latency that rises with requests is a capacity limit, latency that rises without it is a regression or a slow dependency.',
+      '3. Notable days: name the dates whose readings stand out — a spike, an outage, a missing day, a jump in 5xx — and what the numbers show that day.',
+      '4. Recommendations must follow from evidence in the data and cite it (numbers and dates). Size upgrades from the peaks: e.g. memory peaking at 92% of 8 GB means 16 GB, not "more RAM". Options include: more vCPU or RAM, moving staging or observability containers off the production box, container memory limits, adding or tuning swap, pruning Docker images, volumes and logs, log rotation, a bigger Atlas tier or a closer region when the health probe is far slower than the in-API latency, caching or indexing a named slow GraphQL operation, API replicas behind a load balancer, a CDN, renewing an SSL certificate. Never invent a component that is not in the data. Give each a level: HIGH = do it now, MEDIUM = this month, LOW = when convenient.',
+      '5. If there are fewer than 7 days_with_data say so in the summary and prefer WATCH or INCONCLUSIVE; with fewer than 2, grade INCONCLUSIVE.',
+      'Grades: HEALTHY = nothing needs doing; WATCH = fine today but a trend needs action within weeks; ACTION_NEEDED = a limit is being hit or will be soon; INCONCLUSIVE = not enough data.',
+      '',
+      'Plain English, short sentences, no markdown. Numbers must come from the data or be clearly marked as estimates.',
+      'Return STRICT JSON only, exactly this shape:',
+      '{ "grade": "HEALTHY" | "WATCH" | "ACTION_NEEDED" | "INCONCLUSIVE", "headline": string, "summary": string, "trends": [{ "title": string, "detail": string, "level": "LOW" | "MEDIUM" | "HIGH" }], "recommendations": [{ "title": string, "detail": string, "level": "LOW" | "MEDIUM" | "HIGH" }], "notable_days": [{ "date": "yyyy-MM-dd", "note": string }], "watch_points": [string] }',
+      'recommendations ordered most important first, each detail saying the evidence and the expected effect. At most 8 recommendations, 6 trends, 8 notable_days and 6 watch_points.',
+    ].join('\n'),
+  },
+  {
+    key: 'tech.server_advice.user',
+    name: 'Server recommendations — the month',
+    description: 'Hands over the host, the month summary, the per-day readings, containers and slow operations, as one JSON object.',
+    category: PLATFORM,
+    role: 'USER',
+    tasks: ['platform.server_advice'],
+    target_model: '',
+    variables: [
+      required(
+        'server_data',
+        'Server data',
+        'The host size, readings right now, Docker status, month summary, 30 per-day rows, heaviest containers and slowest GraphQL operations.',
+        '{"environment":"production","host":{"cpu_cores":4,"memory_total_gb":8},"days":[{"date":"2026-09-14","memory_peak_pct":91}]}',
+      ),
+    ],
+    usage: [SERVER_ADVICE_SITE],
+    content: 'Review this server month:\n{{server_data}}',
   },
   {
     key: 'askbot.navigation',

@@ -28,6 +28,7 @@ import { startWhatsappScheduler } from '@modules/platform/whatsapp/whatsapp.sche
 import { startDbBackupScheduler } from '@modules/platform/dbBackup/dbBackup.scheduler';
 import { startE2eRunScheduler } from '@modules/platform/e2eRun/e2eRun.scheduler';
 import { startStressTestSampler } from '@modules/platform/stressTest/stressTest.sampler';
+import { startServerHistorySampler } from '@modules/platform/tech/tech.history.sampler';
 import { serverPulseMiddleware, startServerPulse } from './observability/serverPulse';
 import { startAccountDeletionScheduler } from '@modules/access/accountDeletion/accountDeletion.scheduler';
 import { startAccountLockRefresh } from '@modules/access/accountDeletion/accountDeletion.lock';
@@ -452,6 +453,9 @@ async function bootstrap() {
   // a single indexed query while no run is live.
   startServerPulse();
   startStressTestSampler();
+  // Tech > Server > Info's month of history: one host sample every five
+  // minutes (CPU, memory, disk, latency, containers), expired by TTL.
+  startServerHistorySampler();
 
   // Account deletions: a one-minute tick that carries out requests whose grace
   // period has run out (Admin Panel > Settings > Account deletion; off until an

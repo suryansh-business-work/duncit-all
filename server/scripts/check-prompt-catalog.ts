@@ -69,6 +69,8 @@ const SHIPPED_KEYS = [
   'support.assistant',
   'support.mail_auto_reply',
   'support.mail_auto_reply.user',
+  'tech.server_advice',
+  'tech.server_advice.user',
   'upload.image_scan',
   'upload.image_scan.user',
 ];

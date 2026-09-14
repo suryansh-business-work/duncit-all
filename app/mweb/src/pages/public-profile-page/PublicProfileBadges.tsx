@@ -38,7 +38,7 @@ export default function PublicProfileBadges({ userId }: Readonly<Props>) {
   if (badges.length === 0) return null;
 
   return (
-    <Card>
+    <Card data-testid="public-profile-badges">
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack direction="row" spacing={0.75} sx={{ alignItems: 'baseline', mb: 1.5 }}>
           <Typography component="h2" sx={{ fontSize: '1.05rem', fontWeight: 600 }}>
@@ -49,6 +49,7 @@ export default function PublicProfileBadges({ userId }: Readonly<Props>) {
           </Typography>
         </Stack>
         <Box
+          data-testid="public-profile-badges-grid"
           sx={{
             display: 'grid',
             gap: 1.5,
@@ -58,6 +59,7 @@ export default function PublicProfileBadges({ userId }: Readonly<Props>) {
           {badges.map((ub: any) => (
             <ButtonBase
               key={ub.id}
+              data-testid={`public-profile-badges-badge-${ub.id}`}
               focusRipple
               onClick={() => setActive(ub)}
               aria-label={`View badge ${ub.badge?.title ?? ''}`}

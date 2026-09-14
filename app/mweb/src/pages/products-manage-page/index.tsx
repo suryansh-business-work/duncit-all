@@ -29,7 +29,7 @@ export default function ProductsManagePage() {
   });
   if (!showProducts) {
     return (
-      <Stack sx={{ maxWidth: 760, mx: 'auto', width: '100%', py: 4 }}>
+      <Stack data-testid="products-manage-page-disabled" sx={{ maxWidth: 760, mx: 'auto', width: '100%', py: 4 }}>
         <Alert severity="info">{t('mweb.productsManage.productFeaturesAreNotAvailableRight')}</Alert>
       </Stack>
     );
@@ -46,7 +46,7 @@ export default function ProductsManagePage() {
     .map((p) => ({ label: String(p.product_name).slice(0, 8), value: p.available_count ?? 0 }));
 
   return (
-    <Stack spacing={2} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+    <Stack data-testid="products-manage-page" spacing={2} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <StudioPageHeader
         icon={<Inventory2Icon fontSize="small" />}
         title={t('mweb.productsManage.ecommStudio')}
@@ -54,6 +54,7 @@ export default function ProductsManagePage() {
 
       {loading && !data && (
         <Stack
+          data-testid="products-manage-page-loading"
           sx={{
             alignItems: "center",
             py: 4
@@ -61,11 +62,15 @@ export default function ProductsManagePage() {
           <CircularProgress size={22} />
         </Stack>
       )}
-      {error && <Alert severity="error">{error.message}</Alert>}
+      {error && (
+        <Alert data-testid="products-manage-page-error" severity="error">
+          {error.message}
+        </Alert>
+      )}
 
-      <Stack direction="row" spacing={1.25}>
+      <Stack data-testid="products-manage-page-stats" direction="row" spacing={1.25}>
         {[{ label: t('mweb.productsManage.products'), value: products.length }, { label: t('mweb.productsManage.inStock'), value: totalStock }, { label: t('mweb.productsManage.avgPrice'), value: `₹${avgPrice}` }].map((item) => (
-          <Card key={item.label} sx={{ flex: 1, minWidth: 0 }}>
+          <Card key={item.label} data-testid={`products-manage-page-stat-${item.label}`} sx={{ flex: 1, minWidth: 0 }}>
             <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
               <Typography
                 variant="caption"
@@ -81,13 +86,13 @@ export default function ProductsManagePage() {
         ))}
       </Stack>
 
-      <Card>
+      <Card data-testid="products-manage-page-stock-card">
         <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <Typography variant="subtitle1" sx={{ fontSize: '1rem' }}>
             Stock by product
           </Typography>
           {stockChart.length === 0 ? (
-            <Stack spacing={1.25} sx={{ alignItems: 'center', py: 2 }}>
+            <Stack data-testid="products-manage-page-stock-empty" spacing={1.25} sx={{ alignItems: 'center', py: 2 }}>
               <Inventory2Icon sx={{ fontSize: 48, color: 'text.secondary' }} />
               <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center' }}>
                 No products in the catalogue yet.

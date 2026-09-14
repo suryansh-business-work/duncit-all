@@ -15,8 +15,8 @@ export default function ClubMomentsSection({ moments }: Readonly<Props>) {
   if (moments.length === 0) return null;
 
   return (
-    <Box>
-      <SectionHeader title={t('mweb.clubDetailsPage.moments')} />
+    <Box data-testid="club-moments">
+      <SectionHeader testId="club-moments-header" title={t('mweb.clubDetailsPage.moments')} />
       <Box
         sx={{
           display: 'grid',

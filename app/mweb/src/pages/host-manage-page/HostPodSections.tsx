@@ -64,9 +64,10 @@ export default function HostPodSections({
   });
 
   return (
-    <Stack spacing={3}>
+    <Stack data-testid="host-pod-sections" spacing={3}>
       {!errorMessage && (
         <VenueRequestsCard
+          testId="requested-pods-section"
           title={t('mweb.hostManage.requestedPods')}
           emptyText={t('mweb.hostManage.requestedPodsEmpty')}
           pods={requested}
@@ -83,6 +84,7 @@ export default function HostPodSections({
       />
 
       <VenueRequestsCard
+        testId="rejected-pods-section"
         title={t('mweb.hostManage.rejectedPods')}
         emptyText={null}
         pods={rejected}

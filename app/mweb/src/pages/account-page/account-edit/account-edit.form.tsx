@@ -124,9 +124,9 @@ export default function AccountEditForm({
   });
 
   return (
-    <form noValidate onSubmit={submit}>
+    <form data-testid="account-edit-form" noValidate onSubmit={submit}>
       <Stack spacing={1.5}>
-        {(submitError || errorMessage) && <Alert severity="error">{submitError || errorMessage}</Alert>}
+        {(submitError || errorMessage) && <Alert data-testid="account-edit-error" severity="error">{submitError || errorMessage}</Alert>}
         <UsernameField
           control={control}
           current={defaultValues.username || null}
@@ -168,7 +168,7 @@ export default function AccountEditForm({
         />
         <DobDateField control={control} minAge={minAge} />
         <LocationSelect control={control} setValue={setValue} />
-        <Typography sx={{ fontSize: 15, fontWeight: 600, pt: 1 }}>Main address</Typography>
+        <Typography data-testid="account-edit-address-title" sx={{ fontSize: 15, fontWeight: 600, pt: 1 }}>Main address</Typography>
         <AddressFields
           control={control}
           names={ADDRESS_NAMES}

@@ -23,6 +23,7 @@ interface GiftCardVisualProps {
   /** Dense variant for the theme picker's option tiles. Never flips: the tile
    * is itself a button, so a second control inside it would fight the tap. */
   compact?: boolean;
+  testId?: string;
 }
 
 const COMPACT_HEIGHT = 118;
@@ -46,6 +47,7 @@ export default function GiftCardVisual({
   currencySymbol,
   code,
   compact = false,
+  testId,
 }: Readonly<GiftCardVisualProps>) {
   const { t } = useTranslation();
   const [flipped, setFlipped] = useState(false);
@@ -77,7 +79,7 @@ export default function GiftCardVisual({
         }}
       >
         <Box sx={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden' }}>
-          <GiftCardFace side="FRONT" artworkUrl={artwork.front} {...faceProps} />
+          <GiftCardFace side="FRONT" artworkUrl={artwork.front} testId={testId} {...faceProps} />
         </Box>
         {canFlip && (
           <Box
@@ -94,6 +96,7 @@ export default function GiftCardVisual({
       </Box>
       {canFlip && (
         <DuncitIconButton
+          data-testid="gift-card-flip"
           size="small"
           onClick={() => setFlipped((was) => !was)}
           aria-label={t('mweb.giftCards.flipCard')}

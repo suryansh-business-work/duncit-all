@@ -11,7 +11,7 @@ interface Props {
 
 export default function LocationCityGrid({ cities, draftLocationId, onSelect }: Readonly<Props>) {
   return (
-    <Box>
+    <Box data-testid="location-city-grid">
       <LocationSectionLabel>City</LocationSectionLabel>
       <Box
         sx={{
@@ -34,7 +34,7 @@ export default function LocationCityGrid({ cities, draftLocationId, onSelect }: 
           />
         ))}
         {cities.length === 0 && (
-          <Typography variant="body2" sx={{
+          <Typography data-testid="location-city-grid-empty" variant="body2" sx={{
             color: "text.secondary"
           }}>
             No cities here yet.

@@ -23,9 +23,15 @@ function CountStat({
   value,
   label,
   onClick,
-}: Readonly<{ value: number; label: string; onClick: () => void }>) {
+  testId,
+}: Readonly<{ value: number; label: string; onClick: () => void; testId: string }>) {
   return (
-    <Box onClick={onClick} role="button" sx={{ flex: 1, textAlign: 'center', py: 1.5, cursor: 'pointer' }}>
+    <Box
+      data-testid={testId}
+      onClick={onClick}
+      role="button"
+      sx={{ flex: 1, textAlign: 'center', py: 1.5, cursor: 'pointer' }}
+    >
       <Typography sx={{ display: 'block', fontSize: 18, fontWeight: 700, lineHeight: 1.2 }}>
         {value}
       </Typography>
@@ -40,15 +46,16 @@ export default function PublicProfileHeader({ user, viewerId }: Readonly<Props>)
   const [followTab, setFollowTab] = useState<'followers' | 'following' | null>(null);
 
   return (
-    <Stack spacing={2} sx={{ alignItems: 'center' }}>
+    <Stack data-testid="public-profile-header" spacing={2} sx={{ alignItems: 'center' }}>
       <Avatar
+        data-testid="public-profile-header-avatar"
         src={user.profile_photo || undefined}
         sx={{ width: 88, height: 88, fontSize: 34, fontWeight: 600, bgcolor: 'primary.main' }}
       >
         {user.full_name?.[0]?.toUpperCase() ?? '?'}
       </Avatar>
       <Box sx={{ width: '100%', textAlign: 'center' }}>
-        <Typography component="h1" sx={{ fontSize: 22, fontWeight: 600, lineHeight: 1.2 }}>
+        <Typography data-testid="public-profile-header-name" component="h1" sx={{ fontSize: 22, fontWeight: 600, lineHeight: 1.2 }}>
           {user.full_name || 'Duncit user'}
         </Typography>
         {user.username && (
@@ -77,11 +84,13 @@ export default function PublicProfileHeader({ user, viewerId }: Readonly<Props>)
         sx={{ ...SURFACE_SX, width: '100%', '& > * + *': { borderLeft: 1, borderColor: 'divider' } }}
       >
         <CountStat
+          testId="public-profile-header-stat-followers"
           value={user.followers_count ?? 0}
           label="followers"
           onClick={() => setFollowTab('followers')}
         />
         <CountStat
+          testId="public-profile-header-stat-following"
           value={user.following_count ?? 0}
           label="following"
           onClick={() => setFollowTab('following')}

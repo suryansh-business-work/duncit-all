@@ -14,6 +14,7 @@ export default function PhotoViewerDialog({ open, src, onClose }: Readonly<Props
   const { t } = useTranslation();
   return (
     <Dialog
+      data-testid="photo-viewer-dialog"
       open={open && !!src}
       onClose={onClose}
       maxWidth="sm"
@@ -24,6 +25,7 @@ export default function PhotoViewerDialog({ open, src, onClose }: Readonly<Props
     >
       <Box sx={{ position: 'relative' }}>
         <DuncitRoundButton
+          data-testid="photo-viewer-close"
           size="large"
           tone="overlay"
           aria-label={t('mweb.profileAvatar.closePhoto')}
@@ -34,6 +36,7 @@ export default function PhotoViewerDialog({ open, src, onClose }: Readonly<Props
         </DuncitRoundButton>
         {src && (
           <Box
+            data-testid="photo-viewer-image"
             component="img"
             src={src}
             alt={t('mweb.profileAvatar.profilePhoto')}

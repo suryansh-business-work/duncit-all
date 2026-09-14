@@ -47,6 +47,7 @@ export default function ChatDialogs({
   return (
     <>
       <ConfirmDialog
+        testId="support-chat-resolve-confirm"
         open={confirmOpen}
         title={t('mweb.common.markAsResolved')}
         message={t('mweb.common.areYouSureYourIssueHas')}

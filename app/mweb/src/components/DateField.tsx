@@ -1,4 +1,5 @@
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { testIdProps } from '../utils/testIdProps';
 
 interface Props {
   label: string;
@@ -52,6 +53,8 @@ export default function DateField({
       disabled={disabled}
       slotProps={{
         textField: {
+          ...testIdProps('date-field'),
+          slotProps: { htmlInput: { ...testIdProps('date-field-input') } },
           fullWidth,
           required,
           error,

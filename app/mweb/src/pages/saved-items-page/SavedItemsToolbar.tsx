@@ -22,6 +22,7 @@ import {
   type SavedFilters,
 } from './savedItemsFilter';
 import { useTranslation } from '../../i18n/useTranslation';
+import { testIdProps } from '../../utils/testIdProps';
 
 /** The round green filter beside the search pill, and a round surface sort —
  * both the pill's height. Min-height pins them against the coarse-pointer rule. */
@@ -50,12 +51,14 @@ interface LevelSelectProps {
   disabled?: boolean;
   helper?: string;
   onChange: (id: string) => void;
+  testId: string;
 }
 
 /** One level of the Super → Category → Sub cascade. Hoisted (S6478). */
-function LevelSelect({ label, value, options, disabled, helper, onChange }: Readonly<LevelSelectProps>) {
+function LevelSelect({ label, value, options, disabled, helper, onChange, testId }: Readonly<LevelSelectProps>) {
   return (
     <TextField
+      data-testid={testId}
       select
       fullWidth
       size="small"
@@ -97,10 +100,11 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
   const resetCategory = () => onFilters({ ...filters, superId: '', categoryId: '', subId: '' });
 
   return (
-    <Stack direction="row" spacing={1} sx={{
+    <Stack data-testid="saved-items-toolbar" direction="row" spacing={1} sx={{
       alignItems: "center"
     }}>
       <SearchPillField
+        testId="saved-items-toolbar-search"
         placeholder={t('mweb.common.searchSavedPods')}
         value={search}
         onChange={onSearch}
@@ -108,6 +112,7 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
       />
       <Badge color="secondary" badgeContent={filterCount} overlap="circular">
         <DuncitIconButton
+          data-testid="saved-items-toolbar-filter"
           aria-label={t('mweb.savedItems.filterByCategory')}
           onClick={(event) => setFilterAnchor(event.currentTarget)}
           sx={FILTER_BTN_SX}
@@ -116,6 +121,7 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
         </DuncitIconButton>
       </Badge>
       <DuncitIconButton
+        data-testid="saved-items-toolbar-sort"
         aria-label={t('mweb.savedItems.sortSavedPods')}
         onClick={(event) => setSortAnchor(event.currentTarget)}
         sx={SORT_BTN_SX}
@@ -129,13 +135,21 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
         onClose={() => setFilterAnchor(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        slotProps={{ paper: { ...testIdProps('saved-items-toolbar-filter-popover') } }}
       >
         <Stack spacing={2} sx={{ p: 2, width: 288 }}>
           <Typography sx={{
             fontWeight: 600
           }}>{t('mweb.savedItems.filterByCategory')}</Typography>
-          <LevelSelect label={t('mweb.common.superCategory')} value={filters.superId} options={superCategories(categories)} onChange={setSuper} />
           <LevelSelect
+            testId="saved-items-toolbar-filter-super"
+            label={t('mweb.common.superCategory')}
+            value={filters.superId}
+            options={superCategories(categories)}
+            onChange={setSuper}
+          />
+          <LevelSelect
+            testId="saved-items-toolbar-filter-category"
             label={t('mweb.common.category')}
             value={filters.categoryId}
             options={categoriesUnder(categories, filters.superId)}
@@ -144,6 +158,7 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
             onChange={setCategory}
           />
           <LevelSelect
+            testId="saved-items-toolbar-filter-sub"
             label={t('mweb.savedItems.subCategory')}
             value={filters.subId}
             options={subsUnder(categories, filters.categoryId)}
@@ -151,16 +166,22 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
             helper={filters.categoryId ? undefined : 'Select a category first'}
             onChange={setSub}
           />
-          <DuncitButton onClick={resetCategory} disabled={!filterCount}>
+          <DuncitButton data-testid="saved-items-toolbar-filter-reset" onClick={resetCategory} disabled={!filterCount}>
             Reset
           </DuncitButton>
         </Stack>
       </Popover>
 
-      <Menu anchorEl={sortAnchor} open={Boolean(sortAnchor)} onClose={() => setSortAnchor(null)}>
+      <Menu
+        anchorEl={sortAnchor}
+        open={Boolean(sortAnchor)}
+        onClose={() => setSortAnchor(null)}
+        slotProps={{ paper: { ...testIdProps('saved-items-toolbar-sort-menu') } }}
+      >
         {SAVED_SORTS.map((option) => (
           <MenuItem
             key={option.value}
+            data-testid={`saved-items-toolbar-sort-${option.value}`}
             selected={filters.sort === option.value}
             onClick={() => {
               onFilters({ ...filters, sort: option.value });

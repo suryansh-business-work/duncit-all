@@ -19,6 +19,7 @@ export default function OrdersHistoryPage() {
   if (loading && orders.length === 0)
     return (
       <Stack
+        data-testid="orders-loading"
         sx={{
           alignItems: "center",
           p: 6
@@ -26,16 +27,16 @@ export default function OrdersHistoryPage() {
         <CircularProgress />
       </Stack>
     );
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  if (error) return <Alert severity="error" data-testid="orders-error">{error.message}</Alert>;
 
   return (
-    <Stack spacing={2} sx={{ py: 0.5 }}>
-      <PageHeader title={t('mweb.ordersHistory.myProductOrders')} />
+    <Stack spacing={2} sx={{ py: 0.5 }} data-testid="orders-history-screen">
+      <PageHeader testId="orders-history-header" title={t('mweb.ordersHistory.myProductOrders')} />
       {orders.length === 0 ? (
-        <EmptyState icon={<LocalShippingOutlinedIcon />} title="No product orders yet" />
+        <EmptyState testId="orders-empty" icon={<LocalShippingOutlinedIcon />} title="No product orders yet" />
       ) : (
         orders.map((order) => (
-          <Card key={order.id} sx={{ p: 2 }}>
+          <Card key={order.id} sx={{ p: 2 }} data-testid={`orders-history-order-${order.id}`}>
             <Stack spacing={1}>
               {order.pod?.pod_title && (
                 <Typography variant="caption" noWrap sx={{ color: 'text.secondary', fontWeight: 600 }}>

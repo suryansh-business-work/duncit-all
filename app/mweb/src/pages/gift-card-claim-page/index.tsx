@@ -28,10 +28,11 @@ export default function GiftCardClaimPage() {
   const card = data?.giftCardByCode ?? null;
 
   return (
-    <Stack spacing={2} sx={{ maxWidth: 560, mx: 'auto', width: '100%', py: 0.5 }}>
-      <PageHeader title={t('mweb.giftCards.title')} />
+    <Stack data-testid="gift-card-claim-screen" spacing={2} sx={{ maxWidth: 560, mx: 'auto', width: '100%', py: 0.5 }}>
+      <PageHeader testId="gift-card-claim-header" title={t('mweb.giftCards.title')} />
       {loading && !card && (
         <Stack
+          data-testid="gift-card-claim-loading"
           sx={{
             alignItems: "center",
             py: 4
@@ -39,7 +40,7 @@ export default function GiftCardClaimPage() {
           <CircularProgress size={24} />
         </Stack>
       )}
-      {error && <Alert severity="error">{t('mweb.giftCards.redeemError')}</Alert>}
+      {error && <Alert data-testid="gift-card-claim-error" severity="error">{t('mweb.giftCards.redeemError')}</Alert>}
       {card && <GiftCardRedeemView card={card} currencySymbol={currencySymbol} />}
     </Stack>
   );

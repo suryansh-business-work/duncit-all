@@ -60,14 +60,18 @@ export function SomethingForYouRail({ onOpen }: Readonly<Props>) {
   if (items.length === 0) return null;
 
   return (
-    <YStack gap={12}>
+    <YStack testID="something-for-you-rail" gap={12}>
       <YStack paddingHorizontal={16}>
-        <SectionHeader title={t('mweb.home.somethingForYou')} />
+        <SectionHeader
+          testID="something-for-you-rail-header"
+          title={t('mweb.home.somethingForYou')}
+        />
       </YStack>
 
       {/* The last card is deliberately cut off by the screen edge — with no
           scrollbar it is the only signal that the row moves. */}
       <ScrollView
+        testID="something-for-you-rail-list"
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
@@ -91,6 +95,7 @@ function SomethingForYouTile({
   const { soft } = useThemeColors();
   return (
     <Pressable
+      testID={`something-for-you-tile-${item.id}`}
       accessibilityRole={opens ? 'button' : 'image'}
       onPress={opens ? () => onOpen(target) : undefined}
       style={{

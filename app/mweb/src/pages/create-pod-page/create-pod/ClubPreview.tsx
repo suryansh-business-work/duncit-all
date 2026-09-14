@@ -38,6 +38,7 @@ export default function ClubPreview({ club }: Readonly<Props>) {
 
   return (
     <Stack
+      data-testid="club-preview"
       direction="row"
       spacing={1.5}
       sx={{
@@ -65,23 +66,24 @@ export default function ClubPreview({ club }: Readonly<Props>) {
             mt: 0.25
           }}>
           <Chip
+            data-testid="club-preview-venue-count"
             size="small"
             variant="outlined"
             icon={<StorefrontOutlinedIcon />}
             label={venueLabel}
           />
-          <DuncitButton size="small" onClick={() => setOpen(true)} sx={{ p: 0 }}>
+          <DuncitButton data-testid="club-preview-details" size="small" onClick={() => setOpen(true)} sx={{ p: 0 }}>
             {t('mweb.createPod.viewClubDetails')}
           </DuncitButton>
         </Stack>
       </Box>
 
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="xs">
+      <Dialog data-testid="club-preview-dialog" open={open} onClose={() => setOpen(false)} fullWidth maxWidth="xs">
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <Typography component="span" sx={{ flex: 1, fontSize: '1.05rem', fontWeight: 600 }} noWrap>
             {club.club_name}
           </Typography>
-          <DuncitRoundButton tone="surface" aria-label={t('mweb.createPod.closeClubDetails')} onClick={() => setOpen(false)}>
+          <DuncitRoundButton data-testid="club-preview-close" tone="surface" aria-label={t('mweb.createPod.closeClubDetails')} onClick={() => setOpen(false)}>
             <CloseIcon />
           </DuncitRoundButton>
         </DialogTitle>

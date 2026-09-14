@@ -52,7 +52,7 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
   });
 
   return (
-    <form onSubmit={submit}>
+    <form data-testid="pet-form" onSubmit={submit}>
       <Grid container spacing={2}>
         <Grid size={12}>
           <Controller
@@ -79,6 +79,7 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
             render={({ field, fieldState }) => (
               <TextField
                 {...field}
+                data-testid="pet-form-name"
                 fullWidth
                 label={t('mweb.profile.petName')}
                 error={!!fieldState.error}
@@ -108,6 +109,7 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
                 renderInput={(params) => (
                   <TextField
                     {...params}
+                    data-testid="pet-form-species"
                     label={t('mweb.profile.species')}
                     placeholder={t('mweb.profile.dogCat')}
                     error={!!fieldState.error}
@@ -136,6 +138,7 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
                 renderInput={(params) => (
                   <TextField
                     {...params}
+                    data-testid="pet-form-age"
                     label={t('mweb.profile.ageYrs')}
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
@@ -163,6 +166,7 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
                 renderInput={(params) => (
                   <TextField
                     {...params}
+                    data-testid="pet-form-breed"
                     label={t('mweb.profile.breedOrTypeYourOwn')}
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
@@ -179,6 +183,7 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
             render={({ field, fieldState }) => (
               <TextField
                 {...field}
+                data-testid="pet-form-bio"
                 fullWidth
                 label={t('mweb.profile.aboutYourPet')}
                 multiline
@@ -191,7 +196,7 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
         </Grid>
       </Grid>
       {error && (
-        <Alert severity="error" sx={{ mt: 2 }}>
+        <Alert data-testid="pet-form-error" severity="error" sx={{ mt: 2 }}>
           {error.message}
         </Alert>
       )}
@@ -202,10 +207,15 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
           justifyContent: "flex-end",
           mt: 2
         }}>
-        <DuncitButton onClick={onCancel} disabled={loading}>
+        <DuncitButton data-testid="pet-form-cancel" onClick={onCancel} disabled={loading}>
           Cancel
         </DuncitButton>
-        <DuncitButton type="submit" variant="contained" disabled={loading || formState.isSubmitting}>
+        <DuncitButton
+          data-testid="pet-form-save"
+          type="submit"
+          variant="contained"
+          disabled={loading || formState.isSubmitting}
+        >
           {loading ? 'Saving…' : 'Save'}
         </DuncitButton>
       </Stack>

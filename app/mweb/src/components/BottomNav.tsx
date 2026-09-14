@@ -19,26 +19,35 @@ const CART_PATH = '/cart';
  * into the account menu; a visitor reaches a space to meet and their basket
  * from here instead. */
 const TABS = [
-  { value: '/', labelKey: 'mweb.nav.home', icon: <HomeIcon /> },
-  { value: '/explore', labelKey: 'mweb.nav.explore', icon: <ExploreIcon /> },
-  { value: '/clubs', labelKey: 'mweb.nav.clubs', icon: <GroupsIcon /> },
-  { value: '/venues', labelKey: 'mweb.nav.venues', icon: <StoreIcon /> },
+  { value: '/', labelKey: 'mweb.nav.home', icon: <HomeIcon />, testId: 'HomeTab' },
+  { value: '/explore', labelKey: 'mweb.nav.explore', icon: <ExploreIcon />, testId: 'Explore' },
+  { value: '/clubs', labelKey: 'mweb.nav.clubs', icon: <GroupsIcon />, testId: 'Clubs' },
+  { value: '/venues', labelKey: 'mweb.nav.venues', icon: <StoreIcon />, testId: 'Venues' },
 ];
 
 /** The fifth, and only while there is something to buy. With products off the
  * remaining four keep the whole bar — MUI gives every action `flex: 1`, so they
  * redistribute on their own rather than leaving a gap where the cart was. */
-const CART_TAB = { value: CART_PATH, labelKey: 'mweb.nav.cart', icon: <ShoppingCartIcon /> };
+const CART_TAB = { value: CART_PATH, labelKey: 'mweb.nav.cart', icon: <ShoppingCartIcon />, testId: 'Cart' };
 
 /**
  * One tab's glyph. Every tab is drawn through the badge, not just the cart:
  * MUI renders nothing for `badgeContent={0}`, so a single branchless wrapper
  * carries the cart count and leaves the other four untouched.
  */
-function NavIcon({ icon, count }: Readonly<{ icon: ReactNode; count: number }>) {
+function NavIcon({
+  icon,
+  count,
+  badgeTestId,
+}: Readonly<{ icon: ReactNode; count: number; badgeTestId?: string }>) {
   return (
     <Box className="nav-icon-wrap">
-      <Badge badgeContent={count} color="secondary" max={CART_BADGE_MAX}>
+      <Badge
+        data-testid={badgeTestId}
+        badgeContent={count}
+        color="secondary"
+        max={CART_BADGE_MAX}
+      >
         {icon}
       </Badge>
     </Box>
@@ -105,6 +114,7 @@ export default function BottomNav() {
   return (
     <Paper
       ref={paperRef}
+      data-testid="bottom-nav"
       elevation={0}
       square
       sx={{
@@ -171,9 +181,16 @@ export default function BottomNav() {
         {tabs.map((tab) => (
           <BottomNavigationAction
             key={tab.value}
+            data-testid={`tab-bar-${tab.testId}`}
             value={tab.value}
             label={t(tab.labelKey)}
-            icon={<NavIcon icon={tab.icon} count={tab.value === CART_PATH ? totalCount : 0} />}
+            icon={
+              <NavIcon
+                icon={tab.icon}
+                count={tab.value === CART_PATH ? totalCount : 0}
+                badgeTestId={tab.value === CART_PATH ? 'tab-bar-cart-count' : undefined}
+              />
+            }
           />
         ))}
       </BottomNavigation>

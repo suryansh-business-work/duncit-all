@@ -22,6 +22,7 @@ interface RowProps {
 function PolicyRow({ policy, accepted, onToggle, onRead, readLabel }: Readonly<RowProps>) {
   return (
     <Stack
+      data-testid={`policy-row-${policy.slug}`}
       direction="row"
       spacing={1}
       sx={{
@@ -31,6 +32,7 @@ function PolicyRow({ policy, accepted, onToggle, onRead, readLabel }: Readonly<R
         borderColor: 'divider'
       }}>
       <Checkbox
+        data-testid={`policy-accept-${policy.slug}`}
         checked={accepted}
         onChange={(e) => onToggle(policy.id, e.target.checked)}
         slotProps={{
@@ -41,6 +43,7 @@ function PolicyRow({ policy, accepted, onToggle, onRead, readLabel }: Readonly<R
         {policy.title}
       </Typography>
       <DuncitButton
+        data-testid={`policy-read-${policy.slug}`}
         size="small"
         onClick={() => onRead(policy)}
         startIcon={<DescriptionOutlinedIcon fontSize="small" />}
@@ -72,11 +75,12 @@ export default function PolicyAcceptanceList({
   const ticked = new Set(accepted);
 
   if (failed) {
-    return <Alert severity="error">{t('policyAcceptance.loadFailed')}</Alert>;
+    return <Alert data-testid="policy-acceptance-failed" severity="error">{t('policyAcceptance.loadFailed')}</Alert>;
   }
   if (loading) {
     return (
       <Stack
+        data-testid="policy-acceptance-loading"
         direction="row"
         spacing={1.25}
         sx={{
@@ -95,7 +99,7 @@ export default function PolicyAcceptanceList({
 
   return (
     <>
-      <Stack>
+      <Stack data-testid="policy-acceptance-list">
         {policies.map((policy) => (
           <PolicyRow
             key={policy.id}

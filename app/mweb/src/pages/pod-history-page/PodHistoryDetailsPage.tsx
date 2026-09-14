@@ -80,20 +80,30 @@ export default function PodHistoryDetailsPage() {
 
   if (loading && items.length === 0) return (
     <Stack
+      data-testid="pod-history-details-loading"
       sx={{
         alignItems: "center",
         p: 6
       }}><CircularProgress /></Stack>
   );
-  if (error) return <Alert severity="error">{parseApiError(error)}</Alert>;
-  if (!selected) return <Alert severity="warning">{t('mweb.podHistory.notFound')}</Alert>;
+  if (error) return (
+    <Alert severity="error" data-testid="pod-history-details-error">
+      {parseApiError(error)}
+    </Alert>
+  );
+  if (!selected) return (
+    <Alert severity="warning" data-testid="pod-history-details-missing">
+      {t('mweb.podHistory.notFound')}
+    </Alert>
+  );
 
   return (
-    <Stack spacing={2} sx={{ maxWidth: 760, mx: 'auto' }}>
+    <Stack spacing={2} data-testid="pod-history-details-page" sx={{ maxWidth: 760, mx: 'auto' }}>
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <DuncitIconButton
           onClick={() => navigate('/pod-history')}
           aria-label={t('mweb.podHistory.backToPodHistory')}
+          data-testid="pod-history-details-back"
           sx={{
             width: 40,
             height: 40,
@@ -106,7 +116,12 @@ export default function PodHistoryDetailsPage() {
         >
           <ArrowBackIcon fontSize="small" />
         </DuncitIconButton>
-        <Typography component="h1" noWrap sx={{ minWidth: 0, fontSize: 20, fontWeight: 600 }}>
+        <Typography
+          component="h1"
+          noWrap
+          data-testid="pod-history-details-title"
+          sx={{ minWidth: 0, fontSize: 20, fontWeight: 600 }}
+        >
           {selected.pod?.pod_title ?? t('mweb.podHistory.podDetailsTitle')}
         </Typography>
       </Stack>

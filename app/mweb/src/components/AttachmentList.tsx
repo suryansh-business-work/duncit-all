@@ -7,6 +7,7 @@ import { describeAttachment, typeLabel, type AttachmentInfo } from '../utils/att
 function DocCard({ info }: Readonly<{ info: AttachmentInfo }>) {
   return (
     <Chip
+      data-testid={`attachment-doc-${info.url}`}
       component="a"
       href={info.url}
       target="_blank"
@@ -39,7 +40,7 @@ function DocCard({ info }: Readonly<{ info: AttachmentInfo }>) {
 /** Video preview card with a native player + file name. */
 function VideoCard({ info }: Readonly<{ info: AttachmentInfo }>) {
   return (
-    <Box sx={{ maxWidth: 220 }}>
+    <Box data-testid={`attachment-video-${info.url}`} sx={{ maxWidth: 220 }}>
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <video
         src={info.url}
@@ -66,12 +67,12 @@ interface Props {
 export default function AttachmentList({ urls, size = 56 }: Readonly<Props>) {
   if (!urls.length) return null;
   return (
-    <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 0.75, mt: 0.75 }}>
+    <Stack data-testid="attachment-list" direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 0.75, mt: 0.75 }}>
       {urls.map((url) => {
         const info = describeAttachment(url);
         if (info.kind === 'image') {
           return (
-            <a key={url} href={url} target="_blank" rel="noopener noreferrer">
+            <a key={url} href={url} target="_blank" rel="noopener noreferrer" data-testid={`attachment-image-${url}`}>
               <Box
                 component="img"
                 src={url}

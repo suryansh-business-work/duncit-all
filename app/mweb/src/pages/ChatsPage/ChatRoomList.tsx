@@ -16,6 +16,7 @@ function ChatRoomRow({ room, onOpen }: Readonly<RowProps>) {
   const statusChip = podStatusChip(podStatus(room.pod_date_time, room.pod_end_date_time));
   return (
     <ButtonBase
+      data-testid={`chat-room-${room.id}`}
       onClick={() => onOpen(room.id)}
       sx={{
         ...SURFACE_SX,
@@ -41,7 +42,13 @@ function ChatRoomRow({ room, onOpen }: Readonly<RowProps>) {
           {room.pod_date_time ? formatDateTime(room.pod_date_time) : 'Pod chat'}
         </Typography>
         <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center', mt: 0.5 }}>
-          <Chip size="small" label={statusChip.label} color={statusChip.color} sx={{ height: 20, fontSize: 10 }} />
+          <Chip
+            size="small"
+            data-testid={`chat-room-status-${room.id}`}
+            label={statusChip.label}
+            color={statusChip.color}
+            sx={{ height: 20, fontSize: 10 }}
+          />
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
             {/* Identity, deliberately: this counts who is IN the
                 chat, and a multi-seat buyer is one person in it.
@@ -59,7 +66,7 @@ function ChatRoomRow({ room, onOpen }: Readonly<RowProps>) {
 export default function ChatRoomList({ rooms }: Readonly<{ rooms: any[] }>) {
   const navigate = useNavigate();
   return (
-    <Stack spacing={1.75}>
+    <Stack spacing={1.75} data-testid="chats-list">
       {rooms.map((room) => (
         <ChatRoomRow key={room.id} room={room} onOpen={(id) => navigate(`/chats/${id}`)} />
       ))}

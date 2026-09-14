@@ -26,7 +26,6 @@ export const AWAITING_SUITE = new Set([
   'legal',
   'marketing',
   'onboarding',
-  'partners-app',
   'pods',
   'products',
   'regional-club-admin',
@@ -34,6 +33,4 @@ export const AWAITING_SUITE = new Set([
   'tech',
   'venues',
   'website-app',
-  'mweb-app',
-  'duncit-mobile',
 ]);

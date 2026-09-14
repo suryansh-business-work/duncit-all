@@ -97,22 +97,24 @@ export default function LocationDialog({
   const applyLabel = draftZone ? `Apply · ${draftZone}` : zonesLabel;
 
   const title = (
-    <Typography noWrap sx={{ fontSize: 20, fontWeight: 600, lineHeight: 1.25 }}>
+    <Typography data-testid="location-dialog-title" noWrap sx={{ fontSize: 20, fontWeight: 600, lineHeight: 1.25 }}>
       Choose your location
     </Typography>
   );
 
   return (
     <ResponsiveDialog
+      testId="location-dialog"
       open={open}
       onClose={onClose}
       title={title}
       actions={
         <Stack direction="row" spacing={1.5} sx={{ width: '100%' }}>
-          <DuncitButton variant="outlined" size="large" onClick={onClose} sx={{ flex: 1 }}>
+          <DuncitButton data-testid="location-dialog-cancel" variant="outlined" size="large" onClick={onClose} sx={{ flex: 1 }}>
             Cancel
           </DuncitButton>
           <DuncitButton
+            data-testid="location-dialog-apply"
             variant="contained"
             size="large"
             onClick={onApply}

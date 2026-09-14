@@ -12,6 +12,7 @@ export interface IconLayout {
 }
 
 interface VibeTabProps {
+  testId: string;
   label: string;
   icon: ReactNode;
   selected: boolean;
@@ -21,11 +22,12 @@ interface VibeTabProps {
 /** A top-level category chip: a surface pill with the category's icon in a
  * small circle at the left; selected = the green primary fill. Native twin:
  * VibeCategoryTab. */
-export default function VibeTab({ label, icon, selected, onClick }: Readonly<VibeTabProps>) {
+export default function VibeTab({ testId, label, icon, selected, onClick }: Readonly<VibeTabProps>) {
   return (
     <Box
       component="button"
       type="button"
+      data-testid={testId}
       onClick={onClick}
       aria-pressed={selected}
       sx={{

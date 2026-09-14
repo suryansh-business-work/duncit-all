@@ -45,11 +45,13 @@ export default function EarnPage() {
   // 17/600, no subtitle — the same strip the native StackScreen draws.
   return (
     <Stack
+      data-testid="earn-page"
       spacing={1.5}
       sx={{ maxWidth: 720, mx: 'auto', width: '100%', px: 2, py: 1, pb: { xs: 10, sm: 8 } }}
     >
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <DuncitRoundButton
+          data-testid="earn-page-back"
           onClick={() => navigate(-1)}
           aria-label={t('mweb.common.back')}
           sx={{ width: 40, height: 40, minWidth: 40, minHeight: 40, bgcolor: 'background.paper', color: 'text.primary' }}
@@ -57,6 +59,7 @@ export default function EarnPage() {
           <ArrowBackRoundedIcon />
         </DuncitRoundButton>
         <Typography
+          data-testid="earn-page-title"
           component="h1"
           noWrap
           sx={{ flex: 1, minWidth: 0, fontSize: '1.0625rem', fontWeight: 600 }}

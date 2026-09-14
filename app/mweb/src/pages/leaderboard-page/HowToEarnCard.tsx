@@ -39,20 +39,26 @@ export default function HowToEarnCard({ config }: Readonly<Props>) {
   if (active.length === 0) return null;
 
   return (
-    <Card>
+    <Card data-testid="leaderboard-how-to-earn">
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={1.5}>
-          <SectionHeader title={t('mweb.leaderboard.howToTitle')} />
+          <SectionHeader testId="leaderboard-how-to-earn-header" title={t('mweb.leaderboard.howToTitle')} />
           {active.map((category) => (
-            <Stack key={category} direction="row" spacing={1.5} sx={{
-              alignItems: "center"
-            }}>
+            <Stack
+              key={category}
+              direction="row"
+              spacing={1.5}
+              data-testid={`leaderboard-how-to-earn-row-${category}`}
+              sx={{
+                alignItems: "center"
+              }}>
               <IconDisc>{EARN_ICON[category]}</IconDisc>
               <Typography variant="body2" sx={{ flex: 1, fontWeight: 500 }}>
                 {t(LEADERBOARD_EARN_KEY[category])}
               </Typography>
               <Chip
                 size="small"
+                data-testid={`leaderboard-how-to-earn-points-${category}`}
                 label={t('mweb.leaderboard.earnPoints', {
                   vars: { points: config[LEADERBOARD_POINTS_FIELD[category]] },
                 })}

@@ -25,7 +25,7 @@ export default function WhoStep({ control, minAge }: Readonly<Props>) {
   const { t } = useTranslation();
 
   return (
-    <Stack spacing={2}>
+    <Stack data-testid="signup-who-step" spacing={2}>
       <RhfTextField
         control={control}
         name="name"

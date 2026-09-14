@@ -17,7 +17,7 @@ interface Props {
  */
 export default function StudioPageHeader({ icon, title, action }: Readonly<Props>) {
   return (
-    <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
+    <Stack data-testid="studio-page-header" direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
       <Box
         sx={{
           width: 40,
@@ -35,6 +35,7 @@ export default function StudioPageHeader({ icon, title, action }: Readonly<Props
         {icon}
       </Box>
       <Typography
+        data-testid="studio-page-header-title"
         variant="h5"
         component="h1"
         noWrap

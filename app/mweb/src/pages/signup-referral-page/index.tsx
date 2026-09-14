@@ -58,7 +58,7 @@ export default function SignupReferralPage() {
   return (
     <AuthBackground>
       <AuthScreenFrame>
-        <Stack spacing={2}>
+        <Stack data-testid="signup-referral-page" spacing={2}>
           <Stack sx={{ mb: 1 }}>
             <AuthHeading
               title={t('mweb.referral.promptTitle')}
@@ -67,6 +67,7 @@ export default function SignupReferralPage() {
           </Stack>
 
           <TextField
+            data-testid="signup-referral-code"
             label={t('mweb.referral.codeLabel')}
             placeholder={t('mweb.referral.codePlaceholder')}
             value={code}
@@ -76,13 +77,14 @@ export default function SignupReferralPage() {
             size="small"
             fullWidth
             slotProps={{
-              htmlInput: { 'aria-label': t('mweb.referral.codeLabel') }
+              htmlInput: { 'aria-label': t('mweb.referral.codeLabel'), 'data-testid': 'signup-referral-code-input' }
             }}
           />
 
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && <Alert data-testid="signup-referral-error" severity="error">{error}</Alert>}
 
           <DuncitButton
+            data-testid="signup-referral-apply-button"
             variant="contained"
             size="large"
             fullWidth
@@ -93,7 +95,12 @@ export default function SignupReferralPage() {
           >
             {loading ? t('mweb.referral.applying') : t('mweb.referral.apply')}
           </DuncitButton>
-          <DuncitButton variant="text" fullWidth onClick={() => navigate('/signup-survey')}>
+          <DuncitButton
+            data-testid="signup-referral-skip-button"
+            variant="text"
+            fullWidth
+            onClick={() => navigate('/signup-survey')}
+          >
             {t('mweb.referral.skip')}
           </DuncitButton>
         </Stack>

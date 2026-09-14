@@ -44,6 +44,7 @@ export default function MyTicketsList() {
       value: f,
       label: `${LABEL[f]} (${countFor(f)})`,
       sx: { fontWeight: 600 },
+      testId: `tickets-filter-${f}`,
     })),
     fallback: 'ALL',
   });
@@ -53,6 +54,7 @@ export default function MyTicketsList() {
   const emptyOrList =
     items.length === 0 ? (
       <Typography
+        data-testid="my-tickets-empty"
         variant="body2"
         sx={{
           color: "text.secondary",
@@ -65,6 +67,7 @@ export default function MyTicketsList() {
         {items.map((t, index) => (
           <Box
             key={t.id}
+            data-testid={`my-ticket-${t.id}`}
             onClick={() => navigate(`/tickets/${t.id}`)}
             sx={{ px: 2, py: 1.75, cursor: 'pointer', borderTop: index === 0 ? 0 : 1, borderColor: 'divider' }}
           >
@@ -94,8 +97,8 @@ export default function MyTicketsList() {
     );
 
   return (
-    <Stack spacing={1}>
-      <SectionHeader title="Your tickets" />
+    <Stack data-testid="my-tickets-list" spacing={1}>
+      <SectionHeader testId="my-tickets-header" title="Your tickets" />
       <DuncitTabs
         {...tabs}
         variant="scrollable"
@@ -104,7 +107,7 @@ export default function MyTicketsList() {
       />
 
       {loading && all.length === 0 ? (
-        <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Box data-testid="my-tickets-loading" sx={{ p: 3, textAlign: 'center' }}>
           <CircularProgress size={22} />
         </Box>
       ) : (

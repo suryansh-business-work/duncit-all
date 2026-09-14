@@ -48,7 +48,7 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
   };
 
   return (
-    <Stack spacing={2}>
+    <Stack data-testid="callback-content" spacing={2}>
       <Paper sx={CARD_SX}>
         <Stack spacing={1.25}>
           <Typography sx={CARD_TITLE_SX}>Call support now</Typography>
@@ -60,6 +60,7 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
               : 'Support phone is not configured yet — please request a callback below.'}
           </Typography>
           <DuncitButton
+            data-testid="callback-call-now"
             variant="contained"
             color="primary"
             size="large"
@@ -82,26 +83,28 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
           </Typography>
           <TextField
             label="What's it about? (optional)"
+            data-testid="callback-reason-field"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             size="small"
             multiline
             minRows={2}
             slotProps={{
-              htmlInput: { maxLength: 500 }
+              htmlInput: { maxLength: 500, 'data-testid': 'callback-reason' }
             }}
           />
           {error && (
-            <Alert severity="error" onClose={() => setError(null)}>
+            <Alert data-testid="callback-error" severity="error" onClose={() => setError(null)}>
               {error}
             </Alert>
           )}
           {requested && !error && (
-            <Alert severity="success" onClose={() => setRequested(false)}>
+            <Alert data-testid="callback-success" severity="success" onClose={() => setRequested(false)}>
               Callback requested. We will reach you shortly.
             </Alert>
           )}
           <DuncitButton
+            data-testid="callback-request"
             variant="outlined"
             size="large"
             startIcon={<PhoneCallbackIcon />}

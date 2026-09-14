@@ -22,11 +22,12 @@ export function MapEmbed({ query, height = 220 }: Readonly<Props>) {
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 
   return (
-    <YStack gap={4}>
+    <YStack gap={4} testID="map-embed">
       <iframe
         title={t('mweb.mapEmbed.podLocationMap')}
         src={url}
         loading="lazy"
+        data-testid="map-embed-iframe"
         style={{
           width: '100%',
           height,

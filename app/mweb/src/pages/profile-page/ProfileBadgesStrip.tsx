@@ -26,21 +26,24 @@ export default function ProfileBadgesStrip() {
   const earned = sortBadgeProgress(data?.myBadgeProgress ?? []).filter((row) => row.achieved);
 
   return (
-    <Card>
+    <Card data-testid="profile-badges-strip">
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Box sx={{ mb: 1.5 }}>
           <SectionHeader
+            testId="profile-badges-strip-header"
+            actionTestId="profile-badges-strip-view-all"
             title={t('mweb.profile.badges')}
             actionLabel={t('mweb.badges.viewAll')}
             onAction={() => navigate('/badges')}
           />
         </Box>
         {earned.length === 0 ? (
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          <Typography data-testid="profile-badges-strip-empty" variant="body2" sx={{ color: 'text.secondary' }}>
             {t('mweb.badges.profileEmpty')}
           </Typography>
         ) : (
           <Box
+            data-testid="profile-badges-strip-grid"
             sx={{
               display: 'grid',
               gap: 1.5,
@@ -48,7 +51,12 @@ export default function ProfileBadgesStrip() {
             }}
           >
             {earned.map((row) => (
-              <Stack key={row.badge.id} spacing={0.75} sx={{ alignItems: 'center', minWidth: 0 }}>
+              <Stack
+                key={row.badge.id}
+                data-testid={`profile-badges-strip-badge-${row.badge.id}`}
+                spacing={0.75}
+                sx={{ alignItems: 'center', minWidth: 0 }}
+              >
                 <Avatar
                   src={row.badge.image_url || undefined}
                   sx={{ width: 56, height: 56, bgcolor: 'action.hover', color: 'secondary.main' }}

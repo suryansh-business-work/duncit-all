@@ -36,6 +36,7 @@ export default function JoinMeetingButton({ onJoin }: Readonly<Props>) {
 
   return (
     <DuncitButton
+      data-testid="pod-join-meeting"
       variant="contained"
       startIcon={<VideocamIcon />}
       onClick={handleClick}

@@ -51,7 +51,7 @@ export default function VenuePodsSection({ venueId }: Readonly<{ venueId: string
 
   return (
     <Stack spacing={1.25} data-testid="venue-pods-section">
-      <SectionHeader title="Pods at this venue" />
+      <SectionHeader testId="venue-pods-section-header" title="Pods at this venue" />
       {loading && !data ? (
         <Box sx={{ display: 'grid', placeItems: 'center', py: 2 }}>
           <CircularProgress size={20} />

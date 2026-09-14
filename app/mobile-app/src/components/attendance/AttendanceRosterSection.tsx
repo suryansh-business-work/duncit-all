@@ -4,6 +4,8 @@ import type { PodAttendanceLabels, PodAttendanceRow } from '@duncit/utils';
 import { AttendanceRow } from '@/components/attendance/AttendanceRow';
 
 interface Props {
+  /** Distinct per list — the attendance screen renders the unmarked and the marked roster. */
+  testID: string;
   heading: string;
   rows: PodAttendanceRow[];
   labels: PodAttendanceLabels;
@@ -19,6 +21,7 @@ const noop = () => undefined;
 /** One list section — marked, or still to do. Renders nothing when empty, so
  * a fully-marked pod does not show a "Not marked yet · 0" heading. */
 export function AttendanceRosterSection({
+  testID,
   heading,
   rows,
   labels,
@@ -29,8 +32,9 @@ export function AttendanceRosterSection({
 }: Readonly<Props>) {
   if (rows.length === 0) return null;
   return (
-    <YStack gap={8}>
+    <YStack gap={8} testID={testID}>
       <Text
+        testID={`${testID}-count`}
         fontSize={12}
         fontWeight="600"
         letterSpacing={0.6}

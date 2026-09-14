@@ -7,6 +7,7 @@ export default function ChatClosedNotice() {
     <Stack
       direction="row"
       spacing={1}
+      data-testid="chat-closed-notice"
       sx={{
         alignItems: "center",
         justifyContent: "center",

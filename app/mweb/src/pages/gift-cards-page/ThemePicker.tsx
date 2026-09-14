@@ -39,8 +39,8 @@ export default function ThemePicker({
   const options = categories.filter((category) => category.level === scopeType);
 
   return (
-    <Card sx={{ p: 2 }}>
-      <SectionHeader title={t('mweb.giftCards.themeHeading')} />
+    <Card data-testid="theme-picker" sx={{ p: 2 }}>
+      <SectionHeader testId="theme-picker-header" title={t('mweb.giftCards.themeHeading')} />
       <Stack
         direction="row"
         spacing={1}
@@ -51,9 +51,11 @@ export default function ThemePicker({
         }}>
         {THEME_GROUPS.map((group) => {
           const active = scopeType === group.value;
+          const groupTestId = `gift-card-group-${group.value}`;
           return (
             <Chip
               key={group.value}
+              data-testid={groupTestId}
               label={t(group.labelKey)}
               color={active ? 'primary' : 'default'}
               onClick={() => onGroup(group.value)}
@@ -63,7 +65,7 @@ export default function ThemePicker({
         })}
       </Stack>
       {scopeType === 'SHOP' ? (
-        <Box sx={{ mt: 2 }}>
+        <Box data-testid="theme-picker-shop" sx={{ mt: 2 }}>
           <GiftCardVisual
             scopeType="SHOP"
             scopeCategoryId={null}
@@ -86,9 +88,11 @@ export default function ThemePicker({
         <Box sx={{ mt: 2, display: 'flex', gap: 1.5, overflowX: 'auto', pb: 0.5 }}>
           {options.map((category) => {
             const selected = category.id === scopeCategoryId;
+            const themeTestId = `gift-card-theme-${category.id}`;
             return (
               <ButtonBase
                 key={category.id}
+                data-testid={themeTestId}
                 onClick={() => onPick(category)}
                 aria-pressed={selected}
                 sx={{

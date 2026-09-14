@@ -99,6 +99,7 @@ export default function AppHeader({
   // the bar, so a blur here had nothing to blur.
   return (
     <AppBar
+      data-testid="app-header"
       position="sticky"
       color="inherit"
       elevation={0}

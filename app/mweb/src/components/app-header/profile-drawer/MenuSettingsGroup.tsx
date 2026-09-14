@@ -6,6 +6,7 @@ import { useTranslation } from '../../../i18n/useTranslation';
 import MenuGroup from './MenuGroup';
 import MenuRow from './MenuRow';
 import PoliciesSection from './PoliciesSection';
+import { testIdProps } from '../../../utils/testIdProps';
 
 interface Props {
   /** More than one studio is open to this account — the switch row shows. */
@@ -41,6 +42,7 @@ export default function MenuSettingsGroup({
       {canSwitch ? (
         <MenuRow
           key="switch"
+          testId="sidebar-switch-role"
           icon={<SwapHorizIcon />}
           label={t('mweb.common.switchRole')}
           secondary={modeLabel}
@@ -54,9 +56,12 @@ export default function MenuSettingsGroup({
         chevron={false}
         trailing={
           <Switch
+            data-testid="sidebar-theme-switch"
             checked={dark}
             onChange={onToggleTheme}
-            slotProps={{ input: { 'aria-label': t('mweb.sidebar.toggleDarkMode') } }}
+            slotProps={{
+              input: { 'aria-label': t('mweb.sidebar.toggleDarkMode'), ...testIdProps('sidebar-theme-switch-input') },
+            }}
           />
         }
       />

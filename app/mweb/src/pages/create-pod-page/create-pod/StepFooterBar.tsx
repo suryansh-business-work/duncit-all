@@ -34,6 +34,7 @@ export default function StepFooterBar({
   const primaryDisabled = busy || (isLast && submitDisabled);
   return (
     <Box
+      data-testid="create-pod-footer-bar"
       sx={{
         position: 'fixed',
         left: 0,
@@ -49,6 +50,7 @@ export default function StepFooterBar({
     >
       <Stack direction="row" spacing={1.25} sx={{ maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto' }}>
         <DuncitButton
+          data-testid="create-pod-back"
           color="inherit"
           size="large"
           fullWidth
@@ -59,6 +61,7 @@ export default function StepFooterBar({
           {t('mweb.createPod.back')}
         </DuncitButton>
         <DuncitButton
+          data-testid="create-pod-submit"
           variant="contained"
           size="large"
           fullWidth

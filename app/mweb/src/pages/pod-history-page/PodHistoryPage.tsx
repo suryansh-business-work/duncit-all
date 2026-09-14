@@ -41,9 +41,9 @@ const searchSx = {
 };
 
 /** One icon on a soft disc and one short line — the page's empty states. */
-function EmptyLine({ text }: Readonly<{ text: string }>) {
+function EmptyLine({ text, testId }: Readonly<{ text: string; testId: string }>) {
   return (
-    <Stack spacing={1.5} sx={{ alignItems: 'center', py: 6, textAlign: 'center' }}>
+    <Stack spacing={1.5} data-testid={testId} sx={{ alignItems: 'center', py: 6, textAlign: 'center' }}>
       <Box sx={{ width: 72, height: 72, borderRadius: '50%', bgcolor: 'action.hover', display: 'grid', placeItems: 'center' }}>
         <HistoryIcon sx={{ fontSize: 40, color: 'text.secondary' }} />
       </Box>
@@ -78,6 +78,7 @@ export default function PodHistoryPage() {
   if (loading && items.length === 0) {
     return (
       <Stack
+        data-testid="pod-history-loading"
         sx={{
           alignItems: "center",
           p: 6
@@ -86,13 +87,17 @@ export default function PodHistoryPage() {
       </Stack>
     );
   }
-  if (error) return <Alert severity="error">{parseApiError(error)}</Alert>;
+  if (error) return (
+    <Alert severity="error" data-testid="pod-history-error">
+      {parseApiError(error)}
+    </Alert>
+  );
   if (items.length === 0) {
-    return <EmptyLine text={t('mweb.podHistory.empty')} />;
+    return <EmptyLine text={t('mweb.podHistory.empty')} testId="pod-history-empty" />;
   }
 
   return (
-    <Stack spacing={2} sx={{ maxWidth: 720, mx: 'auto' }}>
+    <Stack spacing={2} data-testid="pod-history-page" sx={{ maxWidth: 720, mx: 'auto' }}>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
         <Typography component="h1" sx={{ fontSize: 20, fontWeight: 600, minWidth: 0 }} noWrap>
           {t('mweb.podHistory.title')}
@@ -111,6 +116,7 @@ export default function PodHistoryPage() {
         placeholder={t('mweb.podHistory.searchPlaceholder')}
         value={filters.search}
         onChange={(event) => setFilters({ ...filters, search: event.target.value })}
+        data-testid="pod-history-search"
         sx={searchSx}
         slotProps={{
           input: {
@@ -125,15 +131,16 @@ export default function PodHistoryPage() {
         }} />
 
       {visible.length === 0 ? (
-        <EmptyLine text={t('mweb.podHistory.noPodsFound')} />
+        <EmptyLine text={t('mweb.podHistory.noPodsFound')} testId="pod-history-no-match" />
       ) : (
-        <Box sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
+        <Box data-testid="pod-history-list" sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
           {visible.map((item, index) => (
             <Fragment key={item.id}>
               {index > 0 && <Divider sx={{ mx: 2 }} />}
               <ListItemButton
                 component={RouterLink}
                 to={`/pod-history/${item.id}`}
+                data-testid={`pod-history-card-${item.id}`}
                 sx={{ px: 2, py: 1.5, gap: 1.5, borderRadius: 0 }}
               >
                 <Avatar

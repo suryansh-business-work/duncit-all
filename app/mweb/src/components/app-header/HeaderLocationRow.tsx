@@ -29,6 +29,7 @@ export default function HeaderLocationRow({
 
   return (
     <Box
+      data-testid="header-location"
       role="button"
       tabIndex={0}
       onClick={onOpen}

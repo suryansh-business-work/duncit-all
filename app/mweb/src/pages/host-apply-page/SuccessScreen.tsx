@@ -8,6 +8,7 @@ export default function SuccessScreen() {
   const navigate = useNavigate();
   return (
     <Stack
+      data-testid="host-request-success"
       spacing={2.5}
       sx={{
         alignItems: "center",
@@ -43,6 +44,7 @@ export default function SuccessScreen() {
         updates through Notifications and Email.
       </Typography>
       <DuncitButton
+        data-testid="host-request-done"
         variant="contained"
         size="large"
         onClick={() => navigate('/host/manage')}

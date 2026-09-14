@@ -54,7 +54,7 @@ export default function GrievanceForm({
   });
 
   return (
-    <form noValidate onSubmit={submit}>
+    <form data-testid="grievance-form" noValidate onSubmit={submit}>
       <Stack spacing={1.5}>
         <SupportTicketField control={control} options={tickets} loading={ticketsLoading} />
         <RhfTextField control={control} name="name" label={t('grievance.field.name')} required />
@@ -83,8 +83,14 @@ export default function GrievanceForm({
           multiline
           minRows={4}
         />
-        {submitError && <Alert severity="error">{submitError}</Alert>}
-        <DuncitButton type="submit" variant="contained" size="large" disabled={loading || noTickets}>
+        {submitError && <Alert data-testid="grievance-form-error" severity="error">{submitError}</Alert>}
+        <DuncitButton
+          data-testid="grievance-form-submit"
+          type="submit"
+          variant="contained"
+          size="large"
+          disabled={loading || noTickets}
+        >
           {loading ? t('grievance.submitting') : t('grievance.submit')}
         </DuncitButton>
       </Stack>

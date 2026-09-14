@@ -16,12 +16,12 @@ export default function ClosedNotice({ reopenable, reopenDeadline, formatDateTim
   }
 
   return (
-    <Paper sx={{ p: 1.5, borderRadius: '18px', textAlign: 'center', bgcolor: 'action.hover' }}>
+    <Paper data-testid="support-chat-closed-notice" sx={{ p: 1.5, borderRadius: '18px', textAlign: 'center', bgcolor: 'action.hover' }}>
       <Stack spacing={0.25}>
-        <Typography variant="caption" sx={{ fontWeight: 600 }}>
+        <Typography data-testid="chat-closed-note" variant="caption" sx={{ fontWeight: 600 }}>
           This conversation has been marked as resolved.
         </Typography>
-        <Typography variant="caption" sx={{
+        <Typography data-testid="chat-reopen-deadline" variant="caption" sx={{
           color: "text.secondary"
         }}>
           {windowText}

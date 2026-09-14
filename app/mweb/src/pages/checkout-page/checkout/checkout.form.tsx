@@ -50,6 +50,7 @@ export default function CheckoutFields({
           name="simulate_failure"
           render={({ field }) => (
             <TextField
+              data-testid="simulate-failure"
               select
               label={t('mweb.checkout.simulate')}
               value={field.value ? 'fail' : 'success'}
@@ -61,8 +62,8 @@ export default function CheckoutFields({
                 select: { MenuProps: selectMenuProps }
               }}
             >
-              <MenuItem value="success">{t('mweb.checkout.successfulPayment')}</MenuItem>
-              <MenuItem value="fail">{t('mweb.checkout.failedPayment')}</MenuItem>
+              <MenuItem data-testid="simulate-failure-success" value="success">{t('mweb.checkout.successfulPayment')}</MenuItem>
+              <MenuItem data-testid="simulate-failure-fail" value="fail">{t('mweb.checkout.failedPayment')}</MenuItem>
             </TextField>
           )}
         />

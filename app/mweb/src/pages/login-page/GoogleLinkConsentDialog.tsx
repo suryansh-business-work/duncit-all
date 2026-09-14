@@ -45,6 +45,7 @@ export default function GoogleLinkConsentDialog({
 
   return (
     <Dialog
+      data-testid="google-link-consent"
       open={open}
       // Consent is an explicit choice: Escape must not stand in for "deny".
       onClose={(_e, reason) => {
@@ -53,7 +54,7 @@ export default function GoogleLinkConsentDialog({
       fullWidth
       maxWidth="xs"
     >
-      <DialogTitle sx={{ fontSize: 17, fontWeight: 600 }}>
+      <DialogTitle data-testid="google-link-consent-title" sx={{ fontSize: 17, fontWeight: 600 }}>
         <Stack direction="row" spacing={1} sx={{
           alignItems: "center"
         }}>
@@ -71,11 +72,12 @@ export default function GoogleLinkConsentDialog({
           }}>
             {t('mweb.login.linkConsentDetail')}
           </Typography>
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && <Alert data-testid="google-link-consent-error" severity="error">{error}</Alert>}
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
         <DuncitButton
+          data-testid="google-link-deny"
           variant="outlined"
           color="inherit"
           onClick={onDeny}
@@ -84,7 +86,13 @@ export default function GoogleLinkConsentDialog({
         >
           {t('mweb.login.linkConsentDeny')}
         </DuncitButton>
-        <DuncitButton variant="contained" onClick={onAllow} disabled={busy} sx={{ flex: 1.4 }}>
+        <DuncitButton
+          data-testid="google-link-allow"
+          variant="contained"
+          onClick={onAllow}
+          disabled={busy}
+          sx={{ flex: 1.4 }}
+        >
           {t('mweb.login.linkConsentAllow')}
         </DuncitButton>
       </DialogActions>

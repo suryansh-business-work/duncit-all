@@ -8,6 +8,7 @@ import {
   toIsoDay,
 } from '@duncit/datetime';
 import { useTranslation } from '../i18n/useTranslation';
+import { testIdProps } from '../utils/testIdProps';
 
 interface Props<T extends FieldValues> {
   control: Control<T>;
@@ -61,11 +62,15 @@ export default function DobDateField<T extends FieldValues>({
             }
             slotProps={{
               textField: {
+                ...testIdProps('field-dob'),
                 size: 'small',
                 fullWidth: true,
                 required,
                 onBlur: field.onBlur,
-                slotProps: { inputLabel: { shrink: true } },
+                slotProps: {
+                  inputLabel: { shrink: true },
+                  htmlInput: { ...testIdProps('field-dob-input') },
+                },
                 error: !!fieldState.error,
                 helperText:
                   fieldState.error?.message ??

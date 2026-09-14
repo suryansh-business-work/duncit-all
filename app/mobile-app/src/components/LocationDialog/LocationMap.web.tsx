@@ -25,12 +25,13 @@ export function LocationMap({ city, zoneName, pincode, country }: Readonly<Props
   if (!url) return null;
 
   return (
-    <YStack gap={8}>
+    <YStack gap={8} testID="location-map">
       <SectionLabel>MAP</SectionLabel>
       <iframe
         title={t('mweb.common.selectedLocationMap')}
         src={url}
         loading="lazy"
+        data-testid="location-map-iframe"
         style={{
           width: '100%',
           height: 200,

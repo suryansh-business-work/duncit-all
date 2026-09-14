@@ -26,7 +26,7 @@ export default function InterviewDetailsForm({
   const aboutLabel = isHost ? 'Why do you want to be a host?' : 'Tell us about your venue';
 
   return (
-    <Card>
+    <Card data-testid="interview-details-form">
       <CardContent>
         <Typography variant="h6" gutterBottom sx={{ fontSize: '1.0625rem' }}>
           Your details

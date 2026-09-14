@@ -50,44 +50,50 @@ export default function CreateTicketDialog({ open, onClose, onCreated }: Readonl
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog data-testid="create-ticket-dialog" open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>{t('mweb.supportHub.newTicket')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
           <TextField
             label={t('mweb.common.subject')}
+            data-testid="create-ticket-subject-field"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             fullWidth
             autoFocus
+            slotProps={{ htmlInput: { 'data-testid': 'create-ticket-subject' } }}
           />
           <TextField
             select
             label={t('mweb.common.category')}
+            data-testid="create-ticket-category"
             value={category}
             onChange={(e) => setCategory(e.target.value as TicketCategory)}
             fullWidth
           >
             {CATEGORIES.map((c) => (
-              <MenuItem key={c} value={c}>
+              <MenuItem key={c} data-testid={`create-ticket-category-${c}`} value={c}>
                 {c}
               </MenuItem>
             ))}
           </TextField>
           <TextField
             label={t('mweb.supportHub.describeTheIssue')}
+            data-testid="create-ticket-message-field"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             fullWidth
             multiline
             minRows={4}
+            slotProps={{ htmlInput: { 'data-testid': 'create-ticket-message' } }}
           />
           <AttachmentsField attachments={attachments} setAttachments={setAttachments} />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose}>{t('mweb.common.cancel')}</DuncitButton>
+        <DuncitButton data-testid="create-ticket-cancel" onClick={onClose}>{t('mweb.common.cancel')}</DuncitButton>
         <DuncitButton
+          data-testid="create-ticket-submit"
           variant="contained"
           disabled={loading || !subject.trim() || !message.trim()}
           onClick={submit}

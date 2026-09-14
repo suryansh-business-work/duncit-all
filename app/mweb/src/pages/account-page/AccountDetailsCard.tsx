@@ -22,7 +22,7 @@ export default function AccountDetailsCard({ me }: Readonly<Props>) {
   const phone = me.phone_number ? `${me.phone_extension || ''} ${me.phone_number}`.trim() : '—';
 
   return (
-    <Card>
+    <Card data-testid="account-details-card">
       <Stack divider={<Divider sx={{ ml: '68px' }} />}>
         <AccountInfoRow icon={<EmailIcon fontSize="small" />} label={t('mweb.common.email')} value={me.email || '—'} />
         <AccountInfoRow icon={<PhoneIcon fontSize="small" />} label={t('mweb.common.phone')} value={phone} />

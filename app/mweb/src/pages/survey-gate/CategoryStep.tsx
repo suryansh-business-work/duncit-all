@@ -73,6 +73,7 @@ export default function CategoryStep({
   };
 
   const field = (
+    testId: string,
     label: string,
     level: keyof CategoryScope,
     list: CategoryOption[],
@@ -80,6 +81,7 @@ export default function CategoryStep({
     disabled: boolean,
   ) => (
     <Autocomplete
+      data-testid={testId}
       options={list.map((c) => c.id)}
       value={scope[level] || null}
       getOptionLabel={(id) => list.find((c) => c.id === id)?.name ?? ''}
@@ -95,12 +97,27 @@ export default function CategoryStep({
   const subRequired = subs.options.length > 0;
 
   return (
-    <Stack spacing={2}>
-      {field('Super Category *', 'super_category_id', supers.options, supers.loading, false)}
-      {field(catRequired ? 'Category *' : 'Category', 'category_id', cats.options, cats.loading, !scope.super_category_id)}
-      {field(subRequired ? 'Sub-Category *' : 'Sub-Category', 'sub_category_id', subs.options, subs.loading, !scope.category_id)}
-      {error && <Alert severity="warning">{error}</Alert>}
+    <Stack data-testid="category-step" spacing={2}>
+      {field('category-step-super', 'Super Category *', 'super_category_id', supers.options, supers.loading, false)}
+      {field(
+        'category-step-category',
+        catRequired ? 'Category *' : 'Category',
+        'category_id',
+        cats.options,
+        cats.loading,
+        !scope.super_category_id,
+      )}
+      {field(
+        'category-step-sub',
+        subRequired ? 'Sub-Category *' : 'Sub-Category',
+        'sub_category_id',
+        subs.options,
+        subs.loading,
+        !scope.category_id,
+      )}
+      {error && <Alert data-testid="category-error" severity="warning">{error}</Alert>}
       <DuncitButton
+        data-testid="primary-action"
         variant="contained"
         size="large"
         fullWidth

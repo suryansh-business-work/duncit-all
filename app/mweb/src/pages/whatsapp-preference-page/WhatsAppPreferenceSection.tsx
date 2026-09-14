@@ -28,9 +28,10 @@ export default function WhatsAppPreferenceSection({
   footer,
 }: Readonly<Props>) {
   if (items.length === 0) return null;
+  const sectionId = `whatsapp-preference-section-${heading.toLowerCase().replace(/\s+/g, '-')}`;
 
   return (
-    <Card>
+    <Card data-testid={sectionId}>
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={0.5} sx={{ mb: 0.5 }}>
           <Typography component="h2" sx={{ fontSize: '1.05rem', fontWeight: 600 }}>

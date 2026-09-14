@@ -18,10 +18,11 @@ export default function PetPhotoField({ value, error, touched, onChange }: Reado
   const [pickerOpen, setPickerOpen] = useState(false);
   return (
     <>
-      <Stack direction="row" spacing={2} sx={{
+      <Stack data-testid="pet-photo-field" direction="row" spacing={2} sx={{
         alignItems: "center"
       }}>
         <Avatar
+          data-testid="pet-photo-field-avatar"
           src={value || undefined}
           sx={{
             width: 72,
@@ -43,6 +44,7 @@ export default function PetPhotoField({ value, error, touched, onChange }: Reado
         </Avatar>
         <Stack spacing={0.5} sx={{ flex: 1 }}>
           <DuncitButton
+            data-testid="pet-photo-field-upload"
             variant="outlined"
             size="small"
             startIcon={<PhotoCameraIcon />}
@@ -53,6 +55,7 @@ export default function PetPhotoField({ value, error, touched, onChange }: Reado
           </DuncitButton>
           {value && (
             <DuncitButton
+              data-testid="pet-photo-field-remove"
               size="small"
               color="inherit"
               onClick={() => onChange('')}
@@ -62,7 +65,7 @@ export default function PetPhotoField({ value, error, touched, onChange }: Reado
             </DuncitButton>
           )}
           {touched && error && (
-            <Typography variant="caption" color="error">
+            <Typography data-testid="pet-photo-field-error" variant="caption" color="error">
               {error}
             </Typography>
           )}

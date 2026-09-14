@@ -73,6 +73,7 @@ export default function RecoveryChannelStep({
         items={PASSWORD_RECOVERY_CHANNELS.map((value) => ({
           value,
           label: labels.channel(value).name,
+          testId: `recovery-channel-${value}`,
         }))}
         value={channel}
         onChange={(next) => onChannel(next as PasswordRecoveryChannel)}
@@ -90,6 +91,7 @@ export default function RecoveryChannelStep({
             <Stack direction="row" spacing={1}>
               <CountryCodeField control={control} name="extension" label={t('mweb.common.code')} />
               <RhfTextField
+                data-testid="recovery-destination"
                 control={control}
                 name="number"
                 label={copy.fieldLabel}
@@ -102,6 +104,7 @@ export default function RecoveryChannelStep({
             </Stack>
           ) : (
             <RhfTextField
+              data-testid="recovery-destination"
               control={control}
               name="email"
               type="email"
@@ -124,18 +127,19 @@ export default function RecoveryChannelStep({
           )}
 
           {notFound && (
-            <FormHelperText error role="alert" sx={{ mx: 1.75 }}>
+            <FormHelperText data-testid="recovery-not-found" error role="alert" sx={{ mx: 1.75 }}>
               {labels.notFound}
             </FormHelperText>
           )}
 
           {notSent && (
-            <FormHelperText error role="alert" sx={{ mx: 1.75 }}>
+            <FormHelperText data-testid="recovery-not-sent" error role="alert" sx={{ mx: 1.75 }}>
               {labels.notSent}
             </FormHelperText>
           )}
 
           <DuncitButton
+            data-testid="recovery-send-code"
             type="submit"
             variant="contained"
             size="large"
@@ -153,6 +157,7 @@ export default function RecoveryChannelStep({
             {labels.newToDuncit}
           </Typography>
           <DuncitButton
+            data-testid="recovery-create-account"
             component={RouterLink}
             to="/register"
             variant="contained"

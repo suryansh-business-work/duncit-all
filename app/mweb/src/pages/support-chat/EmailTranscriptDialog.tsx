@@ -30,15 +30,15 @@ export default function EmailTranscriptDialog({ open, sessionId, defaultEmail, o
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog data-testid="support-email-modal" open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.supportChat.emailThisChat')}</DialogTitle>
       <DialogContent>
         {done ? (
-          <Alert severity="success">Transcript sent to {email}.</Alert>
+          <Alert data-testid="email-done" severity="success">Transcript sent to {email}.</Alert>
         ) : (
           <>
             {error && (
-              <Alert severity="error" sx={{ mb: 1 }} onClose={() => setError(null)}>
+              <Alert data-testid="email-error" severity="error" sx={{ mb: 1 }} onClose={() => setError(null)}>
                 {error}
               </Alert>
             )}
@@ -47,18 +47,20 @@ export default function EmailTranscriptDialog({ open, sessionId, defaultEmail, o
               fullWidth
               size="small"
               type="email"
+              data-testid="email-field"
               label={t('mweb.common.emailAddress')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               sx={{ mt: 1 }}
+              slotProps={{ htmlInput: { 'data-testid': 'email-input' } }}
             />
           </>
         )}
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose}>{done ? 'Done' : 'Cancel'}</DuncitButton>
+        <DuncitButton data-testid="email-close" onClick={onClose}>{done ? 'Done' : 'Cancel'}</DuncitButton>
         {!done && (
-          <DuncitButton variant="contained" disabled={loading || !email.trim()} onClick={handleSend}>
+          <DuncitButton data-testid="email-send" variant="contained" disabled={loading || !email.trim()} onClick={handleSend}>
             {loading ? 'Sending…' : 'Send'}
           </DuncitButton>
         )}

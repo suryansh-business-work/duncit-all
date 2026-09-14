@@ -45,7 +45,7 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
   const hasReel = !!watch('reel_url');
 
   return (
-    <Stack spacing={2}>
+    <Stack data-testid="create-pod-basics-step" spacing={2}>
       {/* First field of the form: the category scopes the clubs on step 2 AND
           the products on step 4, so it is picked before the title. Native twin
           (rule 27). */}
@@ -57,15 +57,18 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
             line people read first, and a taller highlight reads as "everything". */}
         <Box data-tour="create-pod-basics">
           <TextField
+            data-testid="pod_title"
             label={requiredLabel(t('mweb.createPod.podTitleLabel'), true)}
             fullWidth
             placeholder={t('mweb.createPod.podTitlePlaceholder')}
             {...register('pod_title')}
             error={!!errors.pod_title}
             helperText={errors.pod_title?.message ?? t('mweb.createPod.podTitleHint')}
+            slotProps={{ htmlInput: { 'data-testid': 'pod_title-input' } }}
           />
         </Box>
         <TextField
+          data-testid="pod_description"
           label={requiredLabel(t('mweb.createPod.podDescriptionLabel'), true)}
           fullWidth
           multiline
@@ -74,6 +77,7 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
           {...register('pod_description')}
           error={!!errors.pod_description}
           helperText={errors.pod_description?.message ?? t('mweb.createPod.podDescriptionHint')}
+          slotProps={{ htmlInput: { 'data-testid': 'pod_description-input' } }}
         />
       </Stack>
       <Box sx={{ ...SURFACE_SX, p: 2 }}>
@@ -97,6 +101,7 @@ export default function BasicsStep({ form, hostCategories }: Readonly<Props>) {
           name="what_this_pod_offers"
           render={({ field, fieldState }) => (
             <ChipArrayField
+              testId="create-pod-offers"
               label={t('mweb.createPod.offersLabel')}
               required
               value={field.value}

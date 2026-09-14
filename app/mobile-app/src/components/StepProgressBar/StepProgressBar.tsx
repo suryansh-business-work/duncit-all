@@ -18,6 +18,7 @@ interface Props {
 export function StepProgressBar({ steps, current, label }: Readonly<Props>) {
   return (
     <XStack
+      testID="step-progress-bar"
       gap={6}
       accessibilityRole="progressbar"
       accessibilityLabel={label}
@@ -26,6 +27,7 @@ export function StepProgressBar({ steps, current, label }: Readonly<Props>) {
       {steps.map((id, index) => (
         <YStack
           key={id}
+          testID={`step-progress-bar-step-${id}`}
           flex={1}
           height={6}
           borderRadius={999}

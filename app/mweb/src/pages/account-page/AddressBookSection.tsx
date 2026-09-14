@@ -111,7 +111,7 @@ export default function AddressBookSection() {
   };
 
   return (
-    <Card sx={{ p: 2 }}>
+    <Card data-testid="address-book-section" sx={{ p: 2 }}>
       <Stack
         direction="row"
         spacing={1}
@@ -120,17 +120,17 @@ export default function AddressBookSection() {
           justifyContent: "space-between",
           mb: 1
         }}>
-        <Typography component="h2" sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>
+        <Typography data-testid="address-book-title" component="h2" sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>
           Address Book
         </Typography>
-        <DuncitButton size="small" variant="contained" startIcon={<AddIcon />} onClick={openAdd} sx={{ minHeight: 36 }}>
+        <DuncitButton data-testid="address-add" size="small" variant="contained" startIcon={<AddIcon />} onClick={openAdd} sx={{ minHeight: 36 }}>
           Add address
         </DuncitButton>
       </Stack>
-      {error && <Alert severity="error">{error.message}</Alert>}
-      {notice && <Alert severity="error" onClose={() => setNotice(null)}>{notice}</Alert>}
+      {error && <Alert data-testid="address-error" severity="error">{error.message}</Alert>}
+      {notice && <Alert data-testid="address-book-notice" severity="error" onClose={() => setNotice(null)}>{notice}</Alert>}
       {!loading && addresses.length === 0 && (
-        <Typography variant="body2" sx={{
+        <Typography data-testid="address-book-empty" variant="body2" sx={{
           color: "text.secondary",
           py: 1
         }}>
@@ -141,6 +141,7 @@ export default function AddressBookSection() {
         {addresses.map((address) => (
           <Stack
             key={address.id}
+            data-testid={`address-book-row-${address.id}`}
             direction="row"
             spacing={1}
             sx={{
@@ -168,10 +169,22 @@ export default function AddressBookSection() {
                 {oneLine(address)}
               </Typography>
             </Box>
-            <DuncitRoundButton tone="surface" aria-label={`Edit ${address.label}`} onClick={() => openEdit(address)} sx={ROW_ACTION_SX}>
+            <DuncitRoundButton
+              data-testid={`address-edit-${address.id}`}
+              tone="surface"
+              aria-label={`Edit ${address.label}`}
+              onClick={() => openEdit(address)}
+              sx={ROW_ACTION_SX}
+            >
               <EditOutlinedIcon />
             </DuncitRoundButton>
-            <DuncitRoundButton tone="surface" aria-label={`Delete ${address.label}`} onClick={() => remove(address)} sx={ROW_ACTION_SX}>
+            <DuncitRoundButton
+              data-testid={`address-delete-${address.id}`}
+              tone="surface"
+              aria-label={`Delete ${address.label}`}
+              onClick={() => remove(address)}
+              sx={ROW_ACTION_SX}
+            >
               <DeleteOutlineIcon />
             </DuncitRoundButton>
           </Stack>

@@ -27,21 +27,22 @@ export default function BadgesPage() {
   let body = null;
   if (loading && !data) {
     body = (
-      <Stack sx={{ alignItems: 'center', py: 4 }}>
+      <Stack sx={{ alignItems: 'center', py: 4 }} data-testid="badges-loading">
         <CircularProgress size={24} />
       </Stack>
     );
   } else if (error) {
-    body = <Alert severity="error">{t('mweb.badges.loadError')}</Alert>;
+    body = <Alert severity="error" data-testid="badges-error">{t('mweb.badges.loadError')}</Alert>;
   } else if (rows.length === 0) {
     body = (
-      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+      <Typography variant="body2" sx={{ color: 'text.secondary' }} data-testid="badges-empty">
         {t('mweb.badges.empty')}
       </Typography>
     );
   } else {
     body = (
       <Box
+        data-testid="badges-grid"
         sx={{
           display: 'grid',
           gap: 1.5,
@@ -60,7 +61,11 @@ export default function BadgesPage() {
     rows.length > 0 ? t('mweb.badges.summary', { vars: { unlocked, total: rows.length } }) : null;
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 720, mx: 'auto', px: { xs: 0.5, sm: 0 }, pb: 6 }}>
+    <Stack
+      spacing={2.5}
+      sx={{ maxWidth: 720, mx: 'auto', px: { xs: 0.5, sm: 0 }, pb: 6 }}
+      data-testid="badges-screen"
+    >
       <TwoToneHeading lead={t('mweb.badges.title')} trail={summary} stacked />
       {body}
     </Stack>

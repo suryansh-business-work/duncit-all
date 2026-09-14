@@ -22,6 +22,7 @@ export default function PostDialogHeader({
   const { t } = useTranslation();
   return (
     <Stack
+      data-testid="post-dialog-header"
       direction="row"
       spacing={1.5}
       sx={{
@@ -34,6 +35,7 @@ export default function PostDialogHeader({
         {(post.author?.first_name?.[0] ?? 'U').toUpperCase()}
       </Avatar>
       <Typography
+        data-testid="post-dialog-header-author"
         variant="subtitle2"
         sx={{
           fontWeight: 700,
@@ -43,6 +45,7 @@ export default function PostDialogHeader({
       </Typography>
       <Tooltip title={t('mweb.profile.sharePost')}>
         <DuncitIconButton
+          data-testid="post-dialog-header-share"
           size="small"
           aria-label={t('mweb.profile.sharePost')}
           onClick={() => sharePost(post.id, post.author?.full_name ?? 'Post')}
@@ -52,12 +55,12 @@ export default function PostDialogHeader({
       </Tooltip>
       {canDelete && (
         <Tooltip title={t('mweb.profile.deletePost')}>
-          <DuncitIconButton size="small" onClick={onRequestDelete}>
+          <DuncitIconButton data-testid="post-dialog-header-delete" size="small" onClick={onRequestDelete}>
             <DeleteOutlineIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>
       )}
-      <DuncitIconButton size="small" onClick={onClose}>
+      <DuncitIconButton data-testid="post-dialog-header-close" size="small" onClick={onClose}>
         <CloseIcon fontSize="small" />
       </DuncitIconButton>
     </Stack>

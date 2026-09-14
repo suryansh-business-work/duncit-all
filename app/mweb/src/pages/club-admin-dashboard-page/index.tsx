@@ -42,7 +42,7 @@ export default function ClubAdminDashboardPage() {
   const pending = loading && !data;
 
   return (
-    <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+    <Stack data-testid="club-admin-dashboard-page" spacing={3} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <StudioPageHeader
         icon={<SpaceDashboardRoundedIcon fontSize="small" />}
         title={t('clubAdmin.dashboard.title')}
@@ -55,7 +55,7 @@ export default function ClubAdminDashboardPage() {
         onChange={setRange}
       />
 
-      {error && <Alert severity="error">{error.message}</Alert>}
+      {error && <Alert data-testid="club-admin-dashboard-page-error" severity="error">{error.message}</Alert>}
 
       <DashboardKpiGroups kpis={dashboard.kpis} loading={pending} />
       <DashboardTrendCard trend={dashboard.trend} />

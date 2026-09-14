@@ -56,6 +56,7 @@ export default function PodCard({
 
   return (
     <Card
+      data-testid={`pod-card-${pod.pod_id}`}
       onClick={onOpen}
       role="button"
       tabIndex={0}
@@ -96,6 +97,7 @@ export default function PodCard({
         {categoryLabel && <PodCategoryPill label={categoryLabel} />}
         {onToggleSave && (
           <PodSaveButton
+            podId={pod.pod_id}
             saved={saved}
             saving={saving}
             label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
@@ -109,6 +111,7 @@ export default function PodCard({
         joiningText={joiningText}
         spotsText={spotsText}
         subText={[hostText, placeText].filter(Boolean).join(' · ')}
+        testIdPrefix={`pod-card-${pod.pod_id}`}
       />
     </Card>
   );

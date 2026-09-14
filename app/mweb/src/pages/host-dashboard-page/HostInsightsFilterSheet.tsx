@@ -38,6 +38,7 @@ export default function HostInsightsFilterSheet({
 
   return (
     <ResponsiveDialog
+      testId="insights-filter-sheet"
       open={open}
       onClose={onClose}
       title={
@@ -49,6 +50,7 @@ export default function HostInsightsFilterSheet({
       actions={
         <Stack direction="row" spacing={1.5} sx={{ width: '100%' }}>
           <DuncitButton
+            data-testid="insights-filter-reset"
             variant="outlined"
             size="large"
             startIcon={<CloseIcon />}
@@ -58,6 +60,7 @@ export default function HostInsightsFilterSheet({
             Reset
           </DuncitButton>
           <DuncitButton
+            data-testid="insights-filter-apply"
             variant="contained"
             size="large"
             onClick={() => onApply(draft)}
@@ -73,9 +76,11 @@ export default function HostInsightsFilterSheet({
       }}>
         {options.map(([value, label]) => {
           const selected = draft === value;
+          const rangeTestId = `insights-range-${value}`;
           return (
             <Chip
               key={value}
+              data-testid={rangeTestId}
               label={label}
               clickable
               color={selected ? 'primary' : 'default'}

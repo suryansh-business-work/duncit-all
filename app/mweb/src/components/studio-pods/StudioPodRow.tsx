@@ -29,9 +29,13 @@ function stateChipSx(tone: StudioPodTone) {
 }
 
 /** One `Label  Value` fact under a row. Hoisted, so it is never redefined. */
-function PodFact({ label, value }: Readonly<{ label: string; value: string }>) {
+function PodFact({
+  label,
+  value,
+  testId,
+}: Readonly<{ label: string; value: string; testId?: string }>) {
   return (
-    <Stack direction="row" spacing={0.5} sx={{ minWidth: 0 }}>
+    <Stack data-testid={testId} direction="row" spacing={0.5} sx={{ minWidth: 0 }}>
       <Typography
         variant="caption"
         noWrap
@@ -76,6 +80,8 @@ interface Props {
   /** "Request Change …" behind the same menu — Venue Studio and Club Studio. */
   onRequestChange?: (pod: StudioPod) => void;
   requestChangeLabel?: string;
+  /** Test id for this row, e.g. `studio-pods-row-<pod.id>`. */
+  testId?: string;
 }
 
 /**
@@ -89,6 +95,7 @@ export default function StudioPodRow({
   onCancel,
   onRequestChange,
   requestChangeLabel,
+  testId,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { formatDateTime } = useDateFormat();
@@ -100,6 +107,7 @@ export default function StudioPodRow({
 
   return (
     <Stack
+      data-testid={testId}
       direction="row"
       spacing={0.5}
       sx={{
@@ -116,6 +124,7 @@ export default function StudioPodRow({
               {pod.pod_title}
             </Typography>
             <Chip
+              data-testid={testId ? `${testId}-state` : undefined}
               size="small"
               label={t(BUCKET_LABEL_KEY[pod.bucket])}
               sx={stateChipSx(BUCKET_TONE[pod.bucket])}
@@ -135,7 +144,11 @@ export default function StudioPodRow({
             </Typography>
           </Stack>
 
-          <PodFact label={t('mweb.studioPods.hosts')} value={hostValue} />
+          <PodFact
+            label={t('mweb.studioPods.hosts')}
+            value={hostValue}
+            testId={testId ? `${testId}-hosts` : undefined}
+          />
 
           <Box>
             <LinearProgress
@@ -150,9 +163,18 @@ export default function StudioPodRow({
             <PodFact
               label={t('mweb.studioPods.spots')}
               value={`${pod.attendee_count}/${pod.no_of_spots}`}
+              testId={testId ? `${testId}-spots` : undefined}
             />
-            <PodFact label={t('mweb.studioPods.people')} value={String(pod.pod_attendees.length)} />
-            <PodFact label={t('mweb.studioPods.ticket')} value={priceLabel} />
+            <PodFact
+              label={t('mweb.studioPods.people')}
+              value={String(pod.pod_attendees.length)}
+              testId={testId ? `${testId}-people` : undefined}
+            />
+            <PodFact
+              label={t('mweb.studioPods.ticket')}
+              value={priceLabel}
+              testId={testId ? `${testId}-price` : undefined}
+            />
           </Stack>
         </Stack>
       </RowSurface>
@@ -163,6 +185,7 @@ export default function StudioPodRow({
           onCancel={onCancel ? () => onCancel(pod) : undefined}
           onRequestChange={onRequestChange ? () => onRequestChange(pod) : undefined}
           requestChangeLabel={requestChangeLabel}
+          testId={testId ? `${testId}-actions` : undefined}
         />
       )}
     </Stack>

@@ -10,6 +10,8 @@ interface Props {
   onBack?: () => void;
   /** Optional right-hand slot (a chip or a round action). */
   right?: ReactNode;
+  /** The page's own id; `-back` and `-title` hang off it, as on native StackScreen. */
+  testId?: string;
 }
 
 const BACK_SX = {
@@ -27,17 +29,17 @@ const BACK_SX = {
  * back button with a 17/600 title, the same bar the native StackScreen draws.
  * No subtitles under it.
  */
-export default function PageHeader({ title, onBack, right }: Readonly<Props>) {
+export default function PageHeader({ title, onBack, right, testId = 'page-header' }: Readonly<Props>) {
   const { t } = useTranslation();
   const fontSize = onBack ? '1.0625rem' : '1.25rem';
   return (
-    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', minHeight: 44 }}>
+    <Stack data-testid={testId} direction="row" spacing={1.5} sx={{ alignItems: 'center', minHeight: 44 }}>
       {onBack ? (
-        <DuncitRoundButton aria-label={t('mweb.common.goBack')} onClick={onBack} sx={BACK_SX}>
+        <DuncitRoundButton data-testid={`${testId}-back`} aria-label={t('mweb.common.goBack')} onClick={onBack} sx={BACK_SX}>
           <ArrowBackIcon />
         </DuncitRoundButton>
       ) : null}
-      <Typography component="h1" noWrap sx={{ flex: 1, minWidth: 0, fontSize, fontWeight: 600 }}>
+      <Typography data-testid={`${testId}-title`} component="h1" noWrap sx={{ flex: 1, minWidth: 0, fontSize, fontWeight: 600 }}>
         {title}
       </Typography>
       {right}

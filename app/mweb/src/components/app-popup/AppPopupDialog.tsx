@@ -85,6 +85,7 @@ export default function AppPopupDialog() {
 
   return (
     <Dialog
+      data-testid="app-popup"
       open
       onClose={close}
       maxWidth={false}

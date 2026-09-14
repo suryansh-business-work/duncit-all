@@ -30,7 +30,7 @@ export default function LocationMapPreview({ city, zoneName, pincode, country }:
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 
   return (
-    <Box>
+    <Box data-testid="location-map-preview">
       <Stack
         direction="row"
         sx={{
@@ -48,6 +48,7 @@ export default function LocationMapPreview({ city, zoneName, pincode, country }:
           Map
         </Typography>
         <DuncitButton
+          data-testid="location-map-preview-open"
           href={mapUrl}
           target="_blank"
           rel="noreferrer"
@@ -59,6 +60,7 @@ export default function LocationMapPreview({ city, zoneName, pincode, country }:
         </DuncitButton>
       </Stack>
       <Box
+        data-testid="location-map"
         component="iframe"
         title={t('mweb.common.selectedLocationMap')}
         src={src}

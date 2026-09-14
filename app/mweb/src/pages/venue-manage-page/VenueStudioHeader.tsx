@@ -21,6 +21,7 @@ export default function VenueStudioHeader() {
           size="small"
           startIcon={<AddRoundedIcon />}
           sx={{ flexShrink: 0 }}
+          data-testid="venue-studio-header-new-venue"
         >
           {t('mweb.venueManagePage.newVenue')}
         </DuncitButton>

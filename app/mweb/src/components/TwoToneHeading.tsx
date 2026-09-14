@@ -11,6 +11,7 @@ interface Props {
   variant?: TypographyProps['variant'];
   align?: TypographyProps['align'];
   component?: ElementType;
+  testId?: string;
 }
 
 /**
@@ -25,10 +26,11 @@ export default function TwoToneHeading({
   variant = 'h5',
   align,
   component = 'h1',
+  testId = 'two-tone-heading',
 }: Readonly<Props>) {
   const separator = stacked ? null : ' ';
   return (
-    <Typography variant={variant} align={align} component={component} sx={{ lineHeight: 1.2 }}>
+    <Typography data-testid={testId} variant={variant} align={align} component={component} sx={{ lineHeight: 1.2 }}>
       {lead}
       {trail ? (
         <Box component="span" sx={{ color: 'text.secondary', display: stacked ? 'block' : 'inline' }}>

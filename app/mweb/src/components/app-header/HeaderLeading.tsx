@@ -29,11 +29,12 @@ export default function HeaderLeading({
   placeReady,
   onOpenLocation,
 }: Readonly<Props>) {
-  if (minimal) return <Stack sx={{ flex: 1, minWidth: 0 }} />;
+  if (minimal) return <Stack data-testid="header-leading" sx={{ flex: 1, minWidth: 0 }} />;
   return (
-    <Stack direction="row" spacing={1} sx={{ flex: 1, minWidth: 0, alignItems: 'center' }}>
+    <Stack data-testid="header-leading" direction="row" spacing={1} sx={{ flex: 1, minWidth: 0, alignItems: 'center' }}>
       {studio === 'USER' ? null : (
         <Chip
+          data-testid="header-studio-badge"
           label={STUDIO_LABEL[studio]}
           icon={<SwapHorizIcon />}
           onClick={onOpenStudioSwitch}

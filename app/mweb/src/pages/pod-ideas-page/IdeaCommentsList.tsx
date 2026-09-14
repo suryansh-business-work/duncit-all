@@ -17,9 +17,9 @@ export default function IdeaCommentsList({
   onDelete,
 }: Readonly<Props>) {
   return (
-    <Stack spacing={1.5} sx={{ mt: 1, maxHeight: 320, overflowY: 'auto' }}>
+    <Stack spacing={1.5} data-testid="idea-comments-list" sx={{ mt: 1, maxHeight: 320, overflowY: 'auto' }}>
       {comments.length === 0 && (
-        <Typography variant="body2" sx={{
+        <Typography variant="body2" data-testid="idea-comments-empty" sx={{
           color: "text.secondary"
         }}>
           No comments yet — be the first.
@@ -28,7 +28,7 @@ export default function IdeaCommentsList({
       {comments.map((c: any) => {
         const canDelete = myId && (c.author_id === myId || ideaAuthorId === myId);
         return (
-          <Stack key={c.id} direction="row" spacing={1.5} sx={{
+          <Stack key={c.id} direction="row" spacing={1.5} data-testid={`idea-comment-${c.id}`} sx={{
             alignItems: "flex-start"
           }}>
             <Avatar src={c.author?.profile_photo || undefined} sx={{ width: 32, height: 32 }}>
@@ -54,7 +54,11 @@ export default function IdeaCommentsList({
               </Typography>
             </Box>
             {canDelete && (
-              <DuncitIconButton size="small" onClick={() => onDelete(c.id)}>
+              <DuncitIconButton
+                size="small"
+                onClick={() => onDelete(c.id)}
+                data-testid={`idea-comment-delete-${c.id}`}
+              >
                 <DeleteIcon fontSize="small" />
               </DuncitIconButton>
             )}

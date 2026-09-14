@@ -22,8 +22,8 @@ export default function TicketComposer({ locked, busy, onSend }: Readonly<Props>
 
   if (locked) {
     return (
-      <Box sx={{ p: 1.5, borderRadius: '18px', textAlign: 'center', bgcolor: 'action.hover' }}>
-        <Typography variant="caption" sx={{
+      <Box data-testid="ticket-composer-locked" sx={{ p: 1.5, borderRadius: '18px', textAlign: 'center', bgcolor: 'action.hover' }}>
+        <Typography data-testid="ticket-resolved-note" variant="caption" sx={{
           color: "text.secondary"
         }}>
           This conversation has been marked as resolved.
@@ -40,7 +40,7 @@ export default function TicketComposer({ locked, busy, onSend }: Readonly<Props>
   };
 
   return (
-    <Paper sx={{ ...SURFACE_SX, p: 1.5 }}>
+    <Paper data-testid="ticket-composer" sx={{ ...SURFACE_SX, p: 1.5 }}>
       <Stack spacing={1}>
         <AttachmentsField attachments={attachments} setAttachments={setAttachments} />
         <Stack direction="row" spacing={1} sx={{
@@ -49,14 +49,17 @@ export default function TicketComposer({ locked, busy, onSend }: Readonly<Props>
           <TextField
             size="small"
             fullWidth
+            data-testid="ticket-reply-field"
             placeholder={t('mweb.common.writeAReply')}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             multiline
             maxRows={4}
             sx={PILL_FIELD_SX}
+            slotProps={{ htmlInput: { 'data-testid': 'ticket-reply-input' } }}
           />
           <DuncitRoundButton
+            data-testid="ticket-reply-send"
             size="large"
             aria-label={t('mweb.ticketDetails.sendReply')}
             disabled={busy || (!message.trim() && attachments.length === 0)}

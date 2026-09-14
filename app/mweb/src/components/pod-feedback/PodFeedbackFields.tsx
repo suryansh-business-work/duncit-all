@@ -33,7 +33,7 @@ export default function PodFeedbackFields({
 
   return (
     <>
-      <Stack divider={<Divider flexItem />}>
+      <Stack data-testid="pod-feedback-fields" divider={<Divider flexItem />}>
         {aspects.map((aspect) => {
           const label = t(POD_FEEDBACK_ASPECT_KEY[aspect]);
           return (
@@ -45,12 +45,14 @@ export default function PodFeedbackFields({
               starLabel={(stars) =>
                 t('mweb.podFeedback.rateAspect', { vars: { aspect: label, stars } })
               }
+              testId={`pod-feedback-${aspect}`}
             />
           );
         })}
       </Stack>
 
       <TextField
+        data-testid="pod-feedback-comment"
         size="small"
         label={t('mweb.podFeedback.comments')}
         placeholder={t('mweb.podFeedback.commentsPlaceholder')}
@@ -59,7 +61,7 @@ export default function PodFeedbackFields({
         multiline
         minRows={2}
         slotProps={{
-          htmlInput: { maxLength: 1000 }
+          htmlInput: { maxLength: 1000, 'data-testid': 'pod-feedback-comment-input' }
         }}
       />
     </>

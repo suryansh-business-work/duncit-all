@@ -87,6 +87,7 @@ export default function ProductCheckoutPage() {
   if (lines.length === 0) {
     return (
       <EmptyState
+        testId="product-checkout-empty"
         icon={<ShoppingBagOutlinedIcon />}
         title={t('mweb.checkout.nothingToCheckout')}
         actionLabel={t('mweb.checkout.backToCart')}
@@ -97,9 +98,10 @@ export default function ProductCheckoutPage() {
   if (session.financeLoading || !breakup) return <ProductCheckoutSkeleton />;
 
   return (
-    <Box sx={{ maxWidth: 720, mx: 'auto', py: 0.5 }}>
+    <Box data-testid="product-checkout-page" sx={{ maxWidth: 720, mx: 'auto', py: 0.5 }}>
       <Stack spacing={2}>
         <PageHeader
+          testId="product-checkout-page-header"
           title={t('mweb.checkout.productTitle')}
           onBack={() => navigate(-1)}
           right={<GatewayChip finance={session.finance} />}
@@ -166,7 +168,7 @@ export default function ProductCheckoutPage() {
 
 function ProductCheckoutSkeleton() {
   return (
-    <Box sx={{ maxWidth: 720, mx: 'auto', py: 0.5 }}>
+    <Box data-testid="product-checkout-page-loading" sx={{ maxWidth: 720, mx: 'auto', py: 0.5 }}>
       <Stack spacing={2}>
         <Skeleton variant="text" width="40%" height={40} />
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>

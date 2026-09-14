@@ -62,10 +62,11 @@ export default function SupportForm({
   const attachedPod = useWatch({ control, name: 'pod_title' });
 
   return (
-    <form noValidate onSubmit={submit}>
+    <form data-testid="ticket-form" noValidate onSubmit={submit}>
       <Stack spacing={1.5}>
         {attachedPod ? (
           <Chip
+            data-testid="ticket-attached-pod"
             icon={<EventIcon />}
             label={`About pod: ${attachedPod}`}
             variant="outlined"
@@ -76,6 +77,7 @@ export default function SupportForm({
         <RhfTextField
           control={control}
           name="name"
+          data-testid="ticket-name"
           label={t('mweb.support.name')}
           autoComplete="name"
           hint="From your Duncit account"
@@ -84,6 +86,7 @@ export default function SupportForm({
         <RhfTextField
           control={control}
           name="email"
+          data-testid="ticket-email"
           label={t('mweb.common.email')}
           type="email"
           autoComplete="email"
@@ -96,6 +99,7 @@ export default function SupportForm({
           render={({ field }) => (
             <TextField
               {...field}
+              data-testid="ticket-category"
               select
               label={t('mweb.common.category')}
               required
@@ -112,7 +116,7 @@ export default function SupportForm({
               }}
             >
               {CATEGORIES.map((c) => (
-                <MenuItem key={c.value} value={c.value}>
+                <MenuItem key={c.value} data-testid={`ticket-category-option-${c.value}`} value={c.value}>
                   {c.label}
                 </MenuItem>
               ))}
@@ -122,6 +126,7 @@ export default function SupportForm({
         <RhfTextField
           control={control}
           name="subject"
+          data-testid="ticket-subject"
           label={t('mweb.common.subject')}
           required
           hint="3–120 characters"
@@ -136,6 +141,7 @@ export default function SupportForm({
         <RhfTextField
           control={control}
           name="message"
+          data-testid="ticket-message"
           label="Tell us what's going on"
           required
           hint="At least 10 characters"
@@ -151,9 +157,10 @@ export default function SupportForm({
           )}
         />
 
-        {(errorMessage || status) && <Alert severity="error">{errorMessage ?? status}</Alert>}
+        {(errorMessage || status) && <Alert data-testid="ticket-error" severity="error">{errorMessage ?? status}</Alert>}
 
         <DuncitButton
+          data-testid="ticket-submit"
           type="submit"
           variant="contained"
           size="large"

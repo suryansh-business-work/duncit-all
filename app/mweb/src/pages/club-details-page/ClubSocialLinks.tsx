@@ -11,17 +11,18 @@ interface Props {
 export default function ClubSocialLinks({ club }: Readonly<Props>) {
   const { t } = useTranslation();
   const social = [
-    { label: t('mweb.common.community'), href: club.club_whats_app_community_link, icon: <WhatsAppIcon /> },
-    { label: t('mweb.common.groupChat'), href: club.club_whats_app_group_link, icon: <ChatIcon /> },
+    { key: 'community', label: t('mweb.common.community'), href: club.club_whats_app_community_link, icon: <WhatsAppIcon /> },
+    { key: 'group', label: t('mweb.common.groupChat'), href: club.club_whats_app_group_link, icon: <ChatIcon /> },
   ].filter((item) => item.href);
 
   if (social.length === 0) return null;
 
   return (
-    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+    <Stack data-testid="club-social-links" direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
       {social.map((item) => (
         <DuncitButton
           key={item.label}
+          data-testid={`club-chat-${item.key}`}
           startIcon={item.icon}
           component="a"
           href={item.href}

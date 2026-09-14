@@ -60,7 +60,7 @@ export default function WithdrawForm({ open, maxAmount, minAmount, currency, onC
   });
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" data-testid="withdraw-dialog">
       <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.wallet.withdrawFromWallet')}</DialogTitle>
       <DialogContent dividers>
         <Stack component="form" id="withdraw-form" onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
@@ -71,31 +71,65 @@ export default function WithdrawForm({ open, maxAmount, minAmount, currency, onC
             {...register('amount')}
             error={!!errors.amount}
             helperText={errors.amount?.message ?? minHint}
+            data-testid="withdraw-amount"
+            slotProps={{ htmlInput: { 'data-testid': 'withdraw-amount-input' } }}
           />
-          <TextField select label={t('mweb.wallet.payoutMethod')} defaultValue="UPI" {...register('payout_method')}>
+          <TextField
+            select
+            label={t('mweb.wallet.payoutMethod')}
+            defaultValue="UPI"
+            {...register('payout_method')}
+            data-testid="withdraw-payout-method"
+          >
             {WITHDRAW_METHODS.map((m) => (
-              <MenuItem key={m} value={m}>
+              <MenuItem key={m} value={m} data-testid={`withdraw-method-${m}`}>
                 {m}
               </MenuItem>
             ))}
           </TextField>
           {method === 'UPI' ? (
-            <TextField label={t('mweb.wallet.upiId')} {...register('upi_id')} error={!!errors.upi_id} helperText={errors.upi_id?.message} />
+            <TextField
+              label={t('mweb.wallet.upiId')}
+              {...register('upi_id')}
+              error={!!errors.upi_id}
+              helperText={errors.upi_id?.message}
+              data-testid="withdraw-upi-id"
+              slotProps={{ htmlInput: { 'data-testid': 'withdraw-upi-id-input' } }}
+            />
           ) : (
             <>
-              <TextField label={t('mweb.wallet.accountHolderName')} {...register('account_holder_name')} />
-              <TextField label={t('mweb.wallet.accountNumber')} {...register('account_number')} error={!!errors.account_number} helperText={errors.account_number?.message} />
-              <TextField label={t('mweb.wallet.ifscCode')} {...register('ifsc_code')} error={!!errors.ifsc_code} helperText={errors.ifsc_code?.message} />
+              <TextField
+                label={t('mweb.wallet.accountHolderName')}
+                {...register('account_holder_name')}
+                data-testid="withdraw-account-holder-name"
+                slotProps={{ htmlInput: { 'data-testid': 'withdraw-account-holder-name-input' } }}
+              />
+              <TextField
+                label={t('mweb.wallet.accountNumber')}
+                {...register('account_number')}
+                error={!!errors.account_number}
+                helperText={errors.account_number?.message}
+                data-testid="withdraw-account-number"
+                slotProps={{ htmlInput: { 'data-testid': 'withdraw-account-number-input' } }}
+              />
+              <TextField
+                label={t('mweb.wallet.ifscCode')}
+                {...register('ifsc_code')}
+                error={!!errors.ifsc_code}
+                helperText={errors.ifsc_code?.message}
+                data-testid="withdraw-ifsc-code"
+                slotProps={{ htmlInput: { 'data-testid': 'withdraw-ifsc-code-input' } }}
+              />
             </>
           )}
-          {state.error && <Alert severity="error">{state.error.message}</Alert>}
+          {state.error && <Alert severity="error" data-testid="withdraw-error">{state.error.message}</Alert>}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose} disabled={state.loading}>
+        <DuncitButton onClick={onClose} disabled={state.loading} data-testid="withdraw-cancel">
           {t('mweb.common.cancel')}
         </DuncitButton>
-        <DuncitButton type="submit" form="withdraw-form" variant="contained" disabled={state.loading} sx={{ borderRadius: 999, fontWeight: 700 }}>
+        <DuncitButton type="submit" form="withdraw-form" variant="contained" disabled={state.loading} sx={{ borderRadius: 999, fontWeight: 700 }} data-testid="withdraw-submit">
           {state.loading ? t('mweb.wallet.requesting') : t('mweb.wallet.requestWithdrawal')}
         </DuncitButton>
       </DialogActions>

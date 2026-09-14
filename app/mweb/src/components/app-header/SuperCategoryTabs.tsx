@@ -53,21 +53,23 @@ export default function SuperCategoryTabs({ loading, superCats, value, onChange 
 
   if (loading && superCats.length === 0) {
     return (
-      <Box sx={WRAP_SX}>
-        <Skeleton variant="rounded" height={44} sx={{ borderRadius: 999 }} />
+      <Box data-testid="super-cat-tabs" sx={WRAP_SX}>
+        <Skeleton data-testid="super-cat-tabs-skeleton" variant="rounded" height={44} sx={{ borderRadius: 999 }} />
       </Box>
     );
   }
   if (superCats.length === 0) return null;
 
   return (
-    <Box sx={WRAP_SX}>
+    <Box data-testid="super-cat-tabs" sx={WRAP_SX}>
       <Box sx={TRACK_SX}>
         {superCats.map((c: any) => {
           const selected = c.slug === value;
+          const tabTestId = `super-cat-${c.slug}`;
           return (
             <ButtonBase
               key={c.id}
+              data-testid={tabTestId}
               aria-label={c.name}
               aria-pressed={selected}
               onClick={() => onChange(c.slug)}

@@ -29,6 +29,8 @@ interface Props {
   onToggleFollow: (clubId: string) => void;
   onOpenClub: (clubId: string) => void;
   onOpenPod: (clubSlug: string, podSlug: string) => void;
+  /** Distinct per group — the page renders two of these. */
+  testId: string;
 }
 
 /** One titled result group ("Happening Soon" / "More Clubs") — each club its
@@ -42,11 +44,12 @@ export default function SearchResultsSection({
   onToggleFollow,
   onOpenClub,
   onOpenPod,
+  testId,
 }: Readonly<Props>) {
   if (results.length === 0) return null;
   return (
-    <Stack component="section" spacing={1.5}>
-      <SectionHeader title={heading} />
+    <Stack data-testid={testId} component="section" spacing={1.5}>
+      <SectionHeader testId={`${testId}-header`} title={heading} />
       {results.map((result) => (
         <SearchClubCard
           key={result.club.id}

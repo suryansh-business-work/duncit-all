@@ -68,11 +68,11 @@ export default function DeleteAccountDialog({ open, onClose, onSubmitted }: Read
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>{t('mweb.account.deletion.action')}</DialogTitle>
+    <Dialog data-testid="delete-account-dialog" open={open} onClose={onClose} fullWidth maxWidth="xs">
+      <DialogTitle data-testid="delete-account-dialog-title">{t('mweb.account.deletion.action')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
-          {info && <Alert severity="info">{info}</Alert>}
+          {info && <Alert data-testid="delete-account-info" severity="info">{info}</Alert>}
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
@@ -87,6 +87,7 @@ export default function DeleteAccountDialog({ open, onClose, onSubmitted }: Read
             }}>
             {t('mweb.account.deletion.didntGetIt')}{' '}
             <Link
+              data-testid="delete-account-resend"
               component="button"
               type="button"
               onClick={handleResend}

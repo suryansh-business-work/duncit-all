@@ -75,10 +75,10 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
   };
 
   return (
-    <Box sx={{ ...SURFACE_SX, p: 2, overflow: 'hidden' }}>
+    <Box data-testid="pod-shop" sx={{ ...SURFACE_SX, p: 2, overflow: 'hidden' }}>
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
         <Box sx={{ minWidth: 0 }}>
-          <SectionHeader title={t('mweb.shop.title')} />
+          <SectionHeader testId="pod-shop-header" title={t('mweb.shop.title')} />
         </Box>
         <Chip size="small" label={pod.products_enabled ? 'Available' : 'Closed'} sx={{ bgcolor: 'action.hover', color: 'text.primary' }} />
       </Stack>
@@ -87,6 +87,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
         <Stack
           direction="row"
           spacing={1}
+          data-testid="pod-shop-empty"
           sx={{
             alignItems: "center",
             mt: 2
@@ -109,6 +110,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
               key={`${item.product_id}-${item.product_name}`}
               direction="row"
               spacing={1}
+              data-testid={`pod-shop-row-${item.product_id}`}
               sx={rowSx(selected)}>
               <Box sx={{ width: 54, height: 54, borderRadius: '12px', overflow: 'hidden', flex: '0 0 auto', bgcolor: 'background.paper', color: 'secondary.main', display: 'grid', placeItems: 'center' }}>
                 {imageUrl && !imageErrors[item.product_id] ? (
@@ -127,6 +129,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
                       variant="contained"
                       startIcon={<AddShoppingCartIcon />}
                       onClick={() => updateQuantity(item.product_id, 1)}
+                      data-testid={`pod-shop-add-${item.product_id}`}
                       sx={{ minHeight: 32 }}
                     >
                       Add to cart
@@ -140,17 +143,18 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
                     alignItems: "center",
                     mt: 0.75
                   }}>
-                  <DuncitIconButton size="small" aria-label={`Decrease ${item.product_name}`} onClick={() => updateQuantity(item.product_id, quantity - 1)}><RemoveIcon fontSize="small" /></DuncitIconButton>
-                  <Typography variant="body2" sx={{
+                  <DuncitIconButton size="small" aria-label={`Decrease ${item.product_name}`} data-testid={`pod-shop-dec-${item.product_id}`} onClick={() => updateQuantity(item.product_id, quantity - 1)}><RemoveIcon fontSize="small" /></DuncitIconButton>
+                  <Typography variant="body2" data-testid={`pod-shop-qty-${item.product_id}`} sx={{
                     fontWeight: 700
                   }}>{quantity}</Typography>
-                  <DuncitIconButton size="small" aria-label={`Increase ${item.product_name}`} disabled={quantity >= maxQuantity} onClick={() => updateQuantity(item.product_id, Math.min(maxQuantity, quantity + 1))}><AddIcon fontSize="small" /></DuncitIconButton>
+                  <DuncitIconButton size="small" aria-label={`Increase ${item.product_name}`} data-testid={`pod-shop-inc-${item.product_id}`} disabled={quantity >= maxQuantity} onClick={() => updateQuantity(item.product_id, Math.min(maxQuantity, quantity + 1))}><AddIcon fontSize="small" /></DuncitIconButton>
                 </Stack>}
               </Box>
               <DuncitIconButton
                 size="small"
                 aria-label={`View ${item.product_name} details`}
                 onClick={() => setInfoProductId(item.product_id)}
+                data-testid={`pod-shop-info-${item.product_id}`}
                 sx={{ color: mutedColor }}
               >
                 <InfoOutlinedIcon fontSize="small" />
@@ -166,12 +170,13 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
 
       <Divider sx={{ my: 1.5 }} />
       {readOnly ? (
-        <Typography variant="caption" sx={{ color: mutedColor }}>
+        <Typography variant="caption" data-testid="pod-shop-closed-note" sx={{ color: mutedColor }}>
           The shop is currently closed.
         </Typography>
       ) : (
         <Stack
           direction="row"
+          data-testid="pod-shop-total"
           sx={{
             alignItems: "center",
             justifyContent: "space-between"

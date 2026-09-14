@@ -53,7 +53,7 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
   const changed = pending !== current;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth aria-labelledby="studio-switch-title">
+    <Dialog data-testid="studio-switch-dialog" open={open} onClose={onClose} maxWidth="xs" fullWidth aria-labelledby="studio-switch-title">
       <DialogContent sx={{ p: 2.5 }}>
         <Typography id="studio-switch-title" sx={{ fontSize: '1.125rem', fontWeight: 600, mb: 2 }}>
           {t('mweb.common.switchRole')}
@@ -70,6 +70,7 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
             return (
               <ButtonBase
                 key={option.mode}
+                data-testid={`studio-switch-${option.mode}`}
                 aria-label={STUDIO_LABEL[option.mode]}
                 aria-pressed={selected}
                 onClick={() => setPending(option.mode)}
@@ -91,6 +92,7 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
         </Stack>
         <Box
           key={pending}
+          data-testid="studio-switch-active-card"
           sx={{
             borderRadius: '18px',
             px: 2,
@@ -117,6 +119,7 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
           <CheckCircleIcon color="primary" />
         </Box>
         <DuncitButton
+          data-testid="studio-switch-confirm"
           fullWidth
           size="large"
           variant="contained"

@@ -23,7 +23,7 @@ export default function ClubAdminsSection({ admins }: Readonly<{ admins: ClubAdm
 
   return (
     <Box data-testid="club-admins">
-      <SectionHeader title="Club Admins" />
+      <SectionHeader testId="club-admins-header" title="Club Admins" />
       <Stack spacing={1.5} sx={{ mt: 1.25 }}>
         {admins.map((admin) => (
           <ClubAdminCard

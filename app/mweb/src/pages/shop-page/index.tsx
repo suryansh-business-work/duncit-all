@@ -33,6 +33,7 @@ export default function ShopPage() {
   if (loading && !data)
     return (
       <Stack
+        data-testid="shop-loading"
         sx={{
           alignItems: "center",
           p: 6
@@ -40,20 +41,21 @@ export default function ShopPage() {
         <CircularProgress />
       </Stack>
     );
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  if (error) return <Alert data-testid="shop-error" severity="error">{error.message}</Alert>;
 
   return (
-    <Stack spacing={2.5} sx={{ py: 0.5 }}>
+    <Stack data-testid="shop-page" spacing={2.5} sx={{ py: 0.5 }}>
       {/* The cart lives in the app header now, on every page — not just here. */}
-      <PageHeader title={t('mweb.shop.title')} />
+      <PageHeader testId="shop-page-header" title={t('mweb.shop.title')} />
       <PodShopSlider />
       <ShopFilterBar filters={filters} />
       {filters.visible.length === 0 ? (
-        <EmptyState icon={<SearchOffRoundedIcon />} title={t('mweb.shop.emptyState')} />
+        <EmptyState testId="shop-empty" icon={<SearchOffRoundedIcon />} title={t('mweb.shop.emptyState')} />
       ) : (
         <Stack spacing={1.5}>
-          <SectionHeader title={t('mweb.shop.featured')} />
+          <SectionHeader testId="shop-featured-heading" title={t('mweb.shop.featured')} />
           <Box
+            data-testid="shop-product-grid"
             sx={{
               display: 'grid',
               gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)' },

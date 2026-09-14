@@ -9,6 +9,7 @@ export default function GatewayChip({ finance }: Readonly<{ finance: any }>) {
   if (finance?.razorpay_enabled) {
     return (
       <Chip
+        data-testid="gateway-chip-razorpay"
         size="small"
         label={t('mweb.checkout.razorpay')}
         sx={(theme) => ({ bgcolor: alpha(theme.palette.primary.main, 0.12), color: 'primary.main' })}
@@ -18,6 +19,7 @@ export default function GatewayChip({ finance }: Readonly<{ finance: any }>) {
   if (finance?.dummy_mode) {
     return (
       <Chip
+        data-testid="gateway-chip-dummy"
         size="small"
         label={t('mweb.checkout.dummy')}
         sx={{ bgcolor: 'background.paper', color: 'text.primary' }}

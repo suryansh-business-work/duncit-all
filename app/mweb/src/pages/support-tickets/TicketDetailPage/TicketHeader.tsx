@@ -48,32 +48,43 @@ export default function TicketHeader({
   };
 
   return (
-    <Stack direction="row" spacing={1} sx={{
+    <Stack data-testid="ticket-header" direction="row" spacing={1} sx={{
       alignItems: "center"
     }}>
-      <DuncitRoundButton onClick={onBack} aria-label={t('mweb.common.back')} sx={ROUND_SX}>
+      <DuncitRoundButton data-testid="ticket-header-back" onClick={onBack} aria-label={t('mweb.common.back')} sx={ROUND_SX}>
         <ArrowBackRoundedIcon />
       </DuncitRoundButton>
-      <Typography component="h1" sx={{ fontSize: '1.0625rem', fontWeight: 600, flex: 1, minWidth: 0 }} noWrap>
+      <Typography
+        data-testid="ticket-header-subject"
+        component="h1"
+        sx={{ fontSize: '1.0625rem', fontWeight: 600, flex: 1, minWidth: 0 }}
+        noWrap
+      >
         {subject || 'Ticket'}
       </Typography>
-      {status && <Chip size="small" color={STATUS_COLOR[status]} label={status} />}
-      <DuncitRoundButton aria-label={t('mweb.supportTickets.ticketOptions')} disabled={!status} onClick={(e) => setAnchor(e.currentTarget)} sx={ROUND_SX}>
+      {status && <Chip data-testid="ticket-header-status" size="small" color={STATUS_COLOR[status]} label={status} />}
+      <DuncitRoundButton
+        data-testid="ticket-header-menu-button"
+        aria-label={t('mweb.supportTickets.ticketOptions')}
+        disabled={!status}
+        onClick={(e) => setAnchor(e.currentTarget)}
+        sx={ROUND_SX}
+      >
         <MoreHorizRoundedIcon />
       </DuncitRoundButton>
-      <Menu anchorEl={anchor} open={!!anchor} onClose={close}>
+      <Menu data-testid="ticket-header-menu" anchorEl={anchor} open={!!anchor} onClose={close}>
         {canResolve && (
-          <MenuItem onClick={run(onResolve)}>
+          <MenuItem data-testid="ticket-action-resolve" onClick={run(onResolve)}>
             <CheckCircleIcon fontSize="small" sx={{ mr: 1 }} /> Mark as resolved
           </MenuItem>
         )}
-        <MenuItem onClick={run(() => onDownload('TXT'))}>
+        <MenuItem data-testid="ticket-action-download" onClick={run(() => onDownload('TXT'))}>
           <DownloadIcon fontSize="small" sx={{ mr: 1 }} /> Download .txt
         </MenuItem>
-        <MenuItem onClick={run(() => onDownload('DOCX'))}>
+        <MenuItem data-testid="ticket-action-download-docx" onClick={run(() => onDownload('DOCX'))}>
           <DescriptionIcon fontSize="small" sx={{ mr: 1 }} /> Download .docx
         </MenuItem>
-        <MenuItem onClick={run(onEmail)}>
+        <MenuItem data-testid="ticket-action-email" onClick={run(onEmail)}>
           <EmailIcon fontSize="small" sx={{ mr: 1 }} /> Email transcript
         </MenuItem>
       </Menu>

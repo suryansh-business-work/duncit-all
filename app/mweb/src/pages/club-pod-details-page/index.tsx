@@ -14,7 +14,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 function AttendanceLinkCard({ podId }: Readonly<{ podId: string }>) {
   const { t } = useTranslation();
   return (
-    <Card>
+    <Card data-testid="club-pod-details-attendance-link">
       <CardActionArea component={RouterLink} to={`/host/pod/${podId}/attendance`}>
         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', px: 2, py: 1.5, minHeight: 60 }}>
           <Box
@@ -59,7 +59,7 @@ export default function ClubPodDetailsPage() {
   const podsPath = `/clubs/${clubId}/pods`;
 
   return (
-    <Box sx={{ maxWidth: 960, mx: 'auto', width: '100%' }}>
+    <Box data-testid="club-pod-details-page" sx={{ maxWidth: 960, mx: 'auto', width: '100%' }}>
       <PodDetailsPage
         scope="CLUB_ADMIN"
         backTo={podsPath}

@@ -15,8 +15,8 @@ export default function FrequentlyAsked({ faqs, onOpen }: Readonly<FrequentlyAsk
   const { t } = useTranslation();
   if (faqs.length === 0) return null;
   return (
-    <Stack spacing={1.5}>
-      <SectionHeader title={t('mweb.supportHub.frequentlyAsked')} />
+    <Stack data-testid="frequently-asked" spacing={1.5}>
+      <SectionHeader testId="frequently-asked-header" title={t('mweb.supportHub.frequentlyAsked')} />
       <Box
         sx={{
           mx: { xs: -1.25, sm: -2 },
@@ -31,6 +31,7 @@ export default function FrequentlyAsked({ faqs, onOpen }: Readonly<FrequentlyAsk
           {faqs.map((faq) => (
             <ButtonBase
               key={faq.id}
+              data-testid={`faq-card-${faq.id}`}
               onClick={() => onOpen(faq)}
               sx={{
                 ...SURFACE_SX,

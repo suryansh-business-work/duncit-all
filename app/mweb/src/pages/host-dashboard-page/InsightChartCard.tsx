@@ -9,22 +9,33 @@ interface Props {
   empty: boolean;
   action?: ReactNode;
   children: ReactNode;
+  testId?: string;
 }
 
 /** Section card for one insights chart — renders the chart, or a consistent
  * "No data available" empty state when there is nothing to plot. */
-export default function InsightChartCard({ title, empty, action, children }: Readonly<Props>) {
+export default function InsightChartCard({
+  title,
+  empty,
+  action,
+  children,
+  testId = 'insight-card',
+}: Readonly<Props>) {
   return (
-    <Card>
+    <Card data-testid={testId}>
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1, minHeight: 36 }}>
-          <Typography sx={{ flex: 1, minWidth: 0, fontSize: '1rem', fontWeight: 600 }}>
+          <Typography data-testid={`${testId}-title`} sx={{ flex: 1, minWidth: 0, fontSize: '1rem', fontWeight: 600 }}>
             {title}
           </Typography>
           {action}
         </Stack>
         {empty ? (
-          <Stack spacing={1} sx={{ alignItems: 'center', justifyContent: 'center', py: 4 }}>
+          <Stack
+            data-testid={`${testId}-empty`}
+            spacing={1}
+            sx={{ alignItems: 'center', justifyContent: 'center', py: 4 }}
+          >
             <InsightsRoundedIcon sx={{ fontSize: 32, color: 'text.secondary' }} />
             <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
               No data available

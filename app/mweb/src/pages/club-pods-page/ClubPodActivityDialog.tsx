@@ -31,11 +31,11 @@ interface BodyProps {
 /** Spinner, error, nothing yet, or the trail — hoisted so it is not redefined. */
 function ActivityBody({ entries, loading, error }: Readonly<BodyProps>) {
   const { t } = useTranslation();
-  if (error) return <Alert severity="error">{error.message}</Alert>;
-  if (loading && entries.length === 0) return <CircularProgress size={22} />;
+  if (error) return <Alert data-testid="club-pod-activity-dialog-error" severity="error">{error.message}</Alert>;
+  if (loading && entries.length === 0) return <CircularProgress data-testid="club-pod-activity-dialog-loading" size={22} />;
   if (entries.length === 0) {
     return (
-      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+      <Typography data-testid="club-pod-activity-dialog-empty" variant="body2" sx={{ color: 'text.secondary' }}>
         {t('clubAdmin.pods.noActivity')}
       </Typography>
     );
@@ -66,7 +66,7 @@ export default function ClubPodActivityDialog({ pod, onClose }: Readonly<Props>)
   const entries: AuditEntry[] = data?.clubAdminPodAuditLogs ?? [];
 
   return (
-    <Dialog open={!!pod} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog data-testid="club-pod-activity-dialog" open={!!pod} onClose={onClose} maxWidth="sm" fullWidth>
       {pod && (
         <>
           <DialogTitle sx={{ fontWeight: 600 }}>
@@ -76,7 +76,7 @@ export default function ClubPodActivityDialog({ pod, onClose }: Readonly<Props>)
             <ActivityBody entries={entries} loading={loading} error={error} />
           </DialogContent>
           <DialogActions>
-            <DuncitButton onClick={onClose}>{t('mweb.common.close')}</DuncitButton>
+            <DuncitButton data-testid="club-pod-activity-dialog-close" onClick={onClose}>{t('mweb.common.close')}</DuncitButton>
           </DialogActions>
         </>
       )}

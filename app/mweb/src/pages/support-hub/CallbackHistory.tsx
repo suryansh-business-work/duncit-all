@@ -26,7 +26,7 @@ export default function CallbackHistory() {
 
   if (loading && items.length === 0) {
     return (
-      <Box sx={{ p: 2, textAlign: 'center' }}>
+      <Box data-testid="callback-history-loading" sx={{ p: 2, textAlign: 'center' }}>
         <CircularProgress size={20} />
       </Box>
     );
@@ -34,14 +34,14 @@ export default function CallbackHistory() {
   if (items.length === 0) return null;
 
   return (
-    <Paper sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
+    <Paper data-testid="callback-history" sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
       <Typography sx={{ fontSize: '1rem', fontWeight: 600, px: 2, pt: 2, pb: 1 }}>
         Previous callbacks
       </Typography>
       {items.map((c) => {
         const dur = durationLabel(c.duration_seconds);
         return (
-          <Box key={c.id} sx={{ px: 2, py: 1.5, borderTop: 1, borderColor: 'divider' }}>
+          <Box key={c.id} data-testid={`callback-${c.id}`} sx={{ px: 2, py: 1.5, borderTop: 1, borderColor: 'divider' }}>
             <Stack
               direction="row"
               spacing={1}

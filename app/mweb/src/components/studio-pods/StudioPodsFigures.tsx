@@ -16,6 +16,7 @@ interface Props {
   summary: StudioPodSummary;
   /** Already-translated word for what the figures cover — Venues or Clubs. */
   scopeLabel: string;
+  testId?: string;
 }
 
 /**
@@ -25,7 +26,7 @@ interface Props {
  * Shared by Venue Studio and Club Studio (rule 34) — the collected-money tile is
  * simply absent on the venue side, whose query exposes no revenue.
  */
-export default function StudioPodsFigures({ summary, scopeLabel }: Readonly<Props>) {
+export default function StudioPodsFigures({ summary, scopeLabel, testId }: Readonly<Props>) {
   const { t } = useTranslation();
   // Date AND time: a studio owner needs to know WHEN the next pod starts, and
   // native already showed both (rule 27).
@@ -73,10 +74,15 @@ export default function StudioPodsFigures({ summary, scopeLabel }: Readonly<Prop
   }
 
   return (
-    <Stack spacing={1}>
+    <Stack data-testid={testId} spacing={1}>
       <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
         {figures.map((figure) => (
-          <FigureTile key={figure.key} label={figure.label} value={figure.value} />
+          <FigureTile
+            key={figure.key}
+            label={figure.label}
+            value={figure.value}
+            testId={testId ? `${testId}-${figure.key}` : undefined}
+          />
         ))}
       </Stack>
       <Box>

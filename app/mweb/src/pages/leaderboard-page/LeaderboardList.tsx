@@ -45,7 +45,11 @@ function PodiumSpot({ entry }: Readonly<{ entry: LeaderboardEntry }>) {
   const color = medal ? MEDAL_TONE[medal] : 'transparent';
   const size = entry.rank === 1 ? 76 : 60;
   return (
-    <Stack spacing={0.5} sx={{ alignItems: 'center', width: 96, minWidth: 0 }}>
+    <Stack
+      spacing={0.5}
+      data-testid={`leaderboard-podium-spot-${entry.user_id}`}
+      sx={{ alignItems: 'center', width: 96, minWidth: 0 }}
+    >
       <Avatar
         src={entry.avatar_url || undefined}
         sx={{ width: size, height: size, border: 3, borderColor: color, fontWeight: 600 }}
@@ -69,6 +73,7 @@ function BoardRow({ entry }: Readonly<{ entry: LeaderboardEntry }>) {
     <Stack
       direction="row"
       spacing={1.5}
+      data-testid={`leaderboard-row-${entry.rank}`}
       sx={{
         alignItems: 'center',
         px: 2,
@@ -100,7 +105,11 @@ export default function LeaderboardList({ rows }: Readonly<Props>) {
 
   if (rows.length === 0) {
     return (
-      <Typography variant="body2" sx={{ color: 'text.secondary', py: 4, textAlign: 'center' }}>
+      <Typography
+        variant="body2"
+        data-testid="leaderboard-empty"
+        sx={{ color: 'text.secondary', py: 4, textAlign: 'center' }}
+      >
         {t('mweb.leaderboard.emptyBoard')}
       </Typography>
     );
@@ -112,8 +121,13 @@ export default function LeaderboardList({ rows }: Readonly<Props>) {
   const podiumOrder = [podium[1], podium[0], podium[2]].filter(Boolean);
 
   return (
-    <Card>
-      <Stack direction="row" spacing={1} sx={{ justifyContent: 'center', alignItems: 'flex-end', p: 2 }}>
+    <Card data-testid="leaderboard-list">
+      <Stack
+        direction="row"
+        spacing={1}
+        data-testid="leaderboard-podium"
+        sx={{ justifyContent: 'center', alignItems: 'flex-end', p: 2 }}
+      >
         {podiumOrder.map((entry) => (
           <PodiumSpot key={entry.user_id} entry={entry} />
         ))}

@@ -12,7 +12,7 @@ const mediaSx = {
  * inline video (same treatment as VenuesCard / HomeStatusTile media). */
 export default function AdMedia({ ad }: Readonly<{ ad: PublicAd }>) {
   if (ad.ad_type === 'VIDEO') {
-    return <Box component="video" src={ad.media_url} autoPlay muted loop playsInline sx={mediaSx} />;
+    return <Box data-testid="ad-media" component="video" src={ad.media_url} autoPlay muted loop playsInline sx={mediaSx} />;
   }
-  return <Box component="img" src={ad.media_url} alt={ad.ad_title ?? 'Sponsored'} sx={mediaSx} />;
+  return <Box data-testid="ad-media" component="img" src={ad.media_url} alt={ad.ad_title ?? 'Sponsored'} sx={mediaSx} />;
 }

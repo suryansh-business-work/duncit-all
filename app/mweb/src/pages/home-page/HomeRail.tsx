@@ -5,6 +5,8 @@ interface Props {
   children: ReactNode;
   /** Space between the entries, in theme units (1.5 = 12px cards, 1 = 8px chips). */
   gap?: number;
+  /** Optional root test id — each caller names its own rail. */
+  testId?: string;
 }
 
 /**
@@ -15,9 +17,10 @@ interface Props {
  * `max-content` so the trailing 16px survives in every browser. Native twin:
  * each rail's ScrollView `contentContainerStyle={{ gap, paddingHorizontal: 16 }}`.
  */
-export default function HomeRail({ children, gap = 1.5 }: Readonly<Props>) {
+export default function HomeRail({ children, gap = 1.5, testId }: Readonly<Props>) {
   return (
     <Box
+      data-testid={testId}
       sx={{
         mx: -2,
         px: 2,

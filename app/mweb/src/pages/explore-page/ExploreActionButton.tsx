@@ -16,6 +16,7 @@ interface Props {
   tooltip?: string;
   /** Optional separate tap on the count/label (e.g. like count → who-liked list). */
   onLabelClick?: () => void;
+  testId?: string;
 }
 
 export default function ExploreActionButton({
@@ -27,9 +28,10 @@ export default function ExploreActionButton({
   loading,
   tooltip,
   onLabelClick,
+  testId,
 }: Readonly<Props>) {
   return (
-    <Stack spacing={0.25} sx={{
+    <Stack data-testid={testId} spacing={0.25} sx={{
       alignItems: "center"
     }}>
       <DuncitIconButton
@@ -51,6 +53,7 @@ export default function ExploreActionButton({
       </DuncitIconButton>
       {caption ? (
         <Typography
+          data-testid={onLabelClick ? `${testId}-count` : undefined}
           variant="caption"
           onClick={onLabelClick}
           sx={(theme) => ({

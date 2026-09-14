@@ -54,8 +54,8 @@ export default function BadgeDetailsSheet({
       : null;
 
   return (
-    <ResponsiveDialog open={open} onClose={onClose} bottomSheetOnly title={t('mweb.badges.badgeDetails')}>
-      <Stack spacing={2} sx={{ pb: 1 }}>
+    <ResponsiveDialog testId="badge-details-dialog" open={open} onClose={onClose} bottomSheetOnly title={t('mweb.badges.badgeDetails')}>
+      <Stack data-testid="badge-details-sheet" spacing={2} sx={{ pb: 1 }}>
         <Stack direction="row" spacing={2} sx={{
           alignItems: "center"
         }}>
@@ -66,7 +66,7 @@ export default function BadgeDetailsSheet({
             {!badge.image_url && <EmojiEventsIcon fontSize="large" />}
           </Avatar>
           <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography variant="h6" noWrap sx={{
+            <Typography data-testid="badge-details-sheet-title" variant="h6" noWrap sx={{
               fontWeight: 600
             }}>
               {badge.title || 'Badge'}
@@ -108,13 +108,14 @@ export default function BadgeDetailsSheet({
               }}>
                 Progress
               </Typography>
-              <Typography variant="caption" sx={{
+              <Typography data-testid="badge-details-sheet-progress" variant="caption" sx={{
                 fontWeight: 600
               }}>
                 {progress.current} / {progress.total}
               </Typography>
             </Stack>
             <LinearProgress
+              data-testid="badge-details-sheet-progress-bar"
               variant="determinate"
               value={pct ?? 100}
               sx={{ mt: 0.75 }}

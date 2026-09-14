@@ -2,7 +2,7 @@ import { Box, Skeleton, Stack } from '@mui/material';
 
 export default function ClubDetailsSkeleton() {
   return (
-    <Stack spacing={3}>
+    <Stack data-testid="club-details-loading" spacing={3}>
       <Skeleton variant="rectangular" height={280} sx={{ borderRadius: '24px' }} />
       <Stack direction="row" spacing={2} sx={{
         alignItems: "center"

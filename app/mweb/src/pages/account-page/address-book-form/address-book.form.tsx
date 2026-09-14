@@ -17,6 +17,7 @@ import { makeAddressSchema as makeSharedAddressSchema } from '@duncit/forms/sche
 import { blankAddressValues, type AddressFormValues } from './address-book.types';
 import { fallbackT, type Translate } from '../../../i18n/fallback';
 import { useTranslation } from '../../../i18n/useTranslation';
+import { testIdProps } from '../../../utils/testIdProps';
 
 /**
  * One saved address, plus the flag only mWeb offers.
@@ -78,6 +79,8 @@ export default function AddressForm({
           error={!!fieldState.error}
           helperText={fieldState.error?.message}
           fullWidth
+          data-testid={`address-${name}`}
+          slotProps={{ htmlInput: testIdProps(`address-${name}-input`) }}
           {...extra}
         />
       )}
@@ -85,8 +88,8 @@ export default function AddressForm({
   );
 
   return (
-    <Dialog open={open} onClose={onCancel} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700 }}>{title}</DialogTitle>
+    <Dialog data-testid="address-form-sheet" open={open} onClose={onCancel} fullWidth maxWidth="xs">
+      <DialogTitle data-testid="address-form-title" sx={{ fontWeight: 700 }}>{title}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5} sx={{ mt: 0.5 }}>
           {field('label', t('mweb.address.labelHomeOffice'))}
@@ -108,7 +111,13 @@ export default function AddressForm({
             control={control}
             render={({ field: f }) => (
               <FormControlLabel
-                control={<Checkbox checked={f.value} onChange={(e) => f.onChange(e.target.checked)} />}
+                control={
+                  <Checkbox
+                    data-testid="address-is-default"
+                    checked={f.value}
+                    onChange={(e) => f.onChange(e.target.checked)}
+                  />
+                }
                 label={t('mweb.address.useAsMyDefaultAddress')}
               />
             )}
@@ -116,10 +125,16 @@ export default function AddressForm({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onCancel} disabled={saving}>
+        <DuncitButton data-testid="address-cancel" onClick={onCancel} disabled={saving}>
           Cancel
         </DuncitButton>
-        <DuncitButton variant="contained" onClick={handleSubmit(onSubmit)} disabled={saving} sx={{ fontWeight: 600 }}>
+        <DuncitButton
+          data-testid="address-save"
+          variant="contained"
+          onClick={handleSubmit(onSubmit)}
+          disabled={saving}
+          sx={{ fontWeight: 600 }}
+        >
           Save address
         </DuncitButton>
       </DialogActions>

@@ -36,7 +36,7 @@ export default function ProfileAboutEditForm({ bio, links, onCancel, onSaved }: 
   });
 
   return (
-    <form onSubmit={submit}>
+    <form data-testid="profile-about-edit-form" onSubmit={submit}>
       <Stack spacing={2}>
         <Controller
           control={control}
@@ -44,28 +44,39 @@ export default function ProfileAboutEditForm({ bio, links, onCancel, onSaved }: 
           render={({ field, fieldState }) => (
             <TextField
               {...field}
+              data-testid="profile-about-edit-form-bio"
               fullWidth
               label={t('mweb.profile.profileDescription')}
               multiline
               minRows={3}
               error={!!fieldState.error}
               helperText={fieldState.error?.message}
+              slotProps={{ htmlInput: { 'data-testid': 'profile-about-edit-form-bio-input' } }}
             />
           )}
         />
         <Stack spacing={1}>
           <Typography variant="subtitle2">{t('mweb.profile.links')}</Typography>
           {fields.map((item, index) => (
-            <Stack key={item.id} direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+            <Stack
+              key={item.id}
+              data-testid={`profile-about-edit-form-link-${item.id}`}
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1}
+            >
               <Controller
                 control={control}
                 name={`profile_links.${index}.label`}
                 render={({ field, fieldState }) => (
                   <TextField
                     {...field}
+                    data-testid={`profile-about-edit-form-link-label-${item.id}`}
                     label={t('mweb.profile.label')}
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
+                    slotProps={{
+                      htmlInput: { 'data-testid': `profile-about-edit-form-link-label-${item.id}-input` },
+                    }}
                   />
                 )}
               />
@@ -75,20 +86,29 @@ export default function ProfileAboutEditForm({ bio, links, onCancel, onSaved }: 
                 render={({ field, fieldState }) => (
                   <TextField
                     {...field}
+                    data-testid={`profile-about-edit-form-link-url-${item.id}`}
                     fullWidth
                     label="URL"
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
+                    slotProps={{
+                      htmlInput: { 'data-testid': `profile-about-edit-form-link-url-${item.id}-input` },
+                    }}
                   />
                 )}
               />
-              <DuncitIconButton aria-label={t('mweb.profile.removeLink')} onClick={() => remove(index)}>
+              <DuncitIconButton
+                data-testid={`profile-about-edit-form-remove-link-${item.id}`}
+                aria-label={t('mweb.profile.removeLink')}
+                onClick={() => remove(index)}
+              >
                 <DeleteIcon />
               </DuncitIconButton>
             </Stack>
           ))}
           <Box>
             <DuncitButton
+              data-testid="profile-about-edit-form-add-link"
               size="small"
               startIcon={<AddIcon />}
               disabled={linkCount >= 5}
@@ -98,14 +118,23 @@ export default function ProfileAboutEditForm({ bio, links, onCancel, onSaved }: 
             </DuncitButton>
           </Box>
         </Stack>
-        {error && <Alert severity="error">{error.message}</Alert>}
+        {error && (
+          <Alert data-testid="profile-about-edit-form-error" severity="error">
+            {error.message}
+          </Alert>
+        )}
         <Stack direction="row" spacing={1} sx={{
           justifyContent: "flex-end"
         }}>
-          <DuncitButton onClick={onCancel} disabled={loading}>
+          <DuncitButton data-testid="profile-about-edit-form-cancel" onClick={onCancel} disabled={loading}>
             Cancel
           </DuncitButton>
-          <DuncitButton type="submit" variant="contained" disabled={loading}>
+          <DuncitButton
+            data-testid="profile-about-edit-form-save"
+            type="submit"
+            variant="contained"
+            disabled={loading}
+          >
             {loading ? 'Saving...' : 'Save'}
           </DuncitButton>
         </Stack>

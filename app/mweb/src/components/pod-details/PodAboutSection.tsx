@@ -18,10 +18,11 @@ export default function PodAboutSection({ description, info }: Readonly<Props>) 
   const shown = !isLong || expanded ? text : text.slice(0, TRUNCATE) + '\u2026';
 
   return (
-    <Stack spacing={1.5}>
+    <Stack data-testid="pod-about-section" spacing={1.5}>
       {text ? (
         <Box>
           <Typography
+            data-testid="pod-about-text"
             variant="body2"
             sx={{
               color: "text.secondary",
@@ -30,13 +31,18 @@ export default function PodAboutSection({ description, info }: Readonly<Props>) 
             {shown}
           </Typography>
           {isLong && (
-            <DuncitButton size="small" onClick={() => setExpanded((v) => !v)} sx={{ mt: 0.5, p: 0 }}>
+            <DuncitButton
+              data-testid="pod-about-toggle"
+              size="small"
+              onClick={() => setExpanded((v) => !v)}
+              sx={{ mt: 0.5, p: 0 }}
+            >
               {expanded ? t('mweb.podDetails.showLess') : t('mweb.podDetails.readMore')}
             </DuncitButton>
           )}
         </Box>
       ) : (
-        <Typography variant="body2" sx={{
+        <Typography data-testid="pod-about-empty" variant="body2" sx={{
           color: "text.secondary"
         }}>
           {t('mweb.podDetails.aboutEmpty')}
@@ -52,7 +58,7 @@ export default function PodAboutSection({ description, info }: Readonly<Props>) 
             }}>
             {t('mweb.podDetails.whatToExpect')}
           </Typography>
-          <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+          <Typography data-testid="pod-about-info" variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
             {info}
           </Typography>
         </Box>

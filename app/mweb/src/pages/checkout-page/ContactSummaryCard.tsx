@@ -12,12 +12,13 @@ interface Props {
 interface RowProps {
   label: string;
   value: string;
+  testId: string;
 }
 
 /** One label/value line in the read-only contact card. */
-function ContactRow({ label, value }: Readonly<RowProps>) {
+function ContactRow({ label, value, testId }: Readonly<RowProps>) {
   return (
-    <Stack direction="row" spacing={1.5} sx={{
+    <Stack data-testid={testId} direction="row" spacing={1.5} sx={{
       alignItems: "baseline"
     }}>
       <Typography
@@ -44,9 +45,9 @@ function ContactRow({ label, value }: Readonly<RowProps>) {
 }
 
 /** Placeholder line shown while the `me` query is still loading. */
-function ContactRowSkeleton({ label }: Readonly<{ label: string }>) {
+function ContactRowSkeleton({ label, testId }: Readonly<{ label: string; testId: string }>) {
   return (
-    <Stack direction="row" spacing={1.5} sx={{
+    <Stack data-testid={testId} direction="row" spacing={1.5} sx={{
       alignItems: "baseline"
     }}>
       <Typography
@@ -86,7 +87,7 @@ export default function ContactSummaryCard({ control, contact, loading }: Readon
   const phoneLine = [resolvedExt, resolvedPhone].filter(Boolean).join(' ');
 
   return (
-    <Stack spacing={1.25}>
+    <Stack data-testid="contact-summary-card" spacing={1.25}>
       <Typography
         variant="overline"
         sx={{
@@ -95,18 +96,18 @@ export default function ContactSummaryCard({ control, contact, loading }: Readon
         }}>
         {t('mweb.checkout.contactDetails')}
       </Typography>
-      <Stack spacing={0.75} sx={{ px: 1.5, py: 1.25, borderRadius: '16px', border: '1px solid', borderColor: 'divider' }}>
+      <Stack data-testid="checkout-contact-summary" spacing={0.75} sx={{ px: 1.5, py: 1.25, borderRadius: '16px', border: '1px solid', borderColor: 'divider' }}>
         {loading ? (
           <>
-            <ContactRowSkeleton label={nameLabel} />
-            <ContactRowSkeleton label={emailLabel} />
-            <ContactRowSkeleton label={phoneLabel} />
+            <ContactRowSkeleton label={nameLabel} testId="contact-summary-card-name" />
+            <ContactRowSkeleton label={emailLabel} testId="contact-summary-card-email" />
+            <ContactRowSkeleton label={phoneLabel} testId="contact-summary-card-phone" />
           </>
         ) : (
           <>
-            <ContactRow label={nameLabel} value={resolvedName} />
-            <ContactRow label={emailLabel} value={resolvedEmail} />
-            <ContactRow label={phoneLabel} value={phoneLine} />
+            <ContactRow label={nameLabel} value={resolvedName} testId="contact-summary-card-name" />
+            <ContactRow label={emailLabel} value={resolvedEmail} testId="contact-summary-card-email" />
+            <ContactRow label={phoneLabel} value={phoneLine} testId="contact-summary-card-phone" />
           </>
         )}
       </Stack>

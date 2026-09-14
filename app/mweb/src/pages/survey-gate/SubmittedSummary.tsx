@@ -15,7 +15,7 @@ export default function SubmittedSummary({ survey, answers }: Readonly<Props>) {
   if (items.length === 0) return null;
 
   return (
-    <Box sx={{ ...SURFACE_SX, p: 2, mb: 2 }}>
+    <Box data-testid="submitted-summary" sx={{ ...SURFACE_SX, p: 2, mb: 2 }}>
       <Typography
         variant="caption"
         sx={{

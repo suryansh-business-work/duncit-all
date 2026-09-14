@@ -107,7 +107,7 @@ export default function PricePanel({ preview }: Readonly<Props>) {
   return (
     <Card sx={{ p: 2 }} data-testid="create-pod-price-panel">
       <Stack spacing={1.5}>
-        <SectionHeader title={t('mweb.createPod.potentialEarnings')} />
+        <SectionHeader testId="create-pod-price-panel-header" title={t('mweb.createPod.potentialEarnings')} />
         {noOfSpots > 0 && (
           <Alert
             severity="success"

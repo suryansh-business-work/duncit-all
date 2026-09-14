@@ -47,12 +47,12 @@ export default function ContactOtpStep({
   const submit = handleSubmit((values) => onVerify(values.otp));
 
   return (
-    <form noValidate onSubmit={submit}>
+    <form data-testid="contact-otp-step" noValidate onSubmit={submit}>
       <Stack spacing={1.5}>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {labels.codeSentTo(sentTo)}
         </Typography>
-        {testCode && <Alert severity="info">{labels.testCode(testCode)}</Alert>}
+        {testCode && <Alert data-testid="contact-change-test-code" severity="info">{labels.testCode(testCode)}</Alert>}
         <RhfTextField
           control={control}
           name="otp"
@@ -62,10 +62,21 @@ export default function ContactOtpStep({
           slotProps={{ inputLabel: { shrink: true }, htmlInput: otpInput }}
         />
         <Stack direction="row" spacing={1}>
-          <DuncitButton type="button" variant="outlined" color="inherit" onClick={onEditValue}>
+          <DuncitButton
+            data-testid="contact-change-edit"
+            type="button"
+            variant="outlined"
+            color="inherit"
+            onClick={onEditValue}
+          >
             {labels.editValue}
           </DuncitButton>
-          <DuncitButton type="submit" variant="contained" disabled={busy || !isValid}>
+          <DuncitButton
+            data-testid="contact-change-verify"
+            type="submit"
+            variant="contained"
+            disabled={busy || !isValid}
+          >
             {busy ? labels.verifying : labels.verifyAndSave}
           </DuncitButton>
         </Stack>

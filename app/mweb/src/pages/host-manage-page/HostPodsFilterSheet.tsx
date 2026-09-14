@@ -22,10 +22,12 @@ function ChipRow<T extends string>({
   items,
   value,
   onChange,
+  testIdPrefix,
 }: Readonly<{
   items: ReadonlyArray<readonly [T, string]>;
   value: T;
   onChange: (value: T) => void;
+  testIdPrefix: string;
 }>) {
   return (
     <Stack direction="row" spacing={0.75} useFlexGap sx={{
@@ -33,9 +35,11 @@ function ChipRow<T extends string>({
     }}>
       {items.map(([itemValue, label]) => {
         const selected = value === itemValue;
+        const chipTestId = `${testIdPrefix}-${itemValue}`;
         return (
           <Chip
             key={itemValue}
+            data-testid={chipTestId}
             label={label}
             clickable
             color={selected ? 'primary' : 'default'}
@@ -60,6 +64,7 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
 
   return (
     <ResponsiveDialog
+      testId="host-pods-filter-sheet"
       open={open}
       onClose={onClose}
       title={
@@ -71,6 +76,7 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
       actions={
         <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
           <DuncitButton
+            data-testid="host-filter-reset"
             variant="outlined"
             size="large"
             onClick={() => setDraft(DEFAULT_HOST_PODS_FILTERS)}
@@ -80,6 +86,7 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
             Reset
           </DuncitButton>
           <DuncitButton
+            data-testid="host-filter-apply"
             variant="contained"
             size="large"
             onClick={() => onApply(draft)}
@@ -104,6 +111,7 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
             items={HOST_TYPE_OPTIONS}
             value={draft.type}
             onChange={(type) => setDraft((d) => ({ ...d, type }))}
+            testIdPrefix="host-filter-type"
           />
         </Stack>
         <Stack spacing={0.8}>
@@ -119,6 +127,7 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
             items={HOST_TIME_OPTIONS}
             value={draft.time}
             onChange={(time) => setDraft((d) => ({ ...d, time }))}
+            testIdPrefix="host-filter-time"
           />
         </Stack>
         <Stack spacing={0.8}>
@@ -134,6 +143,7 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
             items={HOST_PRICE_OPTIONS}
             value={draft.price}
             onChange={(price) => setDraft((d) => ({ ...d, price }))}
+            testIdPrefix="host-filter-price"
           />
         </Stack>
       </Stack>

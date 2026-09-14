@@ -32,7 +32,7 @@ export default function ClubMonitoringPage() {
   });
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+    <Stack data-testid="club-monitoring-page" spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <StudioPageHeader
         icon={<MonitorHeartRoundedIcon fontSize="small" />}
         title={t('clubAdmin.monitoring.title')}

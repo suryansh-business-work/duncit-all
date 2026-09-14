@@ -12,7 +12,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 function CategoryTile({ row }: Readonly<{ row: ClubAdminCategoryRow }>) {
   const { t } = useTranslation();
   return (
-    <Box sx={{ flex: '1 1 45%', minWidth: 140, p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}>
+    <Box data-testid={`dashboard-category-tile-${row.category_id}`} sx={{ flex: '1 1 45%', minWidth: 140, p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}>
       <Typography variant="subtitle2" noWrap sx={{ fontWeight: 600 }}>
         {row.name}
       </Typography>
@@ -45,13 +45,13 @@ export default function DashboardCategoryTiles({ categories, loading }: Readonly
   const { t } = useTranslation();
 
   let body = (
-    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+    <Typography data-testid="dashboard-category-tiles-empty" variant="body2" sx={{ color: 'text.secondary' }}>
       {t('clubAdmin.dashboard.categoriesEmpty')}
     </Typography>
   );
   if (loading) {
     body = (
-      <Stack direction="row" sx={{ gap: 1 }}>
+      <Stack data-testid="dashboard-category-tiles-loading" direction="row" sx={{ gap: 1 }}>
         {SKELETON_KEYS.map((key) => (
           <Skeleton key={key} variant="rounded" height={88} sx={{ flex: 1, borderRadius: '16px' }} />
         ))}
@@ -68,8 +68,8 @@ export default function DashboardCategoryTiles({ categories, loading }: Readonly
   }
 
   return (
-    <Stack spacing={1.5}>
-      <SectionHeader title={t('clubAdmin.dashboard.yourCategories')} />
+    <Stack data-testid="dashboard-category-tiles" spacing={1.5}>
+      <SectionHeader testId="dashboard-category-tiles-header" title={t('clubAdmin.dashboard.yourCategories')} />
       <Card>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>{body}</CardContent>
       </Card>

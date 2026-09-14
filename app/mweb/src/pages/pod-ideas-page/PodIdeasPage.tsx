@@ -166,7 +166,7 @@ export default function PodIdeasPage() {
   };
 
   return (
-    <Box sx={{ maxWidth: 720, mx: 'auto', py: { xs: 1, sm: 2 } }}>
+    <Box data-testid="pod-ideas-page" sx={{ maxWidth: 720, mx: 'auto', py: { xs: 1, sm: 2 } }}>
       <PodIdeasHeader
         search={search}
         setSearch={setSearch}
@@ -179,7 +179,7 @@ export default function PodIdeasPage() {
         }}
       />
 
-      <Stack spacing={0.75} sx={{ mb: 2 }}>
+      <Stack data-testid="pod-ideas-page-filter" spacing={0.75} sx={{ mb: 2 }}>
         <Typography
           variant="caption"
           sx={{
@@ -227,12 +227,14 @@ export default function PodIdeasPage() {
       )}
 
       <Snackbar
+        data-testid="pod-ideas-page-toast"
         open={!!toast}
         autoHideDuration={3500}
         onClose={() => setToast(null)}
         message={toast ?? ''}
       />
       <ConfirmDialog
+        testId="idea-delete-confirm"
         open={!!confirmDeleteId}
         title={t('mweb.podIdeas.deleteThisIdea')}
         message={t('mweb.podIdeas.thisWillPermanentlyRemoveTheIdea')}

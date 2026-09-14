@@ -45,7 +45,7 @@ export default function PodFeedbackCard({
   const busyLabel = rated ? t('mweb.podFeedback.updating') : t('mweb.podFeedback.submitting');
 
   return (
-    <Card>
+    <Card data-testid="pod-feedback-card">
       <CardContent sx={{ p: 2 }}>
         <Stack spacing={1.5}>
           <Typography component="h1" sx={{ fontSize: 20, fontWeight: 600, lineHeight: 1.25 }}>
@@ -56,7 +56,11 @@ export default function PodFeedbackCard({
           }}>
             {t('mweb.podFeedback.subtitle')}
           </Typography>
-          {rated && <Alert severity="info">{t('mweb.podFeedback.alreadyRated')}</Alert>}
+          {rated && (
+            <Alert severity="info" data-testid="pod-feedback-already-rated">
+              {t('mweb.podFeedback.alreadyRated')}
+            </Alert>
+          )}
 
           <PodFeedbackFields
             aspects={aspects}
@@ -66,19 +70,33 @@ export default function PodFeedbackCard({
             onMessage={onMessage}
           />
 
-          {failed && <Alert severity="error">{t('mweb.podFeedback.failed')}</Alert>}
-          {saved && <Alert severity="success">{t('mweb.podFeedback.saved')}</Alert>}
+          {failed && (
+            <Alert severity="error" data-testid="pod-feedback-error">
+              {t('mweb.podFeedback.failed')}
+            </Alert>
+          )}
+          {saved && (
+            <Alert severity="success" data-testid="pod-feedback-saved">
+              {t('mweb.podFeedback.saved')}
+            </Alert>
+          )}
 
           <Stack direction="row" spacing={1} sx={{
             justifyContent: "flex-end"
           }}>
-            <DuncitButton variant="outlined" onClick={onLeave} sx={{ minHeight: 44 }}>
+            <DuncitButton
+              variant="outlined"
+              onClick={onLeave}
+              data-testid="pod-feedback-skip"
+              sx={{ minHeight: 44 }}
+            >
               {saved ? t('mweb.podFeedback.done') : t('mweb.podFeedback.close')}
             </DuncitButton>
             <DuncitButton
               variant="contained"
               disabled={!canSubmitPodFeedback(scores) || saving}
               onClick={onSubmit}
+              data-testid="pod-feedback-submit"
               sx={{ minHeight: 44 }}
             >
               {saving ? busyLabel : submitLabel}

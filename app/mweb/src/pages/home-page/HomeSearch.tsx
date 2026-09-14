@@ -22,6 +22,7 @@ export default function HomeSearch({ disabled }: Readonly<Props>) {
 
   return (
     <TextField
+      data-testid="home-search"
       fullWidth
       disabled={disabled}
       placeholder={t('mweb.home.searchPods')}
@@ -53,6 +54,7 @@ export default function HomeSearch({ disabled }: Readonly<Props>) {
           'aria-label': 'Search Duncit',
           enterKeyHint: 'search',
           readOnly: true,
+          'data-testid': 'home-search-input',
         }
       }} />
   );

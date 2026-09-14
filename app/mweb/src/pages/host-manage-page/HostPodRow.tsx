@@ -39,11 +39,12 @@ export default function HostPodRow({
   const free = pod.pod_type === 'FREE';
   const podPath = pod.club_slug && pod.pod_id ? `/club/${pod.club_slug}/pod/${pod.pod_id}` : '#';
   return (
-    <Stack spacing={1} sx={{ px: 2, py: 1.75 }}>
+    <Stack data-testid={`host-pod-row-${pod.id}`} spacing={1} sx={{ px: 2, py: 1.75 }}>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
         <Box
           component={RouterLink}
           to={podPath}
+          data-testid={`host-pod-open-${pod.id}`}
           sx={{
             flex: 1,
             minWidth: 0,
@@ -69,6 +70,7 @@ export default function HostPodRow({
             </Typography>
             {approvalChip && (
               <Chip
+                data-testid={`host-pod-approval-${pod.id}`}
                 label={approvalChip.label}
                 color={approvalChip.color}
                 sx={{ mt: 0.5, height: 24 }}
@@ -77,6 +79,7 @@ export default function HostPodRow({
           </Box>
         </Box>
         <Chip
+          data-testid={`host-pod-type-${pod.id}`}
           label={free ? t('mweb.podType.free') : t('mweb.podType.paid')}
           color={free ? 'success' : 'primary'}
           variant="outlined"
@@ -92,7 +95,12 @@ export default function HostPodRow({
         />
       </Stack>
       {rejected && (
-        <Alert severity="warning" icon={<InfoOutlinedIcon fontSize="small" />} sx={{ py: 0.25 }}>
+        <Alert
+          data-testid={`host-pod-rejected-note-${pod.id}`}
+          severity="warning"
+          icon={<InfoOutlinedIcon fontSize="small" />}
+          sx={{ py: 0.25 }}
+        >
           {VENUE_REJECTED_NOTE}
         </Alert>
       )}

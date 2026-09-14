@@ -17,7 +17,7 @@ interface Props {
  */
 export function GrievanceStepRow({ index, title, body, isLast }: Readonly<Props>) {
   return (
-    <XStack gap={10}>
+    <XStack testID={`grievance-step-${index}`} gap={10}>
       <YStack alignItems="center" width={24}>
         <YStack
           width={24}

@@ -38,9 +38,13 @@ export default function ProfileAccordions({
 }: Readonly<{ me: any; onSaved: () => void; autoSendEmailOtp?: boolean }>) {
   const { t } = useTranslation();
   return (
-    <Stack spacing={1.5}>
-      <Accordion defaultExpanded disableGutters>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={SUMMARY_SX}>
+    <Stack data-testid="profile-accordions" spacing={1.5}>
+      <Accordion data-testid="profile-accordions-about" defaultExpanded disableGutters>
+        <AccordionSummary
+          data-testid="profile-accordions-about-summary"
+          expandIcon={<ExpandMoreIcon />}
+          sx={SUMMARY_SX}
+        >
           <Title icon={<PersonIcon />} label={t('mweb.profile.yourProfile')} />
         </AccordionSummary>
         <AccordionDetails sx={DETAILS_SX}>
@@ -56,8 +60,12 @@ export default function ProfileAccordions({
         </AccordionDetails>
       </Accordion>
 
-      <Accordion disableGutters>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={SUMMARY_SX}>
+      <Accordion data-testid="profile-accordions-pet" disableGutters>
+        <AccordionSummary
+          data-testid="profile-accordions-pet-summary"
+          expandIcon={<ExpandMoreIcon />}
+          sx={SUMMARY_SX}
+        >
           <Title icon={<PetsIcon />} label={t('mweb.profile.petProfile2')} />
         </AccordionSummary>
         <AccordionDetails sx={DETAILS_SX}>
@@ -65,8 +73,12 @@ export default function ProfileAccordions({
         </AccordionDetails>
       </Accordion>
 
-      <Accordion disableGutters>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={SUMMARY_SX}>
+      <Accordion data-testid="profile-accordions-host" disableGutters>
+        <AccordionSummary
+          data-testid="profile-accordions-host-summary"
+          expandIcon={<ExpandMoreIcon />}
+          sx={SUMMARY_SX}
+        >
           <Title icon={<WorkspacePremiumIcon />} label={t('mweb.profile.userHost')} />
         </AccordionSummary>
         <AccordionDetails sx={DETAILS_SX}>
@@ -74,8 +86,12 @@ export default function ProfileAccordions({
         </AccordionDetails>
       </Accordion>
 
-      <Accordion disableGutters>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={SUMMARY_SX}>
+      <Accordion data-testid="profile-accordions-venue" disableGutters>
+        <AccordionSummary
+          data-testid="profile-accordions-venue-summary"
+          expandIcon={<ExpandMoreIcon />}
+          sx={SUMMARY_SX}
+        >
           <Title icon={<StorefrontIcon />} label={t('mweb.profile.userVenues')} />
         </AccordionSummary>
         <AccordionDetails sx={DETAILS_SX}>

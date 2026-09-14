@@ -35,7 +35,12 @@ export default function MessageComposer({
         borderColor: 'divider',
       }}>
       <Tooltip title={t('mweb.chatRoom.image')}>
-        <DuncitRoundButton size="large" tone="surface" onClick={onOpenPicker}>
+        <DuncitRoundButton
+          size="large"
+          tone="surface"
+          onClick={onOpenPicker}
+          data-testid="chat-pick-image"
+        >
           <ImageOutlinedIcon />
         </DuncitRoundButton>
       </Tooltip>
@@ -47,6 +52,7 @@ export default function MessageComposer({
         size="small"
         multiline
         maxRows={4}
+        data-testid="chat-input-field"
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -58,15 +64,27 @@ export default function MessageComposer({
             sx: { borderRadius: '22px', bgcolor: 'action.hover', minHeight: 44, '& fieldset': { border: 0 } },
             endAdornment: (
               <InputAdornment position="end">
-                <DuncitIconButton size="small" onClick={(e) => onOpenEmoji(e.currentTarget)}>
+                <DuncitIconButton
+                  size="small"
+                  data-testid="chat-emoji-toggle"
+                  onClick={(e) => onOpenEmoji(e.currentTarget)}
+                >
                   <EmojiEmotionsIcon fontSize="small" />
                 </DuncitIconButton>
               </InputAdornment>
             ),
-          }
+          },
+          htmlInput: { 'data-testid': 'chat-input' },
         }}
       />
-      <DuncitRoundButton size="large" aria-label={t('mweb.common.sendMessage')} onClick={onSend} disabled={!text.trim()} sx={SEND_BUTTON_SX}>
+      <DuncitRoundButton
+        size="large"
+        aria-label={t('mweb.common.sendMessage')}
+        onClick={onSend}
+        disabled={!text.trim()}
+        sx={SEND_BUTTON_SX}
+        data-testid="chat-send"
+      >
         <SendRoundedIcon />
       </DuncitRoundButton>
     </Stack>

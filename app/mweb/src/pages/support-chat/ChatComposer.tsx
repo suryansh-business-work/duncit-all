@@ -61,15 +61,23 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
   };
 
   return (
-    <Stack spacing={0.75}>
+    <Stack data-testid="support-chat-composer" spacing={0.75}>
       {error && (
-        <Chip size="small" color="error" label={error} onDelete={() => setError(null)} sx={{ alignSelf: 'flex-start' }} />
+        <Chip
+          data-testid="support-chat-attach-error"
+          size="small"
+          color="error"
+          label={error}
+          onDelete={() => setError(null)}
+          sx={{ alignSelf: 'flex-start' }}
+        />
       )}
       {attachments.length > 0 && (
         <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 0.5 }}>
           {attachments.map((url, i) => (
             <Chip
               key={url}
+              data-testid={`support-chat-attach-preview-${i}`}
               size="small"
               label={`Attachment ${i + 1}`}
               onDelete={() => setAttachments(attachments.filter((u) => u !== url))}
@@ -82,17 +90,19 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
       }}>
         <input ref={fileRef} type="file" accept={ATTACHMENT_ACCEPT_ALL} hidden onChange={pickFile} />
         <DuncitRoundButton
+          data-testid="support-chat-attach"
           size="large"
           tone="surface"
           aria-label={t('mweb.supportChat.attachFile')}
           disabled={disabled || uploading || attachments.length >= 5}
           onClick={() => fileRef.current?.click()}
         >
-          {uploading ? <CircularProgress size={20} /> : <AttachFileIcon />}
+          {uploading ? <CircularProgress data-testid="support-chat-attach-busy" size={20} /> : <AttachFileIcon />}
         </DuncitRoundButton>
         <TextField
           size="small"
           fullWidth
+          data-testid="support-chat-input"
           placeholder={t('mweb.supportChat.typeAMessage')}
           value={text}
           onChange={(e) => handleTyping(e.target.value)}
@@ -103,9 +113,11 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
             }
           }}
           sx={PILL_FIELD_SX}
+          slotProps={{ htmlInput: { 'data-testid': 'support-chat-input-input' } }}
         />
         <Box>
           <DuncitRoundButton
+            data-testid="support-chat-send"
             size="large"
             aria-label={t('mweb.common.sendMessage')}
             disabled={disabled || (!text.trim() && attachments.length === 0)}

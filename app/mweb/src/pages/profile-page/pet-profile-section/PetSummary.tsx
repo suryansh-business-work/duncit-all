@@ -10,17 +10,18 @@ export default function PetSummary({ pet }: Readonly<PetSummaryProps>) {
   const hasPet = !!(pet && (pet.name || pet.species || pet.bio || pet.photo_url));
   if (!hasPet) {
     return (
-      <Typography variant="body2" sx={{
+      <Typography data-testid="pet-summary-empty" variant="body2" sx={{
         color: "text.secondary"
       }}>Tell other members about your pet — they may join your pet-friendly pods.
               </Typography>
     );
   }
   return (
-    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
+    <Stack data-testid="pet-summary" direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
       alignItems: "center"
     }}>
       <Avatar
+        data-testid="pet-summary-avatar"
         src={pet?.photo_url || undefined}
         sx={{
           width: 88,
@@ -42,7 +43,7 @@ export default function PetSummary({ pet }: Readonly<PetSummaryProps>) {
         <PetsIcon />
       </Avatar>
       <Box>
-        <Typography variant="subtitle1" sx={{
+        <Typography data-testid="pet-summary-name" variant="subtitle1" sx={{
           fontWeight: 600
         }}>
           {pet?.name ?? 'Unnamed pet'}

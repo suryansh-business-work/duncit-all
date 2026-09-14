@@ -22,7 +22,7 @@ export default function PodLocationMap({ locationName, zoneName, pincode }: Read
   const mapUrl = mapSearchUrl(query);
 
   return (
-    <Stack spacing={0.5}>
+    <Stack spacing={0.5} data-testid="pod-location-map">
       <Box
         component="iframe"
         title={t('mweb.podDetails.locationMap')}
@@ -30,6 +30,7 @@ export default function PodLocationMap({ locationName, zoneName, pincode }: Read
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"
         allowFullScreen
+        data-testid="pod-location-map-frame"
         sx={{
           width: '100%',
           height: { xs: 240, sm: 280 },
@@ -45,6 +46,7 @@ export default function PodLocationMap({ locationName, zoneName, pincode }: Read
         rel="noreferrer"
         size="small"
         endIcon={<OpenInNewIcon fontSize="small" />}
+        data-testid="pod-location-map-open"
         sx={{ alignSelf: 'flex-end', minHeight: 32, px: 1 }}
       >
         {t('mweb.podDetails.openInMaps')}

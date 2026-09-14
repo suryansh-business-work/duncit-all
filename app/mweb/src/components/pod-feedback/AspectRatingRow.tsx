@@ -6,6 +6,8 @@ interface Props {
   onChange: (value: number) => void;
   /** Screen-reader text for each star, e.g. "Rate Host 3 out of 5". */
   starLabel: (stars: number) => string;
+  /** Test id for the row's rating control, e.g. `pod-feedback-HOST`. */
+  testId?: string;
 }
 
 /**
@@ -15,9 +17,10 @@ interface Props {
  * guest who loved the evening and was let down by the room has said two
  * different things — and only the split version tells anyone what to fix.
  */
-export default function AspectRatingRow({ label, value, onChange, starLabel }: Readonly<Props>) {
+export default function AspectRatingRow({ label, value, onChange, starLabel, testId }: Readonly<Props>) {
   return (
     <Stack
+      data-testid={testId ? `${testId}-row` : undefined}
       direction="row"
       spacing={1.5}
       sx={{
@@ -34,6 +37,7 @@ export default function AspectRatingRow({ label, value, onChange, starLabel }: R
         {label}
       </Typography>
       <Rating
+        data-testid={testId}
         value={value || null}
         onChange={(_event, next) => onChange(next ?? 0)}
         getLabelText={starLabel}

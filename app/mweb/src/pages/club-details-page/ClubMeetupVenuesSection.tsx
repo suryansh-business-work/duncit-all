@@ -50,7 +50,7 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
   };
 
   return (
-    <Box sx={{ ...SURFACE_SX, p: 2 }}>
+    <Box data-testid="club-venues" sx={{ ...SURFACE_SX, p: 2 }}>
       <Stack
         direction="row"
         sx={{
@@ -64,7 +64,7 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
           We usually meet
         </Typography>
         {!origin && (
-          <DuncitButton size="small" startIcon={<NearMeIcon fontSize="small" />} disabled={locating} onClick={locateMe}>
+          <DuncitButton data-testid="club-venues-locate" size="small" startIcon={<NearMeIcon fontSize="small" />} disabled={locating} onClick={locateMe}>
             {locating ? 'Locating…' : 'Show distance'}
           </DuncitButton>
         )}
@@ -75,6 +75,7 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
           return (
             <Card
               key={venue.id}
+              data-testid={`club-venue-card-${venue.id}`}
               elevation={0}
               sx={{ minWidth: 220, flex: '0 0 auto', borderRadius: '16px', bgcolor: 'action.hover', border: 0, boxShadow: 'none' }}
             >
@@ -99,7 +100,7 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
                 </CardContent>
               </CardActionArea>
               <Box sx={{ px: 2, pb: 1.5 }}>
-                <DuncitButton component={RouterLink} to={venueUrl(venue.id)} size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ px: 0 }}>
+                <DuncitButton data-testid={`club-venue-details-${venue.id}`} component={RouterLink} to={venueUrl(venue.id)} size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ px: 0 }}>
                   Venue details
                 </DuncitButton>
               </Box>
@@ -108,6 +109,7 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
         })}
       </Stack>
       <Typography
+        data-testid="club-venue-address"
         variant="body2"
         sx={{
           color: "text.secondary",
@@ -115,7 +117,7 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
         }}>
         {addressParts(selected).filter(Boolean).join(', ')}
       </Typography>
-      <DuncitButton component={RouterLink} to={venueUrl(selected.id)} size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ mt: 1 }}>
+      <DuncitButton data-testid="club-venue-open-selected" component={RouterLink} to={venueUrl(selected.id)} size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ mt: 1 }}>
         Open venue details
       </DuncitButton>
       <VenueMapPreview

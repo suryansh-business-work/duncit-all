@@ -35,6 +35,7 @@ export default function PodAccordion({
   const tint = error ? 'error.main' : 'secondary.main';
   return (
     <Accordion
+      data-testid={id}
       expanded={expanded}
       onChange={(_, v) => onChange(v)}
       disableGutters
@@ -52,6 +53,7 @@ export default function PodAccordion({
       }}
     >
       <AccordionSummary
+        data-testid={`${id}-header`}
         expandIcon={<ExpandMoreIcon sx={{ color: 'text.secondary' }} />}
         sx={{ minHeight: 64, px: 2 }}
         aria-controls={`${id}-content`}
@@ -91,7 +93,7 @@ export default function PodAccordion({
           </Typography>
         </Stack>
       </AccordionSummary>
-      <AccordionDetails sx={{ px: 2, pt: 0, pb: 2 }}>{children}</AccordionDetails>
+      <AccordionDetails data-testid={`${id}-content`} sx={{ px: 2, pt: 0, pb: 2 }}>{children}</AccordionDetails>
     </Accordion>
   );
 }

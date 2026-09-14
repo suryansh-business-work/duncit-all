@@ -39,15 +39,35 @@ export default function HeroOverlayActions({ onBack, saved, saveLoading, onToggl
   );
   const saveLabel = saved ? t('mweb.podDetails.saved') : t('mweb.podDetails.save');
   return (
-    <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
-      <DuncitIconButton onClick={onBack} aria-label={t('mweb.podDetails.back')} sx={roundBtn}>
+    <Stack
+      direction="row"
+      data-testid="hero-overlay-actions"
+      sx={{ alignItems: 'center', justifyContent: 'space-between' }}
+    >
+      <DuncitIconButton
+        onClick={onBack}
+        aria-label={t('mweb.podDetails.back')}
+        data-testid="detail-back"
+        sx={roundBtn}
+      >
         <ArrowBackIcon fontSize="small" />
       </DuncitIconButton>
       <Stack direction="row" spacing={1}>
-        <DuncitIconButton aria-label={saveLabel} onClick={onToggleSave} disabled={saveLoading} sx={roundBtn}>
+        <DuncitIconButton
+          aria-label={saveLabel}
+          onClick={onToggleSave}
+          disabled={saveLoading}
+          data-testid="pod-save"
+          sx={roundBtn}
+        >
           {saveLoading ? <CircularProgress size={18} color="inherit" /> : savedIcon}
         </DuncitIconButton>
-        <DuncitIconButton aria-label={t('mweb.podDetails.share')} onClick={onShare} sx={roundBtn}>
+        <DuncitIconButton
+          aria-label={t('mweb.podDetails.share')}
+          onClick={onShare}
+          data-testid="pod-share"
+          sx={roundBtn}
+        >
           <ShareIcon fontSize="small" />
         </DuncitIconButton>
       </Stack>

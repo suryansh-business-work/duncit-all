@@ -29,16 +29,20 @@ export default function SupportHubPage() {
 
   return (
     <SupportShell title={t('mweb.support.support')} backTo="/">
-      <Stack spacing={3}>
+      <Stack data-testid="support-hub-page" spacing={3}>
         <Stack spacing={2}>
-          <TwoToneHeading lead={t('mweb.supportHub.haveABurningQuestion')} component="h2" />
+          <TwoToneHeading
+            lead={t('mweb.supportHub.haveABurningQuestion')}
+            component="h2"
+            testId="support-hero-title"
+          />
           <FaqSearch query={query} onQueryChange={setQuery} onOpen={setSelected} />
         </Stack>
 
-        {error && <Alert severity="error">{error.message}</Alert>}
+        {error && <Alert data-testid="support-error" severity="error">{error.message}</Alert>}
 
         {!searching && loading && (
-          <Stack spacing={1.5}>
+          <Stack data-testid="support-loading" spacing={1.5}>
             <Skeleton variant="rounded" height={140} sx={{ borderRadius: '24px' }} />
             <Skeleton variant="rounded" height={180} sx={{ borderRadius: '24px' }} />
           </Stack>
@@ -54,7 +58,7 @@ export default function SupportHubPage() {
         <StartConversation />
 
         <Stack spacing={1.5}>
-          <SectionHeader title={t('mweb.supportHub.moreWaysToReachUs')} />
+          <SectionHeader testId="support-more-ways-header" title={t('mweb.supportHub.moreWaysToReachUs')} />
           <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
             {MORE_WAYS.map((section) => (
               <SupportSectionCard key={section.key} section={section} />

@@ -85,6 +85,7 @@ export default function HeaderNotificationsBell({ onToast }: Readonly<HeaderNoti
     <>
       <Tooltip title={t('mweb.appHeader.notifications')}>
         <DuncitIconButton
+          data-testid="notifications-bell"
           size="small"
           onClick={() => setNotificationsOpen(true)}
           aria-label={`Notifications${unreadLabel}`}

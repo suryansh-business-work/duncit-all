@@ -75,10 +75,11 @@ export default function FaqsPage() {
 
   return (
     <SupportShell title={t('mweb.meta.faqs.title')}>
-      <Stack spacing={2.5}>
+      <Stack spacing={2.5} data-testid="faqs-screen">
         <TextField
           fullWidth
           size="small"
+          data-testid="faqs-search-field"
           placeholder={t('mweb.common.searchQuestionsEGRefundHost')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -93,13 +94,15 @@ export default function FaqsPage() {
                   <SearchIcon fontSize="small" sx={{ color: 'text.secondary' }} />
                 </InputAdornment>
               ),
-            }
+            },
+            htmlInput: { 'data-testid': 'faqs-search' },
           }}
         />
 
         {groups.length > 0 && (
           <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 0.5, '&::-webkit-scrollbar': { display: 'none' } }}>
             <Chip
+              data-testid="faqs-filter-all"
               label={t('mweb.common.all')}
               color={activeSuper === 'ALL' ? 'primary' : 'default'}
               onClick={() => setActiveSuper('ALL')}
@@ -111,6 +114,7 @@ export default function FaqsPage() {
               return (
                 <Chip
                   key={id}
+                  data-testid={`faqs-filter-${id}`}
                   label={label}
                   color={activeSuper === id ? 'primary' : 'default'}
                   onClick={() => setActiveSuper(id)}
@@ -122,25 +126,33 @@ export default function FaqsPage() {
         )}
 
         {loading && (
-          <Stack spacing={1.5}>
+          <Stack spacing={1.5} data-testid="faqs-loading">
             {[0, 1, 2, 3].map((i) => (
               <Skeleton key={i} variant="rounded" height={64} sx={{ borderRadius: '24px' }} />
             ))}
           </Stack>
         )}
 
-        {error && <Alert severity="error">{error.message}</Alert>}
+        {error && <Alert severity="error" data-testid="faqs-error">{error.message}</Alert>}
 
         {!loading && filteredGroups.length === 0 && (
-          <Alert severity="info">{t('mweb.faqsPage.noFaqsMatchYourSearch')}</Alert>
+          <Alert severity="info" data-testid="faqs-no-match">{t('mweb.faqsPage.noFaqsMatchYourSearch')}</Alert>
         )}
 
-        {filteredGroups.map((g) => (
-          <Stack key={g.super_category?.id ?? 'GENERIC'} spacing={1.5}>
-            <SectionHeader title={g.super_category?.name ?? 'General'} />
+        {filteredGroups.map((g) => {
+          const groupId = g.super_category?.id ?? 'GENERIC';
+          return (
+          <Stack key={groupId} spacing={1.5}>
+            <SectionHeader testId={`faqs-group-${groupId}-header`} title={g.super_category?.name ?? 'General'} />
             <Stack spacing={1}>
               {g.faqs.map((f: any) => (
-                <Accordion key={f.id} disableGutters elevation={0} sx={{ overflow: 'hidden' }}>
+                <Accordion
+                  key={f.id}
+                  data-testid={`faq-${f.id}`}
+                  disableGutters
+                  elevation={0}
+                  sx={{ overflow: 'hidden' }}
+                >
                   <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 2, minHeight: 56 }}>
                     <Typography sx={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                       {f.question}
@@ -156,15 +168,16 @@ export default function FaqsPage() {
                       {f.answer}
                     </Typography>
                     <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-                      <Chip label={t('mweb.faqsPage.helpful')} />
-                      <Chip label={t('mweb.faqsPage.notReally')} />
+                      <Chip data-testid={`faq-${f.id}-helpful`} label={t('mweb.faqsPage.helpful')} />
+                      <Chip data-testid={`faq-${f.id}-not-helpful`} label={t('mweb.faqsPage.notReally')} />
                     </Stack>
                   </AccordionDetails>
                 </Accordion>
               ))}
             </Stack>
           </Stack>
-        ))}
+          );
+        })}
       </Stack>
     </SupportShell>
   );

@@ -100,6 +100,7 @@ export function PodAttendanceScreen() {
         ) : null}
 
         <AttendanceRosterSection
+          testID="attendance-unmarked"
           heading={labels.unmarkedHeading}
           rows={unmarked}
           labels={labels}
@@ -115,6 +116,7 @@ export function PodAttendanceScreen() {
           <YStack height={1} backgroundColor="$borderColor" />
         ) : null}
         <AttendanceRosterSection
+          testID="attendance-marked"
           heading={labels.markedHeading}
           rows={marked}
           labels={labels}

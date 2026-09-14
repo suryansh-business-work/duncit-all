@@ -121,6 +121,7 @@ export default function ChatRoomPage() {
   if (loading && !data)
     return (
       <Stack
+        data-testid="chat-room-loading"
         sx={{
           alignItems: "center",
           p: 6
@@ -131,6 +132,7 @@ export default function ChatRoomPage() {
 
   return (
     <Stack
+      data-testid="chat-room-screen"
       sx={{
         height: '100%',
         minHeight: 0,
@@ -154,13 +156,14 @@ export default function ChatRoomPage() {
       )}
 
       {error && (
-        <Alert severity="error" onClose={() => setError(null)}>
+        <Alert severity="error" data-testid="chat-room-error" onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
 
       <Box
         ref={scrollRef}
+        data-testid="chat-room-messages"
         sx={{ flex: 1, overflowY: 'auto', px: { xs: 1.25, sm: 2 }, py: 1.25 }}
       >
         <ChatRoomNotice ended={podEnded} />

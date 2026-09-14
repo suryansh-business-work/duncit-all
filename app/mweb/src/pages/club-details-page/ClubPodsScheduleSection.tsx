@@ -21,8 +21,8 @@ const RAILS: ReadonlyArray<readonly [ClubPodPhase, string]> = [
 function PodRail({ title, pods, priceFormat, onOpen }: Readonly<Props & { title: string }>) {
   if (pods.length === 0) return null;
   return (
-    <Stack spacing={1.25}>
-      <SectionHeader title={title} />
+    <Stack data-testid={`club-pods-schedule-rail-${title}`} spacing={1.25}>
+      <SectionHeader testId={`club-pods-schedule-rail-${title}-header`} title={title} />
       <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
         {pods.map((pod) => (
           <ClubPodRailCard key={pod.id} pod={pod} priceFormat={priceFormat} onOpen={onOpen} />
@@ -39,11 +39,11 @@ export default function ClubPodsScheduleSection({ pods, priceFormat, onOpen }: R
     pods.filter((pod) => clubPodPhase(pod.pod_date_time, pod.pod_end_date_time) === phase);
 
   if (pods.length === 0) {
-    return <EmptyState icon={<EventBusyOutlinedIcon />} title={t('mweb.clubDetails.noPodsScheduledForThisClub')} />;
+    return <EmptyState testId="club-no-pods" icon={<EventBusyOutlinedIcon />} title={t('mweb.clubDetails.noPodsScheduledForThisClub')} />;
   }
 
   return (
-    <Stack spacing={2.5}>
+    <Stack data-testid="club-pods-schedule" spacing={2.5}>
       {RAILS.map(([phase, title]) => (
         <PodRail key={phase} title={title} pods={byPhase(phase)} priceFormat={priceFormat} onOpen={onOpen} />
       ))}

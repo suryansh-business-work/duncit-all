@@ -18,6 +18,7 @@ import { DuncitIconButton } from '@duncit/buttons';
 import { SHOP_SORT_OPTIONS, type ShopSort } from './queries';
 import { SHOP_RATING_OPTIONS, type ShopFilters } from './useShopFilters';
 import { useTranslation } from '../../i18n/useTranslation';
+import { testIdProps } from '../../utils/testIdProps';
 
 type Option = readonly [string, string];
 
@@ -42,7 +43,8 @@ function FilterChipRow({
   options,
   value,
   onSelect,
-}: Readonly<{ options: readonly Option[]; value: string; onSelect: (v: string) => void }>) {
+  idPrefix,
+}: Readonly<{ options: readonly Option[]; value: string; onSelect: (v: string) => void; idPrefix: string }>) {
   return (
     <Box sx={railSx}>
       <Stack direction="row" spacing={1} sx={{ width: 'max-content', pb: 0.25 }}>
@@ -51,6 +53,7 @@ function FilterChipRow({
           return (
             <Chip
               key={val || 'all'}
+              data-testid={`${idPrefix}-${val || 'all'}`}
               label={label}
               clickable
               color={selected ? 'primary' : 'default'}
@@ -87,12 +90,13 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   return (
-    <Box>
+    <Box data-testid="shop-filter-bar">
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>
         <TextField
           size="small"
+          data-testid="shop-search"
           placeholder={t('mweb.shop.searchPlaceholder')}
           value={filters.query}
           onChange={(e) => filters.setQuery(e.target.value)}
@@ -104,11 +108,13 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
                   <SearchRoundedIcon sx={{ fontSize: 22, color: 'text.secondary' }} />
                 </InputAdornment>
               ),
-            }
+            },
+            htmlInput: { 'data-testid': 'shop-search-input' },
           }}
         />
         {/* The round green filter button; a darker green while the panel is open. */}
         <DuncitIconButton
+          data-testid="shop-filter-toggle"
           aria-label={t('mweb.common.filters')}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
@@ -121,7 +127,11 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
             '&:hover': { bgcolor: 'primary.dark' },
           }}
         >
-          <Badge badgeContent={filters.activeCount} color="secondary">
+          <Badge
+            badgeContent={filters.activeCount}
+            color="secondary"
+            slotProps={{ badge: { ...testIdProps('shop-filter-count') } }}
+          >
             <TuneRoundedIcon sx={{ fontSize: 24 }} />
           </Badge>
         </DuncitIconButton>
@@ -134,6 +144,7 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
                 options={withAll(filters.superOptions)}
                 value={filters.superId}
                 onSelect={filters.selectSuper}
+                idPrefix="shop-super"
               />
             </FilterSection>
           )}
@@ -143,6 +154,7 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
                 options={withAll(filters.categoryOptions)}
                 value={filters.categoryId}
                 onSelect={filters.selectCategory}
+                idPrefix="shop-cat"
               />
             </FilterSection>
           )}
@@ -152,6 +164,7 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
                 options={withAll(filters.subOptions)}
                 value={filters.subId}
                 onSelect={filters.setSubId}
+                idPrefix="shop-sub"
               />
             </FilterSection>
           )}
@@ -160,11 +173,13 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
               options={SHOP_RATING_OPTIONS}
               value={filters.minRating}
               onSelect={filters.setMinRating}
+              idPrefix="shop-rating"
             />
           </FilterSection>
           <FormControlLabel
             control={
               <Checkbox
+                data-testid="shop-oos-toggle"
                 checked={filters.includeOutOfStock}
                 onChange={(e) => filters.setIncludeOutOfStock(e.target.checked)}
               />
@@ -174,13 +189,14 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
           <TextField
             select
             size="small"
+            data-testid="shop-sort-select"
             label={t('mweb.common.sort')}
             value={filters.sort}
             onChange={(e) => filters.setSort(e.target.value as ShopSort)}
             sx={{ maxWidth: 220 }}
           >
             {SHOP_SORT_OPTIONS.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
+              <MenuItem key={option.value} data-testid={`shop-sort-${option.value}`} value={option.value}>
                 {option.label}
               </MenuItem>
             ))}

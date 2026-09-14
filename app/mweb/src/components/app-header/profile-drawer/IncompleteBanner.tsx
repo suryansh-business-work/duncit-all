@@ -13,6 +13,7 @@ export default function IncompleteBanner({ percent, onComplete }: Readonly<Incom
   return (
     <Box sx={{ px: 2, pb: 1.5 }}>
       <Stack
+        data-testid="profile-completion"
         direction="row"
         spacing={1.5}
         sx={{
@@ -35,6 +36,7 @@ export default function IncompleteBanner({ percent, onComplete }: Readonly<Incom
           </Box>
         </Stack>
         <DuncitButton
+          data-testid="profile-completion-cta"
           onClick={onComplete}
           variant="contained"
           size="small"

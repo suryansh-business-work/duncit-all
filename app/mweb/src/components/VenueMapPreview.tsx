@@ -25,8 +25,9 @@ export default function VenueMapPreview({ title, parts, lat, lng }: Readonly<Pro
   const mapUrl = mapSearchUrl(query);
 
   return (
-    <Stack spacing={0.5}>
+    <Stack data-testid="venue-map-preview" spacing={0.5}>
       <Box
+        data-testid="venue-map-preview-iframe"
         component="iframe"
         title={titleText}
         src={src}
@@ -36,6 +37,7 @@ export default function VenueMapPreview({ title, parts, lat, lng }: Readonly<Pro
         sx={{ width: '100%', height: { xs: 240, sm: 280 }, border: 0, borderRadius: '18px', display: 'block', bgcolor: 'action.hover' }}
       />
       <DuncitButton
+        data-testid="venue-map-preview-open-link"
         href={mapUrl}
         target="_blank"
         rel="noreferrer"

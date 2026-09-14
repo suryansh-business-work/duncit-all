@@ -106,14 +106,20 @@ export default function VenueDetailsPage() {
   };
 
   if (loading && !data) {
-    return <CircularProgress sx={{ display: 'block', mx: 'auto', my: 6 }} />;
+    return (
+      <CircularProgress
+        data-testid="venue-details-loading"
+        sx={{ display: 'block', mx: 'auto', my: 6 }}
+      />
+    );
   }
 
   if (error || !venue) {
     return (
-      <Stack spacing={2} sx={{ py: 2 }}>
-        <PageHeader title={t('mweb.venueDetailsPage.venueNotFound')} onBack={() => navigate(-1)} />
+      <Stack spacing={2} sx={{ py: 2 }} data-testid="venue-details-missing">
+        <PageHeader testId="venue-details-header" title={t('mweb.venueDetailsPage.venueNotFound')} onBack={() => navigate(-1)} />
         <EmptyState
+          testId="venue-details-empty"
           icon={<StorefrontIcon />}
           title="This venue link may be unavailable or the venue may not be approved yet."
         />
@@ -122,14 +128,20 @@ export default function VenueDetailsPage() {
   }
 
   const copyButton = (
-    <DuncitIconButton aria-label={t('mweb.venueDetailsPage.copyLink')} title={t('mweb.venueDetailsPage.copyLink')} onClick={copyLink} sx={ROUND_BTN_SX}>
+    <DuncitIconButton
+      aria-label={t('mweb.venueDetailsPage.copyLink')}
+      title={t('mweb.venueDetailsPage.copyLink')}
+      onClick={copyLink}
+      sx={ROUND_BTN_SX}
+      data-testid="venue-details-copy"
+    >
       <ContentCopyIcon fontSize="small" />
     </DuncitIconButton>
   );
 
   return (
-    <Stack spacing={2.5} sx={{ pb: 4 }}>
-      <PageHeader title={venue.venue_name} onBack={() => navigate(-1)} right={copyButton} />
+    <Stack spacing={2.5} sx={{ pb: 4 }} data-testid="venue-details-screen">
+      <PageHeader testId="venue-details-header" title={venue.venue_name} onBack={() => navigate(-1)} right={copyButton} />
 
       {images[0] ? (
         <ButtonBase
@@ -138,7 +150,13 @@ export default function VenueDetailsPage() {
           aria-label={t('mweb.podDetails.viewImage')}
           sx={{ ...HERO_SX, display: 'block' }}
         >
-          <Box component="img" src={images[0]} alt={venue.venue_name} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          <Box
+            component="img"
+            src={images[0]}
+            alt={venue.venue_name}
+            data-testid="venue-cover-image"
+            sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
         </ButtonBase>
       ) : (
         <Box sx={{ ...HERO_SX, display: 'grid', placeItems: 'center', bgcolor: 'action.hover', color: 'secondary.main' }}>

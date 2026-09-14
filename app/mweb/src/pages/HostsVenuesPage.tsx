@@ -61,8 +61,8 @@ export default function HostsVenuesPage() {
   const statusFor = (id: string) => followStatusFrom(followingIds, requestedIds, id);
 
   const directoryTabs: DuncitTabItem<DirectoryTab>[] = [
-    { value: 'HOSTS', label: countedLabel('Hosts', hosts.length) },
-    { value: 'VENUES', label: countedLabel('Venues', venues.length) },
+    { value: 'HOSTS', label: countedLabel('Hosts', hosts.length), testId: 'hv-tab-hosts' },
+    { value: 'VENUES', label: countedLabel('Venues', venues.length), testId: 'hv-tab-venues' },
   ];
   const tabs = useTabParam<DirectoryTab>({ items: directoryTabs, fallback: 'HOSTS' });
   const tab = tabs.value;
@@ -90,6 +90,7 @@ export default function HostsVenuesPage() {
     if (hostsQ.loading && !hostsQ.data) {
       content = (
         <Stack
+          data-testid="hosts-venues-loading"
           sx={{
             alignItems: "center",
             py: 6
@@ -98,7 +99,7 @@ export default function HostsVenuesPage() {
         </Stack>
       );
     } else if (hostsQ.error) {
-      content = <Alert severity="error">{hostsQ.error.message}</Alert>;
+      content = <Alert severity="error" data-testid="hosts-venues-error">{hostsQ.error.message}</Alert>;
     } else {
       content = (
         <HostList
@@ -113,6 +114,7 @@ export default function HostsVenuesPage() {
   } else if (venuesQ.loading && !venuesQ.data) {
     content = (
       <Stack
+        data-testid="hosts-venues-loading"
         sx={{
           alignItems: "center",
           py: 6
@@ -121,7 +123,7 @@ export default function HostsVenuesPage() {
       </Stack>
     );
   } else if (venuesQ.error) {
-    content = <Alert severity="error">{venuesQ.error.message}</Alert>;
+    content = <Alert severity="error" data-testid="hosts-venues-error">{venuesQ.error.message}</Alert>;
   } else {
     content = (
       <VenueList
@@ -135,8 +137,8 @@ export default function HostsVenuesPage() {
   }
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 960, mx: 'auto', width: '100%' }}>
-      <PageHeader title={t('mweb.hostsVenues.hostsAndVenues')} onBack={() => navigate(-1)} />
+    <Stack spacing={2.5} sx={{ maxWidth: 960, mx: 'auto', width: '100%' }} data-testid="hosts-venues-screen">
+      <PageHeader testId="hosts-venues-header" title={t('mweb.hostsVenues.hostsAndVenues')} onBack={() => navigate(-1)} />
 
       <HostsVenuesIntroCard />
 

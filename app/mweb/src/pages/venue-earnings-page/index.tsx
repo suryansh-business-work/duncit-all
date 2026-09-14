@@ -17,6 +17,7 @@ export default function VenueEarningsPage() {
   if (loading && !data) {
     return (
       <Stack
+        data-testid="venue-earnings-page-loading"
         sx={{
           alignItems: "center",
           py: 8
@@ -25,7 +26,7 @@ export default function VenueEarningsPage() {
       </Stack>
     );
   }
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  if (error) return <Alert severity="error" data-testid="venue-earnings-page-error">{error.message}</Alert>;
 
   const summary = data?.myVenueEarningsSummary;
   const payouts: VenuePayout[] = data?.myVenuePayouts ?? [];
@@ -33,13 +34,13 @@ export default function VenueEarningsPage() {
 
   let history;
   if (payouts.length === 0) {
-    history = <Alert severity="info" sx={{ m: 2 }}>{t('mweb.venueEarnings.payoutsAppearHereAfterAPod')}</Alert>;
+    history = <Alert severity="info" sx={{ m: 2 }} data-testid="venue-earnings-page-empty">{t('mweb.venueEarnings.payoutsAppearHereAfterAPod')}</Alert>;
   } else {
     history = <PayoutList payouts={payouts} symbol={symbol} />;
   }
 
   return (
-    <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+    <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }} data-testid="venue-earnings-page">
       <StudioPageHeader icon={<PaidRoundedIcon fontSize="small" />} title={t('mweb.venueEarnings.earnings')} />
 
       {summary && <StatCards summary={summary} />}
@@ -47,9 +48,9 @@ export default function VenueEarningsPage() {
       <Stack spacing={1.5}>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <Stack sx={{ flex: 1, minWidth: 0 }}>
-            <SectionHeader title="Payout history" />
+            <SectionHeader testId="venue-earnings-page-payout-header" title="Payout history" />
           </Stack>
-          <Chip size="small" label={payouts.length} sx={{ height: 24, minHeight: 24 }} />
+          <Chip size="small" label={payouts.length} sx={{ height: 24, minHeight: 24 }} data-testid="venue-earnings-page-payout-count" />
         </Stack>
         <Card>{history}</Card>
       </Stack>

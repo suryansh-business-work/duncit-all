@@ -63,7 +63,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
   };
 
   return (
-    <Box sx={{ ...SURFACE_SX, p: 2 }}>
+    <Box data-testid="club-ratings" sx={{ ...SURFACE_SX, p: 2 }}>
       <Stack
         direction="row"
         sx={{
@@ -77,6 +77,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
           Ratings & Reviews
         </Typography>
         <DuncitButton
+          data-testid="club-ratings-rate"
           size="small"
           variant="text"
           sx={{ minHeight: 32, bgcolor: 'action.hover', color: 'text.primary' }}
@@ -118,7 +119,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
       {reviews.length > 0 && (
         <List dense disablePadding>
           {reviews.slice(0, 3).map((r: any) => (
-            <Box key={r.id}>
+            <Box key={r.id} data-testid={`club-rating-review-${r.id}`}>
               <ListItem alignItems="flex-start" disablePadding sx={{ mb: 1 }}>
                 <ListItemAvatar sx={{ minWidth: 44 }}>
                   <Avatar src={r.user_photo} sx={{ width: 36, height: 36 }}>
@@ -150,7 +151,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
         </List>
       )}
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>
+      <Dialog data-testid="club-rating-dialog" open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.clubDetails.rateThisClub')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
@@ -161,6 +162,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
                 Your rating
               </Typography>
               <Rating
+                data-testid="club-rating-dialog-stars"
                 value={stars}
                 onChange={(_, v) => setStars(v)}
                 size="large"
@@ -168,6 +170,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
               />
             </Box>
             <TextField
+              data-testid="club-rating-dialog-comment"
               label={t('mweb.clubDetails.commentOptional')}
               multiline
               rows={3}
@@ -175,14 +178,15 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
               onChange={(e) => setComment(e.target.value)}
               helperText={`${comment.length}/500`}
               slotProps={{
-                htmlInput: { maxLength: 500 }
+                htmlInput: { maxLength: 500, 'data-testid': 'club-rating-dialog-comment-input' }
               }}
             />
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <DuncitButton onClick={() => setDialogOpen(false)}>{t('mweb.common.cancel')}</DuncitButton>
+          <DuncitButton data-testid="club-rating-dialog-cancel" onClick={() => setDialogOpen(false)}>{t('mweb.common.cancel')}</DuncitButton>
           <DuncitButton
+            data-testid="club-rating-dialog-submit"
             variant="contained"
             onClick={handleSubmit}
             disabled={!stars || submitting}

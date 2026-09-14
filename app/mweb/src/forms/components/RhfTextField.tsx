@@ -41,6 +41,7 @@ export default function RhfTextField<T extends FieldValues>({
   hint,
   errorText,
   digitsOnly,
+  slotProps,
   ...rest
 }: Readonly<RhfTextFieldProps<T>>) {
   return (
@@ -49,6 +50,7 @@ export default function RhfTextField<T extends FieldValues>({
       name={name}
       render={({ field, fieldState }) => (
         <TextField
+          data-testid={name}
           {...rest}
           {...field}
           onChange={(event) =>
@@ -58,6 +60,10 @@ export default function RhfTextField<T extends FieldValues>({
           fullWidth={rest.fullWidth ?? true}
           error={!!fieldState.error || !!errorText}
           helperText={fieldState.error?.message ?? errorText ?? hint ?? ' '}
+          slotProps={{
+            ...slotProps,
+            htmlInput: { 'data-testid': `${name}-input`, ...slotProps?.htmlInput },
+          }}
         />
       )}
     />

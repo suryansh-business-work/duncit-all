@@ -90,7 +90,7 @@ export default function ClubPodEditorPage() {
   };
 
   return (
-    <Box sx={{ maxWidth: 960, mx: 'auto', width: '100%' }}>
+    <Box data-testid="club-pod-editor-page" sx={{ maxWidth: 960, mx: 'auto', width: '100%' }}>
       <QueryGuard
         loading={podQuery.loading && !pod}
         error={podQuery.error}
@@ -109,8 +109,8 @@ export default function ClubPodEditorPage() {
             backLabel={t('clubAdmin.editor.backLabel')}
             intro={
               <>
-                {lookups.error && <Alert severity="error">{lookups.error.message}</Alert>}
-                <Alert severity="info">{t('clubAdmin.editor.hostNote')}</Alert>
+                {lookups.error && <Alert data-testid="club-pod-editor-page-lookups-error" severity="error">{lookups.error.message}</Alert>}
+                <Alert data-testid="club-pod-editor-page-host-note" severity="info">{t('clubAdmin.editor.hostNote')}</Alert>
               </>
             }
             {...formProps}

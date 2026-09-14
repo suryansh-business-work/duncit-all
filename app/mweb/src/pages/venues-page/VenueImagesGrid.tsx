@@ -17,8 +17,8 @@ export default function VenueImagesGrid({ images, venueName, onOpen }: Readonly<
   if (images.length < 2) return null;
 
   return (
-    <Stack spacing={1.25}>
-      <SectionHeader title={t('mweb.venues.images')} />
+    <Stack spacing={1.25} data-testid="venue-images-grid">
+      <SectionHeader testId="venue-images-grid-header" title={t('mweb.venues.images')} />
       <Box sx={{ display: 'grid', gap: 1, gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' } }}>
         {images.slice(1).map((url, tileIndex) => (
           <ButtonBase
@@ -27,6 +27,7 @@ export default function VenueImagesGrid({ images, venueName, onOpen }: Readonly<
             focusRipple
             aria-label={t('mweb.podDetails.viewImage')}
             sx={{ width: '100%', aspectRatio: '4 / 3', borderRadius: '18px', overflow: 'hidden' }}
+            data-testid="venue-gallery-image"
           >
             <Box component="img" src={url} alt={venueName} loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </ButtonBase>

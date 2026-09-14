@@ -32,19 +32,22 @@ export function ClubSection({
   onToggleSave,
 }: Readonly<ClubSectionProps>) {
   const { t } = useTranslation();
+  const sectionTestID = `club-section-${club.club_id}`;
 
   return (
-    <YStack gap={12}>
+    <YStack testID={sectionTestID} gap={12}>
       <YStack paddingHorizontal={16}>
         <SectionHeader
+          testID={`${sectionTestID}-header`}
           title={club.club_name}
           actionLabel={t('mweb.home.seeAll')}
           onAction={() => onOpenClub(club)}
-          actionTestID={`club-section-${club.club_id}`}
+          actionTestID={sectionTestID}
           actionAriaLabel={club.club_name}
         />
       </YStack>
       <ScrollView
+        testID={`${sectionTestID}-pods`}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 12, paddingHorizontal: 16 }}

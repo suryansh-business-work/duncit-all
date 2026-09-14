@@ -57,7 +57,7 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
   };
 
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth="sm">
+    <Dialog data-testid="upload-dialog" open={open} onClose={close} fullWidth maxWidth="sm">
       <Stack
         direction="row"
         sx={{
@@ -73,7 +73,7 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
           }}>
           New post
         </Typography>
-        <DuncitIconButton onClick={close} disabled={busy}>
+        <DuncitIconButton data-testid="upload-dialog-close" onClick={close} disabled={busy}>
           <CloseIcon />
         </DuncitIconButton>
       </Stack>
@@ -82,6 +82,7 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
         {imageUrl ? (
           <Stack spacing={2}>
             <Box
+              data-testid="upload-dialog-preview"
               component="img"
               src={imageUrl}
               alt="preview"
@@ -94,6 +95,7 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
               }}
             />
             <TextField
+              data-testid="upload-dialog-caption"
               label={t('mweb.profile.writeACaption')}
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
@@ -102,22 +104,23 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
               maxRows={6}
               helperText={`${caption.length}/2200`}
               slotProps={{
-                htmlInput: { maxLength: 2200 }
+                htmlInput: { maxLength: 2200, 'data-testid': 'upload-dialog-caption-input' }
               }}
             />
             <Stack direction="row" spacing={1} sx={{
               justifyContent: "flex-end"
             }}>
-              <DuncitButton onClick={() => setPickerOpen(true)} disabled={busy}>
+              <DuncitButton data-testid="upload-dialog-change-photo" onClick={() => setPickerOpen(true)} disabled={busy}>
                 Change photo
               </DuncitButton>
-              <DuncitButton variant="contained" onClick={submit} disabled={busy}>
+              <DuncitButton data-testid="upload-dialog-share" variant="contained" onClick={submit} disabled={busy}>
                 {busy ? <CircularProgress size={20} /> : 'Share'}
               </DuncitButton>
             </Stack>
           </Stack>
         ) : (
           <Stack
+            data-testid="upload-dialog-empty"
             spacing={2}
             sx={{
               alignItems: "center",
@@ -125,7 +128,7 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
             }}>
             <AddPhotoAlternateIcon sx={{ fontSize: 72, color: 'text.secondary' }} />
             <Typography variant="body1">{t('mweb.profile.pickAnImageToShare')}</Typography>
-            <DuncitButton variant="contained" onClick={() => setPickerOpen(true)}>
+            <DuncitButton data-testid="upload-dialog-choose-image" variant="contained" onClick={() => setPickerOpen(true)}>
               Choose image
             </DuncitButton>
           </Stack>

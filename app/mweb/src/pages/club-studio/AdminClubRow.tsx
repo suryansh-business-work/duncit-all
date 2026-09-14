@@ -20,7 +20,7 @@ export default function AdminClubRowCard({ club }: Readonly<{ club: AdminClubRow
   const clubPath = `/clubs/${club.id}`;
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box data-testid={`admin-club-row-${club.id}`} sx={{ p: 2 }}>
       <Stack direction="row" spacing={1.5}>
         <Avatar
           variant="rounded"
@@ -57,6 +57,7 @@ export default function AdminClubRowCard({ club }: Readonly<{ club: AdminClubRow
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
         <DuncitButton
+          data-testid={`admin-club-row-${club.id}-pods`}
           component={RouterLink}
           to={`${clubPath}/pods`}
           variant="contained"
@@ -67,6 +68,7 @@ export default function AdminClubRowCard({ club }: Readonly<{ club: AdminClubRow
           {t('mweb.clubStudio.openPods')}
         </DuncitButton>
         <DuncitButton
+          data-testid={`admin-club-row-${club.id}-edit`}
           component={RouterLink}
           to={`${clubPath}/edit`}
           variant="outlined"

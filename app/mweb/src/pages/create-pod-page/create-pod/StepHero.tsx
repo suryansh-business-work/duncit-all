@@ -22,8 +22,9 @@ export default function StepHero({ step, total, title }: Readonly<Props>) {
   const { t } = useTranslation();
   const counter = t('mweb.createPod.stepCounter', { vars: { step: step + 1, total } });
   return (
-    <Stack spacing={1.75}>
+    <Stack data-testid="create-pod-step-hero" spacing={1.75}>
       <Stack
+        data-testid="create-pod-progress"
         direction="row"
         spacing={0.75}
         role="progressbar"

@@ -131,7 +131,14 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
   return (
     <StatusUploadContext.Provider value={value}>
       {children}
-      <input ref={inputRef} type="file" accept={accept} hidden onChange={handleFile} />
+      <input
+        ref={inputRef}
+        data-testid="status-upload-input"
+        type="file"
+        accept={accept}
+        hidden
+        onChange={handleFile}
+      />
       <StatusCropDialog
         file={cropPick?.file ?? null}
         onCancel={() => setCropPick(null)}
@@ -151,7 +158,10 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
         }}
       />
       {upload.active && (
-        <Box sx={{ position: 'fixed', left: 12, right: 12, bottom: 'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 10px)', zIndex: 1400 }}>
+        <Box
+          data-testid="status-upload-progress"
+          sx={{ position: 'fixed', left: 12, right: 12, bottom: 'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 10px)', zIndex: 1400 }}
+        >
           <Alert severity="info" variant="filled" sx={{ boxShadow: 6 }}>
             <Stack spacing={0.75}>
               <Stack
@@ -173,7 +183,18 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
           </Alert>
         </Box>
       )}
-      <Snackbar open={!!notice} autoHideDuration={3200} onClose={() => setNotice(null)} message={notice ?? ''} action={<DuncitButton color="inherit" size="small" onClick={() => setNotice(null)}>OK</DuncitButton>} />
+      <Snackbar
+        data-testid="status-upload-notice"
+        open={!!notice}
+        autoHideDuration={3200}
+        onClose={() => setNotice(null)}
+        message={notice ?? ''}
+        action={
+          <DuncitButton data-testid="status-upload-notice-ok" color="inherit" size="small" onClick={() => setNotice(null)}>
+            OK
+          </DuncitButton>
+        }
+      />
     </StatusUploadContext.Provider>
   );
 }

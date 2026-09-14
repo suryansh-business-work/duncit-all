@@ -8,6 +8,7 @@ interface Props<T extends FieldValues> {
   name: Path<T>;
   label: string;
   disabled?: boolean;
+  testId?: string;
 }
 
 const matches = (option: CountryCode, query: string) => {
@@ -34,6 +35,7 @@ export default function CountryCodeField<T extends FieldValues>({
   name,
   label,
   disabled,
+  testId,
 }: Readonly<Props<T>>) {
   return (
     <Controller
@@ -41,6 +43,7 @@ export default function CountryCodeField<T extends FieldValues>({
       name={name}
       render={({ field, fieldState }) => (
         <Autocomplete
+          data-testid={testId}
           options={COUNTRY_CODES}
           value={countryByDial(String(field.value ?? '')) ?? null}
           disabled={disabled}
@@ -49,7 +52,7 @@ export default function CountryCodeField<T extends FieldValues>({
           filterOptions={(options, state) => options.filter((o) => matches(o, state.inputValue))}
           onChange={(_event, option) => field.onChange(option?.dial ?? '')}
           renderOption={(props, option) => (
-            <Box component="li" {...props} key={option.iso2} sx={{ gap: 1 }}>
+            <Box component="li" {...props} key={option.iso2} data-testid={`country-code-option-${option.iso2}`} sx={{ gap: 1 }}>
               <Box
                 component="img"
                 src={countryFlagUrl(option.iso2)}
@@ -69,6 +72,10 @@ export default function CountryCodeField<T extends FieldValues>({
               onBlur={field.onBlur}
               error={!!fieldState.error}
               helperText={fieldState.error?.message ?? ' '}
+              slotProps={{
+                ...params.slotProps,
+                htmlInput: { ...params.slotProps?.htmlInput, 'data-testid': testId ? `${testId}-input` : undefined },
+              }}
             />
           )}
           sx={{ minWidth: 132 }}

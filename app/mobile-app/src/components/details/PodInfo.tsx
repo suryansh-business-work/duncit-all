@@ -28,15 +28,18 @@ function Chip({
   fill = '$surface',
   fg = '$color',
   iconColor,
+  testID,
 }: Readonly<{
   icon?: IconName;
   label: string;
   fill?: string;
   fg?: string;
   iconColor?: string;
+  testID?: string;
 }>) {
   return (
     <XStack
+      testID={testID}
       alignItems="center"
       gap={6}
       height={32}
@@ -52,9 +55,14 @@ function Chip({
   );
 }
 
-function Stat({ label, value, warn }: Readonly<{ label: string; value: number; warn?: boolean }>) {
+function Stat({
+  label,
+  value,
+  warn,
+  testID,
+}: Readonly<{ label: string; value: number; warn?: boolean; testID?: string }>) {
   return (
-    <YStack flex={1}>
+    <YStack flex={1} testID={testID}>
       <Text fontSize={12} fontWeight="500" color="$muted">
         {label}
       </Text>
@@ -85,13 +93,13 @@ export function PodInfo({
   const timeTone = time ? tone[time.tone] : color;
 
   return (
-    <YStack paddingHorizontal={16} paddingTop={20} gap={12}>
+    <YStack testID="pod-info" paddingHorizontal={16} paddingTop={20} gap={12}>
       <YStack gap={4}>
-        <Text fontSize={24} lineHeight={29} fontWeight="600" color="$color">
+        <Text testID="pod-info-title" fontSize={24} lineHeight={29} fontWeight="600" color="$color">
           {pod.pod_title}
         </Text>
         {host ? (
-          <Text fontSize={14} color="$muted" numberOfLines={1}>
+          <Text testID="pod-info-host" fontSize={14} color="$muted" numberOfLines={1}>
             {t('mweb.podDetails.hostedBy', { vars: { names: host } })}
           </Text>
         ) : null}
@@ -105,14 +113,21 @@ export function PodInfo({
           price, Physical/Virtual, and when it runs. */}
       <TourAnchor tour="pod-details" anchor="pod-summary">
         <XStack gap={8} flexWrap="wrap">
-          <Chip label={podPriceLabel(pod, t)} fill="$primarySoft" fg="$primary" />
           <Chip
+            testID="pod-info-price-chip"
+            label={podPriceLabel(pod, t)}
+            fill="$primarySoft"
+            fg="$primary"
+          />
+          <Chip
+            testID="pod-info-mode-chip"
             icon={isVirtual ? 'videocam' : 'place'}
             iconColor={color}
             label={podModeLabel(pod.pod_mode, t)}
           />
           {time ? (
             <Chip
+              testID="pod-info-time-chip"
               icon={time.tone === 'error' ? 'event-busy' : 'hourglass-bottom'}
               iconColor={timeTone}
               label={time.label}
@@ -122,11 +137,16 @@ export function PodInfo({
         </XStack>
       </TourAnchor>
       <SurfaceCard flexDirection="row" gap={16} paddingVertical={12}>
-        <Stat label={t('mweb.podDetails.peopleIn')} value={attendees} />
+        <Stat
+          testID="pod-info-attendees-stat"
+          label={t('mweb.podDetails.peopleIn')}
+          value={attendees}
+        />
         <YStack width={1} alignSelf="stretch" backgroundColor="$borderColor" />
         {/* Half of a two-stat row, so the wrapper has to carry the flex on. */}
         <TourAnchor tour="pod-details" anchor="pod-spots" style={{ flex: 1 }}>
           <Stat
+            testID="pod-info-spots-left-stat"
             label={t('mweb.podDetails.spotsLeft')}
             value={remaining}
             warn={hasSpots && remaining <= FEW_SPOTS}

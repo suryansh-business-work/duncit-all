@@ -47,9 +47,12 @@ export default function SearchPage() {
   };
 
   return (
-    <Container maxWidth="md" sx={{ pb: 2 }}>
-      <PageHeader title={t('mweb.common.search')} onBack={() => navigate(-1)} />
-      <Box sx={{ position: 'sticky', top: 0, zIndex: 4, pt: 1.5, pb: 2.5, bgcolor: 'background.default' }}>
+    <Container data-testid="search-page" maxWidth="md" sx={{ pb: 2 }}>
+      <PageHeader testId="search-page-header" title={t('mweb.common.search')} onBack={() => navigate(-1)} />
+      <Box
+        data-testid="search-page-search-bar"
+        sx={{ position: 'sticky', top: 0, zIndex: 4, pt: 1.5, pb: 2.5, bgcolor: 'background.default' }}
+      >
         <SearchBar value={text} onChange={setText} onPick={setText} />
       </Box>
       {active ? (

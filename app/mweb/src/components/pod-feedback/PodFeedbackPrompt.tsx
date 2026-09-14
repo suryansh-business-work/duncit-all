@@ -95,7 +95,13 @@ export default function PodFeedbackPrompt() {
 
   return (
     <>
-      <Dialog open={!dismissed && !asking} onClose={() => setAsking(true)} fullWidth maxWidth="xs">
+      <Dialog
+        data-testid="pod-feedback-prompt"
+        open={!dismissed && !asking}
+        onClose={() => setAsking(true)}
+        fullWidth
+        maxWidth="xs"
+      >
         <DialogTitle sx={{ fontWeight: 600 }}>
           {t('mweb.podFeedback.title', { vars: { title: pod.title } })}
         </DialogTitle>
@@ -114,12 +120,15 @@ export default function PodFeedbackPrompt() {
               message={message}
               onMessage={setMessage}
             />
-            {failed && <Alert severity="error">{t('mweb.podFeedback.failed')}</Alert>}
+            {failed && <Alert data-testid="pod-feedback-error" severity="error">{t('mweb.podFeedback.failed')}</Alert>}
           </Stack>
         </DialogContent>
         <DialogActions>
-          <DuncitButton onClick={() => setAsking(true)}>{t('mweb.podFeedback.close')}</DuncitButton>
+          <DuncitButton data-testid="pod-feedback-skip" onClick={() => setAsking(true)}>
+            {t('mweb.podFeedback.close')}
+          </DuncitButton>
           <DuncitButton
+            data-testid="pod-feedback-submit"
             variant="contained"
             disabled={!canSubmitPodFeedback(scores) || loading}
             onClick={handleSubmit}

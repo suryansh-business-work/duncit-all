@@ -89,6 +89,7 @@ export default function PodCommentsSheet({
 
   return (
     <Drawer
+      data-testid="pod-comments-sheet"
       anchor="bottom"
       open={open}
       onClose={onClose}
@@ -116,7 +117,12 @@ export default function PodCommentsSheet({
         <Typography component="h2" sx={{ fontSize: 17, fontWeight: 600 }}>
           {t('mweb.podDetails.comments')}
         </Typography>
-        <DuncitRoundButton tone="surface" onClick={onClose} aria-label={t('mweb.podDetails.close')}>
+        <DuncitRoundButton
+          data-testid="pod-comments-close"
+          tone="surface"
+          onClick={onClose}
+          aria-label={t('mweb.podDetails.close')}
+        >
           <CloseIcon />
         </DuncitRoundButton>
       </Stack>
@@ -124,6 +130,7 @@ export default function PodCommentsSheet({
       <Box sx={{ flex: 1, overflowY: 'auto' }}>
         {loading && !data && (
           <Stack
+            data-testid="pod-comments-loading"
             sx={{
               alignItems: "center",
               p: 4
@@ -131,9 +138,10 @@ export default function PodCommentsSheet({
             <CircularProgress size={24} />
           </Stack>
         )}
-        {error && <Alert severity="error" sx={{ m: 2 }}>{error.message}</Alert>}
+        {error && <Alert data-testid="pod-comments-error" severity="error" sx={{ m: 2 }}>{error.message}</Alert>}
         {!loading && comments.length === 0 && (
           <Typography
+            data-testid="pod-comments-empty"
             sx={{
               color: "text.secondary",
               p: 4,
@@ -153,11 +161,12 @@ export default function PodCommentsSheet({
 
       <CommentInput viewerId={viewerId} posting={addState.loading} onSubmit={onAdd} />
       {snack && (
-        <Alert severity="error" onClose={() => setSnack(null)}>
+        <Alert data-testid="pod-comments-snack" severity="error" onClose={() => setSnack(null)}>
           {snack}
         </Alert>
       )}
       <ConfirmDialog
+        testId="comment-delete"
         open={!!deleteId}
         title={t('mweb.podDetails.deleteCommentTitle')}
         message={t('mweb.podDetails.deleteCommentBody')}

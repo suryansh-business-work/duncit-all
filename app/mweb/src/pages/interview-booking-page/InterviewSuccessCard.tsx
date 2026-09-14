@@ -13,7 +13,7 @@ interface InterviewSuccessCardProps {
 export default function InterviewSuccessCard({ submittedRef }: Readonly<InterviewSuccessCardProps>) {
   const navigate = useNavigate();
   return (
-    <Container maxWidth="sm" sx={{ py: 6 }}>
+    <Container data-testid="interview-success-card" maxWidth="sm" sx={{ py: 6 }}>
       <Card>
         <CardContent>
           <Stack
@@ -48,12 +48,28 @@ export default function InterviewSuccessCard({ submittedRef }: Readonly<Intervie
               We've emailed you a confirmation. Our team will review your request and confirm one
               of your preferred meeting slots shortly.
             </Typography>
-            <Chip label={`Reference · ${submittedRef.slice(-8)}`} variant="outlined" />
+            <Chip
+              data-testid="interview-success-reference"
+              label={`Reference · ${submittedRef.slice(-8)}`}
+              variant="outlined"
+            />
             <Stack direction="row" spacing={1.5} sx={{ pt: 1, width: '100%' }}>
-              <DuncitButton variant="outlined" size="large" fullWidth onClick={() => navigate('/')}>
+              <DuncitButton
+                data-testid="interview-success-home-button"
+                variant="outlined"
+                size="large"
+                fullWidth
+                onClick={() => navigate('/')}
+              >
                 Back to home
               </DuncitButton>
-              <DuncitButton variant="contained" size="large" fullWidth onClick={() => navigate('/profile')}>
+              <DuncitButton
+                data-testid="interview-success-profile-button"
+                variant="contained"
+                size="large"
+                fullWidth
+                onClick={() => navigate('/profile')}
+              >
                 My profile
               </DuncitButton>
             </Stack>

@@ -81,10 +81,11 @@ export default function BuyTab() {
   };
 
   return (
-    <Stack spacing={2}>
-      {(settingsError || categoriesError) && <Alert severity="error">{t('mweb.giftCards.loadError')}</Alert>}
+    <Stack data-testid="gift-cards-buy-tab" spacing={2}>
+      {(settingsError || categoriesError) && <Alert data-testid="gift-cards-buy-error" severity="error">{t('mweb.giftCards.loadError')}</Alert>}
       {settingsLoading && !settings && (
         <Stack
+          data-testid="gift-cards-buy-loading"
           sx={{
             alignItems: "center",
             py: 4
@@ -120,7 +121,7 @@ export default function BuyTab() {
             message={message}
             onMessage={setMessage}
           />
-          <DuncitButton variant="contained" size="large" fullWidth disabled={!canContinue} onClick={onContinue}>
+          <DuncitButton data-testid="gift-card-continue" variant="contained" size="large" fullWidth disabled={!canContinue} onClick={onContinue}>
             {t('mweb.giftCards.continueCta')}
           </DuncitButton>
         </>

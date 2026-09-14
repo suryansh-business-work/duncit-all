@@ -9,6 +9,7 @@ import EventRoundedIcon from '@mui/icons-material/EventRounded';
 export default function PodThumb({ src }: Readonly<{ src?: string }>) {
   return (
     <Avatar
+      data-testid="pod-thumb"
       variant="rounded"
       src={src}
       alt=""

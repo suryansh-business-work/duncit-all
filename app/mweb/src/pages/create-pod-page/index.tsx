@@ -179,12 +179,12 @@ export default function CreatePodPage() {
   let body: React.ReactNode;
   if (loading) {
     body = (
-      <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }}>
+      <Box data-testid="create-pod-loading" sx={{ display: 'grid', placeItems: 'center', py: 6 }}>
         <CircularProgress />
       </Box>
     );
   } else if (options.error) {
-    body = <Alert severity="error">{options.error.message}</Alert>;
+    body = <Alert data-testid="create-pod-page-error" severity="error">{options.error.message}</Alert>;
   } else if (isHost) {
     body = (
       <CreatePodStepper
@@ -206,9 +206,10 @@ export default function CreatePodPage() {
   } else {
     body = (
       <Alert
+        data-testid="create-pod-not-host"
         severity="info"
         action={
-          <DuncitButton color="inherit" size="small" onClick={() => navigate('/become-host')}>
+          <DuncitButton data-testid="create-pod-become-host" color="inherit" size="small" onClick={() => navigate('/become-host')}>
             {t('mweb.createPod.becomeHost')}
           </DuncitButton>
         }
@@ -221,12 +222,13 @@ export default function CreatePodPage() {
   // The calm page header: round accent mark, the title alone (no subtitle), and
   // a round close button — the native StackScreen header's twin (rule 27).
   return (
-    <Stack spacing={2.5} sx={{ p: 2, maxWidth: 720, mx: 'auto', minHeight: '100%' }}>
+    <Stack data-testid="create-pod-page" spacing={2.5} sx={{ p: 2, maxWidth: 720, mx: 'auto', minHeight: '100%' }}>
       <StudioPageHeader
         icon={<AddCircleOutlineIcon fontSize="small" />}
         title={t('mweb.createPod.title')}
         action={
           <DuncitRoundButton
+            data-testid="create-pod-page-close"
             tone="paper"
             size="large"
             aria-label={t('mweb.auth.close')}

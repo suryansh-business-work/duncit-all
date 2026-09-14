@@ -37,8 +37,8 @@ export default function DashboardTrendCard({ trend }: Readonly<Props>) {
   const hasData = trend.length >= 2;
 
   return (
-    <Stack spacing={1.5}>
-      <SectionHeader title={t('clubAdmin.dashboard.monthlyTrend')} />
+    <Stack data-testid="dashboard-trend-card" spacing={1.5}>
+      <SectionHeader testId="dashboard-trend-card-header" title={t('clubAdmin.dashboard.monthlyTrend')} />
       <Card>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Stack spacing={1.5}>
@@ -66,7 +66,7 @@ export default function DashboardTrendCard({ trend }: Readonly<Props>) {
                 aria-label={t('clubAdmin.dashboard.monthlyTrendChart')}
               />
             ) : (
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              <Typography data-testid="dashboard-trend-card-empty" variant="body2" sx={{ color: 'text.secondary' }}>
                 {t('clubAdmin.dashboard.trendEmpty')}
               </Typography>
             )}

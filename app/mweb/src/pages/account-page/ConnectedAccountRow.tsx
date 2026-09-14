@@ -20,6 +20,8 @@ interface Props {
   hint?: string;
   /** Rendered in place of the disconnect action when not connected. */
   connectControl?: ReactNode;
+  /** The row's own id — the native twin takes the same `testID`. */
+  testId?: string;
 }
 
 /** One sign-in method in Profile > Connected accounts. */
@@ -33,9 +35,10 @@ export default function ConnectedAccountRow({
   onDisconnect,
   hint,
   connectControl,
+  testId = 'connected-account-row',
 }: Readonly<Props>) {
   return (
-    <Stack spacing={1}>
+    <Stack data-testid={testId} spacing={1}>
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1.5}
@@ -60,7 +63,7 @@ export default function ConnectedAccountRow({
           )}
           <Stack sx={{ minWidth: 0 }}>
             <Typography sx={{ fontSize: 15, fontWeight: 500 }}>{label}</Typography>
-            <Typography variant="body2" noWrap sx={{
+            <Typography data-testid={`${testId}-value`} variant="body2" noWrap sx={{
               color: "text.secondary"
             }}>
               {value}
@@ -77,6 +80,7 @@ export default function ConnectedAccountRow({
 
         {onDisconnect && disconnectLabel && (
           <DuncitButton
+            data-testid={`${testId}-action`}
             color="error"
             size="small"
             disabled={busy}
@@ -90,7 +94,7 @@ export default function ConnectedAccountRow({
       </Stack>
 
       {hint && (
-        <Typography variant="caption" sx={{
+        <Typography data-testid={`${testId}-hint`} variant="caption" sx={{
           color: "text.secondary"
         }}>
           {hint}

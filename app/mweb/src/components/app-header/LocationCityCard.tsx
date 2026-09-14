@@ -20,8 +20,10 @@ export default function LocationCityCard({ location, active, onSelect }: Readonl
   const ink = photo ? 'common.white' : 'text.primary';
   const backgroundImage = photo ? `${PHOTO_SCRIM}, url(${photo})` : 'none';
 
+  const cardTestId = `location-${location.id}`;
   return (
     <Card
+      data-testid={cardTestId}
       elevation={0}
       sx={{
         borderRadius: '18px',

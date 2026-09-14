@@ -122,16 +122,20 @@ export default function PodListPage(props: Readonly<PodListPageProps>) {
   let body: ReactNode;
   if (loading && pods.length === 0) {
     body = (
-      <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }}>
+      <Box data-testid="pod-list-page-loading" sx={{ display: 'grid', placeItems: 'center', py: 6 }}>
         <CircularProgress />
       </Box>
     );
   } else if (error) {
-    body = <Alert severity="error">{error.message}</Alert>;
+    body = (
+      <Alert data-testid="pod-list-page-error" severity="error">
+        {error.message}
+      </Alert>
+    );
   } else if (pods.length === 0) {
-    body = <EmptyState icon={<EventBusyOutlinedIcon />} title={emptyText} />;
+    body = <EmptyState testId="pod-list-page-empty" icon={<EventBusyOutlinedIcon />} title={emptyText} />;
   } else if (filteredPods.length === 0) {
-    body = <EmptyState icon={<SearchOffIcon />} title={t('mweb.home.noSearchResults')} />;
+    body = <EmptyState testId="pod-list-page-no-results" icon={<SearchOffIcon />} title={t('mweb.home.noSearchResults')} />;
   } else {
     body = (
       <VirtualPodRows
@@ -146,12 +150,13 @@ export default function PodListPage(props: Readonly<PodListPageProps>) {
   }
 
   return (
-    <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 }, minHeight: '100%' }}>
-      <PageHeader title={title} onBack={() => navigate(-1)} />
+    <Stack data-testid="pod-list-page" spacing={2} sx={{ p: { xs: 1.5, sm: 2 }, minHeight: '100%' }}>
+      <PageHeader testId="pod-list-page-header" title={title} onBack={() => navigate(-1)} />
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>
         <SearchPillField
+          testId="pod-list-page-search"
           placeholder={t('mweb.home.searchPods')}
           value={query}
           onChange={setQuery}

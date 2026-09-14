@@ -17,15 +17,19 @@ export default function GiftCardsPage() {
   const { t } = useTranslation();
   const tabs = useTabParam<GiftCardsTab>({
     items: [
-      { value: 'buy', label: t('mweb.giftCards.buyTab') },
-      { value: 'mycards', label: t('mweb.giftCards.myCardsTab') },
+      { value: 'buy', label: t('mweb.giftCards.buyTab'), testId: 'gift-cards-tab-buy' },
+      { value: 'mycards', label: t('mweb.giftCards.myCardsTab'), testId: 'gift-cards-tab-cards' },
     ],
     fallback: 'buy',
   });
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%', py: 0.5 }}>
-      <PageHeader title={t('mweb.giftCards.title')} />
+    <Stack
+      data-testid="gift-cards-screen"
+      spacing={2.5}
+      sx={{ maxWidth: 760, mx: 'auto', width: '100%', py: 0.5 }}
+    >
+      <PageHeader testId="gift-cards-header" title={t('mweb.giftCards.title')} />
       <DuncitTabs {...tabs} variant="fullWidth" sx={SEGMENTED_TABS_SX} />
       {tabs.value === 'buy' ? <BuyTab /> : <MyCardsTab />}
     </Stack>

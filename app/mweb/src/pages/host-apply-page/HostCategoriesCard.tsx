@@ -16,14 +16,14 @@ export default function HostCategoriesCard() {
   if (categories.length === 0) return null;
 
   return (
-    <Card sx={{ p: 2 }}>
+    <Card data-testid="host-categories-card" sx={{ p: 2 }}>
       <Typography sx={{ fontSize: '1rem', fontWeight: 600, mb: 1.5 }}>
         Your hosting categories
       </Typography>
       <Stack direction="row" useFlexGap spacing={1} sx={{ flexWrap: 'wrap' }}>
         {categories.map((cat) => {
           const path = formatCategoryPath(cat);
-          return <Chip key={path} label={path} />;
+          return <Chip key={path} data-testid="host-category-row" label={path} />;
         })}
       </Stack>
     </Card>

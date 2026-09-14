@@ -16,8 +16,15 @@ export function AccountInfoRow({
   label: string;
   value: string;
 }>) {
+  const testID = `account-info-row-${label}`;
   return (
-    <XStack alignItems="center" gap={16} paddingHorizontal={16} paddingVertical={12}>
+    <XStack
+      testID={testID}
+      alignItems="center"
+      gap={16}
+      paddingHorizontal={16}
+      paddingVertical={12}
+    >
       <IconDisc icon={icon} />
       <YStack flex={1}>
         <Text fontSize={12} color="$muted">

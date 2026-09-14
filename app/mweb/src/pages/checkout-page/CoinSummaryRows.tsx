@@ -24,6 +24,7 @@ export default function CoinSummaryRows({
 
   return (
     <Box
+      data-testid="coin-summary"
       sx={{
         mt: 1,
         p: 1.25,

@@ -62,13 +62,16 @@ export default function CropDialog({ open, src, saving, onCancel, onConfirm }: R
   const busy = processing || saving;
 
   return (
-    <Dialog open={open && !!src} onClose={busy ? undefined : cancel} fullWidth maxWidth="xs">
+    <Dialog data-testid="crop-dialog" open={open && !!src} onClose={busy ? undefined : cancel} fullWidth maxWidth="xs">
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
         Adjust photo
         <AiMonitoringChip />
       </DialogTitle>
       <DialogContent>
-        <Box sx={{ position: 'relative', width: '100%', height: 300, bgcolor: '#111', borderRadius: '16px' }}>
+        <Box
+          data-testid="crop-preview"
+          sx={{ position: 'relative', width: '100%', height: 300, bgcolor: '#111', borderRadius: '16px' }}
+        >
           {src && (
             <Cropper
               image={src}
@@ -87,6 +90,7 @@ export default function CropDialog({ open, src, saving, onCancel, onConfirm }: R
         </Box>
         <Stack spacing={1} sx={{ mt: 2 }}>
           <Slider
+            data-testid="crop-zoom"
             aria-label={t('mweb.profileAvatar.zoom')}
             value={zoom}
             min={1}
@@ -97,10 +101,15 @@ export default function CropDialog({ open, src, saving, onCancel, onConfirm }: R
           <Stack direction="row" spacing={1} sx={{
             alignItems: "center"
           }}>
-            <DuncitIconButton aria-label={t('mweb.common.rotate')} onClick={() => setRotation((r) => (r + 90) % 360)}>
+            <DuncitIconButton
+              data-testid="crop-rotate"
+              aria-label={t('mweb.common.rotate')}
+              onClick={() => setRotation((r) => (r + 90) % 360)}
+            >
               <RotateRightIcon />
             </DuncitIconButton>
             <Slider
+              data-testid="crop-rotation"
               aria-label={t('mweb.profileAvatar.rotation')}
               value={rotation}
               min={0}
@@ -112,10 +121,11 @@ export default function CropDialog({ open, src, saving, onCancel, onConfirm }: R
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={cancel} disabled={busy}>
+        <DuncitButton data-testid="crop-cancel-btn" onClick={cancel} disabled={busy}>
           Discard
         </DuncitButton>
         <DuncitButton
+          data-testid="crop-confirm"
           variant="contained"
           onClick={confirm}
           disabled={busy || !area}

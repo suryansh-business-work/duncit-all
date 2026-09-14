@@ -19,14 +19,22 @@ interface Props {
 export default function AlreadyBookedDialog({ open, onClose, onHistory }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="xs"
+      data-testid="already-booked-dialog"
+    >
       <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.checkout.alreadyBookedTitle')}</DialogTitle>
       <DialogContent>
         <DialogContentText>{t('mweb.checkout.alreadyBookedMessage')}</DialogContentText>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <DuncitButton onClick={onClose}>{t('mweb.checkout.alreadyBookedStay')}</DuncitButton>
-        <DuncitButton variant="contained" onClick={onHistory}>
+        <DuncitButton onClick={onClose} data-testid="already-booked-stay">
+          {t('mweb.checkout.alreadyBookedStay')}
+        </DuncitButton>
+        <DuncitButton variant="contained" onClick={onHistory} data-testid="already-booked-history">
           {t('mweb.checkout.alreadyBookedHistory')}
         </DuncitButton>
       </DialogActions>

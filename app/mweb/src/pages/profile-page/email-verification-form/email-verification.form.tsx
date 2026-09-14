@@ -92,7 +92,7 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
   }
 
   return (
-    <Stack id="email-verification" spacing={1.5}>
+    <Stack id="email-verification" data-testid="email-verification-form" spacing={1.5}>
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>
@@ -104,14 +104,27 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
       <Typography variant="body2" sx={{
         color: "text.secondary"
       }}>{email || 'Add an email address to verify your account.'}</Typography>
-      {message && <Alert severity="success">{message}</Alert>}
-      {devOtp && <Alert severity="info">Dev OTP: {devOtp}</Alert>}
-      {error && <Alert severity="error">{error}</Alert>}
+      {message && (
+        <Alert data-testid="email-verification-form-message" severity="success">
+          {message}
+        </Alert>
+      )}
+      {devOtp && (
+        <Alert data-testid="email-verification-form-dev-otp" severity="info">
+          Dev OTP: {devOtp}
+        </Alert>
+      )}
+      {error && (
+        <Alert data-testid="email-verification-form-error" severity="error">
+          {error}
+        </Alert>
+      )}
       <form noValidate onSubmit={submit}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} sx={{
           alignItems: { sm: 'flex-start' }
         }}>
           <DuncitButton
+            data-testid="email-verification-form-send"
             variant="outlined"
             onClick={sendOtp}
             disabled={!email || requestState.loading}
@@ -127,17 +140,23 @@ export default function EmailVerificationForm({ email, verified, onVerified, aut
             render={({ field, fieldState }) => (
               <TextField
                 {...field}
+                data-testid="email-verification-form-otp"
                 label="OTP"
                 error={!!fieldState.error}
                 helperText={fieldState.error?.message ?? ' '}
                 size="small"
                 slotProps={{
-                  htmlInput: { inputMode: 'numeric', maxLength: 6 }
+                  htmlInput: {
+                    inputMode: 'numeric',
+                    maxLength: 6,
+                    'data-testid': 'email-verification-form-otp-input',
+                  }
                 }}
               />
             )}
           />
           <DuncitButton
+            data-testid="email-verification-form-verify"
             type="submit"
             variant="contained"
             disabled={verifyState.loading}

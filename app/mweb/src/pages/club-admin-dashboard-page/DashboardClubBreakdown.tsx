@@ -16,6 +16,7 @@ function ClubBreakdownRow({ club, currencySymbol }: Readonly<RowProps>) {
   const { t } = useTranslation();
   return (
     <Link
+      data-testid={`dashboard-club-breakdown-row-${club.club_id}`}
       component={RouterLink}
       to={`/clubs/${club.club_id}/pods`}
       underline="none"
@@ -62,13 +63,13 @@ export default function DashboardClubBreakdown({ clubs, currencySymbol, loading 
   const { t } = useTranslation();
 
   let body = (
-    <Typography variant="body2" sx={{ color: 'text.secondary', py: 1 }}>
+    <Typography data-testid="dashboard-club-breakdown-empty" variant="body2" sx={{ color: 'text.secondary', py: 1 }}>
       {t('clubAdmin.dashboard.noClubs')}
     </Typography>
   );
   if (loading) {
     body = (
-      <Stack spacing={1}>
+      <Stack data-testid="dashboard-club-breakdown-loading" spacing={1}>
         {SKELETON_KEYS.map((key) => (
           <Skeleton key={key} variant="rounded" height={56} sx={{ borderRadius: '14px' }} />
         ))}
@@ -85,8 +86,8 @@ export default function DashboardClubBreakdown({ clubs, currencySymbol, loading 
   }
 
   return (
-    <Stack spacing={1.5}>
-      <SectionHeader title={t('clubAdmin.dashboard.perClubBreakdown')} />
+    <Stack data-testid="dashboard-club-breakdown" spacing={1.5}>
+      <SectionHeader testId="dashboard-club-breakdown-header" title={t('clubAdmin.dashboard.perClubBreakdown')} />
       <Card>
         <CardContent sx={{ px: 2, py: 1, '&:last-child': { pb: 1 } }}>{body}</CardContent>
       </Card>

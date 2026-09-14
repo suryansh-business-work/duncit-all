@@ -26,6 +26,7 @@ export default function HeaderBrand({ logoUrl, appName }: Readonly<HeaderBrandPr
 
   return (
     <Stack
+      data-testid="header-brand"
       direction="row"
       spacing={1.25}
       onClick={goHome}

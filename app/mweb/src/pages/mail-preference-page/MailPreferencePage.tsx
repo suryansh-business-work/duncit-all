@@ -41,9 +41,20 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
   // A link with no signature at all, or one the server would not accept.
   if (fromLink && (token === null || state.linkInvalid)) {
     return (
-      <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', p: 2 }}>
-        <Alert severity="warning">{t('mailPreference.linkInvalid')}</Alert>
-        <DuncitButton component={RouterLink} to="/account/mail-preference" variant="contained">
+      <Stack
+        spacing={2}
+        data-testid="mail-preference-page-invalid-link"
+        sx={{ maxWidth: 640, mx: 'auto', p: 2 }}
+      >
+        <Alert severity="warning" data-testid="mail-preference-page-invalid-link-alert">
+          {t('mailPreference.linkInvalid')}
+        </Alert>
+        <DuncitButton
+          data-testid="mail-preference-page-sign-in-button"
+          component={RouterLink}
+          to="/account/mail-preference"
+          variant="contained"
+        >
           {t('mailPreference.signIn')}
         </DuncitButton>
       </Stack>
@@ -53,6 +64,7 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
   if (state.loading) {
     return (
       <Stack
+        data-testid="mail-preference-page-loading"
         sx={{
           alignItems: "center",
           p: 6
@@ -63,7 +75,11 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
   }
 
   if (!state.preference) {
-    return <Alert severity="error">{t('mailPreference.loadFailed')}</Alert>;
+    return (
+      <Alert severity="error" data-testid="mail-preference-page-load-error">
+        {t('mailPreference.loadFailed')}
+      </Alert>
+    );
   }
 
   const optional = state.preference.categories.filter((item) => !item.required);
@@ -94,6 +110,7 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
         <DuncitButton
           fullWidth
           size="large"
+          data-testid="mail-preference-page-bulk-button"
           color={allOff ? 'primary' : 'error'}
           onClick={bulkAction}
           disabled={state.busyCategory !== null}
@@ -105,9 +122,9 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
     );
 
   return (
-    <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', pb: 4 }}>
+    <Stack spacing={2} data-testid="mail-preference-page" sx={{ maxWidth: 640, mx: 'auto', pb: 4 }}>
       <Stack spacing={0.5}>
-        <Typography component="h1" sx={{ fontSize: 20, fontWeight: 600 }}>
+        <Typography component="h1" data-testid="mail-preference-page-title" sx={{ fontSize: 20, fontWeight: 600 }}>
           {fromLink ? t('mailPreference.linkTitle') : t('mailPreference.title')}
         </Typography>
         <Typography variant="body2" sx={{
@@ -117,7 +134,11 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
         </Typography>
       </Stack>
 
-      {state.saveFailed && <Alert severity="error">{t('mailPreference.saveFailed')}</Alert>}
+      {state.saveFailed && (
+        <Alert severity="error" data-testid="mail-preference-page-save-failed">
+          {t('mailPreference.saveFailed')}
+        </Alert>
+      )}
 
       {/* Signed-in only: `/unsubscribe` is read by somebody in their inbox
           who has no session, and the sheet this card writes needs one. */}
@@ -129,6 +150,7 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
         busyCategory={state.busyCategory}
         onChange={state.setCategory}
         footer={bulkButton}
+        testId="mail-preference-optional-section"
       />
 
       <MailPreferenceSection
@@ -137,9 +159,11 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
         items={required}
         busyCategory={state.busyCategory}
         onChange={state.setCategory}
+        testId="mail-preference-required-section"
       />
 
       <ConfirmDialog
+        testId="mail-preference-confirm"
         open={confirmOpen}
         title={t('mailPreference.unsubscribeAllTitle')}
         message={t('mailPreference.unsubscribeAllMessage')}
@@ -158,6 +182,7 @@ export default function MailPreferencePage({ fromLink = false }: Readonly<Props>
         autoHideDuration={2500}
         onClose={state.dismissSaved}
         message={savedMessage}
+        data-testid="mail-preference-page-snackbar"
       />
     </Stack>
   );

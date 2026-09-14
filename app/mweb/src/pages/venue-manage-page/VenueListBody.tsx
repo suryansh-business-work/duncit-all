@@ -17,6 +17,7 @@ export default function VenueListBody({ showSpinner, error, venue }: Readonly<Ve
   if (showSpinner) {
     return (
       <Stack
+        data-testid="venue-list-body-loading"
         sx={{
           alignItems: "center",
           py: 4
@@ -26,14 +27,14 @@ export default function VenueListBody({ showSpinner, error, venue }: Readonly<Ve
     );
   }
   if (error) {
-    return <Alert severity="error">{error.message}</Alert>;
+    return <Alert severity="error" data-testid="venue-list-body-error">{error.message}</Alert>;
   }
   if (!venue) {
     return (
-      <Alert severity="info">
+      <Alert severity="info" data-testid="venue-list-body-empty">
         You haven't registered a venue yet.
         <Box sx={{ mt: 1.5 }}>
-          <DuncitButton component={RouterLink} to="/register-venue" variant="contained" size="small">
+          <DuncitButton component={RouterLink} to="/register-venue" variant="contained" size="small" data-testid="venue-list-body-register">
             Register a venue
           </DuncitButton>
         </Box>
@@ -41,7 +42,7 @@ export default function VenueListBody({ showSpinner, error, venue }: Readonly<Ve
     );
   }
   return (
-    <Box>
+    <Box data-testid="venue-list-body">
       <Stack direction="row" spacing={1.5}>
         <Box component="img" src={venue.cover_image_url || '/new-duncit-logo.png'} alt={venue.venue_name} sx={{ width: 72, height: 72, objectFit: 'cover', borderRadius: '16px', bgcolor: 'action.hover', flex: '0 0 auto' }} />
         <Stack spacing={0.35} sx={{ flex: 1, minWidth: 0 }}>
@@ -97,11 +98,11 @@ export default function VenueListBody({ showSpinner, error, venue }: Readonly<Ve
         </Stack>
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-        <DuncitButton component={RouterLink} to="/register-venue" variant="outlined" size="small" startIcon={<EditRoundedIcon />} sx={{ flex: 1 }}>
+        <DuncitButton component={RouterLink} to="/register-venue" variant="outlined" size="small" startIcon={<EditRoundedIcon />} sx={{ flex: 1 }} data-testid="venue-list-body-edit">
           Edit
         </DuncitButton>
         {venue?.status === 'APPROVED' && (
-          <DuncitButton component={RouterLink} to={venueUrl(venue.id)} variant="contained" size="small" endIcon={<OpenInNewRoundedIcon fontSize="small" />} sx={{ flex: 1 }}>
+          <DuncitButton component={RouterLink} to={venueUrl(venue.id)} variant="contained" size="small" endIcon={<OpenInNewRoundedIcon fontSize="small" />} sx={{ flex: 1 }} data-testid="venue-list-body-public-link">
             Public link
           </DuncitButton>
         )}

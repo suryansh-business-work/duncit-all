@@ -46,11 +46,13 @@ export default function MyStatusUploadTile({ me, onView }: Readonly<Props>) {
 
   return (
     <Stack
+      data-testid="my-status-upload-tile"
       sx={{
         alignItems: "center",
         position: 'relative'
       }}>
       <HomeStatusTile
+        testId="status-mine"
         label={uploading ? 'Uploading…' : 'My status'}
         imageUrl={latestIsVideo ? null : statusUrl ?? me?.profile_photo}
         videoUrl={latestIsVideo ? statusUrl : null}
@@ -61,6 +63,7 @@ export default function MyStatusUploadTile({ me, onView }: Readonly<Props>) {
       />
       {hasStories && !uploading && (
         <Box
+          data-testid="my-status-upload-tile-add"
           onClick={(e) => {
             e.stopPropagation();
             openPicker();

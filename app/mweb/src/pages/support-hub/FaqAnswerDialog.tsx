@@ -16,7 +16,7 @@ export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDial
   const { t } = useTranslation();
   const navigate = useNavigate();
   return (
-    <Dialog open={faq !== null} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog data-testid="support-faq-modal" open={faq !== null} onClose={onClose} fullWidth maxWidth="sm">
       {faq && (
         <DialogContent sx={{ p: 2.5 }}>
           <Stack
@@ -29,7 +29,12 @@ export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDial
             <Typography variant="h6" sx={{ fontWeight: 600, pr: 1 }}>
               {faq.question}
             </Typography>
-            <DuncitRoundButton tone="surface" onClick={onClose} aria-label={t('mweb.common.close')}>
+            <DuncitRoundButton
+              data-testid="support-faq-modal-close"
+              tone="surface"
+              onClick={onClose}
+              aria-label={t('mweb.common.close')}
+            >
               <CloseIcon />
             </DuncitRoundButton>
           </Stack>
@@ -52,6 +57,7 @@ export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDial
               Still need help?
             </Typography>
             <DuncitButton
+              data-testid="support-faq-modal-chat"
               fullWidth
               variant="contained"
               size="large"

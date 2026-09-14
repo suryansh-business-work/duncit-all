@@ -12,6 +12,8 @@ interface Props {
   subtitle: string;
   goAriaLabel: string;
   onGo: () => void;
+  /** The pod's id — names the Go button's test id to match the native twin. */
+  podId?: string;
 }
 
 /**
@@ -19,10 +21,11 @@ interface Props {
  * green Go, or — for a pod that has already run — the expired notice with no
  * CTA. Native twin: components/explore/ExploreJoinBar.
  */
-export default function ExploreJoinBar({ expired, subtitle, goAriaLabel, onGo }: Readonly<Props>) {
+export default function ExploreJoinBar({ expired, subtitle, goAriaLabel, onGo, podId }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
     <Stack
+      data-testid="explore-join-bar"
       direction="row"
       spacing={1.25}
       sx={(theme) => ({
@@ -68,6 +71,7 @@ export default function ExploreJoinBar({ expired, subtitle, goAriaLabel, onGo }:
             {subtitle}
           </Typography>
           <DuncitButton
+            data-testid={`reel-go-${podId}`}
             variant="contained"
             endIcon={<ArrowForwardRoundedIcon />}
             onClick={onGo}

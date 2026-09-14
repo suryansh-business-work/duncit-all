@@ -51,11 +51,17 @@ export default function UserHostPanel() {
   });
   const pods = podsQuery.data?.pods ?? [];
 
-  if (loading && !data) return <CircularProgress size={22} />;
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  if (loading && !data) return <CircularProgress data-testid="user-host-panel-loading" size={22} />;
+  if (error) {
+    return (
+      <Alert data-testid="user-host-panel-error" severity="error">
+        {error.message}
+      </Alert>
+    );
+  }
   if (!host) {
     return (
-      <Stack spacing={1.5}>
+      <Stack data-testid="user-host-panel-empty" spacing={1.5}>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
@@ -63,7 +69,7 @@ export default function UserHostPanel() {
             ? "You're a host. Complete your host profile to add payout and verification details."
             : 'You have not started a host profile yet.'}
         </Typography>
-        <DuncitButton component={RouterLink} to="/become-host" variant="outlined" size="small">
+        <DuncitButton data-testid="user-host-panel-start" component={RouterLink} to="/become-host" variant="outlined" size="small">
           {isHost ? 'Complete host profile' : 'Become a Host'}
         </DuncitButton>
       </Stack>
@@ -71,7 +77,7 @@ export default function UserHostPanel() {
   }
 
   return (
-    <Stack spacing={1.5}>
+    <Stack data-testid="user-host-panel" spacing={1.5}>
       <Stack direction="row" spacing={1.25} sx={{
         alignItems: "center"
       }}>
@@ -79,7 +85,7 @@ export default function UserHostPanel() {
           <WorkspacePremiumIcon />
         </IconDisc>
         <Typography sx={{ minWidth: 0, flex: 1, fontSize: 15, fontWeight: 600 }}>{t('mweb.profile.hostApplication')}</Typography>
-        <Chip size="small" label={host.status} color={isApproved ? 'success' : 'warning'} />
+        <Chip data-testid="user-host-panel-status" size="small" label={host.status} color={isApproved ? 'success' : 'warning'} />
       </Stack>
       <Stack direction="row" spacing={0.75} sx={{
         alignItems: "center"
@@ -103,8 +109,13 @@ export default function UserHostPanel() {
           {host.approved_at ? `Approved ${formatDate(host.approved_at)}` : `Submitted ${formatDate(host.submitted_at)}`}
         </Typography>
       )}
-      {host.reviewer_notes && <Alert severity="info">{host.reviewer_notes}</Alert>}
+      {host.reviewer_notes && (
+        <Alert data-testid="user-host-panel-notes" severity="info">
+          {host.reviewer_notes}
+        </Alert>
+      )}
       <DuncitButton
+        data-testid="user-host-panel-resume"
         component={RouterLink}
         to="/become-host"
         variant="contained"

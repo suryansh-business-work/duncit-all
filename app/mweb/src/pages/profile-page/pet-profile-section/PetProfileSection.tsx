@@ -20,10 +20,11 @@ export default function PetProfileSection({ pet, onSaved }: Readonly<Props>) {
   // Sits inside the "Pet profile" accordion, which already names it — so no
   // second card and no second title, just the action on the right.
   return (
-    <Box>
+    <Box data-testid="pet-profile-section">
       {!editing && (
         <Stack direction="row" sx={{ justifyContent: 'flex-end', mb: 1.5 }}>
           <DuncitButton
+            data-testid="pet-profile-section-edit"
             size="small"
             color="inherit"
             startIcon={<EditIcon />}
@@ -53,7 +54,7 @@ export default function PetProfileSection({ pet, onSaved }: Readonly<Props>) {
       )}
 
       {savedMsg && !editing && (
-        <Alert severity="success" sx={{ mt: 2 }} onClose={() => setSavedMsg(null)}>
+        <Alert data-testid="pet-profile-section-saved" severity="success" sx={{ mt: 2 }} onClose={() => setSavedMsg(null)}>
           {savedMsg}
         </Alert>
       )}

@@ -37,22 +37,23 @@ export default function VerificationPage() {
 
   if (loading && !data) {
     return (
-      <Stack sx={{ alignItems: 'center', py: 8 }}>
+      <Stack sx={{ alignItems: 'center', py: 8 }} data-testid="verification-page-loading">
         <CircularProgress />
       </Stack>
     );
   }
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  if (error) return <Alert severity="error" data-testid="verification-page-error">{error.message}</Alert>;
 
   const verifications: Verification[] = data?.myVerifications ?? [];
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 640, mx: 'auto', width: '100%', pb: 4 }}>
+    <Stack spacing={2.5} sx={{ maxWidth: 640, mx: 'auto', width: '100%', pb: 4 }} data-testid="verification-page">
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <DuncitRoundButton
           onClick={() => navigate(-1)}
           aria-label={t('mweb.common.goBack')}
           sx={{ width: 40, height: 40, minWidth: 40, minHeight: 40, bgcolor: 'background.paper', color: 'text.primary' }}
+          data-testid="verification-page-back"
         >
           <ArrowBackRoundedIcon />
         </DuncitRoundButton>
@@ -64,7 +65,7 @@ export default function VerificationPage() {
       <VerificationCards items={verifications} onChanged={onChanged} onError={setSnack} />
 
       {snack && (
-        <Alert severity="info" onClose={() => setSnack(null)}>
+        <Alert severity="info" onClose={() => setSnack(null)} data-testid="verification-page-snack">
           {snack}
         </Alert>
       )}

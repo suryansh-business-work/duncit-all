@@ -23,7 +23,7 @@ export default function ResolvedNotice({
   let windowNote: React.ReactNode;
   if (reopenable && reopenDeadline) {
     windowNote = (
-      <Typography variant="caption" sx={{
+      <Typography data-testid="ticket-reopen-until" variant="caption" sx={{
         color: "text.secondary"
       }}>
         You can reopen this until {formatDateTime(reopenDeadline)}
@@ -31,7 +31,7 @@ export default function ResolvedNotice({
     );
   } else {
     windowNote = (
-      <Typography variant="caption" sx={{
+      <Typography data-testid="ticket-reopen-expired" variant="caption" sx={{
         color: "text.secondary"
       }}>
         The reopen window has passed — raise a new ticket if you still need help.
@@ -40,7 +40,7 @@ export default function ResolvedNotice({
   }
 
   return (
-    <Paper sx={{ p: 1.5, borderRadius: '18px', bgcolor: 'action.hover' }}>
+    <Paper data-testid="ticket-resolved-notice" sx={{ p: 1.5, borderRadius: '18px', bgcolor: 'action.hover' }}>
       <Stack
         direction="row"
         spacing={1}
@@ -57,6 +57,7 @@ export default function ResolvedNotice({
           {windowNote}
         </Stack>
         <DuncitButton
+          data-testid="ticket-reopen"
           variant="outlined"
           size="small"
           startIcon={<ReplayIcon />}

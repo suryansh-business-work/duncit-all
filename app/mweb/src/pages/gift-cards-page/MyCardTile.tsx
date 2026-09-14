@@ -73,7 +73,7 @@ export default function MyCardTile({ card, currencySymbol, senderName, showRecip
   };
 
   return (
-    <Card sx={{ p: 1.5 }}>
+    <Card data-testid={`gift-card-row-${card.id}`} sx={{ p: 1.5 }}>
       <GiftCardVisual
         scopeType={card.scope_type}
         scopeCategoryId={card.scope_category_id}
@@ -108,10 +108,10 @@ export default function MyCardTile({ card, currencySymbol, senderName, showRecip
           }}>
           {t('mweb.giftCards.validUntil', { vars: { date: formatDate(card.expires_at) } })}
         </Typography>
-        <DuncitRoundButton tone="surface" onClick={copyCode} aria-label={t('mweb.giftCards.copyCode')} sx={ACTION_SX}>
+        <DuncitRoundButton data-testid={`gift-card-copy-${card.id}`} tone="surface" onClick={copyCode} aria-label={t('mweb.giftCards.copyCode')} sx={ACTION_SX}>
           <ContentCopyIcon />
         </DuncitRoundButton>
-        <DuncitRoundButton tone="surface" onClick={shareCard} aria-label={t('mweb.giftCards.shareCard')} sx={ACTION_SX}>
+        <DuncitRoundButton data-testid={`gift-card-share-${card.id}`} tone="surface" onClick={shareCard} aria-label={t('mweb.giftCards.shareCard')} sx={ACTION_SX}>
           <ShareIcon />
         </DuncitRoundButton>
       </Stack>

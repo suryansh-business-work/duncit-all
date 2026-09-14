@@ -26,6 +26,7 @@ export default function HealthRow({ score, band, label, ariaLabel, onOpen }: Rea
   const tone = BAND_TONE[band] ?? 'error';
   return (
     <ButtonBase
+      data-testid="host-health"
       onClick={onOpen}
       aria-label={ariaLabel}
       sx={{ ...SURFACE_SX, p: 2, gap: 1.5, width: '100%', justifyContent: 'flex-start', textAlign: 'left' }}

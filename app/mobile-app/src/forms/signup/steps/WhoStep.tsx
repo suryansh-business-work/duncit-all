@@ -21,7 +21,7 @@ interface Props {
 export function WhoStep({ control, minAge }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <YStack gap={16}>
+    <YStack testID="signup-who-step" gap={16}>
       <FormTextField
         control={control}
         name="name"

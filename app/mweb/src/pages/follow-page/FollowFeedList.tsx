@@ -57,7 +57,7 @@ export default function FollowFeedList({
 
   if (loading && !data) {
     return (
-      <Stack spacing={2}>
+      <Stack data-testid="following-feed-loading" spacing={2}>
         <Skeleton variant="rounded" height={320} sx={{ borderRadius: '24px' }} />
         <Skeleton variant="rounded" height={320} sx={{ borderRadius: '24px' }} />
       </Stack>
@@ -65,12 +65,12 @@ export default function FollowFeedList({
   }
 
   if (error) {
-    return <Alert severity="error">{error.message}</Alert>;
+    return <Alert data-testid="following-feed-error" severity="error">{error.message}</Alert>;
   }
 
   if (posts.length === 0) {
     return (
-      <Stack spacing={1.5} sx={{ alignItems: 'center', textAlign: 'center', py: 5 }}>
+      <Stack data-testid="following-feed-empty" spacing={1.5} sx={{ alignItems: 'center', textAlign: 'center', py: 5 }}>
         <IconDisc size={64}>
           <FavoriteBorderIcon />
         </IconDisc>
@@ -82,7 +82,7 @@ export default function FollowFeedList({
   }
 
   return (
-    <Stack spacing={2}>
+    <Stack data-testid="following-feed" spacing={2}>
       {posts.map((post) => {
         const club = post.club_id ? (clubsById?.get(post.club_id) ?? null) : null;
         return (

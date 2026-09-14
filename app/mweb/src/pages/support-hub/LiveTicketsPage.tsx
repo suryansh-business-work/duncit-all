@@ -19,6 +19,7 @@ export default function LiveTicketsPage() {
   return (
     <SupportShell title={t('mweb.common.chatWithUs')} backTo="/support">
       <Paper
+        data-testid="live-tickets-chat-entry"
         onClick={() => navigate('/live-chat')}
         sx={{ ...SURFACE_SX, p: 2, cursor: 'pointer' }}
       >

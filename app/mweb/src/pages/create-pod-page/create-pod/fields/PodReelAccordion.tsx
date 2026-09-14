@@ -94,11 +94,13 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
 
   return (
     <Accordion
+      data-testid="pod-reel-accordion"
       disableGutters
       square
       sx={{ ...SURFACE_SX, '&:before': { display: 'none' }, overflow: 'hidden' }}
     >
       <AccordionSummary
+        data-testid="optional-reel"
         expandIcon={<ExpandMoreIcon sx={{ color: 'text.secondary' }} />}
         sx={{ minHeight: 68, px: 2 }}
         aria-controls="pod-reel-content"
@@ -137,11 +139,12 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
           }}>
             {t('mweb.createPod.reelCapHint', { vars: { max: Math.round(caps.maxVideoBytes / MB) } })}
           </Typography>
-          <Box>
+          <Box data-testid="reel-ai-monitoring">
             <AiMonitoringChip />
           </Box>
           {hasReel && (
             <Box
+              data-testid="reel-preview"
               component="video"
               src={reelUrl}
               controls
@@ -151,6 +154,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
           )}
           {error && (
             <Chip
+              data-testid="reel-upload-error"
               size="small"
               color="error"
               label={error}
@@ -170,6 +174,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
           )}
           <Stack direction="row" spacing={1}>
             <DuncitButton
+              data-testid="reel-upload-add"
               size="small"
               variant="outlined"
               startIcon={busy ? <CircularProgress size={16} /> : <VideocamOutlinedIcon />}
@@ -179,12 +184,12 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
               {uploadLabel}
             </DuncitButton>
             {hasReel && !busy && (
-              <DuncitButton size="small" color="error" startIcon={<DeleteOutlineIcon />} onClick={removeReel}>
+              <DuncitButton data-testid="reel-remove" size="small" color="error" startIcon={<DeleteOutlineIcon />} onClick={removeReel}>
                 {t('mweb.createPod.remove')}
               </DuncitButton>
             )}
           </Stack>
-          <input ref={fileRef} type="file" accept="video/*" hidden onChange={pickFile} />
+          <input data-testid="reel-file-input" ref={fileRef} type="file" accept="video/*" hidden onChange={pickFile} />
         </Stack>
       </AccordionDetails>
     </Accordion>

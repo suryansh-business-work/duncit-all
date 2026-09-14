@@ -26,6 +26,7 @@ export default function WhatsAppPreferencePage() {
   if (state.loading) {
     return (
       <Stack
+        data-testid="whatsapp-preference-loading"
         sx={{
           alignItems: "center",
           p: 6
@@ -36,7 +37,7 @@ export default function WhatsAppPreferencePage() {
   }
 
   if (!state.preference) {
-    return <Alert severity="error">{t('whatsappPreference.loadFailed')}</Alert>;
+    return <Alert severity="error" data-testid="whatsapp-preference-error">{t('whatsappPreference.loadFailed')}</Alert>;
   }
 
   const { categories, destination, reachable } = state.preference;
@@ -65,6 +66,7 @@ export default function WhatsAppPreferencePage() {
         onClick={bulkAction}
         disabled={state.busyCategory !== null || !reachable}
         sx={{ bgcolor: (theme) => alpha(theme.palette[allOff ? 'primary' : 'error'].main, 0.1) }}
+        data-testid="whatsapp-preference-bulk"
       >
         {bulkLabel}
       </DuncitButton>
@@ -72,7 +74,7 @@ export default function WhatsAppPreferencePage() {
   );
 
   return (
-    <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', pb: 4 }}>
+    <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', pb: 4 }} data-testid="whatsapp-preference-page">
       <Stack spacing={0.5}>
         <Typography component="h1" sx={{ fontSize: 20, fontWeight: 600 }}>
           {t('whatsappPreference.title')}
@@ -90,7 +92,7 @@ export default function WhatsAppPreferencePage() {
 
       {!reachable && <NoWhatsAppNumberCard />}
 
-      {state.saveFailed && <Alert severity="error">{t('whatsappPreference.saveFailed')}</Alert>}
+      {state.saveFailed && <Alert severity="error" data-testid="whatsapp-preference-save-error">{t('whatsappPreference.saveFailed')}</Alert>}
 
       <AuthMessagesCard channel="WHATSAPP" />
 
@@ -113,6 +115,7 @@ export default function WhatsAppPreferencePage() {
       />
 
       <ConfirmDialog
+        testId="whatsapp-preference-confirm"
         open={confirmOpen}
         title={t('whatsappPreference.turnAllOffTitle')}
         message={t('whatsappPreference.turnAllOffMessage')}
@@ -131,6 +134,7 @@ export default function WhatsAppPreferencePage() {
         autoHideDuration={2500}
         onClose={state.dismissSaved}
         message={t('whatsappPreference.saved')}
+        data-testid="whatsapp-preference-saved"
       />
     </Stack>
   );

@@ -5,7 +5,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 export default function UserDataReloadDialog({ open }: Readonly<{ open: boolean }>) {
   const { t } = useTranslation();
   return (
-    <Dialog open={open} maxWidth="xs" fullWidth>
+    <Dialog data-testid="user-data-reload-dialog" open={open} maxWidth="xs" fullWidth>
       <DialogTitle>{t('mweb.appHeader.userDataNotLoaded')}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" sx={{
@@ -15,7 +15,11 @@ export default function UserDataReloadDialog({ open }: Readonly<{ open: boolean 
         </Typography>
       </DialogContent>
       <DialogActions>
-        <DuncitButton variant="contained" onClick={() => globalThis.window.location.reload()}>
+        <DuncitButton
+          data-testid="user-data-reload-dialog-reload"
+          variant="contained"
+          onClick={() => globalThis.window.location.reload()}
+        >
           Reload application
         </DuncitButton>
       </DialogActions>

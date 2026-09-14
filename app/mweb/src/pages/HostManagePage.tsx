@@ -77,16 +77,30 @@ export default function HostManagePage() {
   const bootLoading = (meQ.loading && !meQ.data) || (!!userId && loading && !data);
 
   return (
-    <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+    <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }} data-testid="host-manage-screen">
       <StudioPageHeader
         icon={<DashboardIcon fontSize="small" />}
         title="Your Pods"
         action={
           <Stack direction="row" spacing={1}>
-            <DuncitButton component={RouterLink} to="/host/dashboard" variant="outlined" size="small" startIcon={<InsightsIcon />}>
+            <DuncitButton
+              component={RouterLink}
+              to="/host/dashboard"
+              variant="outlined"
+              size="small"
+              startIcon={<InsightsIcon />}
+              data-testid="host-manage-insights"
+            >
               Insights
             </DuncitButton>
-            <DuncitButton component={RouterLink} to="/create-pod" variant="contained" size="small" startIcon={<AddIcon />}>
+            <DuncitButton
+              component={RouterLink}
+              to="/create-pod"
+              variant="contained"
+              size="small"
+              startIcon={<AddIcon />}
+              data-testid="host-manage-create"
+            >
               Create
             </DuncitButton>
           </Stack>

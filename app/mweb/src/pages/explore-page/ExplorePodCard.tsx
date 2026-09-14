@@ -91,6 +91,7 @@ export default function ExplorePodCard({
 
   return (
     <Box
+      data-testid={`reel-${pod.pod_id}`}
       onDoubleClick={openPod}
       sx={{
         position: 'relative',
@@ -103,7 +104,7 @@ export default function ExplorePodCard({
         overflow: 'hidden',
       }}
     >
-      <ExploreReelVideo src={pod.reel_url} />
+      <ExploreReelVideo src={pod.reel_url} testId={`reel-video-${pod.pod_id}`} />
 
       <ExplorePodOverlay pod={pod} club={club} location={location} />
 
@@ -111,6 +112,7 @@ export default function ExplorePodCard({
         actions={[
           {
             key: 'join',
+            testId: `reel-join-${pod.pod_id}`,
             icon: expired ? <InfoOutlinedIcon /> : <HowToRegIcon />,
             label: joinLabel,
             caption: joinLabel,
@@ -120,6 +122,7 @@ export default function ExplorePodCard({
           },
           {
             key: 'like',
+            testId: `reel-like-${pod.pod_id}`,
             icon: liked ? <FavoriteIcon /> : <FavoriteBorderIcon />,
             label: String(likeCount),
             caption: String(likeCount),
@@ -130,6 +133,7 @@ export default function ExplorePodCard({
           },
           {
             key: 'comment',
+            testId: `reel-comment-${pod.pod_id}`,
             icon: <CommentIcon />,
             label: String(commentCount),
             caption: String(commentCount),
@@ -138,6 +142,7 @@ export default function ExplorePodCard({
           },
           {
             key: 'save',
+            testId: `reel-save-${pod.pod_id}`,
             icon: saved ? <BookmarkIcon /> : <BookmarkBorderIcon />,
             label: t('mweb.explore.save'),
             ariaLabel: t('mweb.explore.save'),
@@ -147,6 +152,7 @@ export default function ExplorePodCard({
           },
           {
             key: 'share',
+            testId: `reel-share-${pod.pod_id}`,
             icon: <ShareIcon />,
             label: t('mweb.common.share'),
             ariaLabel: t('mweb.common.share'),
@@ -154,6 +160,7 @@ export default function ExplorePodCard({
           },
           {
             key: 'open',
+            testId: `reel-open-${pod.pod_id}`,
             icon: <OpenInNewIcon />,
             label: t('mweb.explore.open'),
             ariaLabel: t('mweb.explore.open'),
@@ -167,6 +174,7 @@ export default function ExplorePodCard({
         subtitle={ctaSubtitle}
         goAriaLabel={t('mweb.explore.openPodDetails')}
         onGo={openPod}
+        podId={pod.pod_id}
       />
 
       <PodCommentsSheet

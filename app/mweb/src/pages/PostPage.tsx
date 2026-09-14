@@ -28,6 +28,7 @@ export default function PostPage() {
   if (loading && !data) {
     return (
       <Stack
+        data-testid="post-page-loading"
         sx={{
           alignItems: "center",
           p: 6
@@ -37,7 +38,7 @@ export default function PostPage() {
     );
   }
   if (error || !data?.me) {
-    return <Alert severity="error">{error?.message ?? 'Unable to open post'}</Alert>;
+    return <Alert severity="error" data-testid="post-page-error">{error?.message ?? 'Unable to open post'}</Alert>;
   }
 
   return (

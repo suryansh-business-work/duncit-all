@@ -36,6 +36,7 @@ function CoinRow({ txn, gold }: Readonly<{ txn: CoinTransaction; gold: string }>
 
   return (
     <Stack
+      data-testid={`coin-row-${txn.id}`}
       component="li"
       direction="row"
       spacing={1.5}
@@ -50,7 +51,7 @@ function CoinRow({ txn, gold }: Readonly<{ txn: CoinTransaction; gold: string }>
           {`${label} · ${formatDateTime(txn.created_at)}`}
         </Typography>
         {validTill ? (
-          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontWeight: 600 }}>
+          <Typography data-testid={`coin-row-valid-${txn.id}`} variant="caption" sx={{ color: 'text.secondary', display: 'block', fontWeight: 600 }}>
             {validTill}
           </Typography>
         ) : null}
@@ -80,11 +81,11 @@ export default function CoinHistoryList({ transactions }: Readonly<Props>) {
   const gold = coinGold(theme.palette.mode);
 
   return (
-    <Stack spacing={1.25}>
-      <SectionHeader title={t('mweb.coin.historyTitle')} />
+    <Stack data-testid="coin-history-list" spacing={1.25}>
+      <SectionHeader testId="coin-history-list-header" title={t('mweb.coin.historyTitle')} />
       <Card sx={{ px: 2, py: 0.5 }}>
         {transactions.length === 0 ? (
-          <Typography variant="body2" sx={{ color: 'text.secondary', py: 1.5 }}>
+          <Typography data-testid="coin-history-empty" variant="body2" sx={{ color: 'text.secondary', py: 1.5 }}>
             {t('mweb.coin.historyEmpty')}
           </Typography>
         ) : (

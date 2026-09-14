@@ -25,12 +25,12 @@ interface Action {
 }
 
 /** One icon action — a router link for a page, a button for a dialog. */
-function ActionButton({ action }: Readonly<{ action: Action }>) {
+function ActionButton({ action, testId }: Readonly<{ action: Action; testId: string }>) {
   const color = action.color ?? 'default';
   if (action.to) {
     return (
       <Tooltip title={action.title}>
-        <DuncitIconButton size="small" color={color} component={RouterLink} to={action.to}>
+        <DuncitIconButton data-testid={testId} size="small" color={color} component={RouterLink} to={action.to}>
           {action.icon}
         </DuncitIconButton>
       </Tooltip>
@@ -38,7 +38,7 @@ function ActionButton({ action }: Readonly<{ action: Action }>) {
   }
   return (
     <Tooltip title={action.title}>
-      <DuncitIconButton size="small" color={color} onClick={action.onClick}>
+      <DuncitIconButton data-testid={testId} size="small" color={color} onClick={action.onClick}>
         {action.icon}
       </DuncitIconButton>
     </Tooltip>
@@ -103,9 +103,9 @@ export default function ClubPodActions({ pod, podsPath, onActivity, onDelete }: 
   }
 
   return (
-    <Stack direction="row" sx={{ justifyContent: 'flex-end' }}>
+    <Stack data-testid={`club-pod-actions-${pod.id}`} direction="row" sx={{ justifyContent: 'flex-end' }}>
       {actions.map((action) => (
-        <ActionButton key={action.key} action={action} />
+        <ActionButton key={action.key} action={action} testId={`club-pod-actions-${action.key}-${pod.id}`} />
       ))}
     </Stack>
   );

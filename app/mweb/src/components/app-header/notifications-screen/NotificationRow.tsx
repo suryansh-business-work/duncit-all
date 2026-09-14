@@ -51,6 +51,7 @@ export default function NotificationRow({
 
   return (
     <Box
+      data-testid={`notification-${item.id}`}
       onClick={busy ? undefined : onClick}
       role="button"
       tabIndex={0}
@@ -85,7 +86,10 @@ export default function NotificationRow({
           <Stack direction="row" spacing={0.75} sx={{
             alignItems: "center"
           }}>
-            <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, flex: 1, minWidth: 0, ...CLAMP_2 }}>
+            <Typography
+              data-testid={`notification-title-${item.id}`}
+              sx={{ fontSize: '0.875rem', fontWeight: 600, flex: 1, minWidth: 0, ...CLAMP_2 }}
+            >
               {notification?.title ?? 'Notification'}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary', flexShrink: 0 }}>
@@ -93,6 +97,7 @@ export default function NotificationRow({
             </Typography>
             {unread && (
               <Box
+                data-testid={`notification-new-${item.id}`}
                 aria-hidden
                 sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'secondary.main', flexShrink: 0 }}
               />

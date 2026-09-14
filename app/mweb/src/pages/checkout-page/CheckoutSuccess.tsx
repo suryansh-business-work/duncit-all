@@ -119,7 +119,10 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
     : null;
 
   return (
-    <Box sx={{ maxWidth: 540, mx: 'auto', minHeight: '100%', display: 'grid', alignItems: 'center', py: 2 }}>
+    <Box
+      sx={{ maxWidth: 540, mx: 'auto', minHeight: '100%', display: 'grid', alignItems: 'center', py: 2 }}
+      data-testid="checkout-success"
+    >
       <ConfettiOverlay open={confetti} onClose={() => setConfetti(false)} />
       <Stack spacing={2} sx={{ textAlign: 'center' }}>
         <Box
@@ -161,15 +164,51 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
             onGoogleCalendar={openGoogleCalendar}
           />
         )}
-        {invoiceError && <Alert severity="error">{invoiceError}</Alert>}
+        {invoiceError && <Alert severity="error" data-testid="invoice-error">{invoiceError}</Alert>}
         <Stack spacing={1.25}>
           {pod?.id && (
-            <DuncitButton fullWidth size="large" variant="contained" startIcon={<DownloadIcon />} onClick={downloadTicket} disabled={ticketLoading}>{t('mweb.ticket.download')}</DuncitButton>
+            <DuncitButton
+              fullWidth
+              size="large"
+              variant="contained"
+              startIcon={<DownloadIcon />}
+              onClick={downloadTicket}
+              disabled={ticketLoading}
+              data-testid="download-ticket"
+            >
+              {t('mweb.ticket.download')}
+            </DuncitButton>
           )}
-          <DuncitButton fullWidth size="large" variant="outlined" startIcon={<DownloadIcon />} onClick={downloadInvoice} disabled={!payment.invoice_no || invoiceLoading}>{t('mweb.checkout.downloadInvoice')}</DuncitButton>
+          <DuncitButton
+            fullWidth
+            size="large"
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            onClick={downloadInvoice}
+            disabled={!payment.invoice_no || invoiceLoading}
+            data-testid="download-invoice"
+          >
+            {t('mweb.checkout.downloadInvoice')}
+          </DuncitButton>
           <Stack direction="row" spacing={1.25}>
-            <DuncitButton fullWidth variant="outlined" onClick={onHome} sx={{ minHeight: 48 }}>{t('mweb.checkout.home')}</DuncitButton>
-            <DuncitButton fullWidth variant="contained" onClick={onProfile} sx={{ minHeight: 48 }}>{profileAction}</DuncitButton>
+            <DuncitButton
+              fullWidth
+              variant="outlined"
+              onClick={onHome}
+              sx={{ minHeight: 48 }}
+              data-testid="success-home"
+            >
+              {t('mweb.checkout.home')}
+            </DuncitButton>
+            <DuncitButton
+              fullWidth
+              variant="contained"
+              onClick={onProfile}
+              sx={{ minHeight: 48 }}
+              data-testid="success-profile"
+            >
+              {profileAction}
+            </DuncitButton>
           </Stack>
         </Stack>
       </Stack>

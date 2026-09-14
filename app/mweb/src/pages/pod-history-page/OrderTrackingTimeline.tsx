@@ -11,11 +11,16 @@ function stepDot(step: TimelineStep) {
   return { Icon: RadioButtonUncheckedIcon, color: 'text.disabled' };
 }
 
+interface Props {
+  steps: TimelineStep[];
+  testId?: string;
+}
+
 /** Vertical fulfilment timeline — the steps joined by a hairline rail.
  * Native twin: components/pod-history/OrderTrackingTimeline. */
-export default function OrderTrackingTimeline({ steps }: Readonly<{ steps: TimelineStep[] }>) {
+export default function OrderTrackingTimeline({ steps, testId }: Readonly<Props>) {
   return (
-    <Stack spacing={0}>
+    <Stack spacing={0} data-testid={testId}>
       {steps.map((step, i) => {
         const { Icon, color } = stepDot(step);
         const isLast = i === steps.length - 1;

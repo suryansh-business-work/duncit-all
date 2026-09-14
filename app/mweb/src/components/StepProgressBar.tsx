@@ -18,6 +18,7 @@ interface Props {
 export default function StepProgressBar({ steps, current, label }: Readonly<Props>) {
   return (
     <Stack
+      data-testid="step-progress-bar"
       direction="row"
       spacing={0.75}
       role="progressbar"
@@ -29,6 +30,7 @@ export default function StepProgressBar({ steps, current, label }: Readonly<Prop
       {steps.map((id, index) => (
         <Box
           key={id}
+          data-testid={`step-progress-bar-step-${id}`}
           sx={{
             flex: 1,
             height: 6,

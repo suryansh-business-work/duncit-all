@@ -45,6 +45,7 @@ export default function RecoveryPasswordStep({ labels, busy, onSave }: Readonly<
   const visibilityToggle = (
     <InputAdornment position="end">
       <DuncitIconButton
+        data-testid="recovery-password-toggle-visibility"
         size="small"
         edge="end"
         onClick={() => setShow((v) => !v)}
@@ -66,7 +67,7 @@ export default function RecoveryPasswordStep({ labels, busy, onSave }: Readonly<
   );
 
   return (
-    <form noValidate onSubmit={submit}>
+    <form data-testid="recovery-password-step" noValidate onSubmit={submit}>
       <Stack spacing={2}>
         <RhfTextField
           control={control}
@@ -99,6 +100,7 @@ export default function RecoveryPasswordStep({ labels, busy, onSave }: Readonly<
           }}
         />
         <DuncitButton
+          data-testid="recovery-save-password"
           type="submit"
           variant="contained"
           size="large"

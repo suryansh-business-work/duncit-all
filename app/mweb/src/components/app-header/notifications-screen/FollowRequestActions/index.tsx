@@ -110,7 +110,7 @@ export default function FollowRequestActions({
   // the row states its outcome and stops there.
   if (state === 'SETTLED') {
     return (
-      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+      <Typography data-testid="follow-request-settled" variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
         {settledLabel}
       </Typography>
     );
@@ -123,7 +123,7 @@ export default function FollowRequestActions({
   const open = state === 'ANSWER';
 
   return (
-    <Stack spacing={0.5} sx={{ mt: 1.25 }} onClick={(event) => event.stopPropagation()}>
+    <Stack data-testid="follow-request-actions" spacing={0.5} sx={{ mt: 1.25 }} onClick={(event) => event.stopPropagation()}>
       <Stack
         direction="row"
         spacing={1}
@@ -144,7 +144,7 @@ export default function FollowRequestActions({
           />
         )}
         {!open && settledLabel && (
-          <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+          <Typography data-testid="follow-request-settled" variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
             {settledLabel}
           </Typography>
         )}
@@ -160,7 +160,7 @@ export default function FollowRequestActions({
         )}
       </Stack>
       {error && (
-        <Typography variant="caption" sx={{ fontWeight: 600, color: 'error.main' }}>
+        <Typography data-testid="follow-request-error" variant="caption" sx={{ fontWeight: 600, color: 'error.main' }}>
           {error}
         </Typography>
       )}

@@ -32,6 +32,7 @@ export default function NotificationsBell({
     <>
       <Tooltip title={t('mweb.appHeader.notifications')}>
         <DuncitIconButton
+          data-testid="notifications-bell"
           size="small"
           onClick={() => setOpen(true)}
           aria-label={`Notifications${unreadSuffix}`}

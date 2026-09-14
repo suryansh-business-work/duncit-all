@@ -90,8 +90,8 @@ export default function ClubStoriesSection({ clubId, canPost }: Readonly<Props>)
   ) : null;
 
   return (
-    <Box>
-      <SectionHeader title={t('mweb.clubDetailsPage.stories')} />
+    <Box data-testid="club-stories">
+      <SectionHeader testId="club-stories-header" title={t('mweb.clubDetailsPage.stories')} />
       <Stack
         direction="row"
         spacing={1.5}
@@ -108,6 +108,7 @@ export default function ClubStoriesSection({ clubId, canPost }: Readonly<Props>)
       />
       <ReportStoryDialog storyId={reporting} onClose={() => setReporting(null)} />
       <ConfirmDialog
+        testId="club-story-delete"
         open={confirmDelete}
         title={t('contentReport.deleteConfirmTitle')}
         message={t('contentReport.deleteConfirmBody')}

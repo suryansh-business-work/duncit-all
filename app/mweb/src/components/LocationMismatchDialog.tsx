@@ -76,7 +76,7 @@ export default function LocationMismatchDialog({
   const { t } = useTranslation();
   if (!mismatch) return null;
   return (
-    <Dialog open onClose={keepLocation} fullWidth maxWidth="xs">
+    <Dialog data-testid="location-mismatch-dialog" open onClose={keepLocation} fullWidth maxWidth="xs">
       <DialogTitle sx={{ fontSize: 20, fontWeight: 600 }}>{t('mweb.locationMismatch.title')}</DialogTitle>
       <DialogContent>
         <Typography variant="body2">{introText(t, kind, mismatch)}</Typography>
@@ -98,10 +98,10 @@ export default function LocationMismatchDialog({
         disableSpacing
         sx={{ flexDirection: 'column', alignItems: 'stretch', gap: 1, px: 3, pt: 1, pb: 3 }}
       >
-        <DuncitButton variant="contained" size="large" fullWidth onClick={switchLocation}>
+        <DuncitButton data-testid="location-mismatch-switch" variant="contained" size="large" fullWidth onClick={switchLocation}>
           {t('mweb.locationMismatch.switchButton', { vars: { target: mismatch.targetCity } })}
         </DuncitButton>
-        <DuncitButton variant="outlined" size="large" fullWidth onClick={keepLocation}>
+        <DuncitButton data-testid="location-mismatch-keep" variant="outlined" size="large" fullWidth onClick={keepLocation}>
           {t('mweb.locationMismatch.keepButton', { vars: { current: mismatch.currentCity } })}
         </DuncitButton>
       </DialogActions>

@@ -26,7 +26,7 @@ function PodAttendanceBody({ podId }: Readonly<{ podId: string }>) {
   const labels = useMemo(() => mwebAttendanceLabels(t), [t]);
 
   return (
-    <Stack spacing={2.5} sx={{ p: 2, pb: 4 }}>
+    <Stack spacing={2.5} data-testid="pod-attendance-page" sx={{ p: 2, pb: 4 }}>
       <PageBackHeader title={labels.pageTitle} backLabel={labels.back} />
 
       <PodAttendanceView

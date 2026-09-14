@@ -38,7 +38,7 @@ export function AddressFields<T extends FieldValues>({
 }: Readonly<AddressFieldsProps<T>>) {
   const { t } = useTranslation();
   return (
-    <YStack gap={12}>
+    <YStack testID="address-fields" gap={12}>
       <FormTextField
         control={control}
         name={names.line1}

@@ -15,7 +15,7 @@ export default function PodScopedPage({ title, children }: Readonly<Props>) {
 
   return (
     <SupportShell title={title} backTo="/support">
-      <Stack spacing={2}>
+      <Stack data-testid="pod-scoped-page" spacing={2}>
         <PodPicker
           options={options}
           selectedId={selectedId}

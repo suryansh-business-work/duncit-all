@@ -44,14 +44,18 @@ export default function AllTicketsPage() {
   let body: React.ReactNode;
   if (loading && rows.length === 0) {
     body = (
-      <Box sx={{ display: 'grid', placeItems: 'center', py: 5 }}>
+      <Box data-testid="all-tickets-loading" sx={{ display: 'grid', placeItems: 'center', py: 5 }}>
         <CircularProgress size={28} />
       </Box>
     );
   } else if (error) {
-    body = <Alert severity="error">{error.message}</Alert>;
+    body = <Alert data-testid="all-tickets-error" severity="error">{error.message}</Alert>;
   } else if (rows.length === 0) {
-    body = <Alert severity="info">{t('mweb.supportHub.youHaveNotRaisedAnySupport')}</Alert>;
+    body = (
+      <Alert data-testid="all-tickets-empty" severity="info">
+        {t('mweb.supportHub.youHaveNotRaisedAnySupport')}
+      </Alert>
+    );
   } else {
     body = (
       <Paper sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
@@ -60,6 +64,7 @@ export default function AllTicketsPage() {
           return (
             <Stack
               key={`${row.source}-${row.id}`}
+              data-testid={`all-ticket-${row.ticket_no}`}
               direction="row"
               spacing={1.5}
               onClick={() => target && navigate(target)}

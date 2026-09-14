@@ -9,9 +9,10 @@ export default function HeaderVerifyEmail({ onOpen }: Readonly<{ onOpen: () => v
   const { t } = useTranslation();
   return (
     <Box
+      data-testid="header-verify-email"
       sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', px: 2, pb: 1.5, boxSizing: 'border-box' }}
     >
-      <Alert severity="info" onClick={onOpen} sx={{ cursor: 'pointer', py: 0.5 }}>
+      <Alert data-testid="verify-email-banner" severity="info" onClick={onOpen} sx={{ cursor: 'pointer', py: 0.5 }}>
         {t('mweb.home.verifyYourEmail')}
       </Alert>
     </Box>

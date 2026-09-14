@@ -20,6 +20,7 @@ function CoinRow({ gold, caption, children }: Readonly<RowProps>) {
     <Stack
       direction="row"
       spacing={1}
+      data-testid="coin-redeem"
       sx={{
         alignItems: "center",
         justifyContent: "space-between",
@@ -43,7 +44,7 @@ function CoinRow({ gold, caption, children }: Readonly<RowProps>) {
           }}>
             {t('mweb.coin.checkoutTitle')}
           </Typography>
-          <Typography variant="caption" sx={{
+          <Typography variant="caption" data-testid="coin-redeem-caption" sx={{
             color: "text.secondary"
           }}>
             {caption}
@@ -70,7 +71,12 @@ export default function CoinRedeemField({ coins }: Readonly<{ coins: CoinRedempt
   if (coins.applied > 0) {
     return (
       <CoinRow gold={gold} caption={t('mweb.coin.checkoutApplied', { vars: { coins: coins.applied } })}>
-        <DuncitButton size="small" onClick={coins.onRemove} sx={{ color: gold, fontWeight: 700, flexShrink: 0 }}>
+        <DuncitButton
+          size="small"
+          onClick={coins.onRemove}
+          data-testid="coin-remove"
+          sx={{ color: gold, fontWeight: 700, flexShrink: 0 }}
+        >
           {t('mweb.coin.checkoutRemove')}
         </DuncitButton>
       </CoinRow>
@@ -84,6 +90,7 @@ export default function CoinRedeemField({ coins }: Readonly<{ coins: CoinRedempt
         variant="outlined"
         onClick={coins.onApply}
         disabled={coins.max <= 0}
+        data-testid="coin-apply"
         sx={{ borderColor: gold, color: gold, fontWeight: 700, borderRadius: 999, flexShrink: 0 }}
       >
         {t('mweb.coin.checkoutApply')}

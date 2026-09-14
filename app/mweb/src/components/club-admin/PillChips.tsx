@@ -27,7 +27,7 @@ export default function PillChips<T extends string>({
   showLabel = true,
 }: Readonly<Props<T>>) {
   return (
-    <Stack spacing={1}>
+    <Stack data-testid="pill-chips" spacing={1}>
       {showLabel && (
         <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
           {label}
@@ -36,9 +36,11 @@ export default function PillChips<T extends string>({
       <Stack direction="row" useFlexGap role="group" aria-label={label} sx={{ flexWrap: 'wrap', gap: 1 }}>
         {options.map((option) => {
           const selected = option.value === value;
+          const chipTestId = `pill-chips-${option.value}`;
           return (
             <Chip
               key={option.value}
+              data-testid={chipTestId}
               label={option.label}
               clickable
               aria-pressed={selected}

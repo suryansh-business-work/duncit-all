@@ -31,6 +31,7 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
   if (!clientId || clientId === 'your_client_id_here') {
     return (
       <Box
+        data-testid="google-signin-fallback"
         sx={{
           minHeight: 44,
           px: 1.5,
@@ -56,7 +57,7 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
   }
 
   return (
-    <Stack sx={{ maxWidth: '100%', alignItems: 'center', position: 'relative', minHeight: 44 }}>
+    <Stack data-testid="google-signin-button" sx={{ maxWidth: '100%', alignItems: 'center', position: 'relative', minHeight: 44 }}>
       <GoogleLogin
         onSuccess={(response) => {
           if (response.credential) onCredential(response.credential);
@@ -71,6 +72,7 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
       />
       {loading && (
         <Box
+          data-testid="google-signin-loading"
           sx={{
             position: 'absolute',
             inset: 0,

@@ -46,9 +46,11 @@ export default function FeedbackPage() {
   return (
     <SupportShell title={t('mweb.common.reportAProblem')} backTo="/support">
       {sent ? (
-        <Alert severity="success">{t('mweb.supportHub.thanksYourFeedbackHasBeenSent')}</Alert>
+        <Alert data-testid="feedback-sent" severity="success">
+          {t('mweb.supportHub.thanksYourFeedbackHasBeenSent')}
+        </Alert>
       ) : (
-        <Paper sx={{ ...SURFACE_SX, p: 2 }}>
+        <Paper data-testid="feedback-form-card" sx={{ ...SURFACE_SX, p: 2 }}>
           <FeedbackForm loading={loading} onSubmit={onSubmit} />
         </Paper>
       )}

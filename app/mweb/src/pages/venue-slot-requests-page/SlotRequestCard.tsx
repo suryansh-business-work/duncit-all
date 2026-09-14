@@ -56,9 +56,10 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
   const [confirmApprove, setConfirmApprove] = useState(false);
   const [declineOpen, setDeclineOpen] = useState(false);
   const [reason, setReason] = useState('');
+  const cardTestId = `slot-request-${request.slot_id}`;
 
   return (
-    <Card sx={{ p: 2 }}>
+    <Card sx={{ p: 2 }} data-testid={cardTestId}>
       <Stack spacing={1.5}>
         <Stack direction="row" spacing={1} sx={{
           alignItems: "flex-start"
@@ -112,6 +113,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
             disabled={busy}
             onClick={() => setDeclineOpen(true)}
             sx={{ flex: 1, color: 'error.main', borderColor: 'error.main' }}
+            data-testid="slot-request-decline-trigger"
           >
             Decline
           </DuncitButton>
@@ -121,13 +123,14 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
             disabled={busy}
             onClick={() => setConfirmApprove(true)}
             sx={{ flex: 1 }}
+            data-testid="slot-request-approve-trigger"
           >
             Approve
           </DuncitButton>
         </Stack>
       </Stack>
 
-      <Dialog open={confirmApprove} onClose={() => setConfirmApprove(false)} fullWidth maxWidth="xs">
+      <Dialog open={confirmApprove} onClose={() => setConfirmApprove(false)} fullWidth maxWidth="xs" data-testid="slot-request-approve">
         <DialogTitle>{t('mweb.venueSlotRequests.approveThisBooking')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2">
@@ -136,20 +139,21 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
           </Typography>
         </DialogContent>
         <DialogActions>
-          <DuncitButton onClick={() => setConfirmApprove(false)}>{t('mweb.common.cancel')}</DuncitButton>
+          <DuncitButton onClick={() => setConfirmApprove(false)} data-testid="slot-request-approve-cancel">{t('mweb.common.cancel')}</DuncitButton>
           <DuncitButton
             variant="contained"
             onClick={() => {
               setConfirmApprove(false);
               onApprove(request.slot_id);
             }}
+            data-testid="slot-request-approve-confirm"
           >
             Approve
           </DuncitButton>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={declineOpen} onClose={() => setDeclineOpen(false)} fullWidth maxWidth="xs">
+      <Dialog open={declineOpen} onClose={() => setDeclineOpen(false)} fullWidth maxWidth="xs" data-testid="slot-request-decline">
         <DialogTitle>{t('mweb.venueSlotRequests.declineThisBooking')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ mb: 1.5 }}>
@@ -163,10 +167,12 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
             label={t('mweb.common.reasonOptional')}
             value={reason}
             onChange={(event) => setReason(event.target.value)}
+            data-testid="slot-request-decline-reason"
+            slotProps={{ htmlInput: { 'data-testid': 'slot-request-decline-reason-input' } }}
           />
         </DialogContent>
         <DialogActions>
-          <DuncitButton onClick={() => setDeclineOpen(false)}>{t('mweb.common.cancel')}</DuncitButton>
+          <DuncitButton onClick={() => setDeclineOpen(false)} data-testid="slot-request-decline-cancel">{t('mweb.common.cancel')}</DuncitButton>
           <DuncitButton
             color="error"
             variant="contained"
@@ -175,6 +181,7 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
               onDecline(request.slot_id, reason.trim());
               setReason('');
             }}
+            data-testid="slot-request-decline-confirm"
           >
             Decline
           </DuncitButton>

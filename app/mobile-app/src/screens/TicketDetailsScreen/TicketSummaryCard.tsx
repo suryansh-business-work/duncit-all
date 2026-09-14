@@ -7,8 +7,8 @@ import type { TicketDetail } from '@/hooks/useUnifiedTickets';
 /** The ticket's subject and meta (number, status, priority, dates) in one card. */
 export function TicketSummaryCard({ ticket }: Readonly<{ ticket: TicketDetail }>) {
   return (
-    <SurfaceCard marginHorizontal={16} marginTop={4} gap={6}>
-      <Text fontSize={16} fontWeight="600" color="$color">
+    <SurfaceCard testID="ticket-summary-card" marginHorizontal={16} marginTop={4} gap={6}>
+      <Text testID="ticket-summary-card-subject" fontSize={16} fontWeight="600" color="$color">
         {ticket.subject}
       </Text>
       <TicketMeta

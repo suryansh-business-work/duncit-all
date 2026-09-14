@@ -7,7 +7,11 @@ import { useTranslation } from '../../i18n/useTranslation';
 export default function HomeEmptyState() {
   const { t } = useTranslation();
   return (
-    <Stack spacing={1.5} sx={{ alignItems: 'center', textAlign: 'center', py: 4, px: 3 }}>
+    <Stack
+      data-testid="home-empty-state"
+      spacing={1.5}
+      sx={{ alignItems: 'center', textAlign: 'center', py: 4, px: 3 }}
+    >
       <Box
         sx={{
           width: 48,
@@ -21,7 +25,9 @@ export default function HomeEmptyState() {
       >
         <EventBusyIcon />
       </Box>
-      <Typography sx={{ fontSize: 14, color: 'text.secondary' }}>{t('mweb.home.homeEmpty')}</Typography>
+      <Typography data-testid="home-empty" sx={{ fontSize: 14, color: 'text.secondary' }}>
+        {t('mweb.home.homeEmpty')}
+      </Typography>
     </Stack>
   );
 }

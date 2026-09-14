@@ -21,16 +21,17 @@ export default function PodHostsSection({ hosts }: Readonly<Props>) {
   const { t } = useTranslation();
   if (!hosts || hosts.length === 0) {
     return (
-      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+      <Typography data-testid="pod-hosts-empty" variant="body2" sx={{ color: 'text.secondary' }}>
         {t('mweb.podDetails.hostsEmpty')}
       </Typography>
     );
   }
   return (
-    <Stack spacing={0.5}>
+    <Stack data-testid="pod-hosts-section" spacing={0.5}>
       {hosts.map((h) => (
         <Stack
           key={h.user_id}
+          data-testid={`host-row-${h.user_id}`}
           direction="row"
           spacing={1.5}
           onClick={() => navigate(`/u/${h.user_id}`)}

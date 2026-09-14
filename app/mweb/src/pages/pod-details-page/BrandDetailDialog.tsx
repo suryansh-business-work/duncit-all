@@ -51,7 +51,7 @@ export default function BrandDetailDialog({
           <StorefrontIcon />
         </Avatar>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }} noWrap>
+          <Typography variant="h6" data-testid="brand-detail-name" sx={{ fontWeight: 600 }} noWrap>
             {brand.brand_name}
           </Typography>
           {brand.tagline && (
@@ -86,6 +86,7 @@ export default function BrandDetailDialog({
         )}
         <Chip
           size="small"
+          data-testid="brand-detail-product-count"
           icon={<Inventory2Icon />}
           label={`${brand.approved_product_count} products`}
         />
@@ -94,6 +95,7 @@ export default function BrandDetailDialog({
   ) : (
     <Typography
       variant="body2"
+      data-testid="brand-detail-empty"
       sx={{
         color: "text.secondary",
         py: 2
@@ -103,16 +105,22 @@ export default function BrandDetailDialog({
   );
 
   return (
-    <Dialog open={Boolean(brandId)} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog open={Boolean(brandId)} onClose={onClose} fullWidth maxWidth="xs" data-testid="brand-detail-dialog">
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
         Brand
-        <DuncitIconButton aria-label={t('mweb.common.close')} onClick={onClose} size="small">
+        <DuncitIconButton
+          aria-label={t('mweb.common.close')}
+          onClick={onClose}
+          size="small"
+          data-testid="brand-detail-close"
+        >
           <CloseIcon />
         </DuncitIconButton>
       </DialogTitle>
       <DialogContent>
         {loading && !brand ? (
           <Stack
+            data-testid="brand-detail-loading"
             sx={{
               alignItems: "center",
               py: 4

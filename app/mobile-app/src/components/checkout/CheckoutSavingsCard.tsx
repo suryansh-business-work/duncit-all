@@ -20,7 +20,7 @@ type Props = ComponentProps<typeof CouponField> & {
  */
 export function CheckoutSavingsCard({ coins, originalTotal, ...coupon }: Readonly<Props>) {
   return (
-    <SurfaceCard gap={14}>
+    <SurfaceCard testID="checkout-savings-card" gap={14}>
       <CouponField {...coupon} />
       <YStack height={1} backgroundColor="$borderColor" />
       <CoinRedeemField coins={coins} />

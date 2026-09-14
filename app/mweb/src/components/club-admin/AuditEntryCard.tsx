@@ -18,7 +18,7 @@ const ROW_SX = { '& .MuiCardActionArea-focusHighlight': { borderRadius: 0 } } as
 function RowSurface({ onOpen, children }: Readonly<SurfaceProps>) {
   if (!onOpen) return <>{children}</>;
   return (
-    <CardActionArea onClick={onOpen} sx={ROW_SX}>
+    <CardActionArea data-testid="audit-entry-card" onClick={onOpen} sx={ROW_SX}>
       {children}
     </CardActionArea>
   );
@@ -51,16 +51,16 @@ export default function AuditEntryCard({ entry, title, onOpen, children }: Reado
 
   return (
     <RowSurface onOpen={onOpen}>
-      <Box sx={{ px: 2, py: 1.5 }}>
+      <Box data-testid={onOpen ? undefined : 'audit-entry-card'} sx={{ px: 2, py: 1.5 }}>
         <Stack spacing={0.75}>
           <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
             <AuditActionChip action={entry.action} />
-            <Typography noWrap sx={{ flex: 1, fontSize: '0.95rem', fontWeight: 600 }}>
+            <Typography data-testid="audit-entry-card-title" noWrap sx={{ flex: 1, fontSize: '0.95rem', fontWeight: 600 }}>
               {title ?? actor}
             </Typography>
             <AuditRiskChip risk={entry.ai_risk} />
           </Stack>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+          <Typography data-testid="audit-entry-card-meta" variant="caption" sx={{ color: 'text.secondary' }}>
             {meta}
           </Typography>
           {entry.ai_summary && (

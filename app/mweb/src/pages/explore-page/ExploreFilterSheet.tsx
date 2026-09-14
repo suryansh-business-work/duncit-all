@@ -25,10 +25,10 @@ const DATES: Array<[ExploreDateFilter, string]> = [['ALL', 'mweb.explore.dateAny
 const CHIP_SX = { height: 36, minHeight: 36, fontWeight: 600, px: 0.5 } as const;
 const LABEL_SX = { color: 'text.secondary', fontWeight: 600 } as const;
 
-function ChipRow<T extends string>({ items, value, onChange }: Readonly<{ items: Array<[T, string]>; value: T; onChange: (value: T) => void }>) {
+function ChipRow<T extends string>({ items, value, onChange, groupTestId }: Readonly<{ items: Array<[T, string]>; value: T; onChange: (value: T) => void; groupTestId: string }>) {
   const { t } = useTranslation();
   return (
-    <Stack direction="row" spacing={0.75} useFlexGap sx={{
+    <Stack data-testid={groupTestId} direction="row" spacing={0.75} useFlexGap sx={{
       flexWrap: "wrap"
     }}>
       {items.map(([itemValue, labelKey]) => {
@@ -36,6 +36,7 @@ function ChipRow<T extends string>({ items, value, onChange }: Readonly<{ items:
         return (
           <Chip
             key={itemValue}
+            data-testid={`${groupTestId}-${itemValue}`}
             label={t(labelKey)}
             clickable
             color={selected ? 'primary' : 'default'}
@@ -62,6 +63,7 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
 
   return (
     <ResponsiveDialog
+      testId="explore-filter-sheet"
       open={open}
       onClose={onClose}
       title={
@@ -77,10 +79,10 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
       sheetMaxHeight="88dvh"
       actions={
         <Stack direction="row" spacing={1} sx={{ width: '100%', alignItems: 'center' }}>
-          <DuncitButton onClick={reset} color="inherit" disabled={activeCount === 0}>
+          <DuncitButton data-testid="explore-filter-reset" onClick={reset} color="inherit" disabled={activeCount === 0}>
             {t('mweb.explore.reset')}
           </DuncitButton>
-          <DuncitButton variant="contained" size="large" onClick={onClose} sx={{ flex: 1 }}>
+          <DuncitButton data-testid="explore-filter-apply" variant="contained" size="large" onClick={onClose} sx={{ flex: 1 }}>
             {t('mweb.explore.showResults', { vars: { count: resultCount } })}
           </DuncitButton>
         </Stack>
@@ -91,28 +93,29 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
           <Typography
             variant="overline"
             sx={LABEL_SX}>{t('mweb.explore.quickPresets')}</Typography>
-          <ChipRow items={PRESETS} value={filters.preset} onChange={(preset) => setFilters({ ...filters, preset })} />
+          <ChipRow groupTestId="explore-filter-preset" items={PRESETS} value={filters.preset} onChange={(preset) => setFilters({ ...filters, preset })} />
         </Stack>
         <Stack spacing={0.8}>
           <Typography
             variant="overline"
             sx={LABEL_SX}>{t('mweb.explore.sortBy')}</Typography>
-          <ChipRow items={SORTS} value={filters.sort} onChange={(sort) => setFilters({ ...filters, sort })} />
+          <ChipRow groupTestId="explore-filter-sort" items={SORTS} value={filters.sort} onChange={(sort) => setFilters({ ...filters, sort })} />
         </Stack>
         <Stack spacing={0.8}>
           <Typography
             variant="overline"
             sx={LABEL_SX}>{t('mweb.explore.vibe')}</Typography>
-          <Stack direction="row" spacing={0.75} useFlexGap sx={{
+          <Stack data-testid="explore-filter-vibe" direction="row" spacing={0.75} useFlexGap sx={{
             flexWrap: "wrap"
           }}>
-            <Chip label={t('mweb.home.vibeAll')} clickable color={filters.categoryId ? 'default' : 'primary'} variant="filled" onClick={() => setFilters({ ...filters, categoryId: '' })} sx={CHIP_SX} />
+            <Chip data-testid="explore-filter-vibe-all" label={t('mweb.home.vibeAll')} clickable color={filters.categoryId ? 'default' : 'primary'} variant="filled" onClick={() => setFilters({ ...filters, categoryId: '' })} sx={CHIP_SX} />
             {visibleCats.map((category: any) => {
               const selected = filters.categoryId === category.id;
-              return <Chip key={category.id} label={category.name} clickable color={selected ? 'primary' : 'default'} variant="filled" onClick={() => setFilters({ ...filters, categoryId: selected ? '' : category.id })} sx={CHIP_SX} />;
+              return <Chip key={category.id} data-testid={`explore-filter-vibe-${category.id}`} label={category.name} clickable color={selected ? 'primary' : 'default'} variant="filled" onClick={() => setFilters({ ...filters, categoryId: selected ? '' : category.id })} sx={CHIP_SX} />;
             })}
             {hiddenCount > 0 && (
               <Chip
+                data-testid="explore-filter-vibe-toggle"
                 label={showAllVibes ? t('mweb.explore.showLess') : t('mweb.explore.moreVibes', { vars: { count: hiddenCount } })}
                 clickable
                 variant="outlined"
@@ -126,13 +129,13 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
           <Typography
             variant="overline"
             sx={LABEL_SX}>{t('mweb.explore.price')}</Typography>
-          <ChipRow items={PRICES} value={filters.price} onChange={(price) => setFilters({ ...filters, price })} />
+          <ChipRow groupTestId="explore-filter-price" items={PRICES} value={filters.price} onChange={(price) => setFilters({ ...filters, price })} />
         </Stack>
         <Stack spacing={0.8}>
           <Typography
             variant="overline"
             sx={LABEL_SX}>{t('mweb.explore.when')}</Typography>
-          <ChipRow items={DATES} value={filters.date} onChange={(date) => setFilters({ ...filters, date })} />
+          <ChipRow groupTestId="explore-filter-date" items={DATES} value={filters.date} onChange={(date) => setFilters({ ...filters, date })} />
         </Stack>
       </Stack>
     </ResponsiveDialog>

@@ -70,8 +70,8 @@ export default function ClubDetailsPage() {
   // "Club not found.": the page reads as a deleted club and hides the only thing
   // that would explain it. Report whichever query actually failed.
   const failure = slugQuery.error ?? error;
-  if (failure) return <Alert severity="error">{failure.message}</Alert>;
-  if (!club) return <Alert severity="warning">{t('mweb.clubDetailsPage.clubNotFound')}</Alert>;
+  if (failure) return <Alert severity="error" data-testid="club-details-error">{failure.message}</Alert>;
+  if (!club) return <Alert severity="warning" data-testid="club-details-not-found">{t('mweb.clubDetailsPage.clubNotFound')}</Alert>;
 
   const featureMedia = club.club_feature_images_and_videos ?? [];
   const pods = data?.clubPods ?? [];
@@ -130,6 +130,7 @@ export default function ClubDetailsPage() {
   return (
     <Stack
       spacing={2.5}
+      data-testid="club-details-screen"
       sx={{
         mx: { xs: -1.25, sm: -2 },
         px: { xs: 1.25, sm: 2 },

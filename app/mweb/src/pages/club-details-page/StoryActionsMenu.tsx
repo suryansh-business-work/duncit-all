@@ -32,6 +32,7 @@ export default function StoryActionsMenu({ canDelete, onDelete, onReport }: Read
   return (
     <>
       <DuncitIconButton
+        data-testid="story-actions-menu-trigger"
         aria-label={t('contentReport.menuLabel')}
         onClick={(e) => setAnchor(e.currentTarget)}
         sx={{
@@ -44,9 +45,9 @@ export default function StoryActionsMenu({ canDelete, onDelete, onReport }: Read
       >
         <MoreVertIcon />
       </DuncitIconButton>
-      <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
+      <Menu data-testid="story-actions-menu" anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
         {canDelete && (
-          <MenuItem onClick={run(onDelete)}>
+          <MenuItem data-testid="story-actions-menu-delete" onClick={run(onDelete)}>
             <ListItemIcon>
               <DeleteOutlineIcon fontSize="small" color="error" />
             </ListItemIcon>
@@ -57,7 +58,7 @@ export default function StoryActionsMenu({ canDelete, onDelete, onReport }: Read
             </ListItemText>
           </MenuItem>
         )}
-        <MenuItem onClick={run(onReport)}>
+        <MenuItem data-testid="story-actions-menu-report" onClick={run(onReport)}>
           <ListItemIcon>
             <FlagOutlinedIcon fontSize="small" />
           </ListItemIcon>

@@ -39,9 +39,10 @@ export default function GpsLocationPicker({
   }, [geocoded, matchedLocation, matchedHasPods, onAutoApply, onAutoSelect]);
 
   return (
-    <Box>
+    <Box data-testid="gps-location-picker">
       {/* A tonal green pill: an action, but not the sheet's primary one. */}
       <DuncitButton
+        data-testid="gps-location-picker-use-location"
         fullWidth
         startIcon={busy ? <CircularProgress size={16} color="inherit" /> : <MyLocationIcon />}
         onClick={() => {
@@ -66,6 +67,7 @@ export default function GpsLocationPicker({
       </DuncitButton>
       {geocoded?.city && (
         <Typography
+          data-testid="gps-location-picker-detected"
           variant="caption"
           sx={{
             color: "text.secondary",
@@ -77,22 +79,22 @@ export default function GpsLocationPicker({
         </Typography>
       )}
       {error && (
-        <Alert severity="warning" sx={{ mt: 1 }}>
+        <Alert data-testid="gps-location-picker-error" severity="warning" sx={{ mt: 1 }}>
           {error}
         </Alert>
       )}
       {geocoded && !matchedLocation && (
-        <Alert severity="info" sx={{ mt: 1 }}>
+        <Alert data-testid="gps-location-picker-no-coverage" severity="info" sx={{ mt: 1 }}>
           Duncit isn&apos;t in <strong>{geocoded.city || 'your area'}</strong> yet. Pick a city below.
         </Alert>
       )}
       {geocoded && matchedLocation && !matchedHasPods && (
-        <Alert severity="info" sx={{ mt: 1 }}>
+        <Alert data-testid="gps-location-picker-no-pods" severity="info" sx={{ mt: 1 }}>
           No live pods in <strong>{matchedLocation.location_name}</strong> right now. Pick a city below.
         </Alert>
       )}
       {geocoded && matchedLocation && matchedHasPods && (
-        <Alert severity="success" sx={{ mt: 1 }}>
+        <Alert data-testid="gps-location-picker-success" severity="success" sx={{ mt: 1 }}>
           Selected <strong>{matchedLocation.location_name}</strong> based on your location.
         </Alert>
       )}

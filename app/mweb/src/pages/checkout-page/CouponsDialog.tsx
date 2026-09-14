@@ -19,16 +19,17 @@ interface Props {
 export default function CouponsDialog({ open, coupons, currency, onClose, onPick }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog data-testid="coupons-sheet" open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ pr: 6, fontWeight: 700 }}>
         {t('mweb.checkout.couponsTitle')}
-        <DuncitIconButton onClick={onClose} aria-label={t('mweb.checkout.close')} sx={{ position: 'absolute', right: 8, top: 8 }}>
+        <DuncitIconButton data-testid="coupons-sheet-close" onClick={onClose} aria-label={t('mweb.checkout.close')} sx={{ position: 'absolute', right: 8, top: 8 }}>
           <CloseIcon />
         </DuncitIconButton>
       </DialogTitle>
       <DialogContent>
         {coupons.length === 0 ? (
           <Typography
+            data-testid="coupons-empty"
             variant="body2"
             sx={{
               color: "text.secondary",
@@ -42,6 +43,7 @@ export default function CouponsDialog({ open, coupons, currency, onClose, onPick
             {coupons.map((coupon) => (
               <Box
                 key={coupon.id}
+                data-testid={`coupon-pick-${coupon.code}`}
                 role="button"
                 tabIndex={0}
                 onClick={() => onPick(coupon.code)}

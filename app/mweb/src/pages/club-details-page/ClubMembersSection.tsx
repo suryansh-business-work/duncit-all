@@ -50,9 +50,10 @@ export default function ClubMembersSection({ memberIds }: Readonly<Props>) {
   if (memberIds.length === 0) return null;
 
   return (
-    <Stack spacing={1.5} sx={{ ...SURFACE_SX, p: 2 }}>
-      <SectionHeader title="Club Members" actionLabel="View all" onAction={() => setOpen(true)} />
+    <Stack data-testid="club-members" spacing={1.5} sx={{ ...SURFACE_SX, p: 2 }}>
+      <SectionHeader testId="club-members-header" title="Club Members" actionLabel="View all" onAction={() => setOpen(true)} />
       <ButtonBase
+        data-testid="club-members-view-all"
         onClick={() => setOpen(true)}
         aria-label={t('mweb.clubDetails.viewAllClubMembers')}
         sx={{ borderRadius: 999, alignSelf: 'flex-start' }}

@@ -76,18 +76,20 @@ export default function SomethingForYouRail() {
   };
 
   return (
-    <Stack spacing={1.5}>
-      <SectionHeader title={t('mweb.home.somethingForYou')} />
+    <Stack data-testid="something-for-you-rail" spacing={1.5}>
+      <SectionHeader testId="something-for-you-rail-header" title={t('mweb.home.somethingForYou')} />
 
       {/* Bleeds to the screen edge so the last card is visibly cut off — the
           only honest signal that a row scrolls when there is no scrollbar. */}
-      <HomeRail>
+      <HomeRail testId="something-for-you-rail-list">
         {items.map((item) => {
           const target = resolveSomethingForYouTarget(item);
           const opens = target.kind !== 'none';
+          const tileTestId = `something-for-you-tile-${item.id}`;
           return (
             <Box
               key={item.id}
+              data-testid={tileTestId}
               component={opens ? 'button' : 'div'}
               onClick={opens ? () => open(target) : undefined}
               sx={{

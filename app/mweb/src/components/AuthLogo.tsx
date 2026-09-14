@@ -45,10 +45,13 @@ export default function AuthLogo({ tagline, size = 64 }: Readonly<Props>) {
 
   let logoContent: ReactNode;
   if (loading && !b) {
-    logoContent = <Skeleton variant="rounded" width={size * 2.5} height={size} />;
+    logoContent = (
+      <Skeleton data-testid="auth-logo-skeleton" variant="rounded" width={size * 2.5} height={size} />
+    );
   } else {
     logoContent = (
       <Box
+        data-testid="auth-logo-image"
         component="img"
         src={source}
         alt={b?.app_name ?? 'Duncit'}
@@ -60,6 +63,7 @@ export default function AuthLogo({ tagline, size = 64 }: Readonly<Props>) {
 
   return (
     <Stack
+      data-testid="auth-logo"
       spacing={1}
       sx={{
         alignItems: "center",
@@ -68,6 +72,7 @@ export default function AuthLogo({ tagline, size = 64 }: Readonly<Props>) {
       {logoContent}
       {tagline && (
         <Typography
+          data-testid="auth-logo-tagline"
           variant="body2"
           sx={{
             color: "text.secondary",

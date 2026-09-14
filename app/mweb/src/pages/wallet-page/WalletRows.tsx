@@ -37,14 +37,15 @@ export const fmtDate = (iso: string) => {
 export function WalletSection({
   title,
   emptyText,
+  testId,
   children,
-}: Readonly<{ title: string; emptyText: string; children: ReactNode[] }>) {
+}: Readonly<{ title: string; emptyText: string; testId?: string; children: ReactNode[] }>) {
   return (
-    <Stack spacing={1.25}>
-      <SectionHeader title={title} />
+    <Stack spacing={1.25} data-testid={testId}>
+      <SectionHeader testId={testId ? `${testId}-header` : undefined} title={title} />
       <Card sx={{ px: 2, py: 0.5 }}>
         {children.length === 0 ? (
-          <Typography variant="body2" sx={{ color: 'text.secondary', py: 1.5 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', py: 1.5 }} data-testid={testId ? `${testId}-empty` : undefined}>
             {emptyText}
           </Typography>
         ) : (
@@ -59,7 +60,7 @@ export function WalletSection({
  * rejected), and its status pill. */
 export function WithdrawalRow({ w, currency }: Readonly<{ w: any; currency: string }>) {
   return (
-    <Stack direction="row" spacing={1.5} sx={ROW_SX}>
+    <Stack direction="row" spacing={1.5} sx={ROW_SX} data-testid={`wallet-withdrawal-${w.id}`}>
       <Box sx={DISC_SX}>
         <AccountBalanceOutlinedIcon />
       </Box>
@@ -83,7 +84,7 @@ export function WithdrawalRow({ w, currency }: Readonly<{ w: any; currency: stri
 export function TxnRow({ txn, currency }: Readonly<{ txn: any; currency: string }>) {
   const credit = txn.type === 'CREDIT';
   return (
-    <Stack direction="row" spacing={1.5} sx={ROW_SX}>
+    <Stack direction="row" spacing={1.5} sx={ROW_SX} data-testid={`wallet-transaction-${txn.id}`}>
       <Box sx={DISC_SX}>{credit ? <CallReceivedRoundedIcon /> : <CallMadeRoundedIcon />}</Box>
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography variant="body2" noWrap sx={{ fontWeight: 600 }}>

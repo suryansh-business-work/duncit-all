@@ -17,7 +17,7 @@ export default function NoWhatsAppNumberCard() {
   const { t } = useTranslation();
 
   return (
-    <Card>
+    <Card data-testid="whatsapp-preference-no-number">
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack direction="row" spacing={1.5} sx={{
           alignItems: "flex-start"
@@ -39,6 +39,7 @@ export default function NoWhatsAppNumberCard() {
               to="/account"
               variant="contained"
               sx={{ alignSelf: 'flex-start' }}
+              data-testid="whatsapp-preference-add-number"
             >
               {t('whatsappPreference.addNumber')}
             </DuncitButton>

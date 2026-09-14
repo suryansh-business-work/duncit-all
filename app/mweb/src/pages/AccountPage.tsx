@@ -45,6 +45,7 @@ export default function AccountPage() {
   if (loading) {
     return (
       <Stack
+        data-testid="account-loading"
         sx={{
           alignItems: "center",
           p: 6
@@ -54,13 +55,13 @@ export default function AccountPage() {
     );
   }
   if (!me) {
-    return <Alert severity="error">{error?.message ?? 'Unable to load profile'}</Alert>;
+    return <Alert data-testid="account-error" severity="error">{error?.message ?? 'Unable to load profile'}</Alert>;
   }
 
   // One order on both apps (rule 27): who you are, your details, how the
   // account is doing, then the settings, with the danger corner last.
   return (
-    <Stack spacing={2} sx={{ maxWidth: 720, mx: 'auto', pb: 3 }}>
+    <Stack data-testid="account-page" spacing={2} sx={{ maxWidth: 720, mx: 'auto', pb: 3 }}>
       <Card>
         <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
           <AccountProfileHeader
@@ -119,12 +120,13 @@ export default function AccountPage() {
         }}
       />
       <Snackbar
+        data-testid="account-page-saved-snackbar"
         open={savedOpen}
         autoHideDuration={3000}
         onClose={() => setSavedOpen(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity="success" variant="filled" onClose={() => setSavedOpen(false)}>
+        <Alert data-testid="account-page-saved-alert" severity="success" variant="filled" onClose={() => setSavedOpen(false)}>
           Profile updated
         </Alert>
       </Snackbar>

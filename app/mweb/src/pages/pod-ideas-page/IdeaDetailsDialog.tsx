@@ -65,12 +65,13 @@ export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Read
   };
 
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open onClose={onClose} fullWidth maxWidth="sm" data-testid="idea-details-dialog">
       <DialogTitle sx={{ pr: 8, fontSize: '1.0625rem', fontWeight: 600 }}>
         {idea?.title ?? 'Pod idea'}
         <DuncitIconButton
           onClick={onClose}
           aria-label={t('mweb.common.close')}
+          data-testid="idea-details-close"
           sx={{ position: 'absolute', right: 12, top: 12, width: 40, height: 40, minHeight: 40, bgcolor: 'action.hover' }}
         >
           <CloseIcon fontSize="small" />
@@ -101,8 +102,14 @@ export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Read
               }
             }}
             disabled={posting}
+            data-testid="idea-details-comment-input"
           />
-          <DuncitIconButton color="primary" onClick={submit} disabled={posting || !text.trim()}>
+          <DuncitIconButton
+            color="primary"
+            onClick={submit}
+            disabled={posting || !text.trim()}
+            data-testid="idea-details-comment-send"
+          >
             <SendIcon />
           </DuncitIconButton>
         </DialogActions>

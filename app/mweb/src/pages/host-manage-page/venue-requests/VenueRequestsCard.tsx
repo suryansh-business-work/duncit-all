@@ -22,6 +22,7 @@ interface Props {
   loading: boolean;
   /** Per-row wiring into the shared action dialogs the page owns. */
   rowProps: (pod: any) => HostPodRowActions;
+  testId?: string;
 }
 
 /**
@@ -35,19 +36,21 @@ export default function VenueRequestsCard({
   pods,
   loading,
   rowProps,
+  testId,
 }: Readonly<Props>) {
   if (pods.length === 0 && !emptyText) return null;
 
   let body;
   if (loading) {
     body = (
-      <Stack sx={{ alignItems: 'center', py: 3 }}>
+      <Stack data-testid={testId ? `${testId}-loading` : undefined} sx={{ alignItems: 'center', py: 3 }}>
         <CircularProgress size={22} />
       </Stack>
     );
   } else if (pods.length === 0) {
     body = (
       <Typography
+        data-testid={testId ? `${testId}-empty` : undefined}
         variant="body2"
         sx={{ px: 2, py: 2.5, textAlign: 'center', color: 'text.secondary' }}
       >
@@ -59,7 +62,7 @@ export default function VenueRequestsCard({
   }
 
   return (
-    <Stack spacing={1.5}>
+    <Stack data-testid={testId} spacing={1.5}>
       <HostSectionHeader title={title} count={pods.length} />
       <RowGroup>{body}</RowGroup>
     </Stack>

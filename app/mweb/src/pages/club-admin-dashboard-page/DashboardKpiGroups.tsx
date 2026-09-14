@@ -32,10 +32,10 @@ export default function DashboardKpiGroups({ kpis, loading }: Readonly<Props>) {
   const headings = useMemo(() => clubAdminGroupHeadings(t), [t]);
 
   return (
-    <Stack spacing={3}>
+    <Stack data-testid="dashboard-kpi-groups" spacing={3}>
       {clubAdminKpiGroups(kpis).map((group) => (
-        <Stack key={group.key} spacing={1.5}>
-          <SectionHeader title={headings[group.key]} />
+        <Stack key={group.key} data-testid={`dashboard-kpi-group-${group.key}`} spacing={1.5}>
+          <SectionHeader testId={`dashboard-kpi-group-${group.key}-header`} title={headings[group.key]} />
           <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1.25 }}>
             {group.cards.map((card) => (
               <StatCard

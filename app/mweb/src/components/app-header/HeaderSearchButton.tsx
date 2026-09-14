@@ -18,6 +18,7 @@ export default function HeaderSearchButton(_props: Readonly<Props>) {
   return (
     <Tooltip title={t('mweb.common.search')}>
       <DuncitIconButton
+        data-testid="header-search-button"
         aria-label={t('mweb.common.search')}
         onClick={() => navigate('/search')}
         sx={HEADER_ROUND_BUTTON_SX}

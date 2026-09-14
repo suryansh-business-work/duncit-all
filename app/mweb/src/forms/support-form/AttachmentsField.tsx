@@ -22,11 +22,12 @@ interface PreviewProps {
 }
 
 /** Type-aware preview: image thumbnail vs a small file chip for video/doc. */
-function AttachmentPreview({ url, onRemove }: Readonly<PreviewProps>) {
+function AttachmentPreview({ url, onRemove, testId }: Readonly<PreviewProps & { testId: string }>) {
   const { t } = useTranslation();
   const info = describeAttachment(url);
   const removeButton = (
     <DuncitRoundButton
+      data-testid={`${testId}-remove`}
       size="small"
       tone="paper"
       aria-label={t('mweb.common.removeAttachment')}
@@ -39,7 +40,7 @@ function AttachmentPreview({ url, onRemove }: Readonly<PreviewProps>) {
 
   if (info.kind === 'image') {
     return (
-      <Box sx={{ position: 'relative', width: 72, height: 72 }}>
+      <Box data-testid={testId} sx={{ position: 'relative', width: 72, height: 72 }}>
         <Avatar
           variant="rounded"
           src={url}
@@ -51,7 +52,7 @@ function AttachmentPreview({ url, onRemove }: Readonly<PreviewProps>) {
   }
 
   return (
-    <Box sx={{ position: 'relative' }}>
+    <Box data-testid={testId} sx={{ position: 'relative' }}>
       <Stack
         direction="row"
         spacing={0.75}
@@ -106,7 +107,7 @@ export default function AttachmentsField({ attachments, setAttachments }: Readon
   };
 
   return (
-    <Box>
+    <Box data-testid="ticket-attachments-field">
       <Stack
         direction="row"
         spacing={1}
@@ -123,6 +124,7 @@ export default function AttachmentsField({ attachments, setAttachments }: Readon
           Attach files ({attachments.length}/5)
         </Typography>
         <DuncitButton
+          data-testid="ticket-attach-add"
           size="small"
           startIcon={uploading ? <CircularProgress size={16} /> : <AttachFileIcon />}
           disabled={uploading || attachments.length >= 5}
@@ -132,9 +134,17 @@ export default function AttachmentsField({ attachments, setAttachments }: Readon
           Add files
         </DuncitButton>
       </Stack>
-      <input ref={fileRef} type="file" accept={ATTACHMENT_ACCEPT_ALL} hidden onChange={pickFile} />
+      <input
+        ref={fileRef}
+        data-testid="ticket-attach-input"
+        type="file"
+        accept={ATTACHMENT_ACCEPT_ALL}
+        hidden
+        onChange={pickFile}
+      />
       {error && (
         <Chip
+          data-testid="ticket-attach-error"
           size="small"
           color="error"
           label={error}
@@ -144,13 +154,17 @@ export default function AttachmentsField({ attachments, setAttachments }: Readon
       )}
       {attachments.length > 0 && (
         <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 1 }}>
-          {attachments.map((url, i) => (
-            <AttachmentPreview
-              key={url + i}
-              url={url}
-              onRemove={() => setAttachments(attachments.filter((_, j) => j !== i))}
-            />
-          ))}
+          {attachments.map((url, i) => {
+            const rowKey = url + i;
+            return (
+              <AttachmentPreview
+                key={rowKey}
+                url={url}
+                testId={`ticket-attach-${url}-${i}`}
+                onRemove={() => setAttachments(attachments.filter((_, j) => j !== i))}
+              />
+            );
+          })}
         </Stack>
       )}
     </Box>

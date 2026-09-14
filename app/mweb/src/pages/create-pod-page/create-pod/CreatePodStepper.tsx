@@ -267,7 +267,7 @@ export default function CreatePodStepper({
   ];
 
   return (
-    <Stack spacing={2.5}>
+    <Stack data-testid="create-pod-stepper" spacing={2.5}>
       {/* The wizard renders ONE page at a time, so every tour step has to live on
           the page the host lands on. The hero's step pills are what lets the
           walkthrough explain the four-step journey. */}
@@ -275,7 +275,7 @@ export default function CreatePodStepper({
         <StepHero step={step} total={STEP_TITLE_KEYS.length} title={t(stepTitleKey(step, podMode))} />
       </Box>
       {steps[step]}
-      {error && <Alert severity="error">{error}</Alert>}
+      {error && <Alert data-testid="create-pod-error" severity="error">{error}</Alert>}
       {/* Spacer so the last field is never hidden behind the fixed footer bar. */}
       <Box aria-hidden sx={{ height: 88 }} />
       <Box data-tour="create-pod-publish">

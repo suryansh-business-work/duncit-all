@@ -69,14 +69,15 @@ export default function ConnectedAccountsSection() {
     : null;
 
   return (
-    <Card>
+    <Card data-testid="account-connected-section">
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={2}>
-          <Typography component="h2" sx={{ fontSize: '1.05rem', fontWeight: 600 }}>
+          <Typography data-testid="connected-accounts-title" component="h2" sx={{ fontSize: '1.05rem', fontWeight: 600 }}>
             {t('mweb.account.connected.title')}
           </Typography>
 
           <ConnectedAccountRow
+            testId="connected-email"
             label={t('mweb.account.connected.emailLabel')}
             value={accounts?.email ?? ''}
             status={
@@ -90,6 +91,7 @@ export default function ConnectedAccountsSection() {
           <Divider />
 
           <ConnectedAccountRow
+            testId="connected-google"
             label={t('mweb.account.connected.googleLabel')}
             value={google?.google_email ?? t('mweb.account.connected.googleNotConnected')}
             status={linkedOn ?? undefined}
@@ -112,7 +114,7 @@ export default function ConnectedAccountsSection() {
           />
 
           {error && (
-            <Alert severity="error" onClose={() => setError(null)}>
+            <Alert data-testid="connected-error" severity="error" onClose={() => setError(null)}>
               {error}
             </Alert>
           )}
@@ -121,6 +123,7 @@ export default function ConnectedAccountsSection() {
 
       <ConfirmDialog
         open={confirmOpen}
+        testId="disconnect-google-confirm"
         title={t('mweb.account.connected.disconnectTitle')}
         message={t('mweb.account.connected.disconnectMessage')}
         confirmLabel={t('mweb.account.connected.disconnect')}
@@ -133,12 +136,13 @@ export default function ConnectedAccountsSection() {
       />
 
       <Snackbar
+        data-testid="connected-toast"
         open={!!toast}
         autoHideDuration={3000}
         onClose={() => setToast(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity="success" variant="filled" onClose={() => setToast(null)}>
+        <Alert data-testid="connected-toast-alert" severity="success" variant="filled" onClose={() => setToast(null)}>
           {toast}
         </Alert>
       </Snackbar>

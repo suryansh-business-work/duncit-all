@@ -27,6 +27,7 @@ export default function HostDashboardPage() {
   if (meQ.loading && !meQ.data) {
     return (
       <Stack
+        data-testid="host-dashboard-loading"
         sx={{
           alignItems: "center",
           py: 8
@@ -35,7 +36,13 @@ export default function HostDashboardPage() {
       </Stack>
     );
   }
-  if (meQ.error) return <Alert severity="error">{meQ.error.message}</Alert>;
+  if (meQ.error) {
+    return (
+      <Alert data-testid="host-dashboard-error" severity="error">
+        {meQ.error.message}
+      </Alert>
+    );
+  }
 
   const wallet = meQ.data?.myWallet;
   const health = meQ.data?.myAccountHealth;
@@ -52,7 +59,7 @@ export default function HostDashboardPage() {
   ];
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+    <Stack data-testid="host-dashboard-screen" spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <StudioPageHeader
         icon={<SpaceDashboardIcon fontSize="small" />}
         title={t('mweb.hostDashboard.dashboard')}

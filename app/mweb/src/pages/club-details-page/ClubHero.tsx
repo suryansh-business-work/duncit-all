@@ -54,7 +54,7 @@ const arrowBtn = (theme: Theme) => ({
 function PrevArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
   const { t } = useTranslation();
   return (
-    <DuncitIconButton size="small" onClick={onClick} aria-label={t('mweb.common.previous')} sx={(theme) => ({ ...arrowBtn(theme), left: 12 })}>
+    <DuncitIconButton data-testid="club-hero-prev" size="small" onClick={onClick} aria-label={t('mweb.common.previous')} sx={(theme) => ({ ...arrowBtn(theme), left: 12 })}>
       <ChevronLeftIcon />
     </DuncitIconButton>
   );
@@ -63,7 +63,7 @@ function PrevArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
 function NextArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
   const { t } = useTranslation();
   return (
-    <DuncitIconButton size="small" onClick={onClick} aria-label={t('mweb.clubDetails.next')} sx={(theme) => ({ ...arrowBtn(theme), right: 12 })}>
+    <DuncitIconButton data-testid="club-hero-next" size="small" onClick={onClick} aria-label={t('mweb.clubDetails.next')} sx={(theme) => ({ ...arrowBtn(theme), right: 12 })}>
       <ChevronRightIcon />
     </DuncitIconButton>
   );
@@ -97,6 +97,7 @@ export default function ClubHero({
   if (media.length === 0) {
     return (
       <Box
+        data-testid="club-hero"
         sx={{
           ...FRAME_SX,
           height: 240,
@@ -114,6 +115,7 @@ export default function ClubHero({
 
   return (
     <Box
+      data-testid="club-hero"
       sx={{
         ...FRAME_SX,
         '.slick-dots': { bottom: 12 },
@@ -138,10 +140,12 @@ export default function ClubHero({
               key={m.url}
               src={m.url}
               height={{ xs: 280, md: 460 }}
+              testId={`detail-hero-video-${i}`}
             />
           ) : (
             <Box
               key={m.url}
+              data-testid={`detail-hero-image-${i}`}
               component="img"
               src={m.url}
               alt={title}

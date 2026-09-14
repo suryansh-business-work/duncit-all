@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Alert, Stack } from '@mui/material';
+import { Alert, Box, Stack } from '@mui/material';
 import { Loader, LoadingOverlay } from '@duncit/ui';
 import type { SwitchableVenue } from '@duncit/utils';
 import StudioPageHeader from '../../components/StudioPageHeader';
@@ -45,9 +45,9 @@ export default function VenuePageFrame({
 }: Readonly<Props>) {
   let body: ReactNode;
   if (loading) {
-    body = <Loader size={24} sx={{ py: 4 }} />;
+    body = <Box data-testid="venue-page-frame-loading"><Loader size={24} sx={{ py: 4 }} /></Box>;
   } else if (error) {
-    body = <Alert severity="error">{error.message}</Alert>;
+    body = <Alert severity="error" data-testid="venue-page-frame-error">{error.message}</Alert>;
   } else if (venue) {
     body = <LoadingOverlay open={refreshing} size={24}>{children}</LoadingOverlay>;
   } else {
@@ -55,7 +55,7 @@ export default function VenuePageFrame({
   }
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+    <Stack data-testid="venue-page-frame" spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <StudioPageHeader icon={icon} title={title} />
       <VenueSwitcher venues={venues} venueId={venue?.id ?? null} onChange={onSelect} />
       {body}

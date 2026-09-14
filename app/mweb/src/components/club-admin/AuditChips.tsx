@@ -14,6 +14,7 @@ export function AuditActionChip({ action }: Readonly<{ action: PodAuditAction }>
   const { t } = useTranslation();
   return (
     <StatusChip
+      data-testid="audit-action-chip"
       status={action}
       label={podAuditActionLabel(action, t)}
       colorMap={POD_AUDIT_ACTION_COLORS}
@@ -34,6 +35,12 @@ export function AuditRiskChip({ risk, verbose = false }: Readonly<RiskProps>) {
   const label = podAuditRiskLabel(risk, t);
   const text = verbose ? t('clubAdmin.monitoring.aiRiskChip', { vars: { risk: label } }) : label;
   return (
-    <StatusChip status={risk} label={text} colorMap={POD_AUDIT_RISK_COLORS} variant="outlined" />
+    <StatusChip
+      data-testid="audit-risk-chip"
+      status={risk}
+      label={text}
+      colorMap={POD_AUDIT_RISK_COLORS}
+      variant="outlined"
+    />
   );
 }

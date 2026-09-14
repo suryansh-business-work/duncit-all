@@ -83,9 +83,13 @@ export default function HostApplyPage() {
   }
 
   return (
-    <Box sx={{ maxWidth: 680, mx: 'auto', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}>
+    <Box
+      data-testid="host-apply-screen"
+      sx={{ maxWidth: 680, mx: 'auto', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}
+    >
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 2 }}>
         <DuncitRoundButton
+          data-testid="host-apply-back"
           onClick={() => navigate('/host/manage')}
           aria-label={t('mweb.common.back')}
           sx={{ width: 40, height: 40, minWidth: 40, minHeight: 40, bgcolor: 'background.paper', color: 'text.primary' }}

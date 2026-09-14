@@ -23,7 +23,7 @@ interface Props {
 export default function SearchSortMenu({ open, value, onClose, onSelect }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog data-testid="search-sort-menu" open={open} onClose={onClose} fullWidth maxWidth="xs">
       <Stack
         direction="row"
         sx={{
@@ -33,6 +33,7 @@ export default function SearchSortMenu({ open, value, onClose, onSelect }: Reado
         }}>
         <DialogTitle sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>{t('mweb.search.sortResults')}</DialogTitle>
         <DuncitIconButton
+          data-testid="search-sort-menu-close"
           aria-label={t('mweb.search.closeSort')}
           onClick={onClose}
           sx={{ width: 40, height: 40, minHeight: 40, bgcolor: 'action.hover' }}
@@ -46,6 +47,7 @@ export default function SearchSortMenu({ open, value, onClose, onSelect }: Reado
           {SEARCH_SORT_OPTIONS.map((option) => (
             <ListItemButton
               key={option.value}
+              data-testid={`search-sort-menu-option-${option.value}`}
               selected={option.value === value}
               onClick={() => {
                 onSelect(option.value);

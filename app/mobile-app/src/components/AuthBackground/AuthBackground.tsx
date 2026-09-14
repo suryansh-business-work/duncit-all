@@ -28,7 +28,7 @@ export function AuthBackground({ children }: Readonly<{ children: ReactNode }>) 
     : '';
 
   return (
-    <YStack flex={1} backgroundColor="$background">
+    <YStack flex={1} backgroundColor="$background" testID="auth-background">
       {videoUrl || imageUrl ? (
         <BrandBackdrop videoUrl={videoUrl} imageUrl={imageUrl} isDark={isDark} />
       ) : null}

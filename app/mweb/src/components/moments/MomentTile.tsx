@@ -12,8 +12,10 @@ interface Props {
 }
 
 export default function MomentTile({ url, type, size, aspect, index, total, onClick }: Readonly<Props>) {
+  const tileTestId = `moment-tile-${url}`;
   return (
     <ButtonBase
+      data-testid={tileTestId}
       onClick={onClick}
       focusRipple
       aria-label={`Open moment ${index + 1} of ${total}`}

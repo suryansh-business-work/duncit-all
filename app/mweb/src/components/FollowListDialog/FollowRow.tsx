@@ -29,6 +29,7 @@ export default function FollowRow({ person, isSelf, onToggle, onOpen }: Readonly
   const name = person.full_name || person.first_name || 'Duncit user';
   return (
     <Stack
+      data-testid={`follow-row-${person.user_id}`}
       direction="row"
       spacing={1.5}
       sx={{
@@ -36,6 +37,7 @@ export default function FollowRow({ person, isSelf, onToggle, onOpen }: Readonly
         py: 1.25
       }}>
       <Avatar
+        data-testid={`follow-row-avatar-${person.user_id}`}
         src={person.profile_photo || undefined}
         onClick={() => onOpen(person.user_id)}
         sx={{ width: 44, height: 44, cursor: 'pointer', bgcolor: 'primary.main', fontWeight: 600 }}
@@ -46,13 +48,13 @@ export default function FollowRow({ person, isSelf, onToggle, onOpen }: Readonly
         onClick={() => onOpen(person.user_id)}
         sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }}
       >
-        <Typography noWrap sx={{
+        <Typography data-testid={`follow-row-name-${person.user_id}`} noWrap sx={{
           fontSize: 15,
           fontWeight: 600
         }}>
           {name}
         </Typography>
-        <Typography variant="caption" noWrap sx={{
+        <Typography data-testid={`follow-row-handle-${person.user_id}`} variant="caption" noWrap sx={{
           display: 'block',
           fontSize: 13,
           color: "text.secondary"

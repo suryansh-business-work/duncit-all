@@ -106,6 +106,7 @@ export default function HomeStatusRail({
       {/* The mock frames the story rail in its own card, with a decorative
        * paper-plane doodle trailing the tiles. */}
       <Box
+        data-testid="home-status-rail"
         sx={{
           ...SURFACE_SX,
           py: 1.5,
@@ -131,6 +132,7 @@ export default function HomeStatusRail({
           {entries.map((entry, entryIndex) => (
             <HomeStatusTile
               key={entry.key}
+              testId={`status-${entry.key}`}
               label={entry.label}
               imageUrl={entry.imageUrl}
               videoUrl={entry.videoUrl}
@@ -172,6 +174,7 @@ export default function HomeStatusRail({
       />
       <StoryViewersDialog storyId={viewersStoryId} onClose={() => setViewersStoryId(null)} />
       <ConfirmDialog
+        testId="status-delete-confirm"
         open={pendingDelete !== null}
         title={t('mweb.common.deleteStory')}
         message="This story will be removed for everyone. This can't be undone."

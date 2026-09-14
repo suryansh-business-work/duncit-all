@@ -68,8 +68,8 @@ export default function HostInsights({ pods, currency }: Readonly<Props>) {
   const meta = hostRangeMeta(range, t);
 
   return (
-    <Stack spacing={1.5}>
-      <SectionHeader title="Host Insights" />
+    <Stack data-testid="host-insights-section" spacing={1.5}>
+      <SectionHeader testId="host-insights-section-header" title="Host Insights" />
       <Stack direction="row" spacing={1.5}>
         <StatCard label={t('mweb.common.totalPods')} value={String(totalPods)} size="lg" />
         <StatCard label={t('mweb.common.hostEarnings')} value={`${currency}${hostEarning.toFixed(2)}`} />
@@ -81,6 +81,7 @@ export default function HostInsights({ pods, currency }: Readonly<Props>) {
         action={
           <Tooltip title={t('mweb.common.filter')}>
             <DuncitIconButton
+              data-testid="insights-filter-open"
               aria-label={t('mweb.common.filterPodsByMonth')}
               onClick={() => setFilterOpen(true)}
               sx={{ width: 36, height: 36, minHeight: 36, bgcolor: 'action.hover' }}

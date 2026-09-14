@@ -100,8 +100,8 @@ export default function ContactsPage() {
   }
 
   return (
-    <Stack spacing={2} sx={{ maxWidth: 760, mx: 'auto', width: '100%', pb: 6 }}>
-      <Typography component="h1" sx={{ fontSize: 20, fontWeight: 600 }}>
+    <Stack data-testid="contacts-screen" spacing={2} sx={{ maxWidth: 760, mx: 'auto', width: '100%', pb: 6 }}>
+      <Typography data-testid="contacts-title" component="h1" sx={{ fontSize: 20, fontWeight: 600 }}>
         {t('mweb.contacts.title')}
       </Typography>
 
@@ -147,6 +147,7 @@ export default function ContactsPage() {
       )}
 
       <ConfirmDialog
+        testId="contacts-clear-dialog"
         open={removal.open}
         title={t('mweb.contacts.clearConfirmTitle')}
         message={t('mweb.contacts.clearConfirmBody')}

@@ -25,18 +25,23 @@ export default function PostActions({
 }: Readonly<PostActionsProps>) {
   const { t } = useTranslation();
   return (
-    <Box sx={{ borderTop: 1, borderColor: 'divider', p: 1 }}>
+    <Box data-testid="post-actions" sx={{ borderTop: 1, borderColor: 'divider', p: 1 }}>
       <Stack direction="row" spacing={0.5} sx={{
         alignItems: "center"
       }}>
-        <DuncitIconButton onClick={onLike} color={post.liked_by_me ? 'error' : 'default'}>
+        <DuncitIconButton
+          data-testid="post-actions-like"
+          onClick={onLike}
+          color={post.liked_by_me ? 'error' : 'default'}
+        >
           {post.liked_by_me ? <FavoriteIcon /> : <FavoriteBorderIcon />}
         </DuncitIconButton>
-        <DuncitIconButton>
+        <DuncitIconButton data-testid="post-actions-comment-icon">
           <ChatBubbleOutlineIcon />
         </DuncitIconButton>
       </Stack>
       <Typography
+        data-testid="post-actions-likes-count"
         variant="subtitle2"
         sx={{
           fontWeight: 700,
@@ -45,6 +50,7 @@ export default function PostActions({
         {post.likes_count} {post.likes_count === 1 ? 'like' : 'likes'}
       </Typography>
       <TextField
+        data-testid="post-actions-comment"
         fullWidth
         size="small"
         variant="standard"
@@ -64,6 +70,7 @@ export default function PostActions({
             endAdornment: (
               <InputAdornment position="end">
                 <DuncitIconButton
+                  data-testid="post-actions-send"
                   onClick={onSend}
                   disabled={!comment.trim() || submitting}
                   color="primary"

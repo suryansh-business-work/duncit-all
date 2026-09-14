@@ -48,7 +48,7 @@ export default function VenueAutoPodsPage({ locationId }: Readonly<Props>) {
   const earnings = useAutoPodEarnings();
 
   return (
-    <Stack spacing={2.5} sx={{ p: 2, pb: 4 }}>
+    <Stack data-testid="venue-auto-pods-page" spacing={2.5} sx={{ p: 2, pb: 4 }}>
       <Typography variant="h5" component="h1" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>
         {queue.labels.venueTitle}
       </Typography>
@@ -66,7 +66,7 @@ export default function VenueAutoPodsPage({ locationId }: Readonly<Props>) {
         formatWhen={queue.formatWhen}
         formatMoney={queue.formatMoney}
         renderAction={(row) => (
-          <DuncitButton fullWidth variant="contained" onClick={() => setTarget(row)} disabled={!venue}>
+          <DuncitButton fullWidth variant="contained" onClick={() => setTarget(row)} disabled={!venue} data-testid={`auto-pod-accept-${row.id}`}>
             {queue.labels.acceptCta}
           </DuncitButton>
         )}

@@ -87,9 +87,9 @@ export default function PaymentDetailsCard({
   };
 
   return (
-    <Card sx={{ flex: 1 }}>
+    <Card data-testid="payment-details-card" sx={{ flex: 1 }}>
       <CardContent sx={{ p: 2 }}>
-        <SectionHeader title={t('mweb.checkout.paymentDetails')} />
+        <SectionHeader testId="payment-details-header" title={t('mweb.checkout.paymentDetails')} />
         <Stack spacing={2} sx={{ mt: 2 }}>
           <CheckoutFields
             control={control}
@@ -116,9 +116,9 @@ export default function PaymentDetailsCard({
           />
           <Divider />
           <CoinRedeemField coins={coins} />
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && <Alert data-testid="checkout-error" severity="error">{error}</Alert>}
           {discounted && (
-            <Typography variant="caption" sx={{ color: 'text.secondary', textAlign: 'center' }}>
+            <Typography data-testid="payment-details-card-savings" variant="caption" sx={{ color: 'text.secondary', textAlign: 'center' }}>
               <s>{formatMoney(currency, total)}</s> &nbsp;
               {t('mweb.checkout.youSave', {
                 vars: { amount: formatMoney(currency, total - effectiveTotal) },
@@ -127,6 +127,7 @@ export default function PaymentDetailsCard({
           )}
           <CheckoutRequirementsCard missing={eligibility.missing} />
           <DuncitButton
+            data-testid="checkout-submit"
             variant="contained"
             size="large"
             startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : <LockIcon />}

@@ -17,10 +17,10 @@ export default function ClubFaqsSection({ faqs }: Readonly<Props>) {
   if (faqs.length === 0) return null;
 
   return (
-    <Stack spacing={1}>
-      <SectionHeader title="FAQs" />
+    <Stack data-testid="club-faqs" spacing={1}>
+      <SectionHeader testId="club-faqs-header" title="FAQs" />
       {faqs.map((faq) => (
-        <Accordion key={faq.question} disableGutters sx={{ overflow: 'hidden' }}>
+        <Accordion key={faq.question} data-testid={`club-faq-${faq.question}`} disableGutters sx={{ overflow: 'hidden' }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 2 }}>
             <Typography variant="subtitle2" sx={{
               fontWeight: 600

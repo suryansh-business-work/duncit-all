@@ -142,12 +142,12 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
   };
 
   return (
-    <Stack spacing={1.5} sx={{ width: '100%' }}>
+    <Stack spacing={1.5} data-testid="pod-history-details" sx={{ width: '100%' }}>
       {/* The tour's first step. It lives here and not on the history LIST
           because the ticket and back-out controls only exist on this page — and
           a tour that resolves on the list would open there, one step long, and
           record itself as shown. */}
-      <Card data-tour="booking-summary">
+      <Card data-tour="booking-summary" data-testid="ph-summary-card">
         <CardContent>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{
             alignItems: { sm: 'center' }
@@ -166,7 +166,7 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
                 }}>
                 {/* "Visited" once the pod has happened — "Joined" is a promise
                     about something still ahead. */}
-                <Chip size="small" color={STATUS_CHIP[item.status].color} label={statusLabel} />
+                <Chip size="small" color={STATUS_CHIP[item.status].color} label={statusLabel} data-testid="ph-status-chip" />
                 {/* No refund state at all unless one is actually in play, and
                     the word comes from the request rather than the booking —
                     the booking's own copy is never written for a partial. */}
@@ -175,6 +175,7 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
                     size="small"
                     variant="outlined"
                     label={t('mweb.podHistory.refundChip', { vars: { status: refundText } })}
+                    data-testid="ph-refund-chip"
                   />
                 )}
                 {gate.coinsRefunded > 0 && (
@@ -182,6 +183,7 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
                     size="small"
                     variant="outlined"
                     label={`${t('mweb.coin.refundCoins')}: ${gate.coinsRefunded}`}
+                    data-testid="ph-coins-chip"
                   />
                 )}
                 {(item.seats ?? 1) > 1 && (
@@ -190,20 +192,21 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
                     color="primary"
                     variant="outlined"
                     label={t('mweb.podHistory.seatsChip', { vars: { count: item.seats ?? 1 } })}
+                    data-testid="ph-seats-chip"
                   />
                 )}
               </Stack>
-              <Typography sx={{ fontSize: 16, fontWeight: 600, lineHeight: 1.25 }}>
+              <Typography data-testid="ph-summary-title" sx={{ fontSize: 16, fontWeight: 600, lineHeight: 1.25 }}>
                 {pod?.pod_title ?? t('mweb.podHistory.podDetailsTitle')}
               </Typography>
-              <Typography variant="body2" sx={{
+              <Typography variant="body2" data-testid="ph-summary-date" sx={{
                 color: "text.secondary"
               }}>
                 {pod?.pod_date_time
                   ? formatDateTime(pod.pod_date_time)
                   : t('mweb.podHistory.dateNotAvailable')}
               </Typography>
-              <Typography variant="caption" sx={{
+              <Typography variant="caption" data-testid="ph-summary-price" sx={{
                 color: "text.secondary"
               }}>
                 {priceCaption}
@@ -213,10 +216,10 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-testid="ph-actions-card">
         <CardContent>
           <Box sx={{ mb: 1.5 }}>
-            <SectionHeader title={t('mweb.podHistory.actions')} />
+            <SectionHeader testId="ph-actions-header" title={t('mweb.podHistory.actions')} />
           </Box>
           <PodHistoryActions
             item={item}
@@ -247,7 +250,7 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
             <ReplacementNotice deductionPct={backoutDeductionPct} />
           )}
           {!podPast && gate.refundStatus === 'PENDING' && (
-            <Alert severity="info" sx={{ mt: 1.5 }}>
+            <Alert severity="info" data-testid="ph-refund-pending" sx={{ mt: 1.5 }}>
               {t('mweb.podHistory.refundPendingNote')}
             </Alert>
           )}
@@ -256,10 +259,10 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
 
       <PodProductOrdersCard podId={pod?.id} />
 
-      <Card>
+      <Card data-testid="ph-timeline-card">
         <CardContent>
           <Box sx={{ mb: 1.5 }}>
-            <SectionHeader title={t('mweb.podHistory.timeline')} />
+            <SectionHeader testId="ph-timeline-header" title={t('mweb.podHistory.timeline')} />
           </Box>
           <PodHistoryTimeline item={item} />
         </CardContent>
@@ -268,10 +271,22 @@ export default function PodHistoryDetails({ item, backoutMaxed = false, backingO
       <Stack direction="row" spacing={1} useFlexGap sx={{
         flexWrap: "wrap"
       }}>
-        <DuncitButton component={RouterLink} to="/policies/backout-terms" size="small" startIcon={<RuleIcon />}>
+        <DuncitButton
+          component={RouterLink}
+          to="/policies/backout-terms"
+          size="small"
+          startIcon={<RuleIcon />}
+          data-testid="ph-backout-terms"
+        >
           {t('mweb.podHistory.backoutTerms')}
         </DuncitButton>
-        <DuncitButton href="https://duncit.com/terms" target="_blank" rel="noopener" size="small">
+        <DuncitButton
+          href="https://duncit.com/terms"
+          target="_blank"
+          rel="noopener"
+          size="small"
+          data-testid="ph-general-terms"
+        >
           {t('mweb.podHistory.generalTerms')}
         </DuncitButton>
       </Stack>

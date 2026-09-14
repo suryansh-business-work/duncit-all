@@ -19,7 +19,7 @@ const CHIP_SX = { height: 36, minHeight: 36, fontWeight: 600, px: 0.5 } as const
 export default function SearchFilterSheet({ open, categories, categoryId, onClose, onSelect }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog data-testid="search-filter-sheet" open={open} onClose={onClose} fullWidth maxWidth="xs">
       <Stack
         direction="row"
         sx={{
@@ -29,6 +29,7 @@ export default function SearchFilterSheet({ open, categories, categoryId, onClos
         }}>
         <DialogTitle sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>{t('mweb.search.filterByCategory')}</DialogTitle>
         <DuncitIconButton
+          data-testid="search-filter-sheet-close"
           aria-label={t('mweb.search.closeFilter')}
           onClick={onClose}
           sx={{ width: 40, height: 40, minHeight: 40, bgcolor: 'action.hover' }}
@@ -38,7 +39,7 @@ export default function SearchFilterSheet({ open, categories, categoryId, onClos
       </Stack>
       <Box sx={{ px: 3, pb: 2 }}>
         {categories.length === 0 ? (
-          <Typography variant="body2" sx={{
+          <Typography data-testid="search-filter-sheet-empty" variant="body2" sx={{
             color: "text.secondary"
           }}>
             No categories available yet.
@@ -46,6 +47,7 @@ export default function SearchFilterSheet({ open, categories, categoryId, onClos
         ) : (
           <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 1 }}>
             <Chip
+              data-testid="search-filter-sheet-chip-all"
               label={t('mweb.common.all')}
               color={categoryId === '' ? 'primary' : 'default'}
               onClick={() => onSelect('')}
@@ -54,6 +56,7 @@ export default function SearchFilterSheet({ open, categories, categoryId, onClos
             {categories.map((category) => (
               <Chip
                 key={category.id}
+                data-testid={`search-filter-sheet-chip-${category.id}`}
                 icon={renderSuperCategoryMark(category.icon) ?? undefined}
                 label={category.name}
                 color={categoryId === category.id ? 'primary' : 'default'}
@@ -65,7 +68,7 @@ export default function SearchFilterSheet({ open, categories, categoryId, onClos
         )}
       </Box>
       <Box sx={{ px: 3, pb: 3 }}>
-        <DuncitButton fullWidth variant="contained" size="large" onClick={onClose}>
+        <DuncitButton data-testid="search-filter-sheet-apply" fullWidth variant="contained" size="large" onClick={onClose}>
           Apply
         </DuncitButton>
       </Box>

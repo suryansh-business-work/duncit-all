@@ -31,6 +31,7 @@ export default function SavedAddressPicker({ onPick }: Readonly<Props>) {
   if (addresses.length === 0) return null;
   return (
     <TextField
+      data-testid="checkout-address-picker"
       select
       size="small"
       label={t('mweb.checkout.deliverToSaved')}
@@ -45,7 +46,7 @@ export default function SavedAddressPicker({ onPick }: Readonly<Props>) {
       sx={{ mb: 2, minWidth: 260 }}
     >
       {addresses.map((address) => (
-        <MenuItem key={address.id} value={address.id}>
+        <MenuItem key={address.id} data-testid={`checkout-address-option-${address.id}`} value={address.id}>
           {address.label}
           {address.is_default ? ` ${t('mweb.checkout.addressDefault')}` : ''} — {address.line1}, {address.city}
         </MenuItem>

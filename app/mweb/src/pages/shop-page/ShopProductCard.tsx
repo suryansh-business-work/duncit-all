@@ -67,7 +67,7 @@ export default function ShopProductCard({
     onQuickAdd(product);
   };
   return (
-    <Card sx={{ position: 'relative', overflow: 'hidden' }}>
+    <Card data-testid={`shop-product-${product.id}`} sx={{ position: 'relative', overflow: 'hidden' }}>
       <CardActionArea onClick={() => onOpen(product.id)} aria-label={`View ${product.product_name}`} sx={{ p: 1 }}>
         <Box sx={{ aspectRatio: '1 / 1', bgcolor: 'action.hover', borderRadius: '18px', overflow: 'hidden' }}>
           {imageUrl && (
@@ -80,14 +80,14 @@ export default function ShopProductCard({
           )}
         </Box>
         <Stack spacing={0.25} sx={{ pt: 1, px: 0.5, pb: 0.25 }}>
-          <Typography sx={NAME_SX}>{product.product_name}</Typography>
+          <Typography data-testid={`shop-product-name-${product.id}`} sx={NAME_SX}>{product.product_name}</Typography>
           {product.brand_name && (
             <Typography variant="caption" noWrap sx={{ color: 'text.secondary' }}>
               {product.brand_name}
             </Typography>
           )}
           {hasRating && (
-            <Stack direction="row" spacing={0.25} sx={{ alignItems: 'center' }}>
+            <Stack data-testid={`shop-product-rating-${product.id}`} direction="row" spacing={0.25} sx={{ alignItems: 'center' }}>
               <StarRoundedIcon sx={{ fontSize: 16, color: 'warning.main' }} />
               <Typography variant="caption" sx={{ fontWeight: 600 }}>
                 {summary.average_rating.toFixed(1)}
@@ -97,13 +97,17 @@ export default function ShopProductCard({
               </Typography>
             </Stack>
           )}
-          <Typography sx={{ fontSize: '1rem', fontWeight: 700, pt: 0.5, pr: 5, minHeight: 36, display: 'flex', alignItems: 'center' }}>
+          <Typography
+            data-testid={`shop-product-price-${product.id}`}
+            sx={{ fontSize: '1rem', fontWeight: 700, pt: 0.5, pr: 5, minHeight: 36, display: 'flex', alignItems: 'center' }}
+          >
             {priceFormat(product.unit_cost)}
           </Typography>
         </Stack>
       </CardActionArea>
       {outOfStock ? (
         <Chip
+          data-testid={`shop-product-oos-${product.id}`}
           label={t('mweb.shop.outOfStock')}
           size="small"
           sx={{
@@ -119,6 +123,7 @@ export default function ShopProductCard({
         />
       ) : (
         <DuncitIconButton
+          data-testid={`shop-product-add-${product.id}`}
           aria-label={`Add ${product.product_name} to cart`}
           disabled={adding}
           onClick={quickAdd}

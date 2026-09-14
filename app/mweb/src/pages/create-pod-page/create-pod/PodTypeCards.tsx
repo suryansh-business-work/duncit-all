@@ -6,6 +6,7 @@ import { useTranslation } from '../../../i18n/useTranslation';
 import { isFreePodType, type CreatePodForm } from './create-pod.types';
 
 interface CardProps {
+  testId: string;
   label: string;
   caption: string;
   icon: ReactNode;
@@ -16,10 +17,11 @@ interface CardProps {
 
 /** A selection tile: green with white ink when picked, the soft fill when not
  * (native twin: TypeCard in PodTypeCards). */
-function TypeCard({ label, caption, icon, selected, disabled, onClick }: Readonly<CardProps>) {
+function TypeCard({ testId, label, caption, icon, selected, disabled, onClick }: Readonly<CardProps>) {
   const ink = selected ? 'primary.contrastText' : 'text.primary';
   return (
     <Card
+      data-testid={testId}
       sx={{
         borderRadius: '16px',
         boxShadow: 'none',
@@ -65,9 +67,9 @@ export default function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>
   };
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
-      <TypeCard label={t('mweb.createPod.podTypeFree')} caption={freeCaption} icon={<VolunteerActivismIcon />} selected={isFree} disabled={isPhysical} onClick={() => choose(true)} />
-      <TypeCard label={t('mweb.createPod.podTypePaid')} caption={t('mweb.createPod.paidCaption')} icon={<PaymentsIcon />} selected={!isFree} onClick={() => choose(false)} />
+    <Box data-testid="create-pod-pod-type-cards" sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+      <TypeCard testId="create-pod-free" label={t('mweb.createPod.podTypeFree')} caption={freeCaption} icon={<VolunteerActivismIcon />} selected={isFree} disabled={isPhysical} onClick={() => choose(true)} />
+      <TypeCard testId="create-pod-paid" label={t('mweb.createPod.podTypePaid')} caption={t('mweb.createPod.paidCaption')} icon={<PaymentsIcon />} selected={!isFree} onClick={() => choose(false)} />
     </Box>
   );
 }

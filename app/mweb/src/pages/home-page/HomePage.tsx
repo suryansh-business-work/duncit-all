@@ -78,7 +78,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
   }
 
   if (loading && !data) return <HomeSkeleton />;
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  if (error) return <Alert data-testid="home-page-error" severity="error">{error.message}</Alert>;
 
   // No clubs/pods in this city → nothing to filter or search.
   const noContent = (data?.pods?.length ?? 0) === 0 && (data?.clubs?.length ?? 0) === 0;
@@ -92,7 +92,11 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
   // One 16px gutter for the whole page (native's paddingHorizontal: 16); the
   // rails bleed out of it to the screen edges. 24px between sections.
   return (
-    <Stack spacing={3} sx={{ pt: 0.25, mx: { xs: -1.25, sm: -2 }, px: 2, minHeight: '100%' }}>
+    <Stack
+      data-testid="home-screen"
+      spacing={3}
+      sx={{ pt: 0.25, mx: { xs: -1.25, sm: -2 }, px: 2, minHeight: '100%' }}
+    >
       <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
         <Box data-tour="home-search" sx={{ flex: 1, minWidth: 0 }}>
           <HomeSearch locationId={locationId} zoneName={zoneName} disabled={noContent} />
@@ -177,6 +181,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
       <AdSlot position="HOME_BOTTOM" variant="banner" />
       {isHost && (
         <Fab
+          data-testid="home-create-pod-fab"
           color="primary"
           aria-label={t('mweb.common.createPod')}
           onClick={() => navigate('/create-pod')}

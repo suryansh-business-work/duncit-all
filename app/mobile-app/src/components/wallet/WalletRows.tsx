@@ -49,9 +49,13 @@ export function WalletSection({
 }: Readonly<{ title: string; empty: ReactNode; children: ReactNode[] }>) {
   const content = children.length === 0 ? empty : children;
   return (
-    <YStack gap={10}>
-      <SectionHeader title={title} />
-      {content ? <SurfaceCard paddingVertical={4}>{content}</SurfaceCard> : null}
+    <YStack testID="wallet-section" gap={10}>
+      <SectionHeader testID="wallet-section-header" title={title} />
+      {content ? (
+        <SurfaceCard testID="wallet-section-card" paddingVertical={4}>
+          {content}
+        </SurfaceCard>
+      ) : null}
     </YStack>
   );
 }
@@ -63,8 +67,10 @@ export function TxnRow({
   divided,
 }: Readonly<{ txn: WalletTxn; symbol: string; divided: boolean }>) {
   const credit = txn.type === 'CREDIT';
+  const testID = `wallet-txn-row-${txn.id}`;
   return (
     <XStack
+      testID={testID}
       alignItems="center"
       gap={12}
       paddingVertical={12}
@@ -80,7 +86,12 @@ export function TxnRow({
           {fmtDate(txn.created_at)}
         </Text>
       </YStack>
-      <Text fontSize={14} fontWeight="700" color={credit ? '$success' : '$color'}>
+      <Text
+        testID={`${testID}-amount`}
+        fontSize={14}
+        fontWeight="700"
+        color={credit ? '$success' : '$color'}
+      >
         {credit ? '+' : '-'}
         {symbol}
         {txn.amount.toFixed(2)}
@@ -96,8 +107,10 @@ export function WithdrawalRow({
   symbol,
   divided,
 }: Readonly<{ w: Withdrawal; symbol: string; divided: boolean }>) {
+  const testID = `wallet-withdrawal-row-${w.id}`;
   return (
     <XStack
+      testID={testID}
       alignItems="center"
       gap={12}
       paddingVertical={12}
@@ -116,6 +129,7 @@ export function WithdrawalRow({
         </Text>
       </YStack>
       <XStack
+        testID={`${testID}-status`}
         height={24}
         paddingHorizontal={10}
         alignItems="center"

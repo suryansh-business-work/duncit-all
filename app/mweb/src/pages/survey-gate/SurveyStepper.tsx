@@ -72,12 +72,12 @@ export default function SurveyStepper({
   };
 
   if (sections.length === 0) {
-    return <DuncitButton variant="contained" size="large" fullWidth onClick={() => onSubmit([])} disabled={submitting}>{submitLabelText}</DuncitButton>;
+    return <DuncitButton variant="contained" size="large" fullWidth onClick={() => onSubmit([])} disabled={submitting} data-testid="primary-action">{submitLabelText}</DuncitButton>;
   }
   const active = sections[step];
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} data-testid="survey-stepper">
       {sections.length > 1 && (
         <StepProgressBar steps={sections.map((s) => s.title)} current={step + 1} label={active.title} />
       )}
@@ -90,15 +90,15 @@ export default function SurveyStepper({
           <SurveyQuestionField key={q.qid} question={q} answer={get(q.qid)} onChange={(patch) => set(q.qid, patch)} />
         ))}
       </Stack>
-      {error && <Alert severity="warning">{error}</Alert>}
+      {error && <Alert severity="warning" data-testid="survey-stepper-error">{error}</Alert>}
       <Stack direction="row" spacing={1.5} sx={{
         justifyContent: "space-between"
       }}>
-        <DuncitButton size="large" disabled={step === 0 || submitting} onClick={() => setStep((s) => Math.max(0, s - 1))} sx={{ flex: 1 }}>Back</DuncitButton>
+        <DuncitButton size="large" disabled={step === 0 || submitting} onClick={() => setStep((s) => Math.max(0, s - 1))} sx={{ flex: 1 }} data-testid="survey-back">Back</DuncitButton>
         {isLast ? (
-          <DuncitButton variant="contained" size="large" onClick={submit} disabled={submitting} sx={{ flex: 1 }}>{submitting ? 'Submitting…' : submitLabelText}</DuncitButton>
+          <DuncitButton variant="contained" size="large" onClick={submit} disabled={submitting} sx={{ flex: 1 }} data-testid="primary-action">{submitting ? 'Submitting…' : submitLabelText}</DuncitButton>
         ) : (
-          <DuncitButton variant="contained" size="large" onClick={next} disabled={submitting} sx={{ flex: 1 }}>Next</DuncitButton>
+          <DuncitButton variant="contained" size="large" onClick={next} disabled={submitting} sx={{ flex: 1 }} data-testid="primary-action">Next</DuncitButton>
         )}
       </Stack>
     </Stack>

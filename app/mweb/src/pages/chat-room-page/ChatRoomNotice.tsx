@@ -8,7 +8,7 @@ interface ChatRoomNoticeProps {
 export default function ChatRoomNotice({ ended = false }: Readonly<ChatRoomNoticeProps>) {
   const { t } = useTranslation();
   return (
-    <Box sx={{ mb: 1.5, display: 'flex', justifyContent: 'center' }}>
+    <Box sx={{ mb: 1.5, display: 'flex', justifyContent: 'center' }} data-testid="chat-room-notice">
       <Stack
         direction="row"
         spacing={1}
@@ -21,9 +21,20 @@ export default function ChatRoomNotice({ ended = false }: Readonly<ChatRoomNotic
           py: 0.5,
         }}>
         {ended ? (
-          <Chip size="small" label={t('mweb.chatRoom.ended')} sx={{ height: 24, bgcolor: 'background.paper' }} />
+          <Chip
+            size="small"
+            data-testid="chat-room-notice-ended"
+            label={t('mweb.chatRoom.ended')}
+            sx={{ height: 24, bgcolor: 'background.paper' }}
+          />
         ) : (
-          <Chip size="small" label={t('mweb.common.live')} color="success" sx={{ height: 24 }} />
+          <Chip
+            size="small"
+            data-testid="chat-room-notice-live"
+            label={t('mweb.common.live')}
+            color="success"
+            sx={{ height: 24 }}
+          />
         )}
         {ended ? (
           <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }} noWrap>

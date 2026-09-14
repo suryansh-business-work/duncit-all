@@ -21,15 +21,16 @@ export default function DuncitCoinPage() {
   const currencySymbol = financeData?.publicFinanceSettings?.currency_symbol ?? '₹';
 
   return (
-    <Stack spacing={2.5} sx={{ py: 0.5 }}>
-      <PageHeader title={t('mweb.coin.title')} />
+    <Stack data-testid="duncit-coin-page" spacing={2.5} sx={{ py: 0.5 }}>
+      <PageHeader testId="duncit-coin-header" title={t('mweb.coin.title')} />
 
-      {error && <Alert severity="error">{t('mweb.coin.loadError')}</Alert>}
+      {error && <Alert data-testid="coin-error" severity="error">{t('mweb.coin.loadError')}</Alert>}
 
       <CoinBalanceCard balance={balance} currencySymbol={currencySymbol} />
 
       {loading && !data ? (
         <Stack
+          data-testid="coin-loading"
           sx={{
             alignItems: "center",
             py: 3

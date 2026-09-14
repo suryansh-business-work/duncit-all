@@ -26,11 +26,11 @@ export default function VenueChargesDialog({ open, charges, currency, onClose }:
   const total = charges.reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog data-testid="venue-charges-sheet" open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ pr: 6, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
         <StorefrontIcon color="primary" fontSize="small" />
         {t('mweb.checkout.venueCharges')}
-        <DuncitIconButton onClick={onClose} aria-label={t('mweb.checkout.close')} sx={{ position: 'absolute', right: 8, top: 8 }}>
+        <DuncitIconButton data-testid="venue-charges-sheet-close" onClick={onClose} aria-label={t('mweb.checkout.close')} sx={{ position: 'absolute', right: 8, top: 8 }}>
           <CloseIcon />
         </DuncitIconButton>
       </DialogTitle>
@@ -50,6 +50,7 @@ export default function VenueChargesDialog({ open, charges, currency, onClose }:
               {charges.map((charge) => (
                 <Stack
                   key={`${charge.label}|${charge.amount}|${charge.note ?? ''}`}
+                  data-testid="venue-charge-row"
                   direction="row"
                   spacing={1.5}
                   sx={{

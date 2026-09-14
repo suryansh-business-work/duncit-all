@@ -83,7 +83,10 @@ export default function PodFeedbackPage() {
 
   if (loading && !form) {
     return (
-      <Box sx={{ display: 'grid', placeItems: 'center', minHeight: '40dvh' }}>
+      <Box
+        data-testid="pod-feedback-loading"
+        sx={{ display: 'grid', placeItems: 'center', minHeight: '40dvh' }}
+      >
         <CircularProgress />
       </Box>
     );
@@ -92,7 +95,9 @@ export default function PodFeedbackPage() {
   if (error || !form) {
     return (
       <Stack sx={{ py: 2 }}>
-        <Alert severity="error">{t('mweb.podFeedback.loadFailed')}</Alert>
+        <Alert severity="error" data-testid="pod-feedback-load-error">
+          {t('mweb.podFeedback.loadFailed')}
+        </Alert>
       </Stack>
     );
   }
@@ -103,13 +108,15 @@ export default function PodFeedbackPage() {
   if (!form.can_rate) {
     return (
       <Stack sx={{ py: 2 }}>
-        <Alert severity="warning">{t('mweb.podFeedback.noAccess')}</Alert>
+        <Alert severity="warning" data-testid="pod-feedback-no-access">
+          {t('mweb.podFeedback.noAccess')}
+        </Alert>
       </Stack>
     );
   }
 
   return (
-    <Stack sx={{ py: 1 }}>
+    <Stack data-testid="pod-feedback-page" sx={{ py: 1 }}>
       <PodFeedbackCard
         podTitle={form.pod.title}
         // Saved this visit counts too: the answers are stored, so the page must

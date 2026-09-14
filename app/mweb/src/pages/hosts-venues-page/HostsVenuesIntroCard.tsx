@@ -8,7 +8,7 @@ import { DuncitButton } from '@duncit/buttons';
 /** "Want to host or list a space?" — the title and the two CTAs say it all. */
 export default function HostsVenuesIntroCard() {
   return (
-    <Card sx={{ p: 2 }}>
+    <Card data-testid="hosts-venues-intro-card" sx={{ p: 2 }}>
       <Stack spacing={2}>
         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
           <Box
@@ -31,6 +31,7 @@ export default function HostsVenuesIntroCard() {
         </Stack>
         <Stack direction="row" spacing={1}>
           <DuncitButton
+            data-testid="hosts-venues-become-host-button"
             component={RouterLink}
             to="/survey/host"
             variant="contained"
@@ -40,6 +41,7 @@ export default function HostsVenuesIntroCard() {
             Become a Host
           </DuncitButton>
           <DuncitButton
+            data-testid="hosts-venues-register-venue-button"
             component={RouterLink}
             to="/survey/venue"
             startIcon={<AddBusinessIcon />}

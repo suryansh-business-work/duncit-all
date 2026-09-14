@@ -11,13 +11,23 @@ interface LabelProps {
   emphasis?: 'price' | 'title';
   /** A muted footnote under the value. */
   note?: string | null;
+  valueTestId?: string;
+  noteTestId?: string;
 }
 
 /**
  * The left half of the booking bar: what this booking is, or costs.
  * Native twin: the caption + value column of the bars in components/details.
  */
-export function BarLabel({ icon, caption, value, emphasis = 'title', note }: Readonly<LabelProps>) {
+export function BarLabel({
+  icon,
+  caption,
+  value,
+  emphasis = 'title',
+  note,
+  valueTestId,
+  noteTestId,
+}: Readonly<LabelProps>) {
   const valueSx =
     emphasis === 'price'
       ? { fontSize: 18, fontWeight: 700, lineHeight: 1.2 }
@@ -29,11 +39,11 @@ export function BarLabel({ icon, caption, value, emphasis = 'title', note }: Rea
         {caption && (
           <Typography sx={{ fontSize: 11, color: 'text.secondary', lineHeight: 1.3 }}>{caption}</Typography>
         )}
-        <Typography noWrap sx={valueSx}>
+        <Typography noWrap data-testid={valueTestId} sx={valueSx}>
           {value}
         </Typography>
         {note && (
-          <Typography sx={{ fontSize: 11, color: 'text.secondary', lineHeight: 1.3 }}>{note}</Typography>
+          <Typography data-testid={noteTestId} sx={{ fontSize: 11, color: 'text.secondary', lineHeight: 1.3 }}>{note}</Typography>
         )}
       </Box>
     </Stack>
@@ -41,9 +51,13 @@ export function BarLabel({ icon, caption, value, emphasis = 'title', note }: Rea
 }
 
 /** A bar with nothing to press: a state icon and one muted sentence. */
-export function BarNotice({ icon, children }: Readonly<{ icon: ReactNode; children: ReactNode }>) {
+export function BarNotice({
+  icon,
+  testId,
+  children,
+}: Readonly<{ icon: ReactNode; testId?: string; children: ReactNode }>) {
   return (
-    <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flex: 1, minWidth: 0, px: 0.5 }}>
+    <Stack direction="row" spacing={1} data-testid={testId} sx={{ alignItems: 'center', flex: 1, minWidth: 0, px: 0.5 }}>
       {icon}
       <Typography sx={{ fontSize: 13.5, fontWeight: 600, color: 'text.secondary' }}>{children}</Typography>
     </Stack>

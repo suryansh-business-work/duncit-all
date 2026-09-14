@@ -77,7 +77,7 @@ export default function SosContent({ selected }: Readonly<Props>) {
 
   if (active) {
     return (
-      <Paper sx={{ ...SURFACE_SX, p: 3 }}>
+      <Paper data-testid="sos-active" sx={{ ...SURFACE_SX, p: 3 }}>
         <Stack
           spacing={1.5}
           sx={{
@@ -89,6 +89,7 @@ export default function SosContent({ selected }: Readonly<Props>) {
             SOS sent. Help is on the way.
           </Typography>
           <Chip
+            data-testid="sos-status-chip"
             size="small"
             color={active.status === 'ACKNOWLEDGED' ? 'success' : 'warning'}
             label={active.status === 'ACKNOWLEDGED' ? 'Acknowledged by team' : 'Awaiting response'}
@@ -104,8 +105,9 @@ export default function SosContent({ selected }: Readonly<Props>) {
   }
 
   return (
-    <Stack spacing={2}>
+    <Stack data-testid="sos-content" spacing={2}>
       <Box
+        data-testid="sos-warning"
         sx={{
           p: 2,
           borderRadius: '18px',
@@ -132,6 +134,7 @@ export default function SosContent({ selected }: Readonly<Props>) {
       <TextField
         label={t('mweb.common.quickNoteOptional')}
         placeholder={t('mweb.supportHub.eGMedicalHelpNeeded')}
+        data-testid="sos-message-field"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         size="small"
@@ -139,18 +142,23 @@ export default function SosContent({ selected }: Readonly<Props>) {
         minRows={2}
         fullWidth
         slotProps={{
-          htmlInput: { maxLength: 500 }
+          htmlInput: { maxLength: 500, 'data-testid': 'sos-message' }
         }}
       />
 
       {error && (
-        <Alert severity="error" onClose={() => setError(null)}>
+        <Alert data-testid="sos-error" severity="error" onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
-      {success && !error && <Alert severity="success">{t('mweb.supportHub.sosSentHangTight')}</Alert>}
+      {success && !error && (
+        <Alert data-testid="sos-success" severity="success">
+          {t('mweb.supportHub.sosSentHangTight')}
+        </Alert>
+      )}
 
       <DuncitButton
+        data-testid="sos-send"
         variant="contained"
         color="error"
         size="large"

@@ -18,8 +18,8 @@ export default function SupportTopics({ groups }: Readonly<SupportTopicsProps>) 
   const navigate = useNavigate();
   if (groups.length === 0) return null;
   return (
-    <Stack spacing={1.5}>
-      <SectionHeader title={t('mweb.supportHub.topics')} />
+    <Stack data-testid="support-topics" spacing={1.5}>
+      <SectionHeader testId="support-topics-header" title={t('mweb.supportHub.topics')} />
       <Paper sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
         <List disablePadding>
           {groups.map((group, index) => {
@@ -31,6 +31,7 @@ export default function SupportTopics({ groups }: Readonly<SupportTopicsProps>) 
             return (
               <ListItemButton
                 key={id}
+                data-testid={`support-topic-${id}`}
                 divider={index < groups.length - 1}
                 onClick={() => navigate(`/faqs?cat=${id}`)}
                 sx={{ px: 2, py: 1.75, borderRadius: 0 }}

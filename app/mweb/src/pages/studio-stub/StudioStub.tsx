@@ -11,6 +11,7 @@ interface Props {
 export default function StudioStub({ icon, title, subtitle }: Readonly<Props>) {
   return (
     <Stack
+      data-testid="studio-stub"
       spacing={2}
       sx={{
         alignItems: "center",

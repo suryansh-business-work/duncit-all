@@ -57,9 +57,9 @@ export default function PodMapSection({ pod, location, venue, onJoinMeeting }: R
   const endText = pod.pod_end_date_time ? `  →  ${formatEnd(pod.pod_end_date_time)}` : '';
 
   return (
-    <Stack spacing={2} sx={{ ...SURFACE_SX, p: 2 }}>
-      <SectionHeader title={t('mweb.podDetails.timeAndVenue')} />
-      <PodMetaRow icon={<EventIcon />}>
+    <Stack data-testid="pod-schedule" spacing={2} sx={{ ...SURFACE_SX, p: 2 }}>
+      <SectionHeader testId="pod-schedule-header" title={t('mweb.podDetails.timeAndVenue')} />
+      <PodMetaRow testId="pod-schedule-time" icon={<EventIcon />}>
         <Typography variant="body2" sx={valueSx}>
           {formatStart(pod.pod_date_time)}
           {endText}
@@ -67,7 +67,7 @@ export default function PodMapSection({ pod, location, venue, onJoinMeeting }: R
       </PodMetaRow>
       {isVirtual ? (
         <Stack spacing={1.5}>
-          <PodMetaRow icon={<VideocamIcon />}>
+          <PodMetaRow testId="pod-schedule-platform" icon={<VideocamIcon />}>
             <Typography variant="body2" sx={valueSx}>
               {formatMeetingPlatform(pod.meeting_platform, t)}
             </Typography>
@@ -87,12 +87,13 @@ export default function PodMapSection({ pod, location, venue, onJoinMeeting }: R
         </Stack>
       ) : (
         <Stack spacing={1.5}>
-          <PodMetaRow icon={<PlaceIcon />}>
+          <PodMetaRow testId="pod-schedule-place" icon={<PlaceIcon />}>
             <Typography variant="body2" sx={valueSx}>
               {placeText ?? '—'}
             </Typography>
             {venue && (
               <DuncitButton
+                data-testid="pod-venue-details"
                 component={RouterLink}
                 to={venueUrl(venue.id)}
                 size="small"

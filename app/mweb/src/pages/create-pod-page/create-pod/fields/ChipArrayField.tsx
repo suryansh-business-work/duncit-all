@@ -12,6 +12,7 @@ interface Props {
   placeholder?: string;
   max?: number;
   error?: string;
+  testId?: string;
 }
 
 /** Enter-to-add chip list backed by a string[] form field. */
@@ -24,6 +25,7 @@ export default function ChipArrayField({
   placeholder,
   max = 20,
   error,
+  testId = 'chip-array-field',
 }: Readonly<Props>) {
   const [draft, setDraft] = useState('');
   const { t } = useTranslation();
@@ -48,7 +50,7 @@ export default function ChipArrayField({
   };
 
   return (
-    <Box>
+    <Box data-testid={testId}>
       <Typography variant="subtitle2" sx={{ mb: 0.75 }}>
         {requiredLabel(label, required)}
       </Typography>
@@ -57,6 +59,7 @@ export default function ChipArrayField({
           {value.map((tag) => (
             <Chip
               key={tag}
+              data-testid={`${testId}-chip-${tag}`}
               label={tag}
               color="primary"
               onDelete={() => onChange(value.filter((t) => t !== tag))}
@@ -66,6 +69,7 @@ export default function ChipArrayField({
         </Stack>
       )}
       <TextField
+        data-testid={`${testId}-input`}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={onKeyDown}
@@ -75,6 +79,7 @@ export default function ChipArrayField({
         fullWidth
         error={!!error}
         helperText={error ?? helperText ?? t('mweb.createPod.chipMaxHint', { vars: { max } })}
+        slotProps={{ htmlInput: { 'data-testid': `${testId}-input-field` } }}
       />
     </Box>
   );

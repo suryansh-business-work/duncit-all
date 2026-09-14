@@ -30,6 +30,7 @@ export default function MessageBubble({ message, mine, onOpenReact }: Readonly<M
     <Stack
       direction="row"
       spacing={1}
+      data-testid={`chat-message-${m.id}`}
       sx={{ mb: 1, justifyContent: mine ? 'flex-end' : 'flex-start', alignItems: 'flex-end' }}
     >
       {!mine && (
@@ -79,6 +80,7 @@ export default function MessageBubble({ message, mine, onOpenReact }: Readonly<M
             ).map(([emoji, count]) => (
               <Box
                 key={emoji}
+                data-testid={`reaction-${m.id}-${emoji}`}
                 sx={{
                   fontSize: 12,
                   bgcolor: 'rgba(0,0,0,0.1)',

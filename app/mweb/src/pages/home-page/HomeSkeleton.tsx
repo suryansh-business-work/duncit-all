@@ -8,7 +8,7 @@ const SECTION_IDS = ['s1', 's2'] as const;
  * story card, the vibe chips and two rails of event cards. */
 export default function HomeSkeleton() {
   return (
-    <Stack spacing={3} sx={{ mx: { xs: -1.25, sm: -2 }, px: 2, overflow: 'hidden' }}>
+    <Stack data-testid="home-skeleton" spacing={3} sx={{ mx: { xs: -1.25, sm: -2 }, px: 2, overflow: 'hidden' }}>
       <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center' }}>
         <Skeleton variant="rounded" height={52} sx={{ flex: 1, borderRadius: 999 }} />
         <Skeleton variant="circular" width={52} height={52} />

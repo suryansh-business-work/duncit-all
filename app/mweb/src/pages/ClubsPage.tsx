@@ -114,6 +114,7 @@ export default function ClubsPage({
   if (loading && !data)
     return (
       <Stack
+        data-testid="clubs-loading"
         sx={{
           alignItems: "center",
           p: 6
@@ -121,14 +122,14 @@ export default function ClubsPage({
         <CircularProgress />
       </Stack>
     );
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  if (error) return <Alert severity="error" data-testid="clubs-error">{error.message}</Alert>;
 
   // A location is applied but no club operates in that locality (vs. a search
   // that matched nothing) — drives the "No Clubs operating…" + Reset CTA.
   const locationHasNoClubs = Boolean(locationId) && (data?.clubs ?? []).length === 0;
   const clubsBody =
     clubs.length === 0 ? (
-      <EmptyState icon={<GroupsOutlinedIcon />} title={t('mweb.clubsPage.noClubsFound')} />
+      <EmptyState testId="clubs-list-empty" icon={<GroupsOutlinedIcon />} title={t('mweb.clubsPage.noClubsFound')} />
     ) : (
       <ClubsGrid
         clubs={clubs}
@@ -140,6 +141,7 @@ export default function ClubsPage({
   return (
     <Stack
       spacing={2}
+      data-testid="clubs-screen"
       sx={{
         mx: { xs: -1.25, sm: -2 },
         px: { xs: 1.25, sm: 2 },
@@ -150,12 +152,13 @@ export default function ClubsPage({
       {/* No page title: the coral Clubs tab already names the page, as on the
           native Clubs tab (rule 27). */}
       {locationId && selectedLocationName && (
-        <Alert severity="info" sx={{ py: 0.25, alignItems: 'center' }}>
+        <Alert severity="info" data-testid="clubs-location-notice" sx={{ py: 0.25, alignItems: 'center' }}>
           Showing clubs in <b>{locationNoteLabel}</b>. Want clubs from another location?{' '}
           <Link
             component="button"
             type="button"
             underline="always"
+            data-testid="clubs-change-location"
             sx={{ fontWeight: 600, verticalAlign: 'baseline' }}
             onClick={() => globalThis.dispatchEvent(new CustomEvent(OPEN_LOCATION_PICKER_EVENT))}
           >
@@ -171,6 +174,7 @@ export default function ClubsPage({
       />
       {locationHasNoClubs ? (
         <EmptyState
+          testId="clubs-location-empty"
           icon={<LocationOffOutlinedIcon />}
           title="No Clubs operating at the selected location,"
           actionLabel="Reset Location"

@@ -38,6 +38,7 @@ function ProcessingDots({ size }: Readonly<{ size: number }>) {
   const dot = size * 0.18;
   return (
     <Box
+      data-testid="payment-lottie-processing"
       role="img"
       aria-label={t('mweb.paymentLottie.processingPayment')}
       sx={{
@@ -71,6 +72,7 @@ function SuccessCheck({ size }: Readonly<{ size: number }>) {
   const { t } = useTranslation();
   return (
     <Box
+      data-testid="payment-lottie-success"
       role="img"
       aria-label={t('mweb.paymentLottie.paymentSuccessful')}
       sx={{

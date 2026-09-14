@@ -30,7 +30,7 @@ export default function OngoingPodsRail({ pods, hostNameOf }: Readonly<Props>) {
 
   return (
     <Stack spacing={1.5} data-testid="ongoing-pods-rail">
-      <SectionHeader title={t('mweb.home.ongoingPodsTitle')} />
+      <SectionHeader testId="ongoing-pods-rail-header" title={t('mweb.home.ongoingPodsTitle')} />
       <HomeRail>
         {pods.map((pod: any) => (
           <PodCard

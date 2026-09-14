@@ -33,11 +33,11 @@ export default function ReopenReasonDialog({ open, loading, error, onClose, onSu
   const submit = () => onSubmit(reason.trim());
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog data-testid="reopen-reason-modal" open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.supportChat.reOpenThisConversation')}</DialogTitle>
       <DialogContent>
         {error && (
-          <Alert severity="error" sx={{ mb: 1 }}>
+          <Alert data-testid="reopen-error" severity="error" sx={{ mb: 1 }}>
             {error}
           </Alert>
         )}
@@ -53,19 +53,20 @@ export default function ReopenReasonDialog({ open, loading, error, onClose, onSu
           autoFocus
           fullWidth
           size="small"
+          data-testid="reopen-reason-field"
           label={t('mweb.common.reasonOptional')}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           multiline
           minRows={2}
           slotProps={{
-            htmlInput: { maxLength: 500 }
+            htmlInput: { maxLength: 500, 'data-testid': 'reopen-reason-input' }
           }}
         />
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose}>{t('mweb.common.cancel')}</DuncitButton>
-        <DuncitButton variant="contained" disabled={loading} onClick={submit}>
+        <DuncitButton data-testid="reopen-cancel" onClick={onClose}>{t('mweb.common.cancel')}</DuncitButton>
+        <DuncitButton data-testid="reopen-submit" variant="contained" disabled={loading} onClick={submit}>
           {loading ? 'Re-opening…' : 'Re-open'}
         </DuncitButton>
       </DialogActions>

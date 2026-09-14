@@ -52,7 +52,7 @@ const TicketThread = forwardRef<TicketThreadHandle, Props>(function TicketThread
   useImperativeHandle(ref, () => ({ pinToBottom: jumpToBottom }));
 
   return (
-    <Box sx={{ position: 'relative' }}>
+    <Box data-testid="ticket-thread" sx={{ position: 'relative' }}>
       <Box ref={scrollRef} onScroll={onScroll} sx={{ maxHeight: '52vh', overflowY: 'auto', pr: 0.5 }}>
         <Stack spacing={1.25}>
           {messages.map((m, i) => (
@@ -63,7 +63,7 @@ const TicketThread = forwardRef<TicketThreadHandle, Props>(function TicketThread
                     alignItems: "center",
                     my: 0.5
                   }}>
-                  <Typography variant="caption" sx={{ bgcolor: 'action.hover', color: 'text.secondary', px: 1.25, py: 0.25, borderRadius: 99, fontWeight: 600 }}>
+                  <Typography data-testid={`ticket-day-${m.id}`} variant="caption" sx={{ bgcolor: 'action.hover', color: 'text.secondary', px: 1.25, py: 0.25, borderRadius: 99, fontWeight: 600 }}>
                     {dayLabel(m.created_at, timeZone)}
                   </Typography>
                 </Stack>
@@ -74,7 +74,14 @@ const TicketThread = forwardRef<TicketThreadHandle, Props>(function TicketThread
         </Stack>
       </Box>
       {showJump && (
-        <Fab size="small" color="primary" aria-label={t('mweb.common.jumpToLatest')} onClick={jumpToBottom} sx={{ position: 'absolute', right: 8, bottom: 8 }}>
+        <Fab
+          data-testid="ticket-jump-bottom"
+          size="small"
+          color="primary"
+          aria-label={t('mweb.common.jumpToLatest')}
+          onClick={jumpToBottom}
+          sx={{ position: 'absolute', right: 8, bottom: 8 }}
+        >
           <KeyboardArrowDownIcon />
         </Fab>
       )}

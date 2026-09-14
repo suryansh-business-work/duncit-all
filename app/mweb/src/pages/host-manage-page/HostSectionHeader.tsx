@@ -8,6 +8,7 @@ interface Props {
   count?: number;
   /** Trailing controls, e.g. the Your-pods filter pill. */
   children?: ReactNode;
+  testId?: string;
 }
 
 /**
@@ -15,11 +16,11 @@ interface Props {
  * any trailing control. Every list on the page opens with this one strip, so
  * the sections cannot drift. Native twin: components/host-manage/HostSectionHeader.
  */
-export default function HostSectionHeader({ title, count, children }: Readonly<Props>) {
+export default function HostSectionHeader({ title, count, children, testId }: Readonly<Props>) {
   return (
-    <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+    <Stack data-testid={testId} direction="row" spacing={1} sx={{ alignItems: 'center' }}>
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <SectionHeader title={title} />
+        <SectionHeader testId={testId ? `${testId}-header` : undefined} title={title} />
       </Box>
       {count === undefined ? null : (
         <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem', fontWeight: 600 }}>

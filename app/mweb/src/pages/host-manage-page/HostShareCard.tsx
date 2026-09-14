@@ -78,7 +78,7 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: any; symbol: string }>
   const payableLabel = isV2 ? t('mweb.hostManage.payout') : legacyLabel;
   const payable = payout.approved_amount ?? b?.payout_amount ?? payout.amount_requested;
   return (
-    <Box sx={{ px: 2, py: 1.75 }}>
+    <Box data-testid={`host-share-row-${payout.id}`} sx={{ px: 2, py: 1.75 }}>
       <Stack
         direction="row"
         spacing={1}
@@ -142,6 +142,7 @@ export default function HostShareCard() {
   if (loading && !data) {
     body = (
       <Stack
+        data-testid="host-share-loading"
         sx={{
           alignItems: "center",
           py: 3
@@ -150,10 +151,15 @@ export default function HostShareCard() {
       </Stack>
     );
   } else if (error) {
-    body = <Alert severity="error" sx={{ m: 2 }}>{error.message}</Alert>;
+    body = (
+      <Alert data-testid="host-share-error" severity="error" sx={{ m: 2 }}>
+        {error.message}
+      </Alert>
+    );
   } else if (payouts.length === 0) {
     body = (
       <Typography
+        data-testid="host-share-empty"
         variant="body2"
         sx={{ px: 2, py: 2.5, textAlign: 'center', color: 'text.secondary' }}
       >
@@ -165,7 +171,7 @@ export default function HostShareCard() {
   }
 
   return (
-    <Stack spacing={1.5}>
+    <Stack data-testid="host-share-section" spacing={1.5}>
       <HostSectionHeader title={t('mweb.hostManage.hostShare')} count={payouts.length} />
       <RowGroup>{body}</RowGroup>
     </Stack>

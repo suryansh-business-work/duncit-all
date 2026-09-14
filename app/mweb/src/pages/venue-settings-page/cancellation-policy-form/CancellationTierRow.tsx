@@ -20,10 +20,12 @@ interface Props {
  */
 export default function CancellationTierRow({ control, index, disabled, onRemove }: Readonly<Props>) {
   const { t } = useTranslation();
+  const rowTestId = `cancellation-tier-${index}`;
   return (
     <Stack
       spacing={1}
       sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}
+      data-testid={rowTestId}
     >
       <RhfTextField
         control={control}
@@ -32,6 +34,7 @@ export default function CancellationTierRow({ control, index, disabled, onRemove
         type="number"
         size="small"
         disabled={disabled}
+        data-testid={`${rowTestId}-hours`}
       />
       <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
         <RhfTextField
@@ -41,6 +44,7 @@ export default function CancellationTierRow({ control, index, disabled, onRemove
           select
           size="small"
           disabled={disabled}
+          data-testid={`${rowTestId}-charge`}
         >
           <MenuItem value="PERCENT">{t('venueSettings.chargePercent')}</MenuItem>
           <MenuItem value="AMOUNT">{t('venueSettings.chargeAmount')}</MenuItem>
@@ -52,6 +56,7 @@ export default function CancellationTierRow({ control, index, disabled, onRemove
           type="number"
           size="small"
           disabled={disabled}
+          data-testid={`${rowTestId}-value`}
         />
         <DuncitIconButton
           aria-label={t('venueSettings.removeTier')}
@@ -59,6 +64,7 @@ export default function CancellationTierRow({ control, index, disabled, onRemove
           disabled={disabled}
           size="small"
           sx={{ mt: 0.5 }}
+          data-testid={`${rowTestId}-remove`}
         >
           <DeleteOutlineRoundedIcon fontSize="small" />
         </DuncitIconButton>

@@ -21,6 +21,7 @@ export default function HomeStatusViewerDetails({
 }: Readonly<Props>) {
   return (
     <Stack
+      data-testid="home-status-viewer-details"
       spacing={1}
       sx={{
         position: 'absolute',
@@ -56,25 +57,29 @@ export default function HomeStatusViewerDetails({
       )}
       {nextPeek.length > 0 && (
         <Stack direction="row" spacing={1} sx={{ overflow: 'hidden' }}>
-          {nextPeek.map((s, i) => (
-            <Box
-              key={s.id ?? s.mediaUrl ?? s.thumbnailUrl}
-              onClick={() => onJumpTo(index + 1 + i)}
-              sx={{
-                width: 56,
-                height: 56,
-                borderRadius: '12px',
-                bgcolor: 'rgba(255,255,255,0.18)',
-                border: '1px solid rgba(255,255,255,0.32)',
-                backgroundImage:
-                  s.thumbnailUrl || s.mediaUrl ? `url(${s.thumbnailUrl || s.mediaUrl})` : undefined,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                cursor: 'pointer',
-                flexShrink: 0,
-              }}
-            />
-          ))}
+          {nextPeek.map((s, i) => {
+            const peekKey = s.id ?? s.mediaUrl ?? s.thumbnailUrl;
+            return (
+              <Box
+                key={peekKey}
+                data-testid={`home-status-viewer-peek-${peekKey}`}
+                onClick={() => onJumpTo(index + 1 + i)}
+                sx={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: '12px',
+                  bgcolor: 'rgba(255,255,255,0.18)',
+                  border: '1px solid rgba(255,255,255,0.32)',
+                  backgroundImage:
+                    s.thumbnailUrl || s.mediaUrl ? `url(${s.thumbnailUrl || s.mediaUrl})` : undefined,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                }}
+              />
+            );
+          })}
         </Stack>
       )}
     </Stack>

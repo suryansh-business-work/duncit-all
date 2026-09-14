@@ -5,6 +5,8 @@ interface Props {
   /** A `@mui/icons-material` glyph — sized and tinted by the disc. */
   icon: ReactNode;
   children: ReactNode;
+  /** Test id for the row root — the caller disambiguates repeated rows. */
+  testId?: string;
 }
 
 /**
@@ -12,9 +14,9 @@ interface Props {
  * beside its text. The icon names the fact, so the row needs no caption.
  * Native twin: components/details/PodMetaRow.
  */
-export default function PodMetaRow({ icon, children }: Readonly<Props>) {
+export default function PodMetaRow({ icon, children, testId }: Readonly<Props>) {
   return (
-    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+    <Stack data-testid={testId} direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
       <Box
         aria-hidden
         sx={{

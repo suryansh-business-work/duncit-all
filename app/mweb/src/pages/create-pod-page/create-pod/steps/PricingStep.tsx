@@ -33,7 +33,7 @@ export default function PricingStep({ form, products, showProducts, preview, spo
     : undefined;
 
   return (
-    <Stack spacing={2}>
+    <Stack data-testid="create-pod-pricing-step" spacing={2}>
       <Stack spacing={2} sx={{ ...SURFACE_SX, p: 2 }}>
         <PodTypeCards form={form} />
         <TicketPriceField form={form} preview={preview} isFree={isFree} />
@@ -59,12 +59,14 @@ export default function PricingStep({ form, products, showProducts, preview, spo
       <PricePanel preview={preview} />
       <Box sx={{ ...SURFACE_SX, p: 2 }}>
         <TextField
+          data-testid="payment_terms"
           label={t('mweb.createPod.paymentTerms')}
           fullWidth
           multiline
           minRows={3}
           helperText={t('mweb.createPod.paymentTermsHint')}
           {...register('payment_terms')}
+          slotProps={{ htmlInput: { 'data-testid': 'payment_terms-input' } }}
         />
       </Box>
       {isPhysical && (

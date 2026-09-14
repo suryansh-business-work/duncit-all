@@ -74,7 +74,7 @@ export default function SupportChatPage() {
   };
 
   return (
-    <Stack spacing={1.5} sx={{ height: '100%', minHeight: 0, position: 'relative' }}>
+    <Stack data-testid="support-chat-page" spacing={1.5} sx={{ height: '100%', minHeight: 0, position: 'relative' }}>
       <ChatHeader
         ticketNo={session?.ticket_no ?? null}
         status={session?.status ?? null}
@@ -99,7 +99,14 @@ export default function SupportChatPage() {
       />
 
       {showJump && (
-        <Fab size="small" color="primary" aria-label={t('mweb.common.jumpToLatest')} onClick={jumpToBottom} sx={{ position: 'absolute', right: 12, bottom: 76 }}>
+        <Fab
+          data-testid="chat-jump-bottom"
+          size="small"
+          color="primary"
+          aria-label={t('mweb.common.jumpToLatest')}
+          onClick={jumpToBottom}
+          sx={{ position: 'absolute', right: 12, bottom: 76 }}
+        >
           <KeyboardArrowDownIcon />
         </Fab>
       )}

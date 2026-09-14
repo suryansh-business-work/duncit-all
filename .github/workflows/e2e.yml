@@ -509,6 +509,264 @@ jobs:
         run: node scripts/report-e2e-run.mjs
 
   # ---------------------------------------------------------------------------
+  # E2E Batch 1 — one account's whole life, live on STAGING, on mWeb, the native
+  # app's web export and the Partners portal.
+  #
+  # ONE job, not three legs, and the order is the design: the surfaces share the
+  # run account and one fixed phone number (Tech > E2E Tests > Settings), and a
+  # number can only sign up once. So mWeb signs the account up and lives its
+  # life, Partners signs in with it, mWeb deletes it, the purge removes it, and
+  # only then can the native app sign the same address and number up again.
+  #
+  # Each Cypress run carries continue-on-error so a red mWeb still lets the
+  # purge free the number and the native run happen — and `Decide the verdict`
+  # fails the job if ANY of them failed, so rule 1 holds: no test failure is
+  # swallowed. One-time codes come from the OTP testing API on staging
+  # (`e2eOneTimeCode`, staging release token), never from the screen.
+  # ---------------------------------------------------------------------------
+  accounts:
+    name: e2e accounts (mWeb, native, Partners on staging)
+    needs: setup
+    if: contains(format(',{0},', needs.setup.outputs.selected), ',accounts,')
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    env:
+      DUNCIT_GRAPHQL_URL: ${{ inputs.report_url || 'https://server.duncit.com/graphql' }}
+      DUNCIT_RELEASE_TOKEN: >-
+        ${{ contains(inputs.report_url, 'staging.') && secrets.DUNCIT_RELEASE_TOKEN_STAGING || secrets.DUNCIT_RELEASE_TOKEN }}
+      DUNCIT_RELEASE_EMAIL: ${{ secrets.DUNCIT_RELEASE_EMAIL }}
+      DUNCIT_RELEASE_PASSWORD: ${{ secrets.DUNCIT_RELEASE_PASSWORD }}
+      DISPATCH_ID: ${{ inputs.dispatch_id }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # The server under test. Always staging, whatever the run reports to: the
+      # OTP testing API must never be on for production.
+      E2E_LIVE_API: https://staging.server.duncit.com
+      E2E_LIVE_GRAPHQL_URL: https://staging.server.duncit.com/graphql
+      CYPRESS_E2E_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN_STAGING }}
+      CYPRESS_GRAPHQL_URL: https://staging.server.duncit.com/graphql
+      JUNIT_ROOT: ${{ github.workspace }}/e2e-artifacts/junit
+      E2E_STAGE: Preparing the runner
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4.4.0
+        with:
+          run_install: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      # Same reasoning as the browser matrix: plumbing from the reporting
+      # server, bounded, never the thing that turns a suite red.
+      - name: Fetch the run identity
+        id: identity
+        continue-on-error: true
+        timeout-minutes: 4
+        env:
+          MODE: start
+        run: node scripts/report-e2e-run.mjs
+
+      # Cypress reads CYPRESS_* from the environment. Written once here so every
+      # run below gets the same identity; the reporter has already masked the password.
+      - name: Hand the run identity to Cypress
+        run: |
+          {
+            echo "CYPRESS_E2E_SIGNUP_EMAIL=${{ steps.identity.outputs.e2e_signup_email }}"
+            echo "CYPRESS_E2E_PASSWORD=${{ steps.identity.outputs.e2e_password }}"
+            echo "CYPRESS_E2E_PHONE=${{ steps.identity.outputs.e2e_phone }}"
+            echo "CYPRESS_E2E_STAMP=${{ steps.identity.outputs.e2e_stamp }}"
+          } >> "$GITHUB_ENV"
+
+      - run: echo "E2E_STAGE=Installing dependencies" >> "$GITHUB_ENV"
+      - name: Install workspace deps
+        run: pnpm install --frozen-lockfile
+      - name: Install the native app's deps
+        working-directory: app/mobile-app
+        run: npm ci
+      - name: Generate the native app's GraphQL types
+        working-directory: app/mobile-app
+        run: npm run codegen
+      - name: Install Cypress binary
+        working-directory: app/mweb
+        run: pnpm exec cypress install
+
+      - run: echo "E2E_STAGE=Type-checking the Cypress specs" >> "$GITHUB_ENV"
+      - name: Type-check the specs
+        run: |
+          (cd app/mweb && pnpm exec tsc --noEmit -p __tests__/e2e/tsconfig.json)
+          (cd portals/partners-app && pnpm exec tsc --noEmit -p __tests__/e2e/tsconfig.json)
+          (cd app/mobile-app && npx tsc --noEmit -p __tests__/e2e/tsconfig.json)
+
+      - run: echo "E2E_STAGE=Building the apps against staging" >> "$GITHUB_ENV"
+      - name: Build mWeb
+        working-directory: app/mweb
+        env:
+          VITE_GRAPHQL_URL: ${{ env.E2E_LIVE_GRAPHQL_URL }}
+        run: pnpm build:e2e
+      - name: Build the Partners portal
+        working-directory: portals/partners-app
+        env:
+          VITE_GRAPHQL_URL: ${{ env.E2E_LIVE_GRAPHQL_URL }}
+        run: pnpm build:e2e
+      # The same target native.duncit.com ships; the slow step of the job.
+      - name: Export the native app for web
+        working-directory: app/mobile-app
+        env:
+          EXPO_PUBLIC_API_URL: ${{ env.E2E_LIVE_API }}
+          NODE_OPTIONS: --max-old-space-size=8192
+        run: npm run export:web
+
+      # Background servers outlive this step and serve every Cypress run below.
+      # `--single` because the export is one index.html with client-side routes.
+      - name: Serve the three apps
+        run: |
+          (cd app/mweb && nohup pnpm preview > "$RUNNER_TEMP/mweb.log" 2>&1 &)
+          (cd portals/partners-app && nohup pnpm preview > "$RUNNER_TEMP/partners.log" 2>&1 &)
+          (cd app/mobile-app && nohup npx --yes serve dist --single -l 2022 > "$RUNNER_TEMP/native.log" 2>&1 &)
+          npx --yes wait-on http://localhost:2003 http://localhost:2005 http://localhost:2022 --timeout 180000
+
+      - run: echo "E2E_STAGE=Running the account lifecycle" >> "$GITHUB_ENV"
+      - name: mWeb · signup, sign in, forgot password, profile, change password
+        id: mweb_life
+        continue-on-error: true
+        working-directory: app/mweb
+        run: >-
+          pnpm e2e --browser chrome --spec "__tests__/e2e/specs/0[1-5]-*.cy.ts"
+          --reporter junit --reporter-options "mochaFile=$JUNIT_ROOT/mweb-[hash].xml"
+          --config video=true,videoCompression=32
+
+      - name: Partners · sign in and profile, with the mWeb account
+        id: partners_life
+        continue-on-error: true
+        working-directory: portals/partners-app
+        run: >-
+          pnpm e2e --browser chrome --spec "__tests__/e2e/specs/0[1-2]-*.cy.ts"
+          --reporter junit --reporter-options "mochaFile=$JUNIT_ROOT/partners-[hash].xml"
+          --config video=true,videoCompression=32
+
+      - name: mWeb · delete the account
+        id: mweb_delete
+        continue-on-error: true
+        working-directory: app/mweb
+        run: >-
+          pnpm e2e --browser chrome --spec "__tests__/e2e/specs/06-*.cy.ts"
+          --reporter junit --reporter-options "mochaFile=$JUNIT_ROOT/mweb-delete-[hash].xml"
+          --config video=true,videoCompression=32
+
+      - name: Partners · the deleted account cannot sign in
+        id: partners_deleted
+        continue-on-error: true
+        working-directory: portals/partners-app
+        run: >-
+          pnpm e2e --browser chrome --spec "__tests__/e2e/specs/03-*.cy.ts"
+          --reporter junit --reporter-options "mochaFile=$JUNIT_ROOT/partners-deleted-[hash].xml"
+          --config video=true,videoCompression=32
+
+      # Whatever mWeb managed, the number must be free before native signs up.
+      - name: Purge the mWeb account
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 5
+        env:
+          E2E_APP_GRAPHQL_URL: ${{ env.E2E_LIVE_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN_STAGING }}
+          E2E_STAMP: ${{ steps.identity.outputs.e2e_stamp }}
+          E2E_SIGNUP_EMAIL: ${{ steps.identity.outputs.e2e_signup_email }}
+        run: node scripts/e2e-purge.mjs
+
+      - name: Native · the whole lifecycle
+        id: native_life
+        continue-on-error: true
+        working-directory: app/mobile-app
+        run: >-
+          npm run e2e -- --browser chrome
+          --reporter junit --reporter-options "mochaFile=$JUNIT_ROOT/native-[hash].xml"
+          --config video=true,videoCompression=32
+
+      - name: Purge the native account
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 5
+        env:
+          E2E_APP_GRAPHQL_URL: ${{ env.E2E_LIVE_GRAPHQL_URL }}
+          DUNCIT_RELEASE_TOKEN: ${{ secrets.DUNCIT_RELEASE_TOKEN_STAGING }}
+          E2E_STAMP: ${{ steps.identity.outputs.e2e_stamp }}
+          E2E_SIGNUP_EMAIL: ${{ steps.identity.outputs.e2e_signup_email }}
+        run: node scripts/e2e-purge.mjs
+
+      # Rule 1: the Cypress steps above may not fail the job on their own (the
+      # purge and the native run must still happen), so this is where a red
+      # scenario anywhere turns the job red.
+      - name: Decide the verdict
+        id: verdict
+        if: always()
+        run: |
+          failed=""
+          for step in \
+            "mWeb lifecycle=${{ steps.mweb_life.outcome }}" \
+            "Partners=${{ steps.partners_life.outcome }}" \
+            "mWeb delete=${{ steps.mweb_delete.outcome }}" \
+            "Partners after delete=${{ steps.partners_deleted.outcome }}" \
+            "Native lifecycle=${{ steps.native_life.outcome }}"
+          do
+            echo "$step"
+            [ "${step#*=}" = "success" ] || failed="$failed, ${step%%=*}"
+          done
+          if [ -n "$failed" ]; then
+            echo "error=Failed:${failed#,}" >> "$GITHUB_OUTPUT"
+            echo "::error::Account lifecycle failed in:${failed#,}"
+            exit 1
+          fi
+
+      - name: Record this suite's result
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 4
+        env:
+          MODE: suite
+          SUITE_KEY: accounts
+          SUITE_STATUS: ${{ job.status == 'success' && 'PASSED' || 'FAILED' }}
+          SUITE_ERROR: "${{ job.status == 'success' && '' || steps.verdict.outputs.error || format('Failed during: {0}', env.E2E_STAGE) }}"
+          JUNIT_DIR: ${{ env.JUNIT_ROOT }}
+          STAGE: Running suites
+        run: node scripts/report-e2e-run.mjs
+
+      - name: Stitch the recordings
+        if: always()
+        continue-on-error: true
+        env:
+          MODE: stitch
+          OUT_DIR: e2e-videos
+        run: |
+          command -v ffmpeg >/dev/null || {
+            sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          }
+          SUITE_KEY=accounts-mweb VIDEO_DIR=app/mweb/cypress-artifacts/videos node scripts/e2e-videos.mjs
+          SUITE_KEY=accounts-partners VIDEO_DIR=portals/partners-app/cypress-artifacts/videos node scripts/e2e-videos.mjs
+          SUITE_KEY=accounts-native VIDEO_DIR=app/mobile-app/cypress-artifacts/videos node scripts/e2e-videos.mjs
+
+      - name: Keep the recordings for the gate
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v6
+        with:
+          name: e2e-video-accounts
+          path: e2e-videos
+          if-no-files-found: ignore
+          retention-days: 1
+
+      - name: Upload Cypress screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: accounts-cypress-screenshots
+          path: |
+            app/mweb/cypress-artifacts/screenshots
+            portals/partners-app/cypress-artifacts/screenshots
+            app/mobile-app/cypress-artifacts/screenshots
+          if-no-files-found: ignore
+
+  # ---------------------------------------------------------------------------
   # A single check other workflows (and branch protection) can require. It is
   # `needs`-ed on every e2e job and re-asserts their results, because a `needs`
   # alone would let a FAILED upstream count as success.
@@ -519,7 +777,7 @@ jobs:
   # ---------------------------------------------------------------------------
   e2e-gate:
     name: E2E gate
-    needs: [audit, setup, browser, no-surface]
+    needs: [audit, setup, browser, no-surface, accounts]
     if: always()
     runs-on: ubuntu-latest
     env:
@@ -541,7 +799,8 @@ jobs:
             "audit=${{ needs.audit.result }}" \
             "setup=${{ needs.setup.result }}" \
             "browser=${{ needs.browser.result }}" \
-            "no-surface=${{ needs['no-surface'].result }}"
+            "no-surface=${{ needs['no-surface'].result }}" \
+            "accounts=${{ needs.accounts.result }}"
           do
             echo "$leg"
             result="${leg#*=}"

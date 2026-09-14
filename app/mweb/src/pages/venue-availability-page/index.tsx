@@ -19,7 +19,7 @@ function AvailabilityEditor({ venue, onVenueChanged }: Readonly<EditorProps>) {
   const { t } = useTranslation();
   if (venue.status !== 'APPROVED') {
     return (
-      <Alert severity="warning">
+      <Alert severity="warning" data-testid="venue-availability-not-approved">
         {t('mweb.venueAvailabilityPage.approvalRequired', { vars: { status: venue.status } })}
       </Alert>
     );

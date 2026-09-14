@@ -29,7 +29,7 @@ export default function AccountProfileHeader({
   const name = me.full_name || `${me.first_name ?? ''} ${me.last_name ?? ''}`.trim();
 
   return (
-    <Stack spacing={2} sx={{ alignItems: 'center' }}>
+    <Stack data-testid="account-profile-header" spacing={2} sx={{ alignItems: 'center' }}>
       <ProfileAvatar photo={me.profile_photo} name={name} size={88} onChanged={onChanged} />
       <Box sx={{ width: '100%', textAlign: 'center' }}>
         <Typography component="h1" sx={{ fontSize: 22, fontWeight: 600, lineHeight: 1.2 }}>
@@ -52,10 +52,11 @@ export default function AccountProfileHeader({
         </Stack>
       </Box>
       <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
-        <DuncitButton color="inherit" startIcon={<EditIcon />} onClick={onEdit} sx={SOFT_SX}>
+        <DuncitButton data-testid="account-edit" color="inherit" startIcon={<EditIcon />} onClick={onEdit} sx={SOFT_SX}>
           Edit
         </DuncitButton>
         <DuncitButton
+          data-testid="account-share"
           color="inherit"
           startIcon={<ShareIcon />}
           onClick={() => shareProfile(me.user_id, name, me.username)}
@@ -64,6 +65,7 @@ export default function AccountProfileHeader({
           Share
         </DuncitButton>
         <DuncitButton
+          data-testid="account-logout"
           color="error"
           startIcon={<LogoutIcon />}
           onClick={onLogout}

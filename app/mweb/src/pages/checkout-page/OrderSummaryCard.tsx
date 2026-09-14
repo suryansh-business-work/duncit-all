@@ -73,20 +73,21 @@ export default function OrderSummaryCard({
   const [venueInfoOpen, setVenueInfoOpen] = useState(false);
 
   return (
-    <Card sx={{ flex: 1 }}>
+    <Card data-testid="order-summary" sx={{ flex: 1 }}>
       <CardContent sx={{ p: 2 }}>
         {media?.url && (
           <Box sx={{ height: 140, borderRadius: '18px', overflow: 'hidden', bgcolor: 'action.hover', mb: 1.5 }}>
             <Box component={mediaIsVideo ? 'video' : 'img'} src={mediaIsVideo ? videoSourceUrl(media.url) : media.url} autoPlay muted loop playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           </Box>
         )}
-        <Typography noWrap sx={{ fontSize: 16, fontWeight: 600 }}>{title}</Typography>
+        <Typography data-testid="order-summary-title" noWrap sx={{ fontSize: 16, fontWeight: 600 }}>{title}</Typography>
         {whenWhere && (
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {whenWhere}
           </Typography>
         )}
         <Chip
+          data-testid="order-summary-seats"
           size="small"
           icon={<GroupsIcon />}
           label={seatsText}
@@ -115,10 +116,10 @@ export default function OrderSummaryCard({
           }}>{t('mweb.checkout.inclusiveOf')}</Typography>
           <Row label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })} value={fmt(breakup.gst)} />
           <Divider sx={{ my: 1 }} />
-          <Row label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
+          <Row testId="order-summary-total" label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
           <CoinSummaryRows coins={coins} />
           {venueCharges.length > 0 && (
-            <Box sx={{ mt: 1, p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}>
+            <Box data-testid="venue-charges-row" sx={{ mt: 1, p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}>
               <Stack
                 direction="row"
                 spacing={1}
@@ -132,7 +133,7 @@ export default function OrderSummaryCard({
                   <Typography variant="body2" sx={{
                     fontWeight: 600
                   }}>{t('mweb.checkout.venueCharges')}</Typography>
-                  <DuncitIconButton size="small" aria-label={t('mweb.checkout.venueChargesAbout')} onClick={() => setVenueInfoOpen(true)} sx={{ p: 0.25 }}>
+                  <DuncitIconButton data-testid="venue-charges-info" size="small" aria-label={t('mweb.checkout.venueChargesAbout')} onClick={() => setVenueInfoOpen(true)} sx={{ p: 0.25 }}>
                     <InfoOutlinedIcon fontSize="inherit" color="action" />
                   </DuncitIconButton>
                 </Stack>
@@ -157,9 +158,11 @@ function Row({
   value,
   bold,
   tone,
-}: Readonly<{ label: string; value: string; bold?: boolean; tone?: string }>) {
+  testId,
+}: Readonly<{ label: string; value: string; bold?: boolean; tone?: string; testId?: string }>) {
   return (
     <Stack
+      data-testid={testId}
       direction="row"
       spacing={2}
       sx={{

@@ -38,6 +38,7 @@ export default function ExploreHeader({
   const { t } = useTranslation();
   return (
     <Stack
+      data-testid="explore-header"
       direction="row"
       spacing={1}
       sx={{ position: 'absolute', top: 12, left: 12, right: 12, zIndex: 3, alignItems: 'center' }}
@@ -45,6 +46,7 @@ export default function ExploreHeader({
       {/* The live count is the only line the header keeps — the tab bar
           already says this is Explore. */}
       <Typography
+        data-testid="explore-live-count"
         sx={(theme) => ({
           px: 1.5,
           py: 0.75,
@@ -60,10 +62,10 @@ export default function ExploreHeader({
         {`${resultCount} live`}
       </Typography>
       <Stack direction="row" spacing={1} sx={{ flex: 1, justifyContent: 'flex-end' }}>
-        <DuncitIconButton onClick={onRefresh} sx={HEADER_BTN_SX} aria-label={t('mweb.explore.refreshFeed')}>
+        <DuncitIconButton data-testid="explore-refresh" onClick={onRefresh} sx={HEADER_BTN_SX} aria-label={t('mweb.explore.refreshFeed')}>
           <RefreshRoundedIcon fontSize="small" />
         </DuncitIconButton>
-        <DuncitIconButton onClick={onOpenFilters} sx={HEADER_BTN_SX} aria-label={t('mweb.explore.openFilters')}>
+        <DuncitIconButton data-testid="explore-open-filters" onClick={onOpenFilters} sx={HEADER_BTN_SX} aria-label={t('mweb.explore.openFilters')}>
           <Badge badgeContent={activeCount} color="secondary" overlap="circular">
             <TuneRoundedIcon fontSize="small" />
           </Badge>

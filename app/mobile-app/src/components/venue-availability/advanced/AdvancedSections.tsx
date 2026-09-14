@@ -38,8 +38,11 @@ export function AdvancedSections({
   const advanceCap = effectiveMaxAdvance(settings.rules.max_advance_days);
 
   return (
-    <YStack gap={12}>
-      <SectionHeader title={t('availability.recurring.advancedSettings')} />
+    <YStack testID="advanced-sections" gap={12}>
+      <SectionHeader
+        testID="advanced-sections-header"
+        title={t('availability.recurring.advancedSettings')}
+      />
       <VenueRulesSection venueId={venueId} rules={settings.rules} onSaved={onVenueChanged} />
       <AutoExtendSection
         venueId={venueId}

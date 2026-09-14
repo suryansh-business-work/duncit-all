@@ -42,7 +42,7 @@ export function ContactStep({ control, emailStatus, phoneStatus }: Readonly<Prop
   const emailLines = signupContactLines(emailStatus, labels.contactCopy.email);
 
   return (
-    <YStack gap={16}>
+    <YStack testID="signup-contact-step" gap={16}>
       <WhatsappNumberFields
         control={control}
         names={WHATSAPP_NUMBER_NAMES}

@@ -148,7 +148,7 @@ export default function SurveyGatePage() {
   };
 
   if (step === 'loading') {
-    return <Box sx={{ display: 'grid', placeItems: 'center', minHeight: '60vh' }}><CircularProgress /></Box>;
+    return <Box data-testid="survey-gate-loading" sx={{ display: 'grid', placeItems: 'center', minHeight: '60vh' }}><CircularProgress /></Box>;
   }
 
   // The phase names itself; the old subtitle under it restated the phase.
@@ -164,7 +164,7 @@ export default function SurveyGatePage() {
     : '';
 
   return (
-    <Box sx={{ maxWidth: 680, mx: 'auto', px: 2, pt: 1.5, pb: { xs: 10, sm: 8 } }}>
+    <Box data-testid="survey-gate-page" sx={{ maxWidth: 680, mx: 'auto', px: 2, pt: 1.5, pb: { xs: 10, sm: 8 } }}>
       <GateHeader title={heading} onBack={goBackStep} />
       {step === 'category' && (
         <CategoryStep

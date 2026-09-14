@@ -40,6 +40,7 @@ function PrevArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
       onClick={onClick}
       aria-label={t('mweb.details.previousImage')}
       sx={(theme) => ({ ...arrowSx(theme), left: 8 })}
+      data-testid="venue-card-media-prev"
     >
       <ChevronLeftIcon fontSize="small" />
     </DuncitIconButton>
@@ -54,6 +55,7 @@ function NextArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
       onClick={onClick}
       aria-label={t('mweb.details.nextImage')}
       sx={(theme) => ({ ...arrowSx(theme), right: 8 })}
+      data-testid="venue-card-media-next"
     >
       <ChevronRightIcon fontSize="small" />
     </DuncitIconButton>
@@ -78,6 +80,7 @@ export default function VenueCardMedia({ images, venueName, onOpen }: Readonly<P
   if (images.length === 0) {
     return (
       <Box
+        data-testid="venue-card-media"
         sx={{
           ...FRAME,
           borderRadius: MEDIA_RADIUS,
@@ -95,6 +98,7 @@ export default function VenueCardMedia({ images, venueName, onOpen }: Readonly<P
   const multiple = images.length > 1;
   return (
     <Box
+      data-testid="venue-card-media"
       sx={{
         position: 'relative',
         borderRadius: MEDIA_RADIUS,
@@ -129,6 +133,7 @@ export default function VenueCardMedia({ images, venueName, onOpen }: Readonly<P
             }}
             aria-label={venueName}
             sx={{ display: 'block', width: '100%' }}
+            data-testid={`venue-card-media-slide-${url}`}
           >
             <Box
               component="img"

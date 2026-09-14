@@ -102,6 +102,7 @@ export default function MomentLightbox({
 
   return (
     <Dialog
+      data-testid="moment-lightbox"
       open={index !== null}
       onClose={close}
       fullScreen
@@ -118,6 +119,7 @@ export default function MomentLightbox({
         >
           {actions}
           <DuncitRoundButton
+            data-testid="moment-lightbox-close"
             size="large"
             tone="overlay"
             onClick={close}
@@ -129,6 +131,7 @@ export default function MomentLightbox({
         {moments.length > 1 && (
           <>
             <DuncitRoundButton
+              data-testid="moment-lightbox-prev"
               size="large"
               tone="overlay"
               onClick={prev}
@@ -138,6 +141,7 @@ export default function MomentLightbox({
               <ChevronLeftIcon />
             </DuncitRoundButton>
             <DuncitRoundButton
+              data-testid="moment-lightbox-next"
               size="large"
               tone="overlay"
               onClick={next}
@@ -159,6 +163,7 @@ export default function MomentLightbox({
           {moment.type === 'VIDEO' ? (
             <Box
               component="video"
+              data-testid="moment-lightbox-media"
               src={moment.url}
               controls
               autoPlay
@@ -167,6 +172,7 @@ export default function MomentLightbox({
           ) : (
             <Box
               component="img"
+              data-testid="moment-lightbox-media"
               src={moment.url}
               alt={`Moment ${current + 1} of ${moments.length}`}
               sx={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '12px' }}
@@ -175,6 +181,7 @@ export default function MomentLightbox({
         </Stack>
         {moments.length > 1 && (
           <Box
+            data-testid="moment-lightbox-counter"
             sx={{
               position: 'absolute',
               bottom: 16,

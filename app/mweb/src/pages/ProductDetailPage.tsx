@@ -118,24 +118,35 @@ export default function ProductDetailPage() {
 
   if (loading && !product)
     return (
-      <Stack sx={{ alignItems: "center", p: 6 }}>
+      <Stack sx={{ alignItems: "center", p: 6 }} data-testid="product-detail-loading">
         <CircularProgress />
       </Stack>
     );
-  if (error) return <Alert severity="error">{error.message}</Alert>;
-  if (!product) return <Alert severity="info">{t('mweb.productDetailPage.productNotFound')}</Alert>;
+  if (error) return <Alert severity="error" data-testid="product-detail-error">{error.message}</Alert>;
+  if (!product) return <Alert severity="info" data-testid="product-detail-not-found">{t('mweb.productDetailPage.productNotFound')}</Alert>;
 
   return (
-    <Stack spacing={2} sx={{ py: 0.5 }}>
-      <DuncitRoundButton aria-label={t('mweb.common.goBack')} onClick={() => navigate(-1)} sx={BACK_SX}>
+    <Stack spacing={2} sx={{ py: 0.5 }} data-testid="product-detail-screen">
+      <DuncitRoundButton
+        aria-label={t('mweb.common.goBack')}
+        onClick={() => navigate(-1)}
+        sx={BACK_SX}
+        data-testid="product-detail-close"
+      >
         <ArrowBackIcon />
       </DuncitRoundButton>
       {images.length > 0 && <ProductGallery images={images} alt={product.product_name} onZoom={setZoomIndex} />}
       <Stack spacing={0.75}>
-        <Typography component="h1" sx={{ fontSize: '1.375rem', fontWeight: 600, lineHeight: 1.25 }}>
+        <Typography
+          component="h1"
+          sx={{ fontSize: '1.375rem', fontWeight: 600, lineHeight: 1.25 }}
+          data-testid="product-detail-name"
+        >
           {product.product_name}
         </Typography>
-        <Typography sx={{ fontSize: '1.25rem', fontWeight: 700 }}>{formatRupees(price)}</Typography>
+        <Typography sx={{ fontSize: '1.25rem', fontWeight: 700 }} data-testid="product-detail-price">
+          {formatRupees(price)}
+        </Typography>
       </Stack>
       {variants.length > 0 && (
         <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
@@ -144,6 +155,7 @@ export default function ProductDetailPage() {
             return (
               <Chip
                 key={v.id}
+                data-testid={`variant-${v.id}`}
                 label={variantName(v)}
                 onClick={() => setVariantId(v.id)}
                 color={selected ? 'primary' : 'default'}
@@ -156,6 +168,7 @@ export default function ProductDetailPage() {
       {product.brand_name && (
         <Chip
           label={`by ${product.brand_name}`}
+          data-testid="product-detail-brand"
           onClick={product.brand_id ? () => setBrandOpen(product.brand_id) : undefined}
           sx={{ ...IDLE_PILL_SX, alignSelf: 'flex-start' }}
         />
@@ -165,7 +178,7 @@ export default function ProductDetailPage() {
         specs={specs}
       />
       {pod ? null : (
-        <Alert severity="info">
+        <Alert severity="info" data-testid="product-detail-no-pod">
           Products are purchased from a pod&apos;s shop while booking — find this product in a pod
           near you.
         </Alert>

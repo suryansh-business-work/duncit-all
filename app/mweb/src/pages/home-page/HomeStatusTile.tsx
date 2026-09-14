@@ -17,6 +17,7 @@ function ringSx(add: boolean, active: boolean) {
 }
 
 interface HomeStatusTileProps {
+  testId?: string;
   label: string;
   imageUrl?: string | null;
   videoUrl?: string | null;
@@ -27,6 +28,7 @@ interface HomeStatusTileProps {
 }
 
 export default function HomeStatusTile({
+  testId,
   label,
   imageUrl,
   videoUrl,
@@ -49,6 +51,7 @@ export default function HomeStatusTile({
     <Stack
       component="button"
       type="button"
+      data-testid={testId}
       onClick={onClick}
       spacing={0.6}
       sx={{

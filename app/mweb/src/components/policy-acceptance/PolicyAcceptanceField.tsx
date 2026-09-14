@@ -69,11 +69,12 @@ export default function PolicyAcceptanceField({
   };
 
   return (
-    <Box>
+    <Box data-testid="policy-acceptance-field">
       <FormControlLabel
         sx={{ alignItems: 'flex-start', m: 0 }}
         control={
           <Checkbox
+            data-testid="signup-policies-checkbox"
             checked={complete}
             onChange={(e) => handleToggle(e.target.checked)}
             sx={{ pt: 0.25 }}
@@ -90,7 +91,11 @@ export default function PolicyAcceptanceField({
           </Typography>
         }
       />
-      {helper && <FormHelperText error={!!error}>{helper}</FormHelperText>}
+      {helper && (
+        <FormHelperText data-testid={error ? 'acceptedPolicyIds-error' : 'policy-acceptance-hint'} error={!!error}>
+          {helper}
+        </FormHelperText>
+      )}
       <PolicyAcceptanceDialog
         open={open}
         policies={policies}

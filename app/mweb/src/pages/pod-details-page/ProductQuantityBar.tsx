@@ -25,6 +25,7 @@ export default function ProductQuantityBar({ quantity, maxQuantity, onUpdate }: 
         startIcon={<AddShoppingCartIcon />}
         disabled={outOfStock}
         onClick={() => onUpdate(1)}
+        data-testid="product-detail-add"
       >
         {outOfStock ? 'Out of stock' : 'Add to selection'}
       </DuncitButton>
@@ -33,6 +34,7 @@ export default function ProductQuantityBar({ quantity, maxQuantity, onUpdate }: 
   return (
     <Stack
       direction="row"
+      data-testid="product-quantity-bar"
       sx={{
         alignItems: "center",
         justifyContent: "space-between",
@@ -41,19 +43,29 @@ export default function ProductQuantityBar({ quantity, maxQuantity, onUpdate }: 
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>
-        <DuncitIconButton aria-label={t('mweb.podDetails.decreaseQuantity')} onClick={() => onUpdate(quantity - 1)}>
+        <DuncitIconButton
+          aria-label={t('mweb.podDetails.decreaseQuantity')}
+          onClick={() => onUpdate(quantity - 1)}
+          data-testid="product-detail-dec"
+        >
           <RemoveIcon />
         </DuncitIconButton>
-        <Typography sx={{ fontWeight: 700, minWidth: 24, textAlign: 'center' }}>{quantity}</Typography>
+        <Typography data-testid="product-detail-qty" sx={{ fontWeight: 700, minWidth: 24, textAlign: 'center' }}>{quantity}</Typography>
         <DuncitIconButton
           aria-label={t('mweb.podDetails.increaseQuantity')}
           disabled={quantity >= maxQuantity}
           onClick={() => onUpdate(Math.min(maxQuantity, quantity + 1))}
+          data-testid="product-detail-inc"
         >
           <AddIcon />
         </DuncitIconButton>
       </Stack>
-      <DuncitButton color="error" startIcon={<DeleteOutlineIcon />} onClick={() => onUpdate(0)}>
+      <DuncitButton
+        color="error"
+        startIcon={<DeleteOutlineIcon />}
+        onClick={() => onUpdate(0)}
+        data-testid="product-detail-remove"
+      >
         Remove
       </DuncitButton>
     </Stack>

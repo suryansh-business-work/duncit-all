@@ -35,8 +35,8 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
   };
 
   return (
-    <Box>
-      <SectionHeader title={t('mweb.createPod.placeCharges')} />
+    <Box data-testid="place-charges-field">
+      <SectionHeader testId="place-charges-field-header" title={t('mweb.createPod.placeCharges')} />
       {helperText && (
         <Typography
           variant="caption"
@@ -63,13 +63,18 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
             }}
           >
             <TextField
+              data-testid={`charge-label-${idx}`}
               label={t('mweb.createPod.chargeLabel')}
               size="small"
               value={row.label}
               onChange={(e) => update(idx, { label: e.target.value })}
               sx={{ flex: 2 }}
+              slotProps={{
+                htmlInput: { 'data-testid': `charge-label-${idx}-input` }
+              }}
             />
             <TextField
+              data-testid={`charge-amount-${idx}`}
               label={t('mweb.createPod.chargeAmount')}
               type="number"
               size="small"
@@ -77,22 +82,26 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
               onChange={(e) => update(idx, { amount: Number(e.target.value) || 0 })}
               sx={{ flex: 1 }}
               slotProps={{
-                htmlInput: { min: 0, max: 100000 }
+                htmlInput: { min: 0, max: 100000, 'data-testid': `charge-amount-${idx}-input` }
               }}
             />
             <TextField
+              data-testid={`charge-note-${idx}`}
               label={t('mweb.createPod.chargeNote')}
               size="small"
               value={row.note}
               onChange={(e) => update(idx, { note: e.target.value })}
               sx={{ flex: 2 }}
+              slotProps={{
+                htmlInput: { 'data-testid': `charge-note-${idx}-input` }
+              }}
             />
-            <DuncitIconButton aria-label={t('mweb.createPod.removeCharge')} onClick={() => remove(idx)} size="small">
+            <DuncitIconButton data-testid={`charge-remove-${idx}`} aria-label={t('mweb.createPod.removeCharge')} onClick={() => remove(idx)} size="small">
               <DeleteOutlineIcon fontSize="small" />
             </DuncitIconButton>
           </Stack>
         ))}
-        <DuncitButton startIcon={<AddIcon />} onClick={add} size="small" sx={{ alignSelf: 'flex-start' }}>
+        <DuncitButton data-testid="charge-add" startIcon={<AddIcon />} onClick={add} size="small" sx={{ alignSelf: 'flex-start' }}>
           {t('mweb.createPod.addCharge')}
         </DuncitButton>
       </Stack>

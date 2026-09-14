@@ -64,7 +64,7 @@ export default function LottiePlayer({
 
   if (!data) {
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width, height }}>
+      <Box data-testid="lottie-player-loading" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width, height }}>
         <CircularProgress size={20} />
       </Box>
     );
@@ -74,6 +74,7 @@ export default function LottiePlayer({
     // lottie-react 3: the animation is `src`, and lifecycle callbacks arrive
     // through `subscriptions` rather than as individual props.
     <Lottie
+      data-testid="lottie-player"
       src={data}
       loop={loop}
       autoplay={autoplay}

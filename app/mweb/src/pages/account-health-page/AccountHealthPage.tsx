@@ -16,7 +16,7 @@ export default function AccountHealthPage() {
   });
 
   return (
-    <Stack spacing={3} sx={{ mx: { xs: -0.25, sm: 0 } }}>
+    <Stack spacing={3} sx={{ mx: { xs: -0.25, sm: 0 } }} data-testid="account-health-screen">
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <DuncitIconButton
           onClick={() => navigate(-1)}
@@ -32,6 +32,7 @@ export default function AccountHealthPage() {
 
       {loading && !data && (
         <Stack
+          data-testid="account-health-loading"
           sx={{
             alignItems: "center",
             py: 4
@@ -40,7 +41,7 @@ export default function AccountHealthPage() {
         </Stack>
       )}
 
-      {error && <Alert severity="error">{error.message}</Alert>}
+      {error && <Alert severity="error" data-testid="account-health-error">{error.message}</Alert>}
 
       {data?.myAccountHealth && (
         <Stack spacing={3} sx={{

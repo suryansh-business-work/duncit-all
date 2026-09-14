@@ -24,7 +24,7 @@ export default function StatCards({ summary }: Readonly<{ summary: VenueEarnings
   ];
 
   return (
-    <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1.25 }}>
+    <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1.25 }} data-testid="venue-earnings-stat-cards">
       {stats.map((item) => (
         <StatCard
           key={item.label}

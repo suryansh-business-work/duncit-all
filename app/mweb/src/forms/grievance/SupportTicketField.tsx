@@ -38,9 +38,11 @@ export default function SupportTicketField({ control, options, loading }: Readon
   if (!loading && options.length === 0) {
     return (
       <Alert
+        data-testid="support-ticket-field-empty"
         severity="warning"
         action={
           <DuncitButton
+            data-testid="support-ticket-field-create"
             component={RouterLink}
             to={CREATE_TICKET_PATH}
             size="small"
@@ -71,7 +73,7 @@ export default function SupportTicketField({ control, options, loading }: Readon
       slotProps={{ inputLabel: { shrink: true }, select: { displayEmpty: true, renderValue: renderValue(options, copy.placeholder) } }}
     >
       {options.map((option) => (
-        <MenuItem key={option.value} value={option.value}>
+        <MenuItem key={option.value} data-testid={`support-ticket-option-${option.value}`} value={option.value}>
           {option.label}
         </MenuItem>
       ))}

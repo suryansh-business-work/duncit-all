@@ -28,13 +28,18 @@ export default function VirtualPodRows({
 }: Readonly<VirtualPodRowsProps>) {
   const visible = rows.slice(range.start, range.end + 1);
   return (
-    <Box ref={listRef}>
+    <Box data-testid="virtual-pod-rows" ref={listRef}>
       {range.leadPad > 0 && <Box sx={{ height: range.leadPad }} />}
       {visible.map((row, offset) => {
         const rowIndex = range.start + offset;
         if (isAdRow(row)) {
           return (
-            <Box key={row.adKey} ref={measureRow(rowIndex)} sx={{ mb: `${LIST_GAP}px` }}>
+            <Box
+              key={row.adKey}
+              data-testid={`virtual-pod-rows-ad-${row.adKey}`}
+              ref={measureRow(rowIndex)}
+              sx={{ mb: `${LIST_GAP}px` }}
+            >
               <AdCard ad={row.ad} />
             </Box>
           );
@@ -42,6 +47,7 @@ export default function VirtualPodRows({
         return (
           <Box
             key={row.items[0].id}
+            data-testid={`virtual-pod-rows-row-${row.items[0].id}`}
             ref={measureRow(rowIndex)}
             sx={{
               display: 'flex',

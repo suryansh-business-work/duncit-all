@@ -13,6 +13,7 @@ interface Props {
 export default function SubmitFooter({ count, total, saving, canSubmit, onSubmit }: Readonly<Props>) {
   return (
     <Box
+      data-testid="survey-footer"
       sx={{
         ...SURFACE_SX,
         // It floats over the white group cards, so it keeps a hairline edge.
@@ -39,7 +40,7 @@ export default function SubmitFooter({ count, total, saving, canSubmit, onSubmit
           }}>
             Selected
           </Typography>
-          <Typography variant="subtitle1" sx={{
+          <Typography data-testid="survey-count" variant="subtitle1" sx={{
             fontWeight: 600
           }}>
             {count}
@@ -49,6 +50,7 @@ export default function SubmitFooter({ count, total, saving, canSubmit, onSubmit
           </Typography>
         </Box>
         <DuncitButton
+          data-testid="survey-submit"
           variant="contained"
           color="primary"
           size="large"

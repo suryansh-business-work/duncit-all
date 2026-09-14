@@ -22,7 +22,7 @@ interface Props {
 export function PodSpotsField({ limits, value, onChange, error }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <YStack gap={6}>
+    <YStack testID="pod-spots-field" gap={6}>
       <SpotsStepper
         value={value}
         onChange={onChange}
@@ -33,7 +33,7 @@ export function PodSpotsField({ limits, value, onChange, error }: Readonly<Props
         error={error}
       />
       {limits.can_decrease ? null : (
-        <Text fontSize={12} color="$muted">
+        <Text testID="pod-spots-field-increase-only-hint" fontSize={12} color="$muted">
           {t('mweb.hostPodEdit.spotsIncreaseOnly')}
         </Text>
       )}

@@ -17,9 +17,10 @@ export default function HostApplyBanner() {
     fetchPolicy: 'cache-and-network',
   });
   const { label, disabled } = applyButtonState(data?.myHostRequest);
+  const buttonTestId = disabled ? 'host-apply-applied' : 'host-apply-cta';
 
   return (
-    <Card>
+    <Card data-testid="host-apply-banner">
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', p: 2 }}>
         <Box
           sx={{
@@ -39,6 +40,7 @@ export default function HostApplyBanner() {
           Ready to Host More Experiences?
         </Typography>
         <DuncitButton
+          data-testid={buttonTestId}
           variant="contained"
           disabled={disabled}
           onClick={() => navigate('/host/apply')}

@@ -40,6 +40,7 @@ exports:
   - 'TopProgressBar'
   - 'FormActionsRow'
   - 'useDebouncedValue'
+  - 'useRouteFocus'
   - 'mergeSx'
   - 'RICH_TEXT_BODY_SX'
   - 'ModerationBlockedDialog'
@@ -407,6 +408,7 @@ disagree about whether a submit in flight shows anything at all.
 | --- | --- | --- |
 | `LanguageSelect` | `({ value, options, onChange, label?, helperText?, disabled?, size?, fullWidth?, showSingle? })` | `options: readonly LanguageOption[]` where `LanguageOption = { code, label, english_label? }`. Renders `null` under two options — under ONE with `showSingle`, which only the shell's clock tray passes. `label` defaults to `'Language'`, `size` to `'small'`, `fullWidth` to `true`. |
 | `ModerationBlockedDialog` | `({ violations, onJump, onClose, title?, description? })` | `violations: BlockedViolation[]` = `{ id, message, type, stepIndex, stepTitle }`. Open state is derived — it renders when `violations.length > 0`. `onJump(stepIndex)` moves the wizard. |
+| `useRouteFocus` | `(target: RefObject<HTMLElement \| null>) => void` | Called once by the portal shell and the mWeb app layout: on a pathname change it focuses `<main tabIndex={-1}>` unless focus is already inside it (WCAG 2.4.3). |
 | `useDebouncedValue` | `<T>(value: T, delayMs = 300) => T` | Standalone filter inputs only — `DuncitTable` already debounces its own search. |
 | `usageColor` | `(percent: number) => 'success' \| 'warning' \| 'error'` | `error` ≥ 90, `warning` ≥ 75, else `success`. |
 | `mergeSx` | `(defaults: SxProps<Theme>, override?: SxProps<Theme>) => SxProps<Theme>` | Returns `defaults` untouched when `override` is falsy. |

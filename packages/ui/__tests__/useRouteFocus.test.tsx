@@ -3,7 +3,7 @@ import { useRef } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Link, useSearchParams } from 'react-router';
-import { useRouteFocus } from '../src/chrome/useRouteFocus';
+import { useRouteFocus } from '../src/useRouteFocus';
 
 /** A page region with a nav link outside it, a query-only control and an in-page link. */
 function Page({ withTarget = true }: Readonly<{ withTarget?: boolean }>) {

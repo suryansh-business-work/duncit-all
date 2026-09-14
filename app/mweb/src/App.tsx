@@ -3,7 +3,7 @@ import { useLocation } from 'react-router';
 import { Box, Container } from '@mui/material';
 import RouteScroll from './app/RouteScroll';
 import SkipLink from './app/SkipLink';
-import { useRouteFocus } from './app/useRouteFocus';
+import { useRouteFocus } from '@duncit/ui';
 import RouteMeta from './app/RouteMeta';
 import AppHeader from './components/AppHeader';
 import BottomNav from './components/BottomNav';

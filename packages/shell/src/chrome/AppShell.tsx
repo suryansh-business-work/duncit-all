@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { Box } from '@mui/material';
-import { Loader } from '@duncit/ui';
+import { Loader, useRouteFocus } from '@duncit/ui';
 import { AppBreadcrumbs, BreadcrumbProvider } from '@duncit/breadcrumb';
 import { useTranslation } from '../i18n/useTranslation';
 import { localizeNav, localizeSearchItems } from '../i18n/localize-nav';
@@ -14,7 +14,6 @@ import { STAFF_CHAT_ROLES } from '../staff-chat/roles';
 import { AppShellNav } from './AppShellNav';
 import { AgentLauncher } from './agent';
 import { usePortalAppFeatures } from './usePortalAppFeatures';
-import { useRouteFocus } from './useRouteFocus';
 import type { ShellUser } from './user-display';
 import { Taskbar, WorkspaceProvider } from '../workspace';
 

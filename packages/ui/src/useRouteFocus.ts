@@ -4,8 +4,10 @@ import { useLocation } from 'react-router';
 /**
  * Moves keyboard focus to the page region when the route changes (WCAG 2.4.3).
  *
- * A client-routed console never reloads, so after picking a sidebar entry the
- * focus stayed on that entry and a screen reader heard nothing of the new page.
+ * A client-routed app never reloads, so after picking a sidebar entry (portal
+ * shell) or tapping a bottom-nav tab or card (mWeb) the focus stayed on that
+ * control and a screen reader heard nothing of the new page. One hook serves
+ * both, because both render their `<main>` the same way (rule 40).
  * Focusing the `<main>` (which carries `tabIndex={-1}`) starts the next Tab from
  * the top of the page it opened. `preventScroll` keeps the viewport where the
  * page's own scroll restoration put it.

@@ -18,9 +18,10 @@ export default function ScannerViewport({ active, onCode, onManualCode }: Readon
   const [manual, setManual] = useState('');
 
   return (
-    <Stack spacing={1.25}>
+    <Stack spacing={1.25} data-testid="ticket-scan-viewport">
       {!error && (
         <Box
+          data-testid="ticket-scan-camera"
           sx={{
             position: 'relative',
             width: '100%',
@@ -51,7 +52,9 @@ export default function ScannerViewport({ active, onCode, onManualCode }: Readon
       <Box component="canvas" ref={canvasRef} sx={{ display: 'none' }} />
 
       {error ? (
-        <Alert severity="warning">{error}</Alert>
+        <Alert severity="warning" data-testid="ticket-scan-permission">
+          {error}
+        </Alert>
       ) : (
         <Typography
           variant="caption"
@@ -70,11 +73,13 @@ export default function ScannerViewport({ active, onCode, onManualCode }: Readon
           label={labels.pasteTicketCode}
           value={manual}
           onChange={(e) => setManual(e.target.value)}
+          data-testid="ticket-scan-manual-code"
         />
         <DuncitButton
           variant="outlined"
           disabled={!manual.trim()}
           onClick={() => onManualCode(manual.trim())}
+          data-testid="ticket-scan-check-code"
           sx={{ borderRadius: 999, fontWeight: 700, flex: '0 0 auto' }}
         >
           {labels.checkCode}

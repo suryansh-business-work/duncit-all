@@ -78,7 +78,13 @@ export default function ForceMarkDialog({
   });
 
   return (
-    <Dialog open={!!row} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog
+      open={!!row}
+      onClose={onClose}
+      fullWidth
+      maxWidth="xs"
+      data-testid="force-mark-dialog"
+    >
       <DialogTitle sx={{ fontWeight: 800 }}>{labels.forceTitle}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
@@ -102,7 +108,7 @@ export default function ForceMarkDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy} data-testid="force-mark-cancel">
           {labels.forceCancel}
         </DuncitButton>
         <DuncitButton
@@ -112,6 +118,7 @@ export default function ForceMarkDialog({
           onClick={() => {
             submit().catch(() => undefined);
           }}
+          data-testid="force-mark-confirm"
           sx={{ borderRadius: 999, fontWeight: 800 }}
         >
           {busy ? labels.marking : labels.forceConfirm}

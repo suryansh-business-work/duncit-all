@@ -10,6 +10,9 @@ import type { VenueAutoExtendForm } from '@duncit/slots';
 import { MY_SLOT_TEMPLATES, UPDATE_VENUE_SETTINGS } from '../../queries';
 import AdvancedAccordion from './AdvancedAccordion';
 
+const HORIZON_INPUT_TEST_ID: { 'data-testid': string } = { 'data-testid': 'auto-extend-horizon-input' };
+const UNTIL_TEST_ID: { 'data-testid': string } = { 'data-testid': 'auto-extend-until' };
+
 interface Props {
   venueId: string;
   autoExtend: VenueAutoExtendForm;
@@ -75,17 +78,26 @@ export default function FutureAvailabilityAccordion({
       icon={<EventRepeatIcon fontSize="small" color="action" />}
       title={t('availability.autoExtend.title')}
       caption={t('availability.autoExtend.caption')}
+      testId="advanced-auto-extend"
     >
       <Stack spacing={2}>
         <FormControlLabel
-          control={<Switch checked={draft.enabled} onChange={(e) => patch({ enabled: e.target.checked })} />}
+          control={
+            <Switch
+              checked={draft.enabled}
+              onChange={(e) => patch({ enabled: e.target.checked })}
+              data-testid="auto-extend-enabled"
+            />
+          }
           label={t('availability.autoExtend.toggle')}
         />
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {t('availability.autoExtend.body', { vars: { days: maxAdvanceDays } })}
         </Typography>
         {draft.enabled && !hasDefault && (
-          <Alert severity="warning">{t('availability.autoExtend.noDefaultTemplate')}</Alert>
+          <Alert severity="warning" data-testid="auto-extend-no-default">
+            {t('availability.autoExtend.noDefaultTemplate')}
+          </Alert>
         )}
         <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
           <TextField
@@ -99,7 +111,8 @@ export default function FutureAvailabilityAccordion({
             }}
             onBlur={commitHorizon}
             disabled={!draft.enabled}
-            slotProps={{ htmlInput: { min: 1, max: maxAdvanceDays } }}
+            data-testid="auto-extend-horizon"
+            slotProps={{ htmlInput: { min: 1, max: maxAdvanceDays, ...HORIZON_INPUT_TEST_ID } }}
           />
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <DatePicker
@@ -108,19 +121,27 @@ export default function FutureAvailabilityAccordion({
               onChange={(d) => patch({ until: d ? format(d, 'yyyy-MM-dd') : '' })}
               minDate={new Date()}
               disabled={!draft.enabled}
-              slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+              slotProps={{ textField: { fullWidth: true, size: 'small', ...UNTIL_TEST_ID } }}
             />
             {draft.enabled && draft.until && (
-              <DuncitButton size="small" onClick={() => patch({ until: '' })}>
+              <DuncitButton size="small" onClick={() => patch({ until: '' })} data-testid="auto-extend-clear">
                 {t('availability.autoExtend.clear')}
               </DuncitButton>
             )}
           </Stack>
         </Box>
-        {error && <Alert severity="error">{t('availability.autoExtend.saveFailed')}</Alert>}
-        {saved && !loading && <Alert severity="success">{t('availability.autoExtend.saved')}</Alert>}
+        {error && (
+          <Alert severity="error" data-testid="auto-extend-error">
+            {t('availability.autoExtend.saveFailed')}
+          </Alert>
+        )}
+        {saved && !loading && (
+          <Alert severity="success" data-testid="auto-extend-saved">
+            {t('availability.autoExtend.saved')}
+          </Alert>
+        )}
         <Box>
-          <DuncitButton variant="outlined" onClick={onSave} disabled={loading}>
+          <DuncitButton variant="outlined" onClick={onSave} disabled={loading} data-testid="auto-extend-save">
             {loading ? t('availability.autoExtend.saving') : t('availability.autoExtend.save')}
           </DuncitButton>
         </Box>

@@ -13,6 +13,10 @@ import AdvancedAccordion from './AdvancedAccordion';
 // The price comes from a number input, which only ever yields '' or a number.
 const toInt = (v: string) => Math.max(0, Math.round(Number(v)));
 
+const FROM_TEST_ID: { 'data-testid': string } = { 'data-testid': 'bulk-from' };
+const TO_TEST_ID: { 'data-testid': string } = { 'data-testid': 'bulk-to' };
+const PRICE_INPUT_TEST_ID: { 'data-testid': string } = { 'data-testid': 'bulk-price-input' };
+
 interface BulkResult {
   matched: number;
   affected: number;
@@ -74,6 +78,7 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
       title={t('availability.bulk.title')}
       caption={t('availability.bulk.caption')}
       tone="error"
+      testId="advanced-bulk"
     >
       <Stack spacing={2}>
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -84,27 +89,32 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
             label={t('availability.bulk.from')}
             value={from}
             onChange={setFrom}
-            slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            slotProps={{ textField: { size: 'small', fullWidth: true, ...FROM_TEST_ID } }}
           />
           <DatePicker
             label={t('availability.bulk.to')}
             value={to}
             onChange={setTo}
-            slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            slotProps={{ textField: { size: 'small', fullWidth: true, ...TO_TEST_ID } }}
           />
         </Stack>
-        <DayOfWeekPicker value={weekdays} onChange={setWeekdays} />
+        <DayOfWeekPicker value={weekdays} onChange={setWeekdays} testId="bulk-weekdays" />
         {result && (
-          <Alert severity="info" onClose={() => setResult(null)}>
+          <Alert severity="info" onClose={() => setResult(null)} data-testid="bulk-result">
             {result}
           </Alert>
         )}
-        {bulkError && <Alert severity="error">{bulkError.message}</Alert>}
+        {bulkError && (
+          <Alert severity="error" data-testid="bulk-error">
+            {bulkError.message}
+          </Alert>
+        )}
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1, alignItems: 'center' }}>
           <DuncitButton
             color="error"
             variant="outlined"
             onClick={() => confirmThen(t('availability.bulk.confirmDelete'), runDelete)}
+            data-testid="bulk-delete"
           >
             {t('availability.bulk.deleteMatching')}
           </DuncitButton>
@@ -116,6 +126,7 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
                 runUpdate({ block: true }, t('availability.bulk.actionDisabled')),
               )
             }
+            data-testid="bulk-disable"
           >
             {t('availability.bulk.disable')}
           </DuncitButton>
@@ -126,6 +137,7 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
                 runUpdate({ block: false }, t('availability.bulk.actionEnabled')),
               )
             }
+            data-testid="bulk-enable"
           >
             {t('availability.bulk.enable')}
           </DuncitButton>
@@ -138,7 +150,8 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             sx={{ maxWidth: 160 }}
-            slotProps={{ htmlInput: { min: 0 } }}
+            data-testid="bulk-price"
+            slotProps={{ htmlInput: { min: 0, ...PRICE_INPUT_TEST_ID } }}
           />
           <DuncitButton
             variant="outlined"
@@ -148,6 +161,7 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
                 runUpdate({ set_price: toInt(price) }, t('availability.bulk.actionRepriced')),
               )
             }
+            data-testid="bulk-set-price"
           >
             {t('availability.bulk.setPrice')}
           </DuncitButton>

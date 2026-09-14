@@ -29,7 +29,7 @@ export default function PodMediaShareCard({ podId, podTitle }: Readonly<Props>) 
   };
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3 }}>
+    <Paper variant="outlined" data-testid="pod-media-share-card" sx={{ p: 1.5, borderRadius: 3 }}>
       <Stack spacing={1}>
         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
           {podMediaLabels.shareHeading}
@@ -43,6 +43,7 @@ export default function PodMediaShareCard({ podId, podTitle }: Readonly<Props>) 
             variant="contained"
             startIcon={<IosShareIcon fontSize="small" />}
             onClick={fire(() => media.share(pod))}
+            data-testid="pod-media-share"
             sx={{ borderRadius: 999, fontWeight: 700 }}
           >
             {podMediaLabels.shareLink}
@@ -52,6 +53,7 @@ export default function PodMediaShareCard({ podId, podTitle }: Readonly<Props>) 
             variant="outlined"
             startIcon={<ContentCopyIcon fontSize="small" />}
             onClick={fire(() => media.copy(pod))}
+            data-testid="pod-media-copy"
             sx={{ borderRadius: 999, fontWeight: 700 }}
           >
             {podMediaLabels.copyLink}

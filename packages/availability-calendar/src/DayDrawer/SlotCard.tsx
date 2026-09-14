@@ -22,7 +22,10 @@ export default function SlotCard({ slot, onToggleBlock, onRequestDelete }: Reado
   const blocked = slot.status === 'BLOCKED';
 
   return (
-    <Box sx={{ p: 1.25, borderRadius: 1.5, border: 1, borderColor: 'divider' }}>
+    <Box
+      data-testid={`day-slot-${slot.id}`}
+      sx={{ p: 1.25, borderRadius: 1.5, border: 1, borderColor: 'divider' }}
+    >
       <Stack
         direction="row"
         sx={{
@@ -45,7 +48,12 @@ export default function SlotCard({ slot, onToggleBlock, onRequestDelete }: Reado
             }}>
             {priceLabel(slot.price, t)}
           </Typography>
-          <Chip size="small" color={STATUS_COLOR[slot.status]} label={slot.status} />
+          <Chip
+            size="small"
+            color={STATUS_COLOR[slot.status]}
+            label={slot.status}
+            data-testid={`day-slot-${slot.id}-status`}
+          />
         </Stack>
       </Stack>
       {slot.space_label && (
@@ -94,6 +102,7 @@ export default function SlotCard({ slot, onToggleBlock, onRequestDelete }: Reado
             size="small"
             startIcon={blocked ? <CheckIcon /> : <BlockIcon />}
             onClick={() => onToggleBlock(slot)}
+            data-testid={`day-slot-${slot.id}-block`}
           >
             {blocked ? t('availability.unblock') : t('availability.block')}
           </DuncitButton>
@@ -102,6 +111,7 @@ export default function SlotCard({ slot, onToggleBlock, onRequestDelete }: Reado
             color="error"
             startIcon={<DeleteOutlineIcon />}
             onClick={() => onRequestDelete(slot.id)}
+            data-testid={`day-slot-${slot.id}-delete`}
           >
             {t('availability.delete')}
           </DuncitButton>

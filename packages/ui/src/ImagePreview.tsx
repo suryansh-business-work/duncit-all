@@ -12,6 +12,7 @@ export interface ImagePreviewProps {
   label: string;
   /** Thumbnail edge length in px. Default 96. */
   size?: number;
+  testId?: string;
 }
 
 const DEFAULT_SIZE = 96;
@@ -26,7 +27,7 @@ const DEFAULT_SIZE = 96;
  * server-side long after the record was written (same reasoning as the
  * bundled-fallback icon rule).
  */
-export function ImagePreview({ src, label, size = DEFAULT_SIZE }: Readonly<ImagePreviewProps>) {
+export function ImagePreview({ src, label, size = DEFAULT_SIZE, testId }: Readonly<ImagePreviewProps>) {
   const [open, setOpen] = useState(false);
   const [broken, setBroken] = useState(false);
 
@@ -38,6 +39,7 @@ export function ImagePreview({ src, label, size = DEFAULT_SIZE }: Readonly<Image
         rel="noreferrer"
         variant="body2"
         underline="hover"
+        data-testid={testId}
         sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontWeight: 700 }}
       >
         <OpenInNewIcon fontSize="small" />
@@ -53,6 +55,7 @@ export function ImagePreview({ src, label, size = DEFAULT_SIZE }: Readonly<Image
       <ButtonBase
         onClick={() => setOpen(true)}
         aria-label={`Enlarge ${label}`}
+        data-testid={testId}
         sx={{
           width: size,
           height: size,
@@ -99,6 +102,7 @@ export function ImagePreview({ src, label, size = DEFAULT_SIZE }: Readonly<Image
         onClose={() => setOpen(false)}
         maxWidth="lg"
         fullWidth
+        data-testid="image-preview-dialog"
         slotProps={{
           paper: { sx: { bgcolor: 'common.black' } }
         }}
@@ -109,6 +113,7 @@ export function ImagePreview({ src, label, size = DEFAULT_SIZE }: Readonly<Image
             tone="overlay"
             onClick={() => setOpen(false)}
             aria-label={`Close ${label}`}
+            data-testid="image-preview-close"
             sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}
           >
             <CloseIcon />

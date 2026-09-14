@@ -22,7 +22,7 @@ interface Props {
 export default function PodMediaGrid({ items, labels, onRemove, busy = false }: Readonly<Props>) {
   if (items.length === 0) {
     return (
-      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+      <Typography variant="body2" data-testid="pod-media-empty" sx={{ color: 'text.secondary' }}>
         {labels.empty}
       </Typography>
     );
@@ -30,6 +30,7 @@ export default function PodMediaGrid({ items, labels, onRemove, busy = false }: 
 
   return (
     <Box
+      data-testid="pod-media-grid"
       sx={{
         display: 'grid',
         gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)' },
@@ -37,7 +38,7 @@ export default function PodMediaGrid({ items, labels, onRemove, busy = false }: 
       }}
     >
       {items.map((item) => (
-        <Stack key={item.url} spacing={0.5}>
+        <Stack key={item.url} spacing={0.5} data-testid={`pod-media-item-${item.url}`}>
           <Box sx={{ position: 'relative', borderRadius: 2, overflow: 'hidden', bgcolor: 'action.hover' }}>
             {item.type === 'VIDEO' ? (
               <Box
@@ -64,6 +65,7 @@ export default function PodMediaGrid({ items, labels, onRemove, busy = false }: 
                     aria-label={labels.remove}
                     disabled={busy}
                     onClick={() => onRemove(item.url)}
+                    data-testid={`pod-media-remove-${item.url}`}
                     sx={{ bgcolor: 'background.paper', '&:hover': { bgcolor: 'background.paper' } }}
                   >
                     <DeleteOutlinedIcon fontSize="small" color="error" />

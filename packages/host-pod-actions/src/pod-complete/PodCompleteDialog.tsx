@@ -113,7 +113,13 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
   });
 
   return (
-    <Dialog open={!!pod} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog
+      open={!!pod}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      data-testid="pod-complete-dialog"
+    >
       <DialogTitle sx={{ fontWeight: 700 }}>{labels.completePod}</DialogTitle>
       <DialogContent dividers>
         <Stack
@@ -134,6 +140,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
               required
               type="number"
               fullWidth
+              data-testid="pod-complete-venue-bill"
               {...register('venue_bill_amount')}
               error={!!errors.venue_bill_amount}
               helperText={errors.venue_bill_amount?.message}
@@ -151,11 +158,19 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
               onScan={() => setScanOpen(true)}
             />
           )}
-          {completeState.error && <Alert severity="error">{completeState.error.message}</Alert>}
+          {completeState.error && (
+            <Alert severity="error" data-testid="pod-complete-error">
+              {completeState.error.message}
+            </Alert>
+          )}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose} disabled={completeState.loading}>
+        <DuncitButton
+          onClick={onClose}
+          disabled={completeState.loading}
+          data-testid="pod-complete-cancel"
+        >
           {labels.cancel}
         </DuncitButton>
         <DuncitButton
@@ -163,6 +178,7 @@ export default function PodCompleteDialog({ pod, onClose, onCompleted }: Readonl
           form="pod-complete-form"
           variant="contained"
           loading={completeState.loading}
+          data-testid="pod-complete-submit"
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {completeState.loading ? labels.completing : labels.completePod}

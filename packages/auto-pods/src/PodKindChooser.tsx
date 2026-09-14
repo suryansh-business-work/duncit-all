@@ -20,16 +20,18 @@ interface PodKindOptionProps {
   title: string;
   description: string;
   onClick: () => void;
+  testId: string;
 }
 
 /**
  * One of the two boxes. Hoisted to module scope (rule 26a/S6478) and a real
  * ButtonBase, so it is reachable by keyboard and announced as a button.
  */
-function PodKindOption({ icon, title, description, onClick }: Readonly<PodKindOptionProps>) {
+function PodKindOption({ icon, title, description, onClick, testId }: Readonly<PodKindOptionProps>) {
   return (
     <ButtonBase
       onClick={onClick}
+      data-testid={testId}
       sx={{ flex: 1, textAlign: 'left', borderRadius: 2, alignItems: 'stretch' }}
     >
       <Paper
@@ -84,7 +86,7 @@ export interface PodKindChooserProps {
  */
 export function PodKindChooser({ open, labels, onClose, onPick }: Readonly<PodKindChooserProps>) {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={onClose} data-testid="pod-kind-chooser" fullWidth maxWidth="sm">
       <DialogTitle sx={{ pb: 0.5 }}>{labels.title}</DialogTitle>
       <DialogContent>
         <Typography
@@ -103,17 +105,19 @@ export function PodKindChooser({ open, labels, onClose, onPick }: Readonly<PodKi
             title={labels.normalTitle}
             description={labels.normalDesc}
             onClick={() => onPick('NORMAL')}
+            testId="pod-kind-normal"
           />
           <PodKindOption
             icon={<AutoModeIcon color="primary" />}
             title={labels.autoTitle}
             description={labels.autoDesc}
             onClick={() => onPick('AUTO')}
+            testId="pod-kind-auto"
           />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose}>{labels.dismiss}</DuncitButton>
+        <DuncitButton onClick={onClose} data-testid="pod-kind-chooser-dismiss">{labels.dismiss}</DuncitButton>
       </DialogActions>
     </Dialog>
   );

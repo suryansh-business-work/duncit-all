@@ -3,7 +3,7 @@ import type { WaterfallLine } from './waterfall-lines';
 
 function WaterfallRow({ symbol, line }: Readonly<{ symbol: string; line: WaterfallLine }>) {
   return (
-    <Stack spacing={0}>
+    <Stack spacing={0} data-testid={`finance-waterfall-row-${line.key}`}>
       <Stack direction="row" spacing={2} sx={{
         justifyContent: "space-between"
       }}>
@@ -36,7 +36,7 @@ export default function FinanceWaterfallList({
   lines,
 }: Readonly<{ symbol: string; lines: WaterfallLine[] }>) {
   return (
-    <Stack spacing={0.75}>
+    <Stack spacing={0.75} data-testid="finance-waterfall-list">
       {lines.map((line) => (
         <WaterfallRow key={line.key} symbol={symbol} line={line} />
       ))}

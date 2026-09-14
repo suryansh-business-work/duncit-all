@@ -14,6 +14,10 @@ interface Props {
   onOpen: () => void;
   onShare: () => void;
   onCopy: () => void;
+  /** Distinct per pod row — several of these render on one screen. */
+  testId?: string;
+  shareTestId?: string;
+  copyTestId?: string;
 }
 
 /**
@@ -34,6 +38,9 @@ export default function PodLinkMenuItem({
   onOpen,
   onShare,
   onCopy,
+  testId,
+  shareTestId,
+  copyTestId,
 }: Readonly<Props>) {
   const act = (action: () => void) => (event: MouseEvent<HTMLElement>) => {
     event.stopPropagation();
@@ -41,17 +48,29 @@ export default function PodLinkMenuItem({
   };
 
   return (
-    <MenuItem onClick={onOpen}>
+    <MenuItem onClick={onOpen} data-testid={testId}>
       <ListItemIcon>{icon}</ListItemIcon>
       <ListItemText primary={label} />
       <Stack direction="row" spacing={0.5} sx={{ pl: 1 }}>
         <Tooltip title={shareLabel}>
-          <DuncitIconButton size="small" edge="end" aria-label={shareLabel} onClick={act(onShare)}>
+          <DuncitIconButton
+            size="small"
+            edge="end"
+            aria-label={shareLabel}
+            onClick={act(onShare)}
+            data-testid={shareTestId}
+          >
             <IosShareIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>
         <Tooltip title={copyLabel}>
-          <DuncitIconButton size="small" edge="end" aria-label={copyLabel} onClick={act(onCopy)}>
+          <DuncitIconButton
+            size="small"
+            edge="end"
+            aria-label={copyLabel}
+            onClick={act(onCopy)}
+            data-testid={copyTestId}
+          >
             <ContentCopyIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>

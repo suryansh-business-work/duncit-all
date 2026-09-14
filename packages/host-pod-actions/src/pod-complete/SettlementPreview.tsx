@@ -76,7 +76,7 @@ export default function SettlementPreview({
 
   const body = () => {
     if (!settlement) {
-      if (loading) return <CircularProgress size={18} />;
+      if (loading) return <CircularProgress size={18} data-testid="settlement-loading" />;
       // Show the server's reason instead of silently hiding the calculation.
       // Apollo 4 hands back ONE error whose message already carries the server's
       // reason (a GraphQL failure arrives as CombinedGraphQLErrors, formatted).
@@ -122,7 +122,10 @@ export default function SettlementPreview({
   };
 
   return (
-    <Box sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'rgba(255,79,115,0.08)' }}>
+    <Box
+      data-testid="settlement-summary"
+      sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'rgba(255,79,115,0.08)' }}
+    >
       <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
         Your share (credited to your wallet on completion)
       </Typography>

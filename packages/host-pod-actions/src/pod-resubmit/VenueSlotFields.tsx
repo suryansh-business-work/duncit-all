@@ -21,13 +21,14 @@ export function VenueField({ venues, value, error, onChange }: Readonly<VenueFie
       label={labels.venue}
       required
       fullWidth
+      data-testid="pod-resubmit-venue-field"
       value={value}
       onChange={(e) => onChange(e.target.value)}
       error={!!error}
       helperText={error ?? labels.venueHint}
     >
       {venues.map((venue) => (
-        <MenuItem key={venue.id} value={venue.id}>
+        <MenuItem key={venue.id} value={venue.id} data-testid={`resubmit-venue-${venue.id}`}>
           {venue.venue_name}
           {venue.city ? ` · ${venue.city}` : ''}
         </MenuItem>
@@ -77,7 +78,7 @@ export function SlotField({
 
   if (disabled) {
     return (
-      <Typography variant="body2" sx={{
+      <Typography variant="body2" data-testid="pod-resubmit-slot-pick-venue-first" sx={{
         color: "text.secondary"
       }}>
         {slotLabels.pickVenueFirst}

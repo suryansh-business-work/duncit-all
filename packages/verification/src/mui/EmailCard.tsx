@@ -12,7 +12,11 @@ export default function EmailCard({ item }: Readonly<{ item: Verification }>) {
   const { t } = useTranslation();
   return (
     <VerificationCardShell item={item}>
-      <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>
+      <Typography
+        variant="caption"
+        data-testid="verification-email-note"
+        sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}
+      >
         {t('verification.emailNote')}
       </Typography>
     </VerificationCardShell>

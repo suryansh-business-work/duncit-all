@@ -17,6 +17,13 @@ import type { VenueSpace } from '../types';
 
 export type { SlotDraft };
 
+const START_DATE_TEST_ID: { 'data-testid': string } = { 'data-testid': 'add-slot-start-date' };
+const START_TIME_TEST_ID: { 'data-testid': string } = { 'data-testid': 'add-slot-start-time' };
+const END_DATE_TEST_ID: { 'data-testid': string } = { 'data-testid': 'add-slot-end-date' };
+const END_TIME_TEST_ID: { 'data-testid': string } = { 'data-testid': 'add-slot-end-time' };
+const PRICE_INPUT_TEST_ID: { 'data-testid': string } = { 'data-testid': 'add-slot-price-input' };
+const NOTES_INPUT_TEST_ID: { 'data-testid': string } = { 'data-testid': 'add-slot-notes-input' };
+
 interface Props {
   draft: SlotDraft;
   patch: (p: Partial<SlotDraft>) => void;
@@ -60,7 +67,11 @@ export default function AddSlotFields({
     <>
       <FormControlLabel
         control={
-          <Switch checked={wholeDay} onChange={(e) => patch({ wholeDay: e.target.checked })} />
+          <Switch
+            checked={wholeDay}
+            onChange={(e) => patch({ wholeDay: e.target.checked })}
+            data-testid="add-slot-whole-day"
+          />
         }
         label={
           <Box>
@@ -85,9 +96,14 @@ export default function AddSlotFields({
           value={activeSpace?.label ?? ''}
           onChange={(e) => patch({ spaceLabel: e.target.value })}
           helperText={t('availability.spaceHint')}
+          data-testid="add-slot-space"
         >
           {spaces.map((space) => (
-            <MenuItem key={space.label} value={space.label}>
+            <MenuItem
+              key={space.label}
+              value={space.label}
+              data-testid={`add-slot-space-${space.label}`}
+            >
               {spaceOption(space)}
             </MenuItem>
           ))}
@@ -100,7 +116,7 @@ export default function AddSlotFields({
           onChange={(next) => patch({ startDate: next })}
           minDate={now}
           maxDate={maxDate}
-          slotProps={{ textField: { size: 'small', fullWidth: true } }}
+          slotProps={{ textField: { size: 'small', fullWidth: true, ...START_DATE_TEST_ID } }}
         />
         {!wholeDay && (
           <TimePicker
@@ -108,7 +124,7 @@ export default function AddSlotFields({
             value={startTime}
             onChange={(next) => patch({ startTime: next })}
             minTime={minTimeOn(startDate, now)}
-            slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            slotProps={{ textField: { size: 'small', fullWidth: true, ...START_TIME_TEST_ID } }}
           />
         )}
       </Stack>
@@ -119,7 +135,7 @@ export default function AddSlotFields({
           onChange={(next) => patch({ endDate: next })}
           minDate={startDate ?? now}
           maxDate={maxDate}
-          slotProps={{ textField: { size: 'small', fullWidth: true } }}
+          slotProps={{ textField: { size: 'small', fullWidth: true, ...END_DATE_TEST_ID } }}
         />
         {!wholeDay && (
           <TimePicker
@@ -127,11 +143,15 @@ export default function AddSlotFields({
             value={endTime}
             onChange={(next) => patch({ endTime: next })}
             minTime={minEndTime(draft, now)}
-            slotProps={{ textField: { size: 'small', fullWidth: true } }}
+            slotProps={{ textField: { size: 'small', fullWidth: true, ...END_TIME_TEST_ID } }}
           />
         )}
       </Stack>
-      {isMultiDay && <Alert severity="info">{t('availability.multiDayHint')}</Alert>}
+      {isMultiDay && (
+        <Alert severity="info" data-testid="add-slot-multi-day">
+          {t('availability.multiDayHint')}
+        </Alert>
+      )}
       <TextField
         size="small"
         type="number"
@@ -139,8 +159,9 @@ export default function AddSlotFields({
         value={price}
         onChange={(e) => patch({ price: e.target.value })}
         helperText={t('availability.priceHint')}
+        data-testid="add-slot-price"
         slotProps={{
-          htmlInput: { min: 0, step: 50 }
+          htmlInput: { min: 0, step: 50, ...PRICE_INPUT_TEST_ID }
         }}
       />
       <TextField
@@ -148,8 +169,9 @@ export default function AddSlotFields({
         label={t('availability.notes')}
         value={notes}
         onChange={(e) => patch({ notes: e.target.value })}
+        data-testid="add-slot-notes"
         slotProps={{
-          htmlInput: { maxLength: 280 }
+          htmlInput: { maxLength: 280, ...NOTES_INPUT_TEST_ID }
         }}
       />
     </>

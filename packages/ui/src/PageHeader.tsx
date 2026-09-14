@@ -22,7 +22,7 @@ export interface PageHeaderProps {
 export function PageHeader({ title, subtitle, actions, titleVariant = 'h5', titleWeight = 800, sx }: Readonly<PageHeaderProps>) {
   const block = (
     <Box>
-      <Typography variant={titleVariant} sx={{ fontWeight: titleWeight }}>
+      <Typography variant={titleVariant} data-testid="page-header-title" sx={{ fontWeight: titleWeight }}>
         {title}
       </Typography>
       {subtitle != null && (
@@ -38,6 +38,7 @@ export function PageHeader({ title, subtitle, actions, titleVariant = 'h5', titl
     return (
       <Stack
         direction="row"
+        data-testid="page-header"
         sx={mergeSx({
           alignItems: "flex-start",
           justifyContent: "space-between",
@@ -56,5 +57,5 @@ export function PageHeader({ title, subtitle, actions, titleVariant = 'h5', titl
       </Stack>
     );
   }
-  return <Box sx={sx}>{block}</Box>;
+  return <Box data-testid="page-header" sx={sx}>{block}</Box>;
 }

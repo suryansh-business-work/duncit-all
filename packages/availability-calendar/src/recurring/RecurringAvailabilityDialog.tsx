@@ -76,7 +76,15 @@ export default function RecurringAvailabilityDialog({
       : t('availability.recurring.createSlots', { vars: { count: total } });
 
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth="lg" fullScreen={fullScreen} scroll="paper">
+    <Dialog
+      open={open}
+      onClose={close}
+      fullWidth
+      maxWidth="lg"
+      fullScreen={fullScreen}
+      scroll="paper"
+      data-testid="recurring-sheet"
+    >
       <DialogTitle sx={{ pr: 6 }}>
         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
           <EventRepeatIcon color="primary" />
@@ -92,6 +100,7 @@ export default function RecurringAvailabilityDialog({
         <DuncitIconButton
           onClick={close}
           aria-label={t('availability.close')}
+          data-testid="recurring-sheet-close"
           sx={{ position: 'absolute', right: 8, top: 8 }}
         >
           <CloseIcon />
@@ -102,12 +111,14 @@ export default function RecurringAvailabilityDialog({
         <Stack spacing={3}>
           <BasicSection form={form} patch={patch} settings={venueSettings} />
           {serverError && (
-            <Alert severity="error" onClose={() => setServerError(null)}>
+            <Alert severity="error" onClose={() => setServerError(null)} data-testid="recurring-server-error">
               {serverError}
             </Alert>
           )}
           {datesPicked && firstError && (
-            <Alert severity="warning">{recurringErrorMessage(firstError, t, venueSettings)}</Alert>
+            <Alert severity="warning" data-testid="recurring-issue">
+              {recurringErrorMessage(firstError, t, venueSettings)}
+            </Alert>
           )}
 
           <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 800, pt: 0.5 }}>
@@ -130,8 +141,15 @@ export default function RecurringAvailabilityDialog({
       </Box>
 
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <DuncitButton onClick={close}>{t('availability.cancel')}</DuncitButton>
-        <DuncitButton variant="contained" disabled={!canCreate} onClick={handleCreate}>
+        <DuncitButton onClick={close} data-testid="recurring-cancel">
+          {t('availability.cancel')}
+        </DuncitButton>
+        <DuncitButton
+          variant="contained"
+          disabled={!canCreate}
+          onClick={handleCreate}
+          data-testid="recurring-create"
+        >
           {submitting ? t('availability.recurring.creating') : createLabel}
         </DuncitButton>
       </DialogActions>

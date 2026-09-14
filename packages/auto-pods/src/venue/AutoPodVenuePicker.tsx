@@ -84,10 +84,11 @@ export function AutoPodVenuePicker({ value, onChange, labels, size = 'small' }: 
         // The select only ever hands back an id it listed, so the venue is there.
         onChange={(event) => onChange(venues.find((venue) => venue.id === event.target.value)!)}
         disabled={loading}
+        data-testid="auto-pod-venue-select"
         slotProps={{ input: { endAdornment: <SelectSpinner busy={loading} /> } }}
       >
         {venues.map((venue) => (
-          <MenuItem key={venue.id} value={venue.id}>
+          <MenuItem key={venue.id} value={venue.id} data-testid={`auto-pod-venue-option-${venue.id}`}>
             {venue.venue_name}
           </MenuItem>
         ))}

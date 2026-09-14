@@ -55,7 +55,11 @@ export const buildPodCancelSchema = (labels: HostPodActionLabels) =>
 function ImpactSummary({ impact }: Readonly<{ impact: PodDeleteImpact }>) {
   const { labels } = useHostPodActionsConfig();
   if (impact.other_attendee_count === 0) {
-    return <Alert severity="info">{labels.cancelNoOthers}</Alert>;
+    return (
+      <Alert severity="info" data-testid="pod-delete-impact">
+        {labels.cancelNoOthers}
+      </Alert>
+    );
   }
   // One sentence per row rather than fragments joined in JSX: a language that
   // orders the clause differently cannot be built by concatenation.
@@ -67,7 +71,7 @@ function ImpactSummary({ impact }: Readonly<{ impact: PodDeleteImpact }>) {
         )
       : labels.cancelEmailOnly;
   return (
-    <Alert severity="warning">
+    <Alert severity="warning" data-testid="pod-delete-impact">
       {labels.cancelOthers(impact.other_attendee_count)} {refundLine}
     </Alert>
   );
@@ -130,13 +134,20 @@ export default function PodCancelDialog({
   });
 
   return (
-    <Dialog open={!!podId} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog
+      open={!!podId}
+      onClose={onClose}
+      fullWidth
+      maxWidth="xs"
+      data-testid="pod-delete-dialog"
+    >
       <DialogTitle sx={{ fontWeight: 700 }}>{labels.cancelPod}</DialogTitle>
       <DialogContent dividers>
         <Stack component="form" id="pod-cancel-form" onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
           <Typography variant="body2">{labels.cancelIntro(podTitle)}</Typography>
           {impactQ.loading && (
             <Stack
+              data-testid="pod-cancel-impact-loading"
               sx={{
                 alignItems: "center",
                 py: 1
@@ -144,7 +155,11 @@ export default function PodCancelDialog({
               <CircularProgress size={20} />
             </Stack>
           )}
-          {impactQ.error && <Alert severity="error">{impactQ.error.message}</Alert>}
+          {impactQ.error && (
+            <Alert severity="error" data-testid="pod-cancel-impact-error">
+              {impactQ.error.message}
+            </Alert>
+          )}
           {impact && <ImpactSummary impact={impact} />}
           <TextField
             select
@@ -152,12 +167,13 @@ export default function PodCancelDialog({
             required
             fullWidth
             defaultValue=""
+            data-testid="pod-cancel-reason"
             {...register('reason_subject')}
             error={!!errors.reason_subject}
             helperText={errors.reason_subject?.message}
           >
             {POD_DELETE_REASON_SUBJECTS.map((item) => (
-              <MenuItem key={item} value={item}>
+              <MenuItem key={item} value={item} data-testid={`pod-delete-reason-${item}`}>
                 {labels.cancelReason(item)}
               </MenuItem>
             ))}
@@ -168,17 +184,26 @@ export default function PodCancelDialog({
             fullWidth
             multiline
             minRows={2}
+            data-testid="pod-delete-note"
             {...register('reason_note')}
             error={!!errors.reason_note}
             helperText={
               errors.reason_note?.message ?? labels.noteHint
             }
           />
-          {removeState.error && <Alert severity="error">{removeState.error.message}</Alert>}
+          {removeState.error && (
+            <Alert severity="error" data-testid="pod-delete-error">
+              {removeState.error.message}
+            </Alert>
+          )}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose} disabled={removeState.loading}>
+        <DuncitButton
+          onClick={onClose}
+          disabled={removeState.loading}
+          data-testid="pod-delete-cancel"
+        >
           {labels.keepPod}
         </DuncitButton>
         <DuncitButton
@@ -187,6 +212,7 @@ export default function PodCancelDialog({
           color="error"
           variant="contained"
           loading={removeState.loading || impactQ.loading}
+          data-testid="pod-delete-confirm"
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {removeState.loading ? labels.cancelling : confirmLabel}

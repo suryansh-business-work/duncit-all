@@ -26,6 +26,8 @@ interface NodeProps {
   formatDateTime: (value: string) => string;
   /** DUN-BKO id to mark as the request the current screen is about. */
   highlightBackoutNo?: string;
+  /** The same stable value used as this node's list `key`, reused as its test id suffix. */
+  nodeId: string;
 }
 
 /**
@@ -36,14 +38,15 @@ interface NodeProps {
  * flat list can show the same events but not which followed from which, and
  * "why was I not refunded" is a question only the shape answers.
  */
-function TimelineNode({ node, depth, formatDateTime, highlightBackoutNo }: Readonly<NodeProps>) {
+function TimelineNode({ node, depth, formatDateTime, highlightBackoutNo, nodeId }: Readonly<NodeProps>) {
   const { t } = useTranslation();
   const copy = timelineCopy(node, t);
   const children = node.children ?? [];
   const isThisRequest = !!highlightBackoutNo && node.backoutNo === highlightBackoutNo;
+  const stepTestId = `pod-history-timeline-step-${nodeId}`;
 
   return (
-    <Box sx={{ position: 'relative', pl: depth === 0 ? 0 : 2.5 }}>
+    <Box data-testid={stepTestId} sx={{ position: 'relative', pl: depth === 0 ? 0 : 2.5 }}>
       {/* The elbow into a nested branch — what makes "this followed from that"
           visible without a second column. */}
       {depth > 0 && (
@@ -110,15 +113,19 @@ function TimelineNode({ node, depth, formatDateTime, highlightBackoutNo }: Reado
           </Typography>
         </Box>
       </Stack>
-      {children.map((child, index) => (
-        <TimelineNode
-          key={`${child.kind}-${child.backoutNo ?? index}`}
-          node={child}
-          depth={depth + 1}
-          formatDateTime={formatDateTime}
-          highlightBackoutNo={highlightBackoutNo}
-        />
-      ))}
+      {children.map((child, index) => {
+        const childId = `${child.kind}-${child.backoutNo ?? index}`;
+        return (
+          <TimelineNode
+            key={childId}
+            nodeId={childId}
+            node={child}
+            depth={depth + 1}
+            formatDateTime={formatDateTime}
+            highlightBackoutNo={highlightBackoutNo}
+          />
+        );
+      })}
     </Box>
   );
 }
@@ -148,16 +155,20 @@ export function PodParticipationTimeline({
   const nodes = buildPodParticipationTimeline(input);
 
   return (
-    <Stack spacing={0.25}>
-      {nodes.map((node, index) => (
-        <TimelineNode
-          key={`${node.kind}-${node.backoutNo ?? index}`}
-          node={node}
-          depth={0}
-          formatDateTime={formatDateTime}
-          highlightBackoutNo={highlightBackoutNo}
-        />
-      ))}
+    <Stack spacing={0.25} data-testid="pod-history-timeline">
+      {nodes.map((node, index) => {
+        const nodeId = `${node.kind}-${node.backoutNo ?? index}`;
+        return (
+          <TimelineNode
+            key={nodeId}
+            nodeId={nodeId}
+            node={node}
+            depth={0}
+            formatDateTime={formatDateTime}
+            highlightBackoutNo={highlightBackoutNo}
+          />
+        );
+      })}
     </Stack>
   );
 }

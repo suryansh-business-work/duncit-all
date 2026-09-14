@@ -14,6 +14,8 @@ import {
 import { EarningsDialogShell } from './EarningsDialogShell';
 import type { AutoPodVenueOption } from '../venue/AutoPodVenuePicker';
 
+const SPACE_PRICE_INPUT_TEST_ID: { 'data-testid': string } = { 'data-testid': 'auto-pod-space-price-input' };
+
 interface SpaceRowProps {
   space: AutoPodVenueSpace;
   price: string;
@@ -32,7 +34,7 @@ function VenueSpaceRow({ space, price, onPrice, labels, formatMoney }: Readonly<
   const amount = Number(price) || 0;
   const total = autoPodSpaceEarnings(amount, space.capacity);
   return (
-    <Card variant="outlined">
+    <Card variant="outlined" data-testid="auto-pod-venue-space-row">
       <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
         <Stack
           direction="row"
@@ -51,7 +53,7 @@ function VenueSpaceRow({ space, price, onPrice, labels, formatMoney }: Readonly<
           label={labels.ticketPrice}
           value={price}
           onChange={(event) => onPrice(event.target.value)}
-          slotProps={{ htmlInput: { min: 1, step: 1 } }}
+          slotProps={{ htmlInput: { min: 1, step: 1, ...SPACE_PRICE_INPUT_TEST_ID } }}
         />
         {total === null ? (
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>

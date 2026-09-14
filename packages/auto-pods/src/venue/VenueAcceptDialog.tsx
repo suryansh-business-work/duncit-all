@@ -147,7 +147,7 @@ export function VenueAcceptDialog({
   const noSlots = venueInCity && !slotsQuery.loading && !!payload && slots.length === 0;
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={handleClose} data-testid="auto-pod-venue-accept-dialog" fullWidth maxWidth="sm">
       <DialogTitle>{labels.confirmAccept}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
@@ -164,9 +164,10 @@ export function VenueAcceptDialog({
             onChange={(e) => setSlotId(e.target.value)}
             disabled={!venueInCity || slots.length === 0}
             helperText={payload ? labels.slotWindow(payload.window_days) : undefined}
+            data-testid="auto-pod-slot-select"
           >
             {slots.map((slot) => (
-              <MenuItem key={slot.id} value={slot.id}>
+              <MenuItem key={slot.id} value={slot.id} data-testid={`auto-pod-slot-option-${slot.id}`}>
                 {slotLabel(slot)}
               </MenuItem>
             ))}
@@ -180,16 +181,17 @@ export function VenueAcceptDialog({
 
           {noSlots ? <NoSlotsNotice labels={labels} onAddAvailability={onAddAvailability} /> : null}
 
-          {failure ? <Alert severity="error">{failure}</Alert> : null}
+          {failure ? <Alert severity="error" data-testid="auto-pod-venue-accept-error">{failure}</Alert> : null}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={handleClose}>{labels.dismiss}</DuncitButton>
+        <DuncitButton onClick={handleClose} data-testid="auto-pod-venue-accept-dismiss">{labels.dismiss}</DuncitButton>
         <DuncitButton
           variant="contained"
           onClick={handleAccept}
           disabled={!handleAccept}
           loading={acceptState.loading}
+          data-testid="auto-pod-venue-accept-confirm"
         >
           {labels.acceptCta}
         </DuncitButton>

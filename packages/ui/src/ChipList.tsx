@@ -7,6 +7,7 @@ export interface ChipListProps {
   /** What an empty list reads as — usually a dash. */
   empty: string;
   size?: 'small' | 'medium';
+  testId?: string;
 }
 
 /**
@@ -18,10 +19,10 @@ export interface ChipListProps {
  * console's offer page. A second copy is exactly the drift rule 40 exists to
  * stop, and the chips are what a reader compares between the two.
  */
-export function ChipList({ items, empty, size = 'small' }: Readonly<ChipListProps>) {
+export function ChipList({ items, empty, size = 'small', testId }: Readonly<ChipListProps>) {
   if (items.length === 0) return <>{empty}</>;
   return (
-    <Stack direction="row" spacing={0.75} useFlexGap sx={{ flexWrap: 'wrap' }}>
+    <Stack direction="row" spacing={0.75} useFlexGap data-testid={testId} sx={{ flexWrap: 'wrap' }}>
       {items.map((item) => (
         <Chip key={item} size={size} variant="outlined" label={item} />
       ))}

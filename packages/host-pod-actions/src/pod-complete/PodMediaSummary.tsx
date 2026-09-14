@@ -28,7 +28,7 @@ export default function PodMediaSummary({ podId }: Readonly<Props>) {
   const board = data?.podMediaBoard ?? null;
 
   return (
-    <Stack spacing={1}>
+    <Stack spacing={1} data-testid="pod-complete-media-summary">
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 700, flex: 1 }}>
           {labels.podMedia}
@@ -38,6 +38,7 @@ export default function PodMediaSummary({ podId }: Readonly<Props>) {
             size="small"
             startIcon={<PhotoCameraBackIcon fontSize="small" />}
             onClick={() => onOpenPodMedia(podId)}
+            data-testid="pod-complete-open-media"
           >
             {podMediaLabels.pageTitle}
           </DuncitButton>

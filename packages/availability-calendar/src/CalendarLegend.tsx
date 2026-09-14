@@ -16,7 +16,12 @@ function LegendItem({ color, label }: Readonly<{ color: string; label: string }>
 export default function CalendarLegend() {
   const { t } = useTranslation();
   return (
-    <Stack direction="row" spacing={2} sx={{ mt: 2, flexWrap: 'wrap', rowGap: 1 }}>
+    <Stack
+      direction="row"
+      spacing={2}
+      data-testid="availability-legend"
+      sx={{ mt: 2, flexWrap: 'wrap', rowGap: 1 }}
+    >
       <LegendItem color="success.light" label={t('availability.legend.available')} />
       <LegendItem color="info.light" label={t('availability.legend.pending')} />
       <LegendItem color="warning.light" label={t('availability.legend.booked')} />

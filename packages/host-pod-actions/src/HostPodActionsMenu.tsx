@@ -12,6 +12,13 @@ interface Props
     'showAttendeeActions' | 'canComplete' | 'canScan' | 'scanNote' | 'canAmend' | 'pick'
   > {
   podTitle: string;
+  /**
+   * The pod this menu belongs to. Optional only for backward compatibility —
+   * every row-level call site has it in scope and should pass it, since it is
+   * what lets a per-pod test address THIS row's trigger and menu items rather
+   * than whichever one happens to be open.
+   */
+  podId?: string;
   /** Set on a completed/cancelled pod — the whole menu is then read-only. */
   disabled?: boolean;
   /**
@@ -49,6 +56,7 @@ interface Props
  * popover around them (rule 9: neither file passes 200 lines).
  */
 export default function HostPodActionsMenu({
+  podId,
   podTitle,
   disabled = false,
   venueRejected = false,
@@ -80,6 +88,7 @@ export default function HostPodActionsMenu({
             disabled={disabled}
             aria-label={labels.menuAria(podTitle)}
             onClick={(e) => setAnchorEl(e.currentTarget)}
+            data-testid={`host-pod-actions-${podId}`}
           >
             <MoreVertIcon fontSize="small" />
           </DuncitIconButton>
@@ -91,6 +100,7 @@ export default function HostPodActionsMenu({
         onClose={() => setAnchorEl(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        data-testid={`host-pod-actions-menu-${podId}`}
       >
         <HostPodActionsItems
           {...items}
@@ -101,6 +111,7 @@ export default function HostPodActionsMenu({
           scanNote={scanNotes[scanWindow]}
           canAmend={canAmend}
           pick={pick}
+          podId={podId}
         />
       </Menu>
     </>

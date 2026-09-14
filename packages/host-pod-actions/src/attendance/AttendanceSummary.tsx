@@ -38,6 +38,7 @@ export default function AttendanceSummary({
           size="small"
           color={complete ? 'success' : 'default'}
           label={labels.bookingsSummary(board.marked_count, board.total_count)}
+          data-testid="attendance-summary-chip"
           sx={{ fontWeight: 700 }}
         />
       </Stack>
@@ -46,6 +47,7 @@ export default function AttendanceSummary({
         value={percent}
         color={complete ? 'success' : 'primary'}
         aria-label={labels.pageTitle}
+        data-testid="attendance-summary-progress"
         sx={{ height: 8, borderRadius: 999 }}
       />
     </Stack>

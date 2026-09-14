@@ -63,34 +63,55 @@ export default function VenueRulesAccordion({ venueId, rules, onSaved }: Readonl
       icon={<RuleIcon fontSize="small" color="action" />}
       title={t('availability.rules.title')}
       caption={t('availability.rules.caption')}
+      testId="advanced-rules"
     >
       <Stack spacing={2}>
         <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
-          {numFields(t).map((f) => (
-            <TextField
-              key={f.key}
-              label={f.label}
-              type="number"
-              size="small"
-              value={draft[f.key]}
-              onChange={(e) => setNum(f.key, e.target.value, f.max)}
-              slotProps={{ htmlInput: { min: 0, max: f.max } }}
-            />
-          ))}
+          {numFields(t).map((f) => {
+            const fieldInputTestId: { 'data-testid': string } = {
+              'data-testid': `rules-${f.key}-input`,
+            };
+            return (
+              <TextField
+                key={f.key}
+                label={f.label}
+                type="number"
+                size="small"
+                value={draft[f.key]}
+                onChange={(e) => setNum(f.key, e.target.value, f.max)}
+                data-testid={`rules-${f.key}`}
+                slotProps={{ htmlInput: { min: 0, max: f.max, ...fieldInputTestId } }}
+              />
+            );
+          })}
         </Box>
         <Box sx={{ display: 'grid', gap: 0.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
           {toggleFields(t).map((f) => (
             <FormControlLabel
               key={f.key}
-              control={<Switch checked={draft[f.key]} onChange={(e) => setBool(f.key, e.target.checked)} />}
+              control={
+                <Switch
+                  checked={draft[f.key]}
+                  onChange={(e) => setBool(f.key, e.target.checked)}
+                  data-testid={`rules-${f.key}`}
+                />
+              }
               label={f.label}
             />
           ))}
         </Box>
-        {error && <Alert severity="error">{error.message}</Alert>}
-        {saved && !loading && <Alert severity="success">{t('availability.rules.saved')}</Alert>}
+        {error && (
+          <Alert severity="error" data-testid="rules-error">
+            {error.message}
+          </Alert>
+        )}
+        {saved && !loading && (
+          <Alert severity="success" data-testid="rules-saved">
+            {t('availability.rules.saved')}
+          </Alert>
+        )}
         <Box>
-          <DuncitButton variant="outlined" onClick={onSave} disabled={loading}>
+          <DuncitButton variant="outlined" onClick={onSave} disabled={loading} data-testid="rules-save">
             {loading ? t('availability.rules.saving') : t('availability.rules.save')}
           </DuncitButton>
         </Box>

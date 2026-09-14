@@ -39,11 +39,13 @@ export default function VerificationCardShell({ item, children }: Readonly<Props
               size="small"
               label={t(meta.labelKey)}
               color={TONE_CHIP_COLOR[meta.tone]}
+              data-testid={`verification-status-${item.type}`}
               sx={{ mt: 0.5, fontWeight: 600 }}
             />
             {reason && (
               <Typography
                 variant="caption"
+                data-testid={`verification-${item.type}-reject-reason`}
                 sx={{ color: 'error.main', display: 'block', mt: 0.5 }}
               >
                 {reason}

@@ -91,7 +91,7 @@ export function ClubClaimDialog({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
+    <Dialog open={open} onClose={handleClose} data-testid="auto-pod-club-claim-dialog" fullWidth maxWidth="xs">
       <DialogTitle>{labels.confirmClaim}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
@@ -128,24 +128,26 @@ export function ClubClaimDialog({
             value={clubId}
             onChange={(e) => setClubId(e.target.value)}
             disabled={clubsQuery.loading}
+            data-testid="auto-pod-club-select"
           >
             {clubs.map((club) => (
-              <MenuItem key={club.id} value={club.id}>
+              <MenuItem key={club.id} value={club.id} data-testid={`auto-pod-club-option-${club.id}`}>
                 {club.club_name}
               </MenuItem>
             ))}
           </TextField>
 
-          {failure ? <Alert severity="error">{failure}</Alert> : null}
+          {failure ? <Alert severity="error" data-testid="auto-pod-club-claim-error">{failure}</Alert> : null}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={handleClose}>{labels.dismiss}</DuncitButton>
+        <DuncitButton onClick={handleClose} data-testid="auto-pod-club-claim-dismiss">{labels.dismiss}</DuncitButton>
         <DuncitButton
           variant="contained"
           onClick={handleClaim}
           disabled={!clubId || claimState.loading}
           loading={claimState.loading}
+          data-testid="auto-pod-club-claim-confirm"
         >
           {labels.claimForClubCta}
         </DuncitButton>

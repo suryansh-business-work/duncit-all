@@ -9,6 +9,9 @@ import TimeSlotsSection from './TimeSlotsSection';
 import SpacePricingSection from './SpacePricingSection';
 import type { RecurringForm } from './useRecurringDialog';
 
+const START_DATE_TEST_ID: { 'data-testid': string } = { 'data-testid': 'recurring-start-date' };
+const END_DATE_TEST_ID: { 'data-testid': string } = { 'data-testid': 'recurring-end-date' };
+
 interface Props {
   form: RecurringForm;
   patch: (p: Partial<RecurringForm>) => void;
@@ -27,7 +30,7 @@ export default function BasicSection({ form, patch, settings }: Readonly<Props>)
           onChange={(d) => patch({ startDate: d })}
           minDate={new Date()}
           maxDate={maxDate}
-          slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+          slotProps={{ textField: { fullWidth: true, size: 'small', ...START_DATE_TEST_ID } }}
         />
         <DatePicker
           label={t('availability.endDate')}
@@ -35,7 +38,7 @@ export default function BasicSection({ form, patch, settings }: Readonly<Props>)
           onChange={(d) => patch({ endDate: d })}
           minDate={form.startDate ?? new Date()}
           maxDate={maxDate}
-          slotProps={{ textField: { fullWidth: true, size: 'small' } }}
+          slotProps={{ textField: { fullWidth: true, size: 'small', ...END_DATE_TEST_ID } }}
         />
       </Stack>
 
@@ -43,10 +46,17 @@ export default function BasicSection({ form, patch, settings }: Readonly<Props>)
         value={form.weekdays}
         onChange={(weekdays) => patch({ weekdays })}
         weeklyOff={settings.weekly_off_days}
+        testId="recurring-weekdays"
       />
 
       <FormControlLabel
-        control={<Switch checked={form.wholeDay} onChange={(e) => patch({ wholeDay: e.target.checked })} />}
+        control={
+          <Switch
+            checked={form.wholeDay}
+            onChange={(e) => patch({ wholeDay: e.target.checked })}
+            data-testid="recurring-whole-day"
+          />
+        }
         label={
           <Box>
             <Typography variant="body2" sx={{ fontWeight: 800 }}>

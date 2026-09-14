@@ -6,6 +6,9 @@ import { useTranslation } from './i18n';
 
 const REASON_MAX = 500;
 
+/** Spread into the input slot: slot prop types do not list data-* keys. */
+const REASON_INPUT_TEST_ID: { 'data-testid': string } = { 'data-testid': 'request-change-reason-input' };
+
 interface Props {
   open: boolean;
   role: PodChangeRole;
@@ -62,18 +65,18 @@ export default function RequestChangeDialog({
   };
 
   return (
-    <Dialog open={open} onClose={busy ? undefined : close} maxWidth="xs" fullWidth>
+    <Dialog data-testid="request-change-sheet" open={open} onClose={busy ? undefined : close} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ fontWeight: 800 }}>{t('changeRequest.confirmTitle')}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ pt: 0.5 }}>
           <Alert severity="warning">{t(changeRequestConfirmKey(role))}</Alert>
-          <Alert severity="info">
+          <Alert data-testid="request-change-penalty" severity="info">
             {penalty > 0
               ? t('changeRequest.penaltyNotice', { count: penalty, vars: { points: penalty } })
               : t('changeRequest.penaltyFree')}
           </Alert>
           {attendeeCount > 0 && (
-            <Alert severity="warning">
+            <Alert data-testid="request-change-attendees" severity="warning">
               {t('changeRequest.attendeeNotice', {
                 count: attendeeCount,
                 vars: { count: attendeeCount },
@@ -81,6 +84,7 @@ export default function RequestChangeDialog({
             </Alert>
           )}
           <TextField
+            data-testid="request-change-reason"
             label={t('changeRequest.reasonLabel')}
             value={reason}
             onChange={(event) => setReason(event.target.value)}
@@ -90,16 +94,16 @@ export default function RequestChangeDialog({
             multiline
             minRows={3}
             fullWidth
-            slotProps={{ htmlInput: { maxLength: REASON_MAX } }}
+            slotProps={{ htmlInput: { maxLength: REASON_MAX, ...REASON_INPUT_TEST_ID } }}
           />
-          {errorText && <Alert severity="error">{errorText}</Alert>}
+          {errorText && <Alert data-testid="request-change-error" severity="error">{errorText}</Alert>}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={close} disabled={busy}>
+        <DuncitButton data-testid="request-change-cancel" onClick={close} disabled={busy}>
           {t('changeRequest.cancelCta')}
         </DuncitButton>
-        <DuncitButton variant="contained" color="warning" onClick={submit} disabled={busy}>
+        <DuncitButton data-testid="request-change-confirm" variant="contained" color="warning" onClick={submit} disabled={busy}>
           {t('changeRequest.confirmCta')}
         </DuncitButton>
       </DialogActions>

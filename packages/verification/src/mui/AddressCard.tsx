@@ -34,17 +34,24 @@ export default function AddressCard({ item, onChanged, onError }: Readonly<Props
   const set = (key: keyof AddressValues) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  const field = (meta: AddressField) => (
-    <TextField
-      key={meta.name}
-      size="small"
-      label={t(meta.labelKey)}
-      placeholder={t(meta.placeholderKey)}
-      value={form[meta.name]}
-      onChange={set(meta.name)}
-      fullWidth
-    />
-  );
+  const field = (meta: AddressField) => {
+    const inputTestId: { 'data-testid': string } = {
+      'data-testid': `verification-address-${meta.name}-input`,
+    };
+    return (
+      <TextField
+        key={meta.name}
+        size="small"
+        label={t(meta.labelKey)}
+        placeholder={t(meta.placeholderKey)}
+        value={form[meta.name]}
+        onChange={set(meta.name)}
+        fullWidth
+        data-testid={`verification-address-${meta.name}`}
+        slotProps={{ htmlInput: inputTestId }}
+      />
+    );
+  };
 
   const onSubmit = async () => {
     if (!isAddressComplete(form)) {
@@ -82,6 +89,7 @@ export default function AddressCard({ item, onChanged, onError }: Readonly<Props
           variant="outlined"
           disabled={busy}
           onClick={() => onSubmit().catch(() => undefined)}
+          data-testid="verification-submit-address"
           sx={{ borderRadius: 999, fontWeight: 700, alignSelf: 'flex-start' }}
         >
           {submitLabel}

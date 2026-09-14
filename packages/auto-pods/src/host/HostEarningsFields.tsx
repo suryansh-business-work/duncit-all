@@ -9,6 +9,9 @@ import type { AutoPodLabels } from '@duncit/utils';
 import { HostProjectionLines } from './HostProjectionLines';
 import type { HostProjectionState } from './useHostProjection';
 
+const PRICE_INPUT_TEST_ID: { 'data-testid': string } = { 'data-testid': 'auto-pod-price-input' };
+const SPOTS_INPUT_TEST_ID: { 'data-testid': string } = { 'data-testid': 'auto-pod-spots-input' };
+
 export interface HostEarningsFieldsProps {
   state: HostProjectionState;
   labels: AutoPodLabels;
@@ -52,7 +55,7 @@ export function HostEarningsFields({
         fullWidth
         error={state.priceInvalid}
         helperText={state.priceInvalid ? labels.earningsPricePositive : undefined}
-        slotProps={{ htmlInput: { min: 1, max: 1999, step: 1 } }}
+        slotProps={{ htmlInput: { min: 1, max: 1999, step: 1, ...PRICE_INPUT_TEST_ID } }}
       />
 
       {slidable ? (
@@ -73,6 +76,7 @@ export function HostEarningsFields({
             // Single-value slider, so `next` is always a number.
             onChange={(_event, next) => setSpots(next as number)}
             aria-label={labels.spotsField}
+            data-testid="auto-pod-spots-slider-control"
           />
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
             {labels.spotsRange(min, max)}
@@ -85,7 +89,7 @@ export function HostEarningsFields({
           value={spots || ''}
           onChange={(event) => setSpots(Number(event.target.value) || 0)}
           fullWidth
-          slotProps={{ htmlInput: { min: 2, step: 1 } }}
+          slotProps={{ htmlInput: { min: 2, step: 1, ...SPOTS_INPUT_TEST_ID } }}
         />
       )}
 

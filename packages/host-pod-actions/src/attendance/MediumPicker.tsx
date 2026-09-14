@@ -23,12 +23,13 @@ export default function MediumPicker({ labels, value, onChange, error }: Readonl
     medium === 'WHATSAPP' ? labels.otpMediumWhatsapp : labels.otpMediumSms;
 
   return (
-    <Stack spacing={0.25}>
+    <Stack spacing={0.25} data-testid="attendance-otp-medium-picker">
       <FormLabel sx={{ fontSize: 12, fontWeight: 700 }}>{labels.otpMediumLabel}</FormLabel>
       <Stack direction="row" spacing={1}>
         {OTP_MEDIUMS.map((medium) => (
           <FormControlLabel
             key={medium}
+            data-testid={`attendance-otp-medium-${labelFor(medium)}`}
             control={
               <Checkbox
                 size="small"

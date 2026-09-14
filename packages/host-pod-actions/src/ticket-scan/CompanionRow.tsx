@@ -66,7 +66,7 @@ export default function CompanionRow({
   const numberHelp = numberHelper(settled, duplicate, labels);
 
   return (
-    <Stack spacing={1}>
+    <Stack spacing={1} data-testid={`companion-row-${index}`}>
       <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
         {labels.companionsHeading(index + 1)}
       </Typography>
@@ -81,6 +81,7 @@ export default function CompanionRow({
             size="small"
             required
             label={labels.companionName}
+            data-testid={`companion-name-${index}`}
             error={!!fieldState.error}
             helperText={fieldState.error?.message ?? labels.fieldRequired}
             slotProps={{ input: lock }}
@@ -98,6 +99,7 @@ export default function CompanionRow({
               required
               label={labels.companionExtension}
               sx={{ width: 120 }}
+              data-testid={`companion-extension-${index}`}
               error={!!fieldState.error}
               helperText={fieldState.error?.message}
               slotProps={{ input: lock }}
@@ -115,6 +117,7 @@ export default function CompanionRow({
               fullWidth
               label={labels.companionPhone}
               inputMode="numeric"
+              data-testid={`companion-phone-${index}`}
               error={!!fieldState.error || duplicate}
               helperText={fieldState.error?.message ?? numberHelp}
               slotProps={{ input: lock }}

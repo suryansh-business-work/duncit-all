@@ -12,6 +12,8 @@ import AdvancedAccordion from './AdvancedAccordion';
 
 const toInt = (v: string) => Math.max(0, Math.round(Number(v) || 0));
 
+const NAME_INPUT_TEST_ID: { 'data-testid': string } = { 'data-testid': 'template-name-input' };
+
 /** A saved template as `mySlotTemplates` returns it. */
 interface SlotTemplate {
   id: string;
@@ -91,24 +93,36 @@ export default function SaveAsTemplateAccordion({ venueId, form, patch }: Readon
       icon={<BookmarkBorderIcon fontSize="small" color="action" />}
       title={t('availability.templates.title')}
       caption={t('availability.templates.caption')}
+      testId="advanced-templates"
     >
       <Stack spacing={1.5}>
         {templates.length > 0 && (
           <Stack spacing={1}>
             {templates.map((template) => (
-              <Stack key={template.id} direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+              <Stack
+                key={template.id}
+                direction="row"
+                spacing={1}
+                sx={{ alignItems: 'center' }}
+                data-testid={`template-${template.id}`}
+              >
                 <Chip size="small" label={template.name} onClick={() => apply(template)} sx={{ cursor: 'pointer' }} />
                 {template.is_default && (
                   <Chip size="small" color="primary" label={t('availability.templates.default')} />
                 )}
                 <Box sx={{ flex: 1 }} />
-                <DuncitButton size="small" onClick={() => apply(template)}>
+                <DuncitButton
+                  size="small"
+                  onClick={() => apply(template)}
+                  data-testid={`template-${template.id}-use`}
+                >
                   {t('availability.templates.use')}
                 </DuncitButton>
                 <DuncitIconButton
                   size="small"
                   aria-label={t('availability.templates.delete', { vars: { name: template.name } })}
                   onClick={() => remove(template.id)}
+                  data-testid={`template-${template.id}-delete`}
                 >
                   <DeleteOutlineIcon fontSize="small" />
                 </DuncitIconButton>
@@ -116,7 +130,11 @@ export default function SaveAsTemplateAccordion({ venueId, form, patch }: Readon
             ))}
           </Stack>
         )}
-        {error && <Alert severity="error">{error.message}</Alert>}
+        {error && (
+          <Alert severity="error" data-testid="template-error">
+            {error.message}
+          </Alert>
+        )}
         <Stack direction="row" spacing={1}>
           <TextField
             size="small"
@@ -124,8 +142,15 @@ export default function SaveAsTemplateAccordion({ venueId, form, patch }: Readon
             value={name}
             onChange={(e) => setName(e.target.value)}
             sx={{ flex: 1 }}
+            data-testid="template-name"
+            slotProps={{ htmlInput: NAME_INPUT_TEST_ID }}
           />
-          <DuncitButton variant="outlined" onClick={save} disabled={saving || name.trim().length === 0}>
+          <DuncitButton
+            variant="outlined"
+            onClick={save}
+            disabled={saving || name.trim().length === 0}
+            data-testid="template-save"
+          >
             {saving ? t('availability.templates.saving') : t('availability.templates.save')}
           </DuncitButton>
         </Stack>

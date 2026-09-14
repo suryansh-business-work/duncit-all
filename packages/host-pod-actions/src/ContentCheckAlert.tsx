@@ -18,7 +18,10 @@ export default function ContentCheckAlert({ violations, title }: Readonly<Props>
       <AlertTitle>{title}</AlertTitle>
       <Stack component="ul" sx={{ m: 0, pl: 2.5 }} spacing={0.25}>
         {violations.map((violation) => (
-          <li key={`${violation.field}-${violation.type}-${violation.message}`}>
+          <li
+            key={`${violation.field}-${violation.type}-${violation.message}`}
+            data-testid={`pod-content-check-item-${violation.field}-${violation.type}`}
+          >
             {violation.message}
             {violation.evidence ? ` (“${violation.evidence}”)` : ''}
           </li>

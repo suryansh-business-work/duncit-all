@@ -78,7 +78,13 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
   });
 
   return (
-    <Dialog open={!!pod} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog
+      open={!!pod}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      data-testid="pod-resubmit-dialog"
+    >
       <DialogTitle sx={{ fontWeight: 700 }}>{labels.resubmitTitle}</DialogTitle>
       <DialogContent dividers>
         <Stack
@@ -88,11 +94,14 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
           spacing={2}
           sx={{ pt: 0.5 }}
         >
-          <Alert severity="info">{labels.resubmitHint}</Alert>
+          <Alert severity="info" data-testid="pod-resubmit-hint">
+            {labels.resubmitHint}
+          </Alert>
           <TextField
             label={labels.fieldTitle}
             required
             fullWidth
+            data-testid="pod-resubmit-title"
             {...register('pod_title')}
             error={!!errors.pod_title}
             helperText={errors.pod_title?.message}
@@ -103,6 +112,7 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
             fullWidth
             multiline
             minRows={4}
+            data-testid="pod-resubmit-description"
             {...register('pod_description')}
             error={!!errors.pod_description}
             helperText={errors.pod_description?.message}
@@ -149,11 +159,15 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
             }
           />
           <ContentCheckAlert violations={check.blocked} title={labels.contentCheck} />
-          {check.failure && <Alert severity="error">{check.failure}</Alert>}
+          {check.failure && (
+            <Alert severity="error" data-testid="pod-resubmit-check-failure">
+              {check.failure}
+            </Alert>
+          )}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy} data-testid="pod-resubmit-cancel">
           {labels.cancel}
         </DuncitButton>
         <DuncitButton
@@ -161,6 +175,7 @@ export default function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Pr
           form="pod-resubmit-form"
           variant="contained"
           loading={busy}
+          data-testid="pod-resubmit-save"
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {busy ? labels.resubmitting : labels.resubmitCta}

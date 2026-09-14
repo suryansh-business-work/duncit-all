@@ -76,6 +76,7 @@ export default function IdentityCard({ item, onChanged, onError }: Readonly<Prop
           startIcon={<UploadFileIcon />}
           disabled={busy}
           onClick={() => inputRef.current?.click()}
+          data-testid="verification-upload-button"
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {uploadLabel}

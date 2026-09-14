@@ -29,7 +29,7 @@ export function EarningsDialogShell({
   children,
 }: Readonly<EarningsDialogShellProps>) {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={onClose} data-testid="auto-pod-earnings-dialog" fullWidth maxWidth="sm">
       <DialogTitle sx={{ pr: 6 }}>
         {labels.earningsTitle}
         <IconButton

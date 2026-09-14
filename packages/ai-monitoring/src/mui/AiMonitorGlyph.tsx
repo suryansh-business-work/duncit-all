@@ -11,6 +11,7 @@ export interface AiMonitorGlyphProps {
   /** Emit rings. On while a check is actually running, off when the glyph is
    * only a label's badge. */
   rings?: boolean;
+  testId?: string;
 }
 
 /**
@@ -26,7 +27,11 @@ export interface AiMonitorGlyphProps {
  * so a screen reader must not announce it twice. Native twin —
  * `AiMonitorGlyph` in the app's `components/ai-monitoring/`.
  */
-export function AiMonitorGlyph({ size = 24, rings = false }: Readonly<AiMonitorGlyphProps>) {
+export function AiMonitorGlyph({
+  size = 24,
+  rings = false,
+  testId,
+}: Readonly<AiMonitorGlyphProps>) {
   // Room for a ring at full flight, or none at all when there are no rings —
   // an empty halo around a chip-sized badge would push its label off-centre.
   const frame = rings ? Math.round(size * ringTo) : size;
@@ -34,6 +39,7 @@ export function AiMonitorGlyph({ size = 24, rings = false }: Readonly<AiMonitorG
   return (
     <Box
       aria-hidden
+      data-testid={testId}
       sx={{
         position: 'relative',
         width: frame,

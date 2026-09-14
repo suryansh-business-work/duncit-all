@@ -25,7 +25,7 @@ interface Props {
  */
 export default function PodSpotsField({ limits, labels, value, onChange, error }: Readonly<Props>) {
   return (
-    <Stack spacing={0.5}>
+    <Stack spacing={0.5} data-testid="pod-spots-field">
       <SpotsStepper
         labels={labels.spots}
         value={value}
@@ -37,7 +37,11 @@ export default function PodSpotsField({ limits, labels, value, onChange, error }
         error={error}
       />
       {!limits.can_decrease && (
-        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        <Typography
+          variant="caption"
+          data-testid="pod-spots-field-increase-only-hint"
+          sx={{ color: 'text.secondary' }}
+        >
           {labels.spotsIncreaseOnly}
         </Typography>
       )}

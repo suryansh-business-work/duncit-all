@@ -86,7 +86,7 @@ export default function ScannedAttendeeCard({
   }
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.5} data-testid="scanned-attendee">
       <Stack direction="row" spacing={1.5} sx={{
         alignItems: "center"
       }}>
@@ -188,6 +188,7 @@ export default function ScannedAttendeeCard({
         size="small"
         endIcon={<OpenInNewIcon />}
         onClick={() => onViewProfile(attendee.profile_path)}
+        data-testid="scanned-attendee-profile"
         sx={{ alignSelf: 'flex-start', borderRadius: 999, fontWeight: 700 }}
       >
         View profile

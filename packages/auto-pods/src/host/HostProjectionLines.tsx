@@ -42,7 +42,7 @@ export function HostProjectionLines({
       <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
         {labels.projectionTitle}
       </Typography>
-      <Typography variant="subtitle2" sx={{ color: 'success.main' }}>
+      <Typography variant="subtitle2" data-testid="auto-pod-host-receives" sx={{ color: 'success.main' }}>
         {labels.projectionHost(formatMoney(projection.host_receives))}
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>

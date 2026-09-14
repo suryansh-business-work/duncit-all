@@ -21,6 +21,7 @@ function RosterRow({ row, symbol }: Readonly<RowProps>) {
     <Stack
       direction="row"
       spacing={1}
+      data-testid={`pod-complete-attendance-row-${row.membership_id}`}
       sx={{
         alignItems: "center",
         px: 1.25,
@@ -80,7 +81,7 @@ export default function AttendanceRoster({
   const pending = attendees.filter((a) => !a.attended);
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.5} data-testid="pod-complete-attendance-roster">
       <Stack
         direction="row"
         sx={{
@@ -95,11 +96,12 @@ export default function AttendanceRoster({
           size="small"
           color={attendedSeats > 0 ? 'success' : 'default'}
           label={`${attendedSeats} of ${bookedSeats} seats marked`}
+          data-testid="pod-complete-attendance-chip"
         />
       </Stack>
 
       {attendedSeats === 0 && (
-        <Alert severity="warning">
+        <Alert severity="warning" data-testid="pod-complete-attendance-warning">
           Nobody has been scanned in yet, so this pod would settle at zero. Scan each guest&apos;s
           ticket to record who turned up.
         </Alert>
@@ -133,6 +135,7 @@ export default function AttendanceRoster({
             fullWidth
             startIcon={<QrCodeScannerIcon />}
             onClick={onScan}
+            data-testid="pod-complete-attendance-scan"
             sx={{ fontWeight: 800, borderRadius: 999 }}
           >
             {labels.attendanceScanCta}
@@ -141,7 +144,7 @@ export default function AttendanceRoster({
       )}
 
       {attendees.length === 0 && (
-        <Typography variant="body2" sx={{
+        <Typography variant="body2" data-testid="pod-complete-attendance-empty" sx={{
           color: "text.secondary"
         }}>
           Nobody booked this pod.

@@ -87,6 +87,7 @@ export default function HostPodRow({
         />
         <HostPodActionsMenu
           {...actions}
+          podId={pod.id}
           onClubAdmin={onClubAdmin}
           onSeeAttendance={onSeeAttendance}
           onSlotRequest={onSlotRequest}

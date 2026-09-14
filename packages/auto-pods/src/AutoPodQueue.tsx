@@ -36,6 +36,7 @@ export interface AutoPodQueueProps extends AutoPodCardChrome {
 }
 
 interface SectionProps extends AutoPodCardChrome {
+  sectionKey: string;
   heading: string;
   rows: AutoPodRow[];
   renderAction: (row: AutoPodRow) => ReactNode;
@@ -46,6 +47,7 @@ interface SectionProps extends AutoPodCardChrome {
 /** One titled block of cards. Hoisted to module scope so it is never redefined
  * per render of the queue (S6478). */
 function AutoPodSection({
+  sectionKey,
   heading,
   rows,
   renderAction,
@@ -54,7 +56,7 @@ function AutoPodSection({
   ...chrome
 }: Readonly<SectionProps>) {
   return (
-    <Box>
+    <Box data-testid={`auto-pod-section-${sectionKey}`}>
       <Typography variant="subtitle2" gutterBottom sx={{ color: 'text.secondary' }}>
         {heading}
       </Typography>
@@ -96,7 +98,7 @@ export function AutoPodQueue({
 }: Readonly<AutoPodQueueProps>) {
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+      <Box data-testid="auto-pods-loading" sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
         <CircularProgress />
       </Box>
     );
@@ -106,8 +108,9 @@ export function AutoPodQueue({
     return (
       <Alert
         severity="error"
+        data-testid="auto-pods-error"
         action={
-          <DuncitButton color="inherit" size="small" onClick={onRetry}>
+          <DuncitButton color="inherit" size="small" onClick={onRetry} data-testid="auto-pods-retry">
             {chrome.labels.retry}
           </DuncitButton>
         }
@@ -119,15 +122,20 @@ export function AutoPodQueue({
 
   const sections = autoPodQueueSections(rows, chrome.role, chrome.labels);
   if (sections.length === 0) {
-    return <Alert severity="info">{chrome.labels.empty(chrome.role)}</Alert>;
+    return (
+      <Alert severity="info" data-testid="auto-pods-empty">
+        {chrome.labels.empty(chrome.role)}
+      </Alert>
+    );
   }
 
   const mineAction = renderMineAction ?? noNode;
   return (
-    <Stack spacing={3}>
+    <Stack spacing={3} data-testid="auto-pods-queue">
       {sections.map((section) => (
         <AutoPodSection
           key={section.key}
+          sectionKey={section.key}
           heading={section.heading}
           rows={section.rows}
           renderAction={section.key === 'actionable' ? renderAction : mineAction}

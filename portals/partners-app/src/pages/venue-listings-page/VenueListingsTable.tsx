@@ -31,7 +31,7 @@ const renderVenue = (venue: VenueListingRow) => (
     <Avatar
       variant="rounded"
       src={venue.cover_image_url || '/duncit-logo.svg'}
-      alt={venue.venue_name ?? 'Venue'}
+      alt=""
       sx={{ width: 32, height: 32, bgcolor: 'action.hover' }}
     />
     <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
@@ -129,11 +129,12 @@ export default function VenueListingsTable() {
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Stack spacing={1.5}>
-          <Typography variant="h6" sx={{
+          <Typography variant="h6" component="h2" sx={{
             fontWeight: 950
           }}>{t('partners.venueListingsPage.yourVenueRegistrations')}</Typography>
           <DuncitTable<VenueListingRow>
             tableId="partners-app-venues"
+            ariaLabel={t('partners.venueListingsPage.yourVenueRegistrations')}
             columns={columns(t)}
             fetchRows={fetchRows}
             getRowId={getVenueRowId}

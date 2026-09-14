@@ -87,10 +87,10 @@ function CommissionField({ control }: Readonly<{ control: Control<ProductListing
       name="commission_pct"
       render={({ field }) => (
         <Box>
-          <Typography sx={{
+          <Typography id="product-commission-label" sx={{
             fontWeight: 900
           }}>Duncit commission: {field.value}%</Typography>
-          <Slider min={5} max={50} value={field.value} onChange={(_, value) => field.onChange(value)} valueLabelDisplay="auto" />
+          <Slider min={5} max={50} value={field.value} onChange={(_, value) => field.onChange(value)} valueLabelDisplay="auto" aria-labelledby="product-commission-label" />
           <Alert severity="info">
             Higher commission improves marketplace viability, but approval still depends on product quality, pricing, and
             fulfillment clarity.

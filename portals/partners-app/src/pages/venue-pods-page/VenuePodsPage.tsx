@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { Alert, Card, MenuItem, Snackbar, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Card, MenuItem, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import type { TableFilterValue, TableQueryState } from '@duncit/table';
-import { DuncitTabs, useTabParam } from '@duncit/tabs';
+import { DuncitTabs, tabPanelProps, useTabParam } from '@duncit/tabs';
 import {
   tabCounts,
   TAB_ORDER,
@@ -100,7 +100,7 @@ export default function VenuePodsPage() {
               }}>
               {t('partners.common.partnerToolsVenues')}
             </Typography>
-            <Typography variant="h5" sx={{
+            <Typography variant="h5" component="h1" sx={{
               fontWeight: 950
             }}>
               {t('shell.nav.pods')}
@@ -132,19 +132,21 @@ export default function VenuePodsPage() {
 
       {podsQuery.error && <Alert severity="error">{podsQuery.error.message}</Alert>}
 
-      <DuncitTabs {...tabs} variant="scrollable" allowScrollButtonsMobile />
+      <DuncitTabs {...tabs} idPrefix="venue-pods" variant="scrollable" allowScrollButtonsMobile />
 
-      <VenuePodsTable
-        fetchRows={fetchRows}
-        externalFilters={externalFilters}
-        refetchRef={refetchRef}
-        onRowClick={setSelected}
-        onCancel={setPodToCancel}
-        onRequestChange={(row) =>
-          change.open({ podDocId: row.id, role: 'VENUE', attendeeCount: row.attendee_count })
-        }
-        requestChangeLabel={t(changeRequestMenuKey('VENUE'))}
-      />
+      <Box {...tabPanelProps('venue-pods', tab)}>
+        <VenuePodsTable
+          fetchRows={fetchRows}
+          externalFilters={externalFilters}
+          refetchRef={refetchRef}
+          onRowClick={setSelected}
+          onCancel={setPodToCancel}
+          onRequestChange={(row) =>
+            change.open({ podDocId: row.id, role: 'VENUE', attendeeCount: row.attendee_count })
+          }
+          requestChangeLabel={t(changeRequestMenuKey('VENUE'))}
+        />
+      </Box>
       {change.dialog}
       <VenuePodDetailDialog row={selected} onClose={() => setSelected(null)} />
       <VenueCancelPodDialog

@@ -18,6 +18,7 @@ export default function PartnerPolicyArticle({ slug }: Readonly<{ slug: string }
     <Box>
       <Typography
         variant="h4"
+        component="h2"
         sx={{
           fontWeight: 950,
           mb: 2
@@ -36,11 +37,11 @@ export default function PartnerPolicyArticle({ slug }: Readonly<{ slug: string }
           display: 'block',
           textAlign: 'right'
         }}>Last updated {formatDate(policy.updated_at)}</Typography>
-      {loading && <CircularProgress size={18} sx={{ position: 'fixed', top: 80, right: 24 }} />}
+      {loading && <CircularProgress size={18} aria-label={t('shell.a11y.loading')} sx={{ position: 'fixed', top: 80, right: 24 }} />}
     </Box>
   );
 }
 
 function PolicySkeleton() {
-  return <Stack spacing={1.5}><Skeleton variant="text" width="60%" height={48} /><Skeleton variant="rectangular" height={20} /><Skeleton variant="rectangular" height={20} /><Skeleton variant="rectangular" height={120} /></Stack>;
+  return <Stack spacing={1.5} aria-busy="true"><Skeleton variant="text" width="60%" height={48} /><Skeleton variant="rectangular" height={20} /><Skeleton variant="rectangular" height={20} /><Skeleton variant="rectangular" height={120} /></Stack>;
 }

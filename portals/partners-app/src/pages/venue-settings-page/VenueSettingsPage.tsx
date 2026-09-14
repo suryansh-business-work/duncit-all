@@ -77,7 +77,7 @@ export default function VenueSettingsPage() {
           alignItems: "center",
           py: 6
         }}>
-        <CircularProgress size={28} />
+        <CircularProgress size={28} aria-label={t('shell.a11y.loading')} />
       </Stack>
     );
   }
@@ -85,7 +85,7 @@ export default function VenueSettingsPage() {
   return (
     <Stack spacing={2.25} sx={{ width: '100%', pb: 4 }}>
       <Stack spacing={0.5}>
-        <Typography variant="h5" sx={{
+        <Typography variant="h5" component="h1" sx={{
           fontWeight: 700
         }}>
           {t('venueSettings.title')}
@@ -118,7 +118,7 @@ export default function VenueSettingsPage() {
           <Card variant="outlined">
             <CardContent>
               <Stack spacing={1.5}>
-                <Typography variant="subtitle1" sx={{
+                <Typography variant="subtitle1" component="h2" sx={{
                   fontWeight: 600
                 }}>
                   {t('venueSettings.cancellationTitle')}

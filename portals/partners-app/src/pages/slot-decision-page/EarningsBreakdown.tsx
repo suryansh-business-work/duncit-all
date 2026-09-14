@@ -18,7 +18,8 @@ interface Props {
  */
 export default function EarningsBreakdown({ request, lost = false }: Readonly<Props>) {
   const { t } = useTranslation();
-  const accent = lost ? 'text.disabled' : 'success.main';
+  // `text.secondary`, not `text.disabled`: the struck-through figure is still content (1.4.3).
+  const accent = lost ? 'text.secondary' : 'success.main';
   return (
     <Box
       sx={{

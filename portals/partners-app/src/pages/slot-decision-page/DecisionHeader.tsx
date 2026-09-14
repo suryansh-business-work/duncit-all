@@ -7,8 +7,10 @@ import { useTranslation } from '@duncit/shell';
 
 type Decision = 'NONE' | 'APPROVED' | 'DECLINED';
 
+/** Every stop keeps the white text at 4.5:1 — the approved green used to end
+ * on `#16a34a` (3.3:1), and the text sat on it at reduced opacity. */
 const GRADIENTS: Record<Decision, string> = {
-  APPROVED: 'linear-gradient(135deg, #0f766e 0%, #16a34a 100%)',
+  APPROVED: 'linear-gradient(135deg, #0f766e 0%, #15803d 100%)',
   DECLINED: 'linear-gradient(135deg, #7f1d1d 0%, #b91c1c 100%)',
   NONE: 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)',
 };
@@ -52,18 +54,19 @@ export default function DecisionHeader({
       }}>
         {icon}
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="overline" sx={{ opacity: 0.85 }}>
+          <Typography variant="overline">
             {eyebrow}
           </Typography>
           <Typography
             variant="h5"
+            component="h1"
             sx={{
               fontWeight: 700,
               lineHeight: 1.2
             }}>
             {title}
           </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.92, mt: 0.5 }}>
+          <Typography variant="body2" sx={{ mt: 0.5 }}>
             {subtitle}
           </Typography>
         </Box>

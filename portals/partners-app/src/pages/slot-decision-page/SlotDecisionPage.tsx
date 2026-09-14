@@ -78,7 +78,7 @@ export default function SlotDecisionPage() {
   if (loading && !request) {
     return (
       <Box sx={{ display: 'grid', placeItems: 'center', py: 8 }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('shell.a11y.loading')} />
       </Box>
     );
   }

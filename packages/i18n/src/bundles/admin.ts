@@ -15,6 +15,9 @@ import type { NestedCatalogue } from '../catalogue';
  */
 export const ADMIN_BUNDLE: NestedCatalogue = {
   admin: {
+    a11y: {
+      mediaViewer: 'Media viewer',
+    },
     filters: {
       // Clubs and Venues are both classified under a Super Category, so one
       // label serves both pages rather than drifting into two.

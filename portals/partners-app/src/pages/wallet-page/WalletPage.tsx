@@ -50,7 +50,7 @@ export default function WalletPage() {
           alignItems: "center",
           py: 8
         }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('shell.a11y.loading')} />
       </Stack>
     );
   }
@@ -74,7 +74,7 @@ export default function WalletPage() {
         alignItems: "center"
       }}>
         <AccountBalanceWalletIcon color="primary" />
-        <Typography variant="h4" sx={{ fontWeight: 950, flex: 1 }}>
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 950, flex: 1 }}>
           Wallet
         </Typography>
       </Stack>
@@ -132,7 +132,7 @@ export default function WalletPage() {
 
       <Card variant="outlined" sx={{ borderRadius: 4 }}>
         <CardContent>
-          <Typography variant="subtitle1" sx={{ fontWeight: 950, mb: 1 }}>
+          <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 950, mb: 1 }}>
             Withdrawals
           </Typography>
           <Divider sx={{ mb: 1.5 }} />
@@ -172,7 +172,7 @@ export default function WalletPage() {
 
       <Card variant="outlined" sx={{ borderRadius: 4 }}>
         <CardContent>
-          <Typography variant="subtitle1" sx={{ fontWeight: 950, mb: 1 }}>
+          <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 950, mb: 1 }}>
             Transactions
           </Typography>
           <Divider sx={{ mb: 1.5 }} />

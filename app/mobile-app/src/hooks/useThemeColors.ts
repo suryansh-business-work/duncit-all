@@ -20,6 +20,8 @@ export function useThemeColors() {
     brand: theme.brand?.val as string,
     soft: theme.soft?.val as string,
     danger: theme.danger?.val as string,
+    /** Text or an icon on a solid `danger` fill. */
+    onDanger: theme.onDanger?.val as string,
     success: theme.success?.val as string,
     warning: theme.warning?.val as string,
     info: theme.info?.val as string,

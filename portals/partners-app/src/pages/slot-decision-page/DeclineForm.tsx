@@ -19,7 +19,7 @@ export default function DeclineForm({ busy, onSubmit, onCancel }: Readonly<Props
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2" sx={{
+      <Typography variant="subtitle2" id="slot-decline-reason-label" sx={{
         fontWeight: 700
       }}>
         Why are you declining?
@@ -30,10 +30,13 @@ export default function DeclineForm({ busy, onSubmit, onCancel }: Readonly<Props
         multiline
         minRows={3}
         fullWidth
+        required
+        data-testid="slot-decline-reason"
         placeholder={t('partners.slotDecisionPage.eGTheSpaceIsAlready')}
         helperText={`Shared with the host so they can follow up · ${trimmed.length}/280`}
         slotProps={{
-          htmlInput: { maxLength: 280 }
+          // The question above is the field's visible label (1.3.1).
+          htmlInput: { maxLength: 280, 'aria-labelledby': 'slot-decline-reason-label' }
         }}
       />
       <Stack direction={{ xs: 'column-reverse', sm: 'row' }} spacing={1} sx={{

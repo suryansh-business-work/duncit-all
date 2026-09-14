@@ -12,6 +12,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
 import { useApolloTableFetch } from '@duncit/table';
 import { DuncitTabs, useTabParam } from '@duncit/tabs';
+import { PageHeader } from '@duncit/ui';
 import NavItemDialog, { type NavItemValues } from './NavItemDialog';
 import NavigationTable from './NavigationTable';
 import {
@@ -62,16 +63,11 @@ export default function NavigationPage() {
 
   return (
     <Stack spacing={2}>
-      <Typography variant="h5" component="h1" sx={{
-        fontWeight: 700
-      }}>
-        Website Navigation
-      </Typography>
-      <Typography variant="body2" sx={{
-        color: "text.secondary"
-      }}>
-        Header + footer links for every marketing website. Changes go live on the next site deploy.
-      </Typography>
+      <PageHeader
+        title="Website Navigation"
+        subtitle="Header + footer links for every marketing website. Changes go live on the next site deploy."
+        titleWeight={700}
+      />
       <DuncitTabs {...tabs} variant="scrollable" />
       {/* key remounts the table so the tab switch resets paging onto the new site. */}
       <NavigationTable

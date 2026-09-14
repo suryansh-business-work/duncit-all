@@ -11,6 +11,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
   shell: {
     a11y: {
       agentMessage: 'Message the Agent',
+      editNamed: 'Edit {name}',
+      deleteNamed: 'Delete {name}',
+      removeNamed: 'Remove {name}',
+      fieldOf: '{field}: {name}',
+      loading: 'Loading…',
     },
     /**
      * The action words every console repeats — Cancel, Save, Delete and the

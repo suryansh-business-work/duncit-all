@@ -19,7 +19,7 @@ export default function VenueListingsPage() {
           }}>
           <Box>
             <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 900 }}>{t('partners.venueListingsPage.venueRegistration')}</Typography>
-            <Typography variant="h4" sx={{
+            <Typography variant="h4" component="h1" sx={{
               fontWeight: 950
             }}>{t('partners.common.registerYourVenue')}</Typography>
             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.76)', mt: 1 }}>

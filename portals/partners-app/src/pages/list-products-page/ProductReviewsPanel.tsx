@@ -106,7 +106,6 @@ function ReviewRow({
           mt: 0.5,
           color: 'text.secondary'
         }}>
-        {/* The icons ARE the meaning of the two counts, so they are named (1.1.1). */}
         <ThumbUpAltIcon titleAccess={t('partners.a11y.upVotes')} sx={{ fontSize: 15 }} />
         <Typography variant="caption">{review.up_votes}</Typography>
         <ThumbDownAltIcon titleAccess={t('partners.a11y.downVotes')} sx={{ fontSize: 15 }} />
@@ -185,7 +184,7 @@ export default function ProductReviewsPanel({ productId }: Readonly<{ productId:
             alignItems: "center",
             py: 2
           }}>
-          <CircularProgress size={22} />
+          <CircularProgress size={22} aria-label={t('shell.a11y.loading')} />
         </Stack>
       ) : null}
       {reviews.map((r, index) => (
@@ -204,4 +203,6 @@ export default function ProductReviewsPanel({ productId }: Readonly<{ productId:
           No reviews yet for this product.
         </Typography>
       )}
-    </
+    </Box>
+  );
+}

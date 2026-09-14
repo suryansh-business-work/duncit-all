@@ -25,7 +25,7 @@ export default function VenueAvailabilityPage() {
   if (!venuesData) {
     return (
       <Stack sx={{ alignItems: 'center', py: 4 }}>
-        <CircularProgress size={24} />
+        <CircularProgress size={24} aria-label={t('shell.a11y.loading')} />
       </Stack>
     );
   }

@@ -26,6 +26,7 @@ function VariantImages({ images, onAdd, onRemove }: Readonly<VariantImagesProps>
               <Box component="img" src={url} alt={t('partners.listProductsPage.variant')} sx={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', display: 'block' }} />
               <DuncitIconButton
                 size="small"
+                aria-label={t('partners.registerVenuePage.removeImage')}
                 onClick={() => onRemove(url)}
                 sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(0,0,0,0.5)', color: '#fff', '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' } }}
               >

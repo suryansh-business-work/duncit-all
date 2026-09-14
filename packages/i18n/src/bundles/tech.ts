@@ -14,6 +14,12 @@ import type { NestedCatalogue } from '../catalogue';
  */
 export const TECH_BUNDLE: NestedCatalogue = {
   tech: {
+    a11y: {
+      sampleValues: 'Sample values (JSON)',
+      scopeGranted: 'Granted',
+      scopeMissing: 'Missing',
+      scopeUnknown: 'Not reported',
+    },
     bugDetail: {
       failedToUpdateBug: 'Failed to update bug',
     },

@@ -29,6 +29,7 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
             {...field}
             label={t('partners.registerVenuePage.ownerName')}
             required
+            autoComplete="name"
             error={Boolean(fieldState.error)}
             helperText={fieldState.error?.message ?? 'Person hosts should reach out to'}
           />
@@ -43,6 +44,7 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
             label={t('partners.registerVenuePage.ownerEmail')}
             type="email"
             required
+            autoComplete="email"
             disabled
             error={Boolean(fieldState.error)}
             helperText={
@@ -63,6 +65,8 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
             {...field}
             label={t('partners.registerVenuePage.ownerPhone')}
             required
+            type="tel"
+            autoComplete="tel"
             error={Boolean(fieldState.error)}
             helperText={fieldState.error?.message ?? 'Digits only, with optional + country code'}
           />
@@ -92,6 +96,7 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
             {...field}
             label={t('partners.registerVenuePage.ownerAddress')}
             required
+            autoComplete="street-address"
             multiline
             minRows={2}
             error={Boolean(fieldState.error)}

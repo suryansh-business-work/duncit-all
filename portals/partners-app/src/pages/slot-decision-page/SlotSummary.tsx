@@ -17,7 +17,7 @@ export default function SlotSummary({ request }: Readonly<{ request: SlotDecisio
 
   return (
     <Stack spacing={1.25}>
-      <Typography variant="h6" sx={{
+      <Typography variant="h6" component="h2" sx={{
         fontWeight: 700
       }}>
         {request.pod_title}

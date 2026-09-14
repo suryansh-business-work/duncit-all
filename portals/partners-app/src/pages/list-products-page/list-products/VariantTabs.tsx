@@ -1,7 +1,7 @@
 import { Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitButton } from '@duncit/buttons';
-import { DuncitTabs, useTabParam } from '@duncit/tabs';
+import { DuncitTabs, tabPanelProps, useTabParam } from '@duncit/tabs';
 import {
   useFieldArray,
   type Control,
@@ -63,9 +63,9 @@ export default function VariantTabs({ control, watch, setValue, onPickImage }: R
       }}>
         Each variant carries its own images, description, size, dimensions, price and stock.
       </Typography>
-      <DuncitTabs {...tabs} variant="scrollable" scrollButtons="auto" />
+      <DuncitTabs {...tabs} idPrefix="product-variant" variant="scrollable" scrollButtons="auto" />
       {fields.map((field, index) => (
-        <Box key={field.id} hidden={current !== index}>
+        <Box key={field.id} hidden={current !== index} {...tabPanelProps('product-variant', index)}>
           <VariantFields
             control={control}
             index={index}

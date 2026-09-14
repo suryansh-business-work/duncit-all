@@ -27,6 +27,7 @@ import {
   canManageProductListings,
 } from './productAccess';
 import { useTranslation } from '@duncit/shell';
+import { primaryHeroBackground } from '../../components/primaryHero';
 
 const settingsSchema = z.object({
   low_stock_alert: z.coerce
@@ -88,7 +89,7 @@ export default function ProductSettingsPage() {
           alignItems: "center",
           py: 5
         }}>
-        <CircularProgress size={24} />
+        <CircularProgress size={24} aria-label={t('shell.a11y.loading')} />
       </Stack>
     );
   }
@@ -101,8 +102,8 @@ export default function ProductSettingsPage() {
         sx={{
           p: 2.5,
           borderRadius: 2,
-          color: 'primary.contrastText',
-          background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)`,
+          color: 'common.white',
+          background: primaryHeroBackground,
         }}
       >
         <DuncitButton onClick={() => navigate(productsHome)} startIcon={<ArrowBackIcon />} variant="outlined" sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)' }}>
@@ -110,6 +111,7 @@ export default function ProductSettingsPage() {
         </DuncitButton>
         <Typography
           variant="h4"
+          component="h1"
           sx={{
             fontWeight: 950,
             mt: 1

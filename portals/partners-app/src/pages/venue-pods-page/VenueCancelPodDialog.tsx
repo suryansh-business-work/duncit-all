@@ -103,7 +103,7 @@ function VenueCancelPodBody({ row, onClose, onCancelled }: Readonly<BodyProps>) 
         {/* noValidate so the Zod message is the only one the owner ever sees. */}
         <Stack component="form" id={FORM_ID} noValidate onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
           <Stack spacing={0.25}>
-            <Typography variant="subtitle1" sx={{
+            <Typography variant="subtitle1" component="h3" sx={{
               fontWeight: 800
             }}>
               {row.pod_title}

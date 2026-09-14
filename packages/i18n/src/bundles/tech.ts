@@ -279,13 +279,14 @@ export const TECH_BUNDLE: NestedCatalogue = {
       emailDomainHint: 'Just the domain, e.g. duncit.com.',
       domainFormat: 'That is not a domain — no scheme, no path.',
       identityIncomplete: 'A prefix needs a domain, and a domain needs a prefix.',
-      previewLogin: 'Signs in as   {email}',
-      previewSignup: 'Signs up as   {email}',
-      previewHint: 'The digits are ddmmyyyyhhmm at the moment the run starts, so every signup is new.',
+      previewRunAccount: 'Runs as   {email}',
+      previewRunAccountHint:
+        'The digits are ddmmyyyyhhmm at the moment the run starts. The run signs this account up, uses it, deletes it and removes it — once per surface.',
       password: 'Password',
       passwordHint: 'Leave blank to keep the saved one. It is sent to the runner and never shown here again.',
       passwordSaved: 'A password is saved',
-      identityPhoneHint: 'Used where a signup asks for a number. One-time codes are stubbed.',
+      identityPhoneRunHint:
+        'Every signup in the run uses this number. The account is removed after each surface, so the number is free for the next signup.',
       // The two switches that exist only so a suite can run against a real
       // server. They are separate because only ONE of them reveals a secret,
       // and a single switch would have made that impossible to say. Each
@@ -298,11 +299,11 @@ export const TECH_BUNDLE: NestedCatalogue = {
         'Stops every email and WhatsApp message leaving the platform, so a nightly sweep does not mail real people or spend WhatsApp credit. Each one is still recorded in its own log with the reason it did not go, so the run can be read afterwards.',
       muteCommunicationsWarning:
         'Nothing is reaching anyone right now — no booking confirmations, no refund notices, no one-time codes. Turn this off when the run is done.',
-      otpBypass: 'Return one-time codes in the response',
-      otpBypassHint:
-        'A signup or a passwordless sign-in sends its code over WhatsApp or email, which no test can read. With this on the code comes back in the response instead, so a suite can finish the flow. Expiry, attempt limit and single use are unchanged.',
-      otpBypassWarning:
-        'Anyone who can reach this server can now ask for a code for ANY email or number and be handed it — which is a sign-in to that account. Only ever on a test database, and only while a suite is running.',
+      runAccountCodes: 'One-time codes for the run account',
+      runAccountCodesHint:
+        'Codes sent to the run account — its stamped address or the phone above — are kept for the suite to read instead of being sent, and the app still says they were sent. Every other member gets their codes as usual. The run’s sign-ins also skip the sign-in rate limit.',
+      runAccountCodesWarning:
+        'This server is an e2e target: anyone with the Tech release token can read the run account’s one-time codes, and the run account skips the sign-in rate limit. Only ever on a test database.',
       colSlack: 'Slack',
       slackPosted: 'Posted',
       slackSkipped: 'Not posted',
@@ -329,8 +330,8 @@ export const TECH_BUNDLE: NestedCatalogue = {
       detailScenarios: 'Scenario recordings · {count} clips, one per test',
       watchClip: 'Watch this scenario',
       scenarioPending: 'Skipped',
-      liveSuiteHint:
-        'The live mWeb suite (mweb-live) drives STAGING with this identity for real: it signs up as the signup address, signs in as the login one, and creates pods, tickets and ideas that the leg purges afterwards. On staging, the login account must exist with this password, have finished the interests survey, and be an approved host with a selected city, one active club in that city for its category, and a partner venue for that club with at least three open slots. Both switches below must be ON there before a run.',
+      liveAccountSuiteHint:
+        'The live account suites drive STAGING with this identity for real: mWeb, the native app and the Partners portal each sign the run account up, sign in, recover the password, edit the profile, change the password and delete the account, and the run removes it after each one. Save the same identity on staging, and turn both switches below on there, before a run.',
       saved: 'Settings saved.',
       ciHeading: 'Can CI reach us?',
       ciLastReport: 'Last reported {when}, as {who}.',

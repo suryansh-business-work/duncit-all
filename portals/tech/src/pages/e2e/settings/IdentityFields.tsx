@@ -10,10 +10,11 @@ interface Props {
 }
 
 /**
- * The identity every run signs in and signs up as.
+ * The identity of the run account: one account per run, signed up, used and
+ * deleted by each surface in turn.
  *
- * The preview is the point of the whole card: the signup address carries a
- * stamp that is unique to the run, and seeing the shape before saving is the
+ * The preview is the point of the whole card: the address carries a stamp
+ * that is unique to the run, and seeing the shape before saving is the
  * difference between configuring it once and discovering on the third nightly
  * sweep that every signup collided on the same address.
  */
@@ -25,8 +26,7 @@ export default function IdentityFields({ control, errors, passwordSet }: Readonl
   // Built here rather than read back from the server so it moves as the
   // operator types. The stamp is a sample of the shape, not this run's own.
   const sample = '070920260300';
-  const login = prefix && domain ? `${prefix.replace(/\+$/, '')}@${domain}` : '';
-  const signup = prefix && domain ? `${prefix}${sample}@${domain}` : '';
+  const account = prefix && domain ? `${prefix}${sample}@${domain}` : '';
 
   return (
     <Stack spacing={2}>
@@ -59,15 +59,12 @@ export default function IdentityFields({ control, errors, passwordSet }: Readonl
         />
       </Stack>
 
-      {login && (
+      {account && (
         <Alert severity="info" variant="outlined">
           <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-            {t('tech.e2e.previewLogin', { vars: { email: login } })}
+            {t('tech.e2e.previewRunAccount', { vars: { email: account } })}
           </Typography>
-          <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-            {t('tech.e2e.previewSignup', { vars: { email: signup } })}
-          </Typography>
-          <Typography variant="caption">{t('tech.e2e.previewHint')}</Typography>
+          <Typography variant="caption">{t('tech.e2e.previewRunAccountHint')}</Typography>
         </Alert>
       )}
 
@@ -94,18 +91,18 @@ export default function IdentityFields({ control, errors, passwordSet }: Readonl
             <TextField
               {...field}
               label={t('tech.e2e.identityPhone')}
-              helperText={t('tech.e2e.identityPhoneHint')}
+              helperText={t('tech.e2e.identityPhoneRunHint')}
               sx={{ flex: 1 }}
             />
           )}
         />
       </Stack>
 
-      {/* What the one suite that uses this identity for real needs to find on
+      {/* What the live account suites need on
           staging — said here, beside the identity, because it is the page an
           operator is on when a live run fails on its first sign-in. */}
       <Alert severity="warning" variant="outlined">
-        <Typography variant="body2">{t('tech.e2e.liveSuiteHint')}</Typography>
+        <Typography variant="body2">{t('tech.e2e.liveAccountSuiteHint')}</Typography>
       </Alert>
     </Stack>
   );

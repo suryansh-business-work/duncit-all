@@ -3,6 +3,8 @@ import { requireRole } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
 import { e2eRunService } from './e2eRun.service';
 import { purgeE2eRunData } from './e2eRun.purge';
+import { latestRunAccountCode } from './e2eRun.codes';
+import { trafficKeyForRun } from './e2eRun.traffic';
 
 // E2E runs are a Tech-portal capability. The workflow authenticates with the
 // same TECH_MANAGER JWT the build workflows use (DUNCIT_RELEASE_TOKEN), so its
@@ -26,6 +28,18 @@ export const e2eRunResolvers = {
     e2eTriggerConfig: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, E2E_MANAGE);
       return e2eRunService.triggerConfig();
+    },
+    e2eOneTimeCode: (
+      _p: unknown,
+      args: { purpose: string; email?: string | null; phone?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, E2E_MANAGE);
+      return latestRunAccountCode(args);
+    },
+    e2eTrafficKey: (_p: unknown, args: { stamp: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, E2E_MANAGE);
+      return trafficKeyForRun(args.stamp);
     },
   },
   Mutation: {

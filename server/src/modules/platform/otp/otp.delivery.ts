@@ -5,11 +5,7 @@ import {
   sendCampaign,
 } from '@modules/platform/aisensy/aisensy.gateway';
 import { recordManualSend, WA_OTP_EVENT_KEY } from '@modules/platform/whatsapp/whatsapp.manualLog';
-import {
-  e2eOverrides,
-  MUTED_REASON,
-  OTP_BYPASS_REASON,
-} from '@modules/platform/e2eRun/e2eRun.mute';
+import { communicationsMuted, MUTED_REASON } from '@modules/platform/e2eRun/e2eRun.mute';
 import { sendLoginOtpEmail, sendPasswordResetOtpEmail } from '@services/email/email.service';
 import { OTP_TTL_MINUTES } from './otp.constants';
 import type { IOtpDelivery, OtpMedium, OtpPurpose } from './otp.model';
@@ -165,26 +161,13 @@ const EMAIL_SENDERS: Partial<Record<OtpPurpose, typeof sendPasswordResetOtpEmail
  */
 export async function deliverOtp(input: Readonly<OtpDeliveryInput>): Promise<IOtpDelivery> {
   /*
-    The two E2E overrides, asked before the mediums so no channel slips past
-    either — and kept apart, because the difference between them is the whole
-    reason they are two switches.
-
-    STUBBED is load-bearing: `otpService` reads it as "the platform chose not to
-    send this", swaps in the fixed test code and returns it as `test_code`. That
-    is the entire mechanism by which a suite gets its code — no second endpoint,
-    no test-only mutation, and the challenge above it (expiry, attempt limit,
-    single use) stays the real one.
-
-    A HELD code is FAILED, not STUBBED. Holding traffic is not a decision to
-    reveal a secret, so muting on its own must not hand the code back — that is
-    what keeps "hold all communications" and "return codes in the response" two
-    switches that mean two different things.
+    Held communications, asked before the mediums so no channel slips past.
+    A HELD code is FAILED, not STUBBED: holding traffic is not a decision to
+    reveal a secret, so muting must never hand a code back. Codes for the e2e
+    run account never reach this function — `otpService.request` records those
+    for the suite (e2eRun.codes) before any delivery is attempted.
   */
-  const { muted, otpBypass } = await e2eOverrides();
-  if (otpBypass) {
-    return { medium: input.medium, status: 'STUBBED', reason: OTP_BYPASS_REASON };
-  }
-  if (muted) return { medium: input.medium, status: 'FAILED', reason: MUTED_REASON };
+  if (await communicationsMuted()) return { medium: input.medium, status: 'FAILED', reason: MUTED_REASON };
 
   if (input.medium === 'WHATSAPP') return deliverWhatsApp(input);
   if (input.medium === 'EMAIL') return deliverEmail(input);

@@ -7,6 +7,7 @@ import { evaluate, shouldSendHeaders, type RateLimitContextInfo } from './rateLi
 import { normaliseApp, normaliseSurface } from './rateLimit.match';
 import type { RateLimitChannel, RateLimitDecision, RateLimitRequest } from './rateLimit.types';
 import { isStressTraffic } from '../stressTest/stressTest.traffic';
+import { isE2eTraffic } from '../e2eRun/e2eRun.traffic';
 
 /**
  * The three doors into the API, each asking the same enforcer.
@@ -154,6 +155,9 @@ export const rateLimitPlugin: ApolloServerPlugin<GraphQLContext> = {
         // here they would trip every per-address ceiling and flood Blocked with
         // rows that are not real callers. The key is verified, not claimed.
         if (isStressTraffic(ctx.contextValue.req)) return;
+        // Same idea for a live e2e run: one runner signs up, in and out far more
+        // often than a person may, and its key is verified the same way.
+        if (await isE2eTraffic(ctx.contextValue.req)) return;
         const { request, info } = describeRequest(ctx.contextValue.req, 'GRAPHQL');
         const decision = await evaluate(
           {

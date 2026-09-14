@@ -6,6 +6,7 @@ import { isEmailAddress } from '@utils/email';
 import { PHONE_EXTENSION_REGEX, PHONE_NUMBER_REGEX } from '@utils/phone';
 import { commPreferenceService } from '@modules/access/commPreference/commPreference.service';
 import { OTP_MAX_ATTEMPTS, OTP_RESEND_COOLDOWN_SEC, OTP_TTL_MS } from './otp.constants';
+import { E2E_HELD_REASON, holdRunAccountCode } from '@modules/platform/e2eRun/e2eRun.codes';
 import { deliverOtp } from './otp.delivery';
 import {
   isPhoneMedium,
@@ -264,11 +265,16 @@ export const otpService = {
     const recipient_name = String(input.recipient_name ?? '').trim();
     // Provisional: the real code depends on whether anything could carry it.
     const candidate = randomCode();
-    const deliveries = await Promise.all(
-      mediums.map((medium) =>
-        deliverOtp({ medium, ...target, recipient_name, code: candidate, purpose: input.purpose })
-      )
-    );
+    // A code for the e2e run account is recorded for the suite and not sent,
+    // and reported SENT so every screen reads exactly as it does in production.
+    const held = await holdRunAccountCode({ purpose: input.purpose, ...target, code: candidate });
+    const deliveries: IOtpDelivery[] = held
+      ? mediums.map((medium) => ({ medium, status: 'SENT', reason: E2E_HELD_REASON }))
+      : await Promise.all(
+          mediums.map((medium) =>
+            deliverOtp({ medium, ...target, recipient_name, code: candidate, purpose: input.purpose })
+          )
+        );
     const stubbed = deliberatelyStubbed(deliveries);
     const code = stubbed ? TEST_CODE : candidate;
 

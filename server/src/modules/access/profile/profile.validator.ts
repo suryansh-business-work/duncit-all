@@ -1,5 +1,5 @@
 import * as yup from 'yup';
-import { phoneRegex, extRegex } from '@modules/access/user/user.validator';
+import { phoneRegex, extRegex, personNameRegex } from '@modules/access/user/user.validator';
 
 const profileLinkSchema = yup.object({
   label: yup.string().trim().min(1).max(40).required(),
@@ -19,9 +19,15 @@ export const postalAddressSchema = yup.object({
 });
 
 export const updateMyProfileSchema = yup.object({
-  first_name: yup.string().min(1).max(60).optional(),
+  // Shape-checked like signup's names: the portals' profile page has no
+  // client-side rule, so this is the only place a "Riya2" is refused there.
+  first_name: yup.string().min(1).max(60).matches(personNameRegex, { message: 'Invalid first name' }).optional(),
   // A surname is optional: '' clears it (the service stores a blank as null).
-  last_name: yup.string().max(60).optional(),
+  last_name: yup
+    .string()
+    .max(60)
+    .matches(personNameRegex, { message: 'Invalid last name', excludeEmptyString: true })
+    .optional(),
   bio: yup.string().max(500).optional(),
   // null is "Remove photo" — the service writes it through as a cleared field.
   profile_photo: yup.string().url().nullable().optional(),

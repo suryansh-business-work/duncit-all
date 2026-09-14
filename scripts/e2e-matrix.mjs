@@ -37,10 +37,12 @@ import process from 'node:process';
 const BROWSER_SUITES = [];
 
 /**
- * The legs that are not matrix rows. `no-surface` is the packages/websites/API
- * sweep, so it cannot be a row in a pnpm matrix.
+ * The legs that are not matrix rows. `accounts` is the live account lifecycle
+ * (E2E Batch 1): mWeb, the native web export and Partners in ONE ordered job,
+ * because they share the run account and its phone number. `no-surface` is the
+ * packages/websites/API sweep, so it cannot be a row in a pnpm matrix.
  */
-const STANDALONE_SUITES = ['no-surface'];
+const STANDALONE_SUITES = ['accounts', 'no-surface'];
 
 const ALL = [...BROWSER_SUITES.map((s) => s.name), ...STANDALONE_SUITES];
 

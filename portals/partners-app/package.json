@@ -16,7 +16,8 @@
     "test:forms": "vitest run",
     "test:forms:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "e2e": "node ../../scripts/e2e-no-surface.mjs partners-app"
+    "e2e": "cypress run --config-file __tests__/e2e/cypress.config.ts",
+    "build:e2e": "tsc -b && vite build"
   },
   "dependencies": {
     "@apollo/client": "^4.2.12",

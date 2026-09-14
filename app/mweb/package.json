@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.79.82",
+  "version": "1.79.83",
   "private": true,
   "scripts": {
     "deps:check": "node ../../scripts/deps.mjs check",
@@ -17,7 +17,8 @@
     "test:forms:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "verify:fallback-icons": "node ../../scripts/verify-fallback-icons.mjs src/fallback-icons",
-    "e2e": "node ../../scripts/e2e-no-surface.mjs mweb-app"
+    "e2e": "cypress run --config-file __tests__/e2e/cypress.config.ts",
+    "build:e2e": "node ../../scripts/verify-fallback-icons.mjs src/fallback-icons && tsc -b && vite build"
   },
   "dependencies": {
     "@apollo/client": "^4.2.12",

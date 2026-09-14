@@ -26,10 +26,13 @@ export interface E2eSuiteDefinition {
 }
 
 /**
- * Every portal and app suite was removed on 2026-09-14 to be rebuilt batch by
+ * Every portal and app suite was removed on 2026-09-14 and is rebuilt batch by
  * batch; each one returns here (and to scripts/e2e-matrix.mjs) with its suite.
  */
 export const E2E_SUITES: readonly E2eSuiteDefinition[] = [
+  // E2E Batch 1: one run account's whole life — signup to deletion — live on
+  // staging, on mWeb, the native web export and the Partners portal in turn.
+  { key: 'accounts', label: 'Account lifecycle (mWeb, native, Partners · staging)', group: 'APP' },
   {
     key: 'no-surface',
     label: 'Shared packages, websites and API',

@@ -4,7 +4,7 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   // `__tests__/e2e/` holds the Cypress (Expo web) suite — jest's default
   // testMatch would otherwise pick those specs up and run them in jsdom.
-  testPathIgnorePatterns: ['/node_modules/', '/e2e/', '/__tests__/e2e/', '/android/', '/ios/'],
+  testPathIgnorePatterns: ['/node_modules/', '/__tests__/e2e/', '/android/', '/ios/'],
   transformIgnorePatterns: [
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|react-native-reanimated|react-native-worklets|tamagui|@tamagui/.*|moti|rn-tourguide|@floating-ui/react-native|react-native-gifted-charts|gifted-charts-core))',
   ],

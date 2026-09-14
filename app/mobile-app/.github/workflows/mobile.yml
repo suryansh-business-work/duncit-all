@@ -33,34 +33,6 @@ jobs:
           name: coverage
           path: coverage/
 
-  e2e:
-    name: Detox E2E (Android emulator)
-    runs-on: ubuntu-latest
-    needs: quality
-    # Emulator + Detox is heavy; keep non-blocking until the runner is stabilised.
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-      - run: npm install
-      - run: npx expo prebuild --platform android --no-install
-      - name: Run Detox on emulator
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 34
-          arch: x86_64
-          profile: pixel_7
-          script: |
-            npm run e2e:build
-            npm run e2e:test
-
   android:
     name: Build Android · Upload to Slack
     runs-on: ubuntu-latest

@@ -6,6 +6,7 @@ import { decodeAuthUser, type GraphQLContext } from '@context';
 import { evaluate, shouldSendHeaders, type RateLimitContextInfo } from './rateLimit.enforcer';
 import { normaliseApp, normaliseSurface } from './rateLimit.match';
 import type { RateLimitChannel, RateLimitDecision, RateLimitRequest } from './rateLimit.types';
+import { isStressTraffic } from '../stressTest/stressTest.traffic';
 
 /**
  * The three doors into the API, each asking the same enforcer.
@@ -98,6 +99,7 @@ export const rateLimitMiddleware: RequestHandler = (
   next: NextFunction,
 ) => {
   if (SKIP_PREFIXES.some((prefix) => req.path.startsWith(prefix))) return next();
+  if (isStressTraffic(req)) return next();
   const { request, info } = describeRequest(req, 'REST');
   evaluate(request, info)
     .then(async (decision) => {
@@ -148,6 +150,10 @@ export const rateLimitPlugin: ApolloServerPlugin<GraphQLContext> = {
         const fields = selectedFields(operation.selectionSet.selections);
         // An introspection-only document has no product field to govern.
         if (fields.length === 0) return;
+        // A stress run's bots arrive from a handful of runner addresses; counted
+        // here they would trip every per-address ceiling and flood Blocked with
+        // rows that are not real callers. The key is verified, not claimed.
+        if (isStressTraffic(ctx.contextValue.req)) return;
         const { request, info } = describeRequest(ctx.contextValue.req, 'GRAPHQL');
         const decision = await evaluate(
           {

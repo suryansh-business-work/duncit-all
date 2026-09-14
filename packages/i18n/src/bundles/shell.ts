@@ -506,6 +506,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       sosAlerts: 'SOS Alerts',
       startupDashboard: 'Startup Dashboard',
       statusReports: 'Status Reports',
+      stressTesting: 'Stress Testing',
       accountDeletions: 'Account Deletions',
       staticContent: 'Static Content',
       subscribers: 'Subscribers',

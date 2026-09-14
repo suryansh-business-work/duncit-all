@@ -105,7 +105,7 @@ function pct(used: number, total: number): number {
   return total > 0 ? Math.round((used / total) * 100) : 0;
 }
 
-function cpuTotals(): { idle: number; total: number } {
+export function cpuTotals(): { idle: number; total: number } {
   let idle = 0;
   let total = 0;
   for (const cpu of os.cpus()) {
@@ -154,7 +154,7 @@ function buildOs(): TechOsInfo {
   };
 }
 
-function buildMemory(): TechBytesInfo {
+export function buildMemory(): TechBytesInfo {
   const total = os.totalmem();
   const free = os.freemem();
   const used = total - free;
@@ -221,7 +221,7 @@ async function buildSsl(host: string | undefined): Promise<TechSslInfo | null> {
   };
 }
 
-function dockerGet<T>(path: string): Promise<T> {
+export function dockerGet<T>(path: string): Promise<T> {
   return new Promise((resolve, reject) => {
     const req = http.request(
       { socketPath: DOCKER_SOCKET, path, method: 'GET', timeout: DOCKER_TIMEOUT_MS },

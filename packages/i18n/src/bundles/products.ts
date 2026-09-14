@@ -12,6 +12,10 @@ import type { NestedCatalogue } from '../catalogue';
  */
 export const PRODUCTS_BUNDLE: NestedCatalogue = {
   products: {
+    a11y: {
+      defaultLocation: 'Default location',
+      setAsDefault: 'Set as default',
+    },
     welcome: {
       atAGlance: 'At a glance',
       products: 'Products',

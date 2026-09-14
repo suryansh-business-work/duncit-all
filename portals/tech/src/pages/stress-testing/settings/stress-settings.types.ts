@@ -19,6 +19,7 @@ export const stressSettingsSchema = (m: StressSettingsMessages) =>
     abort_error_rate_pct: wholeIn(m, 1, 100),
     abort_p95_ms: wholeIn(m, 100, 120_000),
     abort_host_cpu_pct: wholeIn(m, 10, 100),
+    abort_host_memory_pct: wholeIn(m, 10, 100),
     abort_breach_samples: wholeIn(m, 1, 60),
     sample_retention_days: wholeIn(m, 1, 365),
   });

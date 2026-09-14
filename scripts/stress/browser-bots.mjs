@@ -86,14 +86,27 @@ function connect(url) {
   });
 }
 
-function waitFor(session, method, timeoutMs) {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error(`timed out waiting for ${method}`)), timeoutMs);
+/** Resolves on the event; rejects on the timeout, or at once when the run is stopped. */
+function waitFor(session, method, timeoutMs, signal) {
+  const waiting = new Promise((resolve, reject) => {
+    const onAbort = () => {
+      clearTimeout(timer);
+      reject(new Error('stopped'));
+    };
+    const timer = setTimeout(() => {
+      signal.removeEventListener('abort', onAbort);
+      reject(new Error(`timed out waiting for ${method}`));
+    }, timeoutMs);
+    signal.addEventListener('abort', onAbort, { once: true });
     session.once(method, () => {
       clearTimeout(timer);
+      signal.removeEventListener('abort', onAbort);
       resolve();
     });
   });
+  // Handled here as well as by the awaiting caller: it can reject before the caller reaches its await.
+  waiting.catch(() => undefined);
+  return waiting;
 }
 
 const TIMING_SCRIPT = `JSON.stringify((() => {
@@ -101,8 +114,8 @@ const TIMING_SCRIPT = `JSON.stringify((() => {
   return n ? { ttfb: n.responseStart - n.requestStart, load: n.loadEventEnd - n.startTime } : null;
 })())`;
 
-async function navigate(session, url) {
-  const loaded = waitFor(session, 'Page.loadEventFired', NAVIGATION_TIMEOUT_MS);
+async function navigate(session, url, signal) {
+  const loaded = waitFor(session, 'Page.loadEventFired', NAVIGATION_TIMEOUT_MS, signal);
   const started = performance.now();
   const result = await session.send('Page.navigate', { url });
   if (result.errorText) throw new Error(result.errorText);
@@ -132,20 +145,22 @@ async function browserBot(index, port, ctx, states) {
   try {
     while (!ctx.stopped() && pages.length > 0) {
       const journey = pages[iteration % pages.length];
+      const page = journey.page();
       iteration += 1;
-      Object.assign(state, { journey: journey.name, page: journey.page, status: 'loading', at: new Date().toISOString() });
+      Object.assign(state, { journey: journey.name, page, status: 'loading', at: new Date().toISOString() });
       const errorsBefore = jsErrors;
       try {
-        const ms = await navigate(session, `${ctx.mwebUrl}${journey.page}`);
+        const ms = await navigate(session, `${ctx.mwebUrl}${page}`, ctx.abort.signal);
         ctx.metrics.navigation(ms, true);
         const status = jsErrors > errorsBefore ? 'loaded-js-errors' : 'loaded';
         Object.assign(state, { status, load_ms: ms, at: new Date().toISOString() });
       } catch (err) {
+        if (ctx.abort.signal.aborted) break;
         ctx.metrics.navigation(0, false);
-        ctx.noteError(`browser ${journey.page}`, err.message);
+        ctx.noteError(`browser ${page}`, err.message);
         Object.assign(state, { status: 'error', at: new Date().toISOString() });
       }
-      await sleep(Math.max(1000, ctx.thinkTimeMs * 2));
+      await sleep(Math.max(1000, ctx.thinkTimeMs * 2), undefined, { signal: ctx.abort.signal }).catch(() => undefined);
     }
   } finally {
     state.status = 'stopped';

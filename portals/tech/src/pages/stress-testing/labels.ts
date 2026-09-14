@@ -1,5 +1,5 @@
 import type { Translate } from '@duncit/shell';
-import type { StressRunStatus } from './queries';
+import type { StressLevel, StressRunStatus, StressVerdictGrade } from './queries';
 
 /**
  * Words for the codes the server sends. Every key is written out literally —
@@ -43,11 +43,24 @@ export const environmentColor = (environment: string): ChipColor =>
 
 export function journeyLabel(t: Translate, journey: string): string {
   const labels: Record<string, string> = {
+    app_boot: t('tech.stress.journeyAppBoot'),
+    auth: t('tech.stress.journeyAuth'),
     home: t('tech.stress.journeyHome'),
     explore: t('tech.stress.journeyExplore'),
     clubs: t('tech.stress.journeyClubs'),
     search: t('tech.stress.journeySearch'),
     venues: t('tech.stress.journeyVenues'),
+    happening_nearby: t('tech.stress.journeyHappeningNearby'),
+    pod_detail: t('tech.stress.journeyPodDetail'),
+    club_detail: t('tech.stress.journeyClubDetail'),
+    venue_detail: t('tech.stress.journeyVenueDetail'),
+    profile: t('tech.stress.journeyProfile'),
+    hosts_venues: t('tech.stress.journeyHostsVenues'),
+    pod_ideas: t('tech.stress.journeyPodIdeas'),
+    membership: t('tech.stress.journeyMembership'),
+    leaderboard: t('tech.stress.journeyLeaderboard'),
+    gift_cards: t('tech.stress.journeyGiftCards'),
+    help: t('tech.stress.journeyHelp'),
     api_health: t('tech.stress.journeyApiHealth'),
   };
   return labels[journey] ?? journey;
@@ -55,15 +68,60 @@ export function journeyLabel(t: Translate, journey: string): string {
 
 export function journeyHint(t: Translate, journey: string): string {
   const hints: Record<string, string> = {
+    app_boot: t('tech.stress.journeyAppBootHint'),
+    auth: t('tech.stress.journeyAuthHint'),
     home: t('tech.stress.journeyHomeHint'),
     explore: t('tech.stress.journeyExploreHint'),
     clubs: t('tech.stress.journeyClubsHint'),
     search: t('tech.stress.journeySearchHint'),
     venues: t('tech.stress.journeyVenuesHint'),
+    happening_nearby: t('tech.stress.journeyHappeningNearbyHint'),
+    pod_detail: t('tech.stress.journeyPodDetailHint'),
+    club_detail: t('tech.stress.journeyClubDetailHint'),
+    venue_detail: t('tech.stress.journeyVenueDetailHint'),
+    profile: t('tech.stress.journeyProfileHint'),
+    hosts_venues: t('tech.stress.journeyHostsVenuesHint'),
+    pod_ideas: t('tech.stress.journeyPodIdeasHint'),
+    membership: t('tech.stress.journeyMembershipHint'),
+    leaderboard: t('tech.stress.journeyLeaderboardHint'),
+    gift_cards: t('tech.stress.journeyGiftCardsHint'),
+    help: t('tech.stress.journeyHelpHint'),
     api_health: t('tech.stress.journeyApiHealthHint'),
   };
   return hints[journey] ?? '';
 }
+
+export function gradeLabel(t: Translate, grade: StressVerdictGrade): string {
+  const labels: Record<StressVerdictGrade, string> = {
+    HEALTHY: t('tech.stress.gradeHealthy'),
+    STRAINED: t('tech.stress.gradeStrained'),
+    OVERLOADED: t('tech.stress.gradeOverloaded'),
+    INCONCLUSIVE: t('tech.stress.gradeInconclusive'),
+  };
+  return labels[grade] ?? grade;
+}
+
+const GRADE_COLOR: Record<StressVerdictGrade, ChipColor> = {
+  HEALTHY: 'success',
+  STRAINED: 'warning',
+  OVERLOADED: 'error',
+  INCONCLUSIVE: 'default',
+};
+
+export const gradeColor = (grade: StressVerdictGrade): ChipColor => GRADE_COLOR[grade] ?? 'default';
+
+export function levelLabel(t: Translate, level: StressLevel): string {
+  const labels: Record<StressLevel, string> = {
+    LOW: t('tech.stress.levelLow'),
+    MEDIUM: t('tech.stress.levelMedium'),
+    HIGH: t('tech.stress.levelHigh'),
+  };
+  return labels[level] ?? level;
+}
+
+const LEVEL_COLOR: Record<StressLevel, ChipColor> = { LOW: 'info', MEDIUM: 'warning', HIGH: 'error' };
+
+export const levelColor = (level: StressLevel): ChipColor => LEVEL_COLOR[level] ?? 'default';
 
 /* ── numbers ─────────────────────────────────────────────────────────────── */
 

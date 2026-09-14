@@ -63,6 +63,43 @@ export const stressTestTypeDefs = gql`
     p99_ms: Float!
   }
 
+  "LOW / MEDIUM / HIGH — a bottleneck's weight, an upgrade's urgency, or the verdict's confidence."
+  enum StressLevel {
+    LOW
+    MEDIUM
+    HIGH
+  }
+
+  enum StressVerdictGrade {
+    HEALTHY
+    STRAINED
+    OVERLOADED
+    INCONCLUSIVE
+  }
+
+  type StressVerdictItem {
+    title: String!
+    detail: String!
+    level: StressLevel!
+  }
+
+  "OpenAI's reading of a finished run. User counts are estimated REAL concurrent people, not virtual users."
+  type StressVerdict {
+    grade: StressVerdictGrade!
+    headline: String!
+    safe_concurrent_users: Int!
+    "0 when the run never pushed the setup past healthy."
+    breaking_point_users: Int!
+    confidence: StressLevel!
+    capacity_reasoning: String!
+    bottlenecks: [StressVerdictItem!]!
+    upgrades: [StressVerdictItem!]!
+    watch_points: [String!]!
+    model: String!
+    generated_by: String!
+    generated_at: String
+  }
+
   "One line of a run's log."
   type StressEvent {
     at: String!
@@ -87,6 +124,8 @@ export const stressTestTypeDefs = gql`
     ended_at: String
     stop_requested_at: String
     stop_reason: String!
+    "True when the host ran out of CPU or memory and the run was terminated."
+    terminated: Boolean!
     last_report_at: String
     duration_seconds: Int
     peaks: StressPeaks!
@@ -95,6 +134,7 @@ export const stressTestTypeDefs = gql`
     shards_finished: Int!
     events: [StressEvent!]!
     error_message: String!
+    verdict: StressVerdict
     created_at: String
   }
 
@@ -219,6 +259,7 @@ export const stressTestTypeDefs = gql`
     abort_error_rate_pct: Int!
     abort_p95_ms: Int!
     abort_host_cpu_pct: Int!
+    abort_host_memory_pct: Int!
     abort_breach_samples: Int!
     sample_retention_days: Int!
     updated_at: String
@@ -278,6 +319,7 @@ export const stressTestTypeDefs = gql`
     abort_error_rate_pct: Int!
     abort_p95_ms: Int!
     abort_host_cpu_pct: Int!
+    abort_host_memory_pct: Int!
     abort_breach_samples: Int!
     sample_retention_days: Int!
   }
@@ -383,6 +425,8 @@ export const stressTestTypeDefs = gql`
     "Ask a live run to stop."
     stopStressRun(id: ID!): StressRun!
     deleteStressRun(id: ID!): Boolean!
+    "Ask OpenAI for the verdict on a finished run — capacity, bottlenecks, upgrades. Replaces an earlier verdict."
+    generateStressVerdict(id: ID!): StressRun!
     updateStressSettings(input: UpdateStressSettingsInput!): StressSettings!
     "CI: a runner claims its shard of a dispatched run."
     claimStressRun(input: ClaimStressRunInput!): StressClaimResult!

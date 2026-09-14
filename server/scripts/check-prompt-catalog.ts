@@ -64,6 +64,8 @@ const SHIPPED_KEYS = [
   'pod.audit_review.user',
   'release.changelog',
   'release.changelog.user',
+  'stress.verdict',
+  'stress.verdict.user',
   'support.assistant',
   'support.mail_auto_reply',
   'support.mail_auto_reply.user',

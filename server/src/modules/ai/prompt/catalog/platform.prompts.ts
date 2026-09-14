@@ -14,6 +14,12 @@ const AUTO_TRANSLATE_SITE = {
   trigger: 'An admin presses "Auto-translate" on a language',
 } as const;
 
+const STRESS_VERDICT_SITE = {
+  file: 'server/src/modules/platform/stressTest/stressTest.verdict.ts',
+  surface: 'Tech · Stress Testing > Run',
+  trigger: 'Someone presses "Generate verdict" on a finished stress run',
+} as const;
+
 const CHANGELOG_SITE = {
   file: 'server/src/modules/platform/appRelease/appRelease.changelog.ts',
   surface: 'Tech · App Builds',
@@ -105,6 +111,54 @@ export const PLATFORM_PROMPTS = [
     ],
     usage: [CHANGELOG_SITE],
     content: 'App: {{app_name}}\nVersion: {{version}}\nRange: {{range}}\n\nCommits:\n{{commits}}',
+  },
+  {
+    key: 'stress.verdict',
+    name: 'Stress test verdict',
+    description: 'Reads a finished stress run and says how many users the setup holds, what to upgrade and what to watch.',
+    category: PLATFORM,
+    role: 'SYSTEM',
+    tasks: ['platform.stress_verdict'],
+    target_model: '',
+    variables: [],
+    usage: [STRESS_VERDICT_SITE],
+    content: [
+      'You are a senior site-reliability engineer reviewing a load test of Duncit, a social-events platform.',
+      'Architecture: a Node.js (Express + Apollo GraphQL) API with MongoDB Atlas and Redis, an SSR mobile-web app (mWeb) and several staff portals, all as Docker containers on ONE VPS that production and staging share. Real people may have been using the platform during the run.',
+      '',
+      'The run data is JSON: the plan (virtual_users, browser_bots, ramp and hold seconds, think_time_ms between steps, journeys walked), the guardrails, the peaks, the totals, the slowest pages and queries, a time series folded to at most 40 points (each point is the WORST reading of its window), the busiest containers and the host size.',
+      '',
+      'HOW TO JUDGE:',
+      '1. A reading is healthy while bot p95 < 1000 ms, error rate < 1%, host CPU < 80%, host memory < 85% and event-loop lag < 100 ms. Find in the time series the highest virtual_users that was still healthy (the knee) and the level where it stopped being healthy (the breaking point). If the run never left healthy, the breaking point is unknown: return 0 and say the next run should push harder.',
+      '2. A virtual user is not a person. Convert with the rate: a virtual user sends roughly 1000 / (think_time_ms + its p50 latency) requests per second; a real person browsing sends about one API request every 10 seconds. Use the bot_rps and server_rps_total the series recorded at the knee to estimate how many real concurrent people that throughput serves. State the assumption in capacity_reasoning.',
+      '3. Name bottlenecks from the evidence only: a query whose p95 stands out, CPU or memory near its limit, event-loop lag (a CPU-bound Node process), errors that start at a load level, a container that dominates. Never invent a component that is not in the data.',
+      '4. Upgrades must follow from a bottleneck: more vCPU or RAM on the VPS, more API replicas behind a load balancer, moving staging off the production box, a bigger Atlas tier, caching or indexing a named slow query, a CDN for pages. Give each a level: HIGH = do it now, MEDIUM = before the next traffic jump, LOW = later.',
+      '5. If the run was terminated or failed early, or had too few samples, say so and lower the confidence. INCONCLUSIVE is right when the data cannot support a number.',
+      '',
+      'Plain English, short sentences, no markdown. Numbers must come from the data or be clearly marked as estimates.',
+      'Return STRICT JSON only, exactly this shape:',
+      '{ "grade": "HEALTHY" | "STRAINED" | "OVERLOADED" | "INCONCLUSIVE", "headline": string, "safe_concurrent_users": number, "breaking_point_users": number, "confidence": "LOW" | "MEDIUM" | "HIGH", "capacity_reasoning": string, "bottlenecks": [{ "title": string, "detail": string, "level": "LOW" | "MEDIUM" | "HIGH" }], "upgrades": [{ "title": string, "detail": string, "level": "LOW" | "MEDIUM" | "HIGH" }], "watch_points": [string] }',
+      'safe_concurrent_users and breaking_point_users are estimated REAL concurrent people, not virtual users. At most 6 bottlenecks, 6 upgrades and 6 watch_points.',
+    ].join('\n'),
+  },
+  {
+    key: 'stress.verdict.user',
+    name: 'Stress test verdict — the run',
+    description: 'Hands over everything the run recorded, as one JSON object.',
+    category: PLATFORM,
+    role: 'USER',
+    tasks: ['platform.stress_verdict'],
+    target_model: '',
+    variables: [
+      required(
+        'run_data',
+        'Run data',
+        'The plan, guardrails, peaks, totals, slowest endpoints, condensed time series, container peaks and host size of one run.',
+        '{"run":{"run_no":"DUN-STR-000012","status":"COMPLETED"},"peaks":{"virtual_users":400,"host_cpu_pct":71}}',
+      ),
+    ],
+    usage: [STRESS_VERDICT_SITE],
+    content: 'Review this stress run:\n{{run_data}}',
   },
   {
     key: 'askbot.navigation',

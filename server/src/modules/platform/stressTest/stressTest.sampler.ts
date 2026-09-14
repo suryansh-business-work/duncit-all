@@ -40,6 +40,12 @@ const QUEUE_TIMEOUT_MS = 20 * 60_000;
 const SILENCE_TIMEOUT_MS = 3 * 60_000;
 /** How long shards get to acknowledge a stop before the workflow is cancelled. */
 const STOP_GRACE_MS = 2 * 60_000;
+/**
+ * The same, for a host out of CPU or memory. Short on purpose: a server that
+ * busy may not answer the runners' reports at all, so they would never read the
+ * stop flag and the only way to take the load off is to cancel the workflow.
+ */
+const TERMINATE_GRACE_MS = 30_000;
 /** Slack past the planned duration before the run is stopped for overrunning. */
 const OVERRUN_GRACE_MS = 3 * 60_000;
 /** A window this small says nothing about an error rate. */
@@ -69,26 +75,39 @@ function toServerSample(): IStressServerSample {
   };
 }
 
-/** Which guardrail this reading breaks, or null. */
-function breachOf(load: IStressLoadSample, server: IStressServerSample, settings: IStressSettings): string | null {
+/** Which latency or error guardrail this reading breaks, or null. These must persist to trip. */
+function breachOf(load: IStressLoadSample, settings: IStressSettings): string | null {
   if (load.requests >= MIN_REQUESTS_FOR_ERROR_RATE && load.error_rate_pct >= settings.abort_error_rate_pct) {
     return `error rate ${load.error_rate_pct}% ≥ ${settings.abort_error_rate_pct}%`;
   }
   if (load.p95_ms >= settings.abort_p95_ms) return `p95 latency ${load.p95_ms} ms ≥ ${settings.abort_p95_ms} ms`;
+  return null;
+}
+
+/**
+ * Which host resource this reading exhausts, or null. Trips on ONE sample: the
+ * CPU figure is already a five-second average, and a host out of memory starts
+ * killing processes — production's among them — long before a streak is counted.
+ */
+function exhaustionOf(server: IStressServerSample, settings: IStressSettings): string | null {
+  if (server.host_memory_pct >= settings.abort_host_memory_pct) {
+    return `host memory ${server.host_memory_pct}% ≥ ${settings.abort_host_memory_pct}%`;
+  }
   if (server.host_cpu_pct >= settings.abort_host_cpu_pct) {
     return `host CPU ${server.host_cpu_pct}% ≥ ${settings.abort_host_cpu_pct}%`;
   }
   return null;
 }
 
-async function requestStop(run: IStressRun, reason: string): Promise<void> {
+async function requestStop(run: IStressRun, reason: string, terminated = false): Promise<void> {
   const flagged = await StressRunModel.updateOne(
     { _id: run._id, status: 'RUNNING' },
-    { $set: { status: 'STOPPING', stop_requested_at: new Date(), stop_reason: reason } }
+    { $set: { status: 'STOPPING', stop_requested_at: new Date(), stop_reason: reason, terminated } }
   );
   if (flagged.modifiedCount === 0) return;
-  await appendEvent(run._id, 'WARN', 'guardrail', `Stopping: ${reason}.`);
-  logs.server.warn('stressTest', 'guardrail', { run_no: run.run_no, reason });
+  const verb = terminated ? 'Terminating' : 'Stopping';
+  await appendEvent(run._id, terminated ? 'ERROR' : 'WARN', 'guardrail', `${verb}: ${reason}.`);
+  logs.server.warn('stressTest', 'guardrail', { run_no: run.run_no, reason, terminated });
 }
 
 async function recordSample(
@@ -128,7 +147,12 @@ async function recordSample(
 
 async function guard(run: IStressRun, load: IStressLoadSample, server: IStressServerSample, settings: IStressSettings) {
   const id = run._id.toHexString();
-  const breach = breachOf(load, server, settings);
+  const exhausted = exhaustionOf(server, settings);
+  if (exhausted) {
+    await requestStop(run, `Terminated — ${exhausted}`, true);
+    return;
+  }
+  const breach = breachOf(load, settings);
   const count = breach ? (breaches.get(id) ?? 0) + 1 : 0;
   breaches.set(id, count);
   if (breach && count >= settings.abort_breach_samples) {
@@ -166,7 +190,8 @@ async function sweep(run: IStressRun): Promise<boolean> {
   if (run.status === 'QUEUED' && olderThan(run.created_at, QUEUE_TIMEOUT_MS)) {
     return endRun(run, 'FAILED', 'No GitHub runner picked the run up within 20 minutes.');
   }
-  if (run.status === 'STOPPING' && olderThan(run.stop_requested_at, STOP_GRACE_MS)) {
+  const grace = run.terminated ? TERMINATE_GRACE_MS : STOP_GRACE_MS;
+  if (run.status === 'STOPPING' && olderThan(run.stop_requested_at, grace)) {
     const reason = run.stop_reason || 'Stopped';
     return closeAbandoned(run, 'ABORTED', `${reason} — the runners did not acknowledge in time.`);
   }

@@ -60,6 +60,31 @@ export interface StressEvent {
   message: string;
 }
 
+export type StressLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export type StressVerdictGrade = 'HEALTHY' | 'STRAINED' | 'OVERLOADED' | 'INCONCLUSIVE';
+
+export interface StressVerdictItem {
+  title: string;
+  detail: string;
+  level: StressLevel;
+}
+
+export interface StressVerdict {
+  grade: StressVerdictGrade;
+  headline: string;
+  safe_concurrent_users: number;
+  breaking_point_users: number;
+  confidence: StressLevel;
+  capacity_reasoning: string;
+  bottlenecks: StressVerdictItem[];
+  upgrades: StressVerdictItem[];
+  watch_points: string[];
+  model: string;
+  generated_by: string;
+  generated_at: string | null;
+}
+
 export interface StressRun {
   id: string;
   run_no: string;
@@ -75,6 +100,7 @@ export interface StressRun {
   ended_at: string | null;
   stop_requested_at: string | null;
   stop_reason: string;
+  terminated: boolean;
   last_report_at: string | null;
   duration_seconds: number | null;
   peaks: StressPeaks;
@@ -83,6 +109,7 @@ export interface StressRun {
   shards_finished: number;
   events: StressEvent[];
   error_message: string;
+  verdict: StressVerdict | null;
   created_at: string | null;
 }
 
@@ -184,6 +211,7 @@ export interface StressSettings {
   abort_error_rate_pct: number;
   abort_p95_ms: number;
   abort_host_cpu_pct: number;
+  abort_host_memory_pct: number;
   abort_breach_samples: number;
   sample_retention_days: number;
   updated_at: string | null;
@@ -207,14 +235,14 @@ export interface StressTriggerConfig {
 
 const SETTINGS_FIELDS = `
   max_virtual_users max_browser_bots max_runners max_duration_minutes
-  abort_error_rate_pct abort_p95_ms abort_host_cpu_pct abort_breach_samples
+  abort_error_rate_pct abort_p95_ms abort_host_cpu_pct abort_host_memory_pct abort_breach_samples
   sample_retention_days updated_at
 `;
 
 const RUN_FIELDS = `
   id run_no status environment target_mweb_url target_graphql_url
   profile { virtual_users browser_bots runners ramp_up_seconds hold_seconds ramp_down_seconds think_time_ms journeys }
-  triggered_by workflow_run_url ref started_at ended_at stop_requested_at stop_reason last_report_at duration_seconds
+  triggered_by workflow_run_url ref started_at ended_at stop_requested_at stop_reason terminated last_report_at duration_seconds
   peaks { virtual_users browser_bots rps p95_ms error_rate_pct host_cpu_pct host_memory_pct event_loop_lag_ms real_users }
   summary { requests errors error_rate_pct avg_rps avg_ms p50_ms p95_ms p99_ms navigations navigation_errors avg_page_load_ms }
   shards_finished error_message created_at
@@ -231,12 +259,32 @@ export const STRESS_RUNS_TABLE = gql`
   }
 `;
 
+const VERDICT_FIELDS = `
+  verdict {
+    grade headline safe_concurrent_users breaking_point_users confidence capacity_reasoning
+    bottlenecks { title detail level }
+    upgrades { title detail level }
+    watch_points model generated_by generated_at
+  }
+`;
+
 export const STRESS_RUN = gql`
   query StressRun($id: ID!) {
     stressRun(id: $id) {
       ${RUN_FIELDS}
       endpoints { key requests errors avg_ms p50_ms p95_ms p99_ms }
       events { at level source message }
+      ${VERDICT_FIELDS}
+    }
+  }
+`;
+
+export const GENERATE_STRESS_VERDICT = gql`
+  mutation GenerateStressVerdict($id: ID!) {
+    generateStressVerdict(id: $id) {
+      id
+      events { at level source message }
+      ${VERDICT_FIELDS}
     }
   }
 `;

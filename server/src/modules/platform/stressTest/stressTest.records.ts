@@ -40,6 +40,7 @@ export const pubSettings = (doc: IStressSettings) => ({
   abort_error_rate_pct: doc.abort_error_rate_pct,
   abort_p95_ms: doc.abort_p95_ms,
   abort_host_cpu_pct: doc.abort_host_cpu_pct,
+  abort_host_memory_pct: doc.abort_host_memory_pct,
   abort_breach_samples: doc.abort_breach_samples,
   sample_retention_days: doc.sample_retention_days,
   updated_at: doc.updated_at?.toISOString() ?? null,
@@ -69,6 +70,7 @@ export const pubRun = (doc: IStressRun) => ({
   ended_at: iso(doc.ended_at),
   stop_requested_at: iso(doc.stop_requested_at),
   stop_reason: doc.stop_reason ?? '',
+  terminated: doc.terminated ?? false,
   last_report_at: iso(doc.last_report_at),
   duration_seconds: durationSeconds(doc),
   peaks: doc.peaks,
@@ -77,6 +79,7 @@ export const pubRun = (doc: IStressRun) => ({
   shards_finished: (doc.shard_results ?? []).length,
   events: (doc.events ?? []).map((e) => ({ at: e.at.toISOString(), level: e.level, source: e.source, message: e.message })),
   error_message: doc.error_message ?? '',
+  verdict: doc.verdict ? { ...doc.verdict, generated_at: iso(doc.verdict.generated_at) } : null,
   created_at: iso(doc.created_at),
 });
 

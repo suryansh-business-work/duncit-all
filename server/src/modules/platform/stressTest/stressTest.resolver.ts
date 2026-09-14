@@ -3,6 +3,7 @@ import { requireRole } from '@middleware/rbac';
 import type { TableQueryInput } from '@utils/table-query';
 import { stressTestService } from './stressTest.service';
 import { stressTestCi } from './stressTest.ci';
+import { generateStressVerdict } from './stressTest.verdict';
 
 // A Tech-portal capability. The runners authenticate with the same TECH_MANAGER
 // JWT the E2E and build workflows use (DUNCIT_RELEASE_TOKEN). Starting a run
@@ -53,6 +54,10 @@ export const stressTestResolvers = {
     deleteStressRun: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, STRESS_MANAGE);
       return stressTestService.remove(args.id);
+    },
+    generateStressVerdict: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, STRESS_MANAGE);
+      return generateStressVerdict(args.id, user);
     },
     updateStressSettings: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, STRESS_MANAGE);

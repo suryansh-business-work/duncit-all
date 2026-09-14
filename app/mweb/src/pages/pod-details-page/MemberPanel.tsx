@@ -52,7 +52,7 @@ export default function MemberPanel({
   const badge = isExpired ? t('mweb.podDetails.podVisited') : t('mweb.podDetails.podBooked');
 
   return (
-    <Stack spacing={1} sx={{ pl: 1 }}>
+    <Stack spacing={1} data-testid="member-panel" sx={{ pl: 1 }}>
       <ReleasedSeatsRow
         releasedSeats={releasedSeats}
         canTakeSeatsBack={canTakeSeatsBack}
@@ -64,7 +64,9 @@ export default function MemberPanel({
           icon={<CheckCircleIcon sx={{ color: 'success.main' }} />}
           caption={overline}
           value={badge}
+          valueTestId="pod-booked-label"
           note={note}
+          noteTestId="pod-backout-maxed"
         />
         {canBackout && (
           <DuncitButton
@@ -72,6 +74,7 @@ export default function MemberPanel({
             color="error"
             onClick={onBackout}
             disabled={backingOut}
+            data-testid="pod-backout"
             sx={{ ...ctaButtonSx, fontSize: 14 }}
           >
             {t('mweb.podDetails.backout')}
@@ -104,7 +107,10 @@ function ReleasedSeatsRow({
   if (releasedSeats <= 0) return null;
   if (!canTakeSeatsBack) {
     return (
-      <BarNotice icon={<LockClockIcon fontSize="small" sx={{ color: 'warning.main' }} />}>
+      <BarNotice
+        icon={<LockClockIcon fontSize="small" sx={{ color: 'warning.main' }} />}
+        testId="pod-released-seats-locked"
+      >
         {t('mweb.podDetails.backoutLocked')}
       </BarNotice>
     );
@@ -112,11 +118,17 @@ function ReleasedSeatsRow({
   const releasedKey =
     releasedSeats === 1 ? 'mweb.podDetails.releasedSeatsOne' : 'mweb.podDetails.releasedSeatsMany';
   return (
-    <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+    <Stack direction="row" spacing={1} data-testid="pod-released-seats" sx={{ alignItems: 'center' }}>
       <BarNotice icon={<HourglassTopIcon fontSize="small" sx={{ color: 'warning.main' }} />}>
         {t(releasedKey, { vars: { count: releasedSeats } })}
       </BarNotice>
-      <DuncitButton variant="contained" onClick={onKeepSpot} disabled={restoringSpot} sx={compactButtonSx}>
+      <DuncitButton
+        variant="contained"
+        onClick={onKeepSpot}
+        disabled={restoringSpot}
+        data-testid="pod-take-seats-back"
+        sx={compactButtonSx}
+      >
         {t('mweb.podDetails.takeSeatsBack')}
       </DuncitButton>
     </Stack>

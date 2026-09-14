@@ -55,8 +55,8 @@ export function PricingStep({
   const isFree = watch('pod_type') === 'FREE';
 
   return (
-    <YStack gap={16}>
-      <SurfaceCard gap={16}>
+    <YStack testID="pricing-step" gap={16}>
+      <SurfaceCard testID="pricing-step-price-card" gap={16}>
         <PodTypeCards form={form} />
         <FormTextField
           control={control}
@@ -90,7 +90,7 @@ export function PricingStep({
         />
       </SurfaceCard>
       <PricePanel finance={finance} pricing={pricing} />
-      <SurfaceCard>
+      <SurfaceCard testID="pricing-step-payment-terms-card">
         <FormTextField
           control={control}
           name="payment_terms"
@@ -99,7 +99,7 @@ export function PricingStep({
         />
       </SurfaceCard>
       {isPhysical ? (
-        <SurfaceCard>
+        <SurfaceCard testID="pricing-step-place-charges-card">
           <Controller
             control={control}
             name="place_charges"
@@ -115,7 +115,7 @@ export function PricingStep({
         // on submit rather than toggled here. `products` arrives already
         // filtered to the pod's club category, and the field says so when it is
         // empty. mWeb twin (rule 27).
-        <SurfaceCard>
+        <SurfaceCard testID="pricing-step-products-card">
           <Controller
             control={control}
             name="product_requests"

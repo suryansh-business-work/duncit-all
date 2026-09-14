@@ -15,8 +15,8 @@ const emptyText = (t: Translate): Record<FollowingFeedSource, string> => ({
 });
 
 const sourceTabs = (t: Translate): DuncitTabItem<FollowingFeedSource>[] => [
-  { value: 'CLUBS', label: t('mweb.nav.clubs') },
-  { value: 'PEOPLE', label: t('mweb.followPage.people') },
+  { value: 'CLUBS', label: t('mweb.nav.clubs'), testId: 'following-tab-clubs' },
+  { value: 'PEOPLE', label: t('mweb.followPage.people'), testId: 'following-tab-people' },
 ];
 
 interface FeedClubsData {
@@ -57,6 +57,7 @@ export default function FollowPage({ superCategorySlug }: Readonly<{ superCatego
   return (
     <Stack
       spacing={2}
+      data-testid="following-screen"
       sx={{
         mx: { xs: -1.25, sm: -2 },
         px: { xs: 1.25, sm: 2 },

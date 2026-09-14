@@ -16,7 +16,7 @@ export default function ProfilePostsGrid({ posts, onOpenPost, onNewPost }: Reado
   return (
     <>
       {posts.length === 0 ? (
-        <Stack spacing={1.5} sx={{ alignItems: 'center', py: 5 }}>
+        <Stack data-testid="profile-posts-grid-empty" spacing={1.5} sx={{ alignItems: 'center', py: 5 }}>
           <Box
             sx={{
               width: 64,
@@ -33,21 +33,26 @@ export default function ProfilePostsGrid({ posts, onOpenPost, onNewPost }: Reado
           <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
             {t('mweb.profile.sharePhotos')}
           </Typography>
-          <DuncitButton variant="contained" onClick={onNewPost}>
+          <DuncitButton data-testid="profile-posts-grid-share-first" variant="contained" onClick={onNewPost}>
             {t('mweb.profile.shareYourFirstPhoto')}
           </DuncitButton>
         </Stack>
       ) : (
-        <ImageList cols={3} gap={4} sx={{ m: 0 }}>
+        <ImageList data-testid="profile-posts-grid" cols={3} gap={4} sx={{ m: 0 }}>
           {posts.map((post: any) => (
-            <ImageListItem key={post.id} onClick={() => onOpenPost(post.id)} sx={{ cursor: 'pointer', aspectRatio: '1 / 1', position: 'relative', overflow: 'hidden', borderRadius: '12px', '&:hover .post-overlay': { opacity: 1 } }}>
+            <ImageListItem
+              key={post.id}
+              data-testid={`profile-posts-grid-post-${post.id}`}
+              onClick={() => onOpenPost(post.id)}
+              sx={{ cursor: 'pointer', aspectRatio: '1 / 1', position: 'relative', overflow: 'hidden', borderRadius: '12px', '&:hover .post-overlay': { opacity: 1 } }}
+            >
               <Box component="img" src={post.image_url} alt={post.caption || 'post'} loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               <Box className="post-overlay" sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(0,0,0,0.45)', color: 'common.white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, opacity: 0, transition: 'opacity 150ms' }}>
                 <Stack direction="row" spacing={0.5} sx={{
                   alignItems: "center"
                 }}>
                   <FavoriteIcon fontSize="small" />
-                  <Typography variant="body2" sx={{
+                  <Typography data-testid={`profile-posts-grid-post-${post.id}-likes`} variant="body2" sx={{
                     fontWeight: 700
                   }}>{post.likes_count}</Typography>
                 </Stack>
@@ -55,7 +60,7 @@ export default function ProfilePostsGrid({ posts, onOpenPost, onNewPost }: Reado
                   alignItems: "center"
                 }}>
                   <ChatBubbleOutlineIcon fontSize="small" />
-                  <Typography variant="body2" sx={{
+                  <Typography data-testid={`profile-posts-grid-post-${post.id}-comments`} variant="body2" sx={{
                     fontWeight: 700
                   }}>{post.comments_count}</Typography>
                 </Stack>

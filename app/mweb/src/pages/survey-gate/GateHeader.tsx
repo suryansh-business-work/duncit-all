@@ -18,10 +18,11 @@ export default function GateHeader({ title, onBack }: Readonly<Props>) {
   const { t } = useTranslation();
 
   return (
-    <Stack spacing={1} sx={{ mb: 2 }}>
+    <Stack data-testid="gate-header" spacing={1} sx={{ mb: 2 }}>
       <AuthLogo size={32} />
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <DuncitRoundButton
+          data-testid="gate-header-back"
           size="large"
           tone="paper"
           onClick={onBack}
@@ -30,7 +31,7 @@ export default function GateHeader({ title, onBack }: Readonly<Props>) {
         >
           <ArrowBackRoundedIcon />
         </DuncitRoundButton>
-        <Typography component="h1" sx={{ fontSize: 17, fontWeight: 600, minWidth: 0 }}>
+        <Typography data-testid="gate-header-title" component="h1" sx={{ fontSize: 17, fontWeight: 600, minWidth: 0 }}>
           {title}
         </Typography>
       </Stack>

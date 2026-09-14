@@ -44,6 +44,7 @@ export default function CouponField({
   if (applied?.ok) {
     return (
       <Stack
+        data-testid="coupon-applied"
         direction="row"
         sx={(theme) => ({
           alignItems: "center",
@@ -67,31 +68,33 @@ export default function CouponField({
             color="success"
           />
         </Stack>
-        <DuncitButton size="small" color="inherit" onClick={onRemove}>
+        <DuncitButton data-testid="coupon-remove" size="small" color="inherit" onClick={onRemove}>
           {t('mweb.checkout.couponRemove')}
         </DuncitButton>
       </Stack>
     );
   }
   return (
-    <Stack spacing={1}>
+    <Stack data-testid="coupon-field" spacing={1}>
       <Stack direction="row" spacing={1}>
         <TextField
+          data-testid="coupon-code-field"
           size="small"
           fullWidth
           label={couponCodeLabel}
           value={code}
           onChange={(e) => setCode(e.target.value.toUpperCase())}
           slotProps={{
-            htmlInput: { style: { textTransform: 'uppercase' }, 'aria-label': couponCodeLabel }
+            htmlInput: { style: { textTransform: 'uppercase' }, 'aria-label': couponCodeLabel, 'data-testid': 'coupon-input' }
           }}
         />
-        <DuncitButton variant="outlined" onClick={() => onApply()} disabled={applying || !code.trim()}>
+        <DuncitButton data-testid="coupon-apply" variant="outlined" onClick={() => onApply()} disabled={applying || !code.trim()}>
           {applying ? t('mweb.checkout.couponApplying') : t('mweb.checkout.couponApply')}
         </DuncitButton>
       </Stack>
       {available.length > 0 && (
         <Link
+          data-testid="coupon-view-available"
           component="button"
           type="button"
           underline="hover"
@@ -101,7 +104,7 @@ export default function CouponField({
           {availableLabel}
         </Link>
       )}
-      {error && <Alert severity="warning">{error}</Alert>}
+      {error && <Alert data-testid="coupon-error" severity="warning">{error}</Alert>}
       <CouponsDialog
         open={pickerOpen}
         coupons={available}

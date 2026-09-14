@@ -16,6 +16,7 @@ interface Props {
 export default function ProductBuyBar({ price, quantity, maxQuantity, onUpdate }: Readonly<Props>) {
   return (
     <Box
+      data-testid="product-buy-bar"
       sx={{
         ...SURFACE_SX,
         ...STICKY_BAR_SX,
@@ -25,7 +26,9 @@ export default function ProductBuyBar({ price, quantity, maxQuantity, onUpdate }
       }}
     >
       <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-        <Typography sx={{ fontSize: '1.125rem', fontWeight: 700, flexShrink: 0 }}>{price}</Typography>
+        <Typography data-testid="product-buy-bar-price" sx={{ fontSize: '1.125rem', fontWeight: 700, flexShrink: 0 }}>
+          {price}
+        </Typography>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <ProductQuantityBar quantity={quantity} maxQuantity={maxQuantity} onUpdate={onUpdate} />
         </Box>

@@ -18,6 +18,7 @@ export default function ManageAccountList({ title, items, onNavigate }: Readonly
       {items.map((item) => (
         <MenuRow
           key={item.key}
+          testId={`sidebar-item-${item.label}`}
           icon={profileIcon(item.icon)}
           label={item.label}
           badge={item.badge}

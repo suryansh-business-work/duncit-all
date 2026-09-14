@@ -23,7 +23,7 @@ export default function BackoutInProcessPanel({ canCancel, busy, onKeepSpot }: R
   const { t } = useTranslation();
   if (!canCancel) {
     return (
-      <Stack direction="row" sx={{ alignItems: 'center', minHeight: 48 }}>
+      <Stack direction="row" data-testid="pod-backout-locked" sx={{ alignItems: 'center', minHeight: 48 }}>
         <BarNotice icon={<LockClockIcon sx={{ color: 'warning.main' }} />}>
           {t('mweb.podDetails.backoutLocked')}
         </BarNotice>
@@ -31,13 +31,20 @@ export default function BackoutInProcessPanel({ canCancel, busy, onKeepSpot }: R
     );
   }
   return (
-    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', pl: 1 }}>
+    <Stack direction="row" spacing={1.5} data-testid="pod-backout-in-process-panel" sx={{ alignItems: 'center', pl: 1 }}>
       <BarLabel
         icon={<HourglassTopIcon sx={{ color: 'warning.main' }} />}
         caption={t('mweb.podDetails.searchingForReplacement')}
         value={t('mweb.podDetails.backoutInProcess')}
+        valueTestId="pod-backout-in-process"
       />
-      <DuncitButton variant="contained" onClick={onKeepSpot} disabled={busy} sx={ctaButtonSx}>
+      <DuncitButton
+        variant="contained"
+        onClick={onKeepSpot}
+        disabled={busy}
+        data-testid="pod-keep-spot"
+        sx={ctaButtonSx}
+      >
         {t('mweb.podDetails.keepMySpot')}
       </DuncitButton>
     </Stack>

@@ -60,7 +60,7 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
   const selectCategory = (e: SelectChangeEvent) => onChange({ ...filters, categoryId: e.target.value });
 
   return (
-    <Stack direction="row" spacing={1} sx={{ flex: '0 0 auto' }}>
+    <Stack direction="row" spacing={1} data-testid="pod-history-toolbar" sx={{ flex: '0 0 auto' }}>
       {/* Round icon buttons, as on native: the filter turns green and shows how
           many are on; both keep their words as the accessible name. */}
       <DuncitButton
@@ -68,6 +68,7 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
         variant={count ? 'contained' : 'text'}
         aria-label={filterLabel}
         onClick={(e) => setFilterAnchor(e.currentTarget)}
+        data-testid="pod-history-filter-button"
         sx={filterSx}
       >
         <FilterListIcon fontSize="small" />
@@ -77,6 +78,7 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
         size="small"
         aria-label={t('mweb.podHistory.sort')}
         onClick={(e) => setSortAnchor(e.currentTarget)}
+        data-testid="pod-history-sort-button"
         sx={{ ...roundSx, ...surfaceSx }}
       >
         <SortIcon fontSize="small" />
@@ -88,6 +90,7 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
         onClose={() => setFilterAnchor(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        data-testid="pod-history-filter-popover"
       >
         <Box sx={{ p: 2, width: 290 }}>
           <Typography variant="subtitle2" gutterBottom sx={{
@@ -97,7 +100,13 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
           </Typography>
           <FormControl fullWidth size="small" sx={{ mt: 1 }}>
             <InputLabel id="ph-super-label">{superLabel}</InputLabel>
-            <Select labelId="ph-super-label" label={superLabel} value={filters.superId} onChange={selectSuper}>
+            <Select
+              labelId="ph-super-label"
+              label={superLabel}
+              value={filters.superId}
+              onChange={selectSuper}
+              data-testid="pod-history-filter-super-select"
+            >
               <MenuItem value="">
                 <em>{t('mweb.podHistory.none')}</em>
               </MenuItem>
@@ -110,7 +119,13 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
           </FormControl>
           <FormControl fullWidth size="small" sx={{ mt: 2 }} disabled={!filters.superId}>
             <InputLabel id="ph-cat-label">{categoryLabel}</InputLabel>
-            <Select labelId="ph-cat-label" label={categoryLabel} value={filters.categoryId} onChange={selectCategory}>
+            <Select
+              labelId="ph-cat-label"
+              label={categoryLabel}
+              value={filters.categoryId}
+              onChange={selectCategory}
+              data-testid="pod-history-filter-category-select"
+            >
               <MenuItem value="">
                 <em>{t('mweb.podHistory.all')}</em>
               </MenuItem>
@@ -133,17 +148,29 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
             </Typography>
           )}
           <Divider sx={{ my: 1.5 }} />
-          <DuncitButton fullWidth size="small" onClick={onReset} disabled={count === 0}>
+          <DuncitButton
+            fullWidth
+            size="small"
+            onClick={onReset}
+            disabled={count === 0}
+            data-testid="pod-history-filter-reset"
+          >
             {t('mweb.podHistory.reset')}
           </DuncitButton>
         </Box>
       </Popover>
 
-      <Menu open={Boolean(sortAnchor)} anchorEl={sortAnchor} onClose={() => setSortAnchor(null)}>
+      <Menu
+        open={Boolean(sortAnchor)}
+        anchorEl={sortAnchor}
+        onClose={() => setSortAnchor(null)}
+        data-testid="pod-history-sort-menu"
+      >
         {POD_HISTORY_SORTS.map((opt) => (
           <MenuItem
             key={opt.value}
             selected={opt.value === filters.sort}
+            data-testid={`pod-history-sort-option-${opt.value}`}
             onClick={() => {
               onChange({ ...filters, sort: opt.value });
               setSortAnchor(null);

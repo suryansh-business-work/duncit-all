@@ -28,6 +28,7 @@ interface BodyProps extends RowActions {
   emptyText: string;
   currencySymbol: string;
   onRetry: () => void;
+  sectionId: string;
 }
 
 /** Loading / error / empty / list — hoisted so it is not redefined per render. */
@@ -42,11 +43,13 @@ function StudioPodsBody({
   onCancelPod,
   onRequestChange,
   requestChangeLabel,
+  sectionId,
 }: Readonly<BodyProps>) {
   const { t } = useTranslation();
   if (loading) {
     return (
       <Stack
+        data-testid={`${sectionId}-loading`}
         sx={{
           alignItems: "center",
           py: 3
@@ -58,9 +61,10 @@ function StudioPodsBody({
   if (failed) {
     return (
       <Alert
+        data-testid={`${sectionId}-error`}
         severity="error"
         action={
-          <DuncitButton color="inherit" size="small" onClick={onRetry}>
+          <DuncitButton data-testid={`${sectionId}-retry`} color="inherit" size="small" onClick={onRetry}>
             {t('mweb.studioPods.retry')}
           </DuncitButton>
         }
@@ -71,7 +75,7 @@ function StudioPodsBody({
   }
   if (pods.length === 0) {
     return (
-      <Typography variant="body2" sx={{
+      <Typography data-testid={`${sectionId}-empty`} variant="body2" sx={{
         color: "text.secondary"
       }}>
         {emptyText}
@@ -89,6 +93,7 @@ function StudioPodsBody({
           onCancel={onCancelPod}
           onRequestChange={onRequestChange}
           requestChangeLabel={requestChangeLabel}
+          testId={`${sectionId}-row-${pod.id}`}
         />
       ))}
     </Stack>
@@ -107,6 +112,8 @@ interface Props extends RowActions {
   loading: boolean;
   failed: boolean;
   onRetry: () => void;
+  /** Test id root for the section and every id derived from it. */
+  sectionId?: string;
 }
 
 /**
@@ -127,6 +134,7 @@ export default function StudioPodsSection({
   onCancelPod,
   onRequestChange,
   requestChangeLabel,
+  sectionId = 'studio-pods',
 }: Readonly<Props>) {
   const { t } = useTranslation();
   // The summary counts every pod in scope while the list is capped, so this is
@@ -135,7 +143,7 @@ export default function StudioPodsSection({
   const capped = summary.total > pods.length;
 
   return (
-    <Card>
+    <Card data-testid={sectionId}>
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={1.5}>
           <SectionHeader title={title} />
@@ -143,10 +151,12 @@ export default function StudioPodsSection({
           {/* Hidden while the first load runs: a strip reading "Total 0 /
               None scheduled" under a spinner states something false. Native
               already withheld it. */}
-          {!loading && <StudioPodsFigures summary={summary} scopeLabel={scopeLabel} />}
+          {!loading && (
+            <StudioPodsFigures summary={summary} scopeLabel={scopeLabel} testId={`${sectionId}-figures`} />
+          )}
 
           {capped && (
-            <Typography variant="caption" sx={{
+            <Typography data-testid={`${sectionId}-capped`} variant="caption" sx={{
               color: "text.secondary"
             }}>
               {t('mweb.studioPods.showingLatest', { vars: { pods: pods.length } })}
@@ -164,6 +174,7 @@ export default function StudioPodsSection({
             onCancelPod={onCancelPod}
             onRequestChange={onRequestChange}
             requestChangeLabel={requestChangeLabel}
+            sectionId={sectionId}
           />
         </Stack>
       </CardContent>

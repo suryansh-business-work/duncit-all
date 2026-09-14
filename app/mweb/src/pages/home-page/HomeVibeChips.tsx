@@ -35,18 +35,20 @@ interface HomeVibeChipsProps {
 const MARK_SIZE = 16;
 
 interface VibeChipProps {
+  testId: string;
   label: string;
   selected: boolean;
   onClick: () => void;
 }
 
 /** A pill for a sub-category in the second row. */
-function VibeChip({ label, selected, onClick }: Readonly<VibeChipProps>) {
+function VibeChip({ testId, label, selected, onClick }: Readonly<VibeChipProps>) {
   const restSx = selected
     ? null
     : { bgcolor: 'background.paper', border: '1px solid var(--duncit-card-border)', '&:hover': { bgcolor: 'action.hover' } };
   return (
     <Chip
+      data-testid={testId}
       label={label}
       clickable
       color={selected ? 'primary' : 'default'}
@@ -77,6 +79,7 @@ export default function HomeVibeChips({ categories, selectedId, onSelect, allIco
       {hasCategories && (
         <HomeRail gap={1}>
           <VibeTab
+            testId="vibe-chip-all"
             label={t('mweb.home.vibeAll')}
             icon={allMark}
             selected={selectedId === ''}
@@ -87,9 +90,11 @@ export default function HomeVibeChips({ categories, selectedId, onSelect, allIco
             const mark =
               renderSuperCategoryMark(category.icon, MARK_SIZE) ??
               <CategoryOutlinedIcon sx={{ fontSize: MARK_SIZE }} />;
+            const chipTestId = `vibe-chip-${category.id}`;
             return (
               <VibeTab
                 key={category.id}
+                testId={chipTestId}
                 label={category.name}
                 icon={mark}
                 selected={selected}
@@ -103,6 +108,7 @@ export default function HomeVibeChips({ categories, selectedId, onSelect, allIco
       {hasCategories && activeCategory && subs.length > 0 && (
         <HomeRail gap={1}>
           <VibeChip
+            testId={`vibe-sub-all-${activeCategory.id}`}
             label={t('mweb.home.vibeAllOf', { vars: { name: activeCategory.name } })}
             selected={selectedId === activeCategory.id}
             onClick={() => onSelect(activeCategory.id)}
@@ -110,6 +116,7 @@ export default function HomeVibeChips({ categories, selectedId, onSelect, allIco
           {subs.map((sub) => (
             <VibeChip
               key={sub.id}
+              testId={`vibe-sub-${sub.id}`}
               label={sub.name}
               selected={selectedId === sub.id}
               onClick={() => onSelect(selectedId === sub.id ? activeCategory.id : sub.id)}

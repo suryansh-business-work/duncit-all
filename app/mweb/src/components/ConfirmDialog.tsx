@@ -26,6 +26,8 @@ interface Props {
   busy?: boolean;
   onConfirm: () => void;
   onClose: () => void;
+  /** The dialog's own id; `-title`, `-cancel` and `-confirm` hang off it. */
+  testId?: string;
 }
 
 export default function ConfirmDialog({
@@ -38,6 +40,7 @@ export default function ConfirmDialog({
   busy,
   onConfirm,
   onClose,
+  testId = 'confirm-dialog',
 }: Readonly<Props>) {
   const { t } = useTranslation();
   // Resolved here, not as parameter defaults: a default is evaluated before
@@ -52,8 +55,9 @@ export default function ConfirmDialog({
       maxWidth="xs"
       fullWidth
       aria-labelledby="confirm-dialog-title"
+      data-testid={testId}
     >
-      <DialogTitle id="confirm-dialog-title" sx={DIALOG_TITLE_SX}>
+      <DialogTitle id="confirm-dialog-title" data-testid={`${testId}-title`} sx={DIALOG_TITLE_SX}>
         {titleText}
       </DialogTitle>
       {message && (
@@ -66,10 +70,17 @@ export default function ConfirmDialog({
         </DialogContent>
       )}
       <DialogActions disableSpacing sx={DIALOG_ACTIONS_SX}>
-        <DuncitButton variant="outlined" onClick={onClose} disabled={busy} sx={DIALOG_PILL_SX}>
+        <DuncitButton
+          data-testid={`${testId}-cancel`}
+          variant="outlined"
+          onClick={onClose}
+          disabled={busy}
+          sx={DIALOG_PILL_SX}
+        >
           {cancelText}
         </DuncitButton>
         <DuncitButton
+          data-testid={`${testId}-confirm`}
           onClick={onConfirm}
           variant="contained"
           color={destructive ? 'error' : 'primary'}

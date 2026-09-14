@@ -20,9 +20,11 @@ function Stat({
   label,
   value,
   onClick,
-}: Readonly<{ label: string; value: number; onClick?: () => void }>) {
+  testId,
+}: Readonly<{ label: string; value: number; onClick?: () => void; testId: string }>) {
   return (
     <Box
+      data-testid={testId}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       sx={{ flex: 1, textAlign: 'center', py: 1.5, cursor: onClick ? 'pointer' : 'default' }}
@@ -52,13 +54,13 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
   const [followTab, setFollowTab] = useState<'followers' | 'following' | null>(null);
 
   return (
-    <Stack spacing={2} sx={{ alignItems: 'center', pt: 1 }}>
+    <Stack data-testid="profile-header" spacing={2} sx={{ alignItems: 'center', pt: 1 }}>
       <ProfileAvatar photo={me.profile_photo} name={displayName} size={88} onChanged={onChanged} />
       <Box sx={{ width: '100%', textAlign: 'center' }}>
         {/* The tick beside the NAME is the only thing that says the email is
             verified. Native shows the same mark in the same place (rule 27). */}
         <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', justifyContent: 'center' }}>
-          <Typography component="h1" sx={{ fontSize: 22, fontWeight: 600, lineHeight: 1.2 }}>
+          <Typography data-testid="profile-header-name" component="h1" sx={{ fontSize: 22, fontWeight: 600, lineHeight: 1.2 }}>
             {displayName}
           </Typography>
           {me.is_email_verified && (
@@ -81,25 +83,52 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
           '& > * + *': { borderLeft: 1, borderColor: 'divider' },
         }}
       >
-        <Stat label="posts" value={postsCount} />
-        <Stat label="followers" value={me.followers_count ?? 0} onClick={() => setFollowTab('followers')} />
-        <Stat label="following" value={me.following_count ?? 0} onClick={() => setFollowTab('following')} />
+        <Stat testId="profile-header-stat-posts" label="posts" value={postsCount} />
+        <Stat
+          testId="profile-header-stat-followers"
+          label="followers"
+          value={me.followers_count ?? 0}
+          onClick={() => setFollowTab('followers')}
+        />
+        <Stat
+          testId="profile-header-stat-following"
+          label="following"
+          value={me.following_count ?? 0}
+          onClick={() => setFollowTab('following')}
+        />
       </Stack>
       <Stack direction="row" spacing={1} sx={{ width: '100%', alignItems: 'center' }}>
-        <DuncitButton variant="contained" startIcon={<AddPhotoAlternateIcon />} onClick={onNewPost} sx={PILL_SX}>
+        <DuncitButton
+          data-testid="profile-header-new-post"
+          variant="contained"
+          startIcon={<AddPhotoAlternateIcon />}
+          onClick={onNewPost}
+          sx={PILL_SX}
+        >
           New Post
         </DuncitButton>
-        <DuncitButton color="inherit" onClick={onSettings} sx={{ ...PILL_SX, bgcolor: 'action.hover' }}>
+        <DuncitButton
+          data-testid="profile-header-edit"
+          color="inherit"
+          onClick={onSettings}
+          sx={{ ...PILL_SX, bgcolor: 'action.hover' }}
+        >
           Edit profile
         </DuncitButton>
         <DuncitIconButton
+          data-testid="profile-header-share"
           onClick={() => shareProfile(me.user_id, displayName, me.username)}
           sx={ROUND_SX}
           aria-label={t('mweb.common.shareProfile')}
         >
           <ShareIcon fontSize="small" />
         </DuncitIconButton>
-        <DuncitIconButton onClick={onSettings} sx={ROUND_SX} aria-label={t('mweb.profile.accountSettings')}>
+        <DuncitIconButton
+          data-testid="profile-header-settings"
+          onClick={onSettings}
+          sx={ROUND_SX}
+          aria-label={t('mweb.profile.accountSettings')}
+        >
           <SettingsIcon fontSize="small" />
         </DuncitIconButton>
       </Stack>

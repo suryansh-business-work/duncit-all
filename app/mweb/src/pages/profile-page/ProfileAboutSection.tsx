@@ -25,7 +25,7 @@ export default function ProfileAboutSection({ me, onSaved }: Readonly<{ me: any;
   }
 
   return (
-    <Stack spacing={2}>
+    <Stack data-testid="profile-about-section" spacing={2}>
       <Stack
         direction="row"
         sx={{
@@ -38,6 +38,7 @@ export default function ProfileAboutSection({ me, onSaved }: Readonly<{ me: any;
           Description and links
         </Typography>
         <DuncitButton
+          data-testid="profile-about-section-edit"
           size="small"
           color="inherit"
           startIcon={<EditIcon />}
@@ -48,29 +49,38 @@ export default function ProfileAboutSection({ me, onSaved }: Readonly<{ me: any;
         </DuncitButton>
       </Stack>
       {me.bio ? (
-        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+        <Typography data-testid="profile-about-section-bio" variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
           {me.bio}
         </Typography>
       ) : (
-        <Typography variant="body2" sx={{
+        <Typography data-testid="profile-about-section-bio" variant="body2" sx={{
           color: "text.secondary"
         }}>
           Add a short description so members know more about you.
         </Typography>
       )}
       {links.length > 0 && (
-        <Stack direction="row" spacing={1} useFlexGap sx={{
+        <Stack data-testid="profile-about-section-links" direction="row" spacing={1} useFlexGap sx={{
           flexWrap: "wrap"
         }}>
-          {links.map((link: any) => (
-            <Link key={`${link.label}-${link.url}`} href={link.url} target="_blank" rel="noopener noreferrer">
-              {link.label}
-            </Link>
-          ))}
+          {links.map((link: any) => {
+            const linkKey = `${link.label}-${link.url}`;
+            return (
+              <Link
+                key={linkKey}
+                data-testid={`profile-about-section-link-${linkKey}`}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </Stack>
       )}
       {saved && (
-        <Alert severity="success" onClose={() => setSaved(false)}>
+        <Alert data-testid="profile-about-section-saved" severity="success" onClose={() => setSaved(false)}>
           Profile saved
         </Alert>
       )}

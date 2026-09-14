@@ -21,7 +21,7 @@ const RAILS: ReadonlyArray<readonly [ClubPodPhase, string]> = [
 function PodRail({ title, pods, priceFormat, onOpen }: Readonly<Props & { title: string }>) {
   if (pods.length === 0) return null;
   return (
-    <Stack spacing={1.25}>
+    <Stack data-testid={`club-pods-schedule-rail-${title}`} spacing={1.25}>
       <SectionHeader title={title} />
       <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
         {pods.map((pod) => (
@@ -43,7 +43,7 @@ export default function ClubPodsScheduleSection({ pods, priceFormat, onOpen }: R
   }
 
   return (
-    <Stack spacing={2.5}>
+    <Stack data-testid="club-pods-schedule" spacing={2.5}>
       {RAILS.map(([phase, title]) => (
         <PodRail key={phase} title={title} pods={byPhase(phase)} priceFormat={priceFormat} onOpen={onOpen} />
       ))}

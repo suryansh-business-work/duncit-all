@@ -19,9 +19,9 @@ export default function PostCommentList({
   onDeleteComment,
 }: Readonly<PostCommentListProps>) {
   return (
-    <Box sx={{ flex: 1, overflowY: 'auto', p: 1.5 }}>
+    <Box data-testid="post-comment-list" sx={{ flex: 1, overflowY: 'auto', p: 1.5 }}>
       {post.caption && (
-        <Stack direction="row" spacing={1.5} sx={{ mb: 2 }}>
+        <Stack data-testid="post-comment-list-caption" direction="row" spacing={1.5} sx={{ mb: 2 }}>
           <Avatar src={post.author?.profile_photo || undefined} sx={{ width: 32, height: 32 }}>
             {(post.author?.first_name?.[0] ?? 'U').toUpperCase()}
           </Avatar>
@@ -45,6 +45,7 @@ export default function PostCommentList({
 
       {sortedComments.length === 0 ? (
         <Typography
+          data-testid="post-comment-list-empty"
           variant="body2"
           sx={{
             color: "text.secondary",
@@ -54,13 +55,19 @@ export default function PostCommentList({
           No comments yet. Be the first to comment.
         </Typography>
       ) : (
-        <Stack spacing={1.5}>
+        <Stack data-testid="post-comment-list-comments" spacing={1.5}>
           {sortedComments.map((c: any) => {
             const canRemove = c.author_id === meId || canDeletePost;
             return (
-              <Stack key={c.id} direction="row" spacing={1.5} sx={{
-                alignItems: "flex-start"
-              }}>
+              <Stack
+                key={c.id}
+                data-testid={`post-comment-list-comment-${c.id}`}
+                direction="row"
+                spacing={1.5}
+                sx={{
+                  alignItems: "flex-start"
+                }}
+              >
                 <Avatar
                   src={c.author?.profile_photo || undefined}
                   sx={{ width: 28, height: 28 }}
@@ -83,7 +90,11 @@ export default function PostCommentList({
                   </Typography>
                 </Box>
                 {canRemove && (
-                  <DuncitIconButton size="small" onClick={() => onDeleteComment(c.id)}>
+                  <DuncitIconButton
+                    data-testid={`post-comment-list-comment-${c.id}-delete`}
+                    size="small"
+                    onClick={() => onDeleteComment(c.id)}
+                  >
                     <DeleteOutlineIcon fontSize="inherit" />
                   </DuncitIconButton>
                 )}

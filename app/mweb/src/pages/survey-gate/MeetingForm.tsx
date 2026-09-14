@@ -82,55 +82,82 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
   };
 
   if (loading && !data) {
-    return <Box sx={{ display: 'grid', placeItems: 'center', py: 4 }}><CircularProgress size={24} /></Box>;
+    return (
+      <Box data-testid="slots-loading" sx={{ display: 'grid', placeItems: 'center', py: 4 }}>
+        <CircularProgress size={24} />
+      </Box>
+    );
   }
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  if (error) return <Alert data-testid="meeting-error" severity="error">{error.message}</Alert>;
   if (slots.length === 0) {
-    return <Alert severity="info">{t('mweb.surveyGate.noSlotsAreOpenRightNow')}</Alert>;
+    return <Alert data-testid="slots-empty" severity="info">{t('mweb.surveyGate.noSlotsAreOpenRightNow')}</Alert>;
   }
 
   return (
-    <Stack spacing={2}>
+    <Stack data-testid="meeting-form" spacing={2}>
       <SlotPicker slots={slots} value={slot} onChange={setSlot} />
 
       <TextField
         size="small"
+        data-testid="meeting-name-field"
         label={t('mweb.common.yourName')}
         value={name}
         onChange={(e) => setName(e.target.value)}
         disabled={!!me?.full_name}
         helperText={me?.full_name ? 'From your profile.' : undefined}
         fullWidth
+        slotProps={{ htmlInput: { 'data-testid': 'meeting-name' } }}
       />
       <Stack direction="row" spacing={1}>
         <TextField
           size="small"
           label="Ext."
+          data-testid="meeting-ext-field"
           value={contactExt}
           disabled
           sx={{ width: 96 }}
           slotProps={{
-            input: { readOnly: true }
+            input: { readOnly: true },
+            htmlInput: { 'data-testid': 'meeting-ext' },
           }}
         />
         <TextField
           size="small"
           label={t('mweb.common.phone')}
+          data-testid="meeting-phone-field"
           value={contactPhone}
           disabled
           helperText={t('mweb.surveyGate.fromYourProfile')}
           fullWidth
           slotProps={{
-            input: { readOnly: true }
+            input: { readOnly: true },
+            htmlInput: { 'data-testid': 'meeting-phone' },
           }}
         />
       </Stack>
-      <TextField size="small" label={t('mweb.surveyGate.anythingWeShouldKnowOptional')} value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} fullWidth />
+      <TextField
+        size="small"
+        data-testid="meeting-notes-field"
+        label={t('mweb.surveyGate.anythingWeShouldKnowOptional')}
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        multiline
+        minRows={2}
+        fullWidth
+        slotProps={{ htmlInput: { 'data-testid': 'meeting-notes' } }}
+      />
       {phoneMissing && (
         <Alert
+          data-testid="meeting-phone-missing"
           severity="warning"
           action={
-            <DuncitButton color="inherit" size="small" onClick={() => navigate('/account')} sx={{ fontWeight: 600 }}>
+            <DuncitButton
+              data-testid="meeting-go-to-profile"
+              color="inherit"
+              size="small"
+              onClick={() => navigate('/account')}
+              sx={{ fontWeight: 600 }}
+            >
               Go To Profile
             </DuncitButton>
           }
@@ -138,8 +165,17 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
           Phone number is required so our team can reach you. Please add your Phone number from Profile to proceed.
         </Alert>
       )}
-      {(formError || submitError) && <Alert severity="warning">{formError ?? submitError}</Alert>}
-      <DuncitButton variant="contained" size="large" fullWidth onClick={submit} disabled={submitting}>
+      {(formError || submitError) && (
+        <Alert data-testid="meeting-form-error" severity="warning">{formError ?? submitError}</Alert>
+      )}
+      <DuncitButton
+        data-testid="primary-action"
+        variant="contained"
+        size="large"
+        fullWidth
+        onClick={submit}
+        disabled={submitting}
+      >
         {submitting ? 'Booking…' : 'Book this slot'}
       </DuncitButton>
     </Stack>

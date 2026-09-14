@@ -75,7 +75,7 @@ export default function ClubEditPage() {
   };
 
   return (
-    <Box sx={{ maxWidth: 960, mx: 'auto', width: '100%' }}>
+    <Box data-testid="club-edit-page" sx={{ maxWidth: 960, mx: 'auto', width: '100%' }}>
       <QueryGuard
         notFound={!club}
         notFoundText={t('clubAdmin.editClub.notFound')}

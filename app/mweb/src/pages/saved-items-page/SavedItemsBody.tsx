@@ -20,6 +20,7 @@ export default function SavedItemsBody({ loading, hasData, error, pods, onOpen }
   if (loading && !hasData) {
     return (
       <Stack
+        data-testid="saved-items-body-loading"
         sx={{
           alignItems: "center",
           p: 6
@@ -29,13 +30,17 @@ export default function SavedItemsBody({ loading, hasData, error, pods, onOpen }
     );
   }
   if (error) {
-    return <Alert severity="error">{error}</Alert>;
+    return (
+      <Alert data-testid="saved-items-body-error" severity="error">
+        {error}
+      </Alert>
+    );
   }
   if (!pods.length) {
     return <EmptyState icon={<BookmarkBorderIcon />} title={t('mweb.saved.noSavedPodsYetTapThe')} />;
   }
   return (
-    <Stack spacing={1.5}>
+    <Stack data-testid="saved-items-body-list" spacing={1.5}>
       {pods.map((pod) => (
         <SavedItemCard key={pod.id} pod={pod} onOpen={onOpen} />
       ))}

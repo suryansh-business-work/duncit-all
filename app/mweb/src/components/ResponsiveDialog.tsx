@@ -36,6 +36,7 @@ interface Props {
   contentSx?: SxProps<Theme>;
   actionsSx?: SxProps<Theme>;
   children: ReactNode;
+  testId?: string;
 }
 
 function mergeSx(base: SxProps<Theme>, extra?: SxProps<Theme>): SxProps<Theme> {
@@ -61,6 +62,7 @@ export default function ResponsiveDialog({
   contentSx,
   actionsSx,
   children,
+  testId = 'responsive-dialog',
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -70,6 +72,7 @@ export default function ResponsiveDialog({
   if (useSheet) {
     return (
       <SwipeableDrawer
+        data-testid={testId}
         anchor="bottom"
         open={open}
         onClose={onClose}
@@ -119,7 +122,7 @@ export default function ResponsiveDialog({
               flex: '0 0 auto'
             }}>
             <Box sx={{ minWidth: 0, flex: 1, ...TITLE_TEXT_SX }}>{title}</Box>
-            <DuncitRoundButton tone="surface" onClick={onClose} aria-label={t('mweb.common.close')}>
+            <DuncitRoundButton data-testid={`${testId}-close`} tone="surface" onClick={onClose} aria-label={t('mweb.common.close')}>
               <CloseIcon />
             </DuncitRoundButton>
           </Stack>
@@ -145,13 +148,14 @@ export default function ResponsiveDialog({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth={fullWidth} maxWidth={maxWidth} slotProps={{
+    <Dialog data-testid={testId} open={open} onClose={onClose} fullWidth={fullWidth} maxWidth={maxWidth} slotProps={{
       paper: { sx: paperSx }
     }}>
       {title && (
         <DialogTitle sx={{ pr: 8, ...TITLE_TEXT_SX }}>
           {title}
           <DuncitRoundButton
+            data-testid={`${testId}-close`}
             tone="surface"
             onClick={onClose}
             sx={{ position: 'absolute', right: 16, top: 14 }}

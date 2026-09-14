@@ -14,7 +14,11 @@ export default function BillingSummary({ address }: Readonly<{ address: PostalAd
   ].filter((row) => row.text);
 
   return (
-    <Stack spacing={0.25} sx={{ px: 1.5, py: 1.25, borderRadius: '16px', border: '1px dashed', borderColor: 'divider' }}>
+    <Stack
+      spacing={0.25}
+      data-testid="billing-main-summary"
+      sx={{ px: 1.5, py: 1.25, borderRadius: '16px', border: '1px dashed', borderColor: 'divider' }}
+    >
       {rows.map((row) => (
         <Typography key={row.key} variant="body2" sx={{
           color: "text.secondary"

@@ -18,7 +18,7 @@ export default function ReplacementNotice({ deductionPct }: Readonly<Props>) {
   const pct = Math.max(0, Math.min(100, Number(deductionPct) || 0));
 
   return (
-    <Box sx={{ mt: 1.5 }}>
+    <Box data-testid="ph-replacement" sx={{ mt: 1.5 }}>
       <Stack direction="row" spacing={0.5} sx={{
         alignItems: "center"
       }}>
@@ -32,6 +32,7 @@ export default function ReplacementNotice({ deductionPct }: Readonly<Props>) {
           aria-label={t('mweb.podHistory.refundDetails')}
           aria-expanded={open}
           onClick={() => setOpen((prev) => !prev)}
+          data-testid="ph-replacement-info"
         >
           <InfoOutlinedIcon fontSize="small" color="action" />
         </DuncitIconButton>
@@ -39,6 +40,7 @@ export default function ReplacementNotice({ deductionPct }: Readonly<Props>) {
       <Collapse in={open}>
         <Typography
           variant="body2"
+          data-testid="ph-replacement-detail"
           sx={{
             color: "success.main",
             fontWeight: 600,

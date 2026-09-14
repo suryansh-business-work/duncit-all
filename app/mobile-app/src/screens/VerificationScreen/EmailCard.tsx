@@ -12,7 +12,7 @@ export function EmailCard({ item }: Readonly<{ item: Verification }>) {
   const { t } = useTranslation();
   return (
     <VerificationCard item={item}>
-      <Text fontSize={12} color="$muted">
+      <Text testID="verification-email-note" fontSize={12} color="$muted">
         {t('verification.emailNote')}
       </Text>
     </VerificationCard>

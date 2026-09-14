@@ -102,6 +102,7 @@ export default function VenuesPage({ locationId, superCategorySlug }: Readonly<P
 
   return (
     <Stack
+      data-testid="venues-page"
       spacing={1.5}
       sx={{ maxWidth: 720, mx: 'auto', width: '100%', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}
     >
@@ -113,14 +114,15 @@ export default function VenuesPage({ locationId, superCategorySlug }: Readonly<P
         value={searchInput}
         onChange={setSearchInput}
         ariaLabel="Search venues"
+        testId="venues-search"
       />
       {loading && !data && (
-        <Box sx={{ display: 'grid', placeItems: 'center', py: 3 }}>
+        <Box sx={{ display: 'grid', placeItems: 'center', py: 3 }} data-testid="venues-page-loading">
           <CircularProgress size={22} />
         </Box>
       )}
       {!loading && error && (
-        <Typography variant="body2" color="error">
+        <Typography variant="body2" color="error" data-testid="venues-page-error">
           Could not load venues — please try again.
         </Typography>
       )}

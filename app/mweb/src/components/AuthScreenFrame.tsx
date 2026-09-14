@@ -21,6 +21,7 @@ interface Props {
 export default function AuthScreenFrame({ children, center }: Readonly<Props>) {
   return (
     <Box
+      data-testid="auth-screen-frame"
       sx={{
         position: 'relative',
         zIndex: 1,

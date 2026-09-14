@@ -35,23 +35,34 @@ export default function KeepSpotDialog({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
+    <Dialog
+      open={open}
+      onClose={busy ? undefined : onClose}
+      fullWidth
+      maxWidth="sm"
+      data-testid="keep-spot-dialog"
+    >
       <DialogTitle sx={{ pr: 6 }}>{t('mweb.podDetails.changeOfPlans')}</DialogTitle>
       <DialogContent dividers>
         <Typography variant="body2">
           {t('mweb.podDetails.keepSpotBody', { vars: { count: attemptsLeft } })}
         </Typography>
         {error && (
-          <Alert severity="warning" sx={{ mt: 2 }}>
+          <Alert severity="warning" data-testid="keep-spot-error" sx={{ mt: 2 }}>
             {error}
           </Alert>
         )}
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <DuncitButton onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy} data-testid="keep-spot-cancel">
           {t('mweb.podDetails.close')}
         </DuncitButton>
-        <DuncitButton variant="contained" onClick={onConfirm} disabled={busy}>
+        <DuncitButton
+          variant="contained"
+          onClick={onConfirm}
+          disabled={busy}
+          data-testid="keep-spot-confirm"
+        >
           {busy ? t('mweb.podDetails.restoring') : t('mweb.podDetails.keepMySpot')}
         </DuncitButton>
       </DialogActions>

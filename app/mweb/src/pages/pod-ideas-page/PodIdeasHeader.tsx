@@ -18,17 +18,24 @@ export default function PodIdeasHeader({ search, setSearch, onShare }: Readonly<
   const { t } = useTranslation();
   const navigate = useNavigate();
   const shareButton = (
-    <DuncitButton variant="contained" startIcon={<AddIcon />} onClick={onShare} sx={{ minHeight: 40, height: 40, px: 2 }}>
+    <DuncitButton
+      variant="contained"
+      startIcon={<AddIcon />}
+      onClick={onShare}
+      data-testid="pod-ideas-add"
+      sx={{ minHeight: 40, height: 40, px: 2 }}
+    >
       Share idea
     </DuncitButton>
   );
   return (
-    <Stack spacing={2} sx={{ mb: 2.5 }}>
+    <Stack spacing={2} data-testid="pod-ideas-header" sx={{ mb: 2.5 }}>
       <PageHeader title={t('mweb.podIdeas.podIdeas')} onBack={() => navigate(-1)} right={shareButton} />
       <SearchPillField
         placeholder={t('mweb.podIdeas.searchIdeas')}
         value={search}
         onChange={setSearch}
+        testId="pod-ideas-search"
       />
     </Stack>
   );

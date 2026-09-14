@@ -31,6 +31,7 @@ export default function SplashScreen() {
   if (splashUrl) {
     return (
       <Box
+        data-testid="splash-screen"
         role="status"
         aria-label={`Loading ${appName}`}
         sx={{ position: 'fixed', inset: 0, zIndex: (t) => t.zIndex.modal + 100, bgcolor: BRAND_SPLASH }}
@@ -46,6 +47,7 @@ export default function SplashScreen() {
 
   return (
     <Box
+      data-testid="splash-screen"
       role="status"
       aria-label={`Loading ${appName}`}
       sx={{

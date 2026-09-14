@@ -73,12 +73,13 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
     onConfirm(needsTrim ? { start, duration: MAX_STORY_VIDEO_SECONDS } : null);
 
   return (
-    <Dialog open={!!file} onClose={onCancel} fullWidth maxWidth="xs">
+    <Dialog data-testid="story-video-sheet" open={!!file} onClose={onCancel} fullWidth maxWidth="xs">
       <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.common.previewYourVideoStory')}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5}>
           {url && (
             <Box
+              data-testid="story-video-preview"
               component="video"
               ref={videoRef}
               src={url}
@@ -96,6 +97,7 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
                 {MAX_STORY_VIDEO_SECONDS}s you want to post.
               </Alert>
               <Slider
+                data-testid="story-trim-slider"
                 aria-label={t('mweb.statusUpload.trimStart')}
                 value={start}
                 min={0}
@@ -106,6 +108,7 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
                 valueLabelFormat={fmt}
               />
               <Typography
+                data-testid="story-trim-window"
                 variant="caption"
                 sx={{
                   color: "text.secondary",
@@ -118,8 +121,10 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onCancel}>{t('mweb.common.cancel')}</DuncitButton>
-        <DuncitButton variant="contained" onClick={confirm} sx={{ fontWeight: 600 }}>
+        <DuncitButton data-testid="story-video-cancel" onClick={onCancel}>
+          {t('mweb.common.cancel')}
+        </DuncitButton>
+        <DuncitButton data-testid="story-video-post" variant="contained" onClick={confirm} sx={{ fontWeight: 600 }}>
           {needsTrim ? 'Trim & Post' : 'Post story'}
         </DuncitButton>
       </DialogActions>

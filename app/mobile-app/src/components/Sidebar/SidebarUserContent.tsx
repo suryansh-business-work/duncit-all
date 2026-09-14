@@ -85,7 +85,7 @@ export function SidebarUserContent({
   // The flag-gated sections and the grid's translated tiles (rule 38).
   const tiles = buildSidebarTiles(t);
   return (
-    <YStack>
+    <YStack testID="sidebar-user-content">
       <TourAnchor tour="profile" anchor="profile-details">
         <SidebarProfileIdentity me={me} onPress={() => onNavigate('Profile')} />
       </TourAnchor>

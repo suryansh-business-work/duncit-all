@@ -38,15 +38,16 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: s
   const payable = payout.approved_amount ?? b?.payout_amount ?? payout.amount_requested;
   const expandable = (b?.version ?? 0) >= 2;
 
+  const rowTestId = `venue-payout-${payout.id}`;
   return (
-    <Box sx={{ px: 2, py: 1.5 }}>
+    <Box sx={{ px: 2, py: 1.5 }} data-testid={rowTestId}>
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>
         <Typography noWrap sx={{ flex: 1, fontSize: '0.95rem', fontWeight: 600 }}>
           {payout.pod_title}
         </Typography>
-        <Chip size="small" color={STATUS_COLOR[payout.status] ?? 'default'} label={payout.status} />
+        <Chip size="small" color={STATUS_COLOR[payout.status] ?? 'default'} label={payout.status} data-testid={`${rowTestId}-status`} />
       </Stack>
       <Stack
         direction="row"
@@ -64,7 +65,7 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: s
           }}>
           {formatDate(payout.created_at)}
         </Typography>
-        <Typography sx={{ fontSize: '1rem', fontWeight: 700 }}>
+        <Typography sx={{ fontSize: '1rem', fontWeight: 700 }} data-testid={`${rowTestId}-amount`}>
           {fmt(payable)}
         </Typography>
         {expandable && (
@@ -73,13 +74,14 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: s
             aria-label={t('mweb.venueEarnings.showPayoutBreakdown')}
             onClick={() => setOpen((v) => !v)}
             sx={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}
+            data-testid={`${rowTestId}-expand`}
           >
             <ExpandMoreRoundedIcon fontSize="small" />
           </DuncitIconButton>
         )}
       </Stack>
       {expandable && b && (
-        <Collapse in={open} unmountOnExit>
+        <Collapse in={open} unmountOnExit data-testid={`${rowTestId}-breakdown`}>
           <Typography
             variant="caption"
             sx={{
@@ -99,7 +101,7 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: s
  * split by hairlines inside the history card. */
 export default function PayoutList({ payouts, symbol }: Readonly<{ payouts: VenuePayout[]; symbol: string }>) {
   return (
-    <Stack divider={<Divider sx={{ mx: 2 }} />}>
+    <Stack divider={<Divider sx={{ mx: 2 }} />} data-testid="venue-payout-list">
       {payouts.map((payout) => (
         <PayoutRow key={payout.id} payout={payout} symbol={symbol} />
       ))}

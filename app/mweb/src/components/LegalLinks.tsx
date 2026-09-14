@@ -12,6 +12,7 @@ export default function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
 
   return (
     <Typography
+      data-testid="legal-links"
       variant="caption"
       align="center"
       sx={{
@@ -21,11 +22,11 @@ export default function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
         lineHeight: 1.5
       }}>
       {lead} {t('mweb.auth.legalAgree')}{' '}
-      <Link href={TERMS_URL} target="_blank" rel="noopener" underline="hover">
+      <Link data-testid="legal-links-terms" href={TERMS_URL} target="_blank" rel="noopener" underline="hover">
         {t('mweb.auth.terms')}
       </Link>{' '}
       {t('mweb.auth.legalAnd')}{' '}
-      <Link href={PRIVACY_URL} target="_blank" rel="noopener" underline="hover">
+      <Link data-testid="legal-links-privacy" href={PRIVACY_URL} target="_blank" rel="noopener" underline="hover">
         {t('mweb.auth.privacy')}
       </Link>.
           </Typography>
@@ -37,6 +38,7 @@ export function LegalLinkRow() {
 
   return (
     <Stack
+      data-testid="legal-link-row"
       direction="row"
       spacing={2}
       sx={{
@@ -45,6 +47,7 @@ export function LegalLinkRow() {
         flexWrap: 'wrap'
       }}>
       <Link
+        data-testid="legal-link-row-terms"
         href={TERMS_URL}
         target="_blank"
         rel="noopener"
@@ -54,6 +57,7 @@ export function LegalLinkRow() {
         {t('mweb.auth.terms')}
       </Link>
       <Link
+        data-testid="legal-link-row-privacy"
         href={PRIVACY_URL}
         target="_blank"
         rel="noopener"

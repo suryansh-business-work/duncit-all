@@ -25,7 +25,7 @@ export default function ClubPodRailCard({ pod, priceFormat, onOpen }: Readonly<P
   const dateLabel = formatDate(pod.pod_date_time).toUpperCase() || 'TBA';
 
   return (
-    <Card sx={{ width: 180, flex: '0 0 auto', p: 1 }}>
+    <Card data-testid={`pod-card-${pod.id}`} sx={{ width: 180, flex: '0 0 auto', p: 1 }}>
       <Box sx={{ position: 'relative' }}>
         {cover ? (
           <CardMedia component="img" image={cover} alt={pod.pod_title} sx={{ ...MEDIA_SX, objectFit: 'cover' }} />
@@ -66,6 +66,7 @@ export default function ClubPodRailCard({ pod, priceFormat, onOpen }: Readonly<P
           {pod.pod_title}
         </Typography>
         <DuncitButton
+          data-testid={`pod-card-${pod.id}-price`}
           fullWidth
           size="small"
           variant="contained"

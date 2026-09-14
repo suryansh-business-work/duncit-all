@@ -45,6 +45,7 @@ export default function HostPodsSection({ pods, loading }: Readonly<HostPodsSect
   const emptyOrList =
     pods.length === 0 ? (
       <Typography
+        data-testid="host-pods-section-empty"
         variant="body2"
         sx={{
           color: "text.secondary",
@@ -53,7 +54,7 @@ export default function HostPodsSection({ pods, loading }: Readonly<HostPodsSect
         {t('mweb.profile.noPodsYet')}
       </Typography>
     ) : (
-      <List dense disablePadding sx={{ mt: 0.5 }}>
+      <List data-testid="host-pods-section-list" dense disablePadding sx={{ mt: 0.5 }}>
         {pods.map((p: any) => {
           const cover =
             (p.pod_images_and_videos ?? []).find((m: any) => m?.type !== 'VIDEO')?.url ||
@@ -61,6 +62,7 @@ export default function HostPodsSection({ pods, loading }: Readonly<HostPodsSect
           return (
             <ListItemButton
               key={p.id}
+              data-testid={`host-pods-section-pod-${p.id}`}
               onClick={() =>
                 p.club_slug && p.pod_id ? navigate(`/club/${p.club_slug}/pod/${p.pod_id}`) : null
               }
@@ -81,7 +83,7 @@ export default function HostPodsSection({ pods, loading }: Readonly<HostPodsSect
     );
 
   return (
-    <Box>
+    <Box data-testid="host-pods-section">
       <Stack
         direction="row"
         spacing={1}
@@ -90,9 +92,13 @@ export default function HostPodsSection({ pods, loading }: Readonly<HostPodsSect
           mt: 1
         }}>
         <Typography variant="subtitle2">{t('mweb.common.yourPods')}</Typography>
-        <Chip size="small" label={pods.length} />
+        <Chip data-testid="host-pods-section-count" size="small" label={pods.length} />
       </Stack>
-      {loading ? <CircularProgress size={20} sx={{ mt: 1 }} /> : emptyOrList}
+      {loading ? (
+        <CircularProgress data-testid="host-pods-section-loading" size={20} sx={{ mt: 1 }} />
+      ) : (
+        emptyOrList
+      )}
     </Box>
   );
 }

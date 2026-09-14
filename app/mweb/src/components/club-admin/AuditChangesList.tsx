@@ -17,26 +17,30 @@ export default function AuditChangesList({ changes, note, heading = false }: Rea
   const showNone = heading && changes.length === 0;
 
   return (
-    <Stack spacing={0.5}>
+    <Stack data-testid="audit-changes-list" spacing={0.5}>
       {heading && (
-        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+        <Typography data-testid="audit-changes-list-heading" variant="subtitle2" sx={{ fontWeight: 600 }}>
           {t('clubAdmin.monitoring.changesCount', { vars: { total: changes.length } })}
         </Typography>
       )}
       {showNone && (
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+        <Typography data-testid="audit-changes-list-empty" variant="body2" sx={{ color: 'text.secondary' }}>
           {t('clubAdmin.monitoring.noChanges')}
         </Typography>
       )}
-      {changes.map((change) => (
-        <Typography
-          key={change.field}
-          variant="caption"
-          sx={{ color: 'text.secondary', wordBreak: 'break-word' }}
-        >
-          {change.field}: {change.from || empty} → {change.to || empty}
-        </Typography>
-      ))}
+      {changes.map((change) => {
+        const changeTestId = `audit-changes-list-${change.field}`;
+        return (
+          <Typography
+            key={change.field}
+            data-testid={changeTestId}
+            variant="caption"
+            sx={{ color: 'text.secondary', wordBreak: 'break-word' }}
+          >
+            {change.field}: {change.from || empty} → {change.to || empty}
+          </Typography>
+        );
+      })}
       {note && (
         <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
           <b>{t('clubAdmin.monitoring.note')}</b> {note}

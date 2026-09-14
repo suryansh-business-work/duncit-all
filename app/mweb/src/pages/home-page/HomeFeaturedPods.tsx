@@ -36,7 +36,7 @@ export default function HomeFeaturedPods({
   if (pods.length === 0) return null;
 
   return (
-    <HomeRail>
+    <HomeRail testId="home-featured-pods-rail">
       {pods.map((pod) => (
         <PodCard
           key={pod.id}

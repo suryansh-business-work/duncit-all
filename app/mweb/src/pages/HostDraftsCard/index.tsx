@@ -38,9 +38,14 @@ export default function HostDraftsCard() {
   const { expiring, rest } = splitDraftsByExpiry(drafts);
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.5} data-testid="host-drafts-card">
       <HostSectionHeader title={t('mweb.hostManage.draftPods')} count={drafts.length} />
-      <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{ alignItems: 'flex-start' }}
+        data-testid="draft-retention-note"
+      >
         <ScheduleRoundedIcon sx={{ fontSize: 16, color: 'warning.main', mt: '2px' }} />
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
           {t('mweb.hostManage.draftRetentionNote', { vars: { days: retentionDays } })}
@@ -55,7 +60,7 @@ export default function HostDraftsCard() {
         </Typography>
       ) : null}
       {rest.length > 0 ? (
-        <RowGroup>
+        <RowGroup testId="host-drafts-rest">
           {rest.map((draft) => (
             <DraftRow key={draft.id} draft={draft} expiring={false} onDelete={setTarget} />
           ))}

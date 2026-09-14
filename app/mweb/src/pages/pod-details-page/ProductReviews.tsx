@@ -92,7 +92,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
       .catch(() => undefined);
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.5} data-testid="product-reviews">
       <Divider />
       <Typography variant="subtitle1" sx={{
         fontWeight: 600
@@ -100,7 +100,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
         Ratings &amp; reviews
       </Typography>
       {summary && summary.total > 0 && (
-        <Stack direction="row" spacing={1} sx={{
+        <Stack direction="row" spacing={1} data-testid="review-summary" sx={{
           alignItems: "center"
         }}>
           <Rating value={summary.average_rating} precision={0.1} readOnly size="small" />
@@ -112,7 +112,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
         </Stack>
       )}
 
-      <Box sx={{ border: 1, borderColor: 'divider', borderRadius: '16px', p: 1.5 }}>
+      <Box data-testid="product-reviews-write" sx={{ border: 1, borderColor: 'divider', borderRadius: '16px', p: 1.5 }}>
         <Typography
           variant="body2"
           sx={{
@@ -121,7 +121,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
           }}>
           Write a review
         </Typography>
-        <Rating value={rating} onChange={(_, v) => setRating(v)} />
+        <Rating value={rating} onChange={(_, v) => setRating(v)} data-testid="review-rating-input" />
         <TextField
           value={comment}
           onChange={(e) => setComment(e.target.value)}
@@ -130,11 +130,12 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
           minRows={2}
           fullWidth
           size="small"
+          data-testid="review-comment"
           sx={{ mt: 1 }}
         />
         {images.length > 0 && (
-          <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap' }} useFlexGap>
-            {images.map((url) => (
+          <Stack direction="row" spacing={1} data-testid="review-photos" sx={{ mt: 1, flexWrap: 'wrap' }} useFlexGap>
+            {images.map((url, index) => (
               <Box key={url} sx={{ position: 'relative' }}>
                 <Box
                   component="img"
@@ -147,6 +148,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
                   tone="paper"
                   aria-label={t('mweb.common.removeAttachment')}
                   onClick={() => removeImage(url)}
+                  data-testid={`review-photo-remove-${index}`}
                   sx={{ position: 'absolute', top: -8, right: -8 }}
                 >
                   <CloseIcon />
@@ -160,13 +162,21 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
           startIcon={<AddPhotoAlternateIcon />}
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
+          data-testid="review-add-photo"
           sx={{ mt: 1 }}
         >
           {uploading ? 'Uploading…' : 'Add photo'}
         </DuncitButton>
-        <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickImage} />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={onPickImage}
+          data-testid="review-photo-input"
+        />
         {error && (
-          <Alert severity="warning" sx={{ mt: 1 }}>
+          <Alert severity="warning" data-testid="review-error" sx={{ mt: 1 }}>
             {error}
           </Alert>
         )}
@@ -175,6 +185,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
           size="small"
           onClick={submit}
           disabled={saving}
+          data-testid="review-submit"
           sx={{ mt: 1, borderRadius: 999, fontWeight: 600 }}
         >
           {saving ? 'Submitting…' : 'Submit review'}
@@ -183,6 +194,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
 
       {loading && !data ? (
         <Stack
+          data-testid="reviews-loading"
           sx={{
             alignItems: "center",
             py: 2
@@ -191,7 +203,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
         </Stack>
       ) : null}
       {reviews.map((r) => (
-        <Box key={r.id} sx={{ borderTop: 1, borderColor: 'divider', pt: 1.25 }}>
+        <Box key={r.id} data-testid={`review-card-${r.id}`} sx={{ borderTop: 1, borderColor: 'divider', pt: 1.25 }}>
           <Stack direction="row" spacing={1} sx={{
             alignItems: "center"
           }}>
@@ -241,11 +253,21 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
               alignItems: "center",
               mt: 0.5
             }}>
-            <DuncitIconButton size="small" color={r.my_vote === 1 ? 'primary' : 'default'} onClick={() => vote(r.id, 1, r.my_vote)}>
+            <DuncitIconButton
+              size="small"
+              color={r.my_vote === 1 ? 'primary' : 'default'}
+              onClick={() => vote(r.id, 1, r.my_vote)}
+              data-testid={`review-up-${r.id}`}
+            >
               <ThumbUpOffAltIcon fontSize="small" />
             </DuncitIconButton>
             <Typography variant="caption">{r.up_votes}</Typography>
-            <DuncitIconButton size="small" color={r.my_vote === -1 ? 'error' : 'default'} onClick={() => vote(r.id, -1, r.my_vote)}>
+            <DuncitIconButton
+              size="small"
+              color={r.my_vote === -1 ? 'error' : 'default'}
+              onClick={() => vote(r.id, -1, r.my_vote)}
+              data-testid={`review-down-${r.id}`}
+            >
               <ThumbDownOffAltIcon fontSize="small" />
             </DuncitIconButton>
             <Typography variant="caption">{r.down_votes}</Typography>
@@ -253,7 +275,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
         </Box>
       ))}
       {!loading && reviews.length === 0 && (
-        <Typography variant="body2" sx={{
+        <Typography variant="body2" data-testid="product-reviews-empty" sx={{
           color: "text.secondary"
         }}>
           No reviews yet — be the first!

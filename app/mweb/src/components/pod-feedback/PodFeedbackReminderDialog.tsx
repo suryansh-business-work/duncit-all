@@ -36,7 +36,7 @@ export default function PodFeedbackReminderDialog({ open, title, onChoose }: Rea
   const { t } = useTranslation();
 
   return (
-    <Dialog open={open} fullWidth maxWidth="xs">
+    <Dialog data-testid="pod-feedback-reminder" open={open} fullWidth maxWidth="xs">
       <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.podFeedback.remindTitle')}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -48,6 +48,7 @@ export default function PodFeedbackReminderDialog({ open, title, onChoose }: Rea
           {POD_FEEDBACK_REMINDER_OPTIONS.map((option) => (
             <DuncitButton
               key={option.choice}
+              data-testid={`pod-feedback-remind-${option.choice.toLowerCase()}`}
               fullWidth
               variant={option.choice === 'LATER' ? 'contained' : 'outlined'}
               onClick={() => onChoose(option.choice)}

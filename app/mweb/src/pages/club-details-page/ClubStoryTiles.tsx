@@ -32,6 +32,7 @@ export default function ClubStoryTiles({ clubId, canPost, stories, onOpen }: Rea
     <>
       {canPost && (
         <Stack
+          data-testid="club-story-add"
           spacing={0.5}
           role="button"
           aria-label={t('mweb.clubDetails.addAStoryToThisClub')}
@@ -62,6 +63,7 @@ export default function ClubStoryTiles({ clubId, canPost, stories, onOpen }: Rea
       {stories.map((story, index) => (
         <Stack
           key={story.id}
+          data-testid={`club-story-${story.id}`}
           spacing={0.5}
           role="button"
           aria-label={`Story by ${story.author?.full_name ?? 'member'}`}

@@ -35,6 +35,7 @@ export default function CommentInput({ viewerId, posting, onSubmit }: Readonly<P
   return (
     <form onSubmit={submit}>
       <Stack
+        data-testid="comment-input"
         direction="row"
         spacing={1}
         sx={{
@@ -50,6 +51,7 @@ export default function CommentInput({ viewerId, posting, onSubmit }: Readonly<P
           render={({ field, fieldState }) => (
             <TextField
               {...field}
+              data-testid="comment-input-field"
               fullWidth
               size="small"
               placeholder={
@@ -65,10 +67,12 @@ export default function CommentInput({ viewerId, posting, onSubmit }: Readonly<P
                   '& fieldset': { borderColor: 'transparent' },
                 },
               }}
+              slotProps={{ htmlInput: { 'data-testid': 'comment-input-field-input' } }}
             />
           )}
         />
         <DuncitIconButton
+          data-testid="comment-input-send"
           type="submit"
           aria-label={t('mweb.podDetails.sendComment')}
           disabled={!viewerId || posting || !text.trim()}

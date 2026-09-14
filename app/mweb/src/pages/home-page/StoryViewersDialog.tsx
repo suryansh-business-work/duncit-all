@@ -49,7 +49,7 @@ export default function StoryViewersDialog({
     ) : (
       <List disablePadding>
         {viewers.map((viewer) => (
-          <ListItem key={viewer.user_id} disableGutters>
+          <ListItem key={viewer.user_id} data-testid={`story-viewer-${viewer.user_id}`} disableGutters>
             <ListItemAvatar>
               <Avatar src={viewer.user?.profile_photo || undefined} />
             </ListItemAvatar>
@@ -60,7 +60,7 @@ export default function StoryViewersDialog({
     );
 
   return (
-    <Dialog open={!!storyId} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog data-testid="story-viewers-dialog" open={!!storyId} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
         <Stack direction="row" spacing={1} sx={{
           alignItems: "center"
@@ -70,7 +70,12 @@ export default function StoryViewersDialog({
             {viewers.length === 0 ? 'No views yet' : `Seen by ${viewers.length}`}
           </Typography>
         </Stack>
-        <DuncitIconButton onClick={onClose} aria-label={t('mweb.common.closeViewers')} size="small">
+        <DuncitIconButton
+          data-testid="story-viewers-close"
+          onClick={onClose}
+          aria-label={t('mweb.common.closeViewers')}
+          size="small"
+        >
           <CloseIcon />
         </DuncitIconButton>
       </DialogTitle>

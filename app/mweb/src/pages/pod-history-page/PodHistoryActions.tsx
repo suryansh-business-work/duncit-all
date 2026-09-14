@@ -52,6 +52,7 @@ function BackoutButton({
   const button = (
     <DuncitButton
       data-tour="booking-backout"
+      data-testid="ph-backout"
       onClick={onBackout}
       disabled={disabled || maxed}
       color="error"
@@ -106,13 +107,18 @@ export default function PodHistoryActions({
   return (
     <>
       {isDeleted && (
-        <Alert severity="info" sx={{ mb: 1.5 }}>
+        <Alert severity="info" data-testid="ph-deleted-notice" sx={{ mb: 1.5 }}>
           {t('mweb.podHistory.podRemovedNotice')}
         </Alert>
       )}
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap sx={{
-        flexWrap: "wrap"
-      }}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1}
+        useFlexGap
+        data-testid="pod-history-actions"
+        sx={{
+          flexWrap: "wrap"
+        }}>
         {!isDeleted && (
           <>
             <DuncitButton
@@ -121,6 +127,7 @@ export default function PodHistoryActions({
               disabled={!podDetailsPath}
               variant="contained"
               endIcon={<ArrowForwardIcon />}
+              data-testid="ph-pod-details"
             >
               {t('mweb.podHistory.goToPodDetails')}
             </DuncitButton>
@@ -141,12 +148,18 @@ export default function PodHistoryActions({
                 color="success"
                 variant="contained"
                 startIcon={<ReplayIcon />}
+                data-testid="ph-rejoin"
               >
                 {rejoining ? t('mweb.podHistory.rejoining') : t('mweb.podHistory.rejoinPod')}
               </DuncitButton>
             )}
             {showRefundState && (
-              <DuncitButton variant="outlined" startIcon={<ReceiptLongIcon />} onClick={onShowRefundStatus}>
+              <DuncitButton
+                variant="outlined"
+                startIcon={<ReceiptLongIcon />}
+                onClick={onShowRefundStatus}
+                data-testid="ph-refund"
+              >
                 {t('mweb.podHistory.refundChip', { vars: { status: refundLabel } })}
               </DuncitButton>
             )}
@@ -155,6 +168,7 @@ export default function PodHistoryActions({
                 other, which also made the tour one step shorter on mWeb. */}
             <DuncitButton
               data-tour="booking-ticket"
+              data-testid="ph-ticket"
               onClick={onDownloadTicket}
               disabled={item.status !== 'JOINED' || ticketLoading}
               variant="contained"
@@ -169,6 +183,7 @@ export default function PodHistoryActions({
           disabled={!item.payment_id || invoiceLoading}
           variant="outlined"
           startIcon={<ReceiptLongIcon />}
+          data-testid="ph-invoice"
         >
           {invoiceLoading ? t('mweb.podHistory.downloading') : t('mweb.podHistory.invoice')}
         </DuncitButton>
@@ -177,6 +192,7 @@ export default function PodHistoryActions({
           to={supportPath}
           variant="outlined"
           startIcon={<ContactSupportIcon />}
+          data-testid="ph-support"
         >
           {t('mweb.podHistory.contactSupport')}
         </DuncitButton>

@@ -18,7 +18,7 @@ export default function PodPicker({ options, selectedId, onChange, loading }: Re
 
   if (loading && !options.length) {
     return (
-      <Paper sx={{ ...SURFACE_SX, p: 2 }}>
+      <Paper data-testid="pod-picker-loading" sx={{ ...SURFACE_SX, p: 2 }}>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
@@ -29,7 +29,7 @@ export default function PodPicker({ options, selectedId, onChange, loading }: Re
   }
   if (!options.length) {
     return (
-      <Paper sx={{ ...SURFACE_SX, p: 2 }}>
+      <Paper data-testid="pod-picker-empty" sx={{ ...SURFACE_SX, p: 2 }}>
         <Stack direction="row" spacing={1} sx={{
           alignItems: "center"
         }}>
@@ -50,9 +50,10 @@ export default function PodPicker({ options, selectedId, onChange, loading }: Re
         label={t('mweb.common.pod')}
         value={selectedId}
         onChange={(event) => onChange(event.target.value)}
+        data-testid="pod-picker"
       >
         {options.map((opt) => (
-          <MenuItem key={opt.podDocId} value={opt.podDocId}>
+          <MenuItem key={opt.podDocId} data-testid={`pod-option-${opt.podDocId}`} value={opt.podDocId}>
             <Stack>
               <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
                 {opt.title}

@@ -78,11 +78,12 @@ export default function ClubSegments({ club, pods, priceFormat, onOpenPod }: Rea
   const [active, setActive] = useState<SegmentKey>('PODS');
 
   return (
-    <Stack spacing={2}>
+    <Stack data-testid="club-segments" spacing={2}>
       <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
         {segments.map(([key, label]) => (
           <Chip
             key={key}
+            data-testid={`club-tab-${key}`}
             label={label}
             clickable
             color={active === key ? 'primary' : 'default'}

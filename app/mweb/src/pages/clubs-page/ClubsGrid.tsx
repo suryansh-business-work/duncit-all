@@ -18,6 +18,7 @@ export default function ClubsGrid({ clubs, podCounts, onOpen }: Readonly<ClubsGr
   const { ads } = useActiveAds('CLUB_LIST');
   return (
     <Box
+      data-testid="clubs-grid"
       sx={{
         display: 'grid',
         gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },

@@ -17,6 +17,7 @@ interface Props {
   /** The muted chevron that says "this opens somewhere". */
   chevron?: boolean;
   tone?: RowTone;
+  testId?: string;
 }
 
 const ROW_SX = {
@@ -45,6 +46,7 @@ export default function MenuRow({
   trailing,
   chevron = true,
   tone = 'default',
+  testId,
 }: Readonly<Props>) {
   const ink = tone === 'danger' ? 'error.main' : 'text.primary';
   const content = (
@@ -85,10 +87,18 @@ export default function MenuRow({
     </>
   );
   if (!onClick) {
-    return <Box sx={ROW_SX}>{content}</Box>;
+    return (
+      <Box data-testid={testId} sx={ROW_SX}>
+        {content}
+      </Box>
+    );
   }
   return (
-    <ButtonBase onClick={onClick} sx={{ ...ROW_SX, '&:hover': { bgcolor: 'action.hover' } }}>
+    <ButtonBase
+      data-testid={testId}
+      onClick={onClick}
+      sx={{ ...ROW_SX, '&:hover': { bgcolor: 'action.hover' } }}
+    >
       {content}
     </ButtonBase>
   );

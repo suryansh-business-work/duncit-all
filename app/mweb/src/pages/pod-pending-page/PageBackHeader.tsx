@@ -31,8 +31,9 @@ export default function PageBackHeader({ title, backLabel, action }: Readonly<Pr
   const textAlign = action ? 'center' : 'left';
 
   return (
-    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+    <Stack data-testid="page-back-header" direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
       <DuncitRoundButton
+        data-testid="page-back-header-back"
         aria-label={backLabel}
         onClick={() => navigate(-1)}
         sx={ROUND_HEADER_BUTTON_SX}
@@ -40,6 +41,7 @@ export default function PageBackHeader({ title, backLabel, action }: Readonly<Pr
         <ArrowBackRoundedIcon />
       </DuncitRoundButton>
       <Typography
+        data-testid="page-back-header-title"
         component="h1"
         noWrap
         sx={{ flex: 1, minWidth: 0, fontSize: '1.0625rem', fontWeight: 600, textAlign }}

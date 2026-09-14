@@ -10,6 +10,7 @@ export default function ReferralCard({ onNavigate }: Readonly<{ onNavigate: (to:
   return (
     <Box sx={{ px: 2, pb: 1.5 }}>
       <Stack
+        data-testid="sidebar-referral"
         direction="row"
         spacing={1.5}
         onClick={() => onNavigate(REFERRAL_TILE.to)}

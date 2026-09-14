@@ -90,7 +90,7 @@ export default function ClubStoriesSection({ clubId, canPost }: Readonly<Props>)
   ) : null;
 
   return (
-    <Box>
+    <Box data-testid="club-stories">
       <SectionHeader title={t('mweb.clubDetailsPage.stories')} />
       <Stack
         direction="row"

@@ -65,7 +65,7 @@ export default function PolicyAcceptanceDialog({
   const acceptAll = () => onClose(policies.map((policy) => policy.id));
 
   return (
-    <Dialog open={open} onClose={finish} fullWidth maxWidth="sm" scroll="paper">
+    <Dialog data-testid="policy-acceptance-sheet" open={open} onClose={finish} fullWidth maxWidth="sm" scroll="paper">
       <DialogTitle sx={{ fontSize: 17, fontWeight: 600 }}>{t('policyAcceptance.dialogTitle')}</DialogTitle>
       <DialogContent dividers>
         <Typography
@@ -85,7 +85,7 @@ export default function PolicyAcceptanceDialog({
         />
         {ready && (
           <Stack spacing={0.5} sx={{ mt: 1.5 }}>
-            <Typography variant="caption" sx={{
+            <Typography data-testid="policy-acceptance-count" variant="caption" sx={{
               color: "text.secondary"
             }}>
               {t('policyAcceptance.acceptedCount', {
@@ -103,10 +103,22 @@ export default function PolicyAcceptanceDialog({
         )}
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-        <DuncitButton variant="outlined" color="inherit" onClick={finish} sx={{ flex: 1 }}>
+        <DuncitButton
+          data-testid="policy-acceptance-close"
+          variant="outlined"
+          color="inherit"
+          onClick={finish}
+          sx={{ flex: 1 }}
+        >
           {t('policyAcceptance.close')}
         </DuncitButton>
-        <DuncitButton variant="contained" onClick={acceptAll} disabled={!ready} sx={{ flex: 1.4 }}>
+        <DuncitButton
+          data-testid="policy-acceptance-accept-all"
+          variant="contained"
+          onClick={acceptAll}
+          disabled={!ready}
+          sx={{ flex: 1.4 }}
+        >
           {t('policyAcceptance.acceptAll')}
         </DuncitButton>
       </DialogActions>

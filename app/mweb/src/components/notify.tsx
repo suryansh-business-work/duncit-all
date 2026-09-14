@@ -34,6 +34,7 @@ export function NotifyHost() {
   }, []);
   return (
     <Snackbar
+      data-testid="notify-host"
       open={!!item}
       autoHideDuration={item?.duration ?? 4000}
       onClose={(_, reason) => {
@@ -44,6 +45,7 @@ export function NotifyHost() {
       sx={{ bottom: 'var(--duncit-bottom-nav-overlay-offset, 88px) !important' }}
     >
       <Alert
+        data-testid="notify-host-alert"
         severity={item?.severity ?? 'info'}
         onClose={() => setItem(null)}
         variant="filled"

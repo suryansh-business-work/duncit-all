@@ -48,7 +48,7 @@ export default function VenueList({ venues, meId, statusFor, pendingUserId, onTo
             xs: 12,
             sm: 6
           }}>
-          <Card sx={{ height: '100%', p: 1 }}>
+          <Card data-testid={`venue-card-${v.id}`} sx={{ height: '100%', p: 1 }}>
             {v.cover_image_url ? (
               <CardMedia
                 component="img"
@@ -153,7 +153,14 @@ export default function VenueList({ venues, meId, statusFor, pendingUserId, onTo
                   ))}
                 </Stack>
               )}
-              <DuncitButton component={RouterLink} to={venueUrl(v.id)} fullWidth variant="contained" sx={{ mt: 1.5 }}>
+              <DuncitButton
+                data-testid={`venue-view-${v.id}`}
+                component={RouterLink}
+                to={venueUrl(v.id)}
+                fullWidth
+                variant="contained"
+                sx={{ mt: 1.5 }}
+              >
                 View venue
               </DuncitButton>
             </CardContent>

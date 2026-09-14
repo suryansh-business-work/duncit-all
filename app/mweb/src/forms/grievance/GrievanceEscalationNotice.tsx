@@ -20,14 +20,14 @@ export default function GrievanceEscalationNotice() {
   const copy = grievanceEscalationCopy(t);
 
   return (
-    <Paper sx={{ ...SURFACE_SX, p: 2 }}>
+    <Paper data-testid="grievance-escalation-notice" sx={{ ...SURFACE_SX, p: 2 }}>
       <Stack spacing={1.5}>
         <Typography sx={{ fontSize: '1rem', fontWeight: 600 }}>
           {copy.title}
         </Typography>
         <Stepper orientation="vertical" nonLinear activeStep={-1} sx={{ pl: 0.5 }}>
           {copy.steps.map((step) => (
-            <Step key={step.key} active expanded completed={false}>
+            <Step key={step.key} data-testid={`grievance-escalation-step-${step.key}`} active expanded completed={false}>
               <StepLabel>
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
                   {step.title}

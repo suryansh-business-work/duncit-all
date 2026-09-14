@@ -43,8 +43,13 @@ export default function HostAutoPodsPage({ locationId }: Readonly<Props>) {
   const earnings = useAutoPodEarnings();
 
   return (
-    <Stack spacing={2} sx={{ p: 2, pb: 4 }}>
-      <Typography variant="h6" component="h1" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>
+    <Stack data-testid="host-auto-pods-screen" spacing={2} sx={{ p: 2, pb: 4 }}>
+      <Typography
+        data-testid="host-auto-pods-title"
+        variant="h6"
+        component="h1"
+        sx={{ fontSize: '1.25rem', fontWeight: 600 }}
+      >
         {queue.labels.hostTitle}
       </Typography>
 
@@ -65,7 +70,12 @@ export default function HostAutoPodsPage({ locationId }: Readonly<Props>) {
         formatWhen={queue.formatWhen}
         formatMoney={queue.formatMoney}
         renderAction={(row) => (
-          <DuncitButton fullWidth variant="contained" onClick={() => setTarget(row)}>
+          <DuncitButton
+            data-testid={`auto-pod-assign-${row.id}`}
+            fullWidth
+            variant="contained"
+            onClick={() => setTarget(row)}
+          >
             {queue.labels.assignMyselfCta}
           </DuncitButton>
         )}

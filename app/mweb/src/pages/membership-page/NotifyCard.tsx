@@ -48,7 +48,7 @@ export default function NotifyCard({ email, subscribed }: Readonly<Props>) {
 
   if (isOnList) {
     return (
-      <Card sx={{ p: 2 }}>
+      <Card data-testid="membership-notify-done" sx={{ p: 2 }}>
         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
           <Box sx={DONE_DISC_SX}>
             <MarkEmailReadIcon />
@@ -67,7 +67,7 @@ export default function NotifyCard({ email, subscribed }: Readonly<Props>) {
   }
 
   return (
-    <Card sx={{ p: 2 }}>
+    <Card data-testid="membership-notify-card" sx={{ p: 2 }}>
       <Stack spacing={2}>
         <Stack direction="row" spacing={1} sx={{
           alignItems: "center"
@@ -81,21 +81,28 @@ export default function NotifyCard({ email, subscribed }: Readonly<Props>) {
         <TextField
           size="small"
           fullWidth
+          data-testid="membership-notify-email"
           label={t('mweb.membership.notifyEmailLabel')}
           value={email}
           helperText={email ? t('mweb.membership.notifyEmailHint') : t('mweb.membership.notifyNoEmail')}
           error={!email}
           slotProps={{
-            input: { readOnly: true }
+            input: { readOnly: true },
+            htmlInput: { 'data-testid': 'membership-notify-email-input' },
           }}
         />
 
-        {failed && <Alert severity="error">{t('mweb.membership.notifyError')}</Alert>}
+        {failed && (
+          <Alert severity="error" data-testid="membership-notify-error">
+            {t('mweb.membership.notifyError')}
+          </Alert>
+        )}
 
         <DuncitButton
           variant="contained"
           size="large"
           fullWidth
+          data-testid="membership-notify-cta"
           disabled={loading || !email}
           onClick={onSubscribe}
         >

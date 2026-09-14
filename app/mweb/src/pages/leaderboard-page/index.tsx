@@ -54,7 +54,11 @@ const SEGMENTED_SX = {
 export default function LeaderboardPage() {
   const { t } = useTranslation();
   const tabs = useTabParam<LeaderboardCategory>({
-    items: LEADERBOARD_CATEGORIES.map((cat) => ({ value: cat, label: t(LEADERBOARD_TAB_KEY[cat]) })),
+    items: LEADERBOARD_CATEGORIES.map((cat) => ({
+      value: cat,
+      label: t(LEADERBOARD_TAB_KEY[cat]),
+      testId: `leaderboard-tab-${cat}`,
+    })),
     fallback: 'USER',
   });
   const category = tabs.value;
@@ -71,8 +75,9 @@ export default function LeaderboardPage() {
   const board = data?.leaderboard ?? null;
   const config = configData?.leaderboardConfig ?? null;
 
-  const spinner = (
+  const spinner = (testId: string) => (
     <Stack
+      data-testid={testId}
       sx={{
         alignItems: "center",
         py: 4
@@ -83,7 +88,7 @@ export default function LeaderboardPage() {
 
   let configSection: ReactNode = null;
   if (configLoading && !config) {
-    configSection = spinner;
+    configSection = spinner('leaderboard-config-loading');
   } else if (config) {
     configSection = (
       <>
@@ -94,13 +99,18 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box data-testid="leaderboard-page" sx={{ p: 2 }}>
       <Stack spacing={2} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
-        <Typography component="h1" sx={{ fontSize: 20, fontWeight: 600 }}>
+        <Typography component="h1" data-testid="leaderboard-page-title" sx={{ fontSize: 20, fontWeight: 600 }}>
           {t('mweb.leaderboard.title')}
         </Typography>
 
-        <DuncitTabs {...tabs} variant="scrollable" allowScrollButtonsMobile />
+        <DuncitTabs
+          {...tabs}
+          data-testid="leaderboard-category-tabs"
+          variant="scrollable"
+          allowScrollButtonsMobile
+        />
 
         <YourPointsCard board={board} loading={loading} />
 
@@ -109,19 +119,26 @@ export default function LeaderboardPage() {
           fullWidth
           size="small"
           value={period}
+          data-testid="leaderboard-period-toggle"
           onChange={(_e, next: LeaderboardPeriodKey | null) => next && setPeriod(next)}
           sx={SEGMENTED_SX}
         >
           {LEADERBOARD_PERIODS.map((p) => (
-            <ToggleButton key={p} value={p}>
+            <ToggleButton key={p} value={p} data-testid={`leaderboard-period-${p}`}>
               {t(LEADERBOARD_PERIOD_KEY[p])}
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
 
-        {error && <Alert severity="error">{t('mweb.leaderboard.loadError')}</Alert>}
+        {error && (
+          <Alert severity="error" data-testid="leaderboard-error">
+            {t('mweb.leaderboard.loadError')}
+          </Alert>
+        )}
 
-        {loading && !data ? spinner : <LeaderboardList rows={board?.rows ?? []} />}
+        {loading && !data
+          ? spinner('leaderboard-loading')
+          : <LeaderboardList rows={board?.rows ?? []} />}
 
         {configSection}
       </Stack>

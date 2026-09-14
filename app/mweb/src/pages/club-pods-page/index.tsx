@@ -60,12 +60,13 @@ export default function ClubPodsPage() {
   const del = useDeletePod(list.reload);
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+    <Stack data-testid="club-pods-page" spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <StudioPageHeader
         icon={<EventNoteRoundedIcon fontSize="small" />}
         title={club?.club_name ?? t('clubAdmin.pods.clubPods')}
         action={
           <DuncitButton
+            data-testid="club-pods-page-new"
             component={RouterLink}
             to={`${podsPath}/new`}
             variant="contained"
@@ -77,7 +78,7 @@ export default function ClubPodsPage() {
           </DuncitButton>
         }
       />
-      {lookups.error && <Alert severity="error">{lookups.error.message}</Alert>}
+      {lookups.error && <Alert data-testid="club-pods-page-error" severity="error">{lookups.error.message}</Alert>}
 
       <ClubPodsFilters search={search} onSearch={setSearch} status={status} onStatus={setStatus} />
 

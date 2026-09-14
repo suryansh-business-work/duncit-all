@@ -10,15 +10,23 @@ interface Props {
   /** Optional green CTA; needs `onAction`. */
   actionLabel?: string;
   onAction?: () => void;
+  /** The screen's own id for this empty state (native passes e.g. `badges-empty`). */
+  testId?: string;
 }
 
 /**
  * The calm empty state every list shares: one icon on a soft disc, one line,
  * an optional green pill. Native twin: components/EmptyState.
  */
-export default function EmptyState({ icon, title, actionLabel, onAction }: Readonly<Props>) {
+export default function EmptyState({
+  icon,
+  title,
+  actionLabel,
+  onAction,
+  testId = 'empty-state',
+}: Readonly<Props>) {
   return (
-    <Stack spacing={2} sx={{ alignItems: 'center', textAlign: 'center', py: 6, px: 3 }}>
+    <Stack data-testid={testId} spacing={2} sx={{ alignItems: 'center', textAlign: 'center', py: 6, px: 3 }}>
       <Box
         sx={{
           width: 72,
@@ -33,9 +41,9 @@ export default function EmptyState({ icon, title, actionLabel, onAction }: Reado
       >
         {icon}
       </Box>
-      <Typography sx={{ fontSize: '1rem', fontWeight: 600 }}>{title}</Typography>
+      <Typography data-testid={`${testId}-title`} sx={{ fontSize: '1rem', fontWeight: 600 }}>{title}</Typography>
       {actionLabel && onAction ? (
-        <DuncitButton variant="contained" size="large" onClick={onAction}>
+        <DuncitButton data-testid={`${testId}-action`} variant="contained" size="large" onClick={onAction}>
           {actionLabel}
         </DuncitButton>
       ) : null}

@@ -19,5 +19,13 @@ const CHIP_SX = {
  * components/cart/FreeDeliveryBadge. */
 export default function FreeDeliveryChip() {
   const { t } = useTranslation();
-  return <Chip size="small" icon={<LocalShippingOutlinedIcon />} label={t('mweb.cart.freeDelivery')} sx={CHIP_SX} />;
+  return (
+    <Chip
+      data-testid="free-delivery-chip"
+      size="small"
+      icon={<LocalShippingOutlinedIcon />}
+      label={t('mweb.cart.freeDelivery')}
+      sx={CHIP_SX}
+    />
+  );
 }

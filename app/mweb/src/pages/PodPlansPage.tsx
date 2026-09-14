@@ -50,13 +50,14 @@ export default function PodPlansPage() {
   );
 
   return (
-    <Container maxWidth="sm" sx={{ py: 2 }}>
+    <Container maxWidth="sm" sx={{ py: 2 }} data-testid="pod-plans-screen">
       <Box sx={{ mb: 2.5 }}>
         <PageHeader title={t('mweb.podPlans.podPlans')} onBack={() => navigate(-1)} />
       </Box>
 
       {loading && (
         <Stack
+          data-testid="pod-plans-loading"
           sx={{
             alignItems: "center",
             py: 4
@@ -64,11 +65,11 @@ export default function PodPlansPage() {
           <CircularProgress />
         </Stack>
       )}
-      {error && <Alert severity="error">{error.message}</Alert>}
+      {error && <Alert severity="error" data-testid="pod-plans-error">{error.message}</Alert>}
 
-      <Stack spacing={1.5}>
+      <Stack spacing={1.5} data-testid="pod-plans-list">
         {(data?.publicPodPlans ?? []).map((p) => (
-          <Card key={p.id}>
+          <Card key={p.id} data-testid={`pod-plans-plan-${p.id}`}>
             <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
               <Stack direction="row" spacing={2} sx={{
                 alignItems: "flex-start"
@@ -101,7 +102,12 @@ export default function PodPlansPage() {
                       {p.name}
                     </Typography>
                     {p.is_coming_soon && (
-                      <Chip size="small" color="warning" label={t('mweb.podPlansPage.comingSoon')} />
+                      <Chip
+                        size="small"
+                        color="warning"
+                        data-testid={`pod-plans-plan-${p.id}-coming-soon`}
+                        label={t('mweb.podPlansPage.comingSoon')}
+                      />
                     )}
                   </Stack>
                   {p.price_label && (

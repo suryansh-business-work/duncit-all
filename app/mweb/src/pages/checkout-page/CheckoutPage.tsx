@@ -228,16 +228,23 @@ export default function CheckoutPage() {
   if (session.financeLoading || podLoading || !breakup) return <CheckoutSkeleton />;
 
   return (
-    <Box sx={{ maxWidth: 720, mx: 'auto' }}>
+    <Box sx={{ maxWidth: 720, mx: 'auto' }} data-testid="checkout-screen">
       <Box>
         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 2.5 }}>
-          <DuncitIconButton onClick={() => navigate(-1)} aria-label={t('mweb.common.goBack')} sx={roundBackSx}><ArrowBackIcon fontSize="small" /></DuncitIconButton>
+          <DuncitIconButton
+            onClick={() => navigate(-1)}
+            aria-label={t('mweb.common.goBack')}
+            sx={roundBackSx}
+            data-testid="checkout-back"
+          >
+            <ArrowBackIcon fontSize="small" />
+          </DuncitIconButton>
           <Typography component="h1" noWrap sx={{ flex: 1, minWidth: 0, fontSize: 20, fontWeight: 600 }}>
             {t('mweb.checkout.title')}
           </Typography>
           <GatewayChip finance={session.finance} />
         </Stack>
-        {podError && <Alert severity="error" sx={{ mb: 2 }}>{podError.message}</Alert>}
+        {podError && <Alert severity="error" data-testid="checkout-error" sx={{ mb: 2 }}>{podError.message}</Alert>}
         {serverIssue.issue && (
           <Box sx={{ mb: 2 }}>
             <IssueNotice issue={serverIssue.issue} page="/checkout" onClose={serverIssue.clear} />
@@ -294,7 +301,7 @@ export default function CheckoutPage() {
 
 function EmptyCheckout({ onHome, title, action }: Readonly<{ onHome: () => void; title: string; action: string }>) {
   return (
-    <Box sx={{ p: 4, textAlign: 'center' }}>
+    <Box sx={{ p: 4, textAlign: 'center' }} data-testid="checkout-unavailable">
       <Alert severity="info" sx={{ mb: 2 }}>{title}</Alert>
       <DuncitButton onClick={onHome} variant="contained">{action}</DuncitButton>
     </Box>
@@ -303,7 +310,7 @@ function EmptyCheckout({ onHome, title, action }: Readonly<{ onHome: () => void;
 
 function CheckoutSkeleton() {
   return (
-    <Box sx={{ maxWidth: 720, mx: 'auto', p: 2 }}>
+    <Box sx={{ maxWidth: 720, mx: 'auto', p: 2 }} data-testid="checkout-loading">
       <Stack spacing={2}>
         <Skeleton variant="text" width="40%" height={40} />
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>

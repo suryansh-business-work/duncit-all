@@ -86,7 +86,13 @@ export default function BackoutConfirmDialog({
   });
 
   return (
-    <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
+    <Dialog
+      open={open}
+      onClose={busy ? undefined : onClose}
+      fullWidth
+      maxWidth="sm"
+      data-testid="backout-dialog"
+    >
       <DialogTitle sx={{ pr: 6 }}>{t('mweb.podDetails.backoutTitle')}</DialogTitle>
       <DialogContent dividers>
         <Typography variant="body2" sx={{ fontWeight: 700, mb: 1.5 }}>
@@ -97,6 +103,7 @@ export default function BackoutConfirmDialog({
             select
             fullWidth
             size="small"
+            data-testid="backout-seats-select"
             label={t('mweb.podDetails.seatsToRelease')}
             value={releasing}
             onChange={(event) => setSeats(Number(event.target.value))}
@@ -112,10 +119,14 @@ export default function BackoutConfirmDialog({
           </TextField>
         )}
         {estimate != null && (
-          <Alert severity="info" sx={{ mb: 2 }}>
+          <Alert severity="info" data-testid="backout-refund-amount" sx={{ mb: 2 }}>
             {estimateLine}
             {coinsBack > 0 && (
-              <Box component="span" sx={{ display: 'block', mt: 0.5, fontWeight: 700 }}>
+              <Box
+                component="span"
+                data-testid="backout-refund-coins"
+                sx={{ display: 'block', mt: 0.5, fontWeight: 700 }}
+              >
                 {t('mweb.coin.refundCoinsEstimate', {
                   vars: { coins: coinsBack, pct: deductionPct },
                 })}
@@ -137,6 +148,7 @@ export default function BackoutConfirmDialog({
             to="/policies/backout-terms"
             onClick={onClose}
             underline="hover"
+            data-testid="backout-view-terms"
           >
             {t('mweb.podDetails.backoutTerms')}
           </Link>
@@ -144,7 +156,7 @@ export default function BackoutConfirmDialog({
         </Typography>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <DuncitButton onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy} data-testid="backout-cancel">
           {t('mweb.podDetails.close')}
         </DuncitButton>
         <DuncitButton
@@ -152,6 +164,7 @@ export default function BackoutConfirmDialog({
           color="error"
           onClick={() => onConfirm(releasing)}
           disabled={busy}
+          data-testid="backout-confirm"
         >
           {busy ? t('mweb.podDetails.backingOut') : t('mweb.podDetails.confirmBackout')}
         </DuncitButton>

@@ -52,6 +52,7 @@ export default function HeaderQuickActions({
       </Box>
       <Tooltip title={me?.full_name ?? 'Account'}>
         <DuncitIconButton
+          data-testid="account-button"
           onClick={onOpenMenu}
           data-tour="home-profile"
           sx={HEADER_ROUND_BUTTON_SX}
@@ -73,6 +74,7 @@ export default function HeaderQuickActions({
             }}
           >
             <Avatar
+              data-testid="account-avatar-image"
               src={me?.profile_photo || undefined}
               sx={{
                 width: 34,

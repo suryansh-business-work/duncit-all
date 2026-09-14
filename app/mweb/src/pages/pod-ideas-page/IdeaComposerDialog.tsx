@@ -49,11 +49,16 @@ export default function IdeaComposerDialog({
       onClose={() => !creating && onClose()}
       fullWidth
       maxWidth="sm"
+      data-testid="idea-composer-dialog"
     >
       <DialogTitle>{t('mweb.podIdeas.shareAPodIdea')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ mt: 1 }}>
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && (
+            <Alert severity="error" data-testid="idea-composer-error">
+              {error}
+            </Alert>
+          )}
           <TextField
             autoFocus
             label={t('mweb.common.title')}
@@ -62,6 +67,7 @@ export default function IdeaComposerDialog({
             required
             fullWidth
             helperText={`${title.length} / 160`}
+            data-testid="idea-composer-title"
           />
           <TextField
             label={t('mweb.common.description')}
@@ -73,15 +79,21 @@ export default function IdeaComposerDialog({
             minRows={4}
             maxRows={10}
             helperText={`${description.length} / 2001 — describe the vibe, format, location, audience…`}
+            data-testid="idea-composer-description"
           />
           <CategoryCascade value={scope} onChange={onCategoryChange} />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose} disabled={creating}>
+        <DuncitButton onClick={onClose} disabled={creating} data-testid="idea-composer-cancel">
           Cancel
         </DuncitButton>
-        <DuncitButton variant="contained" onClick={onSubmit} disabled={creating}>
+        <DuncitButton
+          variant="contained"
+          onClick={onSubmit}
+          disabled={creating}
+          data-testid="idea-composer-submit"
+        >
           {creating ? <CircularProgress size={20} /> : 'Submit'}
         </DuncitButton>
       </DialogActions>

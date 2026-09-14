@@ -17,6 +17,7 @@ export interface ExploreAction {
   loading?: boolean;
   tooltip?: string;
   onLabelClick?: () => void;
+  testId?: string;
 }
 
 /** Approx pitch of one action (button 42 + caption + gap) — used to decide how
@@ -62,6 +63,7 @@ export default function ExploreActionRail({ actions }: Readonly<{ actions: Explo
   return (
     <Stack
       ref={ref}
+      data-testid="explore-action-rail"
       spacing={1.5}
       sx={{
         alignItems: "center",
@@ -74,6 +76,7 @@ export default function ExploreActionRail({ actions }: Readonly<{ actions: Explo
       {shown.map((action) => (
         <ExploreActionButton
           key={action.key}
+          testId={action.testId}
           icon={action.icon}
           label={action.label}
           ariaLabel={action.ariaLabel}
@@ -88,6 +91,7 @@ export default function ExploreActionRail({ actions }: Readonly<{ actions: Explo
       {overflow && (
         <div ref={moreRef}>
           <ExploreActionButton
+            testId="reel-more"
             icon={<MoreVertIcon />}
             label={t('mweb.explore.more')}
             ariaLabel={t('mweb.explore.moreActions')}
@@ -97,6 +101,7 @@ export default function ExploreActionRail({ actions }: Readonly<{ actions: Explo
         </div>
       )}
       <Menu
+        data-testid="reel-more-menu"
         anchorEl={moreRef.current}
         open={menuOpen && hidden.length > 0}
         onClose={() => setMenuOpen(false)}
@@ -106,6 +111,7 @@ export default function ExploreActionRail({ actions }: Readonly<{ actions: Explo
         {hidden.map((action) => (
           <MenuItem
             key={action.key}
+            data-testid={`reel-more-${action.key}`}
             selected={action.active}
             onClick={() => {
               setMenuOpen(false);

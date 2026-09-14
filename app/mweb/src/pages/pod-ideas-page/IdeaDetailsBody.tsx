@@ -36,14 +36,18 @@ export default function IdeaDetailsBody({
   const { t } = useTranslation();
   if (loading && !hasData) {
     return (
-      <Box sx={{ textAlign: 'center', py: 4 }}>
+      <Box data-testid="idea-details-loading" sx={{ textAlign: 'center', py: 4 }}>
         <CircularProgress />
       </Box>
     );
   }
 
   if (!idea) {
-    return <Alert severity="warning">{t('mweb.podIdeas.ideaNotFound')}</Alert>;
+    return (
+      <Alert severity="warning" data-testid="idea-details-not-found">
+        {t('mweb.podIdeas.ideaNotFound')}
+      </Alert>
+    );
   }
 
   return (
@@ -51,6 +55,7 @@ export default function IdeaDetailsBody({
       <Stack
         direction="row"
         spacing={1.5}
+        data-testid="idea-details-body"
         sx={{
           alignItems: "center",
           mb: 1.5
@@ -74,7 +79,7 @@ export default function IdeaDetailsBody({
           </Typography>
         </Box>
       </Stack>
-      <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', mb: 2 }}>
+      <Typography variant="body1" data-testid="idea-details-description" sx={{ whiteSpace: 'pre-wrap', mb: 2 }}>
         {idea.description}
       </Typography>
       <Stack
@@ -94,6 +99,7 @@ export default function IdeaDetailsBody({
             )
           }
           onClick={onToggleLike}
+          data-testid="idea-details-like"
           sx={{ color: idea.liked_by_me ? 'secondary.main' : 'text.secondary' }}
         >
           {idea.likes_count} like{idea.likes_count === 1 ? '' : 's'}

@@ -53,7 +53,7 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
   if (tree.length === 0) return null;
 
   return (
-    <Stack spacing={2}>
+    <Stack data-testid="country-state-picker" spacing={2}>
       <Box>
         <LocationSectionLabel>Country</LocationSectionLabel>
         <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 0.5, scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' } }}>
@@ -62,6 +62,7 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
             return (
               <Chip
                 key={c.country}
+                data-testid={`country-state-picker-country-${c.country}`}
                 onClick={() => onCountry(c.country)}
                 avatar={flag ? <Box component="img" src={flag} alt="" sx={{ width: 22, height: 16, borderRadius: '4px' }} /> : undefined}
                 label={c.country}
@@ -76,6 +77,7 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
         <LocationSectionLabel>State</LocationSectionLabel>
         {(activeCountry?.states.length ?? 0) > 6 && (
           <TextField
+            data-testid="country-state-picker-state-search"
             size="small"
             fullWidth
             placeholder={t('mweb.common.searchState')}
@@ -89,7 +91,8 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
                     <SearchIcon fontSize="small" />
                   </InputAdornment>
                 ),
-              }
+              },
+              htmlInput: { 'data-testid': 'country-state-picker-state-search-input' },
             }}
           />
         )}
@@ -97,6 +100,7 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
           {states.map((s) => (
             <Chip
               key={s.state}
+              data-testid={`country-state-picker-state-${s.state}`}
               onClick={() => onState(s.state)}
               label={s.state}
               size="small"
@@ -104,7 +108,7 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
             />
           ))}
           {states.length === 0 && (
-            <Typography variant="body2" sx={{
+            <Typography data-testid="country-state-picker-no-states" variant="body2" sx={{
               color: "text.secondary"
             }}>
               No matching states.

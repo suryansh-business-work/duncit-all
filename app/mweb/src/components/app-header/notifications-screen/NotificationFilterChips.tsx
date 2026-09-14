@@ -13,6 +13,7 @@ export default function NotificationFilterChips({ chips, value, onChange }: Read
   if (chips.length <= 2) return null;
   return (
     <Stack
+      data-testid="notification-filter-chips"
       direction="row"
       spacing={1}
       sx={{
@@ -32,6 +33,7 @@ export default function NotificationFilterChips({ chips, value, onChange }: Read
       {chips.map((chip) => (
         <Chip
           key={chip.key}
+          data-testid={`notif-chip-${chip.key}`}
           label={`${chip.label} ${chip.count}`}
           onClick={() => onChange(chip.key)}
           color={value === chip.key ? 'primary' : 'default'}

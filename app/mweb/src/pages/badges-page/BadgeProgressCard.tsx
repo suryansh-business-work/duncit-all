@@ -30,7 +30,7 @@ export default function BadgeProgressCard({ row }: Readonly<{ row: BadgeProgress
   });
 
   return (
-    <Card sx={{ p: 2, height: '100%' }}>
+    <Card sx={{ p: 2, height: '100%' }} data-testid={`badge-card-${badge.id}`}>
       <Stack spacing={1} sx={{ alignItems: 'center', textAlign: 'center', height: '100%' }}>
         <Avatar
           src={badge.image_url || undefined}
@@ -47,6 +47,7 @@ export default function BadgeProgressCard({ row }: Readonly<{ row: BadgeProgress
         <Typography sx={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>{badge.title}</Typography>
         <Chip
           size="small"
+          data-testid={`badge-card-${badge.id}-status`}
           color={row.achieved ? 'success' : 'default'}
           icon={row.achieved ? <CheckCircleIcon /> : <LockOutlinedIcon />}
           label={row.achieved ? t('mweb.badges.achieved') : t('mweb.badges.locked')}
@@ -60,6 +61,7 @@ export default function BadgeProgressCard({ row }: Readonly<{ row: BadgeProgress
             value={percent}
             color={row.achieved ? 'success' : 'primary'}
             aria-label={badge.title}
+            data-testid={`badge-bar-${badge.id}`}
             sx={{ height: 4 }}
           />
           <Typography sx={{ fontSize: 11, fontWeight: 600 }}>{progress}</Typography>

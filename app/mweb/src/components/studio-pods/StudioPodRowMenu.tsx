@@ -15,6 +15,8 @@ interface Props {
   /** Already-translated label for the request item, so one menu serves both
    * studios without deciding for itself which role it is looking at. */
   requestChangeLabel?: string;
+  /** Test id for the row's trigger button, e.g. `studio-pod-row-123-actions`. */
+  testId?: string;
 }
 
 /**
@@ -28,6 +30,7 @@ export default function StudioPodRowMenu({
   onCancel,
   onRequestChange,
   requestChangeLabel,
+  testId,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
@@ -48,15 +51,16 @@ export default function StudioPodRowMenu({
   return (
     <>
       <DuncitIconButton
+        data-testid={testId}
         aria-label={t('mweb.hostManage.podActions')}
         size="small"
         onClick={(event) => setAnchor(event.currentTarget)}
       >
         <MoreVertIcon fontSize="small" />
       </DuncitIconButton>
-      <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
+      <Menu data-testid="studio-pod-actions" anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>
         {onCancel && (
-          <MenuItem disabled={disabled} onClick={pick(onCancel)}>
+          <MenuItem data-testid="studio-pod-action-cancel" disabled={disabled} onClick={pick(onCancel)}>
             <ListItemText
               primary={t('mweb.venuePods.cancelPod')}
               secondary={secondary}
@@ -65,7 +69,11 @@ export default function StudioPodRowMenu({
           </MenuItem>
         )}
         {onRequestChange && requestChangeLabel && (
-          <MenuItem disabled={changeBlocked !== undefined} onClick={pick(onRequestChange)}>
+          <MenuItem
+            data-testid="studio-pod-action-request-change"
+            disabled={changeBlocked !== undefined}
+            onClick={pick(onRequestChange)}
+          >
             <ListItemText primary={requestChangeLabel} secondary={changeBlocked} />
           </MenuItem>
         )}

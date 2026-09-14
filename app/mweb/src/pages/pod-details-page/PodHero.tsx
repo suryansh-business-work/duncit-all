@@ -43,6 +43,7 @@ function PrevArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
       size="small"
       onClick={onClick}
       aria-label={t('mweb.podDetails.previousImage')}
+      data-testid="pod-hero-prev"
       sx={{ ...arrowBtn, left: 12 }}
     >
       <ChevronLeftIcon />
@@ -57,6 +58,7 @@ function NextArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
       size="small"
       onClick={onClick}
       aria-label={t('mweb.podDetails.nextImage')}
+      data-testid="pod-hero-next"
       sx={{ ...arrowBtn, right: 12 }}
     >
       <ChevronRightIcon />
@@ -68,6 +70,7 @@ function NextArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
 function SlideCounter({ index, total }: Readonly<{ index: number; total: number }>) {
   return (
     <Box
+      data-testid="slide-counter"
       sx={{
         position: 'absolute',
         right: 12,
@@ -125,9 +128,12 @@ export default function PodHero({
 
   if (media.length === 0) {
     return (
-      <Stack spacing={2}>
+      <Stack spacing={2} data-testid="pod-hero">
         {topBar}
-        <Box sx={{ ...heroFrame, height: HERO_HEIGHT, display: 'grid', placeItems: 'center' }}>
+        <Box
+          data-testid="pod-hero-placeholder"
+          sx={{ ...heroFrame, height: HERO_HEIGHT, display: 'grid', placeItems: 'center' }}
+        >
           <EventIcon sx={{ fontSize: 64, color: 'text.secondary' }} />
         </Box>
       </Stack>
@@ -135,7 +141,7 @@ export default function PodHero({
   }
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} data-testid="pod-hero">
       {topBar}
       <Box sx={heroFrame}>
         <Slider
@@ -150,8 +156,10 @@ export default function PodHero({
           slidesToShow={1}
           slidesToScroll={1}
         >
-          {media.map((m) =>
+          {media.map((m, i) =>
             isVideoMedia(m) ? (
+              // VideoMedia (components/media/VideoMedia, not in this batch) does not
+              // forward a data-testid prop to its root element.
               <VideoMedia key={m.url} src={m.url} height={HERO_HEIGHT} />
             ) : (
               <Box
@@ -159,6 +167,7 @@ export default function PodHero({
                 component="img"
                 src={m.url}
                 alt={title}
+                data-testid={`detail-hero-image-${i}`}
                 sx={{ width: '100%', height: HERO_HEIGHT, objectFit: 'cover', display: 'block' }}
               />
             )

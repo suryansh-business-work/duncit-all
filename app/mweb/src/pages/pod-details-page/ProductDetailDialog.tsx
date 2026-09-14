@@ -67,6 +67,7 @@ function BrandAttribution({
         type="button"
         onClick={() => onOpenBrand(brandId)}
         underline="hover"
+        data-testid="product-detail-brand"
         sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontWeight: 600, width: 'fit-content' }}
       >
         <StorefrontIcon sx={{ fontSize: 16 }} />
@@ -76,7 +77,7 @@ function BrandAttribution({
     );
   }
   return (
-    <Stack direction="row" spacing={0.5} sx={{
+    <Stack direction="row" spacing={0.5} data-testid="product-detail-brand" sx={{
       alignItems: "center"
     }}>
       <StorefrontIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
@@ -171,6 +172,7 @@ export default function ProductDetailDialog({
   if (loading) {
     body = (
       <Stack
+        data-testid="product-detail-loading"
         sx={{
           alignItems: "center",
           py: 4
@@ -179,7 +181,11 @@ export default function ProductDetailDialog({
       </Stack>
     );
   } else if (error) {
-    body = <Alert severity="error">{error.message}</Alert>;
+    body = (
+      <Alert severity="error" data-testid="product-detail-error">
+        {error.message}
+      </Alert>
+    );
   } else if (product) {
     body = (
       <Stack spacing={1.5}>
@@ -190,6 +196,7 @@ export default function ProductDetailDialog({
                 key={url}
                 onClick={() => setZoomIndex(imageIndex)}
                 aria-label={t('mweb.common.zoomImage')}
+                data-testid={`product-detail-image-${imageIndex}`}
                 sx={{ borderRadius: '16px', flex: '0 0 auto' }}
               >
                 <Box
@@ -202,13 +209,17 @@ export default function ProductDetailDialog({
             ))}
           </Stack>
         )}
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+        <Typography variant="h6" data-testid="product-detail-name" sx={{ fontWeight: 600 }}>
           {product.product_name}
         </Typography>
         <Stack direction="row" spacing={1} sx={{
           alignItems: "baseline"
         }}>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: 'primary.main' }}>
+          <Typography
+            variant="h5"
+            data-testid="product-detail-price"
+            sx={{ fontWeight: 700, color: 'primary.main' }}
+          >
             {formatRupees(price)}
           </Typography>
           {mrp > price && (
@@ -234,6 +245,7 @@ export default function ProductDetailDialog({
                 color={selectedVariant?.id === v.id ? 'primary' : 'default'}
                 variant={selectedVariant?.id === v.id ? 'filled' : 'outlined'}
                 size="small"
+                data-testid={`variant-${v.id}`}
                 sx={{ fontWeight: 700 }}
               />
             ))}
@@ -249,7 +261,7 @@ export default function ProductDetailDialog({
           {description || 'No description provided.'}
         </Typography>
         {specs.length > 0 && (
-          <Box sx={{ border: 1, borderColor: 'divider', borderRadius: '16px', overflow: 'hidden' }}>
+          <Box data-testid="product-detail-specs" sx={{ border: 1, borderColor: 'divider', borderRadius: '16px', overflow: 'hidden' }}>
             {specs.map((spec, specIndex) => (
               <Box key={spec.label}>
                 {specIndex > 0 && <Divider />}
@@ -283,10 +295,20 @@ export default function ProductDetailDialog({
 
   return (
     <>
-      <Dialog open={Boolean(productId)} onClose={onClose} fullScreen>
+      <Dialog
+        open={Boolean(productId)}
+        onClose={onClose}
+        fullScreen
+        data-testid="product-detail-dialog"
+      >
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           Product details
-          <DuncitIconButton aria-label={t('mweb.common.close')} onClick={onClose} size="small">
+          <DuncitIconButton
+            aria-label={t('mweb.common.close')}
+            onClick={onClose}
+            size="small"
+            data-testid="product-detail-close"
+          >
             <CloseIcon />
           </DuncitIconButton>
         </DialogTitle>

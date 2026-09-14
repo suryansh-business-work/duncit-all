@@ -27,10 +27,11 @@ interface CheckboxProps {
   control: Control<CheckoutForm>;
   name: 'same_as_main' | 'save_as_main';
   label: string;
+  testId: string;
 }
 
 /** RHF-bound checkbox — hoisted to module scope (S6478). */
-function BillingCheckbox({ control, name, label }: Readonly<CheckboxProps>) {
+function BillingCheckbox({ control, name, label, testId }: Readonly<CheckboxProps>) {
   return (
     <Controller
       control={control}
@@ -41,6 +42,7 @@ function BillingCheckbox({ control, name, label }: Readonly<CheckboxProps>) {
             <Checkbox
               checked={!!field.value}
               onChange={(event) => field.onChange(event.target.checked)}
+              data-testid={testId}
               slotProps={{
                 input: { 'aria-label': label }
               }}
@@ -87,7 +89,14 @@ export default function BillingAddressSection({ control, fieldSx, mainAddress, h
       error={hasError}
     >
       <Stack spacing={1.5}>
-        {hasMainAddress && <BillingCheckbox control={control} name="same_as_main" label={t('mweb.checkout.sameAsMain')} />}
+        {hasMainAddress && (
+          <BillingCheckbox
+            control={control}
+            name="same_as_main"
+            label={t('mweb.checkout.sameAsMain')}
+            testId="billing-same-as-main"
+          />
+        )}
         {sameAsMain && mainAddress && <BillingSummary address={mainAddress} />}
         {showEditable && (
           <AddressFields
@@ -99,7 +108,14 @@ export default function BillingAddressSection({ control, fieldSx, mainAddress, h
           />
         )}
         <RhfTextField control={control} name="billing_email" label={t('mweb.checkout.billingEmail')} sx={fieldSx} />
-        {!hasMainAddress && <BillingCheckbox control={control} name="save_as_main" label={t('mweb.checkout.saveAsMain')} />}
+        {!hasMainAddress && (
+          <BillingCheckbox
+            control={control}
+            name="save_as_main"
+            label={t('mweb.checkout.saveAsMain')}
+            testId="billing-save-as-main"
+          />
+        )}
       </Stack>
     </PodAccordion>
   );

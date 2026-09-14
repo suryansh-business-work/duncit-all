@@ -25,9 +25,9 @@ export default function VenueHealthPage() {
   });
 
   return (
-    <Stack spacing={3} sx={{ mx: { xs: -0.25, sm: 0 } }}>
+    <Stack spacing={3} sx={{ mx: { xs: -0.25, sm: 0 } }} data-testid="venue-health-page">
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-        <DuncitRoundButton tone="paper" size="large" onClick={() => navigate(-1)} aria-label={t('mweb.common.back')}>
+        <DuncitRoundButton tone="paper" size="large" onClick={() => navigate(-1)} aria-label={t('mweb.common.back')} data-testid="venue-health-page-back">
           <ArrowBackRoundedIcon />
         </DuncitRoundButton>
         <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -42,6 +42,7 @@ export default function VenueHealthPage() {
 
       {loading && !data && (
         <Stack
+          data-testid="venue-health-page-loading"
           sx={{
             alignItems: "center",
             py: 4
@@ -50,11 +51,11 @@ export default function VenueHealthPage() {
         </Stack>
       )}
 
-      {error && <Alert severity="error">{error.message}</Alert>}
+      {error && <Alert severity="error" data-testid="venue-health-page-error">{error.message}</Alert>}
 
       {data?.myVenueHealth && (
         <Stack spacing={3}>
-          <Card>
+          <Card data-testid="venue-health-page-meter">
             <CardContent sx={{ p: 3, display: 'flex', justifyContent: 'center', '&:last-child': { pb: 3 } }}>
               <HealthMeter
                 score={data.myVenueHealth.total_score}
@@ -63,7 +64,7 @@ export default function VenueHealthPage() {
               />
             </CardContent>
           </Card>
-          <Box sx={{ width: '100%' }}>
+          <Box sx={{ width: '100%' }} data-testid="venue-health-page-breakdown">
             <HealthBreakdown score={data.myVenueHealth} />
           </Box>
         </Stack>

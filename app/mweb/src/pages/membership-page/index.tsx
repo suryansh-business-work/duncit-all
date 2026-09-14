@@ -43,6 +43,7 @@ export default function MembershipPage() {
   if (loading && !pricing) {
     body = (
       <Stack
+        data-testid="membership-loading"
         sx={{
           alignItems: "center",
           py: 4
@@ -51,7 +52,11 @@ export default function MembershipPage() {
       </Stack>
     );
   } else if (plans.length === 0) {
-    body = <Alert severity="info">{t('mweb.membership.empty')}</Alert>;
+    body = (
+      <Alert severity="info" data-testid="membership-empty">
+        {t('mweb.membership.empty')}
+      </Alert>
+    );
   } else {
     body = (
       <>
@@ -62,7 +67,11 @@ export default function MembershipPage() {
   }
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%', py: 0.5 }}>
+    <Stack
+      spacing={2.5}
+      data-testid="membership-page"
+      sx={{ maxWidth: 760, mx: 'auto', width: '100%', py: 0.5 }}
+    >
       <PageHeader title={t('mweb.membership.title')} />
 
       <Stack direction="row" spacing={1} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
@@ -72,7 +81,11 @@ export default function MembershipPage() {
         <Chip size="small" label={t('mweb.membership.comingSoon')} sx={SOON_SX} />
       </Stack>
 
-      {error && <Alert severity="error">{t('mweb.membership.loadError')}</Alert>}
+      {error && (
+        <Alert severity="error" data-testid="membership-error">
+          {t('mweb.membership.loadError')}
+        </Alert>
+      )}
 
       {body}
 

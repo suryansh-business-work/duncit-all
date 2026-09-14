@@ -32,9 +32,10 @@ export default function ClubCategoryChips({
   const { t } = useTranslation();
   if (categories.length === 0) return null;
   return (
-    <Box sx={railSx}>
+    <Box data-testid="clubs-filter-cat" sx={railSx}>
       <Stack direction="row" spacing={1} sx={{ width: 'max-content', pb: 0.25 }}>
         <Chip
+          data-testid="clubs-filter-cat-all"
           label={t('mweb.common.all')}
           clickable
           color={selectedId === '' ? 'primary' : 'default'}
@@ -44,6 +45,7 @@ export default function ClubCategoryChips({
         {categories.map((category) => (
           <Chip
             key={category.id}
+            data-testid={`clubs-filter-cat-${category.id}`}
             label={category.name}
             clickable
             color={selectedId === category.id ? 'primary' : 'default'}

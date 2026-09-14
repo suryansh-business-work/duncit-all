@@ -61,7 +61,7 @@ export default function VenueSlotRequestsPage() {
   };
 
   return (
-    <Stack spacing={2.5} sx={{ p: 2 }}>
+    <Stack spacing={2.5} sx={{ p: 2 }} data-testid="venue-slot-requests-page">
       <StudioPageHeader
         icon={<EventAvailableRoundedIcon fontSize="small" />}
         title={t('mweb.venueSlotRequests.slotRequests')}
@@ -72,21 +72,21 @@ export default function VenueSlotRequestsPage() {
       )}
 
       {feedback && (
-        <Alert severity={feedback.severity} onClose={() => setFeedback(null)}>
+        <Alert severity={feedback.severity} onClose={() => setFeedback(null)} data-testid="slot-request-feedback">
           {feedback.text}
         </Alert>
       )}
-      {requestsQuery.error && <Alert severity="error">{requestsQuery.error.message}</Alert>}
+      {requestsQuery.error && <Alert severity="error" data-testid="venue-slot-requests-page-error">{requestsQuery.error.message}</Alert>}
 
       {requestsQuery.loading && !requestsQuery.data && (
-        <Stack spacing={1.5}>
+        <Stack spacing={1.5} data-testid="venue-slot-requests-page-loading">
           <Skeleton variant="rounded" height={200} sx={{ borderRadius: '24px' }} />
           <Skeleton variant="rounded" height={200} sx={{ borderRadius: '24px' }} />
         </Stack>
       )}
 
       {!requestsQuery.loading && requests.length === 0 && (
-        <Alert severity="info">
+        <Alert severity="info" data-testid="venue-slot-requests-page-empty">
           No pending slot requests right now. New ones appear here the moment a host books one of
           your slots.
         </Alert>

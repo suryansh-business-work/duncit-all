@@ -30,18 +30,22 @@ export default function QuickActions() {
 
   return (
     <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1.5 }}>
-      {actions(t).map((action) => (
-        <ButtonBase
-          key={action.label}
-          onClick={() => navigate(action.to)}
-          sx={{ ...SURFACE_SX, p: 1.75, gap: 1.5, justifyContent: 'flex-start', textAlign: 'left' }}
-        >
-          <Box sx={ICON_DISC_SX}>{action.icon}</Box>
-          <Typography noWrap sx={{ minWidth: 0, fontSize: '0.875rem', fontWeight: 600 }}>
-            {action.label}
-          </Typography>
-        </ButtonBase>
-      ))}
+      {actions(t).map((action) => {
+        const actionTestId = `host-action-${action.label.replace(/\s+/g, '-').toLowerCase()}`;
+        return (
+          <ButtonBase
+            key={action.label}
+            data-testid={actionTestId}
+            onClick={() => navigate(action.to)}
+            sx={{ ...SURFACE_SX, p: 1.75, gap: 1.5, justifyContent: 'flex-start', textAlign: 'left' }}
+          >
+            <Box sx={ICON_DISC_SX}>{action.icon}</Box>
+            <Typography noWrap sx={{ minWidth: 0, fontSize: '0.875rem', fontWeight: 600 }}>
+              {action.label}
+            </Typography>
+          </ButtonBase>
+        );
+      })}
     </Box>
   );
 }

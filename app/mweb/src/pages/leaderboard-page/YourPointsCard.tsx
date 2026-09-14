@@ -24,20 +24,28 @@ export default function YourPointsCard({ board, loading }: Readonly<Props>) {
     : t('mweb.leaderboard.notRanked');
 
   return (
-    <Card sx={{ p: 2.5 }}>
+    <Card data-testid="leaderboard-your-points" sx={{ p: 2.5 }}>
       <Stack direction="row" spacing={2} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
         <Stack spacing={0.25} sx={{ minWidth: 0 }}>
           <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
             {t('mweb.leaderboard.yourPoints')}
           </Typography>
           {loading && !board ? (
-            <Skeleton variant="text" width={96} height={48} />
+            <Skeleton
+              variant="text"
+              width={96}
+              height={48}
+              data-testid="leaderboard-your-points-loading"
+            />
           ) : (
-            <Typography sx={{ fontSize: 34, fontWeight: 700, lineHeight: 1.15 }}>
+            <Typography
+              data-testid="leaderboard-your-points-value"
+              sx={{ fontSize: 34, fontWeight: 700, lineHeight: 1.15 }}
+            >
               {board?.my_points ?? 0}
             </Typography>
           )}
-          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          <Typography variant="body2" data-testid="leaderboard-your-points-rank" sx={{ fontWeight: 500 }}>
             {rankLine}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>

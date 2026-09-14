@@ -7,13 +7,18 @@ import { SURFACE_SX } from '../../theme';
 export default function ActivePodsStrip({ rooms }: Readonly<{ rooms: any[] }>) {
   const navigate = useNavigate();
   return (
-    <Paper sx={{ ...SURFACE_SX, p: 2 }}>
+    <Paper sx={{ ...SURFACE_SX, p: 2 }} data-testid="active-pods-strip">
       <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, letterSpacing: 0.4 }}>
         ACTIVE PODS · {rooms.length}
       </Typography>
       <Stack direction="row" spacing={1.25} sx={{ mt: 1.25, overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
         {rooms.slice(0, 10).map((room: any) => (
-          <Box key={room.id} sx={{ position: 'relative', flex: '0 0 auto' }} onClick={() => navigate(`/chats/${room.id}`)}>
+          <Box
+            key={room.id}
+            data-testid={`active-pods-strip-${room.id}`}
+            sx={{ position: 'relative', flex: '0 0 auto' }}
+            onClick={() => navigate(`/chats/${room.id}`)}
+          >
             <Avatar src={room.cover_url || undefined} sx={{ width: 52, height: 52, bgcolor: 'primary.main', cursor: 'pointer' }}>
               <GroupsIcon />
             </Avatar>

@@ -94,6 +94,7 @@ export default function FilterMenu(props: Readonly<Props>) {
   const trigger = props.round ? (
     <Badge badgeContent={activeCount} color="secondary" overlap="circular">
       <DuncitRoundButton
+        data-testid="home-filter-button"
         onClick={() => setOpen(true)}
         disabled={props.disabled}
         aria-label={triggerLabel}
@@ -104,6 +105,7 @@ export default function FilterMenu(props: Readonly<Props>) {
     </Badge>
   ) : (
     <DuncitButton
+      data-testid="home-filter-button"
       onClick={() => setOpen(true)}
       disabled={props.disabled}
       aria-label={triggerLabel}
@@ -134,6 +136,7 @@ export default function FilterMenu(props: Readonly<Props>) {
         actions={
           <>
             <DuncitButton
+              data-testid="home-filter-reset"
               size="small"
               startIcon={<RestartAltIcon />}
               onClick={handleReset}
@@ -141,13 +144,18 @@ export default function FilterMenu(props: Readonly<Props>) {
             >
               Reset
             </DuncitButton>
-            <DuncitButton size="small" variant="contained" onClick={() => setOpen(false)}>
+            <DuncitButton
+              data-testid="home-filter-done"
+              size="small"
+              variant="contained"
+              onClick={() => setOpen(false)}
+            >
               {t('mweb.common.done')}
             </DuncitButton>
           </>
         }
       >
-        <Box>
+        <Box data-testid="home-filter-sheet">
           <FilterBar {...props} />
         </Box>
       </ResponsiveDialog>

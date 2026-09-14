@@ -102,6 +102,7 @@ export default function FollowListDialog({ open, onClose, userId, initialTab, vi
 
   const emptyOrList = people.length === 0 ? (
     <Typography
+      data-testid="follow-list-dialog-empty"
       sx={{
         color: "text.secondary",
         textAlign: "center",
@@ -112,7 +113,7 @@ export default function FollowListDialog({ open, onClose, userId, initialTab, vi
       {tab === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}
     </Typography>
   ) : (
-    <Box sx={{ '& > * + *': { borderTop: 1, borderColor: 'divider' } }}>
+    <Box data-testid="follow-list-dialog-list" sx={{ '& > * + *': { borderTop: 1, borderColor: 'divider' } }}>
       {people.map((person) => (
         <FollowRow
           key={person.user_id}
@@ -126,10 +127,11 @@ export default function FollowListDialog({ open, onClose, userId, initialTab, vi
   );
 
   return (
-    <ResponsiveDialog open={open} onClose={onClose} title={t('mweb.followList.connections')} sheetMaxHeight="80dvh">
+    <ResponsiveDialog open={open} onClose={onClose} title={t('mweb.followList.connections')} sheetMaxHeight="80dvh" testId="follow-list-dialog">
       <DuncitTabs {...tabs} variant="fullWidth" sx={{ mb: 1 }} />
       {loading && people.length === 0 ? (
         <Stack
+          data-testid="follow-list-dialog-loading"
           sx={{
             alignItems: "center",
             py: 4

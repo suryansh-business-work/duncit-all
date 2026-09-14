@@ -37,13 +37,13 @@ export default function GiftCardSuccessCard({ payment, gift, recipientEmail }: R
     : t('mweb.giftCards.successSelfBody');
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 540, mx: 'auto', py: 3, textAlign: 'center' }}>
+    <Stack data-testid="gift-card-purchase-success" spacing={2.5} sx={{ maxWidth: 540, mx: 'auto', py: 3, textAlign: 'center' }}>
       <Box sx={CHECK_DISC_SX}>
         <CheckRoundedIcon />
       </Box>
       <Stack spacing={1}>
         <TwoToneHeading lead={t('mweb.giftCards.successTitle')} align="center" />
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+        <Typography data-testid="gift-card-success-body" variant="body2" sx={{ color: 'text.secondary' }}>
           {body}
         </Typography>
       </Stack>
@@ -69,6 +69,7 @@ export default function GiftCardSuccessCard({ payment, gift, recipientEmail }: R
       </Card>
       <Stack spacing={1.25}>
         <DuncitButton
+          data-testid="gift-card-success-my-cards"
           variant="contained"
           size="large"
           fullWidth
@@ -76,7 +77,7 @@ export default function GiftCardSuccessCard({ payment, gift, recipientEmail }: R
         >
           {t('mweb.giftCards.viewMyCards')}
         </DuncitButton>
-        <DuncitButton variant="outlined" size="large" fullWidth onClick={() => navigate('/')}>
+        <DuncitButton data-testid="gift-card-success-home" variant="outlined" size="large" fullWidth onClick={() => navigate('/')}>
           {t('mweb.checkout.home')}
         </DuncitButton>
       </Stack>

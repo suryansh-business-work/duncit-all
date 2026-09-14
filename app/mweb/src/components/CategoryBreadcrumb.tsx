@@ -15,6 +15,7 @@ export default function CategoryBreadcrumb({ crumbs }: Readonly<Props>) {
   const lastIndex = crumbs.length - 1;
   return (
     <Breadcrumbs
+      data-testid="category-breadcrumb"
       separator={<NavigateNextIcon sx={{ fontSize: 14 }} />}
       aria-label="category"
       sx={{ '& .MuiBreadcrumbs-separator': { mx: 0.5 } }}
@@ -22,6 +23,7 @@ export default function CategoryBreadcrumb({ crumbs }: Readonly<Props>) {
       {crumbs.map((name, i) => (
         <Typography
           key={name}
+          data-testid={`category-breadcrumb-item-${name}`}
           variant="caption"
           sx={{ fontSize: '0.8125rem', fontWeight: i === lastIndex ? 600 : 500, color: i === lastIndex ? 'text.primary' : 'text.secondary' }}
         >

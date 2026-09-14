@@ -24,13 +24,14 @@ export default function ClubPodsFilters({ search, onSearch, status, onStatus }: 
   const options = useMemo(() => podRowStatusOptions(t), [t]);
 
   return (
-    <Stack spacing={1.5}>
+    <Stack data-testid="club-pods-filters" spacing={1.5}>
       <SearchPillField
         value={search}
         onChange={onSearch}
         placeholder={t('mweb.common.search')}
         ariaLabel={t('mweb.common.search')}
         enterKeyHint="search"
+        testId="club-pods-filters-search"
       />
       <PillChips label={t('clubAdmin.pods.statusFilter')} options={options} value={status} onChange={onStatus} />
     </Stack>

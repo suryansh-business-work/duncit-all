@@ -75,7 +75,7 @@ export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>)
   };
 
   return (
-    <Dialog open={!!storyId} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog data-testid="report-story-sheet" open={!!storyId} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ fontWeight: 600 }}>{t('contentReport.title')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
@@ -99,6 +99,7 @@ export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>)
             {REPORT_REASONS.map((value) => (
               <FormControlLabel
                 key={value}
+                data-testid={`report-reason-${value}`}
                 value={value}
                 control={<Radio size="small" />}
                 label={t(REPORT_REASON_KEY[value])}
@@ -106,6 +107,7 @@ export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>)
             ))}
           </RadioGroup>
           <TextField
+            data-testid="report-story-details"
             fullWidth
             multiline
             minRows={2}
@@ -115,12 +117,12 @@ export default function ReportStoryDialog({ storyId, onClose }: Readonly<Props>)
             value={details}
             onChange={(e) => setDetails(e.target.value)}
           />
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && <Alert data-testid="report-story-error" severity="error">{error}</Alert>}
         </Stack>
       </DialogContent>
       <DialogActions>
         <DuncitButton onClick={onClose}>{t('contentReport.cancel')}</DuncitButton>
-        <DuncitButton variant="contained" color="error" disabled={loading} onClick={submit}>
+        <DuncitButton data-testid="report-story-submit" variant="contained" color="error" disabled={loading} onClick={submit}>
           {t('contentReport.submit')}
         </DuncitButton>
       </DialogActions>

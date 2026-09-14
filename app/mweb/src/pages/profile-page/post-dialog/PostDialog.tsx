@@ -150,15 +150,16 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonl
     </Stack>
   ) : (
     <Box sx={{ p: 4 }}>
-      <Alert severity="warning">{t('mweb.profile.postNotFound')}</Alert>
+      <Alert data-testid="post-dialog-not-found" severity="warning">{t('mweb.profile.postNotFound')}</Alert>
     </Box>
   );
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
+    <Dialog data-testid="post-dialog" open={open} onClose={onClose} fullWidth maxWidth="lg">
       <DialogContent sx={{ p: 0 }}>
         {loading && !post ? (
           <Stack
+            data-testid="post-dialog-loading"
             sx={{
               alignItems: "center",
               p: 6

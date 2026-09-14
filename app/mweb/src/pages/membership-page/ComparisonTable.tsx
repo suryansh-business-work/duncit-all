@@ -68,7 +68,7 @@ export default function ComparisonTable({ plans, benefits }: Readonly<Props>) {
   const noLabel = t('mweb.membership.notIncluded');
 
   return (
-    <Stack spacing={1.25}>
+    <Stack spacing={1.25} data-testid="membership-comparison">
       <SectionHeader title={t('mweb.membership.compareTitle')} />
 
       <Box sx={{ ...SURFACE_SX, overflowX: 'auto' }}>
@@ -81,6 +81,7 @@ export default function ComparisonTable({ plans, benefits }: Readonly<Props>) {
               {plans.map((plan) => (
                 <TableCell
                   key={plan.id}
+                  data-testid={`membership-plan-header-${plan.id}`}
                   sx={{ ...headCellSx, color: plan.accent_color || undefined }}
                 >
                   {plan.name}
@@ -110,7 +111,7 @@ export default function ComparisonTable({ plans, benefits }: Readonly<Props>) {
                   </TableCell>
                 </TableRow>
                 {group.rows.map((row) => (
-                  <TableRow key={row.id} hover>
+                  <TableRow key={row.id} hover data-testid={`membership-benefit-row-${row.id}`}>
                     <TableCell sx={stickyCellSx}>
                       <Typography variant="body2" sx={{
                         fontWeight: 600

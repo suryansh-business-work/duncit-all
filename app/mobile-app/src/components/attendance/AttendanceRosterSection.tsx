@@ -29,8 +29,9 @@ export function AttendanceRosterSection({
 }: Readonly<Props>) {
   if (rows.length === 0) return null;
   return (
-    <YStack gap={8}>
+    <YStack gap={8} testID="attendance-roster-section">
       <Text
+        testID="attendance-roster-section-count"
         fontSize={12}
         fontWeight="600"
         letterSpacing={0.6}

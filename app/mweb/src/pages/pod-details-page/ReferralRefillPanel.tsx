@@ -21,11 +21,12 @@ interface Props {
 export default function ReferralRefillPanel({ pod, refundStatus, referralToken, onCopyReferral }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Stack spacing={1} sx={{ flex: 1, minWidth: 0, px: 0.5 }}>
+    <Stack spacing={1} data-testid="referral-refill-panel" sx={{ flex: 1, minWidth: 0, px: 0.5 }}>
       <BarLabel
         icon={<UndoIcon sx={{ color: 'warning.main' }} />}
         caption={t('mweb.podDetails.backedOutRefundLead')}
         value={refundStatus}
+        valueTestId="referral-refill-status"
       />
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
         {t('mweb.podDetails.referFriend')}
@@ -35,6 +36,7 @@ export default function ReferralRefillPanel({ pod, refundStatus, referralToken, 
           variant="outlined"
           startIcon={<ContentCopyIcon />}
           onClick={() => onCopyReferral(referralToken)}
+          data-testid="referral-refill-copy"
           sx={compactButtonSx}
         >
           {t('mweb.podDetails.copyReferralLink')}
@@ -43,6 +45,7 @@ export default function ReferralRefillPanel({ pod, refundStatus, referralToken, 
           <DuncitButton
             variant="text"
             startIcon={<ShareIcon />}
+            data-testid="referral-refill-share"
             onClick={() => {
               const url = `${globalThis.window.location.origin}${podUrl(pod.club_slug, pod.pod_id)}?ref=${referralToken}`;
               // No `url` field — see the note in usePodDetailActions.onShare:

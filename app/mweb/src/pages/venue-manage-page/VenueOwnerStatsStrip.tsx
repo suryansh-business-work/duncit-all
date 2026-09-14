@@ -34,7 +34,7 @@ export default function VenueOwnerStatsStrip({ stats }: Readonly<{ stats: VenueO
   };
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.5} data-testid="venue-slot-earnings">
       <SectionHeader title={t('mweb.venueManagePage.slotEarnings')} />
       <Card>
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>

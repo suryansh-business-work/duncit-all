@@ -38,10 +38,11 @@ export default function FaqSearch({ query, onQueryChange, onOpen }: Readonly<Faq
   const results: FaqItem[] = data?.faqs ?? [];
 
   return (
-    <Box>
+    <Box data-testid="faq-search">
       <TextField
         fullWidth
         size="small"
+        data-testid="support-search-field"
         placeholder={t('mweb.common.searchForTopicsOrQuestions')}
         value={query}
         onChange={(event) => onQueryChange(event.target.value)}
@@ -58,18 +59,24 @@ export default function FaqSearch({ query, onQueryChange, onOpen }: Readonly<Faq
             ),
             endAdornment: query ? (
               <InputAdornment position="end">
-                <DuncitIconButton size="small" onClick={() => onQueryChange('')} aria-label={t('mweb.common.clearSearch')}>
+                <DuncitIconButton
+                  data-testid="support-search-clear"
+                  size="small"
+                  onClick={() => onQueryChange('')}
+                  aria-label={t('mweb.common.clearSearch')}
+                >
                   <CloseIcon fontSize="small" />
                 </DuncitIconButton>
               </InputAdornment>
             ) : null,
-          }
+          },
+          htmlInput: { 'data-testid': 'support-search' },
         }}
       />
       {active && (
         <Paper sx={{ ...SURFACE_SX, mt: 1, overflow: 'hidden' }}>
           {loading && (
-            <Stack sx={{ p: 1 }} spacing={1}>
+            <Stack data-testid="support-search-loading" sx={{ p: 1 }} spacing={1}>
               {[0, 1, 2].map((i) => (
                 <Skeleton key={i} variant="rounded" height={40} />
               ))}
@@ -77,6 +84,7 @@ export default function FaqSearch({ query, onQueryChange, onOpen }: Readonly<Faq
           )}
           {!loading && results.length === 0 && (
             <Typography
+              data-testid="support-search-empty"
               variant="body2"
               sx={{
                 color: "text.secondary",
@@ -90,6 +98,7 @@ export default function FaqSearch({ query, onQueryChange, onOpen }: Readonly<Faq
               {results.map((faq, index) => (
                 <ListItemButton
                   key={faq.id}
+                  data-testid={`support-search-${faq.id}`}
                   divider={index < results.length - 1}
                   onClick={() => onOpen(faq)}
                   sx={{ px: 2, py: 1.5, borderRadius: 0 }}

@@ -11,12 +11,14 @@ interface HeaderToastProps {
 export default function HeaderToast({ toast, onClose }: Readonly<HeaderToastProps>) {
   return (
     <Snackbar
+      data-testid="header-toast"
       open={!!toast}
       onClose={onClose}
       autoHideDuration={5000}
       anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
     >
       <MuiAlert
+        data-testid="header-toast-alert"
         onClose={onClose}
         severity="info"
         variant="filled"

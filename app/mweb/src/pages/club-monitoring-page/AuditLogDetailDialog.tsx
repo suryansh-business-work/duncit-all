@@ -28,7 +28,7 @@ export default function AuditLogDetailDialog({ entry, onClose }: Readonly<Props>
   const { formatDateTime } = useDateFormat();
 
   return (
-    <Dialog open={!!entry} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog data-testid="audit-log-detail-dialog" open={!!entry} onClose={onClose} fullWidth maxWidth="sm">
       {entry && (
         <>
           <DialogTitle sx={{ fontWeight: 600 }}>{entry.pod_title || entry.pod_id}</DialogTitle>
@@ -45,12 +45,12 @@ export default function AuditLogDetailDialog({ entry, onClose }: Readonly<Props>
                   entry.actor_name || t('clubAdmin.monitoring.unknownActor'),
                 ].join(' · ')}
               </Typography>
-              {entry.ai_summary && <Alert severity="info">{entry.ai_summary}</Alert>}
+              {entry.ai_summary && <Alert data-testid="audit-log-detail-dialog-summary" severity="info">{entry.ai_summary}</Alert>}
               <AuditChangesList changes={entry.changes} note={entry.note} heading />
             </Stack>
           </DialogContent>
           <DialogActions>
-            <DuncitButton onClick={onClose}>{t('mweb.common.close')}</DuncitButton>
+            <DuncitButton data-testid="audit-log-detail-dialog-close" onClick={onClose}>{t('mweb.common.close')}</DuncitButton>
           </DialogActions>
         </>
       )}

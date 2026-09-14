@@ -22,7 +22,7 @@ export default function StudioChangeRequests({ role }: Readonly<{ role: PodChang
   // The board's own translator carries the `changeRequest.*` fallback bundle.
   const { t } = useChangeRequestTranslation();
   return (
-    <Card>
+    <Card data-testid={`studio-change-requests-${role}`}>
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={2}>
           <SectionHeader title={t('changeRequest.sectionTitle')} />

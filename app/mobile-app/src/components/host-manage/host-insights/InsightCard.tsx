@@ -12,22 +12,35 @@ interface Props {
   empty: boolean;
   action?: ReactNode;
   children: ReactNode;
+  testID?: string;
 }
 
 /** Surface card for one insights chart — renders the chart or a consistent
  * "No data available" empty state. Mirrors mWeb's InsightChartCard. */
-export function InsightCard({ title, empty, action, children }: Readonly<Props>) {
+export function InsightCard({
+  title,
+  empty,
+  action,
+  children,
+  testID = 'insight-card',
+}: Readonly<Props>) {
   const { muted } = useThemeColors();
   return (
-    <SurfaceCard gap={8}>
+    <SurfaceCard testID={testID} gap={8}>
       <XStack alignItems="center" gap={8} minHeight={36}>
-        <Text flex={1} fontSize={16} fontWeight="600" color="$color">
+        <Text testID={`${testID}-title`} flex={1} fontSize={16} fontWeight="600" color="$color">
           {title}
         </Text>
         {action}
       </XStack>
       {empty ? (
-        <YStack alignItems="center" justifyContent="center" gap={8} paddingVertical={32}>
+        <YStack
+          testID={`${testID}-empty`}
+          alignItems="center"
+          justifyContent="center"
+          gap={8}
+          paddingVertical={32}
+        >
           <MaterialIcons name="insights" size={32} color={muted} />
           <Text fontSize={14} fontWeight="500" color="$muted">
             No data available

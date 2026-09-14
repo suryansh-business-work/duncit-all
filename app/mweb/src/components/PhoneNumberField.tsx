@@ -26,6 +26,7 @@ export default function PhoneNumberField({
         return (
           <TextField
             {...rest}
+            data-testid="phone-number-field"
             name={field.name}
             value={field.value ?? ''}
             type="tel"
@@ -39,6 +40,7 @@ export default function PhoneNumberField({
                 inputMode: 'numeric',
                 pattern: '[0-9]*',
                 maxLength: 15,
+                'data-testid': 'phone-number-field-input',
               }
             }}
           />

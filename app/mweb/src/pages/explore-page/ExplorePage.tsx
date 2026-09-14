@@ -129,6 +129,7 @@ export default function ExplorePage({ superCategorySlug, locationId, zoneName }:
   if (loading && !data) {
     return (
       <Stack
+        data-testid="explore-loading"
         sx={{
           alignItems: "center",
           p: 6
@@ -137,12 +138,13 @@ export default function ExplorePage({ superCategorySlug, locationId, zoneName }:
       </Stack>
     );
   }
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  if (error) return <Alert data-testid="explore-error" severity="error">{error.message}</Alert>;
 
   const exploreHeight = 'calc(100dvh - 64px - 56px - env(safe-area-inset-bottom))';
 
   return (
     <Box
+      data-testid="explore-page"
       sx={{
         height: exploreHeight,
         position: 'relative',
@@ -158,6 +160,7 @@ export default function ExplorePage({ superCategorySlug, locationId, zoneName }:
       <ExploreHeader filters={filters} setFilters={setFilters} activeCount={activeCount} resultCount={pods.length} onOpenFilters={() => setFiltersOpen(true)} onRefresh={() => { refetch().catch(() => undefined); }} />
       {pods.length === 0 ? (
         <Stack
+          data-testid="explore-empty"
           sx={{
             alignItems: "center",
             justifyContent: "center",

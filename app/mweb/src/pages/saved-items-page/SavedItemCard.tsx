@@ -23,8 +23,8 @@ export default function SavedItemCard({ pod, onOpen }: Readonly<Props>) {
   const media = pod.pod_images_and_videos?.[0];
   const isVideo = isVideoMedia(media);
   return (
-    <Card>
-      <CardActionArea onClick={() => onOpen(pod)}>
+    <Card data-testid={`saved-item-card-${pod.id}`}>
+      <CardActionArea data-testid={`saved-item-card-${pod.id}-action`} onClick={() => onOpen(pod)}>
         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', p: 1.5 }}>
           {media?.url ? (
             <CardMedia

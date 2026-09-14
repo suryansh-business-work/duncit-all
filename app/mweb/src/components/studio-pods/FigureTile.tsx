@@ -5,9 +5,14 @@ import { Box, Typography } from '@mui/material';
  * inside a card. The studio figures strip and Venue Studio's slot-earnings
  * strip both lay these out (rule 40).
  */
-export default function FigureTile({ label, value }: Readonly<{ label: string; value: string }>) {
+export default function FigureTile({
+  label,
+  value,
+  testId,
+}: Readonly<{ label: string; value: string; testId?: string }>) {
   return (
     <Box
+      data-testid={testId}
       sx={{
         flex: '1 1 28%',
         minWidth: 96,

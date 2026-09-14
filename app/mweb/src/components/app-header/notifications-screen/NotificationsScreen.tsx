@@ -80,6 +80,7 @@ export default function NotificationsScreen({
 
   return (
     <Dialog
+      data-testid="notifications-screen"
       open={open}
       fullScreen
       onClose={onClose}
@@ -108,6 +109,7 @@ export default function NotificationsScreen({
             flexShrink: 0
           }}>
           <DuncitRoundButton
+            data-testid="notifications-close"
             onClick={onClose}
             aria-label={t('mweb.common.closeNotifications')}
             sx={HEADER_BUTTON_SX}
@@ -119,6 +121,7 @@ export default function NotificationsScreen({
               Notifications
             </Typography>
             <Typography
+              data-testid="notifications-subtitle"
               variant="caption"
               sx={{
                 color: "text.secondary",
@@ -128,13 +131,14 @@ export default function NotificationsScreen({
             </Typography>
           </Box>
           <DuncitRoundButton
+            data-testid="notifications-mark-all"
             onClick={onMarkAll}
             disabled={liveUnread === 0 || markAllBusy}
             aria-label={t('mweb.common.markAllAsRead')}
             aria-busy={markAllBusy}
             sx={HEADER_BUTTON_SX}
           >
-            {markAllBusy ? <CircularProgress size={20} color="inherit" /> : <DoneAllIcon />}
+            {markAllBusy ? <CircularProgress data-testid="notifications-mark-all-busy" size={20} color="inherit" /> : <DoneAllIcon />}
           </DuncitRoundButton>
         </Stack>
 
@@ -151,7 +155,7 @@ export default function NotificationsScreen({
             item's automatic minimum size keeps it as tall as its content. */}
         <Box sx={{ px: 2, pb: 3, flex: 1, minHeight: 0, overflowY: 'auto' }}>
           {visible.length === 0 && (
-            <Paper sx={{ ...SURFACE_SX, p: 3, textAlign: 'center' }}>
+            <Paper data-testid="notifications-empty" sx={{ ...SURFACE_SX, p: 3, textAlign: 'center' }}>
               <Typography variant="body2" sx={{
                 color: "text.secondary"
               }}>
@@ -161,6 +165,7 @@ export default function NotificationsScreen({
           )}
           {visible.length > 0 && (
             <Paper
+              data-testid="notifications-list"
               sx={{
                 ...SURFACE_SX,
                 overflow: 'hidden',

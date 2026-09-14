@@ -31,14 +31,20 @@ export default function CommentsList({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <List>
+    <List data-testid="comments-list">
       {comments.map((c: any) => {
         const mine = !!viewerId && c.author_id === viewerId;
         const liked = !!c.liked_by_me;
         const authorName = c.author_name || t('mweb.podDetails.anon');
         return (
-          <ListItem key={c.id} alignItems="flex-start" sx={{ gap: 1.25, '&:hover .ph-del': { opacity: 1 } }}>
+          <ListItem
+            key={c.id}
+            data-testid={`comment-row-${c.id}`}
+            alignItems="flex-start"
+            sx={{ gap: 1.25, '&:hover .ph-del': { opacity: 1 } }}
+          >
             <Avatar
+              data-testid={`comment-avatar-${c.id}`}
               src={c.author_photo || undefined}
               onClick={() => onOpenProfile(c.author_id)}
               onKeyDown={activateOnKey(() => onOpenProfile(c.author_id))}
@@ -54,6 +60,7 @@ export default function CommentsList({
                 alignItems: "center"
               }}>
                 <Typography
+                  data-testid={`comment-name-${c.id}`}
                   variant="subtitle2"
                   onClick={() => onOpenProfile(c.author_id)}
                   onKeyDown={activateOnKey(() => onOpenProfile(c.author_id))}
@@ -69,7 +76,7 @@ export default function CommentsList({
                   {formatRelative(c.created_at)}
                 </Typography>
               </Stack>
-              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+              <Typography data-testid={`comment-text-${c.id}`} variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                 {c.text}
               </Typography>
             </Box>
@@ -79,6 +86,7 @@ export default function CommentsList({
                 flex: '0 0 auto'
               }}>
               <DuncitIconButton
+                data-testid={`comment-like-${c.id}`}
                 size="small"
                 aria-label={t('mweb.podDetails.likeComment')}
                 onClick={() => onToggleLike(c.id)}
@@ -90,13 +98,18 @@ export default function CommentsList({
                 )}
               </DuncitIconButton>
               {c.like_count > 0 && (
-                <Typography variant="caption" color={liked ? 'secondary.main' : 'text.secondary'}>
+                <Typography
+                  data-testid={`comment-like-count-${c.id}`}
+                  variant="caption"
+                  color={liked ? 'secondary.main' : 'text.secondary'}
+                >
                   {c.like_count}
                 </Typography>
               )}
               {mine && (
                 <DuncitIconButton
                   className="ph-del"
+                  data-testid={`comment-delete-${c.id}`}
                   size="small"
                   aria-label={t('mweb.podDetails.deleteComment')}
                   onClick={() => onRequestDelete(c.id)}

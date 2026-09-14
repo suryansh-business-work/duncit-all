@@ -19,8 +19,9 @@ function RewardRow({ reward }: Readonly<{ reward: LeaderboardReward }>) {
       : t('mweb.leaderboard.rewardRankRange', {
           vars: { from: reward.rank_from, to: reward.rank_to },
         });
+  const rowTestId = `leaderboard-reward-${reward.period}-${reward.rank_from}-${reward.rank_to}`;
   return (
-    <Stack direction="row" spacing={1.5} sx={{
+    <Stack direction="row" spacing={1.5} data-testid={rowTestId} sx={{
       alignItems: "flex-start"
     }}>
       <Chip size="small" label={rankLabel} sx={{ height: 24, fontSize: 12 }} />
@@ -40,10 +41,16 @@ function RewardRow({ reward }: Readonly<{ reward: LeaderboardReward }>) {
   );
 }
 
-function RewardGroup({ title, rewards }: Readonly<{ title: string; rewards: LeaderboardReward[] }>) {
+interface RewardGroupProps {
+  title: string;
+  rewards: LeaderboardReward[];
+  testId: string;
+}
+
+function RewardGroup({ title, rewards, testId }: Readonly<RewardGroupProps>) {
   if (rewards.length === 0) return null;
   return (
-    <Stack spacing={1}>
+    <Stack spacing={1} data-testid={testId}>
       <Typography
         variant="caption"
         sx={{
@@ -69,7 +76,7 @@ export default function RewardsCard({ config, category }: Readonly<Props>) {
   const yearly = rewards.filter((reward) => reward.period === 'YEARLY');
 
   return (
-    <Card>
+    <Card data-testid="leaderboard-rewards">
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={1.5}>
           <Stack direction="row" spacing={1.5} sx={{
@@ -81,16 +88,24 @@ export default function RewardsCard({ config, category }: Readonly<Props>) {
             <SectionHeader title={t('mweb.leaderboard.rewardsTitle')} />
           </Stack>
           {rewards.length === 0 ? (
-            <Typography variant="body2" sx={{
+            <Typography variant="body2" data-testid="leaderboard-rewards-empty" sx={{
               color: "text.secondary"
             }}>
               {t('mweb.leaderboard.rewardsEmpty')}
             </Typography>
           ) : (
             <Stack spacing={1.5}>
-              <RewardGroup title={t('mweb.leaderboard.rewardsMonthly')} rewards={monthly} />
+              <RewardGroup
+                title={t('mweb.leaderboard.rewardsMonthly')}
+                rewards={monthly}
+                testId="leaderboard-rewards-monthly"
+              />
               {monthly.length > 0 && yearly.length > 0 && <Divider />}
-              <RewardGroup title={t('mweb.leaderboard.rewardsYearly')} rewards={yearly} />
+              <RewardGroup
+                title={t('mweb.leaderboard.rewardsYearly')}
+                rewards={yearly}
+                testId="leaderboard-rewards-yearly"
+              />
             </Stack>
           )}
         </Stack>

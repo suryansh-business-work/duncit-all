@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/Skeleton/Skeleton';
 export function SkeletonCard({ height = 200 }: Readonly<{ height?: number }>) {
   return (
     <YStack
+      testID="skeleton-card"
       borderRadius={24}
       overflow="hidden"
       borderWidth={1}

@@ -46,6 +46,7 @@ export default function ProfileTabs({ tabs }: Readonly<Props>) {
   return (
     <DuncitTabs
       {...tabs}
+      data-testid="profile-tabs"
       variant="fullWidth"
       aria-label={t('mweb.profile.profileSections')}
       sx={{ minHeight: 44, borderBottom: 1, borderColor: 'divider', '& .MuiTab-root': { minHeight: 44 } }}

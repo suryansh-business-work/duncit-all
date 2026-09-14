@@ -120,14 +120,18 @@ export default function InterviewBookingPage({ type }: Readonly<Props>) {
   if (submittedRef) return <InterviewSuccessCard submittedRef={submittedRef} />;
 
   return (
-    <Container maxWidth="md" sx={{ pt: 3 }}>
+    <Container data-testid="interview-booking-page" maxWidth="md" sx={{ pt: 3 }}>
       <Stack spacing={2.5}>
         <StudioPageHeader
           icon={isHost ? <StorefrontIcon fontSize="small" /> : <AddBusinessIcon fontSize="small" />}
           title={isHost ? 'Become a Host' : 'Register Your Venue'}
         />
 
-        {error && <Alert severity="error">{error}</Alert>}
+        {error && (
+          <Alert data-testid="interview-booking-error" severity="error">
+            {error}
+          </Alert>
+        )}
 
         <InterviewCalendar
           anchor={anchor}
@@ -147,10 +151,16 @@ export default function InterviewBookingPage({ type }: Readonly<Props>) {
           spacing={1.5}
           sx={{ position: 'sticky', bottom: 0, zIndex: 1, py: 1.5, bgcolor: 'background.default' }}
         >
-          <DuncitButton variant="outlined" size="large" onClick={() => navigate(-1)}>
+          <DuncitButton
+            data-testid="interview-booking-cancel-button"
+            variant="outlined"
+            size="large"
+            onClick={() => navigate(-1)}
+          >
             {t('mweb.common.cancel')}
           </DuncitButton>
           <DuncitButton
+            data-testid="interview-booking-submit-button"
             variant="contained"
             size="large"
             onClick={submit}

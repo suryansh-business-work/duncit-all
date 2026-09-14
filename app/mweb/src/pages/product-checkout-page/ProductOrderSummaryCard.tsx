@@ -28,10 +28,20 @@ interface Props {
 }
 
 /** A summary row: label muted, value ink; the total row is 700 and ink. */
-function Row({ label, value, bold }: Readonly<{ label: string; value: string; bold?: boolean }>) {
+function Row({
+  label,
+  value,
+  bold,
+  testId,
+}: Readonly<{ label: string; value: string; bold?: boolean; testId?: string }>) {
   const size = bold ? '1rem' : '0.875rem';
   return (
-    <Stack direction="row" spacing={2} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+    <Stack
+      data-testid={testId}
+      direction="row"
+      spacing={2}
+      sx={{ justifyContent: 'space-between', alignItems: 'center' }}
+    >
       <Typography sx={{ fontSize: size, fontWeight: bold ? 700 : 500, color: bold ? 'text.primary' : 'text.secondary' }}>
         {label}
       </Typography>
@@ -49,6 +59,7 @@ function LineThumb({
   const { t } = useTranslation();
   return (
     <ButtonBase
+      data-testid={`product-order-summary-card-thumb-${line.product_id}`}
       aria-label={t('mweb.checkout.viewProduct', { vars: { name: line.product_name } })}
       onClick={() => onInfo(line.product_id)}
       sx={{
@@ -87,7 +98,12 @@ function LineRow({
   const variant = line.variant_label ? ` — ${line.variant_label}` : '';
   const label = `${line.product_name}${variant} × ${line.quantity}`;
   return (
-    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+    <Stack
+      data-testid={`product-order-summary-card-line-${line.product_id}`}
+      direction="row"
+      spacing={1.5}
+      sx={{ alignItems: 'center' }}
+    >
       <LineThumb line={line} onInfo={onInfo} />
       <Stack spacing={0.5} sx={{ minWidth: 0, flex: 1, alignItems: 'flex-start' }}>
         <Typography variant="body2" noWrap sx={{ fontWeight: 600, maxWidth: '100%' }}>
@@ -95,7 +111,11 @@ function LineRow({
         </Typography>
         {lineQualifiesFreeDelivery(line) && <FreeDeliveryChip />}
       </Stack>
-      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+      <Typography
+        data-testid={`product-order-summary-card-line-total-${line.product_id}`}
+        variant="body2"
+        sx={{ fontWeight: 600 }}
+      >
         {fmt(line.unit_cost * line.quantity)}
       </Typography>
     </Stack>
@@ -133,21 +153,37 @@ function DeliveryRows({
 }>) {
   const { t } = useTranslation();
   const deliveryLabel = t('mweb.checkout.delivery');
-  if (!pincodeValid) return <Row label={deliveryLabel} value={t('mweb.checkout.deliveryEnterPincode')} />;
+  if (!pincodeValid) {
+    return (
+      <Row
+        testId="product-order-summary-card-delivery"
+        label={deliveryLabel}
+        value={t('mweb.checkout.deliveryEnterPincode')}
+      />
+    );
+  }
   if (!quote) {
     const pending = shippingLoading ? t('mweb.checkout.deliveryCalculating') : formatMoney(currency, 0);
-    return <Row label={deliveryLabel} value={pending} />;
+    return <Row testId="product-order-summary-card-delivery" label={deliveryLabel} value={pending} />;
   }
   return (
     <>
-      {quote.lines.map((line) => (
-        <Row
-          key={`${line.pod_id ?? ''}:${line.warehouse_id}`}
-          label={quoteLineLabel(line, t)}
-          value={quoteLineValue(line, currency, t)}
-        />
-      ))}
-      <Row label={t('mweb.checkout.deliveryTotal')} value={formatMoney(currency, quote.total)} />
+      {quote.lines.map((line) => {
+        const lineKey = `${line.pod_id ?? ''}:${line.warehouse_id}`;
+        return (
+          <Row
+            key={lineKey}
+            testId={`product-order-summary-card-delivery-${lineKey}`}
+            label={quoteLineLabel(line, t)}
+            value={quoteLineValue(line, currency, t)}
+          />
+        );
+      })}
+      <Row
+        testId="product-order-summary-card-delivery-total"
+        label={t('mweb.checkout.deliveryTotal')}
+        value={formatMoney(currency, quote.total)}
+      />
     </>
   );
 }
@@ -162,7 +198,7 @@ export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quot
   const estimated = !!quote && !quote.all_quoted;
 
   return (
-    <Card sx={{ flex: 1, p: 2 }}>
+    <Card data-testid="product-order-summary-card" sx={{ flex: 1, p: 2 }}>
       <Typography component="h2" sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>
         {t('mweb.checkout.yourOrder')}
       </Typography>
@@ -173,7 +209,7 @@ export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quot
       </Stack>
       <Divider sx={{ my: 2 }} />
       <Stack spacing={1}>
-        <Row label={t('mweb.checkout.subtotal')} value={fmt(subtotal)} />
+        <Row testId="product-order-summary-card-subtotal" label={t('mweb.checkout.subtotal')} value={fmt(subtotal)} />
         <DeliveryRows quote={quote} shippingLoading={shippingLoading} pincodeValid={pincodeValid} currency={breakup.currency} />
         {estimated && (
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -183,9 +219,13 @@ export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quot
         <Typography variant="caption" sx={{ color: 'text.secondary', pt: 0.5 }}>
           {t('mweb.checkout.inclusiveOf')}
         </Typography>
-        <Row label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })} value={fmt(breakup.gst)} />
+        <Row
+          testId="product-order-summary-card-gst"
+          label={t('mweb.checkout.gst', { vars: { pct: breakup.gstPct } })}
+          value={fmt(breakup.gst)}
+        />
         <Divider sx={{ my: 1 }} />
-        <Row label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
+        <Row testId="product-order-summary-card-total" label={t('mweb.checkout.totalPayable')} value={fmt(breakup.total)} bold />
         <CoinSummaryRows coins={coins} />
       </Stack>
     </Card>

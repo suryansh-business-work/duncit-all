@@ -7,17 +7,25 @@ interface Props {
   value: string | number;
   /** `lg` for a short count, `md` for money that must not be cut off. */
   size?: 'md' | 'lg';
+  testID?: string;
 }
 
 /** Stat tile shared by the studio dashboards: a muted label over the figure, on
  * a surface card. mWeb twin: pages/host-dashboard-page/StatCard. */
-export function StatTile({ label, value, size = 'md' }: Readonly<Props>) {
+export function StatTile({ label, value, size = 'md', testID = 'stat-tile' }: Readonly<Props>) {
   return (
-    <SurfaceCard flex={1} gap={4}>
-      <Text fontSize={12} fontWeight="600" color="$muted" numberOfLines={1}>
+    <SurfaceCard testID={testID} flex={1} gap={4}>
+      <Text
+        testID={`${testID}-label`}
+        fontSize={12}
+        fontWeight="600"
+        color="$muted"
+        numberOfLines={1}
+      >
         {label}
       </Text>
       <Text
+        testID={`${testID}-value`}
         fontSize={size === 'lg' ? 24 : 20}
         fontWeight="700"
         color="$color"

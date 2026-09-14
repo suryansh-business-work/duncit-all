@@ -6,6 +6,6 @@ import { useTranslation } from '../i18n/useTranslation';
 export default function PolicyPage() {
   const { t } = useTranslation();
   const { slug = '' } = useParams<{ slug: string }>();
-  if (!slug) return <Alert severity="warning">{t('mweb.policyPage.noPolicySpecified')}</Alert>;
+  if (!slug) return <Alert severity="warning" data-testid="policy-error">{t('mweb.policyPage.noPolicySpecified')}</Alert>;
   return <PolicyRenderer slug={slug} />;
 }

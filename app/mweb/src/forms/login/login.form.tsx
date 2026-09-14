@@ -46,7 +46,12 @@ function LoginIdentityFields({
   if (channel === 'PHONE') {
     return (
       <Stack direction="row" spacing={1}>
-        <CountryCodeField control={control} name="phoneExtension" label={t('mweb.common.code')} />
+        <CountryCodeField
+          control={control}
+          name="phoneExtension"
+          label={t('mweb.common.code')}
+          testId="login-code"
+        />
         <RhfTextField
           control={control}
           name="phoneNumber"
@@ -113,7 +118,7 @@ function LoginFields({
   });
 
   return (
-    <form noValidate onSubmit={submit}>
+    <form data-testid="login-form" noValidate onSubmit={submit}>
       <Stack spacing={2}>
         <LoginIdentityFields channel={channel} control={control} />
         <RhfTextField
@@ -135,6 +140,7 @@ function LoginFields({
             endAdornment: (
               <InputAdornment position="end">
                 <DuncitIconButton
+                  data-testid="login-password-toggle"
                   size="small"
                   onClick={() => setShowPwd((v) => !v)}
                   edge="end"
@@ -150,8 +156,17 @@ function LoginFields({
             ),
           } }}
         />
-        {(submitError || errorMessage) && <Alert severity="error">{submitError || errorMessage}</Alert>}
-        <DuncitButton type="submit" variant="contained" size="large" fullWidth disabled={loading}>
+        {(submitError || errorMessage) && (
+          <Alert data-testid="login-error" severity="error">{submitError || errorMessage}</Alert>
+        )}
+        <DuncitButton
+          data-testid="login-submit"
+          type="submit"
+          variant="contained"
+          size="large"
+          fullWidth
+          disabled={loading}
+        >
           {loading ? t('mweb.login.submitting') : (submitLabel ?? t('mweb.login.submit'))}
         </DuncitButton>
       </Stack>
@@ -179,6 +194,7 @@ export default function LoginForm(props: Readonly<Props>) {
             value === 'EMAIL'
               ? t('mweb.passwordRecovery.emailName')
               : t('mweb.passwordRecovery.phoneName'),
+          testId: `login-channel-${value}`,
         }))}
         value={channel}
         onChange={(next) => setChannel(next as LoginChannel)}

@@ -21,7 +21,7 @@ export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<P
   const [lightbox, setLightbox] = useState<number | null>(null);
   if (!club) {
     return (
-      <Typography variant="body2" sx={{
+      <Typography data-testid="pod-club-unavailable" variant="body2" sx={{
         color: "text.secondary"
       }}>
         {t('mweb.podDetails.clubUnavailable')}
@@ -33,7 +33,7 @@ export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<P
   const moments: any[] = club.club_moments ?? [];
 
   return (
-    <Stack spacing={1.5}>
+    <Stack data-testid="pod-club-section" spacing={1.5}>
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1.5}
@@ -53,7 +53,7 @@ export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<P
             {club.club_name?.[0]?.toUpperCase() ?? 'C'}
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" noWrap sx={{
+            <Typography data-testid="pod-club-name" variant="subtitle1" noWrap sx={{
               fontWeight: 600
             }}>
               {club.club_name}
@@ -79,6 +79,7 @@ export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<P
           </Box>
         </Stack>
         <DuncitButton
+          data-testid="pod-view-club"
           size="small"
           variant="outlined"
           startIcon={<GroupsIcon />}
@@ -90,12 +91,13 @@ export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<P
       </Stack>
       {moments.length > 0 && (
         <Stack
+          data-testid="pod-club-moments"
           direction="row"
           spacing={1}
           sx={{ overflowX: 'auto', pb: 0.5, '&::-webkit-scrollbar': { display: 'none' } }}
         >
           {moments.slice(0, 12).map((m: any, i: number) => (
-            <Box key={m.url} sx={{ width: 96, height: 96, flex: '0 0 auto' }}>
+            <Box key={m.url} data-testid={`pod-club-moment-${m.url}`} sx={{ width: 96, height: 96, flex: '0 0 auto' }}>
               <MomentTile
                 url={m.url}
                 type={m.type}

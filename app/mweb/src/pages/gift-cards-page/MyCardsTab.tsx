@@ -28,6 +28,7 @@ export default function MyCardsTab() {
   if (loading && !data) {
     return (
       <Stack
+        data-testid="gift-cards-loading"
         sx={{
           alignItems: "center",
           py: 4
@@ -38,8 +39,8 @@ export default function MyCardsTab() {
   }
 
   return (
-    <Stack spacing={2}>
-      {error && <Alert severity="error">{t('mweb.giftCards.loadError')}</Alert>}
+    <Stack data-testid="gift-cards-my-cards-tab" spacing={2}>
+      {error && <Alert data-testid="gift-cards-error" severity="error">{t('mweb.giftCards.loadError')}</Alert>}
       {!error && owned.length === 0 && gifted.length === 0 && (
         <EmptyState icon={<CardGiftcardOutlinedIcon />} title={t('mweb.giftCards.myCardsEmpty')} />
       )}

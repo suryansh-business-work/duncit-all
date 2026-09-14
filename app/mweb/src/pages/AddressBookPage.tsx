@@ -6,7 +6,7 @@ import AddressBookSection from './account-page/AddressBookSection';
  * page). mWeb twin of the mobile AddressBookScreen. */
 export default function AddressBookPage() {
   return (
-    <Stack spacing={2} sx={{ maxWidth: 720, mx: 'auto' }}>
+    <Stack spacing={2} sx={{ maxWidth: 720, mx: 'auto' }} data-testid="address-book-screen">
       <AddressBookSection />
     </Stack>
   );

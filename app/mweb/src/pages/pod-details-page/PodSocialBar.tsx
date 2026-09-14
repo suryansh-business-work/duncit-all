@@ -69,10 +69,11 @@ export default function PodSocialBar({
 
   return (
     <>
-      <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1.5 }}>
+      <Stack direction="row" data-testid="pod-social-bar" sx={{ flexWrap: 'wrap', gap: 1.5 }}>
         <DuncitButton
           startIcon={liked ? <FavoriteIcon sx={{ color: 'secondary.main' }} /> : <FavoriteBorderIcon />}
           onClick={onLike}
+          data-testid="pod-like-btn"
           sx={socialPillSx}
         >
           {likeLabel}
@@ -80,6 +81,7 @@ export default function PodSocialBar({
         <DuncitButton
           startIcon={<CommentIcon />}
           onClick={() => setCommentsOpen(true)}
+          data-testid="pod-comment-btn"
           sx={socialPillSx}
         >
           {t('mweb.podDetails.commentCount', { vars: { count: commentCount } })}

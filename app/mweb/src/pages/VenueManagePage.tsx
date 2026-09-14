@@ -59,7 +59,7 @@ export default function VenueManagePage() {
   const isApproved = venue?.status === 'APPROVED';
 
   return (
-    <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+    <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }} data-testid="venue-manage-screen">
       <VenueStudioHeader />
 
       <VenueSwitcher venues={venues} venueId={venue?.id ?? null} onChange={setSelectedId} />
@@ -80,7 +80,10 @@ export default function VenueManagePage() {
         <SectionHeader title="Pods at your venue" />
         <Card>
           <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-            <SimpleBarChart data={buildMonthlyCounts(venuePods.map((p) => p.pod_date_time))} />
+            <SimpleBarChart
+              data={buildMonthlyCounts(venuePods.map((p) => p.pod_date_time))}
+              testId="venue-pods-chart"
+            />
           </CardContent>
         </Card>
       </Stack>
@@ -101,7 +104,12 @@ export default function VenueManagePage() {
           <Stack sx={{ flex: 1, minWidth: 0 }}>
             <SectionHeader title={t('mweb.venueManagePage.yourVenues')} />
           </Stack>
-          <Chip size="small" label={isApproved ? 'Live' : 'Draft'} color={isApproved ? 'success' : 'warning'} />
+          <Chip
+            size="small"
+            data-testid="venue-manage-status"
+            label={isApproved ? 'Live' : 'Draft'}
+            color={isApproved ? 'success' : 'warning'}
+          />
         </Stack>
         <Card>
           <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>

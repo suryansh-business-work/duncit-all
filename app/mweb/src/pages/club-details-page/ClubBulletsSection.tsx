@@ -14,7 +14,7 @@ export default function ClubBulletsSection({ title, items }: Readonly<Props>) {
   if (bullets.length === 0) return null;
 
   return (
-    <Box sx={{ ...SURFACE_SX, p: 2 }}>
+    <Box data-testid="club-bullets" sx={{ ...SURFACE_SX, p: 2 }}>
       <SectionHeader title={title} />
       <List dense disablePadding sx={{ mt: 1 }}>
         {bullets.map((item) => (

@@ -13,22 +13,26 @@ interface Props {
 export default function PodChipList({ items, emptyText, color = 'default' }: Readonly<Props>) {
   if (!items || items.length === 0) {
     return (
-      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+      <Typography data-testid="pod-chip-list-empty" variant="body2" sx={{ color: 'text.secondary' }}>
         {emptyText}
       </Typography>
     );
   }
   const tint = color === 'default' ? 'text.secondary' : `${color}.main`;
   return (
-    <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
-      {items.map((item, i) => (
-        <Chip
-          key={`${item}-${i}`}
-          label={item}
-          icon={<CheckCircleIcon />}
-          sx={{ bgcolor: 'action.hover', '& .MuiChip-icon': { color: tint, fontSize: 16 } }}
-        />
-      ))}
+    <Stack data-testid="pod-chip-list" direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
+      {items.map((item, i) => {
+        const chipKey = `${item}-${i}`;
+        return (
+          <Chip
+            key={chipKey}
+            data-testid={`pod-chip-${chipKey}`}
+            label={item}
+            icon={<CheckCircleIcon />}
+            sx={{ bgcolor: 'action.hover', '& .MuiChip-icon': { color: tint, fontSize: 16 } }}
+          />
+        );
+      })}
     </Stack>
   );
 }

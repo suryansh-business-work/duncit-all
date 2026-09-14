@@ -1,4 +1,4 @@
-import { Dimensions } from 'react-native';
+import { Dimensions, View } from 'react-native';
 import { BarChart, LineChart, PieChart } from 'react-native-gifted-charts';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -11,21 +11,23 @@ const chartWidth = () => Dimensions.get('window').width - 88;
 export function InsightsBars({ data, color }: Readonly<{ data: ChartDatum[]; color: string }>) {
   const { muted, borderColor } = useThemeColors();
   return (
-    <BarChart
-      data={data.map((d) => ({ value: d.value, label: d.label, frontColor: color }))}
-      height={CHART_HEIGHT}
-      width={chartWidth()}
-      barWidth={18}
-      spacing={16}
-      initialSpacing={12}
-      barBorderRadius={6}
-      noOfSections={4}
-      yAxisThickness={0}
-      xAxisColor={borderColor}
-      rulesColor={borderColor}
-      yAxisTextStyle={{ color: muted, fontSize: 10 }}
-      xAxisLabelTextStyle={{ color: muted, fontSize: 10 }}
-    />
+    <View testID="insights-bars-chart">
+      <BarChart
+        data={data.map((d) => ({ value: d.value, label: d.label, frontColor: color }))}
+        height={CHART_HEIGHT}
+        width={chartWidth()}
+        barWidth={18}
+        spacing={16}
+        initialSpacing={12}
+        barBorderRadius={6}
+        noOfSections={4}
+        yAxisThickness={0}
+        xAxisColor={borderColor}
+        rulesColor={borderColor}
+        yAxisTextStyle={{ color: muted, fontSize: 10 }}
+        xAxisLabelTextStyle={{ color: muted, fontSize: 10 }}
+      />
+    </View>
   );
 }
 
@@ -37,38 +39,42 @@ export function InsightsLine({
 }: Readonly<{ data: ChartDatum[]; color: string; area: boolean }>) {
   const { muted, borderColor } = useThemeColors();
   return (
-    <LineChart
-      data={data.map((d) => ({ value: d.value, label: d.label }))}
-      height={CHART_HEIGHT}
-      width={chartWidth()}
-      color={color}
-      thickness={2}
-      curved
-      areaChart={area}
-      startFillColor={color}
-      endFillColor={color}
-      startOpacity={0.25}
-      endOpacity={0.03}
-      initialSpacing={12}
-      spacing={Math.max(16, chartWidth() / Math.max(1, data.length))}
-      noOfSections={4}
-      yAxisThickness={0}
-      xAxisColor={borderColor}
-      rulesColor={borderColor}
-      yAxisTextStyle={{ color: muted, fontSize: 10 }}
-      xAxisLabelTextStyle={{ color: muted, fontSize: 10 }}
-    />
+    <View testID="insights-line-chart">
+      <LineChart
+        data={data.map((d) => ({ value: d.value, label: d.label }))}
+        height={CHART_HEIGHT}
+        width={chartWidth()}
+        color={color}
+        thickness={2}
+        curved
+        areaChart={area}
+        startFillColor={color}
+        endFillColor={color}
+        startOpacity={0.25}
+        endOpacity={0.03}
+        initialSpacing={12}
+        spacing={Math.max(16, chartWidth() / Math.max(1, data.length))}
+        noOfSections={4}
+        yAxisThickness={0}
+        xAxisColor={borderColor}
+        rulesColor={borderColor}
+        yAxisTextStyle={{ color: muted, fontSize: 10 }}
+        xAxisLabelTextStyle={{ color: muted, fontSize: 10 }}
+      />
+    </View>
   );
 }
 
 /** Donut chart (pod status distribution). */
 export function InsightsDonut({ slices }: Readonly<{ slices: StatusSlice[] }>) {
   return (
-    <PieChart
-      donut
-      radius={90}
-      innerRadius={55}
-      data={slices.map((s) => ({ value: s.value, color: s.color }))}
-    />
+    <View testID="insights-donut-chart">
+      <PieChart
+        donut
+        radius={90}
+        innerRadius={55}
+        data={slices.map((s) => ({ value: s.value, color: s.color }))}
+      />
+    </View>
   );
 }

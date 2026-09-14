@@ -28,6 +28,7 @@ interface Props {
 export default function StickyPodActionPanel(props: Readonly<Props>) {
   return (
     <Box
+      data-testid="sticky-pod-action-panel"
       sx={{
         position: 'fixed',
         left: 0,

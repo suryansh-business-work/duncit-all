@@ -54,6 +54,7 @@ export default function HealthMeter({
 
   return (
     <Box
+      data-testid="health-meter"
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
       onClick={onClick}

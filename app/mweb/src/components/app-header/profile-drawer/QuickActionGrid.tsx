@@ -16,6 +16,7 @@ const TOUR_ANCHORS: Readonly<Record<string, string>> = {
 function ActionTile({ tile, onNavigate }: Readonly<{ tile: ProfileTile; onNavigate: (to: string) => void }>) {
   return (
     <Box
+      data-testid={`sidebar-grid-${tile.key}`}
       data-tour={TOUR_ANCHORS[tile.key]}
       onClick={() => onNavigate(tile.to)}
       role="button"

@@ -34,7 +34,7 @@ export default function EarningsCard({ balance, currency, nextPayoutAt, summary 
 
   return (
     <Stack spacing={1.5}>
-      <Card>
+      <Card data-testid="host-earnings">
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
             <Box sx={ICON_DISC_SX}>
@@ -53,6 +53,7 @@ export default function EarningsCard({ balance, currency, nextPayoutAt, summary 
               </Typography>
             </Box>
             <DuncitButton
+              data-testid="host-earnings-wallet-button"
               component={RouterLink}
               to="/host/wallet"
               variant="outlined"
@@ -71,7 +72,10 @@ export default function EarningsCard({ balance, currency, nextPayoutAt, summary 
         </CardContent>
       </Card>
       {summary && (
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1.5 }}>
+        <Box
+          data-testid="earnings-summary-tiles"
+          sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1.5 }}
+        >
           <StatCard label={t('mweb.common.lifetimeEarnings')} value={money(summary.lifetime_earnings)} />
           <StatCard label={t('mweb.common.pendingApproval')} value={money(summary.pending_amount)} />
           <StatCard label={t('mweb.common.thisMonth')} value={money(summary.this_month_earnings)} />

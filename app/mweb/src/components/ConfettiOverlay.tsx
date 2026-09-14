@@ -23,6 +23,7 @@ export default function ConfettiOverlay({
 
   return (
     <Backdrop
+      data-testid="confetti-overlay"
       open={open}
       onClick={onClose}
       sx={{

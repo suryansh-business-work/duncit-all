@@ -51,6 +51,7 @@ export default function ClubHeroActions({
     : { height: 40, minHeight: 40, px: 1.75 };
   return (
     <Stack
+      data-testid="club-hero-actions"
       direction="row"
       sx={{
         alignItems: "center",
@@ -63,13 +64,14 @@ export default function ClubHeroActions({
         pointerEvents: 'none',
         '& > *': { pointerEvents: 'auto' }
       }}>
-      <DuncitIconButton onClick={onBack} aria-label={t('mweb.common.back')} sx={ROUND_SX}>
+      <DuncitIconButton data-testid="detail-back" onClick={onBack} aria-label={t('mweb.common.back')} sx={ROUND_SX}>
         <ArrowBackIcon fontSize="small" />
       </DuncitIconButton>
       <Stack direction="row" spacing={1} sx={{
         alignItems: "center"
       }}>
         <DuncitButton
+          data-testid="club-follow"
           variant={following ? 'text' : 'contained'}
           aria-label={following ? 'Following' : 'Follow'}
           onClick={onToggleFollow}
@@ -79,6 +81,7 @@ export default function ClubHeroActions({
           {following ? 'Following' : 'Follow'}
         </DuncitButton>
         <DuncitIconButton
+          data-testid="club-hero-save"
           aria-label={saved ? 'Saved' : 'Save'}
           onClick={onToggleSave}
           disabled={saveLoading}
@@ -86,7 +89,7 @@ export default function ClubHeroActions({
         >
           {saveLoading ? <CircularProgress size={18} color="inherit" /> : savedIcon}
         </DuncitIconButton>
-        <DuncitIconButton aria-label={t('mweb.common.share')} onClick={onShare} sx={ROUND_SX}>
+        <DuncitIconButton data-testid="hb-share" aria-label={t('mweb.common.share')} onClick={onShare} sx={ROUND_SX}>
           <ShareIcon fontSize="small" />
         </DuncitIconButton>
       </Stack>

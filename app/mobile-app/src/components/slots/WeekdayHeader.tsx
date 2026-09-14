@@ -9,9 +9,15 @@ interface Props {
  * slot picker and the availability calendar, so the two cannot drift. */
 export function WeekdayHeader({ initials }: Readonly<Props>) {
   return (
-    <XStack>
+    <XStack testID="weekday-header">
       {initials.map((weekday) => (
-        <YStack key={weekday.id} flex={1} alignItems="center" paddingVertical={4}>
+        <YStack
+          key={weekday.id}
+          testID={`weekday-header-${weekday.id}`}
+          flex={1}
+          alignItems="center"
+          paddingVertical={4}
+        >
           <Text fontSize={11} fontWeight="600" color="$muted">
             {weekday.label}
           </Text>

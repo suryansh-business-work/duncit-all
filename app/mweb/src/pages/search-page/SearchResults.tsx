@@ -96,12 +96,13 @@ export default function SearchResults({
   };
 
   return (
-    <Stack spacing={2.5}>
+    <Stack data-testid="search-results" spacing={2.5}>
       <Stack direction="row" spacing={1}>
-        <DuncitButton startIcon={<SortIcon />} onClick={() => setSortOpen(true)} sx={PILL_SX}>
+        <DuncitButton data-testid="search-results-sort" startIcon={<SortIcon />} onClick={() => setSortOpen(true)} sx={PILL_SX}>
           Sort
         </DuncitButton>
         <DuncitButton
+          data-testid="search-results-filter"
           variant={categoryId ? 'contained' : 'text'}
           startIcon={<FilterIcon />}
           onClick={() => setFilterOpen(true)}
@@ -112,7 +113,7 @@ export default function SearchResults({
       </Stack>
 
       {loading && isEmpty ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <Box data-testid="search-results-loading" sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress />
         </Box>
       ) : null}

@@ -23,6 +23,7 @@ export default function WalletPage() {
   if (loading && !data) {
     return (
       <Stack
+        data-testid="wallet-loading"
         sx={{
           alignItems: "center",
           py: 8
@@ -45,10 +46,10 @@ export default function WalletPage() {
   const minNotice = t(minNoticeKey, { vars: { amount: formatMoney(minAmount, { symbol: currency }) } });
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%', py: 0.5 }}>
+    <Stack data-testid="wallet-page" spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%', py: 0.5 }}>
       <PageHeader title={t('mweb.common.wallet')} />
 
-      {error && <Alert severity="error">{error.message}</Alert>}
+      {error && <Alert severity="error" data-testid="wallet-page-error">{error.message}</Alert>}
 
       {/* The balance hero: muted label, the big number, the payout cycle and
           the green Withdraw pill. */}
@@ -56,7 +57,7 @@ export default function WalletPage() {
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {t('mweb.wallet.availableBalance')}
         </Typography>
-        <Typography sx={{ fontSize: '2rem', fontWeight: 700, lineHeight: 1.2, mt: 0.5 }}>
+        <Typography sx={{ fontSize: '2rem', fontWeight: 700, lineHeight: 1.2, mt: 0.5 }} data-testid="wallet-balance">
           {currency}
           {balance.toFixed(2)}
         </Typography>
@@ -67,6 +68,7 @@ export default function WalletPage() {
           <Typography
             variant="caption"
             color={eligible ? 'text.secondary' : 'warning.main'}
+            data-testid="wallet-minimum-notice"
             sx={{
               display: "block",
               mt: 0.5,
@@ -81,18 +83,19 @@ export default function WalletPage() {
           disabled={!eligible || balance <= 0}
           onClick={() => setOpen(true)}
           sx={{ mt: 2 }}
+          data-testid="wallet-withdraw"
         >
           {t('mweb.wallet.withdraw')}
         </DuncitButton>
       </Card>
 
-      <WalletSection title={t('mweb.wallet.withdrawals')} emptyText={t('mweb.wallet.noWithdrawalsYet')}>
+      <WalletSection title={t('mweb.wallet.withdrawals')} emptyText={t('mweb.wallet.noWithdrawalsYet')} testId="wallet-withdrawals">
         {withdrawals.map((w) => (
           <WithdrawalRow key={w.id} w={w} currency={currency} />
         ))}
       </WalletSection>
 
-      <WalletSection title={t('mweb.wallet.transactions')} emptyText={t('mweb.wallet.yourPodPayoutsWillShowUp')}>
+      <WalletSection title={t('mweb.wallet.transactions')} emptyText={t('mweb.wallet.yourPodPayoutsWillShowUp')} testId="wallet-transactions">
         {transactions.map((txn) => (
           <TxnRow key={txn.id} txn={txn} currency={currency} />
         ))}

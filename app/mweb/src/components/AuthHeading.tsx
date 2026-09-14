@@ -23,7 +23,7 @@ interface Props {
  */
 export default function AuthHeading({ title, accent, subtitle }: Readonly<Props>) {
   return (
-    <Stack spacing={1} sx={{ alignItems: 'center' }}>
+    <Stack data-testid="auth-heading" spacing={1} sx={{ alignItems: 'center' }}>
       <AuthLogo />
       {/* TwoToneHeading has no size prop; the hero size is set here, once. */}
       <Box sx={{ width: '100%', '& .MuiTypography-root': { fontSize: '1.75rem' } }}>
@@ -31,6 +31,7 @@ export default function AuthHeading({ title, accent, subtitle }: Readonly<Props>
       </Box>
       {subtitle && (
         <Typography
+          data-testid="auth-heading-subtitle"
           variant="body2"
           sx={{ textAlign: 'center', color: 'text.secondary', maxWidth: 320 }}
         >

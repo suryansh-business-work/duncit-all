@@ -20,16 +20,29 @@ interface Props {
 export default function RejoinConfirmDialog({ open, busy, onClose, onConfirm }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Dialog open={open} onClose={busy ? undefined : onClose} maxWidth="xs" fullWidth>
+    <Dialog
+      open={open}
+      onClose={busy ? undefined : onClose}
+      maxWidth="xs"
+      fullWidth
+      data-testid="rejoin-dialog"
+    >
       <DialogTitle sx={{ fontWeight: 700 }}>{t('mweb.podHistory.rejoinTitle')}</DialogTitle>
       <DialogContent>
         <DialogContentText>{t('mweb.podHistory.rejoinBody')}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy} data-testid="rejoin-cancel">
           {t('mweb.podHistory.cancel')}
         </DuncitButton>
-        <DuncitButton onClick={onConfirm} disabled={busy} variant="contained" color="success" startIcon={<ReplayIcon />}>
+        <DuncitButton
+          onClick={onConfirm}
+          disabled={busy}
+          variant="contained"
+          color="success"
+          startIcon={<ReplayIcon />}
+          data-testid="rejoin-confirm"
+        >
           {busy ? t('mweb.podHistory.rejoining') : t('mweb.podHistory.rejoinFree')}
         </DuncitButton>
       </DialogActions>

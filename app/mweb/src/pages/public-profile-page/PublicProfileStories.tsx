@@ -39,10 +39,11 @@ export default function PublicProfileStories({ name, photo, stories }: Readonly<
 
   return (
     <>
-      <Stack direction="row" spacing={1.25} sx={{ overflowX: 'auto', pb: 0.5 }}>
+      <Stack data-testid="public-profile-stories" direction="row" spacing={1.25} sx={{ overflowX: 'auto', pb: 0.5 }}>
         {slides.map((slide, index) => (
           <Avatar
             key={slide.id}
+            data-testid={`public-profile-stories-item-${slide.id}`}
             src={slide.mediaUrl ?? undefined}
             role="button"
             aria-label={`Open status ${index + 1}`}

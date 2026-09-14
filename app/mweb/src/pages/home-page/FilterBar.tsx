@@ -48,11 +48,12 @@ export default function FilterBar({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Stack spacing={1.25}>
+    <Stack data-testid="filter-bar" spacing={1.25}>
       {/* ── Category row ── */}
       {categoryChips.length > 0 && (
         <Box sx={scrollRow}>
           <Chip
+            data-testid="filter-cat-all"
             label={t('mweb.common.all')}
             size="small"
             color={categoryId ? 'default' : 'primary'}
@@ -63,9 +64,11 @@ export default function FilterBar({
           {categoryChips.map((c: any) => {
             const selected = categoryId === c.id;
             const isSub = c.level === 'SUB';
+            const catTestId = `filter-cat-${c.id}`;
             return (
               <Chip
                 key={c.id}
+                data-testid={catTestId}
                 label={isSub ? `# ${c.name}` : c.name}
                 size="small"
                 color={selected ? 'primary' : 'default'}
@@ -98,6 +101,7 @@ export default function FilterBar({
           ).map(([val, lbl]) => (
             <Chip
               key={val}
+              data-testid={`filter-price-${val}`}
               label={lbl}
               size="small"
               color={priceFilter === val ? 'primary' : 'default'}
@@ -126,6 +130,7 @@ export default function FilterBar({
           ).map(([val, lbl]) => (
             <Chip
               key={val}
+              data-testid={`filter-date-${val}`}
               label={lbl}
               size="small"
               color={dateFilter === val ? 'primary' : 'default'}
@@ -143,6 +148,7 @@ export default function FilterBar({
           <TextField
             select
             size="small"
+            data-testid="filter-sort"
             label={t('mweb.home.sortBy')}
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortBy)}
@@ -154,10 +160,10 @@ export default function FilterBar({
               }
             }}
           >
-            <MenuItem value="DATE_ASC">{t('mweb.home.dateEarliestFirst')}</MenuItem>
-            <MenuItem value="DATE_DESC">{t('mweb.home.dateLatestFirst')}</MenuItem>
-            <MenuItem value="PRICE_ASC">{t('mweb.home.priceLowToHigh')}</MenuItem>
-            <MenuItem value="PRICE_DESC">{t('mweb.home.priceHighToLow')}</MenuItem>
+            <MenuItem data-testid="filter-sort-DATE_ASC" value="DATE_ASC">{t('mweb.home.dateEarliestFirst')}</MenuItem>
+            <MenuItem data-testid="filter-sort-DATE_DESC" value="DATE_DESC">{t('mweb.home.dateLatestFirst')}</MenuItem>
+            <MenuItem data-testid="filter-sort-PRICE_ASC" value="PRICE_ASC">{t('mweb.home.priceLowToHigh')}</MenuItem>
+            <MenuItem data-testid="filter-sort-PRICE_DESC" value="PRICE_DESC">{t('mweb.home.priceHighToLow')}</MenuItem>
           </TextField>
         </Box>
       )}

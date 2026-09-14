@@ -30,13 +30,14 @@ export default function ChatMessageList({
   let body: React.ReactNode;
   if (loading) {
     body = (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
+      <Box data-testid="support-chat-loading" sx={{ p: 4, textAlign: 'center' }}>
         <CircularProgress size={22} />
       </Box>
     );
   } else if (messages.length === 0) {
     body = (
       <Typography
+        data-testid="support-chat-empty"
         variant="body2"
         sx={{
           color: "text.secondary",
@@ -57,7 +58,7 @@ export default function ChatMessageList({
                   alignItems: "center",
                   my: 0.5
                 }}>
-                <Typography variant="caption" sx={{ bgcolor: 'action.hover', color: 'text.secondary', px: 1.25, py: 0.25, borderRadius: 99, fontWeight: 600 }}>
+                <Typography data-testid={`day-${m.id}`} variant="caption" sx={{ bgcolor: 'action.hover', color: 'text.secondary', px: 1.25, py: 0.25, borderRadius: 99, fontWeight: 600 }}>
                   {dayLabel(m.created_at, timeZone)}
                 </Typography>
               </Stack>
@@ -72,6 +73,7 @@ export default function ChatMessageList({
         ))}
         {typingText && (
           <Typography
+            data-testid="support-typing"
             variant="caption"
             sx={{
               color: "text.secondary",
@@ -86,7 +88,7 @@ export default function ChatMessageList({
   }
 
   return (
-    <Box ref={scrollRef} onScroll={onScroll} sx={{ flex: 1, overflowY: 'auto', px: 0.5 }}>
+    <Box data-testid="support-chat-messages" ref={scrollRef} onScroll={onScroll} sx={{ flex: 1, overflowY: 'auto', px: 0.5 }}>
       {body}
     </Box>
   );

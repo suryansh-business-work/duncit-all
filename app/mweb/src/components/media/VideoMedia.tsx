@@ -48,9 +48,10 @@ export default function VideoMedia({
   };
 
   return (
-    <Box sx={{ position: 'relative', width: '100%', bgcolor: 'black' }}>
+    <Box data-testid="video-media" sx={{ position: 'relative', width: '100%', bgcolor: 'black' }}>
       <Box
         component="video"
+        data-testid="video-media-video"
         ref={ref}
         src={videoSourceUrl(src)}
         poster={poster}
@@ -79,6 +80,7 @@ export default function VideoMedia({
           }}
         >
           <DuncitIconButton
+            data-testid="video-media-play-toggle"
             size="small"
             onClick={togglePlay}
             aria-label={playing ? 'Pause video' : 'Play video'}
@@ -91,6 +93,7 @@ export default function VideoMedia({
             {playing ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
           </DuncitIconButton>
           <DuncitIconButton
+            data-testid="video-media-mute-toggle"
             size="small"
             onClick={toggleMute}
             aria-label={muted ? 'Unmute video' : 'Mute video'}

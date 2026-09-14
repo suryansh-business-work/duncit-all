@@ -4,6 +4,7 @@ import { Text, XStack } from 'tamagui';
 export function SlideCounter({ index, total }: Readonly<{ index: number; total: number }>) {
   return (
     <XStack
+      testID="slide-counter"
       position="absolute"
       right={12}
       bottom={12}

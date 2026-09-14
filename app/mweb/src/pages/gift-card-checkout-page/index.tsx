@@ -16,14 +16,14 @@ import GiftCardSuccessCard from './GiftCardSuccessCard';
 import { useGiftCardPayment } from './useGiftCardPayment';
 
 /** A summary row: label muted, value ink; the total row is 700 and ink. */
-function SummaryRow({ label, value, bold = false }: Readonly<{ label: string; value: string; bold?: boolean }>) {
+function SummaryRow({ label, value, bold = false, testId }: Readonly<{ label: string; value: string; bold?: boolean; testId: string }>) {
   const size = bold ? '1rem' : '0.875rem';
   return (
-    <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+    <Stack data-testid={testId} direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
       <Typography sx={{ fontSize: size, fontWeight: bold ? 700 : 500, color: bold ? 'text.primary' : 'text.secondary' }}>
         {label}
       </Typography>
-      <Typography noWrap sx={{ fontSize: size, fontWeight: bold ? 700 : 600, textAlign: 'right', minWidth: 0 }}>
+      <Typography data-testid={`${testId}-value`} noWrap sx={{ fontSize: size, fontWeight: bold ? 700 : 600, textAlign: 'right', minWidth: 0 }}>
         {value}
       </Typography>
     </Stack>
@@ -70,7 +70,7 @@ export default function GiftCardCheckoutPage() {
   const contactPhone = [me?.phone_extension, me?.phone_number].filter(Boolean).join(' ').trim();
 
   return (
-    <Box sx={{ maxWidth: 560, mx: 'auto', py: 0.5 }}>
+    <Box data-testid="gift-card-checkout-screen" sx={{ maxWidth: 560, mx: 'auto', py: 0.5 }}>
       <Stack spacing={2}>
         <PageHeader
           title={t('mweb.giftCards.checkoutTitle')}
@@ -89,11 +89,11 @@ export default function GiftCardCheckoutPage() {
         />
         <Card sx={{ p: 2 }}>
           <Stack spacing={1.25}>
-            <SummaryRow label={t('mweb.giftCards.checkoutTheme')} value={themeValue} />
-            <SummaryRow label={t('mweb.giftCards.checkoutAmount')} value={amountLabel} />
-            <SummaryRow label={t('mweb.giftCards.checkoutRecipient')} value={recipientValue} />
+            <SummaryRow testId="gift-card-checkout-theme" label={t('mweb.giftCards.checkoutTheme')} value={themeValue} />
+            <SummaryRow testId="gift-card-checkout-amount" label={t('mweb.giftCards.checkoutAmount')} value={amountLabel} />
+            <SummaryRow testId="gift-card-checkout-recipient" label={t('mweb.giftCards.checkoutRecipient')} value={recipientValue} />
             <Divider />
-            <SummaryRow bold label={t('mweb.giftCards.checkoutTotal')} value={amountLabel} />
+            <SummaryRow testId="gift-card-checkout-total" bold label={t('mweb.giftCards.checkoutTotal')} value={amountLabel} />
           </Stack>
           <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 1.5 }}>
             {t('mweb.giftCards.checkoutNote')}
@@ -129,12 +129,13 @@ export default function GiftCardCheckoutPage() {
           )}
         </Card>
         {payment.error && (
-          <Alert severity="error" onClose={() => payment.setError(null)}>
+          <Alert data-testid="gift-card-checkout-error" severity="error" onClose={() => payment.setError(null)}>
             {payment.error}
           </Alert>
         )}
         <CheckoutRequirementsCard missing={eligibility.missing} />
         <DuncitButton
+          data-testid="gift-card-checkout-pay"
           variant="contained"
           size="large"
           fullWidth

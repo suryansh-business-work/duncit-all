@@ -13,8 +13,9 @@ export default function PublicProfileOwnerActions() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   return (
-    <Stack direction="row" spacing={1}>
+    <Stack data-testid="public-profile-owner-actions" direction="row" spacing={1}>
       <DuncitButton
+        data-testid="public-profile-owner-actions-edit"
         color="inherit"
         startIcon={<EditIcon />}
         onClick={() => navigate('/account')}
@@ -24,6 +25,7 @@ export default function PublicProfileOwnerActions() {
         Edit
       </DuncitButton>
       <DuncitButton
+        data-testid="public-profile-owner-actions-settings"
         color="inherit"
         startIcon={<SettingsIcon />}
         onClick={() => navigate('/account')}
@@ -33,6 +35,7 @@ export default function PublicProfileOwnerActions() {
         Settings
       </DuncitButton>
       <DuncitButton
+        data-testid="public-profile-owner-actions-new"
         variant="contained"
         startIcon={<AddIcon />}
         onClick={() => navigate('/pod-ideas')}

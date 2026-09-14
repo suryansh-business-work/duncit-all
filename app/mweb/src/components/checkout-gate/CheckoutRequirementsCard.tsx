@@ -18,7 +18,7 @@ export default function CheckoutRequirementsCard({
   if (missing.length === 0) return null;
 
   return (
-    <Alert severity="warning" sx={{ borderRadius: '16px', mb: 2 }}>
+    <Alert data-testid="checkout-requirements" severity="warning" sx={{ borderRadius: '16px', mb: 2 }}>
       <AlertTitle sx={{ fontWeight: 700 }}>{t('mweb.checkout.needTitle')}</AlertTitle>
       <Typography variant="body2">{t('mweb.checkout.needIntro')}</Typography>
       <Box component="ul" sx={{ mt: 0.5, mb: 1, pl: 2.5 }}>
@@ -29,7 +29,13 @@ export default function CheckoutRequirementsCard({
         ))}
       </Box>
       <Stack direction="row">
-        <DuncitButton size="small" variant="outlined" color="inherit" onClick={() => navigate('/profile')}>
+        <DuncitButton
+          data-testid="checkout-requirements-action"
+          size="small"
+          variant="outlined"
+          color="inherit"
+          onClick={() => navigate('/profile')}
+        >
           {t('mweb.checkout.needAction')}
         </DuncitButton>
       </Stack>

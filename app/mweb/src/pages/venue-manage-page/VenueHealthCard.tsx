@@ -24,7 +24,7 @@ export default function VenueHealthCard({ health, venueId }: Readonly<Props>) {
   const deltaLabel = health.delta_sum > 0 ? `+${health.delta_sum}` : String(health.delta_sum);
 
   return (
-    <Card>
+    <Card data-testid="venue-health-card">
       <CardContent sx={{ p: 3, '&:last-child': { pb: 3 } }}>
         <Stack spacing={1.5} sx={{ alignItems: 'center', textAlign: 'center' }}>
           <HealthMeter
@@ -35,7 +35,7 @@ export default function VenueHealthCard({ health, venueId }: Readonly<Props>) {
             onClick={() => navigate(`/venues/${venueId}/health`)}
             caption={t('mweb.common.tapForDetails')}
           />
-          <Typography sx={{ fontSize: '1rem', fontWeight: 600 }}>{bandHeadline(health.band)}</Typography>
+          <Typography sx={{ fontSize: '1rem', fontWeight: 600 }} data-testid="venue-health-card-headline">{bandHeadline(health.band)}</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             Base activity: {health.base_score}
             {health.delta_sum !== 0 && <> · Admin adjustment: {deltaLabel}</>}

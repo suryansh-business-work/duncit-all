@@ -39,7 +39,7 @@ export function ContactsHeader({
   children,
 }: Readonly<Props>) {
   return (
-    <YStack gap={16} paddingTop={16} paddingBottom={12}>
+    <YStack testID="contacts-header" gap={16} paddingTop={16} paddingBottom={12}>
       <ContactsAllowCard
         status={status}
         busy={sync.busy}

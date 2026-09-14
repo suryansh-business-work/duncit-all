@@ -25,7 +25,7 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
     : { alt: club.club_name };
 
   return (
-    <Card onClick={onOpen} sx={{ cursor: 'pointer', p: 1.5 }}>
+    <Card data-testid={`club-card-${club.id}`} onClick={onOpen} sx={{ cursor: 'pointer', p: 1.5 }}>
       {cover?.url ? (
         <CardMedia
           component={coverIsVideo ? 'video' : 'img'}
@@ -63,6 +63,7 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
         )}
       </Stack>
       <DuncitButton
+        data-testid={`club-card-${club.id}-open`}
         fullWidth
         variant="contained"
         endIcon={<ArrowForwardRoundedIcon />}

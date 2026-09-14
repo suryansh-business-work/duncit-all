@@ -32,7 +32,7 @@ export default function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind 
   const scheduled = meeting.status === 'SCHEDULED' && !!(meeting.scheduled_at || meeting.meeting_link);
 
   return (
-    <Card>
+    <Card data-testid={`meeting-card-${kind}`}>
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack
           direction="row"
@@ -54,6 +54,7 @@ export default function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind 
         </Stack>
         {meeting.request_no && (
           <Typography
+            data-testid={`meeting-request-no-${kind}`}
             variant="caption"
             sx={{
               color: "text.secondary",
@@ -74,7 +75,13 @@ export default function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind 
               </Typography>
             )}
             {meeting.meeting_link && (
-              <DuncitButton variant="contained" href={meeting.meeting_link} target="_blank" rel="noopener">
+              <DuncitButton
+                data-testid={`meeting-join-${kind}`}
+                variant="contained"
+                href={meeting.meeting_link}
+                target="_blank"
+                rel="noopener"
+              >
                 Join meeting
               </DuncitButton>
             )}

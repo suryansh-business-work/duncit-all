@@ -15,6 +15,7 @@ interface Props {
   /** Trailing control inside the pill (a clear button). */
   endAdornment?: ReactNode;
   enterKeyHint?: 'search';
+  testId?: string;
 }
 
 /**
@@ -32,9 +33,11 @@ export default function SearchPillField({
   onFocus,
   endAdornment,
   enterKeyHint,
+  testId,
 }: Readonly<Props>) {
   return (
     <TextField
+      data-testid={testId}
       fullWidth
       size="small"
       autoFocus={autoFocus}
@@ -62,7 +65,11 @@ export default function SearchPillField({
           ),
           endAdornment: endAdornment ? <InputAdornment position="end">{endAdornment}</InputAdornment> : null,
         },
-        htmlInput: { 'aria-label': ariaLabel, enterKeyHint },
+        htmlInput: {
+          'aria-label': ariaLabel,
+          enterKeyHint,
+          'data-testid': testId ? `${testId}-input` : undefined,
+        },
       }}
     />
   );

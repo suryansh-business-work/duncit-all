@@ -49,6 +49,7 @@ export default function ClubRecommendationRow({
 
   return (
     <Card
+      data-testid="club-recommendation"
       onClick={() => navigate(clubUrl(club.club_id ?? club.id))}
       sx={{ p: 1.5, cursor: 'pointer' }}
     >
@@ -72,6 +73,7 @@ export default function ClubRecommendationRow({
           )}
         </Box>
         <DuncitButton
+          data-testid="club-recommendation-join"
           variant="contained"
           size="small"
           disabled={joined || loading}

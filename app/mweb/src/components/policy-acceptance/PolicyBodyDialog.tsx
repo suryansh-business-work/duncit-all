@@ -27,13 +27,19 @@ export default function PolicyBodyDialog({ policy, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
 
   return (
-    <Dialog open={!!policy} onClose={onClose} fullWidth maxWidth="sm" scroll="paper">
+    <Dialog data-testid="policy-body-dialog" open={!!policy} onClose={onClose} fullWidth maxWidth="sm" scroll="paper">
       <DialogTitle sx={{ fontSize: 17, fontWeight: 600 }}>{policy?.title}</DialogTitle>
       <DialogContent dividers>
-        <Box sx={RICH_TEXT_BODY_SX} dangerouslySetInnerHTML={{ __html: policy?.content ?? '' }} />
+        <Box
+          data-testid="policy-acceptance-reader"
+          sx={RICH_TEXT_BODY_SX}
+          dangerouslySetInnerHTML={{ __html: policy?.content ?? '' }}
+        />
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose}>{t('policyAcceptance.close')}</DuncitButton>
+        <DuncitButton data-testid="policy-body-close" onClick={onClose}>
+          {t('policyAcceptance.close')}
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

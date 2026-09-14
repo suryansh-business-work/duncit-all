@@ -45,6 +45,7 @@ export function AnswerButtons({
   return (
     <>
       <DuncitButton
+        data-testid="follow-request-accept"
         size="small"
         variant="contained"
         disabled={busy}
@@ -55,6 +56,7 @@ export function AnswerButtons({
         {acceptLabel}
       </DuncitButton>
       <DuncitButton
+        data-testid="follow-request-reject"
         size="small"
         variant="text"
         disabled={busy}
@@ -92,6 +94,7 @@ export function FollowBackButton({
 }: Readonly<FollowBackButtonProps>) {
   return (
     <DuncitButton
+      data-testid="follow-request-follow-back"
       size="small"
       variant="text"
       disabled={busy || pending}

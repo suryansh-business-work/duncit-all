@@ -80,6 +80,7 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
   if (loading && !data)
     return (
       <Stack
+        data-testid="chats-loading"
         sx={{
           alignItems: "center",
           p: 6
@@ -87,13 +88,14 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
         <CircularProgress />
       </Stack>
     );
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  if (error) return <Alert severity="error" data-testid="chats-error">{error.message}</Alert>;
 
   return (
     <SupportShell title={t('mweb.nav.chats')}>
-      <Stack spacing={2}>
+      <Stack spacing={2} data-testid="chats-screen">
         <TextField
           size="small"
+          data-testid="chats-search"
           placeholder={t('mweb.chatsPage.searchChatsByPodName')}
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -108,7 +110,8 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
                   <SearchIcon fontSize="small" sx={{ color: 'text.secondary' }} />
                 </InputAdornment>
               ),
-            }
+            },
+            htmlInput: { 'data-testid': 'chats-search-input' },
           }}
         />
         <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
@@ -117,6 +120,7 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
             return (
               <Chip
                 key={value}
+                data-testid={`chat-filter-${value}`}
                 clickable
                 label={t(labelKey)}
                 color={selected ? 'primary' : 'default'}
@@ -128,7 +132,7 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
         </Stack>
         {filter === 'ALL' && rooms.length > 0 && <ActivePodsStrip rooms={rooms} />}
         {visibleRooms.length === 0 ? (
-          <Alert severity="info">{emptyMessage}</Alert>
+          <Alert severity="info" data-testid="chats-empty">{emptyMessage}</Alert>
         ) : (
           <ChatRoomList rooms={visibleRooms} />
         )}

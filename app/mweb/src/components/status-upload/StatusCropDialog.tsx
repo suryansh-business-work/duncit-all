@@ -53,7 +53,7 @@ export default function StatusCropDialog({ file, onCancel, onConfirm }: Readonly
   );
 
   return (
-    <Dialog open={!!file} onClose={onCancel} fullWidth maxWidth="sm">
+    <Dialog data-testid="status-crop-dialog" open={!!file} onClose={onCancel} fullWidth maxWidth="sm">
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
         Crop status image
         <AiMonitoringChip />
@@ -72,8 +72,11 @@ export default function StatusCropDialog({ file, onCancel, onConfirm }: Readonly
         {file && <FileDetails file={file} dims={dims} />}
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onCancel}>{t('mweb.common.cancel')}</DuncitButton>
+        <DuncitButton data-testid="status-crop-cancel" onClick={onCancel}>
+          {t('mweb.common.cancel')}
+        </DuncitButton>
         <DuncitButton
+          data-testid="status-crop-confirm"
           variant="contained"
           onClick={() => onConfirm(croppable ? cropRect : null, croppable ? selectedKey : null)}
         >

@@ -19,7 +19,7 @@ export default function ClubStudioPage() {
   const { t } = useTranslation();
 
   return (
-    <Stack spacing={3} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+    <Stack data-testid="club-studio-page" spacing={3} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <StudioPageHeader icon={<GroupsRoundedIcon fontSize="small" />} title={t('mweb.studioPods.clubStudio')} />
 
       <ClubQuickActions />

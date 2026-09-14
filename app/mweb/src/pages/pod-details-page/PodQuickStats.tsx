@@ -10,9 +10,16 @@ interface Props {
 /** A spot count this low is worth a second look before booking. */
 const FEW_SPOTS = 3;
 
-function Stat({ label, value, warn }: Readonly<{ label: string; value: number; warn?: boolean }>) {
+interface StatProps {
+  label: string;
+  value: number;
+  warn?: boolean;
+  testId: string;
+}
+
+function Stat({ label, value, warn, testId }: Readonly<StatProps>) {
   return (
-    <Box sx={{ flex: 1, minWidth: 0 }}>
+    <Box data-testid={testId} sx={{ flex: 1, minWidth: 0 }}>
       <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
         {label}
       </Typography>
@@ -39,11 +46,17 @@ export default function PodQuickStats({ spotsTaken, spotsTotal }: Readonly<Props
       direction="row"
       divider={<Divider orientation="vertical" flexItem />}
       spacing={2}
+      data-testid="pod-quick-stats"
       sx={{ ...SURFACE_SX, px: 2, py: 1.5 }}
     >
-      <Stat label={t('mweb.podDetails.peopleIn')} value={spotsTaken} />
+      <Stat label={t('mweb.podDetails.peopleIn')} value={spotsTaken} testId="pod-info-attendees-stat" />
       <Box data-tour="pod-spots" sx={{ flex: 1, minWidth: 0, display: 'flex' }}>
-        <Stat label={t('mweb.podDetails.spotsLeft')} value={remaining} warn={few} />
+        <Stat
+          label={t('mweb.podDetails.spotsLeft')}
+          value={remaining}
+          warn={few}
+          testId="pod-info-spots-left-stat"
+        />
       </Box>
     </Stack>
   );

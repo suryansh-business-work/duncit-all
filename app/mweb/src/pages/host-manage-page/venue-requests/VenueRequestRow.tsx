@@ -60,11 +60,12 @@ export default function VenueRequestRow({
   const venueName = pod.place_label || pod.zone_name || '—';
 
   return (
-    <Stack spacing={1} sx={{ px: 2, py: 1.75 }}>
+    <Stack data-testid={`venue-request-row-${pod.id}`} spacing={1} sx={{ px: 2, py: 1.75 }}>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
         <Box
           component={RouterLink}
           to={podPath}
+          data-testid={`venue-request-open-${pod.id}`}
           sx={{
             flex: 1,
             minWidth: 0,
@@ -97,12 +98,18 @@ export default function VenueRequestRow({
             />
             {approvalChip && (
               <Box sx={{ pt: 0.5 }}>
-                <Chip label={approvalChip.label} color={approvalChip.color} sx={{ height: 24 }} />
+                <Chip
+                  data-testid={`venue-request-approval-${pod.id}`}
+                  label={approvalChip.label}
+                  color={approvalChip.color}
+                  sx={{ height: 24 }}
+                />
               </Box>
             )}
           </Stack>
         </Box>
         <Chip
+          data-testid={`venue-request-type-${pod.id}`}
           label={free ? t('mweb.podType.free') : t('mweb.podType.paid')}
           color={free ? 'success' : 'primary'}
           variant="outlined"
@@ -119,7 +126,12 @@ export default function VenueRequestRow({
       </Stack>
 
       {rejected && (
-        <Alert severity="warning" icon={<InfoOutlinedIcon fontSize="small" />} sx={{ py: 0.25 }}>
+        <Alert
+          data-testid={`venue-request-note-${pod.id}`}
+          severity="warning"
+          icon={<InfoOutlinedIcon fontSize="small" />}
+          sx={{ py: 0.25 }}
+        >
           {VENUE_REJECTED_NOTE}
         </Alert>
       )}

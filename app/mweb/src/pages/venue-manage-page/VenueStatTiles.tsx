@@ -25,7 +25,7 @@ export default function VenueStatTiles({ listed, capacity, status }: Readonly<Ve
   ];
 
   return (
-    <Stack direction="row" spacing={1.25}>
+    <Stack direction="row" spacing={1.25} data-testid="venue-stat-tiles">
       {tiles.map((item) => (
         <StatCard
           key={item.key}

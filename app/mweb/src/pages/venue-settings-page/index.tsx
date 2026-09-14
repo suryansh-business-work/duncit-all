@@ -69,7 +69,7 @@ export default function VenueSettingsPage() {
       error={error}
       noVenuesMessage={t('mweb.venueSettingsPage.noVenues')}
     >
-      <Card sx={{ overflow: 'visible' }}>
+      <Card sx={{ overflow: 'visible' }} data-testid="venue-settings-page">
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Stack spacing={1.5}>
             <SectionHeader title={t('venueSettings.cancellationTitle')} />

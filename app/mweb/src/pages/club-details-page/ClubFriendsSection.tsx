@@ -46,7 +46,7 @@ export default function ClubFriendsSection({ friendIds }: Readonly<Props>) {
   if (friends.length === 0) return null;
 
   return (
-    <Box sx={{ ...SURFACE_SX, p: 2 }}>
+    <Box data-testid="club-friends" sx={{ ...SURFACE_SX, p: 2 }}>
       <SectionHeader title="Friends Here" actionLabel="View all" onAction={() => setOpen(true)} />
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 1.5 }}>
         <AvatarGroup max={5} sx={{ '& .MuiAvatar-root': { width: 36, height: 36 } }}>
@@ -63,7 +63,7 @@ export default function ClubFriendsSection({ friendIds }: Readonly<Props>) {
         </Typography>
       </Box>
 
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>
+      <Dialog data-testid="club-friends-dialog" open={open} onClose={() => setOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <PeopleIcon />
           Friends in this club
@@ -71,7 +71,7 @@ export default function ClubFriendsSection({ friendIds }: Readonly<Props>) {
         <DialogContent dividers sx={{ p: 0 }}>
           <List dense>
             {friends.map((f) => (
-              <ListItem key={f.user_id}>
+              <ListItem key={f.user_id} data-testid={`club-friend-${f.user_id}`}>
                 <ListItemAvatar>
                   <Avatar src={f.profile_photo}>{f.full_name?.[0]}</Avatar>
                 </ListItemAvatar>

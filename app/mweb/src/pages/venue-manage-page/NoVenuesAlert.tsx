@@ -11,7 +11,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 export default function NoVenuesAlert({ message }: Readonly<{ message: string }>) {
   const { t } = useTranslation();
   return (
-    <Alert severity="info">
+    <Alert severity="info" data-testid="no-venues-alert">
       {message}
       <Box sx={{ mt: 1.5 }}>
         <DuncitButton
@@ -19,6 +19,7 @@ export default function NoVenuesAlert({ message }: Readonly<{ message: string }>
           to="/register-venue"
           variant="contained"
           size="small"
+          data-testid="no-venues-alert-cta"
         >
           {t('mweb.venueManagePage.newVenue')}
         </DuncitButton>

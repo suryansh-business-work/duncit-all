@@ -131,8 +131,8 @@ export default function PodDetailsPage() {
   // found.": the page reads as a deleted pod and hides the only thing that
   // would explain it. Report whichever query actually failed.
   const failure = slugResolution.error ?? error;
-  if (failure) return <Alert severity="error">{failure.message}</Alert>;
-  if (!pod) return <Alert severity="warning">{t('mweb.podDetails.notFound')}</Alert>;
+  if (failure) return <Alert severity="error" data-testid="pod-details-error">{failure.message}</Alert>;
+  if (!pod) return <Alert severity="warning" data-testid="pod-details-not-found">{t('mweb.podDetails.notFound')}</Alert>;
 
   const club = (data?.clusters ?? data?.clubs ?? []).find((c: any) => c.id === pod.club_id) ?? null;
   const clubCategoryCrumbs = categoryPath(
@@ -174,6 +174,7 @@ export default function PodDetailsPage() {
   return (
     <Stack
       spacing={2.5}
+      data-testid="pod-details-screen"
       sx={{
         pt: 0,
         // Kept on the page, unlike the other surfaces: the shell already
@@ -249,7 +250,7 @@ export default function PodDetailsPage() {
       {pod.pod_hashtag?.length > 0 && (
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
           {pod.pod_hashtag.map((t: string) => (
-            <Chip key={t} size="small" label={`#${t}`} />
+            <Chip key={t} size="small" data-testid={`pod-details-hashtag-${t}`} label={`#${t}`} />
           ))}
         </Stack>
       )}
@@ -258,6 +259,7 @@ export default function PodDetailsPage() {
         variant="text"
         size="small"
         startIcon={<ContactSupportIcon />}
+        data-testid="pod-details-contact-support"
         onClick={() =>
           navigate(
             `/support/tickets?category=BOOKING&podId=${pod.id}&podTitle=${encodeURIComponent(pod.pod_title)}&subject=${encodeURIComponent(supportSubject)}`
@@ -290,7 +292,7 @@ export default function PodDetailsPage() {
         }}
       />
       {actions.snack && (
-        <Alert severity="info" onClose={() => actions.setSnack(null)}>
+        <Alert severity="info" data-testid="pod-details-snack" onClose={() => actions.setSnack(null)}>
           {actions.snack}
         </Alert>
       )}

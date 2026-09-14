@@ -41,9 +41,10 @@ export default function AppPopupCard({
   const showHint = !showClose;
   return (
     <>
-      <Box sx={{ position: 'relative', lineHeight: 0 }}>
+      <Box data-testid="app-popup-card" sx={{ position: 'relative', lineHeight: 0 }}>
         <Box
           component="img"
+          data-testid="app-popup-image"
           src={imageUrl}
           alt=""
           onLoad={(event) =>
@@ -63,6 +64,7 @@ export default function AppPopupCard({
         />
         {showClose && (
           <DuncitRoundButton
+            data-testid="app-popup-close"
             aria-label={closeLabel}
             onClick={onClose}
             tone="overlay"
@@ -76,12 +78,12 @@ export default function AppPopupCard({
       {(showCta || showHint) && (
         <Stack spacing={1} sx={{ p: 2 }}>
           {showCta && (
-            <DuncitButton variant="contained" size="large" fullWidth onClick={onCta}>
+            <DuncitButton data-testid="app-popup-cta" variant="contained" size="large" fullWidth onClick={onCta}>
               {ctaLabel}
             </DuncitButton>
           )}
           {showHint && (
-            <Typography sx={{ fontSize: 13, color: 'text.secondary', textAlign: 'center' }}>
+            <Typography data-testid="app-popup-hint" sx={{ fontSize: 13, color: 'text.secondary', textAlign: 'center' }}>
               {closeHint}
             </Typography>
           )}

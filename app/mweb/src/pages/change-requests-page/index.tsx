@@ -26,7 +26,7 @@ export default function ChangeRequestsPage() {
   const { t: tBoard } = useChangeRequestTranslation();
 
   return (
-    <Stack spacing={2.5} sx={{ p: 2 }}>
+    <Stack spacing={2.5} sx={{ p: 2 }} data-testid="change-requests-screen">
       <PageBackHeader
         title={tBoard('changeRequest.sectionTitle')}
         backLabel={t('mweb.common.goBack')}

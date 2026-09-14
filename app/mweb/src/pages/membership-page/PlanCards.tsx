@@ -14,6 +14,7 @@ function PlanCard({ plan, ctaHint }: Readonly<{ plan: MembershipPlanData; ctaHin
   const accent = plan.accent_color || undefined;
   return (
     <Card
+      data-testid={`membership-plan-${plan.key}`}
       sx={{
         minWidth: 232,
         maxWidth: 232,
@@ -66,7 +67,12 @@ function PlanCard({ plan, ctaHint }: Readonly<{ plan: MembershipPlanData; ctaHin
           swallows pointer events, so the tooltip needs a wrapper to hang on. */}
       <Tooltip title={ctaHint}>
         <Box sx={{ mt: 1.25 }}>
-          <DuncitButton fullWidth variant="outlined" disabled>
+          <DuncitButton
+            fullWidth
+            variant="outlined"
+            disabled
+            data-testid={`membership-plan-cta-${plan.key}`}
+          >
             {plan.cta_label}
           </DuncitButton>
         </Box>

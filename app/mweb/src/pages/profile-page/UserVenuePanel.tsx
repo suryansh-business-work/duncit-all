@@ -36,17 +36,23 @@ export default function UserVenuePanel({ venueId = null }: Readonly<{ venueId?: 
   });
   const venue = data?.myVenue;
 
-  if (loading && !data) return <CircularProgress size={22} />;
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  if (loading && !data) return <CircularProgress data-testid="user-venue-panel-loading" size={22} />;
+  if (error) {
+    return (
+      <Alert data-testid="user-venue-panel-error" severity="error">
+        {error.message}
+      </Alert>
+    );
+  }
   if (!venue) {
     return (
-      <Stack spacing={1.5}>
+      <Stack data-testid="user-venue-panel-empty" spacing={1.5}>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
           You have not registered a venue yet.
         </Typography>
-        <DuncitButton component={RouterLink} to="/register-venue" variant="outlined" size="small">
+        <DuncitButton data-testid="user-venue-panel-start" component={RouterLink} to="/register-venue" variant="outlined" size="small">
           Register Venue
         </DuncitButton>
       </Stack>
@@ -58,7 +64,7 @@ export default function UserVenuePanel({ venueId = null }: Readonly<{ venueId?: 
   const labels = ['Details', 'Documents', 'Owner', 'Submit'];
 
   return (
-    <Stack spacing={1.4}>
+    <Stack data-testid="user-venue-panel" spacing={1.4}>
       <Stack direction="row" spacing={1.25} sx={{
         alignItems: "center"
       }}>
@@ -68,7 +74,7 @@ export default function UserVenuePanel({ venueId = null }: Readonly<{ venueId?: 
         <Typography sx={{ minWidth: 0, flex: 1, fontSize: 15, fontWeight: 600 }} noWrap>
           {venue.venue_name || 'Venue application'}
         </Typography>
-        <Chip size="small" label={venue.status} color={isApproved ? 'success' : 'warning'} />
+        <Chip data-testid="user-venue-panel-status" size="small" label={venue.status} color={isApproved ? 'success' : 'warning'} />
       </Stack>
       <Stack direction="row" spacing={0.75} sx={{
         alignItems: "center"
@@ -92,8 +98,18 @@ export default function UserVenuePanel({ venueId = null }: Readonly<{ venueId?: 
           {venue.approved_at ? `Approved ${formatDate(venue.approved_at)}` : `Submitted ${formatDate(venue.submitted_at)}`}
         </Typography>
       )}
-      {venue.reviewer_notes && <Alert severity="info">{venue.reviewer_notes}</Alert>}
-      <DuncitButton component={RouterLink} to="/register-venue" variant="contained" size="large">
+      {venue.reviewer_notes && (
+        <Alert data-testid="user-venue-panel-notes" severity="info">
+          {venue.reviewer_notes}
+        </Alert>
+      )}
+      <DuncitButton
+        data-testid="user-venue-panel-resume"
+        component={RouterLink}
+        to="/register-venue"
+        variant="contained"
+        size="large"
+      >
         {isApproved ? 'Update venue profile' : `Resume - step ${Math.min(completed + 1, 4)} of 4`}
       </DuncitButton>
     </Stack>

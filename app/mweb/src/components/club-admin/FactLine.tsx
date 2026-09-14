@@ -6,7 +6,7 @@ import { Box, Typography } from '@mui/material';
  */
 export default function FactLine({ value, label }: Readonly<{ value: string; label: string }>) {
   return (
-    <Typography variant="caption" sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}>
+    <Typography data-testid="fact-line" variant="caption" sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}>
       <Box component="span" sx={{ color: 'text.primary', fontWeight: 600 }}>
         {value}
       </Box>{' '}

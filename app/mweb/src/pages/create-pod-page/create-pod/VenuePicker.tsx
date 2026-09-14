@@ -25,16 +25,18 @@ export default function VenuePicker({ venues, selectedId, onSelect, required }: 
   const ring = `inset 0 0 0 2px ${theme.palette.primary.main}`;
   return (
     <Box>
-      <Typography variant="subtitle2" component="div">
+      <Typography data-testid="create-pod-venue" variant="subtitle2" component="div">
         {requiredLabel(t('mweb.createPod.selectVenue'), required)}
       </Typography>
       <Stack direction="row" sx={{ mt: 1, gap: 1.5, overflowX: 'auto', pb: 1, scrollSnapType: 'x mandatory' }}>
         {venues.map((venue) => {
           const selected = venue.id === selectedId;
           const locality = [venue.locality, venue.city].filter(Boolean).join(', ');
+          const venueTestId = `create-pod-venue-${venue.id}`;
           return (
             <Card
               key={venue.id}
+              data-testid={venueTestId}
               sx={{
                 minWidth: 236,
                 maxWidth: 260,

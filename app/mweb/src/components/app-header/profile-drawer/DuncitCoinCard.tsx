@@ -24,6 +24,7 @@ export default function DuncitCoinCard({ onNavigate }: Readonly<{ onNavigate: (t
   return (
     <Box sx={{ px: 2, pb: 1.5 }}>
       <Stack
+        data-testid="sidebar-duncit-coin"
         direction="row"
         spacing={1.5}
         onClick={() => onNavigate(COIN_TILE.to)}
@@ -71,7 +72,7 @@ export default function DuncitCoinCard({ onNavigate }: Readonly<{ onNavigate: (t
         {pending ? (
           <Skeleton width={28} height={24} />
         ) : (
-          <Typography noWrap sx={{ fontSize: 16, fontWeight: 700, color: gold }}>
+          <Typography data-testid="sidebar-duncit-coin-balance" noWrap sx={{ fontSize: 16, fontWeight: 700, color: gold }}>
             {balance}
           </Typography>
         )}

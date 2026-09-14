@@ -66,21 +66,26 @@ export default function GrievancePage() {
       <Stack spacing={2}>
         {sent ? (
           <>
-            <Alert severity="success">
+            <Alert data-testid="grievance-sent" severity="success">
               <strong>{t('grievance.successTitle')}</strong>
               <div>{t('grievance.successBody')}</div>
               <div>
-                {t('grievance.referenceLabel')}: <strong>{sent.grievance_no}</strong>
+                {t('grievance.referenceLabel')}: <strong data-testid="grievance-reference">{sent.grievance_no}</strong>
               </div>
             </Alert>
-            <DuncitButton variant="outlined" size="large" onClick={() => setSent(null)}>
+            <DuncitButton
+              data-testid="grievance-raise-another"
+              variant="outlined"
+              size="large"
+              onClick={() => setSent(null)}
+            >
               {t('grievance.raiseAnother')}
             </DuncitButton>
           </>
         ) : (
           <>
             <GrievanceEscalationNotice />
-            <Paper sx={{ ...SURFACE_SX, p: 2 }}>
+            <Paper data-testid="grievance-form-card" sx={{ ...SURFACE_SX, p: 2 }}>
               <GrievanceForm
                 loading={loading}
                 tickets={tickets}

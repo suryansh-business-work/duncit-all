@@ -10,6 +10,7 @@ interface Props {
   onChange: (category: string, enabled: boolean) => void;
   /** Rendered under the rows — the "unsubscribe from everything" action. */
   footer?: React.ReactNode;
+  testId: string;
 }
 
 /**
@@ -24,11 +25,12 @@ export default function MailPreferenceSection({
   busyCategory,
   onChange,
   footer,
+  testId,
 }: Readonly<Props>) {
   if (items.length === 0) return null;
 
   return (
-    <Card>
+    <Card data-testid={testId}>
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={0.5} sx={{ mb: 0.5 }}>
           <Typography component="h2" sx={{ fontSize: '1.05rem', fontWeight: 600 }}>

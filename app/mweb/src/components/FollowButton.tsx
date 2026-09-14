@@ -49,6 +49,7 @@ export default function FollowButton({
   const resting = status === 'NONE';
   return (
     <DuncitButton
+      data-testid="follow-button"
       size="small"
       variant={resting ? 'contained' : 'text'}
       startIcon={loading ? <CircularProgress size={14} color="inherit" /> : ICONS[status]}

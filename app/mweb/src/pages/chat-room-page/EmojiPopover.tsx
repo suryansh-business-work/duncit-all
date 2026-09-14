@@ -22,9 +22,14 @@ export default function EmojiPopover({
       anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
       transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
     >
-      <Stack direction="row" spacing={0.5} sx={{ p: 1, fontSize }}>
+      <Stack direction="row" spacing={0.5} sx={{ p: 1, fontSize }} data-testid="emoji-bar">
         {EMOJIS.map((e) => (
-          <Box key={e} sx={{ cursor: 'pointer', px: 0.5 }} onClick={() => onSelect(e)}>
+          <Box
+            key={e}
+            data-testid={`emoji-${e}`}
+            sx={{ cursor: 'pointer', px: 0.5 }}
+            onClick={() => onSelect(e)}
+          >
             {e}
           </Box>
         ))}

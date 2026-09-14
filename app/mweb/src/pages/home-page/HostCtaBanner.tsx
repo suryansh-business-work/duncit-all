@@ -19,7 +19,7 @@ export default function HostCtaBanner({
   const onPress = isHost ? onCreatePod : onBecomeHost;
 
   return (
-    <Card sx={{ p: 1.5 }}>
+    <Card data-testid="host-cta-banner" sx={{ p: 1.5 }}>
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <Box
           sx={{
@@ -38,7 +38,12 @@ export default function HostCtaBanner({
         <Typography sx={{ minWidth: 0, flex: 1, fontSize: 16, fontWeight: 600, lineHeight: 1.25 }}>
           {title}
         </Typography>
-        <DuncitButton variant="contained" onClick={onPress} sx={{ flex: '0 0 auto', minHeight: 44 }}>
+        <DuncitButton
+          data-testid="host-cta-banner-button"
+          variant="contained"
+          onClick={onPress}
+          sx={{ flex: '0 0 auto', minHeight: 44 }}
+        >
           {buttonLabel}
         </DuncitButton>
       </Stack>

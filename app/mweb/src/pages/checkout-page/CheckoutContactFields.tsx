@@ -22,7 +22,7 @@ interface Props {
  */
 export default function CheckoutContactFields({ control, fieldSx, mainAddress, hasMainAddress, contact, contactLoading, addressRequired }: Readonly<Props>) {
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.5} data-testid="checkout-contact-fields">
       <ContactSummaryCard control={control} contact={contact} loading={contactLoading} />
       <BillingAddressSection
         control={control}

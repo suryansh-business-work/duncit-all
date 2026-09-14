@@ -33,7 +33,7 @@ export default function IdeasList({
     ideas.length === 0 ? (
       <EmptyState icon={<LightbulbOutlinedIcon />} title={t('mweb.podIdeas.noIdeasYetBeTheFirst')} />
     ) : (
-      <Stack spacing={1.5}>
+      <Stack spacing={1.5} data-testid="ideas-list">
         {ideas.map((idea: any) => (
           <IdeaCard
             key={idea.id}
@@ -51,7 +51,7 @@ export default function IdeasList({
   return (
     <>
       {myIdeas.length > 0 && (
-        <Box sx={{ mb: 3 }}>
+        <Box sx={{ mb: 3 }} data-testid="ideas-list-mine">
           <SectionHeader title="Your submissions" />
           <Stack spacing={1.5} sx={{ mt: 1.25 }}>
             {myIdeas.map((idea: any) => (
@@ -71,7 +71,7 @@ export default function IdeasList({
       )}
 
       {loading && !hasData ? (
-        <Box sx={{ py: 6, textAlign: 'center' }}>
+        <Box data-testid="ideas-list-loading" sx={{ py: 6, textAlign: 'center' }}>
           <CircularProgress />
         </Box>
       ) : (

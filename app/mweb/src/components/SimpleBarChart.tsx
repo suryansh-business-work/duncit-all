@@ -31,14 +31,16 @@ export function buildMonthlyCounts(dates: (string | null | undefined)[], back = 
 interface Props {
   data: BarDatum[];
   height?: number;
+  testId?: string;
 }
 
 /** Dependency-free bar chart (animated CSS heights) for the studio dashboards:
  * a green bar rising inside a soft pill track. Native twin: SimpleBarChart. */
-export default function SimpleBarChart({ data, height = 120 }: Readonly<Props>) {
+export default function SimpleBarChart({ data, height = 120, testId = 'bar-chart' }: Readonly<Props>) {
   const max = Math.max(1, ...data.map((d) => d.value));
   return (
     <Stack
+      data-testid={testId}
       direction="row"
       spacing={1.25}
       sx={{
@@ -49,6 +51,7 @@ export default function SimpleBarChart({ data, height = 120 }: Readonly<Props>) 
       {data.map((d) => (
         <Stack
           key={d.label}
+          data-testid={`${testId}-${d.label}`}
           spacing={0.5}
           sx={{
             alignItems: "center",

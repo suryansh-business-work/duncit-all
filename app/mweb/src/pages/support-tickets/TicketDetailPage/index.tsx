@@ -100,14 +100,14 @@ export default function TicketDetailPage() {
 
   if (loading && !ticket) {
     return (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
+      <Box data-testid="ticket-details-loading" sx={{ p: 4, textAlign: 'center' }}>
         <CircularProgress size={24} />
       </Box>
     );
   }
   if (!ticket) {
     return (
-      <Typography variant="body2" sx={{
+      <Typography data-testid="ticket-details-missing" variant="body2" sx={{
         color: "text.secondary"
       }}>This ticket could not be found.
               </Typography>
@@ -115,7 +115,7 @@ export default function TicketDetailPage() {
   }
 
   return (
-    <Stack spacing={2}>
+    <Stack data-testid="ticket-details-page" spacing={2}>
       <TicketHeader
         subject={ticket.subject}
         status={ticket.status}

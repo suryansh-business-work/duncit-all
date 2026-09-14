@@ -46,6 +46,7 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
   if (loading && users.length === 0) {
     body = (
       <Stack
+        data-testid="likes-loading"
         sx={{
           alignItems: "center",
           py: 4
@@ -56,6 +57,7 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
   } else if (userIds.length === 0) {
     body = (
       <Typography
+        data-testid="likes-empty"
         sx={{
           color: "text.secondary",
           px: 3,
@@ -68,7 +70,7 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
     body = (
       <List sx={{ pb: 2 }}>
         {users.map((u) => (
-          <ListItemButton key={u.user_id} onClick={() => openProfile(u.user_id)}>
+          <ListItemButton data-testid={`liker-${u.user_id}`} key={u.user_id} onClick={() => openProfile(u.user_id)}>
             <ListItemAvatar>
               <Avatar src={u.profile_photo || undefined}>
                 {(u.full_name || u.first_name || '?').slice(0, 1).toUpperCase()}
@@ -88,7 +90,7 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
   }
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog data-testid="likes-sheet" open={open} onClose={onClose} fullWidth maxWidth="xs">
       <Stack
         direction="row"
         sx={{
@@ -98,6 +100,7 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
         }}>
         <DialogTitle sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>{t('mweb.explore.likedBy')}</DialogTitle>
         <DuncitIconButton
+          data-testid="likes-close"
           aria-label={t('mweb.common.close')}
           onClick={onClose}
           sx={{ width: 40, height: 40, minHeight: 40, bgcolor: 'action.hover' }}

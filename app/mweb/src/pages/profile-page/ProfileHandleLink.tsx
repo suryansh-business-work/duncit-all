@@ -28,6 +28,7 @@ export default function ProfileHandleLink({ username, fallback }: Readonly<Props
   if (!username) {
     return (
       <Typography
+        data-testid="profile-handle-link"
         variant="body2"
         noWrap
         sx={{
@@ -50,6 +51,7 @@ export default function ProfileHandleLink({ username, fallback }: Readonly<Props
   return (
     <Tooltip title={labels.copyLink}>
       <Stack
+        data-testid="profile-handle-link"
         component="button"
         type="button"
         onClick={copy}

@@ -42,6 +42,7 @@ export default function ReferralPage() {
   if (loading && !data) {
     return (
       <Stack
+        data-testid="referral-page-loading"
         sx={{
           alignItems: "center",
           p: 6
@@ -51,7 +52,11 @@ export default function ReferralPage() {
     );
   }
   if (error || !referral) {
-    return <Alert severity="error">{error?.message ?? t('mweb.referral.loadError')}</Alert>;
+    return (
+      <Alert data-testid="referral-page-error" severity="error">
+        {error?.message ?? t('mweb.referral.loadError')}
+      </Alert>
+    );
   }
 
   const message = renderReferralMessage(referral.share_message, {
@@ -86,7 +91,7 @@ export default function ReferralPage() {
   const friends = referral.referred;
 
   return (
-    <Stack spacing={3} sx={{ maxWidth: 640, mx: 'auto', width: '100%' }}>
+    <Stack data-testid="referral-page" spacing={3} sx={{ maxWidth: 640, mx: 'auto', width: '100%' }}>
       <ReferralCodeCard
         referral={referral}
         onCopyCode={() => void copy(referral.code, t('mweb.referral.codeCopied'))}
@@ -99,18 +104,23 @@ export default function ReferralPage() {
           <Typography component="h2" sx={{ flex: 1, fontSize: '1.05rem', fontWeight: 600 }}>
             {t('mweb.referral.friendsTitle')}
           </Typography>
-          <Chip size="small" label={friends.length} />
+          <Chip data-testid="referral-page-friends-count" size="small" label={friends.length} />
         </Stack>
         {friends.length === 0 ? (
-          <Typography variant="body2" sx={{ color: 'text.secondary', py: 2, textAlign: 'center' }}>
+          <Typography
+            data-testid="referral-page-friends-empty"
+            variant="body2"
+            sx={{ color: 'text.secondary', py: 2, textAlign: 'center' }}
+          >
             {t('mweb.referral.empty')}
           </Typography>
         ) : (
-          <Card>
+          <Card data-testid="referral-page-friends-list">
             <Stack divider={<Divider />}>
               {friends.map((entry) => (
                 <Stack
                   key={entry.user_id}
+                  data-testid={`referral-page-friend-${entry.user_id}`}
                   direction="row"
                   spacing={1.5}
                   sx={{ alignItems: 'center', px: 2, py: 1.5 }}

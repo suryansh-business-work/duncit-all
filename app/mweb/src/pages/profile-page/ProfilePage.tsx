@@ -46,6 +46,7 @@ export default function ProfilePage() {
   if (loading && !data) {
     return (
       <Stack
+        data-testid="profile-page-loading"
         sx={{
           alignItems: "center",
           p: 6
@@ -55,11 +56,15 @@ export default function ProfilePage() {
     );
   }
   if (error || !me) {
-    return <Alert severity="error">{error?.message ?? 'Unable to load profile'}</Alert>;
+    return (
+      <Alert data-testid="profile-page-error" severity="error">
+        {error?.message ?? 'Unable to load profile'}
+      </Alert>
+    );
   }
 
   return (
-    <Stack spacing={3} sx={{ maxWidth: 935, mx: 'auto', px: { xs: 0.5, sm: 0 }, pb: 6 }}>
+    <Stack data-testid="profile-page" spacing={3} sx={{ maxWidth: 935, mx: 'auto', px: { xs: 0.5, sm: 0 }, pb: 6 }}>
       <ProfileHeader
         me={me}
         postsCount={posts.length}
@@ -101,7 +106,13 @@ export default function ProfilePage() {
         onError={(msg) => setSnack(msg)}
       />
 
-      <Snackbar open={!!snack} autoHideDuration={3500} onClose={() => setSnack(null)} message={snack ?? ''} />
+      <Snackbar
+        data-testid="profile-page-toast"
+        open={!!snack}
+        autoHideDuration={3500}
+        onClose={() => setSnack(null)}
+        message={snack ?? ''}
+      />
     </Stack>
   );
 }

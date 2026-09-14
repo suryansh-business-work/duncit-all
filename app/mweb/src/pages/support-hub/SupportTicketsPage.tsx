@@ -89,8 +89,8 @@ export default function SupportTicketsPage() {
 
   return (
     <SupportShell title={t('mweb.common.createSupportTickets')} backTo="/support">
-      <Stack spacing={2}>
-        <Paper sx={{ ...SURFACE_SX, p: 2 }}>
+      <Stack data-testid="support-tickets-page" spacing={2}>
+        <Paper data-testid="tickets-help-banner" sx={{ ...SURFACE_SX, p: 2 }}>
           <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
             <Box sx={ICON_DISC_SX}>
               <SupportAgentIcon fontSize="small" />
@@ -108,6 +108,7 @@ export default function SupportTicketsPage() {
         </Paper>
 
         <Paper
+          data-testid="tickets-faq-banner"
           onClick={() => navigate('/faqs')}
           sx={{ ...SURFACE_SX, p: 2, cursor: 'pointer' }}
         >

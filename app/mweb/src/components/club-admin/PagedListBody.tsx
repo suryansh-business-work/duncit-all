@@ -30,29 +30,35 @@ export default function PagedListBody({
   children,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  if (error && count === 0) return <Alert severity="error">{error}</Alert>;
+  if (error && count === 0) return <Alert data-testid="paged-list-body-error">{error}</Alert>;
   if (loading && count === 0) {
     return (
-      <Stack sx={{ alignItems: 'center', py: 4 }}>
+      <Stack data-testid="paged-list-body-loading" sx={{ alignItems: 'center', py: 4 }}>
         <CircularProgress size={24} />
       </Stack>
     );
   }
   if (count === 0) {
     return (
-      <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', py: 3 }}>
+      <Typography data-testid="paged-list-body-empty" variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', py: 3 }}>
         {emptyText}
       </Typography>
     );
   }
   return (
-    <Stack spacing={1.5}>
-      {error && <Alert severity="error">{error}</Alert>}
+    <Stack data-testid="paged-list-body" spacing={1.5}>
+      {error && <Alert data-testid="paged-list-body-error">{error}</Alert>}
       <Card>
         <Stack divider={<Divider sx={{ mx: 2 }} />}>{children}</Stack>
       </Card>
       {hasMore && (
-        <DuncitButton variant="outlined" onClick={onLoadMore} disabled={loading} sx={{ alignSelf: 'center' }}>
+        <DuncitButton
+          data-testid="paged-list-body-load-more"
+          variant="outlined"
+          onClick={onLoadMore}
+          disabled={loading}
+          sx={{ alignSelf: 'center' }}
+        >
           {t('mweb.clubStudio.loadMore')}
         </DuncitButton>
       )}

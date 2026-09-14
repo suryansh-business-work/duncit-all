@@ -55,8 +55,9 @@ export default function SearchBar({ value, onChange, onPick }: Readonly<Props>) 
 
   return (
     <ClickAwayListener onClickAway={() => setFocused(false)}>
-      <Box sx={{ position: 'relative', width: '100%' }}>
+      <Box data-testid="search-bar" sx={{ position: 'relative', width: '100%' }}>
         <SearchPillField
+          testId="search-bar-input"
           autoFocus
           height={52}
           value={value}
@@ -67,7 +68,12 @@ export default function SearchBar({ value, onChange, onPick }: Readonly<Props>) 
           enterKeyHint="search"
           endAdornment={
             value ? (
-              <DuncitIconButton aria-label={t('mweb.common.clearSearch')} size="small" onClick={() => onChange('')}>
+              <DuncitIconButton
+                data-testid="search-bar-clear"
+                aria-label={t('mweb.common.clearSearch')}
+                size="small"
+                onClick={() => onChange('')}
+              >
                 <CloseIcon fontSize="small" />
               </DuncitIconButton>
             ) : null
@@ -75,27 +81,36 @@ export default function SearchBar({ value, onChange, onPick }: Readonly<Props>) 
         />
         {showSuggestions && (
           <Paper
+            data-testid="search-bar-suggestions"
             elevation={0}
             sx={{ ...SURFACE_SX, position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0, zIndex: 6, overflow: 'hidden', py: 0.5 }}
           >
             <List dense disablePadding>
-              {suggestions.map((s) => (
-                <ListItemButton key={`${s.kind}:${s.text}`} onClick={() => pick(s.text)} sx={{ py: 1.25, px: 2, borderRadius: 0 }}>
-                  <SearchRoundedIcon fontSize="small" sx={{ mr: 1.25, color: 'text.secondary' }} />
-                  <ListItemText primary={s.text} slotProps={{
-                    primary: { noWrap: true, sx: { fontWeight: 600 } }
-                  }} />
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: "text.secondary",
-                      ml: 1,
-                      flex: '0 0 auto'
-                    }}>
-                    {kindLabel[s.kind] ?? s.kind}
-                  </Typography>
-                </ListItemButton>
-              ))}
+              {suggestions.map((s) => {
+                const suggestionKey = `${s.kind}:${s.text}`;
+                return (
+                  <ListItemButton
+                    key={suggestionKey}
+                    data-testid={`search-bar-suggestion-${suggestionKey}`}
+                    onClick={() => pick(s.text)}
+                    sx={{ py: 1.25, px: 2, borderRadius: 0 }}
+                  >
+                    <SearchRoundedIcon fontSize="small" sx={{ mr: 1.25, color: 'text.secondary' }} />
+                    <ListItemText primary={s.text} slotProps={{
+                      primary: { noWrap: true, sx: { fontWeight: 600 } }
+                    }} />
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "text.secondary",
+                        ml: 1,
+                        flex: '0 0 auto'
+                      }}>
+                      {kindLabel[s.kind] ?? s.kind}
+                    </Typography>
+                  </ListItemButton>
+                );
+              })}
             </List>
           </Paper>
         )}

@@ -21,6 +21,7 @@ export default function SmsPreferencePage() {
   if (state.loading) {
     return (
       <Stack
+        data-testid="sms-preference-loading"
         sx={{
           alignItems: "center",
           p: 6
@@ -33,7 +34,7 @@ export default function SmsPreferencePage() {
   if (state.loadFailed || !sms) {
     return (
       <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', pb: 4 }}>
-        <Alert severity="error">{t('mweb.smsPreference.loadFailed')}</Alert>
+        <Alert data-testid="sms-preference-error" severity="error">{t('mweb.smsPreference.loadFailed')}</Alert>
       </Stack>
     );
   }
@@ -45,7 +46,7 @@ export default function SmsPreferencePage() {
     : t('mweb.smsPreference.noNumber');
 
   return (
-    <Stack spacing={2} sx={{ maxWidth: 640, mx: 'auto', pb: 4 }}>
+    <Stack data-testid="sms-preference-page" spacing={2} sx={{ maxWidth: 640, mx: 'auto', pb: 4 }}>
       <Stack spacing={0.5}>
         <Typography component="h1" sx={{ fontSize: 20, fontWeight: 600 }}>
           {t('mweb.smsPreference.title')}

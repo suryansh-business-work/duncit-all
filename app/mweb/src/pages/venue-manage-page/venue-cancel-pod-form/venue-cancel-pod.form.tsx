@@ -49,7 +49,7 @@ export default function VenueCancelPodForm({ formId, onSubmit }: Readonly<Props>
   });
 
   return (
-    <Stack component="form" id={formId} noValidate onSubmit={submit} spacing={1.5}>
+    <Stack component="form" id={formId} noValidate onSubmit={submit} spacing={1.5} data-testid="venue-cancel-pod-form">
       <RhfTextField
         control={control}
         name="reason"
@@ -57,8 +57,10 @@ export default function VenueCancelPodForm({ formId, onSubmit }: Readonly<Props>
         required
         multiline
         minRows={3}
+        data-testid="venue-cancel-pod-form-reason"
+        slotProps={{ htmlInput: { 'data-testid': 'venue-cancel-pod-form-reason-input' } }}
       />
-      {errors.root?.message && <Alert severity="error">{errors.root.message}</Alert>}
+      {errors.root?.message && <Alert severity="error" data-testid="venue-cancel-pod-form-error">{errors.root.message}</Alert>}
     </Stack>
   );
 }

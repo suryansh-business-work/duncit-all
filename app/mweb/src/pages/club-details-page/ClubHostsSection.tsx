@@ -26,12 +26,13 @@ export default function ClubHostsSection({ hosts, title }: Readonly<Props>) {
   if (hosts.length === 0) return null;
 
   return (
-    <Box sx={{ ...SURFACE_SX, p: 2 }}>
+    <Box data-testid="club-hosts" sx={{ ...SURFACE_SX, p: 2 }}>
       <SectionHeader title={titleText} />
       <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pt: 1.5, '&::-webkit-scrollbar': { display: 'none' } }}>
         {hosts.map((host) => (
           <Stack
             key={host.id}
+            data-testid={`club-host-${host.id}`}
             spacing={0.5}
             role="button"
             aria-label={host.name}

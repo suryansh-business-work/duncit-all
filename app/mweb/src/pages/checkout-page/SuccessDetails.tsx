@@ -8,9 +8,9 @@ import { SURFACE_SX } from '../../theme';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /** One label · value line of the receipt card. */
-export function SuccessRow({ label, value, bold, mono }: Readonly<{ label: string; value: string; bold?: boolean; mono?: boolean }>) {
+export function SuccessRow({ label, value, bold, mono, testId }: Readonly<{ label: string; value: string; bold?: boolean; mono?: boolean; testId?: string }>) {
   return (
-    <Stack direction="row" spacing={2} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+    <Stack data-testid={testId} direction="row" spacing={2} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
       <Typography variant="body2" sx={{ color: bold ? 'text.primary' : 'text.secondary', fontWeight: bold ? 700 : 500 }}>
         {label}
       </Typography>
@@ -38,7 +38,7 @@ interface PodProps {
 export function SuccessPodCard({ title, when, venueNote, onAppleWallet, onGoogleCalendar }: Readonly<PodProps>) {
   const { t } = useTranslation();
   return (
-    <Box sx={{ ...SURFACE_SX, p: 2, textAlign: 'left' }}>
+    <Box data-testid="confirmation-pod" sx={{ ...SURFACE_SX, p: 2, textAlign: 'left' }}>
       <Stack spacing={1.5}>
         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
           <Box
@@ -62,15 +62,15 @@ export function SuccessPodCard({ title, when, venueNote, onAppleWallet, onGoogle
         </Stack>
         <Divider />
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-          <DuncitButton fullWidth variant="outlined" startIcon={<AppleIcon />} onClick={onAppleWallet}>
+          <DuncitButton data-testid="success-pod-apple-wallet" fullWidth variant="outlined" startIcon={<AppleIcon />} onClick={onAppleWallet}>
             {t('mweb.checkout.appleWallet')}
           </DuncitButton>
-          <DuncitButton fullWidth variant="outlined" startIcon={<GoogleIcon />} onClick={onGoogleCalendar}>
+          <DuncitButton data-testid="success-pod-google-wallet" fullWidth variant="outlined" startIcon={<GoogleIcon />} onClick={onGoogleCalendar}>
             {t('mweb.checkout.googleWallet')}
           </DuncitButton>
         </Stack>
         {venueNote && (
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <Stack data-testid="success-venue-note" direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <StorefrontIcon fontSize="small" sx={{ color: 'text.secondary' }} />
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {venueNote}

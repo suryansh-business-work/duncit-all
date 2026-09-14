@@ -58,6 +58,7 @@ export default function CategoryCascade({ value, onChange, allowAll }: Readonly<
     list: CategoryOption[],
     loading: boolean,
     disabled: boolean,
+    testId: string,
   ) => (
     <Autocomplete
       options={list.map((c) => c.id)}
@@ -66,17 +67,19 @@ export default function CategoryCascade({ value, onChange, allowAll }: Readonly<
       onChange={(_, v) => pick(level, v ?? '')}
       loading={loading}
       disabled={disabled}
-      renderInput={(p) => <TextField {...p} label={label} size="small" />}
+      renderInput={(p) => (
+        <TextField {...p} label={label} size="small" data-testid={testId} />
+      )}
     />
   );
 
   const mark = (base: string) => (allowAll ? base : `${base} *`);
 
   return (
-    <Stack spacing={1.5}>
-      {field(mark('Super Category'), 'super_category_id', supers.options, supers.loading, false)}
-      {field(mark('Category'), 'category_id', cats.options, cats.loading, !value.super_category_id)}
-      {field(mark('Sub Category'), 'sub_category_id', subs.options, subs.loading, !value.category_id)}
+    <Stack spacing={1.5} data-testid="category-cascade">
+      {field(mark('Super Category'), 'super_category_id', supers.options, supers.loading, false, 'category-cascade-super')}
+      {field(mark('Category'), 'category_id', cats.options, cats.loading, !value.super_category_id, 'category-cascade-category')}
+      {field(mark('Sub Category'), 'sub_category_id', subs.options, subs.loading, !value.category_id, 'category-cascade-sub')}
     </Stack>
   );
 }

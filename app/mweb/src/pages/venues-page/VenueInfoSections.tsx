@@ -11,13 +11,14 @@ export const VENUE_CHIP_SX = { fontWeight: 600 } as const;
  * twin: the ChipsGroup in VenueDetailsScreen. */
 export function VenueChipsSection({ title, items }: Readonly<{ title: string; items?: string[] | null }>) {
   if (!items?.length) return null;
+  const sectionId = `venue-chips-section-${title.toLowerCase().replace(/\s+/g, '-')}`;
   return (
-    <Stack spacing={1.5} sx={{ ...SURFACE_SX, p: 2 }}>
+    <Stack spacing={1.5} sx={{ ...SURFACE_SX, p: 2 }} data-testid={sectionId}>
       <SectionHeader title={title} />
       <Stack direction="row" spacing={1} useFlexGap sx={{
         flexWrap: "wrap"
       }}>
-        {items.map((item) => <Chip key={item} label={item} sx={VENUE_CHIP_SX} />)}
+        {items.map((item) => <Chip key={item} label={item} sx={VENUE_CHIP_SX} data-testid={`${sectionId}-${item}`} />)}
       </Stack>
     </Stack>
   );
@@ -35,7 +36,7 @@ interface LocationProps {
  * address, and the map preview under it. */
 export function VenueLocationCard({ title, venueName, parts, lat, lng }: Readonly<LocationProps>) {
   return (
-    <Stack spacing={1.5} sx={{ ...SURFACE_SX, p: 2 }}>
+    <Stack spacing={1.5} sx={{ ...SURFACE_SX, p: 2 }} data-testid="venue-location-card">
       <SectionHeader title={title} />
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <Box

@@ -23,10 +23,11 @@ export default function ProductGallery({ images, alt, onZoom }: Readonly<Props>)
   const { t } = useTranslation();
   const slideWidth = images.length > 1 ? '86%' : '100%';
   return (
-    <Box sx={RAIL_SX}>
+    <Box data-testid="product-gallery" sx={RAIL_SX}>
       {images.map((url, imageIndex) => (
         <ButtonBase
           key={url}
+          data-testid={`product-gallery-slide-${url}`}
           aria-label={t('mweb.common.zoomImage')}
           onClick={() => onZoom(imageIndex)}
           sx={{

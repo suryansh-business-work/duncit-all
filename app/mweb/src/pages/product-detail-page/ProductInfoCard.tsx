@@ -10,7 +10,7 @@ interface Props {
  * (label muted, value ink) under hairline dividers. */
 export default function ProductInfoCard({ description, specs }: Readonly<Props>) {
   return (
-    <Card sx={{ p: 2 }}>
+    <Card data-testid="product-info-card" sx={{ p: 2 }}>
       <Typography variant="body2" sx={{ color: 'text.secondary', whiteSpace: 'pre-wrap', lineHeight: 1.55 }}>
         {description}
       </Typography>
@@ -19,6 +19,7 @@ export default function ProductInfoCard({ description, specs }: Readonly<Props>)
           {specs.map((spec) => (
             <Stack
               key={spec.label}
+              data-testid={`product-info-card-spec-${spec.label}`}
               direction="row"
               spacing={2}
               sx={{ justifyContent: 'space-between', py: 1.25, borderTop: 1, borderColor: 'divider' }}

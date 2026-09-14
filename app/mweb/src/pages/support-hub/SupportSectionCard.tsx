@@ -22,6 +22,7 @@ export default function SupportSectionCard({ section }: Readonly<Props>) {
 
   return (
     <Paper
+      data-testid={`support-more-${section.key}`}
       component={RouterLink}
       to={path}
       sx={{

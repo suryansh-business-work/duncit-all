@@ -33,10 +33,10 @@ interface BandsProps {
 function PolicyBands({ control, fields, disabled, onRemove }: Readonly<BandsProps>) {
   const { t } = useTranslation();
   if (fields.length === 0) {
-    return <Alert severity="success">{t('venueSettings.noBands')}</Alert>;
+    return <Alert severity="success" data-testid="venue-settings-no-bands">{t('venueSettings.noBands')}</Alert>;
   }
   return (
-    <Stack spacing={1}>
+    <Stack spacing={1} data-testid="venue-settings-bands">
       {fields.map((row, index) => (
         <CancellationTierRow
           key={row.id}
@@ -93,13 +93,13 @@ export default function CancellationPolicyForm({ initialValues, saving, error, o
   const submit = form.handleSubmit((values) => onSubmit(values));
 
   return (
-    <Stack component="form" noValidate onSubmit={submit} spacing={1.5}>
+    <Stack component="form" noValidate onSubmit={submit} spacing={1.5} data-testid="venue-settings-form">
       <Controller
         control={form.control}
         name="reschedule_only"
         render={({ field }) => (
           <FormControlLabel
-            control={<Switch checked={field.value} onChange={(_, checked) => field.onChange(checked)} />}
+            control={<Switch checked={field.value} onChange={(_, checked) => field.onChange(checked)} data-testid="venue-settings-reschedule-only" />}
             label={t('venueSettings.rescheduleOnly')}
           />
         )}
@@ -110,7 +110,7 @@ export default function CancellationPolicyForm({ initialValues, saving, error, o
 
       <Divider />
 
-      {rescheduleOnly && <Alert severity="info">{t('venueSettings.policyDisabled')}</Alert>}
+      {rescheduleOnly && <Alert severity="info" data-testid="venue-settings-policy-disabled">{t('venueSettings.policyDisabled')}</Alert>}
 
       <Stack spacing={0.25}>
         <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
@@ -134,13 +134,14 @@ export default function CancellationPolicyForm({ initialValues, saving, error, o
         onClick={() => tiers.append(emptyTier)}
         disabled={rescheduleOnly}
         sx={{ alignSelf: 'flex-start' }}
+        data-testid="venue-settings-add-band"
       >
         {t('venueSettings.addBand')}
       </DuncitButton>
 
-      {error && <Alert severity="error">{error}</Alert>}
+      {error && <Alert severity="error" data-testid="venue-settings-error">{error}</Alert>}
 
-      <DuncitButton type="submit" variant="contained" size="large" fullWidth disabled={saving} sx={STICKY_BAR_SX}>
+      <DuncitButton type="submit" variant="contained" size="large" fullWidth disabled={saving} sx={STICKY_BAR_SX} data-testid="venue-settings-save">
         {saving ? t('venueSettings.saving') : t('venueSettings.save')}
       </DuncitButton>
     </Stack>

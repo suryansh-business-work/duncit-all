@@ -65,8 +65,9 @@ export default function RecoveryCodeStep({
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {labels.codeSubtitle(destination)}
         </Typography>
-        {testCode && <Alert severity="info">{labels.testCode(testCode)}</Alert>}
+        {testCode && <Alert data-testid="recovery-test-code" severity="info">{labels.testCode(testCode)}</Alert>}
         <RhfTextField
+          data-testid="recovery-otp"
           control={control}
           name="otp"
           label={labels.codeLabel}
@@ -78,6 +79,7 @@ export default function RecoveryCodeStep({
           slotProps={{ inputLabel: { shrink: true }, htmlInput: otpInput }}
         />
         <DuncitButton
+          data-testid="recovery-verify-code"
           type="submit"
           variant="contained"
           size="large"
@@ -91,6 +93,7 @@ export default function RecoveryCodeStep({
             {labels.didntGetIt}
           </Typography>
           <Link
+            data-testid="recovery-resend"
             component="button"
             type="button"
             onClick={onResend}

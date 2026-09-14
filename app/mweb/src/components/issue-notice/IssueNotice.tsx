@@ -54,6 +54,7 @@ export default function IssueNotice({
     if (sent) return undefined;
     return (
       <DuncitButton
+        data-testid="issue-notice-report"
         color="primary"
         size="small"
         disabled={loading}
@@ -68,7 +69,7 @@ export default function IssueNotice({
   })();
 
   return (
-    <Alert severity="error" onClose={onClose} action={action} sx={{ borderRadius: '16px' }}>
+    <Alert data-testid="issue-notice" severity="error" onClose={onClose} action={action} sx={{ borderRadius: '16px' }}>
       {issue.message}
       {sent ? ` ${t('mweb.issue.reported')}` : ''}
     </Alert>

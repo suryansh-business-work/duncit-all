@@ -36,8 +36,8 @@ export default function ClubAutoPodsPage({ locationId }: Readonly<Props>) {
   const [target, setTarget] = useState<AutoPodRow | null>(null);
 
   return (
-    <Stack spacing={2.5} sx={{ p: 2, pb: 4 }}>
-      <Typography variant="h5" component="h1" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>
+    <Stack data-testid="club-auto-pods-page" spacing={2.5} sx={{ p: 2, pb: 4 }}>
+      <Typography data-testid="club-auto-pods-page-title" variant="h5" component="h1" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>
         {queue.labels.clubTitle}
       </Typography>
 
@@ -53,7 +53,7 @@ export default function ClubAutoPodsPage({ locationId }: Readonly<Props>) {
         formatWhen={queue.formatWhen}
         formatMoney={queue.formatMoney}
         renderAction={(row) => (
-          <DuncitButton fullWidth variant="contained" onClick={() => setTarget(row)}>
+          <DuncitButton data-testid={`club-auto-pods-claim-${row.id}`} fullWidth variant="contained" onClick={() => setTarget(row)}>
             {queue.labels.claimForClubCta}
           </DuncitButton>
         )}

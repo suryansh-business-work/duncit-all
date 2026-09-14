@@ -72,6 +72,7 @@ export default function PhoneExtensionField({
       renderInput={(params) => (
         <TextField
           {...params}
+          data-testid="phone-extension-field"
           name={name}
           label={labelText}
           size={size}
@@ -80,7 +81,8 @@ export default function PhoneExtensionField({
           sx={textFieldSx}
           slotProps={{
             ...params.slotProps,
-            inputLabel: { shrink: true }
+            inputLabel: { shrink: true },
+            htmlInput: { ...params.slotProps?.htmlInput, 'data-testid': 'phone-extension-field-input' },
           }}
         />
       )}

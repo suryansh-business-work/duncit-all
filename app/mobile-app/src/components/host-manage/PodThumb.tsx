@@ -19,6 +19,7 @@ export function PodThumb({ uri }: Readonly<{ uri?: string }>) {
   if (uri && !failed) {
     return (
       <AppImage
+        testID="pod-thumb"
         source={{ uri }}
         style={THUMB_STYLE}
         recyclingKey={uri}
@@ -28,6 +29,7 @@ export function PodThumb({ uri }: Readonly<{ uri?: string }>) {
   }
   return (
     <YStack
+      testID="pod-thumb-fallback"
       width={56}
       height={56}
       borderRadius={12}

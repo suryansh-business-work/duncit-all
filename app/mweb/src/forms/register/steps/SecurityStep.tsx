@@ -35,7 +35,7 @@ export default function SecurityStep({
   const hideLabel = t('mweb.auth.hidePassword');
 
   return (
-    <Stack spacing={2}>
+    <Stack data-testid="signup-security-step" spacing={2}>
       <RhfTextField
         control={control}
         name="password"
@@ -53,6 +53,7 @@ export default function SecurityStep({
             showPwd,
             () => setShowPwd((v) => !v),
             showPwd ? hideLabel : showLabel,
+            'signup-password-toggle',
           ),
         }}
       />
@@ -71,6 +72,7 @@ export default function SecurityStep({
             showConfirmPwd,
             () => setShowConfirmPwd((v) => !v),
             showConfirmPwd ? hideLabel : showLabel,
+            'signup-confirm-password-toggle',
           ),
         }}
       />

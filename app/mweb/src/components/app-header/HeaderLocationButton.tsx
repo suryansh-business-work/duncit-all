@@ -23,11 +23,12 @@ export default function HeaderLocationButton({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   if (loading && !hasData) {
-    return <Skeleton variant="rounded" width={90} height={28} sx={{ borderRadius: 1 }} />;
+    return <Skeleton data-testid="header-location-button-loading" variant="rounded" width={90} height={28} sx={{ borderRadius: 1 }} />;
   }
   const flag = countryFlagUrl(selectedCountryCode);
   return (
     <DuncitButton
+      data-testid="header-location-button"
       startIcon={
         flag ? (
           <Box component="img" src={flag} alt="" sx={{ width: 20, height: 14, borderRadius: '4px' }} />
@@ -61,6 +62,7 @@ export default function HeaderLocationButton({
       </Box>
       {selectedZoneName ? (
         <Chip
+          data-testid="header-location-button-zone"
           size="small"
           label={selectedZoneName}
           sx={{ ml: 0.75, height: 20, maxWidth: { xs: 92, sm: 150 }, fontSize: 11, '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}

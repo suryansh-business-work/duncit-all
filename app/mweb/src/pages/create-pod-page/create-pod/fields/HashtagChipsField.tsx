@@ -51,12 +51,13 @@ export default function HashtagChipsField({ form }: Readonly<Props>) {
           }
         };
         return (
-          <Box>
+          <Box data-testid="hashtag-chips-field">
             {tags.length > 0 && (
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1 }}>
                 {tags.map((tag) => (
                   <Chip
                     key={tag}
+                    data-testid={`hashtag-chip-${tag}`}
                     label={`#${tag}`}
                     size="small"
                     color="primary"
@@ -66,6 +67,7 @@ export default function HashtagChipsField({ form }: Readonly<Props>) {
               </Box>
             )}
             <TextField
+              data-testid="field-pod_hashtag_text"
               label={t('mweb.createPod.hashtagsLabel')}
               fullWidth
               placeholder={t('mweb.createPod.hashtagsPlaceholder')}
@@ -74,6 +76,7 @@ export default function HashtagChipsField({ form }: Readonly<Props>) {
               onKeyDown={onKeyDown}
               onBlur={commit}
               helperText={t('mweb.createPod.hashtagsHint')}
+              slotProps={{ htmlInput: { 'data-testid': 'field-pod_hashtag_text-input' } }}
             />
           </Box>
         );

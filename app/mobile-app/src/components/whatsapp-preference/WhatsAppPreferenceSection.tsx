@@ -30,19 +30,25 @@ export function WhatsAppPreferenceSection({
   if (items.length === 0) return null;
 
   return (
-    <SurfaceCard>
-      <Text accessibilityRole="header" fontSize={17} fontWeight="600" color="$color">
+    <SurfaceCard testID="whatsapp-preference-section">
+      <Text
+        testID="whatsapp-preference-section-heading"
+        accessibilityRole="header"
+        fontSize={17}
+        fontWeight="600"
+        color="$color"
+      >
         {heading}
       </Text>
       {hint ? (
-        <Text fontSize={14} color="$muted" paddingTop={4}>
+        <Text testID="whatsapp-preference-section-hint" fontSize={14} color="$muted" paddingTop={4}>
           {hint}
         </Text>
       ) : null}
 
       <YStack paddingTop={4}>
         {items.map((item, index) => (
-          <YStack key={item.category}>
+          <YStack key={item.category} testID={`whatsapp-preference-section-row-${item.category}`}>
             {index > 0 ? <YStack height={1} backgroundColor="$borderColor" /> : null}
             <WhatsAppPreferenceRow
               item={item}

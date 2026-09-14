@@ -88,13 +88,14 @@ export default function PodDetailAccordions({
   const collapseAll = () => setExpanded(new Set());
 
   return (
-    <Box>
+    <Box data-testid="pod-detail-accordions">
       <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end', mb: 1 }}>
         <DuncitButton
           size="small"
           onClick={expandAll}
           disabled={allOpen}
           aria-label={t('mweb.podDetails.expandAllSections')}
+          data-testid="pod-expand-all"
           sx={linkSx}
         >
           {t('mweb.podDetails.expandAll')}
@@ -104,6 +105,7 @@ export default function PodDetailAccordions({
           onClick={collapseAll}
           disabled={expanded.size === 0}
           aria-label={t('mweb.podDetails.collapseAllSections')}
+          data-testid="pod-collapse-all"
           sx={{ ...linkSx, color: 'text.secondary' }}
         >
           {t('mweb.podDetails.collapseAll')}

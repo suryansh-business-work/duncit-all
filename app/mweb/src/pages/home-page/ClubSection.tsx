@@ -25,8 +25,9 @@ interface ClubSectionProps {
 export default function ClubSection({ club, clubPods, hostNameOf, categoryLabelOf, savedOf, savingOf, onToggleSave }: Readonly<ClubSectionProps>) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const sectionTestId = `club-section-${club.club_id}`;
   return (
-    <Stack spacing={1.5} sx={{ minWidth: 0 }}>
+    <Stack data-testid={sectionTestId} spacing={1.5} sx={{ minWidth: 0 }}>
       <SectionHeader
         title={club.club_name}
         actionLabel={t('mweb.home.seeAll')}
@@ -34,13 +35,13 @@ export default function ClubSection({ club, clubPods, hostNameOf, categoryLabelO
       />
 
       {clubPods.length === 0 ? (
-        <Card sx={{ p: 3, textAlign: 'center' }}>
+        <Card data-testid={`${sectionTestId}-empty`} sx={{ p: 3, textAlign: 'center' }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             No upcoming pods in this club for the selected city.
           </Typography>
         </Card>
       ) : (
-        <HomeRail>
+        <HomeRail testId={`${sectionTestId}-rail`}>
           {clubPods.map((p) => (
             <PodCard
               key={p.id}

@@ -118,8 +118,8 @@ export default function PodAttendeesSection({
   const pct = totalSpots > 0 ? Math.min(100, Math.round((count / totalSpots) * 100)) : 0;
 
   return (
-    <Stack spacing={1.5}>
-      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+    <Stack data-testid="pod-attendees-section" spacing={1.5}>
+      <Typography data-testid="pod-attendees-count" variant="body2" sx={{ fontWeight: 600 }}>
         {countLine}
       </Typography>
       {totalSpots > 0 && (
@@ -131,6 +131,7 @@ export default function PodAttendeesSection({
         </Typography>
       ) : (
         <ButtonBase
+          data-testid="attendees-avatar-group"
           onClick={() => setOpen(true)}
           aria-label={t('mweb.podDetails.viewAllAttendees')}
           sx={{ alignSelf: 'flex-start', borderRadius: 999, p: 0.5 }}

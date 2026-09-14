@@ -82,12 +82,13 @@ export default function MediaUrlsField({
   };
 
   return (
-    <Box>
+    <Box data-testid="media">
       <Typography variant="subtitle2" component="div">
         {requiredLabel(fieldLabel, required)}
       </Typography>
       {urls.length === 0 ? (
         <Box
+          data-testid="media-upload-add"
           role="button"
           tabIndex={0}
           aria-label={t('mweb.createPod.uploadImage')}
@@ -123,13 +124,14 @@ export default function MediaUrlsField({
       ) : (
         <Stack direction="row" sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
           {urls.map((url) => (
-            <Box key={url} sx={{ position: 'relative', width: 88, height: 88, borderRadius: '16px', overflow: 'hidden', bgcolor: 'action.hover', display: 'grid', placeItems: 'center' }}>
+            <Box key={url} data-testid={`media-thumb-${url}`} sx={{ position: 'relative', width: 88, height: 88, borderRadius: '16px', overflow: 'hidden', bgcolor: 'action.hover', display: 'grid', placeItems: 'center' }}>
               {isVideoUrl(url) ? (
                 <VideocamIcon color="action" />
               ) : (
                 <Box component="img" src={url} alt={t('mweb.createPod.mediaAlt')} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               )}
               <DuncitRoundButton
+                data-testid={`media-remove-${url}`}
                 size="small"
                 tone="overlay"
                 aria-label={t('mweb.createPod.removeMedia')}
@@ -141,6 +143,7 @@ export default function MediaUrlsField({
             </Box>
           ))}
           <Box
+            data-testid="media-upload-add"
             role="button"
             tabIndex={0}
             aria-label={t('mweb.createPod.addMedia')}
@@ -152,7 +155,7 @@ export default function MediaUrlsField({
           </Box>
         </Stack>
       )}
-      {error && <FormHelperText error>{error}</FormHelperText>}
+      {error && <FormHelperText data-testid="media_text-error" error>{error}</FormHelperText>}
       {full && (
         <FormHelperText>
           {t('mweb.createPod.mediaMaxHint', { vars: { max: maxImages ?? 0 } })}

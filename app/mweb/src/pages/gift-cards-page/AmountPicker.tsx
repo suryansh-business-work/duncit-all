@@ -28,7 +28,7 @@ export default function AmountPicker({ settings, currencySymbol, amountStr, onCh
   });
 
   return (
-    <Card sx={{ p: 2 }}>
+    <Card data-testid="gift-card-amount-picker" sx={{ p: 2 }}>
       <SectionHeader title={t('mweb.giftCards.amountHeading')} />
       <Stack
         direction="row"
@@ -43,6 +43,7 @@ export default function AmountPicker({ settings, currencySymbol, amountStr, onCh
           return (
             <Chip
               key={denomination}
+              data-testid={`gift-card-amount-${denomination}`}
               label={formatMoney(denomination, { symbol: currencySymbol })}
               color={active ? 'primary' : 'default'}
               onClick={() => onChange(String(denomination))}
@@ -52,6 +53,7 @@ export default function AmountPicker({ settings, currencySymbol, amountStr, onCh
         })}
       </Stack>
       <TextField
+        data-testid="gift-card-custom-amount"
         fullWidth
         type="number"
         label={t('mweb.giftCards.customAmountLabel')}
@@ -61,7 +63,7 @@ export default function AmountPicker({ settings, currencySymbol, amountStr, onCh
         helperText={rangeHint}
         sx={{ mt: 2 }}
         slotProps={{
-          htmlInput: { min: settings.min_amount, max: settings.max_amount, inputMode: 'numeric' }
+          htmlInput: { min: settings.min_amount, max: settings.max_amount, inputMode: 'numeric', 'data-testid': 'gift-card-custom-amount-input' }
         }}
       />
     </Card>

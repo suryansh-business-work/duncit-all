@@ -32,21 +32,23 @@ export default function GiftCardRedeemPage() {
   };
 
   return (
-    <Stack spacing={2} sx={{ maxWidth: 560, mx: 'auto', width: '100%', py: 0.5 }}>
+    <Stack data-testid="gift-card-redeem-screen" spacing={2} sx={{ maxWidth: 560, mx: 'auto', width: '100%', py: 0.5 }}>
       <PageHeader title={t('mweb.giftCards.redeemTitle')} />
       <Card sx={{ p: 2 }}>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
           <TextField
+            data-testid="gift-card-code"
             fullWidth
             label={t('mweb.giftCards.codeLabel')}
             value={codeInput}
             onChange={(event) => setCodeInput(event.target.value)}
             helperText={t('mweb.giftCards.codeHint')}
             slotProps={{
-              htmlInput: { style: { textTransform: 'uppercase' }, maxLength: 19 }
+              htmlInput: { style: { textTransform: 'uppercase' }, maxLength: 19, 'data-testid': 'gift-card-code-input' }
             }}
           />
           <DuncitButton
+            data-testid="gift-card-check"
             variant="contained"
             disabled={!codeInput.trim() || loading}
             onClick={check}
@@ -56,7 +58,7 @@ export default function GiftCardRedeemPage() {
           </DuncitButton>
         </Stack>
       </Card>
-      {error && <Alert severity="error">{t('mweb.giftCards.redeemError')}</Alert>}
+      {error && <Alert data-testid="gift-card-lookup-error" severity="error">{t('mweb.giftCards.redeemError')}</Alert>}
       {card && <GiftCardRedeemView key={card.id} card={card} currencySymbol={currencySymbol} />}
       <HowItWorksCard />
     </Stack>

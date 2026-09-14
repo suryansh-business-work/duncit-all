@@ -38,6 +38,7 @@ export default function GstSection({ control, fieldSx }: Readonly<Props>) {
             <FormControlLabel
               control={
                 <Switch
+                  data-testid="billing-has-gstin"
                   checked={!!field.value}
                   onChange={(event) => field.onChange(event.target.checked)}
                 />
@@ -48,6 +49,7 @@ export default function GstSection({ control, fieldSx }: Readonly<Props>) {
         />
         {hasGstin && (
           <RhfTextField
+            data-testid="gst-section-gstin"
             control={control}
             name="gstin"
             label={t('mweb.checkout.gstin')}

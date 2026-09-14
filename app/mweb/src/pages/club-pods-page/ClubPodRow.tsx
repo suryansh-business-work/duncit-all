@@ -25,13 +25,13 @@ export default function ClubPodRow({ pod, podsPath, onActivity, onDelete }: Read
   const status = podRowStatus(pod);
 
   return (
-    <Box sx={{ px: 2, pt: 1.75, pb: 0.75 }}>
+    <Box data-testid={`club-pod-row-${pod.id}`} sx={{ px: 2, pt: 1.75, pb: 0.75 }}>
       <Stack spacing={0.5}>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <Typography noWrap sx={{ flex: 1, fontSize: '1rem', fontWeight: 600 }}>
             {pod.pod_title}
           </Typography>
-          <Chip size="small" label={podRowStatusLabel(status, t)} color={POD_ROW_STATUS_COLORS[status]} />
+          <Chip data-testid={`club-pod-row-${pod.id}-status`} size="small" label={podRowStatusLabel(status, t)} color={POD_ROW_STATUS_COLORS[status]} />
         </Stack>
         <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', color: 'text.secondary' }}>
           <EventRoundedIcon sx={{ fontSize: 14 }} />

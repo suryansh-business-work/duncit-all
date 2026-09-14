@@ -45,6 +45,7 @@ export default function SeatPicker({ value, onChange, maxSeats, disabled }: Read
       direction="row"
       role="group"
       aria-label={t('mweb.podDetails.numberOfSeats')}
+      data-testid="pod-seat-picker"
       sx={{
         alignItems: "center",
         flex: '0 0 auto',
@@ -58,12 +59,14 @@ export default function SeatPicker({ value, onChange, maxSeats, disabled }: Read
         onClick={() => step(seats - 1)}
         disabled={disabled || seats <= 1}
         size="small"
+        data-testid="pod-seat-minus"
         sx={{ width: 38 }}
       >
         <RemoveIcon fontSize="small" />
       </DuncitIconButton>
       <Typography
         variant="body2"
+        data-testid="pod-seat-count"
         sx={{
           fontWeight: 700,
           minWidth: 18,
@@ -76,6 +79,7 @@ export default function SeatPicker({ value, onChange, maxSeats, disabled }: Read
         onClick={() => step(seats + 1)}
         disabled={disabled || seats >= top}
         size="small"
+        data-testid="pod-seat-plus"
         sx={{ width: 38 }}
       >
         <AddIcon fontSize="small" />

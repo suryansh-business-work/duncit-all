@@ -47,7 +47,7 @@ export default function AddressFields<T extends FieldValues>({
   const { t } = useTranslation();
   const labelProps = shrinkLabels ? { shrink: true } : undefined;
   return (
-    <Stack spacing={1.5}>
+    <Stack data-testid="address-fields" spacing={1.5}>
       <RhfTextField control={control} name={names.line1} label={t('mweb.address.line1')} required={required} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
       <RhfTextField control={control} name={names.line2} label={t('mweb.address.line2')} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />
       <RhfTextField control={control} name={names.landmark} label={t('mweb.address.landmark')} size={size} sx={fieldSx} slotProps={{ inputLabel: labelProps }} />

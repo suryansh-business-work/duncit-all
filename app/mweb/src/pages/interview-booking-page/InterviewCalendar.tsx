@@ -53,7 +53,7 @@ export default function InterviewCalendar({
     setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() + 1, 1));
 
   return (
-    <Card>
+    <Card data-testid="interview-calendar">
       <CardContent>
         <Stack
           direction="row"
@@ -63,10 +63,18 @@ export default function InterviewCalendar({
           }}>
           <Typography variant="h6" sx={{ fontSize: '1.0625rem' }}>{monthLabel}</Typography>
           <Stack direction="row" spacing={1}>
-            <DuncitRoundButton tone="surface" onClick={goPrevMonth}>
+            <DuncitRoundButton
+              data-testid="interview-calendar-prev-month"
+              tone="surface"
+              onClick={goPrevMonth}
+            >
               <ChevronLeftRoundedIcon />
             </DuncitRoundButton>
-            <DuncitRoundButton tone="surface" onClick={goNextMonth}>
+            <DuncitRoundButton
+              data-testid="interview-calendar-next-month"
+              tone="surface"
+              onClick={goNextMonth}
+            >
               <ChevronRightRoundedIcon />
             </DuncitRoundButton>
           </Stack>
@@ -96,9 +104,11 @@ export default function InterviewCalendar({
             const past = isPastDay(d);
             const active = selectedDate && isSameDay(d, selectedDate);
             const inactiveColor = past ? 'text.disabled' : 'text.primary';
+            const dayTestId = `interview-calendar-day-${key}`;
             return (
               <DuncitButton
                 key={key}
+                data-testid={dayTestId}
                 onClick={() => !past && setSelectedDate(d)}
                 disabled={past}
                 sx={{
@@ -128,9 +138,11 @@ export default function InterviewCalendar({
               {TIME_OPTIONS.map((t) => {
                 const key = slotKey(selectedDate, t);
                 const selected = slots.has(key);
+                const slotTestId = `interview-calendar-slot-${t}`;
                 return (
                   <Chip
                     key={t}
+                    data-testid={slotTestId}
                     label={t}
                     variant="filled"
                     color={selected ? 'primary' : 'default'}
@@ -168,15 +180,19 @@ export default function InterviewCalendar({
               </Typography>
             </Stack>
             <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-              {slotList.map((s) => (
-                <Chip
-                  key={s.start.toISOString()}
-                  label={formatDateTime(s.start)}
-                  onDelete={() => onRemoveSlot(s)}
-                  color="primary"
-                  variant="outlined"
-                />
-              ))}
+              {slotList.map((s) => {
+                const isoStart = s.start.toISOString();
+                return (
+                  <Chip
+                    key={isoStart}
+                    data-testid={`interview-calendar-selected-slot-${isoStart}`}
+                    label={formatDateTime(s.start)}
+                    onDelete={() => onRemoveSlot(s)}
+                    color="primary"
+                    variant="outlined"
+                  />
+                );
+              })}
             </Stack>
           </Box>
         )}

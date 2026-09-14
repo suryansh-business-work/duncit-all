@@ -45,22 +45,22 @@ export default function EmojiFeedbackDialog({
   const submitted = feedbackOptionFor(existingRating);
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog data-testid="support-feedback-modal" open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.supportChat.howDidWeDo')}</DialogTitle>
       <DialogContent>
         {submitted ? (
           <Stack spacing={1.25} sx={{ pt: 1 }}>
-            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+            <Typography data-testid="feedback-readonly" variant="body1" sx={{ fontWeight: 600 }}>
               Your rating: {submitted.emoji} {submitted.label}
             </Typography>
             {existingComment && (
-              <Typography variant="body2" sx={{
+              <Typography data-testid="feedback-readonly-comment" variant="body2" sx={{
                 color: "text.secondary"
               }}>
                 “{existingComment}”
               </Typography>
             )}
-            <Typography variant="body2" sx={{
+            <Typography data-testid="feedback-thanks" variant="body2" sx={{
               color: "text.secondary"
             }}>
               {FEEDBACK_THANK_YOU}
@@ -73,7 +73,7 @@ export default function EmojiFeedbackDialog({
             }}>
               Rate your support experience.
             </Typography>
-            {error && <Alert severity="error">{error}</Alert>}
+            {error && <Alert data-testid="feedback-error" severity="error">{error}</Alert>}
             <Stack direction="row" sx={{
               justifyContent: "space-between"
             }}>
@@ -82,6 +82,7 @@ export default function EmojiFeedbackDialog({
                 return (
                   <Box
                     key={o.value}
+                    data-testid={`feedback-emoji-${o.value}`}
                     component="button"
                     type="button"
                     aria-label={`${o.value} ${o.label}`}
@@ -106,29 +107,33 @@ export default function EmojiFeedbackDialog({
               })}
             </Stack>
             {rating > 0 && (
-              <Typography variant="caption" align="center" sx={{ fontWeight: 700 }}>
+              <Typography data-testid="feedback-rating-label" variant="caption" align="center" sx={{ fontWeight: 700 }}>
                 {feedbackOptionFor(rating)?.label}
               </Typography>
             )}
             <TextField
               fullWidth
               size="small"
+              data-testid="feedback-comment-field"
               label={t('mweb.supportChat.anythingToAddOptional')}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               multiline
               minRows={2}
               slotProps={{
-                htmlInput: { maxLength: 1000 }
+                htmlInput: { maxLength: 1000, 'data-testid': 'feedback-comment' }
               }}
             />
           </Stack>
         )}
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose}>{submitted ? 'Close' : 'Skip'}</DuncitButton>
+        <DuncitButton data-testid={submitted ? 'feedback-close' : 'feedback-skip'} onClick={onClose}>
+          {submitted ? 'Close' : 'Skip'}
+        </DuncitButton>
         {!submitted && (
           <DuncitButton
+            data-testid="feedback-submit"
             variant="contained"
             disabled={!rating || busy}
             onClick={() => onSubmit(rating, comment.trim())}

@@ -14,13 +14,14 @@ interface CtaBlockProps {
   title: string;
   cta: string;
   onClick: () => void;
+  testId: string;
 }
 
 /** A single call-to-action card: an accent icon on a soft disc, the title and
  * a green pill — the title and the CTA say it all. Hoisted (S6478). */
-function CtaBlock({ icon, title, cta, onClick }: Readonly<CtaBlockProps>) {
+function CtaBlock({ icon, title, cta, onClick, testId }: Readonly<CtaBlockProps>) {
   return (
-    <Stack spacing={1.5} sx={{ ...SURFACE_SX, p: 2 }}>
+    <Stack data-testid={testId} spacing={1.5} sx={{ ...SURFACE_SX, p: 2 }}>
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <Box
           sx={{
@@ -38,7 +39,7 @@ function CtaBlock({ icon, title, cta, onClick }: Readonly<CtaBlockProps>) {
         </Box>
         <Typography sx={{ fontSize: '1rem', fontWeight: 600 }}>{title}</Typography>
       </Stack>
-      <DuncitButton variant="contained" onClick={onClick} sx={{ alignSelf: 'flex-start' }}>
+      <DuncitButton data-testid={`${testId}-button`} variant="contained" onClick={onClick} sx={{ alignSelf: 'flex-start' }}>
         {cta}
       </DuncitButton>
     </Stack>
@@ -65,10 +66,11 @@ export default function SearchEmptyState({
   const heading = isCategory ? 'Nothing Here Yet' : 'No Pods Match Your Search';
 
   return (
-    <Stack spacing={1.5}>
+    <Stack data-testid="search-empty-state" spacing={1.5}>
       <EmptyState icon={<SearchOffIcon />} title={heading} />
 
       <CtaBlock
+        testId="search-empty-state-share-idea"
         icon={<LightbulbIcon />}
         title="Didn't Find What You Were Looking For?"
         cta="Share a Pod Idea"
@@ -77,6 +79,7 @@ export default function SearchEmptyState({
 
       {isCategory ? (
         <CtaBlock
+          testId="search-empty-state-explore-categories"
           icon={<ExploreIcon />}
           title={t('mweb.search.exploreOtherInterests')}
           cta="Explore More Categories"
@@ -84,6 +87,7 @@ export default function SearchEmptyState({
         />
       ) : (
         <CtaBlock
+          testId="search-empty-state-earn"
           icon={<StorefrontIcon />}
           title={t('mweb.search.turnYourPassionIntoSomethingBigger')}
           cta="Earn With Duncit"

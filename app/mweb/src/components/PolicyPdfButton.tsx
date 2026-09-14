@@ -55,14 +55,14 @@ export default function PolicyPdfButton({ slug }: Readonly<{ slug: string }>) {
   };
 
   return (
-    <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-      <DuncitButton size="small" variant="outlined" startIcon={<PictureAsPdfIcon />} onClick={view} disabled={loading}>
+    <Stack data-testid="policy-pdf-button" direction="row" spacing={1} sx={{ mb: 2 }}>
+      <DuncitButton data-testid="policy-pdf-view" size="small" variant="outlined" startIcon={<PictureAsPdfIcon />} onClick={view} disabled={loading}>
         View PDF
       </DuncitButton>
-      <DuncitButton size="small" variant="contained" startIcon={<DownloadIcon />} onClick={download} disabled={loading}>
+      <DuncitButton data-testid="policy-pdf-download" size="small" variant="contained" startIcon={<DownloadIcon />} onClick={download} disabled={loading}>
         Download PDF
       </DuncitButton>
-      <Snackbar open={!!error} autoHideDuration={4000} onClose={() => setError('')} message={error} />
+      <Snackbar data-testid="policy-pdf-error" open={!!error} autoHideDuration={4000} onClose={() => setError('')} message={error} />
     </Stack>
   );
 }

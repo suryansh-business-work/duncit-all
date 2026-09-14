@@ -20,9 +20,9 @@ export default function PodProductOrdersCard({ podId }: Readonly<{ podId?: strin
   if (!podId) return null;
   if (loading && orders.length === 0) {
     return (
-      <Card>
+      <Card data-testid="pod-product-orders-card">
         <CardContent>
-          <Stack direction="row" spacing={1} sx={{
+          <Stack direction="row" spacing={1} data-testid="po-loading" sx={{
             alignItems: "center"
           }}>
             <CircularProgress size={18} />
@@ -39,13 +39,13 @@ export default function PodProductOrdersCard({ podId }: Readonly<{ podId?: strin
   if (orders.length === 0) return null;
 
   return (
-    <Card>
+    <Card data-testid="pod-product-orders-card">
       <CardContent>
         <Box sx={{ mb: 1.5 }}>
           <SectionHeader title={t('mweb.podHistory.productsAndTracking')} />
         </Box>
         {error && (
-          <Alert severity="warning" sx={{ mb: 1 }}>
+          <Alert severity="warning" data-testid="po-tracking-error" sx={{ mb: 1 }}>
             {t('mweb.podHistory.trackingRefreshError')}
           </Alert>
         )}

@@ -12,7 +12,7 @@ export default function TermsAgreement({ form }: Readonly<{ form: CreatePodForm 
       control={form.control}
       name="agreed_to_terms"
       render={({ field, fieldState }) => (
-        <Box>
+        <Box data-testid="create-pod-terms">
           <FormControlLabel
             sx={{ alignItems: 'flex-start', m: 0 }}
             control={
@@ -30,14 +30,14 @@ export default function TermsAgreement({ form }: Readonly<{ form: CreatePodForm 
                 color: "text.secondary"
               }}>
                 {t('mweb.createPod.termsLeadIn')}{' '}
-                <Link href="/policies/terms-of-service" target="_blank" rel="noreferrer" sx={{ fontWeight: 600 }}>
+                <Link data-testid="terms-link" href="/policies/terms-of-service" target="_blank" rel="noreferrer" sx={{ fontWeight: 600 }}>
                   {t('mweb.createPod.termsLink')}
                 </Link>{' '}
                 {t('mweb.createPod.termsTail')}
               </Typography>
             }
           />
-          {fieldState.error && <FormHelperText error>{fieldState.error.message}</FormHelperText>}
+          {fieldState.error && <FormHelperText data-testid="agreed_to_terms-error" error>{fieldState.error.message}</FormHelperText>}
         </Box>
       )}
     />

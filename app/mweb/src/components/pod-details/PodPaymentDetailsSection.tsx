@@ -23,7 +23,7 @@ export default function PodPaymentDetailsSection({
   const { t } = useTranslation();
   if (isFree || !Number(amount)) {
     return (
-      <Typography variant="body2" sx={{
+      <Typography data-testid="pod-payment-free" variant="body2" sx={{
         color: "text.secondary"
       }}>
         {t('mweb.podDetails.freeToJoin')}
@@ -32,7 +32,7 @@ export default function PodPaymentDetailsSection({
   }
   const p = priceCompute(amount);
   return (
-    <Box>
+    <Box data-testid="pod-payment-details-section">
       <Stack
         direction="row"
         sx={{
@@ -44,7 +44,7 @@ export default function PodPaymentDetailsSection({
         }}>
           {t('mweb.checkout.gst', { vars: { pct: p.gstPct } })}
         </Typography>
-        <Typography variant="body2" sx={{
+        <Typography data-testid="pod-payment-gst" variant="body2" sx={{
           fontWeight: 500
         }}>
           {`${p.currency}${p.gst.toFixed(2)}`}
@@ -68,7 +68,7 @@ export default function PodPaymentDetailsSection({
         }}>
           {t('mweb.podDetails.pricePerSeat')}
         </Typography>
-        <Typography variant="subtitle2" sx={{
+        <Typography data-testid="pod-payment-total" variant="subtitle2" sx={{
           fontWeight: 700
         }}>
           {p.currency}

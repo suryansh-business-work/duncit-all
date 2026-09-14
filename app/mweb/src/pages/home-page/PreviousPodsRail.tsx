@@ -26,13 +26,13 @@ export default function PreviousPodsRail({ pods, hostNameOf, filtered }: Readonl
   if (pods.length === 0) return null;
 
   return (
-    <Stack spacing={1.5}>
+    <Stack data-testid="previous-pods-rail" spacing={1.5}>
       <SectionHeader
         title={t('mweb.home.previousPodsTitle')}
         actionLabel={t('mweb.home.seeAll')}
         onAction={() => navigate('/previous-pods')}
       />
-      <HomeRail>
+      <HomeRail testId="previous-pods-rail-list">
         {pods.slice(0, RAIL_CAP).map((pod: any) => (
           <PodCard
             key={pod.id}

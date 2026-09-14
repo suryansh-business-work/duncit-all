@@ -11,8 +11,9 @@ import { SURFACE_SX } from '../../../theme';
  */
 export default function MenuGroup({
   title,
+  testId,
   children,
-}: Readonly<{ title?: string; children: ReactNode }>) {
+}: Readonly<{ title?: string; testId?: string; children: ReactNode }>) {
   const rows = Children.toArray(children).filter(isValidElement);
   return (
     <Box sx={{ px: 2, pb: 1.5 }}>
@@ -21,7 +22,7 @@ export default function MenuGroup({
           <SectionHeader title={title} />
         </Box>
       ) : null}
-      <Box sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
+      <Box data-testid={testId} sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
         {rows.map((row, index) => (
           <Fragment key={row.key}>
             {index > 0 ? <Divider sx={{ mx: 2 }} /> : null}

@@ -43,10 +43,10 @@ export default function ChatHeader({
   };
 
   return (
-    <Stack direction="row" spacing={1} sx={{
+    <Stack data-testid="support-chat-header" direction="row" spacing={1} sx={{
       alignItems: "center"
     }}>
-      <DuncitRoundButton onClick={onBack} aria-label={t('mweb.common.back')} sx={HEADER_BUTTON_SX}>
+      <DuncitRoundButton data-testid="support-chat-back" onClick={onBack} aria-label={t('mweb.common.back')} sx={HEADER_BUTTON_SX}>
         <ArrowBackRoundedIcon />
       </DuncitRoundButton>
       <Stack sx={{ flex: 1, minWidth: 0 }}>
@@ -54,7 +54,7 @@ export default function ChatHeader({
           Chat with Us
         </Typography>
         {ticketNo && (
-          <Typography variant="caption" sx={{
+          <Typography data-testid="chat-ticket-no" variant="caption" sx={{
             color: "text.secondary"
           }}>
             {ticketNo}
@@ -63,31 +63,38 @@ export default function ChatHeader({
       </Stack>
       {status && (
         <Chip
+          data-testid="support-chat-status-chip"
           size="small"
           color={status === 'OPEN' ? 'success' : 'default'}
           label={status === 'OPEN' ? 'Open' : 'Resolved'}
         />
       )}
-      <DuncitRoundButton aria-label={t('mweb.supportChat.chatOptions')} disabled={!ticketNo} onClick={(e) => setAnchor(e.currentTarget)} sx={HEADER_BUTTON_SX}>
+      <DuncitRoundButton
+        data-testid="chat-header-menu-button"
+        aria-label={t('mweb.supportChat.chatOptions')}
+        disabled={!ticketNo}
+        onClick={(e) => setAnchor(e.currentTarget)}
+        sx={HEADER_BUTTON_SX}
+      >
         <MoreHorizRoundedIcon />
       </DuncitRoundButton>
-      <Menu anchorEl={anchor} open={!!anchor} onClose={close}>
+      <Menu data-testid="chat-header-menu" anchorEl={anchor} open={!!anchor} onClose={close}>
         {status === 'OPEN' ? (
-          <MenuItem onClick={run(onResolve)}>
+          <MenuItem data-testid="chat-action-resolve" onClick={run(onResolve)}>
             <CheckCircleIcon fontSize="small" sx={{ mr: 1 }} /> Mark resolved
           </MenuItem>
         ) : (
-          <MenuItem onClick={run(onReopen)} disabled={!reopenable}>
+          <MenuItem data-testid="chat-action-reopen" onClick={run(onReopen)} disabled={!reopenable}>
             <ReplayIcon fontSize="small" sx={{ mr: 1 }} /> Re-open chat
           </MenuItem>
         )}
-        <MenuItem onClick={run(() => onDownload('TXT'))}>
+        <MenuItem data-testid="chat-action-download" onClick={run(() => onDownload('TXT'))}>
           <DownloadIcon fontSize="small" sx={{ mr: 1 }} /> Download .txt
         </MenuItem>
-        <MenuItem onClick={run(() => onDownload('DOCX'))}>
+        <MenuItem data-testid="chat-action-download-docx" onClick={run(() => onDownload('DOCX'))}>
           <DescriptionIcon fontSize="small" sx={{ mr: 1 }} /> Download .docx
         </MenuItem>
-        <MenuItem onClick={run(onEmail)}>
+        <MenuItem data-testid="chat-action-email" onClick={run(onEmail)}>
           <EmailIcon fontSize="small" sx={{ mr: 1 }} /> Email transcript
         </MenuItem>
       </Menu>

@@ -42,8 +42,9 @@ export default function FeedPostCard({
   );
 
   return (
-    <Card sx={{ overflow: 'hidden' }}>
+    <Card data-testid={`feed-post-${post.id}`} sx={{ overflow: 'hidden' }}>
       <Stack
+        data-testid={`feed-author-${post.id}`}
         direction="row"
         spacing={1.25}
         component={RouterLink}
@@ -93,6 +94,7 @@ export default function FeedPostCard({
 
       <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', px: 1, pt: 0.5 }}>
         <DuncitIconButton
+          data-testid={`feed-like-${post.id}`}
           aria-label={post.liked_by_me ? 'Unlike' : 'Like'}
           onClick={() => onToggleLike(post)}
           color={post.liked_by_me ? 'secondary' : 'default'}
@@ -102,7 +104,7 @@ export default function FeedPostCard({
         <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
           {post.likes_count}
         </Typography>
-        <DuncitIconButton aria-label={t('mweb.common.comments')} onClick={() => onOpenComments(post.id)} sx={{ ml: 0.5 }}>
+        <DuncitIconButton data-testid={`feed-comment-${post.id}`} aria-label={t('mweb.common.comments')} onClick={() => onOpenComments(post.id)} sx={{ ml: 0.5 }}>
           <ChatBubbleOutlineIcon />
         </DuncitIconButton>
         <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>

@@ -21,6 +21,7 @@ export default function TicketBubble({ msg, timeText, agentLastReadAt }: Readonl
   if (msg.author_role === 'SYSTEM') {
     return (
       <Stack
+        data-testid={`ticket-msg-${msg.id}`}
         sx={{
           alignItems: "center",
           my: 0.5
@@ -38,7 +39,12 @@ export default function TicketBubble({ msg, timeText, agentLastReadAt }: Readonl
   const seen =
     !!agentLastReadAt && new Date(agentLastReadAt).getTime() >= new Date(msg.created_at).getTime();
   return (
-    <Stack direction="row" sx={{ justifyContent: isUser ? 'flex-end' : 'flex-start', alignItems: 'flex-end' }} spacing={1}>
+    <Stack
+      data-testid={`ticket-msg-${msg.id}`}
+      direction="row"
+      sx={{ justifyContent: isUser ? 'flex-end' : 'flex-start', alignItems: 'flex-end' }}
+      spacing={1}
+    >
       {!isUser && (
         <Avatar src={msg.author_photo || undefined} sx={{ width: 28, height: 28, fontSize: 12 }}>
           {msg.author_name?.[0]?.toUpperCase() || 'S'}
@@ -75,9 +81,9 @@ export default function TicketBubble({ msg, timeText, agentLastReadAt }: Readonl
           </Typography>
           {isUser &&
             (seen ? (
-              <DoneAllIcon sx={{ fontSize: 15, color: SEEN_BLUE }} />
+              <DoneAllIcon data-testid={`ticket-tick-${msg.id}`} sx={{ fontSize: 15, color: SEEN_BLUE }} />
             ) : (
-              <CheckIcon sx={{ fontSize: 15, opacity: 0.7 }} />
+              <CheckIcon data-testid={`ticket-tick-${msg.id}`} sx={{ fontSize: 15, opacity: 0.7 }} />
             ))}
         </Stack>
       </Box>

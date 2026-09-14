@@ -23,6 +23,7 @@ export default function ProfileIdentity({ me, onClick }: Readonly<ProfileIdentit
   return (
     <Box sx={{ px: 2, pb: 1.5 }}>
       <ButtonBase
+        data-testid="sidebar-identity"
         onClick={onClick}
         sx={{
           ...SURFACE_SX,

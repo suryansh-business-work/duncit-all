@@ -47,7 +47,7 @@ interface RowProps {
  * OptionalSettingsCards. */
 function SettingRow({ panel, title, summary, filled, onOpen }: Readonly<RowProps>) {
   return (
-    <CardActionArea onClick={onOpen} sx={{ px: 2, py: 1.75, borderRadius: 0 }} aria-label={title}>
+    <CardActionArea data-testid={`optional-${panel.key}`} onClick={onOpen} sx={{ px: 2, py: 1.75, borderRadius: 0 }} aria-label={title}>
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <Box
           sx={{
@@ -96,7 +96,7 @@ function PanelBody({ panelKey, form }: Readonly<{ panelKey: PanelKey; form: Crea
       control={form.control}
       name="available_perks"
       render={({ field, fieldState }) => (
-        <ChipArrayField label="" value={field.value} onChange={field.onChange} error={fieldState.error?.message} placeholder={t('mweb.createPod.perksPlaceholder')} />
+        <ChipArrayField testId="create-pod-perks" label="" value={field.value} onChange={field.onChange} error={fieldState.error?.message} placeholder={t('mweb.createPod.perksPlaceholder')} />
       )}
     />
   );
@@ -119,7 +119,7 @@ export default function OptionalSettingsCards({ form }: Readonly<{ form: CreateP
   const activePanel = PANELS.find((panel) => panel.key === active) ?? null;
 
   return (
-    <Box sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
+    <Box data-testid="create-pod-optional-settings" sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
       <SettingRow
         panel={PANELS[0]}
         title={t('mweb.createPod.additionalInfoTitle')}
@@ -136,10 +136,11 @@ export default function OptionalSettingsCards({ form }: Readonly<{ form: CreateP
         onOpen={() => setActive('perks')}
       />
 
-      <Dialog open={!!active} onClose={() => setActive(null)} fullWidth maxWidth="sm">
+      <Dialog data-testid="optional-settings-dialog" open={!!active} onClose={() => setActive(null)} fullWidth maxWidth="sm">
         <DialogTitle sx={{ pr: 7 }}>
           {activePanel ? t(activePanel.titleKey) : null}
           <DuncitRoundButton
+            data-testid="optional-settings-close"
             tone="surface"
             aria-label={t('mweb.auth.close')}
             onClick={() => setActive(null)}
@@ -150,7 +151,7 @@ export default function OptionalSettingsCards({ form }: Readonly<{ form: CreateP
         </DialogTitle>
         <DialogContent>{active && <PanelBody panelKey={active} form={form} />}</DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
-          <DuncitButton variant="contained" size="large" fullWidth onClick={() => setActive(null)}>
+          <DuncitButton data-testid="optional-settings-done" variant="contained" size="large" fullWidth onClick={() => setActive(null)}>
             {t('mweb.createPod.done')}
           </DuncitButton>
         </DialogActions>

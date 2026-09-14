@@ -43,6 +43,7 @@ function TimeChip({ iso }: Readonly<{ iso?: string | null }>) {
       <Chip
         icon={<EventBusyIcon />}
         label={t('mweb.podDetails.podExpired')}
+        data-testid="pod-info-time-chip"
         sx={toneChipSx(theme, 'error')}
       />
     );
@@ -61,6 +62,7 @@ function TimeChip({ iso }: Readonly<{ iso?: string | null }>) {
     <Chip
       icon={<HourglassBottomIcon />}
       label={label}
+      data-testid="pod-info-time-chip"
       sx={toneChipSx(theme, days <= 1 ? 'warning' : 'info')}
     />
   );
@@ -79,14 +81,14 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
   const spotsTotal = pod.no_of_spots ?? 0;
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.5} data-testid="pod-info">
       <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <Box sx={{ minWidth: 0 }}>
-          <Typography component="h1" sx={{ fontSize: 24, fontWeight: 600, lineHeight: 1.2 }}>
+          <Typography component="h1" data-testid="pod-info-title" sx={{ fontSize: 24, fontWeight: 600, lineHeight: 1.2 }}>
             {pod.pod_title}
           </Typography>
           {hostLine && (
-            <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }} noWrap>
+            <Typography variant="body2" data-testid="pod-info-host" sx={{ color: 'text.secondary', mt: 0.5 }} noWrap>
               {t('mweb.podDetails.hostedBy', { vars: { names: hostLine } })}
             </Typography>
           )}
@@ -96,6 +98,7 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
             size="small"
             startIcon={<AddPhotoAlternateIcon />}
             onClick={onAddStatus}
+            data-testid="pod-overview-add-status"
             sx={{ flexShrink: 0, minHeight: 36, bgcolor: 'background.paper', color: 'text.primary', '&:hover': { bgcolor: 'background.paper' } }}
           >
             {t('mweb.podDetails.addStatus')}
@@ -112,6 +115,7 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
       <Stack direction="row" data-tour="pod-summary" sx={{ flexWrap: 'wrap', gap: 1 }}>
         <Chip
           label={isFree ? t('mweb.podDetails.free') : priceFormat(pod.pod_amount)}
+          data-testid="pod-info-price-chip"
           sx={(theme) => ({
             fontWeight: 700,
             bgcolor: alpha(theme.palette.primary.main, 0.12),
@@ -121,6 +125,7 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
         <Chip
           icon={pod.pod_mode === 'VIRTUAL' ? <VideocamIcon /> : <PlaceIcon />}
           label={modeLabel}
+          data-testid="pod-info-mode-chip"
           sx={{ bgcolor: 'background.paper', color: 'text.primary', '& .MuiChip-icon': { color: 'text.primary' } }}
         />
         <TimeChip iso={pod.pod_date_time} />

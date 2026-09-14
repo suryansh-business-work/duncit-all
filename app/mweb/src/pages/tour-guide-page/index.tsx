@@ -39,6 +39,7 @@ export default function TourGuidePage() {
 
   return (
     <Stack
+      data-testid="tour-guide-page"
       spacing={2}
       sx={{ maxWidth: 720, mx: 'auto', width: '100%', px: 2, pt: 1, pb: { xs: 10, sm: 8 } }}
     >
@@ -48,6 +49,7 @@ export default function TourGuidePage() {
           tone="paper"
           onClick={() => navigate(-1)}
           aria-label={t('mweb.tourGuide.back')}
+          data-testid="tour-guide-back"
           sx={{ width: 40, height: 40, minWidth: 40, minHeight: 40, borderColor: 'var(--duncit-card-border)' }}
         >
           <ArrowBackIcon />

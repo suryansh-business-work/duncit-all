@@ -19,21 +19,28 @@ function Tick({
   const state = userMessageTick(msg, agentLastReadAt);
   if (state === 'failed') {
     return (
-      <Stack direction="row" spacing={0.25} sx={{
+      <Stack data-testid={`tick-${msg.id}`} direction="row" spacing={0.25} sx={{
         alignItems: "center"
       }}>
         <ErrorOutlineIcon sx={{ fontSize: 14, color: 'error.main' }} />
         {onRetry && (
-          <Link component="button" type="button" onClick={onRetry} underline="always" sx={{ fontSize: 11, fontWeight: 600, color: 'error.main' }}>
+          <Link
+            data-testid={`retry-${msg.id}`}
+            component="button"
+            type="button"
+            onClick={onRetry}
+            underline="always"
+            sx={{ fontSize: 11, fontWeight: 600, color: 'error.main' }}
+          >
             Retry
           </Link>
         )}
       </Stack>
     );
   }
-  if (state === 'pending') return <AccessTimeIcon sx={{ fontSize: 14, opacity: 0.7 }} />;
-  if (state === 'seen') return <DoneAllIcon sx={{ fontSize: 15, color: SEEN_BLUE }} />;
-  return <CheckIcon sx={{ fontSize: 15, opacity: 0.6 }} />;
+  if (state === 'pending') return <AccessTimeIcon data-testid={`tick-${msg.id}`} sx={{ fontSize: 14, opacity: 0.7 }} />;
+  if (state === 'seen') return <DoneAllIcon data-testid={`tick-${msg.id}`} sx={{ fontSize: 15, color: SEEN_BLUE }} />;
+  return <CheckIcon data-testid={`tick-${msg.id}`} sx={{ fontSize: 15, opacity: 0.6 }} />;
 }
 
 interface Props {
@@ -49,6 +56,7 @@ export default function ChatBubble({ msg, agentLastReadAt, timeText, onRetry }: 
   if (msg.sender_role === 'SYSTEM') {
     return (
       <Stack
+        data-testid={`support-msg-${msg.id}`}
         sx={{
           alignItems: "center",
           my: 0.5
@@ -62,7 +70,12 @@ export default function ChatBubble({ msg, agentLastReadAt, timeText, onRetry }: 
   const label = msg.is_ai ? 'Duncit Assistant' : msg.sender_name || 'Support';
 
   return (
-    <Stack direction="row" sx={{ justifyContent: isUser ? 'flex-end' : 'flex-start', alignItems: 'flex-end' }} spacing={1}>
+    <Stack
+      data-testid={`support-msg-${msg.id}`}
+      direction="row"
+      sx={{ justifyContent: isUser ? 'flex-end' : 'flex-start', alignItems: 'flex-end' }}
+      spacing={1}
+    >
       {!isUser && (
         <Avatar src={msg.sender_photo || undefined} sx={{ width: 28, height: 28, fontSize: 12, bgcolor: msg.is_ai ? 'secondary.main' : undefined }}>
           {msg.is_ai ? <SmartToyIcon sx={{ fontSize: 16 }} /> : label[0]?.toUpperCase() || 'S'}

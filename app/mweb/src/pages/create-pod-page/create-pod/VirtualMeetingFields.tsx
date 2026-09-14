@@ -9,6 +9,7 @@ import { useTranslation } from '../../../i18n/useTranslation';
 import { SURFACE_SX } from '../../../theme';
 import { MIN_POD_DURATION_MINUTES } from './create-pod.form';
 import type { CreatePodForm } from './create-pod.types';
+import { testIdProps } from '../../../utils/testIdProps';
 
 /** Virtual-pod branch of Step 3: meeting platform/link/notes + start/end pickers.
  * The schedule is entered by hand since there is no venue calendar to book. */
@@ -40,6 +41,7 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
           name="meeting_platform"
           render={({ field }) => (
             <TextField
+              data-testid="meeting_platform"
               select
               label={requiredLabel(t('mweb.createPod.meetingPlatform'), true)}
               fullWidth
@@ -58,13 +60,23 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
           )}
         />
         <TextField
+          data-testid="meeting_url"
           label={requiredLabel(t('mweb.createPod.meetingLink'), true)}
           fullWidth
+          slotProps={{ htmlInput: { 'data-testid': 'meeting_url-input' } }}
           {...register('meeting_url')}
           error={!!errors.meeting_url}
           helperText={errors.meeting_url?.message}
         />
-        <TextField label={t('mweb.createPod.meetingNotes')} fullWidth multiline minRows={2} {...register('meeting_notes')} />
+        <TextField
+          data-testid="meeting_notes"
+          label={t('mweb.createPod.meetingNotes')}
+          fullWidth
+          multiline
+          minRows={2}
+          slotProps={{ htmlInput: { 'data-testid': 'meeting_notes-input' } }}
+          {...register('meeting_notes')}
+        />
       </Stack>
       <Stack spacing={2} sx={{ ...SURFACE_SX, p: 2 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
@@ -82,6 +94,8 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
                     fullWidth: true,
                     error: !!errors.pod_date_time,
                     helperText: errors.pod_date_time?.message,
+                    ...testIdProps('pod_date_time'),
+                    slotProps: { htmlInput: { ...testIdProps('pod_date_time-input') } },
                   }}}
               />
             )}
@@ -100,13 +114,15 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
                     fullWidth: true,
                     error: !!errors.pod_end_date_time,
                     helperText: errors.pod_end_date_time?.message,
+                    ...testIdProps('pod_end_date_time'),
+                    slotProps: { htmlInput: { ...testIdProps('pod_end_date_time-input') } },
                   }}}
               />
             )}
           />
         </Stack>
         {duration && (
-          <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+          <Typography data-testid="pod-duration" variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
             {t('mweb.createPod.totalDuration', { vars: { duration } })}
           </Typography>
         )}

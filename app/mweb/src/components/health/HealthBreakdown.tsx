@@ -25,8 +25,9 @@ type Adjustment = HealthScore['adjustments'][number];
 function RemarkRow({ adjustment }: Readonly<{ adjustment: Adjustment }>) {
   const sign = adjustment.delta > 0 ? `+${adjustment.delta}` : `${adjustment.delta}`;
   const color: 'success' | 'error' = adjustment.delta > 0 ? 'success' : 'error';
+  const rowTestId = `health-remark-${adjustment.id}`;
   return (
-    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', px: 2, py: 1.75 }}>
+    <Stack data-testid={rowTestId} direction="row" spacing={1.5} sx={{ alignItems: 'center', px: 2, py: 1.75 }}>
       <Chip size="small" color={color} label={sign} sx={{ minWidth: 44 }} />
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography variant="body2" sx={{ fontWeight: 500 }}>
@@ -43,7 +44,7 @@ function RemarkRow({ adjustment }: Readonly<{ adjustment: Adjustment }>) {
 
 export default function HealthBreakdown({ score }: Readonly<Props>) {
   return (
-    <Stack spacing={2.5}>
+    <Stack data-testid="health-breakdown" spacing={2.5}>
       <Card sx={{ p: 2 }}>
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 1 }}>
           <Stack direction="row" spacing={0.5} sx={{ alignItems: 'baseline' }}>
@@ -71,7 +72,7 @@ export default function HealthBreakdown({ score }: Readonly<Props>) {
       <Stack spacing={1.5}>
         <SectionHeader title="Admin remarks" />
         {score.adjustments.length === 0 ? (
-          <Card sx={{ p: 2 }}>
+          <Card data-testid="health-no-remarks" sx={{ p: 2 }}>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               No admin adjustments yet. Your score is the default {score.base_score}.
             </Typography>

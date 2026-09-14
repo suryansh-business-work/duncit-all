@@ -14,16 +14,17 @@ interface Props {
  * users can explore communities by interest instead of facing a blank screen. */
 export default function CategoryActions({ categories, onSelect }: Readonly<Props>) {
   return (
-    <Stack component="section" spacing={1.5}>
+    <Stack data-testid="category-actions" component="section" spacing={1.5}>
       <SectionHeader title="Discover Experiences by Interest" />
       {categories.length === 0 ? (
-        <Typography variant="body2" sx={{
+        <Typography data-testid="category-actions-empty" variant="body2" sx={{
           color: "text.secondary"
         }}>
           Categories are on their way — check back soon.
         </Typography>
       ) : (
         <Box
+          data-testid="category-actions-grid"
           sx={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(104px, 1fr))',
@@ -33,6 +34,7 @@ export default function CategoryActions({ categories, onSelect }: Readonly<Props
           {categories.map((category) => (
             <ButtonBase
               key={category.id}
+              data-testid={`category-actions-item-${category.id}`}
               onClick={() => onSelect(category.id)}
               sx={{ ...SURFACE_SX, flexDirection: 'column', gap: 1, p: 2, minWidth: 0 }}
             >

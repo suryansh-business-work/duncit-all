@@ -17,7 +17,7 @@ function CoinExpiryNote({ coins, at }: Readonly<{ coins: number; at: string }>) 
   const { t } = useTranslation();
   const { formatDate } = useDateFormat();
   return (
-    <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', mt: 0.5 }}>
+    <Stack data-testid="coin-next-expiry" direction="row" spacing={0.5} sx={{ alignItems: 'center', mt: 0.5 }}>
       <HourglassBottomIcon sx={{ fontSize: 16, color: 'warning.main' }} />
       <Typography variant="caption" sx={{ fontWeight: 600 }}>
         {t('mweb.coin.nextExpiry', { vars: { coins, date: formatDate(at) } })}
@@ -41,7 +41,7 @@ export default function CoinBalanceCard({ balance, currencySymbol }: Readonly<Pr
   const nextExpiryAt = balance?.next_expiry_at;
 
   return (
-    <Card sx={{ p: 2.5 }}>
+    <Card data-testid="coin-balance-card" sx={{ p: 2.5 }}>
       <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
         <Box
           sx={{
@@ -61,7 +61,7 @@ export default function CoinBalanceCard({ balance, currencySymbol }: Readonly<Pr
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {t('mweb.coin.balanceLabel')}
           </Typography>
-          <Typography sx={{ fontSize: '2rem', fontWeight: 700, color: gold, lineHeight: 1.2 }}>
+          <Typography data-testid="coin-balance-value" sx={{ fontSize: '2rem', fontWeight: 700, color: gold, lineHeight: 1.2 }}>
             {balance?.balance ?? 0}
           </Typography>
           {expiringCoins > 0 && nextExpiryAt ? (
@@ -90,7 +90,7 @@ export default function CoinBalanceCard({ balance, currencySymbol }: Readonly<Pr
         })}
       </Typography>
       {feedbackCoins > 0 && (
-        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>
+        <Typography data-testid="coin-feedback-rate" variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 0.5 }}>
           {t('mweb.coin.feedbackRateNote', { vars: { coins: feedbackCoins } })}
         </Typography>
       )}

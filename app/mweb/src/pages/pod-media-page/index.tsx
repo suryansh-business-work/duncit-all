@@ -27,7 +27,7 @@ function PodMediaBody({ podId }: Readonly<{ podId: string }>) {
   useEntityPageMeta(labels.pageTitle);
 
   return (
-    <Stack spacing={2.5} sx={{ p: 2, pb: 4 }}>
+    <Stack data-testid="pod-media-page" spacing={2.5} sx={{ p: 2, pb: 4 }}>
       <PageBackHeader title={labels.pageTitle} backLabel={labels.back} />
 
       <PodMediaView podId={podId} />

@@ -61,6 +61,7 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
       >
         {club && (
           <Stack
+            data-testid="explore-club-link"
             direction="row"
             spacing={1}
             role="button"
@@ -84,11 +85,12 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
               {club.club_name}
             </Typography>
             {club.is_verified && (
-              <VerifiedIcon sx={{ fontSize: 16, color: '#1d9bf0', flex: '0 0 auto' }} aria-label={t('mweb.explore.verifiedClub')} />
+              <VerifiedIcon data-testid="explore-club-verified" sx={{ fontSize: 16, color: '#1d9bf0', flex: '0 0 auto' }} aria-label={t('mweb.explore.verifiedClub')} />
             )}
           </Stack>
         )}
         <Typography
+          data-testid="explore-pod-title"
           sx={(theme) => ({
             fontSize: '1.375rem',
             fontWeight: 600,
@@ -99,11 +101,13 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
         </Typography>
         {description && (
           <Box
+            data-testid="explore-caption-wrap"
             onClick={() => collapsible && setExpanded((v) => !v)}
             onDoubleClick={(e) => collapsible && e.stopPropagation()}
             sx={{ cursor: collapsible ? 'pointer' : 'default' }}
           >
             <Typography
+              data-testid="explore-caption"
               variant="body2"
               sx={
                 collapsible && !expanded
@@ -114,7 +118,7 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
               {description}
             </Typography>
             {collapsible && (
-              <Typography component="span" variant="caption" sx={{ fontWeight: 600 }}>
+              <Typography data-testid="explore-caption-toggle" component="span" variant="caption" sx={{ fontWeight: 600 }}>
                 {expanded ? 'Show less' : 'More'}
               </Typography>
             )}
@@ -128,9 +132,9 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
             alignItems: "center",
             flexWrap: "wrap"
           }}>
-          <Chip label={isFree ? 'Free' : format(pod.pod_amount)} sx={CHIP_SX} />
+          <Chip data-testid="explore-price-chip" label={isFree ? 'Free' : format(pod.pod_amount)} sx={CHIP_SX} />
           {pod.pod_date_time && (
-            <Chip icon={<EventRoundedIcon />} label={formatDateTime(pod.pod_date_time)} sx={CHIP_SX} />
+            <Chip data-testid="explore-date-chip" icon={<EventRoundedIcon />} label={formatDateTime(pod.pod_date_time)} sx={CHIP_SX} />
           )}
         </Stack>
       </Stack>

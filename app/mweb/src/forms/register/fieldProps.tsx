@@ -22,11 +22,18 @@ export const passwordInputProps = (
   visible: boolean,
   onToggle: () => void,
   toggleLabel: string,
+  testId?: string,
 ) => ({
   ...startIcon(<LockOutlinedIcon fontSize="small" />),
   endAdornment: (
     <InputAdornment position="end">
-      <DuncitIconButton size="small" onClick={onToggle} edge="end" aria-label={toggleLabel}>
+      <DuncitIconButton
+        data-testid={testId}
+        size="small"
+        onClick={onToggle}
+        edge="end"
+        aria-label={toggleLabel}
+      >
         {visible ? (
           <VisibilityOffOutlinedIcon fontSize="small" />
         ) : (

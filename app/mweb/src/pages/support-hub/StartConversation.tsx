@@ -11,6 +11,7 @@ export default function StartConversation() {
   const navigate = useNavigate();
   return (
     <Paper
+      data-testid="support-start-chat"
       onClick={() => navigate('/live-chat')}
       role="button"
       tabIndex={0}

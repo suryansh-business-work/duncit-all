@@ -26,7 +26,7 @@ export default function GrievanceOfficerCard({ officer }: Readonly<Props>) {
   const filled = rows.filter(([, value]) => value.trim().length > 0);
 
   return (
-    <Paper sx={{ ...SURFACE_SX, p: 2 }}>
+    <Paper data-testid="grievance-officer" sx={{ ...SURFACE_SX, p: 2 }}>
       <Typography sx={{ fontSize: '1rem', fontWeight: 600, mb: 1 }}>
         {t('grievance.officerTitle')}
       </Typography>

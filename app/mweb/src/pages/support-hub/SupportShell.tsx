@@ -21,9 +21,10 @@ export default function SupportShell({ title, backTo, action, children }: Readon
   const titleAlign = action ? 'center' : 'left';
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
+    <Stack data-testid="support-shell" spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <DuncitRoundButton
+          data-testid="support-shell-back"
           onClick={() => (backTo ? navigate(backTo) : navigate(-1))}
           aria-label={t('mweb.common.back')}
           sx={HEADER_BUTTON_SX}
@@ -31,6 +32,7 @@ export default function SupportShell({ title, backTo, action, children }: Readon
           <ArrowBackRoundedIcon />
         </DuncitRoundButton>
         <Typography
+          data-testid="support-shell-title"
           component="h1"
           noWrap
           sx={{ flex: 1, minWidth: 0, fontSize: '1.0625rem', fontWeight: 600, textAlign: titleAlign }}
@@ -40,7 +42,7 @@ export default function SupportShell({ title, backTo, action, children }: Readon
         {action}
       </Stack>
 
-      <Box>{children}</Box>
+      <Box data-testid="support-shell-content">{children}</Box>
     </Stack>
   );
 }

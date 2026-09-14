@@ -15,6 +15,7 @@ export default function DrawerFooter({ onLogout }: Readonly<DrawerFooterProps>) 
     <Box sx={{ px: 2, pt: 0.5, pb: 1.5 }}>
       <Box sx={{ ...SURFACE_SX, overflow: 'hidden' }}>
         <MenuRow
+          testId="sidebar-logout"
           icon={<LogoutIcon />}
           label={t('mweb.common.logout')}
           tone="danger"
@@ -23,6 +24,7 @@ export default function DrawerFooter({ onLogout }: Readonly<DrawerFooterProps>) 
         />
       </Box>
       <Typography
+        data-testid="sidebar-app-version"
         sx={{
           fontSize: 12,
           color: 'text.secondary',

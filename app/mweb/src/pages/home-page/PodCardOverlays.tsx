@@ -41,6 +41,7 @@ export function PodCategoryPill({ label }: Readonly<{ label: string }>) {
 }
 
 interface PodSaveButtonProps {
+  podId: string;
   saved?: boolean;
   /** The toggle is in flight — the icon becomes a spinner. */
   saving?: boolean;
@@ -50,12 +51,13 @@ interface PodSaveButtonProps {
 
 /** The 36px round save button at the image's top-right. Its click never
  * reaches the card, which would open the pod. */
-export function PodSaveButton({ saved, saving, label, onToggle }: Readonly<PodSaveButtonProps>) {
+export function PodSaveButton({ podId, saved, saving, label, onToggle }: Readonly<PodSaveButtonProps>) {
   // Hoisted out of the JSX: a spinner-or-icon choice inline would nest ternaries (S3358).
   const savedIcon = saved ? <BookmarkIcon /> : <BookmarkBorderIcon />;
   const content = saving ? <CircularProgress size={18} color="inherit" /> : savedIcon;
   return (
     <DuncitRoundButton
+      data-testid={`pod-card-save-${podId}`}
       aria-label={label}
       aria-pressed={saved}
       disabled={saving}

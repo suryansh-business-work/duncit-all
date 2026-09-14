@@ -46,7 +46,7 @@ export default function IdeaCard({
   const statusColor = idea.status === 'APPROVED' ? 'success' : notApprovedColor;
   const categoryPath = categoryPathLabel(idea);
   return (
-    <Card>
+    <Card data-testid={`idea-card-${idea.id}`}>
       <CardContent sx={{ p: 2, '&:last-child': { pb: 1.5 } }}>
         <Stack
           direction="row"
@@ -71,17 +71,22 @@ export default function IdeaCard({
             </Typography>
           </Box>
           {showStatus && (
-            <Chip size="small" label={idea.status} color={statusColor} />
+            <Chip size="small" label={idea.status} color={statusColor} data-testid={`idea-card-status-${idea.id}`} />
           )}
           {isMine && (
             <Tooltip title={t('mweb.common.delete')}>
-              <DuncitIconButton size="small" color="error" onClick={onDelete}>
+              <DuncitIconButton
+                size="small"
+                color="error"
+                onClick={onDelete}
+                data-testid={`idea-card-delete-${idea.id}`}
+              >
                 <DeleteIcon fontSize="small" />
               </DuncitIconButton>
             </Tooltip>
           )}
         </Stack>
-        <Box sx={{ cursor: 'pointer' }} onClick={onOpen}>
+        <Box sx={{ cursor: 'pointer' }} onClick={onOpen} data-testid={`idea-card-open-${idea.id}`}>
           <Typography
             component="h3"
             sx={{
@@ -145,6 +150,7 @@ export default function IdeaCard({
               )
             }
             onClick={onLike}
+            data-testid={`idea-card-like-${idea.id}`}
             sx={{ color: idea.liked_by_me ? 'secondary.main' : 'text.secondary' }}
           >
             {idea.likes_count}
@@ -153,6 +159,7 @@ export default function IdeaCard({
             size="small"
             startIcon={<ChatBubbleOutlineIcon fontSize="small" />}
             onClick={onOpen}
+            data-testid={`idea-card-comments-${idea.id}`}
             sx={{ color: 'text.secondary' }}
           >
             {idea.comments_count}
@@ -161,6 +168,7 @@ export default function IdeaCard({
             size="small"
             startIcon={<ShareIcon fontSize="small" />}
             onClick={onShare}
+            data-testid={`idea-card-share-${idea.id}`}
             sx={{ color: 'text.secondary' }}
           >
             {idea.shares_count}

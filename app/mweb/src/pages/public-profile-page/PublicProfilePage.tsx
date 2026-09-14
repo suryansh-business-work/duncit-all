@@ -56,7 +56,7 @@ export default function PublicProfilePage() {
 
   if (loading && !data) {
     return (
-      <Stack spacing={2} sx={{ pt: 2, alignItems: 'center' }}>
+      <Stack data-testid="public-profile-page-loading" spacing={2} sx={{ pt: 2, alignItems: 'center' }}>
         <Skeleton variant="circular" width={88} height={88} />
         <Skeleton width="60%" height={32} />
         <Skeleton width="40%" />
@@ -64,22 +64,35 @@ export default function PublicProfilePage() {
     );
   }
 
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  if (error) {
+    return (
+      <Alert data-testid="public-profile-page-error" severity="error">
+        {error.message}
+      </Alert>
+    );
+  }
   const u = data?.publicUserProfile;
-  if (!u) return <Alert severity="warning">{t('mweb.publicProfile.userNotFound')}</Alert>;
+  if (!u) {
+    return (
+      <Alert data-testid="public-profile-page-not-found" severity="warning">
+        {t('mweb.publicProfile.userNotFound')}
+      </Alert>
+    );
+  }
   const isOwner = data?.me?.user_id && data.me.user_id === u.user_id;
 
   return (
-    <Stack spacing={3} sx={{ pt: 1, pb: 4 }}>
+    <Stack data-testid="public-profile-page" spacing={3} sx={{ pt: 1, pb: 4 }}>
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <DuncitIconButton
+          data-testid="public-profile-page-back"
           onClick={() => navigate(-1)}
           aria-label={t('mweb.common.goBack')}
           sx={{ width: 40, height: 40, minHeight: 40, bgcolor: 'background.paper', color: 'text.primary' }}
         >
           <ArrowBackIcon fontSize="small" />
         </DuncitIconButton>
-        <Typography component="h2" sx={{ fontSize: 17, fontWeight: 600 }}>
+        <Typography data-testid="public-profile-page-title" component="h2" sx={{ fontSize: 17, fontWeight: 600 }}>
           Profile
         </Typography>
       </Stack>

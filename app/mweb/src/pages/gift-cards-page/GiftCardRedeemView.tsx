@@ -66,7 +66,7 @@ export default function GiftCardRedeemView({ card, currencySymbol }: Readonly<Gi
           })
         : t('mweb.giftCards.redeemAlreadyBody');
     return (
-      <Card sx={{ p: 3, textAlign: 'center' }}>
+      <Card data-testid="gift-card-redeem-success" sx={{ p: 3, textAlign: 'center' }}>
         <Box sx={CHECK_DISC_SX}>
           <CheckRoundedIcon />
         </Box>
@@ -81,7 +81,7 @@ export default function GiftCardRedeemView({ card, currencySymbol }: Readonly<Gi
           }}>
           {body}
         </Typography>
-        <DuncitButton variant="contained" size="large" fullWidth onClick={() => navigate('/duncit-coin')} sx={{ mt: 2.5 }}>
+        <DuncitButton data-testid="gift-card-go-to-coins" variant="contained" size="large" fullWidth onClick={() => navigate('/duncit-coin')} sx={{ mt: 2.5 }}>
           {t('mweb.giftCards.goToCoins')}
         </DuncitButton>
       </Card>
@@ -89,11 +89,17 @@ export default function GiftCardRedeemView({ card, currencySymbol }: Readonly<Gi
   }
 
   let statusBody: string | null = null;
-  if (card.status === 'EXPIRED') statusBody = t('mweb.giftCards.claimExpiredBody');
-  else if (card.status === 'REDEEMED') statusBody = t('mweb.giftCards.claimRedeemedBody');
+  let statusTestId: string | undefined;
+  if (card.status === 'EXPIRED') {
+    statusBody = t('mweb.giftCards.claimExpiredBody');
+    statusTestId = 'gift-card-expired';
+  } else if (card.status === 'REDEEMED') {
+    statusBody = t('mweb.giftCards.claimRedeemedBody');
+    statusTestId = 'gift-card-redeemed';
+  }
 
   return (
-    <Card sx={{ p: 1.5 }}>
+    <Card data-testid="gift-card-redeem-panel" sx={{ p: 1.5 }}>
       <Stack spacing={1.5}>
         <GiftCardVisual
           scopeType={card.scope_type}
@@ -108,12 +114,12 @@ export default function GiftCardRedeemView({ card, currencySymbol }: Readonly<Gi
         />
         <Stack spacing={0.75} sx={{ px: 0.5 }}>
           {card.sender_name && (
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            <Typography data-testid="gift-card-sender" variant="body2" sx={{ fontWeight: 600 }}>
               {t('mweb.giftCards.claimFrom', { vars: { sender: card.sender_name } })}
             </Typography>
           )}
           {card.message && (
-            <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
+            <Typography data-testid="gift-card-message" variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
               {card.message}
             </Typography>
           )}
@@ -122,11 +128,11 @@ export default function GiftCardRedeemView({ card, currencySymbol }: Readonly<Gi
           </Typography>
         </Stack>
         {statusBody ? (
-          <Alert severity="warning">{statusBody}</Alert>
+          <Alert data-testid={statusTestId} severity="warning">{statusBody}</Alert>
         ) : (
           <>
-            {error && <Alert severity="error">{error}</Alert>}
-            <DuncitButton variant="contained" size="large" fullWidth disabled={loading} onClick={redeem}>
+            {error && <Alert data-testid="gift-card-redeem-error" severity="error">{error}</Alert>}
+            <DuncitButton data-testid="gift-card-redeem-cta" variant="contained" size="large" fullWidth disabled={loading} onClick={redeem}>
               {t('mweb.giftCards.redeemCta')}
             </DuncitButton>
           </>

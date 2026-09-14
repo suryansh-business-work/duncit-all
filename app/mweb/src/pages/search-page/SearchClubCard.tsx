@@ -46,7 +46,7 @@ export default function SearchClubCard({
   const { t } = useTranslation();
   const { club, upcoming_pods: pods } = result;
   return (
-    <Stack spacing={1.5} sx={{ ...SURFACE_SX, p: 2, minWidth: 0 }}>
+    <Stack data-testid={`search-club-card-${club.id}`} spacing={1.5} sx={{ ...SURFACE_SX, p: 2, minWidth: 0 }}>
       <Stack
         direction="row"
         spacing={1.5}
@@ -54,6 +54,7 @@ export default function SearchClubCard({
           alignItems: "center"
         }}>
         <Avatar
+          data-testid={`search-club-card-${club.id}-avatar`}
           src={coverImageUrl(club.club_feature_images_and_videos)}
           variant="rounded"
           onClick={() => onOpenClub(club.club_id)}
@@ -61,7 +62,11 @@ export default function SearchClubCard({
         >
           <GroupsIcon />
         </Avatar>
-        <Box sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }} onClick={() => onOpenClub(club.club_id)}>
+        <Box
+          data-testid={`search-club-card-${club.id}-open`}
+          sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }}
+          onClick={() => onOpenClub(club.club_id)}
+        >
           <Typography
             noWrap
             sx={{
@@ -96,6 +101,7 @@ export default function SearchClubCard({
         </Box>
         {following ? (
           <Chip
+            data-testid={`search-club-card-${club.id}-following`}
             icon={<CheckRoundedIcon />}
             label={t('mweb.nav.following')}
             sx={{ fontWeight: 600, flex: '0 0 auto', '& .MuiChip-icon': { color: 'text.primary' } }}
@@ -111,6 +117,7 @@ export default function SearchClubCard({
 
       {pods.length > 0 ? (
         <Box
+          data-testid={`search-club-card-${club.id}-pods`}
           sx={{
             display: 'flex',
             gap: 1.5,

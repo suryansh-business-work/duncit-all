@@ -24,7 +24,7 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
   const steps = buildOrderTimeline(order, t);
 
   return (
-    <Box sx={{ bgcolor: 'action.hover', borderRadius: '16px', p: 1.5 }}>
+    <Box data-testid={`po-item-${order.id}`} sx={{ bgcolor: 'action.hover', borderRadius: '16px', p: 1.5 }}>
       <Stack
         direction="row"
         spacing={0.75}
@@ -97,6 +97,7 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
             target="_blank"
             rel="noopener"
             disabled={!track}
+            data-testid={`po-track-${order.id}`}
             sx={{ alignSelf: 'flex-start' }}
           >
             {t('mweb.podHistory.trackShipment')}
@@ -115,7 +116,7 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
         </Typography>
       )}
 
-      <OrderTrackingTimeline steps={steps} />
+      <OrderTrackingTimeline steps={steps} testId={`pod-order-timeline-${order.id}`} />
     </Box>
   );
 }

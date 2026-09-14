@@ -33,7 +33,7 @@ export default function ClubSummaryHeader({
   onToggleFollow,
 }: Readonly<Props>) {
   return (
-    <Box sx={{ ...SURFACE_SX, p: 2 }}>
+    <Box data-testid="club-summary-header" sx={{ ...SURFACE_SX, p: 2 }}>
       {/* Identity and the two things you can do about it. The follower/pod/
           moment/venue counts that used to sit between them are gone: a brand
           new club read "0 total members" as its loudest line, which is the
@@ -59,6 +59,7 @@ export default function ClubSummaryHeader({
       <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
         <DuncitButton
           fullWidth
+          data-testid="club-summary-header-follow"
           data-tour="club-follow"
           variant={following ? 'text' : 'contained'}
           startIcon={following ? <CheckIcon /> : <PersonAddAltIcon />}
@@ -69,6 +70,7 @@ export default function ClubSummaryHeader({
         </DuncitButton>
         <DuncitButton
           fullWidth
+          data-testid="club-summary-header-chat"
           startIcon={<ChatBubbleOutlineIcon />}
           component={chatUrl ? 'a' : 'button'}
           href={chatUrl || undefined}

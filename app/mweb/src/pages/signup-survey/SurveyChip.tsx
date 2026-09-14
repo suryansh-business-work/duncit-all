@@ -33,6 +33,7 @@ export function SurveyChip({
 
   return (
     <Chip
+      data-testid={`chip-${id}`}
       onClick={() => onToggle(id)}
       label={
         <Box

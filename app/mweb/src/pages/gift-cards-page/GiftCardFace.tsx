@@ -24,6 +24,7 @@ export interface GiftCardFaceProps {
   /** Shown on owned cards only — a shared preview never prints a code. */
   code?: string;
   compact?: boolean;
+  testId?: string;
 }
 
 /** Sits under the copy so white text stays readable over any uploaded photo. */
@@ -50,6 +51,7 @@ export default function GiftCardFace({
   currencySymbol,
   code,
   compact = false,
+  testId,
 }: Readonly<GiftCardFaceProps>) {
   const { t } = useTranslation();
   const [artworkFailed, setArtworkFailed] = useState(false);
@@ -65,6 +67,7 @@ export default function GiftCardFace({
 
   return (
     <Box
+      data-testid={testId}
       sx={{
         position: 'absolute',
         inset: 0,

@@ -19,21 +19,21 @@ function ClubsBody({ clubs, loading, error }: Readonly<BodyProps>) {
   const { t } = useTranslation();
   if (loading) {
     return (
-      <Stack sx={{ alignItems: 'center', py: 3 }}>
+      <Stack data-testid="your-clubs-section-loading" sx={{ alignItems: 'center', py: 3 }}>
         <CircularProgress size={22} />
       </Stack>
     );
   }
   if (error) {
     return (
-      <Alert severity="error" sx={{ m: 2 }}>
+      <Alert data-testid="your-clubs-section-error" severity="error" sx={{ m: 2 }}>
         {error.message}
       </Alert>
     );
   }
   if (clubs.length === 0) {
     return (
-      <Typography variant="body2" sx={{ color: 'text.secondary', p: 2 }}>
+      <Typography data-testid="your-clubs-section-empty" variant="body2" sx={{ color: 'text.secondary', p: 2 }}>
         {t('mweb.clubStudio.noClubs')}
       </Typography>
     );
@@ -61,7 +61,7 @@ export default function YourClubsSection() {
   const clubs: AdminClubRow[] = data?.myAdminClubsTable?.rows ?? [];
 
   return (
-    <Stack spacing={1.5}>
+    <Stack data-testid="your-clubs-section" spacing={1.5}>
       <SectionHeader title={t('mweb.clubStudio.yourClubs')} />
       <Card>
         <ClubsBody clubs={clubs} loading={loading && !data} error={error} />

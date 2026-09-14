@@ -42,7 +42,7 @@ export default function PolicyRenderer({ slug, hideTitle, hideUpdated }: Readonl
 
   if (loading && !data) {
     return (
-      <Stack spacing={1.5} sx={{ maxWidth: 880, mx: 'auto' }}>
+      <Stack data-testid="policy-renderer-loading" spacing={1.5} sx={{ maxWidth: 880, mx: 'auto' }}>
         <Skeleton variant="text" width="60%" height={48} />
         <Skeleton variant="rectangular" height={20} />
         <Skeleton variant="rectangular" height={20} />
@@ -52,28 +52,29 @@ export default function PolicyRenderer({ slug, hideTitle, hideUpdated }: Readonl
     );
   }
   if (error)
-    return <Alert severity="error">Could not load policy: {error.message}</Alert>;
+    return <Alert data-testid="policy-renderer-error" severity="error">Could not load policy: {error.message}</Alert>;
 
   const policy = data?.policyBySlug;
   if (!policy) {
     return (
-      <Alert severity="warning">
+      <Alert data-testid="policy-renderer-not-found" severity="warning">
         No policy found for slug <code>{slug}</code>.
       </Alert>
     );
   }
   if (!policy.is_active) {
     return (
-      <Alert severity="info">
+      <Alert data-testid="policy-renderer-hidden" severity="info">
         This policy is currently hidden.
       </Alert>
     );
   }
 
   return (
-    <Box sx={{ maxWidth: 880, mx: 'auto' }}>
+    <Box data-testid="policy-renderer" sx={{ maxWidth: 880, mx: 'auto' }}>
       {!hideTitle && (
         <Typography
+          data-testid="policy-renderer-title"
           variant="h5"
           component="h1"
           sx={{
@@ -85,6 +86,7 @@ export default function PolicyRenderer({ slug, hideTitle, hideUpdated }: Readonl
       )}
       {!hideTitle && <PolicyPdfButton slug={slug} />}
       <Box
+        data-testid="policy-renderer-content"
         className="ql-snow"
         // Quill's own stylesheet supplies alignment and indent classes; the
         // shared block styles the elements themselves — including tables, which
@@ -95,6 +97,7 @@ export default function PolicyRenderer({ slug, hideTitle, hideUpdated }: Readonl
       </Box>
       {!hideUpdated && (
         <Typography
+          data-testid="policy-renderer-updated"
           variant="caption"
           sx={{
             color: "text.secondary",
@@ -106,7 +109,7 @@ export default function PolicyRenderer({ slug, hideTitle, hideUpdated }: Readonl
         </Typography>
       )}
       {loading && (
-        <Box sx={{ position: 'fixed', top: 80, right: 24 }}>
+        <Box data-testid="policy-renderer-refreshing" sx={{ position: 'fixed', top: 80, right: 24 }}>
           <CircularProgress size={18} />
         </Box>
       )}

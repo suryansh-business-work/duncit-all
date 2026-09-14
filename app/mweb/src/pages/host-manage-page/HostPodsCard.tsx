@@ -42,7 +42,11 @@ export default function HostPodsCard({
     : t('mweb.common.filter');
 
   const emptyLine = (text: string) => (
-    <Typography variant="body2" sx={{ px: 2, py: 2.5, textAlign: 'center', color: 'text.secondary' }}>
+    <Typography
+      data-testid="host-pods-section-empty"
+      variant="body2"
+      sx={{ px: 2, py: 2.5, textAlign: 'center', color: 'text.secondary' }}
+    >
       {text}
     </Typography>
   );
@@ -50,12 +54,16 @@ export default function HostPodsCard({
   let body;
   if (loading) {
     body = (
-      <Stack sx={{ alignItems: 'center', py: 4 }}>
+      <Stack data-testid="host-pods-section-loading" sx={{ alignItems: 'center', py: 4 }}>
         <CircularProgress size={22} />
       </Stack>
     );
   } else if (errorMessage) {
-    body = <Alert severity="error" sx={{ m: 2 }}>{errorMessage}</Alert>;
+    body = (
+      <Alert data-testid="host-pods-section-error" severity="error" sx={{ m: 2 }}>
+        {errorMessage}
+      </Alert>
+    );
   } else if (pods.length === 0) {
     body = emptyLine("You don't host any pods yet. New pods you host will show up here.");
   } else if (visible.length === 0) {
@@ -65,9 +73,10 @@ export default function HostPodsCard({
   }
 
   return (
-    <Stack spacing={1.5}>
+    <Stack data-testid="host-pods-section" spacing={1.5}>
       <HostSectionHeader title={t('mweb.common.yourPods')} count={visible.length}>
         <Chip
+          data-testid="host-pods-filter-open"
           clickable
           icon={<FilterListRoundedIcon />}
           label={filterLabel}

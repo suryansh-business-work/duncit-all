@@ -27,7 +27,7 @@ export function HomeClubRails({ clubsWithPods, isEmpty, ...rail }: Readonly<Prop
     // One anchor around the whole club list: the Clubs step describes what
     // clubs are, so it highlights the region rather than picking a row.
     <TourAnchor tour="home" anchor="home-clubs">
-      <YStack gap={24}>
+      <YStack testID="home-club-rails" gap={24}>
         {clubsWithPods.map(({ club, pods }, sectionIndex) => (
           <Reveal key={club.id} index={4 + sectionIndex}>
             <ClubSection club={club} pods={pods} {...rail} />

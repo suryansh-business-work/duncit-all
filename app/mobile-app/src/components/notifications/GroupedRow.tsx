@@ -15,6 +15,7 @@ export function GroupedRow({ index, count, children }: Readonly<Props>) {
   const last = index === count - 1;
   return (
     <YStack
+      testID="grouped-row"
       backgroundColor="$surface"
       borderColor="$cardBorder"
       borderLeftWidth={1}

@@ -38,7 +38,7 @@ export default function CartPage() {
 
   if (groups.length === 0) {
     return (
-      <Stack spacing={2} sx={{ py: 0.5 }}>
+      <Stack spacing={2} sx={{ py: 0.5 }} data-testid="cart-screen">
         <PageHeader title={t('mweb.cart.title')} />
         <EmptyState
           icon={<ShoppingCartOutlinedIcon />}
@@ -51,7 +51,7 @@ export default function CartPage() {
   }
 
   return (
-    <Stack spacing={2} sx={{ py: 0.5 }}>
+    <Stack spacing={2} sx={{ py: 0.5 }} data-testid="cart-screen">
       <PageHeader title={t('mweb.cart.title')} />
       {groups.map(([podId, group]) => (
         <CartPodGroup
@@ -69,10 +69,18 @@ export default function CartPage() {
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {t('mweb.cart.total')}
           </Typography>
-          <Typography sx={{ fontSize: '1.125rem', fontWeight: 700 }}>{priceFormat(grandTotal)}</Typography>
+          <Typography sx={{ fontSize: '1.125rem', fontWeight: 700 }} data-testid="cart-total">
+            {priceFormat(grandTotal)}
+          </Typography>
         </Stack>
       </Card>
-      <DuncitButton variant="text" color="error" onClick={clearAll} sx={{ alignSelf: 'center' }}>
+      <DuncitButton
+        variant="text"
+        color="error"
+        onClick={clearAll}
+        sx={{ alignSelf: 'center' }}
+        data-testid="cart-clear"
+      >
         {t('mweb.cart.clear')}
       </DuncitButton>
       {/* The whole cart pays in ONE product payment — delivery is quoted per
@@ -85,6 +93,7 @@ export default function CartPage() {
           fullWidth
           onClick={() => navigate('/product-checkout')}
           sx={{ boxShadow: (theme) => `0 10px 28px ${alpha(theme.palette.common.black, 0.16)}` }}
+          data-testid="cart-checkout"
         >
           {t('mweb.cart.checkout')}
         </DuncitButton>

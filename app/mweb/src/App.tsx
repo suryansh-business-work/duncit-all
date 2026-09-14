@@ -83,6 +83,7 @@ export default function App() {
     <CartProvider>
     <TourProvider>
     <Box
+      data-testid="app-shell"
       sx={isAuthed ? {
         height: '100dvh',
         display: 'flex',

@@ -48,14 +48,14 @@ export default function ExploreReels({
       {slides.map((entry) => {
         if (isAdEntry(entry)) {
           return (
-            <Box key={entry.__ad.id} sx={{ height: '100%' }}>
+            <Box key={entry.__ad.id} data-testid={`explore-ad-slide-${entry.__ad.id}`} sx={{ height: '100%' }}>
               <AdSlide ad={entry.__ad} />
             </Box>
           );
         }
         const p = entry;
         return (
-          <Box key={p.id} sx={{ height: '100%' }}>
+          <Box key={p.id} data-testid={`explore-pod-slide-${p.id}`} sx={{ height: '100%' }}>
             <ExplorePodCard
               pod={p}
               club={clubsById.get(p.club_id)}

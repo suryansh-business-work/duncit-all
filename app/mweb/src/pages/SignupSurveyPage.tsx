@@ -98,6 +98,7 @@ export default function SignupSurveyPage() {
   if (loading && !data) {
     return (
       <Stack
+        data-testid="survey-loading"
         sx={{
           alignItems: "center",
           p: 6
@@ -106,7 +107,7 @@ export default function SignupSurveyPage() {
       </Stack>
     );
   }
-  if (error) return <Alert severity="error">{error.message}</Alert>;
+  if (error) return <Alert severity="error" data-testid="survey-error">{error.message}</Alert>;
 
   const count = selected.size;
   const progress = Math.min(100, Math.round((count / Math.max(MIN_PICKS, 1)) * 100));
@@ -115,6 +116,7 @@ export default function SignupSurveyPage() {
   return (
     <Stack
       spacing={3}
+      data-testid="survey-screen"
       sx={{
         maxWidth: 760,
         mx: 'auto',
@@ -137,6 +139,7 @@ export default function SignupSurveyPage() {
         <LinearProgress
           variant="determinate"
           value={progress}
+          data-testid="survey-progress"
           sx={{ '& .MuiLinearProgress-bar': { borderRadius: '999px' } }}
         />
       </Box>
@@ -167,7 +170,7 @@ export default function SignupSurveyPage() {
         ))}
       </Stack>
 
-      {opError && <Alert severity="error">{opError}</Alert>}
+      {opError && <Alert severity="error" data-testid="survey-op-error">{opError}</Alert>}
 
       <SubmitFooter
         count={count}

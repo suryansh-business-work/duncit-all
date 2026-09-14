@@ -44,7 +44,7 @@ export default function HostList({ hosts, meId, statusFor, pendingUserId, onTogg
             xs: 12,
             sm: 6
           }}>
-          <Card sx={{ height: '100%', p: 2 }}>
+          <Card data-testid={`host-card-${h.user_id}`} sx={{ height: '100%', p: 2 }}>
             <Stack direction="row" spacing={1.5} sx={{
               alignItems: "center"
             }}>

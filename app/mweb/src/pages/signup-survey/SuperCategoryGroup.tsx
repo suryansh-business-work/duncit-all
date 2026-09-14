@@ -29,7 +29,7 @@ export function SuperCategoryGroup({
 
   return (
     // A plain calm card; the group's own hue lives on its label pill and chips.
-    <Box sx={{ ...SURFACE_SX, p: 2 }}>
+    <Box data-testid={`group-${superCategory.id}`} sx={{ ...SURFACE_SX, p: 2 }}>
       <Stack spacing={1.5}>
         <Box
           sx={{

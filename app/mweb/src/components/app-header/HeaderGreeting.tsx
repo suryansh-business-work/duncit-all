@@ -34,13 +34,15 @@ export default function HeaderGreeting({ tagline, firstName, onOpenLocation }: R
   const name = firstName?.trim();
   const lead = name ? t('mweb.home.greetingHello', { vars: { name } }) : title;
   const trail = name ? title : null;
-  const heading = <TwoToneHeading lead={lead} trail={trail} stacked variant="h5" component="p" />;
+  const heading = (
+    <TwoToneHeading testId="header-greeting-title" lead={lead} trail={trail} stacked variant="h5" component="p" />
+  );
 
-  if (!onOpenLocation) return <Box sx={WRAP_SX}>{heading}</Box>;
+  if (!onOpenLocation) return <Box data-testid="header-greeting" sx={WRAP_SX}>{heading}</Box>;
   // The greeting also opens the location picker — a bigger tap target than
   // the location pill alone (user ask).
   return (
-    <ButtonBase component="div" disableRipple onClick={onOpenLocation} sx={WRAP_SX}>
+    <ButtonBase data-testid="header-greeting" component="div" disableRipple onClick={onOpenLocation} sx={WRAP_SX}>
       {heading}
     </ButtonBase>
   );

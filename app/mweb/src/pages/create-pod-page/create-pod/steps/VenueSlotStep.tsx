@@ -124,13 +124,13 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
   }
 
   return (
-    <Stack spacing={2}>
+    <Stack data-testid="create-pod-venue-slot-step" spacing={2}>
       <VenuePicker venues={clubVenues} selectedId={venueId} onSelect={selectVenue} required />
-      {clubVenues.length === 0 && <Alert severity="info">{t('mweb.createPod.noVenues')}</Alert>}
-      {errors.venue_id && <FormHelperText error>{errors.venue_id.message}</FormHelperText>}
+      {clubVenues.length === 0 && <Alert data-testid="create-pod-no-venues" severity="info">{t('mweb.createPod.noVenues')}</Alert>}
+      {errors.venue_id && <FormHelperText data-testid="venue_id-error" error>{errors.venue_id.message}</FormHelperText>}
       {selectedVenue && (
         <Stack spacing={1.5} sx={{ ...SURFACE_SX, p: 2 }}>
-          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+          <Typography data-testid="create-pod-venue-capacity" variant="body2" sx={{ fontWeight: 600 }}>
             {selectedVenue.venue_type ? `${selectedVenue.venue_type} · ` : ''}
             {t('mweb.createPod.totalCapacity', { vars: { count: selectedVenue.capacity ?? 0 } })}
           </Typography>
@@ -139,6 +139,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
             name="venue_space_label"
             render={({ field }) => (
               <TextField
+                data-testid="venue_space_label"
                 select
                 label={requiredLabel(t('mweb.createPod.spaceCapacity'), true)}
                 fullWidth
@@ -168,7 +169,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
         />
       )}
       {selectedVenue && slotId && (
-        <Alert severity={ownVenue ? 'success' : 'info'}>
+        <Alert data-testid="create-pod-venue-approval-note" severity={ownVenue ? 'success' : 'info'}>
           {ownVenue ? t('mweb.createPod.ownVenueNote') : t('mweb.createPod.venueApprovalNote')}
         </Alert>
       )}
@@ -190,7 +191,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
         />
       )}
       {duration && (
-        <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+        <Typography data-testid="create-pod-window-duration" variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
           {t('mweb.createPod.podWindow', { vars: { duration } })}
         </Typography>
       )}

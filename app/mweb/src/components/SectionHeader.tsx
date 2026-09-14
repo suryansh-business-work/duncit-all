@@ -6,6 +6,10 @@ interface Props {
   /** Right-hand link text, e.g. "See all". Needs `onAction`. */
   actionLabel?: string;
   onAction?: () => void;
+  /** The section's own id — the native twin takes the same `testID`. */
+  testId?: string;
+  /** Id of the action itself, where a screen already addresses its "See all". */
+  actionTestId?: string;
 }
 
 /**
@@ -13,14 +17,21 @@ interface Props {
  * on the right. One look for every rail and list on every page. Native twin:
  * components/SectionHeader.
  */
-export default function SectionHeader({ title, actionLabel, onAction }: Readonly<Props>) {
+export default function SectionHeader({
+  title,
+  actionLabel,
+  onAction,
+  testId = 'section-header',
+  actionTestId,
+}: Readonly<Props>) {
   return (
-    <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
-      <Typography component="h2" sx={{ fontSize: '1.05rem', fontWeight: 600, minWidth: 0 }} noWrap>
+    <Stack data-testid={testId} direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+      <Typography data-testid={`${testId}-title`} component="h2" sx={{ fontSize: '1.05rem', fontWeight: 600, minWidth: 0 }} noWrap>
         {title}
       </Typography>
       {actionLabel && onAction ? (
         <DuncitButton
+          data-testid={actionTestId ?? `${testId}-action`}
           size="small"
           color="secondary"
           onClick={onAction}

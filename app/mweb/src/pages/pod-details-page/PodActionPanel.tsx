@@ -64,9 +64,14 @@ export default function PodActionPanel({
   // — replace the booking CTA with the Host Studio entry point.
   if (isHost) {
     return (
-      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', pl: 1 }}>
+      <Stack direction="row" spacing={1.5} data-testid="pod-action-panel-host" sx={{ alignItems: 'center', pl: 1 }}>
         <BarLabel caption={t('mweb.podDetails.youreHosting')} value={t('mweb.podDetails.yourPod')} />
-        <DuncitButton variant="contained" onClick={onGoToDashboard} sx={ctaButtonSx}>
+        <DuncitButton
+          variant="contained"
+          onClick={onGoToDashboard}
+          data-testid="pod-go-dashboard"
+          sx={ctaButtonSx}
+        >
           {t('mweb.podDetails.goToDashboard')}
         </DuncitButton>
       </Stack>
@@ -83,7 +88,7 @@ export default function PodActionPanel({
     : t('mweb.podDetails.bookingClosed');
   if (isExpired && !isMember && !inProcess) {
     return (
-      <Stack direction="row" sx={{ alignItems: 'center', minHeight: 48 }}>
+      <Stack direction="row" data-testid="pod-booking-closed" sx={{ alignItems: 'center', minHeight: 48 }}>
         <BarNotice icon={<EventBusyIcon sx={{ color: 'warning.main' }} />}>{closedMessage}</BarNotice>
       </Stack>
     );
@@ -134,11 +139,12 @@ export default function PodActionPanel({
   const busy = isFree && joining;
 
   return (
-    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', pl: 1 }}>
+    <Stack direction="row" spacing={1.5} data-testid="pod-action-panel" sx={{ alignItems: 'center', pl: 1 }}>
       <BarLabel
         caption={isFree ? t('mweb.podDetails.entry') : t('mweb.podDetails.price')}
         value={priceValue}
         emphasis="price"
+        valueTestId="pod-price"
       />
       <SeatPicker
         value={seats}
@@ -150,6 +156,7 @@ export default function PodActionPanel({
         variant="contained"
         disabled={busy || isFull}
         onClick={isFree ? onJoinFree : onPaidCheckout}
+        data-testid="pod-book"
         sx={ctaButtonSx}
       >
         {isFull ? t('mweb.podDetails.podIsFull') : bookLabel}

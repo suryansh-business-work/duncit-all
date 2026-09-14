@@ -63,9 +63,11 @@ export default function ComposeWindow({ open, title, icon, onClose, actions, chi
       }}
       data-testid="compose-window"
     >
+      {/* Pointer-only drag handle: the minimize/maximize buttons below are its keyboard equivalents. */}
       <Stack
         direction="row"
         spacing={1}
+        role="presentation"
         onPointerDown={onPointerDown}
         onDoubleClick={() => setMinimized((m) => !m)}
         sx={{

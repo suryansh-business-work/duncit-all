@@ -56,6 +56,7 @@ export default function SignatureStep({ draft, methods, onChange }: Readonly<Pro
           autoComplete="name"
           required
           fullWidth
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the step the user just opened (WCAG 2.4.3)
           autoFocus
         />
         <TextField

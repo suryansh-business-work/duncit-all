@@ -1,4 +1,4 @@
-import { Box, Skeleton, Typography } from '@mui/material';
+import { Box, ButtonBase, Skeleton, Typography } from '@mui/material';
 import { NavLink } from 'react-router';
 import { tokens } from '@duncit/theme';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -17,7 +17,9 @@ export function SidebarBrand({ name, collapsed = false, onNavigate }: Readonly<S
   const { t } = useTranslation();
   const { logoUrl, appName, loading, onLogoError } = useBranding();
   return (
-    <Box
+    // ButtonBase over the NavLink, like the nav rows below it: still the same
+    // <a href="/">, now a control the linter and the focus ring both recognise.
+    <ButtonBase
       component={NavLink}
       to="/"
       onClick={onNavigate}
@@ -60,6 +62,6 @@ export function SidebarBrand({ name, collapsed = false, onNavigate }: Readonly<S
           {name}
         </Typography>
       )}
-    </Box>
+    </ButtonBase>
   );
 }

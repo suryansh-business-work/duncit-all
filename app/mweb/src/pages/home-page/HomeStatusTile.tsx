@@ -93,7 +93,7 @@ export default function HomeStatusTile({
           }}
         >
           {videoUrl ? (
-            <Box component="video" aria-hidden src={videoUrl} autoPlay muted loop playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <Box component="video" aria-hidden tabIndex={-1} src={videoUrl} autoPlay muted loop playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
             imageOrAvatar
           )}

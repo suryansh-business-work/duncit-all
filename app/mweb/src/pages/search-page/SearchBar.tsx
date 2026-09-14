@@ -58,6 +58,7 @@ export default function SearchBar({ value, onChange, onPick }: Readonly<Props>) 
       <Box data-testid="search-bar" sx={{ position: 'relative', width: '100%' }}>
         <SearchPillField
           testId="search-bar-input"
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the search screen the user just opened (WCAG 2.4.3)
           autoFocus
           height={52}
           value={value}

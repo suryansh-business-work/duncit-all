@@ -41,6 +41,7 @@ export default function ManagedOptionEditRow({ draft, setDraft, onSave, onCancel
         <TextField
           size="small"
           fullWidth
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the inline editor the user just opened (WCAG 2.4.3)
           autoFocus
           placeholder={placeholder}
           value={draft.name}

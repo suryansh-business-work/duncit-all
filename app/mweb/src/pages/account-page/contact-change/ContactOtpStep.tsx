@@ -60,6 +60,7 @@ export default function ContactOtpStep({
           size="small"
           required
           autoComplete="one-time-code"
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the code step the user just requested (WCAG 2.4.3)
           autoFocus
           slotProps={{ inputLabel: { shrink: true }, htmlInput: otpInput }}
         />

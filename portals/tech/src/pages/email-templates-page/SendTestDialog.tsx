@@ -119,6 +119,7 @@ export default function SendTestDialog({
             render={({ field, fieldState }) => (
               <TextField
                 {...field}
+                // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3)
                 autoFocus
                 fullWidth
                 required

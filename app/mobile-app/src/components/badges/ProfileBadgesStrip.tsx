@@ -57,7 +57,12 @@ export function ProfileBadgesStrip() {
           {earned.map((row) => (
             <YStack key={row.badge.id} width={72} alignItems="center" gap={6}>
               {row.badge.image_url ? (
-                <Image source={{ uri: row.badge.image_url }} style={ART_STYLE} accessible={false} />
+                <Image
+                  source={{ uri: row.badge.image_url }}
+                  style={ART_STYLE}
+                  accessible={false}
+                  accessibilityIgnoresInvertColors
+                />
               ) : (
                 <YStack
                   width={56}

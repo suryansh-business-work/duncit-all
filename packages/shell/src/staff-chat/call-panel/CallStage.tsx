@@ -8,6 +8,7 @@ function Video({ stream, muted }: Readonly<{ stream: MediaStream | null; muted?:
     if (ref.current) ref.current.srcObject = stream;
   }, [stream]);
   return (
+    // eslint-disable-next-line jsx-a11y/media-has-caption -- live call stream, no caption track
     <Box
       component="video"
       ref={ref}

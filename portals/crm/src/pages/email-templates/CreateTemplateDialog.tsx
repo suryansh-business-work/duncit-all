@@ -87,6 +87,7 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
               }}>{targets(t).find((t) => t.value === target)?.label}</Typography>
               <DuncitButton size="small" onClick={() => setTarget(null)}>{t('crm.emailTemplates.change')}</DuncitButton>
             </Stack>
+            {/* eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3) */}
             <TextField size="small" label={t('shell.common.name')} required value={name} onChange={(e) => setName(e.target.value)} autoFocus fullWidth />
             <TextField size="small" label={t('crm.emailTemplates.slug')} value={slug} onChange={(e) => setSlug(e.target.value)} placeholder={slugify(name) || 'welcome-email'} helperText={t('crm.emailTemplates.stableCodeKeyAutoDerivedFrom')} fullWidth />
             <TextField size="small" label={t('crm.common.subject')} required value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth />

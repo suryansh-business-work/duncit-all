@@ -103,6 +103,7 @@ export function AppsDrawer({
           <TextField
             fullWidth
             size="small"
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the drawer the user just opened (WCAG 2.4.3)
             autoFocus
             value={search}
             onChange={(event) => setSearch(event.target.value)}

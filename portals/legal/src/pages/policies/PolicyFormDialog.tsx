@@ -114,6 +114,7 @@ export default function PolicyFormDialog({
         <Stack spacing={2} sx={{ mt: 1 }}>
           {error && <Alert severity="error">{error}</Alert>}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            {/* eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3) */}
             <TextField label={t('shell.common.title')} value={form.title} onChange={(e) => onTitle(e.target.value)} required fullWidth autoFocus />
             <TextField
               label={t('legal.policies.slug')}

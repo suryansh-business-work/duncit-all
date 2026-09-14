@@ -35,6 +35,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       messageFailed: 'Not sent',
       pauseSlideshow: 'Pause slideshow',
       playSlideshow: 'Play slideshow',
+      openAttachment: 'Open attachment {name}',
     },
     common: {
       language: 'Language',

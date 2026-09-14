@@ -60,6 +60,7 @@ export default function EmailReportDialog({
             onChange={(e) => setTo(e.target.value)}
             error={address.length > 0 && !valid}
             helperText={t('finance.calculators.sendToHint')}
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3)
             autoFocus
             fullWidth
           />

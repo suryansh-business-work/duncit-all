@@ -123,7 +123,7 @@ export default function FollowRequestActions({
   const open = state === 'ANSWER';
 
   return (
-    <Stack data-testid="follow-request-actions" spacing={0.5} sx={{ mt: 1.25 }} onClick={(event) => event.stopPropagation()}>
+    <Stack data-testid="follow-request-actions" role="presentation" spacing={0.5} sx={{ mt: 1.25 }} onClick={(event) => event.stopPropagation()}>
       <Stack
         direction="row"
         spacing={1}

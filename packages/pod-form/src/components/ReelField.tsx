@@ -19,6 +19,7 @@ function ReelBody({ value, onChange, error, onPickVideo }: Readonly<Props>) {
   if (value) {
     return (
       <Stack spacing={1}>
+        {/* eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model */}
         <Box
           component="video"
           src={value}

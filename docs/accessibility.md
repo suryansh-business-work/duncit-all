@@ -151,7 +151,8 @@ node scripts/verify-contrast.mjs
 
 - Config: `app/mobile-app/.eslintrc.a11y.js`, run with `--no-eslintrc`, so it is
   independent of `.eslintrc.js` and its zero-warning `npm run lint` gate.
-- Rules: `eslint-plugin-react-native-a11y`'s `all` preset, every rule at `warn`.
+- Rules: `eslint-plugin-react-native-a11y`'s `all` preset, every rule at `warn`
+  except `has-accessibility-hint`, which is off (see the plan below).
 - The plugin recognises React Native's own touchables (`Pressable`,
   `Touchable*`). A Tamagui `XStack` / `YStack` with `onPress` is not a touchable
   to it — those are covered by review against the checklist above.
@@ -212,9 +213,10 @@ waiting on the slowest one:
    step (no `continue-on-error`) that lints only that path with
    `--max-warnings 0`. A surface that is flipped can never regress while the
    others are still reporting.
-3. **Native** — before flipping, turn off `has-accessibility-hint`: it asks for
-   a hint on every labelled element, which contradicts the checklist above
-   (hints only where the result is not obvious). Then set the rest to `error`
-   and add `--max-warnings 0` to `npm run lint:a11y`.
+3. **Native** — `has-accessibility-hint` is turned off (done, in
+   `app/mobile-app/.eslintrc.a11y.js`): it asks for a hint on every labelled
+   element, which contradicts the checklist above (hints only where the result
+   is not obvious). What is left is to set the rest to `error` and add
+   `--max-warnings 0` to `npm run lint:a11y`.
 4. **Finish** — once every surface is flipped, drop `continue-on-error` from
    the two lint steps in `a11y-report.yml` and fold the per-surface blocks into one.

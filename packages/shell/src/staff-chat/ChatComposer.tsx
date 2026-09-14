@@ -100,6 +100,9 @@ export default function ChatComposer({
 
   return (
     <Box
+      // The drop target is a mouse shortcut; the attach button in the row below
+      // is the same action for everyone else, so this wrapper claims no role.
+      role="presentation"
       onDragOver={(event) => {
         event.preventDefault();
         setDragging(true);

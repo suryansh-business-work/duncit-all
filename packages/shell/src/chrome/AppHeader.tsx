@@ -79,6 +79,7 @@ export function AppHeader({
               <HeaderSearch
                 items={searchItems}
                 nav={nav}
+                // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the search overlay the user just opened (WCAG 2.4.3)
                 autoFocus
                 disableSlashShortcut
                 onNavigated={() => setMobileSearchOpen(false)}

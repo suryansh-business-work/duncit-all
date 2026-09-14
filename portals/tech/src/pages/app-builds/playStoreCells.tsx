@@ -123,7 +123,7 @@ interface PlayCellProps {
 
 /** Both tracks side by side. Clicks stop here so they never also open the row. */
 const PlayCell = ({ row, labels, onPush }: Readonly<PlayCellProps>) => (
-  <Box onClick={(e) => e.stopPropagation()} sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+  <Box role="presentation" onClick={(e) => e.stopPropagation()} sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
     {PLAY_TRACKS.map((track) => (
       <TrackCell key={track} row={row} track={track} labels={labels} onPush={onPush} />
     ))}

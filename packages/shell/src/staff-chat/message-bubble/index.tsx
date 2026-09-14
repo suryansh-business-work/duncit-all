@@ -123,59 +123,77 @@ export default function MessageBubble({
     setEditing(false);
   };
 
+  const bubble = (
+    <Paper variant="outlined" sx={bubbleSx(own, compact, settings.bubbleColor)}>
+      {!deleted && (
+        <BubbleBadges message={message} own={own} nameOf={nameOf} repliedTo={repliedTo} />
+      )}
+
+      <BubbleBody
+        message={message}
+        deleted={deleted}
+        editing={editing}
+        draft={draft}
+        fontSize={settings.fontSize}
+        onDraft={setDraft}
+        onSave={save}
+        onCancel={() => setEditing(false)}
+        onNavigate={onNavigate}
+      />
+
+      {!deleted && (
+        <MessageReactions
+          reactions={message.reactions ?? []}
+          meId={meId}
+          nameOf={nameOf}
+          onReact={(emoji) => onReact(message.id, emoji)}
+        />
+      )}
+
+      <BubbleFooter
+        message={message}
+        mine={mine}
+        editing={editing}
+        deleted={deleted}
+        formats={formats}
+        onReply={() => onReply(message)}
+        onForward={() => onForward(message)}
+        onPin={() => onPin(message.id)}
+        onCopy={() => {
+          globalThis.navigator.clipboard?.writeText(message.text).catch(() => undefined);
+        }}
+        onStartSelect={() => onStartSelect?.(message.id)}
+        onEditHistory={onEditHistory ? () => onEditHistory(message) : undefined}
+        onEdit={() => {
+          setDraft(message.text);
+          setEditing(true);
+        }}
+        onDelete={(forEveryone) => onDelete(message.id, forEveryone)}
+        onRetry={onRetry ? () => onRetry(message) : undefined}
+      />
+    </Paper>
+  );
+
+  if (!onSelect) return <Box sx={rowSx(mine, selected, false)}>{bubble}</Box>;
+
+  // Selection mode: the row is a toggle a keyboard can press too. Keys pressed
+  // on the bubble's own controls stay theirs.
+  const onRowKey = (event: React.KeyboardEvent) => {
+    if (event.target !== event.currentTarget || (event.key !== 'Enter' && event.key !== ' ')) return;
+    event.preventDefault();
+    onSelect(message.id);
+  };
+
   return (
     <Box
-      onClick={onSelect ? () => onSelect(message.id) : undefined}
-      sx={rowSx(mine, selected, Boolean(onSelect))}
+      role="button"
+      tabIndex={0}
+      aria-pressed={Boolean(selected)}
+      onClick={() => onSelect(message.id)}
+      onKeyDown={onRowKey}
+      sx={rowSx(mine, selected, true)}
     >
-      <Paper variant="outlined" sx={bubbleSx(own, compact, settings.bubbleColor)}>
-        {!deleted && (
-          <BubbleBadges message={message} own={own} nameOf={nameOf} repliedTo={repliedTo} />
-        )}
-
-        <BubbleBody
-          message={message}
-          deleted={deleted}
-          editing={editing}
-          draft={draft}
-          fontSize={settings.fontSize}
-          onDraft={setDraft}
-          onSave={save}
-          onCancel={() => setEditing(false)}
-          onNavigate={onNavigate}
-        />
-
-        {!deleted && (
-          <MessageReactions
-            reactions={message.reactions ?? []}
-            meId={meId}
-            nameOf={nameOf}
-            onReact={(emoji) => onReact(message.id, emoji)}
-          />
-        )}
-
-        <BubbleFooter
-          message={message}
-          mine={mine}
-          editing={editing}
-          deleted={deleted}
-          formats={formats}
-          onReply={() => onReply(message)}
-          onForward={() => onForward(message)}
-          onPin={() => onPin(message.id)}
-          onCopy={() => {
-            globalThis.navigator.clipboard?.writeText(message.text).catch(() => undefined);
-          }}
-          onStartSelect={() => onStartSelect?.(message.id)}
-          onEditHistory={onEditHistory ? () => onEditHistory(message) : undefined}
-          onEdit={() => {
-            setDraft(message.text);
-            setEditing(true);
-          }}
-          onDelete={(forEveryone) => onDelete(message.id, forEveryone)}
-          onRetry={onRetry ? () => onRetry(message) : undefined}
-        />
-      </Paper>
+      {bubble}
     </Box>
   );
 }

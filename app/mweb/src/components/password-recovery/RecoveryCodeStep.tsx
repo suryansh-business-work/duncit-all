@@ -72,6 +72,7 @@ export default function RecoveryCodeStep({
           name="otp"
           label={labels.codeLabel}
           required
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the code step the user just requested (WCAG 2.4.3)
           autoFocus
           autoComplete="one-time-code"
           hint={labels.codeExpiry(expiresInMinutes)}

@@ -7,7 +7,7 @@
  * which passes no --max-warnings and therefore always exits 0 on warnings.
  *
  * It turns on eslint-plugin-react-native-a11y's `all` preset and nothing else,
- * every rule as a warning. docs/accessibility.md (repo root) holds the plan
+ * every rule as a warning (has-accessibility-hint excepted, see below). docs/accessibility.md (repo root) holds the plan
  * for flipping these to errors once the count reaches zero.
  */
 const a11y = require('eslint-plugin-react-native-a11y');
@@ -42,7 +42,13 @@ module.exports = {
   ],
   // Files carry directives for rules only the main config defines.
   reportUnusedDisableDirectives: false,
-  rules: Object.fromEntries(
-    Object.entries(a11y.configs.all.rules).map(([name, entry]) => [name, toWarn(entry)]),
-  ),
+  rules: {
+    ...Object.fromEntries(
+      Object.entries(a11y.configs.all.rules).map(([name, entry]) => [name, toWarn(entry)]),
+    ),
+    // Off: it demands a hint on every labelled element, which contradicts the
+    // native checklist in docs/accessibility.md (hints only where the result is
+    // not obvious) — step 3 of "Plan: warnings to errors".
+    'react-native-a11y/has-accessibility-hint': 'off',
+  },
 };

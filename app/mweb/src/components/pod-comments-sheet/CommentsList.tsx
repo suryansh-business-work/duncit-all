@@ -62,6 +62,7 @@ export default function CommentsList({
                 <Typography
                   data-testid={`comment-name-${c.id}`}
                   variant="subtitle2"
+                  component="span"
                   onClick={() => onOpenProfile(c.author_id)}
                   onKeyDown={activateOnKey(() => onOpenProfile(c.author_id))}
                   role="button"

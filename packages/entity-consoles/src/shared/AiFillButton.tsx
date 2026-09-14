@@ -129,6 +129,7 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
             </Typography>
           </Box>
           <TextField
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the popover the user just opened (WCAG 2.4.3)
             autoFocus
             placeholder={promptPlaceholder(entity)}
             slotProps={{ htmlInput: { 'aria-label': t('admin.ai.fill'), 'data-testid': 'ai-fill-prompt' } }}

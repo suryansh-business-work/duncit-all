@@ -79,6 +79,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
             fontWeight: 700
           }}>{t('marketing.mjmlAiButton.createUpdateMjmlWithAi')}</Typography>
           <TextField
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the popover the user just opened (WCAG 2.4.3)
             autoFocus
             label={t('marketing.mjmlAiButton.instruction')}
             placeholder={t('marketing.mjmlAiButton.makeThisADiwaliCampaignWith')}

@@ -64,6 +64,7 @@ export default function MediaLightbox({ items, index, onNavigate, onClose }: Rea
         )}
 
         {isVideoMedia(current) ? (
+          // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model
           <Box component="video" src={videoSourceUrl(current.url)} controls autoPlay sx={{ maxWidth: '100%', maxHeight: '80vh' }} />
         ) : (
           <Box

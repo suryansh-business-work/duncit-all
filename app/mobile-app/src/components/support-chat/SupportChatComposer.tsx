@@ -165,6 +165,7 @@ export function SupportChatComposer({
             value={text}
             onChangeText={change}
             placeholder={t('mweb.supportChat.typeAMessage')}
+            accessibilityLabel={t('mweb.supportChat.typeAMessage')}
             placeholderTextColor={muted}
             style={{ flex: 1, color: ink, paddingVertical: 8 }}
             multiline

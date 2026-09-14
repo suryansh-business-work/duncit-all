@@ -42,7 +42,12 @@ export function BadgeProgressCard({ row }: Readonly<{ row: BadgeRowShape }>) {
     <SurfaceCard testID={`badge-card-${badge.id}`} flex={1} gap={8} alignItems="center">
       <YStack opacity={row.achieved ? 1 : 0.55}>
         {badge.image_url ? (
-          <Image source={{ uri: badge.image_url }} style={ART_STYLE} accessible={false} />
+          <Image
+            source={{ uri: badge.image_url }}
+            style={ART_STYLE}
+            accessible={false}
+            accessibilityIgnoresInvertColors
+          />
         ) : (
           <YStack
             width={64}

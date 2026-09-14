@@ -95,6 +95,7 @@ export default function AdMediaField({ adType, value, onChange, error, helperTex
       {value && (
         <Box sx={{ mt: 1.5, border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}>
           {isVideo ? (
+            // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model
             <Box component="video" src={value} controls sx={PREVIEW_SX} />
           ) : (
             <Box component="img" src={value} alt={t('adRequest.media.previewAlt')} sx={PREVIEW_SX} />

@@ -61,7 +61,7 @@ export const E2E_GRANT_ROLES_MUTATION = `mutation GrantE2eRunAccountRoles($input
  * problem report, a pod idea title — so the staff half of the run finds that
  * record and no other, on either surface: `[E2E 140920260300 mweb]`.
  */
-export const runMarker = (stamp: string, surface: string): string => `[E2E ${stamp} ${surface}]`;
+export const runMarker = (stamp: string, surface: string): string => ['[E2E', stamp, `${surface}]`].join(' ');
 
 /** Where the account is in its life, which decides the password it holds. */
 export type RunPasswordStage = 'SIGNUP' | 'RECOVERED' | 'CHANGED';

@@ -31,6 +31,7 @@ export default function SupportHubPage() {
     <SupportShell title={t('mweb.support.support')} backTo="/">
       <Stack data-testid="support-hub-page" spacing={3}>
         <Stack spacing={2}>
+          {/* eslint-disable-next-line jsx-a11y/heading-has-content -- false positive: TwoToneHeading renders its lead prop as the heading text */}
           <TwoToneHeading
             lead={t('mweb.supportHub.haveABurningQuestion')}
             component="h2"

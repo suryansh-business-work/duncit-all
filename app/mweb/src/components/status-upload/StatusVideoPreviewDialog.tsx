@@ -78,6 +78,7 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
       <DialogContent>
         <Stack spacing={1.5}>
           {url && (
+            // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model
             <Box
               data-testid="story-video-preview"
               component="video"

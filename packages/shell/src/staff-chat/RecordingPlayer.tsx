@@ -29,9 +29,11 @@ export default function RecordingPlayer({ url, onClose }: Readonly<Props>) {
         <Box
           // The video is not the dismiss target: clicking the scrubber should
           // seek, not close what you are watching.
+          role="presentation"
           onClick={(event) => event.stopPropagation()}
           sx={{ position: 'relative', width: 'min(90vw, 900px)' }}
         >
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption -- recorded call media; no caption track exists in the data model */}
           <Box
             component="video"
             src={url}

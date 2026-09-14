@@ -68,8 +68,7 @@ export default function LinkCard({ url, onNavigate }: Readonly<Props>) {
   };
 
   return (
-    <Box
-      component={Link}
+    <Link
       href={url}
       onClick={open}
       target={sameApp ? undefined : '_blank'}
@@ -142,6 +141,6 @@ export default function LinkCard({ url, onNavigate }: Readonly<Props>) {
           />
         )}
       </Stack>
-    </Box>
+    </Link>
   );
 }

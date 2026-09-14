@@ -31,7 +31,6 @@ export default function WhoStep({ control, minAge }: Readonly<Props>) {
         name="name"
         label={t('mweb.signup.nameLabel')}
         required
-        autoFocus
         placeholder={t('mweb.signup.namePlaceholder')}
         autoComplete="name"
         size="small"

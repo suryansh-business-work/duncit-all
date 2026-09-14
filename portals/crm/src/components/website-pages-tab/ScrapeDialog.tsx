@@ -51,6 +51,7 @@ export default function ScrapeDialog({ open, website, loading, onClose, onConfir
             onChange={(e) => setValue(e.target.value)}
             helperText={`Between ${MIN} and ${MAX}.`}
             error={!!value && !valid}
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3)
             autoFocus
             fullWidth
             slotProps={{

@@ -65,6 +65,7 @@ export default function NotificationRow({
         '&:hover': { bgcolor: busy ? undefined : 'action.hover' },
       }}
     >
+      {/* eslint-disable-next-line jsx-a11y/control-has-associated-label -- false positive: the button is named by its title/body text, nested deeper than the rule looks */}
       <Box
         data-testid={`notification-${item.id}`}
         onClick={busy ? undefined : onClick}

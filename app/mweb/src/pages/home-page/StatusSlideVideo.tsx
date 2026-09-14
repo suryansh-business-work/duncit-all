@@ -66,6 +66,7 @@ export default function StatusSlideVideo({
   }, [paused]);
 
   return (
+    // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model
     <Box
       component="video"
       ref={ref}

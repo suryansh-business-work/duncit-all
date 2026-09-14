@@ -125,6 +125,7 @@ export default function VerifyWhatsappStep({
           name="otp"
           label={t('mweb.resetPassword.otpLabel')}
           required
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the code step the user just requested (WCAG 2.4.3)
           autoFocus
           autoComplete="one-time-code"
           size="small"

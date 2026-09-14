@@ -33,6 +33,7 @@ export default function AdMediaCard({ ad }: Readonly<{ ad: AdRequestDetail }>) {
           <Chip size="small" variant="outlined" label={adTypeLabel(ad.ad_type, t)} />
         </Stack>
         {ad.ad_type === 'VIDEO' ? (
+          // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model
           <Box component="video" src={ad.media_url} controls sx={PREVIEW_SX} />
         ) : (
           <Box component="img" src={ad.media_url} alt={`${ad.ad_title} creative`} sx={PREVIEW_SX} />

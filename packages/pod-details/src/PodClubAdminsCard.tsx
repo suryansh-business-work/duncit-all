@@ -116,6 +116,9 @@ function ClubAdminRow({
               variant="outlined"
               icon={link.icon}
               label={link.label}
+              // The chip's label is its visible text; spelled out so the link's
+              // name does not depend on how Chip nests it.
+              aria-label={link.label}
               href={link.href}
               target={link.external ? '_blank' : undefined}
               rel={link.external ? 'noopener' : undefined}

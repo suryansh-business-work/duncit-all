@@ -85,6 +85,7 @@ function PanelBody({ panelKey, form }: Readonly<{ panelKey: PanelKey; form: Crea
         fullWidth
         multiline
         minRows={3}
+        // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3)
         autoFocus
         helperText={t('mweb.createPod.podInfoHint')}
         {...form.register('pod_info')}

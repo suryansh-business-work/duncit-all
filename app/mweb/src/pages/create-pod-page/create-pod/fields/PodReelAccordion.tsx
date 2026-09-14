@@ -143,6 +143,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
             <AiMonitoringChip />
           </Box>
           {hasReel && (
+            // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model
             <Box
               data-testid="reel-preview"
               component="video"

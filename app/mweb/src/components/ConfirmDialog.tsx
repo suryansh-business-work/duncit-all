@@ -76,6 +76,8 @@ export default function ConfirmDialog({
           onClick={onClose}
           disabled={busy}
           sx={DIALOG_PILL_SX}
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves to the safe Cancel action in the dialog the user just opened (WCAG 2.4.3)
+          autoFocus={Boolean(destructive)}
         >
           {cancelText}
         </DuncitButton>
@@ -87,7 +89,8 @@ export default function ConfirmDialog({
           disabled={busy}
           startIcon={busy ? <CircularProgress size={16} color="inherit" /> : undefined}
           sx={DIALOG_PILL_SX}
-          autoFocus
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened, only when confirming is not destructive (WCAG 2.4.3)
+          autoFocus={!destructive}
         >
           {confirmText}
         </DuncitButton>

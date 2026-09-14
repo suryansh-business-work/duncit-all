@@ -165,6 +165,7 @@ export default function VenueDetailsPage() {
       )}
 
       <Stack spacing={1.25}>
+        {/* eslint-disable-next-line jsx-a11y/heading-has-content -- false positive: TwoToneHeading renders its lead prop as the heading text */}
         <TwoToneHeading lead={venue.venue_name} component="h2" />
         <Stack direction="row" spacing={1} useFlexGap sx={{
           flexWrap: "wrap"

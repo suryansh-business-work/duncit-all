@@ -50,6 +50,7 @@ export default function ReopenReasonDialog({ open, loading, error, onClose, onSu
           Tell us why you need to re-open this — it helps our team pick up where you left off. (optional)
         </Typography>
         <TextField
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3)
           autoFocus
           fullWidth
           size="small"

@@ -90,6 +90,7 @@ export default function ExplorePodCard({
   const joinLabel = expired ? 'Expired' : `${podSeatsTaken(pod)}${spotsSuffix}`;
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- double-tap is a pointer shortcut; the reel's Open / Join buttons are the keyboard path, and a role=button reel would nest them
     <Box
       data-testid={`reel-${pod.pod_id}`}
       onDoubleClick={openPod}

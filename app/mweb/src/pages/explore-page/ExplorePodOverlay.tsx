@@ -29,28 +29,53 @@ const CHIP_SX = (theme: Theme) => ({
   '& .MuiChip-icon': { color: 'common.white', fontSize: 15 },
 });
 
+const CAPTION_CLAMPED_SX = { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', opacity: 0.9 } as const;
+const CAPTION_OPEN_SX = { opacity: 0.9 } as const;
+
+/** The reel caption. A long one is a disclosure: keyboard-operable and says whether it is open. */
+function ExploreCaption({ description }: Readonly<{ description: string }>) {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+  const collapsible = description.length > CAPTION_COLLAPSE_AT;
+  const text = (
+    <Typography data-testid="explore-caption" variant="body2" sx={collapsible && !expanded ? CAPTION_CLAMPED_SX : CAPTION_OPEN_SX}>
+      {description}
+    </Typography>
+  );
+  if (!collapsible) {
+    return <Box data-testid="explore-caption-wrap" sx={{ cursor: 'default' }}>{text}</Box>;
+  }
+  const toggle = () => setExpanded((v) => !v);
+  return (
+    <Box
+      data-testid="explore-caption-wrap"
+      role="button"
+      tabIndex={0}
+      aria-expanded={expanded}
+      onClick={toggle}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          toggle();
+        }
+      }}
+      onDoubleClick={(e) => e.stopPropagation()}
+      sx={{ cursor: 'pointer' }}
+    >
+      {text}
+      <Typography data-testid="explore-caption-toggle" component="span" variant="caption" sx={{ fontWeight: 600 }}>
+        {expanded ? t('mweb.explore.showLess') : t('mweb.explore.more')}
+      </Typography>
+    </Box>
+  );
+}
+
 export default function ExplorePodOverlay({ pod, club, location }: Readonly<Props>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { format } = usePricing();
-  const [expanded, setExpanded] = useState(false);
   const isFree = pod.pod_type === 'FREE';
   const description: string = pod.pod_description ?? '';
-  const collapsible = description.length > CAPTION_COLLAPSE_AT;
-  // A long caption is a disclosure: keyboard-operable and says whether it is open.
-  const captionToggleA11y = collapsible
-    ? {
-        role: 'button',
-        tabIndex: 0,
-        'aria-expanded': expanded,
-        onKeyDown: (event: React.KeyboardEvent) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            setExpanded((v) => !v);
-          }
-        },
-      }
-    : {};
 
   return (
     <>
@@ -113,32 +138,7 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
           })}>
           {pod.pod_title}
         </Typography>
-        {description && (
-          <Box
-            data-testid="explore-caption-wrap"
-            {...captionToggleA11y}
-            onClick={() => collapsible && setExpanded((v) => !v)}
-            onDoubleClick={(e) => collapsible && e.stopPropagation()}
-            sx={{ cursor: collapsible ? 'pointer' : 'default' }}
-          >
-            <Typography
-              data-testid="explore-caption"
-              variant="body2"
-              sx={
-                collapsible && !expanded
-                  ? { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', opacity: 0.9 }
-                  : { opacity: 0.9 }
-              }
-            >
-              {description}
-            </Typography>
-            {collapsible && (
-              <Typography data-testid="explore-caption-toggle" component="span" variant="caption" sx={{ fontWeight: 600 }}>
-                {expanded ? t('mweb.explore.showLess') : t('mweb.explore.more')}
-              </Typography>
-            )}
-          </Box>
-        )}
+        {description && <ExploreCaption description={description} />}
         <Stack
           direction="row"
           spacing={1}

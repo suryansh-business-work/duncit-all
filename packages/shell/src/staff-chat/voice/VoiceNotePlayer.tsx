@@ -15,6 +15,9 @@ interface Props {
 /** What the speed button cycles through. 2× is where speech stops being words. */
 const SPEEDS = [1, 1.5, 2] as const;
 
+/** How far one arrow key moves along the note. */
+const SEEK_STEP_SECONDS = 5;
+
 const clock = (value: number) => {
   const total = Math.max(0, Math.round(value));
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
@@ -65,6 +68,22 @@ export default function VoiceNotePlayer({ url, peaks, seconds }: Readonly<Props>
     setAt(node.currentTime);
   };
 
+  /** The keyboard's way along the bars: arrows step, Home and End jump to an end. */
+  const seekKey = (event: React.KeyboardEvent) => {
+    const targets: Partial<Record<string, number>> = {
+      ArrowLeft: at - SEEK_STEP_SECONDS,
+      ArrowDown: at - SEEK_STEP_SECONDS,
+      ArrowRight: at + SEEK_STEP_SECONDS,
+      ArrowUp: at + SEEK_STEP_SECONDS,
+      Home: 0,
+      End: total,
+    };
+    const next = targets[event.key];
+    if (next === undefined || !total) return;
+    event.preventDefault();
+    seekTo(Math.min(1, Math.max(0, next / total)));
+  };
+
   return (
     <Stack
       direction="row"
@@ -73,6 +92,7 @@ export default function VoiceNotePlayer({ url, peaks, seconds }: Readonly<Props>
         alignItems: "center",
         minWidth: 220
       }}>
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model */}
       <Box
         component="audio"
         ref={audioRef}
@@ -99,6 +119,14 @@ export default function VoiceNotePlayer({ url, peaks, seconds }: Readonly<Props>
       <Stack
         direction="row"
         spacing="2px"
+        role="slider"
+        tabIndex={0}
+        aria-label={t('shell.a11y.voiceNoteSeek')}
+        aria-valuemin={0}
+        aria-valuemax={Math.round(total)}
+        aria-valuenow={Math.round(at)}
+        aria-valuetext={clock(at)}
+        onKeyDown={seekKey}
         onClick={(event) => {
           const box = event.currentTarget.getBoundingClientRect();
           seekTo(Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)));

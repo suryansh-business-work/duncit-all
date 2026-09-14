@@ -38,6 +38,7 @@ export default function CampaignPerformanceCard({
           </Typography>
           <Typography
             variant="caption"
+            component="span"
             role="button"
             tabIndex={0}
             onClick={onOpen}

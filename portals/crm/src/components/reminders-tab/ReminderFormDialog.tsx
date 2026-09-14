@@ -71,6 +71,7 @@ export default function ReminderFormDialog({ open, entity, leadId, reminder, onC
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
           {error && <Alert severity="error">{error}</Alert>}
+          {/* eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3) */}
           <TextField size="small" label={t('shell.common.title')} required value={title} onChange={(e) => setTitle(e.target.value)} autoFocus fullWidth />
           <DateTimePicker
             label={t('crm.components.dueDateAndTime')}

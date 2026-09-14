@@ -43,7 +43,16 @@ export default function MessageBubble({ message, mine, onOpenReact }: Readonly<M
         </Avatar>
       )}
       <Paper
+        // The bubble opens the reaction picker: double-click, or Enter / Space (2.1.1).
+        role="button"
+        tabIndex={0}
         onDoubleClick={(e) => onOpenReact(e.currentTarget, m.id)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onOpenReact(e.currentTarget, m.id);
+          }
+        }}
         sx={{
           p: 1.15,
           px: 1.5,

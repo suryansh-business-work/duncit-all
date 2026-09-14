@@ -101,6 +101,7 @@ export function BrandBackdrop({
             source={{ uri: imageUrl }}
             style={StyleSheet.absoluteFill}
             resizeMode="cover"
+            accessibilityIgnoresInvertColors
           />
         )}
       </YStack>

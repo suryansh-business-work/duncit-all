@@ -17,6 +17,8 @@ function DocCard({ info }: Readonly<DocCardProps>) {
       target="_blank"
       rel="noopener noreferrer"
       clickable
+      // The label is a node the lint cannot read; this repeats its text so the name is unchanged.
+      aria-label={`${info.name} ${typeLabel(info.ext)}`}
       variant="outlined"
       icon={<InsertDriveFileIcon />}
       label={

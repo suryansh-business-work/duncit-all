@@ -21,6 +21,14 @@ const BAND_PALETTE: Record<HealthBand, 'error' | 'warning' | 'success'> = {
   GREEN: 'success',
 };
 
+const METER_SX = {
+  display: 'inline-flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  outline: 'none',
+  transition: 'transform 120ms ease',
+} as const;
+
 // Half-circle gauge. We render it as an SVG arc rather than reusing MUI's
 // CircularProgress so the colour can shift with the score band and we can
 // inline a big numeric readout in the middle.
@@ -52,27 +60,8 @@ export default function HealthMeter({
   // rotation is dropped when the app renders as web.
   const arc = `M ${thickness / 2} ${cy} A ${radius} ${radius} 0 0 1 ${size - thickness / 2} ${cy}`;
 
-  return (
-    <Box
-      data-testid="health-meter"
-      role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (!onClick) return;
-        if (e.key === 'Enter' || e.key === ' ') onClick();
-      }}
-      sx={{
-        cursor: onClick ? 'pointer' : 'default',
-        display: 'inline-flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        outline: 'none',
-        '&:focus-visible': { boxShadow: (t) => `0 0 0 2px ${t.palette.primary.main}` },
-        '&:hover': onClick ? { transform: 'translateY(-1px)' } : undefined,
-        transition: 'transform 120ms ease',
-      }}
-    >
+  const body = (
+    <>
       <Box sx={{ position: 'relative', width: size, height }}>
         <svg width={size} height={height}>
           <path
@@ -136,6 +125,38 @@ export default function HealthMeter({
           {caption}
         </Typography>
       )}
+    </>
+  );
+
+  if (!onClick) {
+    return (
+      <Box data-testid="health-meter" sx={{ ...METER_SX, cursor: 'default' }}>
+        {body}
+      </Box>
+    );
+  }
+
+  // Tappable meter: a keyboard-operable button (2.1.1).
+  return (
+    <Box
+      data-testid="health-meter"
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      sx={{
+        ...METER_SX,
+        cursor: 'pointer',
+        '&:focus-visible': { boxShadow: (t) => `0 0 0 2px ${t.palette.primary.main}` },
+        '&:hover': { transform: 'translateY(-1px)' },
+      }}
+    >
+      {body}
     </Box>
   );
 }

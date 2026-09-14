@@ -16,6 +16,7 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       removeNamed: 'Remove {name}',
       fieldOf: '{field}: {name}',
       loading: 'Loading…',
+      voiceNoteSeek: 'Voice note position',
     },
     /**
      * The action words every console repeats — Cancel, Save, Delete and the

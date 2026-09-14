@@ -75,6 +75,7 @@ export default function RecoveryPasswordStep({ labels, busy, onSave }: Readonly<
           type={show ? 'text' : 'password'}
           label={t('mweb.resetPassword.newPasswordLabel')}
           required
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the step the user just advanced to (WCAG 2.4.3)
           autoFocus
           hint={t('mweb.auth.passwordHint')}
           placeholder={t('mweb.resetPassword.newPasswordPlaceholder')}

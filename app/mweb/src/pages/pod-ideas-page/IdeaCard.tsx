@@ -86,7 +86,19 @@ export default function IdeaCard({
             </Tooltip>
           )}
         </Stack>
-        <Box sx={{ cursor: 'pointer' }} onClick={onOpen} data-testid={`idea-card-open-${idea.id}`}>
+        <Box
+          sx={{ cursor: 'pointer' }}
+          role="button"
+          tabIndex={0}
+          onClick={onOpen}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              onOpen();
+            }
+          }}
+          data-testid={`idea-card-open-${idea.id}`}
+        >
           <Typography
             component="h3"
             sx={{

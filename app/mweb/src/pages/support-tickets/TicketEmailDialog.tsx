@@ -44,6 +44,7 @@ export default function TicketEmailDialog({ open, ticketId, defaultEmail, onClos
               </Alert>
             )}
             <TextField
+              // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3)
               autoFocus
               fullWidth
               size="small"

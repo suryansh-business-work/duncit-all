@@ -86,6 +86,8 @@ export function HeaderSearch({
         <TextField
           {...params}
           placeholder={label}
+          // Only the mobile search overlay passes it, as the user opens that overlay.
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the search overlay the user just opened (WCAG 2.4.3)
           autoFocus={autoFocus}
           inputRef={inputRef}
           slotProps={{

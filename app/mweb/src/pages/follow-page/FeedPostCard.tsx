@@ -75,6 +75,7 @@ export default function FeedPostCard({
       </Stack>
 
       {post.media_type === 'VIDEO' ? (
+        // eslint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded media; no caption track exists in the data model
         <Box
           component="video"
           src={post.image_url}

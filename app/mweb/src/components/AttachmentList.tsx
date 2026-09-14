@@ -2,13 +2,16 @@ import { Box, Chip, Stack, Typography } from '@mui/material';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import DownloadIcon from '@mui/icons-material/Download';
 import { describeAttachment, typeLabel, type AttachmentInfo } from '../utils/attachment';
+import { useTranslation } from '../i18n/useTranslation';
 
 /** Document/other file card: icon + file name + type badge + open/download link. */
 function DocCard({ info }: Readonly<{ info: AttachmentInfo }>) {
+  const { t } = useTranslation();
   return (
     <Chip
       data-testid={`attachment-doc-${info.url}`}
       component="a"
+      aria-label={t('mweb.a11y.openAttachment', { vars: { name: info.name } })}
       href={info.url}
       target="_blank"
       rel="noopener noreferrer"

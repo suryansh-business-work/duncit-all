@@ -40,6 +40,7 @@ export default function SearchPillField({
       data-testid={testId}
       fullWidth
       size="small"
+      // eslint-disable-next-line jsx-a11y/no-autofocus -- opt-in pass-through; only the Search screen the user just opened sets it (WCAG 2.4.3)
       autoFocus={autoFocus}
       value={value}
       placeholder={placeholder}

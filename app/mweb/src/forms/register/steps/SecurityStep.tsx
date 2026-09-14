@@ -42,6 +42,7 @@ export default function SecurityStep({
         type={showPwd ? 'text' : 'password'}
         label={t('mweb.auth.passwordLabel')}
         required
+        // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the step the user just advanced to (WCAG 2.4.3)
         autoFocus
         hint={t('mweb.auth.passwordHint')}
         placeholder={t('mweb.signup.passwordPlaceholder')}

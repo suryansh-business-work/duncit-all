@@ -86,25 +86,20 @@ export default function SomethingForYouRail() {
           const target = resolveSomethingForYouTarget(item);
           const opens = target.kind !== 'none';
           const tileTestId = `something-for-you-tile-${item.id}`;
-          return (
-            <Box
-              key={item.id}
-              data-testid={tileTestId}
-              component={opens ? 'button' : 'div'}
-              onClick={opens ? () => open(target) : undefined}
-              sx={{
-                all: opens ? 'unset' : undefined,
-                flex: `0 0 ${CARD_WIDTH}px`,
-                width: CARD_WIDTH,
-                height: CARD_HEIGHT,
-                position: 'relative',
-                borderRadius: CARD_RADIUS,
-                overflow: 'hidden',
-                scrollSnapAlign: 'start',
-                cursor: opens ? 'pointer' : 'default',
-                bgcolor: 'action.hover',
-              }}
-            >
+          const tileSx = {
+            all: opens ? 'unset' : undefined,
+            flex: `0 0 ${CARD_WIDTH}px`,
+            width: CARD_WIDTH,
+            height: CARD_HEIGHT,
+            position: 'relative',
+            borderRadius: CARD_RADIUS,
+            overflow: 'hidden',
+            scrollSnapAlign: 'start',
+            cursor: opens ? 'pointer' : 'default',
+            bgcolor: 'action.hover',
+          } as const;
+          const tileBody = (
+            <>
               <Box
                 component="img"
                 src={item.image_url}
@@ -154,6 +149,19 @@ export default function SomethingForYouRail() {
                   {item.bottom_text}
                 </Typography>
               )}
+            </>
+          );
+          // A card with somewhere to go is a real button; one without is a picture.
+          if (opens) {
+            return (
+              <Box key={item.id} data-testid={tileTestId} component="button" onClick={() => open(target)} sx={tileSx}>
+                {tileBody}
+              </Box>
+            );
+          }
+          return (
+            <Box key={item.id} data-testid={tileTestId} sx={tileSx}>
+              {tileBody}
             </Box>
           );
         })}

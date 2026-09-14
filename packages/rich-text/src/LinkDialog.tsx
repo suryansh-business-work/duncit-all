@@ -42,6 +42,7 @@ export function LinkDialog({ currentUrl, open, onApply, onClose }: Readonly<Prop
       <DialogTitle>{t('shell.richText.linkTitle')}</DialogTitle>
       <DialogContent>
         <TextField
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- focus moves into the dialog the user just opened (WCAG 2.4.3)
           autoFocus
           fullWidth
           label={t('shell.richText.linkLabel')}

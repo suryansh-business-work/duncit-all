@@ -67,7 +67,7 @@ export function TicketComposer({ locked, busy, onSend }: Readonly<Props>) {
             value={text}
             onChangeText={setText}
             placeholder={t('mweb.common.writeAReply')}
-            aria-label={t('mweb.common.writeAReply')}
+            accessibilityLabel={t('mweb.common.writeAReply')}
             placeholderTextColor={muted}
             style={{ flex: 1, color: ink, paddingVertical: 8 }}
             multiline

@@ -439,6 +439,51 @@ describe('VoiceNotePlayer', () => {
     expect(audio.currentTime).toBe(0);
   });
 
+  // The bars are a slider, so a keyboard can move along the note too (WCAG 2.1.1).
+  it('steps along the note with the arrow keys, clamped to its ends, and jumps with Home and End', () => {
+    const { container } = player();
+    const audio = audioOf(container);
+    Object.defineProperty(audio, 'currentTime', { configurable: true, writable: true, value: 0 });
+    const slider = screen.getByRole('slider');
+
+    fireEvent.keyDown(slider, { key: 'ArrowRight' });
+    expect(audio.currentTime).toBeCloseTo(5);
+    fireEvent.keyDown(slider, { key: 'ArrowUp' });
+    expect(audio.currentTime).toBeCloseTo(10);
+    fireEvent.keyDown(slider, { key: 'ArrowRight' });
+    expect(audio.currentTime).toBeCloseTo(12);
+    fireEvent.keyDown(slider, { key: 'ArrowLeft' });
+    expect(audio.currentTime).toBeCloseTo(7);
+    fireEvent.keyDown(slider, { key: 'ArrowDown' });
+    expect(audio.currentTime).toBeCloseTo(2);
+    fireEvent.keyDown(slider, { key: 'ArrowLeft' });
+    expect(audio.currentTime).toBe(0);
+    fireEvent.keyDown(slider, { key: 'End' });
+    expect(audio.currentTime).toBeCloseTo(12);
+    fireEvent.keyDown(slider, { key: 'Home' });
+    expect(audio.currentTime).toBe(0);
+  });
+
+  it('ignores keys that do not seek', () => {
+    const { container } = player();
+    const audio = audioOf(container);
+    Object.defineProperty(audio, 'currentTime', { configurable: true, writable: true, value: 3 });
+
+    fireEvent.keyDown(screen.getByRole('slider'), { key: 'a' });
+
+    expect(audio.currentTime).toBe(3);
+  });
+
+  it('seeks nowhere from the keyboard on a note with no known length', () => {
+    const { container } = player({ seconds: 0 });
+    const audio = audioOf(container);
+    Object.defineProperty(audio, 'currentTime', { configurable: true, writable: true, value: 0 });
+
+    fireEvent.keyDown(screen.getByRole('slider'), { key: 'End' });
+
+    expect(audio.currentTime).toBe(0);
+  });
+
   it('draws a flat line for a note recorded before the waveform existed', () => {
     const { container } = player({ peaks: [] });
 

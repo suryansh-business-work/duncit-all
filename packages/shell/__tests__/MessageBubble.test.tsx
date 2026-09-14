@@ -4,7 +4,7 @@
  * can prove every prop reaches the right call without depending on their own
  * rendering, which is covered where each of them is tested directly.
  */
-import { act, render } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import MessageBubble from '../src/staff-chat/message-bubble';
@@ -189,5 +189,22 @@ describe('MessageBubble', () => {
 
     expect(onEditHistory).toHaveBeenCalledWith(expect.objectContaining({ id: 'm1' }));
     expect(onRetry).toHaveBeenCalledWith(expect.objectContaining({ id: 'm1' }));
+  });
+
+  // Selection mode turns the row into a toggle a keyboard can press too (WCAG 2.1.1).
+  it('selects the row by click, Enter or Space, and leaves other keys and keys on its own controls alone', () => {
+    const onSelect = vi.fn();
+    bubble({ onSelect, selected: true });
+    const row = screen.getByRole('button', { pressed: true });
+
+    fireEvent.click(row);
+    fireEvent.keyDown(row, { key: 'Enter' });
+    fireEvent.keyDown(row, { key: ' ' });
+    expect(onSelect).toHaveBeenCalledTimes(3);
+    expect(onSelect).toHaveBeenCalledWith('m1');
+
+    fireEvent.keyDown(row, { key: 'a' });
+    fireEvent.keyDown(row.firstElementChild as HTMLElement, { key: 'Enter' });
+    expect(onSelect).toHaveBeenCalledTimes(3);
   });
 });

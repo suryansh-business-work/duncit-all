@@ -87,17 +87,6 @@ async function reportIssues(projectKey) {
   );
 }
 
-async function reportHotspots(projectKey) {
-  const query = `projectKey=${projectKey}&inNewCodePeriod=true&status=TO_REVIEW&ps=${LIST_LIMIT}`;
-  const { paging, hotspots } = await api(`/api/hotspots/search?${query}`);
-  if (paging.total === 0) return;
-  lines.push(`### Security hotspots to review on new code (${paging.total})`, '');
-  table(
-    ['Rule', 'Where', 'Message'],
-    hotspots.map((hotspot) => [hotspot.ruleKey, location(hotspot), hotspot.message]),
-  );
-}
-
 async function reportFiles(projectKey, metric) {
   const query = `component=${projectKey}&qualifiers=FIL&metricKeys=${metric}&s=metricPeriod&metricSort=${metric}&metricPeriod=1&asc=false&metricSortFilter=withMeasuresOnly&ps=${FILE_LIMIT}`;
   const { components } = await api(`/api/measures/component_tree?${query}`);
@@ -120,8 +109,10 @@ async function reportAnalysis({ projectKey, ceTaskId, dashboardUrl }) {
     return;
   }
   const failed = await reportConditions(task.analysisId);
+  // No hotspot list: the CI analysis token is refused /api/hotspots/search
+  // (HTTP 403), and the condition table above already carries
+  // new_security_hotspots_reviewed.
   await reportIssues(projectKey);
-  await reportHotspots(projectKey);
   const measures = new Set(failed.map((metric) => FILE_MEASURE.get(metric)).filter(Boolean));
   for (const metric of measures) {
     await reportFiles(projectKey, metric);
@@ -129,16 +120,20 @@ async function reportAnalysis({ projectKey, ceTaskId, dashboardUrl }) {
   lines.push(`[Open the analysis in SonarQube](${dashboardUrl})`);
 }
 
-if (existsSync(REPORT_TASK)) {
-  await reportAnalysis(readReportTask());
-} else {
-  lines.push(
-    '## :x: The SonarQube scan failed before publishing',
-    '',
-    'No report was uploaded, so no quality gate was evaluated — the cause is in the scan step log above.',
-  );
+// `finally`: a refused or failed call later in the report must not throw away
+// the sections already read — the failed conditions come first for a reason.
+try {
+  if (existsSync(REPORT_TASK)) {
+    await reportAnalysis(readReportTask());
+  } else {
+    lines.push(
+      '## :x: The SonarQube scan failed before publishing',
+      '',
+      'No report was uploaded, so no quality gate was evaluated — the cause is in the scan step log above.',
+    );
+  }
+} finally {
+  const report = lines.join('\n');
+  console.log(report);
+  appendFileSync(GITHUB_STEP_SUMMARY, `${report}\n`);
 }
-
-const report = lines.join('\n');
-console.log(report);
-appendFileSync(GITHUB_STEP_SUMMARY, `${report}\n`);

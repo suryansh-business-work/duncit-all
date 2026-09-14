@@ -5,6 +5,8 @@ import { e2eRunService } from './e2eRun.service';
 import { purgeE2eRunData } from './e2eRun.purge';
 import { latestRunAccountCode } from './e2eRun.codes';
 import { trafficKeyForRun } from './e2eRun.traffic';
+import { mintE2eGoogleCredential } from './e2eRun.google';
+import { grantRunAccountRoles, type GrantE2eRunAccountRolesInput } from './e2eRun.staff';
 
 // E2E runs are a Tech-portal capability. The workflow authenticates with the
 // same TECH_MANAGER JWT the build workflows use (DUNCIT_RELEASE_TOKEN), so its
@@ -41,6 +43,14 @@ export const e2eRunResolvers = {
       requireRole(ctx, E2E_MANAGE);
       return trafficKeyForRun(args.stamp);
     },
+    e2eGoogleCredential: (
+      _p: unknown,
+      args: { email: string; given_name: string; family_name: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, E2E_MANAGE);
+      return mintE2eGoogleCredential(args);
+    },
   },
   Mutation: {
     triggerE2eRun: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -66,6 +76,10 @@ export const e2eRunResolvers = {
     purgeE2eRunData: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, E2E_MANAGE);
       return purgeE2eRunData(args.input);
+    },
+    grantE2eRunAccountRoles: (_p: unknown, args: { input: GrantE2eRunAccountRolesInput }, ctx: GraphQLContext) => {
+      requireRole(ctx, E2E_MANAGE);
+      return grantRunAccountRoles(args.input);
     },
     updateE2eRunSettings: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, E2E_MANAGE);

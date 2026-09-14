@@ -53,7 +53,7 @@ export default function SessionList({ sessions, loading, selectedId, freshIds, e
           key={s.id}
           selected={s.id === selectedId}
           aria-current={s.id === selectedId}
-          data-testid="live-chat-session-row"
+          data-testid={`live-chat-session-row-${s.id}`}
           onClick={() => onSelect(s.id)}
           sx={{
             alignItems: 'flex-start',

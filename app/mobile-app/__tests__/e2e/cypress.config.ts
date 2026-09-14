@@ -7,17 +7,20 @@ import { registerScenarioClips } from '../../../../scripts/lib/cypress-scenarios
 const here = path.dirname(fileURLToPath(import.meta.url)).replaceAll('\\', '/');
 
 /**
- * The native app's account lifecycle, live on staging (E2E Batch 1), driven
- * through its Expo web export (`npm run export:web`, served as a single-page
- * app on :2022).
+ * The native app's account lifecycle, live on staging (E2E Batches 1 and 2),
+ * driven through its Expo web export (`npm run export:web`, served as a
+ * single-page app on :2022).
  *
- * Nothing is stubbed. The export is built with EXPO_PUBLIC_API_URL set to
- * staging, and the specs under `specs/` run IN FILE ORDER as one account's
- * life: signup creates the run account, the next specs sign in, recover the
- * password, edit the profile and change the password, and the last one deletes
- * and purges it. One-time codes come from the OTP testing API
- * (`e2eOneTimeCode`), never from the screen. The run's identity arrives as
- * CYPRESS_E2E_* from the workflow (Tech > E2E Tests > Settings).
+ * Nothing on the server is stubbed. The export is built with
+ * EXPO_PUBLIC_API_URL set to staging, and the specs under `specs/` run IN FILE
+ * ORDER as one account's life: signup creates the run account, the next specs
+ * sign in, recover the password, edit the profile, change the password, use
+ * Help & Support and Pod Ideas, and 08 deletes and purges it; 09 then signs the
+ * same number up again through Google and purges that account too. One-time
+ * codes come from the OTP testing API (`e2eOneTimeCode`), never from the
+ * screen; the only browser APIs stood in for are the ones no automated browser
+ * can answer (Google's popup, the location prompt). The run's identity arrives
+ * as CYPRESS_E2E_* from the workflow (Tech > E2E Tests > Settings).
  */
 export default defineConfig({
   e2e: {

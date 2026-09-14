@@ -29,7 +29,7 @@ export default function IdeaActionsBar({ status, onSetStatus, onClose }: Readonl
           {t('admin.podIdeas.approve')}
         </DuncitButton>
       )}
-      <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
+      <DuncitButton onClick={onClose} data-testid="pod-idea-details-close">{t('shell.common.close')}</DuncitButton>
     </DialogActions>
   );
 }

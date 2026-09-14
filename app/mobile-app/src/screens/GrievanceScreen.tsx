@@ -70,6 +70,7 @@ export function GrievanceScreen() {
               {sent.grievance_no}
             </Text>
             <DuncitButton
+              testID="grievance-raise-another"
               variant="soft"
               tone="neutral"
               fullWidth

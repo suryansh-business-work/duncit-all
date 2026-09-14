@@ -19,6 +19,7 @@ export default function MessageBubble({ message: m, time, userLastReadAt }: Read
     <Stack direction="row" sx={{ justifyContent: isAgent ? 'flex-end' : 'flex-start' }}>
       <Paper
         variant="outlined"
+        data-testid={`live-chat-message-${m.id}`}
         sx={{
           p: 1,
           px: 1.25,

@@ -73,16 +73,17 @@ export default function GrievanceDetailDialog({
   const closed = ticket?.resolved_at ? formatDateTime(new Date(ticket.resolved_at)) : '';
 
   return (
-    <Dialog open={!!ticket} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ pr: 6 }}>
+    <Dialog open={!!ticket} onClose={onClose} fullWidth maxWidth="sm" data-testid="grievance-dialog">
+      <DialogTitle sx={{ pr: 6 }} data-testid="grievance-dialog-title">
         Grievance
-        <Typography variant="caption" component="div" sx={{
+        <Typography variant="caption" component="div" data-testid="grievance-dialog-no" sx={{
           color: "text.secondary"
         }}>
           {ticket?.grievance_no}
         </Typography>
         <DuncitIconButton
           onClick={onClose}
+          data-testid="grievance-dialog-close-icon"
           aria-label={t('shell.common.close')}
           sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary' }}
         >
@@ -121,7 +122,7 @@ export default function GrievanceDetailDialog({
             }}>
               Subject
             </Typography>
-            <Typography variant="body2" sx={{
+            <Typography variant="body2" data-testid="grievance-dialog-subject" sx={{
               fontWeight: 700
             }}>
               {ticket?.subject}
@@ -134,7 +135,7 @@ export default function GrievanceDetailDialog({
             }}>
               What they told us
             </Typography>
-            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+            <Typography variant="body2" data-testid="grievance-dialog-description" sx={{ whiteSpace: 'pre-wrap' }}>
               {ticket?.description}
             </Typography>
           </Stack>
@@ -144,6 +145,7 @@ export default function GrievanceDetailDialog({
           <TextField
             select
             label={t('shell.common.status')}
+            data-testid="grievance-dialog-status"
             value={status}
             onChange={(e) => setStatus(e.target.value as GrievanceStatus)}
             fullWidth
@@ -168,8 +170,8 @@ export default function GrievanceDetailDialog({
       </DialogContent>
 
       <DialogActions>
-        <DuncitButton onClick={onClose}>{t('shell.common.close')}</DuncitButton>
-        <DuncitButton variant="contained" onClick={apply} disabled={loading}>
+        <DuncitButton onClick={onClose} data-testid="grievance-dialog-close">{t('shell.common.close')}</DuncitButton>
+        <DuncitButton variant="contained" onClick={apply} disabled={loading} data-testid="grievance-dialog-apply">
           Apply
         </DuncitButton>
       </DialogActions>

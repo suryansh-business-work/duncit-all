@@ -63,12 +63,12 @@ export default function ReportedProblemDetailPage() {
               alignItems: "center"
             }}>
               <BackButton onClick={() => navigate('/reported-problems')}>{t('support.problems.title')}</BackButton>
-              <Typography variant="h5" component="h1" sx={{
+              <Typography variant="h5" component="h1" data-testid="reported-problem-report-no" sx={{
                 fontWeight: 900
               }}>
                 {r.report_no}
               </Typography>
-              <StatusChip status={r.status} colorMap={STATUS_COLORS} />
+              <StatusChip status={r.status} colorMap={STATUS_COLORS} data-testid="reported-problem-status" />
             </Stack>
 
             <Card>
@@ -84,7 +84,7 @@ export default function ReportedProblemDetailPage() {
                     )}
                   </Stack>
 
-                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                  <Typography variant="body1" data-testid="reported-problem-message" sx={{ whiteSpace: 'pre-wrap' }}>
                     {r.message}
                   </Typography>
 
@@ -158,6 +158,7 @@ export default function ReportedProblemDetailPage() {
                     select
                     label={t('shell.common.status')}
                     size="small"
+                    data-testid="reported-problem-status-select"
                     value={r.status}
                     disabled={statusState.loading}
                     onChange={(event) => {

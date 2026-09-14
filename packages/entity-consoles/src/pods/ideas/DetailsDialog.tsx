@@ -118,8 +118,8 @@ export default function DetailsDialog({ id, onClose, onChanged }: Readonly<Detai
   );
 
   return (
-    <Dialog open onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle sx={{ pr: 6 }}>
+    <Dialog open onClose={onClose} fullWidth maxWidth="md" data-testid="pod-idea-details-dialog">
+      <DialogTitle sx={{ pr: 6 }} data-testid="pod-idea-details-title">
         {idea?.title ?? 'Pod idea'}
         {idea && (
           <StatusChip

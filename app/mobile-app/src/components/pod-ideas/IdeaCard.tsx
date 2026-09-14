@@ -96,6 +96,7 @@ export function IdeaCard({
         </YStack>
         {showStatus ? (
           <XStack
+            testID={`idea-card-status-${idea.id}`}
             height={24}
             alignItems="center"
             paddingHorizontal={10}

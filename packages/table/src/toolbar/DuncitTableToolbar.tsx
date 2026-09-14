@@ -132,7 +132,7 @@ export function DuncitTableToolbar<T>(props: Readonly<DuncitTableToolbarProps<T>
             endAdornment: searchInput ? clearAdornment : undefined,
           },
 
-          htmlInput: { 'aria-label': placeholder }
+          htmlInput: { 'aria-label': placeholder, 'data-testid': 'table-toolbar-search' }
         }} />
       {hasFilterableColumns ? (
         <Badge badgeContent={filters.length} color="primary">

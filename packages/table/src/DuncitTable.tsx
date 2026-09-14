@@ -23,6 +23,7 @@ import type {
   FullWidthCellKeyDownEvent,
   GetRowIdParams,
   GridReadyEvent,
+  ProcessRowParams,
   RowClassParams,
   RowClickedEvent,
   RowSelectionOptions,
@@ -405,6 +406,19 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
     [ariaLabel],
   );
 
+  /**
+   * Every row names itself `<tableId>-row-<rowId>`, so an end-to-end suite can
+   * find the one record it filed by the id the API gave it, instead of reading
+   * AG Grid's own attributes or matching on text. `node.id` is `getRowId`'s
+   * answer, which is what keeps the id stable across a refetch.
+   */
+  const handleRowPostCreate = useCallback(
+    (params: ProcessRowParams<T>) => {
+      params.eRow.dataset.testid = `${tableId}-row-${params.node.id}`;
+    },
+    [tableId],
+  );
+
   const agGetRowId = useCallback((params: GetRowIdParams<T>) => getRowId(params.data), [getRowId]);
   const agGetRowStyle = useCallback(
     (params: RowClassParams<T>) => (getRowStyle && params.data ? getRowStyle(params.data) : undefined),
@@ -482,6 +496,7 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
             rowData={table.rows}
             getRowId={agGetRowId}
             getRowStyle={agGetRowStyle}
+            processRowPostCreate={handleRowPostCreate}
             rowSelection={selection ? MULTI_ROW_SELECTION : undefined}
             domLayout="autoHeight"
             headerHeight={HEADER_HEIGHT[prefs.density]}

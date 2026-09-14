@@ -2,10 +2,10 @@ import { APP_TOKEN_KEY } from '../support/commands';
 import {
   expectDisabled,
   expectEnabled,
-  expectHome,
   fill,
   minSignupAge,
   pickDob,
+  saveSurvey,
   tap,
   typeDob,
   wrongCode,
@@ -286,10 +286,7 @@ describe('Native · 01 signup', () => {
       );
 
       cy.get('[data-testid^="chip-"]').eq(2).click();
-      cy.interceptOperation('MobileSaveInterests');
-      tap('survey-submit');
-      cy.wait('@MobileSaveInterests');
-      expectHome();
+      saveSurvey();
     });
   });
 

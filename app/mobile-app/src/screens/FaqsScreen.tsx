@@ -99,7 +99,10 @@ export function FaqsScreen() {
           {filteredGroups.map((group, groupIndex) => (
             <Reveal key={group.super_category?.id ?? 'general'} index={groupIndex}>
               <YStack gap={12} marginBottom={16}>
-                <SectionHeader title={group.super_category?.name ?? 'General'} />
+                <SectionHeader
+                  testID={`faqs-group-${group.super_category?.id ?? 'GENERIC'}-header`}
+                  title={group.super_category?.name ?? 'General'}
+                />
                 {group.faqs.map((faq) => (
                   <Accordion
                     key={faq.id}

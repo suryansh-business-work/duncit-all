@@ -233,11 +233,12 @@ export default function MediaPickerDialog({
         </Box>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose} disabled={device.uploading}>
+        <DuncitButton onClick={onClose} disabled={device.uploading} data-testid="media-picker-cancel">
           Cancel
         </DuncitButton>
         {(multi || tab === 'device') && (
           <DuncitButton
+            data-testid="media-picker-done"
             variant="contained"
             onClick={done}
             disabled={pickCount === 0 || device.uploading}

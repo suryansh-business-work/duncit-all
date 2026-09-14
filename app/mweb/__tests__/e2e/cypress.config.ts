@@ -7,15 +7,18 @@ import { registerScenarioClips } from '../../../../scripts/lib/cypress-scenarios
 const here = path.dirname(fileURLToPath(import.meta.url)).replaceAll('\\', '/');
 
 /**
- * mWeb account lifecycle, live on staging (E2E Batch 1).
+ * mWeb account lifecycle, support and pod ideas, live on staging (E2E Batches 1 + 2).
  *
- * Nothing is stubbed. The bundle under test is built with VITE_GRAPHQL_URL set
- * to staging, and the specs under `specs/account/` run IN FILE ORDER as one
- * account's life: signup creates the run account, the next specs sign in,
- * recover the password, edit the profile and change the password, and the
- * last one deletes it. One-time codes come from the OTP testing API
- * (`e2eOneTimeCode`), never from the screen. The run's identity arrives as
- * CYPRESS_E2E_* from the workflow (Tech > E2E Tests > Settings).
+ * Nothing on the server is stubbed. The bundle under test is built with
+ * VITE_GRAPHQL_URL set to staging, and the specs under `specs/` run IN FILE
+ * ORDER as one account's life: 01 signup creates the run account, 02–05 sign
+ * in, recover the password, edit the profile and change the password, 06 and
+ * 07 file support requests and a pod idea for the staff-portal specs to follow,
+ * 08 deletes the account, and 09 joins and signs in again with Google as a
+ * second account on the same number. One-time codes come from the OTP testing
+ * API (`e2eOneTimeCode`), never from the screen; Google's popup is the one
+ * thing stood in for (support/google-stand-in.ts). The run's identity arrives
+ * as CYPRESS_E2E_* from the workflow (Tech > E2E Tests > Settings).
  */
 export default defineConfig({
   e2e: {
@@ -27,8 +30,9 @@ export default defineConfig({
     videosFolder: `${here}/../../cypress-artifacts/videos`,
     downloadsFolder: `${here}/../../cypress-artifacts/downloads`,
     screenshotOnRunFailure: true,
-    // The CI job runs this project twice (lifecycle, then delete after the
-    // Partners specs); keeping assets keeps the first run's videos and failures.
+    // The CI job runs this project three times (01–07, then 08 after the
+    // Partners and staff-portal specs, then 09); keeping assets keeps every
+    // run's videos and failures.
     trashAssetsBeforeRuns: false,
     viewportWidth: 412,
     viewportHeight: 915,

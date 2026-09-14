@@ -30,9 +30,14 @@ export interface E2eSuiteDefinition {
  * batch; each one returns here (and to scripts/e2e-matrix.mjs) with its suite.
  */
 export const E2E_SUITES: readonly E2eSuiteDefinition[] = [
-  // E2E Batch 1: one run account's whole life — signup to deletion — live on
-  // staging, on mWeb, the native web export and the Partners portal in turn.
-  { key: 'accounts', label: 'Account lifecycle (mWeb, native, Partners · staging)', group: 'APP' },
+  // E2E Batches 1 + 2: one run account's whole life — signup (password and
+  // Google), support journeys, pod ideas, deletion — live on staging, on mWeb,
+  // the native web export, Partners and the Support/Legal/Pods portals in turn.
+  {
+    key: 'accounts',
+    label: 'Account lifecycle, support & pod ideas (mWeb, native, portals · staging)',
+    group: 'APP',
+  },
   {
     key: 'no-surface',
     label: 'Shared packages, websites and API',

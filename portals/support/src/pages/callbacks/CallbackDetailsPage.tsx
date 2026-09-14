@@ -83,11 +83,11 @@ export default function CallbackDetailsPage() {
                   alignItems: "center",
                   flexWrap: "wrap"
                 }}>
-                <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                <Typography variant="h6" data-testid="callback-detail-user" sx={{ fontWeight: 800 }}>
                   {req.user.name}
                 </Typography>
                 <Chip size="small" variant="outlined" label={req.ticket_no} />
-                <StatusChip status={req.status} colorMap={CALLBACK_STATUS_COLORS} />
+                <StatusChip status={req.status} colorMap={CALLBACK_STATUS_COLORS} data-testid="callback-detail-status" />
               </Stack>
               <Typography variant="caption" sx={{
                 color: "text.secondary"
@@ -104,7 +104,7 @@ export default function CallbackDetailsPage() {
             <Typography variant="body2">
               <strong>Pod:</strong> {req.pod?.title ?? '—'}
             </Typography>
-            <Typography variant="body2">
+            <Typography variant="body2" data-testid="callback-detail-reason">
               <strong>Reason:</strong> {req.reason || '—'}
             </Typography>
             {(req.duration_seconds || req.conclusion) && (
@@ -144,6 +144,7 @@ export default function CallbackDetailsPage() {
                     <DuncitButton
                       variant="contained"
                       disabled={busy}
+                      data-testid="callback-mark-contacted"
                       onClick={() =>
                         run(() => markContacted({ variables: { id: req.id, ...outcomeVars() } }))
                       }
@@ -154,6 +155,7 @@ export default function CallbackDetailsPage() {
                   <DuncitButton
                     variant="outlined"
                     disabled={busy}
+                    data-testid="callback-close"
                     onClick={() => run(() => closeCb({ variables: { id: req.id, ...outcomeVars() } }))}
                   >
                     Close

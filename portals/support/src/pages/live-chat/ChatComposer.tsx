@@ -60,6 +60,7 @@ export default function ChatComposer({ text, attachments, sending, onText, onAtt
           variant="contained"
           endIcon={<SendIcon />}
           disabled={sending || (!text.trim() && attachments.length === 0)}
+          data-testid="live-chat-send"
           onClick={onSend}
         >
           Send

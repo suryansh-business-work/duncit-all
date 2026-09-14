@@ -46,7 +46,7 @@ export function IdeasList({
     <YStack gap={12}>
       {myIdeas.length > 0 ? (
         <YStack gap={12} marginBottom={12}>
-          <SectionHeader title="Your submissions" />
+          <SectionHeader testID="ideas-list-mine-header" title="Your submissions" />
           {myIdeas.map((idea, index) => (
             <Reveal key={idea.id} index={index} scale>
               <IdeaCard idea={idea} myId={myId} showStatus {...cardActions(idea)} />

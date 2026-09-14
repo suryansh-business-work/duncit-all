@@ -139,7 +139,7 @@ export default function RegisterPage() {
                   onCancelled={google.cancel}
                 />
                 {google.error && (
-                  <Alert severity="error" sx={{ width: '100%' }}>
+                  <Alert data-testid="google-signup-error" severity="error" sx={{ width: '100%' }}>
                     {google.error}
                   </Alert>
                 )}

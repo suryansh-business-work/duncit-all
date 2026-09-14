@@ -12,13 +12,14 @@ import {
 import { runAccount } from '../support/run-account';
 
 /**
- * 06 · Delete (AD) with the CHANGED password. Filing the request seals the
- * account; the purge in `after()` removes it so the email and number are free.
+ * 08 · Delete (AD) with the CHANGED password. Filing the request seals the
+ * account; the purge in `after()` removes it so the email and number are free
+ * for the Google signup in 09.
  *
  * Native web: the danger row in src/components/account/DeletionRequestPanel,
  * its code sheet DeleteAccountDialog and DeletionSubmittedDialog.
  */
-describe('Native · 06 delete', () => {
+describe('Native · 08 delete', () => {
   const account = runAccount();
   const mailbox = { email: account.email };
   const NOT_FOUND = 'We couldn’t find an account with these details.';
@@ -122,23 +123,27 @@ describe('Native · 06 delete', () => {
     });
   });
 
-  it('AD-07 password sign-in is refused', () => {
-    passwordSignIn(account.email, account.password('CHANGED'));
-    cy.byTestId('login-error').should('have.text', 'Invalid email or password');
-  });
+  // A suite of its own: Mocha runs a describe's direct tests BEFORE its nested
+  // suites, so left at the top level these would run ahead of the request.
+  describe('the account is sealed', () => {
+    it('AD-07 password sign-in is refused', () => {
+      passwordSignIn(account.email, account.password('CHANGED'));
+      cy.byTestId('login-error').should('have.text', 'Invalid email or password');
+    });
 
-  it('AD-08 code sign-in finds no account', () => {
-    openOtpSignIn();
-    fill('field-email', account.email);
-    sendCode('MobileRequestLoginOtp');
-    cy.byTestId('recovery-not-found').should('have.text', NOT_FOUND);
-  });
+    it('AD-08 code sign-in finds no account', () => {
+      openOtpSignIn();
+      fill('field-email', account.email);
+      sendCode('MobileRequestLoginOtp');
+      cy.byTestId('recovery-not-found').should('have.text', NOT_FOUND);
+    });
 
-  it('AD-09 forgot password finds no account', () => {
-    openPasswordSignIn();
-    tap('go-forgot-password');
-    fill('field-email', account.email);
-    sendCode('MobileRequestPasswordResetCode');
-    cy.byTestId('recovery-not-found').should('have.text', NOT_FOUND);
+    it('AD-09 forgot password finds no account', () => {
+      openPasswordSignIn();
+      tap('go-forgot-password');
+      fill('field-email', account.email);
+      sendCode('MobileRequestPasswordResetCode');
+      cy.byTestId('recovery-not-found').should('have.text', NOT_FOUND);
+    });
   });
 });

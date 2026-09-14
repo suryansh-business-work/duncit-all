@@ -347,6 +347,11 @@ The empty-state overlay is a polite `role="status"` region and the grid wrapper 
 function that names the row (`(row) => t('…', { vars: { name: row.name } })`) so ten
 identical "Delete" buttons become ten distinguishable ones.
 
+End-to-end suites select by test id only, so the table names its own parts: the search box is
+`table-toolbar-search`, and every row is `<tableId>-row-<rowId>` — the id `getRowId` returned,
+set when AG Grid creates the row. A spec that filed a ticket finds it as
+`support-tickets-row-<ticketId>` without reading AG Grid's attributes.
+
 ### Data types
 
 | Type | Shape | Notes |

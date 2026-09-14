@@ -78,6 +78,7 @@ export default function SessionInbox({
           size="small"
           fullWidth
           label={t('support.chat.search')}
+          slotProps={{ htmlInput: { 'data-testid': 'live-chat-search' } }}
           value={searchInput}
           onChange={(e) => onSearchChange(e.target.value)}
         />

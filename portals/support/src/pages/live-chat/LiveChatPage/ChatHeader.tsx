@@ -38,7 +38,7 @@ export default function ChatHeader({ session, onResolve, onReopen, onDownload, o
         {session.user.name?.[0]?.toUpperCase() || '?'}
       </Avatar>
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="subtitle2" component="h2" sx={{ fontWeight: 800 }} noWrap>
+        <Typography variant="subtitle2" component="h2" data-testid="live-chat-header-name" sx={{ fontWeight: 800 }} noWrap>
           {session.user.name}
         </Typography>
         <Typography variant="caption" noWrap sx={{

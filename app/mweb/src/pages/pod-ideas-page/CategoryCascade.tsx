@@ -1,4 +1,5 @@
-import { Autocomplete, Stack, TextField } from '@mui/material';
+import type { HTMLAttributes, Key } from 'react';
+import { Autocomplete, Box, Stack, TextField } from '@mui/material';
 import { type CategoryOption } from '../survey-gate/queries';
 import { useCategoryLevel } from '../survey-gate/useCategoryLevel';
 
@@ -26,6 +27,15 @@ interface Props {
 }
 
 const nameOf = (list: CategoryOption[], id: string) => list.find((c) => c.id === id)?.name ?? '';
+
+/** Each option carries its level's id and the category id: `category-cascade-super-option-<id>`. */
+const optionWithTestId =
+  (testId: string, list: CategoryOption[]) =>
+  ({ key, ...props }: HTMLAttributes<HTMLLIElement> & { key?: Key }, id: string) => (
+    <Box component="li" key={key} {...props} data-testid={`${testId}-option-${id}`}>
+      {nameOf(list, id)}
+    </Box>
+  );
 
 /**
  * Cascading Super → Category → Sub category picker shared by the pod-idea
@@ -64,6 +74,7 @@ export default function CategoryCascade({ value, onChange, allowAll }: Readonly<
       options={list.map((c) => c.id)}
       value={value[level] || null}
       getOptionLabel={(id) => nameOf(list, id)}
+      renderOption={optionWithTestId(testId, list)}
       onChange={(_, v) => pick(level, v ?? '')}
       loading={loading}
       disabled={disabled}

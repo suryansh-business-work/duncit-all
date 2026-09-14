@@ -11,6 +11,7 @@ type GridProps = {
   headerHeight?: number;
   defaultColDef?: { cellStyle?: CellStyle };
   getRowId?: (params: { data: unknown }) => string;
+  processRowPostCreate?: (params: { eRow: HTMLElement; node: { id?: string } }) => void;
 };
 type GridHandle = {
   api?: {
@@ -104,6 +105,25 @@ describe('DuncitTable getRowId bridge', () => {
 
     expect(captured.getRowId?.({ data: ROW })).toBe('row-p1');
     expect(getRowId).toHaveBeenCalledWith(ROW);
+  });
+});
+
+describe('DuncitTable row test ids', () => {
+  it('names every created row <tableId>-row-<rowId>', async () => {
+    render(
+      <DuncitTable<Person>
+        tableId="support-tickets"
+        columns={columns}
+        fetchRows={makeFetch()}
+        getRowId={(row) => row.id}
+      />,
+    );
+    await screen.findByTestId('ag-grid-stub');
+    const eRow = document.createElement('div');
+
+    captured.processRowPostCreate?.({ eRow, node: { id: 'p1' } });
+
+    expect(eRow).toHaveAttribute('data-testid', 'support-tickets-row-p1');
   });
 });
 

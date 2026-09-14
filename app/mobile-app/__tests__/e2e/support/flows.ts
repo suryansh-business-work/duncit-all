@@ -1,4 +1,4 @@
-import { APP_TOKEN_KEY } from './commands';
+import { APP_TOKEN_KEY, type VisitAppOptions } from './commands';
 
 /**
  * The few screen moves more than one spec makes, written once.
@@ -8,6 +8,14 @@ import { APP_TOKEN_KEY } from './commands';
  * `<name>-error` (src/components/FormTextField + Field). Every wait is on the
  * operation the app really sends (src/graphql/*.ts), never on a clock.
  */
+
+/** `value`, or a failure naming the staging data a scenario cannot run without. */
+export function prerequisite<T>(value: T | null | undefined, needs: string): T {
+  if (value === null || value === undefined) {
+    throw new Error(`Staging prerequisite missing: ${needs}.`);
+  }
+  return value;
+}
 
 /** Press a control by its testID once it accepts input. */
 export function tap(testId: string): void {
@@ -33,6 +41,33 @@ export function expectHome(): void {
   cy.byTestId('home-screen').should('exist');
   cy.location('pathname').should('eq', '/');
   cy.window().its('localStorage').invoke('getItem', APP_TOKEN_KEY).should('be.a', 'string');
+}
+
+/** Save the interests picked on the survey and land on Home. */
+export function saveSurvey(): void {
+  cy.interceptOperation('MobileSaveInterests');
+  tap('survey-submit');
+  cy.wait('@MobileSaveInterests');
+  expectHome();
+}
+
+/** A new account's interests survey, start to Home: the first three interests, then save. */
+export function completeSurvey(): void {
+  cy.byTestId('survey-screen').should('exist');
+  cy.location('pathname').should('eq', '/survey');
+  cy.byTestIdPrefix('chip-').should('have.length.at.least', 3);
+  cy.byTestIdPrefix('chip-').eq(0).click();
+  cy.byTestIdPrefix('chip-').eq(1).click();
+  cy.byTestIdPrefix('chip-').eq(2).click();
+  saveSurvey();
+}
+
+/** The account menu from Home, signed in with the token `cy.apiLogin` kept. */
+export function openMenu(options?: VisitAppOptions): void {
+  cy.visitApp('/', options);
+  cy.byTestId('home-screen').should('exist');
+  tap('account-button');
+  cy.byTestId('sidebar-panel').should('exist');
 }
 
 /** Signed out, on the sign-in chooser. */

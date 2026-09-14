@@ -97,7 +97,7 @@ export default function DeviceUploadTab({
         alignItems: "center",
         py: 2
       }}>
-      <input ref={fileInputRef} type="file" accept={accept} onChange={onPickFile} hidden />
+      <input ref={fileInputRef} type="file" accept={accept} onChange={onPickFile} hidden data-testid="media-device-file-input" />
       {previewUrl && isPdf && (
         <Stack
           spacing={1}

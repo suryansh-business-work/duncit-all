@@ -29,7 +29,6 @@ export const AWAITING_SUITE = new Set([
   'pods',
   'products',
   'regional-club-admin',
-  'support',
   'tech',
   'venues',
   'website-app',

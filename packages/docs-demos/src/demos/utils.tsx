@@ -171,6 +171,10 @@ import {
   type PodAuditRisk,
   type PodAuditSource,
   type PodStatusFields,
+  clubCityName,
+  groupClubsByCity,
+  groupClubsByLocality,
+  type ClubCityLocation,
 } from '@duncit/utils';
 import { CLUB_ADMIN_BUNDLE, MWEB_BUNDLE, createTranslator, flattenCatalogue } from '@duncit/i18n';
 import { defineDemo, defineDemos } from '../types';
@@ -411,7 +415,45 @@ interface SeatsSoldMock {
   price_per_seat: number;
 }
 
+interface ClubGroupingMock {
+  locations: ClubCityLocation[];
+  clubs: { club_name: string; location_id: string; locality: string }[];
+  openCityId: string;
+}
+
 export default defineDemos('utils', [
+  defineDemo<ClubGroupingMock>({
+    id: 'club-grouping',
+    title: 'The Clubs tab, grouped by city and then by locality',
+    note:
+      'Change a club\'s location_id to loc-blr and it moves to the Bengaluru card. Blank its locality and it drops into the last, no-area section. Point openCityId at another city to see that city\'s sections.',
+    mock: {
+      locations: [
+        { id: 'loc-pune', location_name: 'Pune', city: 'Pune', location_image: '' },
+        { id: 'loc-blr', location_name: 'Bengaluru', city: 'Bengaluru', location_image: '' },
+      ],
+      clubs: [
+        { club_name: 'Smashers United', location_id: 'loc-pune', locality: 'Kothrud' },
+        { club_name: 'Baner Book Circle', location_id: 'loc-pune', locality: 'Baner' },
+        { club_name: 'Sunday Striders', location_id: 'loc-pune', locality: '' },
+        { club_name: 'Indiranagar Runners', location_id: 'loc-blr', locality: 'Indiranagar' },
+      ],
+      openCityId: 'loc-pune',
+    },
+    compute: (mock) => {
+      const openCity = mock.locations.find((location) => location.id === mock.openCityId);
+      const cityClubs = mock.clubs.filter((club) => club.location_id === mock.openCityId);
+      return {
+        'City cards': groupClubsByCity(mock.clubs, mock.locations).map(
+          (group) => `${group.city} — ${group.clubs.length} clubs`,
+        ),
+        'Opened city': openCity ? clubCityName(openCity) : '(not a known city)',
+        'Its locality sections': groupClubsByLocality(cityClubs).map(
+          (group) => `${group.locality || 'Other areas'}: ${group.clubs.map((club) => club.club_name).join(', ')}`,
+        ),
+      };
+    },
+  }),
   defineDemo<SpotsMock>({
     id: 'host-free-spot',
     title: 'The host sits in the pod and never pays',

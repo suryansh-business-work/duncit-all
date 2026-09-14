@@ -5,7 +5,8 @@ import type { CodeTarget } from './commands';
 /**
  * Steps the account specs share: signing in, asking for a one-time code and
  * reading back the one the server issued, and the refusals several flows end
- * on. Selectors and copy are the ones the mWeb components render today.
+ * on. Every element is found by its `data-testid` — the same names the native
+ * twin's testIDs carry — and copy is asserted ON that element.
  */
 
 /** The server's resend cooldown (`OTP_RESEND_COOLDOWN_SEC`, 30 s) plus a second of margin. */
@@ -21,21 +22,15 @@ export type SessionUser = { me: { user_id: string; email: string } | null };
 export const wrongCode = (code: string): string =>
   code.replaceAll(/\d/g, (digit) => String((Number(digit) + 1) % 10));
 
-/** MUI's dialog paper. */
-export const DIALOG = '[role="dialog"]';
-
-/** The dialog that shows this text. */
-export const dialogWith = (text: string | RegExp) => cy.contains(DIALOG, text);
-
 /** What `me` answers for a token — null once the server no longer honours it. */
 export const sessionUser = (token: string) => cy.gql<SessionUser>(SESSION_USER_QUERY, {}, { token });
 
 /** The token the app saved after a sign-in. */
 export const savedToken = () => cy.window().its('localStorage').invoke('getItem', 'token');
 
-/** A screen that sent a code must never print it. */
-export function expectNoTestCode(): void {
-  cy.contains(/Test code/).should('not.exist');
+/** A screen that sent a code must never print it (`recovery-test-code`, `signup-test-code`). */
+export function expectNoTestCode(testId: string): void {
+  cy.byTestId(testId).should('not.exist');
 }
 
 /** Press whatever sends a code, and wait for the server to answer the send. */
@@ -68,11 +63,14 @@ export function waitOutResendCooldown(sentAt: number): void {
   });
 }
 
-export const openPasswordStep = () => cy.get('[data-testid="continue-with-password"]').click();
-export const openOtpStep = () => cy.get('[data-testid="continue-with-otp"]').click();
+/** Replace what a box holds with `text`. */
+export function fill(testId: string, text: string, options: Partial<Cypress.TypeOptions> = {}): void {
+  cy.byTestId(testId).clear();
+  cy.byTestId(testId).type(text, options);
+}
 
-/** The Email | Phone switch on the sign-in and code steps. */
-export const channelTab = (name: 'Email' | 'Phone') => cy.contains('[role="tab"]', name);
+export const openPasswordStep = () => cy.byTestId('continue-with-password').click();
+export const openOtpStep = () => cy.byTestId('continue-with-otp').click();
 
 /** Signed out, on the page that holds the flow. */
 export function openSignedOut(path: string): void {
@@ -84,23 +82,34 @@ export function openSignedOut(path: string): void {
 export function signInWithPassword(email: string, password: string, path = '/login'): void {
   openSignedOut(path);
   openPasswordStep();
-  cy.get('input[name="email"]').type(email);
-  cy.get('input[name="password"]').type(password, { log: false });
+  cy.byTestId('field-email').type(email);
+  cy.byTestId('field-password').type(password, { log: false });
   cy.interceptOperation('Login');
-  cy.contains('button', 'Log me in').click();
+  cy.byTestId('login-submit').click();
   cy.wait('@Login');
 }
 
 /** The one refusal a wrong password, an unknown address and a sealed account share. */
-export const PASSWORD_REFUSED = 'Invalid email or password';
+export function expectPasswordRefused(): void {
+  cy.byTestId('login-error').should('contain.text', 'Invalid email or password');
+  cy.location('pathname').should('eq', '/login');
+}
 
-/** Both code flows refuse an address with no account with this, beside a Create Account link. */
-export const NO_ACCOUNT = 'We couldn’t find an account with these details.';
+/** Both code flows refuse an address with no account with this, beside Create Account. */
+export function expectNoAccount(): void {
+  cy.byTestId('recovery-not-found').should('have.text', 'We couldn’t find an account with these details.');
+  cy.byTestId('recovery-create-account')
+    .should('contain.text', 'Create Account')
+    .and('have.attr', 'href', '/register');
+}
 
-/** On a code flow's channel step, type the address and send (sign-in code or reset code). */
+/** Press Send code on a channel step (sign-in code or reset code) and wait for the server. */
+export function pressSendCode(): void {
+  cy.byTestId('recovery-send-code').should('be.enabled').click();
+}
+
+/** On a code flow's channel step, type the address and send. */
 export function sendCodeToEmail(email: string, operation: string): void {
-  cy.get('input[name="email"]').clear().type(email);
-  sendCode(operation, () => {
-    cy.contains('button', 'Send code').should('be.enabled').click();
-  });
+  fill('field-email', email);
+  sendCode(operation, pressSendCode);
 }

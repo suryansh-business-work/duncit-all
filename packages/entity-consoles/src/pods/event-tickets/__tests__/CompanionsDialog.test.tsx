@@ -51,15 +51,15 @@ describe('CompanionsDialog / open state', () => {
     expect(screen.getByText('Person 1')).toBeInTheDocument();
     expect(screen.getByText('Person 2')).toBeInTheDocument();
     expect(screen.getByText('Person 3')).toBeInTheDocument();
-    expect(screen.getAllByLabelText('Name')).toHaveLength(3);
-    expect(screen.getAllByLabelText('Phone')).toHaveLength(3);
+    expect(screen.getAllByRole('textbox', { name: 'Name' })).toHaveLength(3);
+    expect(screen.getAllByRole('textbox', { name: 'Phone' })).toHaveLength(3);
   });
 });
 
 describe('CompanionsDialog / editing a row', () => {
   it('updates only the row that was typed into', () => {
     renderDialog({ required: 2 });
-    const names = screen.getAllByLabelText('Name');
+    const names = screen.getAllByRole('textbox', { name: 'Name' });
     fireEvent.change(names[0], { target: { value: 'Asha' } });
     fireEvent.change(names[1], { target: { value: 'Ravi' } });
     expect(names[0]).toHaveValue('Asha');
@@ -88,8 +88,8 @@ describe('CompanionsDialog / validation on submit', () => {
 
   it('rejects a name shorter than two characters and a phone with the wrong shape', () => {
     renderDialog({ required: 1 });
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'A' } });
-    fireEvent.change(screen.getByLabelText('Phone'), { target: { value: '123' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), { target: { value: 'A' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Phone' }), { target: { value: '123' } });
     fireEvent.click(screen.getByRole('button', { name: 'Mark attendance' }));
 
     expect(screen.getByText('Enter the name')).toBeInTheDocument();
@@ -99,8 +99,8 @@ describe('CompanionsDialog / validation on submit', () => {
   it('accepts a name of exactly two characters and a 6-to-15 digit phone', () => {
     const onSubmit = vi.fn();
     renderDialog({ required: 1, onSubmit });
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Al' } });
-    fireEvent.change(screen.getByLabelText('Phone'), { target: { value: '123456' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), { target: { value: 'Al' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Phone' }), { target: { value: '123456' } });
     fireEvent.click(screen.getByRole('button', { name: 'Mark attendance' }));
 
     expect(onSubmit).toHaveBeenCalledWith([{ name: 'Al', phone_number: '123456' }]);
@@ -109,8 +109,8 @@ describe('CompanionsDialog / validation on submit', () => {
   it('rejects a phone number longer than 15 digits', () => {
     const onSubmit = vi.fn();
     renderDialog({ required: 1, onSubmit });
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Al' } });
-    fireEvent.change(screen.getByLabelText('Phone'), { target: { value: '1234567890123456' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), { target: { value: 'Al' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Phone' }), { target: { value: '1234567890123456' } });
     fireEvent.click(screen.getByRole('button', { name: 'Mark attendance' }));
 
     expect(onSubmit).not.toHaveBeenCalled();
@@ -120,8 +120,8 @@ describe('CompanionsDialog / validation on submit', () => {
   it('trims the name before handing the row to onSubmit', () => {
     const onSubmit = vi.fn();
     renderDialog({ required: 1, onSubmit });
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: '  Priya  ' } });
-    fireEvent.change(screen.getByLabelText('Phone'), { target: { value: '9998887776' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), { target: { value: '  Priya  ' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Phone' }), { target: { value: '9998887776' } });
     fireEvent.click(screen.getByRole('button', { name: 'Mark attendance' }));
 
     expect(onSubmit).toHaveBeenCalledWith([{ name: 'Priya', phone_number: '9998887776' }]);
@@ -130,8 +130,8 @@ describe('CompanionsDialog / validation on submit', () => {
   it('requires every row to be valid before submitting a multi-seat group', () => {
     const onSubmit = vi.fn();
     renderDialog({ required: 2, onSubmit });
-    const names = screen.getAllByLabelText('Name');
-    const phones = screen.getAllByLabelText('Phone');
+    const names = screen.getAllByRole('textbox', { name: 'Name' });
+    const phones = screen.getAllByRole('textbox', { name: 'Phone' });
     fireEvent.change(names[0], { target: { value: 'Asha' } });
     fireEvent.change(phones[0], { target: { value: '9998887776' } });
     // Second row left blank.
@@ -167,7 +167,7 @@ describe('CompanionsDialog / busy + close', () => {
 describe('CompanionsDialog / ticket or count changes', () => {
   it('resets rows and clears touched errors when the ticket code changes', () => {
     const { rerender } = renderDialog({ ticketCode: 'DUN-TKT-1', required: 1 });
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Asha' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), { target: { value: 'Asha' } });
     fireEvent.click(screen.getByRole('button', { name: 'Mark attendance' }));
     // Incomplete (phone still blank) — shows the touched error state.
     expect(screen.getByText('Enter a phone number — digits only, 6 to 15')).toBeInTheDocument();
@@ -182,13 +182,13 @@ describe('CompanionsDialog / ticket or count changes', () => {
       />,
     );
 
-    expect(screen.getByLabelText('Name')).toHaveValue('');
+    expect(screen.getByRole('textbox', { name: 'Name' })).toHaveValue('');
     expect(screen.queryByText('Enter a phone number — digits only, 6 to 15')).not.toBeInTheDocument();
   });
 
   it('resizes the row count when required changes for the same ticket', () => {
     const { rerender } = renderDialog({ ticketCode: 'DUN-TKT-1', required: 1 });
-    expect(screen.getAllByLabelText('Name')).toHaveLength(1);
+    expect(screen.getAllByRole('textbox', { name: 'Name' })).toHaveLength(1);
 
     rerender(
       <CompanionsDialog
@@ -200,6 +200,6 @@ describe('CompanionsDialog / ticket or count changes', () => {
       />,
     );
 
-    expect(screen.getAllByLabelText('Name')).toHaveLength(3);
+    expect(screen.getAllByRole('textbox', { name: 'Name' })).toHaveLength(3);
   });
 });

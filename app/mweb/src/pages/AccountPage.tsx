@@ -61,7 +61,7 @@ export default function AccountPage() {
   // One order on both apps (rule 27): who you are, your details, how the
   // account is doing, then the settings, with the danger corner last.
   return (
-    <Stack data-testid="account-page" spacing={2} sx={{ maxWidth: 720, mx: 'auto', pb: 3 }}>
+    <Stack data-testid="account-screen" spacing={2} sx={{ maxWidth: 720, mx: 'auto', pb: 3 }}>
       <Card>
         <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
           <AccountProfileHeader
@@ -126,7 +126,7 @@ export default function AccountPage() {
         onClose={() => setSavedOpen(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert data-testid="account-page-saved-alert" severity="success" variant="filled" onClose={() => setSavedOpen(false)}>
+        <Alert data-testid="profile-saved" severity="success" variant="filled" onClose={() => setSavedOpen(false)}>
           Profile updated
         </Alert>
       </Snackbar>

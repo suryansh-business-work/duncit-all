@@ -57,7 +57,7 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
   }
 
   return (
-    <Stack data-testid="google-signin-button" sx={{ maxWidth: '100%', alignItems: 'center', position: 'relative', minHeight: 44 }}>
+    <Stack data-testid="google-auth-button" sx={{ maxWidth: '100%', alignItems: 'center', position: 'relative', minHeight: 44 }}>
       <GoogleLogin
         onSuccess={(response) => {
           if (response.credential) onCredential(response.credential);

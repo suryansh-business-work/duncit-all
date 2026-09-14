@@ -1,12 +1,13 @@
 /// <reference types="cypress" />
 import {
-  channelTab,
-  NO_ACCOUNT,
+  expectNoAccount,
   expectNoTestCode,
-  PASSWORD_REFUSED,
+  expectPasswordRefused,
+  fill,
   openOtpStep,
   openPasswordStep,
   openSignedOut,
+  pressSendCode,
   savedToken,
   sendAndReadCode,
   sendCode,
@@ -24,15 +25,14 @@ import { runAccount } from '../support/run-account';
  * a signed-in code is spent, and spending it frees its destination at once.
  */
 
-const OTP_ERROR = '[data-testid="otp-login-error"]';
-const emailBox = () => cy.get('input[name="email"]');
-const numberBox = () => cy.get('input[name="number"]');
+const otpError = () => cy.byTestId('otp-login-error');
+const loginSubmit = () => cy.byTestId('login-submit');
 
 /** Type the code and press Verify & sign in, waiting for the server's answer. */
 function verifyLoginCode(code: string): void {
-  cy.get('input[name="otp"]').clear().type(code);
+  fill('field-otp', code);
   sendCode('LoginWithOtp', () => {
-    cy.contains('button', 'Verify & sign in').should('be.enabled').click();
+    cy.byTestId('recovery-verify-code').should('contain.text', 'Verify & sign in').and('be.enabled').click();
   });
 }
 
@@ -43,45 +43,40 @@ describe('02 Sign in', () => {
   const phoneTarget = { phone: account.phone };
   const nobody = `nobody-${account.stamp}@example.invalid`;
 
-  const pressSendCode = () => {
-    cy.contains('button', 'Send code').should('be.enabled').click();
-  };
-
   describe('with a password', () => {
     it('SI-01 signed out, Home redirects to the sign-in options', () => {
       openSignedOut('/');
       cy.location('pathname').should('eq', '/login');
-      cy.get('[data-testid="continue-with-password"]').should('contain.text', 'Continue with Password');
-      cy.get('[data-testid="continue-with-otp"]').should('contain.text', 'Continue with OTP');
-      cy.contains('a', 'Create one').should('have.attr', 'href', '/register');
+      cy.byTestId('login-screen').should('exist');
+      cy.byTestId('continue-with-password').should('contain.text', 'Continue with Password');
+      cy.byTestId('continue-with-otp').should('contain.text', 'Continue with OTP');
+      cy.byTestId('go-signup').should('have.text', 'Create one').and('have.attr', 'href', '/register');
     });
 
     it('SI-02 an empty Log me in asks for the email and the password', () => {
       openSignedOut('/login');
       openPasswordStep();
-      cy.contains('button', 'Log me in').click();
-      cy.contains('Email is required').should('be.visible');
-      cy.contains('Min 8 characters').should('be.visible');
+      loginSubmit().should('contain.text', 'Log me in').click();
+      cy.byTestId('email-error').should('have.text', 'Email is required');
+      cy.byTestId('password-error').should('have.text', 'Min 8 characters');
     });
 
     it('SI-03 an address that is not an email is refused', () => {
       openSignedOut('/login');
       openPasswordStep();
-      emailBox().type('not-an-email');
-      cy.contains('button', 'Log me in').click();
-      cy.contains('Enter a valid email').should('be.visible');
+      cy.byTestId('field-email').type('not-an-email');
+      loginSubmit().click();
+      cy.byTestId('email-error').should('have.text', 'Enter a valid email');
     });
 
     it('SI-04 a wrong password is refused', () => {
       signInWithPassword(account.email, `${password}-wrong`);
-      cy.contains(PASSWORD_REFUSED).should('be.visible');
-      cy.location('pathname').should('eq', '/login');
+      expectPasswordRefused();
     });
 
     it('SI-05 an address with no account gets the same refusal', () => {
       signInWithPassword(nobody, password);
-      cy.contains(PASSWORD_REFUSED).should('be.visible');
-      cy.location('pathname').should('eq', '/login');
+      expectPasswordRefused();
     });
 
     it('SI-06 email and password land on Home with a token saved', () => {
@@ -93,12 +88,12 @@ describe('02 Sign in', () => {
     it('SI-07 the Phone tab with +91 and the number signs in', () => {
       openSignedOut('/login');
       openPasswordStep();
-      channelTab('Phone').click();
-      cy.fieldByLabel(/^Code$/).should('have.value', '+91');
-      cy.get('input[name="phoneNumber"]').type(account.phone);
-      cy.get('input[name="password"]').type(password, { log: false });
+      cy.byTestId('login-channel-PHONE').click();
+      cy.byTestId('login-code-trigger').should('have.value', '+91');
+      cy.byTestId('field-phoneNumber').type(account.phone);
+      cy.byTestId('field-password').type(password, { log: false });
       sendCode('Login', () => {
-        cy.contains('button', 'Log me in').click();
+        loginSubmit().click();
       });
       cy.location('pathname').should('eq', '/');
     });
@@ -106,20 +101,21 @@ describe('02 Sign in', () => {
     it('SI-08 switching Email and Phone clears what was typed', () => {
       openSignedOut('/login');
       openPasswordStep();
-      emailBox().type(account.email);
-      cy.get('input[name="password"]').type(password, { log: false });
-      channelTab('Phone').click();
-      cy.get('input[name="phoneNumber"]').should('have.value', '').type(account.phone);
-      cy.get('input[name="password"]').should('have.value', '');
-      channelTab('Email').click();
-      emailBox().should('have.value', '');
+      cy.byTestId('field-email').type(account.email);
+      cy.byTestId('field-password').type(password, { log: false });
+      cy.byTestId('login-channel-PHONE').click();
+      cy.byTestId('field-phoneNumber').should('have.value', '').type(account.phone);
+      cy.byTestId('field-password').should('have.value', '');
+      cy.byTestId('login-channel-EMAIL').click();
+      cy.byTestId('field-email').should('have.value', '');
     });
 
     it('SI-09 Back to sign-in options returns to the chooser', () => {
       openSignedOut('/login');
       openPasswordStep();
-      cy.get('[data-testid="back-to-options"]').should('contain.text', 'Back to sign-in options').click();
-      cy.get('[data-testid="continue-with-otp"]').should('be.visible');
+      cy.byTestId('back-to-options').should('contain.text', 'Back to sign-in options').click();
+      cy.byTestId('continue-with-otp').should('be.visible');
+      loginSubmit().should('not.exist');
     });
 
     it('SI-10 /login?redirect=/account lands on /account after signing in', () => {
@@ -132,12 +128,15 @@ describe('02 Sign in', () => {
     it('SI-11 a code by email: Send code waits for a valid address, then the code signs in', () => {
       openSignedOut('/login');
       openOtpStep();
-      emailBox().type('riya@');
-      cy.contains('button', 'Send code').should('be.disabled');
-      emailBox().clear().type(account.email);
+      cy.byTestId('field-email').type('riya@');
+      cy.byTestId('recovery-send-code').should('be.disabled');
+      fill('field-email', account.email);
       sendAndReadCode('LOGIN', emailTarget, 'RequestLoginOtp', pressSendCode).then((code) => {
-        cy.contains(`We sent a 6-digit code to ${account.email.toLowerCase()}.`).should('be.visible');
-        expectNoTestCode();
+        cy.byTestId('login-screen').should(
+          'contain.text',
+          `We sent a 6-digit code to ${account.email.toLowerCase()}.`,
+        );
+        expectNoTestCode('recovery-test-code');
         verifyLoginCode(code);
       });
       cy.location('pathname').should('eq', '/');
@@ -146,11 +145,11 @@ describe('02 Sign in', () => {
     it('SI-12 a code by WhatsApp number signs in the same way', () => {
       openSignedOut('/login');
       openOtpStep();
-      channelTab('Phone').click();
-      numberBox().type(account.phone);
+      cy.byTestId('recovery-channel-PHONE').click();
+      cy.byTestId('field-number').type(account.phone);
       sendAndReadCode('LOGIN', phoneTarget, 'RequestLoginOtp', pressSendCode).then((code) => {
-        cy.contains(`We sent a 6-digit code to +91 ${account.phone}.`).should('be.visible');
-        expectNoTestCode();
+        cy.byTestId('login-screen').should('contain.text', `We sent a 6-digit code to +91 ${account.phone}.`);
+        expectNoTestCode('recovery-test-code');
         verifyLoginCode(code);
       });
       cy.location('pathname').should('eq', '/');
@@ -159,12 +158,12 @@ describe('02 Sign in', () => {
     it('SI-13 a wrong code is refused with the attempts left', () => {
       openSignedOut('/login');
       openOtpStep();
-      channelTab('Phone').click();
-      numberBox().type(account.phone);
+      cy.byTestId('recovery-channel-PHONE').click();
+      cy.byTestId('field-number').type(account.phone);
       sendAndReadCode('LOGIN', phoneTarget, 'RequestLoginOtp', pressSendCode).then((code) => {
         verifyLoginCode(wrongCode(code));
       });
-      cy.get(OTP_ERROR).should('contain.text', 'Incorrect code — 4 attempts left');
+      otpError().should('contain.text', 'Incorrect code — 4 attempts left');
       cy.location('pathname').should('eq', '/login');
     });
 
@@ -172,8 +171,7 @@ describe('02 Sign in', () => {
       openSignedOut('/login');
       openOtpStep();
       sendCodeToEmail(nobody, 'RequestLoginOtp');
-      cy.contains(NO_ACCOUNT).should('be.visible');
-      cy.contains('a', 'Create Account').should('have.attr', 'href', '/register');
+      expectNoAccount();
     });
 
     it('SI-15 Resend counts down; the newest code works and the older one is refused', () => {
@@ -181,20 +179,20 @@ describe('02 Sign in', () => {
       let newestCode = '';
       openSignedOut('/login');
       openOtpStep();
-      emailBox().type(account.email);
+      cy.byTestId('field-email').type(account.email);
       sendAndReadCode('LOGIN', emailTarget, 'RequestLoginOtp', pressSendCode).then((code) => {
         olderCode = code;
       });
-      cy.contains('button', /^Resend in \d+s$/).should('be.disabled');
+      cy.byTestId('recovery-resend').should('be.disabled').invoke('text').should('match', /^Resend in \d+s$/);
       // The cooldown is a real 30 seconds; the button says when it is over.
-      cy.contains('button', 'Resend code', { timeout: 45_000 }).should('be.enabled');
+      cy.byTestId('recovery-resend', { timeout: 45_000 }).should('have.text', 'Resend code').and('be.enabled');
       sendAndReadCode('LOGIN', emailTarget, 'RequestLoginOtp', () => {
-        cy.contains('button', 'Resend code').click();
+        cy.byTestId('recovery-resend').click();
       }).then((code) => {
         newestCode = code;
       });
       cy.then(() => verifyLoginCode(olderCode));
-      cy.get(OTP_ERROR).should('contain.text', 'Incorrect code');
+      otpError().should('contain.text', 'Incorrect code');
       cy.then(() => verifyLoginCode(newestCode));
       cy.location('pathname').should('eq', '/');
     });
@@ -203,16 +201,16 @@ describe('02 Sign in', () => {
       openSignedOut('/login');
       openOtpStep();
       sendCodeToEmail(account.email, 'RequestLoginOtp');
-      cy.get('input[name="otp"]').should('be.visible');
-      cy.get('[data-testid="otp-back"]').click();
-      emailBox().should('have.value', account.email);
+      cy.byTestId('field-otp').should('be.visible');
+      cy.byTestId('otp-back').click();
+      cy.byTestId('field-email').should('have.value', account.email);
     });
   });
 
   it('SI-17 Logout returns to /login, and /account then redirects to /login', () => {
     cy.apiLogin(account.email, password);
     cy.visitApp('/account');
-    cy.contains('button', 'Logout').click();
+    cy.byTestId('account-logout').should('contain.text', 'Logout').click();
     cy.location('pathname').should('eq', '/login');
     savedToken().should('be.null');
     // The browser holds no token now; /account must not open without one.

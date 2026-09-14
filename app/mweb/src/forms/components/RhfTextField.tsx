@@ -1,6 +1,7 @@
 import { Controller, type Control, type FieldValues, type Path } from 'react-hook-form';
 import { TextField, type TextFieldProps } from '@mui/material';
 import { toDigits } from '@duncit/regex';
+import { testIdProps } from '../../utils/testIdProps';
 
 type Omitted = 'name' | 'value' | 'onChange' | 'onBlur' | 'error' | 'helperText';
 
@@ -48,24 +49,31 @@ export default function RhfTextField<T extends FieldValues>({
     <Controller
       control={control}
       name={name}
-      render={({ field, fieldState }) => (
-        <TextField
-          data-testid={name}
-          {...rest}
-          {...field}
-          onChange={(event) =>
-            field.onChange(digitsOnly ? toDigits(event.target.value) : event.target.value)
-          }
-          value={field.value ?? ''}
-          fullWidth={rest.fullWidth ?? true}
-          error={!!fieldState.error || !!errorText}
-          helperText={fieldState.error?.message ?? errorText ?? hint ?? ' '}
-          slotProps={{
-            ...slotProps,
-            htmlInput: { 'data-testid': `${name}-input`, ...slotProps?.htmlInput },
-          }}
-        />
-      )}
+      render={({ field, fieldState }) => {
+        const hasError = !!fieldState.error || !!errorText;
+        // Native twin's ids (FormTextField + Field): the box is `field-<name>`,
+        // the line under it `<name>-error` or `<name>-hint`.
+        const helperId = hasError ? `${name}-error` : `${name}-hint`;
+        return (
+          <TextField
+            data-testid={name}
+            {...rest}
+            {...field}
+            onChange={(event) =>
+              field.onChange(digitsOnly ? toDigits(event.target.value) : event.target.value)
+            }
+            value={field.value ?? ''}
+            fullWidth={rest.fullWidth ?? true}
+            error={hasError}
+            helperText={fieldState.error?.message ?? errorText ?? hint ?? ' '}
+            slotProps={{
+              ...slotProps,
+              htmlInput: { 'data-testid': `field-${name}`, ...slotProps?.htmlInput },
+              formHelperText: testIdProps(helperId),
+            }}
+          />
+        );
+      }}
     />
   );
 }

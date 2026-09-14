@@ -49,7 +49,7 @@ export default function LoginCard({
 
   return (
     <AuthScreenFrame center>
-      <Stack data-testid="login-card" spacing={3}>
+      <Stack data-testid="login-screen" spacing={3}>
         <AuthHeading title={headingTitle} accent={headingAccent} />
 
         {step === 'CHOOSE' && (

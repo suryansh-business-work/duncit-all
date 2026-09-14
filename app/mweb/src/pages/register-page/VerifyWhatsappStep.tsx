@@ -119,7 +119,7 @@ export default function VerifyWhatsappStep({
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {labels.codeSentTo(`${extension} ${number}`.trim())}
         </Typography>
-        {testCode && <Alert severity="info">{labels.testCode(testCode)}</Alert>}
+        {testCode && <Alert data-testid="signup-test-code" severity="info">{labels.testCode(testCode)}</Alert>}
         <RhfTextField
           control={control}
           name="otp"
@@ -150,6 +150,7 @@ export default function VerifyWhatsappStep({
             {labels.didntGetIt}
           </Typography>
           <Link
+            data-testid="signup-resend"
             component="button"
             type="button"
             disabled={sending}

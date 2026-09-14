@@ -13,6 +13,7 @@ import {
   type AutoPodTableRow,
 } from '../queries';
 import AutoPodsPage from '../AutoPodsPage';
+import AutoPodsConsole from '..';
 
 const harness = vi.hoisted(() => ({
   fetchCalls: [] as { query: unknown; rootField: string }[],
@@ -35,6 +36,9 @@ vi.mock('../AutoPodsTable', () => ({
   default: (props: {
     refetchRef: MutableRefObject<(() => void) | null>;
     toolbarActions?: ReactNode;
+    externalFilters?: readonly unknown[];
+    onRowClick: (row: AutoPodTableRow) => void;
+    onViewDetails: (row: AutoPodTableRow) => void;
     onEdit: (row: AutoPodTableRow) => void;
     onCancel: (row: AutoPodTableRow) => void;
     onDelete: (row: AutoPodTableRow) => void;
@@ -45,6 +49,13 @@ vi.mock('../AutoPodsTable', () => ({
     return (
       <div>
         {props.toolbarActions}
+        <span data-testid="external-filters">{JSON.stringify(props.externalFilters)}</span>
+        <button type="button" onClick={() => props.onRowClick(harness.row as AutoPodTableRow)}>
+          row-click
+        </button>
+        <button type="button" onClick={() => props.onViewDetails(harness.row as AutoPodTableRow)}>
+          row-view-details
+        </button>
         <button type="button" onClick={() => props.onEdit(harness.row as AutoPodTableRow)}>
           row-edit
         </button>
@@ -67,13 +78,18 @@ vi.mock('../AutoPodsTable', () => ({
 
 function LocationProbe() {
   const location = useLocation();
-  return <span data-testid="pathname">{location.pathname}</span>;
+  return (
+    <>
+      <span data-testid="pathname">{location.pathname}</span>
+      <span data-testid="search">{location.search}</span>
+    </>
+  );
 }
 
-const renderPage = (mocks: MockedResponse[] = []) =>
+const renderPage = (mocks: MockedResponse[] = [], entry = '/auto-pods') =>
   renderWithProviders(<></>, {
     mocks,
-    initialEntries: ['/auto-pods'],
+    initialEntries: [entry],
     routes: (
       <>
         <Route
@@ -90,6 +106,15 @@ const renderPage = (mocks: MockedResponse[] = []) =>
           element={
             <>
               <div>NEW AUTO POD ROUTE</div>
+              <LocationProbe />
+            </>
+          }
+        />
+        <Route
+          path="/auto-pods/:id"
+          element={
+            <>
+              <div>AUTO POD DETAILS ROUTE</div>
               <LocationProbe />
             </>
           }
@@ -161,6 +186,38 @@ describe('AutoPodsPage / data fetch', () => {
     renderPage();
     expect(harness.fetchCalls).toEqual([{ query: ADMIN_AUTO_PODS_TABLE, rootField: 'adminAutoPodsTable' }]);
   });
+
+  it('is the default export of the auto pods console barrel', () => {
+    expect(AutoPodsConsole).toBe(AutoPodsPage);
+  });
+});
+
+describe('AutoPodsPage / status filter in the URL', () => {
+  it('filters on nothing until a status is chosen', () => {
+    renderPage();
+    expect(screen.getByTestId('external-filters')).toHaveTextContent('[]');
+  });
+
+  it('writes the chosen stage into ?status= and filters the table on it', async () => {
+    renderPage();
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Status' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'Live' }));
+    await waitFor(() => expect(screen.getByTestId('search')).toHaveTextContent('?status=LIVE'));
+    expect(JSON.parse(screen.getByTestId('external-filters').textContent ?? '[]')).toEqual([
+      { field: 'stage', op: 'eq', value: 'LIVE' },
+    ]);
+  });
+
+  it('keeps a status from a shared link, and drops the param again for all statuses', async () => {
+    renderPage([], '/auto-pods?status=EXPIRED');
+    expect(JSON.parse(screen.getByTestId('external-filters').textContent ?? '[]')).toEqual([
+      { field: 'stage', op: 'eq', value: 'EXPIRED' },
+    ]);
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Status' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'All statuses' }));
+    await waitFor(() => expect(screen.getByTestId('search')).toBeEmptyDOMElement());
+    expect(screen.getByTestId('external-filters')).toHaveTextContent('[]');
+  });
 });
 
 describe('AutoPodsPage / header + navigation', () => {
@@ -178,6 +235,19 @@ describe('AutoPodsPage / header + navigation', () => {
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: 'New Auto Pod' }));
     expect(screen.getByText('NEW AUTO POD ROUTE')).toBeInTheDocument();
+  });
+
+  it("opens the offer's own page from a row click and from View details", () => {
+    renderPage();
+    fireEvent.click(screen.getByText('row-click'));
+    expect(screen.getByText('AUTO POD DETAILS ROUTE')).toBeInTheDocument();
+    expect(screen.getByTestId('pathname')).toHaveTextContent('/auto-pods/doc1');
+  });
+
+  it('opens the offer page from the menu View details as well', () => {
+    renderPage();
+    fireEvent.click(screen.getByText('row-view-details'));
+    expect(screen.getByTestId('pathname')).toHaveTextContent('/auto-pods/doc1');
   });
 
   it("routes a row edit to the offer's edit route", () => {

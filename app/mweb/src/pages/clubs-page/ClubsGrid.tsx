@@ -6,6 +6,13 @@ import { useActiveAds } from '../../components/ads/useActiveAds';
 
 const AD_EVERY_CLUBS = 6;
 
+/** 1 / 2 / 3 columns — shared with the city cards so both lists line up. */
+export const CLUBS_GRID_SX = {
+  display: 'grid',
+  gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
+  gap: 1.5,
+} as const;
+
 interface ClubsGridProps {
   clubs: any[];
   podCounts: Map<string, number>;
@@ -17,14 +24,7 @@ interface ClubsGridProps {
 export default function ClubsGrid({ clubs, podCounts, onOpen }: Readonly<ClubsGridProps>) {
   const { ads } = useActiveAds('CLUB_LIST');
   return (
-    <Box
-      data-testid="clubs-grid"
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
-        gap: 1.5,
-      }}
-    >
+    <Box data-testid="clubs-grid" sx={CLUBS_GRID_SX}>
       {interleaveAds(clubs, ads, AD_EVERY_CLUBS).map((entry) => {
         if (isAdEntry(entry)) {
           return (

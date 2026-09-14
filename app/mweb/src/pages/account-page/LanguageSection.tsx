@@ -52,7 +52,7 @@ export default function LanguageSection() {
   };
 
   return (
-    <Card>
+    <Card data-testid="account-language-section">
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
         <Stack spacing={1.5}>
           <Stack direction="row" spacing={1} sx={{
@@ -75,10 +75,11 @@ export default function LanguageSection() {
             onChange={change}
             label={t('mweb.common.language')}
           />
-          {error && <Alert severity="error">{error}</Alert>}
+          {error && <Alert data-testid="language-error" severity="error">{error}</Alert>}
         </Stack>
       </CardContent>
       <Snackbar
+        data-testid="language-saved"
         open={!!toast}
         autoHideDuration={2500}
         onClose={() => setToast(null)}

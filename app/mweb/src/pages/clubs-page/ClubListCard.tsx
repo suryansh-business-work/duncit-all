@@ -3,6 +3,7 @@ import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
 import { DuncitButton } from '@duncit/buttons';
 import { isVideoMedia, videoSourceUrl } from '@duncit/utils';
+import LocalityChip from '../../components/LocalityChip';
 import { useTranslation } from '../../i18n/useTranslation';
 
 interface ClubListCardProps {
@@ -47,6 +48,7 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
             {t('mweb.clubsPage.podCount', { count: podCount })}
           </Typography>
         </Stack>
+        <LocalityChip locality={club.locality} testId={`club-card-${club.id}-locality`} />
         {club.club_description && (
           <Typography
             variant="body2"

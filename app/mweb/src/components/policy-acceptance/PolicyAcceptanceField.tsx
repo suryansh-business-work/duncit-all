@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Box, Checkbox, FormControlLabel, FormHelperText, Typography } from '@mui/material';
 import { requiredLabel } from '../../forms/components/requiredLabel';
 import { useTranslation } from '../../i18n/useTranslation';
+import { testIdProps } from '../../utils/testIdProps';
 import type { Translate } from '../../i18n/fallback';
 import PolicyAcceptanceDialog from './PolicyAcceptanceDialog';
 import { isEveryPolicyAccepted } from './acceptance';
@@ -77,6 +78,7 @@ export default function PolicyAcceptanceField({
             data-testid="signup-policies-checkbox"
             checked={complete}
             onChange={(e) => handleToggle(e.target.checked)}
+            slotProps={{ input: testIdProps('signup-policies-checkbox-input') }}
             sx={{ pt: 0.25 }}
           />
         }

@@ -91,12 +91,12 @@ export function CurrentPasswordForm({
           variant="contained"
           size="large"
           disabled={loading}
-          data-testid="change-password-request"
+          data-testid="current-password-submit"
         >
           {loading ? 'Sending OTP…' : 'Send OTP'}
         </DuncitButton>
         {(submitError || errorMessage) && (
-          <Alert severity="error">{submitError || errorMessage}</Alert>
+          <Alert data-testid="current-password-error" severity="error">{submitError || errorMessage}</Alert>
         )}
       </Stack>
     </form>
@@ -175,12 +175,12 @@ export function NewPasswordForm({
           variant="contained"
           size="large"
           disabled={loading}
-          data-testid="change-password-submit"
+          data-testid="new-password-submit"
         >
           {loading ? 'Updating…' : 'Update password'}
         </DuncitButton>
         {(submitError || errorMessage) && (
-          <Alert severity="error">{submitError || errorMessage}</Alert>
+          <Alert data-testid="new-password-error" severity="error">{submitError || errorMessage}</Alert>
         )}
       </Stack>
     </form>

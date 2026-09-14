@@ -2,6 +2,7 @@
 import { dobMinAgeMessage } from '@duncit/datetime';
 import {
   expectNoTestCode,
+  fill,
   savedToken,
   sendAndReadCode,
   sendCode,
@@ -37,7 +38,6 @@ import {
  */
 
 const REFERRAL_CODE = 'DUN-A1B2C3';
-const VERIFY_ERROR = '[data-testid="signup-verify-error"]';
 
 /** One box on step 1, one bad value, the sentence under it. */
 interface StepOneRefusal {
@@ -71,17 +71,17 @@ const STEP_ONE_REFUSALS = {
 function itRefusesOnStepOne({ title, box, value, message }: Readonly<StepOneRefusal>): void {
   it(title, () => {
     openSignup();
-    cy.get(`input[name="${box}"]`).type(value);
+    cy.byTestId(`field-${box}`).type(value);
     signupNext().click();
-    cy.contains(message).should('be.visible');
+    cy.byTestId(`${box}-error`).should('have.text', message);
     onSignupStep(1);
   });
 }
 
-const verifyButton = () => cy.get('[data-testid="signup-verify"]');
-const codeBox = () => cy.get('input[name="otp"]');
-const interestChip = (index: number) => cy.get('.MuiChip-root[role="button"]').eq(index);
-const findMyCrew = () => cy.contains('button', 'Find my crew');
+const verifyButton = () => cy.byTestId('signup-verify');
+const verifyError = () => cy.byTestId('signup-verify-error');
+const interestChip = (index: number) => cy.byTestIdPrefix('chip-').eq(index);
+const findMyCrew = () => cy.byTestId('survey-submit');
 
 describe('01 Sign up', () => {
   const account = runAccount();
@@ -92,15 +92,15 @@ describe('01 Sign up', () => {
       openSignup();
       signupNext().should('contain.text', 'Continue');
       googleButton().should('exist');
-      cy.contains('Already have an account?').should('be.visible');
-      cy.get('[data-testid="go-login"]').should('contain.text', 'Log in').and('have.attr', 'href', '/login');
+      cy.byTestId('signup-screen').should('contain.text', 'Already have an account?');
+      cy.byTestId('go-login').should('have.text', 'Log in').and('have.attr', 'href', '/login');
     });
 
     it('SU-02 Continue with step 1 empty asks for the name and the date of birth', () => {
       openSignup();
       signupNext().click();
-      cy.contains('Name is required').should('be.visible');
-      cy.contains('Date of birth is required').should('be.visible');
+      cy.byTestId('name-error').should('have.text', 'Name is required');
+      cy.byTestId('dob-error').should('have.text', 'Date of birth is required');
       onSignupStep(1);
     });
 
@@ -112,7 +112,7 @@ describe('01 Sign up', () => {
         openSignup();
         fillWho(SIGNUP_NAME, underAgeDob(minAge));
         signupNext().click();
-        cy.contains(dobMinAgeMessage(minAge)).should('be.visible');
+        cy.byTestId('dob-error').should('have.text', dobMinAgeMessage(minAge));
         onSignupStep(1);
       });
     });
@@ -121,7 +121,7 @@ describe('01 Sign up', () => {
 
     it('SU-07 a referral link arrives with its code filled in', () => {
       openSignup(`/register?ref=${REFERRAL_CODE}`);
-      cy.get('input[name="referralCode"]').should('have.value', REFERRAL_CODE);
+      cy.byTestId('field-referralCode').should('have.value', REFERRAL_CODE);
     });
   });
 
@@ -133,41 +133,41 @@ describe('01 Sign up', () => {
       signupNext().click();
       onSignupStep(2);
       signupNext().click();
-      cy.contains('Phone number is required').should('be.visible');
-      cy.contains('Email is required').should('be.visible');
+      cy.byTestId('phoneNumber-error').should('have.text', 'Phone number is required');
+      cy.byTestId('email-error').should('have.text', 'Email is required');
     });
 
     it('SU-09 a WhatsApp number that is too short is refused', () => {
-      cy.get('input[name="phoneNumber"]').type('12345');
+      cy.byTestId('field-phoneNumber').type('12345');
       signupNext().click();
-      cy.contains('Enter a phone number — digits only, 6 to 15').should('be.visible');
+      cy.byTestId('phoneNumber-error').should('have.text', 'Enter a phone number — digits only, 6 to 15');
       onSignupStep(2);
     });
 
     it('SU-10 an incomplete email is refused', () => {
-      cy.get('input[name="email"]').type('riya@');
+      cy.byTestId('field-email').type('riya@');
       signupNext().click();
-      cy.contains('Enter a valid email').should('be.visible');
+      cy.byTestId('email-error').should('have.text', 'Enter a valid email');
       onSignupStep(2);
     });
 
     it('SU-11 Back from step 2 keeps the name, date of birth and referral code', () => {
       signupBack().click();
       onSignupStep(1);
-      cy.get('input[name="name"]').should('have.value', SIGNUP_NAME);
+      cy.byTestId('field-name').should('have.value', SIGNUP_NAME);
       expectDob(ADULT_DOB);
-      cy.get('input[name="referralCode"]').should('have.value', REFERRAL_CODE);
+      cy.byTestId('field-referralCode').should('have.value', REFERRAL_CODE);
     });
 
     it('SU-12 a short password and a confirmation that differs are refused', () => {
-      cy.get('input[name="referralCode"]').clear();
+      cy.byTestId('field-referralCode').clear();
       signupNext().click();
       fillContact(account.phone, account.email);
       signupNext().should('be.enabled').click();
       fillSecurity('short', account.password('CHANGED'));
       signupNext().click();
-      cy.contains('Min 8 characters').should('be.visible');
-      cy.contains('Passwords do not match').should('be.visible');
+      cy.byTestId('password-error').should('have.text', 'Min 8 characters');
+      cy.byTestId('confirmPassword-error').should('have.text', 'Passwords do not match');
       onSignupStep(3);
     });
 
@@ -179,7 +179,7 @@ describe('01 Sign up', () => {
           return;
         }
         signupNext().should('contain.text', 'Create account').click();
-        cy.contains('Accept every policy before creating your account').should('be.visible');
+        cy.byTestId('acceptedPolicyIds-error').should('have.text', 'Accept every policy before creating your account');
         onSignupStep(3);
       });
     });
@@ -191,9 +191,9 @@ describe('01 Sign up', () => {
           return;
         }
         policyBox().click();
-        policyDialog().find('input[type="checkbox"]').first().check();
-        policyDialog().should('contain.text', `1 of ${total} accepted`);
-        policyDialog().contains('button', 'Close').click();
+        cy.byTestIdPrefix('policy-accept-').first().click();
+        cy.byTestId('policy-acceptance-count').should('have.text', `1 of ${total} accepted`);
+        cy.byTestId('policy-acceptance-close').click();
         policyDialog().should('not.exist');
         // With one policy that tick is the whole set, so the box is already
         // ticked and pressing it clears the set; it reopens on 0 of 1.
@@ -204,8 +204,8 @@ describe('01 Sign up', () => {
           policyBox().click();
         }
         policyBox().click();
-        policyDialog().should('contain.text', `${reopenedWith} of ${total} accepted`);
-        policyDialog().contains('button', 'Accept all').click();
+        cy.byTestId('policy-acceptance-count').should('have.text', `${reopenedWith} of ${total} accepted`);
+        cy.byTestId('policy-acceptance-accept-all').click();
         policyDialog().should('not.exist');
         policyCheckbox().should('be.checked');
       });
@@ -230,27 +230,30 @@ describe('01 Sign up', () => {
         signupCode = code;
       });
       onSignupStep(4);
-      cy.contains(`We sent a 6-digit code to +91 ${account.phone} on WhatsApp.`).should('be.visible');
-      expectNoTestCode();
+      cy.byTestId('signup-screen').should(
+        'contain.text',
+        `We sent a 6-digit code to +91 ${account.phone} on WhatsApp.`,
+      );
+      expectNoTestCode('signup-test-code');
     });
 
     it('SU-16 a wrong code is refused with the attempts left', () => {
-      codeBox().type(wrongCode(signupCode));
+      cy.byTestId('field-otp').type(wrongCode(signupCode));
       sendCode('VerifySignupWhatsAppOtp', () => {
         verifyButton().should('be.enabled').click();
       });
-      cy.get(VERIFY_ERROR).should('contain.text', 'Incorrect code — 4 attempts left');
+      verifyError().should('contain.text', 'Incorrect code — 4 attempts left');
     });
 
     it('SU-17 Send again inside 30 seconds is refused', () => {
       sendCode('RequestSignupWhatsAppOtp', () => {
-        cy.contains('button', 'Send again').click();
+        cy.byTestId('signup-resend').should('have.text', 'Send again').click();
       });
-      cy.get(VERIFY_ERROR).invoke('text').should('match', /^Wait \d+s before asking for another code$/);
+      verifyError().invoke('text').should('match', /^Wait \d+s before asking for another code$/);
     });
 
     it('SU-18 the code and Verify number create the account, save a token and open the survey', () => {
-      codeBox().clear().type(signupCode);
+      fill('field-otp', signupCode);
       cy.interceptOperation('Register');
       verifyButton().should('contain.text', 'Verify number').click();
       cy.wait('@Register');
@@ -259,8 +262,9 @@ describe('01 Sign up', () => {
     });
 
     it('SU-19 the survey needs three interests, then lands on Home', () => {
-      cy.contains("What's your vibe?").should('be.visible');
-      cy.contains('Pick at least 3 interests across categories to find your tribe.').should('be.visible');
+      cy.byTestId('survey-screen')
+        .should('contain.text', "What's your vibe?")
+        .and('contain.text', 'Pick at least 3 interests across categories to find your tribe.');
       findMyCrew().should('be.disabled');
       interestChip(0).click();
       interestChip(1).click();
@@ -282,16 +286,22 @@ describe('01 Sign up', () => {
 
     it('SU-21 its email is refused on step 2 and Continue stays disabled', () => {
       walkToContact(SIGNUP_NAME, ADULT_DOB);
-      cy.get('input[name="email"]').type(account.email);
-      cy.contains('This email is already registered. Log in instead, or use a different email.').should('be.visible');
+      cy.byTestId('field-email').type(account.email);
+      cy.byTestId('email-error').should(
+        'have.text',
+        'This email is already registered. Log in instead, or use a different email.',
+      );
       signupNext().should('be.disabled');
       onSignupStep(2);
     });
 
     it('SU-22 its WhatsApp number is refused on step 2', () => {
       walkToContact(SIGNUP_NAME, ADULT_DOB);
-      cy.get('input[name="phoneNumber"]').type(account.phone);
-      cy.contains('This number is already registered. Log in instead, or use a different number.').should('be.visible');
+      cy.byTestId('field-phoneNumber').type(account.phone);
+      cy.byTestId('phoneNumber-error').should(
+        'have.text',
+        'This number is already registered. Log in instead, or use a different number.',
+      );
       signupNext().should('be.disabled');
       onSignupStep(2);
     });

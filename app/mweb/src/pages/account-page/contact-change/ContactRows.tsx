@@ -38,7 +38,11 @@ function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
             *
           </Box>
         </Typography>
-        <Typography noWrap sx={{ fontSize: 15, color: value ? 'text.primary' : 'error.main' }}>
+        <Typography
+          data-testid={`contact-change-${channel}-value`}
+          noWrap
+          sx={{ fontSize: 15, color: value ? 'text.primary' : 'error.main' }}
+        >
           {value || copy.emptyValue}
         </Typography>
       </Stack>

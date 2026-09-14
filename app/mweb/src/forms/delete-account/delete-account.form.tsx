@@ -80,7 +80,7 @@ export function DeleteAccountForm({ loading, errorMessage, onSubmit }: Readonly<
           {loading ? t('mweb.account.deletion.submitting') : t('mweb.account.deletion.submit')}
         </DuncitButton>
         {(submitError || errorMessage) && (
-          <Alert severity="error">{submitError || errorMessage}</Alert>
+          <Alert data-testid="delete-account-error" severity="error">{submitError || errorMessage}</Alert>
         )}
       </Stack>
     </form>

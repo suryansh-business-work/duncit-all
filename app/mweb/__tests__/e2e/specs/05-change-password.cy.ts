@@ -1,8 +1,7 @@
 /// <reference types="cypress" />
 import {
-  DIALOG,
-  dialogWith,
-  PASSWORD_REFUSED,
+  expectPasswordRefused,
+  fill,
   sendAndReadCode,
   sendCode,
   sessionUser,
@@ -18,15 +17,16 @@ import { runAccount } from '../support/run-account';
  * code and the boxes the step before left behind.
  */
 
-const passwordDialog = () => dialogWith('Change password');
-const requestButton = () => cy.get('[data-testid="change-password-request"]');
-const updateButton = () => cy.get('[data-testid="change-password-submit"]');
+const passwordDialog = () => cy.byTestId('change-password-dialog');
+const requestButton = () => cy.byTestId('current-password-submit');
+const updateButton = () => cy.byTestId('new-password-submit');
+const newPasswordError = () => cy.byTestId('new-password-error');
 
 /** Step two's three boxes: the emailed code and the new password twice. */
 function fillNewPassword(code: string, password: string, confirmation = password): void {
-  passwordDialog().find('input[name="otp"]').clear().type(code);
-  passwordDialog().find('input[name="new_password"]').clear().type(password, { log: false });
-  passwordDialog().find('input[name="confirm_password"]').clear().type(confirmation, { log: false });
+  fill('field-otp', code);
+  fill('field-new_password', password, { log: false });
+  fill('field-confirm_password', confirmation, { log: false });
 }
 
 function submitNewPassword(): void {
@@ -50,74 +50,74 @@ describe('05 Change password', { testIsolation: false }, () => {
       otherSession = token;
     });
     cy.visitApp('/account');
-    cy.contains('Change your password with an email verification code.').should('be.visible');
-    cy.get('[data-testid="open-change-password"]').should('contain.text', 'Change password').and('be.enabled');
+    cy.byTestId('security-section').should('contain.text', 'Change your password with an email verification code.');
+    cy.byTestId('open-change-password').should('contain.text', 'Change password').and('be.enabled');
   });
 
   it('CP-02 an empty current password is refused', () => {
-    cy.get('[data-testid="open-change-password"]').click();
+    cy.byTestId('open-change-password').click();
+    passwordDialog().should('be.visible');
     requestButton().click();
-    cy.contains(DIALOG, 'Enter your current password').should('be.visible');
+    cy.byTestId('current_password-error').should('have.text', 'Enter your current password');
   });
 
   it('CP-03 a wrong current password is refused', () => {
-    passwordDialog().find('input[name="current_password"]').type(`${current}-wrong`, { log: false });
+    cy.byTestId('field-current_password').type(`${current}-wrong`, { log: false });
     sendCode('RequestPasswordChangeOtp', () => {
       requestButton().click();
     });
-    cy.contains(DIALOG, 'Current password is incorrect').should('be.visible');
+    cy.byTestId('current-password-error').should('contain.text', 'Current password is incorrect');
   });
 
   it('CP-04 the right one sends a code to the email', () => {
-    passwordDialog().find('input[name="current_password"]').clear().type(current, { log: false });
+    fill('field-current_password', current, { log: false });
     sendAndReadCode('PASSWORD_CHANGE', emailTarget, 'RequestPasswordChangeOtp', () => {
       requestButton().click();
     }).then((code) => {
       firstCode = code;
     });
-    cy.contains(DIALOG, 'OTP sent to your email.').should('be.visible');
+    cy.byTestId('change-password-info').should('contain.text', 'OTP sent to your email.');
   });
 
   it('CP-05 a wrong code is refused', () => {
     fillNewPassword(wrongCode(firstCode), next);
     submitNewPassword();
-    cy.contains(DIALOG, 'Invalid OTP').should('be.visible');
+    newPasswordError().should('contain.text', 'Invalid OTP');
   });
 
   it('CP-06 the current password is refused as the new one', () => {
     fillNewPassword(firstCode, current);
     updateButton().click();
-    cy.contains(DIALOG, 'New password must be different from your current password').should('be.visible');
+    newPasswordError().should('contain.text', 'New password must be different from your current password');
   });
 
   it('CP-07 the new pair needs 8 characters and must match', () => {
     fillNewPassword(firstCode, 'short');
     updateButton().click();
-    cy.contains(DIALOG, 'Min 8 characters').should('be.visible');
+    cy.byTestId('new_password-error').should('have.text', 'Min 8 characters');
     fillNewPassword(firstCode, next, current);
     updateButton().click();
-    cy.contains(DIALOG, 'Passwords do not match').should('be.visible');
+    cy.byTestId('confirm_password-error').should('have.text', 'Passwords do not match');
   });
 
   it('CP-08 Resend OTP makes the older code fail', () => {
     sendAndReadCode('PASSWORD_CHANGE', emailTarget, 'RequestPasswordChangeOtp', () => {
-      passwordDialog().contains('button', 'Resend OTP').click();
+      cy.byTestId('change-password-resend').should('have.text', 'Resend OTP').click();
     }).then((code) => {
       newestCode = code;
     });
     fillNewPassword(firstCode, next);
     submitNewPassword();
-    cy.contains(DIALOG, 'Invalid OTP').should('be.visible');
+    newPasswordError().should('contain.text', 'Invalid OTP');
   });
 
   it('CP-09 the newest code changes it; the old password is refused and the CHANGED one signs in', () => {
     fillNewPassword(newestCode, next);
     submitNewPassword();
-    cy.contains('Password updated').should('be.visible');
+    cy.byTestId('security-toast').should('contain.text', 'Password updated');
     passwordDialog().should('not.exist');
     signInWithPassword(account.email, current);
-    cy.contains(PASSWORD_REFUSED).should('be.visible');
-    cy.location('pathname').should('eq', '/login');
+    expectPasswordRefused();
     signInWithPassword(account.email, next);
     cy.location('pathname').should('eq', '/');
   });

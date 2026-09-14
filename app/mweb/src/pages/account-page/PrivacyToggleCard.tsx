@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import IconDisc from './IconDisc';
+import { testIdProps } from '../../utils/testIdProps';
 
 const SET_VISIBILITY = gql`
   mutation SetMyProfileVisibility($visibility: ProfileVisibility!) {
@@ -69,7 +70,7 @@ export default function PrivacyToggleCard({ visibility, onChanged }: Readonly<Pr
                 onToggle(event.target.checked).catch(() => undefined);
               }}
               slotProps={{
-                input: { 'aria-label': 'Toggle private account' }
+                input: { 'aria-label': 'Toggle private account', ...testIdProps('privacy-switch-input') }
               }}
             />
           )}

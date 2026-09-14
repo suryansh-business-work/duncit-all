@@ -2,6 +2,7 @@ import { Avatar, Box, CircularProgress, Tooltip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
+import { testIdProps } from '../../utils/testIdProps';
 
 interface Props {
   photo?: string | null;
@@ -51,6 +52,7 @@ export default function AvatarButton({
         >
           <Avatar
             src={photo || undefined}
+            slotProps={{ img: testIdProps('avatar-story-button-photo') }}
             sx={{
               width: size,
               height: size,
@@ -61,7 +63,9 @@ export default function AvatarButton({
               borderColor: 'background.paper',
             }}
           >
-            {initial}
+            <Box component="span" data-testid="avatar-story-button-initial">
+              {initial}
+            </Box>
           </Avatar>
         </Box>
       </Tooltip>

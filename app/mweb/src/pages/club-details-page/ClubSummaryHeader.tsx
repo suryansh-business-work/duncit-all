@@ -4,6 +4,7 @@ import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import { Box, Stack, Typography } from '@mui/material';
 import { DuncitButton } from '@duncit/buttons';
 import CategoryBreadcrumb from '../../components/CategoryBreadcrumb';
+import LocalityChip from '../../components/LocalityChip';
 import TwoToneHeading from '../../components/TwoToneHeading';
 import { SURFACE_SX } from '../../theme';
 
@@ -43,6 +44,7 @@ export default function ClubSummaryHeader({
           hero's first photo a second time. */}
       <Stack spacing={0.75} data-tour="club-header">
         <TwoToneHeading lead={club.club_name} component="h1" />
+        <LocalityChip locality={club.locality} testId="club-summary-header-locality" />
         {categoryCrumbs.length > 0 && <CategoryBreadcrumb crumbs={categoryCrumbs} />}
         {club.club_description && (
           <Typography

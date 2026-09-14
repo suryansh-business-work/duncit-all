@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, type HTMLAttributes, type Key } from 'react';
 import { useWatch, type Control, type UseFormSetValue } from 'react-hook-form';
-import { Autocomplete, Stack, TextField, Typography } from '@mui/material';
+import { Autocomplete, Box, Stack, TextField, Typography } from '@mui/material';
 import { COUNTRY_OPTIONS, findCountryByName, getStatesForCountry } from '@duncit/geo';
 import type { AccountEditValues } from './account-edit.types';
 import { useTranslation } from '../../../i18n/useTranslation';
@@ -16,6 +16,15 @@ const withCurrent = (names: string[], current: string): string[] =>
   current && !names.includes(current) ? [current, ...names] : names;
 
 type LocationField = 'country' | 'state' | 'city';
+
+/** Each option carries the native SelectSheet's id: `<select>-option-<value>`. */
+const optionWithTestId =
+  (select: string) =>
+  ({ key, ...props }: HTMLAttributes<HTMLLIElement> & { key?: Key }, option: string) => (
+    <Box component="li" key={key} {...props} data-testid={`${select}-option-${option}`}>
+      {option}
+    </Box>
+  );
 
 /**
  * Country → State (dataset-driven — the State list depends on the Country) plus
@@ -53,6 +62,7 @@ export default function LocationSelect({ control, setValue }: Readonly<Props>) {
         data-testid="location-country"
         options={countryNames}
         value={country || null}
+        renderOption={optionWithTestId('location-country')}
         onChange={(_event, next) => {
           write('country', next ?? '');
           write('state', '');
@@ -64,7 +74,7 @@ export default function LocationSelect({ control, setValue }: Readonly<Props>) {
             label={t('mweb.common.country')}
             slotProps={{
               ...params.slotProps,
-              htmlInput: { ...params.slotProps?.htmlInput, ...testIdProps('location-country-input') },
+              htmlInput: { ...params.slotProps?.htmlInput, ...testIdProps('location-country-trigger') },
             }}
           />
         )}
@@ -74,6 +84,7 @@ export default function LocationSelect({ control, setValue }: Readonly<Props>) {
         options={stateNames}
         value={state || null}
         disabled={!country}
+        renderOption={optionWithTestId('location-state')}
         onChange={(_event, next) => write('state', next ?? '')}
         renderInput={(params) => (
           <TextField
@@ -81,19 +92,19 @@ export default function LocationSelect({ control, setValue }: Readonly<Props>) {
             label={t('mweb.common.state')}
             slotProps={{
               ...params.slotProps,
-              htmlInput: { ...params.slotProps?.htmlInput, ...testIdProps('location-state-input') },
+              htmlInput: { ...params.slotProps?.htmlInput, ...testIdProps('location-state-trigger') },
             }}
           />
         )}
       />
       <TextField
-        data-testid="location-city"
+        data-testid="location-city-field"
         label={t('mweb.common.city')}
         value={city}
         onChange={(event) => write('city', event.target.value)}
         placeholder={t('mweb.account.enterYourCity')}
         helperText={t('mweb.account.yourCityUsedToSurfacePods')}
-        slotProps={{ htmlInput: testIdProps('location-city-input') }}
+        slotProps={{ htmlInput: testIdProps('location-city') }}
       />
     </Stack>
   );

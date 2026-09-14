@@ -6,6 +6,7 @@ import { coverImageUrl } from '@duncit/utils';
 
 import { PressScale } from '@/animations/PressScale';
 import { DuncitButton } from '@/components/DuncitButton';
+import { LocalityChip } from '@/components/LocalityChip';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import type { HomeClub } from '@/hooks/useHomeFeed';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -59,6 +60,7 @@ export function ClubCard({ club, podCount = 0, onPress }: Readonly<Props>) {
               {t('mweb.clubsPage.podCount', { count: podCount })}
             </Text>
           </XStack>
+          <LocalityChip locality={club.locality} testID={`club-card-${club.club_id}-locality`} />
           {club.club_description ? (
             <Text fontSize={14} lineHeight={20} minHeight={40} color="$muted" numberOfLines={2}>
               {club.club_description}

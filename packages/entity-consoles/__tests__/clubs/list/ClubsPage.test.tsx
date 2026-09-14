@@ -10,7 +10,7 @@ import ClubsPage from '../../../src/clubs/list/ClubsPage';
 
 const refetchSpy = vi.hoisted(() => vi.fn());
 
-vi.mock('@duncit/table', () => import('../../../__tests__/table-mock'));
+vi.mock('@duncit/table', () => import('../../table-mock'));
 
 const ROW: ClubRow = {
   id: 'c1',
@@ -23,7 +23,7 @@ const ROW: ClubRow = {
   created_at: '2026-02-01T00:00:00.000Z',
 };
 
-vi.mock('../ClubsTable', () => ({
+vi.mock('../../../src/clubs/list/ClubsTable', () => ({
   default: ({
     toolbarActions,
     catName,
@@ -145,6 +145,21 @@ describe('ClubsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
     expect(await screen.findByText('Deleted')).toBeInTheDocument();
     expect(refetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('dismisses the deleted toast when the admin presses Escape', async () => {
+    renderPage([
+      {
+        request: { query: DELETE, variables: { id: 'c1' } },
+        result: { data: { deleteClub: true } },
+      },
+    ]);
+    fireEvent.click(screen.getByText('row-remove'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete' }));
+    expect(await screen.findByText('Deleted')).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByText('Deleted')).not.toBeInTheDocument());
   });
 
   it('does not delete when the confirmation is cancelled', async () => {

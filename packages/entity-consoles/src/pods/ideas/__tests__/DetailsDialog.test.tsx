@@ -203,8 +203,19 @@ describe('DetailsDialog / deleting a comment', () => {
       maxUsageCount: 2,
       result: deleteResult,
     };
+    const setStatus: MockedResponse = {
+      request: { query: SET_STATUS, variables: { id: 'idea-1', status: 'APPROVED' } },
+      result: { data: { setPodIdeaStatus: { __typename: 'PodIdea', id: 'idea-1', status: 'APPROVED' } } },
+    };
+    const withoutComments = { comments_count: 0, comments: [] };
     renderDialog(
-      [detailsMock(makeIdea()), deleteComment, detailsMock(makeIdea({ comments_count: 0, comments: [] }))],
+      [
+        detailsMock(makeIdea()),
+        deleteComment,
+        detailsMock(makeIdea(withoutComments)),
+        setStatus,
+        detailsMock(makeIdea({ ...withoutComments, status: 'APPROVED' })),
+      ],
       (ui) => <ThemeProvider theme={slowExitTheme}>{ui}</ThemeProvider>,
     );
     await screen.findByText('Count me in for Catan!');
@@ -217,11 +228,17 @@ describe('DetailsDialog / deleting a comment', () => {
     await waitFor(() => expect(deleteButton).toBeEnabled());
 
     fireEvent.click(deleteButton);
-    // Long enough for a second mutation + refetch to have landed, had one been sent.
-    await act(() => new Promise((resolve) => setTimeout(resolve, 60)));
+    // A delete that started would have flipped the label to "Deleting…" on the spot. The
+    // handler is async, so DuncitButton may still flash its own press spinner — let it settle.
+    expect(deleteButton).toHaveTextContent('Delete');
+    await waitFor(() => expect(deleteButton).toBeEnabled());
+
+    // The mock link answers requests in the order they were sent, so once this
+    // later approval has landed, a delete sent by the click above would have too.
+    fireEvent.click(screen.getByRole('button', { name: 'Approve', hidden: true }));
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(2));
 
     expect(screen.getByText('No comments yet.')).toBeInTheDocument();
     expect(deleteResult).toHaveBeenCalledTimes(1);
-    expect(onChanged).toHaveBeenCalledTimes(1);
   });
 });

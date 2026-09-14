@@ -35,7 +35,7 @@ describe('Sign in', () => {
   it('a signed-out visit lands on the sign-in options', () => {
     cy.visitApp('/');
     cy.location('pathname').should('match', /\/login/);
-    cy.contains('How would you like to sign in?').should('be.visible');
+    // The chooser has no caption since the calm redesign — the two doors are it.
     cy.get('[data-testid="continue-with-password"]').should('be.visible');
     cy.get('[data-testid="continue-with-otp"]').should('be.visible');
     cy.contains('a', 'Create one').should('have.attr', 'href').and('match', /register/);
@@ -77,7 +77,7 @@ describe('Sign in', () => {
     cy.visitApp('/login');
     openPasswordStep();
     cy.get('[data-testid="back-to-options"]').click();
-    cy.contains('How would you like to sign in?').should('be.visible');
+    cy.get('[data-testid="continue-with-otp"]').should('be.visible');
   });
 
   it('signs in with a one-time code sent by email', () => {

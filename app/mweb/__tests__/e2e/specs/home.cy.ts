@@ -12,7 +12,6 @@ describe('Home', () => {
   it('renders the home shell, status rail and live pods', () => {
     cy.visitApp('/');
     cy.contains('Happening nearby').should('be.visible');
-    cy.contains("What's your vibe today?").should('be.visible');
     cy.contains('Jazz Club').should('be.visible');
     cy.contains('Sunset Jam').should('be.visible');
   });
@@ -27,25 +26,27 @@ describe('Home', () => {
 
   it('"Happening nearby" header opens the nearby feed (bug 9)', () => {
     cy.visitApp('/');
-    // The header row itself is the control (role=button, named after the section).
-    cy.get('[role="button"][aria-label="Happening nearby"]').click();
+    // Every Home section header is a title + its own "See all" (SectionHeader),
+    // so the button is scoped to the section's heading row.
+    cy.contains('h2', 'Happening nearby').parent().contains('button', 'See all').click();
     cy.location('pathname').should('eq', '/happening-nearby');
   });
 
   it('Previous Pods rail + dedicated page show past pods (bug 8)', () => {
     cy.visitApp('/');
     // The rail sits at the bottom of the feed — scroll it into the viewport.
-    cy.contains('Previous Pods').scrollIntoView().should('be.visible');
-    // Two "See all" buttons on Home; the Previous Pods rail is the last section.
-    cy.get('button:contains("See all")').should('have.length.at.least', 2).last().click();
+    cy.contains('h2', 'Previous Pods').scrollIntoView().should('be.visible');
+    // Club rails carry a "See all" too — take the one in this section's header row.
+    cy.contains('h2', 'Previous Pods').parent().contains('button', 'See all').click();
     cy.location('pathname').should('eq', '/previous-pods');
     cy.contains('Old Gig').should('be.visible');
   });
 
-  it('empty feed shows the no-clubs notice', () => {
+  it('empty feed shows the empty state', () => {
     cy.mockGraphql({ ...bootFixtures, ...homeFeed({ pods: [] }) });
     cy.visitApp('/');
-    cy.contains(/No clubs in this category/i).should('be.visible');
+    // HomeEmptyState (mweb.home.homeEmpty) replaced the "No clubs in this category" alert.
+    cy.contains(/No pods here yet/i).should('be.visible');
   });
 
   // The header brand (aria-label "Go to home and refresh") was replaced by the

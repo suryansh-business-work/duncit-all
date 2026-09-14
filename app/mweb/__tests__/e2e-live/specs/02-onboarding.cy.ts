@@ -89,9 +89,14 @@ function bookFirstSlot() {
 describe('Onboarding', () => {
   const me = identity();
 
+  // Once per spec: staging allows 20 sign-ins per 5 minutes per IP, and the
+  // token lives in Cypress.env, which outlasts each test.
+  before(() => {
+    cy.apiLogin(me.signupEmail, me.password);
+  });
+
   beforeEach(() => {
     cy.blockThirdParty();
-    cy.apiLogin(me.signupEmail, me.password);
   });
 
   it('Earn lists the ways a member can start earning', () => {

@@ -15,7 +15,7 @@ describe('Auth', () => {
   it('signed-out visit to home redirects to login with the method chooser', () => {
     cy.visitApp('/');
     cy.location('pathname').should('match', /\/login/);
-    cy.contains('How would you like to sign in?').should('be.visible');
+    // The chooser has no caption since the calm redesign — the two doors are it.
     cy.contains('button', 'Continue with Password').should('be.visible');
     cy.contains('button', 'Continue with OTP').should('be.visible');
     openPasswordStep();

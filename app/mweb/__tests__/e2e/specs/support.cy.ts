@@ -22,7 +22,7 @@ describe('Support module', () => {
     cy.visitApp('/support');
     cy.contains('Create Support Tickets').should('be.visible');
     cy.contains('All Support Tickets').should('be.visible');
-    cy.contains('Chat with our support team in real time').should('be.visible');
+    cy.contains('Start a conversation').should('be.visible');
     cy.contains('Live Feedback').should('not.exist');
     cy.contains('Live Tickets').should('not.exist');
   });

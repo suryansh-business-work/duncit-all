@@ -48,9 +48,14 @@ function openComposer() {
 describe('Pod idea', () => {
   const me = identity();
 
+  // Once per spec: staging allows 20 sign-ins per 5 minutes per IP, and the
+  // token lives in Cypress.env, which outlasts each test.
+  before(() => {
+    cy.apiLogin(me.loginEmail, me.password);
+  });
+
   beforeEach(() => {
     cy.blockThirdParty();
-    cy.apiLogin(me.loginEmail, me.password);
   });
 
   it('opens the composer from the Pod Ideas page', () => {

@@ -14,9 +14,15 @@ describe('Pod Detail', () => {
     cy.mockGraphql(podDetailFixtures());
     cy.visitApp(POD_URL);
     cy.contains('Sunset Jam').should('be.visible');
-    cy.contains('Time & Venue').should('be.visible');
-    cy.contains(/^When$/).should('be.visible');
-    cy.contains(/^Where$/).should('be.visible');
+    // When and Where are icon rows (PodMetaRow) with no caption — the place name
+    // is the Where row's text, scoped to the section so the header city can't match.
+    cy.contains('h2', 'Time & Venue')
+      .should('be.visible')
+      .parent()
+      .parent()
+      .within(() => {
+        cy.contains('Bengaluru').should('be.visible');
+      });
   });
 
   it('hides the Pod Shop when there are no products (bug 12)', () => {

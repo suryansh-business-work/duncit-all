@@ -51,7 +51,25 @@ export const baseMocks = (user: Record<string, unknown> = financeUser) => ({
  * An empty list on purpose: these specs exercise the live finance engine, not
  * the saved-report list, and starting from no saved rows is the state a first
  * visit is actually in.
+ *
+ * `PodCalculatorDefaults` is Finance > Default Deductions: a fresh calculation
+ * (and Reset) takes all five rates from it. The rates below are the server's
+ * shipped schema defaults (`finance.model.ts`), so the spec's rupee figures run
+ * on configured deductions rather than on the offline fallback an unmocked
+ * query would silently drop the page onto.
  */
 export const calculatorMocks = () => ({
   PodCalculators: { data: { podCalculators: [] } },
+  PodCalculatorDefaults: {
+    data: {
+      financeSettings: {
+        __typename: 'FinanceSettings',
+        gst_pct: 18,
+        platform_fee_pct: 5,
+        default_host_commission_pct: 10,
+        default_venue_commission_pct: 10,
+        default_club_admin_pct: 3,
+      },
+    },
+  },
 });

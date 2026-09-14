@@ -105,7 +105,6 @@ describe('App · Support module', () => {
     cy.visitApp('/support/chat');
     // Inbox: a live-chat shortcut + the user's tickets (not a single thread).
     cy.byTestId('chat-with-us-screen').should('be.visible');
-    cy.byTestId('chat-inbox-subtitle').should('be.visible');
     cy.byTestId('chat-live-card').should('be.visible');
     // No ticket-inbox assertion: ChatWithUsScreen deliberately dropped its
     // ticket list ("this screen now offers only Chat live with an agent"), and
@@ -123,7 +122,6 @@ describe('App · Support module', () => {
   it('All Support Tickets lists prefixed rows from every category (bug 1.6)', () => {
     cy.visitApp('/support/all');
     cy.byTestId('all-support-tickets-screen').should('be.visible');
-    cy.byTestId('all-tickets-subtitle').should('be.visible');
     cy.contains('ST-AAA111').should('be.visible');
     cy.contains('CH-BBB222').should('be.visible');
   });
@@ -132,7 +130,9 @@ describe('App · Support module', () => {
     cy.visitApp('/support');
     cy.byTestId('support-more-callback').scrollIntoView().click();
     cy.byTestId('callback-screen').should('be.visible');
-    cy.byTestId('callback-subtitle').should('be.visible');
+    // The redesign (0303642e4) dropped the decorative subtitle; the request
+    // button anchors the negative check below to a fully rendered screen.
+    cy.byTestId('callback-request').should('be.visible');
     cy.contains(/select a pod|choose a pod/i).should('not.exist');
   });
 
@@ -174,7 +174,6 @@ describe('App · Support module', () => {
     cy.visitApp('/support');
     cy.byTestId('support-more-sos').scrollIntoView().click();
     cy.byTestId('sos-screen').should('be.visible');
-    cy.byTestId('sos-subtitle').should('be.visible');
     cy.contains('Only tap SOS in a real emergency').should('be.visible');
     // Pod selector is a dropdown (not a fixed pill) — opens to a list.
     cy.byTestId('pod-picker').click();

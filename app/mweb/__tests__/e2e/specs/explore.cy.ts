@@ -21,7 +21,7 @@ describe('Explore', () => {
     // MUI 9 icons carry no data-testid; the rail's buttons have accessible names.
     cy.get('button[aria-label="Comments"]').first().click();
     // The comments sheet opens in place — heading shows and the URL stays /explore.
-    cy.contains('h6', 'Comments').should('be.visible');
+    cy.contains('h2', 'Comments').should('be.visible');
     cy.location('pathname').should('eq', '/explore');
   });
 });

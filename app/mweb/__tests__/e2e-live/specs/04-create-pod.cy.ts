@@ -128,9 +128,14 @@ function seedDraftWithCover(title: string) {
 describe('Create a pod', () => {
   const me = identity();
 
+  // Once per spec: staging allows 20 sign-ins per 5 minutes per IP, and the
+  // token lives in Cypress.env, which outlasts each test.
+  before(() => {
+    cy.apiLogin(me.loginEmail, me.password);
+  });
+
   beforeEach(() => {
     cy.blockThirdParty();
-    cy.apiLogin(me.loginEmail, me.password);
   });
 
   it('opens the four-step stepper for an approved host', () => {

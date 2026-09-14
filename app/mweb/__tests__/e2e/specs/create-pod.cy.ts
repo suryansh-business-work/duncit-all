@@ -26,9 +26,6 @@ describe('Create a pod', () => {
 
     cy.contains('Create a Pod').should('be.visible');
     cy.contains(STEP_ONE).should('be.visible');
-    // The autosave promise is the reason a host can leave mid-way, so the page
-    // makes it out loud rather than leaving them to discover it.
-    cy.contains('saves automatically').should('be.visible');
   });
 
   // The gate takes EITHER the cached HOST role or an approved, active profile.

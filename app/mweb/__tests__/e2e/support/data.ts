@@ -114,14 +114,22 @@ export const stories = [
   },
 ];
 
-/** The AppHeader boot query — branding, me, super categories, locations. */
-export const appHeader = {
+/**
+ * The header boot is TWO documents: AppHeaderStatic (branding, super categories,
+ * locations — cacheable server-side) and AppHeaderMe (the viewer). Without the
+ * static half there is no city to pick, so Home never asks for its live pods.
+ * `me` is overridable because Apollo normalises every `me` to one `User:u1`.
+ */
+export const appHeaderStatic = {
   branding,
-  me,
   superCategories,
   locations,
   activePodLocationIds: ['loc1'],
 };
+
+export function appHeaderFixtures(viewer: Record<string, unknown> = me) {
+  return { AppHeaderStatic: appHeaderStatic, AppHeaderMe: { me: viewer } };
+}
 
 /**
  * The home feed is TWO documents: HomeFeedStatic (the cacheable catalogue —
@@ -221,7 +229,7 @@ export function podDetailFixtures(over: Record<string, unknown> = {}) {
     MwebSessionMe: { me },
     PublicFeatureFlags: publicFeatureFlags,
     MwebPublicClientConfig: { publicClientConfig: { google_client_id: '', google_maps_api_key: 'e2e-maps-key' } },
-    AppHeader: appHeader,
+    ...appHeaderFixtures(),
     PodIdBySlugs: { podBySlugs: { id: 'pod-up', pod_id: 'sunset-jam', club_slug: 'jazz-club' } },
     PodDetails: podDetails(over),
     PodPeople: { pod: { pod_attendees_users: [] } },
@@ -248,7 +256,7 @@ export function exploreFixtures(over: { pods?: unknown[] } = {}) {
   return {
     MwebSessionMe: { me },
     MwebPublicClientConfig: { publicClientConfig: { google_client_id: '', google_maps_api_key: 'e2e-maps-key' } },
-    AppHeader: appHeader,
+    ...appHeaderFixtures(),
     ExplorePods: {
       me: { ...me, saved_pod_ids: [] },
       pods: over.pods ?? [explorePod],
@@ -268,7 +276,7 @@ export const bootFixtures = {
   // UserProvider's loadUser — returning null pops a "User data not loaded" modal.
   MwebSessionMe: { me },
   MwebPublicClientConfig: { publicClientConfig: { google_client_id: '', google_maps_api_key: 'e2e-maps-key' } },
-  AppHeader: appHeader,
+  ...appHeaderFixtures(),
   ...homeFeed(),
   PublicFeatureFlags: publicFeatureFlags,
   MyNotifications: { myNotifications: [], myUnreadNotificationCount: 0 },
@@ -296,7 +304,7 @@ export function earnFixtures(
   return {
     ...bootFixtures,
     MwebSessionMe: { me: viewer },
-    AppHeader: { ...appHeader, me: viewer },
+    ...appHeaderFixtures(viewer),
     PublicFeatureFlags: {
       publicFeatureFlags: [
         { key: 'is_product_visible', enabled: productsVisible },
@@ -427,7 +435,7 @@ export function createPodFixtures(over: Record<string, unknown> = {}) {
   return {
     ...bootFixtures,
     MwebSessionMe: { me: viewer },
-    AppHeader: { ...appHeader, me: viewer },
+    ...appHeaderFixtures(viewer),
     CreatePodOptions: {
       me: podViewer,
       clubs: [

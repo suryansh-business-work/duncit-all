@@ -31,7 +31,12 @@ const rowValue = (label: string) =>
 
 const duncitRevenue = () => cy.contains('Total Duncit revenue').siblings('h4');
 
-const DEFAULT_DUNCIT_REVENUE = '₹3,563.56';
+/**
+ * ₹29,000 collection -> GST ₹4,423.73 -> fee 5% ₹1,228.81 -> pool ₹23,347.46
+ * -> club-admin cut 3% ₹700.42 -> venue commission ₹40.00 + host commission
+ * 10% of ₹22,247.04 = ₹2,224.70. Duncit = 1,228.81 + 700.42 + 40 + 2,224.70.
+ */
+const DEFAULT_DUNCIT_REVENUE = '₹4,193.93';
 
 /**
  * Replace a numeric field's contents in a single edit — the Cypress equivalent
@@ -81,14 +86,15 @@ describe('Pod profit calculator', () => {
     setNumber('Venue fixed cost', '500');
 
     // ₹1500 × 9 payable spots = ₹13,500 collection, GST 18%, fee 5%,
-    // venue ₹500 (−10%), host keeps the rest (−10%).
+    // club-admin cut 3% of the pool (₹326.06), venue ₹500 (−10%), host keeps
+    // the rest (₹10,042.59 −10%).
     rowValue('Payable spots').should('have.text', '9 of 10');
     rowValue('Total collection').should('have.text', '₹13,500.00');
     rowValue('GST (to government)').should('have.text', '₹2,059.32');
     rowValue('Remaining pool').should('have.text', '₹10,868.65');
     rowValue('Venue receives').should('have.text', '₹450.00');
-    rowValue('Host receives').should('have.text', '₹9,331.78');
-    duncitRevenue().should('have.text', '₹1,658.90');
+    rowValue('Host receives').should('have.text', '₹9,038.33');
+    duncitRevenue().should('have.text', '₹1,952.35');
     // The engine's core invariant: every rupee is accounted for.
     rowValue('Reconciles to collection').should('have.text', '₹13,500.00');
   });
@@ -121,10 +127,10 @@ describe('Pod profit calculator', () => {
 
     // Nothing is clamped (the Finance formula audit): the venue is paid its
     // full price less its 10% commission, the host carries the shortfall
-    // against the ₹23,347.46 pool, and the sheet still adds back up to the
-    // collection.
+    // against the ₹22,647.04 left of the pool after the 3% club-admin cut, and
+    // the sheet still adds back up to the collection.
     rowValue('Venue receives').should('have.text', '₹9,00,000.00');
-    rowValue('Host receives').should('have.text', '-₹9,76,652.54');
+    rowValue('Host receives').should('have.text', '-₹9,77,352.96');
     rowValue('Reconciles to collection').should('have.text', '₹29,000.00');
   });
 

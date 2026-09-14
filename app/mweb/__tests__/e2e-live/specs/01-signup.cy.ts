@@ -12,22 +12,56 @@ import { derivedEmail, identity, unregisteredPhone } from '../support/identity';
  */
 
 const NAME = 'Riya Duncit';
+/** Decades clear of any minimum joining age. No leading zeros, so each part completes on its last digit. */
+const DOB = { Day: '15', Month: '8', Year: '1995' } as const;
+type DobPart = keyof typeof DOB;
+const DOB_PARTS: readonly DobPart[] = ['Day', 'Month', 'Year'];
 
 const next = () => cy.get('[data-testid="signup-next"]').click();
-const onStep = (n: number) => cy.contains(`Step ${n} of 4`).should('exist');
-const birthYear = () => String(new Date().getFullYear() - 25);
+/** "Step X of N" is the progress bar's accessible name, not a caption. */
+const onStep = (n: number) =>
+  cy.get('[data-testid="signup-stepper"] [role="progressbar"]').should('have.attr', 'aria-label', `Step ${n} of 4`);
+
+/**
+ * One part of the date-of-birth box. MUI X renders the field as a contenteditable
+ * `role="spinbutton"` per part, named Day / Month / Year, beside a hidden input.
+ */
+const dobPart = (part: DobPart) =>
+  cy.contains('label', 'Date of birth').parent().find(`[role="spinbutton"][aria-label="${part}"]`);
+
+/**
+ * Typed part by part, addressed by name rather than position: the order and the
+ * separators come from the admin's date format, so "DD MM YYYY" today may be
+ * "MM/DD/YYYY" tomorrow. Each part is checked as it lands.
+ */
+function typeDob() {
+  DOB_PARTS.forEach((part) => {
+    dobPart(part).type(DOB[part]).should('have.attr', 'aria-valuenow', DOB[part]);
+  });
+}
 
 function fillWho(name: string) {
   onStep(1);
   cy.fieldByLabel('Name').clear().type(name);
-  // A native <select>, chosen over MUI's popover on purpose (120 years).
-  cy.get('select[name="dobYear"]').select(birthYear());
+  typeDob();
 }
 
+/**
+ * Both boxes ask the server as they are typed, and Continue stays disabled
+ * until the answers are back — `next()` waits for it to enable.
+ */
 function fillContact(phone: string, email: string) {
   onStep(2);
   cy.get('input[name="phoneNumber"]').clear().type(phone);
   cy.get('input[name="email"]').clear().type(email);
+}
+
+/** Steps 1 and 2 filled in, still on step 2 — where a taken contact is refused. */
+function walkToContact(phone: string, email: string) {
+  cy.visitApp('/register');
+  fillWho(NAME);
+  next();
+  fillContact(phone, email);
 }
 
 /**
@@ -54,10 +88,7 @@ function fillSecurity(password: string) {
 
 /** Steps 1–3, then Create account — which opens step 4 and asks the server for the code. */
 function walkToVerify(details: { phone: string; email: string; password: string }) {
-  cy.visitApp('/register');
-  fillWho(NAME);
-  next();
-  fillContact(details.phone, details.email);
+  walkToContact(details.phone, details.email);
   next();
   fillSecurity(details.password);
   cy.interceptOperation('RequestSignupWhatsAppOtp');
@@ -79,7 +110,7 @@ describe('Sign up', () => {
     onStep(1);
     next();
     cy.contains('Name is required').should('be.visible');
-    cy.contains('Birth year is required').should('be.visible');
+    cy.contains('Date of birth is required').should('be.visible');
 
     cy.fieldByLabel('Name').type('R2D2');
     cy.fieldByLabel('Referral code (optional)').type('abc');
@@ -147,7 +178,9 @@ describe('Sign up', () => {
     cy.get('[data-testid="signup-back"]').click();
     onStep(1);
     cy.fieldByLabel('Name').should('have.value', NAME);
-    cy.get('select[name="dobYear"]').should('have.value', birthYear());
+    DOB_PARTS.forEach((part) => {
+      dobPart(part).should('have.attr', 'aria-valuenow', DOB[part]);
+    });
   });
 
   it('walks all four steps, proves the WhatsApp number with the test code and creates the account', () => {
@@ -176,15 +209,18 @@ describe('Sign up', () => {
     cy.location('pathname').should('eq', '/');
   });
 
+  // A taken contact is a correction beside its box on step 2, before any code is sent.
   it('refuses a second account on the same email address', () => {
-    walkToVerify({ phone: unregisteredPhone(), email: me.signupEmail, password: me.password });
-    cy.contains('Email already in use').should('be.visible');
+    walkToContact(unregisteredPhone(), me.signupEmail);
+    cy.contains('This email is already registered. Log in instead, or use a different email.').should('be.visible');
+    cy.get('[data-testid="signup-next"]').should('be.disabled');
+    onStep(2);
   });
 
   it('refuses a second account on the same WhatsApp number', () => {
-    walkToVerify({ phone: me.phone, email: derivedEmail('dup'), password: me.password });
-    cy.contains('This phone number is already registered. Please use a different number or login.').should(
-      'be.visible',
-    );
+    walkToContact(me.phone, derivedEmail('dup'));
+    cy.contains('This number is already registered. Log in instead, or use a different number.').should('be.visible');
+    cy.get('[data-testid="signup-next"]').should('be.disabled');
+    onStep(2);
   });
 });

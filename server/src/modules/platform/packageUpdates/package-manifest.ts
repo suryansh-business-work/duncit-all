@@ -132,7 +132,6 @@ export const PACKAGE_MANIFEST: ManifestPackage[] = [
       { name: "babel-preset-expo", range: "~57.0.9", kind: "devDependencies" },
       { name: "cross-env", range: "^10.1.0", kind: "devDependencies" },
       { name: "cypress", range: "^15.21.1", kind: "devDependencies" },
-      { name: "detox", range: "^20.51.4", kind: "devDependencies" },
       { name: "eslint", range: "^8.57.1", kind: "devDependencies" },
       { name: "eslint-config-expo", range: "~57.0.2", kind: "devDependencies" },
       { name: "eslint-config-prettier", range: "^10.1.8", kind: "devDependencies" },

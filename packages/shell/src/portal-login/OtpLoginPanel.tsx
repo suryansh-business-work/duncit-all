@@ -63,6 +63,7 @@ export default function OtpLoginPanel({
         </Divider>
         <DuncitButton
           type="button"
+          data-testid="continue-with-otp"
           onClick={() => setOpen(true)}
           variant="outlined"
           fullWidth
@@ -95,7 +96,7 @@ export default function OtpLoginPanel({
         </Typography>
       </Divider>
 
-      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+      {errorMessage && <Alert data-testid="otp-login-error" severity="error">{errorMessage}</Alert>}
 
       <TextField
         value={email}
@@ -106,13 +107,12 @@ export default function OtpLoginPanel({
         size="small"
         sx={pillSx}
         disabled={busy || sent}
+        slotProps={{ htmlInput: { 'data-testid': 'otp-login-email' } }}
       />
 
       {sent ? (
         <>
-          <Typography variant="caption" sx={{
-            color: "text.secondary"
-          }}>
+          <Typography data-testid="otp-login-code-sent" variant="caption" sx={{ color: "text.secondary" }}>
             If that address can sign in here, a {OTP_LENGTH}-digit code is on its way. It expires in
             a few minutes and only works for this portal.
           </Typography>
@@ -129,11 +129,13 @@ export default function OtpLoginPanel({
                 inputMode: 'numeric',
                 autoComplete: 'one-time-code',
                 'aria-label': 'One-time code',
+                'data-testid': 'field-otp',
               }
             }}
           />
           <DuncitButton
             type="button"
+            data-testid="recovery-verify-code"
             onClick={submitCode}
             variant="contained"
             fullWidth
@@ -163,6 +165,7 @@ export default function OtpLoginPanel({
       ) : (
         <DuncitButton
           type="button"
+          data-testid="recovery-send-code"
           onClick={requestCode}
           variant="contained"
           fullWidth

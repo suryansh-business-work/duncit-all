@@ -3,32 +3,23 @@ import type { CodeTarget } from './commands';
 /**
  * The console login screen Partners mounts: @duncit/user-context's
  * LoginScreen + login.form (password) with @duncit/shell's OtpLoginPanel (code)
- * under it. Neither carries test ids, so these are the attributes and copy the
- * components render. Both email inputs share the placeholder `e-mail address`;
- * only the password form's has a `name`.
+ * under it. Every element is found by its test id; the ids repeat the native
+ * app's `testID` wherever the element is the same thing there.
  */
-export const loginPage = {
-  email: () => cy.get('input[name="email"]'),
-  password: () => cy.get('input[name="password"]'),
-  submit: () => cy.get('button[type="submit"][aria-label="Sign in"]'),
-  alert: (message: string) => cy.contains('[role="alert"]', message),
-  codeEmail: () => cy.get('input[type="email"]:not([name])'),
-  code: () => cy.get('input[aria-label="One-time code"]'),
-  codeSignIn: () => cy.contains('button', /^Sign in$/),
-};
 
 /** Open the login page signed out. */
 export function openLogin(): void {
   cy.clearAuth();
   cy.visitApp('/login');
+  cy.byTestId('login-screen').should('be.visible');
 }
 
 /** Sign in with a password and wait for the server's answer. */
 export function submitPassword(email: string, password: string): void {
-  loginPage.email().clear().type(email);
-  loginPage.password().clear().type(password, { log: false });
+  cy.byTestId('field-email').clear().type(email);
+  cy.byTestId('field-password').clear().type(password, { log: false });
   cy.interceptOperation('PartnerLogin');
-  loginPage.submit().click();
+  cy.byTestId('login-submit').click();
   cy.wait('@PartnerLogin');
 }
 
@@ -40,20 +31,22 @@ export function submitPassword(email: string, password: string): void {
 export function requestPortalCode(email: string): Cypress.Chainable<string> {
   const target: CodeTarget = { email };
   return cy.lastOtpIssuedAt('PORTAL_LOGIN', target).then((previous) => {
-    cy.contains('button', 'Login with OTP').click();
-    loginPage.codeEmail().type(email);
+    cy.byTestId('continue-with-otp').should('contain.text', 'Login with OTP').click();
+    cy.byTestId('otp-login-email').type(email);
     cy.interceptOperation('ConsoleRequestLoginOtp');
-    cy.contains('button', 'Email me a code').click();
+    cy.byTestId('recovery-send-code').should('contain.text', 'Email me a code').click();
     cy.wait('@ConsoleRequestLoginOtp');
-    cy.contains('If that address can sign in here, a 6-digit code is on its way.').should('be.visible');
+    cy.byTestId('otp-login-code-sent')
+      .should('be.visible')
+      .and('contain.text', 'If that address can sign in here, a 6-digit code is on its way.');
     return cy.readOtp('PORTAL_LOGIN', target, previous);
   });
 }
 
 /** Type a code into the panel, press `Sign in` and wait for the server's answer. */
 export function submitPortalCode(code: string): void {
-  loginPage.code().type(code, { log: false });
+  cy.byTestId('field-otp').type(code, { log: false });
   cy.interceptOperation('ConsoleOtpLogin');
-  loginPage.codeSignIn().click();
+  cy.byTestId('recovery-verify-code').should('contain.text', 'Sign in').click();
   cy.wait('@ConsoleOtpLogin');
 }

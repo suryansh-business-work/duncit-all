@@ -51,8 +51,6 @@ declare global {
       clearAuth(): Chainable<void>;
       /** `cy.visit` with the current token applied and the marketing popup already closed. */
       visitApp(path: string): Chainable<AUTWindow>;
-      /** The text input carrying this accessible name (RN fields have no `<label for>`). */
-      fieldByLabel(label: string | RegExp): Chainable<JQuery<HTMLElement>>;
       /** Alias the next request carrying this operation so `cy.wait('@Name')` waits for the real answer. */
       interceptOperation(name: string, alias?: string): Chainable<void>;
       /** An element by the app's `testID` (react-native-web renders it as `data-testid`). */
@@ -225,13 +223,6 @@ Cypress.Commands.add('visitApp', (path: string) => {
     }),
   );
 });
-
-Cypress.Commands.add('fieldByLabel', (label: string | RegExp) =>
-  cy.get('input[aria-label], textarea[aria-label]').filter((_index, element) => {
-    const name = element.getAttribute('aria-label') ?? '';
-    return typeof label === 'string' ? name === label : label.test(name);
-  }),
-);
 
 Cypress.Commands.add('interceptOperation', (name: string, alias?: string) => {
   cy.intercept({ method: 'POST', url: graphqlUrl() }, (req) => {

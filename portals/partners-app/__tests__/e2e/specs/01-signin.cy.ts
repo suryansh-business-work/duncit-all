@@ -1,4 +1,4 @@
-import { loginPage, openLogin, requestPortalCode, submitPassword, submitPortalCode } from '../support/login-page';
+import { openLogin, requestPortalCode, submitPassword, submitPortalCode } from '../support/login-page';
 import { LOGIN_MUTATION } from '../support/operations';
 import { runAccount, type RunAccount } from '../support/run-account';
 
@@ -26,16 +26,16 @@ describe('Partners · sign in (mWeb account, password CHANGED)', () => {
 
   it('SI-P1 an empty submit shows E-mail address is required and Password is required', () => {
     openLogin();
-    loginPage.submit().click();
-    cy.contains('E-mail address is required').should('be.visible');
-    cy.contains('Password is required').should('be.visible');
+    cy.byTestId('login-submit').click();
+    cy.byTestId('email-error').should('be.visible').and('contain.text', 'E-mail address is required');
+    cy.byTestId('password-error').should('be.visible').and('contain.text', 'Password is required');
     cy.location('pathname').should('eq', '/login');
   });
 
   it('SI-P2 a wrong password shows Invalid email or password', () => {
     openLogin();
     submitPassword(account.email, `${account.password('CHANGED')}-wrong`);
-    loginPage.alert('Invalid email or password').should('be.visible');
+    cy.byTestId('login-error').should('be.visible').and('contain.text', 'Invalid email or password');
     cy.location('pathname').should('eq', '/login');
   });
 
@@ -60,14 +60,16 @@ describe('Partners · sign in (mWeb account, password CHANGED)', () => {
     requestPortalCode(account.email).then((code) => {
       submitPortalCode(wrongCodeFor(code));
     });
-    loginPage.alert('Invalid or expired code').should('be.visible');
+    cy.byTestId('otp-login-error').should('be.visible').and('contain.text', 'Invalid or expired code');
     cy.location('pathname').should('eq', '/login');
   });
 
   it('SI-P6 Forgot password? shows Contact your administrator to reset your password.', () => {
     openLogin();
-    cy.contains('button', 'Forgot password?').click();
-    cy.contains('Contact your administrator to reset your password.').should('be.visible');
+    cy.byTestId('go-forgot-password').should('contain.text', 'Forgot password?').click();
+    cy.byTestId('login-snackbar')
+      .should('be.visible')
+      .and('contain.text', 'Contact your administrator to reset your password.');
   });
 
   it('SI-P7 the Tech portal refuses the same account with You do not have access to this portal', () => {

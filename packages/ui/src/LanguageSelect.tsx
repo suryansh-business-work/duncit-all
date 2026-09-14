@@ -1,6 +1,12 @@
+import type { HTMLAttributes } from 'react';
 import { InputAdornment, MenuItem, TextField } from '@mui/material';
 import TranslateIcon from '@mui/icons-material/Translate';
 import { useTranslation } from './i18n/useTranslation';
+
+/** The combobox's test id. Typed with the key, because `HTMLAttributes` lists no `data-*` one. */
+const DISPLAY_TEST_ID: HTMLAttributes<HTMLDivElement> & { 'data-testid': string } = {
+  'data-testid': 'language-select',
+};
 
 export interface LanguageOption {
   code: string;
@@ -65,11 +71,12 @@ export function LanguageSelect({
               <TranslateIcon fontSize="small" />
             </InputAdornment>
           ),
-        }
+        },
+        select: { SelectDisplayProps: DISPLAY_TEST_ID },
       }}
     >
       {options.map((option) => (
-        <MenuItem key={option.code} value={option.code}>
+        <MenuItem key={option.code} value={option.code} data-testid={`locale-option-${option.code}`}>
           {option.label}
           {option.english_label ? ` · ${option.english_label}` : ''}
         </MenuItem>

@@ -159,7 +159,7 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
   const recorded = result?.companions ?? [];
 
   return (
-    <Dialog open={!!pod} onClose={close} fullWidth maxWidth="xs">
+    <Dialog open={!!pod} onClose={close} fullWidth maxWidth="xs" data-testid="ticket-scan-dialog">
       <DialogTitle sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
         <QrCodeScannerIcon color="primary" />
         <Box sx={{ minWidth: 0 }}>
@@ -182,6 +182,7 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
           {scanState.loading && (
             <Stack
               spacing={1}
+              data-testid="ticket-scan-busy"
               sx={{
                 alignItems: "center",
                 py: 3
@@ -199,7 +200,11 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
             <ScannerViewport active={scanning} onCode={submit} onManualCode={submit} />
           )}
 
-          {failure && <Alert severity="error">{failure}</Alert>}
+          {failure && (
+            <Alert severity="error" data-testid="ticket-scan-error">
+              {failure}
+            </Alert>
+          )}
 
           {result && (
             <>
@@ -207,7 +212,7 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
                   it in red read as "the scan broke", and with the attendee card
                   between it and the form in an xs dialog, the form below was
                   missed entirely — reported as "nothing happens". */}
-              <Alert severity={resultSeverity(result)}>
+              <Alert severity={resultSeverity(result)} data-testid="ticket-scan-message">
                 {result.ok ? confirmationText(result, labels) : result.message}
               </Alert>
               {result.attendee && (
@@ -250,7 +255,9 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={close}>{labels.close}</DuncitButton>
+        <DuncitButton onClick={close} data-testid="ticket-scan-close">
+          {labels.close}
+        </DuncitButton>
         {result && (
           <DuncitButton
             variant="contained"
@@ -258,6 +265,7 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
               setResult(null);
               setFailure(null);
             }}
+            data-testid="ticket-scan-next"
             sx={{ borderRadius: 999, fontWeight: 700 }}
           >
             Scan next

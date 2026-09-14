@@ -1,4 +1,4 @@
-import { loginPage, openLogin, submitPassword } from '../support/login-page';
+import { openLogin, submitPassword } from '../support/login-page';
 import { runAccount, type RunAccount } from '../support/run-account';
 
 /**
@@ -15,7 +15,7 @@ describe('Partners · after mWeb deleted the account', () => {
   it('AD-07(P) password sign-in shows Invalid email or password', () => {
     openLogin();
     submitPassword(account.email, account.password('CHANGED'));
-    loginPage.alert('Invalid email or password').should('be.visible');
+    cy.byTestId('login-error').should('be.visible').and('contain.text', 'Invalid email or password');
     cy.location('pathname').should('eq', '/login');
   });
 });

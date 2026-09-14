@@ -10,6 +10,7 @@ export interface PodAttendanceSummary {
 interface Props {
   attendance?: PodAttendanceSummary | null;
   size?: 'small' | 'medium';
+  testId?: string;
 }
 
 /**
@@ -23,10 +24,10 @@ interface Props {
  * (a virtual pod, or a host who never opened the scanner) is not a pod where
  * everybody was absent, and showing it as 0/12 would say exactly that.
  */
-export default function AttendanceChip({ attendance, size = 'small' }: Readonly<Props>) {
+export default function AttendanceChip({ attendance, size = 'small', testId }: Readonly<Props>) {
   const { t } = useTranslation();
   if (!attendance || attendance.booked_seats === 0) {
-    return <Chip size={size} variant="outlined" label="—" />;
+    return <Chip size={size} variant="outlined" label="—" data-testid={testId} />;
   }
   if (!attendance.recorded) {
     return (
@@ -36,6 +37,7 @@ export default function AttendanceChip({ attendance, size = 'small' }: Readonly<
           variant="outlined"
           color="warning"
           label={t('ui.attendance.notScanned')}
+          data-testid={testId}
         />
       </Tooltip>
     );
@@ -50,6 +52,7 @@ export default function AttendanceChip({ attendance, size = 'small' }: Readonly<
         label={t('ui.attendance.scannedCount', {
           vars: { attended: attendance.attended_seats, booked: attendance.booked_seats },
         })}
+        data-testid={testId}
       />
     </Tooltip>
   );

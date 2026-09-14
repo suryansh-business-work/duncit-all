@@ -34,10 +34,10 @@ export interface AiMonitoringDialogProps {
  */
 export function AiMonitoringDialog({ open, onClose, copy }: Readonly<AiMonitoringDialogProps>) {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" data-testid="ai-monitoring-dialog">
       <DialogTitle>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          <AiMonitorGlyph size={26} />
+          <AiMonitorGlyph size={26} testId="ai-monitoring-glyph" />
           <Typography component="span" variant="h6" sx={{ fontWeight: 700 }}>
             {copy.title}
           </Typography>
@@ -67,7 +67,7 @@ export function AiMonitoringDialog({ open, onClose, copy }: Readonly<AiMonitorin
         )}
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose} variant="contained">
+        <DuncitButton onClick={onClose} variant="contained" data-testid="ai-monitoring-close">
           {copy.dismissLabel}
         </DuncitButton>
       </DialogActions>

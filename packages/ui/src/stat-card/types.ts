@@ -75,4 +75,6 @@ export interface StatCardProps {
   sx?: SxProps<Theme>;
   /** CardContent sx (padding overrides). */
   contentSx?: SxProps<Theme>;
+  /** data-testid on the card root — a dashboard rendering many tiles needs one per tile. */
+  testId?: string;
 }

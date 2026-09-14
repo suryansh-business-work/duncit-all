@@ -42,8 +42,8 @@ export function ProfileLanguage() {
           label={t('mweb.common.language')}
           helperText={t('shell.profile.languageHint')}
         />
-        {saved && <Alert severity="success">{t('mweb.common.languageSaved')}</Alert>}
-        {error && <Alert severity="error">{error}</Alert>}
+        {saved && <Alert data-testid="language-saved" severity="success">{t('mweb.common.languageSaved')}</Alert>}
+        {error && <Alert data-testid="language-error" severity="error">{error}</Alert>}
       </Stack>
     </>
   );

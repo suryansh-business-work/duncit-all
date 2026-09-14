@@ -8,6 +8,7 @@ interface Props {
   bookings: number;
   /** Declared capacity. 0 (or omitted) means the pod set none. */
   total?: number | null;
+  testId?: string;
 }
 
 /**
@@ -27,14 +28,14 @@ interface Props {
  * and the Become-a-Host list all answer the same question, and three copies is
  * three chances for them to disagree about the same pod (rule 40).
  */
-export default function PodSeatsCell({ seats, bookings, total }: Readonly<Props>) {
+export default function PodSeatsCell({ seats, bookings, total, testId }: Readonly<Props>) {
   const { t } = useTranslation();
   const capacity = total ?? 0;
   const extra = Math.max(seats - bookings, 0);
   const hintKey = extra > 0 ? 'ui.podSeats.hintMulti' : 'ui.podSeats.hint';
   return (
     <Tooltip title={t(hintKey, { vars: { seats, bookings, extra } })}>
-      <Box sx={{ lineHeight: 1.2 }}>
+      <Box data-testid={testId} sx={{ lineHeight: 1.2 }}>
         <Typography variant="body2" component="div" sx={{ fontWeight: 600 }}>
           {capacity > 0 ? `${seats} / ${capacity}` : seats}
         </Typography>

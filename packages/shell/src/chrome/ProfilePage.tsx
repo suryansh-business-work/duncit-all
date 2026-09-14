@@ -157,7 +157,7 @@ export function ProfilePage() {
             </Typography>
           </Box>
           {!editing && (
-            <DuncitButton size="small" startIcon={<EditIcon />} onClick={startEdit} sx={{ fontWeight: 800 }}>
+            <DuncitButton data-testid="account-edit" size="small" startIcon={<EditIcon />} onClick={startEdit} sx={{ fontWeight: 800 }}>
               Edit
             </DuncitButton>
           )}
@@ -167,11 +167,11 @@ export function ProfilePage() {
 
         {editing ? (
           <Stack spacing={2}>
-            <TextField label={t('shell.profile.firstName')} value={firstName} onChange={(e) => setFirstName(e.target.value)} fullWidth size="small" />
-            <TextField label={t('shell.profile.lastName')} value={lastName} onChange={(e) => setLastName(e.target.value)} fullWidth size="small" />
-            {error && <Alert severity="error">{error.message}</Alert>}
+            <TextField label={t('shell.profile.firstName')} value={firstName} onChange={(e) => setFirstName(e.target.value)} fullWidth size="small" slotProps={{ htmlInput: { 'data-testid': 'field-first_name' } }} />
+            <TextField label={t('shell.profile.lastName')} value={lastName} onChange={(e) => setLastName(e.target.value)} fullWidth size="small" slotProps={{ htmlInput: { 'data-testid': 'field-last_name' } }} />
+            {error && <Alert data-testid="account-edit-error" severity="error">{error.message}</Alert>}
             <Stack direction="row" spacing={1.5}>
-              <DuncitButton variant="contained" onClick={submit} disabled={loading} sx={{ borderRadius: 999, fontWeight: 800 }}>
+              <DuncitButton data-testid="account-edit-submit" variant="contained" onClick={submit} disabled={loading} sx={{ borderRadius: 999, fontWeight: 800 }}>
                 {loading ? 'Saving…' : 'Save changes'}
               </DuncitButton>
               <DuncitButton onClick={() => setEditing(false)} disabled={loading} sx={{ borderRadius: 999, fontWeight: 800 }}>
@@ -182,7 +182,7 @@ export function ProfilePage() {
         ) : (
           <>
             {saved && (
-              <Alert severity="success" sx={{ mb: 2 }}>
+              <Alert data-testid="profile-saved" severity="success" sx={{ mb: 2 }}>
                 Profile updated.
               </Alert>
             )}
@@ -204,7 +204,7 @@ export function ProfilePage() {
                 mt: 1
               }}>
               {roles.length > 0 ? (
-                roles.map((role) => <Chip key={role} label={humaniseRole(role)} size="small" />)
+                roles.map((role) => <Chip key={role} data-testid={`profile-role-${role}`} label={humaniseRole(role)} size="small" />)
               ) : (
                 <Typography variant="body2" sx={{
                   color: "text.secondary"

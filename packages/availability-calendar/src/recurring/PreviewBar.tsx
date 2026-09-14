@@ -40,6 +40,7 @@ export default function PreviewBar({ summary, maxAdvanceDays }: Readonly<Props>)
   return (
     <Box
       aria-live="polite"
+      data-testid="recurring-preview"
       sx={{ p: 2, borderRadius: 2, bgcolor: 'action.hover', border: 1, borderColor: 'divider' }}
     >
       <Stack
@@ -66,7 +67,11 @@ export default function PreviewBar({ summary, maxAdvanceDays }: Readonly<Props>)
             <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 800 }}>
               {t('availability.recurring.preview.slotsToCreate')}
             </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 950, color: 'primary.main', lineHeight: 1.05 }}>
+            <Typography
+              variant="h4"
+              data-testid="recurring-preview-total"
+              sx={{ fontWeight: 950, color: 'primary.main', lineHeight: 1.05 }}
+            >
               {t('availability.recurring.preview.slotsCount', { vars: { count: summary.total } })}
             </Typography>
           </Box>
@@ -94,7 +99,7 @@ export default function PreviewBar({ summary, maxAdvanceDays }: Readonly<Props>)
           <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 800 }}>
             {t('availability.recurring.preview.totalRevenue')}
           </Typography>
-          <Typography variant="h5" sx={{ fontWeight: 950 }}>
+          <Typography variant="h5" data-testid="recurring-preview-revenue" sx={{ fontWeight: 950 }}>
             {fmt(summary.estimatedRevenue)}
           </Typography>
         </Box>

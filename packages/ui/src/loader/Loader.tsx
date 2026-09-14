@@ -80,6 +80,7 @@ export function Loader({ variant = 'block', size, label, showLabel, sx }: Readon
       aria-live="polite"
       aria-label={text}
       direction={direction}
+      data-testid="loader"
       sx={mergeSx(LAYOUT[variant], sx)}
     >
       <CircularProgress size={size ?? SIZES[variant]} aria-hidden />

@@ -63,8 +63,9 @@ export function AutoPodCategoryFilter({
         value={ALL}
         disabled
         helperText={labels.noHostCategories}
+        data-testid="auto-pod-category-filter"
       >
-        <MenuItem value={ALL}>{labels.allCategories}</MenuItem>
+        <MenuItem value={ALL} data-testid="auto-pod-category-option-all">{labels.allCategories}</MenuItem>
       </TextField>
     );
   }
@@ -78,11 +79,16 @@ export function AutoPodCategoryFilter({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       disabled={loading}
+      data-testid="auto-pod-category-filter"
       slotProps={{ input: { endAdornment: <SelectSpinner busy={loading} /> } }}
     >
-      <MenuItem value={ALL}>{labels.allCategories}</MenuItem>
+      <MenuItem value={ALL} data-testid="auto-pod-category-option-all">{labels.allCategories}</MenuItem>
       {rows.map((row) => (
-        <MenuItem key={row.sub_category_id} value={row.sub_category_id}>
+        <MenuItem
+          key={row.sub_category_id}
+          value={row.sub_category_id}
+          data-testid={`auto-pod-category-option-${row.sub_category_id}`}
+        >
           {pathOf(row)}
         </MenuItem>
       ))}

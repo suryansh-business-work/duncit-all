@@ -219,6 +219,7 @@ function DayCell({ date, view, monthStart, today, maxDate, bucket, isHoliday, se
 
   return (
     <Box
+      data-testid={`availability-day-${format(date, 'yyyy-MM-dd')}`}
       role="button"
       tabIndex={isDisabled ? -1 : 0}
       aria-disabled={isDisabled}
@@ -286,7 +287,7 @@ export default function AvailabilityCalendar({
   const cols = view === 'day' ? 1 : 7;
 
   return (
-    <Box>
+    <Box data-testid="availability-grid">
       {view !== 'day' && (
         <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: { xs: 0.5, sm: 1 }, mb: 1 }}>
           {weekdays.map((label, i) => (

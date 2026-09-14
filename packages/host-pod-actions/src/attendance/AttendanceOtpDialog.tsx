@@ -96,7 +96,13 @@ export default function AttendanceOtpDialog({
   };
 
   return (
-    <Dialog open={!!row} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog
+      open={!!row}
+      onClose={onClose}
+      fullWidth
+      maxWidth="xs"
+      data-testid="attendance-otp-dialog"
+    >
       <DialogTitle sx={{ fontWeight: 800 }}>{labels.otpTitle}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.75} sx={{ pt: 0.5 }}>
@@ -115,6 +121,7 @@ export default function AttendanceOtpDialog({
                 label={labels.otpName}
                 size="small"
                 fullWidth
+                data-testid="attendance-otp-name"
                 error={!!fieldState.error}
                 helperText={fieldState.error?.message}
               />
@@ -130,6 +137,7 @@ export default function AttendanceOtpDialog({
                   label={labels.otpExtension}
                   size="small"
                   sx={{ width: 120 }}
+                  data-testid="attendance-otp-extension"
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
                 />
@@ -144,6 +152,7 @@ export default function AttendanceOtpDialog({
                   label={labels.otpPhone}
                   size="small"
                   fullWidth
+                  data-testid="attendance-otp-number"
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
                 />
@@ -170,6 +179,7 @@ export default function AttendanceOtpDialog({
               send().catch(() => undefined);
             }}
             disabled={requestState.loading}
+            data-testid="attendance-otp-send"
             sx={{ borderRadius: 999, fontWeight: 800, alignSelf: 'flex-start' }}
           >
             {sendLabel(requestState.loading, !!challengeId, labels)}
@@ -188,6 +198,7 @@ export default function AttendanceOtpDialog({
                     label={labels.otpCode}
                     size="small"
                     fullWidth
+                    data-testid="attendance-otp-code"
                     error={!!fieldState.error}
                     helperText={fieldState.error?.message}
                     slotProps={{
@@ -202,13 +213,16 @@ export default function AttendanceOtpDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose}>{labels.otpCancel}</DuncitButton>
+        <DuncitButton onClick={onClose} data-testid="attendance-otp-cancel">
+          {labels.otpCancel}
+        </DuncitButton>
         <DuncitButton
           variant="contained"
           disabled={!challengeId || verifyState.loading || formState.isSubmitting}
           onClick={() => {
             submitCode().catch(() => undefined);
           }}
+          data-testid="attendance-otp-verify"
           sx={{ borderRadius: 999, fontWeight: 800 }}
         >
           {verifyState.loading ? labels.otpVerifying : labels.otpVerify}

@@ -29,9 +29,14 @@ export default function CompanionsChecklist({ title, people }: Readonly<Props>) 
         {title}
       </Typography>
       {people.map((person) => (
-        <Stack key={person.key} direction="row" spacing={1} sx={{
-          alignItems: "center"
-        }}>
+        <Stack
+          key={person.key}
+          direction="row"
+          spacing={1}
+          data-testid={`scan-checked-in-${person.key}`}
+          sx={{
+            alignItems: "center"
+          }}>
           <CheckCircleIcon color="success" fontSize="small" />
           <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 0 }} noWrap>
             {person.primary}

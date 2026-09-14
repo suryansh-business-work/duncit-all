@@ -59,6 +59,7 @@ export function TopProgressBar({ busy, label, sx }: Readonly<TopProgressBarProps
   return (
     <LinearProgress
       aria-label={label ?? t('ui.loader.loading')}
+      data-testid="top-progress-bar"
       sx={mergeSx(
         {
           position: 'fixed',

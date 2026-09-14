@@ -80,7 +80,7 @@ export function SpotsStepper({
             {boundsHint}
           </Typography>
         )}
-        {error && <FormHelperText error>{error}</FormHelperText>}
+        {error && <FormHelperText error data-testid="no_of_spots_text-error">{error}</FormHelperText>}
       </Box>
     );
   }
@@ -110,7 +110,12 @@ export function SpotsStepper({
           </Typography>
         </Box>
         {readOnly ? (
-          <Typography variant="h6" aria-label={labels.totalSpots} sx={{ fontWeight: 700, px: 1.5 }}>
+          <Typography
+            variant="h6"
+            aria-label={labels.totalSpots}
+            data-testid="create-pod-spots-readonly"
+            sx={{ fontWeight: 700, px: 1.5 }}
+          >
             {value}
           </Typography>
         ) : (
@@ -120,6 +125,7 @@ export function SpotsStepper({
               size="small"
               disabled={value <= min}
               onClick={() => set(value - 1)}
+              data-testid="spots-dec"
               sx={{ border: 1, borderColor: 'divider' }}
             >
               <RemoveIcon fontSize="small" />
@@ -130,13 +136,14 @@ export function SpotsStepper({
               value={value}
               onChange={(e) => set(Number.parseInt(e.target.value, 10))}
               sx={{ width: 76, '& input': { textAlign: 'center', fontWeight: 700 } }}
-              slotProps={{ htmlInput: { 'aria-label': labels.totalSpots, min, max } }}
+              slotProps={{ htmlInput: { 'aria-label': labels.totalSpots, min, max, 'data-testid': 'field-no_of_spots_text' } }}
             />
             <DuncitIconButton
               aria-label={labels.increase}
               size="small"
               disabled={value >= max}
               onClick={() => set(value + 1)}
+              data-testid="spots-inc"
               sx={{ border: 1, borderColor: 'divider' }}
             >
               <AddIcon fontSize="small" />
@@ -144,7 +151,7 @@ export function SpotsStepper({
           </Stack>
         )}
       </Stack>
-      {error && <FormHelperText error>{error}</FormHelperText>}
+      {error && <FormHelperText error data-testid="no_of_spots_text-error">{error}</FormHelperText>}
     </Box>
   );
 }

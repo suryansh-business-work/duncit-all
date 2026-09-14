@@ -88,7 +88,13 @@ export default function ClubAdminMarkDialog({
   onChooseDirect,
 }: Readonly<Props>) {
   return (
-    <Dialog open={!!row} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog
+      open={!!row}
+      onClose={onClose}
+      fullWidth
+      maxWidth="xs"
+      data-testid="attendance-choose-dialog"
+    >
       <DialogTitle sx={{ fontWeight: 800 }}>{labels.chooseTitle(row?.name ?? '')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1.5}>
@@ -112,7 +118,9 @@ export default function ClubAdminMarkDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose}>{labels.chooseCancel}</DuncitButton>
+        <DuncitButton onClick={onClose} data-testid="attendance-choose-cancel">
+          {labels.chooseCancel}
+        </DuncitButton>
       </DialogActions>
     </Dialog>
   );

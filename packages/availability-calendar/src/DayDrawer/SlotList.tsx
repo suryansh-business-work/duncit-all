@@ -71,13 +71,19 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
         {t('availability.existingSlots')}
       </Typography>
       {error && (
-        <Alert severity="error" onClose={() => setError(null)} sx={{ mt: 1 }}>
+        <Alert
+          severity="error"
+          onClose={() => setError(null)}
+          data-testid="availability-day-error"
+          sx={{ mt: 1 }}
+        >
           {error}
         </Alert>
       )}
       {slots.length === 0 ? (
         <Typography
           variant="body2"
+          data-testid="availability-day-empty"
           sx={{
             color: "text.secondary",
             mt: 1
@@ -97,16 +103,29 @@ export default function SlotList({ slots, onToggleBlock, onDelete }: Readonly<Pr
         </Stack>
       )}
 
-      <Dialog open={!!confirmDeleteId} onClose={() => !deleting && setConfirmDeleteId(null)}>
+      <Dialog
+        open={!!confirmDeleteId}
+        onClose={() => !deleting && setConfirmDeleteId(null)}
+        data-testid="day-slot-delete-confirm"
+      >
         <DialogTitle>{t('availability.deleteTitle')}</DialogTitle>
         <DialogContent>
           <DialogContentText>{t('availability.deleteBody')}</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <DuncitButton disabled={deleting} onClick={() => setConfirmDeleteId(null)}>
+          <DuncitButton
+            disabled={deleting}
+            onClick={() => setConfirmDeleteId(null)}
+            data-testid="day-slot-delete-cancel"
+          >
             {t('availability.cancel')}
           </DuncitButton>
-          <DuncitButton color="error" variant="contained" onClick={handleConfirmDelete}>
+          <DuncitButton
+            color="error"
+            variant="contained"
+            onClick={handleConfirmDelete}
+            data-testid="day-slot-delete-confirm-btn"
+          >
             {t('availability.delete')}
           </DuncitButton>
         </DialogActions>

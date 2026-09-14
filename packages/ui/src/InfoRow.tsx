@@ -26,11 +26,12 @@ export interface InfoRowProps {
   sx?: SxProps<Theme>;
   labelSx?: SxProps<Theme>;
   valueSx?: SxProps<Theme>;
+  testId?: string;
 }
 
-function StackedRow({ label, value, labelVariant, labelWeight, valueWeight, sx, labelSx, valueSx }: Readonly<InfoRowProps>) {
+function StackedRow({ label, value, labelVariant, labelWeight, valueWeight, sx, labelSx, valueSx, testId }: Readonly<InfoRowProps>) {
   return (
-    <Box sx={sx}>
+    <Box data-testid={testId} sx={sx}>
       <Typography
         variant={labelVariant ?? 'caption'}
         sx={[{
@@ -52,10 +53,11 @@ function StackedRow({ label, value, labelVariant, labelWeight, valueWeight, sx, 
   );
 }
 
-function InlineRow({ label, value, labelWidth, labelVariant, labelWeight, valueWeight, sx, labelSx, valueSx }: Readonly<InfoRowProps>) {
+function InlineRow({ label, value, labelWidth, labelVariant, labelWeight, valueWeight, sx, labelSx, valueSx, testId }: Readonly<InfoRowProps>) {
   return (
     <Stack
       direction="row"
+      data-testid={testId}
       sx={mergeSx({
         alignItems: "baseline"
       }, mergeSx({ gap: 1.5 }, sx))}>
@@ -79,7 +81,7 @@ function InlineRow({ label, value, labelWidth, labelVariant, labelWeight, valueW
   );
 }
 
-function SplitRow({ label, value, labelVariant, labelWeight, valueWeight, bold, boldColor, sx, labelSx, valueSx }: Readonly<InfoRowProps>) {
+function SplitRow({ label, value, labelVariant, labelWeight, valueWeight, bold, boldColor, sx, labelSx, valueSx, testId }: Readonly<InfoRowProps>) {
   const labelColor = bold ? 'text.primary' : 'text.secondary';
   let resolvedLabelWeight = labelWeight;
   let resolvedValueWeight = valueWeight ?? 600;
@@ -91,6 +93,7 @@ function SplitRow({ label, value, labelVariant, labelWeight, valueWeight, bold, 
   return (
     <Stack
       direction="row"
+      data-testid={testId}
       sx={mergeSx({
         justifyContent: "space-between"
       }, mergeSx({ gap: 2 }, sx))}>

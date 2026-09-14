@@ -73,13 +73,18 @@ describe('PodActivityDialog', () => {
   });
 
   it('renders every entry field: actor/source/risk chips, changes, note and AI summary', async () => {
+    const changes = [
+      { field: 'title', from: '', to: 'Sunday board games' },
+      { field: 'venue', from: 'Third Wave Coffee, Indiranagar', to: '' },
+    ];
     renderWithProviders(
       <PodActivityDialog pod={{ id: 'pod-1', pod_title: 'Sunday board games' }} onClose={onClose} />,
-      { mocks: [logsMock([entry()])] },
+      { mocks: [logsMock([entry({ changes })])] },
     );
     expect(await screen.findByText('Asha Rao')).toBeInTheDocument();
     expect(screen.getByText('Host')).toBeInTheDocument();
     expect(screen.getByText('title: — → Sunday board games')).toBeInTheDocument();
+    expect(screen.getByText('venue: Third Wave Coffee, Indiranagar → —')).toBeInTheDocument();
     expect(screen.getByText('Created via the host app')).toBeInTheDocument();
     expect(screen.getByText('AI: Looks routine.')).toBeInTheDocument();
   });

@@ -130,7 +130,11 @@ export function AutoPodCard({
   const earning = autoPodRoleEarnings(row, role, earnings);
 
   return (
-    <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Card
+      variant="outlined"
+      data-testid={`auto-pod-card-${row.id}`}
+      sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+    >
       {image ? <AutoPodCover url={image} /> : null}
       <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.25, flexGrow: 1 }}>
         <Box>

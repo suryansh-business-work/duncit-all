@@ -71,28 +71,33 @@ export function AutoPodWithdrawDialog({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
+    <Dialog open={open} onClose={handleClose} data-testid="auto-pod-withdraw-sheet" fullWidth maxWidth="xs">
       <DialogTitle>{labels.withdrawTitle}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5} sx={{ mt: 1 }}>
           {row ? <Typography variant="subtitle2">{row.pod_title}</Typography> : null}
-          <Alert severity="warning">{labels.withdrawWarning}</Alert>
+          <Alert severity="warning" data-testid="auto-pod-withdraw-warning">{labels.withdrawWarning}</Alert>
           {points > 0 ? (
-            <Typography variant="body2" sx={{ color: 'error.main', fontWeight: 600 }}>
+            <Typography
+              variant="body2"
+              data-testid="auto-pod-withdraw-penalty"
+              sx={{ color: 'error.main', fontWeight: 600 }}
+            >
               {labels.withdrawPenalty(points)}
             </Typography>
           ) : null}
-          {failure ? <Alert severity="error">{failure}</Alert> : null}
+          {failure ? <Alert severity="error" data-testid="auto-pod-withdraw-error">{failure}</Alert> : null}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={handleClose}>{labels.dismiss}</DuncitButton>
+        <DuncitButton onClick={handleClose} data-testid="auto-pod-withdraw-dismiss">{labels.dismiss}</DuncitButton>
         <DuncitButton
           variant="contained"
           color="error"
           onClick={handleWithdraw}
           disabled={withdrawState.loading}
           loading={withdrawState.loading}
+          data-testid="auto-pod-withdraw-confirm"
         >
           {labels.withdrawConfirm}
         </DuncitButton>

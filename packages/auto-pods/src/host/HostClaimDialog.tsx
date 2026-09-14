@@ -117,7 +117,7 @@ export function HostClaimDialog({
   const handleAssign = target ? () => assignTo(target) : undefined;
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={handleClose} data-testid="auto-pod-host-claim-dialog" fullWidth maxWidth="sm">
       <DialogTitle>{labels.confirmAssign}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5} sx={{ mt: 1 }}>
@@ -144,20 +144,21 @@ export function HostClaimDialog({
 
           <HostEarningsFields state={pricing} labels={labels} formatMoney={formatMoney} />
 
-          {needsLocation ? <Alert severity="warning">{labels.pickLocationFirst}</Alert> : null}
+          {needsLocation ? <Alert severity="warning" data-testid="auto-pod-host-claim-needs-location">{labels.pickLocationFirst}</Alert> : null}
           {pinsCity ? (
-            <Alert severity="info">{labels.willPinTo(locationLabel || locationId)}</Alert>
+            <Alert severity="info" data-testid="auto-pod-host-claim-pins-city">{labels.willPinTo(locationLabel || locationId)}</Alert>
           ) : null}
-          {failure ? <Alert severity="error">{failure}</Alert> : null}
+          {failure ? <Alert severity="error" data-testid="auto-pod-host-claim-error">{failure}</Alert> : null}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={handleClose}>{labels.dismiss}</DuncitButton>
+        <DuncitButton onClick={handleClose} data-testid="auto-pod-host-claim-dismiss">{labels.dismiss}</DuncitButton>
         <DuncitButton
           variant="contained"
           onClick={handleAssign}
           disabled={!handleAssign}
           loading={assignState.loading}
+          data-testid="auto-pod-host-claim-confirm"
         >
           {labels.assignMyselfCta}
         </DuncitButton>

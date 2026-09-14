@@ -69,8 +69,8 @@ from — so it lives here rather than four times over (rule 40).
 
 | Export | What it is |
 | --- | --- |
-| `ChangeRequestBoard` | The studio section: "waiting on you" over "your requests". Pass `role` to scope it to one studio. |
-| `ChangeRequestCard` | One request, rendered the same whichever end you read it from. |
+| `ChangeRequestBoard` | The studio section: "waiting on you" over "your requests". Pass `role` to scope it to one studio, and `testId` (default `change-requests`) — a studio passes `change-requests-${role}`, as the native twin does. |
+| `ChangeRequestCard` | One request, rendered the same whichever end you read it from. Takes a required `testId`; the board passes `${listId}-${row.id}`, and `-role`, `-state`, `-approve`, `-pass`, `-withdraw` hang off it. |
 | `RequestChangeDialog` | The confirm that states the health cost and the seats already sold before anything is filed. |
 | `useRequestPodChange` | The pod-row action. Returns `{ open, dialog, busy }`; render `dialog` once per screen. |
 | `useTranslation` / `fallbackT` | `changeRequest.*`, layered over the host surface's bundle. |

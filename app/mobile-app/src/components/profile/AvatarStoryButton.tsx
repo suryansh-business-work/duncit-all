@@ -72,12 +72,18 @@ export function AvatarStoryButton({
       >
         {photo ? (
           <AppImage
+            testID={`${testID}-photo`}
             source={{ uri: photo }}
             style={{ width: '100%', height: '100%' }}
             resizeMode="cover"
           />
         ) : (
-          <Text fontSize={size * 0.4} fontWeight="600" color={onPrimary}>
+          <Text
+            testID={`${testID}-initial`}
+            fontSize={size * 0.4}
+            fontWeight="600"
+            color={onPrimary}
+          >
             {initial}
           </Text>
         )}

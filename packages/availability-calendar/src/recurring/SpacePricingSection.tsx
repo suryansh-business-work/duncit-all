@@ -26,46 +26,51 @@ export default function SpacePricingSection({ spaces, onChange }: Readonly<Props
         {t('availability.recurring.pricingBySpaceHint')}
       </Typography>
       <Stack spacing={1} sx={{ mt: 1 }}>
-        {spaces.map((space) => (
-          <Stack key={space.label || 'whole-venue'} direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            {showToggle && (
-              <Checkbox
+        {spaces.map((space) => {
+          const rowId = space.label || 'whole-venue';
+          return (
+            <Stack key={rowId} direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+              {showToggle && (
+                <Checkbox
+                  size="small"
+                  checked={space.enabled}
+                  onChange={(e) => setRow(space.label, { enabled: e.target.checked })}
+                  data-testid={`recurring-space-${rowId}-include`}
+                  slotProps={{
+                    input: {
+                      'aria-label': t('availability.recurring.includeSpace', { vars: { space: spaceName(space) } }),
+                    },
+                  }}
+                />
+              )}
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="body2" sx={{ fontWeight: 700 }} noWrap>
+                  {spaceName(space)}
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  {t('availability.recurring.capacity', { vars: { capacity: space.capacity } })}
+                </Typography>
+              </Box>
+              <TextField
+                label={t('availability.price')}
+                type="number"
                 size="small"
-                checked={space.enabled}
-                onChange={(e) => setRow(space.label, { enabled: e.target.checked })}
+                value={space.price}
+                disabled={!space.enabled}
+                onChange={(e) => setRow(space.label, { price: e.target.value })}
+                sx={{ maxWidth: 150 }}
+                data-testid={`recurring-space-${rowId}-price`}
                 slotProps={{
-                  input: {
-                    'aria-label': t('availability.recurring.includeSpace', { vars: { space: spaceName(space) } }),
+                  htmlInput: {
+                    min: 0,
+                    step: 50,
+                    'aria-label': t('availability.recurring.spacePrice', { vars: { space: spaceName(space) } }),
                   },
                 }}
               />
-            )}
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="body2" sx={{ fontWeight: 700 }} noWrap>
-                {spaceName(space)}
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                {t('availability.recurring.capacity', { vars: { capacity: space.capacity } })}
-              </Typography>
-            </Box>
-            <TextField
-              label={t('availability.price')}
-              type="number"
-              size="small"
-              value={space.price}
-              disabled={!space.enabled}
-              onChange={(e) => setRow(space.label, { price: e.target.value })}
-              sx={{ maxWidth: 150 }}
-              slotProps={{
-                htmlInput: {
-                  min: 0,
-                  step: 50,
-                  'aria-label': t('availability.recurring.spacePrice', { vars: { space: spaceName(space) } }),
-                },
-              }}
-            />
-          </Stack>
-        ))}
+            </Stack>
+          );
+        })}
       </Stack>
     </Box>
   );

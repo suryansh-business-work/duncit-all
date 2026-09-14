@@ -94,6 +94,7 @@ export default function CompanionsForm({
     <Stack
       component="form"
       spacing={1.5}
+      data-testid="scan-companions-form"
       onSubmit={handleSubmit((values) => onSubmit(companionEntriesToInput(values.companions)))}
     >
       <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
@@ -117,10 +118,18 @@ export default function CompanionsForm({
       ))}
 
       {formState.isSubmitted && !formState.isValid && (
-        <Alert severity="warning">{labels.companionsIncomplete}</Alert>
+        <Alert severity="warning" data-testid="companions-incomplete">
+          {labels.companionsIncomplete}
+        </Alert>
       )}
 
-      <DuncitButton type="submit" variant="contained" loading={busy} disabled={duplicates.size > 0}>
+      <DuncitButton
+        type="submit"
+        variant="contained"
+        loading={busy}
+        disabled={duplicates.size > 0}
+        data-testid="companions-submit"
+      >
         {labels.companionsSubmit}
       </DuncitButton>
     </Stack>

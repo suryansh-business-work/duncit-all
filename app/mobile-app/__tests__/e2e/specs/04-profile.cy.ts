@@ -328,7 +328,7 @@ describe('Native · 04 profile', () => {
     // expo-image-picker's web picker is a hidden file input it appends to the
     // page; its programmatic click opens no dialog under automation, so the
     // file is handed to the input directly.
-    cy.get('input[type="file"][data-testid="file-input"]').selectFile('@avatar', {
+    cy.byTestId('file-input').selectFile('@avatar', {
       force: true,
     });
     cy.byTestId('crop-dialog').should('be.visible').and('contain', 'Adjust photo');
@@ -338,9 +338,9 @@ describe('Native · 04 profile', () => {
     cy.wait('@MobileUploadImage');
     cy.wait('@MobileUpdateMyProfile');
     cy.byTestId('crop-dialog').should('not.exist');
-    cy.byTestId('avatar-story-button').find('img').should('exist');
+    cy.byTestId('avatar-story-button-photo').should('exist');
     cy.reload();
-    cy.byTestId('avatar-story-button').find('img').should('exist');
+    cy.byTestId('avatar-story-button-photo').should('exist');
   });
 
   it('PU-15 Remove photo? › Remove clears the photo', () => {
@@ -350,9 +350,11 @@ describe('Native · 04 profile', () => {
     cy.interceptOperation('MobileUpdateMyProfile');
     cy.byTestId('remove-photo-confirm-confirm').should('contain', 'Remove').click();
     cy.wait('@MobileUpdateMyProfile');
-    cy.byTestId('avatar-story-button').find('img').should('not.exist');
+    cy.byTestId('avatar-story-button-photo').should('not.exist');
+    cy.byTestId('avatar-story-button-initial').should('be.visible');
     cy.reload();
-    cy.byTestId('avatar-story-button').find('img').should('not.exist');
+    cy.byTestId('avatar-story-button-photo').should('not.exist');
+    cy.byTestId('avatar-story-button-initial').should('be.visible');
   });
 
   it('PU-16 the language choice survives a reload, and is put back', function () {

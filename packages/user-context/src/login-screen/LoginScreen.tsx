@@ -34,7 +34,7 @@ export default function LoginScreen({
   const legalLink = { fontSize: 12, fontWeight: 600 } as const;
 
   return (
-    <Box sx={{ position: 'relative', minHeight: '100dvh', width: '100%', display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
+    <Box data-testid="login-screen" sx={{ position: 'relative', minHeight: '100dvh', width: '100%', display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
       {/* foggy background */}
       <Box
         aria-hidden
@@ -110,7 +110,7 @@ export default function LoginScreen({
                 {t('session.login.heading')}
               </Typography>
               {errorMessage && (
-                <Alert severity="error" sx={{ mb: 2 }}>
+                <Alert data-testid="login-error" severity="error" sx={{ mb: 2 }}>
                   {errorMessage}
                 </Alert>
               )}
@@ -198,6 +198,7 @@ export default function LoginScreen({
       <OtherPortalsDialog open={portalsOpen} onClose={() => setPortalsOpen(false)} t={t} />
 
       <Snackbar
+        data-testid="login-snackbar"
         open={!!snack}
         autoHideDuration={4000}
         onClose={() => setSnack(null)}

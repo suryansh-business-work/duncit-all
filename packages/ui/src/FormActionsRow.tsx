@@ -41,7 +41,7 @@ export function FormActionsRow({
     <>
       {errorMessage ? (
         <Grid size={12}>
-          <Alert severity="error">{errorMessage}</Alert>
+          <Alert severity="error" data-testid="form-actions-row-error">{errorMessage}</Alert>
         </Grid>
       ) : null}
       <Grid size={12}>
@@ -53,6 +53,7 @@ export function FormActionsRow({
             startIcon={startIcon}
             loading={busy}
             disabled={disabled}
+            data-testid="form-actions-row-submit"
           >
             {submitLabel}
           </DuncitButton>

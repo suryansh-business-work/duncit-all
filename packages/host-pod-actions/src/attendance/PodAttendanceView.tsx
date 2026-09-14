@@ -34,6 +34,7 @@ interface Props {
 
 /** One list section — marked, or still to do. */
 function RosterSection({
+  testID,
   heading,
   rows,
   labels,
@@ -43,6 +44,8 @@ function RosterSection({
   formatDateTime,
   onMark,
 }: Readonly<{
+  /** Distinct per list — the page renders the unmarked and the marked roster. */
+  testID: string;
   heading: string;
   rows: AttendanceRowData[];
   labels: PodAttendanceLabels;
@@ -54,8 +57,12 @@ function RosterSection({
 }>) {
   if (rows.length === 0) return null;
   return (
-    <Stack spacing={1}>
-      <Typography variant="overline" sx={{ fontWeight: 800, color: 'text.secondary' }}>
+    <Stack spacing={1} data-testid={testID}>
+      <Typography
+        variant="overline"
+        data-testid={`${testID}-count`}
+        sx={{ fontWeight: 800, color: 'text.secondary' }}
+      >
         {heading} · {rows.length}
       </Typography>
       {rows.map((row) => (
@@ -100,6 +107,7 @@ export default function PodAttendanceView({
   if (api.loading) {
     return (
       <Stack
+        data-testid="attendance-view-loading"
         sx={{
           alignItems: "center",
           py: 4
@@ -111,11 +119,16 @@ export default function PodAttendanceView({
 
   if (!board) {
     return (
-      <Stack spacing={1.5} sx={{
+      <Stack spacing={1.5} data-testid="attendance-view-error" sx={{
         alignItems: "flex-start"
       }}>
         <Alert severity="error">{api.errorText}</Alert>
-        <DuncitButton onClick={api.refetch} variant="outlined" sx={{ borderRadius: 999 }}>
+        <DuncitButton
+          onClick={api.refetch}
+          variant="outlined"
+          data-testid="attendance-retry"
+          sx={{ borderRadius: 999 }}
+        >
           {labels.retry}
         </DuncitButton>
       </Stack>
@@ -148,7 +161,7 @@ export default function PodAttendanceView({
       )}
 
       {board.rows.length === 0 && (
-        <Typography variant="body2" sx={{
+        <Typography variant="body2" data-testid="attendance-empty-roster" sx={{
           color: "text.secondary"
         }}>
           {labels.emptyRoster}
@@ -156,6 +169,7 @@ export default function PodAttendanceView({
       )}
 
       <RosterSection
+        testID="attendance-unmarked"
         heading={labels.unmarkedHeading}
         rows={unmarked}
         labels={labels}
@@ -166,10 +180,13 @@ export default function PodAttendanceView({
         onMark={onMark}
       />
       {unmarked.length === 0 && board.rows.length > 0 && (
-        <Alert severity="success">{labels.allMarked}</Alert>
+        <Alert severity="success" data-testid="attendance-all-marked">
+          {labels.allMarked}
+        </Alert>
       )}
       {marked.length > 0 && unmarked.length > 0 && <Divider />}
       <RosterSection
+        testID="attendance-marked"
         heading={labels.markedHeading}
         rows={marked}
         labels={labels}

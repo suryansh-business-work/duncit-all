@@ -22,6 +22,7 @@ export default function ConflictModeSection({ value, onChange }: Readonly<Props>
       <RadioGroup value={value} onChange={(e) => onChange(e.target.value as ConflictMode)}>
         <FormControlLabel
           value="SKIP"
+          data-testid="recurring-conflict-SKIP"
           control={<Radio size="small" />}
           label={
             <Stack>
@@ -36,6 +37,7 @@ export default function ConflictModeSection({ value, onChange }: Readonly<Props>
         />
         <FormControlLabel
           value="REPLACE"
+          data-testid="recurring-conflict-REPLACE"
           control={<Radio size="small" color="error" />}
           label={
             <Stack>
@@ -50,7 +52,7 @@ export default function ConflictModeSection({ value, onChange }: Readonly<Props>
         />
       </RadioGroup>
       {value === 'REPLACE' && (
-        <Alert severity="warning" sx={{ mt: 1 }}>
+        <Alert severity="warning" data-testid="recurring-conflict-warning" sx={{ mt: 1 }}>
           {t('availability.recurring.overlapReplaceWarning')}
         </Alert>
       )}

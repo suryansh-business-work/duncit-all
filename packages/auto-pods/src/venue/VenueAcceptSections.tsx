@@ -57,13 +57,13 @@ interface NoSlotsProps {
  */
 export function NoSlotsNotice({ labels, onAddAvailability }: Readonly<NoSlotsProps>) {
   const action = onAddAvailability ? (
-    <DuncitButton color="inherit" size="small" onClick={onAddAvailability}>
+    <DuncitButton color="inherit" size="small" onClick={onAddAvailability} data-testid="auto-pod-add-availability">
       {labels.addAvailability}
     </DuncitButton>
   ) : undefined;
 
   return (
-    <Alert severity="info" action={action}>
+    <Alert severity="info" action={action} data-testid="auto-pod-no-slots">
       {labels.noSlots}
     </Alert>
   );

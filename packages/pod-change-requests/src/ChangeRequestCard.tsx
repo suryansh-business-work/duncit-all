@@ -25,6 +25,8 @@ function Fact({ label, value }: Readonly<{ label: string; value: string }>) {
 }
 
 interface Props {
+  /** The card's own id — the list passes `${listId}-${row.id}`, as native does. */
+  testId: string;
   row: PodChangeRow;
   /** Set on the "waiting on you" list — the two answers a candidate may give. */
   onApprove?: () => void;
@@ -43,6 +45,7 @@ interface Props {
  * buttons appear is the caller's decision, not a second component's.
  */
 export default function ChangeRequestCard({
+  testId,
   row,
   onApprove,
   onPass,
@@ -56,12 +59,12 @@ export default function ChangeRequestCard({
   const slotWhen = row.offer?.slot_start_at ? formatDateTime(row.offer.slot_start_at) : '';
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 3 }}>
+    <Card data-testid={testId} variant="outlined" sx={{ borderRadius: 3 }}>
       <CardContent>
         <Stack spacing={1.5}>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
             <Stack sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 800 }} noWrap>
+              <Typography data-testid={`${testId}-title`} variant="subtitle1" sx={{ fontWeight: 800 }} noWrap>
                 {row.pod.pod_title}
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
@@ -69,12 +72,14 @@ export default function ChangeRequestCard({
               </Typography>
             </Stack>
             <Chip
+              data-testid={`${testId}-role`}
               size="small"
               label={t(changeRequestRoleKey(row.role))}
               variant="outlined"
               sx={{ fontWeight: 700 }}
             />
             <Chip
+              data-testid={`${testId}-state`}
               size="small"
               color={changeRequestTone(row)}
               label={t(changeRequestStatusKey(row))}
@@ -104,7 +109,7 @@ export default function ChangeRequestCard({
             <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
               {t('changeRequest.reason')}
             </Typography>
-            <Typography variant="body2">
+            <Typography data-testid={`${testId}-reason`} variant="body2">
               {row.reason || t('changeRequest.noReason')}
             </Typography>
           </Stack>
@@ -112,17 +117,18 @@ export default function ChangeRequestCard({
           {(onApprove ?? onPass ?? showWithdraw) && (
             <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
               {showWithdraw && (
-                <DuncitButton variant="outlined" onClick={onWithdraw} disabled={busy}>
+                <DuncitButton data-testid={`${testId}-withdraw`} variant="outlined" onClick={onWithdraw} disabled={busy}>
                   {t('changeRequest.withdraw')}
                 </DuncitButton>
               )}
               {onPass && (
-                <DuncitButton variant="outlined" color="error" onClick={onPass} disabled={busy}>
+                <DuncitButton data-testid={`${testId}-pass`} variant="outlined" color="error" onClick={onPass} disabled={busy}>
                   {t('changeRequest.pass')}
                 </DuncitButton>
               )}
               {onApprove && (
                 <DuncitButton
+                  data-testid={`${testId}-approve`}
                   variant="contained"
                   color="success"
                   onClick={onApprove}

@@ -41,32 +41,47 @@ export default function TimeSlotsSection({ timeSlots, onChange, openHours, buffe
         {t('availability.recurring.timeSlots')}
       </Typography>
       <Stack spacing={1}>
-        {timeSlots.map((row, index) => (
-          <Stack key={row.id} direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ alignItems: { sm: 'center' } }}>
-            <TimePicker
-              label={startLabel(index)}
-              value={row.start}
-              onChange={(next) => setRow(row.id, { start: next })}
-              slotProps={{ textField: { size: 'small', fullWidth: true } }}
-            />
-            <TimePicker
-              label={t('availability.recurring.end')}
-              value={row.end}
-              onChange={(next) => setRow(row.id, { end: next })}
-              slotProps={{ textField: { size: 'small', fullWidth: true } }}
-            />
-            <DuncitIconButton
-              size="small"
-              aria-label={t('availability.recurring.removeTimeSlot', { vars: { n: index + 1 } })}
-              disabled={timeSlots.length === 1}
-              onClick={() => removeRow(row.id)}
-            >
-              <DeleteOutlineIcon fontSize="small" />
-            </DuncitIconButton>
-          </Stack>
-        ))}
+        {timeSlots.map((row, index) => {
+          const startTestId: { 'data-testid': string } = {
+            'data-testid': `recurring-start-${row.id}`,
+          };
+          const endTestId: { 'data-testid': string } = {
+            'data-testid': `recurring-end-${row.id}`,
+          };
+          return (
+            <Stack key={row.id} direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ alignItems: { sm: 'center' } }}>
+              <TimePicker
+                label={startLabel(index)}
+                value={row.start}
+                onChange={(next) => setRow(row.id, { start: next })}
+                slotProps={{ textField: { size: 'small', fullWidth: true, ...startTestId } }}
+              />
+              <TimePicker
+                label={t('availability.recurring.end')}
+                value={row.end}
+                onChange={(next) => setRow(row.id, { end: next })}
+                slotProps={{ textField: { size: 'small', fullWidth: true, ...endTestId } }}
+              />
+              <DuncitIconButton
+                size="small"
+                aria-label={t('availability.recurring.removeTimeSlot', { vars: { n: index + 1 } })}
+                disabled={timeSlots.length === 1}
+                onClick={() => removeRow(row.id)}
+                data-testid={`recurring-remove-${row.id}`}
+              >
+                <DeleteOutlineIcon fontSize="small" />
+              </DuncitIconButton>
+            </Stack>
+          );
+        })}
       </Stack>
-      <DuncitButton size="small" startIcon={<AddIcon />} onClick={addRow} sx={{ mt: 1 }}>
+      <DuncitButton
+        size="small"
+        startIcon={<AddIcon />}
+        onClick={addRow}
+        data-testid="recurring-add-range"
+        sx={{ mt: 1 }}
+      >
         {t('availability.recurring.addRange')}
       </DuncitButton>
       <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', mt: 0.5 }}>

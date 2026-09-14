@@ -53,7 +53,7 @@ export default function PodMediaView({ podId }: Readonly<Props>) {
 
   if (loading) {
     return (
-      <Stack sx={{ alignItems: 'center', py: 4 }}>
+      <Stack data-testid="pod-media-view-loading" sx={{ alignItems: 'center', py: 4 }}>
         <CircularProgress size={24} />
       </Stack>
     );
@@ -63,8 +63,9 @@ export default function PodMediaView({ podId }: Readonly<Props>) {
     return (
       <Alert
         severity="error"
+        data-testid="pod-media-view-error"
         action={
-          <DuncitButton size="small" onClick={refetch}>
+          <DuncitButton size="small" onClick={refetch} data-testid="pod-media-view-retry">
             {labels.retry}
           </DuncitButton>
         }
@@ -77,7 +78,7 @@ export default function PodMediaView({ podId }: Readonly<Props>) {
   const isHost = board.viewer === 'HOST';
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} data-testid="pod-media-view">
       <Box>
         <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
           {board.pod_title}
@@ -87,8 +88,16 @@ export default function PodMediaView({ podId }: Readonly<Props>) {
         </Typography>
       </Box>
 
-      {board.viewer === 'NONE' && <Alert severity="info">{labels.notInvited}</Alert>}
-      {board.is_cancelled && <Alert severity="warning">{labels.cancelled}</Alert>}
+      {board.viewer === 'NONE' && (
+        <Alert severity="info" data-testid="pod-media-view-not-invited">
+          {labels.notInvited}
+        </Alert>
+      )}
+      {board.is_cancelled && (
+        <Alert severity="warning" data-testid="pod-media-view-cancelled">
+          {labels.cancelled}
+        </Alert>
+      )}
 
       {/* Only the host hands the link out — a guest already has it. */}
       {isHost && <PodMediaShareCard podId={board.pod_id} podTitle={board.pod_title} />}
@@ -105,7 +114,12 @@ export default function PodMediaView({ podId }: Readonly<Props>) {
             deviceOnly: true,
           })}
           {busy && (
-            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              data-testid="pod-media-view-uploading"
+              sx={{ alignItems: 'center' }}
+            >
               <CircularProgress size={16} />
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 {labels.uploading}
@@ -117,7 +131,11 @@ export default function PodMediaView({ podId }: Readonly<Props>) {
 
       <Divider />
 
-      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+      <Typography
+        variant="subtitle2"
+        data-testid="pod-media-view-items-heading"
+        sx={{ fontWeight: 700 }}
+      >
         {labels.itemsHeading(board.count)}
       </Typography>
       <PodMediaGrid

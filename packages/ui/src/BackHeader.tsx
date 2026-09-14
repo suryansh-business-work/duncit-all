@@ -19,13 +19,20 @@ export interface BackButtonProps {
 export function BackButton({ children, to, onClick, sx }: Readonly<BackButtonProps>) {
   if (to) {
     return (
-      <DuncitButton component={RouterLink} to={to} size="small" startIcon={<ArrowBackIcon />} sx={sx}>
+      <DuncitButton
+        component={RouterLink}
+        to={to}
+        size="small"
+        startIcon={<ArrowBackIcon />}
+        sx={sx}
+        data-testid="back-button"
+      >
         {children}
       </DuncitButton>
     );
   }
   return (
-    <DuncitButton size="small" startIcon={<ArrowBackIcon />} onClick={onClick} sx={sx}>
+    <DuncitButton size="small" startIcon={<ArrowBackIcon />} onClick={onClick} sx={sx} data-testid="back-button">
       {children}
     </DuncitButton>
   );
@@ -61,13 +68,20 @@ type BackIconProps = Pick<BackHeaderProps, 'onBack' | 'backTo' | 'backSize' | 'b
 function BackIcon({ onBack, backTo, backSize, backSx, ariaLabel }: Readonly<BackIconProps>) {
   if (backTo) {
     return (
-      <DuncitIconButton size={backSize} component={RouterLink} to={backTo} aria-label={ariaLabel} sx={backSx}>
+      <DuncitIconButton
+        size={backSize}
+        component={RouterLink}
+        to={backTo}
+        aria-label={ariaLabel}
+        sx={backSx}
+        data-testid="back-header-back"
+      >
         <ArrowBackIcon />
       </DuncitIconButton>
     );
   }
   return (
-    <DuncitIconButton size={backSize} onClick={onBack} aria-label={ariaLabel} sx={backSx}>
+    <DuncitIconButton size={backSize} onClick={onBack} aria-label={ariaLabel} sx={backSx} data-testid="back-header-back">
       <ArrowBackIcon />
     </DuncitIconButton>
   );
@@ -116,6 +130,7 @@ export function BackHeader({
   return (
     <Stack
       direction="row"
+      data-testid="back-header"
       sx={mergeSx({
         alignItems: "center"
       }, mergeSx({ gap: 1 }, sx))}>
@@ -131,6 +146,7 @@ export function BackHeader({
         <Typography
           variant={titleVariant}
           noWrap={titleNoWrap}
+          data-testid="back-header-title"
           sx={[{
             fontWeight: titleWeight
           }, ...(Array.isArray(titleSx) ? titleSx : [titleSx])]}>

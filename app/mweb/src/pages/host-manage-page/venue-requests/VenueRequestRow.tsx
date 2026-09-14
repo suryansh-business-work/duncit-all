@@ -117,6 +117,7 @@ export default function VenueRequestRow({
         />
         <HostPodActionsMenu
           {...actions}
+          podId={pod.id}
           onClubAdmin={onClubAdmin}
           onSeeAttendance={onSeeAttendance}
           onSlotRequest={onSlotRequest}

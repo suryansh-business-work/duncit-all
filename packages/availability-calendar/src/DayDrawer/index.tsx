@@ -44,9 +44,14 @@ export default function DayDrawer({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Drawer anchor="right" open={open && !!date} onClose={onClose} slotProps={{
-      paper: { sx: { width: { xs: '100%', sm: 380 } } }
-    }}>
+    <Drawer
+      anchor="right"
+      open={open && !!date}
+      onClose={onClose}
+      data-testid="availability-day-sheet"
+      slotProps={{
+        paper: { sx: { width: { xs: '100%', sm: 380 } } }
+      }}>
       <Stack spacing={2} sx={{ p: 2, height: '100%', overflowY: 'auto' }}>
         <Stack
           direction="row"
@@ -63,13 +68,21 @@ export default function DayDrawer({
               }}>
               {t('availability.drawerTitle')}
             </Typography>
-            <Typography variant="h6" sx={{
+            <Typography
+              variant="h6"
+              data-testid="availability-day-sheet-date"
+              sx={{
               fontWeight: 900
             }}>
               {date ? formatDate(date) : ''}
             </Typography>
           </Box>
-          <DuncitIconButton size="small" onClick={onClose} aria-label={t('availability.close')}>
+          <DuncitIconButton
+            size="small"
+            onClick={onClose}
+            aria-label={t('availability.close')}
+            data-testid="availability-day-sheet-close"
+          >
             <CloseIcon />
           </DuncitIconButton>
         </Stack>

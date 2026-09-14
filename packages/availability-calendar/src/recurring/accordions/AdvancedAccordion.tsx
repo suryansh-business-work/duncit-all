@@ -9,6 +9,7 @@ interface Props {
   /** `error` frames the accordion in red — for the destructive bulk actions. */
   tone?: 'default' | 'error';
   children: ReactNode;
+  testId?: string;
 }
 
 /**
@@ -16,12 +17,20 @@ interface Props {
  * icon, a bold title and a one-line caption. Four accordions share it so the
  * frame, the spacing and the expand affordance cannot drift apart.
  */
-export default function AdvancedAccordion({ icon, title, caption, tone = 'default', children }: Readonly<Props>) {
+export default function AdvancedAccordion({
+  icon,
+  title,
+  caption,
+  tone = 'default',
+  children,
+  testId,
+}: Readonly<Props>) {
   const isError = tone === 'error';
   return (
     <Accordion
       disableGutters
       elevation={0}
+      data-testid={testId}
       sx={{
         border: 1,
         borderColor: isError ? 'error.light' : 'divider',
@@ -29,7 +38,7 @@ export default function AdvancedAccordion({ icon, title, caption, tone = 'defaul
         '&:before': { display: 'none' },
       }}
     >
-      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />} data-testid={`${testId}-toggle`}>
         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
           {icon}
           <div>

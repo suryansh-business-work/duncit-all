@@ -123,7 +123,11 @@ export default function CompanionOtpPanel({
             >
               {otp.verifying ? labels.otpVerifying : labels.otpVerify}
             </DuncitButton>
-            <DuncitButton size="small" onClick={otp.cancel}>
+            <DuncitButton
+              size="small"
+              onClick={otp.cancel}
+              data-testid={`companion-otp-cancel-${index}`}
+            >
               {labels.otpCancel}
             </DuncitButton>
           </Stack>

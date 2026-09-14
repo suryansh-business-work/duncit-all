@@ -48,6 +48,7 @@ export default function ForceCompanionFields({ control, labels, seats }: Readonl
                 label={labels.forceCompanionName}
                 size="small"
                 fullWidth
+                data-testid={`force-companion-name-${index}`}
                 error={!!fieldState.error}
                 helperText={fieldState.error?.message}
               />
@@ -63,6 +64,7 @@ export default function ForceCompanionFields({ control, labels, seats }: Readonl
                   label={labels.otpExtension}
                   size="small"
                   sx={{ width: 120 }}
+                  data-testid={`force-companion-extension-${index}`}
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
                 />
@@ -77,6 +79,7 @@ export default function ForceCompanionFields({ control, labels, seats }: Readonl
                   label={labels.forceCompanionPhone}
                   size="small"
                   fullWidth
+                  data-testid={`force-companion-phone-${index}`}
                   error={!!fieldState.error}
                   helperText={fieldState.error?.message}
                 />

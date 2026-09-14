@@ -44,7 +44,13 @@ function toPeople(result: HostTicketScanResult | null): ChecklistPerson[] {
 export default function ScanConfirmationDialog({ result, text, onDone }: Readonly<Props>) {
   const { labels } = useHostPodActionsConfig();
   return (
-    <Dialog open={!!result} onClose={onDone} fullWidth maxWidth="xs">
+    <Dialog
+      open={!!result}
+      onClose={onDone}
+      fullWidth
+      maxWidth="xs"
+      data-testid="scan-confirmation"
+    >
       <DialogContent>
         <Stack
           spacing={1.5}
@@ -72,6 +78,7 @@ export default function ScanConfirmationDialog({ result, text, onDone }: Readonl
           variant="contained"
           fullWidth
           onClick={onDone}
+          data-testid="scan-confirmation-done"
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {labels.confirmDone}

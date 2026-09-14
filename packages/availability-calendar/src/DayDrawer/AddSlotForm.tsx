@@ -135,7 +135,12 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
 
   // Hoisted out of the Alert's props so the conditionals sit at nesting 0.
   const overwriteAction = clashing ? (
-    <DuncitButton color="inherit" size="small" onClick={() => setConfirmOverwrite(true)}>
+    <DuncitButton
+      color="inherit"
+      size="small"
+      onClick={() => setConfirmOverwrite(true)}
+      data-testid="add-slot-overwrite"
+    >
       {t('availability.overwriteAction')}
     </DuncitButton>
   ) : undefined;
@@ -155,7 +160,7 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
         {t('availability.addTitle')}
       </Typography>
       {isHoliday && (
-        <Alert severity="error" sx={{ mt: 1 }}>
+        <Alert severity="error" data-testid="availability-holiday-alert" sx={{ mt: 1 }}>
           {t('availability.holidayAlert')}
         </Alert>
       )}
@@ -169,11 +174,21 @@ export default function AddSlotForm({ date, isHoliday, spaces, onCreate }: Reado
           maxFutureDays={MAX_FUTURE_DAYS}
         />
         {message && (
-          <Alert severity={error ? 'error' : 'warning'} onClose={dismiss} action={overwriteAction}>
+          <Alert
+            severity={error ? 'error' : 'warning'}
+            onClose={dismiss}
+            action={overwriteAction}
+            data-testid="add-slot-issue"
+          >
             {message}
           </Alert>
         )}
-        <DuncitButton variant="contained" disabled={creating || !!liveIssue} onClick={handleAdd}>
+        <DuncitButton
+          variant="contained"
+          disabled={creating || !!liveIssue}
+          onClick={handleAdd}
+          data-testid="add-slot-submit"
+        >
           {creating ? t('availability.adding') : t('availability.addSlot')}
         </DuncitButton>
       </Stack>

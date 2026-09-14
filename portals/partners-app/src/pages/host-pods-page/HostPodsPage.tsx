@@ -72,6 +72,7 @@ function HostPodsContent() {
   const renderActions = (pod: PartnerPodRow) => (
     <HostPodActionsMenu
       {...menuHandlers(pod)}
+      podId={pod.id}
       disabled={isCancelled(pod)}
       onRequestChange={() =>
         change.open({

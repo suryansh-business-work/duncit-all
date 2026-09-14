@@ -94,7 +94,7 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
   });
 
   return (
-    <Dialog open={!!pod} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={!!pod} onClose={onClose} fullWidth maxWidth="sm" data-testid="pod-edit-dialog">
       <DialogTitle sx={{ fontWeight: 700 }}>{labels.editPod}</DialogTitle>
       <DialogContent dividers>
         <Stack component="form" id="pod-edit-form" onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
@@ -102,6 +102,7 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
             label={labels.fieldTitle}
             required
             fullWidth
+            data-testid="pod-edit-title"
             {...register('pod_title')}
             error={!!errors.pod_title}
             helperText={errors.pod_title?.message}
@@ -112,6 +113,7 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
             fullWidth
             multiline
             minRows={4}
+            data-testid="pod-edit-description"
             {...register('pod_description')}
             error={!!errors.pod_description}
             helperText={errors.pod_description?.message}
@@ -146,11 +148,15 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
             />
           )}
           <ContentCheckAlert violations={check.blocked} title={labels.contentCheck} />
-          {check.failure && <Alert severity="error">{check.failure}</Alert>}
+          {check.failure && (
+            <Alert severity="error" data-testid="pod-edit-error">
+              {check.failure}
+            </Alert>
+          )}
         </Stack>
       </DialogContent>
       <DialogActions>
-        <DuncitButton onClick={onClose} disabled={busy}>
+        <DuncitButton onClick={onClose} disabled={busy} data-testid="pod-edit-cancel">
           {labels.cancel}
         </DuncitButton>
         <DuncitButton
@@ -158,6 +164,7 @@ export default function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>
           form="pod-edit-form"
           variant="contained"
           loading={busy}
+          data-testid="pod-edit-save"
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {busy ? labels.saving : labels.saveChanges}

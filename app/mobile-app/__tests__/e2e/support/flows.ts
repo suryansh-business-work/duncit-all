@@ -80,11 +80,11 @@ function typedDate(placeholder: string, date: Date): string {
 
 /** Type a date of birth into the date box (src/forms/account-edit/DobDateField.tsx). */
 export function typeDob(date: Date): void {
-  cy.fieldByLabel('Date of birth').clear();
-  cy.fieldByLabel('Date of birth')
+  cy.byTestId('field-dob').clear();
+  cy.byTestId('field-dob')
     .invoke('attr', 'placeholder')
     .then((placeholder) => {
-      cy.fieldByLabel('Date of birth').type(typedDate(String(placeholder), date), { delay: 0 });
+      cy.byTestId('field-dob').type(typedDate(String(placeholder), date), { delay: 0 });
     });
 }
 

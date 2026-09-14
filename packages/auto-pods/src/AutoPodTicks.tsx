@@ -19,7 +19,7 @@ export interface AutoPodTicksProps {
  */
 export function AutoPodTicks({ row, labels, size = 'small' }: Readonly<AutoPodTicksProps>) {
   return (
-    <Stack direction="row" spacing={0.75} useFlexGap sx={{
+    <Stack direction="row" spacing={0.75} useFlexGap data-testid="auto-pod-ticks" sx={{
       flexWrap: "wrap"
     }}>
       {autoPodTicks(row).map((tick) => (
@@ -30,6 +30,7 @@ export function AutoPodTicks({ row, labels, size = 'small' }: Readonly<AutoPodTi
           variant={tick.done ? 'filled' : 'outlined'}
           icon={tick.done ? <CheckCircleIcon /> : <HourglassEmptyIcon />}
           label={labels.tick(tick.role as AutoPodRole)}
+          data-testid={`auto-pod-tick-${tick.role}`}
           aria-label={`${labels.tick(tick.role as AutoPodRole)} — ${
             tick.done ? labels.tickDone : labels.tickPending
           }`}

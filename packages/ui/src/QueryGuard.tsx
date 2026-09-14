@@ -49,10 +49,14 @@ export function QueryGuard({
     return <Loader size={spinnerSize} label={loadingLabel} sx={spinnerSx} />;
   }
   if (error) {
-    return <Alert severity="error">{errorText ?? parseApiError(error)}</Alert>;
+    return <Alert severity="error" data-testid="query-guard-error">{errorText ?? parseApiError(error)}</Alert>;
   }
   if (notFound) {
-    return <Alert severity={notFoundSeverity}>{notFoundText ?? t('ui.queryGuard.notFound')}</Alert>;
+    return (
+      <Alert severity={notFoundSeverity} data-testid="query-guard-not-found">
+        {notFoundText ?? t('ui.queryGuard.notFound')}
+      </Alert>
+    );
   }
   if (typeof children === 'function') return <>{children()}</>;
   return <>{children}</>;

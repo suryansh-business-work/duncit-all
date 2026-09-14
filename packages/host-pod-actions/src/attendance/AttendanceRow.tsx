@@ -150,6 +150,7 @@ export default function AttendanceRow({
               variant="contained"
               disabled={busy || state !== 'READY'}
               onClick={() => onMark(row)}
+              data-testid={`attendance-mark-${row.membership_id}`}
               sx={{ borderRadius: 999, fontWeight: 800, flexShrink: 0 }}
             >
               {busy ? labels.marking : labels.markButton}

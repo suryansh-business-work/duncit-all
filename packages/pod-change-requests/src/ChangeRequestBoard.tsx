@@ -14,6 +14,7 @@ import {
 
 /** A titled list with its own empty line. Hoisted (S6478). */
 function BoardList({
+  testId,
   title,
   subtitle,
   emptyText,
@@ -23,6 +24,7 @@ function BoardList({
   onPass,
   onWithdraw,
 }: Readonly<{
+  testId: string;
   title: string;
   subtitle?: string;
   emptyText: string;
@@ -33,9 +35,9 @@ function BoardList({
   onWithdraw?: (row: PodChangeRow) => void;
 }>) {
   return (
-    <Stack spacing={1.25}>
+    <Stack data-testid={testId} spacing={1.25}>
       <Stack>
-        <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+        <Typography data-testid={`${testId}-title`} variant="subtitle1" sx={{ fontWeight: 800 }}>
           {title}
         </Typography>
         {subtitle && (
@@ -45,11 +47,12 @@ function BoardList({
         )}
       </Stack>
       {rows.length === 0 ? (
-        <Alert severity="info">{emptyText}</Alert>
+        <Alert data-testid={`${testId}-empty`} severity="info">{emptyText}</Alert>
       ) : (
         rows.map((row) => (
           <ChangeRequestCard
             key={row.id}
+            testId={`${testId}-${row.id}`}
             row={row}
             busy={busy}
             onApprove={onApprove ? () => onApprove(row) : undefined}
@@ -73,6 +76,8 @@ interface Props {
   hideHeader?: boolean;
   /** Told after every successful answer, so a surface can toast + refetch. */
   onChanged?: (message: string) => void;
+  /** Per-role on a studio, as native passes `change-requests-${role}`. */
+  testId?: string;
 }
 
 /**
@@ -87,6 +92,7 @@ export default function ChangeRequestBoard({
   role,
   hideHeader = false,
   onChanged,
+  testId = 'change-requests',
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const confirm = useConfirm();
@@ -153,15 +159,17 @@ export default function ChangeRequestBoard({
   };
 
   if (board.loading && !data) {
-    return <Skeleton variant="rounded" height={180} />;
+    return <Skeleton data-testid={`${testId}-loading`} variant="rounded" height={180} />;
   }
 
   if (board.error && !data) {
     return (
       <Alert
+        data-testid={`${testId}-error`}
         severity="error"
         action={
           <DuncitButton
+            data-testid={`${testId}-retry`}
             color="inherit"
             size="small"
             onClick={() => {
@@ -178,10 +186,10 @@ export default function ChangeRequestBoard({
   }
 
   return (
-    <Stack spacing={2.5}>
+    <Stack data-testid={testId} spacing={2.5}>
       {!hideHeader && (
         <Stack>
-          <Typography variant="h6" sx={{ fontWeight: 900 }}>
+          <Typography data-testid={`${testId}-title`} variant="h6" sx={{ fontWeight: 900 }}>
             {t('changeRequest.sectionTitle')}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -189,8 +197,9 @@ export default function ChangeRequestBoard({
           </Typography>
         </Stack>
       )}
-      {errorText && <Alert severity="error">{errorText}</Alert>}
+      {errorText && <Alert data-testid={`${testId}-feedback`} severity="error">{errorText}</Alert>}
       <BoardList
+        testId={`${testId}-incoming`}
         title={t('changeRequest.incomingTitle')}
         subtitle={t('changeRequest.incomingSubtitle')}
         emptyText={t('changeRequest.incomingEmpty')}
@@ -200,6 +209,7 @@ export default function ChangeRequestBoard({
         onPass={pass}
       />
       <BoardList
+        testId={`${testId}-mine`}
         title={t('changeRequest.mineTitle')}
         emptyText={t('changeRequest.mineEmpty')}
         rows={mine}

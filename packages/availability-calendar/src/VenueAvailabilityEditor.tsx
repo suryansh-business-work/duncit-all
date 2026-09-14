@@ -94,7 +94,7 @@ export default function VenueAvailabilityEditor({ venue, onVenueChanged }: Reado
 
   return (
     <>
-      <Card variant="outlined">
+      <Card variant="outlined" data-testid="availability-calendar">
         <CardContent>
           <CalendarToolbar
             view={view}
@@ -107,7 +107,7 @@ export default function VenueAvailabilityEditor({ venue, onVenueChanged }: Reado
           />
 
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" data-testid="availability-error" sx={{ mb: 2 }}>
               {error.message}
             </Alert>
           )}

@@ -35,6 +35,11 @@ const pillSx = {
   '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper' },
 } as const;
 
+// Slot prop types list no `data-*` key, so an inline literal fails the
+// excess-property check; a named object carries the id to the helper text.
+const EMAIL_ERROR_SLOT = { 'data-testid': 'email-error' };
+const PASSWORD_ERROR_SLOT = { 'data-testid': 'password-error' };
+
 interface Props {
   loading?: boolean;
   onSubmit: (values: LoginFormValues) => Promise<void> | void;
@@ -81,7 +86,9 @@ export default function LoginForm({
                   <AlternateEmailIcon fontSize="small" color="action" />
                 </InputAdornment>
               ),
-            }
+            },
+            htmlInput: { 'data-testid': 'field-email' },
+            formHelperText: EMAIL_ERROR_SLOT,
           }}
         />
         <TextField
@@ -104,12 +111,15 @@ export default function LoginForm({
                   </DuncitIconButton>
                 </InputAdornment>
               ),
-            }
+            },
+            htmlInput: { 'data-testid': 'field-password' },
+            formHelperText: PASSWORD_ERROR_SLOT,
           }}
         />
         <Link
           component="button"
           type="button"
+          data-testid="go-forgot-password"
           onClick={onForgotPassword}
           underline="none"
           sx={{
@@ -137,6 +147,7 @@ export default function LoginForm({
           </Typography>
           <DuncitIconButton
             type="submit"
+            data-testid="login-submit"
             disabled={loading}
             aria-label={t('session.login.submit')}
             sx={{

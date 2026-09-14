@@ -21,7 +21,7 @@ interface Props {
  */
 export default function VerificationCards({ items, onChanged, onError }: Readonly<Props>) {
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2} data-testid="verification-cards-list">
       {items.map((item) => {
         if (item.type === 'IDENTITY') {
           return (

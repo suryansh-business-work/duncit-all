@@ -110,9 +110,9 @@ function ActionWrap({ to, onClick, children }: Readonly<Pick<StatCardProps, 'to'
  * copies — every variant is reachable via the layout / icon / typography props.
  */
 export function StatCard(props: Readonly<StatCardProps>) {
-  const { cardVariant = 'outlined', sx, contentSx, to, onClick } = props;
+  const { cardVariant = 'outlined', sx, contentSx, to, onClick, testId } = props;
   return (
-    <Card variant={cardVariant} sx={sx}>
+    <Card variant={cardVariant} data-testid={testId} sx={sx}>
       <ActionWrap to={to} onClick={onClick}>
         <CardContent sx={contentSx}>
           <StatCardBody {...props} />

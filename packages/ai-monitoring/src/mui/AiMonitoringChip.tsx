@@ -45,6 +45,7 @@ export function AiMonitoringChip({ size = 'small', sx }: Readonly<AiMonitoringCh
         size={size}
         variant="outlined"
         color="primary"
+        data-testid="ai-monitoring-chip"
         icon={
           <SmartToyIcon
             sx={aiMotion(`${aiTwinkle} ${twinkleMs}ms ease-in-out infinite`)}

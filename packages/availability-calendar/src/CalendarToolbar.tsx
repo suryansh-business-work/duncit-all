@@ -35,6 +35,7 @@ export default function CalendarToolbar({
     <Stack
       direction={{ xs: 'column', md: 'row' }}
       spacing={1.5}
+      data-testid="availability-toolbar"
       sx={{
         alignItems: { xs: 'stretch', md: 'center' },
         justifyContent: 'space-between',
@@ -48,31 +49,56 @@ export default function CalendarToolbar({
         onChange={(_e, next) => next && onView(next)}
         aria-label={t('availability.toolbar.calendarView')}
       >
-        <ToggleButton value="day">{t('availability.toolbar.day')}</ToggleButton>
-        <ToggleButton value="week">{t('availability.toolbar.week')}</ToggleButton>
-        <ToggleButton value="month">{t('availability.toolbar.month')}</ToggleButton>
+        <ToggleButton value="day" data-testid="availability-view-day">
+          {t('availability.toolbar.day')}
+        </ToggleButton>
+        <ToggleButton value="week" data-testid="availability-view-week">
+          {t('availability.toolbar.week')}
+        </ToggleButton>
+        <ToggleButton value="month" data-testid="availability-view-month">
+          {t('availability.toolbar.month')}
+        </ToggleButton>
       </ToggleButtonGroup>
 
       <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', justifyContent: 'center' }}>
-        <DuncitIconButton onClick={() => onShift(-1)} aria-label={t('availability.toolbar.previous')}>
+        <DuncitIconButton
+          onClick={() => onShift(-1)}
+          aria-label={t('availability.toolbar.previous')}
+          data-testid="availability-period-prev"
+        >
           <ChevronLeftIcon />
         </DuncitIconButton>
-        <Typography variant="subtitle1" sx={{ fontWeight: 900, minWidth: 160, textAlign: 'center' }}>
+        <Typography
+          variant="subtitle1"
+          data-testid="availability-period"
+          sx={{ fontWeight: 900, minWidth: 160, textAlign: 'center' }}
+        >
           {periodLabel}
         </Typography>
         <DuncitIconButton
           onClick={() => onShift(1)}
           aria-label={t('availability.toolbar.next')}
           disabled={!canGoNext}
+          data-testid="availability-period-next"
         >
           <ChevronRightIcon />
         </DuncitIconButton>
-        <DuncitButton size="small" startIcon={<TodayIcon />} onClick={onToday}>
+        <DuncitButton
+          size="small"
+          startIcon={<TodayIcon />}
+          onClick={onToday}
+          data-testid="availability-today"
+        >
           {t('availability.toolbar.today')}
         </DuncitButton>
       </Stack>
 
-      <DuncitButton variant="outlined" startIcon={<EventRepeatIcon />} onClick={onRecurring}>
+      <DuncitButton
+        variant="outlined"
+        startIcon={<EventRepeatIcon />}
+        onClick={onRecurring}
+        data-testid="availability-recurring"
+      >
         {t('availability.toolbar.recurring')}
       </DuncitButton>
     </Stack>

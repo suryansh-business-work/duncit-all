@@ -67,7 +67,8 @@ function ContactChip({
   href,
   icon,
   label,
-}: Readonly<{ href: string; icon: React.ReactElement; label: string }>) {
+  testId,
+}: Readonly<{ href: string; icon: React.ReactElement; label: string; testId: string }>) {
   return (
     <Chip
       size="small"
@@ -76,6 +77,7 @@ function ContactChip({
       component={Link}
       href={href}
       clickable
+      data-testid={testId}
       sx={{ fontWeight: 700 }}
     />
   );
@@ -90,9 +92,13 @@ function ClubAdminRow({
   const dial = admin.phone.replace(/[^\d+]/g, '');
   const wa = admin.whatsapp.replace(/\D/g, '');
   return (
-    <Stack direction="row" spacing={1.25} sx={{
-      alignItems: "center"
-    }}>
+    <Stack
+      direction="row"
+      spacing={1.25}
+      data-testid={`attendance-club-admin-row-${admin.id}`}
+      sx={{
+        alignItems: "center"
+      }}>
       <Avatar src={admin.avatar_url || undefined} sx={{ width: 34, height: 34 }}>
         {(admin.name[0] ?? '?').toUpperCase()}
       </Avatar>
@@ -106,16 +112,23 @@ function ClubAdminRow({
               href={`mailto:${admin.email}`}
               icon={<EmailIcon />}
               label={labels.contactEmail}
+              testId={`attendance-club-admin-email-${admin.id}`}
             />
           )}
           {dial && (
-            <ContactChip href={`tel:${dial}`} icon={<PhoneIcon />} label={labels.contactPhone} />
+            <ContactChip
+              href={`tel:${dial}`}
+              icon={<PhoneIcon />}
+              label={labels.contactPhone}
+              testId={`attendance-club-admin-phone-${admin.id}`}
+            />
           )}
           {wa && (
             <ContactChip
               href={`https://wa.me/${wa}`}
               icon={<WhatsAppIcon />}
               label={labels.contactWhatsapp}
+              testId={`attendance-club-admin-whatsapp-${admin.id}`}
             />
           )}
         </Stack>
@@ -150,7 +163,7 @@ export function ClubAdminHelpCard({
         {labels.clubAdminBody}
       </Typography>
       {admins.length === 0 ? (
-        <Typography variant="body2" sx={{
+        <Typography variant="body2" data-testid="attendance-club-admin-none" sx={{
           color: "text.secondary"
         }}>
           {labels.clubAdminNone}

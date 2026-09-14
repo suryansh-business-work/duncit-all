@@ -21,6 +21,9 @@ import { useHostPodActionsConfig } from './HostPodActionsProvider';
  * condition guarding it, moved across verbatim.
  */
 export interface HostPodMenuItemsProps {
+  /** The pod these rows belong to — keys every row's test id (rule: per-pod
+   * rows must be addressable even though only one menu is open at a time). */
+  podId?: string;
   /** Hides everything that only makes sense for a pod that gets to run. */
   showAttendeeActions: boolean;
   canComplete: boolean;
@@ -61,6 +64,7 @@ export interface HostPodMenuItemsProps {
 }
 
 export default function HostPodActionsItems({
+  podId,
   showAttendeeActions,
   canComplete,
   canScan,
@@ -88,7 +92,11 @@ export default function HostPodActionsItems({
   return (
     <>
       {showAttendeeActions && (
-        <MenuItem disabled={!canScan} onClick={pick(onScan)}>
+        <MenuItem
+          disabled={!canScan}
+          onClick={pick(onScan)}
+          data-testid={`host-pod-action-scan-${podId}`}
+        >
           <ListItemIcon>
             <QrCodeScannerIcon fontSize="small" color={canScan ? 'primary' : 'disabled'} />
           </ListItemIcon>
@@ -96,7 +104,7 @@ export default function HostPodActionsItems({
         </MenuItem>
       )}
       {showAttendeeActions && onSeeAttendance && (
-        <MenuItem onClick={pick(onSeeAttendance)}>
+        <MenuItem onClick={pick(onSeeAttendance)} data-testid={`host-pod-action-attendance-${podId}`}>
           <ListItemIcon>
             <FactCheckIcon fontSize="small" color="success" />
           </ListItemIcon>
@@ -104,7 +112,10 @@ export default function HostPodActionsItems({
         </MenuItem>
       )}
       {onSlotRequest && (
-        <MenuItem onClick={pick(onSlotRequest)}>
+        <MenuItem
+          onClick={pick(onSlotRequest)}
+          data-testid={`host-pod-action-slot-request-${podId}`}
+        >
           <ListItemIcon>
             <PendingActionsIcon fontSize="small" color="warning" />
           </ListItemIcon>
@@ -112,7 +123,7 @@ export default function HostPodActionsItems({
         </MenuItem>
       )}
       {showAttendeeActions && canComplete && (
-        <MenuItem onClick={pick(onComplete)}>
+        <MenuItem onClick={pick(onComplete)} data-testid={`host-pod-action-complete-${podId}`}>
           <ListItemIcon>
             <TaskAltIcon fontSize="small" color="success" />
           </ListItemIcon>
@@ -123,7 +134,11 @@ export default function HostPodActionsItems({
           pod that has already run greys all three — with the reason on each,
           because they are not adjacent and a host reaching for any one of them
           deserves the same answer. */}
-      <MenuItem disabled={!canAmend} onClick={pick(onEdit)}>
+      <MenuItem
+        disabled={!canAmend}
+        onClick={pick(onEdit)}
+        data-testid={`host-pod-action-edit-${podId}`}
+      >
         <ListItemIcon>
           <EditIcon fontSize="small" color={canAmend ? 'inherit' : 'disabled'} />
         </ListItemIcon>
@@ -144,6 +159,9 @@ export default function HostPodActionsItems({
           onOpen={pick(onOpenPodMedia)}
           onShare={pick(onSharePodMedia)}
           onCopy={pick(onCopyPodMedia)}
+          testId={`host-pod-action-media-link-${podId}`}
+          shareTestId={`host-pod-action-share-media-${podId}`}
+          copyTestId={`host-pod-action-copy-media-${podId}`}
         />
       )}
       {showAttendeeActions && (
@@ -155,10 +173,13 @@ export default function HostPodActionsItems({
           onOpen={pick(onOpenFeedback)}
           onShare={pick(onShareFeedback)}
           onCopy={pick(onCopyFeedback)}
+          testId={`host-pod-action-feedback-link-${podId}`}
+          shareTestId={`host-pod-action-share-feedback-${podId}`}
+          copyTestId={`host-pod-action-copy-feedback-${podId}`}
         />
       )}
       {onClubAdmin && (
-        <MenuItem onClick={pick(onClubAdmin)}>
+        <MenuItem onClick={pick(onClubAdmin)} data-testid={`host-pod-action-club-admin-${podId}`}>
           <ListItemIcon>
             <SupportAgentIcon fontSize="small" color="primary" />
           </ListItemIcon>
@@ -168,7 +189,11 @@ export default function HostPodActionsItems({
       {/* Above Cancel on purpose: asking for a different host keeps the pod and
           everyone's seat, and it is the thing a host should reach for first. */}
       {onRequestChange && requestChangeLabel && (
-        <MenuItem disabled={!canAmend} onClick={pick(onRequestChange)}>
+        <MenuItem
+          disabled={!canAmend}
+          onClick={pick(onRequestChange)}
+          data-testid={`host-pod-action-request-change-${podId}`}
+        >
           <ListItemIcon>
             <SwapHorizIcon fontSize="small" color={canAmend ? 'warning' : 'disabled'} />
           </ListItemIcon>
@@ -182,6 +207,7 @@ export default function HostPodActionsItems({
         disabled={!canAmend}
         onClick={pick(onCancel)}
         sx={canAmend ? { color: 'error.main' } : undefined}
+        data-testid={`host-pod-action-cancel-${podId}`}
       >
         <ListItemIcon>
           <CancelIcon fontSize="small" color={canAmend ? 'error' : 'disabled'} />

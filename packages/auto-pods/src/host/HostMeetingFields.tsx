@@ -13,6 +13,9 @@ export interface HostMeetingFieldsProps {
   now: Date;
 }
 
+const MEETING_START_TEST_ID: { 'data-testid': string } = { 'data-testid': 'auto-pod-meeting-start-input' };
+const MEETING_END_TEST_ID: { 'data-testid': string } = { 'data-testid': 'auto-pod-meeting-end-input' };
+
 /** Where every host's claim starts: nothing typed, nothing picked. */
 export const BLANK_HOST_MEETING: AutoPodHostMeeting = {
   meeting_platform: '',
@@ -76,14 +79,14 @@ export function HostMeetingFields({ value, onChange, labels, now }: Readonly<Hos
         value={value.pod_date_time}
         onChange={(date) => set({ pod_date_time: date })}
         minDateTime={now}
-        slotProps={{ textField: { fullWidth: true, required: true } }}
+        slotProps={{ textField: { fullWidth: true, required: true, slotProps: { htmlInput: MEETING_START_TEST_ID } } }}
       />
       <DateTimePicker
         label={labels.meetingEnd}
         value={value.pod_end_date_time}
         onChange={(date) => set({ pod_end_date_time: date })}
         minDateTime={endMin}
-        slotProps={{ textField: { fullWidth: true, required: true } }}
+        slotProps={{ textField: { fullWidth: true, required: true, slotProps: { htmlInput: MEETING_END_TEST_ID } } }}
       />
     </Stack>
   );

@@ -7,6 +7,7 @@ interface Props {
   value: number[];
   onChange: (next: number[]) => void;
   weeklyOff?: number[];
+  testId?: string;
 }
 
 type Translate = Translator['t'];
@@ -17,7 +18,12 @@ const presets = (t: Translate): ReadonlyArray<{ id: string; label: string; days:
   { id: 'weekends', label: t('availability.recurring.weekends'), days: [0, 6] },
 ];
 
-export default function DayOfWeekPicker({ value, onChange, weeklyOff = [] }: Readonly<Props>) {
+export default function DayOfWeekPicker({
+  value,
+  onChange,
+  weeklyOff = [],
+  testId,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const labels = weekdayLabels(t);
   const selected = new Set(value);
@@ -29,7 +35,7 @@ export default function DayOfWeekPicker({ value, onChange, weeklyOff = [] }: Rea
   };
 
   return (
-    <Box>
+    <Box data-testid={testId}>
       <Stack
         direction="row"
         sx={{ alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', mb: 0.25 }}
@@ -39,7 +45,13 @@ export default function DayOfWeekPicker({ value, onChange, weeklyOff = [] }: Rea
         </Typography>
         <Stack direction="row" spacing={0.25}>
           {presets(t).map((preset) => (
-            <DuncitButton key={preset.id} size="small" variant="text" onClick={() => onChange(preset.days)}>
+            <DuncitButton
+              key={preset.id}
+              size="small"
+              variant="text"
+              onClick={() => onChange(preset.days)}
+              data-testid={`${testId}-preset-${preset.id}`}
+            >
               {preset.label}
             </DuncitButton>
           ))}
@@ -55,6 +67,7 @@ export default function DayOfWeekPicker({ value, onChange, weeklyOff = [] }: Rea
                 size="small"
                 checked={selected.has(day)}
                 onChange={() => toggle(day)}
+                data-testid={`${testId}-day-${day}`}
                 slotProps={{ input: { 'aria-label': fullName } }}
               />
             }

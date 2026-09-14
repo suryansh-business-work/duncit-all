@@ -9,6 +9,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { GiftCardStatus } from '@/generated/graphql/graphql';
 import { MobileGiftCardByCodeDocument, MobileRedeemGiftCardDocument } from '@/graphql/gift-cards';
+import { refreshCoinBalance } from '@/hooks/useCoins';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -50,6 +51,8 @@ export function GiftCardRedeemPanel({ card, currency }: Readonly<Props>) {
         { auth: true },
       );
       setResult(data.redeemGiftCard);
+      // The card turned into coins — the sidebar and checkout read the store.
+      refreshCoinBalance();
     } catch (e) {
       setError(toErrorMessage(e, t('mweb.giftCards.redeemError')));
     } finally {

@@ -3,6 +3,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { ApplyReferralCodeDocument, MyReferralDocument } from '@/graphql/referral';
 import { graphqlRequest } from '@/services/graphql.client';
+import { refreshCoinBalance } from '@/hooks/useCoins';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type MyReferral = ResultOf<typeof MyReferralDocument>['myReferral'];
@@ -36,6 +37,8 @@ export function useReferral() {
     setApplyError(null);
     try {
       await graphqlRequest(ApplyReferralCodeDocument, { code }, { auth: true });
+      // A referral pays the new account coins, so the balance is re-read too.
+      refreshCoinBalance();
       await refetch();
       return true;
     } catch (err) {

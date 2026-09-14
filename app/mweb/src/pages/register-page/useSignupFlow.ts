@@ -14,6 +14,7 @@ import type { GoogleSignupValues } from '@duncit/forms/schemas';
 import { ACCEPTANCE_SURFACE } from '../../components/policy-acceptance';
 import type { RegisterFormValues } from '../../forms/register';
 import { parseApiError } from '../../utils/parseApiError';
+import { useStartSession } from '../../user-info/useStartSession';
 import { REGISTER, SIGNUP_GOOGLE } from './queries';
 
 /*
@@ -60,8 +61,10 @@ export function useSignupFlow(linkedCode: string) {
   /** Where the finished account lands — the doors ask different questions. */
   const destination = flow.pendingGoogle ? '/signup-referral' : '/signup-survey';
 
-  const finish = (token: string) => {
-    localStorage.setItem('token', token);
+  const { start: startSession, starting } = useStartSession();
+
+  const finish = async (token: string) => {
+    await startSession(token);
     navigate(destination, { state: { code: linkedCode } });
   };
 
@@ -158,7 +161,7 @@ export function useSignupFlow(linkedCode: string) {
       } else if (flow.pendingForm) {
         token = await createFromForm(flow.pendingForm, whatsappToken);
       }
-      if (token) finish(token);
+      if (token) await finish(token);
     } catch (e) {
       setError(parseApiError(e));
     }
@@ -167,7 +170,7 @@ export function useSignupFlow(linkedCode: string) {
   return {
     error,
     setError,
-    creating: registering || creatingGoogle,
+    creating: registering || creatingGoogle || starting,
     step: flow.step,
     setStep,
     verifying: flow.verifying,

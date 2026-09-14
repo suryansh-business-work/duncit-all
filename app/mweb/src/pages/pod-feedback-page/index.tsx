@@ -15,6 +15,7 @@ import { MY_PENDING_POD_FEEDBACK, SUBMIT_FEEDBACK } from '../support-hub/queries
 import { useTranslation } from '../../i18n/useTranslation';
 import PodFeedbackCard from './PodFeedbackCard';
 import { POD_FEEDBACK_FORM, type PodFeedbackFormData } from './queries';
+import { MY_COIN_BALANCE } from '../duncit-coin-page/queries';
 
 /**
  * The pod rating form as its own page, at the link a host shares with the
@@ -41,6 +42,8 @@ export default function PodFeedbackPage() {
     refetchQueries: [
       { query: POD_FEEDBACK_FORM, variables: { pod_id: podId } },
       { query: MY_PENDING_POD_FEEDBACK },
+      // A rating can pay coins, so the cached balance is re-read with it.
+      { query: MY_COIN_BALANCE },
     ],
   });
 

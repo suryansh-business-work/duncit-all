@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -7,6 +7,7 @@ import { ConfirmationPodCard } from '@/components/checkout/ConfirmationPodCard';
 import { ActionButton, Row } from '@/components/checkout/SuccessParts';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { TwoToneHeading } from '@/components/TwoToneHeading';
+import { refreshCoinBalance } from '@/hooks/useCoins';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { CheckoutPayment, CheckoutPod } from '@/hooks/useCheckout';
@@ -46,6 +47,11 @@ export function CheckoutSuccess({
   const [ticketBusy, setTicketBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const venueTotal = (pod?.place_charges ?? []).reduce((sum, charge) => sum + charge.amount, 0);
+  // A paid bill earns coins and may have spent some: re-read the balance once,
+  // here, rather than on every screen that shows it. mWeb does it in finishSuccess.
+  useEffect(() => {
+    refreshCoinBalance();
+  }, []);
 
   const download = async () => {
     setBusy(true);

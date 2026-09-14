@@ -6,7 +6,7 @@ import ComparisonTable from './ComparisonTable';
 import NotifyCard from './NotifyCard';
 import { MEMBERSHIP_PRICING, type MembershipPricingData } from './queries';
 import PageHeader from '../../components/PageHeader';
-import { HEADER_ME } from '../../components/app-header/queries';
+import { useUserInfo } from '../../user-info/useUserInfo';
 import { useTranslation } from '../../i18n/useTranslation';
 
 /** The calm "Coming soon" pill: green text on the tonal green fill. */
@@ -32,8 +32,8 @@ export default function MembershipPage() {
     MEMBERSHIP_PRICING,
     { fetchPolicy: 'cache-and-network' }
   );
-  // Already in the cache from the header, so the email paints with the page.
-  const { data: headerData } = useQuery<any>(HEADER_ME, { fetchPolicy: 'cache-first' });
+  // Already in the cache from the session load, so the email paints with the page.
+  const { me } = useUserInfo();
 
   const pricing = data?.membershipPricing ?? null;
   const plans = pricing?.plans ?? [];
@@ -77,7 +77,7 @@ export default function MembershipPage() {
       {body}
 
       <NotifyCard
-        email={headerData?.me?.email ?? ''}
+        email={me?.email ?? ''}
         subscribed={!!pricing?.is_subscribed}
       />
     </Stack>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
-import { MobileCheckoutMeDocument, MobilePublicFinanceDocument } from '@/graphql/checkout';
+import { MobilePublicFinanceDocument } from '@/graphql/checkout';
 import {
   MobileCreateRazorpayGiftCardOrderDocument,
   MobileDummyGiftCardCheckoutDocument,
@@ -19,6 +19,7 @@ import {
 import { downloadPaymentInvoice, maybeSaveMainAddress } from '@/hooks/checkoutRequests';
 import type { GiftCardSelection } from '@/utils/gift-cards';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
+import { useMeStore } from '@/stores/me.store';
 
 export type GiftCardPayment = ResultOf<
   typeof MobileDummyGiftCardCheckoutDocument
@@ -37,7 +38,9 @@ const GIFT_CARD_CHECKOUT_URL = 'duncit-mobile://gift-cards/checkout';
  */
 export function useGiftCardCheckout(selection: GiftCardSelection) {
   const [finance, setFinance] = useState<FinanceSettings | null>(null);
-  const [me, setMe] = useState<CheckoutMe>(null);
+  // The buyer's contact and main address are the user info already in the
+  // store — a checkout visit does not ask for the account again (mWeb twin).
+  const me: CheckoutMe = useMeStore((s) => s.data?.me ?? null);
   const [isLoading, setIsLoading] = useState(true);
   const { verifyRazorpay, confirmingMessage } = useRazorpayVerification();
 
@@ -49,9 +52,6 @@ export function useGiftCardCheckout(selection: GiftCardSelection) {
     Promise.all([
       graphqlRequest(MobilePublicFinanceDocument, undefined, { auth: true }).then(
         (d) => active && setFinance(d.publicFinanceSettings),
-      ),
-      graphqlRequest(MobileCheckoutMeDocument, undefined, { auth: true }).then(
-        (d) => active && setMe(d.me),
       ),
     ])
       .catch(() => undefined)

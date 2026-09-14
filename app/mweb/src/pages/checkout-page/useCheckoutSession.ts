@@ -60,14 +60,17 @@ interface Args {
 export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddress = false }: Args) {
   const { t } = useTranslation();
   const { data: financeData, loading: financeLoading } = useQuery<any>(PUBLIC_FINANCE);
-  const { data: meData, loading: meLoading } = useQuery<any>(CHECKOUT_ME, { fetchPolicy: 'cache-and-network' });
+  // USER_INFO already holds these fields, so this answers from the cache.
+  const { data: meData, loading: meLoading } = useQuery<any>(CHECKOUT_ME, { fetchPolicy: 'cache-first' });
   const { data: couponsData } = useQuery<any>(AVAILABLE_COUPONS, {
     variables: { pod_id: couponPodId || null },
     fetchPolicy: 'cache-and-network',
   });
   // The loyalty balance a buyer may spend on this bill. Read here so both the
   // pod and the product checkout share one source of truth.
-  const { data: coinData } = useQuery<any>(MY_COIN_BALANCE, { fetchPolicy: 'cache-and-network' });
+  const { data: coinData, refetch: refetchCoins } = useQuery<any>(MY_COIN_BALANCE, {
+    fetchPolicy: 'cache-and-network',
+  });
   const [doVerifyRazorpay] = useMutation<any>(VERIFY_RAZORPAY_PAYMENT);
   const [doUpdateProfile] = useMutation<any>(UPDATE_MY_PROFILE);
   const [runPreviewCoupon] = useLazyQuery<any>(PREVIEW_COUPON, { fetchPolicy: 'no-cache' });
@@ -118,6 +121,9 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
   const finishSuccess = (payment: any) => {
     onBeforeSuccess?.(payment);
     setSuccess(payment);
+    // A paid bill earns coins and may have spent some — re-read the balance the
+    // menu shows now, rather than on the next page load.
+    refetchCoins().catch(() => undefined);
   };
 
   const applyCoupon = async (amount: number, codeArg?: string) => {

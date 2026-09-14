@@ -1,5 +1,3 @@
-import { useEffect } from 'react';
-
 import { missingCheckoutRequirements, type CheckoutRequirement } from '@duncit/utils';
 import { useMeStore } from '@/stores/me.store';
 
@@ -22,14 +20,9 @@ export interface CheckoutEligibility {
  * on a cold store reads as a rejection. mWeb twin.
  */
 export function useCheckoutEligibility(): CheckoutEligibility {
+  // Not re-read on mount: the phone and email verification flows re-read the
+  // user info when they save, which is what lifts the gate in this session.
   const data = useMeStore((s) => s.data);
-  const refetch = useMeStore((s) => s.refetch);
-
-  // A phone or verified email added in this session must lift the gate without a
-  // restart, so the answer is re-read when a checkout screen mounts.
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
 
   const me = data?.me;
   const missing = me

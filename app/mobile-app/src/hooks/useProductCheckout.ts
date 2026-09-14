@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
-import {
-  MobileAvailableCouponsDocument,
-  MobileCheckoutMeDocument,
-  MobilePublicFinanceDocument,
-} from '@/graphql/checkout';
+import { MobileAvailableCouponsDocument, MobilePublicFinanceDocument } from '@/graphql/checkout';
 import {
   MobileCreateRazorpayProductOrderDocument,
   MobileDummyProductCheckoutDocument,
@@ -28,6 +24,7 @@ import {
   type CouponPreview,
 } from '@/hooks/checkoutRequests';
 import { buildProductCheckoutInput, type PickedContact } from '@/utils/product-checkout-input';
+import { useMeStore } from '@/stores/me.store';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
 
 export type ProductPayment = ResultOf<
@@ -53,7 +50,9 @@ export interface ProductPayContext {
  */
 export function useProductCheckout() {
   const [finance, setFinance] = useState<FinanceSettings | null>(null);
-  const [me, setMe] = useState<CheckoutMe>(null);
+  // The buyer's contact and main address are the user info already in the
+  // store — a checkout visit does not ask for the account again (mWeb twin).
+  const me: CheckoutMe = useMeStore((s) => s.data?.me ?? null);
   const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { verifyRazorpay, confirmingMessage } = useRazorpayVerification();
@@ -66,9 +65,6 @@ export function useProductCheckout() {
     Promise.all([
       graphqlRequest(MobilePublicFinanceDocument, undefined, { auth: true }).then(
         (d) => active && setFinance(d.publicFinanceSettings),
-      ),
-      graphqlRequest(MobileCheckoutMeDocument, undefined, { auth: true }).then(
-        (d) => active && setMe(d.me),
       ),
       graphqlRequest(MobileAvailableCouponsDocument, { pod_id: null }, { auth: true })
         .then((d) => active && setAvailableCoupons(d.availableCouponsForPod))

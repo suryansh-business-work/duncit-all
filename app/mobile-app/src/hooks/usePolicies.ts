@@ -8,18 +8,19 @@ import {
 import { fireAndForget } from '@/utils/fire-and-forget';
 import { useRefreshRegistration } from '@/components/PullToRefresh';
 
-/** Public policy links for the drawer's Policies section. */
+/**
+ * Public policy links for the drawer's Policies section. The user info
+ * request seeds them, so this only asks if that has not answered yet — and a
+ * pull to refresh re-reads them through the user info, not a second request.
+ */
 export function usePublicPolicies() {
   const data = usePublicPoliciesStore((s) => s.data);
   const isLoading = usePublicPoliciesStore((s) => s.isLoading);
   const fetch = usePublicPoliciesStore((s) => s.fetch);
-  const refetch = usePublicPoliciesStore((s) => s.refetch);
 
   useEffect(() => {
     fetch();
   }, [fetch]);
-
-  useRefreshRegistration(refetch);
 
   return { data, isLoading };
 }

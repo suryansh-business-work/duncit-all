@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -6,7 +6,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
-import { useAccount } from '@/hooks/useAccount';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { PRODUCT_VISIBILITY_FLAG } from '@/hooks/useProductVisibility';
 import { useLogout } from '@/hooks/useLogout';
@@ -15,7 +14,7 @@ import { usePublicPolicies } from '@/hooks/usePolicies';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useThemeStore } from '@/stores/theme.store';
-import { useAutoPodCountsStore } from '@/stores/auto-pod-counts.store';
+import { useAutoPodCounts } from '@/hooks/useAutoPodCounts';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { STUDIO_LABEL, availableModes, resolveMode, studioSwitchRoute } from '@/utils/studio-mode';
 import { StudioSwitchDialog } from '@/components/StudioSwitchDialog';
@@ -42,18 +41,18 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
   const { color: ink } = useThemeColors();
   const { t } = useTranslation();
 
+  // The identity, the completion record, the coin card and the policies all
+  // come from the one user info request — opening the menu asks for nothing.
   const { data, isLoading } = useMe();
-  const { me: account, isLoading: accountLoading } = useAccount();
   const { data: policiesData, isLoading: policiesLoading } = usePublicPolicies();
   const me = data?.me;
   // Rendering `me` as undefined would paint a stranger's menu for a beat — an
   // anonymous "User" avatar at 0% profile completion. mWeb skeletons the same
   // block; the header ✕ stays either way, so there is always a way back out.
   const pending = isLoading && !me;
-  // On a warm store the answer is already there, so the account record — which
-  // is re-read on every open — shows as the thin bar rather than flashing a
-  // skeleton over content that is already correct.
-  const refreshing = !pending && (isLoading || accountLoading || policiesLoading);
+  // On a warm store the answer is already there, so a pull to refresh shows as
+  // the thin bar rather than flashing a skeleton over content that is correct.
+  const refreshing = !pending && (isLoading || policiesLoading);
   const roles = me?.roles ?? [];
   const showPodPlans = useFeatureFlag('pod_plans_section');
   const showLeaderboard = useFeatureFlag('leaderboard');
@@ -74,17 +73,12 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
   const toggleTheme = useThemeStore((s) => s.toggle);
 
   const [switchOpen, setSwitchOpen] = useState(false);
-  const autoPodCounts = useAutoPodCountsStore((s) => s.data);
-  const fetchAutoPodCounts = useAutoPodCountsStore((s) => s.fetch);
-
-  // Primed on mount and re-read when the dialog opens, so the switch itself
-  // never waits on the network to decide where to land.
-  useEffect(() => {
-    fetchAutoPodCounts().catch(() => undefined);
-  }, [fetchAutoPodCounts]);
+  // Read once for a partner and re-read when the dialog opens, so the switch
+  // itself never waits on the network to decide where to land.
+  const autoPods = useAutoPodCounts(roles);
 
   const openSwitch = () => {
-    fetchAutoPodCounts(true).catch(() => undefined);
+    autoPods.reload();
     setSwitchOpen(true);
   };
 
@@ -142,8 +136,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
           ) : (
             <SidebarUserContent
               me={me}
-              account={account}
-              accountLoading={accountLoading}
+              account={me}
               roles={roles}
               mode={effectiveMode}
               showPodPlans={showPodPlans}
@@ -191,7 +184,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
           onClose();
           // Jump straight to the selected role's dashboard (B3-2) — or to its
           // Auto Pod queue when offers are waiting on that role.
-          navigation.navigate(studioSwitchRoute(next, autoPodCounts));
+          navigation.navigate(studioSwitchRoute(next, autoPods.counts));
         }}
       />
     </YStack>

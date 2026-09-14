@@ -31,7 +31,8 @@ interface Args {
 export function useGiftCardPayment({ onPaymentFailure }: Readonly<Args>) {
   const { t } = useTranslation();
   const { data: financeData, loading: financeLoading } = useQuery<any>(PUBLIC_FINANCE);
-  const { data: meData, loading: meLoading } = useQuery<any>(CHECKOUT_ME, { fetchPolicy: 'cache-and-network' });
+  // USER_INFO already holds these fields, so this answers from the cache.
+  const { data: meData, loading: meLoading } = useQuery<any>(CHECKOUT_ME, { fetchPolicy: 'cache-first' });
   const [doDummy] = useMutation<any>(DUMMY_GIFT_CARD_CHECKOUT);
   const [doOrder] = useMutation<any>(CREATE_RAZORPAY_GIFT_CARD_ORDER);
   const [doVerify] = useMutation<any>(VERIFY_RAZORPAY_PAYMENT);

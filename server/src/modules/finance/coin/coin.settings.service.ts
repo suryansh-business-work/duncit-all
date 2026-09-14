@@ -41,8 +41,16 @@ const settingsPub = (doc: ICoinSettings) => ({
 });
 
 export const coinSettingsService = {
-  /** The singleton, created with schema defaults the first time it is asked for. */
+  /**
+   * The singleton, created with schema defaults the first time it is asked for.
+   *
+   * Read first: this sits under every balance read (the apps' user info) and
+   * every checkout price, and an upsert on each of those was a write per read
+   * for a document that exists from the first boot on.
+   */
   async get(): Promise<ICoinSettings> {
+    const existing = await CoinSettingsModel.findOne(SINGLETON);
+    if (existing) return existing;
     const doc = await CoinSettingsModel.findOneAndUpdate(
       SINGLETON,
       { $setOnInsert: SINGLETON },

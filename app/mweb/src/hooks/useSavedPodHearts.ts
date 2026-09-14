@@ -1,15 +1,7 @@
 import { gql } from '@apollo/client';
-import { useMutation, useQuery } from '@apollo/client/react';
+import { useMutation } from '@apollo/client/react';
 import { useCallback, useMemo, useState } from 'react';
-
-const SAVED_POD_IDS = gql`
-  query SavedPodIds {
-    me {
-      user_id
-      saved_pod_ids
-    }
-  }
-`;
+import { useUserInfo } from '../user-info/useUserInfo';
 
 const TOGGLE_SAVED_POD_CARD = gql`
   mutation ToggleSavedPodCard($pod_doc_id: ID!) {
@@ -31,11 +23,10 @@ const TOGGLE_SAVED_POD_CARD = gql`
  * state.
  */
 export function useSavedPodHearts() {
-  const { data } = useQuery<{ me?: { user_id: string; saved_pod_ids: string[] } | null }>(
-    SAVED_POD_IDS,
-    { fetchPolicy: 'cache-and-network' }
-  );
-  const meId = data?.me?.user_id;
+  // The saved list rides in USER_INFO, already in the cache — a card grid
+  // mounting never asks for it again.
+  const { me } = useUserInfo();
+  const meId = me?.user_id;
   const [toggleMut] = useMutation<any>(TOGGLE_SAVED_POD_CARD, {
     // The answer carries the whole saved list, so it goes onto the viewer's User
     // entry and every reader of saved_pod_ids updates from the mutation itself —
@@ -52,7 +43,7 @@ export function useSavedPodHearts() {
 
   const [savingId, setSavingId] = useState<string | null>(null);
 
-  const ids = useMemo(() => new Set(data?.me?.saved_pod_ids ?? []), [data?.me?.saved_pod_ids]);
+  const ids = useMemo(() => new Set(me?.saved_pod_ids ?? []), [me?.saved_pod_ids]);
   const isSaved = useCallback((podDocId: string) => ids.has(podDocId), [ids]);
   const isSaving = useCallback((podDocId: string) => savingId === podDocId, [savingId]);
   const toggle = useCallback(
@@ -67,5 +58,5 @@ export function useSavedPodHearts() {
   );
 
   // Signed-out visitors have no saved list — the cards hide the button then.
-  return { isSaved, isSaving, toggle, signedIn: !!data?.me?.user_id };
+  return { isSaved, isSaving, toggle, signedIn: !!meId };
 }

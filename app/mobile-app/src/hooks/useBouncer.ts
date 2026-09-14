@@ -15,6 +15,7 @@ import {
   MobileSupportCallTargetDocument,
 } from '@/graphql/bouncer';
 import { graphqlRequest } from '@/services/graphql.client';
+import { refreshCoinBalance } from '@/hooks/useCoins';
 
 export type ActiveSos = ResultOf<typeof MobileActiveSosDocument>['myActiveBouncerSos'];
 export type CallbackHistoryItem = ResultOf<
@@ -105,6 +106,8 @@ export function useBouncer() {
   // score rather than asking the guest to triage their own feedback.
   const submitPodFeedback = useCallback(async (input: PodFeedbackInput) => {
     await graphqlRequest(MobileSubmitFeedbackDocument, { input: input as never }, { auth: true });
+    // A rating can pay coins, so the balance is re-read with it.
+    refreshCoinBalance();
   }, []);
 
   // Closing the prompt without answering is itself an answer, and it is kept

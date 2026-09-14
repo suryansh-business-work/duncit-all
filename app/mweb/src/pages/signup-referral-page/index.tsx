@@ -11,6 +11,7 @@ import AuthScreenFrame from '../../components/AuthScreenFrame';
 import { notifySuccess } from '../../components/notify';
 import { useTranslation } from '../../i18n/useTranslation';
 import { parseApiError } from '../../utils/parseApiError';
+import { MY_COIN_BALANCE } from '../duncit-coin-page/queries';
 
 const APPLY_REFERRAL = gql`
   mutation ApplyReferralOnSignup($code: String!) {
@@ -33,7 +34,10 @@ export default function SignupReferralPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const [apply, { loading }] = useMutation<any>(APPLY_REFERRAL);
+  // A referral pays the new account coins, so the cached balance is re-read.
+  const [apply, { loading }] = useMutation<any>(APPLY_REFERRAL, {
+    refetchQueries: [{ query: MY_COIN_BALANCE }],
+  });
   const [code, setCode] = useState<string>((location.state as { code?: string })?.code ?? '');
   const [error, setError] = useState<string | null>(null);
 

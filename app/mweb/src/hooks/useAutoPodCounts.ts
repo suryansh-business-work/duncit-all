@@ -19,7 +19,8 @@ export interface AutoPodCountsState {
  *
  * The switch itself must not wait on a network round trip — it decides where to
  * land from whatever is already cached — so this mounts with the header rather
- * than inside the switch dialog, and only refreshes when the dialog opens.
+ * than inside the switch dialog. It is read once per session and refreshed
+ * only when the dialog opens, never on a header remount.
  */
 export function useAutoPodCounts(roles: readonly string[]): AutoPodCountsState {
   const enabled = useFeatureFlag('auto_pods');
@@ -28,7 +29,7 @@ export function useAutoPodCounts(roles: readonly string[]): AutoPodCountsState {
 
   const { data, refetch } = useQuery<{ myAutoPodActionCounts: AutoPodActionCounts }>(
     AUTO_POD_ACTION_COUNTS,
-    { fetchPolicy: 'cache-and-network', skip: !active }
+    { fetchPolicy: 'cache-first', skip: !active }
   );
 
   return {

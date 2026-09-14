@@ -19,8 +19,9 @@ export interface CheckoutEligibility {
  * cold cache reads as a rejection.
  */
 export function useCheckoutEligibility(): CheckoutEligibility {
+  // USER_INFO already holds these fields, so this answers from the cache.
   const { data, loading } = useQuery<{ me: CheckoutEligibilityMe | null }>(CHECKOUT_ELIGIBILITY, {
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first',
   });
   const me = data?.me;
   const missing = me

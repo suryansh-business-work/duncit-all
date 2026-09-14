@@ -26,6 +26,7 @@ import {
 import { useTranslation } from '../../i18n/useTranslation';
 import PodFeedbackFields from './PodFeedbackFields';
 import PodFeedbackReminderDialog from './PodFeedbackReminderDialog';
+import { MY_COIN_BALANCE } from '../../pages/duncit-coin-page/queries';
 
 interface PendingPod {
   id: string;
@@ -53,7 +54,8 @@ export default function PodFeedbackPrompt() {
     fetchPolicy: 'cache-and-network',
   });
   const [submit, { loading }] = useMutation<any>(SUBMIT_FEEDBACK, {
-    refetchQueries: [{ query: MY_PENDING_POD_FEEDBACK }],
+    // A rating can pay coins, so the cached balance is re-read with it.
+    refetchQueries: [{ query: MY_PENDING_POD_FEEDBACK }, { query: MY_COIN_BALANCE }],
   });
   const [remind] = useMutation<any>(REMIND_POD_FEEDBACK);
 

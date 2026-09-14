@@ -18,7 +18,7 @@ import { LOGIN_WITH_OTP, REQUEST_LOGIN_OTP } from './queries';
  * uses), so the flow ends at the code step. The native twin is
  * app/mobile-app/src/screens/LoginScreen/useOtpLogin.ts.
  */
-export function useOtpLogin(onAuthed: (token: string, user: any) => void) {
+export function useOtpLogin(onAuthed: (token: string, user: any) => Promise<void>) {
   const [requestOtp] = useMutation<any>(REQUEST_LOGIN_OTP);
   const [loginWithOtp, { loading: verifying }] = useMutation<any>(LOGIN_WITH_OTP);
 
@@ -54,7 +54,7 @@ export function useOtpLogin(onAuthed: (token: string, user: any) => void) {
           },
         });
         const payload = res.data?.loginWithOtp;
-        if (payload?.token) onAuthed(payload.token, payload.user);
+        if (payload?.token) await onAuthed(payload.token, payload.user);
       } catch (e) {
         fail(e);
       }

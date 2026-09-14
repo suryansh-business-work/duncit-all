@@ -307,10 +307,15 @@ jobs:
       # caching do(es) not exist" and fails the job AFTER a successful analysis.
       # Caches are branch-scoped, so main missed every time — its run for
       # 7c73284b1 went red exactly that way. Node alone is all this job uses.
+      #
+      # Dropping `cache:` is not enough: setup-node v5 turns caching back on by
+      # itself when package.json names a `packageManager` (the root says pnpm),
+      # then dies "Unable to locate executable file: pnpm" — fd8cd71d4's run.
       # -----------------------------------------------------------------------
       - uses: actions/setup-node@v5
         with:
           node-version: 24
+          package-manager-cache: false
 
       # One artifact per matrix group (lcov-server, lcov-mweb, …), merged into
       # one directory. The mobile artifact is named mobile-lcov on purpose so

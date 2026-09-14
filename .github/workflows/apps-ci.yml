@@ -97,16 +97,6 @@ jobs:
         working-directory: app/mobile-app
         run: npm run codegen
 
-      # WCAG 2.2 AA lint (eslint-plugin-react-native-a11y) — REPORT ONLY, see
-      # docs/accessibility.md. It runs from .eslintrc.a11y.js with no
-      # --max-warnings, so it is kept apart from the zero-warning Lint step
-      # below, and is continue-on-error so it can never fail this job. Placed
-      # before Typecheck so a red typecheck does not skip the report.
-      - name: Accessibility lint (report only)
-        continue-on-error: true
-        working-directory: app/mobile-app
-        run: npm run lint:a11y
-
       # TEST PAUSE (temporary — see the banner at the top of .claude/CLAUDE.md).
       # The 100% coverage gate is part of the suite, so it pauses with it.
       # - name: Test (jest, 100% coverage gate)

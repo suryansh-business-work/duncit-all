@@ -159,11 +159,12 @@ node scripts/verify-contrast.mjs
 ### In CI
 
 - **Shared gates › Contrast tokens** — blocking.
-- **Shared gates › Shared packages › Accessibility lint (report only)** —
-  `continue-on-error`, writes a per-rule and per-surface table to the run
-  summary page.
-- **Apps CI › Mobile App › Accessibility lint (report only)** —
-  `continue-on-error`, findings in the job log.
+- **A11Y Report** (`.github/workflows/a11y-report.yml`) — never blocks. Runs the
+  contrast check, the web lint and the native lint, and `scripts/a11y-report.mjs`
+  turns them into one table: status per check, findings per rule with the WCAG
+  criterion it stands for, and findings per surface. On a pull request it is
+  posted as ONE sticky comment (marker `<!-- duncit-a11y-status -->`, rewritten
+  on every push); on a push to staging it lands on the run summary.
 
 ---
 
@@ -201,8 +202,8 @@ The lint reports today so the backlog is visible without turning CI red. Each
 surface flips on its own, as soon as it is clean, rather than the whole repo
 waiting on the slowest one:
 
-1. **Fix a surface to zero** — the per-surface table on the Shared gates run
-   summary says which ones are closest. Intentional exceptions (for example
+1. **Fix a surface to zero** — the per-surface table in the A11Y status comment
+   says which ones are closest. Intentional exceptions (for example
    `autoFocus` on the only field of a dialog that just opened) get a
    `// eslint-disable-next-line jsx-a11y/no-autofocus -- reason` rather than a
    rule change.
@@ -214,6 +215,6 @@ waiting on the slowest one:
 3. **Native** — before flipping, turn off `has-accessibility-hint`: it asks for
    a hint on every labelled element, which contradicts the checklist above
    (hints only where the result is not obvious). Then set the rest to `error`
-   and add `--max-warnings 0` to `npm run lint:a11y` in the Mobile App job.
+   and add `--max-warnings 0` to `npm run lint:a11y`.
 4. **Finish** — once every surface is flipped, drop `continue-on-error` from
-   both report steps and fold the per-surface blocks into one.
+   the two lint steps in `a11y-report.yml` and fold the per-surface blocks into one.

@@ -34,7 +34,10 @@ export default function HeaderLocationRow({
       tabIndex={0}
       onClick={onOpen}
       onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') onOpen();
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onOpen();
+        }
       }}
       aria-label={t('mweb.appHeader.changeCityOrZone')}
       sx={{

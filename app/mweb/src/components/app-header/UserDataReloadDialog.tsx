@@ -5,8 +5,8 @@ import { useTranslation } from '../../i18n/useTranslation';
 export default function UserDataReloadDialog({ open }: Readonly<{ open: boolean }>) {
   const { t } = useTranslation();
   return (
-    <Dialog data-testid="user-data-reload-dialog" open={open} maxWidth="xs" fullWidth>
-      <DialogTitle>{t('mweb.appHeader.userDataNotLoaded')}</DialogTitle>
+    <Dialog data-testid="user-data-reload-dialog" open={open} maxWidth="xs" fullWidth aria-labelledby="user-data-reload-title">
+      <DialogTitle id="user-data-reload-title">{t('mweb.appHeader.userDataNotLoaded')}</DialogTitle>
       <DialogContent>
         <Typography variant="body2" sx={{
           color: "text.secondary"

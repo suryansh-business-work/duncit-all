@@ -179,6 +179,7 @@ export default function EmployeeExpensesTable({
 
   return (
     <DuncitTable<EmployeeExpenseClaim>
+      ariaLabel={t('shell.nav.employeeExpenses')}
       tableId="finance-employee-expenses"
       columns={columns}
       fetchRows={fetchRows}

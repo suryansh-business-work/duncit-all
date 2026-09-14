@@ -38,6 +38,8 @@ export function ActionRow({
   return (
     <XStack
       testID={testID}
+      // A focusable row would hide its trailing RowIconButton from VoiceOver.
+      tabIndex={trailing ? undefined : 0}
       role="button"
       aria-label={label}
       aria-disabled={disabled}
@@ -83,6 +85,7 @@ export function RowIconButton({
   return (
     <XStack
       testID={testID}
+      tabIndex={0}
       role="button"
       aria-label={label}
       onPress={onPress}

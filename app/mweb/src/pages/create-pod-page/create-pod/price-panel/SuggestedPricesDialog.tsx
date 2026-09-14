@@ -54,7 +54,7 @@ export default function SuggestedPricesDialog({
   if (loading && prices.length === 0) {
     body = (
       <Box sx={{ display: 'grid', placeItems: 'center', py: 3 }}>
-        <CircularProgress size={22} data-testid="suggested-prices-loading" />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} size={22} data-testid="suggested-prices-loading" />
       </Box>
     );
   } else if (error) {

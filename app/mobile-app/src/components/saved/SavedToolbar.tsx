@@ -25,6 +25,7 @@ export function SavedToolbar({ filterCount, onFilter, onSort }: Readonly<Props>)
       <XStack
         testID="saved-filter-button"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.common.filter')}
         onPress={onFilter}
         alignItems="center"
@@ -58,6 +59,7 @@ export function SavedToolbar({ filterCount, onFilter, onSort }: Readonly<Props>)
       <XStack
         testID="saved-sort-button"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.common.sort')}
         onPress={onSort}
         alignItems="center"

@@ -2,6 +2,7 @@ import { Avatar, Box, Stack, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DuncitIconButton } from '@duncit/buttons';
 import { formatRelative } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   comments: any[];
@@ -16,6 +17,7 @@ export default function IdeaCommentsList({
   myId,
   onDelete,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={1.5} data-testid="idea-comments-list" sx={{ mt: 1, maxHeight: 320, overflowY: 'auto' }}>
       {comments.length === 0 && (
@@ -31,7 +33,7 @@ export default function IdeaCommentsList({
           <Stack key={c.id} direction="row" spacing={1.5} data-testid={`idea-comment-${c.id}`} sx={{
             alignItems: "flex-start"
           }}>
-            <Avatar src={c.author?.profile_photo || undefined} sx={{ width: 32, height: 32 }}>
+            <Avatar src={c.author?.profile_photo || undefined} alt="" sx={{ width: 32, height: 32 }}>
               {(c.author?.first_name?.[0] ?? 'U').toUpperCase()}
             </Avatar>
             <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -56,6 +58,7 @@ export default function IdeaCommentsList({
             {canDelete && (
               <DuncitIconButton
                 size="small"
+                aria-label={t('mweb.common.deleteComment')}
                 onClick={() => onDelete(c.id)}
                 data-testid={`idea-comment-delete-${c.id}`}
               >

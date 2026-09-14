@@ -23,8 +23,10 @@ function VenueOption({ venue, label, selected, tick, onPress }: Readonly<VenueOp
   return (
     <XStack
       testID={`venue-switcher-option-${venue.id}`}
-      role="button"
+      tabIndex={0}
+      role="radio"
       aria-label={label}
+      aria-checked={selected}
       onPress={() => onPress(venue.id)}
       pressStyle={PRESS_STYLE.row}
       alignItems="center"
@@ -80,8 +82,11 @@ export function VenueSwitcher({ venues, venueId, onSelect }: Readonly<VenueSwitc
     <YStack>
       <XStack
         testID="venue-switcher"
+        tabIndex={0}
         role="button"
         aria-label={heading}
+        aria-expanded={open}
+        accessibilityHint={venueLabel(current, untitled)}
         onPress={() => setOpen(true)}
         pressStyle={PRESS_STYLE.surface}
         alignItems="center"
@@ -115,9 +120,15 @@ export function VenueSwitcher({ venues, venueId, onSelect }: Readonly<VenueSwitc
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <ModalThemeScope>
-          <YStack flex={1} alignItems="center" justifyContent="center">
+          <YStack
+            flex={1}
+            alignItems="center"
+            justifyContent="center"
+            onAccessibilityEscape={() => setOpen(false)}
+          >
             <YStack
               testID="venue-switcher-backdrop"
+              importantForAccessibility="no"
               role="button"
               aria-label={t('mweb.common.close')}
               onPress={() => setOpen(false)}
@@ -140,11 +151,18 @@ export function VenueSwitcher({ venues, venueId, onSelect }: Readonly<VenueSwitc
               gap={6}
             >
               <SafeAreaView edges={[]}>
-                <Text fontSize={17} fontWeight="600" color={color} paddingBottom={8}>
+                <Text
+                  testID="venue-switcher-title"
+                  role="heading"
+                  fontSize={17}
+                  fontWeight="600"
+                  color={color}
+                  paddingBottom={8}
+                >
                   {heading}
                 </Text>
                 <ScrollView showsVerticalScrollIndicator={false}>
-                  <YStack gap={2}>
+                  <YStack gap={2} role="radiogroup" aria-label={heading}>
                     {venues.map((venue) => (
                       <VenueOption
                         key={venue.id}

@@ -181,7 +181,7 @@ export function VenueAcceptSheet({
         {accept.busy ? <LoadingIndicator testID="auto-pod-accept-busy" /> : null}
 
         {accept.failure ? (
-          <Text testID="auto-pod-accept-error" fontSize={13} color="$danger">
+          <Text role="alert" testID="auto-pod-accept-error" fontSize={13} color="$danger">
             {accept.failure}
           </Text>
         ) : null}

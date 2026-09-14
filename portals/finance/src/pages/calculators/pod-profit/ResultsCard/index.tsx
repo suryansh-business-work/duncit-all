@@ -48,7 +48,7 @@ export default function ResultsCard({ results }: Readonly<Props>) {
           })}
         >
           <SectionLabel text={t('finance.calculators.totalDuncitRevenue')} />
-          <Typography
+          <Typography component="p"
             variant="h4"
             sx={{
               fontWeight: 900,

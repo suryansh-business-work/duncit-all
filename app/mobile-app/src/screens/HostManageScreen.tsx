@@ -59,6 +59,7 @@ export function HostManageScreen() {
 
             <XStack
               testID="host-manage-insights"
+              tabIndex={0}
               role="button"
               aria-label={t('mweb.hostManage.hostDashboardAndInsights')}
               onPress={() => navigation.navigate('HostDashboard')}

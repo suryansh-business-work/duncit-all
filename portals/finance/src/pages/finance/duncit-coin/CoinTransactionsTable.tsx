@@ -206,6 +206,7 @@ export default function CoinTransactionsTable({
 
   return (
     <DuncitTable<CoinTxnRow>
+      ariaLabel={t('shell.nav.transactions')}
       tableId="admin-coin-transactions"
       columns={columns}
       fetchRows={fetchRows}

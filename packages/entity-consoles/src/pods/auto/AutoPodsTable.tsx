@@ -69,6 +69,7 @@ export default function AutoPodsTable({
   return (
     <>
       <DuncitTable<AutoPodTableRow>
+        ariaLabel={t('admin.autoPods.title')}
         tableId="admin-auto-pods"
         columns={columns}
         fetchRows={fetchRows}

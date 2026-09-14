@@ -29,7 +29,9 @@ export function StepButton({
     <XStack
       testID={testID}
       role="button"
+      tabIndex={0}
       aria-disabled={disabled}
+      hitSlop={7}
       onPress={disabled ? undefined : onPress}
       alignItems="center"
       justifyContent="center"
@@ -86,7 +88,9 @@ function AddToCartButton({
     <XStack
       testID={`pod-shop-add-${productId}`}
       role="button"
+      tabIndex={0}
       aria-label={`Add ${productName} to cart`}
+      hitSlop={6}
       onPress={onAdd}
       gap={6}
       alignItems="center"
@@ -223,7 +227,9 @@ export function PodShopProductRow({
       <XStack
         testID={`pod-shop-info-${product.product_id}`}
         role="button"
+        tabIndex={0}
         aria-label={`View ${product.product_name} details`}
+        hitSlop={7}
         onPress={() => onInfo(product.product_id)}
         width={30}
         height={30}

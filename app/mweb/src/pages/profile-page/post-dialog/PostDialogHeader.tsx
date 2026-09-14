@@ -31,11 +31,12 @@ export default function PostDialogHeader({
         borderBottom: 1,
         borderColor: 'divider'
       }}>
-      <Avatar src={post.author?.profile_photo || undefined} sx={{ width: 32, height: 32 }}>
+      <Avatar src={post.author?.profile_photo || undefined} alt="" sx={{ width: 32, height: 32 }}>
         {(post.author?.first_name?.[0] ?? 'U').toUpperCase()}
       </Avatar>
       <Typography
         data-testid="post-dialog-header-author"
+        id="post-dialog-author"
         variant="subtitle2"
         sx={{
           fontWeight: 700,
@@ -60,7 +61,7 @@ export default function PostDialogHeader({
           </DuncitIconButton>
         </Tooltip>
       )}
-      <DuncitIconButton data-testid="post-dialog-header-close" size="small" onClick={onClose}>
+      <DuncitIconButton data-testid="post-dialog-header-close" size="small" onClick={onClose} aria-label={t('mweb.common.close')}>
         <CloseIcon fontSize="small" />
       </DuncitIconButton>
     </Stack>

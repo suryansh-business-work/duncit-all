@@ -32,6 +32,7 @@ function MethodButton({ testID, label, icon, ink, onPress }: Readonly<MethodButt
       testID={testID}
       role="button"
       aria-label={label}
+      tabIndex={0}
       onPress={onPress}
       alignItems="center"
       justifyContent="center"
@@ -113,9 +114,10 @@ export function LoginMethodStep({
         <Text
           pressStyle={PRESS_STYLE.inline}
           testID="go-signup"
+          role="link"
           fontSize={14}
           fontWeight="600"
-          color="$primary"
+          color="$accent"
           onPress={onSignup}
         >
           {t('mweb.login.createOne')}

@@ -31,6 +31,8 @@ function VibeSubChip({ testID, label, selected, onPress }: Readonly<VibeSubChipP
       role="button"
       aria-label={label}
       aria-pressed={selected}
+      accessibilityState={{ selected }}
+      tabIndex={0}
       onPress={onPress}
       height={32}
       paddingHorizontal={14}

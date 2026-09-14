@@ -32,13 +32,7 @@ export function ProfileBadgesStrip() {
   return (
     <SurfaceCard testID="profile-badges" gap={12} marginHorizontal={16}>
       <XStack alignItems="center" justifyContent="space-between" gap={8}>
-        <Text
-          accessibilityRole="header"
-          flexShrink={1}
-          fontSize={17}
-          fontWeight="600"
-          color="$color"
-        >
+        <Text role="heading" flexShrink={1} fontSize={17} fontWeight="600" color="$color">
           {t('mweb.profile.badges')}
         </Text>
         <Text
@@ -63,7 +57,7 @@ export function ProfileBadgesStrip() {
           {earned.map((row) => (
             <YStack key={row.badge.id} width={72} alignItems="center" gap={6}>
               {row.badge.image_url ? (
-                <Image source={{ uri: row.badge.image_url }} style={ART_STYLE} />
+                <Image source={{ uri: row.badge.image_url }} style={ART_STYLE} accessible={false} />
               ) : (
                 <YStack
                   width={56}

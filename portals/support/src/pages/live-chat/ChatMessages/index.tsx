@@ -16,7 +16,8 @@ export default function ChatMessages({ messages, userLastReadAt }: Readonly<Prop
   const groups = groupByDay(messages, dayKey, dayLabel);
 
   return (
-    <Stack spacing={1.25}>
+    // role="log": a message arriving over the socket is announced politely (WCAG 4.1.3).
+    <Stack spacing={1.25} role="log">
       {groups.map((group) => (
         <Stack key={group.key} spacing={1.25}>
           <Divider>

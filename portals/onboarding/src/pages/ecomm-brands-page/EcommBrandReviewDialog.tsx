@@ -123,8 +123,10 @@ export default function EcommBrandReviewDialog({
         <Stack direction="row" spacing={1} sx={{
           alignItems: "center"
         }}>
+          {/* A span: DialogTitle is already the dialog's <h2>. */}
           <Typography
             variant="h6"
+            component="span"
             noWrap
             sx={{
               fontWeight: 900,

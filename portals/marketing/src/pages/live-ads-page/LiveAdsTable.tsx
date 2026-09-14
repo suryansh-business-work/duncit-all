@@ -31,6 +31,7 @@ export default function LiveAdsTable({
 
   return (
     <DuncitTable<AdRequestRow>
+      ariaLabel={t('shell.nav.liveAds')}
       tableId="marketing-live-ads"
       columns={columns}
       fetchRows={fetchRows}

@@ -31,7 +31,7 @@ export default memo(function InviteRow({ row, selected, busy, onToggleSelect, on
         slotProps={{ input: { 'aria-label': t('mweb.contacts.selectFor', { vars: { name } }) } }}
         sx={{ p: 0.5 }}
       />
-      <Avatar sx={{ width: 44, height: 44, bgcolor: 'action.hover', color: 'text.primary', fontWeight: 600 }}>
+      <Avatar alt="" sx={{ width: 44, height: 44, bgcolor: 'action.hover', color: 'text.primary', fontWeight: 600 }}>
         {name[0]?.toUpperCase()}
       </Avatar>
       <Stack sx={{ minWidth: 0, flex: 1 }}>

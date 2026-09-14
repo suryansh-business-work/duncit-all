@@ -71,6 +71,7 @@ function HostRow({
     <XStack
       testID={`host-row-${host.user_id}`}
       role="button"
+      tabIndex={0}
       aria-label={t('mweb.podDetails.viewProfileOf', { vars: { name } })}
       onPress={() => onOpenProfile(host.user_id)}
       alignItems="center"

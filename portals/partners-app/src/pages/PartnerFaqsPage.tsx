@@ -57,7 +57,7 @@ export default function PartnerFaqsPage() {
           </Box>
           <Box>
             <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 900 }}>{t('partners.page.partnerHelp')}</Typography>
-            <Typography variant="h4" sx={{
+            <Typography variant="h4" component="h1" sx={{
               fontWeight: 950
             }}>FAQs</Typography>
             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.76)', mt: 0.75 }}>{t('partners.page.answersForVenuesHostsAndProduct')}</Typography>
@@ -75,9 +75,10 @@ export default function PartnerFaqsPage() {
         }}
       />
 
+      {/* Topic filter chips are toggles: the pressed state is exposed, not just the fill (1.4.1 / 4.1.2). */}
       <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 0.5 }}>
         {topics(t).map((item) => (
-          <Chip key={item.value} label={item.label} color={topic === item.value ? 'primary' : 'default'} variant={topic === item.value ? 'filled' : 'outlined'} onClick={() => setTopic(item.value)} />
+          <Chip key={item.value} label={item.label} color={topic === item.value ? 'primary' : 'default'} variant={topic === item.value ? 'filled' : 'outlined'} aria-pressed={topic === item.value} data-testid="partner-faqs-topic" onClick={() => setTopic(item.value)} />
         ))}
       </Stack>
 
@@ -85,7 +86,7 @@ export default function PartnerFaqsPage() {
         sx={{
           alignItems: "center",
           py: 5
-        }}><CircularProgress size={24} /></Stack>}
+        }}><CircularProgress size={24} aria-label={t('shell.a11y.loading')} /></Stack>}
       {error && <Alert severity="error">{error.message}</Alert>}
       {!loading && filteredFaqs.length === 0 && <Alert severity="info">{t('partners.page.noFaqsFoundForThisFilter')}</Alert>}
       <Stack spacing={1.25}>

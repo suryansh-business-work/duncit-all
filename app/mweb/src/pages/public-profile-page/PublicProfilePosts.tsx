@@ -3,6 +3,7 @@ import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import {
   Box,
+  ButtonBase,
   ImageList,
   ImageListItem,
   Skeleton,
@@ -13,6 +14,7 @@ import LockIcon from '@mui/icons-material/LockOutlined';
 import PostDialog from '../profile-page/post-dialog/PostDialog';
 import PublicProfileStories, { type ProfileStory } from './PublicProfileStories';
 import { ProfilePodsPanel, ProfileTabs, useProfileTabs } from '../../components/profile-tabs';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const PUBLIC_USER_POSTS = gql`
   query PublicUserPosts($id: ID!) {
@@ -57,6 +59,7 @@ export default function PublicProfilePosts({
   isHost,
   isOwner,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const tabs = useProfileTabs(isHost, isOwner);
   const { data, loading } = useQuery<any>(PUBLIC_USER_POSTS, {
     variables: { id: userId },
@@ -109,16 +112,23 @@ export default function PublicProfilePosts({
       {posts.map((post: any) => (
         <ImageListItem
           key={post.id}
-          onClick={() => setOpenPostId(post.id)}
-          sx={{ cursor: 'pointer', aspectRatio: '1 / 1', overflow: 'hidden', borderRadius: '12px' }}
+          sx={{ aspectRatio: '1 / 1', overflow: 'hidden', borderRadius: '12px' }}
         >
-          <Box
-            component="img"
-            src={post.image_url}
-            alt={post.caption || 'post'}
-            loading="lazy"
-            sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          />
+          {/* A real button, so a keyboard can open the post too (2.1.1). */}
+          <ButtonBase
+            data-testid={`public-profile-post-${post.id}`}
+            aria-label={t('mweb.common.openPost')}
+            onClick={() => setOpenPostId(post.id)}
+            sx={{ width: '100%', height: '100%', display: 'block' }}
+          >
+            <Box
+              component="img"
+              src={post.image_url}
+              alt={post.caption || 'post'}
+              loading="lazy"
+              sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+          </ButtonBase>
         </ImageListItem>
       ))}
     </ImageList>

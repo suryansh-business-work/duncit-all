@@ -64,14 +64,14 @@ export default function BrandReviewDetailPage() {
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
                 alignItems: { sm: 'center' }
               }}>
-                <Avatar src={brand.logo_url || undefined} variant="rounded" sx={{ width: 64, height: 64 }}>
+                <Avatar alt="" src={brand.logo_url || undefined} variant="rounded" sx={{ width: 64, height: 64 }}>
                   {brand.brand_name?.[0]?.toUpperCase() ?? '?'}
                 </Avatar>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Stack direction="row" spacing={1} sx={{
                     alignItems: "center"
                   }}>
-                    <Typography variant="h5" sx={{
+                    <Typography component="h1" variant="h5" sx={{
                       fontWeight: 800
                     }}>
                       {brand.brand_name}

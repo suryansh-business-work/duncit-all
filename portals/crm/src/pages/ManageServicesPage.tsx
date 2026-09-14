@@ -173,7 +173,7 @@ export default function ManageServicesPage({
       }}>
         <HandymanIcon color="primary" />
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: 800 }}>
+          <Typography component="h1" variant="h6" sx={{ fontWeight: 800 }}>
             {title}
           </Typography>
           <Typography variant="caption" sx={{
@@ -229,7 +229,7 @@ export default function ManageServicesPage({
                         onChange={(e) => setDraft({ ...draft, sort_order: e.target.value })}
                         sx={{ width: 70 }}
                         slotProps={{
-                          htmlInput: { inputMode: 'numeric' }
+                          htmlInput: { inputMode: 'numeric', 'aria-label': t('shell.common.order') }
                         }}
                       />
                     </TableCell>
@@ -241,12 +241,14 @@ export default function ManageServicesPage({
                         placeholder={t('crm.page.eGCoachingTraining')}
                         value={draft.name}
                         onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                        slotProps={{ htmlInput: { 'aria-label': t('crm.page.serviceName') } }}
                       />
                     </TableCell>
                     <TableCell>
                       <Switch
                         checked={draft.is_active}
                         onChange={(e) => setDraft({ ...draft, is_active: e.target.checked })}
+                        slotProps={{ input: { 'aria-label': t('crm.common.active') } }}
                       />
                     </TableCell>
                     <TableCell align="right">
@@ -306,7 +308,7 @@ export default function ManageServicesPage({
                             onChange={(e) => setDraft({ ...draft!, sort_order: e.target.value })}
                             sx={{ width: 70 }}
                             slotProps={{
-                              htmlInput: { inputMode: 'numeric' }
+                              htmlInput: { inputMode: 'numeric', 'aria-label': t('shell.common.order') }
                             }}
                           />
                         ) : (
@@ -320,6 +322,7 @@ export default function ManageServicesPage({
                             fullWidth
                             value={draft!.name}
                             onChange={(e) => setDraft({ ...draft!, name: e.target.value })}
+                            slotProps={{ htmlInput: { 'aria-label': t('crm.page.serviceName') } }}
                           />
                         ) : (
                           <Stack direction="row" spacing={1} sx={{
@@ -345,6 +348,7 @@ export default function ManageServicesPage({
                             }
                           }}
                           disabled={busy && !editing}
+                          slotProps={{ input: { 'aria-label': t('shell.a11y.fieldOf', { vars: { field: t('crm.common.active'), name: row.name } }) } }}
                         />
                       </TableCell>
                       <TableCell align="right">
@@ -352,14 +356,14 @@ export default function ManageServicesPage({
                           <>
                             <Tooltip title={t('shell.common.save')}>
                               <span>
-                                <DuncitIconButton size="small" color="primary" onClick={saveDraft} disabled={busy}>
+                                <DuncitIconButton size="small" color="primary" aria-label={t('shell.common.save')} onClick={saveDraft} disabled={busy}>
                                   <SaveIcon fontSize="small" />
                                 </DuncitIconButton>
                               </span>
                             </Tooltip>
                             <Tooltip title={t('shell.common.cancel')}>
                               <span>
-                                <DuncitIconButton size="small" onClick={cancelDraft} disabled={busy}>
+                                <DuncitIconButton size="small" aria-label={t('shell.common.cancel')} onClick={cancelDraft} disabled={busy}>
                                   <CloseIcon fontSize="small" />
                                 </DuncitIconButton>
                               </span>

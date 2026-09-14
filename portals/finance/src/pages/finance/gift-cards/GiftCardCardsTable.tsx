@@ -154,6 +154,7 @@ export default function GiftCardCardsTable({
 
   return (
     <DuncitTable<GiftCardCardRow>
+      ariaLabel={t('finance.giftCards.cardsTitle')}
       tableId="finance-gift-cards"
       columns={columns}
       fetchRows={fetchRows}

@@ -15,6 +15,7 @@ export function StartConversation({ onPress }: Readonly<{ onPress: () => void }>
     <SurfaceCard
       testID="support-start-chat"
       role="button"
+      tabIndex={0}
       aria-label={t('mweb.common.startAConversationWithSupport')}
       onPress={onPress}
       flexDirection="row"

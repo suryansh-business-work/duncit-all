@@ -47,6 +47,7 @@ export function YourPodsSection({ pods, isLoading, notice, onOpen, onActions }: 
       <HostSectionHeader title={t('mweb.common.yourPods')} count={visible.length}>
         <XStack
           testID="host-pods-filter-open"
+          tabIndex={0}
           role="button"
           aria-label={t('mweb.hostManage.filterPods')}
           onPress={() => setFilterOpen(true)}

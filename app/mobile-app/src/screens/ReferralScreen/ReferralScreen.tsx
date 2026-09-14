@@ -4,6 +4,7 @@ import * as Clipboard from 'expo-clipboard';
 import { Spinner, Text, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
+import { useLoadingRegion } from '@/components/Skeleton';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { referralLink, renderReferralMessage } from '@duncit/utils';
 
@@ -27,6 +28,7 @@ const NOTICE_MS = 3000;
 export function ReferralScreen() {
   const { t } = useTranslation();
   const { referral, isLoading } = useReferral();
+  const loadingRegion = useLoadingRegion();
   const [notice, setNotice] = useState<string | null>(null);
   const referredList = referral?.referred ?? [];
 
@@ -67,7 +69,7 @@ export function ReferralScreen() {
     <StackScreen title={t('mweb.referral.title')} testID="referral-screen">
       {isLoading && !referral ? (
         <YStack flex={1} alignItems="center" justifyContent="center">
-          <Spinner testID="referral-loading" color="$primary" />
+          <Spinner testID="referral-loading" color="$primary" {...loadingRegion} />
         </YStack>
       ) : (
         <RefreshScrollView showsVerticalScrollIndicator={false}>
@@ -84,16 +86,18 @@ export function ReferralScreen() {
             {notice ? (
               <Text
                 testID="referral-notice"
+                role="status"
+                aria-live="polite"
                 fontSize={13}
                 fontWeight="600"
-                color="$primary"
+                color="$accent"
                 textAlign="center"
               >
                 {notice}
               </Text>
             ) : null}
 
-            <Text accessibilityRole="header" fontSize={17} fontWeight="600" color="$color">
+            <Text role="heading" fontSize={17} fontWeight="600" color="$color">
               {t('mweb.referral.friendsCount', { vars: { count: referredList.length } })}
             </Text>
             {referredList.length === 0 ? (

@@ -10,6 +10,7 @@ import { MeetingPhoneFields } from './MeetingPhoneFields';
 import { SlotPicker } from './SlotPicker';
 import type { Answer } from './useOnboardingFlow';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useLoadingRegion } from '@/components/Skeleton';
 import { RefreshScrollView } from '@/components/PullToRefresh';
 
 interface Props {
@@ -57,6 +58,7 @@ export function MeetingPhase({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const { primary } = useThemeColors();
+  const loadingRegion = useLoadingRegion();
   // "Book this slot" is the last row of this scroll and nothing floats over it,
   // so it only has to clear the Android navigation bar the edge-to-edge window
   // paints over the app — on top of the container's own 16pt padding.
@@ -95,7 +97,9 @@ export function MeetingPhase({
       )}
 
       <YStack gap={10}>
-        {slotsLoading ? <Spinner testID="slots-loading" color={primary} /> : null}
+        {slotsLoading ? (
+          <Spinner testID="slots-loading" color={primary} {...loadingRegion} />
+        ) : null}
         {!slotsLoading && slots.length === 0 ? (
           <Text testID="slots-empty" fontSize={13} color="$muted">
             No slots are open right now — please check back soon.
@@ -113,6 +117,8 @@ export function MeetingPhase({
           aria-label={t('mweb.common.yourName')}
           value={name}
           onChangeText={setName}
+          autoComplete="name"
+          textContentType="name"
           {...CALM_FIELD}
           disabled={lockName}
           opacity={lockName ? 0.6 : 1}
@@ -140,7 +146,11 @@ export function MeetingPhase({
           minHeight={70}
         />
       </YStack>
-      {error ? <Text color="$danger">{error}</Text> : null}
+      {error ? (
+        <Text role="alert" color="$danger">
+          {error}
+        </Text>
+      ) : null}
       <DuncitButton
         testID="primary-action"
         label={busy ? 'Booking…' : 'Book this slot'}

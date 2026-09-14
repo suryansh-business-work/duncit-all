@@ -105,7 +105,7 @@ export default function GiftCardCheckoutPage() {
             {t('mweb.checkout.contactDetails')}
           </Typography>
           {payment.meLoading && !me ? (
-            <Skeleton variant="text" width="60%" />
+            <Skeleton variant="text" width="60%" role="progressbar" aria-label={t('mweb.a11y.loading')} />
           ) : (
             <>
               {contactName && <Typography variant="body2">{contactName}</Typography>}

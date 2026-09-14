@@ -59,6 +59,7 @@ export function IdeaDetailsBody({ idea, myId, onToggleLike, onDeleteComment }: R
         <XStack
           testID="idea-details-like"
           role="button"
+          tabIndex={0}
           aria-label={t('mweb.podIdeas.likeIdea')}
           onPress={onToggleLike}
           alignItems="center"

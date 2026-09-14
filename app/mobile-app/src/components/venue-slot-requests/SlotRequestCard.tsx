@@ -64,7 +64,7 @@ export function SlotRequestCard({ request, busy, onApprove, onDecline }: Readonl
           borderRadius={999}
           backgroundColor="$warning"
         >
-          <Text fontSize={11} fontWeight="600" color="$onPrimary">
+          <Text fontSize={11} fontWeight="600" color="$onDanger">
             {t('mweb.venueSlotRequests.awaitingDecision')}
           </Text>
         </XStack>

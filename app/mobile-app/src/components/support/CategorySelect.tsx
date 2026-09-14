@@ -28,6 +28,7 @@ export function CategorySelect({ value, onChange }: Readonly<Props>) {
         pressStyle={PRESS_STYLE.surface}
         testID="ticket-category"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.common.category')}
         aria-expanded={open}
         onPress={() => setOpen((o) => !o)}
@@ -61,8 +62,10 @@ export function CategorySelect({ value, onChange }: Readonly<Props>) {
                 key={c.value}
                 testID={`ticket-category-option-${c.value}`}
                 role="button"
+                tabIndex={0}
                 aria-label={c.label}
                 aria-pressed={selected}
+                accessibilityState={{ selected }}
                 onPress={() => {
                   onChange(c.value);
                   setOpen(false);

@@ -56,7 +56,7 @@ export default function PortalModesPage() {
       }}>
         <ConstructionIcon color="primary" />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h5" sx={{
+          <Typography variant="h5" component="h1" sx={{
             fontWeight: 800
           }}>{t('tech.portalModes.maintenanceAndDevelopment')}</Typography>
           <Typography variant="body2" sx={{

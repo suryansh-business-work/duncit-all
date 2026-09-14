@@ -1,4 +1,4 @@
-import { cloneElement, useMemo, useState } from 'react';
+import { cloneElement, useMemo, useState, type KeyboardEvent } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { ActivityCalendar } from 'react-activity-calendar';
 import {
@@ -136,6 +136,12 @@ export default function UserActivitySection({ userId }: Readonly<Props>) {
                     role: 'button',
                     tabIndex: 0,
                     onClick: () => {
+                      setSelectedDate(activity.date);
+                      setJourneyDate(activity.date);
+                    },
+                    onKeyDown: (event: KeyboardEvent) => {
+                      if (event.key !== 'Enter' && event.key !== ' ') return;
+                      event.preventDefault();
                       setSelectedDate(activity.date);
                       setJourneyDate(activity.date);
                     },

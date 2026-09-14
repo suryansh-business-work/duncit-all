@@ -69,7 +69,7 @@ export function FollowRequestActions({
   unreadRow,
   onAnswered,
 }: Readonly<Props>) {
-  const { muted, primary } = useThemeColors();
+  const { accent, muted, primary } = useThemeColors();
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
@@ -157,7 +157,7 @@ export function FollowRequestActions({
         <FollowBackAction
           label={t(followBackLabelKey(followBackStatus))}
           pending={askPending}
-          accentInk={accentInk}
+          accentInk={accent}
           onPress={askPending ? undefined : sendFollowBack}
         />
       ) : null}

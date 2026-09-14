@@ -100,6 +100,7 @@ export function ReportStorySheet({ storyId, onClose, onReported }: Readonly<Prop
             testID={`report-reason-${value}`}
             role="radio"
             aria-checked={reason === value}
+            tabIndex={0}
             aria-label={t(REPORT_REASON_KEY[value])}
             onPress={() => setReason(value)}
             alignItems="center"

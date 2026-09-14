@@ -40,7 +40,14 @@ export function HostDraftsSection({ drafts, isLoading, onContinue, onDelete }: R
           </Text>
         </XStack>
       ) : null}
-      {isLoading ? <Spinner testID="host-manage-loading" color="$primary" /> : null}
+      {isLoading ? (
+        <Spinner
+          role="progressbar"
+          aria-label={t('mweb.a11y.loading')}
+          testID="host-manage-loading"
+          color="$primary"
+        />
+      ) : null}
       {!isLoading && drafts.length === 0 ? (
         <RowGroup>
           <EmptyLine testID="host-manage-empty" text={t('mweb.hostManage.noDraftsYet')} />

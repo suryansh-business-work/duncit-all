@@ -32,6 +32,7 @@ export function PickerTrigger({
   return (
     <XStack
       testID={`${testID}-open`}
+      tabIndex={0}
       role="button"
       aria-label={label}
       aria-disabled={disabled}

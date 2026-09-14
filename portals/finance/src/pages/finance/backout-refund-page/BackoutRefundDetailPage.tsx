@@ -51,7 +51,7 @@ export default function BackoutRefundDetailPage() {
                 <ArrowBackIcon />
               </DuncitIconButton>
               <Box sx={{ flex: 1 }}>
-                <Typography variant="h5" sx={{
+                <Typography component="h1" variant="h5" sx={{
                   fontWeight: 700
                 }}>{request.pod?.pod_title ?? 'Backout refund'}</Typography>
                 <Typography variant="body2" sx={{

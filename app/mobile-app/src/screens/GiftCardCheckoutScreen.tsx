@@ -8,6 +8,7 @@ import { GiftCardPurchaseSuccess, GiftCardVisual } from '@/components/gift-cards
 import { GiftCardSummaryRow as SummaryRow } from '@/components/gift-cards/GiftCardSummaryRow';
 import { PaymentFailureDialog, usePaymentFailure } from '@/components/payment-failure';
 import { StackScreen } from '@/components/StackScreen';
+import { useLoadingRegion } from '@/components/Skeleton';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { CheckoutForm, type CheckoutFormValues } from '@/forms/checkout';
 import {
@@ -46,6 +47,7 @@ export function GiftCardCheckoutScreen() {
   const [error, setError] = useState<string | null>(null);
   const [payment, setPayment] = useState<NonNullable<GiftCardPayment> | null>(null);
   const [order, setOrder] = useState<RazorpayOrder | null>(null);
+  const loadingRegion = useLoadingRegion();
 
   const currency = finance?.currency_symbol ?? '';
   const amountLabel = formatMoney(currency, selection.amount);
@@ -115,7 +117,7 @@ export function GiftCardCheckoutScreen() {
   } else if (isLoading && !finance) {
     body = (
       <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner testID="gift-card-checkout-loading" color="$primary" />
+        <Spinner testID="gift-card-checkout-loading" color="$primary" {...loadingRegion} />
       </YStack>
     );
   } else {

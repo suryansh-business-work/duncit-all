@@ -32,13 +32,16 @@ export function AspectRatingRow({ aspect, label, value, onChange, starLabel }: R
       <Text fontSize={13} fontWeight="600" color="$color" flexShrink={1}>
         {label}
       </Text>
-      <XStack gap={2} flexShrink={0}>
+      <XStack gap={2} flexShrink={0} role="radiogroup" aria-label={label}>
         {STARS.map((star) => (
           <XStack
             key={star}
             testID={`pod-feedback-${aspect}-star-${star}`}
-            role="button"
+            role="radio"
+            aria-checked={star === value}
+            tabIndex={0}
             aria-label={starLabel(star)}
+            hitSlop={8}
             onPress={() => onChange(star)}
             pressStyle={PRESS_STYLE.row}
             padding={2}

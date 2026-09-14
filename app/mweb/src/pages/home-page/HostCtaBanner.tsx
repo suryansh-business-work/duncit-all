@@ -22,6 +22,7 @@ export default function HostCtaBanner({
     <Card data-testid="host-cta-banner" sx={{ p: 1.5 }}>
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <Box
+          aria-hidden
           sx={{
             width: 44,
             height: 44,

@@ -94,6 +94,7 @@ export default function ContactsRadar({ contacts, me, onOpen }: Readonly<Props>)
         }}
       >
         <Avatar
+          alt=""
           src={me.photo || undefined}
           sx={{
             width: FACE + 8,
@@ -102,6 +103,7 @@ export default function ContactsRadar({ contacts, me, onOpen }: Readonly<Props>)
             border: 3,
             borderColor: 'secondary.main',
             bgcolor: 'primary.main',
+            color: 'primary.contrastText',
             fontWeight: 600,
           }}
         >
@@ -115,13 +117,17 @@ export default function ContactsRadar({ contacts, me, onOpen }: Readonly<Props>)
       {plotted.map((row) => {
         const point = points.get(row.profile.user_id)!;
         const name = row.profile.full_name || row.profile.first_name || row.contact_label;
+        const openLabel = t('mweb.podDetails.openProfileOf', { vars: { name } });
+        // The accent ring marks a nearby contact; say it too (1.4.1).
+        const faceLabel = row.is_nearby ? `${openLabel}, ${t('mweb.contacts.nearbyBadge')}` : openLabel;
         return (
           <Avatar
             key={row.profile.user_id}
+            alt=""
             src={row.profile.profile_photo || undefined}
             role="button"
             tabIndex={0}
-            aria-label={t('mweb.podDetails.openProfileOf', { vars: { name } })}
+            aria-label={faceLabel}
             data-testid={`contacts-radar-${row.profile.user_id}`}
             onClick={() => onOpen(row.profile.user_id)}
             onKeyDown={(event) => {
@@ -140,8 +146,9 @@ export default function ContactsRadar({ contacts, me, onOpen }: Readonly<Props>)
               border: 2,
               borderColor: row.is_nearby ? 'secondary.main' : 'background.paper',
               bgcolor: 'primary.main',
+              color: 'primary.contrastText',
               fontWeight: 600,
-              '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main' },
+              '&:focus-visible': { outline: '2px solid', outlineColor: 'accent.main', outlineOffset: 2 },
             }}
           >
             {name[0]?.toUpperCase()}

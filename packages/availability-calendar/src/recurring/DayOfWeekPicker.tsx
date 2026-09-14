@@ -74,7 +74,7 @@ export default function DayOfWeekPicker({
             label={
               <Typography
                 variant="caption"
-                sx={{ fontWeight: 700, color: weeklyOff.includes(day) ? 'text.disabled' : 'text.primary' }}
+                sx={{ fontWeight: 700, color: weeklyOff.includes(day) ? 'text.secondary' : 'text.primary' }}
               >
                 {labels.short[day]}
               </Typography>

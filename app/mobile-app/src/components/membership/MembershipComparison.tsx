@@ -28,11 +28,27 @@ function BenefitCell({
   // on a bare tick otherwise hears nothing at all.
   if (kind === 'YES') {
     return (
-      <MaterialIcons name="check-circle" size={18} color={yes} accessibilityLabel={yesLabel} />
+      <MaterialIcons
+        name="check-circle"
+        size={18}
+        color={yes}
+        role="img"
+        aria-label={yesLabel}
+        accessibilityLabel={yesLabel}
+      />
     );
   }
   if (kind === 'NO') {
-    return <MaterialIcons name="remove" size={18} color={no} accessibilityLabel={noLabel} />;
+    return (
+      <MaterialIcons
+        name="remove"
+        size={18}
+        color={no}
+        role="img"
+        aria-label={noLabel}
+        accessibilityLabel={noLabel}
+      />
+    );
   }
   return (
     <Text fontSize={12} fontWeight="700" color="$color" numberOfLines={1}>
@@ -122,7 +138,7 @@ export function MembershipComparison({
                     fontSize={11}
                     fontWeight="600"
                     textTransform="uppercase"
-                    color={plan.accent_color || '$primary'}
+                    color={plan.accent_color || '$accent'}
                     numberOfLines={1}
                   >
                     {plan.name}

@@ -49,6 +49,7 @@ export function AutoPodDependencyTimeline({
           <>
             <Box
               component="span"
+              role={opens ? undefined : 'img'}
               aria-label={opens ? undefined : stateLabel}
               sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: color, flexShrink: 0 }}
             />

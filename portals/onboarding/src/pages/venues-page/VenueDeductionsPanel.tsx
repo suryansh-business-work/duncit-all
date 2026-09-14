@@ -60,7 +60,7 @@ export default function VenueDeductionsPanel({
 
   return (
     <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
-      <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+      <Typography variant="subtitle2" component="h3" sx={{ fontWeight: 800 }}>
         {t('onboarding.venues.venueDeductions')}
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.secondary' }}>

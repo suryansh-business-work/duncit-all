@@ -7,6 +7,7 @@ import { usePolicy } from '@/hooks/usePolicies';
 import { useGoBack } from '@/hooks/useGoBack';
 import { usePolicyPdf } from '@/hooks/usePolicyPdf';
 import { AppBackground } from '@/components/AppBackground';
+import { useLoadingRegion } from '@/components/Skeleton';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
@@ -24,10 +25,17 @@ export function PolicyScreen() {
   const { data, isLoading, error } = usePolicy(slug);
   const { download, busy } = usePolicyPdf();
   const { color: ink } = useThemeColors();
+  const loadingRegion = useLoadingRegion();
   const policy = data?.policyBySlug;
 
   const body = error ? (
-    <Text testID="policy-error" paddingHorizontal={24} paddingVertical={32} color="$danger">
+    <Text
+      testID="policy-error"
+      role="alert"
+      paddingHorizontal={24}
+      paddingVertical={32}
+      color="$danger"
+    >
       {toErrorMessage(error)}
     </Text>
   ) : (
@@ -50,6 +58,8 @@ export function PolicyScreen() {
             testID="policy-back"
             role="button"
             aria-label={t('mweb.common.goBack')}
+            tabIndex={0}
+            hitSlop={2}
             onPress={goBack}
             width={40}
             height={40}
@@ -62,6 +72,8 @@ export function PolicyScreen() {
             <MaterialIcons name="arrow-back" size={22} color={ink} />
           </XStack>
           <Text
+            testID="policy-title"
+            role="heading"
             numberOfLines={1}
             flex={1}
             fontSize={17}
@@ -75,6 +87,9 @@ export function PolicyScreen() {
             testID="policy-pdf"
             role="button"
             aria-label={t('mweb.policy.downloadPdf')}
+            aria-busy={busy}
+            tabIndex={0}
+            hitSlop={2}
             onPress={() => {
               if (!busy) download(slug).catch(() => undefined);
             }}
@@ -93,7 +108,7 @@ export function PolicyScreen() {
 
         {isLoading ? (
           <YStack flex={1} alignItems="center" justifyContent="center">
-            <Spinner testID="policy-loading" color="$primary" />
+            <Spinner testID="policy-loading" color="$primary" {...loadingRegion} />
           </YStack>
         ) : (
           body

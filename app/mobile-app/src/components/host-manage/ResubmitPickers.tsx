@@ -24,8 +24,10 @@ function OptionRow({ testID, label, selected, onPress }: Readonly<OptionRowProps
   return (
     <XStack
       testID={testID}
-      role="button"
+      tabIndex={0}
+      role="radio"
       aria-label={label}
+      aria-checked={selected}
       onPress={onPress}
       paddingHorizontal={14}
       paddingVertical={12}
@@ -61,14 +63,16 @@ function PickerShell({ title, emptyText, error, children }: Readonly<PickerShell
       <Text fontSize={13} fontWeight="600" color="$color">
         {title}
       </Text>
-      {children}
+      <YStack gap={6} role="radiogroup" aria-label={title}>
+        {children}
+      </YStack>
       {emptyText ? (
         <Text fontSize={12} color="$muted">
           {emptyText}
         </Text>
       ) : null}
       {error ? (
-        <Text fontSize={12} color="$danger">
+        <Text role="alert" fontSize={12} color="$danger">
           {error}
         </Text>
       ) : null}

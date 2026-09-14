@@ -45,10 +45,10 @@ export default function HeaderLeading({
             borderRadius: 999,
             fontSize: 13,
             fontWeight: 600,
-            color: 'primary.main',
+            color: 'accent.main',
             bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
             '&:hover': { bgcolor: (theme) => alpha(theme.palette.primary.main, 0.18) },
-            '& .MuiChip-icon': { color: 'primary.main', fontSize: 16 },
+            '& .MuiChip-icon': { color: 'accent.main', fontSize: 16 },
           }}
         />
       )}

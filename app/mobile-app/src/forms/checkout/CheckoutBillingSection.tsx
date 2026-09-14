@@ -145,6 +145,8 @@ function BillingBody({
         label={t('mweb.checkout.billingEmail')}
         autoCapitalize="none"
         keyboardType="email-address"
+        autoComplete="email"
+        textContentType="emailAddress"
         hint={t('mweb.checkout.billingEmailHint')}
       />
     </YStack>

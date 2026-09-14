@@ -107,7 +107,7 @@ export default function VenueDetailsPage() {
 
   if (loading && !data) {
     return (
-      <CircularProgress
+      <CircularProgress aria-label={t('mweb.a11y.loading')}
         data-testid="venue-details-loading"
         sx={{ display: 'block', mx: 'auto', my: 6 }}
       />
@@ -159,7 +159,7 @@ export default function VenueDetailsPage() {
           />
         </ButtonBase>
       ) : (
-        <Box sx={{ ...HERO_SX, display: 'grid', placeItems: 'center', bgcolor: 'action.hover', color: 'secondary.main' }}>
+        <Box sx={{ ...HERO_SX, display: 'grid', placeItems: 'center', bgcolor: 'action.hover', color: 'brand.main' }}>
           <StorefrontIcon sx={{ fontSize: 44 }} />
         </Box>
       )}

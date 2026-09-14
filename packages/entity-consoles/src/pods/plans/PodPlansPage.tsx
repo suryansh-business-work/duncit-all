@@ -61,7 +61,7 @@ export default function PodPlansPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5" sx={{
+        <Typography variant="h5" component="h1" sx={{
           fontWeight: 700
         }}>
           Pod Plans

@@ -22,6 +22,7 @@ export function PodHistoryToolbar({ filterCount, onFilter, onSort }: Readonly<Pr
       <XStack
         testID="pod-history-filter-button"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.podHistory.filter')}
         onPress={onFilter}
         alignItems="center"
@@ -46,7 +47,9 @@ export function PodHistoryToolbar({ filterCount, onFilter, onSort }: Readonly<Pr
       <XStack
         testID="pod-history-sort-button"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.podHistory.sort')}
+        hitSlop={2}
         onPress={onSort}
         alignItems="center"
         justifyContent="center"

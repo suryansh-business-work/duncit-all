@@ -94,7 +94,7 @@ export default function PodProductDialog({
   };
 
   return (
-    <Dialog fullScreen open={open} onClose={close}>
+    <Dialog fullScreen open={open} onClose={close} aria-labelledby="pod-product-dialog-title">
       <AppBar position="sticky" color="default" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Toolbar sx={{ gap: 1 }}>
           <Stack
@@ -102,7 +102,7 @@ export default function PodProductDialog({
               flexGrow: 1,
               minWidth: 0
             }}>
-            <Typography variant="h6" noWrap>
+            <Typography id="pod-product-dialog-title" variant="h6" component="h2" noWrap>
               {t('podProduct.dialogTitle')}
             </Typography>
             <Typography variant="caption" noWrap sx={{

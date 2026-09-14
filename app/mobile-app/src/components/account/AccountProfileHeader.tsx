@@ -37,6 +37,7 @@ function HeaderPill({ testID, label, text, icon, tone = 'neutral', onPress }: Re
       testID={testID}
       role="button"
       aria-label={label}
+      tabIndex={0}
       onPress={onPress}
       flex={1}
       height={44}
@@ -72,7 +73,14 @@ export function AccountProfileHeader({
       <ProfileAvatar photo={me.profile_photo} initial={initial} size={88} onChanged={onChanged} />
 
       <YStack alignItems="center" gap={4} alignSelf="stretch">
-        <Text fontSize={22} fontWeight="600" color="$color" textAlign="center">
+        <Text
+          testID="account-profile-name"
+          role="heading"
+          fontSize={22}
+          fontWeight="600"
+          color="$color"
+          textAlign="center"
+        >
           {me.full_name || `${me.first_name} ${me.last_name}`.trim()}
         </Text>
         {me.bio ? (

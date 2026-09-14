@@ -55,21 +55,24 @@ function bucketByDay(slots: VenueSlotRow[]): Map<string, Bucket> {
 // Flat (non-nested) colour resolution keeps the JSX free of nested ternaries.
 function cellColors(isSelected: boolean, isOtherMonth: boolean, isDisabled: boolean, isHoliday: boolean) {
   if (isSelected) return { bgcolor: 'primary.main', color: 'primary.contrastText' };
-  if (isOtherMonth) return { bgcolor: 'transparent', color: 'text.disabled' };
-  if (isHoliday) return { bgcolor: 'error.light', color: 'error.contrastText' };
+  // Other-month days stay bookable, so they are real text (1.4.3): the transparent
+  // ground, not a faded ink, is what sets them apart.
+  if (isOtherMonth) return { bgcolor: 'transparent', color: 'text.secondary' };
+  // The .main shades carry a contrastText that is AA in both modes; the .light
+  // shades under that same ink fell to ~3.9:1 on the 10px badge copy (1.4.3).
+  if (isHoliday) return { bgcolor: 'error.main', color: 'error.contrastText' };
   if (isDisabled) return { bgcolor: 'background.paper', color: 'text.disabled' };
   return { bgcolor: 'background.paper', color: 'text.primary' };
 }
 
 // Flat geometry/interaction resolution keeps the day-cell `sx` free of ternaries.
-function cellShape(isDayView: boolean, isSelected: boolean, isDisabled: boolean, isOtherMonth: boolean) {
+function cellShape(isDayView: boolean, isSelected: boolean, isDisabled: boolean) {
   return {
     aspectRatio: isDayView ? undefined : '1 / 1',
     minHeight: isDayView ? 120 : undefined,
     borderColor: isSelected ? 'primary.main' : 'divider',
     // Past and beyond-window days are read-only — dimmed and non-interactive.
     cursor: isDisabled ? 'default' : 'pointer',
-    opacity: isOtherMonth ? 0.5 : 1,
     hoverBorderColor: isDisabled ? 'divider' : 'primary.main',
   } as const;
 }
@@ -157,9 +160,9 @@ function DayBadges({ bucket, isSelected }: Readonly<DayBadgesProps>) {
         flexWrap: "wrap",
         rowGap: 0.25
       }}>
-      <CountBadge count={bucket.available} selected={isSelected} label="A" bg="success.light" fg="success.contrastText" />
-      <CountBadge count={bucket.pending} selected={isSelected} label="P" bg="info.light" fg="info.contrastText" />
-      <CountBadge count={bucket.booked} selected={isSelected} label="B" bg="warning.light" fg="warning.contrastText" />
+      <CountBadge count={bucket.available} selected={isSelected} label="A" bg="success.main" fg="success.contrastText" />
+      <CountBadge count={bucket.pending} selected={isSelected} label="P" bg="info.main" fg="info.contrastText" />
+      <CountBadge count={bucket.booked} selected={isSelected} label="B" bg="warning.main" fg="warning.contrastText" />
       {/* grey.300 never darkens in dark mode, so its fg must be a fixed grey
           too — text.secondary would go light-on-light here. */}
       <CountBadge count={bucket.blocked} selected={isSelected} label="×" bg="grey.300" fg="grey.800" />
@@ -215,7 +218,7 @@ function DayCell({ date, view, monthStart, today, maxDate, bucket, isHoliday, se
   const isToday = isSameDay(date, today);
   const isDayView = view === 'day';
   const { bgcolor, color } = cellColors(isSelected, isOtherMonth, isDisabled, isHoliday);
-  const shape = cellShape(isDayView, isSelected, isDisabled, isOtherMonth);
+  const shape = cellShape(isDayView, isSelected, isDisabled);
 
   return (
     <Box
@@ -223,6 +226,7 @@ function DayCell({ date, view, monthStart, today, maxDate, bucket, isHoliday, se
       role="button"
       tabIndex={isDisabled ? -1 : 0}
       aria-disabled={isDisabled}
+      aria-pressed={isSelected}
       onClick={isDisabled ? undefined : () => onSelect(date)}
       onKeyDown={
         isDisabled
@@ -241,7 +245,6 @@ function DayCell({ date, view, monthStart, today, maxDate, bucket, isHoliday, se
         bgcolor,
         color,
         cursor: shape.cursor,
-        opacity: shape.opacity,
         display: 'flex',
         flexDirection: 'column',
         gap: 0.25,

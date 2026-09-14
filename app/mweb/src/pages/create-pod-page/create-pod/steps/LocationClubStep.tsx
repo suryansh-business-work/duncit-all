@@ -123,6 +123,7 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
             <ToggleButtonGroup
               exclusive
               fullWidth
+              aria-label={t('mweb.createPod.podMode')}
               color="primary"
               value={field.value}
               onChange={(_e, next) => {

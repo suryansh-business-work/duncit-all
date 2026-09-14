@@ -123,6 +123,7 @@ export default function WaAutomation() {
       )}
 
       <DuncitTable<WaScenario>
+        ariaLabel={t('shell.nav.automation')}
         tableId="wa-automation-scenarios"
         columns={columns}
         fetchRows={fetchRows}

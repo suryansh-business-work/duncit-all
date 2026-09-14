@@ -46,10 +46,18 @@ export function SuggestedPricesModal({
 
   let body = <SuggestedPricesTable prices={prices} symbol={symbol} />;
   if (isLoading) {
-    body = <Spinner testID="suggested-prices-loading" size="small" color="$primary" />;
+    body = (
+      <Spinner
+        role="progressbar"
+        aria-label={t('mweb.a11y.loading')}
+        testID="suggested-prices-loading"
+        size="small"
+        color="$primary"
+      />
+    );
   } else if (error) {
     body = (
-      <Text testID="suggested-prices-error" fontSize={13} color="$danger">
+      <Text role="alert" testID="suggested-prices-error" fontSize={13} color="$danger">
         {t('mweb.createPod.suggestedPricesError')}
       </Text>
     );
@@ -69,10 +77,12 @@ export function SuggestedPricesModal({
           alignItems="center"
           justifyContent="center"
           testID="suggested-prices-modal"
+          onAccessibilityEscape={onClose}
         >
           <YStack
             pressStyle={PRESS_STYLE.surface}
             testID="suggested-prices-backdrop"
+            importantForAccessibility="no"
             role="button"
             aria-label={close}
             onPress={onClose}
@@ -94,11 +104,19 @@ export function SuggestedPricesModal({
           >
             <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" gap={12}>
-                <Text fontSize={17} fontWeight="600" color="$color" flexShrink={1}>
+                <Text
+                  testID="suggested-prices-title"
+                  role="heading"
+                  fontSize={17}
+                  fontWeight="600"
+                  color="$color"
+                  flexShrink={1}
+                >
                   {t('mweb.createPod.suggestedPricesTitle')}
                 </Text>
                 <XStack
                   testID="suggested-prices-close"
+                  tabIndex={0}
                   role="button"
                   aria-label={close}
                   onPress={onClose}

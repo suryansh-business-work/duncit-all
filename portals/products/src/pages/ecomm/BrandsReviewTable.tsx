@@ -20,7 +20,7 @@ interface Props {
 const getRowId = (b: EcommBrandRow) => b.id;
 
 const renderLogo = (b: EcommBrandRow) => (
-  <Avatar src={b.logo_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
+  <Avatar alt="" src={b.logo_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
     {b.brand_name?.[0]?.toUpperCase() ?? '?'}
   </Avatar>
 );
@@ -143,6 +143,7 @@ export default function BrandsReviewTable({
 
   return (
     <DuncitTable<EcommBrandRow>
+      ariaLabel={t('shell.nav.brandsReview')}
       tableId="products-ecomm-brands"
       columns={columns}
       fetchRows={fetchRows}

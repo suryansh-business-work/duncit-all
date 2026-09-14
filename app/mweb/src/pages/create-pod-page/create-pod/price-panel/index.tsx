@@ -55,7 +55,7 @@ export default function PricePanel({ preview }: Readonly<Props>) {
     // During the debounce window the previous waterfall would render beside
     // labels built from the live inputs — treat it as loading instead.
     if (!w || !projection || stale) {
-      return loading || stale ? <CircularProgress size={18} /> : null;
+      return loading || stale ? <CircularProgress aria-label={t('mweb.a11y.loading')} size={18} /> : null;
     }
     // Every number below is a server waterfall value — the statement builder
     // only groups them and spells out the formulas.

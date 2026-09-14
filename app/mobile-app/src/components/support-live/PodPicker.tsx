@@ -50,6 +50,7 @@ export function PodPicker({ options, selectedId, onChange }: Readonly<PodPickerP
         pressStyle={PRESS_STYLE.surface}
         testID="pod-picker"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.common.pod')}
         aria-expanded={open}
         onPress={() => setOpen((o) => !o)}
@@ -98,6 +99,8 @@ export function PodPicker({ options, selectedId, onChange }: Readonly<PodPickerP
                 role="button"
                 aria-label={option.title}
                 aria-pressed={isSelected}
+                accessibilityState={{ selected: isSelected }}
+                tabIndex={0}
                 onPress={() => {
                   onChange(option.podDocId);
                   setOpen(false);

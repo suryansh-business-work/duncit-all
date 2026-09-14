@@ -47,7 +47,9 @@ export function ZoomableImageModal({
               pressStyle={PRESS_STYLE.surface}
               testID="zoom-image-close"
               role="button"
+              tabIndex={0}
               aria-label={t('mweb.common.closeImage')}
+              hitSlop={4}
               onPress={onClose}
               width={36}
               height={36}
@@ -78,6 +80,7 @@ export function ZoomableImageModal({
                 pressStyle={PRESS_STYLE.control}
                 testID="zoom-image-prev"
                 role="button"
+                tabIndex={0}
                 aria-label={t('mweb.details.previousImage')}
                 onPress={() => setCurrent((value) => Math.max(0, value - 1))}
                 paddingHorizontal={16}
@@ -91,6 +94,7 @@ export function ZoomableImageModal({
                 pressStyle={PRESS_STYLE.control}
                 testID="zoom-image-next"
                 role="button"
+                tabIndex={0}
                 aria-label={t('mweb.details.nextImage')}
                 onPress={() => setCurrent((value) => Math.min(images.length - 1, value + 1))}
                 paddingHorizontal={16}

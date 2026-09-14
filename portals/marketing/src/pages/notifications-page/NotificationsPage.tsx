@@ -108,7 +108,7 @@ export default function NotificationsPage() {
           alignItems: "center"
         }}>
           <NotificationsActiveIcon color="primary" />
-          <Typography variant="h5">{t('shell.nav.notifications')}</Typography>
+          <Typography component="h1" variant="h5">{t('shell.nav.notifications')}</Typography>
         </Stack>
         <Typography variant="body2" sx={{
           color: "text.secondary"

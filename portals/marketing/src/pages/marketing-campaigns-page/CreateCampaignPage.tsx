@@ -118,7 +118,7 @@ export default function CreateCampaignPage() {
           Campaigns
         </DuncitButton>
         <Stack spacing={0.25}>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 700
           }}>
             New campaign

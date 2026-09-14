@@ -55,7 +55,7 @@ export default function PodIdeasPage() {
         }}>
         <LightbulbIcon color="warning" />
         <Typography
-          variant="h5"
+          variant="h5" component="h1"
           sx={{
             fontWeight: 700,
             flex: 1

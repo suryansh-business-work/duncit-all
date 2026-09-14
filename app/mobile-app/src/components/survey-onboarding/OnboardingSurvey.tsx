@@ -62,7 +62,7 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
             >
               <MaterialIcons name="event-available" size={36} color={accent} />
             </YStack>
-            <Text textAlign="center" fontSize={24} fontWeight="600" color="$color">
+            <Text role="heading" textAlign="center" fontSize={24} fontWeight="600" color="$color">
               You{'’'}re booked!
             </Text>
             <Text textAlign="center" fontSize={14} color="$muted">
@@ -73,6 +73,7 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
               testID="thanks-done"
               role="button"
               aria-label={t('mweb.surveyOnboarding.backToHome')}
+              tabIndex={0}
               onPress={goBack}
               alignSelf="stretch"
               height={52}
@@ -109,8 +110,11 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
         ) : null}
         <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={8}>
           <XStack
+            testID="onboarding-back"
             role="button"
             aria-label={t('mweb.common.goBack')}
+            tabIndex={0}
+            hitSlop={2}
             onPress={() => {
               // Step back a phase (preserving answers) instead of leaving the
               // whole flow; only exit when already at the first phase.
@@ -128,7 +132,7 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
           >
             <MaterialIcons name="arrow-back" size={22} color={ink} />
           </XStack>
-          <Text flexShrink={1} fontSize={17} fontWeight="600" color="$color">
+          <Text role="heading" flexShrink={1} fontSize={17} fontWeight="600" color="$color">
             {headerTitle}
           </Text>
         </XStack>

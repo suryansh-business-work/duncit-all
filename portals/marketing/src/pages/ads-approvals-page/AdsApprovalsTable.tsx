@@ -18,6 +18,7 @@ export default function AdsApprovalsTable({ fetchRows, refetchRef, onReview }: R
 
   return (
     <DuncitTable<AdRequestRow>
+      ariaLabel={t('shell.nav.adsApproval')}
       tableId="marketing-ads-approvals"
       columns={columns}
       fetchRows={fetchRows}

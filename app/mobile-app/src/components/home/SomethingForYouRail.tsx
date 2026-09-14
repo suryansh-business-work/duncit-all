@@ -97,6 +97,8 @@ function SomethingForYouTile({
     <Pressable
       testID={`something-for-you-tile-${item.id}`}
       accessibilityRole={opens ? 'button' : 'image'}
+      // One spoken name for the tile: its title and the line along its foot.
+      aria-label={[item.title, item.bottom_text].filter(Boolean).join(', ')}
       onPress={opens ? () => onOpen(target) : undefined}
       style={{
         width: CARD_WIDTH,

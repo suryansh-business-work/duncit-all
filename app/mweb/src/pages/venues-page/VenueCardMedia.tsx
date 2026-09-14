@@ -85,7 +85,7 @@ export default function VenueCardMedia({ images, venueName, onOpen }: Readonly<P
           ...FRAME,
           borderRadius: MEDIA_RADIUS,
           bgcolor: 'action.hover',
-          color: 'secondary.main',
+          color: 'brand.main',
           display: 'grid',
           placeItems: 'center',
         }}

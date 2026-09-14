@@ -22,9 +22,13 @@ const maskAccount = (value?: string | null) =>
 function Section({ title, children }: Readonly<{ title: string; children: ReactNode }>) {
   return (
     <>
-      <Divider textAlign="left">
+      {/* A titled Divider is role="separator", whose children screen readers
+          drop — so the line is presentational and the title is the heading. */}
+      <Divider textAlign="left" role="presentation">
         <Typography
           variant="caption"
+          role="heading"
+          aria-level={3}
           sx={{
             color: "text.secondary",
             fontWeight: 700

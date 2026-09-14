@@ -63,7 +63,7 @@ export default function MediaRow({ url, index, total, onReplace, onMove, onRemov
           {url}
         </Typography>
         <Typography variant="caption" sx={{
-          color: "text.disabled"
+          color: "text.secondary"
         }}>
           #{index + 1}
         </Typography>
@@ -75,14 +75,24 @@ export default function MediaRow({ url, index, total, onReplace, onMove, onRemov
       </Tooltip>
       <Tooltip title={t('podForm.mediaRow.moveUp')}>
         <span>
-          <DuncitIconButton size="small" disabled={index === 0} onClick={() => onMove(-1)}>
+          <DuncitIconButton
+            size="small"
+            disabled={index === 0}
+            onClick={() => onMove(-1)}
+            aria-label={t('podForm.mediaRow.moveUp')}
+          >
             <ArrowUpwardIcon fontSize="small" />
           </DuncitIconButton>
         </span>
       </Tooltip>
       <Tooltip title={t('podForm.mediaRow.moveDown')}>
         <span>
-          <DuncitIconButton size="small" disabled={index === total - 1} onClick={() => onMove(1)}>
+          <DuncitIconButton
+            size="small"
+            disabled={index === total - 1}
+            onClick={() => onMove(1)}
+            aria-label={t('podForm.mediaRow.moveDown')}
+          >
             <ArrowDownwardIcon fontSize="small" />
           </DuncitIconButton>
         </span>

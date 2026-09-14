@@ -32,7 +32,7 @@ interface BodyProps {
 function ActivityBody({ entries, loading, error }: Readonly<BodyProps>) {
   const { t } = useTranslation();
   if (error) return <Alert data-testid="club-pod-activity-dialog-error" severity="error">{error.message}</Alert>;
-  if (loading && entries.length === 0) return <CircularProgress data-testid="club-pod-activity-dialog-loading" size={22} />;
+  if (loading && entries.length === 0) return <CircularProgress aria-label={t('mweb.a11y.loading')} data-testid="club-pod-activity-dialog-loading" size={22} />;
   if (entries.length === 0) {
     return (
       <Typography data-testid="club-pod-activity-dialog-empty" variant="body2" sx={{ color: 'text.secondary' }}>

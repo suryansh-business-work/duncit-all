@@ -115,6 +115,7 @@ export default function ChallengesTable({
 
   return (
     <DuncitTable<Challenge>
+      ariaLabel={t('shell.nav.challenges')}
       tableId="challenge-portal-challenges"
       columns={columns}
       fetchRows={fetchRows}

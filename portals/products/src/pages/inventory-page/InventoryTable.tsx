@@ -29,7 +29,7 @@ interface Props {
 const getRowId = (p: InventoryProductRow) => p.id;
 
 const renderCover = (p: InventoryProductRow) => (
-  <Avatar src={p.image_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
+  <Avatar alt="" src={p.image_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
     {p.product_name?.[0]?.toUpperCase() ?? '?'}
   </Avatar>
 );
@@ -176,6 +176,7 @@ export default function InventoryTable({
 
   return (
     <DuncitTable<InventoryProductRow>
+      ariaLabel={t('shell.nav.duncitProducts')}
       tableId="products-inventory"
       columns={columns}
       fetchRows={fetchRows}

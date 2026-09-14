@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
-import { Avatar, Box, CircularProgress, Drawer, Stack, TextField, Typography } from '@mui/material';
+import { Avatar, Box, ButtonBase, CircularProgress, Drawer, Stack, TextField, Typography } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';
 import CloseIcon from '@mui/icons-material/Close';
@@ -78,7 +78,7 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
       open={open}
       variant="persistent"
       slotProps={{
-        paper: { sx: { width: { xs: '100%', sm: ASK_AI_WIDTH }, top: HEADER_HEIGHT, height: `calc(100% - ${HEADER_HEIGHT}px)`, borderLeft: 1, borderColor: 'divider' } }
+        paper: { role: 'complementary', 'aria-label': t('crm.components.askAi'), sx: { width: { xs: '100%', sm: ASK_AI_WIDTH }, top: HEADER_HEIGHT, height: `calc(100% - ${HEADER_HEIGHT}px)`, borderLeft: 1, borderColor: 'divider' } }
       }}
     >
       <Stack
@@ -92,7 +92,7 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
         }}>
         <SmartToyIcon color="secondary" />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle1" noWrap sx={{
+          <Typography variant="subtitle1" component="h2" noWrap sx={{
             fontWeight: 800
           }}>{t('crm.components.askAi')}</Typography>
           <Typography
@@ -106,16 +106,16 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
         <DuncitIconButton onClick={onClose} aria-label={t('shell.common.close')} sx={{ flexShrink: 0 }}><CloseIcon /></DuncitIconButton>
       </Stack>
 
-      <Stack spacing={1.5} sx={{ flex: 1, overflowY: 'auto', p: 1.5, bgcolor: 'action.hover' }}>
+      <Stack role="log" spacing={1.5} sx={{ flex: 1, overflowY: 'auto', p: 1.5, bgcolor: 'action.hover' }}>
         {messages.length === 0 && (
           <Stack spacing={1}>
             <Typography variant="body2" sx={{
               color: "text.secondary"
             }}>{t('crm.components.askAnythingAboutThisLeadTry')}</Typography>
             {SUGGESTIONS.map((s) => (
-              <Box key={s} onClick={() => send(s)} sx={{ cursor: 'pointer', bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 1, px: 1.25, py: 0.75, fontSize: 13 }}>
+              <ButtonBase key={s} data-testid="crm-ask-ai-suggestion" onClick={() => send(s)} sx={{ justifyContent: 'flex-start', textAlign: 'left', bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 1, px: 1.25, py: 0.75, fontSize: 13 }}>
                 {s}
-              </Box>
+              </ButtonBase>
             ))}
           </Stack>
         )}
@@ -142,12 +142,12 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
             </Stack>
           );
         })}
-        {loading && <Stack direction="row" spacing={1} sx={{
+        {loading && <Stack role="status" direction="row" spacing={1} sx={{
           alignItems: "center"
         }}><CircularProgress size={16} /><Typography variant="caption" sx={{
           color: "text.secondary"
         }}>Thinking…</Typography></Stack>}
-        {error && <Typography variant="caption" color="error">{error}</Typography>}
+        {error && <Typography variant="caption" color="error" role="alert">{error}</Typography>}
         <div ref={endRef} />
       </Stack>
 
@@ -166,6 +166,8 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
           multiline
           maxRows={4}
           placeholder={t('crm.components.askAboutThisLead')}
+          slotProps={{ htmlInput: { 'aria-label': t('crm.components.askAboutThisLead') } }}
+          data-testid="crm-ask-ai-input"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input); } }}

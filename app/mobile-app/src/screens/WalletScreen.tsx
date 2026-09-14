@@ -3,6 +3,7 @@ import { Spinner, Text, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { SurfaceCard } from '@/components/SurfaceCard';
+import { useLoadingRegion } from '@/components/Skeleton';
 import { WithdrawCta } from '@/components/wallet/WithdrawCta';
 import { WithdrawDialog } from '@/components/wallet/WithdrawDialog';
 import { fmtDate, TxnRow, WalletSection, WithdrawalRow } from '@/components/wallet/WalletRows';
@@ -21,6 +22,7 @@ export function WalletScreen() {
   const { t } = useTranslation();
   const { wallet, transactions, withdrawals, isLoading, refetch } = useWallet();
   const [open, setOpen] = useState(false);
+  const loadingRegion = useLoadingRegion();
   const symbol = wallet?.currency_symbol ?? '₹';
   const balance = wallet?.balance ?? 0;
   // Eligibility is decided by the server (role-wise Minimum Withdrawal Amount)
@@ -42,7 +44,9 @@ export function WalletScreen() {
     <StackScreen header title={t('mweb.common.wallet')} testID="wallet-screen">
       <RefreshScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={20} padding={16} paddingBottom={48}>
-          {isLoading && !wallet ? <Spinner testID="wallet-loading" color="$primary" /> : null}
+          {isLoading && !wallet ? (
+            <Spinner testID="wallet-loading" color="$primary" {...loadingRegion} />
+          ) : null}
 
           {/* The balance hero: muted label, the big number, the payout cycle
               and the green Withdraw pill. */}

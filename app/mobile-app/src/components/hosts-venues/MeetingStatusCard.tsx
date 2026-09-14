@@ -63,6 +63,7 @@ export function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind }>) {
             <XStack
               testID={`meeting-join-${kind}`}
               role="button"
+              tabIndex={0}
               aria-label={t('mweb.hostsVenues.joinMeeting')}
               onPress={() => Linking.openURL(meeting.meeting_link as string)}
               alignSelf="flex-start"

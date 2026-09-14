@@ -57,8 +57,12 @@ export function HomeFilterButton({
   const a11y = {
     testID: 'home-filter-button',
     role: 'button',
-    'aria-label': count > 0 ? `Open filters (${count} active)` : 'Open filters',
+    'aria-label':
+      count > 0
+        ? t('mweb.a11y.openFiltersActive', { vars: { count } })
+        : t('mweb.explore.openFilters'),
     'aria-disabled': disabled,
+    tabIndex: 0,
     onPress: handlePress,
     opacity: disabled ? 0.4 : 1,
   } as const;

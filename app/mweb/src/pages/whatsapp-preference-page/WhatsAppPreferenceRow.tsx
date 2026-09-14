@@ -62,7 +62,7 @@ export default function WhatsAppPreferenceRow({
       </Stack>
 
       {busy ? (
-        <CircularProgress size={20} sx={{ m: 1 }} />
+        <CircularProgress size={20} sx={{ m: 1 }} aria-label={t('mweb.a11y.loading')} />
       ) : (
         <Switch
           checked={item.enabled}

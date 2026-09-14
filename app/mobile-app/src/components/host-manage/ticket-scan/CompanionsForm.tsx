@@ -141,6 +141,7 @@ export function CompanionsForm({
 
       <XStack
         testID="companions-submit"
+        tabIndex={0}
         role="button"
         aria-label={t('mweb.hostManage.markAttendance')}
         aria-disabled={busy}

@@ -69,7 +69,7 @@ export function MembershipNotifyCard({
     <SurfaceCard testID="membership-notify-card" marginHorizontal={16} gap={16}>
       <XStack alignItems="center" gap={8}>
         <MaterialIcons name="notifications-active" size={20} color={accent} />
-        <Text flex={1} fontSize={17} fontWeight="600" color="$color">
+        <Text role="heading" flex={1} fontSize={17} fontWeight="600" color="$color">
           {t('mweb.membership.notifyTitle')}
         </Text>
       </XStack>
@@ -97,7 +97,7 @@ export function MembershipNotifyCard({
       </YStack>
 
       {hasFailed ? (
-        <Text testID="membership-notify-error" fontSize={13} color="$danger">
+        <Text testID="membership-notify-error" role="alert" fontSize={13} color="$danger">
           {t('mweb.membership.notifyError')}
         </Text>
       ) : null}

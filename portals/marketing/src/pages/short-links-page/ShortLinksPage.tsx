@@ -99,7 +99,7 @@ export default function ShortLinksPage() {
           mb: 2
         }}>
         <Stack spacing={0.25} sx={{ flex: 1 }}>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 700
           }}>
             Short Links
@@ -117,6 +117,7 @@ export default function ShortLinksPage() {
       </Stack>
 
       <DuncitTable<ShortLinkRow>
+        ariaLabel={t('shell.nav.shortLinks')}
         tableId="marketing-short-links"
         columns={columns}
         fetchRows={fetchRows}

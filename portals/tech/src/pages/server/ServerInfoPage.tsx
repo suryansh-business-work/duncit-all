@@ -96,7 +96,7 @@ export default function ServerInfoPage() {
     }}>
       <DnsIcon color="primary" />
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="h5" sx={{
+        <Typography variant="h5" component="h1" sx={{
           fontWeight: 800
         }}>
           Server · Info

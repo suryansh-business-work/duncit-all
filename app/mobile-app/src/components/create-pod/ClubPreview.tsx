@@ -70,12 +70,13 @@ export function ClubPreview({ club }: Readonly<Props>) {
         <Text
           pressStyle={PRESS_STYLE.inline}
           testID="club-preview-details"
+          hitSlop={12}
           role="button"
           aria-label={t('mweb.createPod.viewClubDetails')}
           onPress={() => setOpen(true)}
           fontSize={13}
           fontWeight="600"
-          color="$primary"
+          color="$accent"
         >
           {t('mweb.createPod.viewClubDetails')}
         </Text>
@@ -83,9 +84,16 @@ export function ClubPreview({ club }: Readonly<Props>) {
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={close}>
         <ModalThemeScope>
-          <YStack flex={1} alignItems="center" justifyContent="center" testID="club-preview-dialog">
+          <YStack
+            flex={1}
+            alignItems="center"
+            justifyContent="center"
+            testID="club-preview-dialog"
+            onAccessibilityEscape={close}
+          >
             <YStack
               pressStyle={PRESS_STYLE.surface}
+              importantForAccessibility="no"
               role="button"
               aria-label={t('mweb.auth.close')}
               onPress={close}
@@ -111,11 +119,20 @@ export function ClubPreview({ club }: Readonly<Props>) {
                   gap={12}
                   paddingBottom={12}
                 >
-                  <Text fontSize={17} fontWeight="600" color="$color" numberOfLines={1} flex={1}>
+                  <Text
+                    testID="club-preview-title"
+                    role="heading"
+                    fontSize={17}
+                    fontWeight="600"
+                    color="$color"
+                    numberOfLines={1}
+                    flex={1}
+                  >
                     {club.club_name}
                   </Text>
                   <XStack
                     testID="club-preview-close"
+                    tabIndex={0}
                     role="button"
                     aria-label={t('mweb.createPod.closeClubDetails')}
                     onPress={close}

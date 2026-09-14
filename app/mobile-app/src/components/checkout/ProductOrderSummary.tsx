@@ -61,7 +61,9 @@ function LineThumb({
     <XStack
       testID={`summary-info-${line.pod_id}:${cartLineKey(line)}`}
       role="button"
+      tabIndex={0}
       aria-label={t('mweb.checkout.viewProduct', { vars: { name: line.product_name } })}
+      hitSlop={2}
       onPress={() => onInfo(line.product_id)}
       pressStyle={PRESS_STYLE.inline}
       width={40}

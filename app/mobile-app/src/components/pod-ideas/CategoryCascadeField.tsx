@@ -69,6 +69,7 @@ export function CategoryCascadeField({
         key={`${level}-${id || 'all'}`}
         testID={`${idPrefix}-${level}-${id || 'all'}`}
         role="button"
+        tabIndex={0}
         aria-label={label}
         onPress={() => pick(level, id)}
         paddingHorizontal={12}

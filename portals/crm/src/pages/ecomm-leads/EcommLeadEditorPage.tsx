@@ -40,7 +40,7 @@ export default function EcommLeadEditorPage() {
   return (
     <Stack spacing={2}>
       <Box>
-        <Typography variant="h5" sx={{
+        <Typography component="h1" variant="h5" sx={{
           fontWeight: 800
         }}>{isEdit ? `Edit ${lead?.seller_name}` : 'New Ecomm Lead'}</Typography>
       </Box>

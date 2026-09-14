@@ -2,6 +2,7 @@ import { Avatar, Box, Stack, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DuncitIconButton } from '@duncit/buttons';
 import { formatDateTime } from '../../../utils/dateFormat';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface PostCommentListProps {
   post: any;
@@ -18,11 +19,12 @@ export default function PostCommentList({
   canDeletePost,
   onDeleteComment,
 }: Readonly<PostCommentListProps>) {
+  const { t } = useTranslation();
   return (
     <Box data-testid="post-comment-list" sx={{ flex: 1, overflowY: 'auto', p: 1.5 }}>
       {post.caption && (
         <Stack data-testid="post-comment-list-caption" direction="row" spacing={1.5} sx={{ mb: 2 }}>
-          <Avatar src={post.author?.profile_photo || undefined} sx={{ width: 32, height: 32 }}>
+          <Avatar src={post.author?.profile_photo || undefined} alt="" sx={{ width: 32, height: 32 }}>
             {(post.author?.first_name?.[0] ?? 'U').toUpperCase()}
           </Avatar>
           <Box>
@@ -70,6 +72,7 @@ export default function PostCommentList({
               >
                 <Avatar
                   src={c.author?.profile_photo || undefined}
+                  alt=""
                   sx={{ width: 28, height: 28 }}
                 >
                   {(c.author?.first_name?.[0] ?? 'U').toUpperCase()}
@@ -94,6 +97,7 @@ export default function PostCommentList({
                     data-testid={`post-comment-list-comment-${c.id}-delete`}
                     size="small"
                     onClick={() => onDeleteComment(c.id)}
+                    aria-label={t('mweb.common.deleteComment')}
                   >
                     <DeleteOutlineIcon fontSize="inherit" />
                   </DuncitIconButton>

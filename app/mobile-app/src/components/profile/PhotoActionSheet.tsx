@@ -23,6 +23,7 @@ function ActionRow({ icon, label, color, testID, onPress }: Readonly<ActionRowPr
       testID={testID}
       role="button"
       aria-label={label}
+      tabIndex={0}
       onPress={onPress}
       alignItems="center"
       gap={14}
@@ -67,7 +68,12 @@ export function PhotoActionSheet({
   const { color, danger } = useThemeColors();
 
   return (
-    <DuncitDialog open={open} onClose={onClose} testID="photo-action-sheet" closeLabel="Close">
+    <DuncitDialog
+      open={open}
+      onClose={onClose}
+      testID="photo-action-sheet"
+      closeLabel={t('mweb.common.close')}
+    >
       <YStack
         alignSelf="center"
         width={44}

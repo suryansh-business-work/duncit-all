@@ -178,6 +178,7 @@ export default function ClubAdminsTable({
   return (
     <DuncitTable<ClubAdminRow>
       tableId="onboarding-club-admins"
+      ariaLabel={t('shell.nav.clubAdmins')}
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}

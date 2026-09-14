@@ -123,7 +123,7 @@ export default function PodFinancePage() {
         }}>
         <AnalyticsIcon color="primary" />
         <Box>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 700
           }}>{t('shell.nav.podFinance')}</Typography>
           <Typography variant="body2" sx={{
@@ -135,6 +135,7 @@ export default function PodFinancePage() {
       </Stack>
 
       <DuncitTable<PodFinanceGroup>
+        ariaLabel={t('shell.nav.podFinance')}
         tableId="finance-pod-finance"
         columns={columns}
         fetchRows={fetchRows}

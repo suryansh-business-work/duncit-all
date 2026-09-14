@@ -119,7 +119,7 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
           sx={(theme) => ({
             fontWeight: 700,
             bgcolor: alpha(theme.palette.primary.main, 0.12),
-            color: 'primary.main',
+            color: 'accent.main',
           })}
         />
         <Chip

@@ -54,17 +54,25 @@ export function StudioPodsBody({
   const [actionsPod, setActionsPod] = useState<StudioPod | null>(null);
 
   if (state.isLoading) {
-    return <Spinner testID={`${testID}-loading`} color="$primary" />;
+    return (
+      <Spinner
+        role="progressbar"
+        aria-label={t('mweb.a11y.loading')}
+        testID={`${testID}-loading`}
+        color="$primary"
+      />
+    );
   }
 
   if (state.hasError) {
     return (
       <YStack gap={10} alignItems="flex-start">
-        <Text testID={`${testID}-error`} fontSize={13} color="$danger">
+        <Text role="alert" testID={`${testID}-error`} fontSize={13} color="$danger">
           {t('mweb.studioPods.error')}
         </Text>
         <XStack
           testID={`${testID}-retry`}
+          tabIndex={0}
           role="button"
           aria-label={t('mweb.studioPods.retry')}
           onPress={state.refetch}
@@ -78,7 +86,7 @@ export function StudioPodsBody({
           pressStyle={PRESS_STYLE.control}
         >
           <MaterialIcons name="refresh" size={16} color={primary} />
-          <Text fontSize={13} fontWeight="600" color="$primary">
+          <Text fontSize={13} fontWeight="600" color="$accent">
             {t('mweb.studioPods.retry')}
           </Text>
         </XStack>

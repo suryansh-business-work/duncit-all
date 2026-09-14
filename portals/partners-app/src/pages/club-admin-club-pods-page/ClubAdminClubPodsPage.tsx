@@ -163,7 +163,7 @@ export default function ClubAdminClubPodsPage() {
                   color: "text.secondary",
                   fontWeight: 800
                 }}>{t('clubAdmin.pods.title')}</Typography>
-              <Typography variant="h6" sx={{
+              <Typography variant="h6" component="h1" sx={{
                 fontWeight: 950
               }}>{club?.club_name ?? t('clubAdmin.pods.clubPods')}</Typography>
               <Typography variant="body2" sx={{

@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { useNavigate } from 'react-router';
 import { Box, Chip, Divider, Drawer, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -25,6 +26,7 @@ const ENTITY_LABEL: Record<string, string> = { VENUE_LEAD: 'Venue lead', HOST_LE
 export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDelete }: Readonly<Props>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const titleId = useId();
   const isReminder = event?.kind === 'reminder';
   const done = event?.status === 'DONE';
 
@@ -39,7 +41,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
 
   return (
     <Drawer anchor="right" open={!!event} onClose={onClose} slotProps={{
-      paper: { sx: { width: { xs: '100%', sm: 380 } } }
+      paper: { role: 'dialog', 'aria-modal': true, 'aria-labelledby': titleId, sx: { width: { xs: '100%', sm: 380 } } }
     }}>
       {event && (
         <Stack sx={{ height: '100%' }}>
@@ -63,7 +65,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
           </Stack>
 
           <Stack spacing={1.5} sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
-            <Typography variant="h6" sx={{
+            <Typography component="h2" variant="h6" id={titleId} sx={{
               fontWeight: 700
             }}>{event.title}</Typography>
             <Stack direction="row" spacing={1} useFlexGap sx={{

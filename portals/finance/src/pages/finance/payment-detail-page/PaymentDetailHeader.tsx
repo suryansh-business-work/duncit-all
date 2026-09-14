@@ -72,7 +72,7 @@ export default function PaymentDetailHeader({
               alignItems: "center",
               flexWrap: "wrap"
             }}>
-            <Typography
+            <Typography component="h1"
               variant="h5"
               sx={{
                 fontWeight: 700,

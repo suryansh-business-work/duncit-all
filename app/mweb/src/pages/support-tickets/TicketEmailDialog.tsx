@@ -48,6 +48,7 @@ export default function TicketEmailDialog({ open, ticketId, defaultEmail, onClos
               fullWidth
               size="small"
               type="email"
+              autoComplete="email"
               data-testid="email-field"
               label={t('mweb.common.emailAddress')}
               value={email}

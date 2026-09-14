@@ -117,7 +117,7 @@ export default function ClubAdminDashboardPage() {
             }}>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography variant="overline" sx={{ opacity: 0.7, fontWeight: 800 }}>{t('clubAdmin.dashboard.eyebrow')}</Typography>
-                <Typography variant="h5" sx={{
+                <Typography variant="h5" component="h1" sx={{
                   fontWeight: 950
                 }}>{t('clubAdmin.dashboard.title')}</Typography>
                 <Typography variant="body2" sx={{ opacity: 0.75 }}>

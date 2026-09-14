@@ -41,6 +41,7 @@ export function ChatComposer({
       <XStack
         testID="chat-pick-image"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.common.sendImage')}
         aria-disabled={sending}
         onPress={sending ? undefined : onPickImage}
@@ -81,6 +82,8 @@ export function ChatComposer({
       <XStack
         testID="chat-emoji-toggle"
         role="button"
+        tabIndex={0}
+        hitSlop={2}
         aria-label={t('mweb.chat.emoji')}
         onPress={onToggleEmoji}
         width={40}
@@ -96,6 +99,7 @@ export function ChatComposer({
       <XStack
         testID="chat-send"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.common.sendMessage')}
         aria-disabled={!canSend}
         onPress={canSend ? onSend : undefined}

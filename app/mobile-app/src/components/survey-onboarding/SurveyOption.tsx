@@ -19,7 +19,7 @@ interface Props {
  * SurveyQuestionField renders with MUI.
  */
 export function SurveyOption({ testID, label, selected, multi, onPress }: Readonly<Props>) {
-  const { primary, muted } = useThemeColors();
+  const { accent, muted } = useThemeColors();
   const onIcon = multi ? 'check-box' : 'radio-button-checked';
   const offIcon = multi ? 'check-box-outline-blank' : 'radio-button-unchecked';
 
@@ -29,6 +29,7 @@ export function SurveyOption({ testID, label, selected, multi, onPress }: Readon
       role={multi ? 'checkbox' : 'radio'}
       aria-checked={selected}
       aria-label={label}
+      tabIndex={0}
       onPress={onPress}
       minHeight={44}
       alignItems="center"
@@ -38,7 +39,7 @@ export function SurveyOption({ testID, label, selected, multi, onPress }: Readon
       <MaterialIcons
         name={selected ? onIcon : offIcon}
         size={22}
-        color={selected ? primary : muted}
+        color={selected ? accent : muted}
       />
       <Text flex={1} fontSize={14} color="$color">
         {label}

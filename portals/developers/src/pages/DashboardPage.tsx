@@ -66,7 +66,7 @@ export default function DashboardPage() {
       dashboardId="developers.overview"
       header={
         <Box>
-          <Typography variant="h5" sx={{
+          <Typography variant="h5" component="h1" sx={{
             fontWeight: 900
           }}>
             {t('developers.dashboard.title')}

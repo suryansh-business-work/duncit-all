@@ -59,7 +59,13 @@ export function StoryViewersSheet({
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
                 <XStack alignItems="center" gap={8}>
                   <MaterialIcons name="visibility" size={20} color={color} />
-                  <Text fontSize={17} fontWeight="600" color="$color">
+                  <Text
+                    testID="story-viewers-title"
+                    role="heading"
+                    fontSize={17}
+                    fontWeight="600"
+                    color="$color"
+                  >
                     {count === 0 ? 'No views yet' : `Seen by ${count}`}
                   </Text>
                 </XStack>
@@ -67,6 +73,8 @@ export function StoryViewersSheet({
                   pressStyle={PRESS_STYLE.surface}
                   testID="story-viewers-close"
                   role="button"
+                  tabIndex={0}
+                  hitSlop={2}
                   aria-label={t('mweb.common.closeViewers')}
                   onPress={onClose}
                   width={40}

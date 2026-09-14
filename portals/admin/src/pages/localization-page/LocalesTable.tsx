@@ -59,6 +59,12 @@ export default function LocalesTable({
         <TableBody>
           {rows.map((row) => {
             const done = coverage[row.code];
+            const translateTitle = row.is_default
+              ? t('admin.localization.autoTranslateDefault')
+              : t('admin.localization.autoTranslate');
+            const deleteTitle = row.is_default
+              ? t('admin.localization.defaultNotRemovable')
+              : t('shell.common.delete');
             return (
               <TableRow key={row.id} hover>
                 <TableCell>{row.code}</TableCell>
@@ -89,17 +95,13 @@ export default function LocalesTable({
                 <TableCell align="right">
                   {/* The source language is what everything else is
                       translated FROM, so there is nothing to fill it in with. */}
-                  <Tooltip
-                    title={
-                      row.is_default
-                        ? t('admin.localization.autoTranslateDefault')
-                        : t('admin.localization.autoTranslate')
-                    }
-                  >
+                  <Tooltip title={translateTitle}>
                     <span>
                       <DuncitIconButton
                         size="small"
                         color="primary"
+                        aria-label={translateTitle}
+                        data-testid="locales-table-auto-translate"
                         disabled={row.is_default}
                         onClick={() => onAutoTranslate(row)}
                       >
@@ -107,20 +109,21 @@ export default function LocalesTable({
                       </DuncitIconButton>
                     </span>
                   </Tooltip>
-                  <DuncitIconButton size="small" onClick={() => onEdit(row)}>
+                  <DuncitIconButton
+                    size="small"
+                    aria-label={t('admin.localization.editLocale', { vars: { code: row.code } })}
+                    data-testid="locales-table-edit"
+                    onClick={() => onEdit(row)}
+                  >
                     <EditIcon fontSize="small" />
                   </DuncitIconButton>
-                  <Tooltip
-                    title={
-                      row.is_default
-                        ? t('admin.localization.defaultNotRemovable')
-                        : t('shell.common.delete')
-                    }
-                  >
+                  <Tooltip title={deleteTitle}>
                     <span>
                       <DuncitIconButton
                         size="small"
                         color="error"
+                        aria-label={deleteTitle}
+                        data-testid="locales-table-delete"
                         disabled={row.is_default}
                         onClick={() => onDelete(row)}
                       >

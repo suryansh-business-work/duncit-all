@@ -61,7 +61,7 @@ export default function E2eSettingsPage() {
   return (
     <Box>
       <Stack sx={{ mb: 2 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+        <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
           {t('tech.e2e.settingsTitle')}
         </Typography>
         <Typography variant="caption" sx={{ color: 'text.secondary' }}>

@@ -46,6 +46,7 @@ export function CompanionCodeEntry({
         value={code}
         onChangeText={onCodeChange}
         placeholder={t('mweb.attendance.otpCode')}
+        aria-label={t('mweb.attendance.otpCode')}
         keyboardType="number-pad"
         maxLength={6}
         size="$4"
@@ -53,6 +54,7 @@ export function CompanionCodeEntry({
       <XStack gap={8}>
         <XStack
           testID={`companion-otp-verify-${index}`}
+          tabIndex={0}
           role="button"
           aria-label={t('mweb.attendance.otpVerify')}
           aria-disabled={verifying}
@@ -72,6 +74,7 @@ export function CompanionCodeEntry({
         </XStack>
         <XStack
           testID={`companion-otp-cancel-${index}`}
+          tabIndex={0}
           role="button"
           aria-label={t('mweb.attendance.otpCancel')}
           onPress={onCancel}

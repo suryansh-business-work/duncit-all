@@ -17,7 +17,7 @@ function MessageRow({
 }: Readonly<{ message: SlackMessage; botLabel: string; repliesLabel: string }>) {
   return (
     <Stack direction="row" spacing={1.25} sx={{ px: 2, py: 0.75 }}>
-      <Avatar src={message.avatar || undefined} sx={{ width: 36, height: 36 }}>
+      <Avatar alt="" src={message.avatar || undefined} sx={{ width: 36, height: 36 }}>
         {message.user_name.slice(0, 1).toUpperCase()}
       </Avatar>
       <Box sx={{ minWidth: 0, flex: 1 }}>

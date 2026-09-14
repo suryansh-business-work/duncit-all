@@ -177,7 +177,7 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Stack spacing={1.5}>
-          <Typography variant="h6" sx={{
+          <Typography variant="h6" component="h2" sx={{
             fontWeight: 950
           }}>{t('partners.listProductsPage.yourListedProducts')}</Typography>
           {message && (
@@ -185,6 +185,7 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
           )}
           <DuncitTable<ProductListingRow>
             tableId="partners-app-product-listings"
+            ariaLabel={t('partners.listProductsPage.yourListedProducts')}
             columns={columns}
             fetchRows={fetchRows}
             getRowId={getProductRowId}

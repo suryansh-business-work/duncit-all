@@ -52,6 +52,7 @@ export function HostPodRow({
       <XStack alignItems="center" gap={8}>
         <XStack
           testID={`host-pod-open-${id}`}
+          tabIndex={0}
           role="button"
           aria-label={t('mweb.common.openPod')}
           onPress={onOpen}

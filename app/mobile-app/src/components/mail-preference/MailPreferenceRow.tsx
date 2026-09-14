@@ -57,7 +57,11 @@ export function MailPreferenceRow({ item, busy, onChange }: Readonly<Props>) {
       </YStack>
 
       {busy ? (
-        <ActivityIndicator testID={`mail-preference-busy-${item.category}`} color={primary} />
+        <ActivityIndicator
+          testID={`mail-preference-busy-${item.category}`}
+          color={primary}
+          aria-label={t('mweb.a11y.loading')}
+        />
       ) : (
         <Switch
           testID={`mail-preference-switch-${item.category}`}

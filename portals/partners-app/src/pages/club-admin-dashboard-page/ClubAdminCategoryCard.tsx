@@ -98,7 +98,7 @@ export default function ClubAdminCategoryCard({ categories, loading }: Readonly<
   );
   if (loading) {
     body = (
-      <Grid container spacing={1.5}>
+      <Grid container spacing={1.5} aria-busy="true">
         {SKELETON_KEYS.map((key) => (
           <Grid key={key} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <Skeleton variant="rounded" height={104} />
@@ -126,7 +126,7 @@ export default function ClubAdminCategoryCard({ categories, loading }: Readonly<
     <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
       <Stack spacing={1.5}>
         <Stack spacing={0.25}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>
+          <Typography variant="subtitle2" component="h2" sx={{ fontWeight: 900 }}>
             {t('clubAdmin.dashboard.yourCategories')}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>

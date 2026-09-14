@@ -71,7 +71,7 @@ export function PaymentFailureDialog({
         >
           <MaterialIcons name="error-outline" size={32} color={danger} />
         </YStack>
-        <Text fontSize={20} fontWeight="600" color="$color" textAlign="center">
+        <Text role="heading" fontSize={20} fontWeight="600" color="$color" textAlign="center">
           {t(keys.title)}
         </Text>
         <Text fontSize={14} color="$muted" textAlign="center">
@@ -114,6 +114,7 @@ export function PaymentFailureDialog({
             pressStyle={PRESS_STYLE.control}
             testID="payment-failure-close"
             role="button"
+            tabIndex={0}
             aria-label={t('mweb.payment.close')}
             onPress={onClose}
             flex={1}
@@ -133,6 +134,7 @@ export function PaymentFailureDialog({
             pressStyle={PRESS_STYLE.control}
             testID="payment-failure-retry"
             role="button"
+            tabIndex={0}
             aria-label={t('mweb.payment.retry')}
             onPress={onRetry}
             flex={1}

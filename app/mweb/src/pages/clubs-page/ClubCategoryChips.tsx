@@ -39,6 +39,7 @@ export default function ClubCategoryChips({
           label={t('mweb.common.all')}
           clickable
           color={selectedId === '' ? 'primary' : 'default'}
+          aria-pressed={selectedId === ''}
           onClick={() => onSelect('')}
           sx={chipSx(selectedId === '')}
         />
@@ -49,6 +50,7 @@ export default function ClubCategoryChips({
             label={category.name}
             clickable
             color={selectedId === category.id ? 'primary' : 'default'}
+            aria-pressed={selectedId === category.id}
             onClick={() => onSelect(category.id)}
             sx={chipSx(selectedId === category.id)}
           />

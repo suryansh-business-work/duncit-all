@@ -54,7 +54,7 @@ export function CommPreferenceScreen() {
   const failed = state.loadFailed || !state.preference;
   const body = failed ? (
     <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
-      <Text testID="comm-preference-error" color="$muted">
+      <Text testID="comm-preference-error" role="alert" color="$muted">
         {labels.loadFailed}
       </Text>
     </YStack>

@@ -29,7 +29,7 @@ export function PolicyAcceptanceRow({
   onRead,
 }: Readonly<PolicyAcceptanceRowProps>) {
   const { t } = useTranslation();
-  const { primary, muted } = useThemeColors();
+  const { accent, muted } = useThemeColors();
 
   return (
     <XStack
@@ -45,6 +45,7 @@ export function PolicyAcceptanceRow({
         role="checkbox"
         aria-label={policy.title}
         aria-checked={accepted}
+        tabIndex={0}
         onPress={onToggle}
         flex={1}
         alignItems="center"
@@ -54,7 +55,7 @@ export function PolicyAcceptanceRow({
         <MaterialIcons
           name={accepted ? 'check-box' : 'check-box-outline-blank'}
           size={22}
-          color={accepted ? primary : muted}
+          color={accepted ? accent : muted}
         />
         <Text flex={1} fontSize={14} fontWeight="600" color="$color">
           {policy.title}
@@ -64,11 +65,14 @@ export function PolicyAcceptanceRow({
         pressStyle={PRESS_STYLE.inline}
         testID={`policy-read-${policy.slug}`}
         role="button"
-        aria-label={t('policyAcceptance.readAction')}
+        aria-label={t('mweb.a11y.actionFor', {
+          vars: { action: t('policyAcceptance.readAction'), name: policy.title },
+        })}
+        hitSlop={12}
         onPress={onRead}
         fontSize={13}
         fontWeight="600"
-        color="$primary"
+        color="$accent"
       >
         {t('policyAcceptance.readAction')}
       </Text>

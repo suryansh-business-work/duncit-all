@@ -88,7 +88,7 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
         />
       )}
       <YStack gap={4}>
-        <Text fontSize={17} fontWeight="600" color="$color">
+        <Text role="heading" fontSize={17} fontWeight="600" color="$color">
           {active.title}
         </Text>
         {active.help ? (
@@ -144,7 +144,7 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
                 />
               ))}
             {missing.has(q.qid) ? (
-              <Text testID={`required-${q.qid}`} fontSize={12} color="$danger">
+              <Text testID={`required-${q.qid}`} role="alert" fontSize={12} color="$danger">
                 {t('mweb.surveyOnboarding.fieldRequired')}
               </Text>
             ) : null}
@@ -152,7 +152,11 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
         );
       })}
 
-      {localError || error ? <Text color="$danger">{localError || error}</Text> : null}
+      {localError || error ? (
+        <Text role="alert" color="$danger">
+          {localError || error}
+        </Text>
+      ) : null}
 
       <XStack gap={12}>
         {step > 0 && (

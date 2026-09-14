@@ -13,6 +13,8 @@ interface Props {
 /** One chat bubble — agent right (with AI badge + read-ticks), user left. */
 export default function MessageBubble({ message: m, time, userLastReadAt }: Readonly<Props>) {
   const isAgent = m.sender_role === 'AGENT';
+  // A faded white timestamp on the accent fill drops under 4.5:1 (WCAG 1.4.3).
+  const timeColor = isAgent ? 'inherit' : 'text.secondary';
   return (
     <Stack direction="row" sx={{ justifyContent: isAgent ? 'flex-end' : 'flex-start' }}>
       <Paper
@@ -36,7 +38,7 @@ export default function MessageBubble({ message: m, time, userLastReadAt }: Read
         )}
         {m.text && <Typography variant="body2">{m.text}</Typography>}
         <AttachmentList urls={m.attachments} size={52} />
-        <Typography variant="caption" sx={{ opacity: 0.7, display: 'block', mt: 0.25 }}>
+        <Typography variant="caption" sx={{ color: timeColor, display: 'block', mt: 0.25 }}>
           {time}
           {isAgent && <MessageTicks state={tickState(m.id, m.created_at, userLastReadAt)} />}
         </Typography>

@@ -53,6 +53,7 @@ export default function SignatureStep({ draft, methods, onChange }: Readonly<Pro
           label={t('legal.sign.fullName')}
           value={draft.fullName}
           onChange={(e) => onChange({ fullName: e.target.value })}
+          autoComplete="name"
           required
           fullWidth
           autoFocus

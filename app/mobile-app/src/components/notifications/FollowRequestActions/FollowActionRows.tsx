@@ -35,6 +35,8 @@ export function AnswerActions({
         testID="follow-request-accept"
         role="button"
         aria-label={acceptLabel}
+        tabIndex={0}
+        hitSlop={6}
         onPress={onAccept}
         height={32}
         paddingHorizontal={14}
@@ -51,6 +53,8 @@ export function AnswerActions({
         testID="follow-request-reject"
         role="button"
         aria-label={denyLabel}
+        tabIndex={0}
+        hitSlop={6}
         onPress={onDeny}
         height={32}
         paddingHorizontal={14}
@@ -92,6 +96,9 @@ export function FollowBackAction({
       testID="follow-request-follow-back"
       role="button"
       aria-label={label}
+      aria-disabled={pending}
+      tabIndex={0}
+      hitSlop={6}
       gap={5}
       height={32}
       paddingHorizontal={14}

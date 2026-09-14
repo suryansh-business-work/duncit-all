@@ -143,6 +143,7 @@ export default function PodExpensePodsTable({
 
   return (
     <DuncitTable<PodExpensePodRow>
+      ariaLabel={t('shell.nav.podExpenses')}
       tableId="finance-pod-expenses"
       columns={columns}
       fetchRows={fetchRows}

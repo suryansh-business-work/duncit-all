@@ -54,7 +54,7 @@ export default function HostCategoryPicker({ existingSubIds, onAdd, disabled = f
         </DuncitButton>
       </Stack>
       {duplicate && (
-        <Typography variant="caption" color="error">
+        <Typography variant="caption" color="error" role="alert">
           Already added
         </Typography>
       )}

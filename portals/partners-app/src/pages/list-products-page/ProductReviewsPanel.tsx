@@ -106,9 +106,10 @@ function ReviewRow({
           mt: 0.5,
           color: 'text.secondary'
         }}>
-        <ThumbUpAltIcon sx={{ fontSize: 15 }} />
+        {/* The icons ARE the meaning of the two counts, so they are named (1.1.1). */}
+        <ThumbUpAltIcon titleAccess={t('partners.a11y.upVotes')} sx={{ fontSize: 15 }} />
         <Typography variant="caption">{review.up_votes}</Typography>
-        <ThumbDownAltIcon sx={{ fontSize: 15 }} />
+        <ThumbDownAltIcon titleAccess={t('partners.a11y.downVotes')} sx={{ fontSize: 15 }} />
         <Typography variant="caption">{review.down_votes}</Typography>
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
@@ -117,6 +118,7 @@ function ReviewRow({
           value={reply}
           onChange={(e) => setReply(e.target.value)}
           placeholder={t('partners.listProductsPage.replyToThisReview')}
+          slotProps={{ htmlInput: { 'aria-label': t('partners.listProductsPage.replyToThisReview') } }}
           fullWidth
         />
         <DuncitButton variant="outlined" onClick={submit} disabled={saving || !reply.trim()}>
@@ -151,7 +153,7 @@ export default function ProductReviewsPanel({ productId }: Readonly<{ productId:
 
   return (
     <Box sx={{ p: 2.5, borderRadius: 2, border: 1, borderColor: 'divider' }}>
-      <Typography variant="h6" sx={{
+      <Typography variant="h6" component="h2" sx={{
         fontWeight: 900
       }}>
         Ratings &amp; reviews
@@ -202,6 +204,4 @@ export default function ProductReviewsPanel({ productId }: Readonly<{ productId:
           No reviews yet for this product.
         </Typography>
       )}
-    </Box>
-  );
-}
+    </

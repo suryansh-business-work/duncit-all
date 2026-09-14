@@ -71,6 +71,8 @@ export default function VariableChips({ title, items, declared, onToggle, knownS
                   color={color}
                   variant={selected ? 'filled' : 'outlined'}
                   onClick={() => onToggle(it.slug)}
+                  aria-pressed={selected}
+                  data-testid="crm-template-variable-chip"
                   onDelete={() => copy(it.slug)}
                   deleteIcon={
                     <Tooltip title={copied === it.slug ? 'Copied!' : `Copy {{ ${it.slug} }}`}>

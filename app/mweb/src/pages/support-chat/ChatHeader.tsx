@@ -73,6 +73,8 @@ export default function ChatHeader({
         data-testid="chat-header-menu-button"
         aria-label={t('mweb.supportChat.chatOptions')}
         disabled={!ticketNo}
+        aria-haspopup="menu"
+        aria-expanded={!!anchor}
         onClick={(e) => setAnchor(e.currentTarget)}
         sx={HEADER_BUTTON_SX}
       >

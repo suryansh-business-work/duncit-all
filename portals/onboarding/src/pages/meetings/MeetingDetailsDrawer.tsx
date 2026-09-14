@@ -39,7 +39,8 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
     : '';
   return (
     <Drawer anchor="right" open={!!meeting} onClose={onClose} slotProps={{
-      paper: { sx: { width: { xs: '100%', sm: 380 } } }
+      // A temporary Drawer's paper is already role="dialog"; this names it.
+      paper: { 'aria-labelledby': 'meeting-details-title', sx: { width: { xs: '100%', sm: 380 } } }
     }}>
       {meeting && (
         <Stack spacing={2} sx={{ p: 2 }}>
@@ -58,7 +59,7 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
                 }}>
                 {KIND_LABEL[meeting.kind] ?? meeting.kind} meeting
               </Typography>
-              <Typography variant="h6" sx={{
+              <Typography variant="h6" component="h2" id="meeting-details-title" sx={{
                 fontWeight: 900
               }}>
                 {meeting.user_name || meeting.contact_name || 'Applicant'}

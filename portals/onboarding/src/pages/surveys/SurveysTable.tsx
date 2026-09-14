@@ -72,6 +72,7 @@ export default function SurveysTable({ fetchRows, refetchRef, onOpen, onDelete }
   return (
     <DuncitTable<SurveyRow>
       tableId="onboarding-surveys"
+      ariaLabel={t('shell.nav.surveys')}
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getSurveyRowId}

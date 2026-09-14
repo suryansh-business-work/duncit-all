@@ -35,7 +35,7 @@ export function GrievanceField({
       name={name}
       control={control}
       render={({ field, fieldState }) => {
-        const borderColor = fieldState.error ? '$danger' : '$borderColor';
+        const borderColor = fieldState.error ? '$danger' : '$inputBorder';
         return (
           <YStack gap={4}>
             <Text fontSize={12} fontWeight="600" color="$muted">
@@ -46,6 +46,8 @@ export function GrievanceField({
               <TextArea
                 testID={testID}
                 aria-label={label}
+                aria-required={required}
+                aria-invalid={!!fieldState.error}
                 value={field.value}
                 onChangeText={field.onChange}
                 onBlur={field.onBlur}
@@ -58,6 +60,8 @@ export function GrievanceField({
               <Input
                 testID={testID}
                 aria-label={label}
+                aria-required={required}
+                aria-invalid={!!fieldState.error}
                 value={field.value}
                 onChangeText={field.onChange}
                 onBlur={field.onBlur}
@@ -67,7 +71,7 @@ export function GrievanceField({
               />
             )}
             {fieldState.error ? (
-              <Text fontSize={11} color="$danger" testID={`${testID}-error`}>
+              <Text role="alert" fontSize={11} color="$danger" testID={`${testID}-error`}>
                 {fieldState.error.message}
               </Text>
             ) : (

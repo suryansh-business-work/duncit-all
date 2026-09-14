@@ -59,7 +59,7 @@ export default function ChallengesPage() {
         alignItems: "center"
       }}>
         <EmojiEventsIcon color="primary" />
-        <Typography variant="h5" sx={{
+        <Typography component="h1" variant="h5" sx={{
           fontWeight: 800
         }}>{t('challenge.list.title')}</Typography>
       </Stack>

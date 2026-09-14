@@ -95,6 +95,7 @@ export function PexelsTab({
             onSubmitEditing={pexels.search}
             returnKeyType="search"
             placeholder={t('mweb.createPod.searchPhotos')}
+            aria-label={t('mweb.createPod.searchPhotos')}
             color="$color"
             placeholderTextColor="$muted"
             height={40}
@@ -102,6 +103,7 @@ export function PexelsTab({
         </XStack>
         <XStack
           testID="cover-pexels-go"
+          tabIndex={0}
           role="button"
           aria-label={t('mweb.createPod.searchPexels')}
           onPress={pexels.search}
@@ -120,14 +122,14 @@ export function PexelsTab({
       </XStack>
 
       {pexels.error ? (
-        <Text testID="cover-pexels-error" fontSize={12} color="$danger">
+        <Text role="alert" testID="cover-pexels-error" fontSize={12} color="$danger">
           {pexels.error}
         </Text>
       ) : null}
 
       {pexels.searching && pexels.photos.length === 0 ? (
         <YStack paddingVertical={28} alignItems="center">
-          <Spinner color="$primary" />
+          <Spinner role="progressbar" aria-label={t('mweb.a11y.loading')} color="$primary" />
         </YStack>
       ) : null}
 
@@ -146,6 +148,7 @@ export function PexelsTab({
             <YStack
               key={id}
               testID={`cover-pexels-${id}`}
+              tabIndex={0}
               role="button"
               aria-label={
                 photo.alt ||
@@ -194,6 +197,7 @@ export function PexelsTab({
       {pexels.hasMore ? (
         <XStack
           testID="cover-pexels-more"
+          tabIndex={0}
           role="button"
           aria-label={loadMore}
           onPress={pexels.loadMore}

@@ -41,6 +41,7 @@ export function StatusViewerMenu({ canDelete, canReport, onDelete, onReport }: R
         <XStack
           testID="status-viewer-delete"
           role="button"
+          tabIndex={0}
           aria-label={t('contentReport.delete')}
           onPress={onDelete}
           alignItems="center"
@@ -59,6 +60,7 @@ export function StatusViewerMenu({ canDelete, canReport, onDelete, onReport }: R
         <XStack
           testID="status-viewer-report"
           role="button"
+          tabIndex={0}
           aria-label={t('contentReport.report')}
           onPress={onReport}
           alignItems="center"

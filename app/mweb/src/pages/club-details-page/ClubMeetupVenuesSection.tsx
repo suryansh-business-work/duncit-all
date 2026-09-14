@@ -58,7 +58,7 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
           justifyContent: "space-between",
           mb: 0.5
         }}>
-        <Typography variant="h6" sx={{
+        <Typography variant="h6" component="h2" sx={{
           fontWeight: 600, fontSize: '1.0625rem'
         }}>
           We usually meet

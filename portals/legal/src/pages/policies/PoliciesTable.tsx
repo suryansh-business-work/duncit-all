@@ -109,6 +109,7 @@ export default function PoliciesTable({
 
   return (
     <DuncitTable<Policy>
+      ariaLabel={t('legal.policies.title')}
       tableId="legal-policies"
       columns={columns}
       fetchRows={fetchRows}

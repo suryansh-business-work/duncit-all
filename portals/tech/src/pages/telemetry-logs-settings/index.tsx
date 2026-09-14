@@ -187,7 +187,7 @@ export default function TelemetryLogsSettingsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5">{t('tech.telemetryLogsSettings.telemetryLogsSettings')}</Typography>
+        <Typography variant="h5" component="h1">{t('tech.telemetryLogsSettings.telemetryLogsSettings')}</Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>

@@ -54,6 +54,9 @@ export default function TranscriptMenu({ onDownload, onEmail, busy }: Readonly<P
         <DuncitIconButton
           size="small"
           aria-label={t('support.transcript.export')}
+          aria-haspopup="menu"
+          aria-expanded={Boolean(anchor)}
+          data-testid="transcript-menu-open"
           onClick={(e) => {
             if (!busy) setAnchor(e.currentTarget);
           }}

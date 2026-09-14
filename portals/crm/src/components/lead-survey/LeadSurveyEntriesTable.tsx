@@ -79,6 +79,15 @@ export default function LeadSurveyEntriesTable({ entries, survey, onRevoke, onDe
                 hover
                 sx={{ cursor: 'pointer' }}
                 onClick={() => onFill(e)}
+                // Keyboard users open the entry the same way a click does (2.1.1).
+                tabIndex={0}
+                onKeyDown={(ev) => {
+                  if (ev.target === ev.currentTarget && (ev.key === 'Enter' || ev.key === ' ')) {
+                    ev.preventDefault();
+                    onFill(e);
+                  }
+                }}
+                data-testid="crm-lead-survey-entry-row"
                 title={t('crm.components.openToFillEditThisSurvey')}
               >
                 <TableCell><Chip size="small" color={SOURCE_COLOR[e.source]} label={e.source} variant="outlined" /></TableCell>
@@ -99,13 +108,13 @@ export default function LeadSurveyEntriesTable({ entries, survey, onRevoke, onDe
                   {e.source === 'LINK' && !e.token_revoked && e.token && (
                     <>
                       <Tooltip title={t('crm.components.copyLink')}><DuncitIconButton size="small" onClick={() => copy(e.token!)}><ContentCopyIcon fontSize="small" /></DuncitIconButton></Tooltip>
-                      <Tooltip title={t('crm.components.revokeLink')}><span><DuncitIconButton size="small" color="warning" disabled={revoking} onClick={() => onRevoke(e.id)}><BlockIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
+                      <Tooltip title={t('crm.components.revokeLink')}><span><DuncitIconButton size="small" color="warning" aria-label={t('crm.components.revokeLink')} data-testid="crm-lead-survey-revoke" disabled={revoking} onClick={() => onRevoke(e.id)}><BlockIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
                     </>
                   )}
                   {e.filled && (
                     <Tooltip title={t('crm.components.viewAnswers')}><DuncitIconButton size="small" onClick={() => setView(e)}><VisibilityIcon fontSize="small" /></DuncitIconButton></Tooltip>
                   )}
-                  <Tooltip title={t('shell.common.delete')}><span><DuncitIconButton size="small" color="error" disabled={deleting} onClick={() => onDelete(e.id)}><DeleteIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
+                  <Tooltip title={t('shell.common.delete')}><span><DuncitIconButton size="small" color="error" aria-label={t('shell.common.delete')} data-testid="crm-lead-survey-delete" disabled={deleting} onClick={() => onDelete(e.id)}><DeleteIcon fontSize="small" /></DuncitIconButton></span></Tooltip>
                 </TableCell>
               </TableRow>
             ))}

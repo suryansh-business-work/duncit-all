@@ -24,7 +24,7 @@ const renderEntry = (item: WebsiteContentItem) => (
   <Stack direction="row" spacing={1.5} sx={{
     alignItems: "center"
   }}>
-    <Avatar src={item.image_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
+    <Avatar alt="" src={item.image_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
       <ImageIcon fontSize="small" />
     </Avatar>
     <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>

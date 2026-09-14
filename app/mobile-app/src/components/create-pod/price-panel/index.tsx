@@ -63,7 +63,13 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
         </Text>
       ) : null}
       {ready && isLoading ? (
-        <Spinner testID="create-pod-earnings-loading" size="small" color="$primary" />
+        <Spinner
+          role="progressbar"
+          aria-label={t('mweb.a11y.loading')}
+          testID="create-pod-earnings-loading"
+          size="small"
+          color="$primary"
+        />
       ) : null}
       {/* Hide the previous waterfall while a new amount is loading, so stale
           money rows never render beside labels built from the live inputs. */}

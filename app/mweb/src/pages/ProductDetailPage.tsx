@@ -119,7 +119,7 @@ export default function ProductDetailPage() {
   if (loading && !product)
     return (
       <Stack sx={{ alignItems: "center", p: 6 }} data-testid="product-detail-loading">
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   if (error) return <Alert severity="error" data-testid="product-detail-error">{error.message}</Alert>;
@@ -158,6 +158,7 @@ export default function ProductDetailPage() {
                 data-testid={`variant-${v.id}`}
                 label={variantName(v)}
                 onClick={() => setVariantId(v.id)}
+                aria-pressed={selected}
                 color={selected ? 'primary' : 'default'}
                 sx={selected ? PILL_SX : IDLE_PILL_SX}
               />

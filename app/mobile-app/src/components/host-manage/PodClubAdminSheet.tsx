@@ -36,12 +36,12 @@ export function PodClubAdminSheet({
   if (isLoading) {
     body = (
       <YStack alignItems="center" paddingVertical={28} testID="pod-club-admin-loading">
-        <Spinner size="large" />
+        <Spinner role="progressbar" aria-label={t('mweb.a11y.loading')} size="large" />
       </YStack>
     );
   } else if (hasError) {
     body = (
-      <Text testID="pod-club-admin-error" fontSize={13} color="$danger">
+      <Text role="alert" testID="pod-club-admin-error" fontSize={13} color="$danger">
         {t('mweb.podClubAdmin.loadFailed')}
       </Text>
     );
@@ -81,9 +81,15 @@ export function PodClubAdminSheet({
   return (
     <Modal visible={!!pod} transparent animationType="fade" onRequestClose={onClose}>
       <ModalThemeScope>
-        <YStack flex={1} justifyContent="flex-end" testID="pod-club-admin-sheet">
+        <YStack
+          flex={1}
+          justifyContent="flex-end"
+          testID="pod-club-admin-sheet"
+          onAccessibilityEscape={onClose}
+        >
           <YStack
             pressStyle={PRESS_STYLE.surface}
+            importantForAccessibility="no"
             role="button"
             aria-label={t('mweb.podClubAdmin.close')}
             onPress={onClose}
@@ -102,7 +108,13 @@ export function PodClubAdminSheet({
             maxHeight="85%"
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
-              <Text fontSize={17} fontWeight="600" color="$color">
+              <Text
+                testID="pod-club-admin-title"
+                role="heading"
+                fontSize={17}
+                fontWeight="600"
+                color="$color"
+              >
                 {t('mweb.podClubAdmin.title')}
               </Text>
               <Text

@@ -39,6 +39,7 @@ export function KeepSpotDialog({
       <XStack
         testID="keep-spot-cancel"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.podDetails.close')}
         aria-disabled={busy}
         onPress={busy ? undefined : onClose}
@@ -59,6 +60,7 @@ export function KeepSpotDialog({
       <XStack
         testID="keep-spot-confirm"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.podDetails.keepMySpot')}
         aria-disabled={busy}
         onPress={busy ? undefined : onConfirm}
@@ -98,7 +100,13 @@ export function KeepSpotDialog({
           {t('mweb.podDetails.keepSpotBody', { vars: { count: attemptsLeft } })}
         </Text>
         {error ? (
-          <Text testID="keep-spot-error" fontSize={13} fontWeight="600" color="$danger">
+          <Text
+            role="alert"
+            testID="keep-spot-error"
+            fontSize={13}
+            fontWeight="600"
+            color="$danger"
+          >
             {error}
           </Text>
         ) : null}

@@ -78,6 +78,8 @@ export default function ContactValueStep({
               name="number"
               label={copy.fieldLabel}
               size="small"
+              required
+              autoComplete="tel-national"
               slotProps={{ inputLabel: { shrink: true }, htmlInput: numericInput }}
             />
           </Stack>
@@ -88,6 +90,8 @@ export default function ContactValueStep({
             type="email"
             label={copy.fieldLabel}
             size="small"
+            required
+            autoComplete="email"
             slotProps={{ inputLabel: { shrink: true } }}
           />
         )}

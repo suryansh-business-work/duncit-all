@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Spinner, Text, YStack } from 'tamagui';
 
 import { AppHeader } from '@/components/AppHeader';
+import { useLoadingRegion } from '@/components/Skeleton';
 import { SuperCategoryGroup } from '@/components/survey/SuperCategoryGroup';
 import { SurveyFooter } from '@/components/survey/SurveyFooter';
 import { SurveyProgress } from '@/components/survey/SurveyProgress';
@@ -21,6 +22,7 @@ export function SurveyScreen() {
   const completeSurvey = useAuthStore((s) => s.completeSurvey);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [opError, setOpError] = useState<string | null>(null);
+  const loadingRegion = useLoadingRegion();
   // The footer floats over the scroll and already pads itself by the device's
   // bottom inset, so the room reserved behind it is measured rather than
   // guessed — the same number is too small on a 3-button nav bar.
@@ -57,7 +59,7 @@ export function SurveyScreen() {
   };
 
   const surveyBody = error ? (
-    <Text color="$danger" testID="survey-error">
+    <Text color="$danger" testID="survey-error" role="alert">
       {toErrorMessage(error)}
     </Text>
   ) : (
@@ -92,7 +94,7 @@ export function SurveyScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <YStack gap={4} paddingBottom={24}>
-            <Text accessibilityRole="header" fontSize={24} fontWeight="600" color="$color">
+            <Text role="heading" fontSize={24} fontWeight="600" color="$color">
               What&apos;s your vibe? ✨
             </Text>
             <Text fontSize={14} color="$muted">
@@ -102,14 +104,14 @@ export function SurveyScreen() {
 
           {isLoading && !data ? (
             <YStack alignItems="center" paddingVertical={40}>
-              <Spinner testID="survey-loading" color="$primary" />
+              <Spinner testID="survey-loading" color="$primary" {...loadingRegion} />
             </YStack>
           ) : (
             surveyBody
           )}
 
           {opError ? (
-            <Text marginTop={12} color="$danger" testID="survey-op-error">
+            <Text marginTop={12} color="$danger" testID="survey-op-error" role="alert">
               {opError}
             </Text>
           ) : null}

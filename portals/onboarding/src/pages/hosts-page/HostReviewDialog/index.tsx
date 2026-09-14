@@ -98,6 +98,7 @@ export default function HostReviewDialog({
         }}>
           <Typography
             variant="h6"
+            component="span"
             noWrap
             sx={{
               fontWeight: 900,
@@ -124,9 +125,11 @@ export default function HostReviewDialog({
             policeVerificationUrl={active.police_verification_url}
           />
 
-          <Divider textAlign="left">
+          <Divider textAlign="left" role="presentation">
             <Typography
               variant="caption"
+              role="heading"
+              aria-level={3}
               sx={{
                 color: "text.secondary",
                 fontWeight: 700

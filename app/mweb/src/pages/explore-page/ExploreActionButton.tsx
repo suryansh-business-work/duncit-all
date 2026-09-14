@@ -1,6 +1,7 @@
 import { CircularProgress, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { DuncitIconButton } from '@duncit/buttons';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   icon: React.ReactNode;
@@ -30,6 +31,11 @@ export default function ExploreActionButton({
   onLabelClick,
   testId,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
+  // A count that opens something (who liked) is a real button (2.1.1).
+  const countA11y = onLabelClick
+    ? ({ component: 'button', 'aria-label': t('mweb.a11y.seeLikes', { vars: { count: caption ?? '' } }) } as const)
+    : {};
   return (
     <Stack data-testid={testId} spacing={0.25} sx={{
       alignItems: "center"
@@ -55,8 +61,12 @@ export default function ExploreActionButton({
         <Typography
           data-testid={onLabelClick ? `${testId}-count` : undefined}
           variant="caption"
+          {...countA11y}
           onClick={onLabelClick}
           sx={(theme) => ({
+            border: 0,
+            p: 0,
+            bgcolor: 'transparent',
             color: 'common.white',
             fontWeight: 600,
             fontSize: '0.6875rem',

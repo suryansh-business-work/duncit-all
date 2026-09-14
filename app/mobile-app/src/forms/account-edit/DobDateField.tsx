@@ -94,7 +94,7 @@ export function DobDateField<T extends FieldValues>({
           backgroundColor="$surface"
           color="$color"
           placeholderTextColor="$muted"
-          borderColor={error ? '$danger' : '$borderColor'}
+          borderColor={error ? '$danger' : '$inputBorder'}
           value={value}
           onChangeText={onTyped}
           onBlur={field.onBlur}
@@ -106,6 +106,7 @@ export function DobDateField<T extends FieldValues>({
           testID="dob-open"
           role="button"
           aria-label={t('mweb.signup.dobPick')}
+          tabIndex={0}
           onPress={() => setOpen(true)}
           width={FIELD_HEIGHT}
           height={FIELD_HEIGHT}
@@ -119,7 +120,7 @@ export function DobDateField<T extends FieldValues>({
         </XStack>
       </XStack>
       {error ? (
-        <Text testID="dob-error" fontSize={12} color="$danger">
+        <Text testID="dob-error" role="alert" fontSize={12} color="$danger">
           {error}
         </Text>
       ) : null}
@@ -127,7 +128,13 @@ export function DobDateField<T extends FieldValues>({
       <Modal visible={open} transparent animationType="fade" onRequestClose={closeSheet}>
         <ModalThemeScope>
           <KeyboardScreen>
-            <YStack flex={1} alignItems="center" justifyContent="center" testID="dob-sheet">
+            <YStack
+              flex={1}
+              alignItems="center"
+              justifyContent="center"
+              testID="dob-sheet"
+              onAccessibilityEscape={closeSheet}
+            >
               <YStack
                 pressStyle={PRESS_STYLE.surface}
                 testID="dob-sheet-backdrop"

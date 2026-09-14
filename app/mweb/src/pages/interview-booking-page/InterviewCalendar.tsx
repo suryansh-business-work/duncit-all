@@ -7,6 +7,7 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import { DuncitButton, DuncitRoundButton } from '@duncit/buttons';
 import { Slot, TIME_OPTIONS, buildMonth, isPastDay, isSameDay, slotKey } from './slotHelpers';
 import { formatDate, formatDateTime } from '../../utils/dateFormat';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface InterviewCalendarProps {
   anchor: Date;
@@ -27,6 +28,7 @@ export default function InterviewCalendar({
   onToggleSlot,
   onRemoveSlot,
 }: Readonly<InterviewCalendarProps>) {
+  const { t } = useTranslation();
   const cells = useMemo(
     () =>
       buildMonth(anchor).map((date, i) => ({
@@ -39,12 +41,12 @@ export default function InterviewCalendar({
   const slotList = Array.from(slots.values()).sort((a, b) => +a.start - +b.start);
 
   const goPrevMonth = () => {
-    const t = new Date();
-    t.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const next = new Date(anchor.getFullYear(), anchor.getMonth() - 1, 1);
     if (
-      next.getFullYear() < t.getFullYear() ||
-      (next.getFullYear() === t.getFullYear() && next.getMonth() < t.getMonth())
+      next.getFullYear() < today.getFullYear() ||
+      (next.getFullYear() === today.getFullYear() && next.getMonth() < today.getMonth())
     )
       return;
     setAnchor(next);
@@ -61,11 +63,12 @@ export default function InterviewCalendar({
             justifyContent: "space-between",
             alignItems: "center"
           }}>
-          <Typography variant="h6" sx={{ fontSize: '1.0625rem' }}>{monthLabel}</Typography>
+          <Typography variant="h6" component="h2" aria-live="polite" sx={{ fontSize: '1.0625rem' }}>{monthLabel}</Typography>
           <Stack direction="row" spacing={1}>
             <DuncitRoundButton
               data-testid="interview-calendar-prev-month"
               tone="surface"
+              aria-label={t('mweb.slots.previousMonth')}
               onClick={goPrevMonth}
             >
               <ChevronLeftRoundedIcon />
@@ -73,6 +76,7 @@ export default function InterviewCalendar({
             <DuncitRoundButton
               data-testid="interview-calendar-next-month"
               tone="surface"
+              aria-label={t('mweb.slots.nextMonth')}
               onClick={goNextMonth}
             >
               <ChevronRightRoundedIcon />
@@ -103,7 +107,7 @@ export default function InterviewCalendar({
             if (!d) return <Box key={key} />;
             const past = isPastDay(d);
             const active = selectedDate && isSameDay(d, selectedDate);
-            const inactiveColor = past ? 'text.disabled' : 'text.primary';
+            const inactiveColor = past ? 'text.secondary' : 'text.primary';
             const dayTestId = `interview-calendar-day-${key}`;
             return (
               <DuncitButton
@@ -111,6 +115,7 @@ export default function InterviewCalendar({
                 data-testid={dayTestId}
                 onClick={() => !past && setSelectedDate(d)}
                 disabled={past}
+                aria-pressed={Boolean(active)}
                 sx={{
                   minWidth: 0,
                   aspectRatio: '1 / 1',
@@ -135,18 +140,19 @@ export default function InterviewCalendar({
               {formatDate(selectedDate)}
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {TIME_OPTIONS.map((t) => {
-                const key = slotKey(selectedDate, t);
+              {TIME_OPTIONS.map((time) => {
+                const key = slotKey(selectedDate, time);
                 const selected = slots.has(key);
-                const slotTestId = `interview-calendar-slot-${t}`;
+                const slotTestId = `interview-calendar-slot-${time}`;
                 return (
                   <Chip
-                    key={t}
+                    key={time}
                     data-testid={slotTestId}
-                    label={t}
+                    label={time}
                     variant="filled"
                     color={selected ? 'primary' : 'default'}
-                    onClick={() => onToggleSlot(selectedDate, t)}
+                    aria-pressed={selected}
+                    onClick={() => onToggleSlot(selectedDate, time)}
                     icon={selected ? <CheckCircleIcon /> : undefined}
                     sx={{ height: 40, minHeight: 40, px: 0.5 }}
                   />

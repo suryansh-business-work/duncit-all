@@ -11,6 +11,7 @@ import {
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import IconDisc from './IconDisc';
 import { testIdProps } from '../../utils/testIdProps';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const SET_VISIBILITY = gql`
   mutation SetMyProfileVisibility($visibility: ProfileVisibility!) {
@@ -29,6 +30,7 @@ interface Props {
 /** Account privacy: a private profile hides its posts and status from people
  * who don't follow you (like Instagram). Name and avatar stay visible. */
 export default function PrivacyToggleCard({ visibility, onChanged }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [setVisibility, { loading }] = useMutation<any>(SET_VISIBILITY);
   const isPrivate = visibility === 'PRIVATE';
 
@@ -61,7 +63,7 @@ export default function PrivacyToggleCard({ visibility, onChanged }: Readonly<Pr
             </Typography>
           </Stack>
           {loading ? (
-            <CircularProgress size={22} />
+            <CircularProgress size={22} aria-label={t('mweb.a11y.loading')} />
           ) : (
             <Switch
               data-testid="privacy-switch"

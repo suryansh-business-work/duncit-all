@@ -46,7 +46,12 @@ export default function FeatureFlagsTable({
   const { t } = useTranslation();
   const columns = useMemo<DuncitColumn<FeatureFlagRow>[]>(() => {
     const renderEnabled = (f: FeatureFlagRow) => (
-      <Switch size="small" checked={f.enabled} onChange={() => onToggle(f)} />
+      <Switch
+        size="small"
+        slotProps={{ input: { 'aria-label': t('shell.a11y.fieldOf', { vars: { field: t('tech.featureFlags.enabled'), name: f.name } }), 'data-testid': 'feature-flags-enabled-toggle' } as Record<string, string> }}
+        checked={f.enabled}
+        onChange={() => onToggle(f)}
+      />
     );
     return [
       {
@@ -85,6 +90,7 @@ export default function FeatureFlagsTable({
 
   return (
     <DuncitTable<FeatureFlagRow>
+      ariaLabel={t('shell.nav.featureFlags')}
       tableId="tech-feature-flags"
       columns={columns}
       fetchRows={fetchRows}

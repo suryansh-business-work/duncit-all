@@ -118,7 +118,7 @@ export function VenueRulesSection({ venueId, rules, onSaved }: Readonly<Props>) 
         ))}
       </YStack>
       {error ? (
-        <Text testID="rules-error" fontSize={12.5} color="$danger">
+        <Text role="alert" testID="rules-error" fontSize={12.5} color="$danger">
           {error}
         </Text>
       ) : null}

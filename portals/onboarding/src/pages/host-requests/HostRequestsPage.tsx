@@ -81,7 +81,7 @@ export default function HostRequestsPage() {
       <Stack spacing={0.25} sx={{
         mb: 2
       }}>
-        <Typography variant="h5" sx={{
+        <Typography variant="h5" component="h1" sx={{
           fontWeight: 700
         }}>{t('onboarding.hostRequests.hostRequests')}</Typography>
         <Typography variant="body2" sx={{

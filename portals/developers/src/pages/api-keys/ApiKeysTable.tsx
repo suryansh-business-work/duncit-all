@@ -125,6 +125,7 @@ export default function ApiKeysTable({
 
   return (
     <DuncitTable<ApiKeyRow>
+      ariaLabel={t('developers.apiKeys.title')}
       tableId="developers-api-keys"
       columns={columns}
       fetchRows={fetchRows}

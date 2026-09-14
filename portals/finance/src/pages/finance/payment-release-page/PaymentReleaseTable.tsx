@@ -167,6 +167,7 @@ export default function PaymentReleaseTable({ fetchRows, refetchRef, onReview }:
 
   return (
     <DuncitTable<PaymentReleaseRow>
+      ariaLabel={t('shell.nav.paymentRelease')}
       tableId="finance-payment-releases"
       columns={columns}
       fetchRows={fetchRows}

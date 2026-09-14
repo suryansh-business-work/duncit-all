@@ -77,7 +77,7 @@ export default function OrderSummaryCard({
       <CardContent sx={{ p: 2 }}>
         {media?.url && (
           <Box sx={{ height: 140, borderRadius: '18px', overflow: 'hidden', bgcolor: 'action.hover', mb: 1.5 }}>
-            <Box component={mediaIsVideo ? 'video' : 'img'} src={mediaIsVideo ? videoSourceUrl(media.url) : media.url} autoPlay muted loop playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            <Box component={mediaIsVideo ? 'video' : 'img'} src={mediaIsVideo ? videoSourceUrl(media.url) : media.url} alt="" autoPlay muted loop playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           </Box>
         )}
         <Typography data-testid="order-summary-title" noWrap sx={{ fontSize: 16, fontWeight: 600 }}>{title}</Typography>

@@ -64,6 +64,7 @@ export function GrievanceTicketField({ control, options, loading }: Readonly<Pro
               pressStyle={PRESS_STYLE.surface}
               testID="grievance-support_ticket_ref"
               role="button"
+              tabIndex={0}
               aria-label={copy.label}
               aria-expanded={open}
               onPress={() => setOpen((o) => !o)}

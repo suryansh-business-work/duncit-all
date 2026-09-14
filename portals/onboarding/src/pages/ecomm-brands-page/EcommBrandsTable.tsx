@@ -25,7 +25,7 @@ const renderBrand = (b: EcommBrandRow) => (
   <Stack direction="row" spacing={1} sx={{
     alignItems: "center"
   }}>
-    <Avatar src={b.logo_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
+    <Avatar src={b.logo_url || undefined} alt="" variant="rounded" sx={{ width: 32, height: 32 }}>
       {(b.brand_name || '?').charAt(0).toUpperCase()}
     </Avatar>
     <Box>
@@ -175,6 +175,7 @@ export default function EcommBrandsTable({
   return (
     <DuncitTable<EcommBrandRow>
       tableId="onboarding-ecomm-brands"
+      ariaLabel={t('shell.nav.brands')}
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getBrandRowId}

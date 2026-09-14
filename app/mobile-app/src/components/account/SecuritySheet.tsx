@@ -36,7 +36,7 @@ export function SecuritySheet({
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <ModalThemeScope>
         <KeyboardScreen>
-          <YStack flex={1} testID={testID}>
+          <YStack flex={1} testID={testID} onAccessibilityEscape={onClose}>
             <YStack
               pressStyle={PRESS_STYLE.surface}
               role="button"
@@ -67,7 +67,13 @@ export function SecuritySheet({
                   paddingTop={16}
                   paddingBottom={8}
                 >
-                  <Text fontSize={17} fontWeight="600" color="$color">
+                  <Text
+                    testID={`${testID}-title`}
+                    role="heading"
+                    fontSize={17}
+                    fontWeight="600"
+                    color="$color"
+                  >
                     {title}
                   </Text>
                   <XStack
@@ -75,6 +81,8 @@ export function SecuritySheet({
                     testID={`${testID}-close`}
                     role="button"
                     aria-label={t('mweb.common.close')}
+                    tabIndex={0}
+                    hitSlop={4}
                     onPress={onClose}
                     width={36}
                     height={36}

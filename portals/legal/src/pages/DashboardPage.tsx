@@ -105,7 +105,7 @@ export default function DashboardPage() {
           icon={<DescriptionIcon fontSize="large" color="primary" />}
           caption={t('legal.dashboard.totalDocuments')}
           heading={
-            <Typography variant="h4" sx={{ fontWeight: 800, lineHeight: 1 }}>
+            <Typography variant="h4" component="p" sx={{ fontWeight: 800, lineHeight: 1 }}>
               {stats?.total ?? 0}
             </Typography>
           }

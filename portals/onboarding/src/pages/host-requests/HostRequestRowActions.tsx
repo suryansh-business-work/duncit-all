@@ -52,7 +52,7 @@ export default function HostRequestRowActions({ request, busy, onAcknowledge, on
   };
   return (
     <>
-      <DuncitIconButton size="small" disabled={busy} onClick={(e) => setAnchor(e.currentTarget)} aria-label={t('onboarding.hostRequests.hostRequestActions')}>
+      <DuncitIconButton size="small" disabled={busy} onClick={(e) => setAnchor(e.currentTarget)} aria-label={t('onboarding.hostRequests.hostRequestActions')} aria-haspopup="menu" aria-expanded={!!anchor}>
         <MoreVertIcon fontSize="small" />
       </DuncitIconButton>
       <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>

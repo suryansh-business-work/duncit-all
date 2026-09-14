@@ -9,6 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
+import { useTranslation } from '@duncit/shell';
 import ProductsReviewTable from './ProductsReviewTable';
 import ReviewListingDialog from './ReviewListingDialog';
 import { PRODUCT_LISTING_REQUESTS_TABLE, type ProductListingRow } from './requestsQueries';
@@ -16,6 +17,7 @@ import { PRODUCT_LISTING_REQUESTS_TABLE, type ProductListingRow } from './reques
 const STATUS_TABS = ['PENDING', 'APPROVED', 'DENIED', 'ALL'];
 
 export default function ProductsReviewPage() {
+  const { t } = useTranslation();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [status, setStatus] = useState('PENDING');
@@ -54,7 +56,7 @@ export default function ProductsReviewPage() {
         justifyContent: "space-between"
       }}>
         <Box>
-          <Typography variant="h4" sx={{
+          <Typography component="h1" variant="h4" sx={{
             fontWeight: 950
           }}>
             Products Reviews
@@ -71,6 +73,8 @@ export default function ProductsReviewPage() {
           size="small"
           value={status}
           onChange={(_, value) => value && setStatus(value)}
+          aria-label={t('shell.common.status')}
+          data-testid="products-review-status"
         >
           {STATUS_TABS.map((item) => (
             <ToggleButton key={item} value={item}>

@@ -16,7 +16,14 @@ export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDial
   const { t } = useTranslation();
   const navigate = useNavigate();
   return (
-    <Dialog data-testid="support-faq-modal" open={faq !== null} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog
+      data-testid="support-faq-modal"
+      open={faq !== null}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      aria-labelledby="support-faq-modal-title"
+    >
       {faq && (
         <DialogContent sx={{ p: 2.5 }}>
           <Stack
@@ -26,7 +33,13 @@ export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDial
               alignItems: "flex-start",
               justifyContent: "space-between"
             }}>
-            <Typography variant="h6" sx={{ fontWeight: 600, pr: 1 }}>
+            <Typography
+              id="support-faq-modal-title"
+              data-testid="support-faq-modal-title"
+              variant="h6"
+              component="h2"
+              sx={{ fontWeight: 600, pr: 1 }}
+            >
               {faq.question}
             </Typography>
             <DuncitRoundButton

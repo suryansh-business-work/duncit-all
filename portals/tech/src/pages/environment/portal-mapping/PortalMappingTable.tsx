@@ -72,7 +72,13 @@ export default function PortalMappingTable({ fetchRows, refetchRef, onInfo, onAs
         }}>
         <Tooltip title={t('tech.environment.showAssignedConfigs')}>
           <span>
-            <DuncitIconButton size="small" onClick={() => onInfo(row)} disabled={!row.entries.length}>
+            <DuncitIconButton
+              size="small"
+              aria-label={t('tech.environment.showAssignedConfigs')}
+              data-testid="portal-mapping-info"
+              onClick={() => onInfo(row)}
+              disabled={!row.entries.length}
+            >
               <InfoOutlinedIcon fontSize="small" />
             </DuncitIconButton>
           </span>

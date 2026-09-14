@@ -138,6 +138,7 @@ export default function AccountEditForm({
             name="first_name"
             label={t('mweb.common.firstName')}
             required
+            autoComplete="given-name"
             size="small"
             slotProps={{ inputLabel: { shrink: true } }}
           />
@@ -145,6 +146,7 @@ export default function AccountEditForm({
             control={control}
             name="last_name"
             label={t('mweb.common.lastName')}
+            autoComplete="family-name"
             size="small"
             slotProps={{ inputLabel: { shrink: true } }}
           />
@@ -168,7 +170,7 @@ export default function AccountEditForm({
         />
         <DobDateField control={control} minAge={minAge} />
         <LocationSelect control={control} setValue={setValue} />
-        <Typography data-testid="account-edit-address-title" sx={{ fontSize: 15, fontWeight: 600, pt: 1 }}>Main address</Typography>
+        <Typography data-testid="account-edit-address-title" component="h3" sx={{ fontSize: 15, fontWeight: 600, pt: 1 }}>Main address</Typography>
         <AddressFields
           control={control}
           names={ADDRESS_NAMES}

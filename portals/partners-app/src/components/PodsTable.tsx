@@ -204,6 +204,7 @@ export default function PodsTable<T extends PodRowBase>({
   return (
     <DuncitTable<T>
       tableId={tableId}
+      ariaLabel={t('shell.nav.pods')}
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getPodRowId}

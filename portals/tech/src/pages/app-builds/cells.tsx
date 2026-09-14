@@ -182,7 +182,8 @@ const ArtifactLink = ({
   if (!artifact.url) {
     return (
       <Tooltip title={artifact.error || labels.noArtifact}>
-        <ErrorOutlineIcon fontSize="small" color="warning" />
+        {/* Exposed as an image so the tooltip's name reaches a screen reader. */}
+        <ErrorOutlineIcon fontSize="small" color="warning" role="img" aria-hidden={false} />
       </Tooltip>
     );
   }

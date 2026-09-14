@@ -11,6 +11,7 @@ import { IdeaDetailsBody } from './IdeaDetailsBody';
 import { IdeaSheetHeader } from './IdeaSheetHeader';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 interface Props {
   id: string;
@@ -22,6 +23,7 @@ interface Props {
 /** Idea details bottom sheet — description, like, and the comment thread with an
  * add-comment composer. RN port of mWeb's IdeaDetailsDialog. */
 export function IdeaDetailsSheet({ id, myId, onClose, onChanged }: Readonly<Props>) {
+  const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
   const { idea, isLoading, addComment, deleteComment, toggleLike } = usePodIdeaDetails(
     id,
@@ -52,6 +54,7 @@ export function IdeaDetailsSheet({ id, myId, onClose, onChanged }: Readonly<Prop
             <YStack
               pressStyle={PRESS_STYLE.surface}
               role="button"
+              importantForAccessibility="no"
               aria-label={t('mweb.common.close')}
               onPress={onClose}
               position="absolute"
@@ -80,7 +83,7 @@ export function IdeaDetailsSheet({ id, myId, onClose, onChanged }: Readonly<Prop
 
                 {isLoading && !idea ? (
                   <YStack flex={1} alignItems="center" justifyContent="center">
-                    <Spinner testID="idea-details-loading" color="$primary" />
+                    <Spinner {...loadingRegion} testID="idea-details-loading" color="$primary" />
                   </YStack>
                 ) : null}
                 {!(isLoading && !idea) && !idea ? (

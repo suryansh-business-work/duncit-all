@@ -27,7 +27,7 @@ interface Props {
 const getRowId = (p: CatalogBrandProductRow) => p.id;
 
 const renderCover = (p: CatalogBrandProductRow) => (
-  <Avatar src={p.image_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
+  <Avatar alt="" src={p.image_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
     {p.product_name?.[0]?.toUpperCase() ?? '?'}
   </Avatar>
 );

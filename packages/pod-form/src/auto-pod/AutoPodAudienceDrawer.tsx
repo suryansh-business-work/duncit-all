@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useId, useMemo } from 'react';
 import { Drawer, IconButton, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { DuncitTable, clientTableFetch, type DuncitColumn } from '@duncit/table';
@@ -94,18 +94,19 @@ export default function AutoPodAudienceDrawer({ role, audience, onClose }: Reado
   const { t } = useTranslation();
   const table = useMemo(() => (role && audience ? tableFor(role, audience, t) : null), [role, audience, t]);
   const fetchRows = useMemo(() => (table ? clientTableFetch(table.rows, table.search) : null), [table]);
+  const titleId = useId();
 
   return (
     <Drawer
       anchor="right"
       open={!!table}
       onClose={onClose}
-      slotProps={{ paper: { sx: { width: { xs: '100%', sm: 640 } } } }}
+      slotProps={{ paper: { role: 'dialog', 'aria-labelledby': titleId, sx: { width: { xs: '100%', sm: 640 } } } }}
     >
       {table && fetchRows && (
         <Stack spacing={2} sx={{ p: 2 }} data-testid="auto-pod-audience-drawer">
           <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>
+            <Typography id={titleId} variant="h6" component="h2" sx={{ fontWeight: 800 }}>
               {table.title}
             </Typography>
             <IconButton onClick={onClose} aria-label={t('podForm.autoPod.drawerClose')}>

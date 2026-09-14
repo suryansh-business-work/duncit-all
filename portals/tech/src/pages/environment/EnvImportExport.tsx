@@ -128,6 +128,9 @@ export default function EnvImportExport({ category, categoryLabel, onImported }:
         size="small"
         startIcon={<DownloadIcon />}
         disabled={exporting}
+        aria-haspopup="menu"
+        aria-expanded={Boolean(menuAnchor)}
+        data-testid="env-export-menu-open"
         onClick={(e) => setMenuAnchor(e.currentTarget)}
       >
         Export

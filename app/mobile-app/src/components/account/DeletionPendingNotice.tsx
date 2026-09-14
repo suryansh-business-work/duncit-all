@@ -55,6 +55,8 @@ export function DeletionPendingNotice({
         testID="withdraw-deletion"
         role="button"
         aria-label={t('mweb.account.deletion.withdraw')}
+        aria-busy={cancelling}
+        tabIndex={0}
         onPress={onWithdraw}
         alignSelf="flex-start"
         height={40}

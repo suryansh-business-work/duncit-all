@@ -29,7 +29,7 @@ export default function StatusReportsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5">{t('tech.statusReports.title')}</Typography>
+        <Typography variant="h5" component="h1">{t('tech.statusReports.title')}</Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>

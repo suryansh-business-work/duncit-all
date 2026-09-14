@@ -115,7 +115,7 @@ export default function PodEditorPage({
                 }}>
                 {eyebrow}
               </Typography>
-              <Typography variant="h6" sx={{
+              <Typography variant="h6" component="h1" sx={{
                 fontWeight: 950
               }}>
                 {title ?? defaultTitle}

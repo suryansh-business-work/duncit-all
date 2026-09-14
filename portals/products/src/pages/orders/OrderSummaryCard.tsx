@@ -100,7 +100,7 @@ export default function OrderSummaryCard({ order, podDateTime }: Readonly<Props>
             {order.line_items.map((item: any) => (
               <TableRow key={`${item.product_id}-${item.variant_id || 'base'}`}>
                 <TableCell sx={{ width: 48 }}>
-                  <Avatar src={item.image_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
+                  <Avatar alt="" src={item.image_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
                     {item.name?.[0]?.toUpperCase() ?? '?'}
                   </Avatar>
                 </TableCell>

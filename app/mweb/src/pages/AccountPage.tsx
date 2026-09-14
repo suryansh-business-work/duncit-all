@@ -22,8 +22,10 @@ import LanguageSection from './account-page/LanguageSection';
 import CommPreferenceEntryCard from './account-page/comm-preference';
 import { MY_ACCOUNT_HEALTH, type HealthScore } from '../components/health/queries';
 import { useUserInfo } from '../user-info/useUserInfo';
+import { useTranslation } from '../i18n/useTranslation';
 
 export default function AccountPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   // The profile comes from USER_INFO in the cache; every save below re-reads
   // it through the provider, which is the one moment it is asked for again.
@@ -50,7 +52,7 @@ export default function AccountPage() {
           alignItems: "center",
           p: 6
         }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   }

@@ -95,7 +95,10 @@ export default function FaqsPage() {
                 </InputAdornment>
               ),
             },
-            htmlInput: { 'data-testid': 'faqs-search' },
+            htmlInput: {
+              'data-testid': 'faqs-search',
+              'aria-label': t('mweb.faqs.searchFaqs'),
+            },
           }}
         />
 
@@ -105,6 +108,7 @@ export default function FaqsPage() {
               data-testid="faqs-filter-all"
               label={t('mweb.common.all')}
               color={activeSuper === 'ALL' ? 'primary' : 'default'}
+              aria-pressed={activeSuper === 'ALL'}
               onClick={() => setActiveSuper('ALL')}
               sx={chipSx(activeSuper === 'ALL')}
             />
@@ -117,6 +121,7 @@ export default function FaqsPage() {
                   data-testid={`faqs-filter-${id}`}
                   label={label}
                   color={activeSuper === id ? 'primary' : 'default'}
+                  aria-pressed={activeSuper === id}
                   onClick={() => setActiveSuper(id)}
                   sx={chipSx(activeSuper === id)}
                 />
@@ -126,7 +131,7 @@ export default function FaqsPage() {
         )}
 
         {loading && (
-          <Stack spacing={1.5} data-testid="faqs-loading">
+          <Stack spacing={1.5} data-testid="faqs-loading" role="progressbar" aria-busy aria-label={t('mweb.a11y.loading')}>
             {[0, 1, 2, 3].map((i) => (
               <Skeleton key={i} variant="rounded" height={64} sx={{ borderRadius: '24px' }} />
             ))}

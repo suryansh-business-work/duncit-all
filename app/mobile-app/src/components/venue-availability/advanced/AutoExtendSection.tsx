@@ -131,7 +131,7 @@ export function AutoExtendSection({
         </XStack>
       ) : null}
       {error ? (
-        <Text testID="auto-extend-error" fontSize={12.5} color="$danger">
+        <Text role="alert" testID="auto-extend-error" fontSize={12.5} color="$danger">
           {error}
         </Text>
       ) : null}

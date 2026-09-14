@@ -40,7 +40,8 @@ const hubCards = (t: Translate): HubCard[] => [
     description: t('admin.hub.catalogHint'),
     to: '/categories',
     icon: 'catalog',
-    accent: '#16a34a',
+    // Darker than the old #16a34a/#d97706 so the tile title clears 4.5:1 on its tint.
+    accent: '#15803d',
   },
   {
     key: 'community',
@@ -48,7 +49,7 @@ const hubCards = (t: Translate): HubCard[] => [
     description: t('admin.hub.communityHint'),
     to: '/clubs',
     icon: 'community',
-    accent: '#d97706',
+    accent: '#b45309',
   },
   {
     key: 'engagement',

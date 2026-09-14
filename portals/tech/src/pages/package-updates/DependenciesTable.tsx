@@ -32,7 +32,7 @@ const renderRanges = (row: DependencyGroup) => (
 );
 
 const renderLatest = (emptyText: string) => (row: DependencyGroup) => (
-  <Typography variant="body2" color={row.latest ? 'text.primary' : 'text.disabled'} sx={{
+  <Typography variant="body2" color={row.latest ? 'text.primary' : 'text.secondary'} sx={{
     fontWeight: row.latest ? 600 : 400
   }}>
     {row.latest ?? emptyText}

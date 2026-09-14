@@ -28,7 +28,7 @@ export default function PodExpensePodHeader({ pod, currency, onClose }: Readonly
         alignItems: "flex-start"
       }}>
         <Stack sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h6" noWrap sx={{
+          <Typography component="h2" variant="h6" noWrap sx={{
             fontWeight: 800
           }}>
             {pod.pod_title}

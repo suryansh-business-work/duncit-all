@@ -22,7 +22,7 @@ interface ArtifactStateStyle {
 // that names it, so the table reads the same without colour perception.
 const ARTIFACT_STATES: Record<ArtifactState, ArtifactStateStyle> = {
   CREATED: { labelKey: 'finance.payment.artifactCreated', color: 'success.main', Icon: CheckCircleIcon },
-  NOT_APPLICABLE: { labelKey: 'finance.payment.artifactNotApplicable', color: 'text.disabled', Icon: RemoveCircleOutlineIcon },
+  NOT_APPLICABLE: { labelKey: 'finance.payment.artifactNotApplicable', color: 'text.secondary', Icon: RemoveCircleOutlineIcon },
   MISSING: { labelKey: 'finance.payment.artifactMissing', color: 'error.main', Icon: ErrorOutlineIcon },
 };
 

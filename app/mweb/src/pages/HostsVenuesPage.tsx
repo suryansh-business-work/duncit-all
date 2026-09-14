@@ -95,7 +95,7 @@ export default function HostsVenuesPage() {
             alignItems: "center",
             py: 6
           }}>
-          <CircularProgress />
+          <CircularProgress aria-label={t('mweb.a11y.loading')} />
         </Stack>
       );
     } else if (hostsQ.error) {
@@ -119,7 +119,7 @@ export default function HostsVenuesPage() {
           alignItems: "center",
           py: 6
         }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   } else if (venuesQ.error) {

@@ -30,7 +30,7 @@ export default function ProfilePodsPanel({ userId, kind }: Readonly<Props>) {
   if (loading && !data) {
     return (
       <Stack sx={{ alignItems: 'center', py: 6 }} data-testid={`profile-pods-${kind}-loading`}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   }

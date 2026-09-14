@@ -79,9 +79,15 @@ export function CoverPickerDialog({
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <ModalThemeScope>
         <KeyboardScreen>
-          <YStack flex={1} justifyContent="flex-end" testID="cover-picker">
+          <YStack
+            flex={1}
+            justifyContent="flex-end"
+            testID="cover-picker"
+            onAccessibilityEscape={onClose}
+          >
             <YStack
               pressStyle={PRESS_STYLE.surface}
+              importantForAccessibility="no"
               role="button"
               aria-label={close}
               onPress={onClose}
@@ -101,12 +107,19 @@ export function CoverPickerDialog({
             >
               <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
                 <XStack alignItems="center" justifyContent="space-between" paddingBottom={12}>
-                  <Text fontSize={17} fontWeight="600" color="$color">
+                  <Text
+                    testID="cover-picker-title"
+                    role="heading"
+                    fontSize={17}
+                    fontWeight="600"
+                    color="$color"
+                  >
                     {t('mweb.createPod.addPodMedia')}
                   </Text>
                   <XStack
                     pressStyle={PRESS_STYLE.control}
                     testID="cover-picker-close"
+                    tabIndex={0}
                     role="button"
                     aria-label={close}
                     onPress={onClose}
@@ -121,13 +134,20 @@ export function CoverPickerDialog({
                   </XStack>
                 </XStack>
 
-                <XStack gap={8} paddingBottom={12} display={deviceOnly ? 'none' : 'flex'}>
+                <XStack
+                  gap={8}
+                  paddingBottom={12}
+                  display={deviceOnly ? 'none' : 'flex'}
+                  role="tablist"
+                >
                   {TAB_KEYS.map((key, index) => (
                     <XStack
                       key={key}
                       testID={`cover-tab-${index}`}
-                      role="button"
+                      tabIndex={0}
+                      role="tab"
                       aria-label={t(key)}
+                      aria-selected={tab === index}
                       onPress={() => setTab(index)}
                       flex={1}
                       height={40}
@@ -151,7 +171,13 @@ export function CoverPickerDialog({
                 <SelectionTray urls={tray} max={max} onRemove={onRemove} />
 
                 {error ? (
-                  <Text testID="cover-picker-error" fontSize={12} color="$danger" paddingTop={8}>
+                  <Text
+                    role="alert"
+                    testID="cover-picker-error"
+                    fontSize={12}
+                    color="$danger"
+                    paddingTop={8}
+                  >
                     {error}
                   </Text>
                 ) : null}
@@ -170,6 +196,7 @@ export function CoverPickerDialog({
                   {tab === 0 ? (
                     <YStack
                       testID="cover-device-add"
+                      tabIndex={0}
                       role="button"
                       aria-label={chooseFromPhone}
                       aria-disabled={busy || atLimit}
@@ -215,6 +242,7 @@ export function CoverPickerDialog({
                 <XStack gap={12} paddingTop={8} flexShrink={0}>
                   <XStack
                     testID="cover-picker-cancel"
+                    tabIndex={0}
                     role="button"
                     aria-label={t('mweb.createPod.cancel')}
                     onPress={onClose}
@@ -232,6 +260,7 @@ export function CoverPickerDialog({
                   </XStack>
                   <XStack
                     testID="cover-picker-done"
+                    tabIndex={0}
                     role="button"
                     aria-label={t('mweb.createPod.useSelectedImages')}
                     aria-disabled={tray.length === 0}

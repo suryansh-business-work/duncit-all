@@ -42,7 +42,7 @@ export default function GlobalSwitchCard({
       }}>
         <WhatsAppIcon color={enabled ? 'success' : 'disabled'} fontSize="large" />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h6" sx={{
+          <Typography component="h2" variant="h6" sx={{
             fontWeight: 800
           }}>
             {t('adminWhatsapp.globalLabel')}

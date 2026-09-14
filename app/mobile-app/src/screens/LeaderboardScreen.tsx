@@ -8,6 +8,7 @@ import type {
   LeaderboardPeriod as GqlLeaderboardPeriod,
 } from '@/generated/graphql/graphql';
 import { StackScreen } from '@/components/StackScreen';
+import { useLoadingRegion } from '@/components/Skeleton';
 import {
   LeaderboardBoardList,
   LeaderboardCategoryTabs,
@@ -42,6 +43,7 @@ export function LeaderboardScreen() {
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const loadingRegion = useLoadingRegion();
 
   useEffect(() => {
     let active = true;
@@ -80,7 +82,12 @@ export function LeaderboardScreen() {
   let configBody = null;
   if (isConfigLoading && !config) {
     configBody = (
-      <YStack alignItems="center" paddingVertical={32} testID="leaderboard-config-loading">
+      <YStack
+        alignItems="center"
+        paddingVertical={32}
+        testID="leaderboard-config-loading"
+        {...loadingRegion}
+      >
         <Spinner size="large" />
       </YStack>
     );
@@ -96,13 +103,24 @@ export function LeaderboardScreen() {
   let boardBody;
   if (hasError) {
     boardBody = (
-      <Text testID="leaderboard-error" paddingHorizontal={16} fontSize={13} color="$danger">
+      <Text
+        testID="leaderboard-error"
+        role="alert"
+        paddingHorizontal={16}
+        fontSize={13}
+        color="$danger"
+      >
         {t('mweb.leaderboard.loadError')}
       </Text>
     );
   } else if (isLoading && !board) {
     boardBody = (
-      <YStack alignItems="center" paddingVertical={32} testID="leaderboard-loading">
+      <YStack
+        alignItems="center"
+        paddingVertical={32}
+        testID="leaderboard-loading"
+        {...loadingRegion}
+      >
         <Spinner size="large" />
       </YStack>
     );

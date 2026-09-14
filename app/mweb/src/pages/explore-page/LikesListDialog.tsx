@@ -51,7 +51,7 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
           alignItems: "center",
           py: 4
         }}>
-        <CircularProgress size={22} />
+        <CircularProgress size={22} aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   } else if (userIds.length === 0) {
@@ -72,7 +72,7 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
         {users.map((u) => (
           <ListItemButton data-testid={`liker-${u.user_id}`} key={u.user_id} onClick={() => openProfile(u.user_id)}>
             <ListItemAvatar>
-              <Avatar src={u.profile_photo || undefined}>
+              <Avatar alt="" src={u.profile_photo || undefined}>
                 {(u.full_name || u.first_name || '?').slice(0, 1).toUpperCase()}
               </Avatar>
             </ListItemAvatar>
@@ -90,7 +90,7 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
   }
 
   return (
-    <Dialog data-testid="likes-sheet" open={open} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog data-testid="likes-sheet" open={open} onClose={onClose} fullWidth maxWidth="xs" aria-labelledby="likes-sheet-title">
       <Stack
         direction="row"
         sx={{
@@ -98,7 +98,7 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
           justifyContent: "space-between",
           pr: 1.5
         }}>
-        <DialogTitle sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>{t('mweb.explore.likedBy')}</DialogTitle>
+        <DialogTitle id="likes-sheet-title" sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>{t('mweb.explore.likedBy')}</DialogTitle>
         <DuncitIconButton
           data-testid="likes-close"
           aria-label={t('mweb.common.close')}

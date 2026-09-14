@@ -37,6 +37,7 @@ export function VenueImagesGrid({ images, onOpen }: Readonly<Props>) {
             key={url}
             testID="venue-gallery-image"
             role="button"
+            tabIndex={0}
             aria-label={t('mweb.podDetails.viewImage')}
             onPress={() => onOpen(tileIndex + 1)}
             width={tileWidth}

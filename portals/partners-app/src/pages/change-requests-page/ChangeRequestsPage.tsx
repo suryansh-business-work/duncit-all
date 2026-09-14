@@ -35,7 +35,7 @@ export default function ChangeRequestsPage({ role }: Readonly<{ role: PodChangeR
         <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 700 }}>
           {t(OVERLINE_KEY[role])}
         </Typography>
-        <Typography variant="h5" sx={{ fontWeight: 950 }}>
+        <Typography variant="h5" component="h1" sx={{ fontWeight: 950 }}>
           {t('changeRequest.sectionTitle')}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>

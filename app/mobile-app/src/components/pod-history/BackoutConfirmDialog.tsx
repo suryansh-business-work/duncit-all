@@ -12,6 +12,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { stripHtml } from '@/utils/html';
 import { ReleaseSeatsPicker } from './ReleaseSeatsPicker';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 export interface BackoutConfirmDialogProps {
   open: boolean;
@@ -48,6 +49,7 @@ function BackoutActions({ busy, releasing, onClose, onConfirm }: Readonly<Backou
       <XStack
         testID="backout-cancel"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.podDetails.close')}
         aria-disabled={busy}
         onPress={busy ? undefined : onClose}
@@ -68,6 +70,7 @@ function BackoutActions({ busy, releasing, onClose, onConfirm }: Readonly<Backou
       <XStack
         testID="backout-confirm"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.podDetails.confirmBackout')}
         aria-disabled={busy}
         onPress={busy ? undefined : () => onConfirm(releasing)}
@@ -104,6 +107,7 @@ export function BackoutConfirmDialog({
   deductionPct = 0,
   refundCoins = 0,
 }: Readonly<BackoutConfirmDialogProps>) {
+  const loadingRegion = useLoadingRegion();
   const { color } = useThemeColors();
   const { t } = useTranslation();
   const closeIfIdle = busy ? undefined : onClose;
@@ -140,6 +144,7 @@ export function BackoutConfirmDialog({
           <YStack
             pressStyle={PRESS_STYLE.surface}
             role="button"
+            importantForAccessibility="no"
             aria-label={t('mweb.podDetails.close')}
             onPress={closeIfIdle}
             position="absolute"
@@ -161,14 +166,16 @@ export function BackoutConfirmDialog({
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={18} fontWeight="700" color="$color">
+                <Text role="heading" fontSize={18} fontWeight="700" color="$color">
                   {t('mweb.podDetails.backoutTitle')}
                 </Text>
                 <XStack
                   pressStyle={PRESS_STYLE.surface}
                   testID="backout-close"
                   role="button"
+                  tabIndex={0}
                   aria-label={t('mweb.podDetails.close')}
+                  hitSlop={6}
                   onPress={closeIfIdle}
                   width={32}
                   height={32}
@@ -194,7 +201,7 @@ export function BackoutConfirmDialog({
                     testID="backout-refund-amount"
                     fontSize={13.5}
                     fontWeight="600"
-                    color="$primary"
+                    color="$accent"
                   >
                     {estimateLine}
                   </Text>
@@ -213,7 +220,7 @@ export function BackoutConfirmDialog({
                 contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8 }}
               >
                 {isLoading ? (
-                  <Spinner testID="backout-terms-loading" color="$primary" />
+                  <Spinner {...loadingRegion} testID="backout-terms-loading" color="$primary" />
                 ) : (
                   <Text fontSize={14} lineHeight={22} color="$color">
                     {terms || t('mweb.podDetails.reviewBackoutTerms')}
@@ -230,7 +237,7 @@ export function BackoutConfirmDialog({
                   onPress={onViewTerms}
                   fontSize={12}
                   fontWeight="600"
-                  color="$primary"
+                  color="$accent"
                 >
                   {t('mweb.podDetails.readFullBackoutTerms')}
                 </Text>

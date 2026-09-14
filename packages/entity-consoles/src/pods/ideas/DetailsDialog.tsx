@@ -69,6 +69,7 @@ export default function DetailsDialog({ id, onClose, onChanged }: Readonly<Detai
           mb: 2
         }}>
         <Avatar
+          alt=""
           src={idea.author?.profile_photo || undefined}
           sx={{ width: 40, height: 40 }}
         >

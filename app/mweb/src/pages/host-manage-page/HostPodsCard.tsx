@@ -55,7 +55,7 @@ export default function HostPodsCard({
   if (loading) {
     body = (
       <Stack data-testid="host-pods-section-loading" sx={{ alignItems: 'center', py: 4 }}>
-        <CircularProgress size={22} />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} size={22} />
       </Stack>
     );
   } else if (errorMessage) {

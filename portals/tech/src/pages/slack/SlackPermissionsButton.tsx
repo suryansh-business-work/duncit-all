@@ -133,7 +133,13 @@ export default function SlackPermissionsButton() {
   return (
     <>
       <Tooltip title={t('tech.slack.permissionsTitle')}>
-        <DuncitIconButton size="small" onClick={open} aria-label={t('tech.slack.permissionsTitle')}>
+        <DuncitIconButton
+          size="small"
+          onClick={open}
+          aria-label={t('tech.slack.permissionsTitle')}
+          aria-expanded={Boolean(anchor)}
+          data-testid="slack-permissions-open"
+        >
           <InfoOutlinedIcon fontSize="small" />
         </DuncitIconButton>
       </Tooltip>

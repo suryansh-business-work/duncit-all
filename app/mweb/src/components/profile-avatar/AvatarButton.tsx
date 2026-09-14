@@ -1,4 +1,4 @@
-import { Avatar, Box, CircularProgress, Tooltip } from '@mui/material';
+import { Avatar, Box, ButtonBase, CircularProgress, Tooltip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import { DuncitIconButton } from '@duncit/buttons';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -43,20 +43,21 @@ export default function AvatarButton({
   return (
     <Box sx={{ position: 'relative', width: size + 8, height: size + 8 }}>
       <Tooltip title={label}>
-        <Box
-          role="button"
+        <ButtonBase
           aria-label={label}
           data-testid="avatar-button"
           onClick={onAvatarClick}
-          sx={{ cursor: 'pointer', display: 'inline-flex', ...ringSx }}
+          sx={{ display: 'inline-flex', borderRadius: '50%', ...ringSx }}
         >
           <Avatar
             src={photo || undefined}
+            alt=""
             slotProps={{ img: testIdProps('avatar-story-button-photo') }}
             sx={{
               width: size,
               height: size,
               bgcolor: 'primary.main',
+              color: 'primary.contrastText',
               fontSize: size * 0.4,
               fontWeight: 600,
               border: hasStory ? 2 : 0,
@@ -67,7 +68,7 @@ export default function AvatarButton({
               {initial}
             </Box>
           </Avatar>
-        </Box>
+        </ButtonBase>
       </Tooltip>
 
       <Tooltip title={t('mweb.profileAvatar.changeProfilePhoto')}>

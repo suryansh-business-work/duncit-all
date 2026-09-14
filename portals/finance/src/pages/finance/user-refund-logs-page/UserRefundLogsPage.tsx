@@ -56,7 +56,7 @@ export default function UserRefundLogsPage() {
     <Box>
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 1 }}>
         <UndoIcon color="primary" />
-        <Typography variant="h5" sx={{ fontWeight: 700, flex: 1 }}>
+        <Typography component="h1" variant="h5" sx={{ fontWeight: 700, flex: 1 }}>
           {t('finance.refundLogs.title')}
         </Typography>
       </Stack>

@@ -57,12 +57,12 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
     <>
       {iconOnly ? (
         <Tooltip title={t('marketing.mjmlAiButton.createUpdateWithAi')}>
-          <DuncitIconButton size="small" color="secondary" onClick={(event) => setAnchorEl(event.currentTarget)}>
+          <DuncitIconButton size="small" color="secondary" aria-haspopup="dialog" aria-expanded={open} onClick={(event) => setAnchorEl(event.currentTarget)}>
             <AutoAwesomeIcon fontSize="small" />
           </DuncitIconButton>
         </Tooltip>
       ) : (
-        <DuncitButton size="small" variant="outlined" color="secondary" startIcon={<AutoAwesomeIcon />} onClick={(event) => setAnchorEl(event.currentTarget)}>
+        <DuncitButton size="small" variant="outlined" color="secondary" startIcon={<AutoAwesomeIcon />} aria-haspopup="dialog" aria-expanded={open} onClick={(event) => setAnchorEl(event.currentTarget)}>
           {label || 'Create/Update with AI'}
         </DuncitButton>
       )}
@@ -72,7 +72,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
         onClose={() => !loading && setAnchorEl(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        slotProps={{ paper: { sx: { mt: 1, p: 2, width: 360, maxWidth: '92vw' } } }}
+        slotProps={{ paper: { role: 'dialog', 'aria-label': t('marketing.mjmlAiButton.createUpdateMjmlWithAi'), sx: { mt: 1, p: 2, width: 360, maxWidth: '92vw' } } }}
       >
         <Stack spacing={1.25}>
           <Typography variant="subtitle2" sx={{

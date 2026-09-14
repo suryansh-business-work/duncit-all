@@ -104,7 +104,8 @@ export default function VenueSlotAvailabilityTab({ venueId }: Readonly<{ venueId
             <DuncitIconButton onClick={() => setMonth(subMonths(month, 1))} aria-label={t('onboarding.venueDetails.previousMonth')}>
               <ChevronLeftIcon />
             </DuncitIconButton>
-            <Typography variant="h6" sx={{
+            {/* Polite live region: the month arrows change it. */}
+            <Typography variant="h6" component="h2" aria-live="polite" sx={{
               fontWeight: 900
             }}>
               {format(month, 'MMMM yyyy')}
@@ -121,7 +122,7 @@ export default function VenueSlotAvailabilityTab({ venueId }: Readonly<{ venueId
                 alignItems: "center",
                 py: 4
               }}>
-              <CircularProgress size={24} />
+              <CircularProgress size={24} aria-label={t('shell.a11y.loading')} />
             </Stack>
           ) : (
             <AvailabilityCalendar

@@ -51,7 +51,7 @@ export default function UserHostPanel() {
   });
   const pods = podsQuery.data?.pods ?? [];
 
-  if (loading && !data) return <CircularProgress data-testid="user-host-panel-loading" size={22} />;
+  if (loading && !data) return <CircularProgress data-testid="user-host-panel-loading" size={22} aria-label={t('mweb.a11y.loading')} />;
   if (error) {
     return (
       <Alert data-testid="user-host-panel-error" severity="error">
@@ -95,7 +95,7 @@ export default function UserHostPanel() {
           return (
             <Box key={label} sx={{ flex: 1, minWidth: 0 }}>
               <Box sx={{ height: 4, borderRadius: 99, bgcolor: done ? 'primary.main' : 'action.hover', mb: 0.6 }} />
-              <Typography variant="caption" color={done ? 'primary.main' : 'text.secondary'} sx={{ fontSize: 11, fontWeight: 600 }} noWrap>
+              <Typography variant="caption" color={done ? 'accent.main' : 'text.secondary'} sx={{ fontSize: 11, fontWeight: 600 }} noWrap>
                 {label}
               </Typography>
             </Box>

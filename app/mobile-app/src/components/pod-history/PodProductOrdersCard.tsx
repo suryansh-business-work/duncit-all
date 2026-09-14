@@ -5,6 +5,7 @@ import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ProductOrder } from '@/utils/product-orders';
 import { PodProductOrderItem } from './PodProductOrderItem';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 /** "Products & tracking" — the add-on products the buyer purchased in this pod
  * with fulfilment/tracking. Renders nothing when there are no product orders
@@ -13,12 +14,13 @@ export function PodProductOrdersCard({
   orders,
   loading,
 }: Readonly<{ orders: ProductOrder[]; loading: boolean }>) {
+  const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
 
   if (loading && orders.length === 0) {
     return (
       <SurfaceCard alignItems="center">
-        <Spinner testID="po-loading" color="$primary" />
+        <Spinner {...loadingRegion} testID="po-loading" color="$primary" />
       </SurfaceCard>
     );
   }

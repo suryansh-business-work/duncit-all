@@ -163,6 +163,7 @@ export function AttendeesSection({
         <XStack
           testID="attendees-avatar-group"
           role="button"
+          tabIndex={0}
           aria-label={t('mweb.podDetails.viewAllAttendees')}
           onPress={() => setOpen(true)}
           alignItems="center"
@@ -191,7 +192,7 @@ export function AttendeesSection({
               </YStack>
             ) : null}
           </XStack>
-          <Text fontSize={12.5} fontWeight="600" color="$primary">
+          <Text fontSize={12.5} fontWeight="600" color="$accent">
             {t('mweb.podDetails.viewAll')}
           </Text>
         </XStack>

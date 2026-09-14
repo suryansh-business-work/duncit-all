@@ -33,7 +33,9 @@ export function PostMedia({ imageUrl, onDoubleTapLike }: Readonly<Props>) {
   };
 
   return (
-    <Pressable testID="post-media" onPress={onPress}>
+    // The double-tap is a shortcut for the Like button below, which is the
+    // accessible way to like — so the image is not a second unnamed stop.
+    <Pressable testID="post-media" onPress={onPress} accessible={false}>
       <AppImage
         testID="post-viewer-image"
         source={{ uri: imageUrl }}

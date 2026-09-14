@@ -59,7 +59,7 @@ export function WhatsAppPreferenceScreen() {
   const failed = state.loadFailed || !preference;
   const body = failed ? (
     <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
-      <Text testID="whatsapp-preference-error" color="$muted">
+      <Text testID="whatsapp-preference-error" role="alert" color="$muted">
         {t('whatsappPreference.loadFailed')}
       </Text>
     </YStack>
@@ -74,12 +74,12 @@ export function WhatsAppPreferenceScreen() {
       )}
 
       {state.saveFailed ? (
-        <Text testID="whatsapp-preference-save-error" fontSize={12.5} color="$danger">
+        <Text testID="whatsapp-preference-save-error" role="alert" fontSize={12.5} color="$danger">
           {t('whatsappPreference.saveFailed')}
         </Text>
       ) : null}
       {state.saved && !state.saveFailed ? (
-        <Text testID="whatsapp-preference-saved" fontSize={12.5} color="$success">
+        <Text testID="whatsapp-preference-saved" role="status" fontSize={12.5} color="$success">
           {t('whatsappPreference.saved')}
         </Text>
       ) : null}

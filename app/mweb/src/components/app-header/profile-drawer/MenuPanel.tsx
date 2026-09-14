@@ -82,6 +82,7 @@ export default function MenuPanel({
     >
       <Box sx={{ px: 2, py: 1, display: 'flex', justifyContent: 'flex-end' }}>
         <DuncitRoundButton
+          data-testid="menu-close"
           tone="paper"
           onClick={onClose}
           aria-label={t('mweb.home.closeMenu')}

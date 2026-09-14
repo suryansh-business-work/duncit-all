@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { PressScale } from '@/animations/PressScale';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { ExplorePod } from '@/stores/explore.store';
 import { podDateLabel, podPriceLabel } from '@/utils/pod-format';
 import { PRESS_STYLE } from '@duncit/buttons-native';
@@ -39,9 +40,12 @@ function ClubLink({
   isVerified,
   onOpenClub,
 }: Readonly<{ clubName: string; isVerified?: boolean; onOpenClub?: () => void }>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
+  // The blue tick is part of the name, not a picture only (1.1.1).
+  const linkLabel = isVerified ? `${clubName}, ${t('mweb.explore.verifiedClub')}` : clubName;
   return (
-    <PressScale testID="explore-club-link" accessibilityLabel={clubName} onPress={onOpenClub}>
+    <PressScale testID="explore-club-link" accessibilityLabel={linkLabel} onPress={onOpenClub}>
       <XStack alignItems="center" gap={8}>
         <YStack
           width={26}
@@ -76,13 +80,19 @@ function Caption({
   expanded: boolean;
   onToggle: () => void;
 }>) {
+  const { t } = useTranslation();
   const lines = collapsible && !expanded ? 2 : undefined;
-  const toggleLabel = expanded ? 'Show less' : 'More';
+  const toggleLabel = expanded ? t('mweb.explore.showLess') : t('mweb.explore.more');
+  // A long caption is a disclosure: one button that says whether it is open.
+  const toggleA11y = collapsible
+    ? ({ role: 'button', tabIndex: 0, 'aria-expanded': expanded } as const)
+    : {};
 
   return (
     <YStack
       pressStyle={PRESS_STYLE.surface}
       testID="explore-caption-wrap"
+      {...toggleA11y}
       onPress={collapsible ? onToggle : undefined}
     >
       <Text

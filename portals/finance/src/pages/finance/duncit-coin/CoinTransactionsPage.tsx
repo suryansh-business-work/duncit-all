@@ -60,7 +60,7 @@ export default function CoinTransactionsPage() {
           alignItems: "center"
         }}>
           <ReceiptLongIcon color="primary" />
-          <Typography variant="h5" sx={{ fontWeight: 900 }}>
+          <Typography component="h1" variant="h5" sx={{ fontWeight: 900 }}>
             Coin Transactions
           </Typography>
           {total != null && <Chip size="small" label={total} sx={{ ml: 1 }} />}

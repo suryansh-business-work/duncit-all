@@ -25,7 +25,7 @@ export default function ClubAdminClubsPage() {
   return (
     <Stack spacing={2.5} sx={{ width: '100%' }}>
       <Stack spacing={0.25}>
-        <Typography variant="h5" sx={{
+        <Typography variant="h5" component="h1" sx={{
           fontWeight: 950
         }}>{t('clubAdmin.clubs.yourClubs')}</Typography>
         <Typography variant="body2" sx={{
@@ -37,6 +37,7 @@ export default function ClubAdminClubsPage() {
 
       <DuncitTable<ClubAdminClubInfoRow>
         tableId="partners-club-admin-clubs"
+        ariaLabel={t('clubAdmin.clubs.yourClubs')}
         columns={clubAdminClubsColumns(t)}
         fetchRows={fetchRows}
         getRowId={getClubRowId}

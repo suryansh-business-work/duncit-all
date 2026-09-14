@@ -90,7 +90,7 @@ export default function CommsLogsSection({ entityType, entityId }: Readonly<Prop
           }}>
           <ForumIcon color="primary" />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="h6" sx={{
+            <Typography component="h2" variant="h6" sx={{
               fontWeight: 800
             }}>{t('crm.components.communicationLog')}</Typography>
             <Typography variant="caption" sx={{
@@ -114,6 +114,8 @@ export default function CommsLogsSection({ entityType, entityId }: Readonly<Prop
             color={filter === 'ALL' ? 'primary' : 'default'}
             variant={filter === 'ALL' ? 'filled' : 'outlined'}
             onClick={() => setFilter('ALL')}
+            aria-pressed={filter === 'ALL'}
+            data-testid="crm-comms-filter-all"
             size="small"
           />
           <Chip
@@ -121,6 +123,8 @@ export default function CommsLogsSection({ entityType, entityId }: Readonly<Prop
             color={filter === 'EMAIL' ? 'primary' : 'default'}
             variant={filter === 'EMAIL' ? 'filled' : 'outlined'}
             onClick={() => setFilter('EMAIL')}
+            aria-pressed={filter === 'EMAIL'}
+            data-testid="crm-comms-filter-email"
             size="small"
           />
           <Chip
@@ -128,6 +132,8 @@ export default function CommsLogsSection({ entityType, entityId }: Readonly<Prop
             color={filter === 'CALL' ? 'primary' : 'default'}
             variant={filter === 'CALL' ? 'filled' : 'outlined'}
             onClick={() => setFilter('CALL')}
+            aria-pressed={filter === 'CALL'}
+            data-testid="crm-comms-filter-call"
             size="small"
           />
         </Stack>

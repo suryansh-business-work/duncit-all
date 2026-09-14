@@ -12,6 +12,8 @@ import {
   Typography,
 } from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DuncitIconButton } from '@duncit/buttons';
@@ -42,18 +44,23 @@ export default function DynamicFieldsTable({
   const { t } = useTranslation();
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
+  const reorder = (from: number, to: number) => {
+    onReorder(moveItem(rows, from, to).map((r) => r.id));
+  };
+
   const handleDrop = (to: number) => {
     if (dragIndex === null || dragIndex === to) return;
-    const reordered = moveItem(rows, dragIndex, to);
     setDragIndex(null);
-    onReorder(reordered.map((r) => r.id));
+    reorder(dragIndex, to);
   };
+
+  const locked = busy || draftOpen;
 
   return (
     <Table size="small">
       <TableHead>
         <TableRow>
-          <TableCell sx={{ width: 44 }} />
+          <TableCell sx={{ width: 110 }} />
           <TableCell>{t('crm.managedynamicfieldspage.label')}</TableCell>
           <TableCell sx={{ width: 150 }}>Type</TableCell>
           <TableCell sx={{ width: 200 }}>{t('crm.common.appliesTo')}</TableCell>
@@ -89,7 +96,28 @@ export default function DynamicFieldsTable({
             sx={{ cursor: !busy && !draftOpen ? 'grab' : 'default' }}
           >
             <TableCell>
-              <DragIndicatorIcon fontSize="small" sx={{ color: 'text.disabled' }} aria-label={t('crm.managedynamicfieldspage.dragToReorder')} />
+              <Stack direction="row" sx={{ alignItems: 'center' }}>
+                <DragIndicatorIcon fontSize="small" sx={{ color: 'text.secondary' }} aria-label={t('crm.managedynamicfieldspage.dragToReorder')} />
+                {/* Dragging has a single-pointer and keyboard alternative (2.5.7, 2.1.1). */}
+                <DuncitIconButton
+                  size="small"
+                  aria-label={t('crm.a11y.moveUpNamed', { vars: { name: row.label } })}
+                  data-testid="crm-dynamic-field-move-up"
+                  disabled={locked || index === 0}
+                  onClick={() => reorder(index, index - 1)}
+                >
+                  <ArrowUpwardIcon fontSize="small" />
+                </DuncitIconButton>
+                <DuncitIconButton
+                  size="small"
+                  aria-label={t('crm.a11y.moveDownNamed', { vars: { name: row.label } })}
+                  data-testid="crm-dynamic-field-move-down"
+                  disabled={locked || index === rows.length - 1}
+                  onClick={() => reorder(index, index + 1)}
+                >
+                  <ArrowDownwardIcon fontSize="small" />
+                </DuncitIconButton>
+              </Stack>
             </TableCell>
             <TableCell>
               <Stack direction="row" spacing={1} sx={{
@@ -120,7 +148,12 @@ export default function DynamicFieldsTable({
               </Stack>
             </TableCell>
             <TableCell>
-              <Switch checked={row.is_active} onChange={() => onToggleActive(row)} disabled={busy} />
+              <Switch
+                checked={row.is_active}
+                onChange={() => onToggleActive(row)}
+                disabled={busy}
+                slotProps={{ input: { 'aria-label': t('shell.a11y.fieldOf', { vars: { field: t('crm.common.active'), name: row.label } }) } }}
+              />
             </TableCell>
             <TableCell align="right">
               <Tooltip title={t('shell.common.edit')}>

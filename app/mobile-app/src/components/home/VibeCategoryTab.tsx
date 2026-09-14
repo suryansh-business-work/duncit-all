@@ -69,6 +69,8 @@ export function VibeCategoryTab({
       role="button"
       aria-label={label}
       aria-pressed={selected}
+      accessibilityState={{ selected }}
+      tabIndex={0}
       onPress={onPress}
       height={40}
       alignItems="center"

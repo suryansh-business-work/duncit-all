@@ -15,6 +15,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 /** Waiting screen a host lands on after creating a pod whose venue slot request
  * is PENDING — banner + pod summary + venue contact + club-admin help cards.
@@ -24,6 +25,7 @@ import { RefreshScrollView } from '@/components/PullToRefresh';
  * the slot is approved the amber badge and banner turn green on the next load.
  * RN twin of mWeb's post-create pending page (rule 27). */
 export function PodPendingScreen() {
+  const loadingRegion = useLoadingRegion();
   const route = useRoute<RouteProp<RootStackParamList, 'PodPending'>>();
   const podId = route.params?.podId ?? '';
   const { view, isLoading, isRefreshing, error, refetch } = usePodPendingView(podId);
@@ -39,12 +41,12 @@ export function PodPendingScreen() {
   if (isLoading) {
     body = (
       <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner testID="pod-pending-loading" color="$primary" />
+        <Spinner {...loadingRegion} testID="pod-pending-loading" color="$primary" />
       </YStack>
     );
   } else if (error || !view) {
     body = (
-      <Text testID="pod-pending-error" padding={24} color="$danger">
+      <Text role="alert" testID="pod-pending-error" padding={24} color="$danger">
         {toErrorMessage(error, t('mweb.podPending.loadFailed'))}
       </Text>
     );

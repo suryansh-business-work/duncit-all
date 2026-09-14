@@ -34,6 +34,7 @@ export default function ContactsEmpty({ scope, synced, searching, loading, error
     <Typography
       variant="body2"
       data-testid="contacts-empty"
+      role="status"
       sx={{ color: 'text.secondary', textAlign: 'center', py: 4 }}
     >
       {emptyText(t, scope, synced, searching)}

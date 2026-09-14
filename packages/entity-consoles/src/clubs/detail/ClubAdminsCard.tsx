@@ -27,7 +27,7 @@ function AdminIdentity({ admin }: Readonly<{ admin: ClubActor }>) {
   return (
     <>
       <ListItemAvatar>
-        <Avatar src={admin.avatar_url ?? undefined}>
+        <Avatar alt="" src={admin.avatar_url ?? undefined}>
           {(admin.name || '?').charAt(0).toUpperCase()}
         </Avatar>
       </ListItemAvatar>

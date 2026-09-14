@@ -16,11 +16,16 @@ const TICK_DIM = { opacity: 0.7 } as const;
  * clock = pending, single ✓ = Sent/delivered, double blue ✓✓ = Seen. The
  * pending/sent marks are the bubble's own ink, dimmed. */
 function Tick({ id, state }: Readonly<{ id: string; state: 'pending' | 'delivered' | 'seen' }>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
+  // The delivery state is not colour or shape alone: each glyph is named, the
+  // same words as the mWeb twin's tick titles (1.1.1 / 1.4.1).
   if (state === 'pending') {
     return (
       <MaterialIcons
         testID={`tick-${id}`}
+        role="img"
+        aria-label={t('mweb.a11y.messageSending')}
         name="schedule"
         size={12}
         color={onPrimary}
@@ -29,10 +34,27 @@ function Tick({ id, state }: Readonly<{ id: string; state: 'pending' | 'delivere
     );
   }
   if (state === 'seen') {
-    return <MaterialIcons testID={`tick-${id}`} name="done-all" size={13} color={SEEN_TICK} />;
+    return (
+      <MaterialIcons
+        testID={`tick-${id}`}
+        role="img"
+        aria-label={t('mweb.a11y.messageSeen')}
+        name="done-all"
+        size={13}
+        color={SEEN_TICK}
+      />
+    );
   }
   return (
-    <MaterialIcons testID={`tick-${id}`} name="done" size={13} color={onPrimary} style={TICK_DIM} />
+    <MaterialIcons
+      testID={`tick-${id}`}
+      role="img"
+      aria-label={t('mweb.a11y.messageSent')}
+      name="done"
+      size={13}
+      color={onPrimary}
+      style={TICK_DIM}
+    />
   );
 }
 
@@ -102,7 +124,7 @@ export function SupportChatBubble({
           </Text>
         ) : null}
         <XStack justifyContent="flex-end" alignItems="center" gap={4}>
-          <Text fontSize={10} color={mine ? '$onPrimary' : '$muted'} opacity={0.7}>
+          <Text fontSize={10} color={mine ? '$onPrimary' : '$muted'}>
             {formatTime(message.created_at, timeZone)}
           </Text>
           {tick && tick !== 'failed' ? <Tick id={message.id} state={tick} /> : null}
@@ -111,6 +133,8 @@ export function SupportChatBubble({
           <XStack
             testID={`retry-${message.id}`}
             role="button"
+            tabIndex={0}
+            hitSlop={10}
             aria-label={t('mweb.supportChat.retrySending')}
             onPress={() => onRetry?.(message)}
             alignItems="center"

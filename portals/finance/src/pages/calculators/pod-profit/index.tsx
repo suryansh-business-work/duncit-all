@@ -32,7 +32,7 @@ export default function PodProfitCalculatorPage() {
       }}>
         <CalculateIcon color="primary" />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 800
           }}>{t('finance.calculators.podProfitCalculator')}</Typography>
           <Typography

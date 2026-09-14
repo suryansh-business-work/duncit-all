@@ -21,7 +21,7 @@ const STEP_DISC_SX = {
   placeItems: 'center',
   fontSize: 12,
   fontWeight: 600,
-  color: 'primary.main',
+  color: 'accent.main',
   bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.12),
 } as const;
 

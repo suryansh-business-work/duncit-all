@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, ButtonBase, Stack, Typography } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternateOutlined';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import SettingsIcon from '@mui/icons-material/SettingsOutlined';
@@ -15,6 +15,7 @@ import { useTranslation } from '../../i18n/useTranslation';
 /** A 44px round soft button — share / settings beside the pill actions. */
 const ROUND_SX = { width: 44, height: 44, flex: '0 0 44px', bgcolor: 'action.hover' } as const;
 const PILL_SX = { flex: 1, minHeight: 44, px: 1.5 } as const;
+const STAT_SX = { flex: 1, textAlign: 'center', py: 1.5 } as const;
 
 function Stat({
   label,
@@ -22,19 +23,27 @@ function Stat({
   onClick,
   testId,
 }: Readonly<{ label: string; value: number; onClick?: () => void; testId: string }>) {
-  return (
-    <Box
-      data-testid={testId}
-      onClick={onClick}
-      role={onClick ? 'button' : undefined}
-      sx={{ flex: 1, textAlign: 'center', py: 1.5, cursor: onClick ? 'pointer' : 'default' }}
-    >
+  const content = (
+    <>
       <Typography sx={{ display: 'block', fontSize: 18, fontWeight: 700, lineHeight: 1.2 }}>
         {new Intl.NumberFormat(undefined, { notation: value > 999 ? 'compact' : 'standard' }).format(value)}
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
         {label}
       </Typography>
+    </>
+  );
+  // A tappable stat is a real button, so the keyboard reaches it (WCAG 2.1.1).
+  if (onClick) {
+    return (
+      <ButtonBase data-testid={testId} onClick={onClick} sx={{ ...STAT_SX, flexDirection: 'column' }}>
+        {content}
+      </ButtonBase>
+    );
+  }
+  return (
+    <Box data-testid={testId} sx={STAT_SX}>
+      {content}
     </Box>
   );
 }

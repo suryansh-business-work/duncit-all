@@ -20,6 +20,7 @@ import { toErrorMessage } from '@/utils/errors';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 export type ShopProduct = ResultOf<typeof ShopProductsDocument>['availablePodProducts'][number];
 
@@ -44,6 +45,7 @@ export function sortShopProducts(products: ShopProduct[], sort: ShopSort): ShopP
  * opens its detail screen; purchases happen through a pod's shop. RN twin of
  * mWeb's ShopPage. */
 export function ShopScreen() {
+  const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { muted } = useThemeColors();
@@ -70,12 +72,12 @@ export function ShopScreen() {
   if (isLoading) {
     body = (
       <YStack alignItems="center" paddingVertical={48} testID="shop-loading">
-        <Spinner size="large" />
+        <Spinner {...loadingRegion} size="large" />
       </YStack>
     );
   } else if (error) {
     body = (
-      <Text testID="shop-error" padding={24} color="$danger">
+      <Text role="alert" testID="shop-error" padding={24} color="$danger">
         {error}
       </Text>
     );

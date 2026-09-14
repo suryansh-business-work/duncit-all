@@ -40,6 +40,7 @@ export default function SeeAllCard({ count, width, onClick }: Readonly<Props>) {
     >
       <Stack spacing={1} sx={{ alignItems: 'center' }}>
         <Box
+          aria-hidden
           sx={{
             width: 44,
             height: 44,

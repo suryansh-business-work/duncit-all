@@ -9,7 +9,6 @@ import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { HostDeletePodDocument, HostPodDeleteImpactDocument } from '@/graphql/host-manage';
 import { graphqlRequest } from '@/services/graphql.client';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import {
   POD_DELETE_REASON_SUBJECTS,
   validateDeleteReason,
@@ -49,7 +48,6 @@ function ImpactSummary({ impact }: Readonly<{ impact: PodDeleteImpact }>) {
 /** Host's delete-pod sheet — a mandatory reason + refund impact preview (2B). */
 export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { onPrimary } = useThemeColors();
   const [impact, setImpact] = useState<PodDeleteImpact | null>(null);
   const [subject, setSubject] = useState('');
   const [note, setNote] = useState('');
@@ -103,9 +101,16 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
     <Modal visible={!!podId} transparent animationType="fade" onRequestClose={dismiss}>
       <ModalThemeScope>
         <KeyboardScreen>
-          <YStack flex={1} alignItems="center" justifyContent="center" testID="pod-delete-dialog">
+          <YStack
+            flex={1}
+            alignItems="center"
+            justifyContent="center"
+            testID="pod-delete-dialog"
+            onAccessibilityEscape={dismiss}
+          >
             <YStack
               pressStyle={PRESS_STYLE.surface}
+              importantForAccessibility="no"
               role="button"
               aria-label={t('mweb.common.close')}
               onPress={dismiss}
@@ -125,7 +130,13 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
               padding={18}
             >
               <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
-                <Text fontSize={17} fontWeight="600" color="$color">
+                <Text
+                  testID="pod-delete-title"
+                  role="heading"
+                  fontSize={17}
+                  fontWeight="600"
+                  color="$color"
+                >
                   Cancel pod
                 </Text>
                 <Text fontSize={13} color="$muted" paddingTop={4} paddingBottom={8}>
@@ -133,38 +144,49 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
                 </Text>
                 <ScrollView showsVerticalScrollIndicator={false}>
                   <YStack gap={10} paddingBottom={6}>
-                    {impact ? <ImpactSummary impact={impact} /> : <Spinner color="$primary" />}
+                    {impact ? (
+                      <ImpactSummary impact={impact} />
+                    ) : (
+                      <Spinner
+                        role="progressbar"
+                        aria-label={t('mweb.a11y.loading')}
+                        color="$primary"
+                      />
+                    )}
                     <Text fontSize={13} fontWeight="600" color="$color" paddingTop={4}>
                       Reason
                     </Text>
-                    {POD_DELETE_REASON_SUBJECTS.map((item) => {
-                      const selected = subject === item;
-                      return (
-                        <XStack
-                          key={item}
-                          testID={`pod-delete-reason-${item}`}
-                          role="button"
-                          aria-label={item}
-                          aria-pressed={selected}
-                          onPress={() => setSubject(item)}
-                          alignItems="center"
-                          padding={12}
-                          borderRadius={14}
-                          borderWidth={1}
-                          borderColor={selected ? '$primary' : '$cardBorder'}
-                          backgroundColor={selected ? '$primary' : '$surface'}
-                          pressStyle={PRESS_STYLE.control}
-                        >
-                          <Text
-                            fontSize={14}
-                            fontWeight="600"
-                            color={selected ? '$onPrimary' : '$color'}
+                    <YStack gap={10} role="radiogroup" aria-label={t('mweb.common.reason')}>
+                      {POD_DELETE_REASON_SUBJECTS.map((item) => {
+                        const selected = subject === item;
+                        return (
+                          <XStack
+                            key={item}
+                            testID={`pod-delete-reason-${item}`}
+                            tabIndex={0}
+                            role="radio"
+                            aria-label={item}
+                            aria-checked={selected}
+                            onPress={() => setSubject(item)}
+                            alignItems="center"
+                            padding={12}
+                            borderRadius={14}
+                            borderWidth={1}
+                            borderColor={selected ? '$primary' : '$cardBorder'}
+                            backgroundColor={selected ? '$primary' : '$surface'}
+                            pressStyle={PRESS_STYLE.control}
                           >
-                            {item}
-                          </Text>
-                        </XStack>
-                      );
-                    })}
+                            <Text
+                              fontSize={14}
+                              fontWeight="600"
+                              color={selected ? '$onPrimary' : '$color'}
+                            >
+                              {item}
+                            </Text>
+                          </XStack>
+                        );
+                      })}
+                    </YStack>
                     <Field label={t('mweb.hostManage.noteForAttendees')}>
                       <Input
                         testID="pod-delete-note"
@@ -181,7 +203,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
                       />
                     </Field>
                     {error ? (
-                      <Text testID="pod-delete-error" fontSize={12.5} color="$danger">
+                      <Text role="alert" testID="pod-delete-error" fontSize={12.5} color="$danger">
                         {error}
                       </Text>
                     ) : null}
@@ -190,6 +212,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
                 <XStack gap={12} paddingTop={12}>
                   <XStack
                     testID="pod-delete-cancel"
+                    tabIndex={0}
                     role="button"
                     aria-label={t('mweb.hostManage.keepPod')}
                     aria-disabled={busy}
@@ -210,6 +233,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
                   </XStack>
                   <XStack
                     testID="pod-delete-confirm"
+                    tabIndex={0}
                     role="button"
                     aria-label={confirmLabel}
                     aria-disabled={busy}
@@ -224,8 +248,8 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
                     opacity={busy ? 0.7 : 1}
                     pressStyle={PRESS_STYLE.solid}
                   >
-                    {busy ? <Spinner size="small" color={onPrimary} /> : null}
-                    <Text fontSize={14} fontWeight="600" color={onPrimary} numberOfLines={1}>
+                    {busy ? <Spinner size="small" color="$onDanger" /> : null}
+                    <Text fontSize={14} fontWeight="600" color="$onDanger" numberOfLines={1}>
                       {busy ? 'Cancelling…' : confirmLabel}
                     </Text>
                   </XStack>

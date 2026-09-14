@@ -145,6 +145,7 @@ export default function E2eRunsTable({
 
   return (
     <DuncitTable<E2eRunRow>
+      ariaLabel={t('tech.e2e.runsTitle')}
       tableId="tech-e2e-runs"
       columns={columns}
       fetchRows={fetchRows}

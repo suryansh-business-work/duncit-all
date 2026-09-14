@@ -3,6 +3,7 @@ import { Spinner, Text, YStack } from 'tamagui';
 
 import { EmptyState } from '@/components/EmptyState';
 import { SectionHeader } from '@/components/SectionHeader';
+import { useLoadingRegion } from '@/components/Skeleton';
 import type { MyGiftCards } from '@/hooks/useGiftCards';
 import { useTranslation } from '@/hooks/useTranslation';
 import { GiftCardRow } from './GiftCardRow';
@@ -24,6 +25,7 @@ interface Props {
 export function MyGiftCardsList({ cards, loading, error, currency, senderName }: Readonly<Props>) {
   const { t } = useTranslation();
   const [notice, setNotice] = useState<string | null>(null);
+  const loadingRegion = useLoadingRegion();
 
   const flash = (message: string) => {
     setNotice(message);
@@ -32,7 +34,7 @@ export function MyGiftCardsList({ cards, loading, error, currency, senderName }:
 
   if (error) {
     return (
-      <Text testID="gift-cards-error" fontSize={13} color="$danger">
+      <Text testID="gift-cards-error" role="alert" fontSize={13} color="$danger">
         {t('mweb.giftCards.loadError')}
       </Text>
     );
@@ -40,7 +42,7 @@ export function MyGiftCardsList({ cards, loading, error, currency, senderName }:
   if (loading && !cards) {
     return (
       <YStack alignItems="center" paddingVertical={24}>
-        <Spinner testID="gift-cards-loading" color="$primary" />
+        <Spinner testID="gift-cards-loading" color="$primary" {...loadingRegion} />
       </YStack>
     );
   }
@@ -59,7 +61,14 @@ export function MyGiftCardsList({ cards, loading, error, currency, senderName }:
   return (
     <YStack gap={16}>
       {notice ? (
-        <Text testID="gift-cards-notice" fontSize={13} fontWeight="600" color="$primary">
+        <Text
+          testID="gift-cards-notice"
+          role="status"
+          aria-live="polite"
+          fontSize={13}
+          fontWeight="600"
+          color="$accent"
+        >
           {notice}
         </Text>
       ) : null}

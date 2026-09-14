@@ -44,7 +44,7 @@ function StepRow({ step }: Readonly<{ step: PurgeStep }>) {
       {step.redacts && <ShieldOutlinedIcon color="info" sx={{ fontSize: 15 }} />}
       <Typography
         variant="caption"
-        sx={{ color: done ? 'text.secondary' : 'text.disabled', flexShrink: 0 }}
+        sx={{ color: 'text.secondary', flexShrink: 0 }}
       >
         {done
           ? t(countKey, { vars: { count: step.removed } })

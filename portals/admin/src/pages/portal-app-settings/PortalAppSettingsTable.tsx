@@ -185,6 +185,7 @@ export default function PortalAppSettingsTable({
 
   return (
     <DuncitTable<PortalAppRow>
+      ariaLabel={t('admin.portalApp.title')}
       tableId="admin-portal-app-settings"
       columns={columns}
       fetchRows={fetchRows}

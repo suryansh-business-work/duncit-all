@@ -105,7 +105,7 @@ export default function ManageDynamicFieldsPage() {
       }}>
         <TuneIcon color="primary" />
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: 800 }}>
+          <Typography component="h1" variant="h6" sx={{ fontWeight: 800 }}>
             Dynamic Fields
           </Typography>
           <Typography variant="caption" sx={{

@@ -68,6 +68,7 @@ export function HostInsightsSection({ pods, currency }: Readonly<Props>) {
         action={
           <XStack
             testID="insights-filter-open"
+            tabIndex={0}
             role="button"
             aria-label={t('mweb.common.filterPodsByMonth')}
             onPress={() => setFilterOpen(true)}

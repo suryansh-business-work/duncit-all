@@ -19,6 +19,7 @@ export default function AccountHealthPage() {
     <Stack spacing={3} sx={{ mx: { xs: -0.25, sm: 0 } }} data-testid="account-health-screen">
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
         <DuncitIconButton
+          data-testid="account-health-back"
           onClick={() => navigate(-1)}
           aria-label={t('mweb.common.back')}
           sx={{ width: 40, height: 40, minHeight: 40, bgcolor: 'background.paper', color: 'text.primary' }}
@@ -37,7 +38,7 @@ export default function AccountHealthPage() {
             alignItems: "center",
             py: 4
           }}>
-          <CircularProgress size={24} />
+          <CircularProgress size={24} aria-label={t('mweb.a11y.loading')} />
         </Stack>
       )}
 

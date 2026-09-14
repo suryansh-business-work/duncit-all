@@ -37,7 +37,8 @@ export default function TicketThread({ ticket }: Readonly<{ ticket: Ticket }>) {
   return (
     <Box sx={{ flex: 1, minHeight: 0, position: 'relative' }}>
       <Box data-testid="ticket-scroll" ref={scrollRef} onScroll={onScroll} sx={{ height: '100%', overflowY: 'auto', pr: 0.5 }}>
-        <Stack spacing={1.5}>
+        {/* role="log": a reply that arrives while the ticket is open is announced politely. */}
+        <Stack spacing={1.5} role="log">
           {RESOLVED.has(ticket.status) && (
             <FeedbackPanel rating={ticket.rating} comment={ticket.feedback_comment} />
           )}

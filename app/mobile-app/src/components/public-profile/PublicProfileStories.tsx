@@ -6,6 +6,7 @@ import { StatusViewer } from '@/components/status/StatusViewer';
 import type { StatusGroup } from '@/hooks/useStatus';
 import type { PublicProfileStory } from '@/hooks/usePublicProfile';
 import { PRESS_STYLE } from '@duncit/buttons-native';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   authorId: string;
@@ -24,6 +25,7 @@ interface Props {
  * button and no progress bar at all.
  */
 export function PublicProfileStories({ authorId, name, photo, stories }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   // The rail and the viewer read the same oldest → newest slides, so the ring
@@ -63,7 +65,8 @@ export function PublicProfileStories({ authorId, name, photo, stories }: Readonl
             key={slide.id}
             testID={`public-profile-story-${index}`}
             role="button"
-            aria-label={`Open status ${index + 1}`}
+            tabIndex={0}
+            aria-label={t('mweb.a11y.openStatusNumber', { vars: { number: index + 1 } })}
             onPress={() => setOpenIndex(index)}
             borderRadius={36}
             borderWidth={3}

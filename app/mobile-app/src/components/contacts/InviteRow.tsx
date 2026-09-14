@@ -47,6 +47,8 @@ export const InviteRow = memo(function InviteRow({
           testID={`contact-invite-select-${row.phone_key}`}
           role="checkbox"
           aria-checked={selected}
+          tabIndex={0}
+          hitSlop={10}
           aria-label={t('mweb.contacts.selectFor', { vars: { name } })}
           onPress={() => onToggleSelect(row.phone_key)}
           pressStyle={PRESS_STYLE.control}

@@ -144,9 +144,10 @@ export function SignupScreen() {
         <Text
           pressStyle={PRESS_STYLE.inline}
           testID="go-login"
+          role="link"
           fontSize={14}
           fontWeight="600"
-          color="$primary"
+          color="$accent"
           onPress={() => navigation.navigate('Login')}
         >
           {t('mweb.signup.logIn')}

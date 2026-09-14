@@ -12,6 +12,7 @@ export default function NotFoundPage() {
     <Box data-testid="not-found-page" sx={{ minHeight: '60dvh', display: 'grid', placeItems: 'center', p: 3 }}>
       <Stack spacing={2} sx={{ alignItems: 'center', textAlign: 'center' }}>
         <Box
+          aria-hidden
           sx={{
             width: 96,
             height: 96,
@@ -24,10 +25,10 @@ export default function NotFoundPage() {
         >
           <SearchOffIcon sx={{ fontSize: 44 }} />
         </Box>
-        <Typography component="h1" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>
+        <Typography component="h1" data-testid="not-found-title" sx={{ fontSize: '1.25rem', fontWeight: 600 }}>
           Page not found
         </Typography>
-        <DuncitButton component={RouterLink} to="/" variant="contained" size="large">
+        <DuncitButton data-testid="not-found-home" component={RouterLink} to="/" variant="contained" size="large">
           {t('mweb.notFound.goToHome')}
         </DuncitButton>
       </Stack>

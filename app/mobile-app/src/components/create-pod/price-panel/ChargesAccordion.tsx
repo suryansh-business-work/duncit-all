@@ -41,6 +41,7 @@ export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<
     >
       <XStack
         testID="price-panel-charges-header"
+        tabIndex={0}
         role="button"
         aria-label={govtCharges}
         aria-expanded={open}

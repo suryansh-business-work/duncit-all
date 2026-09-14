@@ -106,7 +106,7 @@ function PayoutCard({ payout, symbol }: Readonly<{ payout: HostPayout; symbol: s
         <Text fontSize={14} fontWeight="600" color="$color">
           {payableLabel(b)}
         </Text>
-        <Text fontSize={14} fontWeight="700" color="$primary">
+        <Text fontSize={14} fontWeight="700" color="$accent">
           {fmt(payable)}
         </Text>
       </XStack>
@@ -145,7 +145,7 @@ export function HostShareSection({
           </YStack>
         ) : null}
         {!isLoading && error ? (
-          <Text testID="host-share-error" padding={16} fontSize={13} color="$danger">
+          <Text role="alert" testID="host-share-error" padding={16} fontSize={13} color="$danger">
             {error}
           </Text>
         ) : null}

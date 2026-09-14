@@ -55,7 +55,7 @@ export function SavedScreen() {
           />
         </XStack>
         {error ? (
-          <Text testID="saved-error" padding={24} color="$danger">
+          <Text role="alert" testID="saved-error" padding={24} color="$danger">
             {toErrorMessage(error)}
           </Text>
         ) : (

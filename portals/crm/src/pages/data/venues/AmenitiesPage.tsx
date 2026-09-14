@@ -13,7 +13,7 @@ export default function AmenitiesPage() {
       }}>
         <DeckIcon color="primary" />
         <Box>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 800
           }}>{t('shell.nav.amenitiesManagement')}</Typography>
           <Typography variant="body2" sx={{

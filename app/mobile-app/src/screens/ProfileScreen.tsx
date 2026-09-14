@@ -96,7 +96,7 @@ export function ProfileScreen() {
     </RefreshScrollView>
   ) : (
     <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
-      <Text testID="profile-error" color="$muted">
+      <Text testID="profile-error" role="alert" color="$muted">
         Could not load your profile.
       </Text>
     </YStack>
@@ -114,6 +114,8 @@ export function ProfileScreen() {
             testID="profile-back"
             role="button"
             aria-label={t('mweb.common.goBack')}
+            tabIndex={0}
+            hitSlop={2}
             onPress={goBack}
             width={40}
             height={40}
@@ -125,13 +127,23 @@ export function ProfileScreen() {
           >
             <MaterialIcons name="arrow-back" size={22} color={ink} />
           </XStack>
-          <Text flex={1} fontSize={17} fontWeight="600" color="$color" textAlign="center">
+          <Text
+            testID="profile-title"
+            role="heading"
+            flex={1}
+            fontSize={17}
+            fontWeight="600"
+            color="$color"
+            textAlign="center"
+          >
             Profile
           </Text>
           <XStack
             testID="profile-settings"
             role="button"
             aria-label={t('mweb.profile.profileSettings')}
+            tabIndex={0}
+            hitSlop={2}
             onPress={() => navigation.navigate('Account')}
             width={40}
             height={40}

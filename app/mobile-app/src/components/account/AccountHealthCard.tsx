@@ -35,6 +35,7 @@ export function AccountHealthCard({
       testID="account-health"
       role={onPress ? 'button' : undefined}
       aria-label={onPress ? 'Open account health' : undefined}
+      tabIndex={onPress ? 0 : undefined}
       onPress={onPress}
       pressStyle={onPress ? PRESS_STYLE.surface : undefined}
     >

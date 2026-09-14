@@ -167,8 +167,9 @@ export default function ProductCheckoutPage() {
 }
 
 function ProductCheckoutSkeleton() {
+  const { t } = useTranslation();
   return (
-    <Box data-testid="product-checkout-page-loading" sx={{ maxWidth: 720, mx: 'auto', py: 0.5 }}>
+    <Box data-testid="product-checkout-page-loading" role="progressbar" aria-busy aria-label={t('mweb.a11y.loading')} sx={{ maxWidth: 720, mx: 'auto', py: 0.5 }}>
       <Stack spacing={2}>
         <Skeleton variant="text" width="40%" height={40} />
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>

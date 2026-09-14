@@ -34,6 +34,7 @@ export function AuditLogRow({ log, when, testID, onPress }: Readonly<Props>) {
   return (
     <YStack
       testID={testID}
+      tabIndex={0}
       role={onPress ? 'button' : undefined}
       aria-label={onPress ? log.pod_title : undefined}
       onPress={onPress}

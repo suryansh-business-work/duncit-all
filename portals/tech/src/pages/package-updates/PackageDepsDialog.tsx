@@ -38,7 +38,7 @@ const renderRange = (row: DependencyUpdate) => (
 );
 
 const renderLatest = (emptyText: string) => (row: DependencyUpdate) => (
-  <Typography variant="body2" color={row.latest ? 'text.primary' : 'text.disabled'}>
+  <Typography variant="body2" color={row.latest ? 'text.primary' : 'text.secondary'}>
     {row.latest ?? emptyText}
   </Typography>
 );

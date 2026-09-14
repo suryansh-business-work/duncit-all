@@ -20,6 +20,7 @@ function Control({ icon, label, testID, onPress }: Readonly<ControlProps>) {
         testID={testID}
         role="button"
         aria-label={label}
+        tabIndex={0}
         onPress={onPress}
         width={52}
         height={52}
@@ -31,7 +32,14 @@ function Control({ icon, label, testID, onPress }: Readonly<ControlProps>) {
       >
         <MaterialIcons name={icon} size={24} color="#ffffff" />
       </XStack>
-      <Text fontSize={11} fontWeight="700" color="rgba(255,255,255,0.85)">
+      {/* The caption repeats the button's name, so it is not a second stop. */}
+      <Text
+        fontSize={11}
+        fontWeight="700"
+        color="rgba(255,255,255,0.85)"
+        accessible={false}
+        importantForAccessibility="no"
+      >
         {label}
       </Text>
     </YStack>

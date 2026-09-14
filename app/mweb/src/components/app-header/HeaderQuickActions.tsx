@@ -75,6 +75,7 @@ export default function HeaderQuickActions({
           >
             <Avatar
               data-testid="account-avatar-image"
+              alt=""
               src={me?.profile_photo || undefined}
               sx={{
                 width: 34,

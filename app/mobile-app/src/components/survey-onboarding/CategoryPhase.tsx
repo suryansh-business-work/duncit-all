@@ -79,7 +79,7 @@ export function CategoryPhase({
         <Text fontSize={14} fontWeight="600" color="$color">
           {label}
         </Text>
-        <XStack flexWrap="wrap" gap={8}>
+        <XStack flexWrap="wrap" gap={8} role="radiogroup" aria-label={label}>
           {options.map((c) => {
             const selected = scope[level] === c.id;
             const heldDisabled = disabledSet.has(c.id);
@@ -87,9 +87,10 @@ export function CategoryPhase({
               <XStack
                 key={c.id}
                 testID={`cat-${c.id}`}
-                role="button"
+                role="radio"
                 aria-label={c.name}
-                aria-pressed={selected}
+                aria-checked={selected}
+                tabIndex={0}
                 aria-disabled={heldDisabled}
                 disabled={heldDisabled}
                 height={40}
@@ -122,7 +123,7 @@ export function CategoryPhase({
       {group('Category *', 'category_id', cats)}
       {group('Sub-Category *', 'sub_category_id', subs)}
       {message ? (
-        <Text testID="category-error" color="$danger">
+        <Text testID="category-error" role="alert" color="$danger">
           {message}
         </Text>
       ) : null}

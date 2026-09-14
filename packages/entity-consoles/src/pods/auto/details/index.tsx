@@ -56,7 +56,7 @@ export default function AutoPodDetailsPage() {
                 <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
                   <AutoModeIcon color="primary" />
                   <Box sx={{ flexGrow: 1, minWidth: 200 }}>
-                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                    <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
                       {row.pod_title}
                     </Typography>
                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>

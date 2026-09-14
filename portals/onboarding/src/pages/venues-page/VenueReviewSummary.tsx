@@ -55,7 +55,7 @@ export default function VenueReviewSummary({ active }: Readonly<VenueReviewSumma
 
       {documents.length > 0 && (
         <Box>
-          <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 800 }}>
+          <Typography variant="overline" component="h3" sx={{ color: 'text.secondary', fontWeight: 800 }}>
             Documents
           </Typography>
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1, mt: 0.5 }}>

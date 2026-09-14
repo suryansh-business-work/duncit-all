@@ -55,7 +55,7 @@ export default function WhatsAppLeadGeneratorPage() {
           mb: 2
         }}>
         <WhatsAppIcon sx={{ color: '#25D366' }} />
-        <Typography variant="h5" sx={{
+        <Typography component="h1" variant="h5" sx={{
           fontWeight: 800
         }}>
           WhatsApp Lead Generator

@@ -115,12 +115,12 @@ export function BulkActionsSection({ venueId, onDone }: Readonly<Props>) {
       />
       <WeekdayChips testID="bulk-weekdays" value={weekdays} onChange={setWeekdays} />
       {result ? (
-        <Text testID="bulk-result" fontSize={12.5} color="$primary">
+        <Text testID="bulk-result" fontSize={12.5} color="$accent">
           {result}
         </Text>
       ) : null}
       {error ? (
-        <Text testID="bulk-error" fontSize={12.5} color="$danger">
+        <Text role="alert" testID="bulk-error" fontSize={12.5} color="$danger">
           {error}
         </Text>
       ) : null}

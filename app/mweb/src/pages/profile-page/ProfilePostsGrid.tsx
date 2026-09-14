@@ -1,4 +1,4 @@
-import { Box, ImageList, ImageListItem, Stack, Typography } from '@mui/material';
+import { Box, ButtonBase, ImageList, ImageListItem, Stack, Typography } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternateOutlined';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -40,12 +40,14 @@ export default function ProfilePostsGrid({ posts, onOpenPost, onNewPost }: Reado
       ) : (
         <ImageList data-testid="profile-posts-grid" cols={3} gap={4} sx={{ m: 0 }}>
           {posts.map((post: any) => (
-            <ImageListItem
-              key={post.id}
-              data-testid={`profile-posts-grid-post-${post.id}`}
-              onClick={() => onOpenPost(post.id)}
-              sx={{ cursor: 'pointer', aspectRatio: '1 / 1', position: 'relative', overflow: 'hidden', borderRadius: '12px', '&:hover .post-overlay': { opacity: 1 } }}
-            >
+            <ImageListItem key={post.id} sx={{ aspectRatio: '1 / 1', overflow: 'hidden', borderRadius: '12px' }}>
+              {/* A real button inside the list item: the keyboard reaches it
+                  and the list keeps its listitem structure (WCAG 2.1.1). */}
+              <ButtonBase
+                data-testid={`profile-posts-grid-post-${post.id}`}
+                onClick={() => onOpenPost(post.id)}
+                sx={{ display: 'block', width: '100%', height: '100%', position: 'relative', '&:hover .post-overlay, &.Mui-focusVisible .post-overlay': { opacity: 1 } }}
+              >
               <Box component="img" src={post.image_url} alt={post.caption || 'post'} loading="lazy" sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               <Box className="post-overlay" sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(0,0,0,0.45)', color: 'common.white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, opacity: 0, transition: 'opacity 150ms' }}>
                 <Stack direction="row" spacing={0.5} sx={{
@@ -65,6 +67,7 @@ export default function ProfilePostsGrid({ posts, onOpenPost, onNewPost }: Reado
                   }}>{post.comments_count}</Typography>
                 </Stack>
               </Box>
+              </ButtonBase>
             </ImageListItem>
           ))}
         </ImageList>

@@ -109,6 +109,7 @@ export function PublicProfilePosts({
                 key={post.id}
                 testID={`public-profile-post-${index}`}
                 role="button"
+                tabIndex={0}
                 aria-label={t('mweb.common.openPost')}
                 onPress={() => setPostIndex(index)}
               >

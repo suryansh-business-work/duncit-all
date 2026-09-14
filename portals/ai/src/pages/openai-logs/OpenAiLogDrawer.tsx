@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Box, Chip, CircularProgress, Divider, Drawer, Stack, Typography } from '@mui/material';
 import { useTranslation } from '@duncit/shell';
@@ -81,6 +82,7 @@ function TextBlock({ title, body }: Readonly<{ title: string; body: string }>) {
  */
 export default function OpenAiLogDrawer({ logId, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
+  const titleId = useId();
   const { data, loading } = useQuery<{ openAiUsageLog: OpenAiLogDetail | null }>(OPENAI_LOG_ONE, {
     variables: { id: logId },
     skip: !logId,
@@ -90,7 +92,7 @@ export default function OpenAiLogDrawer({ logId, onClose }: Readonly<Props>) {
 
   return (
     <Drawer anchor="right" open={!!logId} onClose={onClose} slotProps={{
-      paper: { sx: { width: { xs: '100%', sm: 560 } } }
+      paper: { 'aria-labelledby': titleId, sx: { width: { xs: '100%', sm: 560 } } }
     }}>
       <Stack
         direction="row"
@@ -100,7 +102,7 @@ export default function OpenAiLogDrawer({ logId, onClose }: Readonly<Props>) {
           p: 2,
           pb: 1
         }}>
-        <Typography variant="h6" sx={{ flex: 1 }}>
+        <Typography variant="h6" component="h2" id={titleId} sx={{ flex: 1 }}>
           OpenAI call
         </Typography>
         {log && <Chip size="small" label={log.status} color={STATUS_COLOR[log.status] ?? 'default'} />}

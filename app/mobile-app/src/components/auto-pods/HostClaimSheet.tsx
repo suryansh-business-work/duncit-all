@@ -237,7 +237,7 @@ export function HostClaimSheet({
         {busy ? <LoadingIndicator testID="auto-pod-assign-busy" /> : null}
 
         {failure ? (
-          <Text testID="auto-pod-assign-error" fontSize={13} color="$danger">
+          <Text role="alert" testID="auto-pod-assign-error" fontSize={13} color="$danger">
             {failure}
           </Text>
         ) : null}

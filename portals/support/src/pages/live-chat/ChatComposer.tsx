@@ -46,6 +46,7 @@ export default function ChatComposer({ text, attachments, sending, onText, onAtt
           size="small"
           fullWidth
           placeholder={t('support.chat.placeholder')}
+          slotProps={{ htmlInput: { 'aria-label': t('support.chat.placeholder'), 'data-testid': 'live-chat-composer-input' } }}
           value={text}
           onChange={(e) => handleChange(e.target.value)}
           onKeyDown={(e) => {

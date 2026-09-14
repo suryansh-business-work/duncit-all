@@ -109,7 +109,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
         <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', bgcolor: 'background.default' }}>
           {previewErrors.length > 0 && <Alert severity="warning" sx={{ borderRadius: 0 }}>{previewErrors.slice(0, 3).join(' · ')}</Alert>}
           <iframe title="preview" srcDoc={previewHtml} sandbox="" style={{ width: '100%', height: '100%', border: 'none', background: 'white' }} />
-          <Dialog open={fullscreen} onClose={() => setFullscreen(false)} fullScreen>
+          <Dialog open={fullscreen} onClose={() => setFullscreen(false)} fullScreen aria-label={t('crm.emailTemplates.fullScreenPreview')}>
             <Stack
               direction="row"
               sx={{
@@ -186,9 +186,11 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
                         setDraft({ ...draft, variables: copy });
                       }}
                       sx={{ width: 160 }}
+                      slotProps={{ htmlInput: { 'aria-label': t('crm.emailTemplates.slug') } }}
                     />
                     <TextField
                       size="small"
+                      slotProps={{ htmlInput: { 'aria-label': t('shell.common.description') } }}
                       placeholder="description"
                       value={v.description ?? ''}
                       onChange={(e) => {
@@ -201,7 +203,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
                     <Tooltip title={`Copy {{ ${v.key} }}`}>
                       <DuncitIconButton size="small" onClick={() => navigator.clipboard?.writeText(`{{ ${v.key} }}`)}><ContentCopyIcon fontSize="small" /></DuncitIconButton>
                     </Tooltip>
-                    <DuncitIconButton size="small" color="error" onClick={() => setDraft({ ...draft, variables: draft.variables.filter((_, j) => j !== index) })}>
+                    <DuncitIconButton size="small" color="error" aria-label={t('shell.a11y.removeNamed', { vars: { name: v.key } })} data-testid="crm-template-variable-remove" onClick={() => setDraft({ ...draft, variables: draft.variables.filter((_, j) => j !== index) })}>
                       <DeleteIcon fontSize="small" />
                     </DuncitIconButton>
                   </Stack>

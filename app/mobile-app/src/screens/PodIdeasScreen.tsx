@@ -97,6 +97,7 @@ export function PodIdeasScreen() {
     <XStack
       testID="pod-ideas-add"
       role="button"
+      tabIndex={0}
       aria-label={t('mweb.podIdeas.shareAnIdea')}
       onPress={() => setComposerOpen(true)}
       alignItems="center"

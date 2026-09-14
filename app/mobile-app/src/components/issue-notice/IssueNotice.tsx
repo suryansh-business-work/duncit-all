@@ -55,13 +55,14 @@ export function IssueNotice({ issue, page }: Readonly<{ issue: ParsedIssue; page
       backgroundColor="$dangerSoft"
     >
       <MaterialIcons name="error-outline" size={20} color={danger} />
-      <Text flex={1} fontSize={14} lineHeight={20} color="$color">
+      <Text role="alert" flex={1} fontSize={14} lineHeight={20} color="$color">
         {issue.message}
         {sent ? ` ${t('mweb.issue.reported')}` : ''}
       </Text>
       {issue.offerReport && !sent ? (
         <XStack
           role="button"
+          tabIndex={0}
           aria-label={reportLabel}
           minHeight={36}
           alignItems="center"
@@ -71,7 +72,7 @@ export function IssueNotice({ issue, page }: Readonly<{ issue: ParsedIssue; page
           }}
           pressStyle={PRESS_STYLE.inline}
         >
-          <Text fontSize={13} fontWeight="600" color="$primary">
+          <Text fontSize={13} fontWeight="600" color="$accent">
             {reportLabel}
           </Text>
         </XStack>

@@ -66,7 +66,7 @@ export default function AudienceListsPage() {
           mb: 2
         }}>
         <Stack spacing={0.25} sx={{ flex: 1 }}>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 700
           }}>
             Target Audience
@@ -88,6 +88,7 @@ export default function AudienceListsPage() {
       </Stack>
 
       <DuncitTable<AudienceListRow>
+        ariaLabel={t('shell.nav.targetAudience')}
         tableId="marketing-audience-lists"
         columns={columns}
         fetchRows={fetchRows}

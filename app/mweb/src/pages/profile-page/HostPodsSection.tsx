@@ -68,7 +68,7 @@ export default function HostPodsSection({ pods, loading }: Readonly<HostPodsSect
               }
             >
               <ListItemAvatar>
-                <Avatar src={cover || undefined} variant="rounded" sx={{ borderRadius: '12px' }}>
+                <Avatar src={cover || undefined} alt="" variant="rounded" sx={{ borderRadius: '12px' }}>
                   <EventIcon fontSize="small" />
                 </Avatar>
               </ListItemAvatar>
@@ -95,7 +95,7 @@ export default function HostPodsSection({ pods, loading }: Readonly<HostPodsSect
         <Chip data-testid="host-pods-section-count" size="small" label={pods.length} />
       </Stack>
       {loading ? (
-        <CircularProgress data-testid="host-pods-section-loading" size={20} sx={{ mt: 1 }} />
+        <CircularProgress data-testid="host-pods-section-loading" size={20} sx={{ mt: 1 }} aria-label={t('mweb.a11y.loading')} />
       ) : (
         emptyOrList
       )}

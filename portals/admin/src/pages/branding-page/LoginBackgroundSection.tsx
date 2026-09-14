@@ -84,6 +84,8 @@ export default function LoginBackgroundSection({ form, setForm }: Readonly<Props
                 loop
                 autoPlay
                 playsInline
+                // A looping preview needs a way to pause it (WCAG 2.2.2).
+                controls
                 sx={{
                   width: 234,
                   height: 132,

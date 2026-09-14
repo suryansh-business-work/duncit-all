@@ -20,6 +20,8 @@ function HostChip({
   return (
     <XStack
       testID={`create-pod-host-chip-${host.user_id}`}
+      tabIndex={0}
+      hitSlop={6}
       role="button"
       aria-label={removeLabel}
       onPress={onRemove}
@@ -113,13 +115,21 @@ export function AssignHostsField({ hosts, onChange, search }: Readonly<Props>) {
         placeholder={t('mweb.common.search')}
         aria-label={label}
       />
-      {isSearching ? <Spinner testID="create-pod-hosts-searching" color="$primary" /> : null}
+      {isSearching ? (
+        <Spinner
+          role="progressbar"
+          aria-label={t('mweb.a11y.loading')}
+          testID="create-pod-hosts-searching"
+          color="$primary"
+        />
+      ) : null}
       {results
         .filter((host) => !chosen.has(host.user_id))
         .map((host) => (
           <XStack
             key={host.user_id}
             testID={`create-pod-host-${host.user_id}`}
+            tabIndex={0}
             role="button"
             aria-label={host.full_name}
             onPress={() => add(host)}

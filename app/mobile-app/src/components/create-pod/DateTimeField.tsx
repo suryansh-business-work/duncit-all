@@ -68,6 +68,7 @@ export function DateTimeField({
         />
         <XStack
           testID={`${testID}-open`}
+          tabIndex={0}
           role="button"
           aria-label={t('mweb.createPod.pickDateTime', { vars: { label } })}
           onPress={() => setOpen(true)}
@@ -88,17 +89,24 @@ export function DateTimeField({
         </Text>
       ) : null}
       {error ? (
-        <Text testID={`${testID}-error`} fontSize={12} color="$danger">
+        <Text role="alert" testID={`${testID}-error`} fontSize={12} color="$danger">
           {error}
         </Text>
       ) : null}
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={closeSheet}>
         <ModalThemeScope>
-          <YStack flex={1} alignItems="center" justifyContent="center" testID={`${testID}-sheet`}>
+          <YStack
+            flex={1}
+            alignItems="center"
+            justifyContent="center"
+            testID={`${testID}-sheet`}
+            onAccessibilityEscape={closeSheet}
+          >
             <YStack
               pressStyle={PRESS_STYLE.surface}
               testID={`${testID}-sheet-backdrop`}
+              importantForAccessibility="no"
               role="button"
               aria-label={t('mweb.auth.close')}
               onPress={closeSheet}

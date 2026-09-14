@@ -1,5 +1,6 @@
 import { Avatar, Box, Paper, Stack, Typography } from '@mui/material';
 import { formatTime } from '../../utils/dateFormat';
+import { useTranslation } from '../../i18n/useTranslation';
 import { bubbleRadiusSx } from '../support-chat/calmStyles';
 
 interface MessageBubbleProps {
@@ -9,13 +10,16 @@ interface MessageBubbleProps {
 }
 
 export default function MessageBubble({ message, mine, onOpenReact }: Readonly<MessageBubbleProps>) {
+  const { t } = useTranslation();
   const m = message;
+  // Muted ink only on the paper bubble: faded white on the red fill fails 4.5:1.
+  const metaInk = mine ? 'inherit' : 'text.secondary';
   const messageContent =
     m.type === 'IMAGE' ? (
       <Box
         component="img"
         src={m.image_url}
-        alt=""
+        alt={t('mweb.chatRoom.image')}
         sx={{ maxWidth: 240, maxHeight: 240, borderRadius: '12px', display: 'block' }}
       />
     ) : (
@@ -34,7 +38,7 @@ export default function MessageBubble({ message, mine, onOpenReact }: Readonly<M
       sx={{ mb: 1, justifyContent: mine ? 'flex-end' : 'flex-start', alignItems: 'flex-end' }}
     >
       {!mine && (
-        <Avatar src={m.user_photo || undefined} sx={{ width: 32, height: 32 }}>
+        <Avatar alt="" src={m.user_photo || undefined} sx={{ width: 32, height: 32 }}>
           {(m.user_name || '?').charAt(0)}
         </Avatar>
       )}
@@ -61,13 +65,13 @@ export default function MessageBubble({ message, mine, onOpenReact }: Readonly<M
           </Typography>
         )}
         {m.deleted ? (
-          <Typography variant="body2" sx={{ fontStyle: 'italic', opacity: 0.7 }}>
+          <Typography variant="body2" sx={{ fontStyle: 'italic', color: metaInk }}>
             deleted
           </Typography>
         ) : (
           messageContent
         )}
-        <Typography variant="caption" sx={{ opacity: 0.7, display: 'block', mt: 0.5, textAlign: 'right' }}>
+        <Typography variant="caption" sx={{ color: metaInk, display: 'block', mt: 0.5, textAlign: 'right' }}>
           {formatTime(m.createdAt)}
         </Typography>
         {m.reactions?.length > 0 && (

@@ -42,7 +42,7 @@ export default function LeadsToolbar({
         justifyContent: "space-between"
       }}>
       <Box>
-        <Typography variant="h5" sx={{
+        <Typography component="h1" variant="h5" sx={{
           fontWeight: 800
         }}>{title}</Typography>
         {subtitle && <Typography variant="body2" sx={{

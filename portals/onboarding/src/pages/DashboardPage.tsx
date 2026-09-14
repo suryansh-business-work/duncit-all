@@ -66,7 +66,7 @@ export default function DashboardPage() {
   if (flagPending || (loading && !data)) {
     return (
       <Box sx={{ display: 'grid', placeItems: 'center', minHeight: '50vh' }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('shell.a11y.loading')} />
       </Box>
     );
   }

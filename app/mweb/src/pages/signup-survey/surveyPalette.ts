@@ -1,20 +1,22 @@
-// Vibrant palette used for super-categories / categories in the signup survey.
+// Palette used for super-categories / categories in the signup survey.
 // Colors are hashed deterministically to a category id so the same chip keeps
-// the same hue across renders.
+// the same hue across renders. Every hue is at least 4.5:1 against white, so
+// the white label on a selected chip passes WCAG 1.4.3; unselected chips and
+// group pills keep the hue as a tint and write their text in the theme ink.
 
 export const SURVEY_COLORS = [
-  '#ff5757', // brand
-  '#22c55e', // green
-  '#f59e0b', // orange
-  '#8b5cf6', // purple
-  '#ec4899', // pink
-  '#06b6d4', // cyan
-  '#3b82f6', // blue
-  '#f97316', // amber-orange
-  '#14b8a6', // teal
-  '#eab308', // yellow
-  '#a855f7', // violet
-  '#ef4444', // red
+  '#c62828', // brand red
+  '#15803d', // green
+  '#b45309', // orange
+  '#7c3aed', // purple
+  '#be185d', // pink
+  '#0e7490', // cyan
+  '#1d4ed8', // blue
+  '#c2410c', // amber-orange
+  '#0f766e', // teal
+  '#a16207', // yellow
+  '#9333ea', // violet
+  '#b91c1c', // red
 ];
 
 function hashId(id: string): number {

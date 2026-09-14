@@ -59,6 +59,7 @@ export default function ThemePicker({
               label={t(group.labelKey)}
               color={active ? 'primary' : 'default'}
               onClick={() => onGroup(group.value)}
+              aria-pressed={active}
               sx={active ? CARD_PILL_SX : CARD_PILL_IDLE_SX}
             />
           );

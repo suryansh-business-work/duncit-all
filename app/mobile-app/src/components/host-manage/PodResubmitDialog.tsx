@@ -96,9 +96,16 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
     <Modal visible={!!pod} transparent animationType="fade" onRequestClose={dismiss}>
       <ModalThemeScope>
         <KeyboardScreen>
-          <YStack flex={1} alignItems="center" justifyContent="center" testID="pod-resubmit-dialog">
+          <YStack
+            flex={1}
+            alignItems="center"
+            justifyContent="center"
+            testID="pod-resubmit-dialog"
+            onAccessibilityEscape={dismiss}
+          >
             <YStack
               pressStyle={PRESS_STYLE.surface}
+              importantForAccessibility="no"
               role="button"
               aria-label={t('mweb.common.close')}
               onPress={dismiss}
@@ -118,7 +125,14 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
               padding={18}
             >
               <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
-                <Text fontSize={17} fontWeight="600" color="$color" paddingBottom={6}>
+                <Text
+                  testID="pod-resubmit-title"
+                  role="heading"
+                  fontSize={17}
+                  fontWeight="600"
+                  color="$color"
+                  paddingBottom={6}
+                >
                   {t('mweb.hostPodActions.resubmitTitle')}
                 </Text>
                 <Text fontSize={12.5} color="$muted" paddingBottom={10}>
@@ -183,7 +197,12 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                       )}
                     />
                     {error ? (
-                      <Text testID="pod-resubmit-error" fontSize={12.5} color="$danger">
+                      <Text
+                        role="alert"
+                        testID="pod-resubmit-error"
+                        fontSize={12.5}
+                        color="$danger"
+                      >
                         {error}
                       </Text>
                     ) : null}

@@ -355,14 +355,14 @@ export default function VenueLeadDetailPage() {
               flexWrap: "wrap"
             }}>
             {lead.logo_url && (
-              <Avatar
+              <Avatar alt=""
                 src={lead.logo_url}
                 variant="rounded"
                 sx={{ width: 56, height: 56, bgcolor: 'action.hover' }}
               />
             )}
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography
+              <Typography component="h1"
                 variant="h5"
                 sx={{
                   fontWeight: 800,

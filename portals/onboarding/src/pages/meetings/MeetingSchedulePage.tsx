@@ -149,7 +149,7 @@ export default function MeetingSchedulePage() {
       }}>
         <EventIcon color="primary" />
         <Box>
-          <Typography variant="h5" sx={{
+          <Typography variant="h5" component="h1" sx={{
             fontWeight: 800
           }}>{KIND_LABELS[kind]} Meeting Schedule</Typography>
           <Typography variant="body2" sx={{
@@ -158,7 +158,7 @@ export default function MeetingSchedulePage() {
         </Box>
       </Stack>
 
-      <ToggleButtonGroup size="small" exclusive value={statusFilter} onChange={(_, v) => onStatusChange(v ?? '')}>
+      <ToggleButtonGroup size="small" exclusive value={statusFilter} onChange={(_, v) => onStatusChange(v ?? '')} aria-label={t('onboarding.a11y.meetingStatusFilter')} data-testid="meeting-schedule-status-filter">
         {statusFilters(t).map((f) => <ToggleButton key={f.label} value={f.value}>{f.label}</ToggleButton>)}
       </ToggleButtonGroup>
 

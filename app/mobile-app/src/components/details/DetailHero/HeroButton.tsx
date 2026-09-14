@@ -13,6 +13,8 @@ const HERO_SCRIM = 'rgba(0,0,0,0.45)';
 
 interface Props {
   icon: HeroIconName;
+  /** The spoken name — the button shows only an icon. */
+  label?: string;
   onPress: () => void;
   active?: boolean;
   loading?: boolean;
@@ -26,6 +28,7 @@ interface Props {
  * toggle wears the action green. */
 export function HeroButton({
   icon,
+  label,
   onPress,
   active,
   loading,
@@ -38,6 +41,10 @@ export function HeroButton({
     <XStack
       testID={testID}
       role="button"
+      tabIndex={0}
+      aria-label={label}
+      aria-busy={loading}
+      hitSlop={2}
       onPress={onPress}
       width={40}
       height={40}

@@ -32,7 +32,7 @@ export default function RunHeader({ run, onStop, onDownload }: Readonly<Props>) 
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { md: 'center' } }}>
         <Stack spacing={0.5}>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
-            <Typography variant="h5" sx={{ fontWeight: 800 }}>
+            <Typography variant="h5" component="h1" sx={{ fontWeight: 800 }}>
               {run.run_no}
             </Typography>
             <RunStatusChip status={run.status} />

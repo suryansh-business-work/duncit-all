@@ -94,7 +94,7 @@ export default function ContentManager({ type }: Readonly<{ type: WebsitePageTyp
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5" sx={{
+        <Typography variant="h5" component="h1" sx={{
           fontWeight: 700
         }}>
           {labels.title}

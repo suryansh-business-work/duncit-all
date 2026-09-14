@@ -42,9 +42,12 @@ function fenceOf(children: ReactNode): FenceParts {
 const CELL_SX = { border: 1, borderColor: 'divider', px: 1.25, py: 0.75, textAlign: 'left' };
 
 const COMPONENTS: Components = {
+  // The page title is the h1 and the package name the h2, so a doc's own
+  // headings start one level below them (WCAG 1.3.1).
   h1: ({ children }) => (
     <Typography
       variant="h5"
+      component="h3"
       sx={{
         fontWeight: 700,
         mt: 3,
@@ -58,6 +61,7 @@ const COMPONENTS: Components = {
       <Divider sx={{ mt: 4, mb: 2 }} />
       <Typography
         variant="h6"
+        component="h4"
         sx={{
           fontWeight: 700,
           mb: 1
@@ -69,6 +73,7 @@ const COMPONENTS: Components = {
   h3: ({ children }) => (
     <Typography
       variant="subtitle1"
+      component="h5"
       sx={{
         fontWeight: 700,
         mt: 2.5,
@@ -80,6 +85,7 @@ const COMPONENTS: Components = {
   h4: ({ children }) => (
     <Typography
       variant="subtitle2"
+      component="h6"
       sx={{
         fontWeight: 700,
         mt: 2,

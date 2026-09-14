@@ -98,6 +98,8 @@ export default function PlatformAssetsSection({ prefix, sizes, form, setForm }: 
             loop
             autoPlay
             playsInline
+            // A looping preview needs a way to pause it (WCAG 2.2.2).
+            controls
             sx={{
               width: 132,
               height: 234,

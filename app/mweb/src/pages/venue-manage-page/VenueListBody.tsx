@@ -4,6 +4,7 @@ import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
 import { DuncitButton } from '@duncit/buttons';
 import { venueUrl } from '../../utils/seoUrls';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface VenueListBodyProps {
   showSpinner: boolean;
@@ -14,6 +15,7 @@ interface VenueListBodyProps {
 /** The "Your venues" card body — spinner, error, the register prompt, or the
  * owner's single listed venue. */
 export default function VenueListBody({ showSpinner, error, venue }: Readonly<VenueListBodyProps>) {
+  const { t } = useTranslation();
   if (showSpinner) {
     return (
       <Stack
@@ -22,7 +24,7 @@ export default function VenueListBody({ showSpinner, error, venue }: Readonly<Ve
           alignItems: "center",
           py: 4
         }}>
-        <CircularProgress size={22} />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} size={22} />
       </Stack>
     );
   }

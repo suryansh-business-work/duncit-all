@@ -70,6 +70,7 @@ export default function VariablesTab({
         onChange={(e) => setVarsJson(e.target.value)}
         fullWidth
         placeholder='{"name":"Suryansh"}'
+        slotProps={{ htmlInput: { 'aria-label': t('tech.a11y.sampleValues'), 'data-testid': 'email-template-sample-values' } }}
         helperText={t('tech.emailTemplates.usedForLivePreviewAndSend')}
         sx={{ fontFamily: 'monospace', '& textarea': { fontFamily: 'monospace' } }}
       />
@@ -87,6 +88,7 @@ export default function VariablesTab({
             <Stack key={rowKeys.current.keys[i]} direction="row" spacing={1}>
               <TextField
                 size="small"
+                slotProps={{ htmlInput: { 'aria-label': t('tech.featureFlags.key'), 'data-testid': 'email-template-variable-key' } }}
                 value={v.key}
                 onChange={(e) => {
                   const copy = [...draft.variables];
@@ -98,6 +100,7 @@ export default function VariablesTab({
               <TextField
                 size="small"
                 placeholder="description"
+                slotProps={{ htmlInput: { 'aria-label': t('shell.common.description'), 'data-testid': 'email-template-variable-description' } }}
                 value={v.description ?? ''}
                 onChange={(e) => {
                   const copy = [...draft.variables];
@@ -109,6 +112,8 @@ export default function VariablesTab({
               <DuncitIconButton
                 size="small"
                 color="error"
+                aria-label={t('shell.a11y.removeNamed', { vars: { name: v.key } })}
+                data-testid="email-template-variable-remove"
                 onClick={() =>
                   setDraft({ ...draft, variables: draft.variables.filter((_, j) => j !== i) })
                 }

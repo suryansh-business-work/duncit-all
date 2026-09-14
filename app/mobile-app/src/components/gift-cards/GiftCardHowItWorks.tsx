@@ -30,7 +30,7 @@ export function GiftCardHowItWorks() {
             justifyContent="center"
             backgroundColor="$primarySoft"
           >
-            <Text fontSize={12} fontWeight="600" color="$primary">
+            <Text fontSize={12} fontWeight="600" color="$accent">
               {index + 1}
             </Text>
           </YStack>

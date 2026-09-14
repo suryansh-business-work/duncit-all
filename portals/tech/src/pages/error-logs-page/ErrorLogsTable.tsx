@@ -129,6 +129,7 @@ export default function ErrorLogsTable({
 
   return (
     <DuncitTable<ErrorLogRow>
+      ariaLabel={t('shell.nav.errorLogs')}
       tableId="tech-error-logs"
       columns={columns}
       fetchRows={fetchRows}

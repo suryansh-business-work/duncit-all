@@ -2,6 +2,7 @@ import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import ChatBubble from '../ChatBubble';
 import { dayLabel, showDaySeparator } from '../chatHelpers';
 import type { SupportChatMessage } from '../queries';
+import { useTranslation } from '../../../i18n/useTranslation';
 
 interface Props {
   loading: boolean;
@@ -27,11 +28,12 @@ export default function ChatMessageList({
   scrollRef,
   onScroll,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   let body: React.ReactNode;
   if (loading) {
     body = (
       <Box data-testid="support-chat-loading" sx={{ p: 4, textAlign: 'center' }}>
-        <CircularProgress size={22} />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} size={22} />
       </Box>
     );
   } else if (messages.length === 0) {
@@ -74,6 +76,7 @@ export default function ChatMessageList({
         {typingText && (
           <Typography
             data-testid="support-typing"
+            role="status"
             variant="caption"
             sx={{
               color: "text.secondary",
@@ -88,7 +91,7 @@ export default function ChatMessageList({
   }
 
   return (
-    <Box data-testid="support-chat-messages" ref={scrollRef} onScroll={onScroll} sx={{ flex: 1, overflowY: 'auto', px: 0.5 }}>
+    <Box data-testid="support-chat-messages" role="log" ref={scrollRef} onScroll={onScroll} sx={{ flex: 1, overflowY: 'auto', px: 0.5 }}>
       {body}
     </Box>
   );

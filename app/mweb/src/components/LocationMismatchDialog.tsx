@@ -36,6 +36,7 @@ function LocationRow({
   return (
     <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
       <Box
+        aria-hidden
         sx={{
           width: 40,
           height: 40,
@@ -76,8 +77,15 @@ export default function LocationMismatchDialog({
   const { t } = useTranslation();
   if (!mismatch) return null;
   return (
-    <Dialog data-testid="location-mismatch-dialog" open onClose={keepLocation} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontSize: 20, fontWeight: 600 }}>{t('mweb.locationMismatch.title')}</DialogTitle>
+    <Dialog
+      data-testid="location-mismatch-dialog"
+      open
+      onClose={keepLocation}
+      fullWidth
+      maxWidth="xs"
+      aria-labelledby="location-mismatch-title"
+    >
+      <DialogTitle id="location-mismatch-title" data-testid="location-mismatch-title" sx={{ fontSize: 20, fontWeight: 600 }}>{t('mweb.locationMismatch.title')}</DialogTitle>
       <DialogContent>
         <Typography variant="body2">{introText(t, kind, mismatch)}</Typography>
         <Stack spacing={1.5} sx={{ mt: 2 }}>

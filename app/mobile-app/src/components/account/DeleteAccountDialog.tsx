@@ -93,7 +93,7 @@ export function DeleteAccountDialog({
       onClose={onClose}
     >
       <YStack gap={12}>
-        <Text fontSize={13.5} color="$muted" testID="delete-account-info">
+        <Text fontSize={13.5} color="$muted" testID="delete-account-info" role="status">
           {info}
         </Text>
         <Text fontSize={13.5} color="$muted">
@@ -105,10 +105,11 @@ export function DeleteAccountDialog({
           testID="delete-account-resend"
           role="button"
           aria-label={t('mweb.account.deletion.resend')}
+          aria-busy={resending}
           onPress={handleResend}
           fontSize={14}
           fontWeight="600"
-          color="$primary"
+          color="$accent"
           textAlign="center"
         >
           {resending ? t('mweb.account.deletion.resending') : t('mweb.account.deletion.resend')}

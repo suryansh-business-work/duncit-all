@@ -4,13 +4,14 @@ import { Modal } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, ScrollView, Text, XStack, YStack } from 'tamagui';
 
-import { FIELD_HEIGHT, FIELD_RADIUS, FieldLabel } from '@/components/Field';
+import { FieldLabel } from '@/components/Field';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 import { SelectOptionRow } from './SelectOptionRow';
+import { SelectTrigger } from './SelectTrigger';
 
 export interface SelectOption {
   value: string;
@@ -77,31 +78,18 @@ export function SelectSheet({
   return (
     <YStack gap={8} flex={1}>
       <FieldLabel label={label} />
-      <XStack
-        testID={`${testID}-trigger`}
-        role="button"
-        aria-label={label}
-        aria-disabled={disabled}
-        onPress={disabled ? undefined : () => setOpen(true)}
-        alignItems="center"
-        gap={8}
-        height={FIELD_HEIGHT}
-        paddingHorizontal={14}
-        borderRadius={FIELD_RADIUS}
-        borderWidth={1}
-        borderColor={error ? '$danger' : '$borderColor'}
-        backgroundColor="$surface"
-        opacity={disabled ? 0.5 : 1}
-        pressStyle={PRESS_STYLE.control}
-      >
-        {leading}
-        <Text flex={1} fontSize={15} color={triggerText ? '$color' : '$muted'} numberOfLines={1}>
-          {triggerText || placeholder}
-        </Text>
-        <MaterialIcons name="expand-more" size={22} color={muted} />
-      </XStack>
+      <SelectTrigger
+        testID={testID}
+        label={label}
+        text={triggerText}
+        placeholder={placeholder}
+        disabled={disabled}
+        hasError={!!error}
+        leading={leading}
+        onOpen={() => setOpen(true)}
+      />
       {error ? (
-        <Text testID={`${testID}-error`} fontSize={12} color="$danger">
+        <Text testID={`${testID}-error`} role="alert" fontSize={12} color="$danger">
           {error}
         </Text>
       ) : null}
@@ -109,7 +97,13 @@ export function SelectSheet({
       <Modal visible={open} transparent animationType="fade" onRequestClose={close}>
         <ModalThemeScope>
           <KeyboardScreen>
-            <YStack flex={1} alignItems="center" justifyContent="center" testID={`${testID}-sheet`}>
+            <YStack
+              flex={1}
+              alignItems="center"
+              justifyContent="center"
+              testID={`${testID}-sheet`}
+              onAccessibilityEscape={close}
+            >
               <YStack
                 pressStyle={PRESS_STYLE.surface}
                 testID={`${testID}-sheet-backdrop`}
@@ -132,7 +126,13 @@ export function SelectSheet({
                 padding={20}
                 gap={12}
               >
-                <Text fontSize={18} fontWeight="600" color="$color">
+                <Text
+                  testID={`${testID}-sheet-title`}
+                  role="heading"
+                  fontSize={18}
+                  fontWeight="600"
+                  color="$color"
+                >
                   {label}
                 </Text>
                 <XStack
@@ -161,7 +161,7 @@ export function SelectSheet({
                   showsVerticalScrollIndicator={false}
                   keyboardShouldPersistTaps="handled"
                 >
-                  <YStack>
+                  <YStack role="radiogroup" aria-label={label}>
                     {filtered.map((option) => (
                       <SelectOptionRow
                         key={option.value}

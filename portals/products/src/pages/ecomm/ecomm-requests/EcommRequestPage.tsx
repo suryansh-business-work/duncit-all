@@ -105,7 +105,7 @@ export default function EcommRequestPage({ config }: Readonly<{ config: EcommReq
   return (
     <Stack spacing={3}>
       <div>
-        <Typography variant="h4" sx={{
+        <Typography component="h1" variant="h4" sx={{
           fontWeight: 700
         }}>
           {config.title}
@@ -167,7 +167,7 @@ export default function EcommRequestPage({ config }: Readonly<{ config: EcommReq
       </Stack>
 
       <div>
-        <Typography variant="h6" gutterBottom sx={{
+        <Typography component="h2" variant="h6" gutterBottom sx={{
           fontWeight: 700
         }}>
           Your requests

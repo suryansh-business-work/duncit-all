@@ -29,7 +29,7 @@ function SourcePill({ host, label }: Readonly<{ host: boolean; label: string }>)
       borderWidth={1}
       borderColor={host ? '$primary' : '$borderColor'}
     >
-      <Text fontSize={11} fontWeight="600" color={host ? '$primary' : '$color'}>
+      <Text fontSize={11} fontWeight="600" color={host ? '$accent' : '$color'}>
         {label}
       </Text>
     </XStack>
@@ -83,8 +83,11 @@ export function PodMediaGrid({ items, labels, onRemove, busy = false }: Readonly
                 onPress={() => {
                   if (!busy) onRemove(item.url);
                 }}
-                accessibilityRole="button"
-                accessibilityLabel={labels.remove}
+                role="button"
+                aria-label={labels.remove}
+                aria-disabled={busy}
+                tabIndex={0}
+                hitSlop={6}
               >
                 <MaterialIcons name="delete-outline" size={18} color={danger} />
               </XStack>

@@ -26,6 +26,7 @@ export function PodHistoryCard({
     <XStack
       testID={`pod-history-card-${item.id}`}
       role="button"
+      tabIndex={0}
       aria-label={title}
       onPress={onPress}
       gap={12}

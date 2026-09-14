@@ -15,6 +15,7 @@ export default function PhotoViewerDialog({ open, src, onClose }: Readonly<Props
   return (
     <Dialog
       data-testid="photo-viewer-dialog"
+      aria-label={t('mweb.profileAvatar.profilePhoto')}
       open={open && !!src}
       onClose={onClose}
       maxWidth="sm"

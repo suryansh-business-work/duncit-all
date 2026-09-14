@@ -49,7 +49,7 @@ export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<P
             width: '100%',
             flex: 1
           }}>
-          <Avatar src={cover || undefined} sx={{ width: 48, height: 48, bgcolor: 'action.hover', color: 'text.primary' }}>
+          <Avatar alt="" src={cover || undefined} sx={{ width: 48, height: 48, bgcolor: 'action.hover', color: 'text.primary' }}>
             {club.club_name?.[0]?.toUpperCase() ?? 'C'}
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>

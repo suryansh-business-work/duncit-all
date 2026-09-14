@@ -74,7 +74,7 @@ export default function HostInsightsCharts({ insights, currencySymbol }: Readonl
         }}>
         <Card variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%' }}>
           <Stack spacing={1.5}>
-            <Typography variant="subtitle2" sx={{
+            <Typography variant="subtitle2" component="h2" sx={{
               fontWeight: 900
             }}>
               Pods by status
@@ -108,6 +108,7 @@ export default function HostInsightsCharts({ insights, currencySymbol }: Readonl
                       variant="determinate"
                       value={(value / totalPods) * 100}
                       color={status.palette}
+                      aria-label={status.label}
                       sx={{ height: 8, borderRadius: 999 }}
                     />
                   </Stack>
@@ -125,7 +126,7 @@ export default function HostInsightsCharts({ insights, currencySymbol }: Readonl
         }}>
         <Card variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%' }}>
           <Stack spacing={1.5}>
-            <Typography variant="subtitle2" sx={{
+            <Typography variant="subtitle2" component="h2" sx={{
               fontWeight: 900
             }}>
               Monthly earnings

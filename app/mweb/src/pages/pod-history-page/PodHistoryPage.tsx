@@ -83,7 +83,7 @@ export default function PodHistoryPage() {
           alignItems: "center",
           p: 6
         }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   }
@@ -143,7 +143,7 @@ export default function PodHistoryPage() {
                 data-testid={`pod-history-card-${item.id}`}
                 sx={{ px: 2, py: 1.5, gap: 1.5, borderRadius: 0 }}
               >
-                <Avatar
+                <Avatar alt=""
                   variant="rounded"
                   src={coverImageUrl(item.pod?.pod_images_and_videos)}
                   sx={{ width: 48, height: 48, borderRadius: '12px', bgcolor: 'action.hover', color: 'text.secondary' }}

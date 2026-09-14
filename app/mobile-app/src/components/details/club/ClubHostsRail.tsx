@@ -49,6 +49,7 @@ export function ClubHostsRail({
             alignItems="center"
             gap={4}
             role="button"
+            tabIndex={0}
             aria-label={host.name}
             onPress={() => onOpenHost(host.id)}
           >

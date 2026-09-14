@@ -96,7 +96,7 @@ export default function VenuesPage() {
       <Stack spacing={0.25} sx={{
         mb: 2
       }}>
-        <Typography variant="h5" sx={{
+        <Typography variant="h5" component="h1" sx={{
           fontWeight: 700
         }}>{t('onboarding.venues.registeredVenues')}</Typography>
         <Typography variant="body2" sx={{

@@ -27,7 +27,7 @@ function Row({ row, money }: Readonly<{ row: ProjectionRow; money: (v: number) =
   if (row.amount !== null) {
     amount = row.kind === 'deduction' ? `− ${money(row.amount)}` : money(row.amount);
   }
-  const color = row.kind === 'payout' ? 'primary.main' : 'text.primary';
+  const color = row.kind === 'payout' ? 'accent.main' : 'text.primary';
   return (
     <Stack direction="row" spacing={2} sx={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
       <Box sx={{ minWidth: 0 }}>

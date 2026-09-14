@@ -59,6 +59,7 @@ export default function OrderFulfilmentPanel({
       <CardContent>
         <Typography
           variant="subtitle1"
+          component="h2"
           sx={{
             fontWeight: 700,
             mb: 1.5
@@ -72,6 +73,8 @@ export default function OrderFulfilmentPanel({
           value={order.fulfilment_method}
           onChange={(_, value) => value && onSetMethod(value)}
           disabled={busy}
+          aria-label={t('shell.nav.fulfilment')}
+          data-testid="order-fulfilment-method"
         >
           <ToggleButton value="SHIP">Ship</ToggleButton>
           <ToggleButton value="PICKUP">{t('products.orders.pickup')}</ToggleButton>

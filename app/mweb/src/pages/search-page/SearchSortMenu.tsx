@@ -23,7 +23,7 @@ interface Props {
 export default function SearchSortMenu({ open, value, onClose, onSelect }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Dialog data-testid="search-sort-menu" open={open} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog data-testid="search-sort-menu" open={open} onClose={onClose} fullWidth maxWidth="xs" aria-labelledby="search-sort-menu-title">
       <Stack
         direction="row"
         sx={{
@@ -31,7 +31,7 @@ export default function SearchSortMenu({ open, value, onClose, onSelect }: Reado
           justifyContent: "space-between",
           pr: 1.5
         }}>
-        <DialogTitle sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>{t('mweb.search.sortResults')}</DialogTitle>
+        <DialogTitle id="search-sort-menu-title" sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>{t('mweb.search.sortResults')}</DialogTitle>
         <DuncitIconButton
           data-testid="search-sort-menu-close"
           aria-label={t('mweb.search.closeSort')}
@@ -49,15 +49,19 @@ export default function SearchSortMenu({ open, value, onClose, onSelect }: Reado
               key={option.value}
               data-testid={`search-sort-menu-option-${option.value}`}
               selected={option.value === value}
+              aria-pressed={option.value === value}
               onClick={() => {
                 onSelect(option.value);
                 onClose();
               }}
             >
+              {/* Visual only: the row button carries the pressed state, so the
+                  radio is not a second, unlabeled control inside it. */}
               <Radio
                 checked={option.value === value}
                 tabIndex={-1}
                 disableRipple
+                slotProps={{ input: { tabIndex: -1, 'aria-hidden': true } }}
                 sx={{ mr: 0.5 }}
               />
               <ListItemText

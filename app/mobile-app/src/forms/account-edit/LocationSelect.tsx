@@ -30,13 +30,15 @@ function CityField({ control }: Readonly<{ control: Control<AccountEditValues> }
         value={String(field.value ?? '')}
         onChangeText={field.onChange}
         onBlur={field.onBlur}
+        autoComplete="postal-address-locality"
+        textContentType="addressCity"
         placeholder={t('mweb.accountEdit.enterCity')}
         placeholderTextColor="$muted"
         height={FIELD_HEIGHT}
         paddingHorizontal={14}
         borderRadius={FIELD_RADIUS}
         borderWidth={1}
-        borderColor="$borderColor"
+        borderColor="$inputBorder"
         backgroundColor="$surface"
         fontSize={14}
         color="$color"

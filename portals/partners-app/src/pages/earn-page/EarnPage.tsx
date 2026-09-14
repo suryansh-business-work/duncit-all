@@ -84,6 +84,7 @@ export default function EarnPage({ focus }: Readonly<{ focus?: EarnFocus }>) {
         <Box>
           <Typography
             variant="h5"
+            component="h1"
             sx={{
               fontWeight: 700,
               lineHeight: 1

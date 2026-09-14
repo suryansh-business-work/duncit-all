@@ -101,6 +101,7 @@ export default function MyAdsPage() {
     <Stack spacing={3}>
       <PageHeader title={t('ads.myAds.title')} subtitle={t('ads.myAds.subtitle')} />
       <DuncitTable<AdRequestRow>
+        ariaLabel={t('ads.myAds.title')}
         tableId="ads-my-requests"
         columns={columns}
         fetchRows={fetchRows}

@@ -33,6 +33,7 @@ export function VenueCard({ venue, onOpen }: Readonly<VenueCardProps>) {
       <VenueCardMedia images={venueImages(venue)} venueName={venue.venue_name} onOpen={onOpen} />
       <YStack
         role="button"
+        tabIndex={0}
         aria-label={venue.venue_name}
         onPress={onOpen}
         pressStyle={PRESS_STYLE.surface}

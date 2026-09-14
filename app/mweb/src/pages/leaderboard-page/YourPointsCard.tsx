@@ -36,6 +36,8 @@ export default function YourPointsCard({ board, loading }: Readonly<Props>) {
               width={96}
               height={48}
               data-testid="leaderboard-your-points-loading"
+              role="progressbar"
+              aria-label={t('mweb.a11y.loading')}
             />
           ) : (
             <Typography

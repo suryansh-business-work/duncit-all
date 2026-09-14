@@ -121,7 +121,7 @@ export function AutoPodWithdrawSheet({ row, role, labels, onClose, onWithdrawn }
         {busy ? <LoadingIndicator testID="auto-pod-withdraw-busy" /> : null}
 
         {failure ? (
-          <Text testID="auto-pod-withdraw-error" fontSize={13} color="$danger">
+          <Text role="alert" testID="auto-pod-withdraw-error" fontSize={13} color="$danger">
             {failure}
           </Text>
         ) : null}

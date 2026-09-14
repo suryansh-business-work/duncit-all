@@ -1,5 +1,6 @@
 import { Avatar, Badge, Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface ChatPerson {
   user_id: string;
@@ -18,16 +19,18 @@ interface Props {
  * participant count. Tapping anyone opens their public profile. Web twin of the
  * mobile ChatParticipantsPanel. */
 export default function ChatParticipants({ hosts, participants, count, onOpenProfile }: Readonly<Props>) {
+  const { t } = useTranslation();
+  const hostWord = t('mweb.podDetails.host');
   if (hosts.length === 0 && participants.length === 0) return null;
 
   const personChip = (person: ChatPerson, isHost: boolean) => {
     const avatar = (
-      <Avatar src={person.profile_photo || undefined} sx={{ width: 34, height: 34 }}>
+      <Avatar alt="" src={person.profile_photo || undefined} sx={{ width: 34, height: 34 }}>
         {(person.full_name?.[0] ?? 'U').toUpperCase()}
       </Avatar>
     );
     return (
-      <Tooltip key={person.user_id} title={`${person.full_name}${isHost ? ' · Host' : ''}`}>
+      <Tooltip key={person.user_id} title={isHost ? `${person.full_name} · ${hostWord}` : person.full_name}>
         <Chip
           data-testid={`chat-person-${person.user_id}`}
           onClick={() => onOpenProfile(person.user_id)}

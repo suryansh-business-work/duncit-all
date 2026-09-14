@@ -74,6 +74,7 @@ export function SupportTicketsScreen() {
         <SurfaceCard
           testID="tickets-faq-banner"
           role="button"
+          tabIndex={0}
           aria-label={t('mweb.supportTickets.readFaqs')}
           onPress={() => navigation.navigate('Faqs')}
           flexDirection="row"

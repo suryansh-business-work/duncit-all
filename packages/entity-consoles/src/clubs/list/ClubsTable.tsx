@@ -37,6 +37,7 @@ const getClubRowId = (c: ClubRow) => c.id;
 const renderCover = (c: ClubRow) => (
   <Avatar
     variant="rounded"
+    alt=""
     src={c.club_feature_images_and_videos?.[0]?.url}
     sx={{ width: 32, height: 32 }}
   >
@@ -179,6 +180,7 @@ export default function ClubsTable({
 
   return (
     <DuncitTable<ClubRow>
+      ariaLabel={t('admin.clubs.title')}
       tableId="admin-clubs"
       columns={columns}
       fetchRows={fetchRows}

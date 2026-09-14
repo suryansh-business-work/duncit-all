@@ -61,7 +61,7 @@ export default function PodShopSliderPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h4" sx={{
+        <Typography component="h1" variant="h4" sx={{
           fontWeight: 700
         }}>
           Pod Shop Slider

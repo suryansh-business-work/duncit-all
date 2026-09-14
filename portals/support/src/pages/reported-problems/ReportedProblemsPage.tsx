@@ -141,6 +141,7 @@ export default function ReportedProblemsPage() {
     <Stack spacing={2}>
       <PageHeader title={t('support.problems.title')} subtitle={t('support.problems.subtitle')} />
       <DuncitTable<FeedbackReportRow>
+        ariaLabel={t('support.problems.title')}
         tableId="support-reported-problems"
         columns={columns}
         fetchRows={fetchRows}

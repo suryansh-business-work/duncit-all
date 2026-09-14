@@ -48,7 +48,7 @@ export default function PaymentReleasePage() {
         }}>
         <PaymentsIcon color="primary" />
         <Box>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 700
           }}>{t('shell.nav.paymentRelease')}</Typography>
           <Typography variant="body2" sx={{

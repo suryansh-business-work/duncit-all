@@ -14,12 +14,14 @@ import { fireAndForget } from '@/utils/fire-and-forget';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 type Tab = 'HOSTS' | 'VENUES';
 
 /** Hosts & Venues discovery — two tabs that open public profiles / venue details.
  * RN twin of mWeb's HostsVenuesPage. */
 export function HostsVenuesScreen() {
+  const loadingRegion = useLoadingRegion();
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { hosts, venues, meId, statusFor, pendingFollow, isLoading, error, toggleFollow } =
@@ -67,12 +69,12 @@ export function HostsVenuesScreen() {
   if (isLoading && hosts.length === 0 && venues.length === 0) {
     hostsVenuesBody = (
       <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner testID="hosts-venues-loading" color="$primary" />
+        <Spinner {...loadingRegion} testID="hosts-venues-loading" color="$primary" />
       </YStack>
     );
   } else if (error) {
     hostsVenuesBody = (
-      <Text testID="hosts-venues-error" padding={24} color="$danger">
+      <Text role="alert" testID="hosts-venues-error" padding={24} color="$danger">
         {toErrorMessage(error)}
       </Text>
     );
@@ -99,6 +101,7 @@ export function HostsVenuesScreen() {
         borderWidth={1}
         borderColor="$cardBorder"
         backgroundColor="$surface"
+        role="tablist"
       >
         {(['HOSTS', 'VENUES'] as Tab[]).map((t) => {
           const selected = tab === t;
@@ -106,8 +109,10 @@ export function HostsVenuesScreen() {
             <XStack
               key={t}
               testID={`hv-tab-${t.toLowerCase()}`}
-              role="button"
-              aria-pressed={selected}
+              role="tab"
+              tabIndex={0}
+              aria-selected={selected}
+              hitSlop={2}
               onPress={() => setTab(t)}
               flex={1}
               height={40}

@@ -137,7 +137,7 @@ export function SignupForm({
       ) : null}
 
       {errorMessage || submitError ? (
-        <Text fontSize={14} color="$danger" testID="signup-error">
+        <Text fontSize={14} color="$danger" testID="signup-error" role="alert">
           {errorMessage || submitError}
         </Text>
       ) : null}

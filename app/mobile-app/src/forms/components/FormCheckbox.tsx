@@ -32,6 +32,7 @@ export function FormCheckbox<T extends FieldValues>({
       role="checkbox"
       aria-label={label}
       aria-checked={checked}
+      tabIndex={0}
       onPress={() => field.onChange(!checked)}
       alignItems="center"
       gap={10}

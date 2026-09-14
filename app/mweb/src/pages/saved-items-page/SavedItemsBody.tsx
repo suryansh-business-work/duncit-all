@@ -25,7 +25,7 @@ export default function SavedItemsBody({ loading, hasData, error, pods, onOpen }
           alignItems: "center",
           p: 6
         }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   }

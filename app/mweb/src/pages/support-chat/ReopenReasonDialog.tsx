@@ -33,8 +33,8 @@ export default function ReopenReasonDialog({ open, loading, error, onClose, onSu
   const submit = () => onSubmit(reason.trim());
 
   return (
-    <Dialog data-testid="reopen-reason-modal" open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.supportChat.reOpenThisConversation')}</DialogTitle>
+    <Dialog data-testid="reopen-reason-modal" open={open} onClose={onClose} fullWidth maxWidth="xs" aria-labelledby="reopen-reason-title">
+      <DialogTitle id="reopen-reason-title" sx={{ fontWeight: 600 }}>{t('mweb.supportChat.reOpenThisConversation')}</DialogTitle>
       <DialogContent>
         {error && (
           <Alert data-testid="reopen-error" severity="error" sx={{ mb: 1 }}>

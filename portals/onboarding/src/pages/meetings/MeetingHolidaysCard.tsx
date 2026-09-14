@@ -79,7 +79,7 @@ export default function MeetingHolidaysCard() {
           }}>
           <BeachAccessIcon color="primary" fontSize="small" />
           <Box>
-            <Typography variant="subtitle1" sx={{
+            <Typography variant="subtitle1" component="h2" sx={{
               fontWeight: 800
             }}>{t('onboarding.meetings.holidaysAndAmpLeave')}</Typography>
             <Typography variant="body2" sx={{

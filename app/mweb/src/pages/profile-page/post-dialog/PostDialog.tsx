@@ -155,7 +155,14 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonl
   );
 
   return (
-    <Dialog data-testid="post-dialog" open={open} onClose={onClose} fullWidth maxWidth="lg">
+    <Dialog
+      data-testid="post-dialog"
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="lg"
+      aria-labelledby={post ? 'post-dialog-author' : undefined}
+    >
       <DialogContent sx={{ p: 0 }}>
         {loading && !post ? (
           <Stack
@@ -164,7 +171,7 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonl
               alignItems: "center",
               p: 6
             }}>
-            <CircularProgress />
+            <CircularProgress aria-label={t('mweb.a11y.loading')} />
           </Stack>
         ) : (
           postBody

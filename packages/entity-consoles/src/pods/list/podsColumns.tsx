@@ -34,7 +34,7 @@ const renderCover = (p: PodRow) => {
     );
   }
   return (
-    <Avatar variant="rounded" src={first?.url} sx={{ width: 32, height: 32 }}>
+    <Avatar variant="rounded" alt="" src={first?.url} sx={{ width: 32, height: 32 }}>
       {p.pod_title[0]}
     </Avatar>
   );

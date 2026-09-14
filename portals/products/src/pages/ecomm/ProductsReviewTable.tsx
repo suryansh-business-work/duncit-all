@@ -25,7 +25,7 @@ const renderProduct = (r: ProductListingRow) => (
   <Stack direction="row" spacing={1} component="span" sx={{
     alignItems: "center"
   }}>
-    <Avatar src={r.image_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
+    <Avatar alt="" src={r.image_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
       {r.product_name?.[0]?.toUpperCase() ?? '?'}
     </Avatar>
     <Stack sx={{ lineHeight: 1.2, minWidth: 0 }} component="span">
@@ -132,6 +132,7 @@ export default function ProductsReviewTable({
 
   return (
     <DuncitTable<ProductListingRow>
+      ariaLabel={t('shell.nav.productsReviews')}
       tableId="products-ecomm-requests"
       columns={columns}
       fetchRows={fetchRows}

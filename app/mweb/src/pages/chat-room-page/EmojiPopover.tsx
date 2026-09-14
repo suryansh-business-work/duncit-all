@@ -1,5 +1,6 @@
-import { Box, Popover, Stack } from '@mui/material';
+import { ButtonBase, Popover, Stack } from '@mui/material';
 import { EMOJIS } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface EmojiPopoverProps {
   anchorEl: HTMLElement | null;
@@ -14,6 +15,7 @@ export default function EmojiPopover({
   onSelect,
   fontSize = 24,
 }: Readonly<EmojiPopoverProps>) {
+  const { t } = useTranslation();
   return (
     <Popover
       open={!!anchorEl}
@@ -24,14 +26,15 @@ export default function EmojiPopover({
     >
       <Stack direction="row" spacing={0.5} sx={{ p: 1, fontSize }} data-testid="emoji-bar">
         {EMOJIS.map((e) => (
-          <Box
+          <ButtonBase
             key={e}
             data-testid={`emoji-${e}`}
-            sx={{ cursor: 'pointer', px: 0.5 }}
+            aria-label={`${t('mweb.chat.emoji')} ${e}`}
+            sx={{ px: 0.5, minWidth: 32, minHeight: 32, borderRadius: '8px', font: 'inherit' }}
             onClick={() => onSelect(e)}
           >
             {e}
-          </Box>
+          </ButtonBase>
         ))}
       </Stack>
     </Popover>

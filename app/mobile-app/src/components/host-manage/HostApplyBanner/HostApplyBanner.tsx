@@ -48,7 +48,14 @@ export function HostApplyBanner() {
       >
         <MaterialIcons name="add-business" size={22} color={accent} />
       </YStack>
-      <Text flex={1} fontSize={16} fontWeight="600" color="$color">
+      <Text
+        testID="host-apply-banner-title"
+        role="heading"
+        flex={1}
+        fontSize={16}
+        fontWeight="600"
+        color="$color"
+      >
         Ready to Host More Experiences?
       </Text>
       {disabled ? (
@@ -67,6 +74,7 @@ export function HostApplyBanner() {
       ) : (
         <XStack
           testID="host-apply-cta"
+          tabIndex={0}
           role="button"
           aria-label={t('mweb.hostManage.applyNow')}
           onPress={() => navigation.navigate('HostApply')}

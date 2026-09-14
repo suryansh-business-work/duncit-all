@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Box, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
+import { useTranslation } from '@duncit/shell';
 import BrandsReviewTable from './BrandsReviewTable';
 import ReviewBrandDialog from './ReviewBrandDialog';
 import { ECOMM_BRANDS_TABLE, type EcommBrandRow } from './queries';
@@ -11,6 +12,7 @@ import { ECOMM_BRANDS_TABLE, type EcommBrandRow } from './queries';
 const STATUS_TABS = ['SUBMITTED', 'APPROVED', 'REJECTED', 'DRAFT', 'ALL'];
 
 export default function BrandsReviewPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -53,7 +55,7 @@ export default function BrandsReviewPage() {
         justifyContent: "space-between"
       }}>
         <Box>
-          <Typography variant="h4" sx={{
+          <Typography component="h1" variant="h4" sx={{
             fontWeight: 950
           }}>
             Brands Review
@@ -69,6 +71,8 @@ export default function BrandsReviewPage() {
           size="small"
           value={status}
           onChange={(_, value) => value && setStatus(value)}
+          aria-label={t('shell.common.status')}
+          data-testid="brands-review-status"
         >
           {STATUS_TABS.map((item) => (
             <ToggleButton key={item} value={item}>

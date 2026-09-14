@@ -55,7 +55,7 @@ export default function LeadStatsBar({ reloadKey }: Readonly<{ reloadKey: number
                   {c.icon}
                 </Stack>
                 <div>
-                  <Typography
+                  <Typography component="p"
                     variant="h6"
                     sx={{
                       fontWeight: 800,

@@ -34,6 +34,8 @@ export default function StoryActionsMenu({ canDelete, onDelete, onReport }: Read
       <DuncitIconButton
         data-testid="story-actions-menu-trigger"
         aria-label={t('contentReport.menuLabel')}
+        aria-haspopup="menu"
+        aria-expanded={!!anchor}
         onClick={(e) => setAnchor(e.currentTarget)}
         sx={{
           color: 'common.white',

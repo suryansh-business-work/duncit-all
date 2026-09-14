@@ -153,6 +153,7 @@ export default function CouponsTable({
       emptyText={t('shell.coupons.empty')}
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder={t('shell.coupons.search')}
+      ariaLabel={t('shell.coupons.title')}
       refetchRef={refetchRef}
       onRowClick={onRowClick}
     />

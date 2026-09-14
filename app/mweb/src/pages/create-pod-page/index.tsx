@@ -180,7 +180,7 @@ export default function CreatePodPage() {
   if (loading) {
     body = (
       <Box data-testid="create-pod-loading" sx={{ display: 'grid', placeItems: 'center', py: 6 }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Box>
     );
   } else if (options.error) {

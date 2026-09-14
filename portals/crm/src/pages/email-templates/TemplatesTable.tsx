@@ -89,6 +89,7 @@ export default function TemplatesTable({
 
   return (
     <DuncitTable<EmailTemplateRow>
+      ariaLabel={t('shell.nav.emailTemplates')}
       tableId="crm-email-templates"
       columns={columns}
       fetchRows={fetchRows}

@@ -4,6 +4,8 @@ import { PRESS_STYLE } from '@duncit/buttons-native';
 interface Props {
   testID: string;
   label: string;
+  /** One of a set where exactly one is picked (radio), or a free toggle (checkbox). */
+  role: 'radio' | 'checkbox';
   /** What a screen reader announces — the full weekday name for "Mon". */
   ariaLabel?: string;
   selected: boolean;
@@ -16,6 +18,7 @@ interface Props {
  * not — the same shape as the create-pod chip pickers. */
 export function SelectChip({
   testID,
+  role,
   label,
   ariaLabel,
   selected,
@@ -25,9 +28,10 @@ export function SelectChip({
   return (
     <XStack
       testID={testID}
-      role="button"
+      tabIndex={0}
+      role={role}
       aria-label={ariaLabel ?? label}
-      aria-pressed={selected}
+      aria-checked={selected}
       onPress={onPress}
       alignItems="center"
       minHeight={36}

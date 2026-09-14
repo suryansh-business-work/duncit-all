@@ -165,12 +165,18 @@ export const ContactsRadar = memo(function ContactsRadar({
       {plotted.map((row) => {
         const point = points.get(row.profile.user_id)!;
         const name = row.profile.full_name || row.profile.first_name || row.contact_label;
+        const openLabel = t('mweb.podDetails.openProfileOf', { vars: { name } });
+        // The accent ring marks a nearby contact; say it too (1.4.1).
+        const faceLabel = row.is_nearby
+          ? `${openLabel}, ${t('mweb.contacts.nearbyBadge')}`
+          : openLabel;
         return (
           <XStack
             key={row.profile.user_id}
             testID={`contacts-radar-${row.profile.user_id}`}
             role="button"
-            aria-label={t('mweb.podDetails.openProfileOf', { vars: { name } })}
+            tabIndex={0}
+            aria-label={faceLabel}
             onPress={() => onOpen(row.profile.user_id)}
             position="absolute"
             left={point.x * size - FACE / 2}

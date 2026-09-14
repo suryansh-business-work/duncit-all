@@ -51,7 +51,7 @@ export default function StoryViewersDialog({
         {viewers.map((viewer) => (
           <ListItem key={viewer.user_id} data-testid={`story-viewer-${viewer.user_id}`} disableGutters>
             <ListItemAvatar>
-              <Avatar src={viewer.user?.profile_photo || undefined} />
+              <Avatar alt="" src={viewer.user?.profile_photo || undefined} />
             </ListItemAvatar>
             <ListItemText primary={viewer.user?.full_name ?? 'Someone'} />
           </ListItem>
@@ -60,13 +60,13 @@ export default function StoryViewersDialog({
     );
 
   return (
-    <Dialog data-testid="story-viewers-dialog" open={!!storyId} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog data-testid="story-viewers-dialog" open={!!storyId} onClose={onClose} fullWidth maxWidth="xs" aria-labelledby="story-viewers-title">
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
         <Stack direction="row" spacing={1} sx={{
           alignItems: "center"
         }}>
-          <VisibilityIcon fontSize="small" />
-          <Typography component="span" sx={{ fontWeight: 700 }}>
+          <VisibilityIcon fontSize="small" aria-hidden />
+          <Typography id="story-viewers-title" component="span" sx={{ fontWeight: 700 }}>
             {viewers.length === 0 ? 'No views yet' : `Seen by ${viewers.length}`}
           </Typography>
         </Stack>

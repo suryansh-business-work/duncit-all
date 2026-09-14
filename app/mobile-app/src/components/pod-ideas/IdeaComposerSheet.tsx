@@ -92,6 +92,7 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
             <YStack
               pressStyle={PRESS_STYLE.surface}
               role="button"
+              importantForAccessibility="no"
               aria-label={t('mweb.common.close')}
               onPress={close}
               position="absolute"
@@ -153,13 +154,19 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
                       idPrefix="idea-composer-cat"
                     />
                     {error ? (
-                      <Text testID="idea-composer-error" color="$danger" fontSize={12.5}>
+                      <Text
+                        role="alert"
+                        testID="idea-composer-error"
+                        color="$danger"
+                        fontSize={12.5}
+                      >
                         {error}
                       </Text>
                     ) : null}
                     <XStack
                       testID="idea-composer-submit"
                       role="button"
+                      tabIndex={0}
                       aria-label={t('mweb.podIdeas.submitIdea')}
                       aria-disabled={submitting}
                       onPress={submit}

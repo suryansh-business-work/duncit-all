@@ -41,14 +41,15 @@ export function SuperCategoryGroup({
             py: 0.5,
             borderRadius: 999,
             backgroundColor: alpha(hue, 0.12),
-            color: hue,
+            color: 'text.primary',
             fontWeight: 600,
             userSelect: 'none',
           }}
         >
-          {emoji && <Box component="span" sx={{ fontSize: 18, lineHeight: 1 }}>{emoji}</Box>}
+          {emoji && <Box component="span" aria-hidden sx={{ fontSize: 18, lineHeight: 1 }}>{emoji}</Box>}
           <Typography
             variant="subtitle2"
+            component="h2"
             sx={{
               fontWeight: 600,
               color: 'inherit'

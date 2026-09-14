@@ -33,7 +33,7 @@ function HostRow({ userId, name, primary, contact, podId }: Readonly<HostRowProp
     <Stack direction="row" spacing={1.5} sx={{
       alignItems: "center"
     }}>
-      <Avatar src={contact?.profile_photo ?? undefined} sx={{ width: 36, height: 36 }}>
+      <Avatar alt="" src={contact?.profile_photo ?? undefined} sx={{ width: 36, height: 36 }}>
         {(name[0] ?? '?').toUpperCase()}
       </Avatar>
       <Stack sx={{ minWidth: 0, flex: 1 }}>

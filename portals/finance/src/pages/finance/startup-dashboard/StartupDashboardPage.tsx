@@ -105,7 +105,7 @@ export default function StartupDashboardPage() {
         alignItems: { xs: 'flex-start', sm: 'center' }
       }}>
       <Box>
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+        <Typography component="h1" variant="h5" sx={{ fontWeight: 700 }}>
           Startup Dashboard
         </Typography>
         <Typography variant="body2" sx={{

@@ -5,6 +5,9 @@ import type { InvoiceSettingsForm } from './types';
 import { formatDate, useTranslation } from '@duncit/app-settings';
 
 const ACCENT = '#ff4f73';
+// The preview is always white paper, so its muted text is a fixed ink rather than
+// the theme's text.secondary (which turns light in dark mode). 7.56:1 on white.
+const PAPER_MUTED = '#4b5563';
 // GST-inclusive sample matching the settlement engine: the customer pays 1000
 // (GST-inclusive); GST is extracted (1000×18/118), leaving the net taxable value.
 const SAMPLE = { subtotal: 847.46, gst: 152.54, total: 1000 };
@@ -50,16 +53,16 @@ export default function InvoicePreview({ value }: Readonly<{ value: InvoiceSetti
             {value.business_address && <Typography
               variant="caption"
               sx={{
-                color: "text.secondary",
+                color: PAPER_MUTED,
                 display: "block"
               }}>{value.business_address}</Typography>}
             {value.business_gstin && <Typography variant="caption" sx={{
-              color: "text.secondary"
+              color: PAPER_MUTED
             }}>GSTIN: {value.business_gstin}</Typography>}
           </Box>
           <Box sx={{ textAlign: 'right' }}>
             <Typography variant="caption" sx={{
-              color: "text.secondary"
+              color: PAPER_MUTED
             }}>{t('finance.invoiceManagement.invoiceNo')}</Typography>
             <Typography sx={{
               fontWeight: 800
@@ -67,7 +70,7 @@ export default function InvoicePreview({ value }: Readonly<{ value: InvoiceSetti
             <Typography
               variant="caption"
               sx={{
-                color: "text.secondary",
+                color: PAPER_MUTED,
                 display: "block"
               }}>Date: {formatDate(new Date())}</Typography>
           </Box>
@@ -79,7 +82,7 @@ export default function InvoicePreview({ value }: Readonly<{ value: InvoiceSetti
             fontWeight: 800
           }}>{t('finance.invoiceManagement.riyaSharma')}</Typography>
           <Typography variant="caption" sx={{
-            color: "text.secondary"
+            color: PAPER_MUTED
           }}>riya@example.com · +91 90000 00000</Typography>
         </Box>
 
@@ -110,7 +113,7 @@ export default function InvoicePreview({ value }: Readonly<{ value: InvoiceSetti
             <Typography
               variant="caption"
               sx={{
-                color: "text.secondary",
+                color: PAPER_MUTED,
                 display: "block"
               }}>
               {[value.invoice_support_email && `Email: ${value.invoice_support_email}`, value.invoice_support_phone && `Phone: ${value.invoice_support_phone}`].filter(Boolean).join('   ·   ')}
@@ -120,14 +123,14 @@ export default function InvoicePreview({ value }: Readonly<{ value: InvoiceSetti
             <Typography
               variant="caption"
               sx={{
-                color: "text.secondary",
+                color: PAPER_MUTED,
                 display: "block",
                 mt: 0.5
               }}>
               <b>Terms:</b> {value.invoice_terms}
             </Typography>
           )}
-          <Typography variant="caption" sx={{ color: '#9ca3af', display: 'block', textAlign: 'center', mt: 1 }}>
+          <Typography variant="caption" sx={{ color: PAPER_MUTED, display: 'block', textAlign: 'center', mt: 1 }}>
             {value.invoice_footer_note || 'This is a computer-generated invoice and does not require a signature.'}
           </Typography>
         </Box>

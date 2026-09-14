@@ -37,7 +37,13 @@ export function PayoutCard({
       <XStack alignItems="flex-start" gap={10}>
         <MaterialIcons name="account-balance-wallet" size={22} color={success} />
         <YStack flex={1} minWidth={0} gap={4}>
-          <Text fontSize={16} fontWeight="600" color="$color">
+          <Text
+            testID="price-panel-payout-title"
+            role="heading"
+            fontSize={16}
+            fontWeight="600"
+            color="$color"
+          >
             {t('mweb.createPod.youWillReceive')}
           </Text>
           <XStack alignItems="center" gap={8} flexWrap="wrap">

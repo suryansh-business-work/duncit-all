@@ -24,7 +24,7 @@ function TourRow({
   onStart,
 }: Readonly<{ tour: TourDefinition; done: boolean; onStart: () => void }>) {
   const { t } = useTranslation();
-  const { muted, primary } = useThemeColors();
+  const { muted, accent } = useThemeColors();
   const name = t(tour.titleKey);
   return (
     <XStack
@@ -35,6 +35,7 @@ function TourRow({
           ? t('mweb.tourGuide.restartAria', { vars: { name } })
           : t('mweb.tourGuide.startAria', { vars: { name } })
       }
+      tabIndex={0}
       onPress={onStart}
       alignItems="center"
       gap={12}
@@ -50,7 +51,7 @@ function TourRow({
         justifyContent="center"
         backgroundColor="$primarySoft"
       >
-        <MaterialIcons name={done ? 'replay' : 'play-arrow'} size={20} color={primary} />
+        <MaterialIcons name={done ? 'replay' : 'play-arrow'} size={20} color={accent} />
       </YStack>
       <YStack flex={1} gap={2}>
         <Text fontSize={15} fontWeight="500" color="$color">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { Alert, Box, Divider, Drawer, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -39,6 +39,7 @@ export default function ExpenseDrawer({
   onSaved,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const titleId = useId();
   const [current, setCurrent] = useState<ExpenseRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -97,10 +98,10 @@ export default function ExpenseDrawer({
       anchor="right"
       open={open}
       onClose={onClose}
-      slotProps={{ paper: { sx: { width: { xs: '100%', sm: 480 }, p: 2.5 } } }}
+      slotProps={{ paper: { role: 'dialog', 'aria-modal': true, 'aria-labelledby': titleId, sx: { width: { xs: '100%', sm: 480 }, p: 2.5 } } }}
     >
       <Stack direction="row" sx={{ alignItems: 'center', mb: 1 }}>
-        <Typography variant="h6" sx={{ fontWeight: 800, flex: 1 }}>
+        <Typography component="h2" variant="h6" id={titleId} sx={{ fontWeight: 800, flex: 1 }}>
           {current
             ? t('finance.expenseManagement.expenseDetails')
             : t('finance.expenseManagement.newExpense')}

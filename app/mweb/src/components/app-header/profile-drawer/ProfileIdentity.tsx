@@ -35,8 +35,10 @@ export default function ProfileIdentity({ me, onClick }: Readonly<ProfileIdentit
           p: 2,
         }}
         aria-label={t('mweb.common.openYourProfile')}
+        aria-describedby="sidebar-identity-name"
       >
         <Avatar
+          alt=""
           src={me?.profile_photo || undefined}
           sx={{
             width: AVATAR,
@@ -50,7 +52,7 @@ export default function ProfileIdentity({ me, onClick }: Readonly<ProfileIdentit
           {initial}
         </Avatar>
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography noWrap sx={{ fontSize: 18, fontWeight: 600, lineHeight: 1.25 }}>
+          <Typography id="sidebar-identity-name" noWrap sx={{ fontSize: 18, fontWeight: 600, lineHeight: 1.25 }}>
             {me?.full_name ?? 'User'}
           </Typography>
           {me?.email && (

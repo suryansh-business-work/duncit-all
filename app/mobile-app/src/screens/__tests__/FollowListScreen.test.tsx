@@ -66,7 +66,7 @@ describe('FollowListScreen (bug 9)', () => {
   it('switches between the Followers and Following tabs', () => {
     renderWithProviders(<FollowListScreen />);
     fireEvent.press(screen.getByTestId('follow-tab-following'));
-    expect(screen.getByTestId('follow-tab-following')).toHaveProp('aria-pressed', true);
+    expect(screen.getByTestId('follow-tab-following')).toHaveProp('aria-selected', true);
   });
 
   it('shows the empty state for both tabs', () => {

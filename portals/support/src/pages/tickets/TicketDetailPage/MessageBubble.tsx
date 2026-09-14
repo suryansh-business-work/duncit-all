@@ -30,7 +30,7 @@ export default function MessageBubble({ msg, time, userLastReadAt }: Readonly<Pr
     !!userLastReadAt && new Date(userLastReadAt).getTime() >= new Date(msg.created_at).getTime();
   return (
     <Stack direction="row" spacing={1.25} sx={{ flexDirection: isAgent ? 'row-reverse' : 'row' }}>
-      <Avatar src={msg.author_photo || undefined} sx={{ width: 32, height: 32, fontSize: 13 }}>
+      <Avatar alt="" src={msg.author_photo || undefined} sx={{ width: 32, height: 32, fontSize: 13 }}>
         {msg.author_name?.[0]?.toUpperCase() || '?'}
       </Avatar>
       <Paper

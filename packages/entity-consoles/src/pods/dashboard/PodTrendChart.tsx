@@ -79,7 +79,7 @@ export default function PodTrendChart({ trend, loading }: Readonly<Props>) {
         </Typography>
         <Box sx={{ height: 260, mt: 2 }}>
           {hasData ? (
-            <Bar data={data} options={options} />
+            <Bar data={data} options={options} role="img" aria-label={t('admin.podsDashboard.podsCreated')} />
           ) : (
             <Typography
               sx={{

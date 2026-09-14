@@ -65,6 +65,7 @@ export function CartScreen() {
         <XStack
           testID="cart-clear"
           role="button"
+          tabIndex={0}
           aria-label={clearLabel}
           onPress={clearAll}
           alignSelf="center"
@@ -100,7 +101,14 @@ export function CartScreen() {
         flex={1}
         contentContainerStyle={{ paddingBottom: bottomSpace + (hasItems ? CHECKOUT_BAR_SPACE : 0) }}
       >
-        <Text paddingHorizontal={16} paddingTop={12} fontSize={20} fontWeight="600" color="$color">
+        <Text
+          role="heading"
+          paddingHorizontal={16}
+          paddingTop={12}
+          fontSize={20}
+          fontWeight="600"
+          color="$color"
+        >
           {t('mweb.cart.title')}
         </Text>
         {body}

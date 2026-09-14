@@ -90,37 +90,47 @@ export function StatusTile({
     </YStack>
   );
 
+  // The + badge is a SIBLING of the tile button, laid over its ring: an
+  // accessible parent hides a nested button from VoiceOver (4.1.2).
   return (
-    <YStack
-      testID={testID}
-      role="button"
-      aria-label={label}
-      onPress={onPress}
-      width={70}
-      alignItems="center"
-      gap={6}
-      pressStyle={PRESS_STYLE.control}
-    >
-      {seen ? (
-        <YStack
-          testID={testID ? `${testID}-seen-ring` : undefined}
-          padding={1.5}
-          borderRadius={999}
-          borderWidth={1}
-          borderColor="$borderColor"
-        >
-          {ringInner}
-        </YStack>
-      ) : (
-        <YStack padding={2.5} borderRadius={999} backgroundColor="$accent">
-          {ringInner}
-        </YStack>
-      )}
+    <YStack width={70} position="relative">
+      <YStack
+        testID={testID}
+        role="button"
+        tabIndex={0}
+        aria-label={label}
+        onPress={onPress}
+        width={70}
+        alignItems="center"
+        gap={6}
+        pressStyle={PRESS_STYLE.control}
+      >
+        {seen ? (
+          <YStack
+            testID={testID ? `${testID}-seen-ring` : undefined}
+            padding={1.5}
+            borderRadius={999}
+            borderWidth={1}
+            borderColor="$borderColor"
+          >
+            {ringInner}
+          </YStack>
+        ) : (
+          <YStack padding={2.5} borderRadius={999} backgroundColor="$accent">
+            {ringInner}
+          </YStack>
+        )}
+        <Text fontSize={12} fontWeight="600" color="$color" numberOfLines={1}>
+          {label}
+        </Text>
+      </YStack>
       {badge ? (
         <YStack
           pressStyle={PRESS_STYLE.surface}
           testID={badgeTestID}
           role="button"
+          tabIndex={0}
+          hitSlop={11}
           aria-label={t('mweb.common.addStory')}
           onPress={onBadgePress}
           position="absolute"
@@ -138,9 +148,6 @@ export function StatusTile({
           <MaterialIcons name="add" size={13} color={onPrimary} />
         </YStack>
       ) : null}
-      <Text fontSize={12} fontWeight="600" color="$color" numberOfLines={1}>
-        {label}
-      </Text>
     </YStack>
   );
 }

@@ -132,7 +132,7 @@ export default function SurveyBuilderPage() {
           flexWrap: "wrap"
         }}>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" sx={{
+          <Typography variant="h5" component="h1" sx={{
             fontWeight: 800
           }}>{heading}</Typography>
           <Typography variant="body2" sx={{
@@ -149,7 +149,7 @@ export default function SurveyBuilderPage() {
           sx={{
             alignItems: "center",
             py: 4
-          }}><CircularProgress /></Stack>
+          }}><CircularProgress aria-label={t('shell.a11y.loading')} /></Stack>
       ) : (
         <>
           <Card variant="outlined"><CardContent>

@@ -45,6 +45,7 @@ export default function HostReviewCategories({
       }}>
         <Typography
           variant="subtitle2"
+          component="h3"
           sx={{
             fontWeight: 800,
             flex: 1
@@ -52,7 +53,7 @@ export default function HostReviewCategories({
           Host categories
         </Typography>
         {saving && (
-          <Typography variant="caption" data-testid="categories-saving" sx={{
+          <Typography variant="caption" role="status" data-testid="categories-saving" sx={{
             color: "text.secondary"
           }}>
             Saving…

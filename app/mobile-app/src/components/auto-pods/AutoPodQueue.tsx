@@ -82,7 +82,7 @@ export function AutoPodQueue({
   if (error) {
     return (
       <YStack gap={12} alignItems="flex-start">
-        <Text testID="auto-pods-error" fontSize={14} color="$danger">
+        <Text role="alert" testID="auto-pods-error" fontSize={14} color="$danger">
           {chrome.labels.loadFailed}
         </Text>
         <DuncitButton

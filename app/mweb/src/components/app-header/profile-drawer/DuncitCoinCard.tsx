@@ -31,7 +31,10 @@ export default function DuncitCoinCard({ onNavigate }: Readonly<{ onNavigate: (t
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') onNavigate(COIN_TILE.to);
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onNavigate(COIN_TILE.to);
+          }
         }}
         sx={{
           ...SURFACE_SX,
@@ -42,6 +45,7 @@ export default function DuncitCoinCard({ onNavigate }: Readonly<{ onNavigate: (t
           '&:hover': { borderColor: gold },
         }}
         aria-label={t('mweb.coin.title')}
+        aria-describedby="sidebar-duncit-coin-balance"
       >
         <Box
           sx={{
@@ -72,7 +76,7 @@ export default function DuncitCoinCard({ onNavigate }: Readonly<{ onNavigate: (t
         {pending ? (
           <Skeleton width={28} height={24} />
         ) : (
-          <Typography data-testid="sidebar-duncit-coin-balance" noWrap sx={{ fontSize: 16, fontWeight: 700, color: gold }}>
+          <Typography id="sidebar-duncit-coin-balance" data-testid="sidebar-duncit-coin-balance" noWrap sx={{ fontSize: 16, fontWeight: 700, color: gold }}>
             {balance}
           </Typography>
         )}

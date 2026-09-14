@@ -267,7 +267,7 @@ describe('CreatePodStepper', () => {
     // always PAID — the Free card is not offered and Paid is preselected.
     await screen.findByTestId('create-pod-paid');
     expect(screen.queryByTestId('create-pod-free')).toBeNull();
-    expect(screen.getByTestId('create-pod-paid')).toHaveProp('aria-pressed', true);
+    expect(screen.getByTestId('create-pod-paid')).toHaveProp('aria-checked', true);
     expect(screen.getByTestId('create-pod-price-panel')).toBeOnTheScreen();
     press('products-enabled-toggle');
     press('products-enabled-toggle');
@@ -305,7 +305,7 @@ describe('CreatePodStepper', () => {
     await fillToPricing('VIRTUAL');
     // A virtual pod may be Free; picking it locks the ticket price at zero.
     press('create-pod-free');
-    expect(screen.getByTestId('create-pod-free')).toHaveProp('aria-pressed', true);
+    expect(screen.getByTestId('create-pod-free')).toHaveProp('aria-checked', true);
     expect(screen.getByTestId('field-pod_amount_text')).toHaveProp('editable', false);
     expect(screen.getByTestId('pod_amount_text-hint')).toHaveTextContent('Free pods are ₹0.');
 
@@ -326,7 +326,7 @@ describe('CreatePodStepper', () => {
     press('create-pod-submit');
     await screen.findByTestId('create-pod-paid');
     expect(screen.queryByTestId('create-pod-free')).toBeNull();
-    expect(screen.getByTestId('create-pod-paid')).toHaveProp('aria-pressed', true);
+    expect(screen.getByTestId('create-pod-paid')).toHaveProp('aria-checked', true);
     // The ₹0 the Free pick forced does not survive either — the paid pod is
     // blank again and must be priced by the host before it can publish.
     expect(screen.getByTestId('field-pod_amount_text')).toHaveProp('value', '');

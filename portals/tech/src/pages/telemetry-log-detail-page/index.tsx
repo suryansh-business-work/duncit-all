@@ -54,7 +54,7 @@ export default function TelemetryLogDetailPage() {
             color={ENV_COLOR[row.environment] ?? 'default'}
           />
         ) : null}
-        <Typography variant="h6" sx={{ fontWeight: 700, wordBreak: 'break-word', flex: 1 }}>
+        <Typography variant="h6" component="h1" sx={{ fontWeight: 700, wordBreak: 'break-word', flex: 1 }}>
           {row ? `${row.page} / ${row.component}` : t('tech.telemetryLogs.log')}
         </Typography>
       </Stack>

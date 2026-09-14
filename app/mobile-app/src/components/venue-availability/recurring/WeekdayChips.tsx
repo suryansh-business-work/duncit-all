@@ -53,11 +53,17 @@ export function WeekdayChips({ value, onChange, weeklyOff = [], testID }: Readon
           ))}
         </XStack>
       </XStack>
-      <XStack gap={6} flexWrap="wrap" aria-label={t('availability.recurring.repeatOnDays')}>
+      <XStack
+        gap={6}
+        flexWrap="wrap"
+        role="group"
+        aria-label={t('availability.recurring.repeatOnDays')}
+      >
         {labels.full.map((fullName, day) => (
           <SelectChip
             key={fullName}
             testID={`${testID}-day-${day}`}
+            role="checkbox"
             label={labels.short[day] ?? ''}
             ariaLabel={fullName}
             selected={selected.has(day)}

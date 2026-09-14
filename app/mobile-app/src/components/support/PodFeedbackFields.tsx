@@ -63,7 +63,7 @@ export function PodFeedbackFields({
           placeholderTextColor="$muted"
           maxLength={1000}
           backgroundColor="$surface"
-          borderColor="$borderColor"
+          borderColor="$inputBorder"
         />
       </Field>
     </YStack>

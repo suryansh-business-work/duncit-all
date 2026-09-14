@@ -103,6 +103,7 @@ export function PodSchedule({ pod, venue, location, onOpenVenue, onJoinMeeting }
               <XStack
                 testID="pod-venue-details"
                 role="button"
+                tabIndex={0}
                 aria-label={t('mweb.podDetails.venueDetails')}
                 onPress={() => onOpenVenue?.(venue.id)}
                 alignItems="center"
@@ -111,7 +112,7 @@ export function PodSchedule({ pod, venue, location, onOpenVenue, onJoinMeeting }
                 paddingVertical={4}
                 pressStyle={PRESS_STYLE.row}
               >
-                <Text fontSize={13} fontWeight="600" color="$primary">
+                <Text fontSize={13} fontWeight="600" color="$accent">
                   {t('mweb.podDetails.venueDetails')}
                 </Text>
                 <MaterialIcons name="open-in-new" size={14} color={primary} />

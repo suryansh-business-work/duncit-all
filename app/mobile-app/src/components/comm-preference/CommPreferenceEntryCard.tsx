@@ -32,6 +32,8 @@ export function CommPreferenceEntryCard({ onPress }: Readonly<Props>) {
       testID="comm-preference-entry"
       role="button"
       aria-label={labels.title}
+      accessibilityHint={labels.entryHint}
+      tabIndex={0}
       onPress={onPress}
       flexDirection="row"
       alignItems="center"

@@ -63,7 +63,7 @@ export default function HowToEarnCard({ config }: Readonly<Props>) {
                   vars: { points: config[LEADERBOARD_POINTS_FIELD[category]] },
                 })}
                 sx={{
-                  color: 'primary.main',
+                  color: 'accent.main',
                   bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
                 }}
               />

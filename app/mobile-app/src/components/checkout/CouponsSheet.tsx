@@ -37,6 +37,7 @@ export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Reado
             <YStack
               pressStyle={PRESS_STYLE.surface}
               role="button"
+              importantForAccessibility="no"
               aria-label={t('mweb.checkout.close')}
               onPress={onClose}
               position="absolute"
@@ -55,12 +56,13 @@ export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Reado
             >
               <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
                 <XStack alignItems="center" justifyContent="space-between" paddingBottom={12}>
-                  <Text fontSize={17} fontWeight="600" color="$color">
+                  <Text role="heading" fontSize={17} fontWeight="600" color="$color">
                     {t('mweb.checkout.couponsTitle')}
                   </Text>
                   <XStack
                     testID="coupons-sheet-close"
                     role="button"
+                    tabIndex={0}
                     aria-label={t('mweb.checkout.couponsClose')}
                     onPress={onClose}
                     pressStyle={PRESS_STYLE.inline}
@@ -79,6 +81,7 @@ export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Reado
                         key={coupon.id}
                         testID={`coupon-pick-${coupon.code}`}
                         role="button"
+                        tabIndex={0}
                         aria-label={t('mweb.checkout.couponPickAria', {
                           vars: { code: coupon.code },
                         })}

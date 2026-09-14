@@ -112,7 +112,7 @@ export function PodFeedbackPrompt() {
           borderRadius={28}
           backgroundColor="$surface"
         >
-          <Text fontSize={17} fontWeight="600" color="$color">
+          <Text role="heading" fontSize={17} fontWeight="600" color="$color">
             {t('mweb.podFeedback.title', { vars: { title: pod.title } })}
           </Text>
           <Text fontSize={12} color="$muted">
@@ -141,6 +141,7 @@ export function PodFeedbackPrompt() {
               pressStyle={PRESS_STYLE.control}
               testID="pod-feedback-skip"
               role="button"
+              tabIndex={0}
               aria-label={t('mweb.podFeedback.close')}
               onPress={() => setAsking(true)}
               height={42}
@@ -159,6 +160,7 @@ export function PodFeedbackPrompt() {
               pressStyle={PRESS_STYLE.control}
               testID="pod-feedback-submit"
               role="button"
+              tabIndex={0}
               aria-label={t('mweb.podFeedback.submit')}
               aria-disabled={!ready || busy}
               onPress={!ready || busy ? undefined : () => void submit()}

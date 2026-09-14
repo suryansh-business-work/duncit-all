@@ -33,6 +33,9 @@ interface Props {
   /** Return the follow/unfollow promise and the button spins until it settles
    *  — a handler that returns nothing behaves exactly as it did before. */
   onToggle: () => void | Promise<unknown>;
+  /** Who this button follows. Repeated rows of Follow buttons need it so each
+   * one is told apart (2.4.6); the name still starts with the visible label. */
+  targetName?: string;
 }
 
 /** Follow / Follow Back / Requested / Following. REQUESTED is a real, tappable
@@ -44,12 +47,16 @@ export default function FollowButton({
   disabled,
   loading,
   onToggle,
+  targetName,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const resting = status === 'NONE';
+  const label = t(followButtonLabelKey(status, followsViewer));
+  const accessibleName = targetName ? t('mweb.a11y.followTarget', { vars: { action: label, name: targetName } }) : undefined;
   return (
     <DuncitButton
       data-testid="follow-button"
+      aria-label={accessibleName}
       size="small"
       variant={resting ? 'contained' : 'text'}
       startIcon={loading ? <CircularProgress size={14} color="inherit" /> : ICONS[status]}
@@ -62,7 +69,7 @@ export default function FollowButton({
         return onToggle();
       }}
     >
-      {t(followButtonLabelKey(status, followsViewer))}
+      {label}
     </DuncitButton>
   );
 }

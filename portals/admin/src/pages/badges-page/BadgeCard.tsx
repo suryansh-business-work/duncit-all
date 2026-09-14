@@ -72,10 +72,21 @@ export default function BadgeCard({ badge, onEdit, onRemove }: Readonly<Props>) 
             </Typography>
           </Box>
           <Stack>
-            <DuncitIconButton size="small" onClick={() => onEdit(badge)}>
+            <DuncitIconButton
+              size="small"
+              aria-label={t('shell.a11y.editNamed', { vars: { name: badge.title } })}
+              data-testid="badge-card-edit"
+              onClick={() => onEdit(badge)}
+            >
               <EditIcon fontSize="small" />
             </DuncitIconButton>
-            <DuncitIconButton size="small" onClick={() => onRemove(badge)} color="error">
+            <DuncitIconButton
+              size="small"
+              aria-label={t('shell.a11y.deleteNamed', { vars: { name: badge.title } })}
+              data-testid="badge-card-delete"
+              onClick={() => onRemove(badge)}
+              color="error"
+            >
               <DeleteIcon fontSize="small" />
             </DuncitIconButton>
           </Stack>

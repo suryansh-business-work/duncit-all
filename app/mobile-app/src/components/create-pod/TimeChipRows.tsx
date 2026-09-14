@@ -47,8 +47,10 @@ export function TimeChip({
   return (
     <YStack
       testID={testID}
-      role="button"
+      tabIndex={0}
+      role="radio"
       aria-label={ariaLabel}
+      aria-checked={selected}
       aria-disabled={blocked}
       onPress={blocked ? undefined : onPress}
       minHeight={36}

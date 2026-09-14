@@ -36,7 +36,7 @@ export function AlreadyBookedDialog({ open, onClose, onHistory }: Readonly<Props
           borderRadius={28}
           backgroundColor="$surface"
         >
-          <Text fontSize={18} fontWeight="600" color="$color">
+          <Text role="heading" fontSize={18} fontWeight="600" color="$color">
             {t('mweb.checkout.alreadyBookedTitle')}
           </Text>
           <Text fontSize={14} color="$muted">

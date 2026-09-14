@@ -20,6 +20,7 @@ export default function IdentitySection({ form, setForm }: Readonly<Props>) {
         alignItems: "center"
       }}>
         <Avatar
+          alt=""
           src={form.logo_url || undefined}
           variant="rounded"
           sx={{
@@ -38,7 +39,7 @@ export default function IdentitySection({ form, setForm }: Readonly<Props>) {
           }}>
             Live preview
           </Typography>
-          <Typography variant="h5">{form.app_name || 'App name'}</Typography>
+          <Typography variant="h5" component="p">{form.app_name || 'App name'}</Typography>
           <Typography variant="caption" sx={{
             color: "text.secondary"
           }}>

@@ -108,7 +108,7 @@ export default function ReviewBrandDialog({ brand, onClose, onDone }: Readonly<P
           <Stack direction="row" spacing={1} sx={{
             alignItems: "center"
           }}>
-            <Typography
+            <Typography component="h2"
               variant="h6"
               noWrap
               sx={{

@@ -109,7 +109,12 @@ export default function RewardRowFields({ row, index, onChange, onRemove }: Read
         <Stack direction="row" spacing={1} sx={{
           alignItems: "center"
         }}>
-          <Switch checked={row.is_active} onChange={(_, value) => onChange(index, { is_active: value })} />
+          <Switch
+            checked={row.is_active}
+            onChange={(_, value) => onChange(index, { is_active: value })}
+            slotProps={{ input: { 'aria-label': t('admin.leaderboard.rewardActive') } }}
+            data-testid="leaderboard-reward-active"
+          />
           <Typography variant="body2">{t('admin.leaderboard.rewardActive')}</Typography>
         </Stack>
         <Tooltip title={t('admin.leaderboard.removeReward')}>

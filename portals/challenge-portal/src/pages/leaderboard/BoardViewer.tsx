@@ -55,7 +55,7 @@ function BoardTable({ rows, t }: Readonly<BoardTableProps>) {
               <Stack direction="row" spacing={1} sx={{
                 alignItems: "center"
               }}>
-                <Avatar src={row.avatar_url || undefined} sx={{ width: 28, height: 28 }} />
+                <Avatar alt="" src={row.avatar_url || undefined} sx={{ width: 28, height: 28 }} />
                 <Typography variant="body2" noWrap sx={{
                   fontWeight: row.is_me ? 700 : 400
                 }}>
@@ -125,6 +125,8 @@ export default function BoardViewer() {
             onChange={(_, next: LeaderboardPeriod | null) => {
               if (next) setPeriod(next);
             }}
+            aria-label={t('challenge.a11y.period')}
+            data-testid="leaderboard-period"
           >
             {PERIODS.map((value) => (
               <ToggleButton key={value} value={value}>

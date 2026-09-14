@@ -93,6 +93,7 @@ export default function CallbacksTable({ fetchRows, refetchRef, onRowClick }: Re
   const columns = useMemo(() => buildColumns(t), [t]);
   return (
     <DuncitTable<CallbackRequest>
+      ariaLabel={t('support.callbacks.title')}
       tableId="support-callbacks"
       columns={columns}
       fetchRows={fetchRows}

@@ -28,6 +28,7 @@ export function VenuesLocationBar({ cityLabel }: Readonly<Props>) {
       <XStack
         testID="venues-location-bar"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.venues.changeAria')}
         onPress={() => setOpen(true)}
         alignItems="center"
@@ -44,7 +45,7 @@ export function VenuesLocationBar({ cityLabel }: Readonly<Props>) {
         <Text flex={1} fontSize={12.5} fontWeight="700" color="$color" numberOfLines={1}>
           {label}
         </Text>
-        <Text fontSize={12.5} fontWeight="700" color="$primary">
+        <Text fontSize={12.5} fontWeight="700" color="$accent">
           {t('mweb.venues.change')}
         </Text>
         <MaterialIcons name="keyboard-arrow-down" size={16} color={primary} />

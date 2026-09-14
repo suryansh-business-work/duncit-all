@@ -48,7 +48,7 @@ export function ReferralPromptScreen() {
           borderRadius={14}
           color="$color"
           placeholderTextColor="$muted"
-          borderColor={malformed ? '$danger' : '$borderColor'}
+          borderColor={malformed ? '$danger' : '$inputBorder'}
           autoCapitalize="characters"
           autoCorrect={false}
           placeholder={t('mweb.referral.codePlaceholder')}
@@ -57,12 +57,12 @@ export function ReferralPromptScreen() {
         />
 
         {malformed ? (
-          <Text testID="referral-prompt-pattern" fontSize={12.5} color="$danger">
+          <Text testID="referral-prompt-pattern" role="alert" fontSize={12.5} color="$danger">
             {t('mweb.referral.validation.codePattern')}
           </Text>
         ) : null}
         {applyError ? (
-          <Text testID="referral-prompt-error" fontSize={12.5} color="$danger">
+          <Text testID="referral-prompt-error" role="alert" fontSize={12.5} color="$danger">
             {applyError}
           </Text>
         ) : null}
@@ -83,7 +83,7 @@ export function ReferralPromptScreen() {
           textAlign="center"
           fontSize={14}
           fontWeight="600"
-          color="$primary"
+          color="$accent"
         >
           {t('mweb.referral.skip')}
         </Text>

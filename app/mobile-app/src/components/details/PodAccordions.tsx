@@ -258,7 +258,7 @@ export function PodAccordions({
           onPress={() => setOpen(new Set(sections.map((s) => s.id)))}
           fontSize={13}
           fontWeight="600"
-          color="$primary"
+          color="$accent"
         >
           {t('mweb.podDetails.expandAll')}
         </Text>

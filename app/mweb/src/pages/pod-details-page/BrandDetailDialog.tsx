@@ -47,11 +47,11 @@ export default function BrandDetailDialog({
       <Stack direction="row" spacing={1.5} sx={{
         alignItems: "center"
       }}>
-        <Avatar src={brand.logo_url || undefined} variant="rounded" sx={{ width: 52, height: 52 }}>
+        <Avatar alt="" src={brand.logo_url || undefined} variant="rounded" sx={{ width: 52, height: 52 }}>
           <StorefrontIcon />
         </Avatar>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h6" data-testid="brand-detail-name" sx={{ fontWeight: 600 }} noWrap>
+          <Typography variant="h6" component="h3" data-testid="brand-detail-name" sx={{ fontWeight: 600 }} noWrap>
             {brand.brand_name}
           </Typography>
           {brand.tagline && (
@@ -105,9 +105,16 @@ export default function BrandDetailDialog({
   );
 
   return (
-    <Dialog open={Boolean(brandId)} onClose={onClose} fullWidth maxWidth="xs" data-testid="brand-detail-dialog">
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
-        Brand
+    <Dialog
+      open={Boolean(brandId)}
+      onClose={onClose}
+      fullWidth
+      maxWidth="xs"
+      data-testid="brand-detail-dialog"
+      aria-labelledby="brand-detail-dialog-title"
+    >
+      <DialogTitle id="brand-detail-dialog-title-row" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
+        <span id="brand-detail-dialog-title">Brand</span>
         <DuncitIconButton
           aria-label={t('mweb.common.close')}
           onClick={onClose}
@@ -125,7 +132,7 @@ export default function BrandDetailDialog({
               alignItems: "center",
               py: 4
             }}>
-            <CircularProgress size={26} />
+            <CircularProgress aria-label={t('mweb.a11y.loading')} size={26} />
           </Stack>
         ) : (
           brandBody

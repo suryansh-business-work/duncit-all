@@ -123,6 +123,7 @@ export default function ExpenseOptionTable({
 
   return (
     <DuncitTable<ExpenseOptionRow>
+      ariaLabel={t('shell.nav.expenseSettings')}
       tableId="finance-expense-options"
       columns={columns}
       fetchRows={fetchRows}

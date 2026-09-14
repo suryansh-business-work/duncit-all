@@ -53,7 +53,7 @@ function VariantCard({ variant, index }: Readonly<{ variant: any; index: number 
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Stack spacing={1}>
-          <Typography sx={{
+          <Typography component="h4" sx={{
             fontWeight: 800
           }}>{variant.option_label || `Variant ${index + 1}`}</Typography>
           <VariantImages images={Array.isArray(variant.images) ? variant.images : []} />
@@ -88,7 +88,7 @@ export default function ProductDetailView({ product }: Readonly<{ product: any }
               justifyContent: "space-between",
               alignItems: "center"
             }}>
-            <Typography variant="h6" sx={{
+            <Typography variant="h6" component="h2" sx={{
               fontWeight: 950
             }}>{product.product_name}</Typography>
             <StatusChip status={product.listing_review_status} colorMap={STATUS_COLORS} fallbackColor="warning" />
@@ -105,7 +105,7 @@ export default function ProductDetailView({ product }: Readonly<{ product: any }
             color: "text.secondary"
           }}>Review notes: {product.listing_review_notes}</Typography>}
           <Divider />
-          <Typography variant="subtitle2" sx={{
+          <Typography variant="subtitle2" component="h3" sx={{
             fontWeight: 800
           }}>Variants ({variants.length})</Typography>
           <Stack spacing={1.5}>

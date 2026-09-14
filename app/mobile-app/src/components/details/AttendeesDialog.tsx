@@ -74,6 +74,7 @@ function AttendeeRow({
     <XStack
       testID={`attendee-row-${person.user_id}`}
       role="button"
+      tabIndex={0}
       aria-label={name}
       onPress={onPress}
       alignItems="center"
@@ -131,6 +132,7 @@ function SpotFillRowItem({ fill, onPress }: Readonly<{ fill: SpotFillRow; onPres
     <XStack
       testID={`spot-fill-row-${fill.key}`}
       role="button"
+      tabIndex={0}
       aria-label={fill.old_name}
       onPress={onPress}
       alignItems="center"
@@ -197,6 +199,7 @@ export function AttendeesDialog({
           <YStack
             pressStyle={PRESS_STYLE.surface}
             role="button"
+            importantForAccessibility="no"
             aria-label={t('mweb.podDetails.close')}
             onPress={onClose}
             position="absolute"
@@ -216,13 +219,15 @@ export function AttendeesDialog({
           >
             <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" paddingBottom={8}>
-                <Text fontSize={17} fontWeight="600" color="$color">
+                <Text role="heading" fontSize={17} fontWeight="600" color="$color">
                   {t('mweb.podDetails.attendeesCount', { vars: { count } })}
                 </Text>
                 <XStack
                   testID="attendees-dialog-close"
                   role="button"
+                  tabIndex={0}
                   aria-label={t('mweb.podDetails.closeAttendees')}
+                  hitSlop={4}
                   onPress={onClose}
                   width={36}
                   height={36}

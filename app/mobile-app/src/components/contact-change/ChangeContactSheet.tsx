@@ -91,7 +91,7 @@ export function ChangeContactSheet({ channel, snapshot, onClose, onSaved }: Read
     >
       <YStack gap={12}>
         {state.error ? (
-          <Text fontSize={13} color="$danger" testID="contact-change-error">
+          <Text fontSize={13} color="$danger" testID="contact-change-error" role="alert">
             {state.error}
           </Text>
         ) : null}

@@ -129,6 +129,7 @@ export default function GiftCardLogsTable({
 
   return (
     <DuncitTable<GiftCardTxnRow>
+      ariaLabel={t('finance.giftCards.logsTitle')}
       tableId="finance-gift-card-logs"
       columns={columns}
       fetchRows={fetchRows}

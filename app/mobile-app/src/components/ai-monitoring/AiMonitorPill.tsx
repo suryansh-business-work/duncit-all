@@ -32,6 +32,8 @@ export function AiMonitorPill({ label, onPress, ariaLabel, testID }: Readonly<Pr
     <XStack
       testID={testID}
       role="button"
+      tabIndex={0}
+      hitSlop={6}
       aria-label={ariaLabel ?? label}
       onPress={onPress}
       pressStyle={PRESS_STYLE.control}

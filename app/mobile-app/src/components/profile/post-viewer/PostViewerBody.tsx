@@ -59,6 +59,8 @@ function PostCommentRow({
           testID={`post-comment-delete-${comment.id}`}
           role="button"
           aria-label={t('mweb.common.deleteComment')}
+          tabIndex={0}
+          hitSlop={10}
           onPress={onDelete}
           padding={4}
           pressStyle={PRESS_STYLE.inline}
@@ -88,6 +90,11 @@ export function PostViewerBody({ post, meId, onToggleLike, onDeleteComment }: Re
           testID="post-like"
           role="button"
           aria-label={t('mweb.profile.likePost')}
+          // aria-pressed reaches the web DOM; native reads the state object.
+          aria-pressed={post.liked_by_me}
+          accessibilityState={{ selected: post.liked_by_me }}
+          tabIndex={0}
+          hitSlop={12}
           onPress={onToggleLike}
           alignItems="center"
           gap={6}

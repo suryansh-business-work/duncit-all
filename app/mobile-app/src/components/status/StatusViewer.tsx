@@ -86,6 +86,8 @@ function StatusHeaderText({
         <Text
           testID="status-author"
           role="button"
+          tabIndex={0}
+          hitSlop={8}
           aria-label={t('mweb.podDetails.openProfileOf', { vars: { name } })}
           pressStyle={PRESS_STYLE.inline}
           onPress={onPress}
@@ -147,6 +149,8 @@ function StatusRoundButton({
       pressStyle={PRESS_STYLE.surface}
       testID={testID}
       role="button"
+      tabIndex={0}
+      hitSlop={4}
       aria-label={label}
       onPress={onPress}
       width={36}
@@ -211,13 +215,16 @@ function StatusLikeButton({
   likeCount,
   onPress,
 }: Readonly<{ liked: boolean; likeCount: number; onPress: () => void }>) {
+  const { t } = useTranslation();
   const { accent } = useThemeColors();
   return (
     <XStack paddingHorizontal={16} paddingTop={8} alignItems="center" gap={8}>
       <XStack
         testID="status-like"
         role="button"
-        aria-label={liked ? 'Unlike story' : 'Like story'}
+        tabIndex={0}
+        hitSlop={8}
+        aria-label={liked ? t('mweb.a11y.unlikeStory') : t('mweb.a11y.likeStory')}
         onPress={onPress}
         alignItems="center"
         gap={6}
@@ -445,9 +452,14 @@ export function StatusViewer({
                 onEnded={() => advanceRef.current()}
               />
               <XStack position="absolute" top={0} bottom={0} left={0} right={0}>
+                {/* Named buttons, so VoiceOver and a keyboard can step through
+                    the slides as well as a tap can (2.1.1) — mWeb's twin zones. */}
                 <YStack
                   pressStyle={PRESS_STYLE.surface}
                   testID="status-prev"
+                  role="button"
+                  aria-label={t('mweb.a11y.previousStory')}
+                  tabIndex={0}
                   width="30%"
                   onPress={goPrev}
                 />
@@ -455,6 +467,9 @@ export function StatusViewer({
                   pressStyle={PRESS_STYLE.surface}
                   flex={1}
                   testID="status-next"
+                  role="button"
+                  aria-label={t('mweb.a11y.nextStory')}
+                  tabIndex={0}
                   onPress={() => advanceRef.current()}
                 />
               </XStack>
@@ -472,6 +487,8 @@ export function StatusViewer({
                 <XStack
                   testID="status-viewers"
                   role="button"
+                  tabIndex={0}
+                  hitSlop={8}
                   aria-label={t('mweb.common.seeWhoViewedThisStory')}
                   onPress={() => onViewers(current.id)}
                   alignItems="center"
@@ -490,6 +507,7 @@ export function StatusViewer({
                 <XStack
                   testID="status-open-target"
                   role="button"
+                  tabIndex={0}
                   aria-label={t('mweb.status.openDetails')}
                   onPress={() => onOpenTarget(status.target as StoryTarget)}
                   flex={1}
@@ -502,7 +520,7 @@ export function StatusViewer({
                   pressStyle={PRESS_STYLE.control}
                 >
                   <Text fontSize={15} fontWeight="600" color={onPrimary}>
-                    Open details
+                    {t('mweb.status.openDetails')}
                   </Text>
                   <MaterialIcons name="arrow-forward" size={16} color={onPrimary} />
                 </XStack>

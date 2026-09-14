@@ -128,7 +128,7 @@ function CancelPodDialog({ pod, onClose, onCancelled }: Readonly<Props>) {
           required
         />
         {error ? (
-          <Text testID="venue-cancel-pod-error" fontSize={12.5} color="$danger">
+          <Text role="alert" testID="venue-cancel-pod-error" fontSize={12.5} color="$danger">
             {error}
           </Text>
         ) : null}

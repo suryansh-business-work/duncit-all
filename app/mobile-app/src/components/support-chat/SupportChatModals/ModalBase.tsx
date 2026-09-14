@@ -19,6 +19,8 @@ export function ModalButton({ testID, label, primary, disabled, onPress }: Reado
     <XStack
       testID={testID}
       role="button"
+      tabIndex={0}
+      hitSlop={1}
       aria-label={label}
       aria-disabled={disabled}
       onPress={disabled ? undefined : onPress}

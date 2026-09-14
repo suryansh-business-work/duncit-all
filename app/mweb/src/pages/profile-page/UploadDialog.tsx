@@ -57,7 +57,14 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
   };
 
   return (
-    <Dialog data-testid="upload-dialog" open={open} onClose={close} fullWidth maxWidth="sm">
+    <Dialog
+      data-testid="upload-dialog"
+      open={open}
+      onClose={close}
+      fullWidth
+      maxWidth="sm"
+      aria-labelledby="upload-dialog-title"
+    >
       <Stack
         direction="row"
         sx={{
@@ -66,14 +73,22 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
           py: 1
         }}>
         <Typography
+          id="upload-dialog-title"
+          data-testid="upload-dialog-title"
           variant="subtitle1"
+          component="h2"
           sx={{
             fontWeight: 600,
             flex: 1
           }}>
           New post
         </Typography>
-        <DuncitIconButton data-testid="upload-dialog-close" onClick={close} disabled={busy}>
+        <DuncitIconButton
+          data-testid="upload-dialog-close"
+          onClick={close}
+          disabled={busy}
+          aria-label={t('mweb.common.close')}
+        >
           <CloseIcon />
         </DuncitIconButton>
       </Stack>
@@ -114,7 +129,7 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
                 Change photo
               </DuncitButton>
               <DuncitButton data-testid="upload-dialog-share" variant="contained" onClick={submit} disabled={busy}>
-                {busy ? <CircularProgress size={20} /> : 'Share'}
+                {busy ? <CircularProgress size={20} aria-label={t('mweb.a11y.loading')} /> : 'Share'}
               </DuncitButton>
             </Stack>
           </Stack>

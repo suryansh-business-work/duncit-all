@@ -33,7 +33,12 @@ export function HostPodsList({ pods, visible, isLoading, onOpen, onActions }: Re
   if (isLoading) {
     body = (
       <YStack paddingVertical={24} alignItems="center">
-        <Spinner testID="host-pods-loading" color="$primary" />
+        <Spinner
+          role="progressbar"
+          aria-label={t('mweb.a11y.loading')}
+          testID="host-pods-loading"
+          color="$primary"
+        />
       </YStack>
     );
   } else if (pods.length === 0) {

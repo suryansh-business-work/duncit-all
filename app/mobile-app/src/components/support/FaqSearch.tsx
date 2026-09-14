@@ -64,6 +64,7 @@ function FaqResults({ results, isLoading, query, onOpen }: Readonly<FaqResultsPr
           key={faq.id}
           testID={`support-search-${faq.id}`}
           role="button"
+          tabIndex={0}
           aria-label={faq.question}
           onPress={() => onOpen(faq)}
           paddingHorizontal={16}
@@ -123,7 +124,9 @@ export function FaqSearch({ query, onQueryChange, onOpen }: Readonly<FaqSearchPr
           <XStack
             testID="support-search-clear"
             role="button"
+            tabIndex={0}
             aria-label={t('mweb.common.clearSearch')}
+            hitSlop={8}
             onPress={() => onQueryChange('')}
             width={28}
             height={28}

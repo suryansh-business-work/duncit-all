@@ -32,7 +32,10 @@ export function DoubleTapJoin({ onJoin, testID, children }: Readonly<Props>) {
   };
 
   return (
-    <Pressable testID={testID} onPress={onPress}>
+    // Not an accessibility element: an accessible Pressable would swallow every
+    // control on the reel into one VoiceOver stop. The join bar is the
+    // screen-reader path to the same action (4.1.2).
+    <Pressable testID={testID} accessible={false} onPress={onPress}>
       {children}
       {burst ? (
         <YStack

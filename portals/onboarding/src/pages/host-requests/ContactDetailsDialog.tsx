@@ -17,9 +17,10 @@ interface Props {
 export default function ContactDetailsDialog({ request, onClose, onApprove, onReject }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Dialog open={!!request} onClose={onClose} fullWidth maxWidth="xs">
+    // Named by the title text alone, not by the close button inside the title row.
+    <Dialog open={!!request} onClose={onClose} fullWidth maxWidth="xs" aria-labelledby="contact-details-title">
       <DialogTitle sx={{ pr: 6 }}>
-        Contact Details
+        <span id="contact-details-title">Contact Details</span>
         <DuncitIconButton aria-label={t('shell.common.close')} onClick={onClose} sx={{ position: 'absolute', right: 8, top: 8 }}>
           <CloseIcon fontSize="small" />
         </DuncitIconButton>

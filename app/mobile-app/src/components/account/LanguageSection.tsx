@@ -24,7 +24,7 @@ const LANGUAGE_PREFERENCE_FLAG = 'language_preference';
 export function LanguageSection() {
   const { t, locale, setLocale } = useTranslation();
   const locales = useLocaleStore((s) => s.locales);
-  const { primary, muted } = useThemeColors();
+  const { accent, muted } = useThemeColors();
   const [saving, setSaving] = useState(false);
   const enabled = useFeatureFlag(LANGUAGE_PREFERENCE_FLAG);
 
@@ -48,20 +48,28 @@ export function LanguageSection() {
   return (
     <SurfaceCard gap={12} testID="account-language-section">
       <XStack alignItems="center" gap={8}>
-        <Text accessibilityRole="header" flex={1} fontSize={17} fontWeight="600" color="$color">
+        <Text role="heading" flex={1} fontSize={17} fontWeight="600" color="$color">
           {t('mweb.account.preferences')}
         </Text>
-        {saving ? <ActivityIndicator testID="language-saving" color={primary} /> : null}
+        {saving ? (
+          <ActivityIndicator
+            testID="language-saving"
+            color={accent}
+            aria-label={t('mweb.a11y.loading')}
+          />
+        ) : null}
       </XStack>
-      <YStack gap={8}>
+      <YStack gap={8} role="radiogroup" aria-label={t('mweb.common.language')}>
         {locales.map((option) => {
           const selected = option.code === locale;
           return (
             <XStack
               key={option.code}
               testID={`locale-option-${option.code}`}
-              role="button"
+              role="radio"
               aria-label={option.label}
+              aria-checked={selected}
+              tabIndex={0}
               onPress={() => pick(option.code)}
               alignItems="center"
               justifyContent="space-between"
@@ -86,7 +94,7 @@ export function LanguageSection() {
               <MaterialIcons
                 name={selected ? 'radio-button-checked' : 'radio-button-unchecked'}
                 size={20}
-                color={selected ? primary : muted}
+                color={selected ? accent : muted}
               />
             </XStack>
           );

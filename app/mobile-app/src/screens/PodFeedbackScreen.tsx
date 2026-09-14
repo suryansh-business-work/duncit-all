@@ -17,6 +17,7 @@ import { useGoBack } from '@/hooks/useGoBack';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { RootStackParamList } from '@/navigation/types';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 /**
  * The pod rating form as its own screen, behind the link a host shares with
@@ -27,6 +28,7 @@ import { RefreshScrollView } from '@/components/PullToRefresh';
  * first time, and submitting again edits that one rating.
  */
 export function PodFeedbackScreen() {
+  const loadingRegion = useLoadingRegion();
   const route = useRoute<RouteProp<RootStackParamList, 'PodFeedback'>>();
   const podId = route.params?.podId ?? '';
   const goBack = useGoBack();
@@ -85,7 +87,7 @@ export function PodFeedbackScreen() {
 
   let body;
   if (loading) {
-    body = <Spinner testID="pod-feedback-loading" color="$primary" />;
+    body = <Spinner {...loadingRegion} testID="pod-feedback-loading" color="$primary" />;
   } else if (form?.can_rate) {
     body = (
       <PodFeedbackCard
@@ -119,7 +121,7 @@ export function PodFeedbackScreen() {
     );
   } else {
     body = (
-      <Text testID="pod-feedback-load-error" color="$danger" fontSize={13}>
+      <Text role="alert" testID="pod-feedback-load-error" color="$danger" fontSize={13}>
         {t('mweb.podFeedback.loadFailed')}
       </Text>
     );

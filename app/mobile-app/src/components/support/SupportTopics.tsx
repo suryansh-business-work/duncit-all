@@ -40,6 +40,7 @@ function SupportTopicRow({ group, isLast, onOpen }: Readonly<SupportTopicRowProp
     <XStack
       testID={`support-topic-${id}`}
       role="button"
+      tabIndex={0}
       aria-label={name}
       onPress={onOpen}
       alignItems="center"

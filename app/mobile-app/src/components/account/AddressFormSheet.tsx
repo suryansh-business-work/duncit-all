@@ -2,8 +2,8 @@ import { formResolver } from '../../utils/form-resolver';
 import { useEffect, useMemo } from 'react';
 import { Modal } from 'react-native';
 import { z } from 'zod';
-import { Controller, useForm } from 'react-hook-form';
-import { Input, ScrollView, Text, XStack, YStack } from 'tamagui';
+import { useForm } from 'react-hook-form';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
@@ -13,6 +13,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 import { blankAddress, makeAddressSchema } from '@duncit/forms/schemas';
 import { fallbackT } from '@/i18n/fallback';
+import { AddressFormField as Field } from './AddressFormField';
 
 /** Bundled-English schema, for callers that parse outside React. The rules are
  * @duncit/forms' — mWeb's dialog renders the same ones (rules 27 and 40). */
@@ -31,42 +32,6 @@ interface Props {
   saving?: boolean;
   onCancel: () => void;
   onSubmit: (values: AddressFormValues) => void;
-}
-
-interface FieldProps {
-  name: keyof AddressFormValues;
-  label: string;
-  control: ReturnType<typeof useForm<AddressFormValues>>['control'];
-}
-
-function Field({ name, label, control }: Readonly<FieldProps>) {
-  return (
-    <Controller
-      name={name}
-      control={control}
-      render={({ field, fieldState }) => (
-        <YStack gap={4}>
-          <Text fontSize={11.5} fontWeight="600" color="$muted">
-            {label}
-          </Text>
-          <Input
-            testID={`address-${name}`}
-            aria-label={label}
-            value={field.value}
-            onChangeText={field.onChange}
-            onBlur={field.onBlur}
-            borderRadius={12}
-            borderColor={fieldState.error ? '$danger' : '$borderColor'}
-          />
-          {fieldState.error ? (
-            <Text fontSize={11} color="$danger" testID={`address-${name}-error`}>
-              {fieldState.error.message}
-            </Text>
-          ) : null}
-        </YStack>
-      )}
-    />
-  );
 }
 
 /** Add/edit sheet for one saved address (React Hook Form + Zod). RN twin of
@@ -106,7 +71,12 @@ export function AddressFormSheet({
     <Modal visible={open} transparent animationType="slide" onRequestClose={onCancel}>
       <ModalThemeScope>
         <KeyboardScreen>
-          <YStack flex={1} justifyContent="flex-end" testID="address-form-sheet">
+          <YStack
+            flex={1}
+            justifyContent="flex-end"
+            testID="address-form-sheet"
+            onAccessibilityEscape={onCancel}
+          >
             <YStack
               pressStyle={PRESS_STYLE.surface}
               role="button"
@@ -128,7 +98,13 @@ export function AddressFormSheet({
               paddingBottom={16 + bottomInset}
               gap={10}
             >
-              <Text fontSize={17} fontWeight="700" color="$color">
+              <Text
+                testID="address-form-title"
+                role="heading"
+                fontSize={17}
+                fontWeight="700"
+                color="$color"
+              >
                 {title}
               </Text>
               <ScrollView>
@@ -150,6 +126,7 @@ export function AddressFormSheet({
                   testID="address-cancel"
                   role="button"
                   aria-label={t('mweb.common.cancel')}
+                  tabIndex={0}
                   onPress={onCancel}
                   flex={1}
                   height={46}
@@ -169,6 +146,7 @@ export function AddressFormSheet({
                   role="button"
                   aria-label={t('mweb.account.saveAddress')}
                   aria-disabled={saving}
+                  tabIndex={0}
                   onPress={saving ? undefined : handleSubmit(onSubmit)}
                   flex={1}
                   height={46}

@@ -23,6 +23,7 @@ export default function PetSummary({ pet }: Readonly<PetSummaryProps>) {
       <Avatar
         data-testid="pet-summary-avatar"
         src={pet?.photo_url || undefined}
+        alt=""
         sx={{
           width: 88,
           height: 88,

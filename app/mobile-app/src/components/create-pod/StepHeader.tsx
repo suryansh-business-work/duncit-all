@@ -39,7 +39,14 @@ export function StepHeader({ step, podMode }: Readonly<Props>) {
         ))}
       </XStack>
       <XStack alignItems="center" justifyContent="space-between" gap={8}>
-        <Text flex={1} fontSize={20} fontWeight="600" color="$color">
+        <Text
+          testID="create-pod-step-title"
+          role="heading"
+          flex={1}
+          fontSize={20}
+          fontWeight="600"
+          color="$color"
+        >
           {titleKey ? t(titleKey) : ''}
         </Text>
         <AiMonitorChip onPress={() => setGuideOpen(true)} />

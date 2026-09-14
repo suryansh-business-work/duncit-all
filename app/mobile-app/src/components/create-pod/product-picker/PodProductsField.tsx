@@ -80,6 +80,7 @@ export function PodProductsField({ value, onChange, products, error }: Readonly<
           so the door stays shut — mWeb disables the same button (rule 27). */}
       <XStack
         testID="product-add"
+        tabIndex={0}
         role="button"
         aria-label={t('podProduct.addButton')}
         aria-disabled={noProducts}
@@ -95,7 +96,7 @@ export function PodProductsField({ value, onChange, products, error }: Readonly<
         pressStyle={PRESS_STYLE.ghost}
       >
         <MaterialIcons name="add-shopping-cart" size={18} color={primary} />
-        <Text fontSize={15} fontWeight="600" color="$primary">
+        <Text fontSize={15} fontWeight="600" color="$accent">
           {t('podProduct.addButton')}
         </Text>
       </XStack>
@@ -113,7 +114,7 @@ export function PodProductsField({ value, onChange, products, error }: Readonly<
       ) : null}
 
       {error ? (
-        <Text testID="product-error" fontSize={12} color="$danger">
+        <Text role="alert" testID="product-error" fontSize={12} color="$danger">
           {error}
         </Text>
       ) : null}

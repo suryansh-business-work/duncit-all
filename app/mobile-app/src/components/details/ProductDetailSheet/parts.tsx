@@ -34,6 +34,10 @@ export function VariantChips({
             key={v.id}
             testID={`variant-${v.id}`}
             role="button"
+            aria-pressed={selected}
+            accessibilityState={{ selected }}
+            tabIndex={0}
+            hitSlop={4}
             onPress={() => onSelectVariant(v.id)}
             alignItems="center"
             height={36}
@@ -76,6 +80,7 @@ export function ProductGallery({
             key={url}
             testID={`product-detail-image-${imageIndex}`}
             role="button"
+            tabIndex={0}
             aria-label={t('mweb.common.zoomImage')}
             onPress={() => onZoom(imageIndex)}
             width={slide}
@@ -111,6 +116,7 @@ export function BrandPill({
     <XStack
       testID="product-detail-brand"
       role={brandId ? 'button' : undefined}
+      tabIndex={brandId ? 0 : undefined}
       aria-label={brandId ? `View ${brandName}` : undefined}
       onPress={brandId ? () => onOpenBrand(brandId) : undefined}
       alignSelf="flex-start"

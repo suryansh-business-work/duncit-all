@@ -58,6 +58,7 @@ function FilterChipRow({
               clickable
               color={selected ? 'primary' : 'default'}
               variant={selected ? 'filled' : 'outlined'}
+              aria-pressed={selected}
               onClick={() => onSelect(val)}
               sx={CHIP_SX}
             />
@@ -109,7 +110,7 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
                 </InputAdornment>
               ),
             },
-            htmlInput: { 'data-testid': 'shop-search-input' },
+            htmlInput: { 'data-testid': 'shop-search-input', 'aria-label': t('mweb.shop.searchProducts') },
           }}
         />
         {/* The round green filter button; a darker green while the panel is open. */}

@@ -136,6 +136,7 @@ export default function BackupsTable({
 
   return (
     <DuncitTable<BackupRow>
+      ariaLabel={t('tech.dbBackup.title')}
       tableId="tech-db-backups"
       columns={columns}
       fetchRows={fetchRows}

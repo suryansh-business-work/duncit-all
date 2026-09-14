@@ -129,7 +129,7 @@ export default function CropDialog({ open, src, saving, onCancel, onConfirm }: R
           variant="contained"
           onClick={confirm}
           disabled={busy || !area}
-          startIcon={busy ? <CircularProgress size={16} color="inherit" /> : undefined}
+          startIcon={busy ? <CircularProgress size={16} color="inherit" aria-hidden /> : undefined}
         >
           {busy ? 'Saving…' : 'Save'}
         </DuncitButton>

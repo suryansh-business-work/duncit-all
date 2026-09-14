@@ -28,7 +28,7 @@ export default function BadgesPage() {
   if (loading && !data) {
     body = (
       <Stack sx={{ alignItems: 'center', py: 4 }} data-testid="badges-loading">
-        <CircularProgress size={24} />
+        <CircularProgress size={24} aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   } else if (error) {

@@ -38,7 +38,7 @@ export default function ShopPage() {
           alignItems: "center",
           p: 6
         }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   if (error) return <Alert data-testid="shop-error" severity="error">{error.message}</Alert>;

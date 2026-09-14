@@ -23,6 +23,7 @@ function MoreWayCard({ section, onPress }: Readonly<MoreWayCardProps>) {
     <SurfaceCard
       testID={`support-more-${section.key}`}
       role="button"
+      tabIndex={0}
       aria-label={title}
       onPress={onPress}
       flexBasis="45%"

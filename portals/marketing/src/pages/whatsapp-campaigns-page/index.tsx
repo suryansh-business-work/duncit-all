@@ -106,7 +106,7 @@ export default function WhatsappCampaignsPage() {
       <Stack spacing={0.25} sx={{
         mb: 2
       }}>
-        <Typography variant="h5" sx={{
+        <Typography variant="h5" component="h1" sx={{
           fontWeight: 700
         }}>
           WhatsApp

@@ -72,7 +72,7 @@ export default function SelectionPanel({
               <ImageNotSupportedIcon color="disabled" />
             )}
           </Box>
-          <Typography variant="h6">{product.product_name}</Typography>
+          <Typography variant="h6" component="h3">{product.product_name}</Typography>
           <Stack
             direction="row"
             sx={{
@@ -81,7 +81,7 @@ export default function SelectionPanel({
               gap: 1
             }}>
             <Typography variant="subtitle1" sx={{
-              color: "primary.main"
+              color: "accent.main"
             }}>
               {t('podProduct.perUnit', { vars: { cost: formatMoney(product.unit_cost) } })}
             </Typography>

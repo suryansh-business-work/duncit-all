@@ -68,6 +68,7 @@ export function CoinRedeemField({ coins }: Readonly<{ coins: CoinRedemption }>) 
         <XStack
           testID="coin-remove"
           role="button"
+          tabIndex={0}
           aria-label={removeLabel}
           onPress={coins.onRemove}
           paddingHorizontal={8}
@@ -91,6 +92,7 @@ export function CoinRedeemField({ coins }: Readonly<{ coins: CoinRedemption }>) 
       <XStack
         testID="coin-apply"
         role="button"
+        tabIndex={0}
         aria-label={applyLabel}
         aria-disabled={!canApply}
         onPress={canApply ? coins.onApply : undefined}

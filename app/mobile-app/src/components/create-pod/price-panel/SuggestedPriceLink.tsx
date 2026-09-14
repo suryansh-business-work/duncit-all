@@ -14,6 +14,7 @@ export function SuggestedPriceLink({ onPress }: Readonly<{ onPress: () => void }
   return (
     <XStack
       testID="suggested-price-link"
+      tabIndex={0}
       role="button"
       aria-label={label}
       onPress={onPress}
@@ -21,7 +22,7 @@ export function SuggestedPriceLink({ onPress }: Readonly<{ onPress: () => void }
       gap={4}
       pressStyle={PRESS_STYLE.inline}
     >
-      <Text fontSize={13} fontWeight="600" color="$primary">
+      <Text fontSize={13} fontWeight="600" color="$accent">
         {label}
       </Text>
       <MaterialIcons name="info-outline" size={15} color={primary} />

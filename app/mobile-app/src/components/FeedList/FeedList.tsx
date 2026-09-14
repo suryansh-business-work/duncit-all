@@ -56,6 +56,7 @@ export function FeedList<T>({
           <Reveal scale>
             <Text
               testID={`${testID}-empty`}
+              role="status"
               textAlign="center"
               fontSize={13}
               color="$muted"

@@ -27,6 +27,7 @@ export function ChatWithUsScreen() {
         <SurfaceCard
           testID="chat-live-card"
           role="button"
+          tabIndex={0}
           aria-label={t('mweb.chatWithUs.chatLiveWithAnAgent')}
           onPress={() => navigation.navigate('LiveChat')}
           flexDirection="row"

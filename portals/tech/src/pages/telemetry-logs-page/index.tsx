@@ -64,7 +64,7 @@ export default function TelemetryLogsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5">{t('tech.telemetryLogs.telemetryLogs')}</Typography>
+        <Typography variant="h5" component="h1">{t('tech.telemetryLogs.telemetryLogs')}</Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>

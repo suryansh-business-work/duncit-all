@@ -37,6 +37,8 @@ export default function LocationCityCard({ location, active, onSelect }: Readonl
       }}
     >
       <CardActionArea
+        data-testid={`${cardTestId}-select`}
+        aria-pressed={active}
         onClick={onSelect}
         sx={{
           position: 'relative',

@@ -114,7 +114,7 @@ export default function BrandingPage() {
       }}>
         <BrandingWatermarkIcon color="primary" />
         <Box>
-          <Typography variant="h5">{t('admin.branding.title')}</Typography>
+          <Typography variant="h5" component="h1">{t('admin.branding.title')}</Typography>
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>

@@ -1,6 +1,7 @@
 import { useWatch, type Control } from 'react-hook-form';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { useLoadingRegion } from '@/components/Skeleton';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { CheckoutContact, CheckoutFormValues } from './checkout.types';
 
@@ -44,6 +45,7 @@ export function CheckoutContactFields({
   loading,
 }: Readonly<CheckoutContactFieldsProps>) {
   const { t } = useTranslation();
+  const loadingRegion = useLoadingRegion(t('mweb.checkout.contactLoading'));
   const [fullName, email, phoneExtension, phoneNumber] = useWatch({
     control,
     name: ['full_name', 'email', 'phone_extension', 'phone_number'],
@@ -57,6 +59,7 @@ export function CheckoutContactFields({
   return (
     <YStack gap={10}>
       <Text
+        role="heading"
         fontSize={12}
         fontWeight="700"
         color="$muted"
@@ -75,7 +78,7 @@ export function CheckoutContactFields({
         borderColor="$borderColor"
       >
         {loading ? (
-          <XStack testID="checkout-contact-loading" alignItems="center" gap={8}>
+          <XStack testID="checkout-contact-loading" alignItems="center" gap={8} {...loadingRegion}>
             <Spinner color="$primary" />
             <Text fontSize={13} color="$muted">
               {t('mweb.checkout.contactLoading')}

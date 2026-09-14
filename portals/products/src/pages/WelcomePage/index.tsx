@@ -134,7 +134,7 @@ export default function WelcomePage() {
       dashboardId="products.overview"
       header={
         <Box>
-          <Typography variant="h4" sx={{
+          <Typography component="h1" variant="h4" sx={{
             fontWeight: 800
           }}>
             Dashboard

@@ -116,6 +116,7 @@ export default function LeadsTable({
 
   return (
     <DuncitTable<LeadRow>
+      ariaLabel={t('shell.nav.whatsappLeads')}
       tableId="crm-user-leads"
       columns={columns}
       fetchRows={fetchRows}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import {
   Box,
@@ -31,6 +31,7 @@ interface Props {
 
 export default function PortalEnvDrawer({ portal, onClose, onSaved }: Readonly<Props>) {
   const { t } = useTranslation();
+  const titleId = useId();
   const { data, loading } = useQuery<{ envEntries: EnvEntry[] }>(ENV_ENTRIES, {
     variables: { filter: {} },
     skip: !portal,
@@ -83,11 +84,11 @@ export default function PortalEnvDrawer({ portal, onClose, onSaved }: Readonly<P
 
   return (
     <Drawer anchor="right" open={!!portal} onClose={onClose} slotProps={{
-      paper: { sx: { width: { xs: '100%', sm: 420 } } }
+      paper: { 'aria-labelledby': titleId, sx: { width: { xs: '100%', sm: 420 } } }
     }}>
       <Stack sx={{ height: '100%' }}>
         <Box sx={{ p: 2 }}>
-          <Typography variant="h6" sx={{
+          <Typography variant="h6" component="h2" id={titleId} sx={{
             fontWeight: 800
           }}>{portal?.name}</Typography>
           <Typography variant="body2" sx={{

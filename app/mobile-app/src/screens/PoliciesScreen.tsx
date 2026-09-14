@@ -39,6 +39,7 @@ export function PoliciesScreen() {
                   testID={`policy-${policy.slug}`}
                   role="button"
                   aria-label={policy.title}
+                  tabIndex={0}
                   onPress={() => navigation.navigate('Policy', { slug: policy.slug })}
                   alignItems="center"
                   gap={12}
@@ -55,6 +56,8 @@ export function PoliciesScreen() {
                     backgroundColor="$soft"
                     alignItems="center"
                     justifyContent="center"
+                    accessibilityElementsHidden
+                    importantForAccessibility="no-hide-descendants"
                   >
                     <MaterialIcons name="description" size={20} color={accent} />
                   </YStack>

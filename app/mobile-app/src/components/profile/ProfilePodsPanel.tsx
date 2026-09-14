@@ -28,7 +28,7 @@ export function ProfilePodsPanel({ userId, kind }: Readonly<Props>) {
     return <ListSkeleton testID={`profile-pods-${kind}-loading`} />;
   if (error) {
     return (
-      <Text testID={`profile-pods-${kind}-error`} padding={24} color="$danger">
+      <Text testID={`profile-pods-${kind}-error`} role="alert" padding={24} color="$danger">
         {t('mweb.profile.podsLoadFailed')}
       </Text>
     );

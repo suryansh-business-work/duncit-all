@@ -31,6 +31,8 @@ export function ChannelLinkCard({ channel, icon, name, summary, onPress }: Reado
       testID={`comm-channel-${channel}`}
       role="button"
       aria-label={name}
+      accessibilityHint={summary}
+      tabIndex={0}
       onPress={onPress}
       paddingHorizontal={16}
       paddingVertical={14}

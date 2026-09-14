@@ -79,7 +79,7 @@ export default function TicketUserDetails({
       <Stack direction="row" spacing={1.5} sx={{
         alignItems: "center"
       }}>
-        <Avatar src={user.avatar_url || undefined} sx={{ width: 40, height: 40 }} />
+        <Avatar alt="" src={user.avatar_url || undefined} sx={{ width: 40, height: 40 }} />
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 800 }} noWrap>
             {user.name}

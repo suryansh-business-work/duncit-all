@@ -4,6 +4,7 @@ import { Spinner, Text, YStack } from 'tamagui';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -38,24 +39,32 @@ export function ExploreActionButton({
   testID,
   onLabelPress,
 }: Readonly<ExploreActionButtonProps>) {
+  const { t } = useTranslation();
   const { onPrimary } = useThemeColors();
+  // The count is its own button when it opens something (who liked): a
+  // pressable nested in the disc's button is hidden from VoiceOver (4.1.2).
+  const countA11y = onLabelPress
+    ? ({
+        role: 'button',
+        tabIndex: 0,
+        'aria-label': t('mweb.a11y.seeLikes', { vars: { count: caption ?? '' } }),
+      } as const)
+    : {};
   return (
-    <YStack
-      testID={testID}
-      role="button"
-      aria-label={label}
-      onPress={onPress}
-      alignItems="center"
-      gap={3}
-      pressStyle={PRESS_STYLE.row}
-    >
+    <YStack alignItems="center" gap={3}>
       <YStack
+        testID={testID}
+        role="button"
+        tabIndex={0}
+        aria-label={label}
+        onPress={onPress}
         width={44}
         height={44}
         borderRadius={22}
         alignItems="center"
         justifyContent="center"
         backgroundColor={active ? '$accent' : REEL_SCRIM}
+        pressStyle={PRESS_STYLE.row}
       >
         {loading ? (
           <Spinner color={onPrimary} />
@@ -67,6 +76,8 @@ export function ExploreActionButton({
         <Text
           pressStyle={PRESS_STYLE.inline}
           testID={onLabelPress ? `${testID}-count` : undefined}
+          {...countA11y}
+          hitSlop={8}
           onPress={onLabelPress}
           fontSize={11}
           fontWeight="600"

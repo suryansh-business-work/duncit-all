@@ -36,7 +36,7 @@ function BoardList({
 }>) {
   return (
     <YStack testID={testID} gap={12}>
-      <Text accessibilityRole="header" fontSize={16} fontWeight="600" color="$color">
+      <Text testID={`${testID}-title`} role="heading" fontSize={16} fontWeight="600" color="$color">
         {title}
       </Text>
       {rows.length === 0 ? (
@@ -168,7 +168,13 @@ export function ChangeRequestBoard({ role, testID = 'change-requests' }: Readonl
       />
 
       {state.isLoading ? (
-        <Spinner testID={`${testID}-loading`} size="small" color="$primary" />
+        <Spinner
+          role="progressbar"
+          aria-label={t('mweb.a11y.loading')}
+          testID={`${testID}-loading`}
+          size="small"
+          color="$primary"
+        />
       ) : null}
     </YStack>
   );

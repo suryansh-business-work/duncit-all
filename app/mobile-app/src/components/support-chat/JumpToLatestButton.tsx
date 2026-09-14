@@ -21,6 +21,8 @@ export function JumpToLatestButton({ testID, bottom, onPress }: Readonly<Props>)
       pressStyle={PRESS_STYLE.surface}
       testID={testID}
       role="button"
+      tabIndex={0}
+      hitSlop={2}
       aria-label={t('mweb.common.jumpToLatest')}
       onPress={onPress}
       position="absolute"

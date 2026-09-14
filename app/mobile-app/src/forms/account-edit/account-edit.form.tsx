@@ -119,7 +119,7 @@ export function AccountEditForm({
   return (
     <YStack gap={14}>
       {errorMessage ? (
-        <Text fontSize={14} color="$danger" testID="account-edit-error">
+        <Text fontSize={14} color="$danger" testID="account-edit-error" role="alert">
           {errorMessage}
         </Text>
       ) : null}
@@ -138,6 +138,8 @@ export function AccountEditForm({
             label={t('mweb.common.firstName')}
             required
             autoCapitalize="words"
+            autoComplete="given-name"
+            textContentType="givenName"
           />
         </YStack>
         <YStack flex={1}>
@@ -146,6 +148,8 @@ export function AccountEditForm({
             name="last_name"
             label={t('mweb.common.lastName')}
             autoCapitalize="words"
+            autoComplete="family-name"
+            textContentType="familyName"
           />
         </YStack>
       </XStack>
@@ -171,7 +175,14 @@ export function AccountEditForm({
 
       <LocationSelect control={control} setValue={setValue} />
 
-      <Text fontSize={15} fontWeight="600" color="$color" paddingTop={4}>
+      <Text
+        testID="account-edit-address-title"
+        role="heading"
+        fontSize={15}
+        fontWeight="600"
+        color="$color"
+        paddingTop={4}
+      >
         Main address
       </Text>
       <AddressFields control={control} names={ADDRESS_NAMES} pincodeHint="6-digit PIN code" />

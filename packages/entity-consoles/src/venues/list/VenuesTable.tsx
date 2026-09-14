@@ -116,6 +116,7 @@ export default function VenuesTable({
 
   return (
     <DuncitTable<VenueRow>
+      ariaLabel={t('admin.clubs.venues')}
       tableId="admin-venues"
       columns={columns}
       fetchRows={fetchRows}

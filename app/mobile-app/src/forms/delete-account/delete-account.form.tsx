@@ -41,6 +41,8 @@ export function DeleteAccountForm({
         label={t('mweb.account.deletion.otpLabel')}
         placeholder={t('mweb.account.deletion.otpPlaceholder')}
         keyboardType="number-pad"
+        autoComplete="sms-otp"
+        textContentType="oneTimeCode"
         digitsOnly
         maxLength={6}
         required
@@ -56,7 +58,7 @@ export function DeleteAccountForm({
         numberOfLines={3}
       />
       {errorMessage ? (
-        <Text fontSize={14} color="$danger" testID="delete-account-error">
+        <Text fontSize={14} color="$danger" testID="delete-account-error" role="alert">
           {errorMessage}
         </Text>
       ) : null}

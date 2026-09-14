@@ -79,7 +79,7 @@ export default function ClubFriendsSection({ friendIds }: Readonly<Props>) {
             {friends.map((f) => (
               <ListItem key={f.user_id} data-testid={`club-friend-${f.user_id}`}>
                 <ListItemAvatar>
-                  <Avatar src={f.profile_photo}>{f.full_name?.[0]}</Avatar>
+                  <Avatar alt="" src={f.profile_photo}>{f.full_name?.[0]}</Avatar>
                 </ListItemAvatar>
                 <ListItemText primary={f.full_name} />
               </ListItem>

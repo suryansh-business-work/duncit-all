@@ -81,6 +81,8 @@ export default function CreateKeyDialog({ open, busy, rawKey, error, onCreate, o
             />
             {copied && (
               <Typography
+                role="status"
+                data-testid="create-key-copied"
                 variant="caption"
                 sx={{
                   color: "success.main",

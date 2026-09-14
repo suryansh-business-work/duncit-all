@@ -1,5 +1,5 @@
 import { useQuery } from '@apollo/client/react';
-import { Alert, Box, Chip, CircularProgress, Paper, Stack, Typography } from '@mui/material';
+import { Alert, Box, CardActionArea, Chip, CircularProgress, Paper, Stack, Typography } from '@mui/material';
 import { useNavigate } from 'react-router';
 import { formatDistanceToNowStrict } from 'date-fns';
 import SupportShell from './SupportShell';
@@ -45,7 +45,7 @@ export default function AllTicketsPage() {
   if (loading && rows.length === 0) {
     body = (
       <Box data-testid="all-tickets-loading" sx={{ display: 'grid', placeItems: 'center', py: 5 }}>
-        <CircularProgress size={28} />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} size={28} />
       </Box>
     );
   } else if (error) {
@@ -62,42 +62,44 @@ export default function AllTicketsPage() {
         {rows.map((row, index) => {
           const target = targetFor(row);
           return (
-            <Stack
+            <CardActionArea
               key={`${row.source}-${row.id}`}
               data-testid={`all-ticket-${row.ticket_no}`}
-              direction="row"
-              spacing={1.5}
+              disabled={!target}
               onClick={() => target && navigate(target)}
-              sx={{
-                alignItems: 'center',
-                minWidth: 0,
-                px: 2,
-                py: 1.75,
-                cursor: target ? 'pointer' : 'default',
-                borderTop: index === 0 ? 0 : 1,
-                borderColor: 'divider',
-              }}
+              sx={{ borderTop: index === 0 ? 0 : 1, borderColor: 'divider', borderRadius: 0 }}
             >
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                  <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                    {row.ticket_no}
+              <Stack
+                direction="row"
+                spacing={1.5}
+                sx={{
+                  alignItems: 'center',
+                  minWidth: 0,
+                  px: 2,
+                  py: 1.75,
+                }}
+              >
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                      {row.ticket_no}
+                    </Typography>
+                    <Chip
+                      size="small"
+                      label={SOURCE_LABEL[row.source]}
+                      sx={{ height: 22, fontSize: '0.6875rem', bgcolor: 'action.hover' }}
+                    />
+                  </Stack>
+                  <Typography sx={{ fontSize: '0.9375rem', fontWeight: 600, mt: 0.25 }} noWrap>
+                    {row.title}
                   </Typography>
-                  <Chip
-                    size="small"
-                    label={SOURCE_LABEL[row.source]}
-                    sx={{ height: 22, fontSize: '0.6875rem', bgcolor: 'action.hover' }}
-                  />
-                </Stack>
-                <Typography sx={{ fontSize: '0.9375rem', fontWeight: 600, mt: 0.25 }} noWrap>
-                  {row.title}
-                </Typography>
-                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                  {formatDistanceToNowStrict(new Date(row.created_at))} ago
-                </Typography>
-              </Box>
-              <Chip size="small" label={row.status} sx={{ bgcolor: 'action.hover' }} />
-            </Stack>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    {formatDistanceToNowStrict(new Date(row.created_at))} ago
+                  </Typography>
+                </Box>
+                <Chip size="small" label={row.status} sx={{ bgcolor: 'action.hover' }} />
+              </Stack>
+            </CardActionArea>
           );
         })}
       </Paper>

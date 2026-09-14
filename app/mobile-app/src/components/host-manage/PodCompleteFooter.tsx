@@ -67,6 +67,7 @@ export function PodCompleteFooter({
     <XStack gap={12}>
       <XStack
         testID="pod-complete-cancel"
+        tabIndex={0}
         role="button"
         aria-label={cancelLabel}
         aria-disabled={busy}
@@ -87,6 +88,7 @@ export function PodCompleteFooter({
       </XStack>
       <XStack
         testID="pod-complete-submit"
+        tabIndex={0}
         role="button"
         aria-label={submitAriaLabel}
         aria-disabled={busy}

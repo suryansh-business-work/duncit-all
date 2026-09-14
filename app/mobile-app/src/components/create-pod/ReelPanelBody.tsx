@@ -59,6 +59,8 @@ export function ReelPanelBody({
           </Text>
           <XStack
             testID="reel-remove"
+            tabIndex={0}
+            hitSlop={6}
             role="button"
             aria-label={t('mweb.createPod.removeReel')}
             onPress={onRemove}
@@ -75,6 +77,7 @@ export function ReelPanelBody({
       ) : (
         <XStack
           testID="reel-upload-add"
+          tabIndex={0}
           role="button"
           aria-label={t('mweb.createPod.reelUploadAria')}
           aria-disabled={uploading}
@@ -102,7 +105,7 @@ export function ReelPanelBody({
         </XStack>
       )}
       {error ? (
-        <Text testID="reel-upload-error" fontSize={12} color="$danger">
+        <Text role="alert" testID="reel-upload-error" fontSize={12} color="$danger">
           {error}
         </Text>
       ) : null}

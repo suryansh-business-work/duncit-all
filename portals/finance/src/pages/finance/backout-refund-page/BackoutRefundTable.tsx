@@ -178,6 +178,7 @@ export default function BackoutRefundTable({
 
   return (
     <DuncitTable<BackoutRefundRequest>
+      ariaLabel={t('finance.backoutRefund.backoutRefunds')}
       tableId="finance-backout-refunds"
       columns={columns}
       fetchRows={fetchRows}

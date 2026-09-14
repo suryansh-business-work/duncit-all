@@ -135,6 +135,7 @@ export default function AisensyTemplates({ onOpenLogs }: Readonly<Props>) {
         emptyText={t('marketing.whatsappCampaigns.aisensyReturnedNoTemplatesForThis')}
       >
         <DuncitTable<TemplateSendRow>
+          ariaLabel={t('shell.nav.templates')}
           tableId="marketing-aisensy-templates"
           columns={columns}
           fetchRows={fetchRows}

@@ -42,7 +42,13 @@ export default function SignupStepperRail({ step, askingNumber }: Readonly<Props
         current={current}
         label={labels.stepOf(current, SIGNUP_STEP_COUNT)}
       />
-      <Typography sx={{ fontSize: 17, fontWeight: 600, textAlign: 'center' }}>{title}</Typography>
+      <Typography
+        component="h2"
+        data-testid="signup-stepper-title"
+        sx={{ fontSize: 17, fontWeight: 600, textAlign: 'center' }}
+      >
+        {title}
+      </Typography>
     </Stack>
   );
 }

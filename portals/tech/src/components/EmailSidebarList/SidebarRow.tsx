@@ -21,6 +21,8 @@ export default function SidebarRow({
   return (
     <ListItemButton
       selected={selected}
+      aria-current={selected}
+      data-testid="email-sidebar-row"
       onClick={() => onSelect(item.key)}
       sx={{ alignItems: 'flex-start', gap: 1 }}
     >

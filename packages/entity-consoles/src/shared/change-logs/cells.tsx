@@ -36,7 +36,7 @@ export const renderField = (row: EntityChangeLogRow) => (
 function renderValue(value: string) {
   if (!value) {
     return (
-      <Typography variant="caption" component="span" sx={{ color: 'text.disabled' }}>
+      <Typography variant="caption" component="span" sx={{ color: 'text.secondary' }}>
         {EMPTY}
       </Typography>
     );

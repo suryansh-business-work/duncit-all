@@ -24,6 +24,7 @@ function PeriodArrow({ testID, label, icon, enabled, tint, onPress }: Readonly<A
   return (
     <XStack
       testID={testID}
+      tabIndex={0}
       role="button"
       aria-label={label}
       aria-disabled={!enabled}
@@ -79,11 +80,12 @@ export function AvailabilityToolbar({
   return (
     <YStack gap={12} testID="availability-toolbar">
       <XStack alignItems="center" justifyContent="space-between" gap={8} flexWrap="wrap">
-        <XStack gap={6} aria-label={t('availability.toolbar.calendarView')}>
+        <XStack gap={6} role="radiogroup" aria-label={t('availability.toolbar.calendarView')}>
           {VIEWS.map((option) => (
             <SelectChip
               key={option}
               testID={`availability-view-${option}`}
+              role="radio"
               label={viewLabels[option]}
               selected={option === view}
               onPress={() => onView(option)}

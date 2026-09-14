@@ -65,10 +65,17 @@ export function StudioSwitchDialog({
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
       <ModalThemeScope>
-        <YStack flex={1} alignItems="center" justifyContent="center" testID="studio-switch-dialog">
+        <YStack
+          flex={1}
+          alignItems="center"
+          justifyContent="center"
+          testID="studio-switch-dialog"
+          onAccessibilityEscape={onClose}
+        >
           <YStack
             pressStyle={PRESS_STYLE.surface}
             testID="studio-switch-backdrop"
+            importantForAccessibility="no"
             role="button"
             aria-label={t('mweb.common.close')}
             onPress={onClose}
@@ -88,19 +95,33 @@ export function StudioSwitchDialog({
             gap={14}
           >
             <SafeAreaView edges={[]}>
-              <Text fontSize={18} fontWeight="600" color="$color" paddingBottom={16}>
+              <Text
+                testID="studio-switch-title"
+                role="heading"
+                fontSize={18}
+                fontWeight="600"
+                color="$color"
+                paddingBottom={16}
+              >
                 {t('mweb.common.switchRole')}
               </Text>
-              <XStack justifyContent="center" gap={16} paddingBottom={16}>
+              <XStack
+                justifyContent="center"
+                gap={16}
+                paddingBottom={16}
+                role="radiogroup"
+                aria-label={t('mweb.common.switchRole')}
+              >
                 {availableModes(roles, { products: showProducts }).map((option) => {
                   const selected = option.mode === pending;
                   return (
                     <YStack
                       key={option.mode}
                       testID={`studio-switch-${option.mode}`}
-                      role="button"
+                      tabIndex={0}
+                      role="radio"
                       aria-label={STUDIO_LABEL[option.mode]}
-                      aria-pressed={selected}
+                      aria-checked={selected}
                       onPress={() => setPending(option.mode)}
                       width={52}
                       height={52}

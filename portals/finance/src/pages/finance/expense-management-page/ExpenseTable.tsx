@@ -204,6 +204,7 @@ export default function ExpenseTable({
 
   return (
     <DuncitTable<ExpenseRecord>
+      ariaLabel={t('shell.nav.expenses')}
       tableId="finance-expenses"
       columns={columns}
       fetchRows={fetchRows}

@@ -87,7 +87,12 @@ export default function RulesTable({
 
   const columns = useMemo<DuncitColumn<RateLimitRuleRow>[]>(() => {
     const renderEnabled = (row: RateLimitRuleRow) => (
-      <Switch size="small" checked={row.enabled} onChange={() => onToggle(row)} />
+      <Switch
+        size="small"
+        slotProps={{ input: { 'aria-label': t('shell.a11y.fieldOf', { vars: { field: t('tech.rateLimit.field.enabled'), name: row.name } }), 'data-testid': 'rate-limit-rules-enabled-toggle' } as Record<string, string> }}
+        checked={row.enabled}
+        onChange={() => onToggle(row)}
+      />
     );
     return [
       {

@@ -58,7 +58,7 @@ export function MailPreferenceScreen() {
   const failed = state.loadFailed || !preference;
   const body = failed ? (
     <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
-      <Text testID="mail-preference-error" color="$muted">
+      <Text testID="mail-preference-error" role="alert" color="$muted">
         {t('mailPreference.loadFailed')}
       </Text>
     </YStack>
@@ -69,12 +69,12 @@ export function MailPreferenceScreen() {
       </Text>
 
       {state.saveFailed ? (
-        <Text testID="mail-preference-save-error" fontSize={12.5} color="$danger">
+        <Text testID="mail-preference-save-error" role="alert" fontSize={12.5} color="$danger">
           {t('mailPreference.saveFailed')}
         </Text>
       ) : null}
       {state.saved && !state.saveFailed ? (
-        <Text testID="mail-preference-saved" fontSize={12.5} color="$success">
+        <Text testID="mail-preference-saved" role="status" fontSize={12.5} color="$success">
           {savedMessage}
         </Text>
       ) : null}

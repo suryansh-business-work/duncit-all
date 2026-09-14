@@ -49,6 +49,7 @@ function StepButton({ testID, label, icon, onPress, color }: Readonly<StepButton
   return (
     <XStack
       testID={testID}
+      tabIndex={0}
       role="button"
       aria-label={label}
       onPress={onPress}
@@ -144,7 +145,7 @@ export function SpotsStepper({
           ) : null}
         </YStack>
         {error ? (
-          <Text testID="no_of_spots_text-error" fontSize={12} color="$danger">
+          <Text role="alert" testID="no_of_spots_text-error" fontSize={12} color="$danger">
             {error}
           </Text>
         ) : null}
@@ -211,7 +212,7 @@ export function SpotsStepper({
         )}
       </XStack>
       {error ? (
-        <Text testID="no_of_spots_text-error" fontSize={12} color="$danger">
+        <Text role="alert" testID="no_of_spots_text-error" fontSize={12} color="$danger">
           {error}
         </Text>
       ) : null}

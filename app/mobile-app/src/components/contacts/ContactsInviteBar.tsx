@@ -44,6 +44,7 @@ export function ContactsInviteBar({
       {result ? (
         <Text
           testID="contacts-invite-result"
+          role="status"
           fontSize={13}
           color={result.sent > 0 ? '$success' : '$danger'}
         >
@@ -51,7 +52,7 @@ export function ContactsInviteBar({
         </Text>
       ) : null}
       {error ? (
-        <Text testID="contacts-invite-error" fontSize={13} color="$danger">
+        <Text testID="contacts-invite-error" role="alert" fontSize={13} color="$danger">
           {toErrorMessage(error)}
         </Text>
       ) : null}

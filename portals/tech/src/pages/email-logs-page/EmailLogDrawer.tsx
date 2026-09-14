@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { Box, CircularProgress, Divider, Drawer, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -35,6 +36,7 @@ const drawerTabs = (t: Translate): DuncitTabItem<TabKey>[] => [
  */
 export default function EmailLogDrawer({ logId, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
+  const titleId = useId();
   // Own key — the drawer opens over the Email Logs table, not instead of it.
   const tabs = useTabParam<TabKey>({
     items: drawerTabs(t),
@@ -64,7 +66,7 @@ export default function EmailLogDrawer({ logId, onClose }: Readonly<Props>) {
       open={Boolean(logId)}
       onClose={onClose}
       slotProps={{
-        paper: { sx: { width: { xs: '100%', md: 720 }, maxWidth: '100%' } }
+        paper: { 'aria-labelledby': titleId, sx: { width: { xs: '100%', md: 720 }, maxWidth: '100%' } }
       }}
     >
       <Stack
@@ -75,7 +77,7 @@ export default function EmailLogDrawer({ logId, onClose }: Readonly<Props>) {
           p: 2,
           pb: 1
         }}>
-        <Typography variant="h6" sx={{ flex: 1, minWidth: 0 }} noWrap>
+        <Typography variant="h6" component="h2" id={titleId} sx={{ flex: 1, minWidth: 0 }} noWrap>
           {row?.subject || 'Email'}
         </Typography>
         <DuncitIconButton onClick={onClose} aria-label={t('shell.common.close')}>

@@ -87,6 +87,7 @@ export function ChargeSection({
         <XStack
           flex={1}
           testID={testID}
+          tabIndex={0}
           role="button"
           aria-label={title}
           aria-expanded={open}
@@ -114,6 +115,7 @@ export function ChargeSection({
         </XStack>
         <XStack
           testID={`${testID}-info`}
+          tabIndex={0}
           role="button"
           aria-label={t('earnings.statement.whyThisCharge')}
           aria-expanded={info}

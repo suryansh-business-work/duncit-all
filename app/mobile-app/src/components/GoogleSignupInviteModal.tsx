@@ -48,9 +48,11 @@ export function GoogleSignupInviteModal({ open, email, onAccept, onDismiss }: Re
             right={0}
             bottom={0}
             backgroundColor="rgba(0,0,0,0.55)"
+            importantForAccessibility="no"
           />
           <YStack
             testID="google-signup-invite"
+            onAccessibilityEscape={onDismiss}
             width="88%"
             maxWidth={420}
             backgroundColor="$surface"
@@ -60,7 +62,14 @@ export function GoogleSignupInviteModal({ open, email, onAccept, onDismiss }: Re
           >
             <XStack alignItems="center" gap={8}>
               <MaterialIcons name="person-add" size={20} color={accent} />
-              <Text fontSize={17} fontWeight="600" color="$color" flexShrink={1}>
+              <Text
+                testID="google-signup-invite-title"
+                role="heading"
+                fontSize={17}
+                fontWeight="600"
+                color="$color"
+                flexShrink={1}
+              >
                 {t('mweb.login.googleNotFoundTitle')}
               </Text>
             </XStack>
@@ -77,6 +86,7 @@ export function GoogleSignupInviteModal({ open, email, onAccept, onDismiss }: Re
                 testID="google-signup-dismiss"
                 role="button"
                 aria-label={t('mweb.login.googleNotFoundDismiss')}
+                tabIndex={0}
                 onPress={onDismiss}
                 flex={1}
                 height={44}
@@ -95,6 +105,7 @@ export function GoogleSignupInviteModal({ open, email, onAccept, onDismiss }: Re
                 testID="google-signup-accept"
                 role="button"
                 aria-label={t('mweb.login.googleNotFoundAction')}
+                tabIndex={0}
                 onPress={onAccept}
                 flex={1.4}
                 height={44}

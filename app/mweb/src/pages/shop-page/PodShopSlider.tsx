@@ -1,13 +1,15 @@
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 import { useNavigate } from 'react-router';
+import { useState } from 'react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography, useMediaQuery } from '@mui/material';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { DuncitButton } from '@duncit/buttons';
 import VideoMedia from '../../components/media/VideoMedia';
+import SlideshowToggle from '../pod-details-page/SlideshowToggle';
 
 export const POD_SHOP_SLIDER = gql`
   query PodShopSlider {
@@ -56,6 +58,7 @@ function SlideOverlay({ media, onCta }: Readonly<{ media: SliderMedia; onCta: (u
       {media.heading ? (
         <Typography
           variant="h4"
+          component="h2"
           sx={{ color: 'common.white', fontWeight: 600, lineHeight: 1.1, maxWidth: 360 }}
         >
           {media.heading}
@@ -97,6 +100,9 @@ export default function PodShopSlider() {
   const { data } = useQuery<any>(POD_SHOP_SLIDER, { fetchPolicy: 'cache-and-network' });
   const media = [...(data?.branding?.pod_shop_slider ?? [])] as SliderMedia[];
   media.sort((a, b) => a.order - b.order);
+  const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+  const [pausedByUser, setPausedByUser] = useState<boolean | null>(null);
+  const playing = media.length > 1 && !(pausedByUser ?? reduceMotion);
 
   const onCta = (url: string) => {
     const target = url.trim();
@@ -113,6 +119,7 @@ export default function PodShopSlider() {
     <Box
       data-testid="pod-shop-slider"
       sx={{
+        position: 'relative',
         borderRadius: '24px',
         overflow: 'hidden',
         // Safari only clips a transformed slick track to the radius with this.
@@ -126,7 +133,7 @@ export default function PodShopSlider() {
         dots={media.length > 1}
         arrows={false}
         infinite={media.length > 1}
-        autoplay={media.length > 1}
+        autoplay={playing}
         autoplaySpeed={4500}
         slidesToShow={1}
         slidesToScroll={1}
@@ -147,6 +154,7 @@ export default function PodShopSlider() {
           </Stack>
         ))}
       </Slider>
+      {media.length > 1 && <SlideshowToggle corner="topRight" playing={playing} onToggle={() => setPausedByUser(playing)} />}
     </Box>
   );
 }

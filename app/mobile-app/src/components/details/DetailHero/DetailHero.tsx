@@ -68,6 +68,7 @@ export function DetailHero({
         pressStyle={PRESS_STYLE.surface}
         testID={`detail-hero-image-${i}`}
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.podDetails.viewImage')}
         onPress={() => setViewerIndex(item.viewerIndex)}
         width={width}
@@ -80,7 +81,13 @@ export function DetailHero({
 
   const topBar = (
     <XStack justifyContent="space-between" alignItems="center" pointerEvents="box-none">
-      <HeroButton testID="detail-back" icon="arrow-back" onPress={onBack} overMedia={fullBleed} />
+      <HeroButton
+        testID="detail-back"
+        icon="arrow-back"
+        label={t('mweb.common.back')}
+        onPress={onBack}
+        overMedia={fullBleed}
+      />
       <XStack gap={8}>{children}</XStack>
     </XStack>
   );

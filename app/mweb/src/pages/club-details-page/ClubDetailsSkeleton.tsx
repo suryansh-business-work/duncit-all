@@ -1,8 +1,10 @@
 import { Box, Skeleton, Stack } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export default function ClubDetailsSkeleton() {
+  const { t } = useTranslation();
   return (
-    <Stack data-testid="club-details-loading" spacing={3}>
+    <Stack data-testid="club-details-loading" spacing={3} role="progressbar" aria-busy aria-label={t('mweb.a11y.loading')}>
       <Skeleton variant="rectangular" height={280} sx={{ borderRadius: '24px' }} />
       <Stack direction="row" spacing={2} sx={{
         alignItems: "center"

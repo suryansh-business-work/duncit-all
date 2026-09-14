@@ -91,7 +91,7 @@ export default function PodAuditDetailDialog({ log, onClose }: Readonly<Props>) 
                 </Typography>
               )}
               <Divider />
-              <Typography variant="subtitle2" sx={{
+              <Typography variant="subtitle2" component="h3" sx={{
                 fontWeight: 800
               }}>
                 {t('clubAdmin.monitoring.changesCount', { vars: { total: log.changes.length } })}

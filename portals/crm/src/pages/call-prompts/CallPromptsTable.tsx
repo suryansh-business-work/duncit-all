@@ -72,6 +72,7 @@ export default function CallPromptsTable({
 
   return (
     <DuncitTable<CrmCallPrompt>
+      ariaLabel={t('shell.nav.staticContent')}
       tableId="crm-call-prompts"
       columns={columns}
       fetchRows={fetchRows}

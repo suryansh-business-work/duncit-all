@@ -48,7 +48,7 @@ export default function BrandSummaryCard({ brand, productsTo }: Readonly<Props>)
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{
             alignItems: { sm: 'center' }
           }}>
-            <Avatar src={brand.logo_url || undefined} variant="rounded" sx={{ width: 64, height: 64 }}>
+            <Avatar alt="" src={brand.logo_url || undefined} variant="rounded" sx={{ width: 64, height: 64 }}>
               {brand.brand_name?.[0]?.toUpperCase() ?? '?'}
             </Avatar>
             <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -59,7 +59,7 @@ export default function BrandSummaryCard({ brand, productsTo }: Readonly<Props>)
                   alignItems: "center",
                   flexWrap: "wrap"
                 }}>
-                <Typography variant="h6" sx={{
+                <Typography component="h2" variant="h6" sx={{
                   fontWeight: 800
                 }}>
                   {brand.brand_name}

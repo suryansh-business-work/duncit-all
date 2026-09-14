@@ -75,6 +75,7 @@ export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonl
               </Text>
               <XStack
                 testID={`moderation-fix-${violation.id}`}
+                tabIndex={0}
                 role="button"
                 aria-label={fixIn}
                 onPress={() => onJump(violation.stepIndex)}
@@ -84,7 +85,7 @@ export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonl
                 pressStyle={PRESS_STYLE.row}
               >
                 <MaterialIcons name="arrow-forward" size={14} color={primary} />
-                <Text fontSize={13} fontWeight="600" color="$primary">
+                <Text fontSize={13} fontWeight="600" color="$accent">
                   {fixIn}
                 </Text>
               </XStack>

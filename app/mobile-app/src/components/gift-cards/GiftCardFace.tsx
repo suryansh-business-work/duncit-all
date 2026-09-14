@@ -111,6 +111,7 @@ export function GiftCardFace({
             <Image
               source={{ uri: imageUrl }}
               style={{ width: 34, height: 34, borderRadius: 8 }}
+              accessible={false}
               contentFit="cover"
               onError={() => setIconFailed(true)}
             />

@@ -27,10 +27,10 @@ function BenefitCell({
 }: Readonly<{ value: string; yesLabel: string; noLabel: string }>) {
   const kind = membershipCellKind(value);
   if (kind === 'YES') {
-    return <CheckCircleIcon fontSize="small" color="success" aria-label={yesLabel} />;
+    return <CheckCircleIcon fontSize="small" color="success" aria-label={yesLabel} titleAccess={yesLabel} />;
   }
   if (kind === 'NO') {
-    return <RemoveIcon fontSize="small" sx={{ color: 'text.disabled' }} aria-label={noLabel} />;
+    return <RemoveIcon fontSize="small" sx={{ color: 'text.secondary' }} aria-label={noLabel} titleAccess={noLabel} />;
   }
   return (
     <Typography
@@ -112,7 +112,7 @@ export default function ComparisonTable({ plans, benefits }: Readonly<Props>) {
                 </TableRow>
                 {group.rows.map((row) => (
                   <TableRow key={row.id} hover data-testid={`membership-benefit-row-${row.id}`}>
-                    <TableCell sx={stickyCellSx}>
+                    <TableCell component="th" scope="row" sx={stickyCellSx}>
                       <Typography variant="body2" sx={{
                         fontWeight: 600
                       }}>

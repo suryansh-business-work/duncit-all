@@ -34,7 +34,7 @@ export default function PodPendingPage() {
   if (loading && !view) {
     body = (
       <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }} data-testid="pod-pending-loading">
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Box>
     );
   } else if (error || !view) {

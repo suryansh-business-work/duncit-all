@@ -2,13 +2,12 @@ import { useMemo } from 'react';
 import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SHEET_SAFE_AREA } from '@/components/DuncitDialog/sheet-body';
-import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { Section, OptionChipRow } from '@/components/home/HomeFilterParts';
+import { HomeFilterSheetHeader } from '@/components/home/HomeFilterSheetHeader';
 import type { HomeCategory } from '@/hooks/useHomeFeed';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import {
   DATE_OPTIONS,
   PRICE_OPTIONS,
@@ -48,7 +47,6 @@ export function HomeFilterSheet({
   showSort = true,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { color } = useThemeColors();
   const count = activeFilterCount(filters, categoryId);
   const allLabel = t('mweb.common.all');
 
@@ -65,7 +63,12 @@ export function HomeFilterSheet({
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <ModalThemeScope>
-        <YStack flex={1} justifyContent="flex-end" testID="home-filter-sheet">
+        <YStack
+          flex={1}
+          justifyContent="flex-end"
+          testID="home-filter-sheet"
+          onAccessibilityEscape={onClose}
+        >
           <YStack
             pressStyle={PRESS_STYLE.surface}
             role="button"
@@ -85,26 +88,7 @@ export function HomeFilterSheet({
             maxHeight="82%"
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
-              <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={17} fontWeight="600" color="$color">
-                  {t('mweb.common.filters')}
-                </Text>
-                <XStack
-                  pressStyle={PRESS_STYLE.surface}
-                  testID="home-filter-close"
-                  role="button"
-                  aria-label={t('mweb.common.close')}
-                  onPress={onClose}
-                  width={40}
-                  height={40}
-                  alignItems="center"
-                  justifyContent="center"
-                  borderRadius={20}
-                  backgroundColor="$surface"
-                >
-                  <MaterialIcons name="close" size={20} color={color} />
-                </XStack>
-              </XStack>
+              <HomeFilterSheetHeader onClose={onClose} />
               <ScrollView paddingHorizontal={16}>
                 <YStack gap={16} paddingBottom={8}>
                   {categoryChips.length > 0 ? (
@@ -152,6 +136,7 @@ export function HomeFilterSheet({
                   testID="home-filter-reset"
                   role="button"
                   aria-label={t('mweb.common.resetFilters')}
+                  tabIndex={0}
                   onPress={onReset}
                   flex={1}
                   height={52}
@@ -170,6 +155,7 @@ export function HomeFilterSheet({
                   testID="home-filter-done"
                   role="button"
                   aria-label={t('mweb.common.applyFilters')}
+                  tabIndex={0}
                   onPress={onClose}
                   flex={1}
                   height={52}

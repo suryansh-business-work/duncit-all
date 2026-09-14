@@ -66,6 +66,7 @@ export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readon
           render={({ field, fieldState }) => (
             <Stack spacing={0.75}>
               <Typography
+                id="feedback-category-label"
                 variant="caption"
                 sx={{
                   color: "text.secondary",
@@ -74,11 +75,16 @@ export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readon
                 Category
               </Typography>
               {configLoading && config.categories.length === 0 ? (
-                <CircularProgress size={18} />
+                <CircularProgress size={18} aria-label={t('mweb.a11y.loading')} />
               ) : (
-                <Stack direction="row" spacing={1} useFlexGap sx={{
-                  flexWrap: "wrap"
-                }}>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  useFlexGap
+                  role="group"
+                  aria-labelledby="feedback-category-label"
+                  sx={{ flexWrap: 'wrap' }}
+                >
                   {config.categories.map((option) => (
                     <Chip
                       key={option.key || option.label}
@@ -86,13 +92,14 @@ export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readon
                       data-testid={`feedback-cat-${option.label}`}
                       color={field.value === option.label ? 'primary' : 'default'}
                       onClick={() => field.onChange(option.label)}
+                      aria-pressed={field.value === option.label}
                       sx={{ height: 36, px: 0.75 }}
                     />
                   ))}
                 </Stack>
               )}
               {fieldState.error && (
-                <Typography variant="caption" color="error">
+                <Typography variant="caption" color="error" role="alert">
                   {fieldState.error.message}
                 </Typography>
               )}

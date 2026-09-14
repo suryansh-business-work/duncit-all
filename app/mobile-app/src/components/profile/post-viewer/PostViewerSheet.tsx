@@ -6,6 +6,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { CommentComposer } from '@/components/details/pod-comments/CommentComposer';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
+import { useLoadingRegion } from '@/components/Skeleton';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { usePostViewer } from '@/hooks/usePostViewer';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -33,6 +34,7 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
   const [text, setText] = useState('');
   const [posting, setPosting] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const loadingRegion = useLoadingRegion();
   const canDelete = !!meId && post?.author_id === meId;
 
   const submit = async () => {
@@ -71,10 +73,22 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
       <ModalThemeScope>
         <KeyboardScreen>
-          <YStack flex={1} testID="post-viewer" backgroundColor="$background">
+          <YStack
+            flex={1}
+            testID="post-viewer"
+            backgroundColor="$background"
+            onAccessibilityEscape={onClose}
+          >
             <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
               <XStack alignItems="center" justifyContent="space-between" padding={12}>
-                <Text fontSize={16} fontWeight="600" color="$color" numberOfLines={1} flex={1}>
+                <Text
+                  role="heading"
+                  fontSize={16}
+                  fontWeight="600"
+                  color="$color"
+                  numberOfLines={1}
+                  flex={1}
+                >
                   {post?.author?.full_name ?? 'Post'}
                 </Text>
                 {post ? (
@@ -82,6 +96,8 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
                     testID="post-viewer-share"
                     role="button"
                     aria-label={t('mweb.profile.sharePost')}
+                    tabIndex={0}
+                    hitSlop={4}
                     onPress={() => sharePost(post.id, post.author?.full_name ?? 'Post')}
                     width={36}
                     height={36}
@@ -98,6 +114,8 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
                     role="button"
                     aria-label={t('mweb.profile.deletePost')}
                     aria-disabled={deleting}
+                    tabIndex={0}
+                    hitSlop={4}
                     onPress={removePost}
                     width={36}
                     height={36}
@@ -112,6 +130,8 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
                   testID="post-viewer-close"
                   role="button"
                   aria-label={t('mweb.common.close')}
+                  tabIndex={0}
+                  hitSlop={4}
                   onPress={onClose}
                   width={36}
                   height={36}
@@ -125,7 +145,7 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
 
               {isLoading && !post ? (
                 <YStack flex={1} alignItems="center" justifyContent="center">
-                  <Spinner testID="post-viewer-loading" color="$primary" />
+                  <Spinner testID="post-viewer-loading" color="$primary" {...loadingRegion} />
                 </YStack>
               ) : null}
               {!(isLoading && !post) && !post ? (

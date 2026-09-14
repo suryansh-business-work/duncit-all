@@ -78,7 +78,7 @@ const renderRemaining = (t: Translate) => (row: AccountDeletionRow) => {
   if (row.days_remaining === null) {
     return (
       <Typography variant="body2" sx={{
-        color: "text.disabled"
+        color: "text.secondary"
       }}>
         —
       </Typography>
@@ -95,7 +95,7 @@ const renderReason = (t: Translate) => (row: AccountDeletionRow) => (
   <Typography
     variant="body2"
     noWrap
-    color={row.reason ? 'text.primary' : 'text.disabled'}
+    color={row.reason ? 'text.primary' : 'text.secondary'}
     title={row.reason}
   >
     {row.reason || t('tech.accountDeletions.noReason')}
@@ -180,6 +180,7 @@ export default function AccountDeletionsTable({ fetchRows, refetchRef, onOpen }:
 
   return (
     <DuncitTable<AccountDeletionRow>
+      ariaLabel={t('tech.accountDeletions.title')}
       tableId="tech-account-deletions"
       columns={columns}
       fetchRows={fetchRows}

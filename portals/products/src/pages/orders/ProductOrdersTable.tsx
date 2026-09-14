@@ -149,6 +149,7 @@ export default function ProductOrdersTable({ fetchRows, refetchRef, onView }: Re
 
   return (
     <DuncitTable<ProductOrderRow>
+      ariaLabel={t('shell.nav.orders')}
       tableId="products-orders"
       columns={columns}
       fetchRows={fetchRows}

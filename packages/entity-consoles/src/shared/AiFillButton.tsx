@@ -85,6 +85,7 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
           <DuncitIconButton
             size="small"
             color="secondary"
+            aria-expanded={open}
             onClick={(e) => setAnchorEl(e.currentTarget)}
           >
             <AutoAwesomeIcon fontSize="small" />
@@ -96,6 +97,7 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
           variant="outlined"
           color="secondary"
           startIcon={<AutoAwesomeIcon fontSize="small" />}
+          aria-expanded={open}
           onClick={(e) => setAnchorEl(e.currentTarget)}
         >
           {label || 'Fill with AI'}
@@ -129,6 +131,7 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
           <TextField
             autoFocus
             placeholder={promptPlaceholder(entity)}
+            slotProps={{ htmlInput: { 'aria-label': t('admin.ai.fill'), 'data-testid': 'ai-fill-prompt' } }}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             multiline

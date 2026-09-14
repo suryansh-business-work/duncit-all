@@ -57,6 +57,7 @@ export function AvatarStoryButton({
         testID={testID}
         role="button"
         aria-label={label}
+        tabIndex={0}
         onPress={onPress}
         onLongPress={onLongPress}
         width={size}
@@ -95,6 +96,9 @@ export function AvatarStoryButton({
         role="button"
         aria-label={t('mweb.common.editPhoto')}
         aria-disabled={saving}
+        aria-busy={saving}
+        tabIndex={0}
+        hitSlop={8}
         onPress={saving ? undefined : onEditPhoto}
         position="absolute"
         bottom={-2}

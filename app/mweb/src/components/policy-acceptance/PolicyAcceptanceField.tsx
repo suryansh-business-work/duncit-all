@@ -8,6 +8,9 @@ import PolicyAcceptanceDialog from './PolicyAcceptanceDialog';
 import { isEveryPolicyAccepted } from './acceptance';
 import type { SignupPolicy } from './useSignupPolicies';
 
+/** Ties the hint or the Zod message to the checkbox it explains (WCAG 3.3.1). */
+const HELPER_ID = 'policy-acceptance-helper';
+
 interface Props {
   accepted: readonly string[];
   onChange: (ids: string[]) => void;
@@ -78,7 +81,13 @@ export default function PolicyAcceptanceField({
             data-testid="signup-policies-checkbox"
             checked={complete}
             onChange={(e) => handleToggle(e.target.checked)}
-            slotProps={{ input: testIdProps('signup-policies-checkbox-input') }}
+            slotProps={{
+              input: {
+                ...testIdProps('signup-policies-checkbox-input'),
+                'aria-describedby': helper ? HELPER_ID : undefined,
+                'aria-invalid': error ? true : undefined,
+              },
+            }}
             sx={{ pt: 0.25 }}
           />
         }
@@ -94,7 +103,7 @@ export default function PolicyAcceptanceField({
         }
       />
       {helper && (
-        <FormHelperText data-testid={error ? 'acceptedPolicyIds-error' : 'policy-acceptance-hint'} error={!!error}>
+        <FormHelperText id={HELPER_ID} data-testid={error ? 'acceptedPolicyIds-error' : 'policy-acceptance-hint'} error={!!error}>
           {helper}
         </FormHelperText>
       )}

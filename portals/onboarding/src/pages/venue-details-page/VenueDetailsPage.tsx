@@ -1,8 +1,8 @@
 import { useQuery } from '@apollo/client/react';
 import { useNavigate, useParams } from 'react-router';
-import { Stack } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import { BackHeader, QueryGuard } from '@duncit/ui';
-import { DuncitTabs, useTabParam, type DuncitTabItem } from '@duncit/tabs';
+import { DuncitTabs, tabPanelProps, useTabParam, type DuncitTabItem } from '@duncit/tabs';
 import { VENUE_DETAILS, type AdminVenueDetails } from './queries';
 import VenueOverviewCard from './VenueOverviewCard';
 import VenuePodsTab from './VenuePodsTab';
@@ -56,11 +56,13 @@ export default function VenueDetailsPage() {
               titleSx={{ lineHeight: 1.1 }}
             />
 
-            <DuncitTabs {...tabs} variant="scrollable" allowScrollButtonsMobile />
+            <DuncitTabs {...tabs} idPrefix="venue-details" variant="scrollable" allowScrollButtonsMobile />
 
-            {tab === 'overview' && <VenueOverviewCard venue={venue} />}
+            <Box {...tabPanelProps('venue-details', tab)}>
+              {tab === 'overview' && <VenueOverviewCard venue={venue} />}
 
-            {tab === 'pods' && <VenuePodsTab venueId={venue.id} />}
+              {tab === 'pods' && <VenuePodsTab venueId={venue.id} />}
+            </Box>
           </Stack>
         );
       }}

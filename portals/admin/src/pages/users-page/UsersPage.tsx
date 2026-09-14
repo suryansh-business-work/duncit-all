@@ -66,7 +66,7 @@ export default function UsersPage() {
   return (
     <Stack spacing={2}>
       <Box>
-        <Typography variant="h5">{t('admin.users.title')}</Typography>
+        <Typography variant="h5" component="h1">{t('admin.users.title')}</Typography>
         <Typography variant="body2" sx={{
           color: "text.secondary"
         }}>
@@ -75,6 +75,7 @@ export default function UsersPage() {
       </Box>
 
       <DuncitTable<UserRow>
+        ariaLabel={t('admin.users.title')}
         tableId="admin-users"
         columns={columns}
         fetchRows={fetchRows}

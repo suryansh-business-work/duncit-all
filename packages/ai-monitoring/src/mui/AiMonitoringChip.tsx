@@ -53,6 +53,7 @@ export function AiMonitoringChip({ size = 'small', sx }: Readonly<AiMonitoringCh
         }
         label={copy.chipLabel}
         onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
         aria-label={t('aiMonitoring.ariaLabel')}
         sx={[
           {

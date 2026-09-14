@@ -18,6 +18,9 @@ interface Props {
   onClose: () => void;
 }
 
+/** One drawer per page, so a fixed id names it without a generated one. */
+const TITLE_ID = 'region-drill-title';
+
 /**
  * The one drill-down surface: Club Admin -> Clubs -> Pods, or Host -> Pods.
  *
@@ -46,14 +49,26 @@ export default function RegionDrillDrawer({
       anchor="right"
       open={!!level}
       onClose={onClose}
-      slotProps={{ paper: { sx: { width: { xs: '100%', sm: 640, lg: 820 }, p: 2.5 } } }}
+      slotProps={{
+        paper: {
+          // A temporary Drawer's paper is already `role="dialog"`; this names it.
+          'aria-labelledby': TITLE_ID,
+          sx: { width: { xs: '100%', sm: 640, lg: 820 }, p: 2.5 },
+        },
+      }}
     >
       {level && (
         <>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start', mb: 2 }}>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               {parent && <BackButton onClick={onPop}>{parent.label}</BackButton>}
-              <Typography variant="h6" sx={{ fontWeight: 800 }}>
+              <Typography
+                variant="h6"
+                component="h2"
+                id={TITLE_ID}
+                data-testid="region-drill-title"
+                sx={{ fontWeight: 800 }}
+              >
                 {level.label}
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>

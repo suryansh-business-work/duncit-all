@@ -24,7 +24,9 @@ interface StepProps<T> {
   onSubmit: (values: T) => Promise<void> | void;
 }
 
-const passwordAdornments = (visible: boolean, onToggle: () => void) => ({
+type ToggleCopy = Readonly<{ show: string; hide: string }>;
+
+const passwordAdornments = (visible: boolean, onToggle: () => void, copy: ToggleCopy, testId: string) => ({
   startAdornment: (
     <InputAdornment position="start">
       <LockOutlinedIcon fontSize="small" />
@@ -33,10 +35,11 @@ const passwordAdornments = (visible: boolean, onToggle: () => void) => ({
   endAdornment: (
     <InputAdornment position="end">
       <DuncitIconButton
+        data-testid={testId}
         size="small"
         onClick={onToggle}
         edge="end"
-        aria-label={visible ? 'Hide password' : 'Show password'}
+        aria-label={visible ? copy.hide : copy.show}
       >
         {visible ? (
           <VisibilityOffOutlinedIcon fontSize="small" />
@@ -55,6 +58,7 @@ export function CurrentPasswordForm({
   onSubmit,
 }: Readonly<StepProps<CurrentPasswordValues>>) {
   const { t } = useTranslation();
+  const copy = { show: t('mweb.auth.showPassword'), hide: t('mweb.auth.hidePassword') };
   const [show, setShow] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { control, handleSubmit } = useForm<CurrentPasswordValues, any, CurrentPasswordValues>({
@@ -84,7 +88,7 @@ export function CurrentPasswordForm({
           placeholder={t('mweb.changePassword.enterYourCurrentPassword')}
           autoComplete="current-password"
           size="small"
-          slotProps={{ input: passwordAdornments(show, () => setShow((v) => !v)) }}
+          slotProps={{ input: passwordAdornments(show, () => setShow((v) => !v), copy, 'current-password-toggle') }}
         />
         <DuncitButton
           type="submit"
@@ -110,6 +114,7 @@ export function NewPasswordForm({
   onSubmit,
 }: Readonly<StepProps<NewPasswordValues>>) {
   const { t } = useTranslation();
+  const copy = { show: t('mweb.auth.showPassword'), hide: t('mweb.auth.hidePassword') };
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -136,6 +141,7 @@ export function NewPasswordForm({
           name="otp"
           label="6-digit OTP"
           required
+          autoComplete="one-time-code"
           placeholder="123456"
           slotProps={{ input: {
             startAdornment: (
@@ -157,7 +163,7 @@ export function NewPasswordForm({
           placeholder={t('mweb.changePassword.createANewPassword')}
           autoComplete="new-password"
           size="small"
-          slotProps={{ input: passwordAdornments(showPwd, () => setShowPwd((v) => !v)) }}
+          slotProps={{ input: passwordAdornments(showPwd, () => setShowPwd((v) => !v), copy, 'new-password-toggle') }}
         />
         <RhfTextField
           control={control}
@@ -168,7 +174,7 @@ export function NewPasswordForm({
           placeholder={t('mweb.changePassword.reEnterNewPassword')}
           autoComplete="new-password"
           size="small"
-          slotProps={{ input: passwordAdornments(showConfirm, () => setShowConfirm((v) => !v)) }}
+          slotProps={{ input: passwordAdornments(showConfirm, () => setShowConfirm((v) => !v), copy, 'confirm-password-toggle') }}
         />
         <DuncitButton
           type="submit"

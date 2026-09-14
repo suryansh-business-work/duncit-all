@@ -69,7 +69,7 @@ function RequestStep({
         {t('mweb.changePassword.createStepHint')}
       </Text>
       {errorMessage ? (
-        <Text fontSize={14} color="$danger" testID="create-password-error">
+        <Text fontSize={14} color="$danger" testID="create-password-error" role="alert">
           {errorMessage}
         </Text>
       ) : null}
@@ -175,7 +175,7 @@ export function ChangePasswordDialog({
         />
       ) : (
         <YStack gap={12}>
-          <Text fontSize={13.5} color="$primary" testID="change-password-info">
+          <Text fontSize={13.5} color="$accent" testID="change-password-info" role="status">
             {info}
           </Text>
           <NewPasswordForm loading={loading} errorMessage={error} onSubmit={handleChange} />
@@ -187,7 +187,7 @@ export function ChangePasswordDialog({
             onPress={handleResend}
             fontSize={14}
             fontWeight="600"
-            color="$primary"
+            color="$accent"
             textAlign="center"
           >
             {t('mweb.account.resendOtp')}

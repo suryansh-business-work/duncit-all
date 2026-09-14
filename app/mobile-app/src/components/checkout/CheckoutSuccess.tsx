@@ -129,7 +129,7 @@ export function CheckoutSuccess({
       ) : null}
 
       {error ? (
-        <Text testID="invoice-error" fontSize={13} color="$danger">
+        <Text role="alert" testID="invoice-error" fontSize={13} color="$danger">
           {error}
         </Text>
       ) : null}
@@ -160,6 +160,7 @@ export function CheckoutSuccess({
         <XStack
           testID="success-home"
           role="button"
+          tabIndex={0}
           aria-label={t('mweb.checkout.goHome')}
           onPress={onHome}
           flex={1}
@@ -178,6 +179,7 @@ export function CheckoutSuccess({
         <XStack
           testID="success-profile"
           role="button"
+          tabIndex={0}
           aria-label={t('mweb.checkout.viewBookings')}
           onPress={onProfile}
           flex={1}

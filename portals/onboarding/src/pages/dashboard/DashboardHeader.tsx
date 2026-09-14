@@ -11,14 +11,16 @@ interface Props {
 export default function DashboardHeader({ firstName, photo, roles }: Readonly<Props>) {
   return (
     <Stack direction="row" spacing={1.75} sx={{ alignItems: 'center' }}>
+      {/* Decorative: the welcome line beside it already names the person. */}
       <Avatar
         src={photo || undefined}
-        sx={{ width: 56, height: 56, bgcolor: 'primary.main', fontWeight: 800 }}
+        alt=""
+        sx={{ width: 56, height: 56, bgcolor: 'primary.main', color: 'primary.contrastText', fontWeight: 800 }}
       >
         {firstName.charAt(0).toUpperCase()}
       </Avatar>
       <Box>
-        <Typography variant="h5" sx={{ fontWeight: 800 }}>
+        <Typography variant="h5" component="h1" data-testid="onboarding-dashboard-title" sx={{ fontWeight: 800 }}>
           Welcome back, {firstName}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>

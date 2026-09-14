@@ -14,6 +14,7 @@ export function PodContactSupportLink({ onPress }: Readonly<{ onPress: () => voi
       pressStyle={PRESS_STYLE.surface}
       testID="pod-contact-support"
       role="button"
+      tabIndex={0}
       aria-label={t('mweb.podDetails.contactSupport')}
       onPress={onPress}
       alignItems="center"
@@ -23,7 +24,7 @@ export function PodContactSupportLink({ onPress }: Readonly<{ onPress: () => voi
       paddingVertical={12}
     >
       <MaterialIcons name="contact-support" size={18} color={primary} />
-      <Text fontSize={13} fontWeight="600" color="$primary">
+      <Text fontSize={13} fontWeight="600" color="$accent">
         {t('mweb.podDetails.contactSupport')}
       </Text>
     </XStack>

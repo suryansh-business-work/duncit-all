@@ -8,6 +8,8 @@ import {
 } from '@duncit/utils';
 import { PRESS_STYLE } from '@duncit/buttons-native';
 
+import { useTranslation } from '@/hooks/useTranslation';
+
 interface RowProps {
   channel: ContactChannel;
   labels: ContactChangeLabels;
@@ -29,6 +31,7 @@ interface RowProps {
  * is rather than greyed out like an optional blank.
  */
 function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
+  const { t } = useTranslation();
   const copy = labels.channel(channel);
   const action = value ? labels.changeAction : labels.addAction;
   return (
@@ -44,7 +47,9 @@ function ContactRow({ channel, labels, value, onChange }: Readonly<RowProps>) {
       <XStack
         testID={`contact-change-${channel}`}
         role="button"
-        aria-label={`${action} ${copy.name}`}
+        aria-label={t('mweb.a11y.actionFor', { vars: { action, name: copy.name } })}
+        tabIndex={0}
+        hitSlop={4}
         onPress={() => onChange(channel)}
         height={36}
         paddingHorizontal={16}

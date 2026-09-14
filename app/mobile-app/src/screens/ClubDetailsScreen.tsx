@@ -30,7 +30,7 @@ const DEEP_LINK_BASE = 'https://duncit.com/club';
  * the club's upcoming pods. */
 export function ClubDetailsScreen() {
   const { t } = useTranslation();
-  const { accent } = useThemeColors();
+  const { brand } = useThemeColors();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const goBack = useGoBack();
   const route = useRoute<RouteProp<RootStackParamList, 'ClubDetails'>>();
@@ -65,9 +65,15 @@ export function ClubDetailsScreen() {
         fullBleed
         media={club.club_feature_images_and_videos}
         onBack={goBack}
-        placeholder={<MaterialIcons name="groups" size={72} color={accent} />}
+        placeholder={<MaterialIcons name="groups" size={72} color={brand} />}
       >
-        <HeroButton overMedia testID="hb-share" icon="share" onPress={handleShare} />
+        <HeroButton
+          overMedia
+          testID="hb-share"
+          icon="share"
+          label={t('mweb.common.share')}
+          onPress={handleShare}
+        />
       </DetailHero>
       <Reveal>
         <ClubBody

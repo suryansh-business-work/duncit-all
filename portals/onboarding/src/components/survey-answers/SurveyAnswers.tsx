@@ -47,7 +47,7 @@ export default function SurveyAnswers({ userId, kind, title }: Readonly<Props>) 
             alignItems: "center",
             py: 2
           }}>
-          <CircularProgress size={22} />
+          <CircularProgress size={22} aria-label={t('shell.a11y.loading')} />
         </Stack>
       )}
       {!loading && items.length === 0 && (

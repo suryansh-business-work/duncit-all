@@ -246,14 +246,14 @@ describe('NotificationRow', () => {
   it('opens from a click', () => {
     const { container, spies } = row();
 
-    fireEvent.click(container.firstElementChild as HTMLElement);
+    fireEvent.click(container.querySelector('[data-testid="notification-n-1"]') as HTMLElement);
 
     expect(spies.onClick).toHaveBeenCalled();
   });
 
   it('opens from the keyboard, since the row is not a real button', () => {
     const { container, spies } = row();
-    const target = container.firstElementChild as HTMLElement;
+    const target = container.querySelector('[data-testid="notification-n-1"]') as HTMLElement;
 
     fireEvent.keyDown(target, { key: 'Enter' });
     fireEvent.keyDown(target, { key: ' ' });
@@ -264,14 +264,14 @@ describe('NotificationRow', () => {
   it('ignores other keys, so Tab still moves on', () => {
     const { container, spies } = row();
 
-    fireEvent.keyDown(container.firstElementChild as HTMLElement, { key: 'Tab' });
+    fireEvent.keyDown(container.querySelector('[data-testid="notification-n-1"]') as HTMLElement, { key: 'Tab' });
 
     expect(spies.onClick).not.toHaveBeenCalled();
   });
 
   it('takes no input while its own mark-read is in flight', () => {
     const { container, spies } = row({ busy: true });
-    const target = container.firstElementChild as HTMLElement;
+    const target = container.querySelector('[data-testid="notification-n-1"]') as HTMLElement;
 
     fireEvent.click(target);
     fireEvent.keyDown(target, { key: 'Enter' });

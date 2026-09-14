@@ -52,6 +52,7 @@ export function IdeaCommentRow({ comment, canDelete, onDelete }: Readonly<Props>
         <XStack
           testID={`idea-comment-delete-${comment.id}`}
           role="button"
+          tabIndex={0}
           aria-label={t('mweb.common.deleteComment')}
           onPress={onDelete}
           padding={4}

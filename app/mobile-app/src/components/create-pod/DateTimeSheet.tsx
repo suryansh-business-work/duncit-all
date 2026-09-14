@@ -45,8 +45,10 @@ function DayCell({ testID, d, selected, blocked, ariaLabel, onSelect }: Readonly
     <YStack
       pressStyle={PRESS_STYLE.surface}
       testID={`${testID}-day-${d}`}
-      role="button"
+      tabIndex={0}
+      role="radio"
       aria-label={ariaLabel}
+      aria-checked={selected}
       aria-disabled={blocked}
       onPress={blocked ? undefined : () => onSelect(d)}
       width="14.28%"
@@ -107,6 +109,7 @@ export function CalendarSheet({
       <XStack alignItems="center" justifyContent="space-between">
         <XStack
           testID={`${testID}-prev-month`}
+          tabIndex={0}
           role="button"
           aria-label={t('mweb.slots.previousMonth')}
           onPress={() => setView((v) => addMonths(v, -1))}
@@ -120,6 +123,7 @@ export function CalendarSheet({
         </Text>
         <XStack
           testID={`${testID}-next-month`}
+          tabIndex={0}
           role="button"
           aria-label={t('mweb.slots.nextMonth')}
           onPress={() => setView((v) => addMonths(v, 1))}

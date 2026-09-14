@@ -75,6 +75,8 @@ export function RecoveryCodeStep({
         name="otp"
         label={labels.codeLabel}
         keyboardType="number-pad"
+        autoComplete="sms-otp"
+        textContentType="oneTimeCode"
         digitsOnly
         maxLength={6}
         required
@@ -95,10 +97,12 @@ export function RecoveryCodeStep({
         </Text>
         <Text
           testID="recovery-resend"
+          role="button"
+          aria-disabled={waiting || resending}
           pressStyle={PRESS_STYLE.inline}
           fontSize={14}
           fontWeight="600"
-          color={waiting || resending ? '$muted' : '$primary'}
+          color={waiting || resending ? '$muted' : '$accent'}
           onPress={waiting || resending ? undefined : onResend}
         >
           {resendLabel}

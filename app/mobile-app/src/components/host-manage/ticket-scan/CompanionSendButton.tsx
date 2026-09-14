@@ -36,6 +36,7 @@ export function CompanionSendButton({ index, ready, sent, sending, onStart }: Re
   return (
     <XStack
       testID={`companion-otp-send-${index}`}
+      tabIndex={0}
       role="button"
       aria-label={t('mweb.hostScan.companionVerifyCta')}
       aria-disabled={!ready}

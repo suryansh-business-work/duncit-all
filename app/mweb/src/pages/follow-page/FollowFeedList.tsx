@@ -6,6 +6,7 @@ import { TOGGLE_LIKE } from '../profile-page/queries';
 import IconDisc from '../account-page/IconDisc';
 import FeedPostCard from './FeedPostCard';
 import { FOLLOWING_FEED } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 import type { FeedClub, FeedPost, FollowingFeedSource } from './queries';
 
 interface FollowFeedListProps {
@@ -25,6 +26,7 @@ export default function FollowFeedList({
   superCategoryId,
   onOpenComments,
 }: Readonly<FollowFeedListProps>) {
+  const { t } = useTranslation();
   const { data, loading, error } = useQuery<{ followingFeed: FeedPost[] }>(FOLLOWING_FEED, {
     variables: { source, limit: 60 },
     fetchPolicy: 'cache-and-network',
@@ -57,7 +59,7 @@ export default function FollowFeedList({
 
   if (loading && !data) {
     return (
-      <Stack data-testid="following-feed-loading" spacing={2}>
+      <Stack data-testid="following-feed-loading" role="progressbar" aria-busy aria-label={t('mweb.a11y.loading')} spacing={2}>
         <Skeleton variant="rounded" height={320} sx={{ borderRadius: '24px' }} />
         <Skeleton variant="rounded" height={320} sx={{ borderRadius: '24px' }} />
       </Stack>
@@ -70,7 +72,7 @@ export default function FollowFeedList({
 
   if (posts.length === 0) {
     return (
-      <Stack data-testid="following-feed-empty" spacing={1.5} sx={{ alignItems: 'center', textAlign: 'center', py: 5 }}>
+      <Stack data-testid="following-feed-empty" role="status" spacing={1.5} sx={{ alignItems: 'center', textAlign: 'center', py: 5 }}>
         <IconDisc size={64}>
           <FavoriteBorderIcon />
         </IconDisc>

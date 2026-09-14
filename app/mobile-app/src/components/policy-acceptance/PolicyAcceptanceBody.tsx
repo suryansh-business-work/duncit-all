@@ -1,5 +1,6 @@
 import { ScrollView, Spinner, Text, YStack } from 'tamagui';
 
+import { useLoadingRegion } from '@/components/Skeleton';
 import { SurfaceCard } from '@/components/SurfaceCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { SignupPolicy } from '@/stores/policies.store';
@@ -27,11 +28,13 @@ export function PolicyAcceptanceBody({
   onRead,
 }: Readonly<PolicyAcceptanceBodyProps>) {
   const { t } = useTranslation();
+  const loadingRegion = useLoadingRegion(t('policyAcceptance.loading'));
 
   if (failed) {
     return (
       <Text
         testID="policy-acceptance-failed"
+        role="alert"
         paddingHorizontal={16}
         paddingVertical={28}
         fontSize={13.5}
@@ -44,7 +47,13 @@ export function PolicyAcceptanceBody({
 
   if (loading && policies.length === 0) {
     return (
-      <YStack testID="policy-acceptance-loading" alignItems="center" gap={10} paddingVertical={32}>
+      <YStack
+        testID="policy-acceptance-loading"
+        alignItems="center"
+        gap={10}
+        paddingVertical={32}
+        {...loadingRegion}
+      >
         <Spinner color="$primary" />
         <Text fontSize={13} color="$muted">
           {t('policyAcceptance.loading')}

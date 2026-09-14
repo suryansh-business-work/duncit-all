@@ -22,11 +22,11 @@ export default function CalendarLegend() {
       data-testid="availability-legend"
       sx={{ mt: 2, flexWrap: 'wrap', rowGap: 1 }}
     >
-      <LegendItem color="success.light" label={t('availability.legend.available')} />
-      <LegendItem color="info.light" label={t('availability.legend.pending')} />
-      <LegendItem color="warning.light" label={t('availability.legend.booked')} />
+      <LegendItem color="success.main" label={t('availability.legend.available')} />
+      <LegendItem color="info.main" label={t('availability.legend.pending')} />
+      <LegendItem color="warning.main" label={t('availability.legend.booked')} />
       <LegendItem color="grey.300" label={t('availability.legend.blocked')} />
-      <LegendItem color="error.light" label={t('availability.legend.leave')} />
+      <LegendItem color="error.main" label={t('availability.legend.leave')} />
     </Stack>
   );
 }

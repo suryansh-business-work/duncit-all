@@ -1,4 +1,4 @@
-import { Box, CircularProgress, Stack, Typography } from '@mui/material';
+import { Box, ButtonBase, CircularProgress, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import HomeStatusTile from './HomeStatusTile';
 import { useStatusUpload } from '../../components/status-upload/StatusUploadProvider';
@@ -62,7 +62,7 @@ export default function MyStatusUploadTile({ me, onView }: Readonly<Props>) {
         onClick={handlePick}
       />
       {hasStories && !uploading && (
-        <Box
+        <ButtonBase
           data-testid="my-status-upload-tile-add"
           onClick={(e) => {
             e.stopPropagation();
@@ -70,10 +70,11 @@ export default function MyStatusUploadTile({ me, onView }: Readonly<Props>) {
           }}
           sx={{
             position: 'absolute',
-            right: 4,
-            bottom: 18,
-            width: 22,
-            height: 22,
+            right: 3,
+            bottom: 17,
+            // 24px: the smallest target WCAG 2.5.8 allows.
+            width: 24,
+            height: 24,
             borderRadius: '50%',
             bgcolor: 'primary.main',
             color: 'primary.contrastText',
@@ -86,7 +87,7 @@ export default function MyStatusUploadTile({ me, onView }: Readonly<Props>) {
           aria-label={t('mweb.home.addAnother')}
         >
           <AddIcon sx={{ fontSize: 16 }} />
-        </Box>
+        </ButtonBase>
       )}
       {uploading && (
         <Box

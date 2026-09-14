@@ -18,6 +18,7 @@ function ReminderButton({ label, primary, testID, onPress }: Readonly<ButtonProp
       pressStyle={PRESS_STYLE.control}
       testID={testID}
       role="button"
+      tabIndex={0}
       aria-label={label}
       onPress={onPress}
       height={42}
@@ -65,7 +66,7 @@ export function PodFeedbackReminder({ title, onChoose }: Readonly<Props>) {
       borderRadius={28}
       backgroundColor="$surface"
     >
-      <Text fontSize={17} fontWeight="600" color="$color">
+      <Text role="heading" fontSize={17} fontWeight="600" color="$color">
         {t('mweb.podFeedback.remindTitle')}
       </Text>
       <Text fontSize={12} color="$muted">

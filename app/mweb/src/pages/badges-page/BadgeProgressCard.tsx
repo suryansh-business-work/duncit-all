@@ -34,6 +34,7 @@ export default function BadgeProgressCard({ row }: Readonly<{ row: BadgeProgress
       <Stack spacing={1} sx={{ alignItems: 'center', textAlign: 'center', height: '100%' }}>
         <Avatar
           src={badge.image_url || undefined}
+          alt=""
           sx={{
             width: 64,
             height: 64,
@@ -44,7 +45,9 @@ export default function BadgeProgressCard({ row }: Readonly<{ row: BadgeProgress
         >
           {!badge.image_url && <EmojiEventsIcon />}
         </Avatar>
-        <Typography sx={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>{badge.title}</Typography>
+        <Typography component="h2" sx={{ fontSize: 13, fontWeight: 600, lineHeight: 1.3 }}>
+          {badge.title}
+        </Typography>
         <Chip
           size="small"
           data-testid={`badge-card-${badge.id}-status`}

@@ -128,6 +128,8 @@ export function MediaUploadField({
               )}
               <XStack
                 testID={`media-remove-${url}`}
+                tabIndex={0}
+                hitSlop={11}
                 role="button"
                 aria-label={t('mweb.createPod.removeMedia')}
                 onPress={() => removeUrl(url)}
@@ -150,6 +152,7 @@ export function MediaUploadField({
       ) : null}
       <YStack
         testID="media-upload-add"
+        tabIndex={0}
         role="button"
         aria-label={t('mweb.createPod.addMedia')}
         aria-disabled={busy || full}
@@ -187,12 +190,12 @@ export function MediaUploadField({
         </Text>
       </YStack>
       {upload.error && !upload.pending ? (
-        <Text testID="media-upload-error" fontSize={12} color="$danger">
+        <Text role="alert" testID="media-upload-error" fontSize={12} color="$danger">
           {upload.error}
         </Text>
       ) : null}
       {error ? (
-        <Text testID="media_text-error" fontSize={12} color="$danger">
+        <Text role="alert" testID="media_text-error" fontSize={12} color="$danger">
           {error}
         </Text>
       ) : null}

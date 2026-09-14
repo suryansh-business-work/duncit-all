@@ -4,6 +4,7 @@ import { Spinner, Text, YStack } from 'tamagui';
 
 import { GiftCardRedeemPanel, type GiftCardByCode } from '@/components/gift-cards';
 import { StackScreen } from '@/components/StackScreen';
+import { useLoadingRegion } from '@/components/Skeleton';
 import { MobileGiftCardByCodeDocument } from '@/graphql/gift-cards';
 import { useFinanceCurrency } from '@/hooks/useGiftCards';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -23,6 +24,7 @@ export function GiftCardClaimScreen() {
   const [card, setCard] = useState<GiftCardByCode | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const loadingRegion = useLoadingRegion();
 
   useEffect(() => {
     let active = true;
@@ -43,12 +45,17 @@ export function GiftCardClaimScreen() {
   if (isLoading) {
     body = (
       <YStack alignItems="center" paddingVertical={32}>
-        <Spinner testID="gift-card-claim-loading" size="large" color="$primary" />
+        <Spinner
+          testID="gift-card-claim-loading"
+          size="large"
+          color="$primary"
+          {...loadingRegion}
+        />
       </YStack>
     );
   } else if (error) {
     body = (
-      <Text testID="gift-card-claim-error" fontSize={13} color="$danger">
+      <Text testID="gift-card-claim-error" role="alert" fontSize={13} color="$danger">
         {error}
       </Text>
     );

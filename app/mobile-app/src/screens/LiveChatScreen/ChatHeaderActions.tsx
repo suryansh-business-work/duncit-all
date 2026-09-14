@@ -29,6 +29,8 @@ function IconButton({ testID, label, icon, color, onPress }: Readonly<IconButton
       pressStyle={PRESS_STYLE.surface}
       testID={testID}
       role="button"
+      tabIndex={0}
+      hitSlop={8}
       aria-label={label}
       onPress={onPress}
       padding={6}

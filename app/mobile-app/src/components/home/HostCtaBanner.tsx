@@ -28,6 +28,7 @@ export function HostCtaBanner({ isHost, onCreatePod, onBecomeHost }: Readonly<Pr
     <SurfaceCard
       testID="host-cta-banner"
       role="button"
+      tabIndex={0}
       aria-label={title}
       onPress={onPress}
       marginHorizontal={16}

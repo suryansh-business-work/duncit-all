@@ -123,7 +123,7 @@ export default function PodListPage(props: Readonly<PodListPageProps>) {
   if (loading && pods.length === 0) {
     body = (
       <Box data-testid="pod-list-page-loading" sx={{ display: 'grid', placeItems: 'center', py: 6 }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Box>
     );
   } else if (error) {

@@ -44,8 +44,16 @@ export function AddressFields<T extends FieldValues>({
         name={names.line1}
         label={t('mweb.address.line1')}
         required={required}
+        autoComplete="address-line1"
+        textContentType="streetAddressLine1"
       />
-      <FormTextField control={control} name={names.line2} label={t('mweb.address.line2')} />
+      <FormTextField
+        control={control}
+        name={names.line2}
+        label={t('mweb.address.line2')}
+        autoComplete="address-line2"
+        textContentType="streetAddressLine2"
+      />
       <FormTextField control={control} name={names.landmark} label={t('mweb.address.landmark')} />
       <XStack gap={12}>
         <YStack flex={1}>
@@ -54,6 +62,8 @@ export function AddressFields<T extends FieldValues>({
             name={names.city}
             label={t('mweb.address.city')}
             required={required}
+            autoComplete="postal-address-locality"
+            textContentType="addressCity"
           />
         </YStack>
         <YStack flex={1}>
@@ -62,6 +72,8 @@ export function AddressFields<T extends FieldValues>({
             name={names.state}
             label={t('mweb.address.state')}
             required={required}
+            autoComplete="postal-address-region"
+            textContentType="addressState"
           />
         </YStack>
       </XStack>
@@ -74,11 +86,19 @@ export function AddressFields<T extends FieldValues>({
             required={required}
             hint={pincodeHint}
             keyboardType="number-pad"
+            autoComplete="postal-code"
+            textContentType="postalCode"
             maxLength={10}
           />
         </YStack>
         <YStack flex={1}>
-          <FormTextField control={control} name={names.country} label={t('mweb.address.country')} />
+          <FormTextField
+            control={control}
+            name={names.country}
+            label={t('mweb.address.country')}
+            autoComplete="country"
+            textContentType="countryName"
+          />
         </YStack>
       </XStack>
     </YStack>

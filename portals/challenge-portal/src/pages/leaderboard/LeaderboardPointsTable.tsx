@@ -23,6 +23,7 @@ export default function LeaderboardPointsTable({ fetchRows }: Readonly<Props>) {
 
   return (
     <DuncitTable<LeaderboardPointRow>
+      ariaLabel={t('shell.nav.pointsLedger')}
       tableId="admin-leaderboard-points"
       columns={columns}
       fetchRows={fetchRows}

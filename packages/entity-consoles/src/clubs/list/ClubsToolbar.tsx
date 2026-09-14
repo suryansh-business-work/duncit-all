@@ -26,7 +26,7 @@ export default function ClubsToolbar({
           alignItems: "center"
         }}>
           <GroupsIcon color="primary" />
-          <Typography variant="h5">{t('admin.clubs.title')}</Typography>
+          <Typography variant="h5" component="h1">{t('admin.clubs.title')}</Typography>
         </Stack>
         <Typography variant="body2" sx={{
           color: "text.secondary"

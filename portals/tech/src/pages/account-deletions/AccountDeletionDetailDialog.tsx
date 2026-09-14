@@ -133,7 +133,7 @@ export default function AccountDeletionDetailDialog({
                 </Typography>
                 <Typography
                   variant="body2"
-                  color={request.reason ? 'text.primary' : 'text.disabled'}
+                  color={request.reason ? 'text.primary' : 'text.secondary'}
                   sx={{ mt: 0.5 }}
                 >
                   {request.reason || t('tech.accountDeletions.noReason')}

@@ -23,12 +23,17 @@ export function VenueHealthScreen() {
   if (isLoading && !health) {
     body = (
       <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner testID="venue-health-loading" color="$primary" />
+        <Spinner
+          role="progressbar"
+          aria-label={t('mweb.a11y.loading')}
+          testID="venue-health-loading"
+          color="$primary"
+        />
       </YStack>
     );
   } else if (error) {
     body = (
-      <Text testID="venue-health-error" padding={24} color="$danger">
+      <Text role="alert" testID="venue-health-error" padding={24} color="$danger">
         {toErrorMessage(error)}
       </Text>
     );

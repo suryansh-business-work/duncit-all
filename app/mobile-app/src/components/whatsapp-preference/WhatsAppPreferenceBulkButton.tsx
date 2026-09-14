@@ -29,6 +29,8 @@ export function WhatsAppPreferenceBulkButton({
       testID="whatsapp-preference-bulk"
       role="button"
       aria-label={label}
+      aria-disabled={disabled}
+      tabIndex={0}
       onPress={disabled ? undefined : onPress}
       marginTop={14}
       height={52}
@@ -39,7 +41,7 @@ export function WhatsAppPreferenceBulkButton({
       opacity={disabled ? 0.5 : 1}
       pressStyle={PRESS_STYLE.control}
     >
-      <Text fontSize={15} fontWeight="600" color={destructive ? '$danger' : '$primary'}>
+      <Text fontSize={15} fontWeight="600" color={destructive ? '$danger' : '$accent'}>
         {label}
       </Text>
     </XStack>

@@ -50,7 +50,14 @@ export function ClubPodMonitoringScreen() {
               />
             </XStack>
           </Field>
-          {logs.isLoading ? <Spinner testID="club-monitoring-loading" color="$primary" /> : null}
+          {logs.isLoading ? (
+            <Spinner
+              role="progressbar"
+              aria-label={t('mweb.a11y.loading')}
+              testID="club-monitoring-loading"
+              color="$primary"
+            />
+          ) : null}
           {logs.hasError ? (
             <LoadErrorNotice testID="club-monitoring-error" onRetry={logs.refetch} />
           ) : null}

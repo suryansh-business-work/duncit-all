@@ -76,6 +76,7 @@ export function SavedAddressPicker({ onPick }: Readonly<Props>) {
       <XStack
         testID="checkout-address-field"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.checkout.chooseAddress')}
         onPress={() => setOpen(true)}
         alignItems="center"
@@ -108,6 +109,7 @@ export function SavedAddressPicker({ onPick }: Readonly<Props>) {
               pressStyle={PRESS_STYLE.surface}
               testID="checkout-address-backdrop"
               role="button"
+              importantForAccessibility="no"
               aria-label={t('mweb.checkout.close')}
               onPress={close}
               position="absolute"
@@ -124,16 +126,18 @@ export function SavedAddressPicker({ onPick }: Readonly<Props>) {
               maxHeight="70%"
             >
               <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
-                <Text padding={16} fontSize={16} fontWeight="700" color="$color">
+                <Text padding={16} fontSize={16} fontWeight="700" color="$color" role="heading">
                   {t('mweb.checkout.deliverToSaved')}
                 </Text>
                 <ScrollView>
-                  <YStack paddingHorizontal={16} paddingBottom={16} gap={8}>
+                  <YStack paddingHorizontal={16} paddingBottom={16} gap={8} role="radiogroup">
                     {addresses.map((address) => (
                       <XStack
                         key={address.id}
                         testID={`checkout-address-option-${address.id}`}
-                        role="button"
+                        role="radio"
+                        aria-checked={address.id === selectedId}
+                        tabIndex={0}
                         aria-label={address.label}
                         onPress={() => {
                           choose(address);

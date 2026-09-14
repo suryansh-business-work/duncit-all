@@ -1,4 +1,3 @@
-import { semantic } from '@duncit/auth-tokens';
 import type { ClubAdminTrendPalette, StatusTone } from '@duncit/utils';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -10,13 +9,13 @@ import { useThemeColors } from '@/hooks/useThemeColors';
  * only the paint lives here.
  */
 export function useToneColors(): Record<StatusTone, string> {
-  const { muted, success, warning, danger } = useThemeColors();
-  return { default: muted, info: semantic.info, success, warning, error: danger };
+  const { muted, info, success, warning, danger } = useThemeColors();
+  return { default: muted, info, success, warning, error: danger };
 }
 
 /** The line colour of each trend series, by the palette name the shared
  * series list carries. */
 export function useTrendPalette(): Record<ClubAdminTrendPalette, string> {
-  const { primary, success, warning } = useThemeColors();
-  return { primary, success, info: semantic.info, warning };
+  const { primary, info, success, warning } = useThemeColors();
+  return { primary, success, info, warning };
 }

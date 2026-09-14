@@ -134,7 +134,7 @@ export function RequestChangeSheet({
           />
         </Field>
         {errorText ? (
-          <Text testID="request-change-error" fontSize={12.5} color="$danger">
+          <Text role="alert" testID="request-change-error" fontSize={12.5} color="$danger">
             {errorText}
           </Text>
         ) : null}

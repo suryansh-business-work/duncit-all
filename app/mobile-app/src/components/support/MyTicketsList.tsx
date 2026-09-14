@@ -66,6 +66,7 @@ export function MyTicketsList() {
             key={t.id}
             testID={`my-ticket-${t.id}`}
             role="button"
+            tabIndex={0}
             aria-label={t.subject}
             onPress={() => navigation.navigate('TicketDetails', { ticketId: t.id })}
             paddingHorizontal={16}
@@ -100,7 +101,11 @@ export function MyTicketsList() {
               key={f}
               testID={`tickets-filter-${f}`}
               role="button"
+              tabIndex={0}
               aria-label={LABEL[f]}
+              aria-pressed={active}
+              accessibilityState={{ selected: active }}
+              hitSlop={4}
               onPress={() => setFilter(f)}
               height={36}
               alignItems="center"

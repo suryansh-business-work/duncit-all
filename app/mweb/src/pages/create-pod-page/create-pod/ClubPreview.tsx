@@ -50,6 +50,7 @@ export default function ClubPreview({ club }: Readonly<Props>) {
       <Avatar
         variant="rounded"
         src={cover}
+        alt=""
         sx={{ width: 56, height: 56, borderRadius: '12px', bgcolor: 'background.paper', color: 'secondary.main' }}
       >
         <GroupsIcon />

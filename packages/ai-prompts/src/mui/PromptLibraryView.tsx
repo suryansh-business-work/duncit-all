@@ -123,7 +123,7 @@ export function PromptLibraryView({ apiOrigin }: Readonly<PromptLibraryViewProps
           alignItems: "center"
         }}>
           <AutoStoriesIcon color="primary" />
-          <Typography variant="h5" sx={{
+          <Typography variant="h5" component="h1" sx={{
             fontWeight: 800
           }}>
             {copy.pageTitle}

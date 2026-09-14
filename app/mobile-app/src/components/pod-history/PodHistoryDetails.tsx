@@ -93,7 +93,7 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
     productOrders,
     ordersLoading,
   } = props;
-  const { muted, primary } = useThemeColors();
+  const { muted } = useThemeColors();
   const { t } = useTranslation();
   const pod = item.pod;
   const image = coverImageUrl(pod?.pod_images_and_videos);
@@ -183,7 +183,7 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
           </Text>
         ) : null}
         {notice ? (
-          <Text testID="ph-notice" fontSize={13} fontWeight="700" color="$primary">
+          <Text testID="ph-notice" fontSize={13} fontWeight="700" color="$accent">
             {notice}
           </Text>
         ) : null}
@@ -204,7 +204,7 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
           onPress={onBackoutTerms}
           fontSize={13}
           fontWeight="600"
-          color="$primary"
+          color="$accent"
         >
           {t('mweb.podHistory.backoutTerms')}
         </Text>
@@ -216,7 +216,7 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
           onPress={onGeneralTerms}
           fontSize={13}
           fontWeight="600"
-          color={primary}
+          color="$accent"
         >
           {t('mweb.podHistory.generalTerms')}
         </Text>

@@ -24,7 +24,7 @@ function Chip({ label, filled }: Readonly<{ label: string; filled?: boolean }>) 
       paddingVertical={4}
       backgroundColor={filled ? '$surface' : '$primarySoft'}
     >
-      <Text fontSize={11} fontWeight="600" color={filled ? '$color' : '$primary'}>
+      <Text fontSize={11} fontWeight="600" color={filled ? '$color' : '$accent'}>
         {label}
       </Text>
     </XStack>
@@ -99,6 +99,7 @@ export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>
             pressStyle={PRESS_STYLE.surface}
             testID={`po-track-${order.id}`}
             role="button"
+            tabIndex={0}
             aria-label={t('mweb.podHistory.trackShipment')}
             aria-disabled={!track}
             opacity={track ? 1 : 0.5}
@@ -109,7 +110,7 @@ export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>
             }}
           >
             <MaterialIcons name="open-in-new" size={14} color={primary} />
-            <Text fontSize={12.5} fontWeight="600" color="$primary">
+            <Text fontSize={12.5} fontWeight="600" color="$accent">
               {t('mweb.podHistory.trackShipment')}
             </Text>
           </XStack>

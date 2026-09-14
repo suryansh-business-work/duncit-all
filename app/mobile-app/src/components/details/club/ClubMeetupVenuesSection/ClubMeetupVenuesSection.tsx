@@ -77,13 +77,14 @@ export function ClubMeetupVenuesSection({ venues, onOpenVenue }: Readonly<Props>
   return (
     <SurfaceCard gap={8} testID="club-venues">
       <XStack alignItems="center" justifyContent="space-between">
-        <Text fontSize={17} fontWeight="600" color="$color">
+        <Text role="heading" fontSize={17} fontWeight="600" color="$color">
           We usually meet
         </Text>
         {origin ? null : (
           <XStack
             testID="club-venues-locate"
             role="button"
+            tabIndex={0}
             aria-label={t('mweb.details.showDistance')}
             onPress={locateMe}
             alignItems="center"
@@ -91,7 +92,7 @@ export function ClubMeetupVenuesSection({ venues, onOpenVenue }: Readonly<Props>
             pressStyle={PRESS_STYLE.row}
           >
             <MaterialIcons name="near-me" size={14} color={primary} />
-            <Text fontSize={13} fontWeight="600" color="$primary">
+            <Text fontSize={13} fontWeight="600" color="$accent">
               {locating ? 'Locating…' : 'Show distance'}
             </Text>
           </XStack>
@@ -118,6 +119,7 @@ export function ClubMeetupVenuesSection({ venues, onOpenVenue }: Readonly<Props>
       <XStack
         testID="club-venue-open-selected"
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.details.openVenueDetails')}
         onPress={() => onOpenVenue(selected.id)}
         alignItems="center"
@@ -125,7 +127,7 @@ export function ClubMeetupVenuesSection({ venues, onOpenVenue }: Readonly<Props>
         gap={4}
         pressStyle={PRESS_STYLE.row}
       >
-        <Text fontSize={13} fontWeight="600" color="$primary">
+        <Text fontSize={13} fontWeight="600" color="$accent">
           Open venue details
         </Text>
         <MaterialIcons name="open-in-new" size={13} color={primary} />

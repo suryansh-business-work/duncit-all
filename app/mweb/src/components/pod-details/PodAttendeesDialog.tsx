@@ -118,7 +118,7 @@ export default function PodAttendeesDialog({
                 sx={{ borderRadius: '16px' }}
               >
                 <ListItemAvatar>
-                  <Avatar
+                  <Avatar alt=""
                     src={person.profile_photo || undefined}
                     sx={{
                       bgcolor: 'action.hover',
@@ -180,7 +180,7 @@ export default function PodAttendeesDialog({
                   sx={{ borderRadius: '16px' }}
                 >
                   <ListItemAvatar>
-                    <Avatar src={fill.old_photo || undefined} sx={{ opacity: 0.6, bgcolor: 'action.hover', color: 'text.primary' }}>
+                    <Avatar alt="" src={fill.old_photo || undefined} sx={{ opacity: 0.6, bgcolor: 'action.hover', color: 'text.primary' }}>
                       {fill.old_name.charAt(0).toUpperCase()}
                     </Avatar>
                   </ListItemAvatar>
@@ -188,7 +188,7 @@ export default function PodAttendeesDialog({
                     primary={fill.old_name}
                     secondary={fill.filled_by_label}
                     slotProps={{
-                      primary: { sx: { fontSize: 14, textDecoration: 'line-through', color: 'text.disabled' } },
+                      primary: { sx: { fontSize: 14, textDecoration: 'line-through', color: 'text.secondary' } },
                       secondary: { sx: { fontSize: 12 } }
                     }} />
                 </ListItemButton>

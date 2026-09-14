@@ -1,4 +1,3 @@
-import { semantic } from '@duncit/auth-tokens';
 import { formatMoney } from '@duncit/utils';
 
 import type { Translate } from '@/i18n/fallback';
@@ -7,12 +6,12 @@ import type { Translate } from '@/i18n/fallback';
  * The colour of each slot status — the day-cell badges, the legend pills and
  * the day sheet's status pill all read it, so the three cannot disagree. The
  * same hues the MUI calendar in @duncit/availability-calendar paints (success,
- * info, warning, grey), so a status reads alike on both apps (rule 27). Info
- * has no theme key, so it is the shared token, as `club-admin/tone` reads it.
+ * info, warning, grey), so a status reads alike on both apps (rule 27). Every
+ * one is a mode-aware theme key, so the text stays AA in dark mode too.
  */
 export const SLOT_STATUS_TONE = {
   AVAILABLE: '$success',
-  PENDING: semantic.info,
+  PENDING: '$info',
   BOOKED: '$warning',
   BLOCKED: '$muted',
 } as const;

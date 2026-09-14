@@ -70,7 +70,7 @@ export default function SendTestDialog({ open, templateId, varsJson, onClose, on
           helperText={to && !valid ? 'Enter a valid email' : 'Uses the sample JSON from the Variables tab.'}
           disabled={loading}
         />
-        {error && <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1 }}>{error}</Typography>}
+        {error && <Typography variant="caption" color="error" role="alert" sx={{ display: 'block', mt: 1 }}>{error}</Typography>}
         {!templateId && <Alert severity="info" sx={{ mt: 1 }}>{t('crm.emailTemplates.saveTheTemplateFirst')}</Alert>}
       </DialogContent>
       <DialogActions>

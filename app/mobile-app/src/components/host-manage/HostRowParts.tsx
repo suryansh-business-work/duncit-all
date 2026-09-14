@@ -11,7 +11,7 @@ const NOTE_ALPHA = 0.14;
 /** The Paid / Free pill on the right of a hosted-pod row — outlined in the
  * tone mWeb's outlined Chip uses (success for free, primary for paid). */
 export function TypePill({ label, free }: Readonly<{ label: string; free: boolean }>) {
-  const tone = free ? '$success' : '$primary';
+  const tone = free ? '$success' : '$accent';
   return (
     <XStack
       height={24}
@@ -43,7 +43,7 @@ export function ApprovalPill({
       borderRadius={999}
       backgroundColor={tone}
     >
-      <Text testID={testID} fontSize={12} fontWeight="600" color="$onPrimary" numberOfLines={1}>
+      <Text testID={testID} fontSize={12} fontWeight="600" color="$onDanger" numberOfLines={1}>
         {approval.label}
       </Text>
     </XStack>
@@ -96,6 +96,7 @@ export function OverflowButton({
   return (
     <XStack
       testID={testID}
+      tabIndex={0}
       role="button"
       aria-label={label}
       onPress={onPress}

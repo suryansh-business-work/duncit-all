@@ -44,7 +44,7 @@ export function AccountScreen() {
   const loaded =
     error || !me ? (
       <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
-        <Text testID="account-error" color="$muted">
+        <Text testID="account-error" role="alert" color="$muted">
           Unable to load profile.
         </Text>
       </YStack>

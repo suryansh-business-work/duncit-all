@@ -74,7 +74,7 @@ export default function AiMonitoringSettingsPage() {
   return (
     <Box>
       <Stack sx={{ mb: 2 }}>
-        <Typography variant="h5" sx={{
+        <Typography variant="h5" component="h1" sx={{
           fontWeight: 700
         }}>
           AI Monitoring Settings

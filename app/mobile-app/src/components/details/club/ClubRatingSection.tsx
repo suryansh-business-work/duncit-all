@@ -73,10 +73,14 @@ export function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Pro
   return (
     <SurfaceCard gap={12} testID="club-ratings">
       <XStack alignItems="center" justifyContent="space-between">
-        <Text fontSize={17} fontWeight="600" color="$color">
+        <Text role="heading" fontSize={17} fontWeight="600" color="$color">
           Ratings & Reviews
         </Text>
-        <TouchableOpacity onPress={() => setDialogOpen(true)} accessibilityLabel="Rate this club">
+        <TouchableOpacity
+          role="button"
+          onPress={() => setDialogOpen(true)}
+          accessibilityLabel="Rate this club"
+        >
           <XStack
             height={32}
             paddingHorizontal={14}
@@ -125,10 +129,16 @@ export function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Pro
             gap={16}
           >
             <XStack alignItems="center" justifyContent="space-between">
-              <Text fontSize={17} fontWeight="600" color="$color">
+              <Text role="heading" fontSize={17} fontWeight="600" color="$color">
                 {t('mweb.clubDetails.rateThisClub')}
               </Text>
-              <TouchableOpacity testID="rating-dialog-close" onPress={() => setDialogOpen(false)}>
+              <TouchableOpacity
+                testID="rating-dialog-close"
+                role="button"
+                aria-label={t('mweb.common.close')}
+                hitSlop={11}
+                onPress={() => setDialogOpen(false)}
+              >
                 <MaterialIcons name="close" size={22} color={muted} />
               </TouchableOpacity>
             </XStack>

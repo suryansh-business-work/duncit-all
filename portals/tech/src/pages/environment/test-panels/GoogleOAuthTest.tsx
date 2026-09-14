@@ -38,7 +38,7 @@ export default function GoogleOAuthTest() {
       {error && <Alert severity="error">{t('tech.environment.signInFailedCheckTheClient')}</Alert>}
       {profile && (
         <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
-          <Avatar src={profile.picture} />
+          <Avatar alt="" src={profile.picture} />
           <Box>
             <Typography variant="body2" sx={{
               fontWeight: 700

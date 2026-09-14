@@ -46,7 +46,7 @@ export default function PodSettingsPage() {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5">{t('admin.podSettings.title')}</Typography>
+        <Typography variant="h5" component="h1">{t('admin.podSettings.title')}</Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {t('admin.podSettings.subtitle')}
         </Typography>

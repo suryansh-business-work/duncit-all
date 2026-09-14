@@ -119,6 +119,8 @@ function ContactPill({
   const { color: ink } = useThemeColors();
   return (
     <XStack
+      tabIndex={0}
+      hitSlop={6}
       role="button"
       aria-label={label}
       onPress={() => openUrl(url)}

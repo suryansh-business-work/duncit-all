@@ -93,7 +93,7 @@ export default function ServicesOfferedPage() {
       }}>
         <HandymanIcon color="primary" />
         <Box>
-          <Typography variant="h5" sx={{
+          <Typography component="h1" variant="h5" sx={{
             fontWeight: 800
           }}>{t('crm.data.servicesOfferedForHostAndAmp')}</Typography>
           <Typography variant="body2" sx={{

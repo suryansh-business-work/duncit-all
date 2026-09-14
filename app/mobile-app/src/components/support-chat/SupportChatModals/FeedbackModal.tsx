@@ -24,7 +24,10 @@ function EmojiScale({ rating, onPick }: Readonly<ScaleProps>) {
           key={o.value}
           testID={`feedback-emoji-${o.value}`}
           role="button"
+          tabIndex={0}
           aria-label={`${o.value} ${o.label}`}
+          aria-pressed={o.value === rating}
+          accessibilityState={{ selected: o.value === rating }}
           onPress={() => onPick(o.value)}
           alignItems="center"
           gap={2}

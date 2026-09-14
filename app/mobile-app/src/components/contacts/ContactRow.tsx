@@ -31,6 +31,9 @@ export const ContactRow = memo(function ContactRow({
   const name = profile.full_name || profile.first_name || row.contact_label;
   const initial = (name[0] ?? '?').toUpperCase();
   const status = readFollowStatus(profile);
+  // The Nearby pill is part of the spoken name, not a visual-only badge (1.4.1).
+  const openLabel = t('mweb.podDetails.openProfileOf', { vars: { name } });
+  const rowLabel = row.is_nearby ? `${openLabel}, ${t('mweb.contacts.nearbyBadge')}` : openLabel;
   const savedAs =
     row.contact_label && row.contact_label !== name
       ? t('mweb.contacts.savedAs', { vars: { label: row.contact_label } })
@@ -47,7 +50,8 @@ export const ContactRow = memo(function ContactRow({
       <XStack
         testID={`contact-open-${profile.user_id}`}
         role="button"
-        aria-label={t('mweb.podDetails.openProfileOf', { vars: { name } })}
+        tabIndex={0}
+        aria-label={rowLabel}
         onPress={() => onOpen(profile.user_id)}
         alignItems="center"
         gap={12}

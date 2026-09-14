@@ -53,7 +53,7 @@ export default function LiveAdDetailsDialog({
         <Stack direction="row" spacing={1} sx={{
           alignItems: "center"
         }}>
-          <Typography
+          <Typography component="h2"
             variant="h6"
             noWrap
             sx={{

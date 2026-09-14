@@ -54,7 +54,7 @@ export default function ReferralSettingsCard({
               }}>
               COINS PER REFERRAL
             </Typography>
-            <Typography variant="h6" sx={{
+            <Typography component="p" variant="h6" sx={{
               fontWeight: 700
             }}>
               {coinsPerReferral}

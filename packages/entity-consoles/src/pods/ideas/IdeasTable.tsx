@@ -45,7 +45,7 @@ const renderAuthor = (it: IdeaRow) => (
   <Stack direction="row" spacing={1} component="span" sx={{
     alignItems: "center"
   }}>
-    <Avatar src={it.author?.profile_photo || undefined} sx={{ width: 28, height: 28 }}>
+    <Avatar alt="" src={it.author?.profile_photo || undefined} sx={{ width: 28, height: 28 }}>
       {(it.author?.first_name?.[0] ?? 'U').toUpperCase()}
     </Avatar>
     <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>

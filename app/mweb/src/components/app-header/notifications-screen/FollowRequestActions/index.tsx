@@ -150,7 +150,7 @@ export default function FollowRequestActions({
         )}
         {followBackOffered && (
           <FollowBackButton
-            accentInk={accentInk}
+            accentInk="accent.main"
             busy={busy}
             spinning={inFlight === 'followBack'}
             pending={!canFollowBack(followBackStatus)}
@@ -160,7 +160,7 @@ export default function FollowRequestActions({
         )}
       </Stack>
       {error && (
-        <Typography data-testid="follow-request-error" variant="caption" sx={{ fontWeight: 600, color: 'error.main' }}>
+        <Typography data-testid="follow-request-error" role="alert" variant="caption" sx={{ fontWeight: 600, color: 'error.main' }}>
           {error}
         </Typography>
       )}

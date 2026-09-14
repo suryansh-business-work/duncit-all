@@ -167,7 +167,8 @@ describe('getUsersColumns / cell renderers', () => {
 
   it('shows the profile photo instead of initials when one exists', () => {
     renderCell('first_name', makeUser({ profile_photo: 'https://cdn.test/jane.png' }));
-    expect(screen.getByRole('img')).toHaveAttribute('src', 'https://cdn.test/jane.png');
+    // Decorative (alt=""): the name beside it already says who this is.
+    expect(document.querySelector('img')).toHaveAttribute('src', 'https://cdn.test/jane.png');
   });
 
   it('falls back to placeholders for an unnamed, email-less user', () => {

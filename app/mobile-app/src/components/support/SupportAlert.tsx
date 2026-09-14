@@ -48,6 +48,7 @@ export function SupportAlert({ variant, message, onClose, testID }: Readonly<Pro
       <XStack
         testID={`${testID}-close`}
         role="button"
+        tabIndex={0}
         aria-label={t('mweb.support.dismiss')}
         onPress={onClose}
         padding={2}

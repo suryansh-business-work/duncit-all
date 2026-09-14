@@ -164,6 +164,7 @@ export default function MonitoringLogsTable({ fetchRows, refetchRef, onRowClick 
 
   return (
     <DuncitTable<MonitoringLogRow>
+      ariaLabel={t('ai.monitoringLogs.title')}
       tableId="ai-monitoring-logs"
       columns={columns}
       fetchRows={fetchRows}

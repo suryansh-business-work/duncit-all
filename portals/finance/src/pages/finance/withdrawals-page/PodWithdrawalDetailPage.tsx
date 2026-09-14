@@ -123,7 +123,7 @@ export default function PodWithdrawalDetailPage() {
                     alignItems: "center",
                     flexWrap: "wrap"
                   }}>
-                  <Typography variant="h5" sx={{
+                  <Typography component="h1" variant="h5" sx={{
                     fontWeight: 700
                   }}>
                     {summary.pod_title}

@@ -109,6 +109,7 @@ export default function BadgeFormDialog({
           />
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <Switch
+              slotProps={{ input: { 'aria-label': t('admin.badgesPage.activeHint'), 'data-testid': 'badge-form-active' } as Record<string, string> }}
               checked={form.is_active}
               onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
             />

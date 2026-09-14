@@ -120,6 +120,7 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
         <Box key={section.title}>
           <Typography
             variant="subtitle2"
+            component="h3"
             sx={{
               fontWeight: 800,
               mb: 1
@@ -226,7 +227,7 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
                     minWidth: 0
                   }}>{doc.url}</Typography>
                 {!locked && (
-                  <DuncitIconButton size="small" onClick={() => setValue('documents', documents.filter((_, i) => i !== index))}><DeleteIcon fontSize="small" /></DuncitIconButton>
+                  <DuncitIconButton size="small" aria-label={t('partners.registerVenuePage.removeDocument')} onClick={() => setValue('documents', documents.filter((_, i) => i !== index))}><DeleteIcon fontSize="small" /></DuncitIconButton>
                 )}
               </Stack>
             ))}

@@ -75,7 +75,7 @@ export default function NewsletterPage() {
 
   return (
     <Stack spacing={2}>
-      <Typography variant="h5" sx={{
+      <Typography variant="h5" component="h1" sx={{
         fontWeight: 700
       }}>
         Newsletter Submission
@@ -84,13 +84,13 @@ export default function NewsletterPage() {
         <Card sx={{ flex: 1 }}>
           <CardContent>
             <Typography variant="overline">{t('websiteApp.newsletter.statTotal')}</Typography>
-            <Typography variant="h4">{all.length}</Typography>
+            <Typography variant="h4" component="p">{all.length}</Typography>
           </CardContent>
         </Card>
         <Card sx={{ flex: 1 }}>
           <CardContent>
             <Typography variant="overline">{t('websiteApp.newsletter.statActive')}</Typography>
-            <Typography variant="h4">{active}</Typography>
+            <Typography variant="h4" component="p">{active}</Typography>
           </CardContent>
         </Card>
       </Stack>

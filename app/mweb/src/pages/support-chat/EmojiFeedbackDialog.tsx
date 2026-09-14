@@ -45,8 +45,8 @@ export default function EmojiFeedbackDialog({
   const submitted = feedbackOptionFor(existingRating);
 
   return (
-    <Dialog data-testid="support-feedback-modal" open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 600 }}>{t('mweb.supportChat.howDidWeDo')}</DialogTitle>
+    <Dialog data-testid="support-feedback-modal" open={open} onClose={onClose} fullWidth maxWidth="xs" aria-labelledby="support-feedback-title">
+      <DialogTitle id="support-feedback-title" sx={{ fontWeight: 600 }}>{t('mweb.supportChat.howDidWeDo')}</DialogTitle>
       <DialogContent>
         {submitted ? (
           <Stack spacing={1.25} sx={{ pt: 1 }}>

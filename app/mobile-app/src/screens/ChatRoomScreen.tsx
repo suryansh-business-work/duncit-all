@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ScrollView } from 'react-native';
+import { AccessibilityInfo, ScrollView } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -41,7 +41,7 @@ export function ChatRoomScreen() {
   const { hosts, participants, count } = useChatParticipants(podId);
   const { data: meData } = useMe();
   const meId = meData?.me?.user_id;
-  const { onPrimary } = useThemeColors();
+  const { onDanger } = useThemeColors();
 
   const openPod = () => navigation.navigate('PodDetails', { podId, title });
   const openProfile = (userId: string) => navigation.navigate('PublicProfile', { userId });
@@ -54,6 +54,11 @@ export function ChatRoomScreen() {
     /* istanbul ignore next -- native autoscroll; method absent under the test renderer */
     listRef.current?.scrollToEnd?.({ animated: true });
   }, [messages.length]);
+
+  // The error banner appears without focus moving to it, so say it (4.1.3).
+  useEffect(() => {
+    if (error) AccessibilityInfo.announceForAccessibility(error);
+  }, [error]);
 
   const handleSend = () => {
     sendText(text);
@@ -106,17 +111,19 @@ export function ChatRoomScreen() {
               pressStyle={PRESS_STYLE.surface}
               testID="chat-room-error"
               role="button"
-              aria-label={t('mweb.chatRoom.dismissError')}
+              tabIndex={0}
+              aria-label={`${error}, ${t('mweb.chatRoom.dismissError')}`}
+              aria-live="assertive"
               onPress={() => setError(null)}
               margin={12}
               padding={12}
               borderRadius={14}
               backgroundColor="$danger"
             >
-              <Text flex={1} fontSize={13} color="$onPrimary">
+              <Text flex={1} fontSize={13} color="$onDanger">
                 {error}
               </Text>
-              <MaterialIcons name="close" size={18} color={onPrimary} />
+              <MaterialIcons name="close" size={18} color={onDanger} />
             </XStack>
           ) : null}
 
@@ -131,6 +138,7 @@ export function ChatRoomScreen() {
               {messages.length === 0 ? (
                 <Text
                   testID="chat-room-empty"
+                  role="status"
                   textAlign="center"
                   color="$muted"
                   paddingVertical={40}

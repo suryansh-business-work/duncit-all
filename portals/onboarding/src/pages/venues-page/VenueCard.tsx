@@ -20,7 +20,7 @@ export default function VenueCard({ venue, onReview }: Readonly<Props>) {
             justifyContent: "space-between",
             mb: 1
           }}>
-          <Typography variant="subtitle1" sx={{
+          <Typography variant="subtitle1" component="h2" sx={{
             fontWeight: 700
           }}>
             {venue.venue_name || '(Unnamed venue)'}

@@ -92,7 +92,9 @@ export function ShopProductCard({ product, adding, onOpen, onQuickAdd }: Readonl
             <YStack
               testID={`shop-product-add-${product.id}`}
               role="button"
+              tabIndex={0}
               aria-label={`Add ${product.product_name} to cart`}
+              hitSlop={4}
               onPress={quickAdd}
               width={36}
               height={36}

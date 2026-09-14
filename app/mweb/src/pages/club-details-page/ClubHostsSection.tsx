@@ -1,4 +1,4 @@
-import { Avatar, Box, Stack, Typography } from '@mui/material';
+import { Avatar, Box, ButtonBase, Stack, Typography } from '@mui/material';
 import { useNavigate } from 'react-router';
 import SectionHeader from '../../components/SectionHeader';
 import { SURFACE_SX } from '../../theme';
@@ -30,26 +30,27 @@ export default function ClubHostsSection({ hosts, title }: Readonly<Props>) {
       <SectionHeader testId="club-hosts-header" title={titleText} />
       <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pt: 1.5, '&::-webkit-scrollbar': { display: 'none' } }}>
         {hosts.map((host) => (
-          <Stack
+          <ButtonBase
             key={host.id}
             data-testid={`club-host-${host.id}`}
-            spacing={0.5}
-            role="button"
             aria-label={host.name}
             onClick={() => navigate(`/u/${host.id}`)}
             sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 0.5,
               alignItems: "center",
-              cursor: 'pointer',
               width: 72,
-              flex: '0 0 auto'
+              flex: '0 0 auto',
+              borderRadius: '12px'
             }}>
-            <Avatar src={host.avatar_url || undefined} sx={{ width: 56, height: 56, bgcolor: 'action.selected', color: 'text.primary' }}>
+            <Avatar alt="" src={host.avatar_url || undefined} sx={{ width: 56, height: 56, bgcolor: 'action.selected', color: 'text.primary' }}>
               {host.name?.[0]?.toUpperCase() || 'H'}
             </Avatar>
             <Typography variant="caption" sx={{ fontWeight: 600, textAlign: 'center', width: '100%' }} noWrap>
               {host.name}
             </Typography>
-          </Stack>
+          </ButtonBase>
         ))}
       </Stack>
     </Box>

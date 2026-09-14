@@ -93,6 +93,7 @@ export function AddressCard({ item, busy, onSubmit }: Readonly<Props>) {
           />
           <XStack
             testID="verification-submit-address"
+            tabIndex={0}
             role="button"
             aria-label={t('verification.submitAddress')}
             aria-disabled={busy}
@@ -110,7 +111,7 @@ export function AddressCard({ item, busy, onSubmit }: Readonly<Props>) {
             pressStyle={PRESS_STYLE.control}
           >
             {busy ? <Spinner testID="address-busy" size="small" color={primary} /> : null}
-            <Text fontSize={14} fontWeight="600" color="$primary">
+            <Text fontSize={14} fontWeight="600" color="$accent">
               {submitLabel}
             </Text>
           </XStack>

@@ -35,6 +35,7 @@ export function ClubPodRow({ pod, when, testID, onOpen, onActions }: Readonly<Pr
       <XStack alignItems="center" gap={8}>
         <YStack
           testID={`${testID}-open`}
+          tabIndex={0}
           role="button"
           aria-label={pod.pod_title}
           onPress={onOpen}
@@ -58,6 +59,7 @@ export function ClubPodRow({ pod, when, testID, onOpen, onActions }: Readonly<Pr
         </YStack>
         <XStack
           testID={`${testID}-actions`}
+          tabIndex={0}
           role="button"
           aria-label={t('mweb.hostManage.podActions')}
           onPress={onActions}

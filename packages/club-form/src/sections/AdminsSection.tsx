@@ -151,7 +151,7 @@ export default function AdminsSection() {
             <Stack direction="row" spacing={1.5} sx={{
               alignItems: "center"
             }}>
-              <Avatar src={option.profile_photo ?? undefined} sx={{ width: 28, height: 28 }}>
+              <Avatar src={option.profile_photo ?? undefined} alt="" sx={{ width: 28, height: 28 }}>
                 {userLabel(option).charAt(0).toUpperCase()}
               </Avatar>
               <Stack>

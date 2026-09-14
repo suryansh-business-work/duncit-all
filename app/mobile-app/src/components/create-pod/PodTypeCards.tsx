@@ -23,9 +23,10 @@ function TypeCard({ testID, label, caption, icon, selected, onPress }: Readonly<
   return (
     <YStack
       testID={testID}
-      role="button"
+      tabIndex={0}
+      role="radio"
       aria-label={label}
-      aria-pressed={selected}
+      aria-checked={selected}
       onPress={onPress}
       flex={1}
       padding={16}
@@ -72,7 +73,7 @@ export function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>) {
 
   return (
     <YStack gap={6}>
-      <XStack gap={12}>
+      <XStack gap={12} role="radiogroup">
         {isPhysical ? null : (
           <TypeCard
             testID="create-pod-free"
@@ -93,7 +94,7 @@ export function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>) {
         />
       </XStack>
       {typeError ? (
-        <Text testID="pod_type-error" fontSize={12} color="$danger">
+        <Text role="alert" testID="pod_type-error" fontSize={12} color="$danger">
           {typeError}
         </Text>
       ) : null}

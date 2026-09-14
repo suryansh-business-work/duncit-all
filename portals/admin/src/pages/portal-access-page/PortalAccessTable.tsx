@@ -29,6 +29,7 @@ export default function PortalAccessTable({
 
   return (
     <DuncitTable<PortalAccessRequest>
+      ariaLabel={t('admin.portalAccess.title')}
       tableId="admin-portal-access"
       columns={columns}
       fetchRows={fetchRows}

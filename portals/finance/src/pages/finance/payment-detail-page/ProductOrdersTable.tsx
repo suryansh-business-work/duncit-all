@@ -50,6 +50,7 @@ export default function ProductOrdersTable({ orders, currencySymbol }: Readonly<
   return (
     <SectionBlock title={t('finance.payment.ordersTitle')}>
       <DuncitTable<PaymentProductOrderLine>
+        ariaLabel={t('finance.payment.ordersTitle')}
         tableId="finance-payment-product-orders"
         columns={columns}
         fetchRows={fetchRows}

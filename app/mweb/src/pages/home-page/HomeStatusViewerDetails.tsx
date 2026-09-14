@@ -1,4 +1,5 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { ButtonBase, Stack, Typography } from '@mui/material';
+import { useTranslation } from '../../i18n/useTranslation';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlined';
 import type { HomeStatusViewerSlide } from './HomeStatusViewer';
 
@@ -19,6 +20,7 @@ export default function HomeStatusViewerDetails({
   onJumpTo,
   hasOpenButton,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   return (
     <Stack
       data-testid="home-status-viewer-details"
@@ -60,9 +62,10 @@ export default function HomeStatusViewerDetails({
           {nextPeek.map((s, i) => {
             const peekKey = s.id ?? s.mediaUrl ?? s.thumbnailUrl;
             return (
-              <Box
+              <ButtonBase
                 key={peekKey}
                 data-testid={`home-status-viewer-peek-${peekKey}`}
+                aria-label={t('mweb.a11y.goToStory', { vars: { number: index + 2 + i } })}
                 onClick={() => onJumpTo(index + 1 + i)}
                 sx={{
                   width: 56,
@@ -74,7 +77,6 @@ export default function HomeStatusViewerDetails({
                     s.thumbnailUrl || s.mediaUrl ? `url(${s.thumbnailUrl || s.mediaUrl})` : undefined,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
-                  cursor: 'pointer',
                   flexShrink: 0,
                 }}
               />

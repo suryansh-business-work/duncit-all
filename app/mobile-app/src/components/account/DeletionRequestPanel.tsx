@@ -126,7 +126,7 @@ export function DeletionRequestPanel({ onDone }: Readonly<Props>) {
       : t('mweb.account.deletion.confirmSealedDays', { vars: { days: retentionDays } });
 
   const errorLine = error ? (
-    <Text fontSize={13} color="$danger" testID="deletion-panel-error">
+    <Text fontSize={13} color="$danger" testID="deletion-panel-error" role="alert">
       {error}
     </Text>
   ) : null;
@@ -149,6 +149,7 @@ export function DeletionRequestPanel({ onDone }: Readonly<Props>) {
         testID="open-delete-account"
         role="button"
         aria-label={t('mweb.account.deletion.action')}
+        tabIndex={0}
         onPress={() => setConfirmOpen(true)}
         alignItems="center"
         gap={16}

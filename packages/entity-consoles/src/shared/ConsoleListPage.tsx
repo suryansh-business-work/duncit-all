@@ -69,7 +69,7 @@ export default function ConsoleListPage<Row extends { id: string }>({
         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
           {icon}
           <Box>
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>
+            <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
               {title}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -90,6 +90,7 @@ export default function ConsoleListPage<Row extends { id: string }>({
       </Stack>
 
       <DuncitTable<Row>
+        ariaLabel={title}
         tableId={tableId}
         columns={columns}
         fetchRows={fetchRows}

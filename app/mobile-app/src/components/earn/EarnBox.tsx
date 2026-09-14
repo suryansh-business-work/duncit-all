@@ -80,6 +80,8 @@ export function EarnBox({
   return (
     <SurfaceCard
       testID={testID}
+      // A disabled card can hold a CTA button: a focusable card would swallow it on iOS.
+      tabIndex={disabled ? undefined : 0}
       role="button"
       aria-label={title}
       aria-disabled={disabled}

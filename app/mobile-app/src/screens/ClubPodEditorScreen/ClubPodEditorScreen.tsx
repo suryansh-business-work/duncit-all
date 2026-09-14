@@ -56,7 +56,12 @@ export function ClubPodEditorScreen() {
     <StackScreen title={title} testID="club-pod-editor-screen">
       {editor.isLoading ? (
         <YStack flex={1} alignItems="center" justifyContent="center">
-          <Spinner testID="club-pod-editor-loading" color="$primary" />
+          <Spinner
+            role="progressbar"
+            aria-label={t('mweb.a11y.loading')}
+            testID="club-pod-editor-loading"
+            color="$primary"
+          />
         </YStack>
       ) : null}
       {editor.hasError ? (

@@ -240,6 +240,7 @@ export default function MeetingsTable({
   return (
     <DuncitTable<OnboardingMeeting>
       tableId="onboarding-meetings"
+      ariaLabel={t('onboarding.dashboard.meetingSchedule')}
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getMeetingRowId}

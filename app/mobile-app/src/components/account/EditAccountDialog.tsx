@@ -107,7 +107,7 @@ export function EditAccountDialog({
     <Modal visible={open} transparent animationType="slide" onRequestClose={requestClose}>
       <ModalThemeScope>
         <KeyboardScreen>
-          <YStack flex={1} testID="edit-account-dialog">
+          <YStack flex={1} testID="edit-account-dialog" onAccessibilityEscape={requestClose}>
             <YStack
               pressStyle={PRESS_STYLE.surface}
               role="button"
@@ -138,7 +138,7 @@ export function EditAccountDialog({
                   paddingTop={16}
                   paddingBottom={8}
                 >
-                  <Text fontSize={17} fontWeight="600" color="$color">
+                  <Text role="heading" fontSize={17} fontWeight="600" color="$color">
                     Edit profile
                   </Text>
                   <XStack
@@ -146,6 +146,8 @@ export function EditAccountDialog({
                     testID="edit-account-close"
                     role="button"
                     aria-label={t('mweb.common.close')}
+                    tabIndex={0}
+                    hitSlop={4}
                     onPress={requestClose}
                     width={36}
                     height={36}

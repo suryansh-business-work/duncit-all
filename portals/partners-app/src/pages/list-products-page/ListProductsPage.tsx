@@ -11,6 +11,7 @@ import {
   canManageProductListings,
 } from './productAccess';
 import { useTranslation } from '@duncit/shell';
+import { primaryHeroBackground } from '../../components/primaryHero';
 
 export default function ListProductsPage() {
   const { t } = useTranslation();
@@ -21,7 +22,7 @@ export default function ListProductsPage() {
 
   return (
     <Stack spacing={2.5} sx={{ width: '100%' }}>
-      <Box sx={{ p: 2.5, borderRadius: 2, color: 'primary.contrastText', background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)` }}>
+      <Box sx={{ p: 2.5, borderRadius: 2, color: 'common.white', background: primaryHeroBackground }}>
         <BackButton onClick={() => navigate('/ecomm-brand')} sx={{ color: 'inherit', mb: 1 }}>
           Back to brands
         </BackButton>
@@ -33,11 +34,11 @@ export default function ListProductsPage() {
             alignItems: { xs: 'flex-start', sm: 'center' }
           }}>
           <Box>
-            <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 800 }}>{t('partners.common.productManagement')}</Typography>
-            <Typography variant="h4" sx={{
+            <Typography variant="overline" sx={{ fontWeight: 800 }}>{t('partners.common.productManagement')}</Typography>
+            <Typography variant="h4" component="h1" sx={{
               fontWeight: 900
             }}>{t('partners.listProductsPage.brandProducts')}</Typography>
-            <Typography variant="body2" sx={{ opacity: 0.85, mt: 0.5 }}>
+            <Typography variant="body2" sx={{ mt: 0.5 }}>
               Add products under a Super → Category → Sub category. Once the products portal approves them they appear in matching pods.
             </Typography>
           </Box>
@@ -48,7 +49,7 @@ export default function ListProductsPage() {
             variant="contained"
             color="inherit"
             startIcon={<AddIcon />}
-            sx={{ color: 'primary.main', bgcolor: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}
+            sx={{ color: 'primary.dark', bgcolor: '#fff', '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' } }}
           >
             Add Product
           </DuncitButton>

@@ -25,7 +25,7 @@ export default function SendCountCell({ row, onOpenLogs }: Readonly<Props>) {
   if (attempts === 0) {
     return (
       <Tooltip title={t('marketingWhatsapp.sendCount.none')}>
-        <Typography variant="body2" sx={{ color: 'text.disabled' }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           0
         </Typography>
       </Tooltip>

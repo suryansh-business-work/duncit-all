@@ -57,13 +57,14 @@ export default function GrievanceForm({
     <form data-testid="grievance-form" noValidate onSubmit={submit}>
       <Stack spacing={1.5}>
         <SupportTicketField control={control} options={tickets} loading={ticketsLoading} />
-        <RhfTextField control={control} name="name" label={t('grievance.field.name')} required />
-        <RhfTextField control={control} name="email" label={t('grievance.field.email')} required />
-        <RhfTextField control={control} name="phone" label={t('grievance.field.phone')} required />
+        <RhfTextField control={control} name="name" label={t('grievance.field.name')} required autoComplete="name" />
+        <RhfTextField control={control} name="email" label={t('grievance.field.email')} required autoComplete="email" />
+        <RhfTextField control={control} name="phone" label={t('grievance.field.phone')} required autoComplete="tel" />
         <RhfTextField
           control={control}
           name="address"
           label={t('grievance.field.address')}
+          autoComplete="street-address"
           hint={t('grievance.optional')}
           multiline
           minRows={2}

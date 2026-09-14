@@ -63,7 +63,7 @@ export default function PublicSurveyPage() {
           textAlign: 'center'
         }}>
         <CheckCircleIcon color="success" sx={{ fontSize: 48 }} />
-        <Typography variant="h6" sx={{
+        <Typography component="h1" variant="h6" sx={{
           fontWeight: 900
         }}>{done ? 'Thank you!' : 'Already submitted'}</Typography>
         <Typography variant="body2" sx={{
@@ -78,7 +78,7 @@ export default function PublicSurveyPage() {
   return shell(
     <>
       <Stack spacing={0.5} sx={{ mb: 2 }}>
-        <Typography variant="h6" sx={{
+        <Typography component="h1" variant="h6" sx={{
           fontWeight: 950
         }}>{survey.title || 'Quick survey'}</Typography>
         <Typography variant="body2" sx={{

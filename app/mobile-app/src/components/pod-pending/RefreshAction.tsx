@@ -21,8 +21,10 @@ export function RefreshAction({ refreshing, onPress }: Readonly<Props>) {
     <XStack
       testID="pod-pending-refresh"
       role="button"
+      tabIndex={0}
       aria-label={t('mweb.podPending.refresh')}
       aria-disabled={refreshing}
+      hitSlop={2}
       onPress={refreshing ? undefined : onPress}
       width={40}
       height={40}

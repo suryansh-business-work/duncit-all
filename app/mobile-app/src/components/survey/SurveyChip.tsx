@@ -27,9 +27,10 @@ export function SurveyChip({
   return (
     <XStack
       testID={`chip-${id}`}
-      role="button"
-      aria-pressed={selected}
+      role="checkbox"
+      aria-checked={selected}
       aria-label={label}
+      tabIndex={0}
       onPress={() => onToggle(id)}
       alignItems="center"
       justifyContent="center"
@@ -43,7 +44,11 @@ export function SurveyChip({
       pressStyle={PRESS_STYLE.control}
     >
       {emoji ? <Text fontSize={large ? 17 : 15}>{emoji}</Text> : null}
-      <Text color={selected ? '$onPrimary' : hue} fontWeight="600" fontSize={large ? 15 : 13.5}>
+      <Text
+        color={selected ? '$onPrimary' : '$color'}
+        fontWeight="600"
+        fontSize={large ? 15 : 13.5}
+      >
         {label}
       </Text>
     </XStack>

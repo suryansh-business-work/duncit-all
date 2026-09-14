@@ -22,7 +22,7 @@ const CHECK_DISC_SX = {
   borderRadius: '50%',
   display: 'grid',
   placeItems: 'center',
-  color: 'primary.main',
+  color: 'accent.main',
   bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.12),
   '& svg': { fontSize: 44 },
 } as const;

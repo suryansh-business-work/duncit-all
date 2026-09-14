@@ -38,7 +38,7 @@ export default function AccountDeletionsPage() {
         sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}
       >
         <Box>
-          <Typography variant="h5">{t('tech.accountDeletions.title')}</Typography>
+          <Typography variant="h5" component="h1">{t('tech.accountDeletions.title')}</Typography>
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>

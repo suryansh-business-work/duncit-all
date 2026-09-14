@@ -17,6 +17,7 @@ export function ParticipationToggle({
     <DuncitIconButton
       size="small"
       aria-label={open ? 'Hide participation timeline' : 'Show participation timeline'}
+      aria-expanded={open}
       onClick={onToggle}
     >
       {open ? <KeyboardArrowUpIcon fontSize="small" /> : <KeyboardArrowDownIcon fontSize="small" />}

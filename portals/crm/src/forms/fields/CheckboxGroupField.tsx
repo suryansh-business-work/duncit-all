@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { Box, Checkbox, FormControlLabel, FormGroup, FormLabel, Stack } from '@mui/material';
 
@@ -10,6 +11,7 @@ interface Props {
 /** Checkbox grid bound to react-hook-form (value is string[]). */
 export default function CheckboxGroupField({ name, label, options }: Readonly<Props>) {
   const { control } = useFormContext();
+  const labelId = useId();
   return (
     <Controller
       control={control}
@@ -21,8 +23,8 @@ export default function CheckboxGroupField({ name, label, options }: Readonly<Pr
         };
         return (
           <Stack spacing={0.5}>
-            <FormLabel sx={{ fontSize: 13 }}>{label}</FormLabel>
-            <FormGroup>
+            <FormLabel id={labelId} sx={{ fontSize: 13 }}>{label}</FormLabel>
+            <FormGroup role="group" aria-labelledby={labelId}>
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' }, gap: 0 }}>
                 {options.map((option) => (
                   <FormControlLabel

@@ -52,6 +52,7 @@ function PodiumSpot({ entry }: Readonly<{ entry: LeaderboardEntry }>) {
     >
       <Avatar
         src={entry.avatar_url || undefined}
+        alt=""
         sx={{ width: size, height: size, border: 3, borderColor: color, fontWeight: 600 }}
       >
         {(entry.name || '?').charAt(0).toUpperCase()}
@@ -82,7 +83,7 @@ function BoardRow({ entry }: Readonly<{ entry: LeaderboardEntry }>) {
       }}
     >
       <RankPill rank={entry.rank} />
-      <Avatar src={entry.avatar_url || undefined} sx={{ width: 36, height: 36, fontWeight: 600 }}>
+      <Avatar src={entry.avatar_url || undefined} alt="" sx={{ width: 36, height: 36, fontWeight: 600 }}>
         {(entry.name || '?').charAt(0).toUpperCase()}
       </Avatar>
       <Typography variant="body2" sx={{ flex: 1, fontWeight: entry.is_me ? 600 : 500 }} noWrap>

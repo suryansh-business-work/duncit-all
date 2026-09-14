@@ -93,6 +93,7 @@ export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Read
             fullWidth
             size="small"
             placeholder={t('mweb.common.addAComment')}
+            slotProps={{ htmlInput: { 'aria-label': t('mweb.common.addAComment') } }}
             value={text}
             onChange={(e) => setText(e.target.value.slice(0, 1000))}
             onKeyDown={(e) => {
@@ -106,6 +107,7 @@ export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Read
           />
           <DuncitIconButton
             color="primary"
+            aria-label={t('mweb.podDetails.sendComment')}
             onClick={submit}
             disabled={posting || !text.trim()}
             data-testid="idea-details-comment-send"

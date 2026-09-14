@@ -52,6 +52,8 @@ export default function SessionList({ sessions, loading, selectedId, freshIds, e
         <ListItemButton
           key={s.id}
           selected={s.id === selectedId}
+          aria-current={s.id === selectedId}
+          data-testid="live-chat-session-row"
           onClick={() => onSelect(s.id)}
           sx={{
             alignItems: 'flex-start',
@@ -64,7 +66,7 @@ export default function SessionList({ sessions, loading, selectedId, freshIds, e
         >
           <ListItemAvatar sx={{ minWidth: 40 }}>
             <Badge color="error" badgeContent={s.unread_for_agent} max={9}>
-              <Avatar src={s.user.avatar_url || undefined} sx={{ width: 30, height: 30, fontSize: 13 }}>
+              <Avatar alt="" src={s.user.avatar_url || undefined} sx={{ width: 30, height: 30, fontSize: 13 }}>
                 {s.user.name?.[0]?.toUpperCase() || '?'}
               </Avatar>
             </Badge>

@@ -24,6 +24,7 @@ import {
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { RefreshScrollView } from '@/components/PullToRefresh';
+import { useLoadingRegion } from '@/components/Skeleton';
 
 /** One icon on a soft disc and one short line — the list's empty states. */
 function EmptyLine({ text, testID }: Readonly<{ text: string; testID: string }>) {
@@ -57,6 +58,7 @@ function EmptyLine({ text, testID }: Readonly<{ text: string; testID: string }>)
  * and a top-right Filter (Super → Category) and Sort (date / price). RN twin of
  * mWeb's PodHistoryPage. */
 export function PodHistoryScreen() {
+  const loadingRegion = useLoadingRegion();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { muted } = useThemeColors();
   const { t } = useTranslation();
@@ -103,12 +105,12 @@ export function PodHistoryScreen() {
   if (isLoading && uniqueItems.length === 0) {
     body = (
       <YStack flex={1} alignItems="center" justifyContent="center">
-        <Spinner testID="pod-history-loading" color="$primary" />
+        <Spinner {...loadingRegion} testID="pod-history-loading" color="$primary" />
       </YStack>
     );
   } else if (error) {
     body = (
-      <Text testID="pod-history-error" padding={24} color="$danger">
+      <Text role="alert" testID="pod-history-error" padding={24} color="$danger">
         {toErrorMessage(error)}
       </Text>
     );

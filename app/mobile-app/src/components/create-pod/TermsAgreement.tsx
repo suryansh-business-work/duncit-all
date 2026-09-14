@@ -23,6 +23,7 @@ export function TermsAgreement({ form }: Readonly<{ form: CreatePodForm }>) {
         <YStack gap={4}>
           <XStack
             testID="create-pod-terms"
+            tabIndex={0}
             role="checkbox"
             aria-label={t('mweb.createPod.termsAria')}
             aria-checked={field.value}
@@ -41,7 +42,9 @@ export function TermsAgreement({ form }: Readonly<{ form: CreatePodForm }>) {
               <Text
                 pressStyle={PRESS_STYLE.inline}
                 testID="terms-link"
-                color="$primary"
+                hitSlop={12}
+                role="link"
+                color="$accent"
                 fontWeight="600"
                 onPress={() => Linking.openURL(TERMS_URL)}
               >
@@ -51,7 +54,7 @@ export function TermsAgreement({ form }: Readonly<{ form: CreatePodForm }>) {
             </Text>
           </XStack>
           {fieldState.error ? (
-            <Text testID="agreed_to_terms-error" fontSize={12} color="$danger">
+            <Text testID="agreed_to_terms-error" role="alert" fontSize={12} color="$danger">
               {fieldState.error.message}
             </Text>
           ) : null}

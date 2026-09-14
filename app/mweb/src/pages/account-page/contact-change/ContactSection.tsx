@@ -32,7 +32,7 @@ export default function ContactSection({ snapshot, onChanged }: Readonly<Props>)
 
   return (
     <Stack spacing={1}>
-      <Typography sx={{ fontSize: 15, fontWeight: 600, pt: 1 }}>
+      <Typography component="h3" sx={{ fontSize: 15, fontWeight: 600, pt: 1 }}>
         {t('mweb.account.contactDetails')}
       </Typography>
       <ContactRows labels={labels} snapshot={snapshot} onChange={setChannel} />

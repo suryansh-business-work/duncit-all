@@ -28,6 +28,7 @@ export default function ClubAdminKpiCards({ kpis, loading }: Readonly<Props>) {
         <Stack key={group.key} spacing={1.25}>
           <Typography
             variant="overline"
+            component="h2"
             sx={{
               color: "text.secondary",
               fontWeight: 800,

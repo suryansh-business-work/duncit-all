@@ -63,7 +63,7 @@ export default function ReportedProblemDetailPage() {
               alignItems: "center"
             }}>
               <BackButton onClick={() => navigate('/reported-problems')}>{t('support.problems.title')}</BackButton>
-              <Typography variant="h5" sx={{
+              <Typography variant="h5" component="h1" sx={{
                 fontWeight: 900
               }}>
                 {r.report_no}

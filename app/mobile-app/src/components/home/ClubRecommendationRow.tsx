@@ -77,46 +77,62 @@ export function ClubRecommendationRow({ clubs, onOpenClub }: Readonly<Props>) {
   const meta = [city, membersLabel].filter(Boolean).join(' · ');
   const joined = isFollowing(club.id);
   const verified = (club as { is_verified?: boolean }).is_verified === true;
+  const verifiedWord = verified ? t('mweb.explore.verifiedClub') : '';
+  const openLabel = [club.club_name, verifiedWord, meta].filter(Boolean).join(', ');
 
   return (
     <SurfaceCard
       testID="club-recommendation"
-      role="button"
-      aria-label={club.club_name}
-      onPress={() => onOpenClub(club)}
       marginHorizontal={16}
       flexDirection="row"
       alignItems="center"
       gap={12}
       padding={12}
-      pressStyle={PRESS_STYLE.surface}
     >
-      <Avatar circular size={44}>
-        {image ? <Avatar.Image src={image} /> : null}
-        <Avatar.Fallback backgroundColor="$soft" alignItems="center" justifyContent="center">
-          <Text color="$color" fontSize={16} fontWeight="600">
-            {club.club_name?.[0]?.toUpperCase() ?? 'C'}
-          </Text>
-        </Avatar.Fallback>
-      </Avatar>
-      <YStack flex={1} minWidth={0}>
-        <XStack alignItems="center" gap={4} minWidth={0}>
-          <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1} flexShrink={1}>
-            {club.club_name}
-          </Text>
-          {verified ? <MaterialIcons name="verified" size={15} color={accent} /> : null}
-        </XStack>
-        {meta ? (
-          <Text fontSize={12} fontWeight="500" color="$muted" numberOfLines={1}>
-            {meta}
-          </Text>
-        ) : null}
-      </YStack>
+      {/* The club link and Join sit side by side: an accessible card would hide
+          the nested Join button from VoiceOver (4.1.2). */}
+      <XStack
+        testID="club-recommendation-open"
+        role="button"
+        aria-label={openLabel}
+        tabIndex={0}
+        onPress={() => onOpenClub(club)}
+        flex={1}
+        minWidth={0}
+        alignItems="center"
+        gap={12}
+        pressStyle={PRESS_STYLE.surface}
+      >
+        <Avatar circular size={44}>
+          {image ? <Avatar.Image src={image} /> : null}
+          <Avatar.Fallback backgroundColor="$soft" alignItems="center" justifyContent="center">
+            <Text color="$color" fontSize={16} fontWeight="600">
+              {club.club_name?.[0]?.toUpperCase() ?? 'C'}
+            </Text>
+          </Avatar.Fallback>
+        </Avatar>
+        <YStack flex={1} minWidth={0}>
+          <XStack alignItems="center" gap={4} minWidth={0}>
+            <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1} flexShrink={1}>
+              {club.club_name}
+            </Text>
+            {verified ? <MaterialIcons name="verified" size={15} color={accent} /> : null}
+          </XStack>
+          {meta ? (
+            <Text fontSize={12} fontWeight="500" color="$muted" numberOfLines={1}>
+              {meta}
+            </Text>
+          ) : null}
+        </YStack>
+      </XStack>
       <XStack
         testID="club-recommendation-join"
         role="button"
         aria-label={joined ? t('mweb.home.joinedClub') : t('mweb.home.joinClub')}
         aria-disabled={joined || busy}
+        aria-busy={busy}
+        tabIndex={0}
+        hitSlop={4}
         onPress={() => {
           if (!joined && !busy) follow(club.id);
         }}

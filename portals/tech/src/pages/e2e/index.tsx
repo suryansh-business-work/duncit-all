@@ -87,7 +87,7 @@ export default function E2eRunsPage() {
         sx={{ alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}
       >
         <Stack>
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>
+          <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
             {t('tech.e2e.runsTitle')}
           </Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>

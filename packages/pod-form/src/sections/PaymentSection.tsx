@@ -147,6 +147,7 @@ export default function PaymentSection() {
         )}
         {config.showIsActive && isEdit && (
           <Stack
+            component="label"
             direction="row"
             spacing={1}
             sx={{
@@ -155,7 +156,7 @@ export default function PaymentSection() {
               flexShrink: 0
             }}>
             <Switch checked={isActive} onChange={(_, v) => setValue('is_active', v)} />
-            <Typography variant="body2">{isActive ? 'Active' : 'Inactive'}</Typography>
+            <Typography variant="body2" component="span">{isActive ? 'Active' : 'Inactive'}</Typography>
           </Stack>
         )}
       </Stack>

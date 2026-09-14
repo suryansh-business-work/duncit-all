@@ -37,7 +37,7 @@ export default function GiftCardClaimPage() {
             alignItems: "center",
             py: 4
           }}>
-          <CircularProgress size={24} />
+          <CircularProgress size={24} aria-label={t('mweb.a11y.loading')} />
         </Stack>
       )}
       {error && <Alert data-testid="gift-card-claim-error" severity="error">{t('mweb.giftCards.redeemError')}</Alert>}

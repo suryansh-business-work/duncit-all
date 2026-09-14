@@ -50,7 +50,14 @@ export function ContactsAllowCard({ status, busy, stage, failure, onAllow }: Rea
     <SurfaceCard testID="contacts-allow-card" marginHorizontal={16} gap={12}>
       <XStack alignItems="center" gap={12}>
         <IconDisc icon="contact-phone" />
-        <Text flex={1} fontSize={16} fontWeight="600" color="$color">
+        <Text
+          testID="contacts-allow-title"
+          role="heading"
+          flex={1}
+          fontSize={16}
+          fontWeight="600"
+          color="$color"
+        >
           {t('mweb.contacts.allowTitle')}
         </Text>
       </XStack>
@@ -81,7 +88,7 @@ export function ContactsAllowCard({ status, busy, stage, failure, onAllow }: Rea
         loading={busy}
       />
       {failureText ? (
-        <Text testID="contacts-sync-error" fontSize={13} color="$danger">
+        <Text testID="contacts-sync-error" role="alert" fontSize={13} color="$danger">
           {failureText}
         </Text>
       ) : null}

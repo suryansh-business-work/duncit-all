@@ -68,7 +68,7 @@ export default function ServicesGrid({ services }: Readonly<Props>) {
               </Typography>
             ) : (
               <Typography variant="caption" sx={{
-                color: "text.disabled"
+                color: "text.secondary"
               }}>
                 No description.
               </Typography>

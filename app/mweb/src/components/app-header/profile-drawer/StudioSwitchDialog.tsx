@@ -55,7 +55,7 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
   return (
     <Dialog data-testid="studio-switch-dialog" open={open} onClose={onClose} maxWidth="xs" fullWidth aria-labelledby="studio-switch-title">
       <DialogContent sx={{ p: 2.5 }}>
-        <Typography id="studio-switch-title" sx={{ fontSize: '1.125rem', fontWeight: 600, mb: 2 }}>
+        <Typography id="studio-switch-title" data-testid="studio-switch-title" component="h2" sx={{ fontSize: '1.125rem', fontWeight: 600, mb: 2 }}>
           {t('mweb.common.switchRole')}
         </Typography>
         <Stack
@@ -112,7 +112,7 @@ export default function StudioSwitchDialog({ open, roles, showProducts = true, c
             <Typography sx={{ fontSize: 17, fontWeight: 600, lineHeight: 1.2 }} noWrap>
               {STUDIO_LABEL[pending]}
             </Typography>
-            <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'text.secondary' }}>
+            <Typography aria-live="polite" sx={{ fontSize: 12, fontWeight: 500, color: 'text.secondary' }}>
               {changed ? PENDING_CAPTION : ACTIVE_CAPTION}
             </Typography>
           </Box>

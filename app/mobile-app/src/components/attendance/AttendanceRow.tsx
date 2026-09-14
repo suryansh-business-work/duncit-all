@@ -62,8 +62,12 @@ function MarkButton({ row, labels, state, busy, onMark }: Readonly<MarkButtonPro
       <MaterialIcons name="radio-button-unchecked" size={18} color={muted} />
       <XStack
         testID={`attendance-mark-${row.membership_id}`}
+        tabIndex={0}
         role="button"
         aria-label={labels.markButton}
+        aria-disabled={!ready}
+        aria-busy={busy}
+        accessibilityHint={row.name}
         onPress={() => ready && onMark(row)}
         alignItems="center"
         justifyContent="center"

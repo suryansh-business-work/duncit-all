@@ -52,10 +52,17 @@ export function RescheduleDialog({
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
       <ModalThemeScope>
         <KeyboardScreen>
-          <YStack flex={1} alignItems="center" justifyContent="center" testID="reschedule-dialog">
+          <YStack
+            flex={1}
+            alignItems="center"
+            justifyContent="center"
+            testID="reschedule-dialog"
+            onAccessibilityEscape={onClose}
+          >
             <YStack
               pressStyle={PRESS_STYLE.surface}
               testID="reschedule-backdrop"
+              importantForAccessibility="no"
               role="button"
               aria-label={t('mweb.common.close')}
               onPress={onClose}
@@ -76,7 +83,14 @@ export function RescheduleDialog({
               gap={10}
             >
               <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
-                <Text fontSize={17} fontWeight="600" color="$color" paddingBottom={8}>
+                <Text
+                  testID="reschedule-title"
+                  role="heading"
+                  fontSize={17}
+                  fontWeight="600"
+                  color="$color"
+                  paddingBottom={8}
+                >
                   Reschedule your onboarding meeting
                 </Text>
                 <ScrollView keyboardShouldPersistTaps="handled">
@@ -91,7 +105,14 @@ export function RescheduleDialog({
                       below.
                     </Text>
                   ) : null}
-                  {slotsLoading ? <Spinner testID="reschedule-loading" color={primary} /> : null}
+                  {slotsLoading ? (
+                    <Spinner
+                      role="progressbar"
+                      aria-label={t('mweb.a11y.loading')}
+                      testID="reschedule-loading"
+                      color={primary}
+                    />
+                  ) : null}
                   {!slotsLoading && slots.length === 0 ? (
                     <Text testID="reschedule-empty" fontSize={13} color="$muted">
                       No slots are open right now — please check back soon.
@@ -112,7 +133,13 @@ export function RescheduleDialog({
                     onChangeText={onChangeReason}
                   />
                   {error ? (
-                    <Text testID="reschedule-error" fontSize={13} color="$danger" paddingTop={8}>
+                    <Text
+                      role="alert"
+                      testID="reschedule-error"
+                      fontSize={13}
+                      color="$danger"
+                      paddingTop={8}
+                    >
                       {error}
                     </Text>
                   ) : null}
@@ -120,6 +147,7 @@ export function RescheduleDialog({
                 <XStack gap={10} paddingTop={12}>
                   <XStack
                     testID="reschedule-close"
+                    tabIndex={0}
                     role="button"
                     aria-label={t('mweb.common.close')}
                     onPress={onClose}
@@ -137,6 +165,7 @@ export function RescheduleDialog({
                   </XStack>
                   <XStack
                     testID="reschedule-confirm"
+                    tabIndex={0}
                     role="button"
                     aria-label={t('mweb.earn.moveToThisSlot')}
                     aria-disabled={busy}

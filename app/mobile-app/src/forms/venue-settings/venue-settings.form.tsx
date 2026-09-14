@@ -77,7 +77,7 @@ export function VenueSettingsForm({
       ) : null}
       <YStack height={1} backgroundColor="$borderColor" />
       <YStack gap={2}>
-        <Text fontSize={15} fontWeight="600" color="$color">
+        <Text role="heading" fontSize={15} fontWeight="600" color="$color">
           {t('venueSettings.bandsTitle')}
         </Text>
         <Text fontSize={12} color="$muted">
@@ -109,12 +109,12 @@ export function VenueSettingsForm({
         />
       </XStack>
       {error ? (
-        <Text testID="venue-settings-error" fontSize={13} color="$danger">
+        <Text testID="venue-settings-error" role="alert" fontSize={13} color="$danger">
           {error}
         </Text>
       ) : null}
       {saved ? (
-        <Text testID="venue-settings-saved" fontSize={13} color="$success">
+        <Text testID="venue-settings-saved" role="status" fontSize={13} color="$success">
           {t('venueSettings.saved')}
         </Text>
       ) : null}

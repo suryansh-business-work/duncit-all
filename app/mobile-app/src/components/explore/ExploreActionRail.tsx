@@ -83,6 +83,7 @@ export function ExploreActionRail({ actions, availableHeight }: Readonly<Explore
                   key={action.key}
                   testID={`reel-more-${action.key}`}
                   role="button"
+                  tabIndex={0}
                   aria-label={action.label}
                   onPress={() => {
                     setMenuOpen(false);

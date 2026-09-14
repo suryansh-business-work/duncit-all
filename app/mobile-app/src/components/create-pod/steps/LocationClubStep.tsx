@@ -85,6 +85,7 @@ export function LocationClubStep({ form, clubs, locations, pinnedClub = null }: 
           </YStack>
           <XStack
             testID="create-pod-change-location"
+            tabIndex={0}
             role="button"
             aria-label={t('mweb.createPod.changeLocation')}
             onPress={() => setPickerOpen(true)}
@@ -96,7 +97,7 @@ export function LocationClubStep({ form, clubs, locations, pinnedClub = null }: 
             borderRadius={999}
             pressStyle={PRESS_STYLE.control}
           >
-            <Text fontSize={13} fontWeight="600" color="$primary">
+            <Text fontSize={13} fontWeight="600" color="$accent">
               {t('mweb.createPod.change')}
             </Text>
           </XStack>

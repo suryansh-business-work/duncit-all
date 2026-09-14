@@ -33,7 +33,7 @@ export function WhatsAppPreferenceSection({
     <SurfaceCard testID="whatsapp-preference-section">
       <Text
         testID="whatsapp-preference-section-heading"
-        accessibilityRole="header"
+        role="heading"
         fontSize={17}
         fontWeight="600"
         color="$color"

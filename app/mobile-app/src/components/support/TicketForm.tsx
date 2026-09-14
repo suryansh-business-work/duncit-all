@@ -88,7 +88,7 @@ export function TicketForm({
           borderColor="$primary"
         >
           <MaterialIcons name="event" size={14} color={primary} />
-          <Text fontSize={12} fontWeight="600" color="$primary">
+          <Text fontSize={12} fontWeight="600" color="$accent">
             About pod: {podTitle}
           </Text>
         </XStack>
@@ -103,7 +103,7 @@ export function TicketForm({
           autoComplete="name"
           backgroundColor="$surface"
           borderRadius={14}
-          borderColor="$borderColor"
+          borderColor="$inputBorder"
           opacity={0.7}
         />
       </YStack>
@@ -116,9 +116,10 @@ export function TicketForm({
           disabled
           autoCapitalize="none"
           keyboardType="email-address"
+          autoComplete="email"
           backgroundColor="$surface"
           borderRadius={14}
-          borderColor="$borderColor"
+          borderColor="$inputBorder"
           opacity={0.7}
         />
         <Text fontSize={11} color="$muted">
@@ -141,7 +142,7 @@ export function TicketForm({
           maxLength={120}
           backgroundColor="$surface"
           borderRadius={14}
-          borderColor="$borderColor"
+          borderColor="$inputBorder"
         />
       </YStack>
       <YStack gap={4}>
@@ -157,12 +158,12 @@ export function TicketForm({
           numberOfLines={4}
           backgroundColor="$surface"
           borderRadius={14}
-          borderColor="$borderColor"
+          borderColor="$inputBorder"
         />
       </YStack>
       <TicketAttachments attachments={attachments} onChange={setAttachments} />
       {error ? (
-        <Text testID="ticket-error" color="$danger" fontSize={12}>
+        <Text role="alert" testID="ticket-error" color="$danger" fontSize={12}>
           {error}
         </Text>
       ) : null}

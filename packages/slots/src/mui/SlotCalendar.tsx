@@ -66,11 +66,12 @@ export default function SlotCalendar({
     return (
       <Stack
         data-testid="slot-calendar-loading"
+        role="status"
         sx={{
           alignItems: "center",
           py: 3
         }}>
-        <CircularProgress size={22} />
+        <CircularProgress size={22} aria-hidden />
         <Typography
           variant="caption"
           sx={{
@@ -91,7 +92,7 @@ export default function SlotCalendar({
         }}>
           {labels.empty}
         </Typography>
-        {error && <FormHelperText error>{error}</FormHelperText>}
+        {error && <FormHelperText error role="alert">{error}</FormHelperText>}
       </Stack>
     );
   }
@@ -176,7 +177,7 @@ export default function SlotCalendar({
         )}
       </Box>
 
-      {error && <FormHelperText error>{error}</FormHelperText>}
+      {error && <FormHelperText error role="alert">{error}</FormHelperText>}
     </Stack>
   );
 }

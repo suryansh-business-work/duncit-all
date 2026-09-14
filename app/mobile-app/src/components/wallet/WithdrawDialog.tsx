@@ -88,7 +88,13 @@ export function WithdrawDialog({
     <Modal visible={open} transparent animationType="fade" onRequestClose={dismiss}>
       <ModalThemeScope>
         <KeyboardScreen>
-          <YStack flex={1} alignItems="center" justifyContent="center" testID="withdraw-dialog">
+          <YStack
+            flex={1}
+            alignItems="center"
+            justifyContent="center"
+            testID="withdraw-dialog"
+            onAccessibilityEscape={dismiss}
+          >
             <YStack
               pressStyle={PRESS_STYLE.surface}
               role="button"
@@ -110,7 +116,13 @@ export function WithdrawDialog({
               padding={20}
             >
               <SafeAreaView edges={[]} style={SHEET_SAFE_AREA}>
-                <Text fontSize={17} fontWeight="600" color="$color" paddingBottom={12}>
+                <Text
+                  role="heading"
+                  fontSize={17}
+                  fontWeight="600"
+                  color="$color"
+                  paddingBottom={12}
+                >
                   Withdraw {currency}
                   {maxAmount.toFixed(2)} max
                 </Text>
@@ -124,13 +136,15 @@ export function WithdrawDialog({
                       required
                       hint={amountHint}
                     />
-                    <XStack gap={8}>
+                    <XStack gap={8} role="radiogroup" aria-label={t('mweb.wallet.payoutMethod')}>
                       {METHODS.map((m) => (
                         <XStack
                           key={m}
                           testID={`withdraw-method-${m}`}
-                          role="button"
+                          role="radio"
                           aria-label={`Pay via ${m}`}
+                          aria-checked={method === m}
+                          tabIndex={0}
                           onPress={() => setValue('payout_method', m)}
                           flex={1}
                           height={40}
@@ -183,7 +197,7 @@ export function WithdrawDialog({
                       </>
                     )}
                     {error ? (
-                      <Text testID="withdraw-error" fontSize={12.5} color="$danger">
+                      <Text testID="withdraw-error" role="alert" fontSize={12.5} color="$danger">
                         {error}
                       </Text>
                     ) : null}
@@ -195,6 +209,7 @@ export function WithdrawDialog({
                     role="button"
                     aria-label={t('mweb.common.cancel')}
                     aria-disabled={busy}
+                    tabIndex={0}
                     onPress={dismiss}
                     flex={1}
                     height={48}
@@ -215,6 +230,8 @@ export function WithdrawDialog({
                     role="button"
                     aria-label={t('mweb.wallet.requestWithdrawal')}
                     aria-disabled={busy}
+                    aria-busy={busy}
+                    tabIndex={0}
                     onPress={busy ? undefined : () => fireAndForget(submit())}
                     flex={1}
                     height={48}

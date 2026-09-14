@@ -31,7 +31,7 @@ export default function WhatsAppPreferencePage() {
           alignItems: "center",
           p: 6
         }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   }

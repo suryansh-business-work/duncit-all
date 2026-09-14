@@ -29,8 +29,10 @@ function FilterChip({ label, selected, testID, onPress, segment = false }: Reado
   return (
     <XStack
       testID={testID}
-      role="button"
+      role="tab"
       aria-label={label}
+      aria-selected={selected}
+      tabIndex={0}
       onPress={onPress}
       flex={segment ? 1 : undefined}
       height={36}
@@ -59,6 +61,7 @@ export function LeaderboardCategoryTabs({
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
+      role="tablist"
     >
       {LEADERBOARD_CATEGORIES.map((category) => (
         <FilterChip
@@ -81,7 +84,15 @@ export function LeaderboardPeriodToggle({
 }: Readonly<{ value: LeaderboardPeriodKey; onChange: (next: LeaderboardPeriodKey) => void }>) {
   const { t } = useTranslation();
   return (
-    <XStack marginHorizontal={16} padding={4} gap={4} borderRadius={999} backgroundColor="$soft">
+    <XStack
+      marginHorizontal={16}
+      padding={4}
+      gap={4}
+      borderRadius={999}
+      backgroundColor="$soft"
+      role="tablist"
+      aria-label={t('mweb.a11y.leaderboardPeriod')}
+    >
       {LEADERBOARD_PERIODS.map((period) => (
         <FilterChip
           key={period}

@@ -122,6 +122,7 @@ export default function WaLogs({
       )}
 
       <DuncitTable<WaLogRow>
+        ariaLabel={t('marketingWhatsapp.logs.title')}
         tableId="wa-logs"
         columns={columns}
         fetchRows={fetchRows}

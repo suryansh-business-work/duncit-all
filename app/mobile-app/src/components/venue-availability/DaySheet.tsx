@@ -86,7 +86,7 @@ export function DaySheet({
           ) : null}
           <SectionHeader title={t('availability.existingSlots')} />
           {error ? (
-            <Text testID="availability-day-error" fontSize={13} color="$danger">
+            <Text role="alert" testID="availability-day-error" fontSize={13} color="$danger">
               {error}
             </Text>
           ) : null}

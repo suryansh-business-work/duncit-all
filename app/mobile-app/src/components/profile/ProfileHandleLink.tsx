@@ -53,6 +53,7 @@ export function ProfileHandleLink({ username, fallback }: Readonly<Props>) {
       testID="profile-handle"
       role="button"
       aria-label={labels.copyLink}
+      tabIndex={0}
       onPress={copy}
       alignItems="center"
       gap={5}
@@ -64,7 +65,7 @@ export function ProfileHandleLink({ username, fallback }: Readonly<Props>) {
       </Text>
       <MaterialIcons name="content-copy" size={14} color={copied ? success : muted} />
       {copied ? (
-        <Text testID="profile-handle-copied" fontSize={11.5} color={success}>
+        <Text testID="profile-handle-copied" role="status" fontSize={11.5} color={success}>
           {labels.linkCopied}
         </Text>
       ) : null}

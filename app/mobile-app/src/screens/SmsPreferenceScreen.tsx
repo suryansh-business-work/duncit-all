@@ -32,7 +32,7 @@ export function SmsPreferenceScreen() {
 
   const body = failed ? (
     <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
-      <Text testID="sms-preference-error" color="$muted">
+      <Text testID="sms-preference-error" role="alert" color="$muted">
         {t('mweb.smsPreference.loadFailed')}
       </Text>
     </YStack>

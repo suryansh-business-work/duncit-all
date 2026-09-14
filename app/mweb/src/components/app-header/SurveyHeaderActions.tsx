@@ -16,6 +16,7 @@ export default function SurveyHeaderActions({ onLogout }: Readonly<SurveyHeaderA
     }}>
       <Tooltip title={t('mweb.common.logout')}>
         <DuncitIconButton
+          data-testid="survey-header-logout"
           size="small"
           onClick={onLogout}
           aria-label={t('mweb.common.logout')}

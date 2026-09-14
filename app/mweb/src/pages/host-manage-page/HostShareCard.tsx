@@ -120,7 +120,7 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: any; symbol: string }>
           <Typography
             variant="body2"
             sx={{
-              color: "primary.main",
+              color: "accent.main",
               fontWeight: 700
             }}>
             {fmt(payable)}
@@ -147,7 +147,7 @@ export default function HostShareCard() {
           alignItems: "center",
           py: 3
         }}>
-        <CircularProgress size={20} />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} size={20} />
       </Stack>
     );
   } else if (error) {

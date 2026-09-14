@@ -19,8 +19,10 @@ import {
   surveySchema,
 } from './signup-survey/queries';
 import SubmitFooter from './signup-survey/SubmitFooter';
+import { useTranslation } from '../i18n/useTranslation';
 
 export default function SignupSurveyPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { data, loading, error } = useQuery<any>(SURVEY_DATA, {
@@ -103,7 +105,7 @@ export default function SignupSurveyPage() {
           alignItems: "center",
           p: 6
         }}>
-        <CircularProgress />
+        <CircularProgress aria-label={t('mweb.a11y.loading')} />
       </Stack>
     );
   }
@@ -140,6 +142,7 @@ export default function SignupSurveyPage() {
           variant="determinate"
           value={progress}
           data-testid="survey-progress"
+          aria-label={t('mweb.a11y.surveyProgress')}
           sx={{ '& .MuiLinearProgress-bar': { borderRadius: '999px' } }}
         />
       </Box>

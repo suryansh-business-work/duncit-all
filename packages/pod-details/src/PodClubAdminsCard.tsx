@@ -88,7 +88,7 @@ function ClubAdminRow({
   const links = contactLinks(admin, t);
   return (
     <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
-      <Avatar src={admin.avatar_url ?? undefined} sx={{ width: 40, height: 40 }}>
+      <Avatar alt="" src={admin.avatar_url ?? undefined} sx={{ width: 40, height: 40 }}>
         {(admin.name?.[0] ?? '?').toUpperCase()}
       </Avatar>
       <Stack spacing={0.75} sx={{ minWidth: 0, flex: 1 }}>

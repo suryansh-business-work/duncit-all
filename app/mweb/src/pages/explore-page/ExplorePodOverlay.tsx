@@ -37,6 +37,20 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
   const isFree = pod.pod_type === 'FREE';
   const description: string = pod.pod_description ?? '';
   const collapsible = description.length > CAPTION_COLLAPSE_AT;
+  // A long caption is a disclosure: keyboard-operable and says whether it is open.
+  const captionToggleA11y = collapsible
+    ? {
+        role: 'button',
+        tabIndex: 0,
+        'aria-expanded': expanded,
+        onKeyDown: (event: React.KeyboardEvent) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            setExpanded((v) => !v);
+          }
+        },
+      }
+    : {};
 
   return (
     <>
@@ -85,7 +99,7 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
               {club.club_name}
             </Typography>
             {club.is_verified && (
-              <VerifiedIcon data-testid="explore-club-verified" sx={{ fontSize: 16, color: '#1d9bf0', flex: '0 0 auto' }} aria-label={t('mweb.explore.verifiedClub')} />
+              <VerifiedIcon data-testid="explore-club-verified" sx={{ fontSize: 16, color: '#1d9bf0', flex: '0 0 auto' }} titleAccess={t('mweb.explore.verifiedClub')} />
             )}
           </Stack>
         )}
@@ -102,6 +116,7 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
         {description && (
           <Box
             data-testid="explore-caption-wrap"
+            {...captionToggleA11y}
             onClick={() => collapsible && setExpanded((v) => !v)}
             onDoubleClick={(e) => collapsible && e.stopPropagation()}
             sx={{ cursor: collapsible ? 'pointer' : 'default' }}
@@ -119,7 +134,7 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
             </Typography>
             {collapsible && (
               <Typography data-testid="explore-caption-toggle" component="span" variant="caption" sx={{ fontWeight: 600 }}>
-                {expanded ? 'Show less' : 'More'}
+                {expanded ? t('mweb.explore.showLess') : t('mweb.explore.more')}
               </Typography>
             )}
           </Box>

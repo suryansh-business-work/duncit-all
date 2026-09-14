@@ -73,6 +73,7 @@ export function SavedFilterSheet({
           <YStack
             pressStyle={PRESS_STYLE.surface}
             role="button"
+            importantForAccessibility="no"
             aria-label={t('mweb.common.closeFilters')}
             onPress={onClose}
             position="absolute"
@@ -90,14 +91,16 @@ export function SavedFilterSheet({
           >
             <SafeAreaView edges={['bottom']} style={SHEET_SAFE_AREA}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={17} fontWeight="600" color="$color">
+                <Text role="heading" fontSize={17} fontWeight="600" color="$color">
                   Filter by category
                 </Text>
                 <XStack
                   pressStyle={PRESS_STYLE.surface}
                   testID="saved-filter-close"
                   role="button"
+                  tabIndex={0}
                   aria-label={t('mweb.common.close')}
+                  hitSlop={2}
                   onPress={onClose}
                   width={40}
                   height={40}
@@ -153,6 +156,7 @@ export function SavedFilterSheet({
                 <XStack
                   testID="saved-filter-reset"
                   role="button"
+                  tabIndex={0}
                   aria-label={t('mweb.common.resetFilters')}
                   onPress={onReset}
                   paddingHorizontal={20}
@@ -170,6 +174,7 @@ export function SavedFilterSheet({
                 <XStack
                   testID="saved-filter-done"
                   role="button"
+                  tabIndex={0}
                   aria-label={t('mweb.common.applyFilters')}
                   onPress={onClose}
                   flex={1}

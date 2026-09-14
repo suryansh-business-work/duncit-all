@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client/react';
 import { Alert, Drawer, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -41,6 +41,7 @@ interface Props {
  */
 export default function AssignDrawer({ request, onClose, onOffered }: Readonly<Props>) {
   const { t } = useTranslation();
+  const titleId = useId();
   const [venue, setVenue] = useState<PodChangeCandidateRow | null>(null);
   const [errorText, setErrorText] = useState<string | null>(null);
 
@@ -92,12 +93,12 @@ export default function AssignDrawer({ request, onClose, onOffered }: Readonly<P
       anchor="right"
       open
       onClose={onClose}
-      slotProps={{ paper: { sx: { width: { xs: '100%', sm: 720 } } } }}
+      slotProps={{ paper: { 'aria-labelledby': titleId, sx: { width: { xs: '100%', sm: 720 } } } }}
     >
       <Stack spacing={2} sx={{ p: 2 }}>
         <Stack direction="row" sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <Stack sx={{ minWidth: 0 }}>
-            <Typography variant="h6" sx={{ fontWeight: 900 }}>
+            <Typography variant="h6" component="h2" id={titleId} sx={{ fontWeight: 900 }}>
               {t('admin.changeRequests.drawerTitle')}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>

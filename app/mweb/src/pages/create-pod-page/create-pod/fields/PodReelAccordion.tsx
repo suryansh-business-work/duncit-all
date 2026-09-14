@@ -164,7 +164,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
           )}
           {pct !== null && (
             <Box>
-              <LinearProgress variant="determinate" value={pct} />
+              <LinearProgress variant="determinate" value={pct} aria-label={progressLabel} />
               <Typography variant="caption" sx={{
                 color: "text.secondary"
               }}>
@@ -177,7 +177,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
               data-testid="reel-upload-add"
               size="small"
               variant="outlined"
-              startIcon={busy ? <CircularProgress size={16} /> : <VideocamOutlinedIcon />}
+              startIcon={busy ? <CircularProgress size={16} aria-hidden /> : <VideocamOutlinedIcon />}
               disabled={busy}
               onClick={() => fileRef.current?.click()}
             >

@@ -165,6 +165,8 @@ export default function PodsTable({
         exclusive
         value={timeFilter}
         onChange={(_e, next) => next && setTimeFilter(next)}
+        aria-label={t('onboarding.a11y.podTimeFilter')}
+        data-testid="pods-table-time-filter"
         sx={{ alignSelf: 'flex-start' }}
       >
         {timeFilters(t).map((f) => (
@@ -178,6 +180,7 @@ export default function PodsTable({
       <DuncitTable<PodRow>
         key={timeFilter}
         tableId={tableId}
+        ariaLabel={t('shell.nav.pods')}
         columns={columns}
         fetchRows={scopedFetch}
         getRowId={getPodRowId}

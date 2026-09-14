@@ -19,7 +19,7 @@ const CHIP_SX = { height: 36, minHeight: 36, fontWeight: 600, px: 0.5 } as const
 export default function SearchFilterSheet({ open, categories, categoryId, onClose, onSelect }: Readonly<Props>) {
   const { t } = useTranslation();
   return (
-    <Dialog data-testid="search-filter-sheet" open={open} onClose={onClose} fullWidth maxWidth="xs">
+    <Dialog data-testid="search-filter-sheet" open={open} onClose={onClose} fullWidth maxWidth="xs" aria-labelledby="search-filter-sheet-title">
       <Stack
         direction="row"
         sx={{
@@ -27,7 +27,7 @@ export default function SearchFilterSheet({ open, categories, categoryId, onClos
           justifyContent: "space-between",
           pr: 1.5
         }}>
-        <DialogTitle sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>{t('mweb.search.filterByCategory')}</DialogTitle>
+        <DialogTitle id="search-filter-sheet-title" sx={{ fontSize: '1.0625rem', fontWeight: 600 }}>{t('mweb.search.filterByCategory')}</DialogTitle>
         <DuncitIconButton
           data-testid="search-filter-sheet-close"
           aria-label={t('mweb.search.closeFilter')}
@@ -50,6 +50,7 @@ export default function SearchFilterSheet({ open, categories, categoryId, onClos
               data-testid="search-filter-sheet-chip-all"
               label={t('mweb.common.all')}
               color={categoryId === '' ? 'primary' : 'default'}
+              aria-pressed={categoryId === ''}
               onClick={() => onSelect('')}
               sx={CHIP_SX}
             />
@@ -60,6 +61,7 @@ export default function SearchFilterSheet({ open, categories, categoryId, onClos
                 icon={renderSuperCategoryMark(category.icon) ?? undefined}
                 label={category.name}
                 color={categoryId === category.id ? 'primary' : 'default'}
+                aria-pressed={categoryId === category.id}
                 onClick={() => onSelect(category.id)}
                 sx={CHIP_SX}
               />

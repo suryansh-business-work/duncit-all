@@ -58,6 +58,8 @@ export default function ContactOtpStep({
           name="otp"
           label={labels.codeLabel}
           size="small"
+          required
+          autoComplete="one-time-code"
           autoFocus
           slotProps={{ inputLabel: { shrink: true }, htmlInput: otpInput }}
         />

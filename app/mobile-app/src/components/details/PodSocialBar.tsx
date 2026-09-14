@@ -34,6 +34,7 @@ function SocialButton({
     <XStack
       testID={testID}
       role="button"
+      tabIndex={0}
       aria-label={label}
       onPress={onPress}
       alignItems="center"

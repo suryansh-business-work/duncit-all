@@ -1,7 +1,7 @@
 import { Box, Chip, Paper, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import AdMedia from './AdMedia';
-import { adClickProps } from './adClick';
+import { adClickProps, sponsoredLabel } from './adClick';
 import type { PublicAd } from './useActiveAds';
 import { SURFACE_SX } from '../../theme';
 import { useTranslation } from '../../i18n/useTranslation';
@@ -26,7 +26,7 @@ export default function AdCard({ ad, variant = 'banner', sx }: Readonly<AdCardPr
   return (
     <Paper
       data-testid="ad-card"
-      {...adClickProps(ad)}
+      {...adClickProps(ad, sponsoredLabel(t, ad))}
       sx={[
         {
           ...SURFACE_SX,

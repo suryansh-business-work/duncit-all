@@ -67,7 +67,13 @@ export function ScanConfirmation({ result, text, onDone }: Readonly<Props>) {
         alignItems="center"
       >
         <MaterialIcons name="check-circle" size={56} color={success} />
-        <Text fontSize={17} fontWeight="600" color="$color">
+        <Text
+          testID="scan-confirmation-title"
+          role="heading"
+          fontSize={17}
+          fontWeight="600"
+          color="$color"
+        >
           {t('mweb.hostScan.attendanceMarked')}
         </Text>
         <Text fontSize={13} color="$muted" textAlign="center">
@@ -78,6 +84,7 @@ export function ScanConfirmation({ result, text, onDone }: Readonly<Props>) {
         </YStack>
         <XStack
           testID="scan-confirmation-done"
+          tabIndex={0}
           role="button"
           aria-label={t('mweb.common.done')}
           onPress={onDone}

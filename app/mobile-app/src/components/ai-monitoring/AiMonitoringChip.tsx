@@ -31,7 +31,8 @@ interface Props {
  */
 export function AiMonitoringChip({ testID = 'ai-monitoring-chip' }: Readonly<Props>) {
   const { visible, copy } = useAiMonitoringConfig();
-  const { primary } = useThemeColors();
+  // Red TEXT and its outline use the AA accent, not the CTA fill.
+  const { accent } = useThemeColors();
   const [open, setOpen] = useState(false);
   const sheenStyle = useAiSweep(visible, '-140%', '240%');
   const twinkleStyle = useAiTwinkle(visible);
@@ -43,6 +44,8 @@ export function AiMonitoringChip({ testID = 'ai-monitoring-chip' }: Readonly<Pro
       <XStack
         testID={testID}
         role="button"
+        tabIndex={0}
+        hitSlop={6}
         aria-label={copy.title}
         onPress={() => setOpen(true)}
         pressStyle={PRESS_STYLE.control}
@@ -50,7 +53,7 @@ export function AiMonitoringChip({ testID = 'ai-monitoring-chip' }: Readonly<Pro
         gap={5}
         borderRadius={999}
         borderWidth={1}
-        borderColor="$primary"
+        borderColor="$accent"
         paddingHorizontal={10}
         paddingVertical={5}
         overflow="hidden"
@@ -69,9 +72,9 @@ export function AiMonitoringChip({ testID = 'ai-monitoring-chip' }: Readonly<Pro
           />
         </Animated.View>
         <Animated.View style={twinkleStyle}>
-          <MaterialIcons name="smart-toy" size={13} color={primary} />
+          <MaterialIcons name="smart-toy" size={13} color={accent} />
         </Animated.View>
-        <Text fontSize={11} fontWeight="600" color="$primary">
+        <Text fontSize={11} fontWeight="600" color="$accent">
           {copy.chipLabel}
         </Text>
       </XStack>

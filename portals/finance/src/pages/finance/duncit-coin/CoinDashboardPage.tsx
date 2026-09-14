@@ -64,7 +64,7 @@ export default function CoinDashboardPage() {
                 alignItems: "center"
               }}>
                 <MonetizationOnIcon color="primary" />
-                <Typography variant="h4" sx={{ fontWeight: 800 }}>
+                <Typography component="h1" variant="h4" sx={{ fontWeight: 800 }}>
                   Duncit Coin
                 </Typography>
               </Stack>

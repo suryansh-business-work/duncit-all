@@ -10,11 +10,13 @@ import { useNotifications, type UserNotification } from '@/hooks/useNotification
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { resolveNotificationLink } from '@/utils/notification-link';
+import { useTranslation } from '@/hooks/useTranslation';
 import { NotificationsScreen } from './NotificationsScreen';
 
 /** Header bell with unread badge — RN twin of mWeb's <HeaderNotificationsBell/>.
  * Opens the full-screen notifications list and owns the data + read mutations. */
 export function NotificationsBell() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const { color } = useThemeColors();
   const { notifs, unreadCount, busyId, markAllBusy, refetch, markRead, markAll } =
@@ -55,15 +57,13 @@ export function NotificationsBell() {
     if (link) openLink(link);
   };
 
-  const unreadSuffix = unreadCount ? ` (${unreadCount} unread)` : '';
+  const bellLabel = unreadCount
+    ? t('mweb.a11y.notificationsUnread', { vars: { count: unreadCount } })
+    : t('mweb.appHeader.notifications');
 
   return (
     <>
-      <HeaderRoundButton
-        testID="notifications-bell"
-        label={`Notifications${unreadSuffix}`}
-        onPress={onOpen}
-      >
+      <HeaderRoundButton testID="notifications-bell" label={bellLabel} onPress={onOpen}>
         <MaterialIcons name="notifications-none" size={22} color={color} />
         {unreadCount > 0 ? (
           <YStack

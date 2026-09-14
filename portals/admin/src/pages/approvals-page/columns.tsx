@@ -24,7 +24,7 @@ const renderKind = (row: ApprovalRequest) => {
   if (!row.kind) {
     return (
       <Typography variant="caption" component="span" sx={{
-        color: "text.disabled"
+        color: "text.secondary"
       }}>—
               </Typography>
     );

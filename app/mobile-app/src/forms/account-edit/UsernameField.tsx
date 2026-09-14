@@ -37,7 +37,7 @@ export interface UsernameFieldProps {
  */
 export function UsernameField({ control, current, onStatusChange }: Readonly<UsernameFieldProps>) {
   const { t } = useTranslation();
-  const { muted, primary } = useThemeColors();
+  const { muted, primary, success } = useThemeColors();
   const labels = buildUsernameLabels(t);
   const { field } = useController({ control, name: 'username' });
 
@@ -72,7 +72,7 @@ export function UsernameField({ control, current, onStatusChange }: Readonly<Use
             backgroundColor="$surface"
             color="$color"
             placeholderTextColor="$muted"
-            borderColor={errored ? '$danger' : '$borderColor'}
+            borderColor={errored ? '$danger' : '$inputBorder'}
             focusStyle={{ borderColor: errored ? '$danger' : '$primary', borderWidth: 1.5 }}
             value={typed}
             onChangeText={(text) => field.onChange(normalizeUsername(text))}
@@ -80,11 +80,19 @@ export function UsernameField({ control, current, onStatusChange }: Readonly<Use
             placeholder={labels.placeholder}
             autoCapitalize="none"
             autoCorrect={false}
+            autoComplete="username"
+            textContentType="username"
             aria-label={labels.label}
           />
-          {check.checking ? <ActivityIndicator testID="username-checking" color={primary} /> : null}
+          {check.checking ? (
+            <ActivityIndicator
+              testID="username-checking"
+              color={primary}
+              aria-label={t('mweb.a11y.loading')}
+            />
+          ) : null}
           {status === 'AVAILABLE' ? (
-            <MaterialIcons name="check-circle-outline" size={20} color={primary} />
+            <MaterialIcons name="check-circle-outline" size={20} color={success} />
           ) : null}
         </XStack>
       </Field>

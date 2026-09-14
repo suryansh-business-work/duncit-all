@@ -25,6 +25,7 @@ export function VerifyEmailBanner({ email, verified, onPress }: Readonly<Props>)
     <SurfaceCard
       testID="verify-email-banner"
       role="button"
+      tabIndex={0}
       aria-label={t('mweb.home.verifyYourEmail')}
       onPress={onPress}
       marginHorizontal={16}
